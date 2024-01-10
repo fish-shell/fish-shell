@@ -10,6 +10,7 @@ use crate::parser::Parser;
 use crate::proc::job_reap;
 use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
+    reader_set_show_overlay_state,
 };
 use crate::signal::signal_clear_cancel;
 #[cfg(test)]
@@ -173,6 +174,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("kill-selection"), ReadlineCmd::KillSelection),
     make_md(L!("kill-whole-line"), ReadlineCmd::KillWholeLine),
     make_md(L!("kill-word"), ReadlineCmd::KillWord),
+    make_md(L!("move-jump-anchor"), ReadlineCmd::MoveJumpAnchor),
     make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWord),
     make_md(L!("or"), ReadlineCmd::FuncOr),
     make_md(L!("pager-toggle-search"), ReadlineCmd::PagerToggleSearch),
@@ -264,8 +266,16 @@ fn input_function_arity(function: ReadlineCmd) -> usize {
         ReadlineCmd::ForwardJump
         | ReadlineCmd::BackwardJump
         | ReadlineCmd::ForwardJumpTill
-        | ReadlineCmd::BackwardJumpTill => 1,
+        | ReadlineCmd::BackwardJumpTill
+        | ReadlineCmd::MoveJumpAnchor => 1,
         _ => 0,
+    }
+}
+
+fn input_function_show_overlay(function: ReadlineCmd) -> bool {
+    match function {
+        ReadlineCmd::MoveJumpAnchor => true,
+        _ => false,
     }
 }
 
@@ -468,6 +478,9 @@ impl Inputter {
             "event_storage should be empty"
         );
         let mut skipped = std::mem::take(&mut self.event_storage);
+        if arity > 0 && input_function_show_overlay(code) {
+            reader_set_show_overlay_state(true);
+        }
         for _ in 0..arity {
             // Skip and queue up any function codes. See issue #2357.
             let arg: char;

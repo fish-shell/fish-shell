@@ -532,6 +532,8 @@ pub struct ReaderData {
     /// If these differs from the text of the command line, then we must kick off a new request.
     in_flight_highlight_request: WString,
     in_flight_autosuggest_request: WString,
+
+    move_locations_displayed: bool,
 }
 
 /// Read commands from \c fd until encountering EOF.
@@ -855,6 +857,13 @@ pub fn reader_handle_command(cmd: ReadlineCmd) {
     }
 }
 
+pub fn reader_set_show_overlay_state(visible: bool) {
+    if let Some(data) = current_data() {
+        data.move_locations_displayed = visible;
+        data.layout_and_repaint(L!(" readline show move jump anchor"));
+    }
+}
+
 /// Enqueue an event to the back of the reader's input queue.
 pub fn reader_queue_ch(ch: CharEvent) {
     if let Some(data) = current_data() {
@@ -1041,6 +1050,7 @@ impl ReaderData {
             last_jump_precision: JumpPrecision::To,
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
+            move_locations_displayed: Default::default(),
         }))
     }
 
@@ -1219,6 +1229,71 @@ pub fn combine_command_and_autosuggestion(cmdline: &wstr, autosuggestion: &wstr)
     full_line
 }
 
+fn line_move_locations_inner<F, I>(
+    base: &wstr,
+    char_iter: I,
+    jump_anchors: &wstr,
+    mut record_location: F,
+) where
+    F: FnMut(usize, char),
+    I: Iterator<Item = char>,
+{
+    let mut alphanumeric_state = base.char_at(0).is_alphanumeric();
+    let mut anchor_idx = 0;
+    let mut jump_before_iter = jump_anchors.chars();
+    let mut last_location: Option<usize> = None;
+    for (cidx, char) in char_iter.enumerate() {
+        if char.is_alphanumeric() != alphanumeric_state {
+            alphanumeric_state = char.is_alphanumeric();
+            //log::info!("State change x:{}", cidx);
+            /* Skip adjacent locations, is there a way to do this without
+            being unstable when moving the cursor */
+            if last_location
+                .map(|ll| cidx.saturating_sub(ll) > 1)
+                .unwrap_or(true)
+                && cidx > 0
+            {
+                /* Show jump anchor at every transition between alphanumeric an non alphanumeric text */
+                if jump_anchors.len() > anchor_idx {
+                    if let Some(jump_anchor) = jump_before_iter.next() {
+                        last_location = Some(cidx);
+                        // render char instead
+                        record_location(cidx, jump_anchor);
+                        anchor_idx += 1;
+                    }
+                }
+            }
+        }
+    }
+}
+pub fn line_move_locations<F>(
+    base: &wstr,
+    jump_anchors: &wstr,
+    cursor: usize,
+    after: bool,
+    record_location: F,
+) where
+    F: FnMut(usize, char),
+{
+    if jump_anchors.is_empty() {
+        return;
+    }
+    /* TODO: Ideally we should use grapheme based iteration.
+    Currently only unicode codepoint based iteration is used */
+    /*let (before_cursor, after_cursor) =
+    base.split_at((cursor + if after { 0 } else { 1 }).min(base.len()));*/
+    if after {
+        if cursor < base.len() {
+            let after_cursor = &base[cursor..];
+            let char_iter = after_cursor.chars();
+            line_move_locations_inner(base, char_iter, jump_anchors, record_location)
+        }
+    } else {
+        let before_cursor = &base[0..(cursor + 1).min(base.len())];
+        let char_iter = before_cursor.chars().rev();
+        line_move_locations_inner(base, char_iter, jump_anchors, record_location)
+    };
+}
 impl ReaderData {
     /// \return true if the command line has changed and repainting is needed. If \p colors is not
     /// null, then also return true if the colors have changed.
@@ -1300,6 +1375,99 @@ impl ReaderData {
         self.rendered_layout = self.make_layout_data();
         self.paint_layout(reason);
     }
+    fn move_location_perfom(&mut self, target: char, elt: EditableLineTag) {
+        let jump_anchors_before = self
+            .vars()
+            .get(L!("fish_jump_anchors_before"))
+            .map(|ev| ev.as_string())
+            .unwrap_or_default();
+        let jump_anchors_after = self
+            .vars()
+            .get(L!("fish_jump_anchors_after"))
+            .map(|ev| ev.as_string())
+            .unwrap_or_default();
+
+        let basis_text = self.command_line.text();
+        let current_position = self.command_line.position();
+
+        let mut target_pos = None;
+        // TODO: Adjust target pos depending on if to or till mode is enabled
+        if jump_anchors_before.contains(target) {
+            line_move_locations(
+                &basis_text,
+                &jump_anchors_before,
+                current_position,
+                false,
+                |pos, jump_char| {
+                    let abs_pos = current_position.saturating_sub(pos);
+                    if jump_char == target {
+                        target_pos = Some(abs_pos);
+                    }
+                },
+            );
+        } else if jump_anchors_after.contains(target) {
+            line_move_locations(
+                &basis_text,
+                &jump_anchors_after,
+                current_position,
+                true,
+                |pos, jump_char| {
+                    let abs_pos = current_position + pos;
+                    if jump_char == target {
+                        target_pos = Some(abs_pos);
+                    }
+                },
+            );
+        } else {
+            /* Target character not found, do nothing */
+        }
+        if let Some(target_pos) = target_pos {
+            self.update_buff_pos(elt, Some(target_pos));
+        }
+        self.move_locations_displayed = false;
+    }
+    fn apply_overlays(&self, basis: WString, highlight: &mut Vec<HighlightSpec>) -> WString {
+        let current_position = self.command_line.position();
+        // TODO: Figure out a way to do string manipulation in an unicode safe manner
+        let mut overlayed = basis.clone().into_vec();
+        let jump_anchors_before = self
+            .vars()
+            .get(L!("fish_jump_anchors_before"))
+            .map(|ev| ev.as_string())
+            .unwrap_or_default();
+        let jump_anchors_after = self
+            .vars()
+            .get(L!("fish_jump_anchors_after"))
+            .map(|ev| ev.as_string())
+            .unwrap_or_default();
+        line_move_locations(
+            &basis,
+            &jump_anchors_before,
+            current_position,
+            false,
+            |pos, jump_char| {
+                let abs_pos = current_position.saturating_sub(pos);
+                overlayed.get_mut(abs_pos).map(|c| *c = jump_char as u32);
+                highlight
+                    .get_mut(abs_pos)
+                    .map(|h| h.background = HighlightRole::search_match);
+            },
+        );
+        line_move_locations(
+            &basis,
+            &jump_anchors_after,
+            current_position,
+            true,
+            |pos, jump_char| {
+                let abs_pos = current_position + pos;
+                overlayed.get_mut(abs_pos).map(|c| *c = jump_char as u32);
+                highlight
+                    .get_mut(abs_pos)
+                    .map(|h| h.background = HighlightRole::search_match);
+            },
+        );
+        WString::from_vec(overlayed).unwrap()
+    }
 
     /// Paint the last rendered layout.
     /// \p reason is used in FLOG to explain why.
@@ -1308,15 +1476,24 @@ impl ReaderData {
         let data = &self.rendered_layout;
         let cmd_line = &self.command_line;
 
+        let mut colors = data.colors.clone();
+
         let full_line = if self.conf.in_silent_mode {
             wstr::from_char_slice(&[get_obfuscation_read_char()]).repeat(cmd_line.len())
+        } else if self.move_locations_displayed {
+            let mut command_line_string = WString::new();
+            command_line_string.push_utfstr(cmd_line.text());
+            // Combine the command and autosuggestion into one string.
+            combine_command_and_autosuggestion(
+                &self.apply_overlays(command_line_string, &mut colors),
+                &self.autosuggestion.text,
+            )
         } else {
             // Combine the command and autosuggestion into one string.
             combine_command_and_autosuggestion(cmd_line.text(), &self.autosuggestion.text)
         };
 
         // Copy the colors and extend them with autosuggestion color.
-        let mut colors = data.colors.clone();
 
         // Highlight any history search.
         if !self.conf.in_silent_mode && data.history_search_range.is_some() {
@@ -2988,6 +3165,12 @@ impl ReaderData {
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 panic!("should have been handled by inputter_t::readch");
+            }
+            ReadlineCmd::MoveJumpAnchor => {
+                let target = self.inputter.function_pop_arg();
+                self.move_locations_displayed = false;
+                let (elt, _el) = self.active_edit_line();
+                self.move_location_perfom(target, elt);
             }
         }
     }

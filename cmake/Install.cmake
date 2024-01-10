@@ -41,6 +41,15 @@ set(extra_confdir
     CACHE STRING "Path for extra configuration")
 
 
+corrosion_set_env_vars(${fish_rust_target}
+    "PREFIX=${prefix}"
+    # Temporary hack to propogate CMake flags/options to build.rs.
+    "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
+    "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
+    "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
+    "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"
+    "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
+)
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
 set(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish.1
             ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_indent.1

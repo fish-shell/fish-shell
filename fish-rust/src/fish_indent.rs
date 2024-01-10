@@ -446,8 +446,9 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                     self.emit_newline();
                 }
             } else {
-                panic!("Gap text should only have comments and newlines - instead found token type {:?} with text: {}",
-                        tok.type_, tok_text);
+                // Anything else we write a space.
+                self.emit_space_or_indent(GapFlags::default());
+                self.output.push_utfstr(tok_text);
             }
         }
         if needs_nl {

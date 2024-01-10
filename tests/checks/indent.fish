@@ -443,3 +443,6 @@ echo a\<\) | $fish_indent
 # CHECK: a < )
 echo b\|\{ | $fish_indent
 # CHECK: b | {
+
+echo "\'\\\\\x00\'" | string unescape | $fish_indent | string escape
+# CHECK: \'\\\x00\'

@@ -521,11 +521,14 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         // Unescape the string - this leaves special markers around if there are any
         // expansions or anything. We specifically tell it to not compute backslash-escapes
         // like \U or \x, because we want to leave them intact.
-        let mut unescaped = unescape_string(
+        let Some(mut unescaped) = unescape_string(
             input,
             UnescapeStringStyle::Script(UnescapeFlags::SPECIAL | UnescapeFlags::NO_BACKSLASHES),
-        )
-        .unwrap();
+            // TODO: If we cannot unescape that means there's something fishy,
+            // like a NUL in the source.
+        ) else {
+            return input.into();
+        };
 
         // Remove INTERNAL_SEPARATOR because that's a quote.
         let quote = |ch| ch == INTERNAL_SEPARATOR;

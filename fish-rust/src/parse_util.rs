@@ -31,7 +31,7 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use std::ops;
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
-/// \return the length of the slice starting at \p in, or 0 if there is no slice, or -1 on error.
+/// \return the length of the slice starting at \p in, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
     const openc: char = '[';
@@ -46,11 +46,20 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
     let mut bracket_count = 1;
 
     let mut pos = 0;
-    for c in chars {
+    while let Some(c) = chars.next() {
         pos += 1;
         if !escaped {
             if ['\'', '"'].contains(&c) {
+                let oldpos = pos;
                 pos = quote_end(input, pos, c)?;
+                // We need to advance the iterator as well
+                if pos - oldpos > 0 {
+                    // nth(0) advances by 1
+                    chars.nth(pos - oldpos - 1)?;
+                } else {
+                    // Quotes aren't over, slice is invalid
+                    return None;
+                }
             } else if c == openc {
                 bracket_count += 1;
             } else if c == closec {
@@ -1802,6 +1811,16 @@ fn test_parse_util_cmdsubst_extent() {
         parse_util_cmdsubst_extent(a, 17),
         "echo (echo (".chars().count()..a.len()
     );
+}
+
+#[test]
+#[serial]
+fn test_parse_util_slice_length() {
+    test_init();
+    assert_eq!(parse_util_slice_length(L!("[2]")), Some(3));
+    assert_eq!(parse_util_slice_length(L!("[12]")), Some(4));
+    assert_eq!(parse_util_slice_length(L!("[\"foo\"]")), Some(7));
+    assert_eq!(parse_util_slice_length(L!("[\"foo\"")), None);
 }
 
 #[test]

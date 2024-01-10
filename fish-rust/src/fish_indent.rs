@@ -647,7 +647,9 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         //    # something
         //    cmd2
         // Treat it as gap text.
-        let Some(range) = node.range() else { return; };
+        let Some(range) = node.range() else {
+            return;
+        };
         if range.length() == 0 {
             return;
         }

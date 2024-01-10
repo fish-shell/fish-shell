@@ -438,3 +438,8 @@ echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 
 echo a\> | $fish_indent
 # CHECK: a >
+
+echo a\<\) | $fish_indent
+# CHECK: a < )
+echo b\|\{ | $fish_indent
+# CHECK: b | {

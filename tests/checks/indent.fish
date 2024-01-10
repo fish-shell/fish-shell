@@ -435,3 +435,6 @@ echo $status #CHECK: 0
 
 echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 # CHECK: PATH={$PATH[echo " "
+
+echo a\> | $fish_indent
+# CHECK: a >

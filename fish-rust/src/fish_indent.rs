@@ -614,9 +614,17 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
     fn visit_redirection(&mut self, node: &ast::Redirection) {
         // No space between a redirection operator and its target (#2899).
-        self.emit_text(node.oper.range().unwrap(), GapFlags::default());
+        let Some(orange) = node.oper.range() else {
+            return;
+        };
+        self.emit_text(orange, GapFlags::default());
+
+        // (target is None if the source ends in a `<` or `>`
+        let Some(trange) = node.target.range() else {
+            return;
+        };
         self.emit_text(
-            node.target.range().unwrap(),
+            trange,
             GapFlags {
                 skip_space: true,
                 ..Default::default()

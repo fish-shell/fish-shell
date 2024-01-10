@@ -446,3 +446,6 @@ echo b\|\{ | $fish_indent
 
 echo "\'\\\\\x00\'" | string unescape | $fish_indent | string escape
 # CHECK: \'\\\x00\'
+
+echo '\"\"\|\x00' | string unescape | $fish_indent | string unescape
+# CHECK: |

@@ -647,11 +647,11 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         //    # something
         //    cmd2
         // Treat it as gap text.
-        if node.range().unwrap().length() == 0 {
+        let Some(range) = node.range() else { return; };
+        if range.length() == 0 {
             return;
         }
         let flags = self.gap_text_flags_before_node(node);
-        let range = node.range().unwrap();
         self.current_indent = self.indent(range.start());
         let added_newline = self.emit_gap_text_before(range, flags);
         let mut gap_range = range;

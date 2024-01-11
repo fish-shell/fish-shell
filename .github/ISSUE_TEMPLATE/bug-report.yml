@@ -1,0 +1,41 @@
+name: Bug Report
+description: Found a bug? Use this form to file a bug report!
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: fish-version
+    attributes:
+      label: What version of Fish are you using?
+      description: "Please provide the output of `fish --version`"
+      placeholder: "Example: fish, version 3.7.0"
+    validations:
+      required: true
+  - type: input
+    id: os-and-kernel
+    attributes:
+      label: What operating system and terminal are you using?
+      description: "Please provide the output of this command: `uname -a && echo $TERM`"
+      placeholder: "Example: Linux 6.7.0, xterm-kitty"
+    validations:
+      required: true
+  - type: dropdown
+    id: is-vanilla-fish
+    attributes:
+      label: Are you using vanilla fish?
+      description: Are you using fish with or without third-party customizations and/or extensions?
+      options:
+        - "No"
+        - "Yes"
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: how-to-reproduce
+    attributes:
+      label: How to reproduce the bug?
+      description: If you know how, please show us how we can reproduce this bug. If you can, please also record an asciinema, upload it, and link to it in the reproduction steps.
+      placeholder: "Step 1: Execute `sudo kill -9 1` (please don't do this)"
+    validations:
+      
+    

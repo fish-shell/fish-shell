@@ -46,8 +46,8 @@ rand_pcg = "0.3.1"
 serial_test = "0.4.0"
 
 [build-dependencies]
-cc = { git = "https://github.com/mqudsi/cc-rs", branch = "fish" }
-rsconf = { git = "https://github.com/mqudsi/rsconf", branch = "master" }
+cc = "1.0.83"
+rsconf = "0.1.1"
 
 [lib]
 crate-type = ["staticlib"]

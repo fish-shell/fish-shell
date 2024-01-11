@@ -33,11 +33,6 @@ checksum = "b4682ae6287fcf752ecaabbfcc7b6f9b72aa33933dc23a554d853aea8eea8635"
 
 [[package]]
 name = "cc"
-version = "1.0.79"
-source = "git+https://github.com/mqudsi/cc-rs?branch=fish#cdc3a376eb0f56c2fb2cf640cc0e9192feaa621b"
-
-[[package]]
-name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1174fb0b6ec23863f8b971027804a42614e347eafb0a95bf0b12cdae21fc4d0"
@@ -90,7 +85,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
 dependencies = [
- "cc 1.0.83",
+ "cc",
  "libc",
 ]
 
@@ -104,7 +99,7 @@ name = "fish-rust"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.4.0",
- "cc 1.0.79",
+ "cc",
  "errno",
  "fast-float",
  "git-version",
@@ -305,7 +300,7 @@ name = "pcre2-sys"
 version = "0.2.4"
 source = "git+https://github.com/fish-shell/rust-pcre2?branch=master#813a4267546e5ca8ff349c9c67d65e52a82172d2"
 dependencies = [
- "cc 1.0.83",
+ "cc",
  "libc",
  "pkg-config",
 ]
@@ -404,10 +399,11 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "rsconf"
-version = "0.1.0"
-source = "git+https://github.com/mqudsi/rsconf?branch=master#39b6841b373c5c32fcc5333fa17f01be42ad3217"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38a9a3f6ff97f1bc63b490ea2d2c1570fd8372ab887b45dff59695ded372d576"
 dependencies = [
- "cc 1.0.79",
+ "cc",
 ]
 
 [[package]]

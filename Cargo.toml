@@ -73,3 +73,27 @@ benchmark = []
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []
 bsd = []
+
+[lints]
+rust.non_camel_case_types = "allow"
+rust.dead_code = "allow"
+rust.non_upper_case_globals = "allow"
+rust.unstable_name_collisions = "allow"
+clippy.bool_assert_comparison = "allow"
+clippy.box_default = "allow"
+clippy.collapsible_if = "allow"
+clippy.comparison_chain = "allow"
+clippy.derivable_impls = "allow"
+clippy.field_reassign_with_default = "allow"
+clippy.get_first = "allow"
+clippy.if_same_then_else = "allow"
+clippy.manual_is_ascii_check = "allow"
+clippy.mut_from_ref = "allow"
+clippy.needless_return = "allow"
+clippy.option_map_unit_fn = "allow"
+clippy.ptr_arg = "allow"
+clippy.redundant_slicing = "allow"
+clippy.too_many_arguments = "allow"
+clippy.uninlined_format_args = "allow"
+clippy.unnecessary_to_owned = "allow"
+clippy.unnecessary_unwrap = "allow"

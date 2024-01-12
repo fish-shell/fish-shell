@@ -41,6 +41,12 @@ corrosion_import_crate(
     FLAGS "${CARGO_FLAGS}"
 )
 
+if (Rust_CARGO_TARGET)
+    set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_TARGET}")
+else()
+    set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_HOST_TARGET}")
+endif()
+
 # Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the
 # truthiness of the strings if they are set.
 set(CMAKE_WITH_GETTEXT "1")

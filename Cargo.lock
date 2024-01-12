@@ -95,7 +95,7 @@ version = "0.2.0"
 source = "git+https://github.com/fish-shell/fast-float-rust?branch=fish#9590c33a3f166a3533ba1cbb7a03e1105acec034"
 
 [[package]]
-name = "fish-rust"
+name = "fish"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.4.0",

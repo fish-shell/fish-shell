@@ -31,6 +31,8 @@ use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
 use std::time;
 
+pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+
 // Highest legal ASCII value.
 pub const ASCII_MAX: char = 127 as char;
 
@@ -1177,7 +1179,7 @@ pub fn cstr2wcstring(input: &[u8]) -> WString {
     str2wcstring(&input[0..strlen])
 }
 
-pub fn charptr2wcstring(input: *const libc::c_char) -> WString {
+pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
     let input: &[u8] = unsafe {
         let strlen = libc::strlen(input);
         slice::from_raw_parts(input.cast(), strlen)
@@ -2144,21 +2146,24 @@ macro_rules! err {
     }
 }
 
+#[macro_export]
 macro_rules! fprintf {
     ($fd:expr, $format:expr $(, $arg:expr)* $(,)?) => {
         {
-            let wide = crate::wutil::sprintf!($format, $( $arg ),*);
-            crate::wutil::wwrite_to_fd(&wide, $fd);
+            let wide = $crate::wutil::sprintf!($format, $( $arg ),*);
+            $crate::wutil::wwrite_to_fd(&wide, $fd);
         }
     }
 }
 
+#[macro_export]
 macro_rules! printf {
     ($format:expr $(, $arg:expr)* $(,)?) => {
         fprintf!(libc::STDOUT_FILENO, $format $(, $arg)*)
     }
 }
 
+#[macro_export]
 macro_rules! eprintf {
     ($format:expr $(, $arg:expr)* $(,)?) => {
         fprintf!(libc::STDERR_FILENO, $format $(, $arg)*)

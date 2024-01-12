@@ -46,7 +46,7 @@ fn strlen_safe(s: *const libc::c_char) -> usize {
 }
 
 /// Report the error code for a failed setpgid call.
-pub fn report_setpgid_error(
+pub(crate) fn report_setpgid_error(
     err: i32,
     is_parent: bool,
     pid: pid_t,
@@ -243,7 +243,7 @@ pub fn execute_fork() -> pid_t {
     exit_without_destructors(1)
 }
 
-pub fn safe_report_exec_error(
+pub(crate) fn safe_report_exec_error(
     err: i32,
     actual_cmd: *const c_char,
     argvv: *const *const c_char,

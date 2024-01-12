@@ -127,7 +127,7 @@ impl OwningNullTerminatedArray {
 }
 
 /// Return the length of a null-terminated array of pointers to something.
-pub fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
+pub(crate) fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
     let mut len = 0;
     // Safety: caller must ensure that arr is null-terminated.
     unsafe {

@@ -159,7 +159,7 @@ endif()
 
 add_test(
     NAME "cargo-test"
-    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish-rust --target-dir ${rust_target_dir} ${cargo_target_opt}
+    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish --target-dir ${rust_target_dir} ${cargo_target_opt}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})

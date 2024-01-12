@@ -15,16 +15,19 @@ use std::{
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 
 #[allow(unused_imports)]
-use crate::future::IsSomeAnd;
-use crate::{
+use fish::future::IsSomeAnd;
+use fish::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{scoped_push_replacer, shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
+    eprintf,
     fallback::fish_wcwidth,
+    fprintf,
     input::input_terminfo_get_name,
     input_common::{CharEvent, InputEventQueue, InputEventQueuer},
     parser::Parser,
     print_help::print_help,
+    printf,
     proc::set_interactive_session,
     reader::{
         check_exit_loop_maybe_warning, reader_init, reader_test_and_clear_interrupted,
@@ -335,7 +338,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
                     wgettext_fmt!(
                         "%ls, version %s\n",
                         PROGRAM_NAME.get().unwrap(),
-                        crate::BUILD_VERSION
+                        fish::BUILD_VERSION
                     )
                 );
             }
@@ -366,19 +369,18 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
     true
 }
 
-#[no_mangle]
-extern "C" fn fish_key_reader_main() -> i32 {
+fn main() {
     PROGRAM_NAME.set(L!("fish_key_reader")).unwrap();
     let mut continuous_mode = false;
     let mut verbose = false;
 
     if !parse_flags(&mut continuous_mode, &mut verbose) {
-        return 1;
+        std::process::exit(1);
     }
 
     if unsafe { libc::isatty(STDIN_FILENO) } == 0 {
         eprintf!("Stdin must be attached to a tty.\n");
-        return 1;
+        std::process::exit(1);
     }
 
     setup_and_process_keys(continuous_mode, verbose);

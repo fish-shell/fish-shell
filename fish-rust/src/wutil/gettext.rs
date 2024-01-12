@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring};
-use crate::fish::PACKAGE_NAME;
+use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -130,38 +129,41 @@ pub fn wgettext_str(s: &wstr) -> &'static wstr {
 
 /// Get a (possibly translated) string from a string literal.
 /// This returns a &'static wstr.
+#[macro_export]
 macro_rules! wgettext {
     ($string:expr) => {
-        crate::wutil::gettext::wgettext_static_str(widestring::utf32str!($string))
+        $crate::wutil::gettext::wgettext_static_str(widestring::utf32str!($string))
     };
 }
-pub(crate) use wgettext;
+pub use wgettext;
 
 /// Like wgettext, but applies a sprintf format string.
 /// The result is a WString.
+#[macro_export]
 macro_rules! wgettext_fmt {
     (
     $string:expr, // format string
     $($args:expr),+ // list of expressions
     $(,)?   // optional trailing comma
     ) => {
-        crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),+)
+        $crate::wutil::sprintf!(&$crate::wutil::wgettext!($string), $($args),+)
     };
 }
-pub(crate) use wgettext_fmt;
+pub use wgettext_fmt;
 
 /// Like wgettext_fmt, but doesn't require an argument to format.
 /// For use in macros.
+#[macro_export]
 macro_rules! wgettext_maybe_fmt {
     (
     $string:expr // format string
     $(, $args:expr)* // list of expressions
     $(,)?   // optional trailing comma
     ) => {
-        crate::wutil::sprintf!(&crate::wutil::wgettext!($string), $($args),*)
+        $crate::wutil::sprintf!(&$crate::wutil::wgettext!($string), $($args),*)
     };
 }
-pub(crate) use wgettext_maybe_fmt;
+pub use wgettext_maybe_fmt;
 
 #[test]
 #[serial]

@@ -771,8 +771,8 @@ fn main() {
     // File path for debug output.
     let mut debug_output = None;
 
-    const short_opts: &wstr = L!("+d:hvwicD:");
-    const long_opts: &[woption] = &[
+    let short_opts: &wstr = L!("+d:hvwicD:");
+    let long_opts: &[woption] = &[
         wopt(L!("debug"), woption_argument_t::required_argument, 'd'),
         wopt(
             L!("debug-output"),

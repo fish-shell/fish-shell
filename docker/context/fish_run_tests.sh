@@ -4,7 +4,7 @@
 # It is the entry point for running Docker-based tests.
 
 cd ~/fish-build
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug /fish-source
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug /fish-source "$@"
 
 # Spawn a shell if FISH_RUN_SHELL_BEFORE_TESTS is set.
 if test -n "$FISH_RUN_SHELL_BEFORE_TESTS"

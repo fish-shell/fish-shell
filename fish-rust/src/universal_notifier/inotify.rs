@@ -67,16 +67,18 @@ impl UniversalNotifier for InotifyNotifier {
 
 #[test]
 fn test_inotify_notifiers() {
-    use crate::common::{charptr2wcstring, wcs2osstring};
+    use crate::common::{cstr2wcstring, wcs2osstring};
+    use std::ffi::CString;
     use std::fs::remove_dir_all;
     use std::path::PathBuf;
 
-    let template = std::ffi::CString::new("/tmp/fish_inotify_XXXXXX").unwrap();
+    let template = CString::new("/tmp/fish_inotify_XXXXXX").unwrap();
     let temp_dir_ptr = unsafe { libc::mkdtemp(template.into_raw() as *mut libc::c_char) };
     if temp_dir_ptr.is_null() {
         panic!("failed to create temp dir");
     }
-    let fake_uvars_dir = charptr2wcstring(temp_dir_ptr);
+    let tmp_dir = unsafe { CString::from_raw(temp_dir_ptr) };
+    let fake_uvars_dir = cstr2wcstring(tmp_dir.as_bytes_with_nul());
     let fake_uvars_path = fake_uvars_dir.clone() + "/fish_variables";
 
     let mut notifiers = Vec::new();

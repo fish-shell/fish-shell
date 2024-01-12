@@ -2,7 +2,7 @@ use crate::common::{
     escape_string, str2wcstring, unescape_string, wcs2string, EscapeFlags, EscapeStringStyle,
     UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
 };
-use crate::wchar::{widestrs, wstr, WString};
+use crate::wchar::{wstr, WString, L};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 use rand::{Rng, RngCore};
 use rand_pcg::Pcg64Mcg;
@@ -31,41 +31,39 @@ fn setlocale() {
     panic!("No UTF-8 locale found");
 }
 
-#[widestrs]
 #[test]
 fn test_escape_string() {
     let regex = |input| escape_string(input, EscapeStringStyle::Regex);
 
     // plain text should not be needlessly escaped
-    assert_eq!(regex("hello world!"L), "hello world!"L);
+    assert_eq!(regex(L!("hello world!")), L!("hello world!"));
 
     // all the following are intended to be ultimately matched literally - even if they
     // don't look like that's the intent - so we escape them.
-    assert_eq!(regex(".ext"L), "\\.ext"L);
-    assert_eq!(regex("{word}"L), "\\{word\\}"L);
-    assert_eq!(regex("hola-mundo"L), "hola\\-mundo"L);
+    assert_eq!(regex(L!(".ext")), L!("\\.ext"));
+    assert_eq!(regex(L!("{word}")), L!("\\{word\\}"));
+    assert_eq!(regex(L!("hola-mundo")), L!("hola\\-mundo"));
     assert_eq!(
-        regex("$17.42 is your total?"L),
-        "\\$17\\.42 is your total\\?"L
+        regex(L!("$17.42 is your total?")),
+        L!("\\$17\\.42 is your total\\?")
     );
     assert_eq!(
-        regex("not really escaped\\?"L),
-        "not really escaped\\\\\\?"L
+        regex(L!("not really escaped\\?")),
+        L!("not really escaped\\\\\\?")
     );
 }
 
-#[widestrs]
 #[test]
 pub fn test_unescape_sane() {
     const TEST_CASES: &[(&wstr, &wstr)] = &[
-        ("abcd"L, "abcd"L),
-        ("'abcd'"L, "abcd"L),
-        ("'abcd\\n'"L, "abcd\\n"L),
-        ("\"abcd\\n\""L, "abcd\\n"L),
-        ("\"abcd\\n\""L, "abcd\\n"L),
-        ("\\143"L, "c"L),
-        ("'\\143'"L, "\\143"L),
-        ("\\n"L, "\n"L), // \n normally becomes newline
+        (L!("abcd"), L!("abcd")),
+        (L!("'abcd'"), L!("abcd")),
+        (L!("'abcd\\n'"), L!("abcd\\n")),
+        (L!("\"abcd\\n\""), L!("abcd\\n")),
+        (L!("\"abcd\\n\""), L!("abcd\\n")),
+        (L!("\\143"), L!("c")),
+        (L!("'\\143'"), L!("\\143")),
+        (L!("\\n"), L!("\n")), // \n normally becomes newline
     ];
 
     for (input, expected) in TEST_CASES {
@@ -80,17 +78,16 @@ pub fn test_unescape_sane() {
     }
 }
 
-#[widestrs]
 #[test]
 fn test_escape_var() {
     const TEST_CASES: &[(&wstr, &wstr)] = &[
-        (" a"L, "_20_a"L),
-        ("a B "L, "a_20_42_20_"L),
-        ("a b "L, "a_20_b_20_"L),
-        (" B"L, "_20_42_"L),
-        (" f"L, "_20_f"L),
-        (" 1"L, "_20_31_"L),
-        ("a\nghi_"L, "a_0A_ghi__"L),
+        (L!(" a"), L!("_20_a")),
+        (L!("a B "), L!("a_20_42_20_")),
+        (L!("a b "), L!("a_20_b_20_")),
+        (L!(" B"), L!("_20_42_")),
+        (L!(" f"), L!("_20_f")),
+        (L!(" 1"), L!("_20_31_")),
+        (L!("a\nghi_"), L!("a_0A_ghi__")),
     ];
 
     for (input, expected) in TEST_CASES {
@@ -142,11 +139,10 @@ fn test_escape_random_url() {
     escape_test(EscapeStringStyle::Url, UnescapeStringStyle::Url);
 }
 
-#[widestrs]
 #[test]
 fn test_escape_no_printables() {
     // Verify that ESCAPE_NO_PRINTABLES also escapes backslashes so we don't regress on issue #3892.
-    let random_string = "line 1\\n\nline 2"L.to_owned();
+    let random_string = L!("line 1\\n\nline 2").to_owned();
     let escaped_string = escape_string(
         &random_string,
         EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),

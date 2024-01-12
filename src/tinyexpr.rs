@@ -95,7 +95,6 @@ pub enum ErrorKind {
     Unknown,
 }
 
-#[widestrs]
 impl ErrorKind {
     pub fn describe_wstr(&self) -> &'static wstr {
         match self {
@@ -273,50 +272,49 @@ fn npr(n: f64, r: f64) -> f64 {
     ncr(n, r) * fac(r)
 }
 
-#[widestrs]
 const BUILTINS: &[(&wstr, Function)] = &[
     // must be in alphabetical order
-    ("abs"L, Function::Fn1(f64::abs)),
-    ("acos"L, Function::Fn1(f64::acos)),
-    ("asin"L, Function::Fn1(f64::asin)),
-    ("atan"L, Function::Fn1(f64::atan)),
-    ("atan2"L, Function::Fn2(f64::atan2)),
+    (L!("abs"), Function::Fn1(f64::abs)),
+    (L!("acos"), Function::Fn1(f64::acos)),
+    (L!("asin"), Function::Fn1(f64::asin)),
+    (L!("atan"), Function::Fn1(f64::atan)),
+    (L!("atan2"), Function::Fn2(f64::atan2)),
     (
-        "bitand"L,
+        L!("bitand"),
         Function::Fn2(|a, b| bitwise_op(a, b, BitAnd::bitand)),
     ),
     (
-        "bitor"L,
+        L!("bitor"),
         Function::Fn2(|a, b| bitwise_op(a, b, BitOr::bitor)),
     ),
     (
-        "bitxor"L,
+        L!("bitxor"),
         Function::Fn2(|a, b| bitwise_op(a, b, BitXor::bitxor)),
     ),
-    ("ceil"L, Function::Fn1(f64::ceil)),
-    ("cos"L, Function::Fn1(f64::cos)),
-    ("cosh"L, Function::Fn1(f64::cosh)),
-    ("e"L, Function::Constant(E)),
-    ("exp"L, Function::Fn1(f64::exp)),
-    ("fac"L, Function::Fn1(fac)),
-    ("floor"L, Function::Fn1(f64::floor)),
-    ("ln"L, Function::Fn1(f64::ln)),
-    ("log"L, Function::Fn1(f64::log10)),
-    ("log10"L, Function::Fn1(f64::log10)),
-    ("log2"L, Function::Fn1(f64::log2)),
-    ("max"L, Function::FnN(maximum)),
-    ("min"L, Function::FnN(minimum)),
-    ("ncr"L, Function::Fn2(ncr)),
-    ("npr"L, Function::Fn2(npr)),
-    ("pi"L, Function::Constant(PI)),
-    ("pow"L, Function::Fn2(f64::powf)),
-    ("round"L, Function::Fn1(f64::round)),
-    ("sin"L, Function::Fn1(f64::sin)),
-    ("sinh"L, Function::Fn1(f64::sinh)),
-    ("sqrt"L, Function::Fn1(f64::sqrt)),
-    ("tan"L, Function::Fn1(f64::tan)),
-    ("tanh"L, Function::Fn1(f64::tanh)),
-    ("tau"L, Function::Constant(TAU)),
+    (L!("ceil"), Function::Fn1(f64::ceil)),
+    (L!("cos"), Function::Fn1(f64::cos)),
+    (L!("cosh"), Function::Fn1(f64::cosh)),
+    (L!("e"), Function::Constant(E)),
+    (L!("exp"), Function::Fn1(f64::exp)),
+    (L!("fac"), Function::Fn1(fac)),
+    (L!("floor"), Function::Fn1(f64::floor)),
+    (L!("ln"), Function::Fn1(f64::ln)),
+    (L!("log"), Function::Fn1(f64::log10)),
+    (L!("log10"), Function::Fn1(f64::log10)),
+    (L!("log2"), Function::Fn1(f64::log2)),
+    (L!("max"), Function::FnN(maximum)),
+    (L!("min"), Function::FnN(minimum)),
+    (L!("ncr"), Function::Fn2(ncr)),
+    (L!("npr"), Function::Fn2(npr)),
+    (L!("pi"), Function::Constant(PI)),
+    (L!("pow"), Function::Fn2(f64::powf)),
+    (L!("round"), Function::Fn1(f64::round)),
+    (L!("sin"), Function::Fn1(f64::sin)),
+    (L!("sinh"), Function::Fn1(f64::sinh)),
+    (L!("sqrt"), Function::Fn1(f64::sqrt)),
+    (L!("tan"), Function::Fn1(f64::tan)),
+    (L!("tanh"), Function::Fn1(f64::tanh)),
+    (L!("tau"), Function::Constant(TAU)),
 ];
 
 assert_sorted_by_name!(BUILTINS, 0);

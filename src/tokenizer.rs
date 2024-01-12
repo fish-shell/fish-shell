@@ -143,10 +143,9 @@ pub const TOK_SHOW_BLANK_LINES: TokFlags = TokFlags(4);
 pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
 
 impl From<TokenizerError> for &'static wstr {
-    #[widestrs]
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::none => ""L,
+            TokenizerError::none => L!(""),
             TokenizerError::unterminated_quote => {
                 wgettext!("Unexpected end of string, quotes are not balanced")
             }

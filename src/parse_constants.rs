@@ -184,21 +184,20 @@ impl Default for ParseTokenType {
 
 impl ParseTokenType {
     /// Return a string describing the token type.
-    #[widestrs]
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseTokenType::comment => "ParseTokenType::comment"L,
-            ParseTokenType::error => "ParseTokenType::error"L,
-            ParseTokenType::tokenizer_error => "ParseTokenType::tokenizer_error"L,
-            ParseTokenType::background => "ParseTokenType::background"L,
-            ParseTokenType::end => "ParseTokenType::end"L,
-            ParseTokenType::pipe => "ParseTokenType::pipe"L,
-            ParseTokenType::redirection => "ParseTokenType::redirection"L,
-            ParseTokenType::string => "ParseTokenType::string"L,
-            ParseTokenType::andand => "ParseTokenType::andand"L,
-            ParseTokenType::oror => "ParseTokenType::oror"L,
-            ParseTokenType::terminate => "ParseTokenType::terminate"L,
-            ParseTokenType::invalid => "ParseTokenType::invalid"L,
+            ParseTokenType::comment => L!("ParseTokenType::comment"),
+            ParseTokenType::error => L!("ParseTokenType::error"),
+            ParseTokenType::tokenizer_error => L!("ParseTokenType::tokenizer_error"),
+            ParseTokenType::background => L!("ParseTokenType::background"),
+            ParseTokenType::end => L!("ParseTokenType::end"),
+            ParseTokenType::pipe => L!("ParseTokenType::pipe"),
+            ParseTokenType::redirection => L!("ParseTokenType::redirection"),
+            ParseTokenType::string => L!("ParseTokenType::string"),
+            ParseTokenType::andand => L!("ParseTokenType::andand"),
+            ParseTokenType::oror => L!("ParseTokenType::oror"),
+            ParseTokenType::terminate => L!("ParseTokenType::terminate"),
+            ParseTokenType::invalid => L!("ParseTokenType::invalid"),
         }
     }
 }
@@ -211,28 +210,27 @@ impl Default for ParseKeyword {
 
 impl ParseKeyword {
     /// Return the keyword as a string.
-    #[widestrs]
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_exclam => "!"L,
-            ParseKeyword::kw_and => "and"L,
-            ParseKeyword::kw_begin => "begin"L,
-            ParseKeyword::kw_builtin => "builtin"L,
-            ParseKeyword::kw_case => "case"L,
-            ParseKeyword::kw_command => "command"L,
-            ParseKeyword::kw_else => "else"L,
-            ParseKeyword::kw_end => "end"L,
-            ParseKeyword::kw_exec => "exec"L,
-            ParseKeyword::kw_for => "for"L,
-            ParseKeyword::kw_function => "function"L,
-            ParseKeyword::kw_if => "if"L,
-            ParseKeyword::kw_in => "in"L,
-            ParseKeyword::kw_not => "not"L,
-            ParseKeyword::kw_or => "or"L,
-            ParseKeyword::kw_switch => "switch"L,
-            ParseKeyword::kw_time => "time"L,
-            ParseKeyword::kw_while => "while"L,
-            _ => "unknown_keyword"L,
+            ParseKeyword::kw_exclam => L!("!"),
+            ParseKeyword::kw_and => L!("and"),
+            ParseKeyword::kw_begin => L!("begin"),
+            ParseKeyword::kw_builtin => L!("builtin"),
+            ParseKeyword::kw_case => L!("case"),
+            ParseKeyword::kw_command => L!("command"),
+            ParseKeyword::kw_else => L!("else"),
+            ParseKeyword::kw_end => L!("end"),
+            ParseKeyword::kw_exec => L!("exec"),
+            ParseKeyword::kw_for => L!("for"),
+            ParseKeyword::kw_function => L!("function"),
+            ParseKeyword::kw_if => L!("if"),
+            ParseKeyword::kw_in => L!("in"),
+            ParseKeyword::kw_not => L!("not"),
+            ParseKeyword::kw_or => L!("or"),
+            ParseKeyword::kw_switch => L!("switch"),
+            ParseKeyword::kw_time => L!("time"),
+            ParseKeyword::kw_while => L!("while"),
+            _ => L!("unknown_keyword"),
         }
     }
 }
@@ -244,27 +242,26 @@ impl printf_compat::args::ToArg<'static> for ParseKeyword {
 }
 
 impl From<&wstr> for ParseKeyword {
-    #[widestrs]
     fn from(s: &wstr) -> Self {
         match s {
-            _ if s == "!"L => ParseKeyword::kw_exclam,
-            _ if s == "and"L => ParseKeyword::kw_and,
-            _ if s == "begin"L => ParseKeyword::kw_begin,
-            _ if s == "builtin"L => ParseKeyword::kw_builtin,
-            _ if s == "case"L => ParseKeyword::kw_case,
-            _ if s == "command"L => ParseKeyword::kw_command,
-            _ if s == "else"L => ParseKeyword::kw_else,
-            _ if s == "end"L => ParseKeyword::kw_end,
-            _ if s == "exec"L => ParseKeyword::kw_exec,
-            _ if s == "for"L => ParseKeyword::kw_for,
-            _ if s == "function"L => ParseKeyword::kw_function,
-            _ if s == "if"L => ParseKeyword::kw_if,
-            _ if s == "in"L => ParseKeyword::kw_in,
-            _ if s == "not"L => ParseKeyword::kw_not,
-            _ if s == "or"L => ParseKeyword::kw_or,
-            _ if s == "switch"L => ParseKeyword::kw_switch,
-            _ if s == "time"L => ParseKeyword::kw_time,
-            _ if s == "while"L => ParseKeyword::kw_while,
+            _ if s == L!("!") => ParseKeyword::kw_exclam,
+            _ if s == L!("and") => ParseKeyword::kw_and,
+            _ if s == L!("begin") => ParseKeyword::kw_begin,
+            _ if s == L!("builtin") => ParseKeyword::kw_builtin,
+            _ if s == L!("case") => ParseKeyword::kw_case,
+            _ if s == L!("command") => ParseKeyword::kw_command,
+            _ if s == L!("else") => ParseKeyword::kw_else,
+            _ if s == L!("end") => ParseKeyword::kw_end,
+            _ if s == L!("exec") => ParseKeyword::kw_exec,
+            _ if s == L!("for") => ParseKeyword::kw_for,
+            _ if s == L!("function") => ParseKeyword::kw_function,
+            _ if s == L!("if") => ParseKeyword::kw_if,
+            _ if s == L!("in") => ParseKeyword::kw_in,
+            _ if s == L!("not") => ParseKeyword::kw_not,
+            _ if s == L!("or") => ParseKeyword::kw_or,
+            _ if s == L!("switch") => ParseKeyword::kw_switch,
+            _ if s == L!("time") => ParseKeyword::kw_time,
+            _ if s == L!("while") => ParseKeyword::kw_while,
             _ => ParseKeyword::none,
         }
     }
@@ -402,27 +399,26 @@ impl ParseError {
     }
 }
 
-#[widestrs]
 pub fn token_type_user_presentable_description(
     type_: ParseTokenType,
     keyword: ParseKeyword,
 ) -> WString {
     if keyword != ParseKeyword::none {
-        return sprintf!("keyword: '%ls'"L, keyword.to_wstr());
+        return sprintf!(L!("keyword: '%ls'"), keyword.to_wstr());
     }
     match type_ {
-        ParseTokenType::string => "a string"L.to_owned(),
-        ParseTokenType::pipe => "a pipe"L.to_owned(),
-        ParseTokenType::redirection => "a redirection"L.to_owned(),
-        ParseTokenType::background => "a '&'"L.to_owned(),
-        ParseTokenType::andand => "'&&'"L.to_owned(),
-        ParseTokenType::oror => "'||'"L.to_owned(),
-        ParseTokenType::end => "end of the statement"L.to_owned(),
-        ParseTokenType::terminate => "end of the input"L.to_owned(),
-        ParseTokenType::error => "a parse error"L.to_owned(),
-        ParseTokenType::tokenizer_error => "an incomplete token"L.to_owned(),
-        ParseTokenType::comment => "a comment"L.to_owned(),
-        _ => sprintf!("a %ls"L, type_.to_wstr()),
+        ParseTokenType::string => L!("a string").to_owned(),
+        ParseTokenType::pipe => L!("a pipe").to_owned(),
+        ParseTokenType::redirection => L!("a redirection").to_owned(),
+        ParseTokenType::background => L!("a '&'").to_owned(),
+        ParseTokenType::andand => L!("'&&'").to_owned(),
+        ParseTokenType::oror => L!("'||'").to_owned(),
+        ParseTokenType::end => L!("end of the statement").to_owned(),
+        ParseTokenType::terminate => L!("end of the input").to_owned(),
+        ParseTokenType::error => L!("a parse error").to_owned(),
+        ParseTokenType::tokenizer_error => L!("an incomplete token").to_owned(),
+        ParseTokenType::comment => L!("a comment").to_owned(),
+        _ => sprintf!(L!("a %ls"), type_.to_wstr()),
     }
 }
 

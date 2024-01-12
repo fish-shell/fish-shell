@@ -121,8 +121,7 @@ impl PartialEq<ExpandResultCode> for ExpandResult {
 }
 
 /// The string represented by PROCESS_EXPAND_SELF
-#[widestrs]
-pub const PROCESS_EXPAND_SELF_STR: &wstr = "%self"L;
+pub const PROCESS_EXPAND_SELF_STR: &wstr = L!("%self");
 
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
@@ -296,26 +295,25 @@ pub fn expand_tilde(input: &mut WString, vars: &dyn Environment) {
 }
 
 /// Perform the opposite of tilde expansion on the string, which is modified in place.
-#[widestrs]
 pub fn replace_home_directory_with_tilde(s: &wstr, vars: &dyn Environment) -> WString {
     let mut result = s.to_owned();
     // Only absolute paths get this treatment.
-    if result.starts_with("/"L) {
-        let mut home_directory = "~"L.to_owned();
+    if result.starts_with(L!("/")) {
+        let mut home_directory = L!("~").to_owned();
         expand_tilde(&mut home_directory, vars);
         // If we can't get a home directory, don't replace anything.
         // This is the case e.g. with --no-execute
         if home_directory.is_empty() {
             return result;
         }
-        if !home_directory.ends_with("/"L) {
+        if !home_directory.ends_with(L!("/")) {
             home_directory.push('/');
         }
 
         // Now check if the home_directory prefixes the string.
         if result.starts_with(&home_directory) {
             // Success
-            result.replace_range(0..home_directory.len(), "~/"L);
+            result.replace_range(0..home_directory.len(), L!("~/"));
         }
     }
     result

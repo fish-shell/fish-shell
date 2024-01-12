@@ -127,7 +127,6 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
     }
 }
 
-#[widestrs]
 pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
@@ -135,10 +134,10 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let mut print_help = false;
     let print_hints = false;
 
-    const shortopts: &wstr = ":nh"L;
+    const shortopts: &wstr = L!(":nh");
     const longopts: &[woption] = &[
-        wopt("any"L, woption_argument_t::no_argument, 'n'),
-        wopt("help"L, woption_argument_t::no_argument, 'h'),
+        wopt(L!("any"), woption_argument_t::no_argument, 'n'),
+        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     ];
 
     let mut w = wgetopter_t::new(shortopts, longopts, argv);

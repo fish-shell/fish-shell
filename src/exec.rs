@@ -59,7 +59,6 @@ use std::os::fd::{FromRawFd, RawFd};
 use std::slice;
 use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicUsize, Arc};
-use widestring_suffix::widestrs;
 
 /// Execute the processes specified by \p j in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
@@ -472,7 +471,6 @@ fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     !wants_terminal
 }
 
-#[widestrs]
 fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
     // Do a regular launch -  but without forking first...
     let mut all_ios = block_io;
@@ -499,8 +497,8 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
     {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         if is_interactive_session() {
-            let shlvl_var = vars.getf("SHLVL"L, EnvMode::GLOBAL | EnvMode::EXPORT);
-            let mut shlvl_str = "0"L.to_owned();
+            let shlvl_var = vars.getf(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT);
+            let mut shlvl_str = L!("0").to_owned();
             if let Some(shlvl_var) = shlvl_var {
                 if let Ok(shlvl) = fish_wcstol(&shlvl_var.as_string()) {
                     if shlvl > 0 {
@@ -508,7 +506,7 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
                     }
                 }
             }
-            vars.set_one("SHLVL"L, EnvMode::GLOBAL | EnvMode::EXPORT, shlvl_str);
+            vars.set_one(L!("SHLVL"), EnvMode::GLOBAL | EnvMode::EXPORT, shlvl_str);
         }
 
         // launch_process _never_ returns.

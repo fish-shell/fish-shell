@@ -8,23 +8,22 @@ use crate::fallback::fish_mkstemp_cloexec;
 use super::*;
 
 #[test]
-#[widestrs]
 fn test_wdirname_wbasename() {
     // path, dir, base
     struct Test(&'static wstr, &'static wstr, &'static wstr);
     const testcases: &[Test] = &[
-        Test(""L, "."L, "."L),
-        Test("foo//"L, "."L, "foo"L),
-        Test("foo//////"L, "."L, "foo"L),
-        Test("/////foo"L, "/"L, "foo"L),
-        Test("//foo/////bar"L, "//foo"L, "bar"L),
-        Test("foo/////bar"L, "foo"L, "bar"L),
+        Test(L!(""), L!("."), L!(".")),
+        Test(L!("foo//"), L!("."), L!("foo")),
+        Test(L!("foo//////"), L!("."), L!("foo")),
+        Test(L!("/////foo"), L!("/"), L!("foo")),
+        Test(L!("//foo/////bar"), L!("//foo"), L!("bar")),
+        Test(L!("foo/////bar"), L!("foo"), L!("bar")),
         // Examples given in XPG4.2.
-        Test("/usr/lib"L, "/usr"L, "lib"L),
-        Test("usr"L, "."L, "usr"L),
-        Test("/"L, "/"L, "/"L),
-        Test("."L, "."L, "."L),
-        Test(".."L, "."L, ".."L),
+        Test(L!("/usr/lib"), L!("/usr"), L!("lib")),
+        Test(L!("usr"), L!("."), L!("usr")),
+        Test(L!("/"), L!("/"), L!("/")),
+        Test(L!("."), L!("."), L!(".")),
+        Test(L!(".."), L!("."), L!("..")),
     ];
 
     for tc in testcases {
@@ -54,7 +53,7 @@ fn test_wdirname_wbasename() {
     let last_slash = longpath.chars().rposition(|c| c == '/').unwrap();
     let longpath_dir = &longpath[..last_slash];
     assert_eq!(wdirname(&longpath), longpath_dir);
-    assert_eq!(wbasename(&longpath), "overlong"L);
+    assert_eq!(wbasename(&longpath), L!("overlong"));
 }
 
 #[test]

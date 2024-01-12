@@ -37,7 +37,6 @@ use libc::{
 };
 use lru::LruCache;
 use rand::Rng;
-use widestring_suffix::widestrs;
 
 use crate::{
     ast::{Ast, Node},
@@ -204,7 +203,6 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
 
 /// Returns the path for the history file for the given `session_id`, or `None` if it could not be
 /// loaded. If `suffix` is provided, append that suffix to the path; this is used for temporary files.
-#[widestrs]
 fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
     if session_id.is_empty() {
         return None;
@@ -216,7 +214,7 @@ fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
 
     result.push('/');
     result.push_utfstr(session_id);
-    result.push_utfstr("_history"L);
+    result.push_utfstr(L!("_history"));
     result.push_utfstr(suffix);
     Some(result)
 }

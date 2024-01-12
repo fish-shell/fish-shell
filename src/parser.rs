@@ -46,7 +46,6 @@ use std::sync::{
     atomic::{AtomicIsize, AtomicU64, Ordering},
     Arc,
 };
-use widestring_suffix::widestrs;
 
 /// block_t represents a block of commands.
 #[derive(Default)]
@@ -97,22 +96,21 @@ impl Block {
     }
 
     /// Description of the block, for debugging.
-    #[widestrs]
     pub fn description(&self) -> WString {
         let mut result = match self.typ() {
-            BlockType::while_block => "while"L,
-            BlockType::for_block => "for"L,
-            BlockType::if_block => "if"L,
-            BlockType::function_call => "function_call"L,
-            BlockType::function_call_no_shadow => "function_call_no_shadow"L,
-            BlockType::switch_block => "switch"L,
-            BlockType::subst => "substitution"L,
-            BlockType::top => "top"L,
-            BlockType::begin => "begin"L,
-            BlockType::source => "source"L,
-            BlockType::event => "event"L,
-            BlockType::breakpoint => "breakpoint"L,
-            BlockType::variable_assignment => "variable_assignment"L,
+            BlockType::while_block => L!("while"),
+            BlockType::for_block => L!("for"),
+            BlockType::if_block => L!("if"),
+            BlockType::function_call => L!("function_call"),
+            BlockType::function_call_no_shadow => L!("function_call_no_shadow"),
+            BlockType::switch_block => L!("switch"),
+            BlockType::subst => L!("substitution"),
+            BlockType::top => L!("top"),
+            BlockType::begin => L!("begin"),
+            BlockType::source => L!("source"),
+            BlockType::event => L!("event"),
+            BlockType::breakpoint => L!("breakpoint"),
+            BlockType::variable_assignment => L!("variable_assignment"),
         }
         .to_owned();
 

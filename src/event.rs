@@ -76,16 +76,15 @@ impl EventDescription {
         }
     }
 
-    #[widestrs]
     fn name(&self) -> &'static wstr {
         match self {
-            EventDescription::Any => "any"L,
-            EventDescription::Signal { .. } => "signal"L,
-            EventDescription::Variable { .. } => "variable"L,
-            EventDescription::ProcessExit { .. } => "process-exit"L,
-            EventDescription::JobExit { .. } => "job-exit"L,
-            EventDescription::CallerExit { .. } => "caller-exit"L,
-            EventDescription::Generic { .. } => "generic"L,
+            EventDescription::Any => L!("any"),
+            EventDescription::Signal { .. } => L!("signal"),
+            EventDescription::Variable { .. } => L!("variable"),
+            EventDescription::ProcessExit { .. } => L!("process-exit"),
+            EventDescription::JobExit { .. } => L!("job-exit"),
+            EventDescription::CallerExit { .. } => L!("caller-exit"),
+            EventDescription::Generic { .. } => L!("generic"),
         }
     }
 
@@ -609,15 +608,14 @@ pub fn fire(parser: &Parser, event: Event) {
     }
 }
 
-#[widestrs]
 pub const EVENT_FILTER_NAMES: [&wstr; 7] = [
-    "signal"L,
-    "variable"L,
-    "exit"L,
-    "process-exit"L,
-    "job-exit"L,
-    "caller-exit"L,
-    "generic"L,
+    L!("signal"),
+    L!("variable"),
+    L!("exit"),
+    L!("process-exit"),
+    L!("job-exit"),
+    L!("caller-exit"),
+    L!("generic"),
 ];
 
 /// Print all events. If type_filter is not empty, only output events with that type.

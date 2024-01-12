@@ -38,7 +38,6 @@ use std::os::fd::RawFd;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU64, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
-use widestring_suffix::widestrs;
 
 /// Types of processes.
 #[derive(Default, Eq, PartialEq)]
@@ -844,15 +843,14 @@ impl Job {
     /// due to reuse of freed job ids. Prevents overloading the debug comments with the full,
     /// untruncated job string when we don't care what the job is, only which of the currently
     /// running jobs it is.
-    #[widestrs]
     pub fn preview(&self) -> WString {
         if self.processes().is_empty() {
-            return ""L.to_owned();
+            return L!("").to_owned();
         }
         // Note argv0 may be empty in e.g. a block process.
         let procs = self.processes();
-        let result = procs.first().unwrap().argv0().unwrap_or("null"L);
-        result.to_owned() + "..."L
+        let result = procs.first().unwrap().argv0().unwrap_or(L!("null"));
+        result.to_owned() + L!("...")
     }
 
     /// \return our pgid, or none if we don't have one, or are internal to fish
@@ -1185,7 +1183,6 @@ pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
 
 /// Print the exit warning for the given jobs, which should have been obtained via
 /// jobs_requiring_warning_on_exit().
-#[widestrs]
 pub fn print_exit_warning_for_jobs(jobs: &JobList) {
     printf!("%s", wgettext!("There are still jobs active:\n"));
     printf!("%s", wgettext!("\n   PID  Command\n"));
@@ -1581,9 +1578,8 @@ fn call_job_summary(parser: &Parser, cmd: &wstr) {
 // \return a command which invokes fish_job_summary.
 // The process pointer may be null, in which case it represents the entire job.
 // Note this implements the arguments which fish_job_summary expects.
-#[widestrs]
 fn summary_command(j: &Job, p: Option<&Process>) -> WString {
-    let mut buffer = "fish_job_summary"L.to_owned();
+    let mut buffer = L!("fish_job_summary").to_owned();
 
     // Job id.
     buffer += &sprintf!(" %s", j.job_id().to_wstring())[..];
@@ -1599,9 +1595,9 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
         None => {
             // No process, we are summarizing the whole job.
             buffer += if j.is_stopped() {
-                " STOPPED"L
+                L!(" STOPPED")
             } else {
-                " ENDED"L
+                L!(" ENDED")
             };
         }
         Some(p) => {

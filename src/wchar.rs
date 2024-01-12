@@ -16,7 +16,6 @@ pub mod prelude {
         wchar_ext::{ToWString, WExt},
         wutil::{sprintf, wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str},
     };
-    pub use widestring_suffix::widestrs;
 }
 
 /// Creates a wstr string slice, like the "L" prefix of C++.
@@ -29,17 +28,6 @@ macro_rules! L {
     };
 }
 pub use L;
-
-/// A proc-macro for creating wide string literals using an L *suffix*.
-///  Example usage:
-/// ```ignore
-///  #[widestrs]
-///  pub fn func() {
-///     let s = "hello"L; // type &'static wstr
-///  }
-/// ```
-/// Note: the resulting string is NOT nul-terminated.
-pub use widestring_suffix::widestrs;
 
 /// Encode a literal byte in a UTF-32 character. This is required for e.g. the echo builtin, whose
 /// escape sequences can be used to construct raw byte sequences which are then interpreted as e.g.

@@ -244,6 +244,7 @@ impl DirIter {
     /// Read the next entry in the directory.
     /// This returns an error if readir errors, or Ok(None) if there are no more entries; else an Ok entry.
     /// This is slightly more efficient than the Iterator version, as it avoids allocating.
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
         errno::set_errno(errno::Errno(0));
         let dent = unsafe { libc::readdir(self.dir.dir()).as_ref() };

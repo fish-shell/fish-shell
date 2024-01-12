@@ -104,5 +104,4 @@ pub mod wildcard;
 pub mod wutil;
 
 #[cfg(test)]
-#[allow(unused_imports)] // Easy way to suppress warnings while we have two testing modes.
 mod tests;

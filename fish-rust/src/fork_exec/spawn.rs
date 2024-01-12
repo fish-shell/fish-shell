@@ -162,7 +162,7 @@ impl PosixSpawner {
     }
 
     // Attempt to spawn a new process.
-    pub fn spawn(
+    pub(crate) fn spawn(
         &mut self,
         cmd: *const c_char,
         argv: *const *mut c_char,

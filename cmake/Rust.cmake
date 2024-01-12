@@ -21,7 +21,7 @@ else()
     )
 endif()
 
-set(fish_rust_target "fish-rust")
+set(fish_rust_target "fish")
 
 set(FISH_CRATE_FEATURES)
 if(NOT DEFINED CARGO_FLAGS)
@@ -36,7 +36,7 @@ endif()
 
 corrosion_import_crate(
     MANIFEST_PATH "${CMAKE_SOURCE_DIR}/Cargo.toml"
-    CRATES "fish-rust"
+    CRATES "fish"
     "${FISH_CRATE_FEATURES}"
     FLAGS "${CARGO_FLAGS}"
 )
@@ -56,7 +56,6 @@ endif()
 
 # CMAKE_BINARY_DIR can include symlinks, since we want to compare this to the dir fish is executed in we need to canonicalize it.
 file(REAL_PATH "${CMAKE_BINARY_DIR}" fish_binary_dir)
-
 string(JOIN "," CURSES_LIBRARY_LIST ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY})
 
 # Tell Cargo where our build directory is so it can find config.h.
@@ -72,5 +71,3 @@ set(VARS_FOR_CARGO
     "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
     "CURSES_LIBRARY_LIST=${CURSES_LIBRARY_LIST}"
 )
-
-corrosion_set_env_vars(${fish_rust_target} ${VARS_FOR_CARGO})

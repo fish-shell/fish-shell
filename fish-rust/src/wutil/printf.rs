@@ -1,5 +1,5 @@
 // Re-export sprintf macro.
-pub(crate) use printf_compat::sprintf;
+pub use printf_compat::sprintf;
 
 #[cfg(test)]
 mod tests {

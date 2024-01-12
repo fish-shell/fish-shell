@@ -138,7 +138,9 @@ include(cmake/PCRE2.cmake)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
-  target_link_libraries(${target} fishlib)
+  # Tell Cargo where our build directory is so it can find config.h.
+  corrosion_set_env_vars(${target} ${VARS_FOR_CARGO})
+  corrosion_link_libraries(${target} fishlib)
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)
 
@@ -146,25 +148,18 @@ endfunction(FISH_LINK_DEPS_AND_SIGN)
 add_library(fishlib STATIC ${FISH_SRCS})
 target_sources(fishlib PRIVATE ${FISH_HEADERS})
 target_link_libraries(fishlib
-  fish-rust
   ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
-  ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY}
-  "fish-rust")
+  ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY})
 target_include_directories(fishlib PRIVATE
   ${CURSES_INCLUDE_DIRS})
 
 # Define fish.
-add_executable(fish src/fish.cpp)
 fish_link_deps_and_sign(fish)
 
 # Define fish_indent.
-add_executable(fish_indent
-               src/fish_indent.cpp)
 fish_link_deps_and_sign(fish_indent)
 
 # Define fish_key_reader.
-add_executable(fish_key_reader
-               src/fish_key_reader.cpp)
 fish_link_deps_and_sign(fish_key_reader)
 
 # Set up the docs.

@@ -172,12 +172,13 @@ pub fn flog_impl(s: &str) {
 }
 
 /// The entry point for flogging.
+#[macro_export]
 macro_rules! FLOG {
     ($category:ident, $($elem:expr),+ $(,)*) => {
-        if crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
+        if $crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
-            use crate::flog::{FloggableDisplay, FloggableDebug};
-            let mut vs = vec![format!("{}:", crate::flog::categories::$category.name)];
+            use $crate::flog::{FloggableDisplay, FloggableDebug};
+            let mut vs = vec![format!("{}:", $crate::flog::categories::$category.name)];
             $(
                 {
                    vs.push($elem.to_flog_str())
@@ -186,26 +187,28 @@ macro_rules! FLOG {
             // We don't use locking here so we have to append our own newline to avoid multiple writes.
             let mut v = vs.join(" ");
             v.push('\n');
-            crate::flog::flog_impl(&v);
+            $crate::flog::flog_impl(&v);
         }
     };
 }
 
+#[macro_export]
 macro_rules! FLOGF {
     ($category:ident, $fmt: expr, $($elem:expr),+ $(,)*) => {
-        crate::flog::FLOG!($category, crate::wutil::sprintf!($fmt, $($elem),*))
+        $crate::flog::FLOG!($category, $crate::wutil::sprintf!($fmt, $($elem),*))
     }
 }
 
+#[macro_export]
 macro_rules! should_flog {
     ($category:ident) => {
-        crate::flog::categories::$category
+        $crate::flog::categories::$category
             .enabled
             .load(std::sync::atomic::Ordering::Relaxed)
     };
 }
 
-pub(crate) use {should_flog, FLOG, FLOGF};
+pub use {should_flog, FLOG, FLOGF};
 
 /// For each category, if its name matches the wildcard, set its enabled to the given sense.
 fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {

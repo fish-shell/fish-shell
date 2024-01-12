@@ -724,7 +724,7 @@ fn fork_child_for_process(
                     job.job_id().as_num(),
                     narrow_cmd.as_ptr(),
                     narrow_argv0.as_ptr(),
-                );
+                )
             }
         }
     }

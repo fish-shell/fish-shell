@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-use crate::{
+use fish::{
     ast::Ast,
     builtins::shared::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
@@ -25,17 +25,19 @@ use crate::{
     common::{
         escape, exit_without_destructors, get_executable_path,
         restore_term_foreground_process_group_for_exit, save_term_foreground_process_group,
-        scoped_push_replacer, str2wcstring, wcs2string, PROFILING_ACTIVE, PROGRAM_NAME,
+        scoped_push_replacer, str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE,
+        PROGRAM_NAME,
     },
     env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
         ConfigPaths, EnvMode,
     },
+    eprintf,
     event::{self, Event},
     fds::set_cloexec,
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
-    function, future_feature_flags as features, history,
+    fprintf, function, future_feature_flags as features, history,
     history::start_private_mode,
     io::IoChain,
     libc::setlinebuf,
@@ -45,6 +47,7 @@ use crate::{
     parse_util::parse_util_detect_errors_in_ast,
     parser::{BlockType, Parser},
     path::path_get_config,
+    printf,
     proc::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session,
@@ -64,11 +67,6 @@ use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
-
-// FIXME: when the crate is actually called fish and not fish-rust, read this from cargo
-// See: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
-// for reference
-pub const PACKAGE_NAME: &str = "fish"; // env!("CARGO_PKG_NAME");
 
 // FIXME: the following should just use env!(), this is to make `cargo test` work without CMake for now
 const DOC_DIR: &str = {
@@ -341,7 +339,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
-    use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
+    use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
@@ -436,7 +434,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
             'v' => {
                 printf!(
                     "%s",
-                    wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, crate::BUILD_VERSION)
+                    wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
                 );
                 std::process::exit(0);
             }
@@ -491,8 +489,7 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
     .unwrap()
 }
 
-#[no_mangle]
-extern "C" fn fish_main() -> i32 {
+fn main() {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
@@ -633,7 +630,7 @@ extern "C" fn fish_main() -> i32 {
     }
     features::set_from_string(opts.features.as_utfstr());
     proc_init();
-    crate::env::misc_init();
+    fish::env::misc_init();
     reader_init();
 
     let parser = Parser::principal_parser();
@@ -706,7 +703,7 @@ extern "C" fn fish_main() -> i32 {
                 "no-execute mode enabled and no script given. Exiting"
             );
             // above line should always exit
-            return libc::EXIT_FAILURE;
+            std::process::exit(libc::EXIT_FAILURE);
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {

@@ -14,7 +14,7 @@ edition = "2021"
 overflow-checks = true
 
 [package]
-name = "fish-rust"
+name = "fish"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -50,9 +50,21 @@ cc = "1.0.83"
 rsconf = "0.1.1"
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["rlib"]
 path = "fish-rust/src/lib.rs"
 doctest = false
+
+[[bin]]
+name = "fish"
+path = "fish-rust/src/bin/fish.rs"
+
+[[bin]]
+name = "fish_indent"
+path = "fish-rust/src/bin/fish_indent.rs"
+
+[[bin]]
+name = "fish_key_reader"
+path = "fish-rust/src/bin/fish_key_reader.rs"
 
 [features]
 default = []

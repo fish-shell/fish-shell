@@ -7,37 +7,40 @@ use std::sync::atomic::Ordering;
 
 use libc::{LC_ALL, STDOUT_FILENO};
 
-use crate::ast::{
+use fish::ast::{
     self, Ast, Category, Leaf, List, Node, NodeVisitor, SourceRangeList, Traversal, Type,
 };
-use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
-use crate::common::{
+use fish::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+use fish::common::{
     str2wcstring, unescape_string, wcs2string, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
     PROGRAM_NAME,
 };
-use crate::env::env_init;
-use crate::env::environment::Environment;
-use crate::env::EnvStack;
-use crate::expand::INTERNAL_SEPARATOR;
-use crate::fds::set_cloexec;
+use fish::env::env_init;
+use fish::env::environment::Environment;
+use fish::env::EnvStack;
+use fish::eprintf;
+use fish::expand::INTERNAL_SEPARATOR;
+use fish::fds::set_cloexec;
+use fish::fprintf;
 #[allow(unused_imports)]
-use crate::future::{IsOkAnd, IsSomeAnd, IsSorted};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
-use crate::libc::setlinebuf;
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::parse_util_compute_indents;
-use crate::print_help::print_help;
-use crate::threads;
-use crate::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS};
-use crate::topic_monitor::topic_monitor_init;
-use crate::wchar::prelude::*;
-use crate::wcstringutil::count_preceding_backslashes;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
-use crate::wutil::perror;
-use crate::wutil::{fish_iswalnum, write_to_fd};
-use crate::{
+use fish::future::{IsOkAnd, IsSomeAnd, IsSorted};
+use fish::global_safety::RelaxedAtomicBool;
+use fish::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
+use fish::libc::setlinebuf;
+use fish::operation_context::OperationContext;
+use fish::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
+use fish::parse_util::parse_util_compute_indents;
+use fish::print_help::print_help;
+use fish::printf;
+use fish::threads;
+use fish::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS};
+use fish::topic_monitor::topic_monitor_init;
+use fish::wchar::prelude::*;
+use fish::wcstringutil::count_preceding_backslashes;
+use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use fish::wutil::perror;
+use fish::wutil::{fish_iswalnum, write_to_fd};
+use fish::{
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd},
     future_feature_flags,
 };
@@ -728,8 +731,7 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
     count_preceding_backslashes(text, idx) % 2 == 1
 }
 
-#[no_mangle]
-extern "C" fn fish_indent_main() -> i32 {
+fn main() {
     PROGRAM_NAME.set(L!("fish_indent")).unwrap();
 
     topic_monitor_init();
@@ -804,7 +806,7 @@ extern "C" fn fish_indent_main() -> i32 {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
                 print_help("fish_indent");
-                return STATUS_CMD_OK.unwrap();
+                std::process::exit(STATUS_CMD_OK.unwrap());
             }
             'v' => {
                 printf!(
@@ -812,10 +814,10 @@ extern "C" fn fish_indent_main() -> i32 {
                     wgettext_fmt!(
                         "%s, version %s\n",
                         PROGRAM_NAME.get().unwrap(),
-                        crate::BUILD_VERSION
+                        fish::BUILD_VERSION
                     )
                 );
-                return STATUS_CMD_OK.unwrap();
+                std::process::exit(STATUS_CMD_OK.unwrap());
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
@@ -838,7 +840,7 @@ extern "C" fn fish_indent_main() -> i32 {
             'o' => {
                 debug_output = Some(w.woptarg.unwrap());
             }
-            _ => return STATUS_CMD_ERROR.unwrap(),
+            _ => std::process::exit(STATUS_CMD_ERROR.unwrap()),
         }
     }
 
@@ -854,7 +856,7 @@ extern "C" fn fish_indent_main() -> i32 {
         if file.is_null() {
             eprintf!("Could not open file %s\n", debug_output);
             perror("fopen");
-            return -1;
+            std::process::exit(-1);
         }
         let fd = unsafe { libc::fileno(file) };
         set_cloexec(fd, true);
@@ -876,11 +878,11 @@ extern "C" fn fish_indent_main() -> i32 {
                         PROGRAM_NAME.get().unwrap()
                     )
                 );
-                return STATUS_CMD_ERROR.unwrap();
+                std::process::exit(STATUS_CMD_ERROR.unwrap());
             }
             match read_file(stdin()) {
                 Ok(s) => src = s,
-                Err(()) => return STATUS_CMD_ERROR.unwrap(),
+                Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
             }
         } else {
             let arg = args[i];
@@ -888,7 +890,7 @@ extern "C" fn fish_indent_main() -> i32 {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
-                        Err(()) => return STATUS_CMD_ERROR.unwrap(),
+                        Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
                     }
                     output_location = arg;
                 }
@@ -897,7 +899,7 @@ extern "C" fn fish_indent_main() -> i32 {
                         "%s",
                         wgettext_fmt!("Opening \"%s\" failed: %s\n", arg, err.to_string())
                     );
-                    return STATUS_CMD_ERROR.unwrap();
+                    std::process::exit(STATUS_CMD_ERROR.unwrap());
                 }
             }
         }
@@ -942,7 +944,7 @@ extern "C" fn fish_indent_main() -> i32 {
                                 err.to_string()
                             )
                         );
-                        return STATUS_CMD_ERROR.unwrap();
+                        std::process::exit(STATUS_CMD_ERROR.unwrap());
                     }
                 }
             }
@@ -972,7 +974,7 @@ extern "C" fn fish_indent_main() -> i32 {
         let _ = write_to_fd(&colored_output, STDOUT_FILENO);
         i += 1;
     }
-    retval
+    std::process::exit(retval)
 }
 
 static DUMP_PARSE_TREE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

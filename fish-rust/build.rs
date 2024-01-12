@@ -1,3 +1,5 @@
+#![allow(clippy::uninlined_format_args)]
+
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;

@@ -1,5 +1,9 @@
 //! The fish_indent program.
 
+// Delete this once we require Rust 1.74.
+#![allow(unstable_name_collisions)]
+#![allow(clippy::uninlined_format_args)]
+
 use std::ffi::{CString, OsStr};
 use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;

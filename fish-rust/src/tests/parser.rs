@@ -1,5 +1,4 @@
 use crate::ast::{self, Ast, List, Node, Traversal};
-use crate::builtins::shared::{STATUS_CMD_OK, STATUS_UNMATCHED_WILDCARD};
 use crate::common::ScopeGuard;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
@@ -12,7 +11,6 @@ use crate::reader::{
     reader_current_data, reader_pop, reader_push, reader_reset_interrupted, ReaderConfig,
 };
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
-use crate::tests::prelude::*;
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;

@@ -1,19 +1,16 @@
-use crate::common::{
-    cstr2wcstring, is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string,
-};
-use crate::env::{EnvDyn, EnvMode, EnvStack, Environment};
+use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring};
+use crate::env::{EnvMode, EnvStack};
 use crate::fds::{wopen_cloexec, AutoCloseFd};
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
-use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-use libc::{O_RDONLY, STDERR_FILENO};
+use libc::O_RDONLY;
 use rand::random;
 use std::collections::VecDeque;
-use std::ffi::{CString, OsStr, OsString};
+use std::ffi::CString;
 use std::io::BufReader;
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;

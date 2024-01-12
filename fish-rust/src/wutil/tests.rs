@@ -4,7 +4,6 @@ use rand::random;
 use std::{ffi::CString, ptr};
 
 use crate::fallback::fish_mkstemp_cloexec;
-use crate::tests::prelude::*;
 
 use super::*;
 

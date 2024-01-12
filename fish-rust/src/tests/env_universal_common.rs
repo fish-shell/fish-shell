@@ -2,7 +2,6 @@ use crate::common::wcs2osstring;
 use crate::common::ScopeGuard;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
-use crate::flog::FLOG;
 use crate::parser::Parser;
 use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;

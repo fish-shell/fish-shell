@@ -2,7 +2,7 @@ use crate::abbrs::{self, with_abbrs_mut, Abbreviation};
 use crate::complete::{
     complete, complete_add, complete_add_wrapper, complete_get_wrap_targets,
     complete_remove_wrapper, sort_and_prioritize, CompleteFlags, CompleteOptionType,
-    CompletionList, CompletionMode, CompletionRequestOptions,
+    CompletionMode, CompletionRequestOptions,
 };
 use crate::env::{EnvMode, Environment};
 use crate::io::IoChain;
@@ -11,7 +11,6 @@ use crate::operation_context::{
 };
 use crate::parser::Parser;
 use crate::reader::completion_apply_to_command_line;
-use crate::tests::prelude::*;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;

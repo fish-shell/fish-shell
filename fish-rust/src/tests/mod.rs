@@ -1,5 +1,3 @@
-use crate::wchar::prelude::*;
-
 mod abbrs;
 mod common;
 mod complete;

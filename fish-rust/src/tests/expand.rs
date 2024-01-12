@@ -8,7 +8,6 @@ use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
 use crate::parse_constants::ParseErrorList;
 use crate::parser::Parser;
 use crate::tests::prelude::*;
-use crate::tests::prelude::*;
 use crate::wildcard::ANY_STRING;
 use crate::{
     expand::{expand_string, ExpandFlags},

@@ -6,10 +6,7 @@ use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::{
     env::EnvStack,
-    highlight::{
-        highlight_shell, is_potential_path, HighlightColorResolver, HighlightRole, HighlightSpec,
-        PathFlags,
-    },
+    highlight::{highlight_shell, is_potential_path, HighlightRole, HighlightSpec, PathFlags},
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT},
 };
 use libc::PATH_MAX;

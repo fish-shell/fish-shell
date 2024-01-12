@@ -1,12 +1,8 @@
 use crate::abbrs::{self, abbrs_get_set, abbrs_match, Abbreviation};
-use crate::complete::CompleteFlags;
 use crate::editable_line::{apply_edit, Edit};
 use crate::highlight::HighlightSpec;
 use crate::parser::Parser;
-use crate::reader::{
-    combine_command_and_autosuggestion, completion_apply_to_command_line,
-    reader_expand_abbreviation_at_cursor,
-};
+use crate::reader::reader_expand_abbreviation_at_cursor;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 

@@ -15,12 +15,12 @@ fn main() {
         }
     }
 
-    let build_dir = PathBuf::from(
-        std::env::var("FISH_BUILD_DIR")
-            // Add our default to enable tools that don't go through CMake, like "cargo test"
-            // and the language server.
-            .unwrap_or("./build".into()),
-    );
+    let rust_dir = env!("CARGO_MANIFEST_DIR");
+    // Add our default to enable tools that don't go through CMake, like "cargo test" and the
+    // language server.
+    let build_dir =
+        PathBuf::from(std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{rust_dir}/build")));
+    println!("cargo:rustc-env=FISH_BUILD_DIR={}", build_dir.display());
 
     let cached_curses_libnames = Path::join(&build_dir, "cached-curses-libnames");
     let curses_libnames: Vec<String> = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
@@ -65,12 +65,6 @@ fn main() {
     if compiles("fish-rust/src/cfg/spawn.c") {
         println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
     }
-
-    let rust_dir = env!("CARGO_MANIFEST_DIR");
-    // If FISH_BUILD_DIR is given by CMake, then use it; otherwise assume it's at build.
-    let fish_build_dir =
-        std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{}/{}", rust_dir, "build/"));
-    println!("cargo:rustc-env=FISH_BUILD_DIR={fish_build_dir}");
 
     let mut build = cc::Build::new();
     // Add to the default library search path

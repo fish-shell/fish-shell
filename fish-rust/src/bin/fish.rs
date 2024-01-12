@@ -96,7 +96,6 @@ const BIN_DIR: &str = {
 
 // C++ had this as optional, and used CMAKE_BINARY_DIR,
 // should probably be swapped to `OUT_DIR` once CMake is gone?
-// const OUT_DIR: &str = env!("OUT_DIR", "OUT_DIR was not specified");
 const OUT_DIR: &str = env!("FISH_BUILD_DIR");
 
 /// container to hold the options specified within the command line

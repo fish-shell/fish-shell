@@ -52,6 +52,7 @@ rsconf = "0.1.1"
 [lib]
 crate-type = ["staticlib"]
 path = "fish-rust/src/lib.rs"
+doctest = false
 
 [features]
 default = []

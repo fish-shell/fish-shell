@@ -487,7 +487,7 @@ pub fn iothread_service_main(ctx: &mut ReaderData) {
 }
 
 /// Does nasty polling via select() and marked as unsafe because it should only be used for testing.
-pub unsafe fn iothread_drain_all(ctx: &mut ReaderData) {
+pub(crate) unsafe fn iothread_drain_all(ctx: &mut ReaderData) {
     while borrow_io_thread_pool()
         .shared
         .mutex

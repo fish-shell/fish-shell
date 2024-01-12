@@ -162,14 +162,6 @@ impl<NodeType: Node> NodeRef<NodeType> {
     pub fn parsed_source_ref(&self) -> ParsedSourceRef {
         Pin::into_inner(self.parsed_source.clone())
     }
-
-    /// Construct a NodeRef from ParsedSource and a node, which must point into that parsed source.
-    pub unsafe fn from_parts(parsed_source: ParsedSourceRef, node: &NodeType) -> Self {
-        NodeRef {
-            parsed_source: Pin::new(parsed_source),
-            node: node as *const NodeType,
-        }
-    }
 }
 
 // Safety: NodeRef is Send and Sync because it's just a pointer into a parse tree, which is pinned.

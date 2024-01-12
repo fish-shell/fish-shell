@@ -54,7 +54,7 @@ file(REAL_PATH "${CMAKE_BINARY_DIR}" fish_binary_dir)
 string(JOIN "," CURSES_LIBRARY_LIST ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY})
 
 # Tell Cargo where our build directory is so it can find config.h.
-corrosion_set_env_vars(${fish_rust_target}
+set(VARS_FOR_CARGO
     "FISH_BUILD_DIR=${fish_binary_dir}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
     # Temporary hack to propogate CMake flags/options to build.rs.
@@ -66,3 +66,5 @@ corrosion_set_env_vars(${fish_rust_target}
     "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
     "CURSES_LIBRARY_LIST=${CURSES_LIBRARY_LIST}"
 )
+
+corrosion_set_env_vars(${fish_rust_target} ${VARS_FOR_CARGO})

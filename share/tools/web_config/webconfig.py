@@ -1674,13 +1674,20 @@ url = "http://localhost:%d/%s/%s" % (PORT, authkey, initial_tab)
 # Create temporary file to hold redirect to real server. This prevents exposing
 # the URL containing the authentication key on the command line (see
 # CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438).
+#
+
+# If on Windows, the file needs to be closed after writing, otherwise, the browser won't be able to open it."
+# unfortunately this was added in python 3.12, so we don't add it on other platforms
+# to support older python versions there.
+kwargs = {}
+if is_windows():
+    kwargs["delete_on_close"] = False
 f = tempfile.NamedTemporaryFile(
     prefix="web_config",
     suffix=".html",
     mode="w",
     delete=True,
-    # If on Windows, the file needs to be closed after writing, otherwise, the browser won't be able to open it."
-    delete_on_close=not is_windows(),
+    **kwargs,
 )
 
 f.write(redirect_template_html % (url, url))

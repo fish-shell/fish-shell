@@ -479,13 +479,6 @@ fn test_autosuggest_suggest_special() {
         };
     }
 
-    //     // We execute LSAN with use_tls=0 under CI to avoid a SIGSEGV crash in LSAN itself.
-    //     // Unfortunately, this causes it to incorrectly flag a memory leak here that doesn't reproduce
-    //     // locally with use_tls=1.
-    // #ifdef FISH_CI_SAN
-    //     __lsan::ScopedDisabler disable_leak_detection{};
-    // #endif
-
     std::fs::create_dir_all("test/autosuggest_test/0foobar").unwrap();
     std::fs::create_dir_all("test/autosuggest_test/1foo bar").unwrap();
     std::fs::create_dir_all("test/autosuggest_test/2foo  bar").unwrap();

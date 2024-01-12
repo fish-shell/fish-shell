@@ -1,7 +1,6 @@
 use super::prelude::*;
 use crate::event;
 
-#[widestrs]
 pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
 
@@ -19,7 +18,7 @@ pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let Some(event_name) = argv.get(opts.optind) else {
         streams
             .err
-            .append(sprintf!("%ls: expected event name\n"L, cmd));
+            .append(sprintf!(L!("%ls: expected event name\n"), cmd));
         return STATUS_INVALID_ARGS;
     };
 

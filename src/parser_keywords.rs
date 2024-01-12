@@ -2,33 +2,45 @@
 
 use crate::wchar::prelude::*;
 
-#[widestrs]
-const SKIP_KEYWORDS: &[&wstr] = &["else"L, "begin"L];
-#[widestrs]
+const SKIP_KEYWORDS: &[&wstr] = &[L!("else"), L!("begin")];
 const SUBCOMMAND_KEYWORDS: &[&wstr] = &[
-    "command"L, "builtin"L, "while"L, "exec"L, "if"L, "and"L, "or"L, "not"L, "time"L, "begin"L,
+    L!("command"),
+    L!("builtin"),
+    L!("while"),
+    L!("exec"),
+    L!("if"),
+    L!("and"),
+    L!("or"),
+    L!("not"),
+    L!("time"),
+    L!("begin"),
 ];
-#[widestrs]
-const BLOCK_KEYWORDS: &[&wstr] = &["for"L, "while"L, "if"L, "function"L, "switch"L, "begin"L];
+const BLOCK_KEYWORDS: &[&wstr] = &[
+    L!("for"),
+    L!("while"),
+    L!("if"),
+    L!("function"),
+    L!("switch"),
+    L!("begin"),
+];
 
 // Don't forget to add any new reserved keywords to the documentation
-#[widestrs]
 const RESERVED_KEYWORDS: &[&wstr] = &[
-    "end"L,
-    "case"L,
-    "else"L,
-    "return"L,
-    "continue"L,
-    "break"L,
-    "argparse"L,
-    "read"L,
-    "string"L,
-    "set"L,
-    "status"L,
-    "test"L,
-    "["L,
-    "_"L,
-    "eval"L,
+    L!("end"),
+    L!("case"),
+    L!("else"),
+    L!("return"),
+    L!("continue"),
+    L!("break"),
+    L!("argparse"),
+    L!("read"),
+    L!("string"),
+    L!("set"),
+    L!("status"),
+    L!("test"),
+    L!("["),
+    L!("_"),
+    L!("eval"),
 ];
 
 // The lists above are purposely implemented separately from the logic below, so that future

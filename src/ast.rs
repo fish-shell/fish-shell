@@ -2224,47 +2224,46 @@ impl BlockStatementHeaderVariant {
 }
 
 /// \return a string literal name for an ast type.
-#[widestrs]
 pub fn ast_type_to_string(t: Type) -> &'static wstr {
     match t {
-        Type::token_base => "token_base"L,
-        Type::keyword_base => "keyword_base"L,
-        Type::redirection => "redirection"L,
-        Type::variable_assignment => "variable_assignment"L,
-        Type::variable_assignment_list => "variable_assignment_list"L,
-        Type::argument_or_redirection => "argument_or_redirection"L,
-        Type::argument_or_redirection_list => "argument_or_redirection_list"L,
-        Type::statement => "statement"L,
-        Type::job_pipeline => "job_pipeline"L,
-        Type::job_conjunction => "job_conjunction"L,
-        Type::for_header => "for_header"L,
-        Type::while_header => "while_header"L,
-        Type::function_header => "function_header"L,
-        Type::begin_header => "begin_header"L,
-        Type::block_statement => "block_statement"L,
-        Type::if_clause => "if_clause"L,
-        Type::elseif_clause => "elseif_clause"L,
-        Type::elseif_clause_list => "elseif_clause_list"L,
-        Type::else_clause => "else_clause"L,
-        Type::if_statement => "if_statement"L,
-        Type::case_item => "case_item"L,
-        Type::switch_statement => "switch_statement"L,
-        Type::decorated_statement => "decorated_statement"L,
-        Type::not_statement => "not_statement"L,
-        Type::job_continuation => "job_continuation"L,
-        Type::job_continuation_list => "job_continuation_list"L,
-        Type::job_conjunction_continuation => "job_conjunction_continuation"L,
-        Type::andor_job => "andor_job"L,
-        Type::andor_job_list => "andor_job_list"L,
-        Type::freestanding_argument_list => "freestanding_argument_list"L,
-        Type::token_conjunction => "token_conjunction"L,
-        Type::job_conjunction_continuation_list => "job_conjunction_continuation_list"L,
-        Type::maybe_newlines => "maybe_newlines"L,
-        Type::token_pipe => "token_pipe"L,
-        Type::case_item_list => "case_item_list"L,
-        Type::argument => "argument"L,
-        Type::argument_list => "argument_list"L,
-        Type::job_list => "job_list"L,
+        Type::token_base => L!("token_base"),
+        Type::keyword_base => L!("keyword_base"),
+        Type::redirection => L!("redirection"),
+        Type::variable_assignment => L!("variable_assignment"),
+        Type::variable_assignment_list => L!("variable_assignment_list"),
+        Type::argument_or_redirection => L!("argument_or_redirection"),
+        Type::argument_or_redirection_list => L!("argument_or_redirection_list"),
+        Type::statement => L!("statement"),
+        Type::job_pipeline => L!("job_pipeline"),
+        Type::job_conjunction => L!("job_conjunction"),
+        Type::for_header => L!("for_header"),
+        Type::while_header => L!("while_header"),
+        Type::function_header => L!("function_header"),
+        Type::begin_header => L!("begin_header"),
+        Type::block_statement => L!("block_statement"),
+        Type::if_clause => L!("if_clause"),
+        Type::elseif_clause => L!("elseif_clause"),
+        Type::elseif_clause_list => L!("elseif_clause_list"),
+        Type::else_clause => L!("else_clause"),
+        Type::if_statement => L!("if_statement"),
+        Type::case_item => L!("case_item"),
+        Type::switch_statement => L!("switch_statement"),
+        Type::decorated_statement => L!("decorated_statement"),
+        Type::not_statement => L!("not_statement"),
+        Type::job_continuation => L!("job_continuation"),
+        Type::job_continuation_list => L!("job_continuation_list"),
+        Type::job_conjunction_continuation => L!("job_conjunction_continuation"),
+        Type::andor_job => L!("andor_job"),
+        Type::andor_job_list => L!("andor_job_list"),
+        Type::freestanding_argument_list => L!("freestanding_argument_list"),
+        Type::token_conjunction => L!("token_conjunction"),
+        Type::job_conjunction_continuation_list => L!("job_conjunction_continuation_list"),
+        Type::maybe_newlines => L!("maybe_newlines"),
+        Type::token_pipe => L!("token_pipe"),
+        Type::case_item_list => L!("case_item_list"),
+        Type::argument => L!("argument"),
+        Type::argument_list => L!("argument_list"),
+        Type::job_list => L!("job_list"),
     }
 }
 
@@ -2794,7 +2793,6 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         self.depth += 1
     }
 
-    #[widestrs]
     fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult) {
         self.depth -= 1;
 
@@ -2817,27 +2815,27 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 }
                 Type::for_header => {
                     let n = cursor.as_for_header().unwrap();
-                    break Some((n.kw_for.range.unwrap(), "for loop"L));
+                    break Some((n.kw_for.range.unwrap(), L!("for loop")));
                 }
                 Type::while_header => {
                     let n = cursor.as_while_header().unwrap();
-                    break Some((n.kw_while.range.unwrap(), "while loop"L));
+                    break Some((n.kw_while.range.unwrap(), L!("while loop")));
                 }
                 Type::function_header => {
                     let n = cursor.as_function_header().unwrap();
-                    break Some((n.kw_function.range.unwrap(), "function definition"L));
+                    break Some((n.kw_function.range.unwrap(), L!("function definition")));
                 }
                 Type::begin_header => {
                     let n = cursor.as_begin_header().unwrap();
-                    break Some((n.kw_begin.range.unwrap(), "begin"L));
+                    break Some((n.kw_begin.range.unwrap(), L!("begin")));
                 }
                 Type::if_statement => {
                     let n = cursor.as_if_statement().unwrap();
-                    break Some((n.if_clause.kw_if.range.unwrap(), "if statement"L));
+                    break Some((n.if_clause.kw_if.range.unwrap(), L!("if statement")));
                 }
                 Type::switch_statement => {
                     let n = cursor.as_switch_statement().unwrap();
-                    break Some((n.kw_switch.range.unwrap(), "switch statement"L));
+                    break Some((n.kw_switch.range.unwrap(), L!("switch statement")));
                 }
                 _ => break None,
             }
@@ -2919,31 +2917,29 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 
 /// Helper to describe a list of keywords.
 /// TODO: these need to be localized properly.
-#[widestrs]
 fn keywords_user_presentable_description(kws: &'static [ParseKeyword]) -> WString {
     assert!(!kws.is_empty(), "Should not be empty list");
     if kws.len() == 1 {
-        return sprintf!("keyword '%ls'"L, kws[0]);
+        return sprintf!(L!("keyword '%ls'"), kws[0]);
     }
-    let mut res = "keywords "L.to_owned();
+    let mut res = L!("keywords ").to_owned();
     for (i, kw) in kws.iter().enumerate() {
         if i != 0 {
-            res += " or "L;
+            res += L!(" or ");
         }
-        res += &sprintf!("'%ls'"L, *kw)[..];
+        res += &sprintf!(L!("'%ls'"), *kw)[..];
     }
     res
 }
 
 /// Helper to describe a list of token types.
 /// TODO: these need to be localized properly.
-#[widestrs]
 fn token_types_user_presentable_description(types: &'static [ParseTokenType]) -> WString {
     assert!(!types.is_empty(), "Should not be empty list");
     let mut res = WString::new();
     for typ in types {
         if !res.is_empty() {
-            res += " or "L;
+            res += L!(" or ");
         }
         res += &token_type_user_presentable_description(*typ, ParseKeyword::none)[..];
     }

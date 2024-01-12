@@ -180,7 +180,6 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 }
 
 /// Escape a string in a fashion suitable for using in fish script.
-#[widestrs]
 fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
@@ -197,7 +196,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let mut need_complex_escape = false;
 
     if !no_quoted && input.is_empty() {
-        return "''"L.to_owned();
+        return L!("''").to_owned();
     }
 
     let mut out = WString::new();
@@ -220,7 +219,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␉');
                 } else {
-                    out += "\\t"L;
+                    out += L!("\\t");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -229,7 +228,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␤');
                 } else {
-                    out += "\\n"L;
+                    out += L!("\\n");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -238,7 +237,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␈');
                 } else {
-                    out += "\\b"L;
+                    out += L!("\\b");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -247,7 +246,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␍');
                 } else {
-                    out += "\\r"L;
+                    out += L!("\\r");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -256,7 +255,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␛');
                 } else {
-                    out += "\\e"L;
+                    out += L!("\\e");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -265,7 +264,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 if symbolic {
                     out.push('␡');
                 } else {
-                    out += "\\x7f"L;
+                    out += L!("\\x7f");
                 }
                 need_escape = true;
                 need_complex_escape = true;
@@ -286,7 +285,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 out.push('*');
             }
             ANY_STRING_RECURSIVE => {
-                out += "**"L;
+                out += L!("**");
             }
 
             '&' | '$' | ' ' | '#' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*'
@@ -358,7 +357,6 @@ fn byte_to_hex(byte: u8) -> (char, char) {
 }
 
 /// Escape a string in a fashion suitable for using as a URL. Store the result in out_str.
-#[widestrs]
 fn escape_string_url(input: &wstr) -> WString {
     let narrow = wcs2string(input);
     let mut out = WString::new();
@@ -1246,8 +1244,7 @@ fn count_ascii_prefix(inp: &[u8]) -> usize {
 }
 
 // Check if we are running in the test mode, where we should suppress error output
-#[widestrs]
-pub const TESTS_PROGRAM_NAME: &wstr = "(ignore)"L;
+pub const TESTS_PROGRAM_NAME: &wstr = L!("(ignore)");
 
 /// Hack to not print error messages in the tests. Do not call this from functions in this module
 /// like `debug()`. It is only intended to suppress diagnostic noise from testing things like the
@@ -1533,7 +1530,6 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
 }
 
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
-#[widestrs]
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
@@ -1568,7 +1564,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
                 if line_width != 0 {
                     buff.push('\n');
                 }
-                buff += &sprintf!("%ls-\n"L, token)[..];
+                buff += &sprintf!(L!("%ls-\n"), token)[..];
                 line_width = 0;
             } else {
                 // Print the token.
@@ -1579,7 +1575,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
                     line_width = 0;
                 }
                 if line_width != 0 {
-                    buff += " "L;
+                    buff += L!(" ");
                 }
                 buff += token;
                 line_width += line_width_unit + tok_width;

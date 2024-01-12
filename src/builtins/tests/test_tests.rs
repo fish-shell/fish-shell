@@ -47,7 +47,6 @@ fn run_test_test(expected: i32, lst: &[&str]) -> bool {
     nobracket
 }
 
-#[widestrs]
 fn test_test_brackets() {
     // Ensure [ knows it needs a ].
     let parser = Parser::principal_parser();
@@ -57,16 +56,16 @@ fn test_test_brackets() {
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
-    let args1 = &mut ["["L, "foo"L];
+    let args1 = &mut [L!("["), L!("foo")];
     assert_eq!(
         builtin_test(parser, &mut streams, args1),
         STATUS_INVALID_ARGS
     );
 
-    let args2 = &mut ["["L, "foo"L, "]"L];
+    let args2 = &mut [L!("["), L!("foo"), L!("]")];
     assert_eq!(builtin_test(parser, &mut streams, args2), STATUS_CMD_OK);
 
-    let args3 = &mut ["["L, "foo"L, "]"L, "bar"L];
+    let args3 = &mut [L!("["), L!("foo"), L!("]"), L!("bar")];
     assert_eq!(
         builtin_test(parser, &mut streams, args3),
         STATUS_INVALID_ARGS

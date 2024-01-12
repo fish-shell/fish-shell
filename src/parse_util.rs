@@ -626,15 +626,20 @@ pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
 }
 
 /// Checks if the specified string is a help option.
-#[widestrs]
 pub fn parse_util_argument_is_help(s: &wstr) -> bool {
-    ["-h"L, "--help"L].contains(&s)
+    [L!("-h"), L!("--help")].contains(&s)
 }
 
 /// Returns true if the specified command is a builtin that may not be used in a pipeline.
-#[widestrs]
 fn parser_is_pipe_forbidden(word: &wstr) -> bool {
-    ["exec"L, "case"L, "break"L, "return"L, "continue"L].contains(&word)
+    [
+        L!("exec"),
+        L!("case"),
+        L!("break"),
+        L!("return"),
+        L!("continue"),
+    ]
+    .contains(&word)
 }
 
 // \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if

@@ -1,5 +1,5 @@
 use crate::signal::Signal;
-use crate::wchar::{widestrs, wstr, WString};
+use crate::wchar::{wstr, WString, L};
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
 use lazy_static::lazy_static;
@@ -253,22 +253,21 @@ pub struct ElectricVar {
 
 // Keep sorted alphabetically
 #[rustfmt::skip]
-#[widestrs]
 pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
-    ElectricVar{name: "FISH_VERSION"L, flags: electric::READONLY},
-    ElectricVar{name: "PWD"L, flags: electric::READONLY | electric::COMPUTED | electric::EXPORTS},
-    ElectricVar{name: "SHLVL"L, flags: electric::READONLY | electric::EXPORTS},
-    ElectricVar{name: "_"L, flags: electric::READONLY},
-    ElectricVar{name: "fish_kill_signal"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "fish_killring"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "fish_pid"L, flags:electric::READONLY},
-    ElectricVar{name: "history"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "hostname"L, flags:electric::READONLY},
-    ElectricVar{name: "pipestatus"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "status"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "status_generation"L, flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: "umask"L, flags:electric::COMPUTED},
-    ElectricVar{name: "version"L, flags:electric::READONLY},
+    ElectricVar{name: L!("FISH_VERSION"), flags: electric::READONLY},
+    ElectricVar{name: L!("PWD"), flags: electric::READONLY | electric::COMPUTED | electric::EXPORTS},
+    ElectricVar{name: L!("SHLVL"), flags: electric::READONLY | electric::EXPORTS},
+    ElectricVar{name: L!("_"), flags: electric::READONLY},
+    ElectricVar{name: L!("fish_kill_signal"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("fish_killring"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("fish_pid"), flags:electric::READONLY},
+    ElectricVar{name: L!("history"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("hostname"), flags:electric::READONLY},
+    ElectricVar{name: L!("pipestatus"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("status"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("status_generation"), flags:electric::READONLY | electric::COMPUTED},
+    ElectricVar{name: L!("umask"), flags:electric::COMPUTED},
+    ElectricVar{name: L!("version"), flags:electric::READONLY},
 ];
 assert_sorted_by_name!(ELECTRIC_VARIABLES);
 

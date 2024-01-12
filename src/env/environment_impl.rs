@@ -336,19 +336,18 @@ impl EnvScopedImpl {
         self.perproc_data.statuses = s;
     }
 
-    #[widestrs]
     fn try_get_computed(&self, key: &wstr) -> Option<EnvVar> {
         let ev = ElectricVar::for_name(key);
         if ev.is_none() || !ev.unwrap().computed() {
             return None;
         }
 
-        if key == "PWD"L {
+        if key == L!("PWD") {
             Some(EnvVar::new(
                 self.perproc_data.pwd.clone(),
                 EnvVarFlags::EXPORT,
             ))
-        } else if key == "history"L {
+        } else if key == L!("history") {
             // Big hack. We only allow getting the history on the main thread. Note that history_t
             // may ask for an environment variable, so don't take the lock here (we don't need it).
             if (!is_main_thread()) {
@@ -359,34 +358,40 @@ impl EnvScopedImpl {
                 let session_id = history_session_id_from_var(fish_history_var);
                 History::with_name(&session_id)
             });
-            return Some(EnvVar::new_from_name_vec("history"L, history.get_history()));
-        } else if key == "fish_killring"L {
-            Some(EnvVar::new_from_name_vec("fish_killring"L, kill_entries()))
-        } else if key == "pipestatus"L {
+            return Some(EnvVar::new_from_name_vec(
+                L!("history"),
+                history.get_history(),
+            ));
+        } else if key == L!("fish_killring") {
+            Some(EnvVar::new_from_name_vec(
+                L!("fish_killring"),
+                kill_entries(),
+            ))
+        } else if key == L!("pipestatus") {
             let js = &self.perproc_data.statuses;
             let mut result = Vec::new();
             result.reserve(js.pipestatus.len());
             for i in &js.pipestatus {
                 result.push(i.to_wstring());
             }
-            Some(EnvVar::new_from_name_vec("pipestatus"L, result))
-        } else if key == "status"L {
+            Some(EnvVar::new_from_name_vec(L!("pipestatus"), result))
+        } else if key == L!("status") {
             let js = &self.perproc_data.statuses;
-            Some(EnvVar::new_from_name("status"L, js.status.to_wstring()))
-        } else if key == "status_generation"L {
+            Some(EnvVar::new_from_name(L!("status"), js.status.to_wstring()))
+        } else if key == L!("status_generation") {
             let status_generation = reader_status_count();
             Some(EnvVar::new_from_name(
-                "status_generation"L,
+                L!("status_generation"),
                 status_generation.to_wstring(),
             ))
-        } else if key == "fish_kill_signal"L {
+        } else if key == L!("fish_kill_signal") {
             let js = &self.perproc_data.statuses;
             let signal = js.kill_signal.map_or(0, |ks| ks.code());
             Some(EnvVar::new_from_name(
-                "fish_kill_signal"L,
+                L!("fish_kill_signal"),
                 signal.to_wstring(),
             ))
-        } else if key == "umask"L {
+        } else if key == L!("umask") {
             // note umask() is an absurd API: you call it to set the value and it returns the old
             // value. Thus we have to call it twice, to reset the value. The env_lock protects
             // against races. Guess what the umask is; if we guess right we don't need to reset it.
@@ -396,7 +401,7 @@ impl EnvScopedImpl {
             if res != guess {
                 unsafe { libc::umask(res) };
             }
-            Some(EnvVar::new_from_name("umask"L, sprintf!("0%0.3o", res)))
+            Some(EnvVar::new_from_name(L!("umask"), sprintf!("0%0.3o", res)))
         } else {
             // We should never get here unless the electric var list is out of sync with the above code.
             panic!("Unrecognized computed var name {}", key);

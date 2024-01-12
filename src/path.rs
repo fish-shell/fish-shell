@@ -71,15 +71,14 @@ pub fn path_get_config_remoteness() -> DirRemoteness {
 
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
-#[widestrs]
 pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     let data = get_data_directory();
     if !data.success() {
         maybe_issue_path_warning(
-            "data"L,
+            L!("data"),
             &wgettext!("can not save history"),
             data.used_xdg,
-            "XDG_DATA_HOME"L,
+            L!("XDG_DATA_HOME"),
             &data.path,
             data.err,
             vars,
@@ -92,10 +91,10 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     let config = get_config_directory();
     if !config.success() {
         maybe_issue_path_warning(
-            "config"L,
+            L!("config"),
             &wgettext!("can not save universal variables or functions"),
             config.used_xdg,
-            "XDG_CONFIG_HOME"L,
+            L!("XDG_CONFIG_HOME"),
             &config.path,
             config.err,
             vars,
@@ -110,7 +109,6 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
 /// problem, and thus is not central to the behavior of that function. Second, we only want to issue
 /// the message once. If the current shell starts a new fish shell (e.g., by running `fish -c` from
 /// a function) we don't want that subshell to issue the same warnings.
-#[widestrs]
 fn maybe_issue_path_warning(
     which_dir: &wstr,
     custom_error_msg: &wstr,
@@ -120,7 +118,7 @@ fn maybe_issue_path_warning(
     saved_errno: libc::c_int,
     vars: &EnvStack,
 ) {
-    let warning_var_name = "_FISH_WARNED_"L.to_owned() + which_dir;
+    let warning_var_name = L!("_FISH_WARNED_").to_owned() + which_dir;
     if vars
         .getf(&warning_var_name, EnvMode::GLOBAL | EnvMode::EXPORT)
         .is_some()
@@ -130,7 +128,7 @@ fn maybe_issue_path_warning(
     vars.set_one(
         &warning_var_name,
         EnvMode::GLOBAL | EnvMode::EXPORT,
-        "1"L.to_owned(),
+        L!("1").to_owned(),
     );
 
     FLOG!(error, custom_error_msg);
@@ -147,7 +145,7 @@ fn maybe_issue_path_warning(
             )
         );
     } else {
-        let env_var = if using_xdg { xdg_var } else { "HOME"L };
+        let env_var = if using_xdg { xdg_var } else { L!("HOME") };
         FLOG!(
             warning_path,
             wgettext_fmt!(
@@ -184,13 +182,12 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 }
 
 // PREFIX is defined at build time.
-#[widestrs]
 pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     [
         // TODO This should use env!. The fallback is only to appease "cargo test" for now.
-        WString::from_str(option_env!("PREFIX").unwrap_or("/usr/local")) + "/bin"L,
-        "/usr/bin"L.to_owned(),
-        "/bin"L.to_owned(),
+        WString::from_str(option_env!("PREFIX").unwrap_or("/usr/local")) + L!("/bin"),
+        L!("/usr/bin").to_owned(),
+        L!("/bin").to_owned(),
     ]
 });
 
@@ -357,23 +354,25 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
 }
 
 /// Returns the given directory with all CDPATH components applied.
-#[widestrs]
 pub fn path_apply_cdpath(dir: &wstr, wd: &wstr, env_vars: &dyn Environment) -> Vec<WString> {
     let mut paths = vec![];
     if dir.chars().next() == Some('/') {
         // Absolute path.
         paths.push(dir.to_owned());
-    } else if dir.starts_with("./"L) || dir.starts_with("../"L) || ["."L, ".."L].contains(&dir) {
+    } else if dir.starts_with(L!("./"))
+        || dir.starts_with(L!("../"))
+        || [L!("."), L!("..")].contains(&dir)
+    {
         // Path is relative to the working directory.
         paths.push(path_normalize_for_cd(wd, dir));
     } else {
         // Respect CDPATH.
         let mut cdpathsv = vec![];
-        if let Some(cdpaths) = env_vars.get("CDPATH"L) {
+        if let Some(cdpaths) = env_vars.get(L!("CDPATH")) {
             cdpathsv = cdpaths.as_list().to_vec();
         }
         // Always append $PWD
-        cdpathsv.push("."L.to_owned());
+        cdpathsv.push(L!(".").to_owned());
         for path in cdpathsv {
             let mut abspath = WString::new();
             // We want to return an absolute path (see issue 6220)
@@ -399,15 +398,14 @@ pub fn path_apply_cdpath(dir: &wstr, wd: &wstr, env_vars: &dyn Environment) -> V
 
 /// Returns the path resolved as an implicit cd command, or none() if none. This requires it to
 /// start with one of the allowed prefixes (., .., ~) and resolve to a directory.
-#[widestrs]
 pub fn path_as_implicit_cd(path: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<WString> {
     let mut exp_path = path.to_owned();
     expand_tilde(&mut exp_path, vars);
-    if exp_path.starts_with("/"L)
-        || exp_path.starts_with("./"L)
-        || exp_path.starts_with("../"L)
-        || exp_path.ends_with("/"L)
-        || exp_path == ".."L
+    if exp_path.starts_with(L!("/"))
+        || exp_path.starts_with(L!("./"))
+        || exp_path.starts_with(L!("../"))
+        || exp_path.ends_with(L!("/"))
+        || exp_path == L!("..")
     {
         // These paths can be implicit cd, so see if you cd to the path. Note that a single period
         // cannot (that's used for sourcing files anyways).
@@ -495,15 +493,14 @@ pub fn paths_are_equivalent(p1: &wstr, p2: &wstr) -> bool {
     idx1 == len1 && idx2 == len2
 }
 
-#[widestrs]
 pub fn path_is_valid(path: &wstr, working_directory: &wstr) -> bool {
     // Some special paths are always valid.
     if path.is_empty() {
         false
-    } else if ["."L, "./"L].contains(&path) {
+    } else if [L!("."), L!("./")].contains(&path) {
         true
-    } else if [".."L, "../"L].contains(&path) {
-        !working_directory.is_empty() && working_directory != "/"L
+    } else if [L!(".."), L!("../")].contains(&path) {
+        !working_directory.is_empty() && working_directory != L!("/")
     } else if path.chars().next() != Some('/') {
         // Prepend the working directory. Note that we know path is not empty here.
         let mut tmp = working_directory.to_owned();
@@ -582,7 +579,6 @@ impl BaseDirectory {
 /// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
 /// set, use that directory; otherwise use the path \p non_xdg_homepath rooted in $HOME. \return the
 /// result; see the base_directory_t fields.
-#[widestrs]
 fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory {
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
@@ -592,10 +588,10 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     let mut path = WString::new();
     let used_xdg;
     if let Some(xdg_dir) = vars.getf_unless_empty(xdg_var, EnvMode::GLOBAL | EnvMode::EXPORT) {
-        path = xdg_dir.as_string() + "/fish"L;
+        path = xdg_dir.as_string() + L!("/fish");
         used_xdg = true;
     } else {
-        if let Some(home) = vars.getf_unless_empty("HOME"L, EnvMode::GLOBAL | EnvMode::EXPORT) {
+        if let Some(home) = vars.getf_unless_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT) {
             path = home.as_string() + non_xdg_homepath;
         }
         used_xdg = false;
@@ -706,17 +702,15 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
 }
 
-#[widestrs]
 fn get_data_directory() -> &'static BaseDirectory {
     static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory("XDG_DATA_HOME"L, "/.local/share/fish"L));
+        Lazy::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
     &*DIR
 }
 
-#[widestrs]
 fn get_config_directory() -> &'static BaseDirectory {
     static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory("XDG_CONFIG_HOME"L, "/.config/fish"L));
+        Lazy::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
     &*DIR
 }
 

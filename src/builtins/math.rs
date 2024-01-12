@@ -14,22 +14,21 @@ struct Options {
     base: usize,
 }
 
-#[widestrs]
 fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), Option<c_int>> {
-    const cmd: &wstr = "math"L;
+    const cmd: &wstr = L!("math");
     let print_hints = true;
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
-    const SHORT_OPTS: &wstr = "+:hs:b:"L;
+    const SHORT_OPTS: &wstr = L!("+:hs:b:");
     const LONG_OPTS: &[woption] = &[
-        wopt("scale"L, woption_argument_t::required_argument, 's'),
-        wopt("base"L, woption_argument_t::required_argument, 'b'),
-        wopt("help"L, woption_argument_t::no_argument, 'h'),
+        wopt(L!("scale"), woption_argument_t::required_argument, 's'),
+        wopt(L!("base"), woption_argument_t::required_argument, 'b'),
+        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     ];
 
     let mut opts = Options {
@@ -158,7 +157,6 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     ret
 }
 
-#[widestrs]
 fn evaluate_expression(
     cmd: &wstr,
     streams: &mut IoStreams,
@@ -174,11 +172,11 @@ fn evaluate_expression(
             // (e.g. infinite is the result of "x / 0"),
             // but that's much more work.
             let error_message = if n.is_infinite() {
-                "Result is infinite"L
+                L!("Result is infinite")
             } else if n.is_nan() {
-                "Result is not a number"L
+                L!("Result is not a number")
             } else if n.abs() >= MAX_CONTIGUOUS_INTEGER {
-                "Result magnitude is too large"L
+                L!("Result magnitude is too large")
             } else {
                 let mut s = format_double(n, opts);
                 s.push('\n');
@@ -189,24 +187,26 @@ fn evaluate_expression(
 
             streams
                 .err
-                .append(sprintf!("%ls: Error: %ls\n"L, cmd, error_message));
-            streams.err.append(sprintf!("'%ls'\n"L, expression));
+                .append(sprintf!(L!("%ls: Error: %ls\n"), cmd, error_message));
+            streams.err.append(sprintf!(L!("'%ls'\n"), expression));
 
             STATUS_CMD_ERROR
         }
         Err(err) => {
             streams.err.append(sprintf!(
-                "%ls: Error: %ls\n"L,
+                L!("%ls: Error: %ls\n"),
                 cmd,
                 err.kind.describe_wstr()
             ));
-            streams.err.append(sprintf!("'%ls'\n"L, expression));
+            streams.err.append(sprintf!(L!("'%ls'\n"), expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams.err.append(sprintf!("%ls^%ls^\n"L, padding, tildes));
+                streams
+                    .err
+                    .append(sprintf!(L!("%ls^%ls^\n"), padding, tildes));
             } else {
-                streams.err.append(sprintf!("%ls^\n"L, padding));
+                streams.err.append(sprintf!(L!("%ls^\n"), padding));
             }
 
             STATUS_CMD_ERROR
@@ -218,7 +218,6 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-#[widestrs]
 pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
 

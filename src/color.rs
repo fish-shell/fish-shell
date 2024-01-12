@@ -231,13 +231,12 @@ impl RgbColor {
     }
 
     /// Try parsing a special color name like "normal".
-    #[widestrs]
     fn try_parse_special(special: &wstr) -> Option<Self> {
         // TODO: this is a very hot function, may need optimization by e.g. comparing length first,
         // depending on how well inlining of `simple_icase_compare` works
-        let typ = if simple_icase_compare(special, "normal"L) == Ordering::Equal {
+        let typ = if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
             Type::Normal
-        } else if simple_icase_compare(special, "reset"L) == Ordering::Equal {
+        } else if simple_icase_compare(special, L!("reset")) == Ordering::Equal {
             Type::Reset
         } else {
             return None;
@@ -320,32 +319,31 @@ struct NamedColor {
     hidden: bool,
 }
 
-#[widestrs]
 #[rustfmt::skip]
 const NAMED_COLORS: &[NamedColor] = &[
     // Keep this sorted alphabetically
-    NamedColor {name: "black"L, idx: 0, _rgb: [0x00, 0x00, 0x00], hidden: false},
-    NamedColor {name: "blue"L, idx: 4, _rgb: [0x00, 0x00, 0x80], hidden: false},
-    NamedColor {name: "brblack"L, idx: 8, _rgb: [0x80, 0x80, 0x80], hidden: false},
-    NamedColor {name: "brblue"L, idx: 12, _rgb: [0x00, 0x00, 0xFF], hidden: false},
-    NamedColor {name: "brbrown"L, idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: true},
-    NamedColor {name: "brcyan"L, idx: 14, _rgb: [0x00, 0xFF, 0xFF], hidden: false},
-    NamedColor {name: "brgreen"L, idx: 10, _rgb: [0x00, 0xFF, 0x00], hidden: false},
-    NamedColor {name: "brgrey"L, idx: 8, _rgb: [0x55, 0x55, 0x55], hidden: true},
-    NamedColor {name: "brmagenta"L, idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: false},
-    NamedColor {name: "brown"L, idx: 3, _rgb: [0x72, 0x50, 0x00], hidden: true},
-    NamedColor {name: "brpurple"L, idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: true},
-    NamedColor {name: "brred"L, idx: 9, _rgb: [0xFF, 0x00, 0x00], hidden: false},
-    NamedColor {name: "brwhite"L, idx: 15, _rgb: [0xFF, 0xFF, 0xFF], hidden: false},
-    NamedColor {name: "bryellow"L, idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: false},
-    NamedColor {name: "cyan"L, idx: 6, _rgb: [0x00, 0x80, 0x80], hidden: false},
-    NamedColor {name: "green"L, idx: 2, _rgb: [0x00, 0x80, 0x00], hidden: false},
-    NamedColor {name: "grey"L, idx: 7, _rgb: [0xE5, 0xE5, 0xE5], hidden: true},
-    NamedColor {name: "magenta"L, idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: false},
-    NamedColor {name: "purple"L, idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: true},
-    NamedColor {name: "red"L, idx: 1, _rgb: [0x80, 0x00, 0x00], hidden: false},
-    NamedColor {name: "white"L, idx: 7, _rgb: [0xC0, 0xC0, 0xC0], hidden: false},
-    NamedColor {name: "yellow"L, idx: 3, _rgb: [0x80, 0x80, 0x00], hidden: false},
+    NamedColor {name: L!("black"), idx: 0, _rgb: [0x00, 0x00, 0x00], hidden: false},
+    NamedColor {name: L!("blue"), idx: 4, _rgb: [0x00, 0x00, 0x80], hidden: false},
+    NamedColor {name: L!("brblack"), idx: 8, _rgb: [0x80, 0x80, 0x80], hidden: false},
+    NamedColor {name: L!("brblue"), idx: 12, _rgb: [0x00, 0x00, 0xFF], hidden: false},
+    NamedColor {name: L!("brbrown"), idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: true},
+    NamedColor {name: L!("brcyan"), idx: 14, _rgb: [0x00, 0xFF, 0xFF], hidden: false},
+    NamedColor {name: L!("brgreen"), idx: 10, _rgb: [0x00, 0xFF, 0x00], hidden: false},
+    NamedColor {name: L!("brgrey"), idx: 8, _rgb: [0x55, 0x55, 0x55], hidden: true},
+    NamedColor {name: L!("brmagenta"), idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: false},
+    NamedColor {name: L!("brown"), idx: 3, _rgb: [0x72, 0x50, 0x00], hidden: true},
+    NamedColor {name: L!("brpurple"), idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: true},
+    NamedColor {name: L!("brred"), idx: 9, _rgb: [0xFF, 0x00, 0x00], hidden: false},
+    NamedColor {name: L!("brwhite"), idx: 15, _rgb: [0xFF, 0xFF, 0xFF], hidden: false},
+    NamedColor {name: L!("bryellow"), idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: false},
+    NamedColor {name: L!("cyan"), idx: 6, _rgb: [0x00, 0x80, 0x80], hidden: false},
+    NamedColor {name: L!("green"), idx: 2, _rgb: [0x00, 0x80, 0x00], hidden: false},
+    NamedColor {name: L!("grey"), idx: 7, _rgb: [0xE5, 0xE5, 0xE5], hidden: true},
+    NamedColor {name: L!("magenta"), idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: false},
+    NamedColor {name: L!("purple"), idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: true},
+    NamedColor {name: L!("red"), idx: 1, _rgb: [0x80, 0x00, 0x00], hidden: false},
+    NamedColor {name: L!("white"), idx: 7, _rgb: [0xC0, 0xC0, 0xC0], hidden: false},
+    NamedColor {name: L!("yellow"), idx: 3, _rgb: [0x80, 0x80, 0x00], hidden: false},
 ];
 
 assert_sorted_by_name!(NAMED_COLORS);
@@ -434,28 +432,26 @@ mod tests {
     use crate::wchar::prelude::*;
 
     #[test]
-    #[widestrs]
     fn parse() {
-        assert!(RgbColor::from_wstr("#FF00A0"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("FF00A0"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("#F30"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("F30"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("f30"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("#FF30a5"L).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr("3f30"L).is_none());
-        assert!(RgbColor::from_wstr("##f30"L).is_none());
-        assert!(RgbColor::from_wstr("magenta"L).unwrap().is_named());
-        assert!(RgbColor::from_wstr("MaGeNTa"L).unwrap().is_named());
-        assert!(RgbColor::from_wstr("mooganta"L).is_none());
+        assert!(RgbColor::from_wstr(L!("#FF00A0")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("FF00A0")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("#F30")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("F30")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("f30")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("#FF30a5")).unwrap().is_rgb());
+        assert!(RgbColor::from_wstr(L!("3f30")).is_none());
+        assert!(RgbColor::from_wstr(L!("##f30")).is_none());
+        assert!(RgbColor::from_wstr(L!("magenta")).unwrap().is_named());
+        assert!(RgbColor::from_wstr(L!("MaGeNTa")).unwrap().is_named());
+        assert!(RgbColor::from_wstr(L!("mooganta")).is_none());
     }
 
     #[test]
-    #[widestrs]
     fn parse_rgb() {
-        assert!(RgbColor::from_wstr("##FF00A0"L) == None);
-        assert!(RgbColor::from_wstr("#FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr("FF00A0"L) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr("FAF"L) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));
+        assert!(RgbColor::from_wstr(L!("##FF00A0")) == None);
+        assert!(RgbColor::from_wstr(L!("#FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(RgbColor::from_wstr(L!("FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(RgbColor::from_wstr(L!("FAF")) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));
     }
 
     // Regression test for multiplicative overflow in convert_color.

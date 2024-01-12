@@ -32,7 +32,6 @@ use std::mem;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
-use widestring_suffix::widestrs;
 
 /// The list of topics which may be observed.
 #[repr(u8)]
@@ -73,7 +72,6 @@ pub fn all_topics() -> [topic_t; 3] {
     [topic_t::sighupint, topic_t::sigchld, topic_t::internal_exit]
 }
 
-#[widestrs]
 impl GenerationsList {
     pub fn new() -> Self {
         Self::default()

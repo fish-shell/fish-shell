@@ -17,7 +17,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
 use std::sync::Arc;
-use widestring_suffix::widestrs;
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> Option<c_int>;
 
@@ -115,250 +114,249 @@ struct BuiltinData {
 // Data about all the builtin commands in fish.
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
-#[widestrs]
 const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
-        name: "."L,
+        name: L!("."),
         func: source::source,
     },
     BuiltinData {
-        name: ":"L,
+        name: L!(":"),
         func: builtin_true,
     },
     BuiltinData {
-        name: "["L, // ]
+        name: L!("["), // ]
         func: test::test,
     },
     BuiltinData {
-        name: "_"L,
+        name: L!("_"),
         func: builtin_gettext,
     },
     BuiltinData {
-        name: "abbr"L,
+        name: L!("abbr"),
         func: abbr::abbr,
     },
     BuiltinData {
-        name: "and"L,
+        name: L!("and"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "argparse"L,
+        name: L!("argparse"),
         func: argparse::argparse,
     },
     BuiltinData {
-        name: "begin"L,
+        name: L!("begin"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "bg"L,
+        name: L!("bg"),
         func: bg::bg,
     },
     BuiltinData {
-        name: "bind"L,
+        name: L!("bind"),
         func: bind::bind,
     },
     BuiltinData {
-        name: "block"L,
+        name: L!("block"),
         func: block::block,
     },
     BuiltinData {
-        name: "break"L,
+        name: L!("break"),
         func: builtin_break_continue,
     },
     BuiltinData {
-        name: "breakpoint"L,
+        name: L!("breakpoint"),
         func: builtin_breakpoint,
     },
     BuiltinData {
-        name: "builtin"L,
+        name: L!("builtin"),
         func: builtin::builtin,
     },
     BuiltinData {
-        name: "case"L,
+        name: L!("case"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "cd"L,
+        name: L!("cd"),
         func: cd::cd,
     },
     BuiltinData {
-        name: "command"L,
+        name: L!("command"),
         func: command::command,
     },
     BuiltinData {
-        name: "commandline"L,
+        name: L!("commandline"),
         func: commandline::commandline,
     },
     BuiltinData {
-        name: "complete"L,
+        name: L!("complete"),
         func: complete::complete,
     },
     BuiltinData {
-        name: "contains"L,
+        name: L!("contains"),
         func: contains::contains,
     },
     BuiltinData {
-        name: "continue"L,
+        name: L!("continue"),
         func: builtin_break_continue,
     },
     BuiltinData {
-        name: "count"L,
+        name: L!("count"),
         func: count::count,
     },
     BuiltinData {
-        name: "disown"L,
+        name: L!("disown"),
         func: disown::disown,
     },
     BuiltinData {
-        name: "echo"L,
+        name: L!("echo"),
         func: echo::echo,
     },
     BuiltinData {
-        name: "else"L,
+        name: L!("else"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "emit"L,
+        name: L!("emit"),
         func: emit::emit,
     },
     BuiltinData {
-        name: "end"L,
+        name: L!("end"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "eval"L,
+        name: L!("eval"),
         func: eval::eval,
     },
     BuiltinData {
-        name: "exec"L,
+        name: L!("exec"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "exit"L,
+        name: L!("exit"),
         func: exit::exit,
     },
     BuiltinData {
-        name: "false"L,
+        name: L!("false"),
         func: builtin_false,
     },
     BuiltinData {
-        name: "fg"L,
+        name: L!("fg"),
         func: fg::fg,
     },
     BuiltinData {
-        name: "for"L,
+        name: L!("for"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "function"L,
+        name: L!("function"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "functions"L,
+        name: L!("functions"),
         func: functions::functions,
     },
     BuiltinData {
-        name: "history"L,
+        name: L!("history"),
         func: history::history,
     },
     BuiltinData {
-        name: "if"L,
+        name: L!("if"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "jobs"L,
+        name: L!("jobs"),
         func: jobs::jobs,
     },
     BuiltinData {
-        name: "math"L,
+        name: L!("math"),
         func: math::math,
     },
     BuiltinData {
-        name: "not"L,
+        name: L!("not"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "or"L,
+        name: L!("or"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "path"L,
+        name: L!("path"),
         func: path::path,
     },
     BuiltinData {
-        name: "printf"L,
+        name: L!("printf"),
         func: printf::printf,
     },
     BuiltinData {
-        name: "pwd"L,
+        name: L!("pwd"),
         func: pwd::pwd,
     },
     BuiltinData {
-        name: "random"L,
+        name: L!("random"),
         func: random::random,
     },
     BuiltinData {
-        name: "read"L,
+        name: L!("read"),
         func: read::read,
     },
     BuiltinData {
-        name: "realpath"L,
+        name: L!("realpath"),
         func: realpath::realpath,
     },
     BuiltinData {
-        name: "return"L,
+        name: L!("return"),
         func: r#return::r#return,
     },
     BuiltinData {
-        name: "set"L,
+        name: L!("set"),
         func: set::set,
     },
     BuiltinData {
-        name: "set_color"L,
+        name: L!("set_color"),
         func: set_color::set_color,
     },
     BuiltinData {
-        name: "source"L,
+        name: L!("source"),
         func: source::source,
     },
     BuiltinData {
-        name: "status"L,
+        name: L!("status"),
         func: status::status,
     },
     BuiltinData {
-        name: "string"L,
+        name: L!("string"),
         func: string::string,
     },
     BuiltinData {
-        name: "switch"L,
+        name: L!("switch"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "test"L,
+        name: L!("test"),
         func: test::test,
     },
     BuiltinData {
-        name: "time"L,
+        name: L!("time"),
         func: builtin_generic,
     },
     BuiltinData {
-        name: "true"L,
+        name: L!("true"),
         func: builtin_true,
     },
     BuiltinData {
-        name: "type"L,
+        name: L!("type"),
         func: r#type::r#type,
     },
     BuiltinData {
-        name: "ulimit"L,
+        name: L!("ulimit"),
         func: ulimit::ulimit,
     },
     BuiltinData {
-        name: "wait"L,
+        name: L!("wait"),
         func: wait::wait,
     },
     BuiltinData {
-        name: "while"L,
+        name: L!("while"),
         func: builtin_generic,
     },
 ];
@@ -380,16 +378,15 @@ pub fn builtin_exists(name: &wstr) -> bool {
 }
 
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
-#[widestrs]
 fn cmd_needs_help(cmd: &wstr) -> bool {
     [
-        "for"L,
-        "while"L,
-        "function"L,
-        "if"L,
-        "end"L,
-        "switch"L,
-        "case"L,
+        L!("for"),
+        L!("while"),
+        L!("function"),
+        L!("if"),
+        L!("end"),
+        L!("switch"),
+        L!("case"),
     ]
     .contains(&cmd)
 }

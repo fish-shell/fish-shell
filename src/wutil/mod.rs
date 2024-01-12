@@ -27,7 +27,6 @@ use std::io::{self, Write};
 use std::os::unix::prelude::*;
 
 pub use wcstoi::*;
-use widestring_suffix::widestrs;
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).
@@ -274,7 +273,6 @@ fn test_normalize_path() {
 /// appropriate for cd. That is, return effectively wd + path while resolving leading ../s from
 /// path. The intent here is to allow 'cd' out of a directory which may no longer exist, without
 /// allowing 'cd' into a directory that may not exist; see #5341.
-#[widestrs]
 pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     // Fast paths.
     const sep: char = '/';
@@ -302,9 +300,9 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     let mut erase_count = 0;
     for comp in &path_comps {
         let mut erase_it = false;
-        if comp.is_empty() || comp == "."L {
+        if comp.is_empty() || comp == L!(".") {
             erase_it = true;
-        } else if comp == ".."L && !wd_comps.is_empty() {
+        } else if comp == L!("..") && !wd_comps.is_empty() {
             erase_it = true;
             wd_comps.pop();
         }

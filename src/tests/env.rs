@@ -5,7 +5,6 @@ use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
-use widestring_suffix::widestrs;
 
 /// An environment built around an std::map.
 #[derive(Clone, Default)]
@@ -40,10 +39,9 @@ impl PwdEnvironment {
         Self::default()
     }
 }
-#[widestrs]
 impl Environment for PwdEnvironment {
     fn getf(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        if name == "PWD"L {
+        if name == L!("PWD") {
             return Some(EnvVar::new(wgetcwd(), EnvVarFlags::default()));
         }
         self.parent.getf(name, mode)
@@ -51,8 +49,8 @@ impl Environment for PwdEnvironment {
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         let mut res = self.parent.get_names(flags);
-        if !res.iter().any(|n| n == "PWD"L) {
-            res.push("PWD"L.to_owned());
+        if !res.iter().any(|n| n == L!("PWD")) {
+            res.push(L!("PWD").to_owned());
         }
         res
     }

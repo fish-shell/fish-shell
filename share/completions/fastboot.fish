@@ -20,7 +20,7 @@ complete -c fastboot -s v -l verbose -d 'Verbose output'
 complete -c fastboot -l version -d 'Display version'
 
 complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -s w -d 'Wipe userdata'
-complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -s s -d 'Specify a device'
+complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -s s -x -a "(fastboot devices)" -d 'Specify a device'
 complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -s S -d 'Break into sparse files no larger than SIZE'
 complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -l slot -d 'Use SLOT; \'all\' for both slots, \'other\' for non-current slot (default: current active slot)' -xa "all other a b"
 complete -n "not __fish_seen_subcommand_from $commands" -c fastboot -l set-active -d 'Sets the active slot before rebooting' -xa "a b"

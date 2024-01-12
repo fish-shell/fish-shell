@@ -31,3 +31,9 @@ jobs:
       # This used to have --deny=warnings, but that turns rust release day
       # into automatic CI failure day, so we don't do that.
       run: cargo clippy --workspace --all-targets
+
+  cargo-deny:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: EmbarkStudios/cargo-deny-action@v1

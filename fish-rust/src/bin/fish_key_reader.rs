@@ -310,8 +310,8 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> ! {
 }
 
 fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
-    const short_opts: &wstr = L!("+chvV");
-    const long_opts: &[woption] = &[
+    let short_opts: &wstr = L!("+chvV");
+    let long_opts: &[woption] = &[
         wopt(L!("continuous"), woption_argument_t::no_argument, 'c'),
         wopt(L!("help"), woption_argument_t::no_argument, 'h'),
         wopt(L!("version"), woption_argument_t::no_argument, 'v'),

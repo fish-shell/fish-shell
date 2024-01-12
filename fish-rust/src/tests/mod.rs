@@ -34,6 +34,7 @@ pub mod prelude {
     use crate::{env::EnvStack, proc::proc_init};
     use once_cell::sync::Lazy;
     use once_cell::sync::OnceCell;
+    use std::env::set_current_dir;
     use std::ffi::CString;
     use std::sync::Mutex;
 
@@ -60,6 +61,7 @@ pub mod prelude {
     pub fn test_init() {
         static DONE: OnceCell<()> = OnceCell::new();
         DONE.get_or_init(|| {
+            set_current_dir(env!("FISH_BUILD_DIR")).unwrap();
             {
                 let s = CString::new("").unwrap();
                 unsafe {

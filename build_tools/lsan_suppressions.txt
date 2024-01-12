@@ -4,3 +4,4 @@ leak:AsanThread
 
 # ncurses leaks allocations freely as it assumes it will be running throughout. Ignore these.
 leak:tparm
+leak:_nc_doalloc

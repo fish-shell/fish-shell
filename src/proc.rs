@@ -1605,10 +1605,10 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
             // Arguments are the signal name and description.
             let sig = Signal::new(p.status.signal_code());
             buffer.push(' ');
-            buffer += &escape(&sig.name())[..];
+            buffer += &escape(sig.name())[..];
 
             buffer.push(' ');
-            buffer += &escape(&sig.desc())[..];
+            buffer += &escape(sig.desc())[..];
 
             // If we have multiple processes, we also append the pid and argv.
             if j.processes().len() > 1 {

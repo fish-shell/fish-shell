@@ -154,7 +154,7 @@ impl Features {
         self.values[flag as usize].store(value, Ordering::SeqCst)
     }
 
-    fn set_from_string<'a>(&self, str: &wstr) {
+    fn set_from_string(&self, str: &wstr) {
         let whitespace = L!("\t\n\0x0B\0x0C\r ").as_char_slice();
         for entry in str.as_char_slice().split(|c| *c == ',') {
             if entry.is_empty() {

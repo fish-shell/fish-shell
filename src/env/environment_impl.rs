@@ -350,7 +350,7 @@ impl EnvScopedImpl {
         } else if key == L!("history") {
             // Big hack. We only allow getting the history on the main thread. Note that history_t
             // may ask for an environment variable, so don't take the lock here (we don't need it).
-            if (!is_main_thread()) {
+            if !is_main_thread() {
                 return None;
             }
             let history = commandline_get_state().history.unwrap_or_else(|| {
@@ -369,8 +369,7 @@ impl EnvScopedImpl {
             ))
         } else if key == L!("pipestatus") {
             let js = &self.perproc_data.statuses;
-            let mut result = Vec::new();
-            result.reserve(js.pipestatus.len());
+            let mut result = Vec::with_capacity(js.pipestatus.len());
             for i in &js.pipestatus {
                 result.push(i.to_wstring());
             }

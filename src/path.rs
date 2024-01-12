@@ -76,7 +76,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     if !data.success() {
         maybe_issue_path_warning(
             L!("data"),
-            &wgettext!("can not save history"),
+            wgettext!("can not save history"),
             data.used_xdg,
             L!("XDG_DATA_HOME"),
             &data.path,
@@ -92,7 +92,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     if !config.success() {
         maybe_issue_path_warning(
             L!("config"),
-            &wgettext!("can not save universal variables or functions"),
+            wgettext!("can not save universal variables or functions"),
             config.used_xdg,
             L!("XDG_CONFIG_HOME"),
             &config.path,
@@ -705,13 +705,13 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
 fn get_data_directory() -> &'static BaseDirectory {
     static DIR: Lazy<BaseDirectory> =
         Lazy::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
-    &*DIR
+    &DIR
 }
 
 fn get_config_directory() -> &'static BaseDirectory {
     static DIR: Lazy<BaseDirectory> =
         Lazy::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
-    &*DIR
+    &DIR
 }
 
 /// Appends a path component, with a / if necessary.

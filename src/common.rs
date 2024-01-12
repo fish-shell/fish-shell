@@ -1569,7 +1569,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             } else {
                 // Print the token.
                 let token = &msg[start..pos];
-                let line_width_unit = (if line_width != 0 { 1 } else { 0 });
+                let line_width_unit = if line_width != 0 { 1 } else { 0 };
                 if (line_width + line_width_unit + tok_width) > screen_width {
                     buff.push('\n');
                     line_width = 0;

@@ -2803,10 +2803,10 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             return;
         };
 
-        /// We believe the node is some sort of block statement. Attempt to find a source range
-        /// for the block's keyword (for, if, etc) and a user-presentable description. This
-        /// is used to provide better error messages. Note at this point the parse tree is
-        /// incomplete; in particular parent nodes are not set.
+        // We believe the node is some sort of block statement. Attempt to find a source range
+        // for the block's keyword (for, if, etc) and a user-presentable description. This
+        // is used to provide better error messages. Note at this point the parse tree is
+        // incomplete; in particular parent nodes are not set.
         let mut cursor = node;
         let header = loop {
             match cursor.typ() {

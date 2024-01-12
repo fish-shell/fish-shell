@@ -150,11 +150,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, &argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, &argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -176,15 +176,16 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
 
     // Get the list of wait handles for our waiting.
     let mut wait_handles: Vec<WaitHandleRef> = Vec::new();
-    for i in w.woptind..argc {
-        if iswnumeric(argv[i]) {
+    let optind = w.woptind;
+    for item in &argv[optind..argc] {
+        if iswnumeric(item) {
             // argument is pid
-            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(argv[i]);
+            let mpid: Result<pid_t, wutil::Error> = fish_wcstoi(item);
             if mpid.is_err() || mpid.unwrap() <= 0 {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid process id\n",
                     cmd,
-                    argv[i],
+                    item,
                 ));
                 continue;
             }
@@ -198,15 +199,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             }
         } else {
             // argument is process name
-            if !find_wait_handles(
-                WaitHandleQuery::ProcName(argv[i]),
-                parser,
-                &mut wait_handles,
-            ) {
+            if !find_wait_handles(WaitHandleQuery::ProcName(item), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
                     "%ls: Could not find child processes with the name '%ls'\n",
                     cmd,
-                    argv[i],
+                    item,
                 ));
             }
         }

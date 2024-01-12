@@ -166,10 +166,3 @@ add_test(
 )
 set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
 add_test_target("cargo-test")
-
-add_test(
-    NAME "cargo-test-widestring"
-    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package widestring-suffix --target-dir ${rust_target_dir} ${cargo_test_flags}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-add_test_target("cargo-test-widestring")

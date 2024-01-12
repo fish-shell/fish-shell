@@ -1,7 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "widestring-suffix",
 ]
 
 [workspace.package]
@@ -18,7 +17,6 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-widestring-suffix = { path = "widestring-suffix/" }
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }
 fast-float = { git = "https://github.com/fish-shell/fast-float-rust", branch="fish" }
 hexponent = { git = "https://github.com/fish-shell/hexponent", branch="fish" }

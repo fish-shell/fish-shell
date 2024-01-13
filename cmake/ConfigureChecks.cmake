@@ -22,8 +22,6 @@ if(NOT ${CURSES_FOUND})
     set(CURSES_CURSES_LIBRARY ${CURSES_LIBRARIES})
     set(CURSES_LIBRARY ${CURSES_LIBRARIES})
 endif()
-# Set up extra include directories for CheckIncludeFile
-list(APPEND CMAKE_REQUIRED_INCLUDES ${CURSES_INCLUDE_DIRS})
 
 # Fix undefined reference to tparm on RHEL 6 and potentially others
 # If curses is found via CMake, it also links against tinfo if it exists. But if we use our

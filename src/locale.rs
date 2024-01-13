@@ -59,14 +59,7 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 }
 
 /// Read the numeric locale, or None on any failure.
-// TODO: figure out precisely which platforms have localeconv_l, or use a build script.
-#[cfg(any(
-    target_os = "macos",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "openbsd",
-    target_os = "netbsd",
-))]
+#[cfg(feature = "localeconv_l")]
 unsafe fn read_locale() -> Option<Locale> {
     extern "C" {
         fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
@@ -95,13 +88,7 @@ unsafe fn read_locale() -> Option<Locale> {
     result
 }
 
-#[cfg(not(any(
-    target_os = "macos",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "openbsd",
-    target_os = "netbsd",
-)))]
+#[cfg(not(feature = "localeconv_l"))]
 unsafe fn read_locale() -> Option<Locale> {
     // Bleh, we have to go through localeconv, which races with setlocale.
     // TODO: There has to be a better way to do this.

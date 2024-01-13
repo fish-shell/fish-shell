@@ -96,6 +96,7 @@ fn detect_features(target: Target) {
         ),
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
+        ("localeconv_l", &have_localeconv_l),
     ] {
         match handler(&target) {
             Err(e) => rsconf::warn!("{}: {}", feature, e),
@@ -183,4 +184,9 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
             Ok(true)
         }
     }
+}
+
+/// See if the system headers provide the thread-safe localeconv_l(3) alternative to localeconv(3).
+fn have_localeconv_l(target: &Target) -> Result<bool, Box<dyn Error>> {
+    Ok(target.has_symbol_in::<String>("localeconv_l", &[]))
 }

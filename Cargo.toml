@@ -1,14 +1,12 @@
 [workspace]
 resolver = "2"
 members = [
-    "fish-rust/widestring-suffix",
+    "widestring-suffix",
 ]
 
 [workspace.package]
 rust-version = "1.67"
 edition = "2021"
-
-# TODO: Move fish-rust to src, make it the root package of this workspace
 
 [profile.release]
 overflow-checks = true
@@ -18,10 +16,9 @@ name = "fish"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
-build = "fish-rust/build.rs"
 
 [dependencies]
-widestring-suffix = { path = "fish-rust/widestring-suffix/" }
+widestring-suffix = { path = "widestring-suffix/" }
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }
 fast-float = { git = "https://github.com/fish-shell/fast-float-rust", branch="fish" }
 hexponent = { git = "https://github.com/fish-shell/hexponent", branch="fish" }
@@ -51,19 +48,19 @@ rsconf = "0.1.1"
 
 [lib]
 crate-type = ["rlib"]
-path = "fish-rust/src/lib.rs"
+path = "src/lib.rs"
 
 [[bin]]
 name = "fish"
-path = "fish-rust/src/bin/fish.rs"
+path = "src/bin/fish.rs"
 
 [[bin]]
 name = "fish_indent"
-path = "fish-rust/src/bin/fish_indent.rs"
+path = "src/bin/fish_indent.rs"
 
 [[bin]]
 name = "fish_key_reader"
-path = "fish-rust/src/bin/fish_key_reader.rs"
+path = "src/bin/fish_key_reader.rs"
 
 [features]
 default = []

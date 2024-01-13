@@ -51,20 +51,20 @@ fn main() {
     rsconf::link_libraries(&curses_libnames, LinkType::Default);
 
     cc::Build::new()
-        .file("fish-rust/src/libc.c")
+        .file("src/libc.c")
         .include(&build_dir)
         .compile("flibc.a");
 
-    if compiles("fish-rust/src/cfg/w_exitcode.cpp") {
+    if compiles("src/cfg/w_exitcode.cpp") {
         println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
     }
-    if compiles("fish-rust/src/cfg/eventfd.c") {
+    if compiles("src/cfg/eventfd.c") {
         println!("cargo:rustc-cfg=HAVE_EVENTFD");
     }
-    if compiles("fish-rust/src/cfg/pipe2.c") {
+    if compiles("src/cfg/pipe2.c") {
         println!("cargo:rustc-cfg=HAVE_PIPE2");
     }
-    if compiles("fish-rust/src/cfg/spawn.c") {
+    if compiles("src/cfg/spawn.c") {
         println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
     }
 

@@ -25,7 +25,7 @@ Files: share/tools/web_config/themes/Dracula.theme
 Copyright: 2018 Dracula Team
 License: MIT
 
-Files: fish-rust/src/builtins/printf.rs
+Files: src/builtins/printf.rs
 Copyright: 1990-2007 Free Software Foundation, Inc.
            2022 fish-shell contributors
 License: GPL-2+

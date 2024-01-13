@@ -266,7 +266,7 @@ regressions in the future (i.e., we don’t reintroduce the bug).
 
 The tests can be found in three places:
 
-- fish-rust/src/tests for unit tests.
+- src/tests for unit tests.
 - tests/checks for script tests, run by `littlecheck <https://github.com/ridiculousfish/littlecheck>`__
 - tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 

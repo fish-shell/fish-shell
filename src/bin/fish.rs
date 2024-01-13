@@ -763,7 +763,7 @@ fn main() {
     // Trigger any exit handlers.
     event::fire_generic(
         parser,
-        L!("fire_exit").to_owned(),
+        L!("fish_exit").to_owned(),
         vec![exit_status.to_wstring()],
     );
 

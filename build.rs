@@ -55,19 +55,6 @@ fn main() {
         .include(&build_dir)
         .compile("flibc.a");
 
-    if compiles("src/cfg/w_exitcode.cpp") {
-        println!("cargo:rustc-cfg=HAVE_WAITSTATUS_SIGNAL_RET");
-    }
-    if compiles("src/cfg/eventfd.c") {
-        println!("cargo:rustc-cfg=HAVE_EVENTFD");
-    }
-    if compiles("src/cfg/pipe2.c") {
-        println!("cargo:rustc-cfg=HAVE_PIPE2");
-    }
-    if compiles("src/cfg/spawn.c") {
-        println!("cargo:rustc-cfg=FISH_USE_POSIX_SPAWN");
-    }
-
     let mut build = cc::Build::new();
     // Add to the default library search path
     build.flag_if_supported("-L/usr/local/lib/");
@@ -102,6 +89,10 @@ fn detect_cfgs(target: Target) {
         ("gettext", &have_gettext),
         // See if the system headers provide the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| Ok(target.has_symbol_in::<String>("localeconv_l", &[]))),
+        ("FISH_USE_POSIX_SPAWN", &|target| Ok(target.has_header("spawn.h"))),
+        ("HAVE_PIPE2", &|target| Ok(target.has_symbol_in::<String>("pipe2", &[]))),
+        ("HAVE_EVENTFD", &|target| Ok(target.has_header("sys/eventfd.h"))),
+        ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| Ok(target.r#if("WEXITSTATUS(0x007f) == 0x7f", "sys/wait.h"))),
     ] {
         match handler(&target) {
             Err(e) => rsconf::warn!("{}: {}", name, e),

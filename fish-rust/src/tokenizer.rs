@@ -876,6 +876,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
     /// Examples of supported syntaxes.
     ///    Note we are only responsible for parsing the redirection part, not 'cmd' or 'file'.
     ///
+    /// ```text
     ///     cmd | cmd        normal pipe
     ///     cmd &| cmd       normal pipe plus stderr-merge
     ///     cmd >| cmd       pipe with explicit fd
@@ -893,6 +894,7 @@ impl TryFrom<&wstr> for PipeOrRedir {
     ///     cmd &> file      redirection with stderr merge
     ///     cmd ^ file       caret (stderr) redirection, perhaps disabled via feature flags
     ///     cmd ^^ file      caret (stderr) redirection, perhaps disabled via feature flags
+    /// ```
     fn try_from(buff: &wstr) -> Result<PipeOrRedir, ()> {
         // Extract a range of leading fd.
         let mut cursor = buff.chars().take_while(|c| c.is_ascii_digit()).count();

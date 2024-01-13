@@ -32,7 +32,7 @@ pub use L;
 
 /// A proc-macro for creating wide string literals using an L *suffix*.
 ///  Example usage:
-/// ```
+/// ```ignore
 ///  #[widestrs]
 ///  pub fn func() {
 ///     let s = "hello"L; // type &'static wstr

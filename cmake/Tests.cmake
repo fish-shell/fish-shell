@@ -146,6 +146,7 @@ foreach(PEXPECT ${PEXPECTS})
   add_test_target("${PEXPECT}")
 endforeach(PEXPECT)
 
+set(cargo_test_flags)
 # Rust stuff.
 if(DEFINED ASAN)
     # Rust w/ -Zsanitizer=address requires explicitly specifying the --target triple or else linker
@@ -154,12 +155,13 @@ if(DEFINED ASAN)
         message(FATAL_ERROR "ASAN requires defining the CMake variable Rust_CARGO_TARGET to the
             intended target triple")
     endif()
-    set(cargo_target_opt "--target" ${Rust_CARGO_TARGET})
+    list(APPEND cargo_test_flags "--target" ${Rust_CARGO_TARGET})
+    list(APPEND cargo_test_flags "--lib")
 endif()
 
 add_test(
     NAME "cargo-test"
-    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish --target-dir ${rust_target_dir} ${cargo_target_opt}
+    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package fish --target-dir ${rust_target_dir} ${cargo_test_flags}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 set_tests_properties("cargo-test" PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -167,7 +169,7 @@ add_test_target("cargo-test")
 
 add_test(
     NAME "cargo-test-widestring"
-    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package widestring-suffix --target-dir ${rust_target_dir} ${cargo_target_opt}
+    COMMAND env ${VARS_FOR_CARGO} cargo test ${CARGO_FLAGS} --package widestring-suffix --target-dir ${rust_target_dir} ${cargo_test_flags}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 add_test_target("cargo-test-widestring")

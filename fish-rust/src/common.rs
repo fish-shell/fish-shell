@@ -1800,8 +1800,9 @@ pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
 ///
 /// ```rust
 /// use std::io::prelude::*;
+/// use fish::common::ScopeGuard;
 ///
-/// let file = std::fs::File::open("/dev/null");
+/// let file = std::fs::File::create("/dev/null").unwrap();
 /// // Create a scope guard to write to the file when the scope expires.
 /// // To be able to still use the file, shadow `file` with the ScopeGuard itself.
 /// let mut file = ScopeGuard::new(file, |file| file.write_all(b"goodbye\n").unwrap());
@@ -2000,7 +2001,10 @@ pub fn is_console_session() -> bool {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```ignore
+/// use fish::wchar::prelude::*;
+/// use fish::common::assert_sorted_by_name;
+///
 /// const COLORS: &[(&wstr, u32)] = &[
 ///     // must be in alphabetical order
 ///     (L!("blue"), 0x0000ff),

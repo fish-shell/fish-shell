@@ -475,7 +475,7 @@ impl<'s> State<'s> {
         };
     }
 
-    /// ```
+    /// ```text
     /// <base>   = <constant> |
     ///            <function-0> {"(" ")"} |
     ///            <function-1> <power> |
@@ -641,9 +641,7 @@ impl<'s> State<'s> {
         }
     }
 
-    /// ```
     /// <power>  = {("-" | "+")} <base>
-    /// ```
     fn power(&mut self) -> f64 {
         let mut sign = 1.0;
         while let Token::Infix(op) = self.current {
@@ -660,9 +658,7 @@ impl<'s> State<'s> {
         sign * self.base()
     }
 
-    /// ```
     /// <factor> = <power> {"^" <power>}
-    /// ```
     fn factor(&mut self) -> f64 {
         let mut ret = self.power();
 
@@ -674,9 +670,7 @@ impl<'s> State<'s> {
         ret
     }
 
-    /// ```
     /// <term>   = <factor> {("*" | "/" | "%") <factor>}
-    /// ```
     fn term(&mut self) -> f64 {
         let mut ret = self.factor();
         while let Token::Infix(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current
@@ -695,9 +689,7 @@ impl<'s> State<'s> {
         ret
     }
 
-    /// ```
     /// <expr>   = <term> {("+" | "-") <term>}
-    /// ```
     fn expr(&mut self) -> f64 {
         let mut ret = self.term();
         while let Token::Infix(op @ (Operator::Add | Operator::Sub)) = self.current {

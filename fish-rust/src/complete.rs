@@ -2215,17 +2215,13 @@ pub fn append_completion(
 /// The command 'gcc -o' requires that a file follows it, so the `requires_param` mode is suitable.
 /// This can be done using the following line:
 ///
-/// ```
 /// complete -c gcc -s o -r
-/// ```
 ///
 /// The command 'grep -d' required that one of the strings 'read', 'skip' or 'recurse' is used. As
 /// such, it is suitable to specify that a completion requires one of them. This can be done using
 /// the following line:
 ///
-/// ```
 /// complete -c grep -s d -x -a "read skip recurse"
-/// ```
 ///
 /// - `cmd`: Command to complete.
 /// - `cmd_is_path`: If `true`, cmd will be interpreted as the absolute

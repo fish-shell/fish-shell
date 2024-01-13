@@ -2,16 +2,15 @@ use crate::common::{
     escape_string, str2wcstring, unescape_string, wcs2string, EscapeFlags, EscapeStringStyle,
     UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
 };
+use crate::locale::LOCALE_LOCK;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 use rand::{Rng, RngCore};
 use rand_pcg::Pcg64Mcg;
-use std::sync::Mutex;
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
 fn setlocale() {
-    static LOCALE_LOCK: Mutex<()> = Mutex::new(());
     let _guard = LOCALE_LOCK.lock().unwrap();
 
     #[rustfmt::skip]

@@ -2,6 +2,9 @@
 pub use printf_compat::locale::{Locale, C_LOCALE};
 use std::sync::Mutex;
 
+/// Lock guarding libc `setlocale()` or `localeconv()` calls to avoid races.
+pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
+
 /// It's CHAR_MAX.
 const CHAR_MAX: libc::c_char = libc::c_char::max_value();
 
@@ -102,7 +105,7 @@ unsafe fn read_locale() -> Option<Locale> {
 unsafe fn read_locale() -> Option<Locale> {
     // Bleh, we have to go through localeconv, which races with setlocale.
     // TODO: There has to be a better way to do this.
-    let _guard = SETLOCALE_LOCK.lock().unwrap();
+    let _guard = LOCALE_LOCK.lock().unwrap();
     const empty: [libc::c_char; 1] = [0];
     const c_loc_str: [libc::c_char; 2] = [b'C' as libc::c_char, 0];
 
@@ -121,10 +124,6 @@ unsafe fn read_locale() -> Option<Locale> {
 
 // Current numeric locale.
 static NUMERIC_LOCALE: Mutex<Option<Locale>> = Mutex::new(None);
-
-/// Lock guarding setlocale() calls to avoid races.
-// TODO: need to grab this lock when we port setlocale() calls.
-static SETLOCALE_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn get_numeric_locale() -> Locale {
     let mut locale = NUMERIC_LOCALE.lock().unwrap();

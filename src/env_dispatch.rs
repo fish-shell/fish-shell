@@ -678,6 +678,8 @@ fn init_curses(vars: &EnvStack) {
 
 /// Initialize the locale subsystem
 fn init_locale(vars: &EnvStack) {
+    let _guard = crate::locale::LOCALE_LOCK.lock().unwrap();
+
     #[rustfmt::skip]
     const UTF8_LOCALES: &[&str] = &[
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",

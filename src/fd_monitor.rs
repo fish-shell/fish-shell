@@ -192,10 +192,10 @@ impl From<u64> for FdMonitorItemId {
 }
 
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
-/// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup. The
-/// callback may close the fd, in which case the `FdMonitorItem` is removed from [`FdMonitor`]'s
-/// set.
-pub type Callback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
+/// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup.
+/// It should return an [`ItemAction`] to indicate whether the item should be removed from the
+/// [`FdMonitor`] set.
+pub type Callback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) -> ItemAction + Send + Sync>;
 
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable
 /// and invoke the callback.
@@ -214,11 +214,9 @@ pub struct FdMonitorItem {
     item_id: FdMonitorItemId,
 }
 
-/// Unlike C++, rust's `Vec` has `Vec::retain()` instead of `std::remove_if(...)` with the inverse
-/// logic. It's hard to keep track of which bool means what across the different layers, so be more
-/// explicit.
+/// A value returned by the callback to indicate what to do with the item.
 #[derive(PartialEq, Eq)]
-enum ItemAction {
+pub enum ItemAction {
     Remove,
     Retain,
 }
@@ -257,12 +255,9 @@ impl FdMonitorItem {
             } else {
                 ItemWakeReason::Timeout
             };
-            (self.callback)(&mut self.fd, reason);
-            if !self.fd.is_valid() {
-                result = ItemAction::Remove;
-            }
+            result = (self.callback)(&mut self.fd, reason);
         }
-        return result;
+        result
     }
 
     /// Invoke this item's callback with a poke, if its id is present in the sorted poke list.
@@ -272,12 +267,7 @@ impl FdMonitorItem {
             return ItemAction::Retain;
         }
 
-        (self.callback)(&mut self.fd, ItemWakeReason::Poke);
-        // Return `ItemAction::Remove` if the callback closed the fd
-        match self.fd.is_valid() {
-            true => ItemAction::Retain,
-            false => ItemAction::Remove,
-        }
+        (self.callback)(&mut self.fd, ItemWakeReason::Poke)
     }
 
     pub fn new(fd: AutoCloseFd, timeout: Option<Duration>, callback: Callback) -> Self {
@@ -483,11 +473,11 @@ impl BackgroundFdMonitor {
             // A predicate which services each item in turn, returning true if it should be removed
             let servicer = |item: &mut FdMonitorItem| {
                 let fd = item.fd.as_raw_fd();
-                if item.service_item(&fds, &now) == ItemAction::Remove {
+                let action = item.service_item(&fds, &now);
+                if action == ItemAction::Remove {
                     FLOG!(fd_monitor, "Removing fd", fd);
-                    return ItemAction::Remove;
                 }
-                return ItemAction::Retain;
+                action
             };
 
             // Service all items that are either readable or have timed out, and remove any which

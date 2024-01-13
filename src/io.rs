@@ -1,6 +1,8 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
 use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
-use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason};
+use crate::fd_monitor::{
+    Callback, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemAction, ItemWakeReason,
+};
 use crate::fds::{
     make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
 };
@@ -580,7 +582,9 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
                 }
                 done = true;
             }
-            if done {
+            if !done {
+                ItemAction::Retain
+            } else {
                 fd.close();
                 let (mutex, condvar) = &*promise;
                 {
@@ -588,6 +592,7 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
                     *done = true;
                 }
                 condvar.notify_one();
+                ItemAction::Remove
             }
         })
     };

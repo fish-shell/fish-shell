@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::fd_monitor::{
-    FdEventSignaller, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason,
+    FdEventSignaller, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemAction, ItemWakeReason,
 };
 use crate::fds::{make_autoclose_pipes, AutoCloseFd};
 use crate::tests::prelude::*;
@@ -51,9 +51,7 @@ impl ItemMaker {
         let result = Arc::new(result);
         let callback = {
             let result = Arc::clone(&result);
-            move |fd: &mut AutoCloseFd, reason: ItemWakeReason| {
-                result.callback(fd, reason);
-            }
+            move |fd: &mut AutoCloseFd, reason: ItemWakeReason| result.callback(fd, reason)
         };
         let item = FdMonitorItem::new(pipes.read, timeout, Box::new(callback));
         let item_id = monitor.add(item);
@@ -66,7 +64,7 @@ impl ItemMaker {
         self.item_id.load(Ordering::Relaxed).into()
     }
 
-    fn callback(&self, fd: &mut AutoCloseFd, reason: ItemWakeReason) {
+    fn callback(&self, fd: &mut AutoCloseFd, reason: ItemWakeReason) -> ItemAction {
         let mut was_closed = false;
 
         match reason {
@@ -89,6 +87,9 @@ impl ItemMaker {
         self.total_calls.fetch_add(1, Ordering::Relaxed);
         if self.always_exit || was_closed {
             fd.close();
+            ItemAction::Remove
+        } else {
+            ItemAction::Retain
         }
     }
 

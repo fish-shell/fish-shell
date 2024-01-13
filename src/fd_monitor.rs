@@ -191,31 +191,20 @@ impl From<u64> for FdMonitorItemId {
     }
 }
 
-pub type NativeCallback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
-
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
 /// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup. The
 /// callback may close the fd, in which case the `FdMonitorItem` is removed from [`FdMonitor`]'s
 /// set.
-///
-/// As capturing C++ closures can't be safely used via ffi interop and cxx bridge doesn't support
-/// passing typed `fn(...)` pointers from C++ to rust, we have a separate variant of the type that
-/// uses the C abi to invoke a callback. This will be removed when the dependent C++ code (currently
-/// only `src/io.cpp`) is ported to rust
-enum FdMonitorCallback {
-    None,
-    Native(NativeCallback),
-}
+pub type Callback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) + Send + Sync>;
 
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable
 /// and invoke the callback.
 pub struct FdMonitorItem {
     /// The fd to monitor
     fd: AutoCloseFd,
-    /// A callback to be invoked when the fd is readable, or when we are timed out. If we time out,
-    /// then timed_out will be true. If the fd is invalid on return from the function, then the item
-    /// is removed from the [`FdMonitor`] set.
-    callback: FdMonitorCallback,
+    /// A callback to be invoked when the fd is readable, or for another reason given by the wake reason.
+    /// If the fd is invalid on return from the function, then the item is removed from the [`FdMonitor`] set.
+    callback: Callback,
     /// The timeout associated with waiting on this item or `None` to wait indefinitely. A timeout
     /// of `0` is not supported.
     timeout: Option<Duration>,
@@ -268,10 +257,7 @@ impl FdMonitorItem {
             } else {
                 ItemWakeReason::Timeout
             };
-            match &self.callback {
-                FdMonitorCallback::None => panic!("Callback not assigned!"),
-                FdMonitorCallback::Native(callback) => (callback)(&mut self.fd, reason),
-            }
+            (self.callback)(&mut self.fd, reason);
             if !self.fd.is_valid() {
                 result = ItemAction::Remove;
             }
@@ -286,10 +272,7 @@ impl FdMonitorItem {
             return ItemAction::Retain;
         }
 
-        match &self.callback {
-            FdMonitorCallback::None => panic!("Callback not assigned!"),
-            FdMonitorCallback::Native(callback) => (callback)(&mut self.fd, ItemWakeReason::Poke),
-        }
+        (self.callback)(&mut self.fd, ItemWakeReason::Poke);
         // Return `ItemAction::Remove` if the callback closed the fd
         match self.fd.is_valid() {
             true => ItemAction::Retain,
@@ -297,36 +280,13 @@ impl FdMonitorItem {
         }
     }
 
-    pub fn new(
-        fd: AutoCloseFd,
-        timeout: Option<Duration>,
-        callback: Option<NativeCallback>,
-    ) -> Self {
+    pub fn new(fd: AutoCloseFd, timeout: Option<Duration>, callback: Callback) -> Self {
         FdMonitorItem {
             fd,
             timeout,
-            callback: match callback {
-                Some(callback) => FdMonitorCallback::Native(callback),
-                None => FdMonitorCallback::None,
-            },
+            callback,
             item_id: FdMonitorItemId(0),
             last_time: None,
-        }
-    }
-
-    pub fn set_callback(&mut self, callback: NativeCallback) {
-        self.callback = FdMonitorCallback::Native(callback);
-    }
-}
-
-impl Default for FdMonitorItem {
-    fn default() -> Self {
-        Self {
-            callback: FdMonitorCallback::None,
-            fd: AutoCloseFd::empty(),
-            timeout: None,
-            last_time: None,
-            item_id: FdMonitorItemId(0),
         }
     }
 }

@@ -35,7 +35,6 @@ impl ItemMaker {
         config: F,
     ) -> Arc<Self> {
         let pipes = make_autoclose_pipes().expect("fds exhausted!");
-        let mut item = FdMonitorItem::new(pipes.read, timeout, None);
 
         let mut result = ItemMaker {
             did_timeout: false.into(),
@@ -56,7 +55,7 @@ impl ItemMaker {
                 result.callback(fd, reason);
             }
         };
-        item.set_callback(Box::new(callback));
+        let item = FdMonitorItem::new(pipes.read, timeout, Box::new(callback));
         let item_id = monitor.add(item);
         result.item_id.store(u64::from(item_id), Ordering::Relaxed);
 

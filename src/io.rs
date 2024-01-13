@@ -1,8 +1,6 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
 use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
-use crate::fd_monitor::{
-    FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason, NativeCallback,
-};
+use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemWakeReason};
 use crate::fds::{
     make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
 };
@@ -557,44 +555,41 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
     iobuffer.fill_waiter.replace(Some(promise.clone()));
     // Run our function to read until the receiver is closed.
     // It's OK to capture 'buffer' because 'this' waits for the promise in its dtor.
-    let item_callback: Option<NativeCallback> = {
+    let item_callback: Callback = {
         let iobuffer = iobuffer.clone();
-        Some(Box::new(
-            move |fd: &mut AutoCloseFd, reason: ItemWakeReason| {
-                // Only check the shutdown flag if we timed out or were poked.
-                // It's important that if select() indicated we were readable, that we call select() again
-                // allowing it to time out. Note the typical case is that the fd will be closed, in which
-                // case select will return immediately.
-                let mut done = false;
-                if reason == ItemWakeReason::Readable {
-                    // select() reported us as readable; read a bit.
-                    let mut buf = iobuffer.buffer.lock().unwrap();
+        Box::new(move |fd: &mut AutoCloseFd, reason: ItemWakeReason| {
+            // Only check the shutdown flag if we timed out or were poked.
+            // It's important that if select() indicated we were readable, that we call select() again
+            // allowing it to time out. Note the typical case is that the fd will be closed, in which
+            // case select will return immediately.
+            let mut done = false;
+            if reason == ItemWakeReason::Readable {
+                // select() reported us as readable; read a bit.
+                let mut buf = iobuffer.buffer.lock().unwrap();
+                let ret = IoBuffer::read_once(fd.fd(), &mut buf);
+                done = ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
+            } else if iobuffer.shutdown_fillthread.load() {
+                // Here our caller asked us to shut down; read while we keep getting data.
+                // This will stop when the fd is closed or if we get EAGAIN.
+                let mut buf = iobuffer.buffer.lock().unwrap();
+                loop {
                     let ret = IoBuffer::read_once(fd.fd(), &mut buf);
-                    done =
-                        ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
-                } else if iobuffer.shutdown_fillthread.load() {
-                    // Here our caller asked us to shut down; read while we keep getting data.
-                    // This will stop when the fd is closed or if we get EAGAIN.
-                    let mut buf = iobuffer.buffer.lock().unwrap();
-                    loop {
-                        let ret = IoBuffer::read_once(fd.fd(), &mut buf);
-                        if ret <= 0 {
-                            break;
-                        }
+                    if ret <= 0 {
+                        break;
                     }
-                    done = true;
                 }
-                if done {
-                    fd.close();
-                    let (mutex, condvar) = &*promise;
-                    {
-                        let mut done = mutex.lock().unwrap();
-                        *done = true;
-                    }
-                    condvar.notify_one();
+                done = true;
+            }
+            if done {
+                fd.close();
+                let (mutex, condvar) = &*promise;
+                {
+                    let mut done = mutex.lock().unwrap();
+                    *done = true;
                 }
-            },
-        ))
+                condvar.notify_one();
+            }
+        })
     };
 
     let item_id = fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));

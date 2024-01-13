@@ -143,7 +143,8 @@ pub struct AutoClosePipes {
 pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
     let mut pipes: [c_int; 2] = [-1, -1];
 
-    let already_cloexec = false;
+    #[allow(unused_mut, unused_assignments)]
+    let mut already_cloexec = false;
     #[cfg(HAVE_PIPE2)]
     {
         if unsafe { libc::pipe2(&mut pipes[0], O_CLOEXEC) } < 0 {

@@ -266,10 +266,6 @@ pub fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
         .collect()
 }
 
-pub struct GlobalAbbrs<'a> {
-    g: MutexGuard<'a, AbbreviationSet>,
-}
-
 #[test]
 #[serial]
 fn rename_abbrs() {

@@ -478,10 +478,10 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
 
 const PUA1_START: char = '\u{E000}';
 const PUA1_END: char = '\u{F900}';
-const PUA2_START: char = '\u{F0000}';
-const PUA2_END: char = '\u{FFFFE}';
-const PUA3_START: char = '\u{100000}';
-const PUA3_END: char = '\u{10FFFE}';
+// const PUA2_START: char = '\u{F0000}';
+// const PUA2_END: char = '\u{FFFFE}';
+// const PUA3_START: char = '\u{100000}';
+// const PUA3_END: char = '\u{10FFFE}';
 
 /// Return one if the code point is in a Unicode private use area.
 fn fish_is_pua(c: char) -> bool {

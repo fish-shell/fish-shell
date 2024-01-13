@@ -292,11 +292,6 @@ impl ElectricVar {
     pub fn exports(&self) -> bool {
         self.flags & electric::EXPORTS != 0
     }
-
-    /// Supports assert_sorted_by_name.
-    fn as_char_slice(&self) -> &[char] {
-        self.name.as_char_slice()
-    }
 }
 
 /// Check if a variable may not be set using the set command.

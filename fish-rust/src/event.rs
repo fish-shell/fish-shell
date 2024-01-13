@@ -199,12 +199,6 @@ impl EventHandler {
 }
 type EventHandlerList = Vec<Arc<EventHandler>>;
 
-impl EventHandler {
-    fn set_removed(self: &mut EventHandler) {
-        self.removed.store(true, Ordering::Relaxed);
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Event {
     desc: EventDescription,

@@ -1072,10 +1072,6 @@ fn parse_fd(s: &wstr) -> RawFd {
     s.parse().unwrap_or(-1)
 }
 
-fn new_move_word_state_machine(syl: MoveWordStyle) -> Box<MoveWordStateMachine> {
-    Box::new(MoveWordStateMachine::new(syl))
-}
-
 impl MoveWordStateMachine {
     pub fn new(style: MoveWordStyle) -> Self {
         MoveWordStateMachine { state: 0, style }

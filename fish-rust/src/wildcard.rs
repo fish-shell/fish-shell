@@ -24,15 +24,9 @@ use once_cell::sync::Lazy;
 
 static COMPLETE_EXEC_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command"));
 static COMPLETE_EXEC_LINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command link"));
-static COMPLETE_CHAR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("char device"));
-static COMPLETE_BLOCK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("block device"));
-static COMPLETE_FIFO_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("fifo"));
 static COMPLETE_FILE_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("file"));
 static COMPLETE_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("symlink"));
 static COMPLETE_DIRECTORY_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("dir symlink"));
-static COMPLETE_BROKEN_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("broken symlink"));
-static COMPLETE_LOOP_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("symlink loop"));
-static COMPLETE_SOCKET_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("socket"));
 static COMPLETE_DIRECTORY_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("directory"));
 
 /// Character representing any character except '/' (slash).

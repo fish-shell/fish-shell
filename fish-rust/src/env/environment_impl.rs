@@ -24,9 +24,6 @@ use std::ops::{Deref, DerefMut};
 
 use std::sync::{atomic::AtomicU64, atomic::Ordering, Arc, Mutex, MutexGuard};
 
-/// TODO: migrate to history once ported.
-const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
-
 // Universal variables instance.
 lazy_static! {
     static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());
@@ -527,19 +524,6 @@ impl EnvScopedImpl {
             pwd.push('/');
         }
         pwd
-    }
-
-    // todo!("these two are clones from the trait")
-    fn get_unless_empty(&self, name: &wstr) -> Option<EnvVar> {
-        self.getf_unless_empty(name, EnvMode::default())
-    }
-
-    fn getf_unless_empty(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        let var = self.getf(name, mode)?;
-        if !var.is_empty() {
-            return Some(var);
-        }
-        None
     }
 
     /// Return a copy of self, with copied locals but shared globals.
@@ -1106,7 +1090,7 @@ static ENV_LOCK: Mutex<()> = Mutex::new(());
 
 /// Like MutexGuard but for our global lock.
 pub struct EnvMutexGuard<'a, T: 'a> {
-    guard: MutexGuard<'static, ()>,
+    _guard: MutexGuard<'static, ()>,
     value: *mut T,
     _phantom: PhantomData<&'a T>,
 }
@@ -1143,7 +1127,7 @@ impl<T> EnvMutex<T> {
         // Safety: we have the global lock.
         let value = unsafe { &mut *self.inner.get() };
         EnvMutexGuard {
-            guard,
+            _guard: guard,
             value,
             _phantom: PhantomData,
         }

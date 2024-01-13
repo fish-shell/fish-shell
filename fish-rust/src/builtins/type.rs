@@ -14,7 +14,6 @@ struct type_cmd_opts_t {
     get_type: bool,
     path: bool,
     force_path: bool,
-    print_help: bool,
     query: bool,
 }
 

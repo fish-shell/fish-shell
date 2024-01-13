@@ -67,7 +67,7 @@ fn test_debounce() {
     while !ctx.completion_ran.last().unwrap().load() {
         iothread_service_main(reader_data);
     }
-    unsafe { iothread_drain_all(reader_data) };
+    iothread_drain_all(reader_data);
 
     // Each perform() call may displace an existing queued operation.
     // Each operation waits until all are queued.

@@ -23,7 +23,6 @@ use crate::{
 
 // FIXME: (once localization works in Rust) These should separate `%ls: ` and the trailing `\n`, like in builtins/string
 const MISMATCHED_ARGS: &str = "%ls: given %d indexes but %d values\n";
-const ARRAY_BOUNDS_ERR: &str = "%ls: array index out of bounds\n";
 const UVAR_ERR: &str =
     "%ls: successfully set universal '%ls'; but a global by that name shadows it\n";
 
@@ -935,8 +934,6 @@ fn set_internal(
 
     // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
     if !split.indexes.is_empty() {
-        // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
-
         // Append and prepend are disallowed.
         if opts.append || opts.prepend {
             streams.err.append(wgettext_fmt!(

@@ -864,12 +864,6 @@ mod fish3_uvars {
     pub const PATH: &[u8] = b"--path";
 }
 
-/// The different types of messages found in the fishd file.
-enum UvarMessageType {
-    set,
-    set_export,
-}
-
 /// \return the default variable path, or an empty string on failure.
 fn default_vars_path_directory() -> Option<WString> {
     path_get_config()

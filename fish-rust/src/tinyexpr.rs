@@ -41,7 +41,6 @@ use crate::{
 #[derive(Clone, Copy)]
 enum Function {
     Constant(f64),
-    Fn0(fn() -> f64),
     Fn1(fn(f64) -> f64),
     Fn2(fn(f64, f64) -> f64),
     FnN(fn(&[f64]) -> f64),
@@ -51,7 +50,6 @@ impl Debug for Function {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let variant = match self {
             Function::Constant(n) => return f.debug_tuple("Function::Constant").field(n).finish(),
-            Function::Fn0(_) => "Fn0",
             Function::Fn1(_) => "Fn1",
             Function::Fn2(_) => "Fn2",
             Function::FnN(_) => "FnN",
@@ -65,7 +63,6 @@ impl Function {
     pub fn arity(&self) -> Option<usize> {
         match self {
             Function::Constant(_) => Some(0),
-            Function::Fn0(_) => Some(0),
             Function::Fn1(_) => Some(1),
             Function::Fn2(_) => Some(2),
             Function::FnN(_) => None,
@@ -75,7 +72,6 @@ impl Function {
     pub fn call(&self, args: &[f64]) -> f64 {
         match (self, args) {
             (Function::Constant(n), []) => *n,
-            (Function::Fn0(f), []) => f(),
             (Function::Fn1(f), [a]) => f(*a),
             (Function::Fn2(f), [a, b]) => f(*a, *b),
             (Function::FnN(f), args) => f(args),
@@ -152,7 +148,6 @@ impl Operator {
 
 #[derive(Debug, Clone, Copy)]
 enum Token {
-    Null,
     Error,
     End,
     Sep,
@@ -529,7 +524,6 @@ impl<'s> State<'s> {
                     }
 
                     return match f {
-                        Function::Fn0(f) => f(),
                         Function::Constant(n) => n,
                         _ => unreachable!("unhandled function type with arity 0"),
                     };
@@ -631,7 +625,7 @@ impl<'s> State<'s> {
                 NAN
             }
 
-            Token::Null | Token::Error | Token::Sep | Token::Close | Token::Infix(_) => {
+            Token::Error | Token::Sep | Token::Close | Token::Infix(_) => {
                 if self.no_specific_error() {
                     self.set_error(ErrorKind::UnexpectedToken, None);
                 }

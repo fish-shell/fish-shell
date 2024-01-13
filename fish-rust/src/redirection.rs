@@ -89,14 +89,6 @@ impl RedirectionSpec {
             None => panic!("Not a file redirection"),
         }
     }
-
-    fn fd(&self) -> RawFd {
-        self.fd
-    }
-
-    fn mode(&self) -> RedirectionMode {
-        self.mode
-    }
 }
 
 pub type RedirectionSpecList = Vec<RedirectionSpec>;

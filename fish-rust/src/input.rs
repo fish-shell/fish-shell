@@ -198,19 +198,17 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
 ];
 assert_sorted_by_name!(INPUT_FUNCTION_METADATA);
 
-const INPUT_FUNCTION_COUNT: usize = R_END_INPUT_FUNCTIONS;
-
-#[allow(dead_code)]
-const fn assert_sizes_match() {
+const fn _assert_sizes_match() {
+    let input_function_count = R_END_INPUT_FUNCTIONS;
     assert!(
-        INPUT_FUNCTION_METADATA.len() == INPUT_FUNCTION_COUNT,
+        INPUT_FUNCTION_METADATA.len() == input_function_count,
         concat!(
             "input_function_metadata size mismatch with input_common. ",
             "Did you forget to update input_function_metadata?"
         )
     );
 }
-const _: () = assert_sizes_match();
+const _: () = _assert_sizes_match();
 
 // Keep this function for debug purposes
 // See 031b265

@@ -133,10 +133,6 @@ pub struct ScreenData {
 }
 
 impl ScreenData {
-    fn new() -> Self {
-        Default::default()
-    }
-
     pub fn add_line(&mut self) -> &mut Line {
         self.line_datas.push(Line::new());
         self.line_datas.last_mut().unwrap()
@@ -852,14 +848,8 @@ impl Screen {
         fn o_line(zelf: &Screen, i: usize) -> &Line {
             zelf.desired.line(i)
         }
-        fn o_line_mut(zelf: &mut Screen, i: usize) -> &mut Line {
-            zelf.desired.line_mut(i)
-        }
         fn s_line(zelf: &Screen, i: usize) -> &Line {
             zelf.actual.line(i)
-        }
-        fn s_line_mut(zelf: &mut Screen, i: usize) -> &mut Line {
-            zelf.actual.line_mut(i)
         }
 
         // Output all lines.

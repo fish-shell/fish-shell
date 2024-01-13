@@ -141,16 +141,6 @@ impl SeparatedBuffer {
         !self.elements.is_empty() && !self.elements.last().unwrap().is_explicitly_separated()
     }
 
-    /// If our last element has an inferred separation, return a pointer to it; else nullptr.
-    /// This is useful for appending one inferred separation to another.
-    fn last_if_inferred(&self) -> Option<&BufferElement> {
-        if self.last_inferred() {
-            self.elements.last()
-        } else {
-            None
-        }
-    }
-
     /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
     /// succeed, false if we exceed buffer_limit.
     fn try_add_size(&mut self, delta: usize) -> bool {

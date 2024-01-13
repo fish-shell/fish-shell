@@ -531,10 +531,6 @@ fn test_signal_name() {
     assert_eq!(sig.name(), "SIGINT");
 }
 
-fn new_sighupint_checker() -> Box<SigChecker> {
-    Box::new(SigChecker::new_sighupint())
-}
-
 #[rustfmt::skip]
 #[test]
 fn test_signal_parse() {

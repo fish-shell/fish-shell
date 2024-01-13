@@ -75,7 +75,6 @@ bsd = []
 
 [lints]
 rust.non_camel_case_types = "allow"
-rust.dead_code = "allow"
 rust.non_upper_case_globals = "allow"
 rust.unstable_name_collisions = "allow"
 clippy.bool_assert_comparison = "allow"

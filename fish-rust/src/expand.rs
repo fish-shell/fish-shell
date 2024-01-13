@@ -420,7 +420,6 @@ fn is_quotable(s: &wstr) -> bool {
 }
 
 enum ParseSliceError {
-    none,
     zero_index,
     invalid_index,
 }
@@ -671,9 +670,6 @@ fn expand_variables(
             }
             Err((bad_pos, error)) => {
                 match error {
-                    ParseSliceError::none => {
-                        panic!("bad_pos != 0 but parse_slice_error_t::none!");
-                    }
                     ParseSliceError::zero_index => {
                         append_syntax_error!(
                             errors,
@@ -1023,9 +1019,6 @@ pub fn expand_cmdsubst(
             Ok(offset) => slice_begin + offset,
             Err((bad_pos, error)) => {
                 match error {
-                    ParseSliceError::none => {
-                        panic!("bad_pos != 0 but parse_slice_error_t::none!");
-                    }
                     ParseSliceError::zero_index => {
                         append_syntax_error!(
                             errors,

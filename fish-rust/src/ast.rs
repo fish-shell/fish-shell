@@ -1947,19 +1947,6 @@ impl ArgumentOrRedirectionVariant {
         self.embedded_node().try_source_range()
     }
 
-    fn as_argument(&self) -> Option<&Argument> {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(node) => Some(node),
-            _ => None,
-        }
-    }
-    fn as_redirection(&self) -> Option<&Redirection> {
-        match self {
-            ArgumentOrRedirectionVariant::Redirection(redirection) => Some(redirection),
-            _ => None,
-        }
-    }
-
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             ArgumentOrRedirectionVariant::Argument(node) => node,

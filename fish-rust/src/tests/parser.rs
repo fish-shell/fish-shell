@@ -711,9 +711,7 @@ fn test_1_cancellation(src: &wstr) {
         src
     );
     assert!(res.status.signal_exited() && res.status.signal_code() == SIGINT);
-    unsafe {
-        iothread_drain_all(reader_current_data().unwrap());
-    }
+    iothread_drain_all(reader_current_data().unwrap());
 }
 
 #[test]

@@ -259,7 +259,6 @@ mod test_expressions {
     /// Parenthentical expression.
     struct ParentheticalExpression {
         contents: Box<dyn Expression>,
-        token: Token,
         range: Range,
     }
 
@@ -572,7 +571,6 @@ mod test_expressions {
             // Success.
             ParentheticalExpression {
                 contents: subexpr,
-                token: Token::paren_open,
                 range: start..close_index + 1,
             }
             .into_some_box()

@@ -402,15 +402,6 @@ impl ParseError {
     }
 }
 
-impl ParseError {
-    fn code(&self) -> ParseErrorCode {
-        self.code
-    }
-    fn source_start(&self) -> usize {
-        self.source_start
-    }
-}
-
 #[widestrs]
 pub fn token_type_user_presentable_description(
     type_: ParseTokenType,

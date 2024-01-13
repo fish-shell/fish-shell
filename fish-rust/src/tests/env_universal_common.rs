@@ -50,7 +50,7 @@ fn test_universal() {
     for i in 0..threads {
         iothread_perform(move || test_universal_helper(i));
     }
-    unsafe { iothread_drain_all(reader_current_data().unwrap()) };
+    iothread_drain_all(reader_current_data().unwrap());
 
     let mut uvars = EnvUniversal::new();
     let mut callbacks = CallbackDataList::new();

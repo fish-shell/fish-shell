@@ -2527,13 +2527,6 @@ pub struct CompletionRequestOptions {
     pub fuzzy_match: bool,
 }
 
-fn completion_request_options_autosuggest() -> CompletionRequestOptions {
-    CompletionRequestOptions::autosuggest()
-}
-fn completion_request_options_normal() -> CompletionRequestOptions {
-    CompletionRequestOptions::normal()
-}
-
 impl Default for CompletionRequestOptions {
     fn default() -> Self {
         Self {
@@ -2541,20 +2534,5 @@ impl Default for CompletionRequestOptions {
             descriptions: false,
             fuzzy_match: false,
         }
-    }
-}
-
-impl Completion {
-    fn flags(&self) -> u8 {
-        self.flags.bits()
-    }
-    fn set_flags(&mut self, value: u8) {
-        self.flags = CompleteFlags::from_bits(value).unwrap();
-    }
-    fn match_is_exact_or_prefix(&self) -> bool {
-        self.r#match.is_exact_or_prefix()
-    }
-    fn completion_erase(&mut self, begin: usize, end: usize) {
-        self.completion.replace_range(begin..end, L!(""))
     }
 }

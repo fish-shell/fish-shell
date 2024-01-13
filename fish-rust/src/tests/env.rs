@@ -13,6 +13,7 @@ pub struct TestEnvironment {
     pub vars: HashMap<WString, WString>,
 }
 impl TestEnvironment {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }
@@ -34,6 +35,7 @@ pub struct PwdEnvironment {
     pub parent: TestEnvironment,
 }
 impl PwdEnvironment {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }

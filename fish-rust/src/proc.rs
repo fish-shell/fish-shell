@@ -144,11 +144,6 @@ impl ProcStatus {
         self.value.store(value, Ordering::Relaxed);
     }
 
-    fn set_empty(&self, empty: bool) {
-        let value = Self::to_u64(self.status(), empty);
-        self.value.store(value, Ordering::Relaxed);
-    }
-
     fn to_u64(status: i32, empty: bool) -> u64 {
         (u64::from(empty) << 32) | u64::from(status as u32)
     }
@@ -185,9 +180,9 @@ impl ProcStatus {
         );
 
         // Some paranoia.
-        const zerocode: i32 = ProcStatus::w_exitcode(0, 0);
+        const _zerocode: i32 = ProcStatus::w_exitcode(0, 0);
         const _: () = assert!(
-            WIFEXITED(zerocode),
+            WIFEXITED(_zerocode),
             "Synthetic exit status not reported as exited"
         );
 

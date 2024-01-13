@@ -38,9 +38,6 @@ use std::os::unix::prelude::*;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
-/// TODO: migrate to history once ported.
-const DFLT_FISH_HISTORY_SESSION_ID: &wstr = L!("fish");
-
 // Universal variables instance.
 lazy_static! {
     static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());

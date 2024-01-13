@@ -58,10 +58,6 @@ impl Write for AutoCloseFd {
     }
 }
 
-fn new_autoclose_fd(fd: i32) -> Box<AutoCloseFd> {
-    Box::new(AutoCloseFd::new(fd))
-}
-
 impl AutoCloseFd {
     // Closes the fd if not already closed.
     pub fn close(&mut self) {

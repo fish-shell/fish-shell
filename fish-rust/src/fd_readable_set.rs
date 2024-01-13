@@ -30,7 +30,9 @@ pub struct fd_readable_set_t {
     nfds_: c_int,
 }
 
+#[allow(dead_code)]
 const kUsecPerMsec: u64 = 1000;
+#[allow(dead_code)]
 const kUsecPerSec: u64 = 1000 * kUsecPerMsec;
 
 #[cfg(target_os = "macos")]

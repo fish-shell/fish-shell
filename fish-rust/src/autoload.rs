@@ -119,6 +119,7 @@ impl Autoload {
 
     /// Invalidate any underlying cache.
     /// This is exposed for testing.
+    #[cfg(test)]
     fn invalidate_cache(&mut self) {
         self.cache = Box::new(AutoloadFileCache::with_dirs(self.cache.dirs().to_owned()));
     }

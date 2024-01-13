@@ -54,7 +54,6 @@ fn try_ptr_to_cstr(ptr: *const libc::c_char) -> Option<CString> {
 /// Private module exposing system curses ffi.
 mod sys {
     pub const OK: i32 = 0;
-    pub const ERR: i32 = -1;
 
     /// tputs callback argument type and the callback type itself.
     /// N.B. The C++ had a check for TPUTS_USES_INT_ARG for the first parameter of tputs
@@ -481,7 +480,6 @@ pub fn reset() {
 /// Panics if the given code string does not contain exactly two bytes.
 fn get_str_cap(code: &str) -> Option<CString> {
     let code = to_cstr_code(code);
-    const NULL: *const i8 = core::ptr::null();
     // termcap spec says nul is not allowed in terminal sequences and must be encoded;
     // so the terminating NUL is the end of the string.
     let tstr = unsafe { sys::tgetstr(code.as_ptr(), core::ptr::null_mut()) };

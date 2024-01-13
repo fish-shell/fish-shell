@@ -2,9 +2,6 @@
 pub use printf_compat::locale::{Locale, C_LOCALE};
 use std::sync::Mutex;
 
-/// Rust libc does not provide LC_GLOBAL_LOCALE, but it appears to be -1 everywhere.
-const LC_GLOBAL_LOCALE: libc::locale_t = (-1_isize) as libc::locale_t;
-
 /// It's CHAR_MAX.
 const CHAR_MAX: libc::c_char = libc::c_char::max_value();
 
@@ -58,11 +55,6 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
     }
 }
 
-// Declare localeconv_l as an extern C function as libc does not have it.
-extern "C" {
-    fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
-}
-
 /// Read the numeric locale, or None on any failure.
 // TODO: figure out precisely which platforms have localeconv_l, or use a build script.
 #[cfg(any(
@@ -73,6 +65,12 @@ extern "C" {
     target_os = "netbsd",
 ))]
 unsafe fn read_locale() -> Option<Locale> {
+    extern "C" {
+        fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
+    }
+    /// Rust libc does not provide LC_GLOBAL_LOCALE, but it appears to be -1 everywhere.
+    const LC_GLOBAL_LOCALE: libc::locale_t = (-1_isize) as libc::locale_t;
+
     const empty: [libc::c_char; 1] = [0];
     let cur = libc::duplocale(LC_GLOBAL_LOCALE);
     if cur.is_null() {

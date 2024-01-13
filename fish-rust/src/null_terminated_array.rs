@@ -95,7 +95,7 @@ unsafe impl<T: NulTerminatedString + ?Sized + Sync> Sync for NullTerminatedArray
 pub struct OwningNullTerminatedArray {
     // Note that null_terminated_array holds pointers into our boxed strings.
     // The 'static is a lie.
-    strings: Pin<Box<[CString]>>,
+    _strings: Pin<Box<[CString]>>,
     null_terminated_array: NullTerminatedArray<'static, CStr>,
 }
 
@@ -120,7 +120,7 @@ impl OwningNullTerminatedArray {
         // Safety: we're pinning the strings, so they won't move.
         let string_slice: &'static [CString] = unsafe { std::mem::transmute(&*strings) };
         OwningNullTerminatedArray {
-            strings: Pin::from(strings),
+            _strings: Pin::from(strings),
             null_terminated_array: NullTerminatedArray::new(string_slice),
         }
     }

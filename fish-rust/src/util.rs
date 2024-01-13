@@ -4,14 +4,6 @@ use crate::wchar::prelude::*;
 use std::cmp::Ordering;
 use std::time;
 
-fn ordering_to_int(ord: Ordering) -> i32 {
-    match ord {
-        Ordering::Less => -1,
-        Ordering::Equal => 0,
-        Ordering::Greater => 1,
-    }
-}
-
 /// Compares two wide character strings with an (arguably) intuitive ordering. This function tries
 /// to order strings in a way which is intuitive to humans with regards to sorting strings
 /// containing numbers.

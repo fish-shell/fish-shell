@@ -88,11 +88,21 @@ fn detect_cfgs(target: Target) {
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
         // See if the system headers provide the thread-safe localeconv_l(3) alternative to localeconv(3).
-        ("localeconv_l", &|target| Ok(target.has_symbol_in::<String>("localeconv_l", &[]))),
-        ("FISH_USE_POSIX_SPAWN", &|target| Ok(target.has_header("spawn.h"))),
-        ("HAVE_PIPE2", &|target| Ok(target.has_symbol_in::<String>("pipe2", &[]))),
-        ("HAVE_EVENTFD", &|target| Ok(target.has_header("sys/eventfd.h"))),
-        ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| Ok(target.r#if("WEXITSTATUS(0x007f) == 0x7f", "sys/wait.h"))),
+        ("localeconv_l", &|target| {
+            Ok(target.has_symbol_in::<String>("localeconv_l", &[]))
+        }),
+        ("FISH_USE_POSIX_SPAWN", &|target| {
+            Ok(target.has_header("spawn.h"))
+        }),
+        ("HAVE_PIPE2", &|target| {
+            Ok(target.has_symbol_in::<String>("pipe2", &[]))
+        }),
+        ("HAVE_EVENTFD", &|target| {
+            Ok(target.has_header("sys/eventfd.h"))
+        }),
+        ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| {
+            Ok(target.r#if("WEXITSTATUS(0x007f) == 0x7f", "sys/wait.h"))
+        }),
     ] {
         match handler(&target) {
             Err(e) => rsconf::warn!("{}: {}", name, e),

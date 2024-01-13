@@ -98,14 +98,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
-# List of other sources.
-set(FISH_SRCS
-    src/empty.cpp
-)
-
-# Header files are just globbed.
-file(GLOB FISH_HEADERS src/*.h)
-
 # Set up config.h
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
@@ -124,12 +116,6 @@ get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
-# Teach fish_version.o to rebuild when FBVF changes.
-# The standard C++ include detection machinery misses this.
-set_source_files_properties(src/fish_version.cpp
-                            PROPERTIES OBJECT_DEPENDS
-                            ${CMAKE_CURRENT_BINARY_DIR}/${FBVF})
-
 # Enable thread-safe errno on Solaris (#5611)
 add_definitions(-D_REENTRANT)
 
@@ -140,18 +126,8 @@ include(cmake/PCRE2.cmake)
 function(FISH_LINK_DEPS_AND_SIGN target)
   # Tell Cargo where our build directory is so it can find config.h.
   corrosion_set_env_vars(${target} ${VARS_FOR_CARGO})
-  corrosion_link_libraries(${target} fishlib)
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)
-
-# Define libfish.a.
-add_library(fishlib STATIC ${FISH_SRCS})
-target_sources(fishlib PRIVATE ${FISH_HEADERS})
-target_link_libraries(fishlib
-  ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS}
-  ${PCRE2_LIB} ${Intl_LIBRARIES} ${ATOMIC_LIBRARY})
-target_include_directories(fishlib PRIVATE
-  ${CURSES_INCLUDE_DIRS})
 
 # Define fish.
 fish_link_deps_and_sign(fish)

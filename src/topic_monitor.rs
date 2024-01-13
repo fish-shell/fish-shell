@@ -86,6 +86,7 @@ impl GenerationsList {
         }
     }
 
+    #[allow(dead_code)]
     fn describe(&self) -> WString {
         let mut result = WString::new();
         for gen in self.as_array() {

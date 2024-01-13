@@ -1629,6 +1629,8 @@ pub fn restore_term_foreground_process_group_for_exit() {
     }
 }
 
+#[allow(unused)]
+// This function is unused in some configurations/on some platforms
 fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     a.windows(b.len()).any(|aw| aw == b)
 }

@@ -766,7 +766,7 @@ impl<'ctx> Completer<'ctx> {
 
             // Check to see if we have a preceding double-dash.
             for tok in &tokens[..tokens.len() - 1] {
-                if tok.get_source(&cmdline) == L!("--") {
+                if tok.get_source(&cmdline) == "--" {
                     had_ddash = true;
                     break;
                 }
@@ -816,7 +816,7 @@ impl<'ctx> Completer<'ctx> {
 
             // Hack. If we're cd, handle it specially (issue #1059, others).
             handle_as_special_cd =
-                exp_command == L!("cd") || arg_data.visited_wrapped_commands.contains(L!("cd"));
+                exp_command == "cd" || arg_data.visited_wrapped_commands.contains(L!("cd"));
         }
 
         // Maybe apply variable assignments.
@@ -1607,7 +1607,7 @@ impl<'ctx> Completer<'ctx> {
             if self.flags.descriptions && self.flags.autosuggestion {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
-                if env_name == L!("history") {
+                if env_name == "history" {
                     let history = History::with_name(&history_session_id(self.ctx.vars()));
                     for i in 1..std::cmp::min(history.size(), 64) {
                         if i > 1 {

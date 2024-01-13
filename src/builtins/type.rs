@@ -88,7 +88,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
                     if path.is_empty() {
                         comment.push_utfstr(&wgettext!("Defined interactively"));
-                    } else if path == L!("-") {
+                    } else if path == "-" {
                         comment.push_utfstr(&wgettext!("Defined via `source`"));
                     } else {
                         let lineno: i32 = props.definition_lineno();
@@ -103,7 +103,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                         let path = props.copy_definition_file().unwrap_or(L!(""));
                         if path.is_empty() {
                             comment.push_utfstr(&wgettext!(", copied interactively"));
-                        } else if path == L!("-") {
+                        } else if path == "-" {
                             comment.push_utfstr(&wgettext!(", copied via `source`"));
                         } else {
                             let lineno = props.copy_definition_lineno();

@@ -982,7 +982,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
-                    if node.source(self.src) == L!("\n") {
+                    if node.source(self.src) == "\n" {
                         inc = 1;
                         dec = 1;
                     }
@@ -1534,7 +1534,7 @@ fn detect_errors_in_decorated_statement(
             }
 
             // Similarly for time (#8841).
-            if command == L!("time") {
+            if command == "time" {
                 errored = append_syntax_error!(
                     parse_errors,
                     source_start,
@@ -1549,7 +1549,7 @@ fn detect_errors_in_decorated_statement(
     // to avoid people trying `if $status`.
     // We see this surprisingly regularly.
     let com = dst.command.source(buff_src);
-    if com == L!("$status") {
+    if com == "$status" {
         errored = append_syntax_error!(
             parse_errors,
             source_start,
@@ -1615,7 +1615,7 @@ fn detect_errors_in_decorated_statement(
             }
 
             if !found_loop {
-                errored = if command == L!("break") {
+                errored = if command == "break" {
                     append_syntax_error!(
                         parse_errors,
                         source_start,

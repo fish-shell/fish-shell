@@ -95,16 +95,16 @@ fn test_killring() {
 
     assert!(kr.entries() == [L!("c"), L!("b"), L!("a")]);
 
-    assert!(kr.yank_rotate() == L!("b"));
+    assert!(kr.yank_rotate() == "b");
     assert!(kr.entries() == [L!("b"), L!("a"), L!("c")]);
 
-    assert!(kr.yank_rotate() == L!("a"));
+    assert!(kr.yank_rotate() == "a");
     assert!(kr.entries() == [L!("a"), L!("c"), L!("b")]);
 
     kr.add(WString::from_str("d"));
 
     assert!((kr.entries() == [L!("d"), L!("a"), L!("c"), L!("b")]));
 
-    assert!(kr.yank_rotate() == L!("a"));
+    assert!(kr.yank_rotate() == "a");
     assert!((kr.entries() == [L!("a"), L!("c"), L!("b"), L!("d")]));
 }

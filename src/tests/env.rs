@@ -41,7 +41,7 @@ impl PwdEnvironment {
 }
 impl Environment for PwdEnvironment {
     fn getf(&self, name: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        if name == L!("PWD") {
+        if name == "PWD" {
             return Some(EnvVar::new(wgetcwd(), EnvVarFlags::default()));
         }
         self.parent.getf(name, mode)
@@ -49,7 +49,7 @@ impl Environment for PwdEnvironment {
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         let mut res = self.parent.get_names(flags);
-        if !res.iter().any(|n| n == L!("PWD")) {
+        if !res.iter().any(|n| n == "PWD") {
             res.push(L!("PWD").to_owned());
         }
         res

@@ -33,7 +33,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     let func_filename;
     let optind = opts.optind;
 
-    if argc == optind || args[optind] == L!("-") {
+    if argc == optind || args[optind] == "-" {
         if streams.stdin_fd < 0 {
             streams
                 .err

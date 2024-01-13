@@ -74,7 +74,7 @@ impl RedirectionSpec {
     }
     /// \return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
-        self.mode == RedirectionMode::fd && self.target == L!("-")
+        self.mode == RedirectionMode::fd && self.target == "-"
     }
 
     /// Attempt to parse target as an fd.

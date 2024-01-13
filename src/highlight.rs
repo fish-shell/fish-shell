@@ -335,7 +335,7 @@ pub fn autosuggest_validate_from_history(
     };
 
     // We handle cd specially.
-    if parsed_command == L!("cd") && !cd_dir.is_empty() {
+    if parsed_command == "cd" && !cd_dir.is_empty() {
         if expand_one(&mut cd_dir, ExpandFlags::SKIP_CMDSUBST, ctx, None) {
             if string_prefixes_string(&cd_dir, L!("--help"))
                 || string_prefixes_string(&cd_dir, L!("-h"))
@@ -809,7 +809,7 @@ pub fn is_potential_path(
             // We do not end with a slash; it does not have to be a directory.
             let dir_name = wdirname(&abs_path);
             let filename_fragment = wbasename(&abs_path);
-            if dir_name == L!("/") && filename_fragment == L!("/") {
+            if dir_name == "/" && filename_fragment == "/" {
                 // cd ///.... No autosuggestion.
                 return true;
             }
@@ -1231,7 +1231,7 @@ impl<'s> Highlighter<'s> {
                 let target_path = path_apply_working_directory(&target, &self.working_directory);
                 match oper.mode {
                     RedirectionMode::fd => {
-                        if target == L!("-") {
+                        if target == "-" {
                             target_is_valid = true;
                         } else {
                             target_is_valid = match fish_wcstoi(&target) {
@@ -1373,8 +1373,8 @@ impl<'s> Highlighter<'s> {
 
         // Color arguments and redirections.
         // Except if our command is 'cd' we have special logic for how arguments are colored.
-        let is_cd = expanded_cmd == L!("cd");
-        let mut is_set = expanded_cmd == L!("set");
+        let is_cd = expanded_cmd == "cd";
+        let mut is_set = expanded_cmd == "set";
         // If we have seen a "--" argument, color all options from then on as normal arguments.
         let mut have_dashdash = false;
         for v in &stmt.args_or_redirs {
@@ -1387,7 +1387,7 @@ impl<'s> Highlighter<'s> {
                     }
                 }
                 self.visit_argument(v.argument(), is_cd, !have_dashdash);
-                if v.argument().source(self.buff) == L!("--") {
+                if v.argument().source(self.buff) == "--" {
                     have_dashdash = true;
                 }
             } else {

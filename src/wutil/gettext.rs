@@ -9,7 +9,7 @@ use crate::wchar::prelude::*;
 use errno::{errno, set_errno};
 use once_cell::sync::{Lazy, OnceCell};
 
-#[cfg(feature = "gettext")]
+#[cfg(gettext)]
 mod internal {
     use libc::c_char;
     use std::ffi::CStr;
@@ -28,7 +28,7 @@ mod internal {
         unsafe { textdomain(domainname.as_ptr()) }
     }
 }
-#[cfg(not(feature = "gettext"))]
+#[cfg(not(gettext))]
 mod internal {
     use libc::c_char;
     use std::ffi::CStr;

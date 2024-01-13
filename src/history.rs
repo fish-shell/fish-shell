@@ -1404,7 +1404,7 @@ fn format_history_record(
             const max_tstamp_length: usize = 100;
             let mut timestamp_str = [0_u8; max_tstamp_length];
             // The libc crate fails to declare strftime on BSD.
-            #[cfg(feature = "bsd")]
+            #[cfg(bsd)]
             extern "C" {
                 fn strftime(
                     buf: *mut libc::c_char,
@@ -1413,7 +1413,7 @@ fn format_history_record(
                     timeptr: *const libc::tm,
                 ) -> usize;
             }
-            #[cfg(not(feature = "bsd"))]
+            #[cfg(not(bsd))]
             use libc::strftime;
             if unsafe {
                 strftime(

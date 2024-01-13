@@ -389,10 +389,10 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     LookupEntry::new(libc::SIGSYS,    L!("SIGSYS"), L!("Bad system call")),
     LookupEntry::new(libc::SIGIOT,    L!("SIGIOT"), L!("Abort (Alias for SIGABRT)")),
 
-    #[cfg(any(feature = "bsd", target_os = "macos"))]
+    #[cfg(any(bsd, target_os = "macos"))]
     LookupEntry::new(libc::SIGEMT,    L!("SIGEMT"), L!("Unused signal")),
 
-    #[cfg(any(feature = "bsd", target_os = "macos"))]
+    #[cfg(any(bsd, target_os = "macos"))]
     LookupEntry::new(libc::SIGINFO,   L!("SIGINFO"), L!("Information request")),
 
     #[cfg(target_os = "linux")]

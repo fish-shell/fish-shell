@@ -133,7 +133,7 @@ pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
         // 12.2) does not consider a child that has already forked, exec'd, and exited to "exist"
         // and returns ESRCH (process not found) instead of EACCES (child has called exec).
         // See https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=251227
-        #[cfg(any(feature = "bsd", target_os = "macos"))]
+        #[cfg(any(bsd, target_os = "macos"))]
         if err == libc::ESRCH && is_parent {
             // Handle this just like we would EACCES above, as we're virtually certain that
             // setpgid(2) was called against a process that was at least at one point in time a

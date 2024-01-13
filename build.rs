@@ -75,19 +75,23 @@ fn main() {
     let mut detector = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff
     detector.set_verbose(true);
-    detect_features(detector);
+    detect_cfgs(detector);
 }
 
-/// Dynamically enables certain features at build-time, without their having to be explicitly
-/// enabled in the `cargo build --features xxx` invocation.
+/// Check target system support for certain functionality dynamically when the build is invoked,
+/// without their having to be explicitly enabled in the `cargo build --features xxx` invocation.
+///
+/// We are using [`rsconf::enable_cfg()`] instead of [`rsconf::enable_feature()`] as rust features
+/// should be used for things that a user can/would reasonably enable or disable to tweak or coerce
+/// behavior, but here we are testing for whether or not things are supported altogether.
 ///
 /// This can be used to enable features that we check for and conditionally compile according to in
 /// our own codebase, but [can't be used to pull in dependencies](0) even if they're gated (in
 /// `Cargo.toml`) behind a feature we just enabled.
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
-fn detect_features(target: Target) {
-    for (feature, handler) in [
+fn detect_cfgs(target: Target) {
+    for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference. Model new entries after the
         // second line.
         (
@@ -100,8 +104,8 @@ fn detect_features(target: Target) {
         ("localeconv_l", &|target| Ok(target.has_symbol_in::<String>("localeconv_l", &[]))),
     ] {
         match handler(&target) {
-            Err(e) => rsconf::warn!("{}: {}", feature, e),
-            Ok(true) => rsconf::enable_feature(feature),
+            Err(e) => rsconf::warn!("{}: {}", name, e),
+            Ok(true) => rsconf::enable_cfg(name),
             Ok(false) => (),
         }
     }

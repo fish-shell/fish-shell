@@ -124,6 +124,8 @@ fn test_universal_output() {
     assert_eq!(text, expected);
 }
 
+#[test]
+#[serial]
 fn test_universal_parsing() {
     test_init();
     let input = concat!(

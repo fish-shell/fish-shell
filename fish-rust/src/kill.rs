@@ -83,7 +83,7 @@ pub fn kill_entries() -> Vec<WString> {
     KILL_RING.lock().unwrap().entries()
 }
 
-#[cfg(test)]
+#[test]
 fn test_killring() {
     let mut kr = KillRing::new();
 
@@ -93,13 +93,13 @@ fn test_killring() {
     kr.add(WString::from_str("b"));
     kr.add(WString::from_str("c"));
 
-    assert!((kr.entries() == [L!("c"), L!("b"), L!("a")]));
+    assert!(kr.entries() == [L!("c"), L!("b"), L!("a")]);
 
-    assert!(kill_yank_rotate() == L!("b"));
-    assert!((kr.entries() == [L!("b"), L!("a"), L!("c")]));
+    assert!(kr.yank_rotate() == L!("b"));
+    assert!(kr.entries() == [L!("b"), L!("a"), L!("c")]);
 
-    assert!(kill_yank_rotate() == L!("a"));
-    assert!((kr.entries() == [L!("a"), L!("c"), L!("b")]));
+    assert!(kr.yank_rotate() == L!("a"));
+    assert!(kr.entries() == [L!("a"), L!("c"), L!("b")]);
 
     kr.add(WString::from_str("d"));
 

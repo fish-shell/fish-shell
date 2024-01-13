@@ -307,7 +307,7 @@ mod tests {
     use super::*;
     use crate::wchar::L;
     /// Write some tests.
-    #[cfg(test)]
+    #[test]
     fn test_find_char() {
         assert_eq!(Some(0), L!("abc").find_char('a'));
         assert_eq!(Some(1), L!("abc").find_char('b'));
@@ -315,7 +315,7 @@ mod tests {
         assert_eq!(None, L!("").find_char('X'));
     }
 
-    #[cfg(test)]
+    #[test]
     fn test_prefix() {
         assert!(L!("").starts_with(L!("")));
         assert!(L!("abc").starts_with(L!("")));
@@ -325,7 +325,7 @@ mod tests {
         assert!(L!("abc").starts_with(&WString::from_str("abc")));
     }
 
-    #[cfg(test)]
+    #[test]
     fn test_suffix() {
         assert!(L!("").ends_with(L!("")));
         assert!(L!("abc").ends_with(L!("")));

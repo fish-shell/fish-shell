@@ -52,7 +52,6 @@ rsconf = "0.1.1"
 [lib]
 crate-type = ["rlib"]
 path = "fish-rust/src/lib.rs"
-doctest = false
 
 [[bin]]
 name = "fish"

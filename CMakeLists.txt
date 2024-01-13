@@ -63,15 +63,6 @@ endif()
 # Disable exception handling.
 add_compile_options(-fno-exceptions)
 
-# Undefine NDEBUG to keep assert() in release builds.
-add_definitions(-UNDEBUG)
-
-# Enable large files on GNU.
-add_definitions(-D_LARGEFILE_SOURCE
-                -D_LARGEFILE64_SOURCE
-                -D_FILE_OFFSET_BITS=64
-                -D_ATFILE_SOURCE)
-
 # Hide the CMake Rules directories in Xcode projects.
 source_group("CMake Rules" REGULAR_EXPRESSION "^$")
 
@@ -94,21 +85,10 @@ else()
   set(FISH_IN_TREE_BUILD FALSE)
 endif()
 
-# NetBSD does weird things with finding libraries,
-# making the tests fail by failing to find pcre.
-#
-# Keep the rpath used to build.
-if(CMAKE_SYSTEM_NAME STREQUAL NetBSD)
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-endif()
-
 # Set up config.h
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-# Pull in our src directory for headers searches, but only quoted ones.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -iquote ${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 # Set up the machinery around FISH-BUILD-VERSION-FILE
 # This defines the FBVF variable.

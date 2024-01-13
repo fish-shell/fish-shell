@@ -842,7 +842,7 @@ fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr])
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
-    if argc == 1 || argv[0] == L!("time") {
+    if argc == 1 || argv[0] == "time" {
         builtin_print_help(parser, streams, argv[0]);
         return STATUS_INVALID_ARGS;
     }
@@ -857,7 +857,7 @@ fn builtin_break_continue(
     streams: &mut IoStreams,
     argv: &mut [&wstr],
 ) -> Option<c_int> {
-    let is_break = argv[0] == L!("break");
+    let is_break = argv[0] == "break";
     let argc = argv.len();
 
     if argc != 1 {

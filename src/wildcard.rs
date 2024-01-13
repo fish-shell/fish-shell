@@ -1109,7 +1109,7 @@ pub fn wildcard_match(
     let pattern = pattern.as_ref();
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
     // literal matches.
-    if leading_dots_fail_to_match && (name == L!(".") || name == L!("..")) {
+    if leading_dots_fail_to_match && (name == "." || name == "..") {
         // The string is '.' or '..' so the only possible match is an exact match.
         return name == pattern;
     }

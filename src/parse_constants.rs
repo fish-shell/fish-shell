@@ -244,24 +244,24 @@ impl printf_compat::args::ToArg<'static> for ParseKeyword {
 impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
         match s {
-            _ if s == L!("!") => ParseKeyword::kw_exclam,
-            _ if s == L!("and") => ParseKeyword::kw_and,
-            _ if s == L!("begin") => ParseKeyword::kw_begin,
-            _ if s == L!("builtin") => ParseKeyword::kw_builtin,
-            _ if s == L!("case") => ParseKeyword::kw_case,
-            _ if s == L!("command") => ParseKeyword::kw_command,
-            _ if s == L!("else") => ParseKeyword::kw_else,
-            _ if s == L!("end") => ParseKeyword::kw_end,
-            _ if s == L!("exec") => ParseKeyword::kw_exec,
-            _ if s == L!("for") => ParseKeyword::kw_for,
-            _ if s == L!("function") => ParseKeyword::kw_function,
-            _ if s == L!("if") => ParseKeyword::kw_if,
-            _ if s == L!("in") => ParseKeyword::kw_in,
-            _ if s == L!("not") => ParseKeyword::kw_not,
-            _ if s == L!("or") => ParseKeyword::kw_or,
-            _ if s == L!("switch") => ParseKeyword::kw_switch,
-            _ if s == L!("time") => ParseKeyword::kw_time,
-            _ if s == L!("while") => ParseKeyword::kw_while,
+            _ if s == "!" => ParseKeyword::kw_exclam,
+            _ if s == "and" => ParseKeyword::kw_and,
+            _ if s == "begin" => ParseKeyword::kw_begin,
+            _ if s == "builtin" => ParseKeyword::kw_builtin,
+            _ if s == "case" => ParseKeyword::kw_case,
+            _ if s == "command" => ParseKeyword::kw_command,
+            _ if s == "else" => ParseKeyword::kw_else,
+            _ if s == "end" => ParseKeyword::kw_end,
+            _ if s == "exec" => ParseKeyword::kw_exec,
+            _ if s == "for" => ParseKeyword::kw_for,
+            _ if s == "function" => ParseKeyword::kw_function,
+            _ if s == "if" => ParseKeyword::kw_if,
+            _ if s == "in" => ParseKeyword::kw_in,
+            _ if s == "not" => ParseKeyword::kw_not,
+            _ if s == "or" => ParseKeyword::kw_or,
+            _ if s == "switch" => ParseKeyword::kw_switch,
+            _ if s == "time" => ParseKeyword::kw_time,
+            _ if s == "while" => ParseKeyword::kw_while,
             _ => ParseKeyword::none,
         }
     }
@@ -404,7 +404,7 @@ pub fn token_type_user_presentable_description(
     keyword: ParseKeyword,
 ) -> WString {
     if keyword != ParseKeyword::none {
-        return sprintf!(L!("keyword: '%ls'"), keyword.to_wstr());
+        return sprintf!("keyword: '%ls'", keyword.to_wstr());
     }
     match type_ {
         ParseTokenType::string => L!("a string").to_owned(),
@@ -418,7 +418,7 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::error => L!("a parse error").to_owned(),
         ParseTokenType::tokenizer_error => L!("an incomplete token").to_owned(),
         ParseTokenType::comment => L!("a comment").to_owned(),
-        _ => sprintf!(L!("a %ls"), type_.to_wstr()),
+        _ => sprintf!("a %ls", type_.to_wstr()),
     }
 }
 

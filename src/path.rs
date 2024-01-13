@@ -405,7 +405,7 @@ pub fn path_as_implicit_cd(path: &wstr, wd: &wstr, vars: &dyn Environment) -> Op
         || exp_path.starts_with(L!("./"))
         || exp_path.starts_with(L!("../"))
         || exp_path.ends_with(L!("/"))
-        || exp_path == L!("..")
+        || exp_path == ".."
     {
         // These paths can be implicit cd, so see if you cd to the path. Note that a single period
         // cannot (that's used for sourcing files anyways).

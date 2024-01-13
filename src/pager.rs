@@ -585,7 +585,7 @@ impl Pager {
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
         // Maybe join them.
-        if self.prefix == L!("-") {
+        if self.prefix == "-" {
             join_completions(&mut self.unfiltered_completion_infos);
         }
 

@@ -187,8 +187,8 @@ fn evaluate_expression(
 
             streams
                 .err
-                .append(sprintf!(L!("%ls: Error: %ls\n"), cmd, error_message));
-            streams.err.append(sprintf!(L!("'%ls'\n"), expression));
+                .append(sprintf!("%ls: Error: %ls\n", cmd, error_message));
+            streams.err.append(sprintf!("'%ls'\n", expression));
 
             STATUS_CMD_ERROR
         }
@@ -198,15 +198,13 @@ fn evaluate_expression(
                 cmd,
                 err.kind.describe_wstr()
             ));
-            streams.err.append(sprintf!(L!("'%ls'\n"), expression));
+            streams.err.append(sprintf!("'%ls'\n", expression));
             let padding = WString::from_chars(vec![' '; err.position + 1]);
             if err.len >= 2 {
                 let tildes = WString::from_chars(vec!['~'; err.len - 2]);
-                streams
-                    .err
-                    .append(sprintf!(L!("%ls^%ls^\n"), padding, tildes));
+                streams.err.append(sprintf!("%ls^%ls^\n", padding, tildes));
             } else {
-                streams.err.append(sprintf!(L!("%ls^\n"), padding));
+                streams.err.append(sprintf!("%ls^\n", padding));
             }
 
             STATUS_CMD_ERROR

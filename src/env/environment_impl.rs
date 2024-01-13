@@ -342,12 +342,12 @@ impl EnvScopedImpl {
             return None;
         }
 
-        if key == L!("PWD") {
+        if key == "PWD" {
             Some(EnvVar::new(
                 self.perproc_data.pwd.clone(),
                 EnvVarFlags::EXPORT,
             ))
-        } else if key == L!("history") {
+        } else if key == "history" {
             // Big hack. We only allow getting the history on the main thread. Note that history_t
             // may ask for an environment variable, so don't take the lock here (we don't need it).
             if !is_main_thread() {
@@ -362,35 +362,35 @@ impl EnvScopedImpl {
                 L!("history"),
                 history.get_history(),
             ));
-        } else if key == L!("fish_killring") {
+        } else if key == "fish_killring" {
             Some(EnvVar::new_from_name_vec(
                 L!("fish_killring"),
                 kill_entries(),
             ))
-        } else if key == L!("pipestatus") {
+        } else if key == "pipestatus" {
             let js = &self.perproc_data.statuses;
             let mut result = Vec::with_capacity(js.pipestatus.len());
             for i in &js.pipestatus {
                 result.push(i.to_wstring());
             }
             Some(EnvVar::new_from_name_vec(L!("pipestatus"), result))
-        } else if key == L!("status") {
+        } else if key == "status" {
             let js = &self.perproc_data.statuses;
             Some(EnvVar::new_from_name(L!("status"), js.status.to_wstring()))
-        } else if key == L!("status_generation") {
+        } else if key == "status_generation" {
             let status_generation = reader_status_count();
             Some(EnvVar::new_from_name(
                 L!("status_generation"),
                 status_generation.to_wstring(),
             ))
-        } else if key == L!("fish_kill_signal") {
+        } else if key == "fish_kill_signal" {
             let js = &self.perproc_data.statuses;
             let signal = js.kill_signal.map_or(0, |ks| ks.code());
             Some(EnvVar::new_from_name(
                 L!("fish_kill_signal"),
                 signal.to_wstring(),
             ))
-        } else if key == L!("umask") {
+        } else if key == "umask" {
             // note umask() is an absurd API: you call it to set the value and it returns the old
             // value. Thus we have to call it twice, to reset the value. The env_lock protects
             // against races. Guess what the umask is; if we guess right we don't need to reset it.

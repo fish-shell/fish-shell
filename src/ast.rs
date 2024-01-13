@@ -2570,7 +2570,7 @@ impl<'a> TokenStream<'a> {
         result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = text.starts_with('-');
         result.is_help_argument = [L!("-h"), L!("--help")].contains(&text);
-        result.is_newline = result.typ == ParseTokenType::end && text == L!("\n");
+        result.is_newline = result.typ == ParseTokenType::end && text == "\n";
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
 
@@ -2920,14 +2920,14 @@ impl<'s> NodeVisitorMut for Populator<'s> {
 fn keywords_user_presentable_description(kws: &'static [ParseKeyword]) -> WString {
     assert!(!kws.is_empty(), "Should not be empty list");
     if kws.len() == 1 {
-        return sprintf!(L!("keyword '%ls'"), kws[0]);
+        return sprintf!("keyword '%ls'", kws[0]);
     }
     let mut res = L!("keywords ").to_owned();
     for (i, kw) in kws.iter().enumerate() {
         if i != 0 {
             res += L!(" or ");
         }
-        res += &sprintf!(L!("'%ls'"), *kw)[..];
+        res += &sprintf!("'%ls'", *kw)[..];
     }
     res
 }

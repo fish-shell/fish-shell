@@ -130,7 +130,7 @@ fn test_history() {
         L!("alph").to_owned(),
         history::SearchType::Exact,
     );
-    let expected = set_expected(|s| s == L!("alph"));
+    let expected = set_expected(|s| s == "alph");
     test_history_matches!(searcher, expected);
 
     // Items exactly matching "alph", case-insensitive.
@@ -141,7 +141,7 @@ fn test_history() {
         nocase,
         0,
     );
-    let expected = set_expected(|s| s.to_lowercase() == L!("alph"));
+    let expected = set_expected(|s| s.to_lowercase() == "alph");
     test_history_matches!(searcher, expected);
 
     // Test item removal case-sensitive.

@@ -300,9 +300,9 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     let mut erase_count = 0;
     for comp in &path_comps {
         let mut erase_it = false;
-        if comp.is_empty() || comp == L!(".") {
+        if comp.is_empty() || comp == "." {
             erase_it = true;
-        } else if comp == L!("..") && !wd_comps.is_empty() {
+        } else if comp == ".." && !wd_comps.is_empty() {
             erase_it = true;
             wd_comps.pop();
         }

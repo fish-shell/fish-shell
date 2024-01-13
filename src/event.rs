@@ -98,7 +98,7 @@ impl EventDescription {
             EventDescription::ProcessExit { .. }
             | EventDescription::JobExit { .. }
             | EventDescription::CallerExit { .. }
-                if filter == L!("exit") =>
+                if filter == "exit" =>
             {
                 true
             }

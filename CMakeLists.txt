@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+# CMake 3.15 is required to support Corrosion
+# CMake 3.19 is needed for file(REAL_PATH)
+cmake_minimum_required(VERSION 3.19)
 
 if(POLICY CMP0066)
   cmake_policy(SET CMP0066 OLD)

@@ -94,7 +94,6 @@ fn has_prefix_match(comps: &CompletionReceiver, first: usize) -> bool {
 /// We ignore ANY_STRING_RECURSIVE here. The consequence is that you cannot tab complete **
 /// wildcards. This is historic behavior.
 /// is_first_call is default false.
-#[allow(clippy::unnecessary_unwrap)]
 fn wildcard_complete_internal(
     s: &wstr,
     wc: &wstr,

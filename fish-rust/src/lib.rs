@@ -21,7 +21,6 @@
 #![allow(clippy::redundant_slicing)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
-#![allow(clippy::unnecessary_unwrap)]
 
 pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
     Some(v) => v,

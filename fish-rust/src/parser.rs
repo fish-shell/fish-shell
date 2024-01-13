@@ -561,6 +561,7 @@ impl Parser {
                     // Outermost node.
                     std::mem::replace(&mut self.execution_context.borrow_mut(), new_value)
                 } else {
+                    #[allow(clippy::unnecessary_unwrap)]
                     Some(ParseExecutionContext::swap(
                         self.execution_context.borrow().as_ref().unwrap(),
                         new_value.unwrap(),

@@ -1680,6 +1680,7 @@ impl History {
                 cancel_check,
             );
         } else {
+            #[allow(clippy::unnecessary_to_owned)]
             for search_string in search_args.iter().copied() {
                 if search_string.is_empty() {
                     streams

@@ -309,6 +309,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 ));
                 return STATUS_INVALID_ARGS;
             }
+            #[allow(clippy::unnecessary_to_owned)]
             for delete_string in args.iter().copied() {
                 history.remove(delete_string.to_owned());
             }

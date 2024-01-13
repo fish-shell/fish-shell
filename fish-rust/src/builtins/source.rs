@@ -96,6 +96,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
     let mut argv_list: Vec<WString> = vec![];
     let remaining_args = &args[optind + if argc == optind { 0 } else { 1 }..];
+    #[allow(clippy::unnecessary_to_owned)]
     for arg in remaining_args.iter().copied() {
         argv_list.push(arg.to_owned());
     }

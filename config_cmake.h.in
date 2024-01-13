@@ -1,122 +1,20 @@
-/* Define to 1 if you have the `backtrace_symbols' function. */
-#cmakedefine HAVE_BACKTRACE_SYMBOLS 1
-
-/* Define to 1 if compiled on WSL */
-#cmakedefine WSL 1
-
-/* Define to 1 if C++11 thread_local is supported. */
-#cmakedefine HAVE_CX11_THREAD_LOCAL 1
-
-/* Define to 1 if you have the `dirfd' function. */
-#cmakedefine HAVE_DIRFD 1
-
-/* Define to 1 if you have the <execinfo.h> header file. */
-#cmakedefine HAVE_EXECINFO_H 1
-
-/* Define to 1 if you have the `getpwent' function. */
-#cmakedefine HAVE_GETPWENT 1
-
-/* Define to 1 if you have the 'getrusage' function. */
-#cmakedefine HAVE_GETRUSAGE 1
-
 /* Define to 1 if you have the `gettext' function. */
 #cmakedefine HAVE_GETTEXT 1
-
-/* Define to 1 if you have the `killpg' function. */
-#cmakedefine HAVE_KILLPG 1
-
-/* Define to 1 if you have the `mkostemp' function. */
-#cmakedefine HAVE_MKOSTEMP 1
-
-/* Define to 1 if you have the <curses.h> header file. */
-#cmakedefine HAVE_CURSES_H 1
-
-/* Define to 1 if you have the <ncurses/curses.h> header file. */
-#cmakedefine HAVE_NCURSES_CURSES_H 1
-
-/* Define to 1 if you have the <ncurses.h> header file. */
-#cmakedefine HAVE_NCURSES_H 1
-
-/* Define to 1 if you have the <ncurses/term.h> header file. */
-#cmakedefine HAVE_NCURSES_TERM_H 1
-
-/* Define to 1 if you have the <siginfo.h> header file. */
-#cmakedefine HAVE_SIGINFO_H 1
-
-/* Define to 1 if you have the <spawn.h> header file. */
-#cmakedefine HAVE_SPAWN_H 1
-
-/* Define to 1 if you have the `std::wcscasecmp' function. */
-#cmakedefine HAVE_STD__WCSCASECMP 1
-
-/* Define to 1 if you have the `std::wcsncasecmp' function. */
-#cmakedefine HAVE_STD__WCSNCASECMP 1
-
-/* Define to 1 if `d_type' is a member of `struct dirent'. */
-#cmakedefine HAVE_STRUCT_DIRENT_D_TYPE 1
-
-/* Define to 1 if `st_ctime_nsec' is a member of `struct stat'. */
-#cmakedefine HAVE_STRUCT_STAT_ST_CTIME_NSEC 1
-
-/* Define to 1 if `st_mtimespec.tv_nsec' is a member of `struct stat'. */
-#cmakedefine HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC 1
-
-/* Define to 1 if `st_mtim.tv_nsec' is a member of `struct stat'. */
-#cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1
-
-/* Define to 1 if you have the <sys/ioctl.h> header file. */
-#cmakedefine HAVE_SYS_IOCTL_H 1
-
-/* Define to 1 if you have the <sys/select.h> header file. */
-#cmakedefine HAVE_SYS_SELECT_H 1
-
-/* Define to 1 if you have the <sys/sysctl.h> header file. */
-#cmakedefine HAVE_SYS_SYSCTL_H 1
-
-/* Define to 1 if you have the <term.h> header file. */
-#cmakedefine HAVE_TERM_H 1
-
-/* Define to 1 if you have the `wcscasecmp' function. */
-#cmakedefine HAVE_WCSCASECMP 1
-
-/* Define to 1 if you have the `wcsncasecmp' function. */
-#cmakedefine HAVE_WCSNCASECMP 1
 
 /* Define to 1 if the status that wait returns and WEXITSTATUS expects is signal and then ret instead of the other way around. */
 #cmakedefine HAVE_WAITSTATUS_SIGNAL_RET 1
 
-/* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
-#cmakedefine HAVE_WINSIZE 1
-
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 #cmakedefine HAVE__NL_MSG_CAT_CNTR 1
 
-/* Define to 1 if std::make_unique is available. */
-#cmakedefine HAVE_STD__MAKE_UNIQUE 1
-
 /* Define to use clock_gettime and futimens to hack around Linux mtime issue */
 #cmakedefine UVAR_FILE_SET_MTIME_HACK 1
-
-/* Define to 1 to disable ncurses macros that conflict with the STL */
-#define NCURSES_NOMACROS 1
-
-/* Define to 1 to disable curses macros that conflict with the STL */
-#define NOMACROS 1
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "https://github.com/fish-shell/fish-shell/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"
-
-/* Use a variadic tparm on NetBSD curses. */
-#cmakedefine TPARM_VARARGS 1
-
-/* The parameter type for the last tputs parameter */
-#cmakedefine TPUTS_USES_INT_ARG 1
-
-/* Define to 1 if tparm accepts a fixed amount of parameters. */
-#cmakedefine TPARM_SOLARIS_KLUDGE 1
 
 /* Enable GNU extensions on systems that have them.  */
 #ifndef _GNU_SOURCE
@@ -126,16 +24,10 @@
 /* The size of wchar_t in bits. */
 #define WCHAR_T_BITS ${WCHAR_T_BITS}
 
-/* Define if xlocale.h is required for locale_t or wide character support */
-#cmakedefine HAVE_XLOCALE_H 1
-
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
 # define _DARWIN_USE_64_BIT_INODE 1
 #endif
-
-/* Define to 1 if mbrtowc attempts to convert invalid UTF-8 sequences */
-#cmakedefine HAVE_BROKEN_MBRTOWC_UTF8 1
 
 /* Support __warn_unused on function return values. */
 #if __GNUC__ >= 3

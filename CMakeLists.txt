@@ -31,6 +31,10 @@ add_definitions(-D_UNICODE=1)
 include(cmake/ConfigureChecks.cmake)
 include(cmake/gettext.cmake)
 
+# Set up PCRE2
+# This sets an environment variable that needs to be available before the Rust stanzas
+include(cmake/PCRE2.cmake)
+
 include(cmake/Rust.cmake)
 
 # Error out when linking statically, it doesn't work.
@@ -118,9 +122,6 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
 # Enable thread-safe errno on Solaris (#5611)
 add_definitions(-D_REENTRANT)
-
-# Set up PCRE2
-include(cmake/PCRE2.cmake)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)

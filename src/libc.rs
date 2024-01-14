@@ -31,7 +31,7 @@ extern "C" {
     fn C_CS_PATH() -> i32;
 }
 
-pub static _PATH_BSHELL: AtomicPtr<i8> = AtomicPtr::new(std::ptr::null_mut());
+pub static _PATH_BSHELL: AtomicPtr<c_char> = AtomicPtr::new(std::ptr::null_mut());
 extern "C" {
     pub fn C_PATH_BSHELL() -> *const c_char;
 }

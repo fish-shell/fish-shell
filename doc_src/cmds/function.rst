@@ -54,12 +54,10 @@ The following options are available:
 
 The event handler switches (``on-event``, ``on-variable``, ``on-job-exit``, ``on-process-exit`` and ``on-signal``) cause a function to run automatically at specific events. New named events for ``--on-event`` can be fired using the :doc:`emit <emit>` builtin. Fish already generates a few events, see :ref:`event` for more.
 
-Functions may not be named the same as a reserved keyword. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
+Functions names cannot be reserved words. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
 
 Example
 -------
-
-
 
 ::
 

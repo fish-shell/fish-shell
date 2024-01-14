@@ -8,6 +8,20 @@ use crate::libc::MB_CUR_MAX;
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 
+/// Return the number of newlines in a string.
+pub fn count_newlines(s: &wstr) -> usize {
+    // This is a performance-sensitive function.
+    // The native filter().count() produces sub-optimal codegen because of overflow checks,
+    // which we currently enable in release mode. Implement it more efficiently.
+    let mut count: usize = 0;
+    for c in s.as_char_slice() {
+        if *c == '\n' {
+            count = count.wrapping_add(1);
+        }
+    }
+    count
+}
+
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &wstr) -> bool {
     let prefix_size = proposed_prefix.len();
@@ -642,4 +656,14 @@ fn test_line_iterator() {
             &b"Delta"[..]
         ]
     );
+}
+
+#[test]
+fn test_count_newlines() {
+    assert_eq!(count_newlines(L!("")), 0);
+    assert_eq!(count_newlines(L!("foo")), 0);
+    assert_eq!(count_newlines(L!("foo\nbar")), 1);
+    assert_eq!(count_newlines(L!("foo\nbar\nbaz")), 2);
+    assert_eq!(count_newlines(L!("\n")), 1);
+    assert_eq!(count_newlines(L!("\n\n")), 2);
 }

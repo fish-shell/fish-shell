@@ -48,6 +48,7 @@ use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
+use crate::wcstringutil::count_newlines;
 use crate::wildcard::wildcard_match;
 use crate::wutil::{wgettext, wgettext_maybe_fmt};
 use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
@@ -1946,19 +1947,13 @@ impl<'a> ParseExecutionContext {
         let mut cached_lineno = self.cached_lineno.borrow_mut();
         if offset > cached_lineno.offset {
             // Add one for every newline we find in the range [cached_lineno.offset, offset).
+            // The codegen is substantially better when using a char slice than the char iterator.
             let offset = std::cmp::min(offset, src.len());
-            let i = src[cached_lineno.offset..offset]
-                .chars()
-                .filter(|c| *c == '\n')
-                .count();
-            cached_lineno.count += i;
+            cached_lineno.count += count_newlines(&src[cached_lineno.offset..offset]);
             cached_lineno.offset = offset;
         } else if offset < cached_lineno.offset {
             // Subtract one for every newline we find in the range [offset, cached_range.start).
-            cached_lineno.count -= src[offset..cached_lineno.offset]
-                .chars()
-                .filter(|c| *c == '\n')
-                .count();
+            cached_lineno.count -= count_newlines(&src[offset..cached_lineno.offset]);
             cached_lineno.offset = offset;
         }
         cached_lineno.count

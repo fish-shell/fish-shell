@@ -4,7 +4,6 @@ use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
 
 fn main() {
     for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR", "LOCALEDIR"] {
@@ -110,17 +109,6 @@ fn detect_cfgs(target: Target) {
             Ok(false) => (),
         }
     }
-}
-
-fn compiles(file: &str) -> bool {
-    let mut command = cc::Build::new()
-        .flag("-fsyntax-only")
-        .get_compiler()
-        .to_command();
-    command.arg(file);
-    command.stdout(Stdio::null());
-    command.stderr(Stdio::null());
-    command.status().unwrap().success()
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with

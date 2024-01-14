@@ -44,15 +44,6 @@ include(CheckCXXSymbolExists)
 include(CheckCXXSourceCompiles)
 include(CheckTypeSize)
 
-# workaround for lousy mtime precision on a Linux kernel
-if (CMAKE_SYSTEM_NAME MATCHES "Linux|Android")
-    check_cxx_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
-    check_cxx_symbol_exists(futimens sys/stat.h HAVE_FUTIMENS)
-    if ((HAVE_CLOCK_GETTIME) AND (HAVE_FUTIMENS))
-        set(UVAR_FILE_SET_MTIME_HACK 1)
-    endif()
-endif()
-
 check_cxx_symbol_exists(gettext libintl.h HAVE_GETTEXT)
 
 check_type_size("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)

@@ -9,7 +9,6 @@ use crate::fallback::fish_mkstemp_cloexec;
 use crate::fds::AutoCloseFd;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
-use crate::libc::UVAR_FILE_SET_MTIME_HACK;
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::prelude::*;
@@ -20,9 +19,7 @@ use crate::wutil::{
     wunlink, FileId, INVALID_FILE_ID,
 };
 use errno::{errno, Errno};
-use libc::{
-    CLOCK_REALTIME, EINTR, ENOTSUP, EOPNOTSUPP, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR, UTIME_OMIT,
-};
+use libc::{EINTR, ENOTSUP, EOPNOTSUPP, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -800,10 +797,11 @@ impl EnvUniversal {
             //
             // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
             // unlikely to affect users.
-            if unsafe { UVAR_FILE_SET_MTIME_HACK() } {
+            #[cfg(any(target_os = "linux", target_os = "android"))]
+            {
                 let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
-                times[0].tv_nsec = UTIME_OMIT; // don't change ctime
-                if unsafe { libc::clock_gettime(CLOCK_REALTIME, &mut times[1]) } != 0 {
+                times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
+                if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
                     unsafe {
                         libc::futimens(private_fd.fd(), &times[0]);
                     }

@@ -48,7 +48,6 @@ extern "C" {
         len: libc::size_t,
     ) -> libc::size_t;
     pub fn stdout_stream() -> *mut libc::FILE;
-    pub fn UVAR_FILE_SET_MTIME_HACK() -> bool;
     pub fn setlinebuf(stream: *mut libc::FILE);
 }
 

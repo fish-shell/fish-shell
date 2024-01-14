@@ -7,9 +7,6 @@
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 #cmakedefine HAVE__NL_MSG_CAT_CNTR 1
 
-/* Define to use clock_gettime and futimens to hack around Linux mtime issue */
-#cmakedefine UVAR_FILE_SET_MTIME_HACK 1
-
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "https://github.com/fish-shell/fish-shell/issues"
 

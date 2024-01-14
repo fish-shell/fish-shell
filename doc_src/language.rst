@@ -386,6 +386,8 @@ If a file of the right name doesn't define the function, fish will not read othe
 
 If you are developing another program and want to install fish functions for it, install them to the "vendor" functions directory. As this path varies from system to system, you can use ``pkgconfig`` to discover it with the output of ``pkg-config --variable functionsdir fish``. Your installation system should support a custom path to override the pkgconfig path, as other distributors may need to alter it easily.
 
+.. _comments:
+
 Comments
 --------
 
@@ -1058,11 +1060,34 @@ When combining multiple parameter expansions, expansions are performed in the fo
 - Bracket expansion
 - Wildcard expansion
 
-Expansions are performed from right to left, nested bracket expansions are performed from the inside and out.
+Expansions are performed from right to left, nested bracket expansions and command substitutions are performed from the inside and out.
 
 Example:
 
 If the current directory contains the files 'foo' and 'bar', the command ``echo a(ls){1,2,3}`` will output ``abar1 abar2 abar3 afoo1 afoo2 afoo3``.
+
+Table Of Operators
+------------------
+
+Putting it together, here is a quick reference to fish's operators, all of the special symbols it uses:
+
+====================    ==========================================================   =================================================
+Symbol                  Meaning                                                      Example
+====================    ==========================================================   =================================================
+``$``                   :ref:`Variable expansion <expand-variable>`                  ``echo $foo``
+``$()`` and ``()``      :ref:`Command substitution <expand-command-substitution>`    ``cat (grep foo bar)`` or ``cat $(grep foo bar)``
+``<`` and ``>``         :ref:`Redirection <redirects>`, like ``command > file``      ``git shortlog -nse . > authors``
+``|``                   :ref:`Pipe <pipes>`, connect two or more commands            ``foo | grep bar | grep baz``
+``;``                   End of the command, instead of a newline                     ``command1; command2``
+``&``                   :ref:`Backgrounding <syntax-job-control>`                    ``sleep 5m &``
+``{}``                  :ref:`Brace expansion <expand-brace>`                        ``ls {/usr,}/bin``
+``&&`` and ``||``       :ref:`Combiners <syntax-combiners>`                          ``mkdir foo && cd foo`` or ``rm foo || exit``
+``*`` and ``**``        :ref:`Wildcards <expand-wildcard>`                           ``cat *.fish`` or ``count **.jpg``
+``\\``                  :ref:`Escaping <escapes>`                                    ``echo foo\nbar`` or ``echo \$foo``
+``''`` and ``""``       :ref:`Quoting <quotes>`                                      ``rm "file with spaces"`` or ``echo '$foo'``
+``~``                   :ref:`Home directory expansion <expand-home>`                ``ls ~/`` or ``ls ~root/``
+``#``                   :ref:`Comments`                                              ``echo Hello # this isn't printed``
+====================    ==========================================================   =================================================
 
 .. _variables:
 

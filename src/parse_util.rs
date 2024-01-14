@@ -26,6 +26,7 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
+use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use std::ops;
@@ -498,7 +499,7 @@ pub fn parse_util_lineno(s: &wstr, offset: usize) -> usize {
     }
 
     let end = offset.min(s.len());
-    s.chars().take(end).filter(|c| *c == '\n').count() + 1
+    count_newlines(&s[..end]) + 1
 }
 
 /// Calculate the line number of the specified cursor position.
@@ -507,12 +508,7 @@ pub fn parse_util_get_line_from_offset(s: &wstr, pos: usize) -> isize {
     if pos > s.len() {
         return -1;
     }
-    s.chars()
-        .take(pos)
-        .filter(|c| *c == '\n')
-        .count()
-        .try_into()
-        .unwrap()
+    count_newlines(&s[..pos]).try_into().unwrap()
 }
 
 /// Get the offset of the first character on the specified line.

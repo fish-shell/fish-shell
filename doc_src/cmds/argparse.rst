@@ -57,12 +57,25 @@ To use this command, pass the option specifications (**OPTION_SPEC**), a mandato
 
 A simple example::
 
-    argparse --name=my_function 'h/help' 'n/name=' -- $argv
+    argparse 'h/help' 'n/name=' -- $argv
     or return
 
-If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables called ``_flag_OPTION`` are set so the script can determine which options were seen. If ``$argv`` doesn't have any errors, like a missing mandatory value for an option, then ``argparse`` exits with a status of zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
+If ``$argv`` is empty then there is nothing to parse and ``argparse`` returns zero to indicate success. If ``$argv`` is not empty then it is checked for flags ``-h``, ``--help``, ``-n`` and ``--name``. If they are found they are removed from the arguments and local variables called ``_flag_OPTION`` are set so the script can determine which options were seen. If ``$argv`` doesn't have any errors, like an unknown option or a missing mandatory value for an option, then ``argparse`` exits with a status of zero. Otherwise it writes appropriate error messages to stderr and exits with a status of one.
 
 The ``or return`` means that the function returns ``argparse``'s status if it failed, so if it goes on ``argparse`` succeeded.
+
+To use the flags argparse has extracted::
+
+    # Checking for _flag_h and _flag_help is equivalent
+    # We check if it has been given at least once
+    if set -ql _flag_h
+        echo "Usage: my_function [-h | --help] [-n | --name=NAME]" >&2
+        return 1
+    end
+
+    set -l myname somedefault
+    set -ql _flag_name[1]
+    and set myname $_flag_name[-1] # here we use the *last* --name=
 
 The ``--`` argument is required. You do not have to include any option specifications or arguments after the ``--`` but you must include the ``--``. For example, this is acceptable::
 

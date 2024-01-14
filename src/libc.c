@@ -64,14 +64,6 @@ int C_PC_CASE_SENSITIVE() {
 
 FILE* stdout_stream() { return stdout; }
 
-int C_O_EXLOCK() {
-#ifdef O_EXLOCK
-    return O_EXLOCK;
-#else
-    return 0;
-#endif
-}
-
 static const bool uvar_file_set_mtime_hack =
 #ifdef UVAR_FILE_SET_MTIME_HACK
     true;

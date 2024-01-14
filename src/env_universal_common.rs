@@ -1,3 +1,5 @@
+#![allow(clippy::bad_bit_mask)]
+
 use crate::common::{
     read_loop, str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, write_loop,
     UnescapeFlags, UnescapeStringStyle,
@@ -7,7 +9,7 @@ use crate::fallback::fish_mkstemp_cloexec;
 use crate::fds::AutoCloseFd;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
-use crate::libc::{C_O_EXLOCK, UVAR_FILE_SET_MTIME_HACK};
+use crate::libc::UVAR_FILE_SET_MTIME_HACK;
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::prelude::*;
@@ -27,6 +29,13 @@ use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
 use std::os::unix::prelude::MetadataExt;
+
+// Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
+#[cfg(any(bsd, target_os = "macos"))]
+use libc::O_EXLOCK;
+
+#[cfg(not(any(bsd, target_os = "macos")))]
+const O_EXLOCK: libc::c_int = 0;
 
 /// Callback data, reflecting a change in universal variables.
 pub struct CallbackData {
@@ -430,8 +439,6 @@ impl EnvUniversal {
         let mut locked_by_open = false;
         let mut flags = O_RDWR | O_CREAT;
 
-        #[allow(non_snake_case)]
-        let O_EXLOCK = unsafe { C_O_EXLOCK() };
         if O_EXLOCK != 0 && self.do_flock {
             flags |= O_EXLOCK;
             locked_by_open = true;

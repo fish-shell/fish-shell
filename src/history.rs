@@ -1976,7 +1976,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
         let mut expanded_path = path.clone();
         if expand_one(
             &mut expanded_path,
-            ExpandFlags::SKIP_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
+            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
             &ctx,
             None,
         ) && path_is_valid(&expanded_path, &working_directory)
@@ -2004,7 +2004,7 @@ pub fn all_paths_are_valid<P: IntoIterator<Item = WString>>(
         }
         if !expand_one(
             &mut path,
-            ExpandFlags::SKIP_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
+            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
             ctx,
             None,
         ) {

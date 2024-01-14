@@ -4811,7 +4811,7 @@ fn try_expand_wildcard(
 
     // We do wildcards only.
 
-    let flags = ExpandFlags::SKIP_CMDSUBST
+    let flags = ExpandFlags::FAIL_ON_CMDSUBST
         | ExpandFlags::SKIP_VARIABLES
         | ExpandFlags::PRESERVE_HOME_TILDES;
     let mut expanded = CompletionList::new();

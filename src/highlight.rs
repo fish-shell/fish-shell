@@ -336,7 +336,7 @@ pub fn autosuggest_validate_from_history(
 
     // We handle cd specially.
     if parsed_command == "cd" && !cd_dir.is_empty() {
-        if expand_one(&mut cd_dir, ExpandFlags::SKIP_CMDSUBST, ctx, None) {
+        if expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None) {
             if string_prefixes_string(&cd_dir, L!("--help"))
                 || string_prefixes_string(&cd_dir, L!("-h"))
             {
@@ -1149,7 +1149,7 @@ impl<'s> Highlighter<'s> {
         if cmd_is_cd {
             // Mark this as an error if it's not 'help' and not a valid cd path.
             let mut param = arg.source(self.buff).to_owned();
-            if expand_one(&mut param, ExpandFlags::SKIP_CMDSUBST, self.ctx, None) {
+            if expand_one(&mut param, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
                 let is_help = string_prefixes_string(&param, L!("--help"))
                     || string_prefixes_string(&param, L!("-h"));
                 if !is_help {
@@ -1221,7 +1221,7 @@ impl<'s> Highlighter<'s> {
                 target_is_valid = true;
             } else if contains_pending_variable(&self.pending_variables, &target) {
                 target_is_valid = true;
-            } else if !expand_one(&mut target, ExpandFlags::SKIP_CMDSUBST, self.ctx, None) {
+            } else if !expand_one(&mut target, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
                 // Could not be expanded.
                 target_is_valid = false;
             } else {

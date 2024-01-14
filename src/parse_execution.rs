@@ -475,7 +475,7 @@ impl<'a> ParseExecutionContext {
             let forbidden = !cmd.is_empty()
                 && expand_one(
                     &mut cmd,
-                    ExpandFlags::SKIP_CMDSUBST | ExpandFlags::SKIP_VARIABLES,
+                    ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_VARIABLES,
                     ctx,
                     None,
                 )

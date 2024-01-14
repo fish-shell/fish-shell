@@ -32,8 +32,8 @@ bitflags! {
     /// Set of flags controlling expansions.
     #[derive(Copy, Clone, Default)]
     pub struct ExpandFlags : u16 {
-        /// Skip command substitutions.
-        const SKIP_CMDSUBST = 1 << 0;
+        /// Fail expansion if there is a command substitution.
+        const FAIL_ON_CMDSUBST = 1 << 0;
         /// Skip variable expansion.
         const SKIP_VARIABLES = 1 << 1;
         /// Skip wildcard expansion.
@@ -132,8 +132,6 @@ pub const PROCESS_EXPAND_SELF_STR: &wstr = L!("%self");
 ///
 /// \param input The parameter to expand
 /// \param output The list to which the result will be appended.
-/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param ctx The parser, variables, and cancellation checker for this operation.  The parser may
 /// be null. \param errors Resulting errors, or nullptr to ignore
 ///
@@ -170,8 +168,6 @@ pub fn expand_to_receiver(
 /// string. This is used for expanding command names.
 ///
 /// \param inout_str The parameter to expand in-place
-/// \param flags Specifies if any expansion pass should be skipped. Legal values are any combination
-/// of skip_cmdsubst skip_variables and skip_wildcards
 /// \param ctx The parser, variables, and cancellation checker for this operation. The parser may be
 /// null.
 /// \param errors Resulting errors, or nullptr to ignore
@@ -222,7 +218,7 @@ pub fn expand_to_command_and_args(
         return ExpandResult::ok();
     }
 
-    let mut eflags = ExpandFlags::SKIP_CMDSUBST;
+    let mut eflags = ExpandFlags::FAIL_ON_CMDSUBST;
     if skip_wildcards {
         eflags |= ExpandFlags::SKIP_WILDCARDS;
     }
@@ -851,7 +847,7 @@ fn expand_braces(
             }
 
             // Note: this code looks very fishy, apparently it has never worked.
-            return expand_braces(synth, ExpandFlags::SKIP_CMDSUBST, out, errors);
+            return expand_braces(synth, ExpandFlags::FAIL_ON_CMDSUBST, out, errors);
         }
     }
 
@@ -1239,7 +1235,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
-            flags.contains(ExpandFlags::SKIP_CMDSUBST) || ctx.has_parser(),
+            flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) || ctx.has_parser(),
             "Must have a parser if not skipping command substitutions"
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
@@ -1313,7 +1309,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
-        if self.flags.contains(ExpandFlags::SKIP_CMDSUBST) {
+        if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
             let mut start = 0;
             let mut end = 0;

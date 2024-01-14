@@ -903,7 +903,7 @@ impl<'ctx> Completer<'ctx> {
             &mut tmp,
             self.expand_flags()
                 | extra_expand_flags
-                | ExpandFlags::SKIP_CMDSUBST
+                | ExpandFlags::FAIL_ON_CMDSUBST
                 | ExpandFlags::SKIP_WILDCARDS,
             self.ctx,
             None,
@@ -930,7 +930,7 @@ impl<'ctx> Completer<'ctx> {
 
     fn expand_flags(&self) -> ExpandFlags {
         let mut result = ExpandFlags::empty();
-        result.set(ExpandFlags::SKIP_CMDSUBST, self.flags.autosuggestion);
+        result.set(ExpandFlags::FAIL_ON_CMDSUBST, self.flags.autosuggestion);
         result.set(ExpandFlags::FUZZY_MATCH, self.flags.fuzzy_match);
         result.set(ExpandFlags::GEN_DESCRIPTIONS, self.flags.descriptions);
         result
@@ -1164,7 +1164,7 @@ impl<'ctx> Completer<'ctx> {
         };
 
         let eflags = if is_autosuggest {
-            ExpandFlags::SKIP_CMDSUBST
+            ExpandFlags::FAIL_ON_CMDSUBST
         } else {
             ExpandFlags::empty()
         };
@@ -1502,7 +1502,7 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
         let mut flags = self.expand_flags()
-            | ExpandFlags::SKIP_CMDSUBST
+            | ExpandFlags::FAIL_ON_CMDSUBST
             | ExpandFlags::FOR_COMPLETIONS
             | ExpandFlags::PRESERVE_HOME_TILDES;
         if !do_file {
@@ -1817,7 +1817,7 @@ impl<'ctx> Completer<'ctx> {
         //   VAR=(launch_missiles) cmd<tab>
         // should not launch missiles.
         // Note we also do NOT send --on-variable events.
-        let expand_flags = ExpandFlags::SKIP_CMDSUBST;
+        let expand_flags = ExpandFlags::FAIL_ON_CMDSUBST;
         let block = parser.push_block(Block::variable_assignment_block());
         for var_assign in var_assignments {
             let equals_pos = variable_assignment_equals_pos(var_assign)
@@ -2185,7 +2185,7 @@ fn expand_command_token(ctx: &OperationContext<'_>, cmd_tok: &mut WString) -> bo
     // Also we could expand wildcards.
     expand_one(
         cmd_tok,
-        ExpandFlags::SKIP_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
+        ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
         ctx,
         None,
     )

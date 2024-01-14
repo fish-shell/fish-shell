@@ -1638,7 +1638,7 @@ fn detect_errors_in_decorated_statement(
             let mut command = unexp_command.to_owned();
             if expand_one(
                 &mut command,
-                ExpandFlags::SKIP_CMDSUBST,
+                ExpandFlags::FAIL_ON_CMDSUBST,
                 &OperationContext::empty(),
                 match parse_errors {
                     Some(pe) => Some(pe),

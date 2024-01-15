@@ -17,3 +17,15 @@ or echo Invalid $status
 commandline --input 'echo $$' --is-valid
 or echo Invalid $status
 # CHECK: Invalid 1
+
+commandline --input 'echo $$' --current-command
+# CHECK: echo
+
+commandline --input 'foo=bar ' --current-command
+# CHECK:
+
+commandline --input 'boo; and foo=bar git' --current-command
+# CHECK: git
+
+commandline --input 'cat boo | foo=bar less' --current-command
+# CHECK: less

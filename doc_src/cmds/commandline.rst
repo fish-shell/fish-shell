@@ -70,6 +70,9 @@ The following options change what part of the commandline is printed or updated:
 **-t** or **--current-token**
     Selects the current token
 
+**-m** or **--current-command**
+    Selects just the command token in the current process, without any decorators like ``exec`` or ``and``, unless they are the only thing in the process. This can be empty if the commandline doesn't currently have one. Note that it is *not* expanded, so e.g. ``$PAGER foo`` has a command of ``$PAGER``.
+
 The following options change the way ``commandline`` prints the current commandline buffer:
 
 **-c** or **--cut-at-cursor**

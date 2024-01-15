@@ -154,3 +154,21 @@ sendline(r"""abbr LLL --position anywhere --set-cursor=!HERE! '!HERE! | less'"""
 expect_prompt()
 send(r"""echo LLL derp?""")
 expect_str(r"<echo derp | less >")
+
+sendline(r"""
+function abbr_echo_commit
+    test "$(commandline -m)" = echo
+    or return
+    echo commit
+end
+abbr c --position anywhere --function abbr_echo_commit""")
+expect_prompt()
+
+sendline(r"""echo c""")
+expect_prompt("commit")
+
+sendline(r"""true; and builtin echo c; and false""")
+expect_prompt("commit")
+
+sendline(r"""printf '%s\n' c""")
+expect_prompt("c")

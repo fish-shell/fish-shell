@@ -1,8 +1,9 @@
 use super::prelude::*;
+use crate::ast::{Ast, List, Node};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
-use crate::parse_constants::ParserTestErrorBits;
+use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{
     parse_util_detect_errors, parse_util_job_extent, parse_util_lineno, parse_util_process_extent,
     parse_util_token_extent,
@@ -25,6 +26,7 @@ enum TextScope {
     Job,
     Process,
     Token,
+    Command,
 }
 
 /// For text insertion, how should it be done.
@@ -156,12 +158,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let ld = parser.libdata();
 
-    const short_options: &wstr = L!(":abijpctforhI:CBELSsP");
+    const short_options: &wstr = L!(":abimjpctforhI:CBELSsP");
     let long_options: &[woption] = &[
         wopt(L!("append"), woption_argument_t::no_argument, 'a'),
         wopt(L!("insert"), woption_argument_t::no_argument, 'i'),
         wopt(L!("replace"), woption_argument_t::no_argument, 'r'),
         wopt(L!("current-buffer"), woption_argument_t::no_argument, 'b'),
+        wopt(L!("current-command"), woption_argument_t::no_argument, 'm'),
         wopt(L!("current-job"), woption_argument_t::no_argument, 'j'),
         wopt(L!("current-process"), woption_argument_t::no_argument, 'p'),
         wopt(
@@ -195,6 +198,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'r' => append_mode = Some(AppendMode::Replace),
             'c' => cut_at_cursor = true,
             't' => buffer_part = Some(TextScope::Token),
+            'm' => buffer_part = Some(TextScope::Command),
             'j' => buffer_part = Some(TextScope::Job),
             'p' => buffer_part = Some(TextScope::Process),
             'f' => function_mode = true,
@@ -449,6 +453,35 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         }
         TextScope::Token => {
             parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+        }
+        TextScope::Command => {
+            let procrange = parse_util_process_extent(current_buffer, current_cursor_pos, None);
+            range = {
+                let ast = Ast::parse(
+                    &current_buffer[procrange.start..procrange.end],
+                    ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
+                    None,
+                );
+
+                let mut newrange = 0..0;
+
+                if let Some(jc) = ast.top().as_job_list().unwrap().get(0) {
+                    if let Some(first_statement) =
+                        jc.job.statement.contents.as_decorated_statement()
+                    {
+                        if let Some(srange) = first_statement.command.try_source_range() {
+                            newrange = procrange.start + srange.start as usize
+                                ..procrange.start + srange.start as usize + srange.length as usize;
+                        } else {
+                            // For `foo=bar ` we don't have a source range.
+                            // We set the range at the end.
+                            // TODO: For `foo=bar` without a space this won't insert a space.
+                            newrange = procrange.end..procrange.end;
+                        }
+                    }
+                }
+                newrange
+            }
         }
     }
 

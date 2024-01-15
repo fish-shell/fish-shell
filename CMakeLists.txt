@@ -1,6 +1,7 @@
 # CMake 3.15 is required to support Corrosion
 # CMake 3.19 is needed for file(REAL_PATH)
-cmake_minimum_required(VERSION 3.19)
+# CMake 3.21 is needed for file(IMPORTED_RUNTIME_ARTIFACTS)
+cmake_minimum_required(VERSION 3.21)
 
 if(POLICY CMP0066)
   cmake_policy(SET CMP0066 OLD)

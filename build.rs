@@ -6,15 +6,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 fn main() {
-    for key in ["DOCDIR", "DATADIR", "SYSCONFDIR", "BINDIR", "LOCALEDIR"] {
-        if let Ok(val) = env::var(key) {
-            // Forward some CMake config
-            if val.is_empty() {
-                panic!("{} is empty!", key);
-            }
-            println!("cargo:rustc-env={key}={val}");
-        }
-    }
+    setup_paths();
 
     let rust_dir = env!("CARGO_MANIFEST_DIR");
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
@@ -179,4 +171,40 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
             Ok(true)
         }
     }
+}
+
+fn get_path(name: &str, default: &str, onvar: PathBuf) -> PathBuf {
+    let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
+    if var.is_relative() {
+        var = onvar.join(var);
+    }
+    var
+}
+
+fn setup_paths() {
+    rsconf::rebuild_if_env_changed("PREFIX");
+    rsconf::rebuild_if_env_changed("DATADIR");
+    rsconf::rebuild_if_env_changed("BINDIR");
+    rsconf::rebuild_if_env_changed("SYSCONFDIR");
+    rsconf::rebuild_if_env_changed("LOCALEDIR");
+    rsconf::rebuild_if_env_changed("DOCDIR");
+    let prefix = PathBuf::from(env::var("PREFIX").unwrap_or("/usr/local".to_string()));
+    if prefix.is_relative() {
+        panic!("Can't have relative prefix");
+    }
+    println!("cargo:rustc-env=PREFIX={}", prefix.to_str().unwrap());
+
+    let datadir = get_path("DATADIR", "share/", prefix.clone());
+    println!("cargo:rustc-env=DATADIR={}", datadir.to_str().unwrap());
+    let bindir = get_path("BINDIR", "bin/", prefix.clone());
+    println!("cargo:rustc-env=BINDIR={}", bindir.to_str().unwrap());
+    let sysconfdir = get_path("SYSCONFDIR", "etc/", datadir.clone());
+    println!(
+        "cargo:rustc-env=SYSCONFDIR={}",
+        sysconfdir.to_str().unwrap()
+    );
+    let localedir = get_path("LOCALEDIR", "locale/", datadir.clone());
+    println!("cargo:rustc-env=LOCALEDIR={}", localedir.to_str().unwrap());
+    let docdir = get_path("DOCDIR", "doc/fish", datadir.clone());
+    println!("cargo:rustc-env=DOCDIR={}", docdir.to_str().unwrap());
 }

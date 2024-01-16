@@ -2181,7 +2181,7 @@ impl ReaderData {
                     let sfs = self.pager.is_search_field_shown();
                     self.pager.set_search_field_shown(!sfs);
                     self.pager.set_fully_disclosed();
-                    if self.pager.is_search_field_shown() && self.is_navigating_pager_contents() {
+                    if self.pager.is_search_field_shown() && !self.is_navigating_pager_contents() {
                         self.select_completion_in_direction(SelectionMotion::South, false);
                     }
                 }

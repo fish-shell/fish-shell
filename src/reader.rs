@@ -2795,7 +2795,7 @@ impl ReaderData {
                 let mut capitalized_first = false;
 
                 // We apply the operation from the current location to the end of the word.
-                let pos = el.position();
+                let mut pos = el.position();
                 let init_pos = pos;
                 self.move_word(
                     elt,
@@ -2824,6 +2824,7 @@ impl ReaderData {
                         replacement.extend(chr.to_lowercase());
                     };
                     capitalized_first = capitalized_first || make_uppercase;
+                    pos = pos + 1;
                 }
                 self.replace_substring(elt, init_pos..pos, replacement);
                 self.update_buff_pos(elt, None);

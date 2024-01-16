@@ -375,6 +375,11 @@ expect_prompt()
 send("\x1A")
 expect_str("bound ctrl-z")
 
+send('echo foobar')
+send('\x02\x02\x02') # ctrl-b, backward-char
+sendline('\x1bu') # alt+u, upcase word
+expect_prompt("fooBAR")
+
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
 sendline("function myexit; echo exit; exit; end; bind \cz myexit")

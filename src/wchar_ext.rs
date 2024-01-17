@@ -3,6 +3,7 @@ use std::{iter, slice};
 use crate::{
     common::subslice_position,
     wchar::{wstr, WString},
+    L,
 };
 use widestring::utfstr::CharsUtf32;
 
@@ -284,6 +285,17 @@ pub trait WExt {
             self.as_char_slice().iter().copied().rev(),
         )
     }
+
+    fn trim_matches(&self, pat: char) -> &wstr {
+        let slice = self.as_char_slice();
+        let leading_count = slice.chars().take_while(|&c| c == pat).count();
+        let trailing_count = slice.chars().rev().take_while(|&c| c == pat).count();
+        if leading_count == slice.len() {
+            return L!("");
+        }
+        let slice = self.slice_from(leading_count);
+        slice.slice_to(slice.len() - trailing_count)
+    }
 }
 
 impl WExt for WString {
@@ -395,5 +407,12 @@ mod tests {
         let haystack = L!("wOrld");
         let needle = L!("hello world");
         assert_eq!(haystack.find(needle), None);
+    }
+
+    #[test]
+    fn test_trim_matches() {
+        assert_eq!(L!("|foo|").trim_matches('|'), L!("foo"));
+        assert_eq!(L!("<foo|").trim_matches('|'), L!("<foo"));
+        assert_eq!(L!("|foo>").trim_matches('|'), L!("foo>"));
     }
 }

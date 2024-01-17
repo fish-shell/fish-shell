@@ -1,5 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor};
+use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -29,7 +29,7 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use std::ops;
+use std::{iter, ops};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// \return the length of the slice starting at \p in, or 0 if there is no slice, or None on error.
@@ -1114,6 +1114,8 @@ pub fn parse_util_detect_errors_in_ast(
             if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
                 has_unclosed_pipe = true;
             }
+        } else if let Some(job_conjunction) = node.as_job_conjunction() {
+            errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
         } else if let Some(jcc) = node.as_job_conjunction_continuation() {
             // Somewhat clumsy way of checking for a job without source in a conjunction.
             // See if our conjunction operator (&& or ||) has source but our job does not.
@@ -1390,6 +1392,36 @@ pub fn parse_util_detect_errors_in_argument(
     } else {
         Err(err)
     }
+}
+
+fn detect_errors_in_job_conjunction(
+    job_conjunction: &ast::JobConjunction,
+    parse_errors: &mut Option<&mut ParseErrorList>,
+) -> bool {
+    // Disallow background immediately before conjunction continuations. For example:
+    // foo & && bar
+    // foo & || baz
+    let continuations = &job_conjunction.continuations;
+    let jobs = iter::once(&job_conjunction.job)
+        .chain(continuations.iter().map(|continuation| &continuation.job));
+    for (job, continuation) in jobs.zip(continuations.iter()) {
+        if job.bg.is_some() {
+            let conjunction = &continuation.conjunction;
+            return append_syntax_error!(
+                parse_errors,
+                conjunction.source_range().start(),
+                conjunction.source_range().length(),
+                BOOL_AFTER_BACKGROUND_ERROR_MSG,
+                if conjunction.token_type() == ParseTokenType::andand {
+                    L!("&&")
+                } else {
+                    L!("||")
+                }
+            );
+        }
+    }
+
+    false
 }
 
 /// Given that the job given by node should be backgrounded, return true if we detect any errors.
@@ -1778,7 +1810,7 @@ pub fn parse_util_expand_variable_error(
 }
 
 /// Error message for use of backgrounded commands before and/or.
-const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
+pub(crate) const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
     "The '%ls' command can not be used immediately after a backgrounded job";
 
 /// Error message for backgrounded commands as conditionals.

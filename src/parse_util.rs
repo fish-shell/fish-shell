@@ -1,5 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor};
+use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -1120,6 +1120,17 @@ pub fn parse_util_detect_errors_in_ast(
             if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
                 has_unclosed_conjunction = true;
             }
+            let continuations = jcc
+                .parent()
+                .and_then(|job_conj_list| job_conj_list.as_job_conjunction_continuation_list());
+            if let Some(continuations) = continuations {
+                for continuation in continuations {
+                    if continuation.job.bg.is_some() {
+                        errored |=
+                            detect_errors_in_backgrounded_job(&continuation.job, &mut out_errors);
+                    }
+                }
+            }
         } else if let Some(arg) = node.as_argument() {
             let arg_src = arg.source(buff_src);
             res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
@@ -1402,6 +1413,39 @@ fn detect_errors_in_backgrounded_job(
     };
 
     let mut errored = false;
+
+    // Disallow background immediately before continuation conjunctions. For example:
+    // foo & && bar
+    // foo & || baz
+    if let Some(list) = job
+        .parent()
+        .unwrap()
+        .as_job_conjunction_continuation()
+        .and_then(|j| j.parent())
+        .and_then(|j| j.as_job_conjunction_continuation_list())
+    {
+        let content = list.contents();
+        if let Some(deco) = content
+            .iter()
+            .position(|j| j.job.pointer_eq(job))
+            .and_then(|me| content.get(me + 1))
+        {
+            let deco = &deco.conjunction;
+            let deco_name = if deco.token_type() == ParseTokenType::andand {
+                L!("&&")
+            } else {
+                L!("||")
+            };
+            return append_syntax_error!(
+                parse_errors,
+                deco.source_range().start(),
+                deco.source_range().length(),
+                BOOL_AFTER_BACKGROUND_ERROR_MSG,
+                deco_name
+            );
+        }
+    }
+
     // Disallow background in the following cases:
     // foo & ; and bar
     // foo & ; or bar

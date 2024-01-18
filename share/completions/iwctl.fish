@@ -14,7 +14,7 @@ function __iwctl_filter -w iwctl
     set -l results (iwctl $argv | string replace -ra '\e\[[\d;]+m' '')
     # calculate column widths
     set -l headers $results[3]
-    # We exploit the fact that all colum labels will have >2 space to the left, and inside column labels there is always only one space.
+    # We exploit the fact that all column labels will have >2 space to the left, and inside column labels there is always only one space.
     set -l leading_ws (string match -r "^ *" -- $headers | string length)
     set -l column_widths (string match -a -r '(?<=  )\S.*?(?:  (?=\S)|$)' -- $headers | string length)
 

@@ -5,7 +5,7 @@ function __fish_print_port_packages
     set -l xdg_cache_home (__fish_make_cache_dir)
     or return
 
-    set -l cache_file $xdg_cache_home/.port-cache.$USER
+    set -l cache_file $xdg_cache_home/port
     if test -f $cache_file
         cat $cache_file
         set -l age (path mtime -R -- $cache_file)

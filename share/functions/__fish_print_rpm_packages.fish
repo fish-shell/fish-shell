@@ -10,7 +10,7 @@ function __fish_print_rpm_packages
 
     if type -q -f /usr/share/yum-cli/completion-helper.py
         # If the cache is less than six hours old, we do not recalculate it
-        set -l cache_file $xdg_cache_home/.yum-cache.$USER
+        set -l cache_file $xdg_cache_home/yum
         if test -f $cache_file
             cat $cache_file
             set -l age (path mtime -R -- $cache_file)
@@ -29,7 +29,7 @@ function __fish_print_rpm_packages
     # as a background job and cache the results.
     if type -q -f rpm
         # If the cache is less than five minutes old, we do not recalculate it
-        set -l cache_file $xdg_cache_home/.rpm-cache.$USER
+        set -l cache_file $xdg_cache_home/rpm
         if test -f $cache_file
             cat $cache_file
             set -l age (path mtime -R -- $cache_file)

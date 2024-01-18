@@ -11,7 +11,7 @@ function __fish_print_eopkg_packages
     # Determine whether to print installed/available packages
 
     if set -q _flag_installed
-        set -l cache_file $xdg_cache_home/.eopkg-installed-cache.$USER
+        set -l cache_file $xdg_cache_home/eopkg-installed
         if test -f $cache_file
             cat $cache_file
             set -l age (path mtime -R -- $cache_file)
@@ -25,7 +25,7 @@ function __fish_print_eopkg_packages
         eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
         return 0
     else
-        set -l cache_file $xdg_cache_home/.eopkg-available-cache.$USER
+        set -l cache_file $xdg_cache_home/eopkg-available
         if test -f $cache_file
             cat $cache_file
             set -l age (path mtime -R -- $cache_file)

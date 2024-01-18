@@ -9,7 +9,7 @@ function __fish_print_xbps_packages
     or return
 
     if not set -q _flag_installed
-        set -l cache_file $xdg_cache_home/.xbps-cache.$USER
+        set -l cache_file $xdg_cache_home/xbps
         if test -f $cache_file
             set -l age (path mtime -R -- $cache_file)
             set -l max_age 300

@@ -9,7 +9,7 @@ function __fish_print_pacman_packages
     or return
 
     if not set -q _flag_installed
-        set -l cache_file $xdg_cache_home/.pac-cache.$USER
+        set -l cache_file $xdg_cache_home/pacman
         if test -f $cache_file
             cat $cache_file
             set -l age (path mtime -R -- $cache_file)

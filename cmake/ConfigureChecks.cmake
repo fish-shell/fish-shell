@@ -38,21 +38,9 @@ else()
 endif()
 
 # Set up the config.h file.
-set(PACKAGE_NAME "fish")
-set(PACKAGE_TARNAME "fish")
 include(CheckCXXSymbolExists)
-include(CheckCXXSourceCompiles)
 include(CheckTypeSize)
 
 check_cxx_symbol_exists(gettext libintl.h HAVE_GETTEXT)
 
 check_type_size("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
-
-# Work around the fact that cmake does not propagate the language standard flag into
-# the CHECK_CXX_SOURCE_COMPILES function. See CMake issue #16456.
-# Ensure we do this after the FIND_PACKAGE calls which use C, and will error on a C++
-# standards flag.
-# Also see https://github.com/fish-shell/fish-shell/issues/5865
-if(NOT POLICY CMP0067)
-  list(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
-endif()

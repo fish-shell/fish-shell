@@ -17,7 +17,7 @@ fn test_error_messages() {
     // Given a format string, returns a list of non-empty strings separated by format specifiers. The
     // format specifiers themselves are omitted.
     fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
-        let format_specifier_regex = Regex::new(L!(r"%l?[ds]").as_char_slice()).unwrap();
+        let format_specifier_regex = Regex::new(L!(r"%l?[cds]").as_char_slice()).unwrap();
         let mut result = vec![];
         let mut offset = 0;
         for mtch in format_specifier_regex.find_iter(format.as_char_slice()) {
@@ -25,6 +25,7 @@ fn test_error_messages() {
             result.push(&format[offset..mtch.start()]);
             offset = mtch.end();
         }
+        result.push(&format[offset..]);
         result
     }
 
@@ -33,6 +34,7 @@ fn test_error_messages() {
     // that each of the remaining chunks is found (in order) in the string.
     fn string_matches_format(s: &wstr, format: &wstr) -> bool {
         let components = separate_by_format_specifiers(format);
+        assert!(!components.is_empty());
         let mut idx = 0;
         for component in components {
             let Some(relpos) = s[idx..].find(component) else {

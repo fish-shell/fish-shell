@@ -349,10 +349,13 @@ pub fn split_string_tok<'val>(
     let max_results = max_results.unwrap_or(usize::MAX);
     while pos < end && out.len() + 1 < max_results {
         // Skip leading seps.
-        pos += match val[pos..].iter().position(|c| !seps.contains(*c)) {
-            Some(p) => p,
-            None => break,
-        };
+        match val[pos..].iter().position(|c| !seps.contains(*c)) {
+            Some(p) => pos += p,
+            None => {
+                pos = end;
+                break;
+            }
+        }
 
         // Find next sep.
         let next_sep = val[pos..]

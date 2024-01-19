@@ -398,9 +398,9 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "rsconf"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a9a3f6ff97f1bc63b490ea2d2c1570fd8372ab887b45dff59695ded372d576"
+checksum = "7b9653c00e095416c7586382524a5ede22b9dec6f067879bd7eed21429721e6d"
 dependencies = [
  "cc",
 ]

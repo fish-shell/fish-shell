@@ -76,6 +76,7 @@ fn main() {
 /// `Cargo.toml`) behind a feature we just enabled.
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
+#[rustfmt::skip]
 fn detect_cfgs(target: Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference. Model new entries after the
@@ -86,15 +87,15 @@ fn detect_cfgs(target: Target) {
         ),
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
-        // See if the system headers provide the thread-safe localeconv_l(3) alternative to localeconv(3).
+        // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
-            Ok(target.has_symbol_in::<String>("localeconv_l", &[]))
+            Ok(target.has_symbol("localeconv_l", None))
         }),
         ("FISH_USE_POSIX_SPAWN", &|target| {
             Ok(target.has_header("spawn.h"))
         }),
         ("HAVE_PIPE2", &|target| {
-            Ok(target.has_symbol_in::<String>("pipe2", &[]))
+            Ok(target.has_symbol("pipe2", None))
         }),
         ("HAVE_EVENTFD", &|target| {
             Ok(target.has_header("sys/eventfd.h"))
@@ -112,7 +113,7 @@ fn detect_cfgs(target: Target) {
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
-/// `#[cfg(feature = "bsd")]`.
+/// `#[cfg(bsd)]`.
 ///
 /// Rust offers fine-grained conditional compilation per-os for the popular operating systems, but
 /// doesn't necessarily include less-popular forks nor does it group them into families more

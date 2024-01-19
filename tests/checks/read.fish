@@ -389,3 +389,7 @@ echo foo | read status
 # CHECKERR: (Type 'help read' for related documentation)
 echo read $status
 # CHECK: read 2
+
+echo ' foo' | read -n 1 -la var
+set -S var
+#CHECK: $var: set in local scope, unexported, with 0 elements

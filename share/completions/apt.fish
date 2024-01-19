@@ -37,7 +37,18 @@ complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -a '(__fish_pri
 complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -a '(__fish_print_apt_packages --installed | string match -re -- "(?:\\b|_)"(commandline -ct | string escape --style=regex) | head -n 250)'
 complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -a '(__fish_complete_suffix .deb)'
 
-complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends
+complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends -d 'Do not install recommended packages'
+complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-suggests -d 'Do not install suggested packages'
+complete -c apt -n "__fish_seen_subcommand_from install" -s d -l download-only -d 'Download Only'
+complete -c apt -n "__fish_seen_subcommand_from install" -s f -l fix-broken -d 'Correct broken dependencies'
+complete -c apt -n "__fish_seen_subcommand_from install" -s m -l fix-missing -d 'Ignore missing packages'
+complete -c apt -n "__fish_seen_subcommand_from install" -l no-download -d 'Disable downloading packages'
+complete -c apt -n "__fish_seen_subcommand_from install" -s q -l quiet -d 'Quiet mode'
+complete -c apt -n "__fish_seen_subcommand_from install" -s s -l simulate -l just-print -l dry-run -l recon -l no-act -d 'Perform a simulation'
+complete -c apt -n "__fish_seen_subcommand_from install" -s y -l yes -l assume-yes -d 'Automatic yes to prompts'
+complete -c apt -n "__fish_seen_subcommand_from install" -l assume-no -d 'Automatic no to prompts'
+complete -c apt -n "__fish_seen_subcommand_from install" -l install-recommends -d 'Install recommended packages'
+complete -c apt -n "__fish_seen_subcommand_from install" -l install-suggests -d 'Install suggested packages'
 # This advanced flag is the safest way to upgrade packages that otherwise would have been kept back
 complete -c apt -n "__fish_seen_subcommand_from upgrade" -l with-new-pkgs
 

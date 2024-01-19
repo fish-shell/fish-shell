@@ -1632,10 +1632,13 @@ pub fn restore_term_foreground_process_group_for_exit() {
 #[allow(unused)]
 // This function is unused in some configurations/on some platforms
 fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
-    a.windows(b.len()).any(|aw| aw == b)
+    subslice_position(a, b).is_some()
 }
 
 pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
+    if b.is_empty() {
+        return Some(0);
+    }
     a.windows(b.len()).position(|aw| aw == b)
 }
 

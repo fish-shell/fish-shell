@@ -245,11 +245,7 @@ pub trait WExt {
 
     /// Returns the index of the first match against the provided substring or `None`.
     fn find(&self, search: impl AsRef<[char]>) -> Option<usize> {
-        fn inner(lhs: &[char], rhs: &[char]) -> Option<usize> {
-            lhs.windows(rhs.len()).position(|window| window == rhs)
-        }
-
-        inner(self.as_char_slice(), search.as_ref())
+        subslice_position(self.as_char_slice(), search.as_ref())
     }
 
     /// Replaces all matches of a pattern with another string.

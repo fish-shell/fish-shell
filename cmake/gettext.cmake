@@ -43,14 +43,3 @@ set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${Intl_LIBRARIES})
 if(Intl_FOUND AND Intl_LIBRARIES)
   set(LIBINTL_INCLUDE "#include <libintl.h>")
 endif()
-check_cxx_source_compiles("
-${LIBINTL_INCLUDE}
-#include <stdlib.h>
-int main () {
-    extern int  _nl_msg_cat_cntr;
-    int tmp = _nl_msg_cat_cntr;
-    exit(tmp);
-}
-"
-    HAVE__NL_MSG_CAT_CNTR)
-cmake_pop_check_state()

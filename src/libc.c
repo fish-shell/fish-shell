@@ -1,5 +1,3 @@
-#include "config.h"
-
 #include <paths.h>
 #include <stdbool.h>
 #include <stdint.h>

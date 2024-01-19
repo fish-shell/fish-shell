@@ -88,11 +88,6 @@ else()
   set(FISH_IN_TREE_BUILD FALSE)
 endif()
 
-# Set up config.h
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_cmake.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 # Set up the machinery around FISH-BUILD-VERSION-FILE
 # This defines the FBVF variable.
 include(Version)

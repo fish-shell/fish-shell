@@ -5,7 +5,7 @@ use crate::parse_constants::{
     ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
     ERROR_NO_VAR_NAME,
 };
-use crate::parse_util::parse_util_detect_errors;
+use crate::parse_util::{parse_util_detect_errors, BOOL_AFTER_BACKGROUND_ERROR_MSG};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
@@ -70,4 +70,9 @@ fn test_error_messages() {
     validate!("echo foo\"$\"bar", ERROR_NO_VAR_NAME);
     validate!("echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME);
     validate!("echo foo $ bar", ERROR_NO_VAR_NAME);
+    validate!("echo 1 & && echo 2", BOOL_AFTER_BACKGROUND_ERROR_MSG);
+    validate!(
+        "echo 1 && echo 2 & && echo 3",
+        BOOL_AFTER_BACKGROUND_ERROR_MSG
+    );
 }

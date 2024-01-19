@@ -1853,7 +1853,7 @@ pub fn parse_util_expand_variable_error(
 }
 
 /// Error message for use of backgrounded commands before and/or.
-const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
+pub(crate) const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
     "The '%ls' command can not be used immediately after a backgrounded job";
 
 /// Error message for backgrounded commands as conditionals.

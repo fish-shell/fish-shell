@@ -76,6 +76,7 @@ fn main() {
 /// `Cargo.toml`) behind a feature we just enabled.
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
+#[rustfmt::skip]
 fn detect_cfgs(target: Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference. Model new entries after the

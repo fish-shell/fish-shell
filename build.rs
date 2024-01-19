@@ -11,32 +11,28 @@ fn main() {
     let rust_dir = env!("CARGO_MANIFEST_DIR");
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
-    let build_dir =
-        PathBuf::from(std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{rust_dir}/build")));
-    println!("cargo:rustc-env=FISH_BUILD_DIR={}", build_dir.display());
+    let build_dir = std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{rust_dir}/build"));
+    rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
 
-    let cached_curses_libnames = Path::join(&build_dir, "cached-curses-libnames");
+    let cached_curses_libnames = Path::join(Path::new(&build_dir), "cached-curses-libnames");
     let curses_libnames: Vec<String> = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
-        let lib_paths = lib_path_list
-            .split(',')
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string());
+        let lib_paths = lib_path_list.split(',').filter(|s| !s.is_empty());
         let curses_libnames: Vec<_> = lib_paths
             .map(|libpath| {
                 let stem = Path::new(&libpath).file_stem().unwrap().to_str().unwrap();
                 // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
-                stem.strip_prefix("lib").unwrap_or(stem).to_owned()
+                stem.strip_prefix("lib").unwrap_or(stem).to_string()
             })
             .collect();
         std::fs::write(cached_curses_libnames, curses_libnames.join("\n") + "\n").unwrap();
         curses_libnames
     } else {
         let lib_cache = std::fs::read(cached_curses_libnames).unwrap_or_default();
-        let lib_cache = String::from_utf8(lib_cache).unwrap();
+        let lib_cache = std::str::from_utf8(&lib_cache).unwrap();
         lib_cache
             .split('\n')
             .filter(|s| !s.is_empty())
-            .map(|s| s.to_owned())
+            .map(|s| s.to_string())
             .collect()
     };
     if !curses_libnames.is_empty() {
@@ -154,7 +150,7 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
     for symbol in &symbols {
         // Historically, libintl was required in order to use gettext() and co, but that
         // functionality was subsumed by some versions of libc.
-        if target.has_symbol_in::<&str>(symbol, &[]) {
+        if target.has_symbol(symbol, None) {
             // No need to link anything special for this symbol
             found += 1;
             continue;
@@ -177,38 +173,39 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
     }
 }
 
-fn get_path(name: &str, default: &str, onvar: PathBuf) -> PathBuf {
-    let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
-    if var.is_relative() {
-        var = onvar.join(var);
-    }
-    var
-}
-
 fn setup_paths() {
-    rsconf::rebuild_if_env_changed("PREFIX");
-    rsconf::rebuild_if_env_changed("DATADIR");
-    rsconf::rebuild_if_env_changed("BINDIR");
-    rsconf::rebuild_if_env_changed("SYSCONFDIR");
-    rsconf::rebuild_if_env_changed("LOCALEDIR");
-    rsconf::rebuild_if_env_changed("DOCDIR");
+    fn get_path(name: &str, default: &str, onvar: PathBuf) -> PathBuf {
+        let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
+        if var.is_relative() {
+            var = onvar.join(var);
+        }
+        var
+    }
+
     let prefix = PathBuf::from(env::var("PREFIX").unwrap_or("/usr/local".to_string()));
     if prefix.is_relative() {
         panic!("Can't have relative prefix");
     }
-    println!("cargo:rustc-env=PREFIX={}", prefix.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("PREFIX");
+    rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 
     let datadir = get_path("DATADIR", "share/", prefix.clone());
-    println!("cargo:rustc-env=DATADIR={}", datadir.to_str().unwrap());
+    rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("DATADIR");
+
     let bindir = get_path("BINDIR", "bin/", prefix.clone());
-    println!("cargo:rustc-env=BINDIR={}", bindir.to_str().unwrap());
+    rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("BINDIR");
+
     let sysconfdir = get_path("SYSCONFDIR", "etc/", datadir.clone());
-    println!(
-        "cargo:rustc-env=SYSCONFDIR={}",
-        sysconfdir.to_str().unwrap()
-    );
+    rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("SYSCONFDIR");
+
     let localedir = get_path("LOCALEDIR", "locale/", datadir.clone());
-    println!("cargo:rustc-env=LOCALEDIR={}", localedir.to_str().unwrap());
+    rsconf::set_env_value("LOCALEDIR", localedir.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("LOCALEDIR");
+
     let docdir = get_path("DOCDIR", "doc/fish", datadir.clone());
-    println!("cargo:rustc-env=DOCDIR={}", docdir.to_str().unwrap());
+    rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
+    rsconf::rebuild_if_env_changed("DOCDIR");
 }

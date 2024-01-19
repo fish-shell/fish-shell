@@ -14,33 +14,6 @@ fn main() {
     let build_dir = std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{rust_dir}/build"));
     rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
 
-    let cached_curses_libnames = Path::join(Path::new(&build_dir), "cached-curses-libnames");
-    let curses_libnames: Vec<String> = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
-        let lib_paths = lib_path_list.split(',').filter(|s| !s.is_empty());
-        let curses_libnames: Vec<_> = lib_paths
-            .map(|libpath| {
-                let stem = Path::new(&libpath).file_stem().unwrap().to_str().unwrap();
-                // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
-                stem.strip_prefix("lib").unwrap_or(stem).to_string()
-            })
-            .collect();
-        std::fs::write(cached_curses_libnames, curses_libnames.join("\n") + "\n").unwrap();
-        curses_libnames
-    } else {
-        let lib_cache = std::fs::read(cached_curses_libnames).unwrap_or_default();
-        let lib_cache = std::str::from_utf8(&lib_cache).unwrap();
-        lib_cache
-            .split('\n')
-            .filter(|s| !s.is_empty())
-            .map(|s| s.to_string())
-            .collect()
-    };
-    if !curses_libnames.is_empty() {
-        rsconf::link_libraries(&curses_libnames, LinkType::Default);
-    } else {
-        rsconf::link_libraries(&["ncurses"], LinkType::Default);
-    }
-
     cc::Build::new()
         .file("src/libc.c")
         .include(&build_dir)
@@ -50,10 +23,38 @@ fn main() {
     // Add to the default library search path
     build.flag_if_supported("-L/usr/local/lib/");
     rsconf::add_library_search_path("/usr/local/lib");
-    let mut detector = Target::new_from(build).unwrap();
+    let mut target = Target::new_from(build).unwrap();
     // Keep verbose mode on until we've ironed out rust build script stuff
-    detector.set_verbose(true);
-    detect_cfgs(detector);
+    target.set_verbose(true);
+    detect_cfgs(&mut target);
+
+    // Handle case where CMake has found curses for us and where we have to find it ourselves.
+    rsconf::rebuild_if_env_changed("CURSES_LIBRARY_LIST");
+    if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
+        let lib_paths = lib_path_list.split(',').filter(|s| !s.is_empty());
+        let curses_libnames: Vec<_> = lib_paths
+            .map(|libpath| {
+                let stem = Path::new(libpath).file_stem().unwrap().to_str().unwrap();
+                // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
+                stem.strip_prefix("lib").unwrap_or(stem)
+            })
+            .collect();
+        // We don't need to test the libs because presumably CMake already did
+        rsconf::link_libraries(&curses_libnames, LinkType::Default);
+    } else {
+        let mut curses_found = false;
+        for lib in ["ncurses", "curses"] {
+            if target.has_library(lib) && target.has_symbol("setupterm", lib) {
+                rsconf::link_library(lib, LinkType::Default);
+                curses_found = true;
+                break;
+            }
+        }
+
+        if !curses_found {
+            rsconf::warn!("Could not locate a compatible curses library!");
+        }
+    }
 }
 
 /// Check target system support for certain functionality dynamically when the build is invoked,
@@ -69,7 +70,7 @@ fn main() {
 ///
 /// [0]: https://github.com/rust-lang/cargo/issues/5499
 #[rustfmt::skip]
-fn detect_cfgs(target: Target) {
+fn detect_cfgs(target: &mut Target) {
     for (name, handler) in [
         // Ignore the first entry, it just sets up the type inference. Model new entries after the
         // second line.

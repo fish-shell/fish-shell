@@ -39,7 +39,11 @@ fn main() {
             .map(|s| s.to_owned())
             .collect()
     };
-    rsconf::link_libraries(&curses_libnames, LinkType::Default);
+    if !curses_libnames.is_empty() {
+        rsconf::link_libraries(&curses_libnames, LinkType::Default);
+    } else {
+        rsconf::link_libraries(&["ncurses"], LinkType::Default);
+    }
 
     cc::Build::new()
         .file("src/libc.c")

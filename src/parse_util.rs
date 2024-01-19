@@ -1,5 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
+use crate::ast::{self, Ast, ConcreteNode, Keyword, Leaf, List, Node, NodeVisitor, Token};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -1130,6 +1130,16 @@ pub fn parse_util_detect_errors_in_ast(
                             detect_errors_in_backgrounded_job(&continuation.job, &mut out_errors);
                     }
                 }
+                if let Some(parent_conjunction) =
+                    continuations.parent().and_then(|j| j.as_job_conjunction())
+                {
+                    if parent_conjunction.job.bg.is_some() {
+                        errored |= detect_errors_in_backgrounded_job(
+                            &parent_conjunction.job,
+                            &mut out_errors,
+                        );
+                    }
+                }
             }
         } else if let Some(arg) = node.as_argument() {
             let arg_src = arg.source(buff_src);
@@ -1417,10 +1427,31 @@ fn detect_errors_in_backgrounded_job(
     // Disallow background immediately before continuation conjunctions. For example:
     // foo & && bar
     // foo & || baz
+    if let Some(conjunction) = job
+        .parent()
+        .and_then(|j| j.as_job_conjunction())
+        .and_then(|j| j.continuations.contents().first())
+        .and_then(|j| j.as_job_conjunction_continuation())
+    {
+        {
+            let deco = &conjunction.conjunction;
+            let deco_name = if deco.token_type() == ParseTokenType::andand {
+                L!("&&")
+            } else {
+                L!("||")
+            };
+            return append_syntax_error!(
+                parse_errors,
+                deco.source_range().start(),
+                deco.source_range().length(),
+                BOOL_AFTER_BACKGROUND_ERROR_MSG,
+                deco_name
+            );
+        }
+    }
+
     if let Some(list) = job
         .parent()
-        .unwrap()
-        .as_job_conjunction_continuation()
         .and_then(|j| j.parent())
         .and_then(|j| j.as_job_conjunction_continuation_list())
     {

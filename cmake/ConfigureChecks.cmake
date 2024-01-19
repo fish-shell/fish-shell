@@ -56,13 +56,3 @@ check_type_size("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)
 if(NOT POLICY CMP0067)
   list(APPEND CMAKE_REQUIRED_FLAGS "${CMAKE_CXX${CMAKE_CXX_STANDARD}_EXTENSION_COMPILE_OPTION}")
 endif()
-
-check_cxx_source_compiles("
-#include <sys/wait.h>
-
-int main() {
-    static_assert(WEXITSTATUS(0x007f) == 0x7f, \"This is our message we need to add because C++ is terrible\");
-    return 0;
-}
-"
-HAVE_WAITSTATUS_SIGNAL_RET)

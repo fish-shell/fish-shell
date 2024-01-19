@@ -88,13 +88,13 @@ fn detect_cfgs(target: Target) {
         ("gettext", &have_gettext),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
-            Ok(target.has_symbol_in::<String>("localeconv_l", &[]))
+            Ok(target.has_symbol("localeconv_l", None))
         }),
         ("FISH_USE_POSIX_SPAWN", &|target| {
             Ok(target.has_header("spawn.h"))
         }),
         ("HAVE_PIPE2", &|target| {
-            Ok(target.has_symbol_in::<String>("pipe2", &[]))
+            Ok(target.has_symbol("pipe2", None))
         }),
         ("HAVE_EVENTFD", &|target| {
             Ok(target.has_header("sys/eventfd.h"))

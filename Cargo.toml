@@ -42,7 +42,7 @@ serial_test = "0.4.0"
 
 [build-dependencies]
 cc = "1.0.83"
-rsconf = "0.1.1"
+rsconf = "0.1.2"
 
 [lib]
 crate-type = ["rlib"]

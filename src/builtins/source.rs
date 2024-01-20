@@ -1,6 +1,8 @@
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+
 use crate::{
     common::{escape, scoped_push_replacer, FilenameRef},
-    fds::{wopen_cloexec, AutoCloseFd},
+    fds::wopen_cloexec,
     nix::isatty,
     parser::Block,
     reader::reader_read,
@@ -48,8 +50,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         func_filename = FilenameRef::new(L!("-").to_owned());
         fd = streams.stdin_fd;
     } else {
-        opened_fd = AutoCloseFd::new(wopen_cloexec(args[optind], O_RDONLY, 0));
-        if !opened_fd.is_valid() {
+        let Ok(raw_fd) = wopen_cloexec(args[optind], O_RDONLY, 0) else {
             let esc = escape(args[optind]);
             streams.err.append(wgettext_fmt!(
                 "%ls: Error encountered while sourcing file '%ls':\n",
@@ -58,9 +59,10 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             ));
             builtin_wperror(cmd, streams);
             return STATUS_CMD_ERROR;
-        }
+        };
+        opened_fd = unsafe { OwnedFd::from_raw_fd(raw_fd) };
 
-        fd = opened_fd.fd();
+        fd = opened_fd.as_raw_fd();
         let mut buf: libc::stat = unsafe { std::mem::zeroed() };
         if unsafe { libc::fstat(fd, &mut buf) } == -1 {
             let esc = escape(args[optind]);

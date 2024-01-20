@@ -19,12 +19,12 @@ use crate::wutil::{
     wunlink, FileId, INVALID_FILE_ID,
 };
 use errno::{errno, Errno};
-use libc::{EINTR, ENOTSUP, EOPNOTSUPP, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR};
+use libc::{EINTR, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -236,14 +236,13 @@ impl EnvUniversal {
 
         // Open the file.
         let vars_fd = self.open_and_acquire_lock();
-        if !vars_fd.is_valid() {
+        let Some(vars_fd) = vars_fd else {
             FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
             return false;
-        }
+        };
 
         // Read from it.
-        assert!(vars_fd.is_valid());
-        self.load_from_fd(vars_fd.fd(), callbacks);
+        self.load_from_fd(vars_fd.as_raw_fd(), callbacks);
 
         if self.ok_to_save {
             self.save(&directory)
@@ -389,18 +388,17 @@ impl EnvUniversal {
             return true;
         }
 
-        let mut result = false;
-        let fd = AutoCloseFd::new(open_cloexec(&self.narrow_vars_path, O_RDONLY, 0));
-        if fd.is_valid() {
-            FLOG!(uvar_file, "universal log reading from file");
-            self.load_from_fd(fd.fd(), callbacks);
-            result = true;
-        }
-        result
+        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, O_RDONLY, 0) else {
+            return false;
+        };
+
+        let fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw_fd) };
+        FLOG!(uvar_file, "universal log reading from file");
+        self.load_from_fd(fd.as_raw_fd(), callbacks);
+        true
     }
 
     fn load_from_fd(&mut self, fd: RawFd, callbacks: &mut CallbackDataList) {
-        assert!(fd >= 0);
         // Get the dev / inode.
         let current_file = file_id_for_fd(fd);
         if current_file == self.last_read_file {
@@ -426,7 +424,7 @@ impl EnvUniversal {
     }
 
     // Functions concerned with saving.
-    fn open_and_acquire_lock(&mut self) -> AutoCloseFd {
+    fn open_and_acquire_lock(&mut self) -> Option<OwnedFd> {
         // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
         // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
         // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -441,57 +439,62 @@ impl EnvUniversal {
             locked_by_open = true;
         }
 
-        let mut fd = AutoCloseFd::empty();
-        while !fd.is_valid() {
-            fd = AutoCloseFd::new(wopen_cloexec(&self.vars_path, flags, 0o644));
-
-            if !fd.is_valid() {
-                let err = errno();
-                if err.0 == EINTR {
-                    continue; // signaled; try again
-                }
-
-                if O_EXLOCK != 0 {
-                    if (flags & O_EXLOCK) != 0 && [ENOTSUP, EOPNOTSUPP].contains(&err.0) {
-                        // Filesystem probably does not support locking. Give up on locking.
-                        // Note that on Linux the two errno symbols have the same value but on BSD they're
-                        // different.
-                        flags &= !O_EXLOCK;
-                        self.do_flock = false;
-                        locked_by_open = false;
-                        continue;
+        let mut res_fd = None;
+        while res_fd.is_none() {
+            let raw = match wopen_cloexec(&self.vars_path, flags, 0o644) {
+                Ok(raw) => raw,
+                Err(err) => {
+                    if err == nix::Error::EINTR {
+                        continue; // signaled; try again
                     }
-                }
-                FLOG!(
-                    error,
-                    wgettext_fmt!(
-                        "Unable to open universal variable file '%s': %s",
-                        &self.vars_path,
-                        err.to_string()
-                    )
-                );
-                break;
-            }
 
-            assert!(fd.is_valid(), "Should have a valid fd here");
+                    if O_EXLOCK != 0 {
+                        if (flags & O_EXLOCK) != 0
+                            && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
+                        {
+                            // Filesystem probably does not support locking. Give up on locking.
+                            // Note that on Linux the two errno symbols have the same value but on BSD they're
+                            // different.
+                            flags &= !O_EXLOCK;
+                            self.do_flock = false;
+                            locked_by_open = false;
+                            continue;
+                        }
+                    }
+                    FLOG!(
+                        error,
+                        wgettext_fmt!(
+                            "Unable to open universal variable file '%s': %s",
+                            &self.vars_path,
+                            err.to_string()
+                        )
+                    );
+                    break;
+                }
+            };
+
+            assert!(raw >= 0, "Should have a valid fd here");
+            let fd = unsafe { OwnedFd::from_raw_fd(raw) };
 
             // Lock if we want to lock and open() didn't do it for us.
             // If flock fails, give up on locking forever.
             if self.do_flock && !locked_by_open {
-                if !flock_uvar_file(fd.fd()) {
+                if !flock_uvar_file(fd.as_raw_fd()) {
                     self.do_flock = false;
                 }
             }
 
             // Hopefully we got the lock. However, it's possible the file changed out from under us
             // while we were waiting for the lock. Make sure that didn't happen.
-            if file_id_for_fd(fd.fd()) != file_id_for_path(&self.vars_path) {
+            if file_id_for_fd(fd.as_raw_fd()) != file_id_for_path(&self.vars_path) {
                 // Oops, it changed! Try again.
-                fd.close();
+                drop(fd);
+            } else {
+                res_fd = Some(fd);
             }
         }
 
-        fd
+        res_fd
     }
 
     fn open_temporary_file(&mut self, directory: &wstr, out_path: &mut WString) -> AutoCloseFd {

@@ -17,7 +17,7 @@ use crate::topic_monitor::topic_t;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
-use libc::{EAGAIN, EEXIST, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
+use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
 use std::cell::{RefCell, UnsafeCell};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -657,52 +657,61 @@ impl IoChain {
                     // Mark it as CLO_EXEC because we don't want it to be open in any child.
                     let path = path_apply_working_directory(&spec.target, pwd);
                     let oflags = spec.oflags();
-                    let file = AutoCloseFd::new(wopen_cloexec(&path, oflags, OPEN_MASK));
-                    if !file.is_valid() {
-                        if (oflags & O_EXCL) != 0 && errno::errno().0 == EEXIST {
-                            FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                        } else {
-                            if should_flog!(warning) {
-                                let err = errno::errno().0;
-                                // If the error is that the file doesn't exist
-                                // or there's a non-directory component,
-                                // find the first problematic component for a better message.
-                                if [ENOENT, ENOTDIR].contains(&err) {
-                                    FLOGF!(warning, FILE_ERROR, spec.target);
-                                    let mut dname: &wstr = &spec.target;
-                                    while !dname.is_empty() {
-                                        let next: &wstr = wdirname(dname);
-                                        if let Ok(md) = wstat(next) {
-                                            if !md.is_dir() {
-                                                FLOGF!(
-                                                    warning,
-                                                    "Path '%ls' is not a directory",
-                                                    next
-                                                );
-                                            } else {
-                                                FLOGF!(warning, "Path '%ls' does not exist", dname);
+
+                    match wopen_cloexec(&path, oflags, OPEN_MASK) {
+                        Ok(raw_fd) => {
+                            let file = AutoCloseFd::new(raw_fd);
+                            self.push(Arc::new(IoFile::new(spec.fd, file)));
+                        }
+                        Err(err) => {
+                            if (oflags & O_EXCL) != 0 && err == nix::Error::EEXIST {
+                                FLOGF!(warning, NOCLOB_ERROR, spec.target);
+                            } else {
+                                if should_flog!(warning) {
+                                    let err = errno::errno().0;
+                                    // If the error is that the file doesn't exist
+                                    // or there's a non-directory component,
+                                    // find the first problematic component for a better message.
+                                    if [ENOENT, ENOTDIR].contains(&err) {
+                                        FLOGF!(warning, FILE_ERROR, spec.target);
+                                        let mut dname: &wstr = &spec.target;
+                                        while !dname.is_empty() {
+                                            let next: &wstr = wdirname(dname);
+                                            if let Ok(md) = wstat(next) {
+                                                if !md.is_dir() {
+                                                    FLOGF!(
+                                                        warning,
+                                                        "Path '%ls' is not a directory",
+                                                        next
+                                                    );
+                                                } else {
+                                                    FLOGF!(
+                                                        warning,
+                                                        "Path '%ls' does not exist",
+                                                        dname
+                                                    );
+                                                }
+                                                break;
                                             }
-                                            break;
+                                            dname = next;
                                         }
-                                        dname = next;
+                                    } else if err != EINTR {
+                                        // If we get EINTR we had a cancel signal.
+                                        // That's expected (ctrl-c on the commandline),
+                                        // so no warning.
+                                        FLOGF!(warning, FILE_ERROR, spec.target);
+                                        perror("open");
                                     }
-                                } else if err != EINTR {
-                                    // If we get EINTR we had a cancel signal.
-                                    // That's expected (ctrl-c on the commandline),
-                                    // so no warning.
-                                    FLOGF!(warning, FILE_ERROR, spec.target);
-                                    perror("open");
                                 }
                             }
+                            // If opening a file fails, insert a closed FD instead of the file redirection
+                            // and return false. This lets execution potentially recover and at least gives
+                            // the shell a chance to gracefully regain control of the shell (see #7038).
+                            self.push(Arc::new(IoClose::new(spec.fd)));
+                            have_error = true;
+                            continue;
                         }
-                        // If opening a file fails, insert a closed FD instead of the file redirection
-                        // and return false. This lets execution potentially recover and at least gives
-                        // the shell a chance to gracefully regain control of the shell (see #7038).
-                        self.push(Arc::new(IoClose::new(spec.fd)));
-                        have_error = true;
-                        continue;
                     }
-                    self.push(Arc::new(IoFile::new(spec.fd, file)));
                 }
             }
         }

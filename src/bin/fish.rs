@@ -77,8 +77,6 @@ const DATA_DIR: &str = env!("DATADIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
-const OUT_DIR: &str = env!("FISH_BUILD_DIR");
-
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
 struct FishCmdOpts {
@@ -160,7 +158,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         // TODO: we should determine program_name from argv0 somewhere in this file
 
         // Detect if we're running right out of the CMAKE build directory
-        if exec_path.starts_with(OUT_DIR) {
+        if exec_path.starts_with(env!("CARGO_MANIFEST_DIR")) {
             let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             FLOG!(
                 config,
@@ -172,7 +170,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
-                bin: OUT_DIR.into(),
+                bin: exec_path.clone(),
             }
         }
 

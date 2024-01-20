@@ -48,7 +48,7 @@ use internal::*;
 // Really init wgettext.
 fn wgettext_really_init() {
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    let localedir = CString::new(option_env!("LOCALEDIR").unwrap_or("UNDEFINED")).unwrap();
+    let localedir = CString::new(env!("LOCALEDIR")).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }

@@ -72,34 +72,11 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-// FIXME: the following should just use env!(), this is to make `cargo test` work without CMake for now
-const DOC_DIR: &str = {
-    match option_env!("DOCDIR") {
-        Some(e) => e,
-        None => "(unused)",
-    }
-};
-const DATA_DIR: &str = {
-    match option_env!("DATADIR") {
-        Some(e) => e,
-        None => "(unused)",
-    }
-};
-const SYSCONF_DIR: &str = {
-    match option_env!("SYSCONFDIR") {
-        Some(e) => e,
-        None => "(unused)",
-    }
-};
-const BIN_DIR: &str = {
-    match option_env!("BINDIR") {
-        Some(e) => e,
-        None => "(unused)",
-    }
-};
+const DOC_DIR: &str = env!("DOCDIR");
+const DATA_DIR: &str = env!("DATADIR");
+const SYSCONF_DIR: &str = env!("SYSCONFDIR");
+const BIN_DIR: &str = env!("BINDIR");
 
-// C++ had this as optional, and used CMAKE_BINARY_DIR,
-// should probably be swapped to `OUT_DIR` once CMake is gone?
 const OUT_DIR: &str = env!("FISH_BUILD_DIR");
 
 /// container to hold the options specified within the command line

@@ -8,6 +8,7 @@ use crate::{
     reader::reader_read,
 };
 use libc::{c_int, O_RDONLY, S_IFMT, S_IFREG};
+use nix::sys::stat::Mode;
 
 use super::prelude::*;
 
@@ -50,7 +51,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         func_filename = FilenameRef::new(L!("-").to_owned());
         fd = streams.stdin_fd;
     } else {
-        let Ok(raw_fd) = wopen_cloexec(args[optind], O_RDONLY, 0) else {
+        let Ok(raw_fd) = wopen_cloexec(args[optind], O_RDONLY, Mode::empty()) else {
             let esc = escape(args[optind]);
             streams.err.append(wgettext_fmt!(
                 "%ls: Error encountered while sourcing file '%ls':\n",

@@ -18,6 +18,7 @@ use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
+use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -1006,7 +1007,12 @@ const FILE_ERROR: &wstr = L!("An error occurred while redirecting file '%ls'");
 const NOCLOB_ERROR: &wstr = L!("The file '%ls' already exists");
 
 /// Base open mode to pass to calls to open.
-const OPEN_MASK: libc::c_int = 0o666;
+const OPEN_MASK: Mode = Mode::S_IRUSR
+    .union(Mode::S_IWUSR)
+    .union(Mode::S_IRGRP)
+    .union(Mode::S_IWGRP)
+    .union(Mode::S_IROTH)
+    .union(Mode::S_IWOTH);
 
 /// Provide the fd monitor used for background fillthread operations.
 fn fd_monitor() -> &'static mut FdMonitor {

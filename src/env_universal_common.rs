@@ -20,6 +20,7 @@ use crate::wutil::{
 };
 use errno::{errno, Errno};
 use libc::{EINTR, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR};
+use nix::sys::stat::Mode;
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -388,7 +389,7 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, O_RDONLY, 0) else {
+        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, O_RDONLY, Mode::empty()) else {
             return false;
         };
 
@@ -441,7 +442,11 @@ impl EnvUniversal {
 
         let mut res_fd = None;
         while res_fd.is_none() {
-            let raw = match wopen_cloexec(&self.vars_path, flags, 0o644) {
+            let raw = match wopen_cloexec(
+                &self.vars_path,
+                flags,
+                Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IROTH,
+            ) {
                 Ok(raw) => raw,
                 Err(err) => {
                     if err == nix::Error::EINTR {

@@ -8,6 +8,7 @@ use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
 use libc::O_RDONLY;
+use nix::sys::stat::Mode;
 use rand::random;
 use std::collections::VecDeque;
 use std::ffi::CString;
@@ -594,8 +595,9 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file =
-        AutoCloseFd::new(wopen_cloexec(L!("tests/history_sample_bash"), O_RDONLY, 0).unwrap());
+    let file = AutoCloseFd::new(
+        wopen_cloexec(L!("tests/history_sample_bash"), O_RDONLY, Mode::empty()).unwrap(),
+    );
     test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
     assert_eq!(test_history_imported_from_bash.get_history(), expected);
     test_history_imported_from_bash.clear();

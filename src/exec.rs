@@ -53,6 +53,7 @@ use libc::{
     c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
     O_RDONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
+use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
 use std::os::fd::{FromRawFd, RawFd};
@@ -366,7 +367,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     }
     let e = errno();
     let mut res = false;
-    let fd = open_cloexec(path, O_RDONLY | O_NOCTTY, 0);
+    let fd = open_cloexec(path, O_RDONLY | O_NOCTTY, stat::Mode::empty());
     if let Ok(fd) = fd {
         let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
         let mut buf = [b'\0'; 256];

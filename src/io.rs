@@ -17,7 +17,8 @@ use crate::topic_monitor::topic_t;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
-use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, O_EXCL, STDOUT_FILENO};
+use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
+use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
 use std::os::fd::RawFd;
@@ -665,7 +666,7 @@ impl IoChain {
                             self.push(Arc::new(IoFile::new(spec.fd, file)));
                         }
                         Err(err) => {
-                            if (oflags & O_EXCL) != 0 && err == nix::Error::EEXIST {
+                            if oflags.intersects(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
                             } else {
                                 if should_flog!(warning) {

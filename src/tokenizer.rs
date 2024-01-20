@@ -6,7 +6,8 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::redirection::RedirectionMode;
 use crate::wchar::prelude::*;
-use libc::{c_int, STDIN_FILENO, STDOUT_FILENO};
+use libc::{STDIN_FILENO, STDOUT_FILENO};
+use nix::fcntl::OFlag;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
 use std::os::fd::RawFd;
 
@@ -1036,8 +1037,8 @@ impl TryFrom<&wstr> for PipeOrRedir {
 
 impl PipeOrRedir {
     /// \return the oflags (as in open(2)) for this redirection.
-    pub fn oflags(&self) -> c_int {
-        self.mode.oflags().unwrap_or(-1)
+    pub fn oflags(&self) -> Option<OFlag> {
+        self.mode.oflags()
     }
 
     // \return if we are "valid". Here "valid" means only that the source fd did not overflow.

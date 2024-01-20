@@ -19,8 +19,8 @@ use crate::wutil::{
     wunlink, FileId, INVALID_FILE_ID,
 };
 use errno::{errno, Errno};
-use libc::{EINTR, LOCK_EX, O_CREAT, O_RDONLY, O_RDWR};
-use nix::sys::stat::Mode;
+use libc::{EINTR, LOCK_EX};
+use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -30,10 +30,10 @@ use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
 #[cfg(any(bsd, target_os = "macos"))]
-use libc::O_EXLOCK;
+const O_EXLOCK: OFlag = OFlag::O_EXLOCK;
 
 #[cfg(not(any(bsd, target_os = "macos")))]
-const O_EXLOCK: libc::c_int = 0;
+const O_EXLOCK: OFlag = OFlag::empty();
 
 /// Callback data, reflecting a change in universal variables.
 pub struct CallbackData {
@@ -389,7 +389,8 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, O_RDONLY, Mode::empty()) else {
+        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
+        else {
             return false;
         };
 
@@ -433,9 +434,9 @@ impl EnvUniversal {
         // We pass O_RDONLY with O_CREAT; this creates a potentially empty file. We do this so that we
         // have something to lock on.
         let mut locked_by_open = false;
-        let mut flags = O_RDWR | O_CREAT;
+        let mut flags = OFlag::O_RDWR | OFlag::O_CREAT;
 
-        if O_EXLOCK != 0 && self.do_flock {
+        if !O_EXLOCK.is_empty() && self.do_flock {
             flags |= O_EXLOCK;
             locked_by_open = true;
         }
@@ -453,8 +454,8 @@ impl EnvUniversal {
                         continue; // signaled; try again
                     }
 
-                    if O_EXLOCK != 0 {
-                        if (flags & O_EXLOCK) != 0
+                    if !O_EXLOCK.is_empty() {
+                        if flags.intersects(O_EXLOCK)
                             && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
                         {
                             // Filesystem probably does not support locking. Give up on locking.

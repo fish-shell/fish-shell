@@ -33,7 +33,7 @@ use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use libc::c_int;
-use libc::O_RDONLY;
+use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
@@ -361,7 +361,7 @@ impl Parser {
 
         match open_cloexec(
             CStr::from_bytes_with_nul(b".\0").unwrap(),
-            O_RDONLY,
+            OFlag::O_RDONLY,
             Mode::empty(),
         ) {
             Ok(raw_fd) => {

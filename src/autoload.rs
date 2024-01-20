@@ -325,7 +325,7 @@ fn test_autoload() {
     use crate::common::{charptr2wcstring, wcs2zstring, write_loop};
     use crate::fds::wopen_cloexec;
     use crate::wutil::sprintf;
-    use libc::{O_CREAT, O_RDWR};
+    use nix::fcntl::OFlag;
 
     macro_rules! run {
         ( $fmt:expr $(, $arg:expr )* $(,)? ) => {
@@ -340,7 +340,7 @@ fn test_autoload() {
 
         let fd = wopen_cloexec(
             path,
-            O_RDWR | O_CREAT,
+            OFlag::O_RDWR | OFlag::O_CREAT,
             Mode::S_IRUSR
                 | Mode::S_IWUSR
                 | Mode::S_IRGRP

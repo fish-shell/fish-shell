@@ -17,6 +17,7 @@ use libc::{
     IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
     S_IFDIR, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
+use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
@@ -4660,7 +4661,7 @@ impl ReaderData {
                 var.map_or_else(|| L!("~/.bash_history").to_owned(), |var| var.as_string());
             expand_tilde(&mut path, self.vars());
 
-            let Ok(raw_fd) = wopen_cloexec(&path, O_RDONLY, Mode::empty()) else {
+            let Ok(raw_fd) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
 

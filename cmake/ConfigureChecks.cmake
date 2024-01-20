@@ -37,10 +37,6 @@ else()
     endif()
 endif()
 
-# Set up the config.h file.
-include(CheckCXXSymbolExists)
+# This is required for finding the right PCRE2
 include(CheckTypeSize)
-
-check_cxx_symbol_exists(gettext libintl.h HAVE_GETTEXT)
-
 check_type_size("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)

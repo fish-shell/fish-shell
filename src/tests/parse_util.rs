@@ -55,9 +55,10 @@ fn test_error_messages() {
         ($src:expr, $error_text_format:expr) => {
             let mut errors = vec![];
             let res = parse_util_detect_errors(L!($src), Some(&mut errors), false);
+            let fmt = wgettext!($error_text_format);
             assert!(res.is_err());
             assert!(
-                string_matches_format(&errors[0].text, L!($error_text_format)),
+                string_matches_format(&errors[0].text, fmt),
                 "command '{}' is expected to match error pattern '{}' but is '{}'",
                 $src,
                 $error_text_format,

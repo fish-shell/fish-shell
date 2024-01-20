@@ -25,7 +25,7 @@ use std::{
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::RawFd,
+    os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -480,33 +480,35 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let file = AutoCloseFd::new(wopen_cloexec(&filename, O_RDONLY, 0));
-            let fd = file.fd();
-            if fd >= 0 {
-                // Take a read lock to guard against someone else appending. This is released after
-                // getting the file's length. We will read the file after releasing the lock, but that's
-                // not a problem, because we never modify already written data. In short, the purpose of
-                // this lock is to ensure we don't see the file size change mid-update.
-                //
-                // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
-                // as if it did not fail. The risk is that we may get an incomplete history item; this
-                // is unlikely because we only treat an item as valid if it has a terminating newline.
-                let locked = unsafe { Self::maybe_lock_file(fd, LOCK_SH) };
-                self.file_contents = HistoryFileContents::create(fd);
-                self.history_file_id = if self.file_contents.is_some() {
-                    file_id_for_fd(fd)
-                } else {
-                    INVALID_FILE_ID
-                };
-                if locked {
-                    unsafe {
-                        Self::unlock_file(fd);
-                    }
-                }
+            let Ok(raw_fd) = wopen_cloexec(&filename, O_RDONLY, 0) else {
+                return;
+            };
 
-                let _profiler = TimeProfiler::new("populate_from_file_contents");
-                self.populate_from_file_contents();
+            let fd = unsafe { OwnedFd::from_raw_fd(raw_fd) };
+
+            // Take a read lock to guard against someone else appending. This is released after
+            // getting the file's length. We will read the file after releasing the lock, but that's
+            // not a problem, because we never modify already written data. In short, the purpose of
+            // this lock is to ensure we don't see the file size change mid-update.
+            //
+            // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
+            // as if it did not fail. The risk is that we may get an incomplete history item; this
+            // is unlikely because we only treat an item as valid if it has a terminating newline.
+            let locked = unsafe { Self::maybe_lock_file(fd.as_raw_fd(), LOCK_SH) };
+            self.file_contents = HistoryFileContents::create(fd.as_raw_fd());
+            self.history_file_id = if self.file_contents.is_some() {
+                file_id_for_fd(fd.as_raw_fd())
+            } else {
+                INVALID_FILE_ID
+            };
+            if locked {
+                unsafe {
+                    Self::unlock_file(fd.as_raw_fd());
+                }
             }
+
+            let _profiler = TimeProfiler::new("populate_from_file_contents");
+            self.populate_from_file_contents();
         }
     }
 
@@ -670,42 +672,46 @@ impl HistoryImpl {
             if done {
                 break;
             }
+
+            let target_fd_before =
+                wopen_cloexec(&target_name, O_RDONLY | O_CREAT, HISTORY_FILE_MODE)
+                    .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+
+            let orig_file_id = target_fd_before
+                .as_ref()
+                .map(|fd| file_id_for_fd(fd.as_raw_fd()))
+                .unwrap_or(INVALID_FILE_ID);
+
             // Open any target file, but do not lock it right away
-            let mut target_fd_before = AutoCloseFd::new(wopen_cloexec(
-                &target_name,
-                O_RDONLY | O_CREAT,
-                HISTORY_FILE_MODE,
-            ));
-            let orig_file_id = file_id_for_fd(target_fd_before.fd()); // possibly invalid
             if !self.rewrite_to_temporary_file(
-                if target_fd_before.is_valid() {
-                    Some(target_fd_before.fd())
-                } else {
-                    None
-                },
+                target_fd_before.as_ref().map(AsRawFd::as_raw_fd).ok(),
                 tmp_fd,
             ) {
                 // Failed to write, no good
                 break;
             }
-            target_fd_before.close();
+            drop(target_fd_before);
 
             // The crux! We rewrote the history file; see if the history file changed while we
             // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
-            let target_fd_after = AutoCloseFd::new(wopen_cloexec(&target_name, O_RDONLY, 0));
-            if target_fd_after.is_valid() {
+
+            let target_fd_after = wopen_cloexec(&target_name, O_RDONLY, 0)
+                .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+
+            if let Ok(target_fd_after) = target_fd_after.as_ref() {
                 // critical to take the lock before checking file IDs,
                 // and hold it until after we are done replacing.
                 // Also critical to check the file at the path, NOT based on our fd.
                 // It's only OK to replace the file while holding the lock.
                 // Note any lock is released when target_fd_after is closed.
                 unsafe {
-                    Self::maybe_lock_file(target_fd_after.fd(), LOCK_EX);
+                    Self::maybe_lock_file(target_fd_after.as_raw_fd(), LOCK_EX);
                 }
                 new_file_id = file_id_for_path(&target_name);
             }
+
             let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
             if !can_replace_file {
                 // The file has changed, so we're going to re-read it
@@ -728,23 +734,23 @@ impl HistoryImpl {
                 // corresponds to e.g. someone running sudo -E as the very first command. If they
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
-                let mut sbuf: libc::stat = unsafe { mem::zeroed() };
-                if target_fd_after.is_valid()
-                    && unsafe { fstat(target_fd_after.fd(), &mut sbuf) } >= 0
-                {
-                    if unsafe { fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) } == -1 {
-                        FLOGF!(
-                            history_file,
-                            "Error %d when changing ownership of history file",
-                            errno::errno().0
-                        );
-                    }
-                    if unsafe { fchmod(tmp_fd, sbuf.st_mode) } == -1 {
-                        FLOGF!(
-                            history_file,
-                            "Error %d when changing mode of history file",
-                            errno::errno().0,
-                        );
+                if let Ok(target_fd_after) = target_fd_after.as_ref() {
+                    let mut sbuf: libc::stat = unsafe { mem::zeroed() };
+                    if unsafe { fstat(target_fd_after.as_raw_fd(), &mut sbuf) } >= 0 {
+                        if unsafe { fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) } == -1 {
+                            FLOGF!(
+                                history_file,
+                                "Error %d when changing ownership of history file",
+                                errno::errno().0
+                            );
+                        }
+                        if unsafe { fchmod(tmp_fd, sbuf.st_mode) } == -1 {
+                            FLOGF!(
+                                history_file,
+                                "Error %d when changing mode of history file",
+                                errno::errno().0,
+                            );
+                        }
                     }
                 }
 
@@ -762,6 +768,8 @@ impl HistoryImpl {
                 // We did it
                 done = true;
             }
+
+            drop(target_fd_after);
         }
 
         // Ensure we never leave the old file around
@@ -804,34 +812,36 @@ impl HistoryImpl {
         // After locking it, we need to stat the file at the path; if there is a new file there, it
         // means the file was replaced and we have to try again.
         // Limit our max tries so we don't do this forever.
-        let mut history_fd = AutoCloseFd::new(-1);
+        let mut history_fd = None;
         for _i in 0..MAX_SAVE_TRIES {
-            let fd = AutoCloseFd::new(wopen_cloexec(&history_path, O_WRONLY | O_APPEND, 0));
-            if !fd.is_valid() {
+            let Ok(fd) = wopen_cloexec(&history_path, O_WRONLY | O_APPEND, 0) else {
                 // can't open, we're hosed
                 break;
-            }
+            };
+
+            let fd = unsafe { OwnedFd::from_raw_fd(fd) };
+
             // Exclusive lock on the entire file. This is released when we close the file (below). This
             // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
             // we may get interleaved history items, which is considered better than no history, or
             // forcing everything through the slow copy-move mode. We try to minimize this possibility
             // by writing with O_APPEND.
             unsafe {
-                Self::maybe_lock_file(fd.fd(), LOCK_EX);
+                Self::maybe_lock_file(fd.as_raw_fd(), LOCK_EX);
             }
-            let file_id = file_id_for_fd(fd.fd());
+            let file_id = file_id_for_fd(fd.as_raw_fd());
             if file_id_for_path(&history_path) == file_id {
                 // File IDs match, so the file we opened is still at that path
                 // We're going to use this fd
                 if file_id != self.history_file_id {
                     file_changed = true;
                 }
-                history_fd = fd;
+                history_fd = Some(fd);
                 break;
             }
         }
 
-        if history_fd.is_valid() {
+        if let Some(history_fd) = history_fd {
             // We (hopefully successfully) took the exclusive lock. Append to the file.
             // Note that this is sketchy for a few reasons:
             //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -860,7 +870,11 @@ impl HistoryImpl {
                 let item = &self.new_items[self.first_unwritten_new_item_index];
                 if item.should_write_to_disk() {
                     append_history_item_to_buffer(item, &mut buffer);
-                    res = flush_to_fd(&mut buffer, history_fd.fd(), HISTORY_OUTPUT_BUFFER_SIZE);
+                    res = flush_to_fd(
+                        &mut buffer,
+                        history_fd.as_raw_fd(),
+                        HISTORY_OUTPUT_BUFFER_SIZE,
+                    );
                     if res.is_err() {
                         break;
                     }
@@ -870,7 +884,7 @@ impl HistoryImpl {
             }
 
             if res.is_ok() {
-                res = flush_to_fd(&mut buffer, history_fd.fd(), 0);
+                res = flush_to_fd(&mut buffer, history_fd.as_raw_fd(), 0);
             }
 
             // Since we just modified the file, update our history_file_id to match its current state
@@ -878,11 +892,12 @@ impl HistoryImpl {
             // write.
             // We don't update the mapping since we only appended to the file, and everything we
             // appended remains in our new_items
-            self.history_file_id = file_id_for_fd(history_fd.fd());
+            self.history_file_id = file_id_for_fd(history_fd.as_raw_fd());
 
             ok = res.is_ok();
+
+            drop(history_fd);
         }
-        history_fd.close();
 
         // If someone has replaced the file, forget our file state.
         if file_changed {
@@ -1090,28 +1105,33 @@ impl HistoryImpl {
         old_file.push_utfstr(&self.name);
         old_file.push_str("_history");
 
-        let mut src_fd = AutoCloseFd::new(wopen_cloexec(&old_file, O_RDONLY, 0));
-        if src_fd.is_valid() {
-            // Clear must come after we've retrieved the new_file name, and before we open
-            // destination file descriptor, since it destroys the name and the file.
-            self.clear();
+        let Ok(src_fd) = wopen_cloexec(&old_file, O_RDONLY, 0) else {
+            return;
+        };
 
-            let mut dst_fd = AutoCloseFd::new(wopen_cloexec(
-                &new_file,
-                O_WRONLY | O_CREAT,
-                HISTORY_FILE_MODE,
-            ));
+        let mut src_fd = unsafe { std::fs::File::from_raw_fd(src_fd) };
 
-            let mut buf = [0; libc::BUFSIZ as usize];
-            while let Ok(n) = src_fd.read(&mut buf) {
-                if n == 0 {
-                    break;
-                }
-                if dst_fd.write(&buf[..n]).is_err() {
-                    // This message does not have high enough priority to be shown by default.
-                    FLOG!(history_file, "Error when writing history file");
-                    break;
-                }
+        // Clear must come after we've retrieved the new_file name, and before we open
+        // destination file descriptor, since it destroys the name and the file.
+        self.clear();
+
+        let Ok(dst_fd) = wopen_cloexec(&new_file, O_WRONLY | O_CREAT, HISTORY_FILE_MODE) else {
+            FLOG!(history_file, "Error when writing history file");
+            return;
+        };
+
+        let mut dst_fd = unsafe { std::fs::File::from_raw_fd(dst_fd) };
+
+        let mut buf = [0; libc::BUFSIZ as usize];
+        while let Ok(n) = src_fd.read(&mut buf) {
+            if n == 0 {
+                break;
+            }
+
+            if dst_fd.write(&buf[..n]).is_err() {
+                // This message does not have high enough priority to be shown by default.
+                FLOG!(history_file, "Error when writing history file");
+                break;
             }
         }
     }

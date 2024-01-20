@@ -9,7 +9,7 @@ use crate::{
 };
 use errno::{self, Errno};
 use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
-use std::sync::Arc;
+use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -86,32 +86,47 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        // We need to keep around the fd for this directory, in the parser.
-        let dir_fd = Arc::new(AutoCloseFd::new(wopen_cloexec(&norm_dir, O_RDONLY, 0)));
+        let res = wopen_cloexec(&norm_dir, O_RDONLY, 0)
+            .map(AutoCloseFd::new)
+            .map_err(|err| err as i32);
 
-        if !(dir_fd.is_valid() && unsafe { fchdir(dir_fd.fd()) } == 0) {
-            // Some errors we skip and only report if nothing worked.
-            // ENOENT in particular is very low priority
-            // - if in another directory there was a *file* by the correct name
-            // we prefer *that* error because it's more specific
-            if errno::errno().0 == ENOENT {
-                let tmp = wreadlink(&norm_dir);
-                // clippy doesn't like this is_some/unwrap pair, but using if let is harder to read IMO
-                #[allow(clippy::unnecessary_unwrap)]
-                if broken_symlink.is_empty() && tmp.is_some() {
-                    broken_symlink = norm_dir;
-                    broken_symlink_target = tmp.unwrap();
-                } else if best_errno == 0 {
-                    best_errno = errno::errno().0;
-                }
-                continue;
-            } else if errno::errno().0 == ENOTDIR {
-                best_errno = errno::errno().0;
-                continue;
+        let res = res.and_then(|fd| {
+            if unsafe { fchdir(fd.as_raw_fd()) } == 0 {
+                Ok(fd)
+            } else {
+                Err(errno::errno().0)
             }
-            best_errno = errno::errno().0;
-            break;
-        }
+        });
+
+        let fd = match res {
+            Ok(raw_fd) => raw_fd,
+            Err(err) => {
+                // Some errors we skip and only report if nothing worked.
+                // ENOENT in particular is very low priority
+                // - if in another directory there was a *file* by the correct name
+                // we prefer *that* error because it's more specific
+                if err == ENOENT {
+                    let tmp = wreadlink(&norm_dir);
+                    // clippy doesn't like this is_some/unwrap pair, but using if let is harder to read IMO
+                    #[allow(clippy::unnecessary_unwrap)]
+                    if broken_symlink.is_empty() && tmp.is_some() {
+                        broken_symlink = norm_dir;
+                        broken_symlink_target = tmp.unwrap();
+                    } else if best_errno == 0 {
+                        best_errno = errno::errno().0;
+                    }
+                    continue;
+                } else if err == ENOTDIR {
+                    best_errno = err;
+                    continue;
+                }
+                best_errno = err;
+                break;
+            }
+        };
+
+        // We need to keep around the fd for this directory, in the parser.
+        let dir_fd = Arc::new(fd);
 
         // Stash the fd for the cwd in the parser.
         parser.libdata_mut().cwd_fd = Some(dir_fd);

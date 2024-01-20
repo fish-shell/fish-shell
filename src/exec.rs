@@ -367,7 +367,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     let e = errno();
     let mut res = false;
     let fd = open_cloexec(path, O_RDONLY | O_NOCTTY, 0);
-    if fd != -1 {
+    if let Ok(fd) = fd {
         let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
         let mut buf = [b'\0'; 256];
         if let Ok(got) = file.read(&mut buf) {

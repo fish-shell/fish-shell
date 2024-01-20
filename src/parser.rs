@@ -357,12 +357,16 @@ impl Parser {
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
         });
-        let cwd = open_cloexec(CStr::from_bytes_with_nul(b".\0").unwrap(), O_RDONLY, 0);
-        if cwd < 0 {
-            perror("Unable to open the current working directory");
-        } else {
-            result.libdata_mut().cwd_fd = Some(Arc::new(AutoCloseFd::new(cwd)));
+
+        match open_cloexec(CStr::from_bytes_with_nul(b".\0").unwrap(), O_RDONLY, 0) {
+            Ok(raw_fd) => {
+                result.libdata_mut().cwd_fd = Some(Arc::new(AutoCloseFd::new(raw_fd)));
+            }
+            Err(_) => {
+                perror("Unable to open the current working directory");
+            }
         }
+
         result.base.initialize(&result);
         result
     }

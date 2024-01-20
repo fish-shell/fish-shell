@@ -3,13 +3,6 @@
 # CMake 3.21 is needed for file(IMPORTED_RUNTIME_ARTIFACTS)
 cmake_minimum_required(VERSION 3.21)
 
-if(POLICY CMP0066)
-  cmake_policy(SET CMP0066 OLD)
-endif()
-if(POLICY CMP0067)
-  cmake_policy(SET CMP0067 NEW)
-endif()
-
 include(cmake/Mac.cmake)
 
 project(fish)

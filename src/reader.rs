@@ -13,9 +13,9 @@
 //! end of the list is reached, at which point regular searching will commence.
 
 use libc::{
-    c_char, c_int, c_void, EAGAIN, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, EWOULDBLOCK,
-    ICANON, ICRNL, IEXTEN, INLCR, IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN,
-    STDIN_FILENO, STDOUT_FILENO, S_IFDIR, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
+    c_char, c_int, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
+    IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
+    S_IFDIR, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
@@ -688,27 +688,31 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
     let mut fd_contents = Vec::with_capacity(usize::try_from(buf.st_size).unwrap());
     loop {
         let mut buff = [0_u8; 4096];
-        let amt = unsafe { libc::read(fd, &mut buff[0] as *mut _ as *mut c_void, buff.len()) };
-        if amt > 0 {
-            fd_contents.extend_from_slice(&buff[..usize::try_from(amt).unwrap()]);
-        } else if amt == 0 {
-            // EOF.
-            break;
-        } else {
-            assert!(amt == -1);
-            let err = errno();
-            if err.0 == EINTR {
-                continue;
-            } else if err.0 == EAGAIN || err.0 == EWOULDBLOCK && make_fd_blocking(fd).is_ok() {
-                // We succeeded in making the fd blocking, keep going.
-                continue;
-            } else {
-                // Fatal error.
-                FLOG!(
-                    error,
-                    wgettext_fmt!("Unable to read input file: %s", err.to_string())
-                );
-                return 1;
+
+        match nix::unistd::read(fd, &mut buff) {
+            Ok(0) => {
+                // EOF.
+                break;
+            }
+            Ok(amt) => {
+                fd_contents.extend_from_slice(&buff[..amt]);
+            }
+            Err(err) => {
+                if err == nix::Error::EINTR {
+                    continue;
+                } else if err == nix::Error::EAGAIN
+                    || err == nix::Error::EWOULDBLOCK && make_fd_blocking(fd).is_ok()
+                {
+                    // We succeeded in making the fd blocking, keep going.
+                    continue;
+                } else {
+                    // Fatal error.
+                    FLOG!(
+                        error,
+                        wgettext_fmt!("Unable to read input file: %s", err.to_string())
+                    );
+                    return 1;
+                }
             }
         }
     }

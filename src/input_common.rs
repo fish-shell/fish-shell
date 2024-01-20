@@ -294,7 +294,7 @@ fn readb(in_fd: RawFd) -> ReadbResult {
         // Check stdin.
         if fdset.test(in_fd) {
             let mut arr: [u8; 1] = [0];
-            if read_blocked(in_fd, &mut arr) != 1 {
+            if read_blocked(in_fd, &mut arr) != Ok(1) {
                 // The terminal has been closed.
                 return ReadbResult::Eof;
             }

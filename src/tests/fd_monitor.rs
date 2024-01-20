@@ -76,9 +76,8 @@ impl ItemMaker {
             }
             ItemWakeReason::Readable => {
                 let mut buf = [0u8; 1024];
-                let amt =
-                    unsafe { libc::read(fd.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) };
-                assert_ne!(amt, -1, "read error!");
+                let res = nix::unistd::read(fd.as_raw_fd(), &mut buf);
+                let amt = res.expect("read error!");
                 self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
                 was_closed = amt == 0;
             }

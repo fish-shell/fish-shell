@@ -18,7 +18,7 @@ use crate::wutil::encoding::{mbrtowc, wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX
 use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
-use libc::{EINTR, EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use std::env;
@@ -1469,10 +1469,10 @@ fn can_be_encoded(wc: char) -> bool {
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
 /// \return the number of bytes read, or 0 on EOF. On EAGAIN, returns -1 if nothing was read.
-pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> isize {
+pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
-        let res = unsafe { libc::read(fd, buf.as_mut_ptr().cast(), buf.len()) };
-        if res < 0 && errno::errno().0 == EINTR {
+        let res = nix::unistd::read(fd, buf);
+        if let Err(nix::Error::EINTR) = res {
             continue;
         }
         return res;
@@ -1496,16 +1496,17 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
-        let written =
-            unsafe { libc::write(fd, buf[total..].as_ptr() as *const _, buf.len() - total) };
-        if written < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
-                continue;
+        match nix::unistd::write(fd, &buf[total..]) {
+            Ok(written) => {
+                total += written;
             }
-            return Err(std::io::Error::from_raw_os_error(errno));
+            Err(err) => {
+                if matches!(err, nix::Error::EAGAIN | nix::Error::EINTR) {
+                    continue;
+                }
+                return Err(std::io::Error::from(err));
+            }
         }
-        total += written as usize;
     }
     Ok(total)
 }
@@ -1517,15 +1518,17 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
 pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
     let fd = fd.as_raw_fd();
     loop {
-        let read = unsafe { libc::read(fd, buf.as_mut_ptr() as *mut _, buf.len()) };
-        if read < 0 {
-            let errno = errno::errno().0;
-            if matches!(errno, libc::EAGAIN | libc::EINTR) {
-                continue;
+        match nix::unistd::read(fd, buf) {
+            Ok(read) => {
+                return Ok(read);
             }
-            return Err(std::io::Error::from_raw_os_error(errno));
+            Err(err) => {
+                if matches!(err, nix::Error::EAGAIN | nix::Error::EINTR) {
+                    continue;
+                }
+                return Err(std::io::Error::from(err));
+            }
         }
-        return Ok(read as usize);
     }
 }
 

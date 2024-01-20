@@ -114,16 +114,16 @@ impl UniversalNotifier for NotifydNotifier {
         let mut read_something = false;
         let mut buff: [u8; 64] = [0; 64];
         loop {
-            let amt_read = unsafe {
-                libc::read(
-                    self.notify_fd,
-                    buff.as_mut_ptr() as *mut libc::c_void,
-                    buff.len(),
-                )
-            };
-            read_something = read_something || amt_read > 0;
-            if amt_read != buff.len() as isize {
-                break;
+            let res = nix::unistd::read(self.notify_fd, &mut buff);
+
+            if let Ok(amt_read) = res {
+                read_something |= amt_read > 0;
+            }
+
+            match res {
+                Ok(amt_read) if amt_read != buff.len() => break,
+                Err(_) => break,
+                _ => continue,
             }
         }
         FLOGF!(

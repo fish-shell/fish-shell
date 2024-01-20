@@ -33,23 +33,13 @@ pub struct AutoCloseFd {
 
 impl Read for AutoCloseFd {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        unsafe {
-            match libc::read(self.as_raw_fd(), buf.as_mut_ptr() as *mut _, buf.len()) {
-                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
-                bytes => Ok(bytes as usize),
-            }
-        }
+        nix::unistd::read(self.as_raw_fd(), buf).map_err(std::io::Error::from)
     }
 }
 
 impl Write for AutoCloseFd {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        unsafe {
-            match libc::write(self.as_raw_fd(), buf.as_ptr() as *const _, buf.len()) {
-                -1 => Err(std::io::Error::from_raw_os_error(errno::errno().0)),
-                bytes => Ok(bytes as usize),
-            }
-        }
+        nix::unistd::write(self.as_raw_fd(), buf).map_err(std::io::Error::from)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {

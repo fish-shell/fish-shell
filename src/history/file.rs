@@ -7,10 +7,9 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use errno::errno;
 use libc::{
-    c_void, lseek, mmap, munmap, EINTR, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ,
-    PROT_WRITE, SEEK_END, SEEK_SET,
+    lseek, mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, SEEK_END,
+    SEEK_SET,
 };
 
 use super::{HistoryItem, PersistenceMode};
@@ -137,7 +136,7 @@ impl HistoryFileContents {
             if unsafe { lseek(fd, 0, SEEK_SET) } != 0 {
                 return None;
             }
-            if !read_from_fd(fd, region.as_mut()) {
+            if read_from_fd(fd, region.as_mut()).is_err() {
                 return None;
             }
         }
@@ -230,25 +229,19 @@ fn should_mmap() -> bool {
 
 /// Read from `fd` to fill `dest`, zeroing any unused space.
 // Return true on success, false on failure.
-fn read_from_fd(fd: RawFd, dest: &mut [u8]) -> bool {
-    let mut remaining = dest.len();
-    let mut nread = 0;
-    while remaining > 0 {
-        let amt =
-            unsafe { libc::read(fd, (&mut dest[nread]) as *mut u8 as *mut c_void, remaining) };
-        if amt < 0 {
-            if errno().0 != EINTR {
-                return false;
+fn read_from_fd(fd: RawFd, mut dest: &mut [u8]) -> nix::Result<()> {
+    while !dest.is_empty() {
+        match nix::unistd::read(fd, dest) {
+            Ok(0) => break,
+            Ok(amt) => {
+                dest = &mut dest[amt..];
             }
-        } else if amt == 0 {
-            break;
-        } else {
-            remaining -= amt as usize;
-            nread += amt as usize;
+            Err(nix::Error::EINTR) => continue,
+            Err(err) => return Err(err),
         }
     }
-    dest[nread..].fill(0u8);
-    true
+    dest.fill(0u8);
+    Ok(())
 }
 
 fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {

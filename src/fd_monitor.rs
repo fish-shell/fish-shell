@@ -120,20 +120,21 @@ impl FdEventSignaller {
         let c = 1_u8;
         let mut ret;
         loop {
-            ret = unsafe {
-                libc::write(
-                    self.write_fd(),
-                    &c as *const _ as *const c_void,
-                    std::mem::size_of_val(&c),
-                )
-            };
-            if ret >= 0 || errno().0 != EINTR {
-                break;
+            let bytes = c.to_ne_bytes();
+            ret = nix::unistd::write(self.write_fd(), &bytes);
+
+            match ret {
+                Ok(_) => break,
+                Err(nix::Error::EINTR) => continue,
+                Err(_) => break,
             }
         }
-        // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
-        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
-            perror("write");
+
+        if let Err(err) = ret {
+            // EAGAIN occurs if either the pipe buffer is full or the eventfd overflows (very unlikely).
+            if ![nix::Error::EAGAIN, nix::Error::EWOULDBLOCK].contains(&err) {
+                perror("write");
+            }
         }
     }
 

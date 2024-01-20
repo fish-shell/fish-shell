@@ -401,12 +401,8 @@ pub fn wrename(old_name: &wstr, new_name: &wstr) -> libc::c_int {
     unsafe { libc::rename(old_narrow.as_ptr(), new_narrow.as_ptr()) }
 }
 
-pub fn write_to_fd(input: &[u8], fd: RawFd) -> std::io::Result<usize> {
-    let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
-    let amt = file.write(input);
-    // Ensure the file is not closed.
-    file.into_raw_fd();
-    amt
+pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
+    nix::unistd::write(fd, input)
 }
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.

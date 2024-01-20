@@ -222,14 +222,17 @@ pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
 
 /// Wide character version of open() that also sets the close-on-exec flag (atomically when
 /// possible).
-pub fn wopen_cloexec(pathname: &wstr, flags: i32, mode: libc::c_int) -> nix::Result<RawFd> {
+pub fn wopen_cloexec(
+    pathname: &wstr,
+    flags: i32,
+    mode: nix::sys::stat::Mode,
+) -> nix::Result<RawFd> {
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
 /// Narrow versions of wopen_cloexec.
-pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> nix::Result<RawFd> {
+pub fn open_cloexec(path: &CStr, flags: i32, mode: nix::sys::stat::Mode) -> nix::Result<RawFd> {
     let flags = unsafe { OFlag::from_bits_unchecked(flags) };
-    let mode = unsafe { nix::sys::stat::Mode::from_bits_unchecked(mode as u32) };
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     let saved_errno = errno();

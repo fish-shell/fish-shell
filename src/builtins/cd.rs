@@ -9,6 +9,7 @@ use crate::{
 };
 use errno::{self, Errno};
 use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM, O_RDONLY};
+use nix::sys::stat::Mode;
 use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
@@ -86,7 +87,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        let res = wopen_cloexec(&norm_dir, O_RDONLY, 0)
+        let res = wopen_cloexec(&norm_dir, O_RDONLY, Mode::empty())
             .map(AutoCloseFd::new)
             .map_err(|err| err as i32);
 

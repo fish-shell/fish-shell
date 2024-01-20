@@ -36,6 +36,7 @@ use libc::{
     O_RDONLY, O_WRONLY, SEEK_SET,
 };
 use lru::LruCache;
+use nix::sys::stat::Mode;
 use rand::Rng;
 
 use crate::{
@@ -130,7 +131,7 @@ const HISTORY_SAVE_MAX: NonZeroUsize = unsafe { NonZeroUsize::new_unchecked(1024
 const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
 
 /// The file access mode we use for creating history files
-const HISTORY_FILE_MODE: i32 = 0o600;
+const HISTORY_FILE_MODE: Mode = Mode::S_IRUSR.union(Mode::S_IWUSR);
 
 /// How many times we retry to save
 /// Saving may fail if the file is modified in between our opening
@@ -480,7 +481,7 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(raw_fd) = wopen_cloexec(&filename, O_RDONLY, 0) else {
+            let Ok(raw_fd) = wopen_cloexec(&filename, O_RDONLY, Mode::empty()) else {
                 return;
             };
 
@@ -697,7 +698,7 @@ impl HistoryImpl {
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let target_fd_after = wopen_cloexec(&target_name, O_RDONLY, 0)
+            let target_fd_after = wopen_cloexec(&target_name, O_RDONLY, Mode::empty())
                 .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
 
             if let Ok(target_fd_after) = target_fd_after.as_ref() {
@@ -814,7 +815,7 @@ impl HistoryImpl {
         // Limit our max tries so we don't do this forever.
         let mut history_fd = None;
         for _i in 0..MAX_SAVE_TRIES {
-            let Ok(fd) = wopen_cloexec(&history_path, O_WRONLY | O_APPEND, 0) else {
+            let Ok(fd) = wopen_cloexec(&history_path, O_WRONLY | O_APPEND, Mode::empty()) else {
                 // can't open, we're hosed
                 break;
             };
@@ -1105,7 +1106,7 @@ impl HistoryImpl {
         old_file.push_utfstr(&self.name);
         old_file.push_str("_history");
 
-        let Ok(src_fd) = wopen_cloexec(&old_file, O_RDONLY, 0) else {
+        let Ok(src_fd) = wopen_cloexec(&old_file, O_RDONLY, Mode::empty()) else {
             return;
         };
 

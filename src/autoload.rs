@@ -336,7 +336,19 @@ fn test_autoload() {
     }
 
     fn touch_file(path: &wstr) {
-        let fd = wopen_cloexec(path, O_RDWR | O_CREAT, 0o666).unwrap();
+        use nix::sys::stat::Mode;
+
+        let fd = wopen_cloexec(
+            path,
+            O_RDWR | O_CREAT,
+            Mode::S_IRUSR
+                | Mode::S_IWUSR
+                | Mode::S_IRGRP
+                | Mode::S_IWGRP
+                | Mode::S_IROTH
+                | Mode::S_IWOTH,
+        )
+        .unwrap();
         write_loop(&fd, "Hello".as_bytes()).unwrap();
         unsafe { libc::close(fd) };
     }

@@ -34,6 +34,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use libc::c_int;
 use libc::O_RDONLY;
+use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
@@ -358,7 +359,11 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_cloexec(CStr::from_bytes_with_nul(b".\0").unwrap(), O_RDONLY, 0) {
+        match open_cloexec(
+            CStr::from_bytes_with_nul(b".\0").unwrap(),
+            O_RDONLY,
+            Mode::empty(),
+        ) {
             Ok(raw_fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(AutoCloseFd::new(raw_fd)));
             }

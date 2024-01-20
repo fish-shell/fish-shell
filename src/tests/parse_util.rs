@@ -53,8 +53,10 @@ fn test_error_messages() {
             assert!(res.is_err());
             assert!(
                 string_matches_format(&errors[0].text, L!($error_text_format)),
-                "{}",
-                $src
+                "command '{}' is expected to match error pattern '{}' but is '{}'",
+                $src,
+                $error_text_format,
+                &errors[0].text
             );
         };
     }

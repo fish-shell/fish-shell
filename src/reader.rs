@@ -2799,7 +2799,7 @@ impl ReaderData {
                         replacement.extend(chr.to_lowercase());
                     };
                     capitalized_first = capitalized_first || make_uppercase;
-                    pos = pos + 1;
+                    pos += 1;
                 }
                 self.replace_substring(elt, init_pos..pos, replacement);
                 self.update_buff_pos(elt, None);

@@ -123,6 +123,7 @@ impl UniversalNotifier for NotifydNotifier {
             match res {
                 Ok(amt_read) if amt_read != buff.len() => break,
                 Err(_) => break,
+                _ => continue,
             }
         }
         FLOGF!(

@@ -31,12 +31,9 @@ use std::{
 };
 
 use bitflags::bitflags;
-use libc::{
-    fchmod, fchown, flock, fstat, ftruncate, lseek, LOCK_EX, LOCK_SH, LOCK_UN, O_APPEND, O_CREAT,
-    O_RDONLY, O_WRONLY, SEEK_SET,
-};
+use libc::{fchmod, fchown, flock, fstat, ftruncate, lseek, LOCK_EX, LOCK_SH, LOCK_UN, SEEK_SET};
 use lru::LruCache;
-use nix::sys::stat::Mode;
+use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
 
 use crate::{
@@ -481,7 +478,7 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(raw_fd) = wopen_cloexec(&filename, O_RDONLY, Mode::empty()) else {
+            let Ok(raw_fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
 
@@ -674,9 +671,12 @@ impl HistoryImpl {
                 break;
             }
 
-            let target_fd_before =
-                wopen_cloexec(&target_name, O_RDONLY | O_CREAT, HISTORY_FILE_MODE)
-                    .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+            let target_fd_before = wopen_cloexec(
+                &target_name,
+                OFlag::O_RDONLY | OFlag::O_CREAT,
+                HISTORY_FILE_MODE,
+            )
+            .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
 
             let orig_file_id = target_fd_before
                 .as_ref()
@@ -698,7 +698,7 @@ impl HistoryImpl {
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let target_fd_after = wopen_cloexec(&target_name, O_RDONLY, Mode::empty())
+            let target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty())
                 .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
 
             if let Ok(target_fd_after) = target_fd_after.as_ref() {
@@ -815,7 +815,11 @@ impl HistoryImpl {
         // Limit our max tries so we don't do this forever.
         let mut history_fd = None;
         for _i in 0..MAX_SAVE_TRIES {
-            let Ok(fd) = wopen_cloexec(&history_path, O_WRONLY | O_APPEND, Mode::empty()) else {
+            let Ok(fd) = wopen_cloexec(
+                &history_path,
+                OFlag::O_WRONLY | OFlag::O_APPEND,
+                Mode::empty(),
+            ) else {
                 // can't open, we're hosed
                 break;
             };
@@ -1106,7 +1110,7 @@ impl HistoryImpl {
         old_file.push_utfstr(&self.name);
         old_file.push_str("_history");
 
-        let Ok(src_fd) = wopen_cloexec(&old_file, O_RDONLY, Mode::empty()) else {
+        let Ok(src_fd) = wopen_cloexec(&old_file, OFlag::O_RDONLY, Mode::empty()) else {
             return;
         };
 
@@ -1116,7 +1120,11 @@ impl HistoryImpl {
         // destination file descriptor, since it destroys the name and the file.
         self.clear();
 
-        let Ok(dst_fd) = wopen_cloexec(&new_file, O_WRONLY | O_CREAT, HISTORY_FILE_MODE) else {
+        let Ok(dst_fd) = wopen_cloexec(
+            &new_file,
+            OFlag::O_WRONLY | OFlag::O_CREAT,
+            HISTORY_FILE_MODE,
+        ) else {
             FLOG!(history_file, "Error when writing history file");
             return;
         };

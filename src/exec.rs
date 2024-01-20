@@ -50,9 +50,10 @@ use crate::wutil::{fish_wcstol, perror};
 use crate::wutil::{wgettext, wgettext_fmt};
 use errno::{errno, set_errno};
 use libc::{
-    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, O_NOCTTY,
-    O_RDONLY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
+    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
+    STDIN_FILENO, STDOUT_FILENO,
 };
+use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
@@ -367,7 +368,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     }
     let e = errno();
     let mut res = false;
-    let fd = open_cloexec(path, O_RDONLY | O_NOCTTY, stat::Mode::empty());
+    let fd = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty());
     if let Ok(fd) = fd {
         let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
         let mut buf = [b'\0'; 256];

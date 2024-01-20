@@ -3,7 +3,7 @@
 use crate::io::IoChain;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
-use libc::{c_int, O_APPEND, O_CREAT, O_EXCL, O_RDONLY, O_TRUNC, O_WRONLY};
+use nix::fcntl::OFlag;
 use std::os::fd::RawFd;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -33,12 +33,12 @@ pub struct Dup2List {
 
 impl RedirectionMode {
     /// The open flags for this redirection mode.
-    pub fn oflags(self) -> Option<c_int> {
+    pub fn oflags(self) -> Option<OFlag> {
         match self {
-            RedirectionMode::append => Some(O_CREAT | O_APPEND | O_WRONLY),
-            RedirectionMode::overwrite => Some(O_CREAT | O_WRONLY | O_TRUNC),
-            RedirectionMode::noclob => Some(O_CREAT | O_EXCL | O_WRONLY),
-            RedirectionMode::input => Some(O_RDONLY),
+            RedirectionMode::append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
+            RedirectionMode::overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
+            RedirectionMode::noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
+            RedirectionMode::input => Some(OFlag::O_RDONLY),
             _ => None,
         }
     }
@@ -83,7 +83,7 @@ impl RedirectionSpec {
     }
 
     /// \return the open flags for this redirection.
-    pub fn oflags(&self) -> c_int {
+    pub fn oflags(&self) -> OFlag {
         match self.mode.oflags() {
             Some(flags) => flags,
             None => panic!("Not a file redirection"),

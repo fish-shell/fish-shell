@@ -24,7 +24,7 @@ use std::cell::UnsafeCell;
 use std::io::BufReader;
 use std::num::NonZeroUsize;
 use std::ops::Range;
-use std::os::fd::{FromRawFd, RawFd};
+use std::os::fd::RawFd;
 use std::pin::Pin;
 use std::rc::Rc;
 use std::sync::atomic::Ordering;
@@ -4661,11 +4661,11 @@ impl ReaderData {
                 var.map_or_else(|| L!("~/.bash_history").to_owned(), |var| var.as_string());
             expand_tilde(&mut path, self.vars());
 
-            let Ok(raw_fd) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
+            let Ok(fd) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
 
-            let file = unsafe { std::fs::File::from_raw_fd(raw_fd) };
+            let file = std::fs::File::from(fd);
             self.history.populate_from_bash(BufReader::new(file));
         }
     }

@@ -25,7 +25,7 @@ use std::{
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd},
+    os::fd::{AsRawFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -478,11 +478,9 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(raw_fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
+            let Ok(fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
-
-            let fd = unsafe { OwnedFd::from_raw_fd(raw_fd) };
 
             // Take a read lock to guard against someone else appending. This is released after
             // getting the file's length. We will read the file after releasing the lock, but that's
@@ -675,8 +673,7 @@ impl HistoryImpl {
                 &target_name,
                 OFlag::O_RDONLY | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
-            )
-            .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+            );
 
             let orig_file_id = target_fd_before
                 .as_ref()
@@ -698,8 +695,7 @@ impl HistoryImpl {
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty())
-                .map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+            let target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
 
             if let Ok(target_fd_after) = target_fd_after.as_ref() {
                 // critical to take the lock before checking file IDs,
@@ -823,8 +819,6 @@ impl HistoryImpl {
                 // can't open, we're hosed
                 break;
             };
-
-            let fd = unsafe { OwnedFd::from_raw_fd(fd) };
 
             // Exclusive lock on the entire file. This is released when we close the file (below). This
             // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
@@ -1114,7 +1108,7 @@ impl HistoryImpl {
             return;
         };
 
-        let mut src_fd = unsafe { std::fs::File::from_raw_fd(src_fd) };
+        let mut src_fd = std::fs::File::from(src_fd);
 
         // Clear must come after we've retrieved the new_file name, and before we open
         // destination file descriptor, since it destroys the name and the file.
@@ -1129,7 +1123,7 @@ impl HistoryImpl {
             return;
         };
 
-        let mut dst_fd = unsafe { std::fs::File::from_raw_fd(dst_fd) };
+        let mut dst_fd = std::fs::File::from(dst_fd);
 
         let mut buf = [0; libc::BUFSIZ as usize];
         while let Ok(n) = src_fd.read(&mut buf) {

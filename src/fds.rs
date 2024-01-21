@@ -226,12 +226,12 @@ pub fn wopen_cloexec(
     pathname: &wstr,
     flags: OFlag,
     mode: nix::sys::stat::Mode,
-) -> nix::Result<RawFd> {
+) -> nix::Result<OwnedFd> {
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
 /// Narrow versions of wopen_cloexec.
-pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<RawFd> {
+pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     let saved_errno = errno();
@@ -241,11 +241,12 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        
+        let ret = ret.map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+
         match ret {
-            Ok(ret) => { 
+            Ok(fd) => {
                 set_errno(saved_errno);
-                return Ok(ret);
+                return Ok(fd);
             }
             Err(err) => {
                 if err != nix::Error::EINTR || signal_check_cancel() != 0 {
@@ -253,8 +254,6 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
                 }
             }
         }
-
-        
     }
 }
 

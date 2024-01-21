@@ -1,6 +1,6 @@
 use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring};
 use crate::env::{EnvMode, EnvStack};
-use crate::fds::{wopen_cloexec, AutoCloseFd};
+use crate::fds::wopen_cloexec;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
@@ -594,7 +594,7 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file = AutoCloseFd::new(
+    let file = std::fs::File::from(
         wopen_cloexec(
             L!("tests/history_sample_bash"),
             OFlag::O_RDONLY,

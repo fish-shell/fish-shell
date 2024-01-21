@@ -12,7 +12,7 @@ use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
-use crate::fds::{open_cloexec, AutoCloseFd};
+use crate::fds::open_cloexec;
 use crate::flog::FLOGF;
 use crate::function;
 use crate::global_safety::{RelaxedAtomicBool, SharedFromThis, SharedFromThisBase};
@@ -39,7 +39,7 @@ use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -224,7 +224,7 @@ pub struct LibraryData {
 
     /// A file descriptor holding the current working directory, for use in openat().
     /// This is never null and never invalid.
-    pub cwd_fd: Option<Arc<AutoCloseFd>>,
+    pub cwd_fd: Option<Arc<OwnedFd>>,
 
     pub status_vars: StatusVars,
 }
@@ -364,8 +364,8 @@ impl Parser {
             OFlag::O_RDONLY,
             Mode::empty(),
         ) {
-            Ok(raw_fd) => {
-                result.libdata_mut().cwd_fd = Some(Arc::new(AutoCloseFd::new(raw_fd)));
+            Ok(fd) => {
+                result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }
             Err(_) => {
                 perror("Unable to open the current working directory");

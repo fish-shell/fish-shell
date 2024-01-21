@@ -1,4 +1,4 @@
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+use std::os::fd::AsRawFd;
 
 use crate::{
     common::{escape, scoped_push_replacer, FilenameRef},
@@ -51,17 +51,21 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         func_filename = FilenameRef::new(L!("-").to_owned());
         fd = streams.stdin_fd;
     } else {
-        let Ok(raw_fd) = wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) else {
-            let esc = escape(args[optind]);
-            streams.err.append(wgettext_fmt!(
-                "%ls: Error encountered while sourcing file '%ls':\n",
-                cmd,
-                &esc
-            ));
-            builtin_wperror(cmd, streams);
-            return STATUS_CMD_ERROR;
+        match wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) {
+            Ok(fd) => {
+                opened_fd = fd;
+            }
+            Err(_) => {
+                let esc = escape(args[optind]);
+                streams.err.append(wgettext_fmt!(
+                    "%ls: Error encountered while sourcing file '%ls':\n",
+                    cmd,
+                    &esc
+                ));
+                builtin_wperror(cmd, streams);
+                return STATUS_CMD_ERROR;
+            }
         };
-        opened_fd = unsafe { OwnedFd::from_raw_fd(raw_fd) };
 
         fd = opened_fd.as_raw_fd();
         let mut buf: libc::stat = unsafe { std::mem::zeroed() };

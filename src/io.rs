@@ -21,7 +21,7 @@ use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
@@ -264,10 +264,10 @@ impl IoData for IoFd {
 pub struct IoFile {
     fd: RawFd,
     // The fd for the file which we are writing to or reading from.
-    file_fd: AutoCloseFd,
+    file_fd: OwnedFd,
 }
 impl IoFile {
-    pub fn new(fd: RawFd, file_fd: AutoCloseFd) -> Self {
+    pub fn new(fd: RawFd, file_fd: OwnedFd) -> Self {
         IoFile { fd, file_fd }
         // Invalid file redirections are replaced with a closed fd, so the following
         // assertion isn't guaranteed to pass:
@@ -282,10 +282,10 @@ impl IoData for IoFile {
         self.fd
     }
     fn source_fd(&self) -> RawFd {
-        self.file_fd.fd()
+        self.file_fd.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!("file %d -> %d\n", self.file_fd.fd(), self.fd)
+        eprintf!("file %d -> %d\n", self.file_fd.as_raw_fd(), self.fd)
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -661,9 +661,8 @@ impl IoChain {
                     let oflags = spec.oflags();
 
                     match wopen_cloexec(&path, oflags, OPEN_MASK) {
-                        Ok(raw_fd) => {
-                            let file = AutoCloseFd::new(raw_fd);
-                            self.push(Arc::new(IoFile::new(spec.fd, file)));
+                        Ok(fd) => {
+                            self.push(Arc::new(IoFile::new(spec.fd, fd)));
                         }
                         Err(err) => {
                             if oflags.intersects(OFlag::O_EXCL) && err == nix::Error::EEXIST {

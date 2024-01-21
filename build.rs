@@ -61,7 +61,7 @@ fn main() {
 
     for lib in curses_libraries {
         if target.has_symbol("_nc_cur_term", &lib) {
-            rsconf::enable_cfg("_nc_cur_term");
+            rsconf::enable_cfg("have_nc_cur_term");
             if target.has_symbol("cur_term", &lib) {
                 rsconf::warn!("curses provides both cur_term and _nc_cur_term");
             }

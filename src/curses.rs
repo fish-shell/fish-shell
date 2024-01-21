@@ -65,7 +65,7 @@ mod sys {
         #[cfg(not(have_nc_cur_term))]
         pub static mut cur_term: *const core::ffi::c_void;
         #[cfg(have_nc_cur_term)]
-        pub fn have_nc_cur_term() -> *const core::ffi::c_void;
+        pub fn _nc_cur_term() -> *const core::ffi::c_void;
 
         /// setupterm(3) is a low-level call to begin doing any sort of `term.h`/`curses.h` work.
         /// It's called internally by ncurses's `initscr()` and `newterm()`, but the C++ code called
@@ -105,7 +105,7 @@ mod sys {
 fn get_curterm() -> *const core::ffi::c_void {
     #[cfg(have_nc_cur_term)]
     unsafe {
-        sys::have_nc_cur_term()
+        sys::_nc_cur_term()
     }
     #[cfg(not(have_nc_cur_term))]
     unsafe {

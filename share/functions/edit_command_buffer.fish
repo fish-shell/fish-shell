@@ -41,24 +41,33 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
     set col (math $offset + 1)
 
-    set -l basename (string match -r '[^/]*$' -- $editor[1])
-    switch $basename
-        case vi vim nvim
-            set -a editor +$line +"norm! $col|" $f
-        case emacs emacsclient gedit kak
-            set -a editor +$line:$col $f
-        case nano
-            set -a editor +$line,$col $f
-        case joe ee
-            set -a editor +$line $f
-        case code code-oss
-            set -a editor --goto $f:$line:$col --wait
-        case subl
-            set -a editor $f:$line:$col --wait
-        case micro
-            set -a editor $f +$line:$col
-        case '*'
-            set -a editor $f
+    set -l basename (string match -r '[^/]+$' -- $editor[1])
+    set -l wrap_targets (complete -- $basename | string replace -rf '^complete [^/]+ --wraps (.+)$' '$1')
+    set -l found false
+    for alias in $basename $wrap_targets
+        switch $alias
+            case vi vim nvim
+                set -a editor +$line +"norm! $col|" $f
+            case emacs emacsclient gedit kak
+                set -a editor +$line:$col $f
+            case nano
+                set -a editor +$line,$col $f
+            case joe ee
+                set -a editor +$line $f
+            case code code-oss
+                set -a editor --goto $f:$line:$col --wait
+            case subl
+                set -a editor $f:$line:$col --wait
+            case micro
+                set -a editor $f +$line:$col
+            case '*'
+                continue
+        end
+        set found true
+        break
+    end
+    if not $found
+        set -a editor $f
     end
 
     __fish_disable_bracketed_paste

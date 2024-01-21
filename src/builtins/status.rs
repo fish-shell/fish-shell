@@ -10,25 +10,19 @@ use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
 use nix::NixPath;
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
-        impl TryFrom<&str> for $name {
-            type Error = ();
-
-            fn try_from(s: &str) -> Result<Self, Self::Error> {
+        impl $name {
+            fn from_wstr(s: &str) -> Option<Self> {
                 // matching on str's lets us avoid having to do binary search and friends ourselves,
                 // this is ascii only anyways
                 match s {
-                    $($str => Ok(Self::$val)),*,
-                    _ => Err(()),
+                    $($str => Some(Self::$val)),*,
+                    _ => None,
                 }
             }
-        }
 
-        impl $name {
             fn to_wstr(self) -> &'static wstr {
                 // There can be multiple vals => str mappings, and that's okay
                 #[allow(unreachable_patterns)]
@@ -41,7 +35,7 @@ macro_rules! str_enum {
 }
 
 use StatusCmd::*;
-#[derive(PartialEq, FromPrimitive, Clone, Copy)]
+#[derive(Clone, Copy)]
 enum StatusCmd {
     STATUS_CURRENT_CMD = 1,
     STATUS_BASENAME,
@@ -95,15 +89,6 @@ str_enum!(
     (STATUS_TEST_FEATURE, "test-feature"),
 );
 
-impl StatusCmd {
-    const fn as_char(self) -> char {
-        match char::from_u32(self as u32) {
-            Some(c) => c,
-            None => panic!("Should be a valid char"),
-        }
-    }
-}
-
 /// Values that may be returned from the test-feature option to status.
 #[repr(i32)]
 enum TestFeatureRetVal {
@@ -119,6 +104,25 @@ struct StatusCmdOpts {
     print_help: bool,
 }
 
+impl StatusCmdOpts {
+    // Set the status command to the given command.
+    // Returns true on success, false if there's already a status command, in which case an error is printed.
+    fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
+        match self.status_cmd.replace(subcmd) {
+            Some(existing) => {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                    "status",
+                    existing.to_wstr(),
+                    subcmd.to_wstr(),
+                ));
+                false
+            }
+            None => true,
+        }
+    }
+}
+
 impl Default for StatusCmdOpts {
     fn default() -> Self {
         Self {
@@ -130,32 +134,34 @@ impl Default for StatusCmdOpts {
     }
 }
 
+/// Short options for long options that have no corresponding short options.
+const FISH_PATH_SHORT: char = '\x01';
+const IS_FULL_JOB_CTRL_SHORT: char = '\x02';
+const IS_INTERACTIVE_JOB_CTRL_SHORT: char = '\x03';
+const IS_NO_JOB_CTRL_SHORT: char = '\x04';
+
 const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
 const LONG_OPTIONS: &[woption] = &[
     wopt(L!("help"), no_argument, 'h'),
     wopt(L!("current-filename"), no_argument, 'f'),
     wopt(L!("current-line-number"), no_argument, 'n'),
     wopt(L!("filename"), no_argument, 'f'),
-    wopt(L!("fish-path"), no_argument, STATUS_FISH_PATH.as_char()),
+    wopt(L!("fish-path"), no_argument, FISH_PATH_SHORT),
     wopt(L!("is-block"), no_argument, 'b'),
     wopt(L!("is-command-substitution"), no_argument, 'c'),
     wopt(
         L!("is-full-job-control"),
         no_argument,
-        STATUS_IS_FULL_JOB_CTRL.as_char(),
+        IS_FULL_JOB_CTRL_SHORT,
     ),
     wopt(L!("is-interactive"), no_argument, 'i'),
     wopt(
         L!("is-interactive-job-control"),
         no_argument,
-        STATUS_IS_INTERACTIVE_JOB_CTRL.as_char(),
+        IS_INTERACTIVE_JOB_CTRL_SHORT,
     ),
     wopt(L!("is-login"), no_argument, 'l'),
-    wopt(
-        L!("is-no-job-control"),
-        no_argument,
-        STATUS_IS_NO_JOB_CTRL.as_char(),
-    ),
+    wopt(L!("is-no-job-control"), no_argument, IS_NO_JOB_CTRL_SHORT),
     wopt(L!("job-control"), required_argument, 'j'),
     wopt(L!("level"), required_argument, 'L'),
     wopt(L!("line"), no_argument, 'n'),
@@ -235,25 +241,12 @@ fn parse_cmd_opts(
                     't' => STATUS_STACK_TRACE,
                     _ => unreachable!(),
                 };
-                if let Some(existing) = opts.status_cmd.replace(subcmd) {
-                    streams.err.append(wgettext_fmt!(
-                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                        cmd,
-                        existing.to_wstr(),
-                        subcmd.to_wstr(),
-                    ));
+                if !opts.try_set_status_cmd(subcmd, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
             'j' => {
-                let subcmd = STATUS_SET_JOB_CONTROL;
-                if let Some(existing) = opts.status_cmd.replace(subcmd) {
-                    streams.err.append(wgettext_fmt!(
-                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                        cmd,
-                        existing.to_wstr(),
-                        subcmd.to_wstr(),
-                    ));
+                if !opts.try_set_status_cmd(STATUS_SET_JOB_CONTROL, streams) {
                     return STATUS_CMD_ERROR;
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
@@ -266,6 +259,26 @@ fn parse_cmd_opts(
                 };
                 opts.new_job_control_mode = Some(job_mode);
             }
+            IS_FULL_JOB_CTRL_SHORT => {
+                if !opts.try_set_status_cmd(STATUS_IS_FULL_JOB_CTRL, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            IS_INTERACTIVE_JOB_CTRL_SHORT => {
+                if !opts.try_set_status_cmd(STATUS_IS_INTERACTIVE_JOB_CTRL, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            IS_NO_JOB_CTRL_SHORT => {
+                if !opts.try_set_status_cmd(STATUS_IS_NO_JOB_CTRL, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            FISH_PATH_SHORT => {
+                if !opts.try_set_status_cmd(STATUS_FISH_PATH, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
@@ -275,28 +288,7 @@ fn parse_cmd_opts(
                 builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            c => {
-                let Some(opt_cmd) = StatusCmd::from_u32(c.into()) else {
-                    panic!("unexpected retval from wgetopt_long")
-                };
-                match opt_cmd {
-                    STATUS_IS_FULL_JOB_CTRL
-                    | STATUS_IS_INTERACTIVE_JOB_CTRL
-                    | STATUS_IS_NO_JOB_CTRL
-                    | STATUS_FISH_PATH => {
-                        if let Some(existing) = opts.status_cmd.replace(opt_cmd) {
-                            streams.err.append(wgettext_fmt!(
-                                BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                                cmd,
-                                existing.to_wstr(),
-                                opt_cmd.to_wstr(),
-                            ));
-                            return STATUS_CMD_ERROR;
-                        }
-                    }
-                    _ => panic!("unexpected retval from wgetopt_long"),
-                }
-            }
+            _ => panic!("unexpected retval from wgetopt_long"),
         }
     }
 
@@ -324,20 +316,14 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     // If a status command hasn't already been specified via a flag check the first word.
     // Note that this can be simplified after we eliminate allowing subcommands as flags.
     if optind < argc {
-        match StatusCmd::try_from(args[optind].to_string().as_str()) {
-            Ok(s) => {
-                if let Some(existing) = opts.status_cmd.replace(s) {
-                    streams.err.append(wgettext_fmt!(
-                        BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                        cmd,
-                        existing.to_wstr(),
-                        s.to_wstr(),
-                    ));
+        match StatusCmd::from_wstr(args[optind].to_string().as_str()) {
+            Some(s) => {
+                if !opts.try_set_status_cmd(s, streams) {
                     return STATUS_CMD_ERROR;
                 }
                 optind += 1;
             }
-            Err(_) => {
+            None => {
                 streams
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[1]));

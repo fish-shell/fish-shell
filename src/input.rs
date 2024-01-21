@@ -12,8 +12,6 @@ use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
 };
 use crate::signal::signal_clear_cancel;
-#[cfg(test)]
-use crate::tests::prelude::*;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use errno::{set_errno, Errno};
@@ -1188,51 +1186,4 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
     // `input_function_metadata` is required to be kept in asciibetical order, making it OK to do
     // a binary search for the matching name.
     get_by_sorted_name(name, INPUT_FUNCTION_METADATA).map(|md| md.code)
-}
-
-#[test]
-#[serial]
-fn test_input() {
-    test_init();
-    use crate::env::EnvStack;
-    let parser = Parser::new(Arc::pin(EnvStack::new()), false);
-    let mut input = Inputter::new(parser, libc::STDIN_FILENO);
-    // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
-    // of the second, and then emit the second key list. The second binding should be invoked, not
-    // the first!
-    let prefix_binding = WString::from_str("qqqqqqqa");
-    let desired_binding = prefix_binding.clone() + "a";
-
-    let default_mode = || DEFAULT_BIND_MODE.to_owned();
-
-    {
-        let mut input_mapping = input_mappings();
-        input_mapping.add1(
-            prefix_binding,
-            WString::from_str("up-line"),
-            default_mode(),
-            default_mode(),
-            true,
-        );
-        input_mapping.add1(
-            desired_binding.clone(),
-            WString::from_str("down-line"),
-            default_mode(),
-            default_mode(),
-            true,
-        );
-    }
-
-    // Push the desired binding to the queue.
-    for c in desired_binding.chars() {
-        input.queue_char(CharEvent::from_char(c));
-    }
-
-    // Now test.
-    let evt = input.read_char(None);
-    if !evt.is_readline() {
-        panic!("Event is not a readline");
-    } else if evt.get_readline() != ReadlineCmd::DownLine {
-        panic!("Expected to read char down_line");
-    }
 }

@@ -62,8 +62,10 @@ mod sys {
     pub type putc_t = extern "C" fn(tputs_arg) -> libc::c_int;
 
     extern "C" {
-        /// The ncurses `cur_term` TERMINAL pointer.
+        #[cfg(not(have_nc_cur_term))]
         pub static mut cur_term: *const core::ffi::c_void;
+        #[cfg(have_nc_cur_term)]
+        pub fn have_nc_cur_term() -> *const core::ffi::c_void;
 
         /// setupterm(3) is a low-level call to begin doing any sort of `term.h`/`curses.h` work.
         /// It's called internally by ncurses's `initscr()` and `newterm()`, but the C++ code called
@@ -76,6 +78,9 @@ mod sys {
 
         /// Frees the `cur_term` TERMINAL  pointer.
         pub fn del_curterm(term: *const core::ffi::c_void) -> libc::c_int;
+
+        /// Sets the `cur_term` TERMINAL  pointer.
+        pub fn set_curterm(term: *const core::ffi::c_void) -> *const core::ffi::c_void;
 
         /// Checks for the presence of a termcap flag identified by the first two characters of
         /// `id`.
@@ -95,6 +100,19 @@ mod sys {
         pub fn tputs(str: *const libc::c_char, affcnt: libc::c_int, putc: putc_t) -> libc::c_int;
     }
 }
+
+/// The ncurses `cur_term` TERMINAL pointer.
+fn get_curterm() -> *const core::ffi::c_void {
+    #[cfg(have_nc_cur_term)]
+    unsafe {
+        sys::have_nc_cur_term()
+    }
+    #[cfg(not(have_nc_cur_term))]
+    unsafe {
+        sys::cur_term
+    }
+}
+
 pub use sys::tputs_arg as TputsArg;
 
 /// The safe wrapper around curses functionality, initialized by a successful call to [`setup()`]
@@ -434,7 +452,7 @@ where
     let result = unsafe {
         // If cur_term is already initialized for a different $TERM value, calling setupterm() again
         // will leak memory. Call del_curterm() first to free previously allocated resources.
-        let _ = sys::del_curterm(cur_term);
+        let _ = sys::del_curterm(get_curterm());
 
         let mut err = 0;
         if let Some(term) = term {
@@ -469,8 +487,8 @@ pub fn reset() {
         unsafe {
             // Ignore the result of del_curterm() as the only documented error is that
             // `cur_term` was already null.
-            let _ = sys::del_curterm(cur_term);
-            sys::cur_term = core::ptr::null();
+            let _ = sys::del_curterm(get_curterm());
+            let _ = sys::set_curterm(core::ptr::null());
         }
         *term = None;
     }

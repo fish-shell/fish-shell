@@ -30,29 +30,42 @@ fn main() {
 
     // Handle case where CMake has found curses for us and where we have to find it ourselves.
     rsconf::rebuild_if_env_changed("CURSES_LIBRARY_LIST");
-    if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
+    let curses_libraries = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
         let lib_paths = lib_path_list.split(',').filter(|s| !s.is_empty());
         let curses_libnames: Vec<_> = lib_paths
             .map(|libpath| {
                 let stem = Path::new(libpath).file_stem().unwrap().to_str().unwrap();
                 // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
-                stem.strip_prefix("lib").unwrap_or(stem)
+                stem.strip_prefix("lib").unwrap_or(stem).to_string()
             })
             .collect();
         // We don't need to test the libs because presumably CMake already did
         rsconf::link_libraries(&curses_libnames, LinkType::Default);
+        curses_libnames
     } else {
-        let mut curses_found = false;
-        for lib in ["ncurses", "curses"] {
+        let mut curses_libraries = vec![];
+        let libs = ["ncurses", "curses"];
+        for lib in libs {
             if target.has_library(lib) && target.has_symbol("setupterm", lib) {
                 rsconf::link_library(lib, LinkType::Default);
-                curses_found = true;
+                curses_libraries.push(lib.to_string());
                 break;
             }
         }
 
-        if !curses_found {
-            rsconf::warn!("Could not locate a compatible curses library!");
+        if curses_libraries.is_empty() {
+            panic!("Could not locate a compatible curses library (tried {libs:?})");
+        }
+        curses_libraries
+    };
+
+    for lib in curses_libraries {
+        if target.has_symbol("_nc_cur_term", &lib) {
+            rsconf::enable_cfg("_nc_cur_term");
+            if target.has_symbol("cur_term", &lib) {
+                rsconf::warn!("curses provides both cur_term and _nc_cur_term");
+            }
+            break;
         }
     }
 }

@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment},
-    fds::{wopen_cloexec, AutoCloseFd},
+    fds::wopen_cloexec,
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
@@ -87,9 +87,8 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        let res = wopen_cloexec(&norm_dir, OFlag::O_RDONLY, Mode::empty())
-            .map(AutoCloseFd::new)
-            .map_err(|err| err as i32);
+        let res =
+            wopen_cloexec(&norm_dir, OFlag::O_RDONLY, Mode::empty()).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
             if unsafe { fchdir(fd.as_raw_fd()) } == 0 {
@@ -100,7 +99,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
         });
 
         let fd = match res {
-            Ok(raw_fd) => raw_fd,
+            Ok(fd) => fd,
             Err(err) => {
                 // Some errors we skip and only report if nothing worked.
                 // ENOENT in particular is very low priority

@@ -25,7 +25,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -389,12 +389,10 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(raw_fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
-        else {
+        let Ok(fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty()) else {
             return false;
         };
 
-        let fd = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw_fd) };
         FLOG!(uvar_file, "universal log reading from file");
         self.load_from_fd(fd.as_raw_fd(), callbacks);
         true
@@ -443,12 +441,12 @@ impl EnvUniversal {
 
         let mut res_fd = None;
         while res_fd.is_none() {
-            let raw = match wopen_cloexec(
+            let fd = match wopen_cloexec(
                 &self.vars_path,
                 flags,
                 Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IROTH,
             ) {
-                Ok(raw) => raw,
+                Ok(fd) => fd,
                 Err(err) => {
                     if err == nix::Error::EINTR {
                         continue; // signaled; try again
@@ -478,9 +476,6 @@ impl EnvUniversal {
                     break;
                 }
             };
-
-            assert!(raw >= 0, "Should have a valid fd here");
-            let fd = unsafe { OwnedFd::from_raw_fd(raw) };
 
             // Lock if we want to lock and open() didn't do it for us.
             // If flock fails, give up on locking forever.

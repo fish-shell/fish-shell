@@ -57,7 +57,7 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
-use std::os::fd::{FromRawFd, RawFd};
+use std::os::fd::RawFd;
 use std::slice;
 use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicUsize, Arc};
@@ -370,7 +370,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     let mut res = false;
     let fd = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty());
     if let Ok(fd) = fd {
-        let mut file = unsafe { std::fs::File::from_raw_fd(fd) };
+        let mut file = std::fs::File::from(fd);
         let mut buf = [b'\0'; 256];
         if let Ok(got) = file.read(&mut buf) {
             if is_thompson_shell_payload(&buf[..got]) {

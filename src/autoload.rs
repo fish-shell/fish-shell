@@ -350,7 +350,6 @@ fn test_autoload() {
         )
         .unwrap();
         write_loop(&fd, "Hello".as_bytes()).unwrap();
-        unsafe { libc::close(fd) };
     }
 
     let mut t1 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();

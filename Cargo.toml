@@ -9,6 +9,8 @@ edition = "2021"
 
 [profile.release]
 overflow-checks = true
+lto = true
+codegen-units = 1
 
 [package]
 name = "fish"

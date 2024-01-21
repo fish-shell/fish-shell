@@ -84,7 +84,9 @@ pub fn flog_impl_async_safe(fd: i32, s: impl FloggableDisplayAsyncSafe) {
     let bytes: &[u8] = s.to_flog_str_async_safe(&mut storage);
     // Note we deliberately do not retry on signals, etc.
     // This is used to report error messages after fork() in the child process.
-    let _ = nix::unistd::write(fd, bytes);
+    unsafe {
+        let _ = libc::write(fd, bytes.as_ptr() as *const libc::c_void, bytes.len());
+    }
 }
 
 /// Variant of FLOG which is async-safe to use after fork().

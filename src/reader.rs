@@ -684,7 +684,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
         return 1;
     }
 
-    // Read all data into a std::string.
+    // Read all data into a vec.
     let mut fd_contents = Vec::with_capacity(usize::try_from(buf.st_size).unwrap());
     loop {
         let mut buff = [0_u8; 4096];

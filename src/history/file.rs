@@ -228,7 +228,6 @@ fn should_mmap() -> bool {
 }
 
 /// Read from `fd` to fill `dest`, zeroing any unused space.
-// Return true on success, false on failure.
 fn read_from_fd(fd: RawFd, mut dest: &mut [u8]) -> nix::Result<()> {
     while !dest.is_empty() {
         match nix::unistd::read(fd, dest) {

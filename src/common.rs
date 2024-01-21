@@ -1468,7 +1468,7 @@ fn can_be_encoded(wc: char) -> bool {
 }
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
-/// \return the number of bytes read, or 0 on EOF. On EAGAIN, returns -1 if nothing was read.
+/// \return the number of bytes read, or 0 on EOF, or an error.
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
         let res = nix::unistd::read(fd, buf);

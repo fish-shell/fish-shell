@@ -48,8 +48,6 @@
 
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 
-use num_traits;
-
 use super::prelude::*;
 use crate::locale::{get_numeric_locale, Locale};
 use crate::wchar::encode_byte_to_char;
@@ -99,7 +97,7 @@ struct builtin_printf_state_t<'a, 'b> {
 
 /// Convert to a scalar type. \return the result of conversion, and the end of the converted string.
 /// On conversion failure, \p end is not modified.
-trait RawStringToScalarType: Copy + num_traits::Zero + std::convert::From<u32> {
+trait RawStringToScalarType: Copy + std::convert::From<u32> {
     /// Convert from a string to our self type.
     /// \return the result of conversion, and the remainder of the string.
     fn raw_string_to_scalar_type<'a>(
@@ -192,7 +190,7 @@ fn string_to_scalar_type<T: RawStringToScalarType>(
         let mut end = s;
         let mval = T::raw_string_to_scalar_type(s, &state.locale, &mut end);
         state.verify_numeric(s, end, mval.err());
-        mval.unwrap_or(T::zero())
+        mval.unwrap_or(T::from(0))
     }
 }
 

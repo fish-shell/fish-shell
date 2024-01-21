@@ -13,7 +13,7 @@ complete -c strace -s f -l follow-forks
 complete -c strace -l output-separately
 complete -c strace -o ff -d 'Like --follow-forks --output-separately'
 complete -c strace -s I -l interruptible -d 'When strace can be interrupted by signals'
-complete -c strace -l syscall-limit -d 'Detach all tracees when limit number of syscalls have been captured'
+complete -c strace -l syscall-limit -d 'Detach all tracees when LIMIT number of syscalls have been captured'
 complete -c strace -l kill-on-exit -d 'Set PTRACE_O_EXITKILL ptrace option to all tracee processes'
 
 # General/Filtering/Tampering

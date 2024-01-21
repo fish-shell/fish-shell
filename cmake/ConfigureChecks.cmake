@@ -2,13 +2,6 @@
 # CMAKE_REQUIRED_DEFINITIONS, CMAKE_REQUIRED_FLAGS, CMAKE_REQUIRED_LIBRARIES,
 # and CMAKE_REQUIRED_INCLUDES
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE=1)
-include(CMakePushCheckState)
-
-# An unrecognized flag is usually a warning and not an error, which CMake apparently does
-# not pick up on. Combine it with -Werror to determine if it's actually supported.
-# This is not bulletproof; old versions of GCC only emit a warning about unrecognized warning
-# options when there are other warnings to emit :rolleyes:
-# See https://github.com/fish-shell/fish-shell/commit/fe2da0a9#commitcomment-47431659
 
 # Try using CMake's own logic to locate curses/ncurses
 find_package(Curses)
@@ -36,7 +29,3 @@ else()
         set(CURSES_LIBRARY ${CURSES_LIBRARY} ${CURSES_TINFO})
     endif()
 endif()
-
-# This is required for finding the right PCRE2
-include(CheckTypeSize)
-check_type_size("wchar_t[8]" WCHAR_T_BITS LANGUAGE CXX)

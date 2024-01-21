@@ -49,9 +49,8 @@ struct InputMapping {
     specification_order: u32,
     /// Mode in which this command should be evaluated.
     mode: WString,
-    /// New mode that should be switched to after command evaluation.
-    /// TODO: should be an Option, instead of empty string to mean none.
-    sets_mode: WString,
+    /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
+    sets_mode: Option<WString>,
 }
 
 impl InputMapping {
@@ -60,10 +59,14 @@ impl InputMapping {
         seq: WString,
         commands: Vec<WString>,
         mode: WString,
-        sets_mode: WString,
+        sets_mode: Option<WString>,
     ) -> InputMapping {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
+        assert!(
+            sets_mode.is_none() || !mode.is_empty(),
+            "sets_mode set but mode is empty"
+        );
         InputMapping {
             seq,
             commands,
@@ -284,7 +287,7 @@ impl InputMappingSet {
         sequence: WString,
         commands: Vec<WString>,
         mode: WString,
-        sets_mode: WString,
+        sets_mode: Option<WString>,
         user: bool,
     ) {
         // Clear cached mappings.
@@ -316,7 +319,7 @@ impl InputMappingSet {
         sequence: WString,
         command: WString,
         mode: WString,
-        sets_mode: WString,
+        sets_mode: Option<WString>,
         user: bool,
     ) {
         self.add(sequence, vec![command], mode, sets_mode, user);
@@ -339,7 +342,7 @@ pub fn init_input() {
         // Helper for adding.
         let mut add = |seq: &str, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
-            let sets_mode = DEFAULT_BIND_MODE.to_owned();
+            let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
             input_mapping.add1(seq.into(), cmd.into(), mode, sets_mode, false);
         };
 
@@ -510,8 +513,8 @@ impl Inputter {
 
         // !has_functions && !has_commands: only set bind mode
         if !has_commands && !has_functions {
-            if !m.sets_mode.is_empty() {
-                input_set_bind_mode(&self.parser, &m.sets_mode);
+            if let Some(sets_mode) = m.sets_mode.as_ref() {
+                input_set_bind_mode(&self.parser, sets_mode);
             }
             return;
         }
@@ -541,9 +544,9 @@ impl Inputter {
             // one.
             self.push_front(CharEvent::from_check_exit());
         }
-        // Empty bind mode indicates to not reset the mode (#2871)
-        if !m.sets_mode.is_empty() {
-            input_set_bind_mode(&self.parser, &m.sets_mode);
+        // Missing bind mode indicates to not reset the mode (#2871)
+        if let Some(sets_mode) = m.sets_mode.as_ref() {
+            input_set_bind_mode(&self.parser, sets_mode);
         }
     }
 
@@ -1014,15 +1017,14 @@ impl InputMappingSet {
 
     /// Gets the command bound to the specified key sequence in the specified mode. Returns true if
     /// it exists, false if not.
-    pub fn get(
-        &self,
+    pub fn get<'a>(
+        &'a self,
         sequence: &wstr,
         mode: &wstr,
-        out_cmds: &mut Vec<WString>,
+        out_cmds: &mut &'a [WString],
         user: bool,
-        out_sets_mode: &mut WString,
+        out_sets_mode: &mut Option<&'a wstr>,
     ) -> bool {
-        let mut result = false;
         let ml = if user {
             &self.mapping_list
         } else {
@@ -1030,13 +1032,12 @@ impl InputMappingSet {
         };
         for m in ml {
             if m.seq == sequence && m.mode == mode {
-                *out_cmds = m.commands.clone();
-                *out_sets_mode = m.sets_mode.clone();
-                result = true;
-                break;
+                *out_cmds = &m.commands;
+                *out_sets_mode = m.sets_mode.as_deref();
+                return true;
             }
         }
-        result
+        false
     }
 
     /// \return a snapshot of the list of input mappings.

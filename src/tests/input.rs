@@ -26,14 +26,14 @@ fn test_input() {
             prefix_binding,
             WString::from_str("up-line"),
             default_mode(),
-            default_mode(),
+            None,
             true,
         );
         input_mapping.add1(
             desired_binding.clone(),
             WString::from_str("down-line"),
             default_mode(),
-            default_mode(),
+            None,
             true,
         );
     }

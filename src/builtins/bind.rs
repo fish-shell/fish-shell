@@ -33,7 +33,7 @@ struct Options {
     preset: bool,
     mode: c_int,
     bind_mode: WString,
-    sets_bind_mode: WString,
+    sets_bind_mode: Option<WString>,
 }
 
 impl Options {
@@ -51,7 +51,7 @@ impl Options {
             preset: false,
             mode: BIND_INSERT,
             bind_mode: DEFAULT_BIND_MODE.to_owned(),
-            sets_bind_mode: WString::new(),
+            sets_bind_mode: None,
         }
     }
 }
@@ -82,8 +82,8 @@ impl BuiltinBind {
         parser: &Parser,
         streams: &mut IoStreams,
     ) -> bool {
-        let mut ecmds = Vec::new();
-        let mut sets_mode = WString::new();
+        let mut ecmds: &[_] = &[];
+        let mut sets_mode = None;
         let mut out = WString::new();
         if !self
             .input_mappings
@@ -102,9 +102,12 @@ impl BuiltinBind {
             out.push_str(" -M ");
             out.push_utfstr(&escape(bind_mode));
         }
-        if !sets_mode.is_empty() && sets_mode != bind_mode {
-            out.push_str(" -m ");
-            out.push_utfstr(&escape(&sets_mode));
+
+        if let Some(sets_mode) = sets_mode {
+            if sets_mode != bind_mode {
+                out.push_str(" -m ");
+                out.push_utfstr(&escape(sets_mode));
+            }
         }
 
         // Append the name.
@@ -122,7 +125,7 @@ impl BuiltinBind {
         // Now show the list of commands.
         for ecmd in ecmds {
             out.push(' ');
-            out.push_utfstr(&escape(&ecmd));
+            out.push_utfstr(&escape(ecmd));
         }
         out.push('\n');
 
@@ -229,7 +232,7 @@ impl BuiltinBind {
         seq: &wstr,
         cmds: &[&wstr],
         mode: WString,
-        sets_mode: WString,
+        sets_mode: Option<WString>,
         terminfo: bool,
         user: bool,
         streams: &mut IoStreams,
@@ -461,15 +464,14 @@ fn parse_cmd_opts(
                 opts.bind_mode_given = true;
             }
             'm' => {
-                if !valid_var_name(w.woptarg.unwrap()) {
-                    streams.err.append(wgettext_fmt!(
-                        BUILTIN_ERR_BIND_MODE,
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
+                let new_mode = w.woptarg.unwrap();
+                if !valid_var_name(new_mode) {
+                    streams
+                        .err
+                        .append(wgettext_fmt!(BUILTIN_ERR_BIND_MODE, cmd, new_mode));
                     return STATUS_INVALID_ARGS;
                 }
-                opts.sets_bind_mode = w.woptarg.unwrap().to_owned();
+                opts.sets_bind_mode = Some(new_mode.to_owned());
             }
             'p' => {
                 opts.have_preset = true;

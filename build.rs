@@ -8,10 +8,10 @@ use std::path::{Path, PathBuf};
 fn main() {
     setup_paths();
 
-    let rust_dir = env!("CARGO_MANIFEST_DIR");
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
-    let build_dir = std::env::var("FISH_BUILD_DIR").unwrap_or(format!("{rust_dir}/build"));
+    let build_dir = format!("{}/build", env!("CARGO_MANIFEST_DIR"));
+    let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&build_dir);
     rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
 
     cc::Build::new()
@@ -30,13 +30,14 @@ fn main() {
 
     // Handle case where CMake has found curses for us and where we have to find it ourselves.
     rsconf::rebuild_if_env_changed("CURSES_LIBRARY_LIST");
-    let curses_libraries = if let Ok(lib_path_list) = env::var("CURSES_LIBRARY_LIST") {
+    let curses_lib_list = env::var("CURSES_LIBRARY_LIST");
+    let curses_libraries = if let Ok(lib_path_list) = curses_lib_list.as_ref() {
         let lib_paths = lib_path_list.split(',').filter(|s| !s.is_empty());
         let curses_libnames: Vec<_> = lib_paths
             .map(|libpath| {
                 let stem = Path::new(libpath).file_stem().unwrap().to_str().unwrap();
                 // Ubuntu-32bit-fetched-pcre2's ncurses doesn't have the "lib" prefix.
-                stem.strip_prefix("lib").unwrap_or(stem).to_string()
+                stem.strip_prefix("lib").unwrap_or(stem)
             })
             .collect();
         // We don't need to test the libs because presumably CMake already did
@@ -48,7 +49,7 @@ fn main() {
         for lib in libs {
             if target.has_library(lib) && target.has_symbol("setupterm", lib) {
                 rsconf::link_library(lib, LinkType::Default);
-                curses_libraries.push(lib.to_string());
+                curses_libraries.push(lib);
                 break;
             }
         }
@@ -60,9 +61,9 @@ fn main() {
     };
 
     for lib in curses_libraries {
-        if target.has_symbol("_nc_cur_term", &lib) {
+        if target.has_symbol("_nc_cur_term", lib) {
             rsconf::enable_cfg("have_nc_cur_term");
-            if target.has_symbol("cur_term", &lib) {
+            if target.has_symbol("cur_term", lib) {
                 rsconf::warn!("curses provides both cur_term and _nc_cur_term");
             }
             break;

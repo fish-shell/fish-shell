@@ -11,7 +11,7 @@ function __fish_preview_current_file --description "Open the file at the cursor 
         # $backslash will parsed as regex which may need additional escaping.
         set -l backslash '\\\\'
         not status test-feature regex-easyesc && set backslash $backslash$backslash
-        set file (string replace -ra -- '([ ;#^<>&|()"\'])' "$backslash\$1" (commandline -oc)[-1])
+        set file (string replace -ra -- '([ ;#^<>&|()"\'])' "$backslash\$1" (commandline -xc)[-1])
         set prefix set
     end
 

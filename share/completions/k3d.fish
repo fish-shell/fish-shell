@@ -1,5 +1,5 @@
 function __fish_k3d_no_subcommand --description 'Test if k3d has yet to be given subcommands'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i cluster image kubeconfig node version
             return 1
         end

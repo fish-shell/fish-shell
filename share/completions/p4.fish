@@ -285,7 +285,7 @@ end
 #########################################################
 
 function __fish_p4_not_in_command -d "Checks that prompt is not inside of p4 command"
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i (__fish_print_p4_commands_list)
             return 1
         end
@@ -301,7 +301,7 @@ end
 # in the arguments, even though if more than a single command is specified,
 # p4 will complain.
 function __fish_p4_is_using_command -d "Checks if prompt is in a specific command"
-    if contains -- $argv[1] (commandline -opc)
+    if contains -- $argv[1] (commandline -xpc)
         return 0
     end
     return 1

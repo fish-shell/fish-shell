@@ -1,5 +1,5 @@
 function __fish_complete_tar -d "Peek inside of archives and list all files"
-    set -l args (commandline -poc)
+    set -l args (commandline -pxc)
     while count $args >/dev/null
         switch $args[1]
             case '-*f' --file

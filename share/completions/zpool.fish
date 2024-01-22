@@ -39,7 +39,7 @@ function __fish_zpool_needs_command
 end
 
 function __fish_zpool_using_command # zpool command whose completions are looked for
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -eq 1 # The token can only be 'zpool', so skip
         return 2
     end
@@ -80,7 +80,7 @@ function __fish_zpool_complete_vdevs
 
     # First, reverse token list to analyze it from the end
     set -l tokens 0
-    for i in (commandline -co)[-1..1]
+    for i in (commandline -cx)[-1..1]
         switch $i
             case spare log cache # At least 1 item expected
                 if test $tokens -ge 1

@@ -1,6 +1,6 @@
 # Returns exit code of 0 if apm hasn't received a command yet, e.g. `config`
 function __fish_apm_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -eq 1
         return 0
     else if test (count $cmd) -gt 1
@@ -21,7 +21,7 @@ end
 # Returns exit code of 0 if any command (argv[1..-1]) appears once, ignores flags.
 function __fish_apm_using_command
     set -l commands $argv
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -gt 1
         set -l command_seen_once 1
         for c in $cmd[2..-1]
@@ -50,7 +50,7 @@ end
 
 # Check if `commandline` contains a set of subcommands
 function __fish_apm_includes_subcommand
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     for subcommand in $argv
         if contains $subcommand $cmd
             return 0

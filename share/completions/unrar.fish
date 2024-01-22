@@ -1,5 +1,5 @@
 function __fish_complete_unrar -d "Peek inside of archives and list all files"
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     set -e cmd[1]
     for i in $cmd
         switch $i

@@ -3,7 +3,7 @@
 # Functions
 
 function __fish_hugo_command
-    set -l tokens (commandline -opc)
+    set -l tokens (commandline -xpc)
     test (count $tokens) -le 1; and return 1
     set -l command ""
     set -l skip 1

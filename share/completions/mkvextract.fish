@@ -8,7 +8,7 @@
 # Chapters: 7 entries
 
 function __fish_mkvextract_get_mode
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     set -l skip_next 0
     for c in $cmd[2..-1]
         test $skip_next = 1; and set skip_next 0; and continue
@@ -29,7 +29,7 @@ function __fish_mkvextract_get_mode
 end
 
 function __fish_mkvextract_get_file
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     # Any invocation with a file specified will already have >= 2 args
     if not set -q cmd[3]
         return 1

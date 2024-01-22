@@ -1,7 +1,7 @@
 # Completions for `snap` command
 
 function __fish_snap_no_subcommand -d 'Test if snap has yet to be given the subcommand'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i abort ack alias aliases buy changes connect disable disconnect download \
                 enable find get help info install interfaces known list login logout prefer refresh remove \
                 revert run set tasks try unalias version watch
@@ -12,7 +12,7 @@ function __fish_snap_no_subcommand -d 'Test if snap has yet to be given the subc
 end
 
 function __fish_snap_using_subcommand -d 'Test if given subcommand is used'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i $argv[1]
             return 0
         end
@@ -21,7 +21,7 @@ function __fish_snap_using_subcommand -d 'Test if given subcommand is used'
 end
 
 function __fish_snap_use_file -d 'Test if snap command should have files as potential completion'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i ack try
             return 0
         end
@@ -71,7 +71,7 @@ function __fish_snap_aliases -d 'List aliases'
 end
 
 function __fish_snap_no_assertion -d 'Check that no assertion type is used yet'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i account account-key model serial snap-declaration snap-build snap-revision \
                 system-user validation
             return 1

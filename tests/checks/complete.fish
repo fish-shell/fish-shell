@@ -135,7 +135,7 @@ complete -C'foo -z'
 
 
 # Builtins (with subcommands; #2705)
-complete -c complete_test_subcommand -n 'test (commandline -op)[1] = complete_test_subcommand' -xa ok
+complete -c complete_test_subcommand -n 'test (commandline -xp)[1] = complete_test_subcommand' -xa ok
 complete -C'not complete_test_subcommand '
 # CHECK: ok
 complete -C'echo; and complete_test_subcommand '
@@ -463,7 +463,7 @@ complete -C 'crookshanks '
 # CHECK: +pet
 
 # Custom completion works with variable overrides.
-complete cmd_with_fancy_completion -xa '(commandline -opc | count)'
+complete cmd_with_fancy_completion -xa '(commandline -xpc | count)'
 complete -C"a=1 b=2 cmd_with_fancy_completion "
 # CHECK: 1
 complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
@@ -473,17 +473,17 @@ complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
 # Multiple conditions
 complete -f -c shot
-complete -fc shot -n 'test (count (commandline -opc) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'
-# CHECKERR: complete: -n 'test (count (commandline -opc) -eq 1': Unexpected end of string, expecting ')'
-# CHECKERR: test (count (commandline -opc) -eq 1
+complete -fc shot -n 'test (count (commandline -xpc) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
+# CHECKERR: complete: -n 'test (count (commandline -xpc) -eq 1': Unexpected end of string, expecting ')'
+# CHECKERR: test (count (commandline -xpc) -eq 1
 # CHECKERR: ^
-complete -fc shot -n 'test (count (commandline -opc)) -eq 1' -n 'test (commandline -opc)[-1] = shot' -a 'through'
-complete -fc shot -n 'test (count (commandline -opc)) -eq 2' -n 'test (commandline -opc)[-1] = through' -a 'the'
-complete -fc shot -n 'test (count (commandline -opc)) -eq 3' -n 'test (commandline -opc)[-1] = the' -a 'heart'
-complete -fc shot -n 'test (count (commandline -opc)) -eq 4' -n 'test (commandline -opc)[-1] = heart' -a 'and'
-complete -fc shot -n 'test (count (commandline -opc)) -eq 5' -n 'test (commandline -opc)[-1] = and' -a "you\'re"
-complete -fc shot -n 'test (count (commandline -opc)) -eq 6' -n 'test (commandline -opc)[-1] = "you\'re"' -a 'to'
-complete -fc shot -n 'test (count (commandline -opc)) -eq 7' -n 'test (commandline -opc)[-1] = to' -a 'blame'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 1' -n 'test (commandline -xpc)[-1] = shot' -a 'through'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 2' -n 'test (commandline -xpc)[-1] = through' -a 'the'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 3' -n 'test (commandline -xpc)[-1] = the' -a 'heart'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 4' -n 'test (commandline -xpc)[-1] = heart' -a 'and'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 5' -n 'test (commandline -xpc)[-1] = and' -a "you\'re"
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 6' -n 'test (commandline -xpc)[-1] = "you\'re"' -a 'to'
+complete -fc shot -n 'test (count (commandline -xpc)) -eq 7' -n 'test (commandline -xpc)[-1] = to' -a 'blame'
 
 complete -C"shot "
 # CHECK: through

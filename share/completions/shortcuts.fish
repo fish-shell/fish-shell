@@ -12,7 +12,7 @@ end
 # output is like: 
 
 # function __fish_shortcuts_using_command
-#     set cmd (commandline -opc)
+#     set cmd (commandline -xpc)
 #     if test  (count $cmd) -eq (count $argv) 
 #         for i in (seq (count $argv))
 #             if test  $cmd[$i] != $argv[$i] 
@@ -36,8 +36,8 @@ end
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts run --output-path' -f -a '(for i in *.{}; echo $i;end)'
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts run' -f -r -l output-type -d 'What type to output data in, in Universal Type Identifier format.'
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list' -f -r -s f -l folder-name -d 'The folder to list.'
-# complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list -f' -f -a '(command shortcuts ---completion list -- --custom (commandline -opc)[1..-1])'
-# complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list --folder-name' -f -a '(command shortcuts ---completion list -- --custom (commandline -opc)[1..-1])'
+# complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list -f' -f -a '(command shortcuts ---completion list -- --custom (commandline -xpc)[1..-1])'
+# complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list --folder-name' -f -a '(command shortcuts ---completion list -- --custom (commandline -xpc)[1..-1])'
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts list' -f -l folders -d 'List folders instead of shortcuts.'
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts sign' -f -r -s m -l mode -d 'The signing mode.'
 # complete -c shortcuts -n '__fish_shortcuts_using_command shortcuts sign' -f -r -s i -l input -d 'The shortcut file to sign.'

@@ -2,7 +2,7 @@
 
 function __fish_complete_ant_targets -d "Print list of targets from build.xml and imported files"
     function __get_buildfile -d "Get a buildfile that will be used by ant"
-        set -l tokens $argv # tokens from 'commandline -opc'
+        set -l tokens $argv # tokens from 'commandline -xpc'
         set -l prev $tokens[1]
         set -l buildfile "build.xml"
         for token in $argv[2..-1]
@@ -56,7 +56,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
 end
 
 # completion for ant targets
-complete -x -c ant -a "(__fish_complete_ant_targets (commandline -opc))"
+complete -x -c ant -a "(__fish_complete_ant_targets (commandline -xpc))"
 
 # Script Options:
 complete -f -c ant -l help -l h -d 'print help message and ant help'

@@ -27,7 +27,7 @@ function __fish_conda_subcommand
     set -l have_sub $status
 
     # get the commandline args without the "conda"
-    set -l toks (commandline -opc)[2..-1]
+    set -l toks (commandline -xpc)[2..-1]
 
     # Remove any important options - if we had options with arguments,
     # they'd need to be listed here to be removed.

@@ -33,7 +33,7 @@ complete -c abook -l add-email -d 'Read email message from stdin and add the sen
 complete -c abook -l add-email-quiet -d 'Same as --add-email. Without confirmation'
 complete -c abook -l convert -d 'Convert address book files'
 
-set -l convert 'contains -- --convert (commandline -po)'
+set -l convert 'contains -- --convert (commandline -px)'
 complete -c abook -l informat -d 'Input file format' -xa '(__fish_complete_abook_formats in)' -n $convert
 complete -c abook -l outformat -d 'Output file format' -xa '(__fish_complete_abook_formats out)' -n $convert
 complete -c abook -l infile -d 'Input file (default: stdin)' -r -n $convert

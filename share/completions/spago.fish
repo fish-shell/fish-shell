@@ -4,7 +4,7 @@
 spago --fish-completion-script (command -v spago) | source
 
 function __fish_spago_is_arg_n --argument-names n
-    test $n -eq (count (string match -v -- '-*' (commandline -poc)))
+    test $n -eq (count (string match -v -- '-*' (commandline -pxc)))
 end
 
 function __fish_spago_pkgnames

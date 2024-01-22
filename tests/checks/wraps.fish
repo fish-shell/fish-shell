@@ -21,7 +21,7 @@ complete -C 'testcommand 0'
 # This tests that a call to complete from within a completion doesn't trigger
 # wrap chain explosion - #5638 again.
 function testcommand2_complete
-    set -l tokens (commandline -opc) (commandline -ct)
+    set -l tokens (commandline -xpc) (commandline -ct)
     set -e tokens[1]
     echo $tokens 1>&2
 end

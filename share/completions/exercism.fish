@@ -1,5 +1,5 @@
 function __fish_exercism_no_subcommand -d 'Test if exercism has yet to be given the subcommand'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i demo debug configure fetch restore submit unsubmit tracks download help
             return 1
         end

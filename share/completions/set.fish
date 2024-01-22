@@ -7,7 +7,7 @@
 #
 
 function __fish_set_is_color -a foreground background -d 'Test if We are specifying a color value for the prompt'
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     set -e cmd[1]
     for i in $cmd
         switch $i
@@ -28,7 +28,7 @@ function __fish_set_is_color -a foreground background -d 'Test if We are specify
 end
 
 function __fish_set_is_locale -d 'Test if We are specifying a locale value for the prompt'
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     set -e cmd[1]
     for i in $cmd
         switch $i

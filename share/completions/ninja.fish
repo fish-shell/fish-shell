@@ -1,7 +1,7 @@
 function __fish_ninja
     set -l saved_args $argv
     set -l dir .
-    if argparse -i C/dir= -- (commandline -opc)
+    if argparse -i C/dir= -- (commandline -xpc)
         command ninja -C$_flag_C $saved_args
     end
 end

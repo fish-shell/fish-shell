@@ -14,7 +14,7 @@ end
 
 function __fish_pkg_is
     for option in $argv
-        if contains $option (commandline -poc)
+        if contains $option (commandline -pxc)
             return 0
         end
     end
@@ -23,7 +23,7 @@ end
 
 function __fish_pkg_subcommand
     set -l skip_next 1
-    for token in (commandline -opc)
+    for token in (commandline -xpc)
         if test $skip_next = 1
             set skip_next 0
             continue

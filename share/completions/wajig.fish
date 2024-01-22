@@ -1,5 +1,5 @@
 function __fish_wajig_no_subcommand -d 'Test if wajig has yet to be given the subcommand'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i addcdrom auto-alts auto-clean auto-download auto-install \
                 available bug build build-depend changelog clean commands daily-upgrade \
                 dependents describe describe-new detail detail-new dist-upgrade docs download \
@@ -23,7 +23,7 @@ function __fish_wajig_no_subcommand -d 'Test if wajig has yet to be given the su
 end
 
 function __fish_wajig_use_package -d 'Test if wajig command should have packages as potential completion'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i contains bug build build-depend changelog dependents describe \
                 detail hold install installr installrs installs list list-files news \
                 package purge purge-depend readme recursive recommended reconfigure \

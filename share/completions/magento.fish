@@ -202,7 +202,7 @@ end
 #########################################################
 
 function __fish_magento_not_in_command -d "Checks that prompt is not inside of magento command"
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     for i in $cmd
         if contains -- $i (__fish_print_magento_commands_list)
             return 1
@@ -219,7 +219,7 @@ end
 # in the arguments, even though if more than a single command is specified,
 # p4 will complain.
 function __fish_magento_is_using_command -d "Checks if prompt is in a specific command"
-    if contains -- $argv[1] (commandline -opc)
+    if contains -- $argv[1] (commandline -xpc)
         return 0
     end
     return 1

@@ -37,7 +37,7 @@ end
 function __iwctl_match_subcoms
     set -l match (string split --no-empty " " -- $argv)
 
-    set argv (commandline -poc)
+    set argv (commandline -pxc)
     # iwctl allows to specify arguments for username, password, passphrase and dont-ask regardless of any following commands
     argparse -i 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
     set argv $argv[2..]
@@ -54,7 +54,7 @@ function __iwctl_match_subcoms
 end
 
 function __iwctl_connect
-    set argv (commandline -poc)
+    set argv (commandline -pxc)
     # remove all options
     argparse -i 'u/username=' 'p/password=' 'P/passphrase=' v/dont-ask -- $argv
     # station name should now be the third argument (`iwctl station <wlan>`)

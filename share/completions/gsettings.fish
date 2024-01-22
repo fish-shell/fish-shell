@@ -5,7 +5,7 @@ function __fish_complete_gsettings_args
     set -l key_commands get monitor writable range describe set reset
 
     set -l schemadir
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     set -e cmd[1]
 
     if set -q cmd[2]

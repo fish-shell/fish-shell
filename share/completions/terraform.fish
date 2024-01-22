@@ -1,7 +1,7 @@
 # Returns 0 if the command has not had a subcommand yet
 # Does not currently account for -chdir
 function __fish_terraform_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
 
     if test (count $cmd) -eq 1
         return 0

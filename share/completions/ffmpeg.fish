@@ -1,5 +1,5 @@
 function __fish_ffmpeg_last_arg
-    echo (commandline -co)[-1]
+    echo (commandline -cx)[-1]
 end
 
 # Allow completions to match against an argument that includes a stream specifier, e.g. -c:v:2
@@ -56,7 +56,7 @@ function __fish_ffmpeg_pix_fmts
     # could be to instead provide a second input, but we can rule out an output if no input has
     # been specified
     set -l regex_filter '.'
-    if contains -- -i (commandline -co)
+    if contains -- -i (commandline -cx)
         set regex_filter '^I'
     end
     ffmpeg -hide_banner -loglevel quiet -pix_fmts |
@@ -290,7 +290,7 @@ function __fish_ffmpeg_complete_filter
 
     # echo -e "\n **** $filter_type **** \n" > /dev/tty
 
-    set -l filters_arg (commandline -op)[-1]
+    set -l filters_arg (commandline -xp)[-1]
     if string match -rq -- '^-' $filters_arg
         # No filter name started
         __fish_ffmpeg_filters $filter_type

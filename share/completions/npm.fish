@@ -8,7 +8,7 @@ source $__fish_data_dir/functions/__fish_npm_helper.fish
 set -l npm_install "npm install --global"
 
 function __fish_npm_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
 
     if test (count $cmd) -eq 1
         return 0
@@ -18,7 +18,7 @@ function __fish_npm_needs_command
 end
 
 function __fish_npm_using_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
 
     if test (count $cmd) -gt 1
         if contains -- $cmd[2] $argv

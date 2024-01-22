@@ -23,7 +23,7 @@ function _fish_busctl
         m-match= S-size= l-list q-quiet v-verbose e-expect-reply= Ä-auto-start= \
         1-allow-interactive-authorization= t-timeout= 2-augment-creds= U-user 3-system \
         H/host= M/machine= n-no-pager N-no-legend h/help V-version
-    set -l cmdline (commandline -opc) (commandline -ct)
+    set -l cmdline (commandline -xpc) (commandline -ct)
     set -e cmdline[1]
     argparse $args -- $cmdline 2>/dev/null
     or return

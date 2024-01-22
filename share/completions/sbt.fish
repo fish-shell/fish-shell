@@ -29,12 +29,12 @@ complete -c sbt -f -a '(string split "\n" "
     tasks            List the tasks defined for the current project
     test             Execute all tests
 " | string trim | string replace -r "\s+" "\t")' \
-    -n 'not contains -- "new" (commandline -cpo);
-    and not contains -- "client" (commandline -cpo)'
+    -n 'not contains -- "new" (commandline -cpx);
+    and not contains -- "client" (commandline -cpx)'
 
 # These cannot be combined with any other commands and require an argument
-complete -c sbt -f -n 'test  (count (commandline -cpo)) = 1 ' -a new -d 'Create a new sbt project from the given template'
-complete -c sbt -f -n 'test  (count (commandline -cpo)) = 1 ' -a client -d 'Connect to a server with an interactive sbt prompt'
+complete -c sbt -f -n 'test  (count (commandline -cpx)) = 1 ' -a new -d 'Create a new sbt project from the given template'
+complete -c sbt -f -n 'test  (count (commandline -cpx)) = 1 ' -a client -d 'Connect to a server with an interactive sbt prompt'
 
 
 ###########

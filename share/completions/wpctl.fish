@@ -22,7 +22,7 @@ end
 
 function __wpctl_command_shape
     set -l shape $argv
-    set -l command (commandline -poc)
+    set -l command (commandline -pxc)
     set -e command[1] # Remove command name
 
     # Remove flags as we won't count them with the shape

@@ -70,7 +70,7 @@ set -l metadata_opts '
 '
 
 function __fish_cwebp_is_first_arg_or_its_value -a arg -d 'Like __fish_is_first_arg, but also returns true for the second token after a given parameter'
-    set -l tokens (commandline -co)
+    set -l tokens (commandline -cx)
 
     switch (count $tokens)
         case 1

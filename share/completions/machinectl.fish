@@ -8,7 +8,7 @@ function __fish_systemd_has_machine_image
     set -l images (__fish_systemd_machine_images)
     for i in $images ".host"
         # Include ".host" here because it _is_ a valid machine
-        if contains -- $i (commandline -opc)
+        if contains -- $i (commandline -xpc)
             echo $i
             return 0
         end
@@ -19,7 +19,7 @@ end
 function __fish_systemd_has_machine
     set -l cmd
     if not count $argv >/dev/null
-        set cmd (commandline -opc)
+        set cmd (commandline -xpc)
     else
         set cmd $argv
     end
@@ -120,7 +120,7 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to cop
 
 complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to copy-from shell; and not __fish_systemd_has_machine" -a "(__fish_systemd_machines)"
 # This is imperfect as we print the _local_ users
-complete -f -c machinectl -n "__fish_seen_subcommand_from shell; and not __fish_systemd_has_machine (commandline -opc | cut -d"@" -f2-)" -a "(__fish_print_users)@(__fish_systemd_machines)"
+complete -f -c machinectl -n "__fish_seen_subcommand_from shell; and not __fish_systemd_has_machine (commandline -xpc | cut -d"@" -f2-)" -a "(__fish_print_users)@(__fish_systemd_machines)"
 
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and not __fish_systemd_has_machine_image" -a "(__fish_systemd_machine_images)"
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and __fish_systemd_has_machine_image" -a "yes no"

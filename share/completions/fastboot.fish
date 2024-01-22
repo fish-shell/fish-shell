@@ -1,7 +1,7 @@
 set -l commands flashall getvar oem flashing reboot update erase format devices flash get_staged help stage boot fetch
 
 function __fish_fastboot_list_partition_or_file
-    set -l tokens (commandline -opc)
+    set -l tokens (commandline -xpc)
     # if last 2 token is flash, then list file
     if test (count $tokens) -gt 2
         if test $tokens[-2] = flash

@@ -20,7 +20,7 @@ set -l __fish_yadm_subcommands (yadm introspect commands)
 # Borrowed from git completion file
 function __fish_yadm_needs_command
     # Figure out if the current invocation already has a command.
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     set -e cmd[1]
     argparse -s (__fish_yadm_global_optspecs) -- $cmd 2>/dev/null
     or return 0
@@ -51,7 +51,7 @@ end
 # don't want to inherit all completions from git
 function __fish_complete_yadm_like_git
     # Remove the first word from the commandline because that is "yadm"
-    set -l cmdline (commandline -opc; commandline -ct)[2..-1]
+    set -l cmdline (commandline -xpc; commandline -ct)[2..-1]
 
     # `yadm gitconfig` is same as `git config`
     if __fish_seen_subcommand_from gitconfig

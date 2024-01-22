@@ -1,5 +1,5 @@
 function __fish_seen_ebuild_arg -d "Test if an ebuild-argument has been given in the current commandline"
-    commandline -opc | string match -q '*.ebuild'
+    commandline -xpc | string match -q '*.ebuild'
 end
 
 ## Opts

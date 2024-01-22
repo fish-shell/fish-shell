@@ -4,7 +4,7 @@ function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --ar
 
     # test if there is an alternative config file specified
     set -l store_next
-    for opt in (commandline -cpo)
+    for opt in (commandline -cpx)
         if set -q store_next[1]
             set store_next
             set cfgfiles $opt

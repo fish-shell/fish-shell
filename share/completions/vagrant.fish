@@ -46,7 +46,7 @@ function __fish_vagrant_boxes
 end
 
 function __fish_vagrant_need_command -V commands
-    argparse -s h/help v/version -- (commandline -opc)[2..-1] 2>/dev/null
+    argparse -s h/help v/version -- (commandline -xpc)[2..-1] 2>/dev/null
     or return
     if set -q _flag_help[1]; or set -q _flag_help[1]
         return 1

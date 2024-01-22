@@ -1,7 +1,7 @@
 # Completions for Android adb command
 
 function __fish_adb_no_subcommand -d 'Test if adb has yet to be given the subcommand'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i connect disconnect devices push pull sync shell emu logcat install uninstall jdwp forward bugreport backup restore version help start-server kill-server remount reboot get-state get-serialno get-devpath status-window root usb tcpip ppp sideload reconnect unroot exec-out
             return 1
         end
@@ -25,7 +25,7 @@ end
 function __fish_adb_run_command -d 'Runs adb with any -s parameters already given on the command line'
     set -l sopt
     set -l sopt_is_next
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     set -e cmd[1]
     for i in $cmd
         if test -n "$sopt_is_next"

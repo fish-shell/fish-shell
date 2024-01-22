@@ -6,7 +6,7 @@ function __blender_echo_input_file_name
     # Find last argument ending in .blend (or .blend1, etc.)
     # This is because a Blender invocation can open multiple blend file
     # sequentially, so we need to find the last one up to this point.
-    set -l path (commandline -poc |
+    set -l path (commandline -pxc |
         string match -r '.*\\.blend[0-9]*$' |
         tail --lines=1)
     echo $path

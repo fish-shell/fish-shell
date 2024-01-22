@@ -2432,6 +2432,85 @@ complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l contains -d 
 complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l no-contains -d "Only list refs not containing the specified commit" -ka '(__fish_git_commits)'
 complete -f -c git -n '__fish_git_using_command for-each-ref' -x -l ignore-case -d "Sorting and filtering refs are case insensitive"
 
+### send-email
+complete -f -c git -n __fish_git_needs_command -a send-email -d 'Send a collection of patches as emails'
+complete -f -c git -n '__fish_git_using_command send-email' -l annotate -d 'Edit patches before sending'
+complete -f -c git -n '__fish_git_using_command send-email' -l bcc -r -d 'Specify Bcc: value'
+complete -f -c git -n '__fish_git_using_command send-email' -l cc -r -d 'Specify Cc: value'
+complete -f -c git -n '__fish_git_using_command send-email' -l compose -d 'Add an introductory message'
+complete -f -c git -n '__fish_git_using_command send-email' -l from -r -d Sender
+complete -f -c git -n '__fish_git_using_command send-email' -l reply-to -r -d 'Address for replies'
+complete -f -c git -n '__fish_git_using_command send-email' -l in-reply-to -r -d 'Reply in thread to given Message-ID'
+complete -f -c git -n '__fish_git_using_command send-email' -l subject -r -d Subject
+complete -f -c git -n '__fish_git_using_command send-email' -l to -r -d Recipient
+complete -f -c git -n '__fish_git_using_command send-email' -l 8bit-encoding -ra UTF-8 -d 'Encoding for non-ASCII messages'
+complete -f -c git -n '__fish_git_using_command send-email' -l compose-encoding -ra UTF-8 -d 'Encoding for the compose message'
+complete -f -c git -n '__fish_git_using_command send-email' -l transfer-encoding -ra '7bit 8bit quoted-printable base64 auto' -d 'Encoding for transferring over SMTP'
+complete -f -c git -n '__fish_git_using_command send-email' -l xmailer -d 'Add X-Mailer: header'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-xmailer -d 'Suppress X-Mailer: header'
+complete -f -c git -n '__fish_git_using_command send-email' -l envelope-sender -r
+complete -f -c git -n '__fish_git_using_command send-email' -l sendmail-cmd -ra '(__fish_complete_command)' -d 'Command to send email'
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-encryption -ra 'ssl tls'
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-domain -r
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-auth -r -d 'Restrict auth mechanisms'
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-pass -r
+complete -f -c git -n '__fish_git_using_command send-email' -l no-smtp-auth
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-server -r
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-server-port -r
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-server-option -r
+complete -c git -n '__fish_git_using_command send-email' -l smtp-ssl-cert-path -r
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-user -r
+complete -f -c git -n '__fish_git_using_command send-email' -l smt-debug -ra '0 1' -d 'SMTP debug output'
+complete -f -c git -n '__fish_git_using_command send-email' -l batch-size -r -d 'Reconnect after sending this many messages'
+complete -f -c git -n '__fish_git_using_command send-email' -l relogin-dleay -r -d 'Seconds to wait before reconnecting'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-to -d 'Clear To:'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-cc -d 'Clear Cc:'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-bcc -d 'Clear Bcc:'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-identity
+complete -f -c git -n '__fish_git_using_command send-email' -l to-cmd -ra '(__fish_complete_command)' -d 'Command to generate To: lines'
+complete -f -c git -n '__fish_git_using_command send-email' -l cc-cmd -ra '(__fish_complete_command)' -d 'Command to generate Cc: lines'
+complete -f -c git -n '__fish_git_using_command send-email' -l header-cmd -ra '(__fish_complete_command)' -d 'Command to generate header lines'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-header-cmd -d 'Disable any header command'
+complete -f -c git -n '__fish_git_using_command send-email' -l chain-reply-to -d 'Each email is sent as reply to the previous one'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-chain-reply-to -d 'Each email is sent as reply to the first one'
+complete -f -c git -n '__fish_git_using_command send-email' -l identity -r -d 'Configuration identity'
+complete -f -c git -n '__fish_git_using_command send-email' -l signed-off-by-cc -d 'Add addresses in Signed-off-by trailers to Cc'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-signed-off-by-cc -d 'Do not add Signed-off-by trailers to Cc'
+complete -f -c git -n '__fish_git_using_command send-email' -l cc-cover -d 'Copy Cc: list from first message to the others'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-cc-cover -d 'Do not copy Cc: list from first message'
+complete -f -c git -n '__fish_git_using_command send-email' -l to-cover -d 'Copy To: list from first message to the others'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-to-cover -d 'Do not copy To: list from first message'
+complete -f -c git -n '__fish_git_using_command send-email' -l suppress-cc -ra '
+    author\t"Do not auto-cc patch author"
+    self\t"Do not auto-cc sender"
+    cc\t"Do not auto-cc address from Cc lines in patch header"
+    bodycc\t"Do not auto-cc addresses from Cc lines in patch body"
+    sob\t"Do not auto-cc address from Signed-off-by trailers"
+    misc-by\t"Do not auto-cc addresses from commit trailers"
+    cccmd\t"Do not run --cc-cmd"
+    body\t"equivalent to sob + bodycc + misc-by"
+    all\t"Do not auto-cc anyone"
+' -d 'Suppress auto-cc of recipient categories'
+complete -f -c git -n '__fish_git_using_command send-email' -l suppress-from -d 'Do not cc the From: address'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-suppress-from -d 'Do cc the From: address'
+complete -f -c git -n '__fish_git_using_command send-email' -l thread -d 'Create an email thread'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-thread -d 'Do not create an email thread'
+complete -f -c git -n '__fish_git_using_command send-email' -l confirm -ra '
+    always\t"Always confirm before sending"
+    never\t"Never confirm before sending"
+    cc\t"Confirm before sending if CC lines have been added"
+    compose\t"Confirm before sending if using --compose"
+    auto\t"Equivalent to cc + compose"
+' -d 'Confirm just before sending'
+complete -f -c git -n '__fish_git_using_command send-email' -l dry-run -d 'Do everything except actually send the emails'
+complete -f -c git -n '__fish_git_using_command send-email' -l format-patch -d 'Ambiguous arguments are for format-patch, not filenames'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-format-patch -d 'Interpret ambiguous arguments as filenames, not format-patch arguments'
+complete -f -c git -n '__fish_git_using_command send-email' -l quiet -d 'Print only one line per email'
+complete -f -c git -n '__fish_git_using_command send-email' -l validate -d 'Perform sanity checks'
+complete -f -c git -n '__fish_git_using_command send-email' -l no-validate -d 'Skip sanity checks'
+complete -f -c git -n '__fish_git_using_command send-email' -l force -d 'Ignore safety checks'
+complete -f -c git -n '__fish_git_using_command send-email' -l dump-aliases -d 'Dump shorthand alias names'
+
 ### subcommands supporting --sort (XXX: list may not be complete!)
 set -l sortcommands branch for-each-ref tag
 # A list of keys one could reasonably sort refs by. This isn't the list of all keys that

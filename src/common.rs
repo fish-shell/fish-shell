@@ -19,7 +19,6 @@ use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
 use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
-use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
@@ -418,13 +417,7 @@ fn escape_string_var(input: &wstr) -> WString {
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 fn escape_string_pcre2(input: &wstr) -> WString {
     let mut out = WString::new();
-    out.reserve(
-        (f64::from(u32::try_from(input.len()).unwrap()) * 1.3) // a wild guess
-            .to_i128()
-            .unwrap()
-            .try_into()
-            .unwrap(),
-    );
+    out.reserve(input.len());
 
     for c in input.chars() {
         if [

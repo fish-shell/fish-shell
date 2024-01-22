@@ -34,6 +34,7 @@ use crate::parse_constants::{
 use crate::parse_tree::{NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::parser::{Block, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
+use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::pointer::ConstPointer;
 use crate::proc::{
@@ -565,6 +566,19 @@ impl<'a> ParseExecutionContext {
                 STATUS_ILLEGAL_CMD.unwrap(),
                 &statement.command,
                 "The expanded command was empty."
+            );
+        }
+        // Complain if we've expanded to a subcommand keyword like "command" or "if".
+        // This is an attempt to defeat function resolution.
+        //
+        // Make an exception for "time" because that is frequently used as a command and does fundamentally the same thing.
+        if parser_keywords_is_subcommand(out_cmd) && !unexp_cmd.starts_with(out_cmd.chars()) && out_cmd != L!("time") {
+            return report_error!(
+                self,
+                ctx,
+                STATUS_ILLEGAL_CMD.unwrap(),
+                &statement.command,
+                "The expanded command is a keyword."
             );
         }
         EndExecutionReason::ok

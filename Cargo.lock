@@ -108,7 +108,6 @@ dependencies = [
  "libc",
  "lru",
  "nix",
- "num-derive",
  "num-traits",
  "once_cell",
  "pcre2",
@@ -231,17 +230,6 @@ dependencies = [
  "bitflags 1.3.2",
  "cfg-if 1.0.0",
  "libc",
-]
-
-[[package]]
-name = "num-derive"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "876a53fff98e03a936a674b29568b0e605f06b29372c2489ff4de23f1949743d"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

@@ -54,7 +54,6 @@ fn replace_part(
     cursor_pos: usize,
 ) {
     let mut out_pos = cursor_pos;
-
     let mut out = buff[..range.start].to_owned();
 
     match insert_mode {
@@ -67,11 +66,11 @@ fn replace_part(
             out.push_utfstr(insert);
         }
         AppendMode::Insert => {
-            let cursor = cursor_pos - range.start;
-            assert!(range.start <= cursor);
-            out.push_utfstr(&buff[range.start..cursor]);
+            assert!(cursor_pos >= range.start);
+            assert!(cursor_pos <= range.end);
+            out.push_utfstr(&buff[range.start..cursor_pos]);
             out.push_utfstr(&insert);
-            out.push_utfstr(&buff[cursor..range.end]);
+            out.push_utfstr(&buff[cursor_pos..range.end]);
             out_pos += insert.len();
         }
     }

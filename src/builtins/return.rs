@@ -1,7 +1,5 @@
 // Implementation of the return builtin.
 
-use num_traits::abs;
-
 use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -59,8 +57,9 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     // Map negative values to (256 - their absolute value). This prevents `return -1` from
     // evaluating to a `$status` of 0 and keeps us from running into undefined behavior by trying to
     // left shift a negative value in W_EXITCODE().
+    // Note in Rust, dividend % divisor has the same sign as the dividend.
     if retval < 0 {
-        retval = 256 - (abs(retval) % 256);
+        retval = 256 - (retval % 256).abs();
     }
 
     // If we're not in a function, exit the current script (but not an interactive shell).

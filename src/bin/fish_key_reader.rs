@@ -341,6 +341,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
                         fish::BUILD_VERSION
                     )
                 );
+                std::process::exit(0);
             }
             'V' => {
                 *verbose = true;

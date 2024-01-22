@@ -18,6 +18,10 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
+sendline("$fish_key_reader --version")
+expect_re("fish_key_reader, version .*")
+expect_prompt()
+
 sendline("exec $fish_key_reader -c -V")
 
 # Do we get the expected startup prompt?

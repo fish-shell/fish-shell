@@ -572,7 +572,12 @@ impl<'a> ParseExecutionContext {
         // This is an attempt to defeat function resolution.
         //
         // Make an exception for "time" because that is frequently used as a command and does fundamentally the same thing.
-        if parser_keywords_is_subcommand(out_cmd) && !unexp_cmd.starts_with(out_cmd.chars()) && out_cmd != L!("time") {
+        // (skipping in no-exec because we don't have the actual variable value)
+        if !no_exec()
+            && parser_keywords_is_subcommand(out_cmd)
+            && !unexp_cmd.starts_with(out_cmd.chars())
+            && out_cmd != L!("time")
+        {
             return report_error!(
                 self,
                 ctx,

@@ -12,11 +12,11 @@ fn main() {
     // language server.
     let build_dir = format!("{}/build", env!("CARGO_MANIFEST_DIR"));
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&build_dir);
-    rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
+    rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
 
     cc::Build::new()
         .file("src/libc.c")
-        .include(&build_dir)
+        .include(build_dir)
         .compile("flibc.a");
 
     let mut build = cc::Build::new();

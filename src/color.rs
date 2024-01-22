@@ -448,7 +448,7 @@ mod tests {
 
     #[test]
     fn parse_rgb() {
-        assert!(RgbColor::from_wstr(L!("##FF00A0")) == None);
+        assert!(RgbColor::from_wstr(L!("##FF00A0")).is_none());
         assert!(RgbColor::from_wstr(L!("#FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
         assert!(RgbColor::from_wstr(L!("FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
         assert!(RgbColor::from_wstr(L!("FAF")) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));

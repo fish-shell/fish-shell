@@ -663,12 +663,12 @@ impl IoChain {
                             FLOGF!(warning, NOCLOB_ERROR, spec.target);
                         } else {
                             if should_flog!(warning) {
-                                FLOGF!(warning, FILE_ERROR, spec.target);
                                 let err = errno::errno().0;
                                 // If the error is that the file doesn't exist
                                 // or there's a non-directory component,
                                 // find the first problematic component for a better message.
                                 if [ENOENT, ENOTDIR].contains(&err) {
+                                    FLOGF!(warning, FILE_ERROR, spec.target);
                                     let mut dname: &wstr = &spec.target;
                                     while !dname.is_empty() {
                                         let next: &wstr = wdirname(dname);
@@ -686,7 +686,11 @@ impl IoChain {
                                         }
                                         dname = next;
                                     }
-                                } else {
+                                } else if err != EINTR {
+                                    // If we get EINTR we had a cancel signal.
+                                    // That's expected (ctrl-c on the commandline),
+                                    // so no warning.
+                                    FLOGF!(warning, FILE_ERROR, spec.target);
                                     perror("open");
                                 }
                             }

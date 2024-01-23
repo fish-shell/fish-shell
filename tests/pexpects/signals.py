@@ -63,6 +63,15 @@ subprocess.call(["pkill", "-TERM", "-P", str(sp.spawn.pid), "sleep"])
 expect_str("fish_kill_signal 15")
 expect_prompt()
 
+# See that open() is only interruptible by SIGINT.
+sendline("mkfifo fifoo")
+expect_prompt()
+sendline("cat >fifoo")
+subprocess.call(["kill", "-WINCH", str(sp.spawn.pid)])
+expect_re("open: ", shouldfail=True, timeout=10)
+subprocess.call(["kill", "-INT", str(sp.spawn.pid)])
+expect_prompt()
+
 # Verify that sending SIGHUP to the shell, such as will happen when the tty is
 # closed by the terminal, terminates the shell and the foreground command and
 # any background commands run from that shell.

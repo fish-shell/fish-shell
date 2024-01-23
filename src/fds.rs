@@ -1,9 +1,11 @@
 use crate::common::wcs2zstring;
 use crate::flog::FLOG;
+use crate::signal::signal_check_cancel;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
+use errno::{errno, set_errno};
 use libc::{
     c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC,
     O_NONBLOCK,
@@ -228,7 +230,22 @@ pub fn wopen_cloexec(pathname: &wstr, flags: i32, mode: libc::c_int) -> RawFd {
 pub fn open_cloexec(path: &CStr, flags: i32, mode: libc::c_int) -> RawFd {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
-    unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) }
+    let saved_errno = errno();
+    errno::set_errno(errno::Errno(0));
+    // We retry this in case of signals,
+    // if we get EINTR and it's not a SIGINIT, we continue.
+    // If it is that's our cancel signal, so we abort.
+    loop {
+        let ret = unsafe { libc::open(path.as_ptr(), flags | O_CLOEXEC, mode) };
+        if ret >= 0 {
+            set_errno(saved_errno);
+            return ret;
+        }
+
+        if errno::errno().0 != EINTR || signal_check_cancel() != 0 {
+            return ret;
+        }
+    }
 }
 
 /// Close a file descriptor \p fd, retrying on EINTR.

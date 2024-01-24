@@ -17,6 +17,7 @@ name = "fish"
 version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
+default-run = "fish"
 
 [dependencies]
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }

@@ -179,7 +179,7 @@ Agreement.
 MIT License
 -----------
 
-``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and the Nord theme, which is copyright 2016-present Sven Greb. These themes are also used under the MIT license.
+``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also uses FindRust.cmake, from the Corrosion project, which is copyright 2018 Andrew Gaspar and licensed under the MIT license. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and the Nord theme, which is copyright 2016-present Sven Greb. These themes are also used under the MIT license.
 
 The MIT license follows.
 

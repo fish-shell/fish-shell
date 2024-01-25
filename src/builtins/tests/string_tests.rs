@@ -34,17 +34,18 @@ fn test_string() {
 
         let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");
 
-        assert_eq!(
-            expected_rc.unwrap(),
-            rc,
-            "string builtin returned unexpected return code"
-        );
-
         let actual = escape(outs.contents());
         let expected = escape(expected_out);
         assert_eq!(
             expected, actual,
             "string builtin returned unexpected output"
+        );
+
+        // Check return code after so we get a chance to identify the difference first
+        assert_eq!(
+            expected_rc.unwrap(),
+            rc,
+            "string builtin returned unexpected return code"
         );
     }
 
@@ -88,15 +89,11 @@ fn test_string() {
         (["string", "match"], STATUS_INVALID_ARGS, ""),
         (["string", "match", ""], STATUS_CMD_ERROR, ""),
         (["string", "match", "", ""], STATUS_CMD_OK, "\n"),
-        (["string", "match", "?", "a"], STATUS_CMD_OK, "a\n"),
         (["string", "match", "*", ""], STATUS_CMD_OK, "\n"),
         (["string", "match", "**", ""], STATUS_CMD_OK, "\n"),
         (["string", "match", "*", "xyzzy"], STATUS_CMD_OK, "xyzzy\n"),
         (["string", "match", "**", "plugh"], STATUS_CMD_OK, "plugh\n"),
         (["string", "match", "a*b", "axxb"], STATUS_CMD_OK, "axxb\n"),
-        (["string", "match", "a??b", "axxb"], STATUS_CMD_OK, "axxb\n"),
-        (["string", "match", "-i", "a??B", "axxb"], STATUS_CMD_OK, "axxb\n"),
-        (["string", "match", "-i", "a??b", "Axxb"], STATUS_CMD_OK, "Axxb\n"),
         (["string", "match", "a*", "axxb"], STATUS_CMD_OK, "axxb\n"),
         (["string", "match", "*a", "xxa"], STATUS_CMD_OK, "xxa\n"),
         (["string", "match", "*a*", "axa"], STATUS_CMD_OK, "axa\n"),
@@ -107,14 +104,7 @@ fn test_string() {
         (["string", "match", "a*b*c", "axxbyyc"], STATUS_CMD_OK, "axxbyyc\n"),
         (["string", "match", "\\*", "*"], STATUS_CMD_OK, "*\n"),
         (["string", "match", "a*\\", "abc\\"], STATUS_CMD_OK, "abc\\\n"),
-        (["string", "match", "a*\\?", "abc?"], STATUS_CMD_OK, "abc?\n"),
 
-        (["string", "match", "?", ""], STATUS_CMD_ERROR, ""),
-        (["string", "match", "?", "ab"], STATUS_CMD_ERROR, ""),
-        (["string", "match", "??", "a"], STATUS_CMD_ERROR, ""),
-        (["string", "match", "?a", "a"], STATUS_CMD_ERROR, ""),
-        (["string", "match", "a?", "a"], STATUS_CMD_ERROR, ""),
-        (["string", "match", "a??B", "axxb"], STATUS_CMD_ERROR, ""),
         (["string", "match", "a*b", "axxbc"], STATUS_CMD_ERROR, ""),
         (["string", "match", "*b", "bbba"], STATUS_CMD_ERROR, ""),
         (["string", "match", "0x[0-9a-fA-F][0-9a-fA-F]", "0xbad"], STATUS_CMD_ERROR, ""),
@@ -293,6 +283,20 @@ fn test_string() {
         (["string", "match", "?*", "a"], STATUS_CMD_ERROR, ""),
         (["string", "match", "?*", "ab"], STATUS_CMD_ERROR, ""),
         (["string", "match", "a*\\?", "abc?"], STATUS_CMD_ERROR, ""),
+
+        (["string", "match", "?", "?"], STATUS_CMD_OK, "?\n"),
+        (["string", "match", "a??b", "axxb"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "a??b", "a??b"], STATUS_CMD_OK, "a??b\n"),
+        (["string", "match", "-i", "a??B", "axxb"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "-i", "a??b", "A??b"], STATUS_CMD_OK, "A??b\n"),
+        (["string", "match", "a*\\?", "abc\\?"], STATUS_CMD_OK, "abc\\?\n"),
+
+        (["string", "match", "?", ""], STATUS_CMD_ERROR, ""),
+        (["string", "match", "?", "ab"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "??", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "?a", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "a?", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "a??B", "axxb"], STATUS_CMD_ERROR, ""),
     ];
 
     scoped_test(FeatureFlag::qmark_noglob, true, || {
@@ -309,6 +313,13 @@ fn test_string() {
         (["string", "match", "?*", "a"], STATUS_CMD_OK, "a\n"),
         (["string", "match", "?*", "ab"], STATUS_CMD_OK, "ab\n"),
         (["string", "match", "a*\\?", "abc?"], STATUS_CMD_OK, "abc?\n"),
+
+        (["string", "match", "?", ""], STATUS_CMD_ERROR, ""),
+        (["string", "match", "?", "ab"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "??", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "?a", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "a?", "a"], STATUS_CMD_ERROR, ""),
+        (["string", "match", "a??B", "axxb"], STATUS_CMD_ERROR, ""),
     ];
 
     scoped_test(FeatureFlag::qmark_noglob, false, || {

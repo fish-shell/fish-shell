@@ -62,9 +62,9 @@ pub const METADATA: &[FeatureMetadata] = &[
     FeatureMetadata {
         flag: FeatureFlag::qmark_noglob,
         name: L!("qmark-noglob"),
-        groups: L!("3.0"),
+        groups: L!("3.8"), // TODO: Decide if this is 3.8 or 4.0 at some later date
         description: L!("? no longer globs"),
-        default_value: false,
+        default_value: true,
         read_only: false,
     },
     FeatureMetadata {

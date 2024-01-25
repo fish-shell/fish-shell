@@ -1,6 +1,6 @@
 // Generic output functions.
 use crate::color::RgbColor;
-use crate::common::{self, assert_is_locked, wcs2string_appending};
+use crate::common::{self, wcs2string_appending};
 use crate::curses::{self, tparm1, Term};
 use crate::env::EnvVar;
 use crate::wchar::prelude::*;
@@ -10,7 +10,6 @@ use std::ffi::CStr;
 use std::io::{Result, Write};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::Mutex;
 
 bitflags! {
     #[derive(Copy, Clone, Default)]
@@ -423,35 +422,13 @@ impl Write for Outputter {
     }
 }
 
-// tputs accepts a function pointer that receives an int only.
-// Use the following lock to redirect it to the proper outputter.
-// Note we can't use an owning Mutex because the tputs_writer must access it and Mutex is not
-// recursive.
-static TPUTS_RECEIVER_LOCK: Mutex<()> = Mutex::new(());
-static mut TPUTS_RECEIVER: *mut Outputter = std::ptr::null_mut();
-
-extern "C" fn tputs_writer(b: curses::TputsArg) -> libc::c_int {
-    // Safety: we hold the lock.
-    assert_is_locked!(&TPUTS_RECEIVER_LOCK);
-    let receiver = unsafe { TPUTS_RECEIVER.as_mut().expect("null TPUTS_RECEIVER") };
-    receiver.push(b as u8);
-    0
-}
-
 impl Outputter {
     /// Emit a terminfo string, like tputs.
     /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
     pub fn tputs(&mut self, str: &CStr) {
-        let affcnt = 1;
-        // Acquire the lock, set the receiver, and call tputs.
-        let _guard = TPUTS_RECEIVER_LOCK.lock().unwrap();
-        // Safety: we hold the lock.
-        let saved_recv = unsafe { TPUTS_RECEIVER };
-        unsafe { TPUTS_RECEIVER = self as *mut Outputter };
         self.begin_buffering();
-        let _ = curses::tputs(str, affcnt, tputs_writer);
+        let _ = self.write(str.to_bytes());
         self.end_buffering();
-        unsafe { TPUTS_RECEIVER = saved_recv };
     }
 
     /// Convenience cover over tputs, in recognition of the fact that our Term has Optional fields.

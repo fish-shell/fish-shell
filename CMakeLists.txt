@@ -3,6 +3,8 @@
 # CMake 3.21 is needed for file(IMPORTED_RUNTIME_ARTIFACTS)
 cmake_minimum_required(VERSION 3.21)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 include(cmake/Mac.cmake)
 
 project(fish)
@@ -73,8 +75,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
   set(FISH_IN_TREE_BUILD TRUE)
 else()
@@ -94,10 +94,46 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 # Enable thread-safe errno on Solaris (#5611)
 add_definitions(-D_REENTRANT)
 
+add_custom_command(
+  OUTPUT ${rust_target_dir}/${rust_profile}/libfish.rlib
+  COMMAND ${CMAKE_COMMAND} -E env
+      ${VARS_FOR_CARGO}
+      $<$<CONFIG:Debug,RelWithDebInfo>:RUSTFLAGS=-g>
+    ${Rust_CARGO} ARGS
+      build --lib
+      $<$<CONFIG:Release,RelWithDebInfo>:--release>
+      --target ${Rust_CARGO_TARGET}
+      ${CARGO_FLAGS}
+      ${FEATURES_ARG}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  USES_TERMINAL
+  # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
+  )
+add_custom_target(libfish DEPENDS ${rust_target_dir}/${rust_profile}/libfish.rlib)
+
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
-  # Tell Cargo where our build directory is so it can find config.h.
-  corrosion_set_env_vars(${target} ${VARS_FOR_CARGO})
+  add_custom_command(
+    OUTPUT ${rust_target_dir}/${rust_profile}/${target}
+    COMMAND ${CMAKE_COMMAND} -E env
+      ${VARS_FOR_CARGO}
+      $<$<CONFIG:Debug,RelWithDebInfo>:RUSTFLAGS=-g>
+    ${Rust_CARGO} ARGS build --bin ${target}
+      $<$<CONFIG:Release,RelWithDebInfo>:--release>
+      --target ${Rust_CARGO_TARGET}
+      ${CARGO_FLAGS}
+      ${FEATURES_ARG}
+    DEPENDS libfish
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    USES_TERMINAL
+    # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
+  )
+  add_custom_target(${target} ALL
+    COMMAND "${CMAKE_COMMAND}" -E copy
+      "${rust_target_dir}/${rust_profile}/${target}"
+      "${CMAKE_CURRENT_BINARY_DIR}"
+    DEPENDS ${rust_target_dir}/${rust_profile}/${target}
+  )
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)
 

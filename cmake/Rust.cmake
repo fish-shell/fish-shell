@@ -1,51 +1,24 @@
-if(EXISTS "${CMAKE_SOURCE_DIR}/corrosion-vendor/")
-    add_subdirectory("${CMAKE_SOURCE_DIR}/corrosion-vendor/")
-else()
-    include(FetchContent)
+# Trying to build using the resolved toolchain causes all kinds of weird errors
+# Just let rustup do its job
+set(Rust_RESOLVE_RUSTUP_TOOLCHAINS Off)
 
-    # Don't let Corrosion's tests interfere with ours.
-    set(CORROSION_TESTS OFF CACHE BOOL "" FORCE)
+include(FindRust)
+find_package(Rust REQUIRED)
 
-    FetchContent_Declare(
-        Corrosion
-        GIT_REPOSITORY https://github.com/mqudsi/corrosion
-        GIT_TAG fish
-    )
+set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo/build")
 
-    FetchContent_MakeAvailable(Corrosion)
-
-    add_custom_target(corrosion-vendor.tar.gz
-        COMMAND git archive --format tar.gz --output "${CMAKE_BINARY_DIR}/corrosion-vendor.tar.gz"
-        --prefix corrosion-vendor/ HEAD
-        WORKING_DIRECTORY ${corrosion_SOURCE_DIR}
-    )
-endif()
-
-set(fish_rust_target "fish")
-
-set(FISH_CRATE_FEATURES)
-if(NOT DEFINED CARGO_FLAGS)
-    # Corrosion doesn't like an empty string as FLAGS. This is basically a no-op alternative.
-    # See https://github.com/corrosion-rs/corrosion/issues/356
-    set(CARGO_FLAGS "--config" "foo=0")
-endif()
 if(DEFINED ASAN)
     list(APPEND CARGO_FLAGS "-Z" "build-std")
-    list(APPEND FISH_CRATE_FEATURES FEATURES "asan")
+    list(APPEND FISH_CRATE_FEATURES "asan")
 endif()
-
-corrosion_import_crate(
-    MANIFEST_PATH "${CMAKE_SOURCE_DIR}/Cargo.toml"
-    CRATES "fish"
-    "${FISH_CRATE_FEATURES}"
-    FLAGS "${CARGO_FLAGS}"
-)
 
 if (Rust_CARGO_TARGET)
-    set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_TARGET}")
+    set(rust_target_dir "${FISH_RUST_BUILD_DIR}/${Rust_CARGO_TARGET}")
 else()
-    set(rust_target_dir "${CMAKE_BINARY_DIR}/cargo/build/${_CORROSION_RUST_CARGO_HOST_TARGET}")
+    set(rust_target_dir "${FISH_RUST_BUILD_DIR}/${Rust_CARGO_HOST_TARGET}")
 endif()
+
+set(rust_profile $<IF:$<CONFIG:Debug>,debug,release>)
 
 # Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the
 # truthiness of the strings if they are set.
@@ -57,6 +30,16 @@ endif()
 # CMAKE_BINARY_DIR can include symlinks, since we want to compare this to the dir fish is executed in we need to canonicalize it.
 file(REAL_PATH "${CMAKE_BINARY_DIR}" fish_binary_dir)
 string(JOIN "," CURSES_LIBRARY_LIST ${CURSES_LIBRARY} ${CURSES_EXTRA_LIBRARY})
+
+if(FISH_CRATE_FEATURES)
+    set(FEATURES_ARG ${FISH_CRATE_FEATURES})
+    list(PREPEND FEATURES_ARG "--features")
+endif()
+
+get_property(
+    RUSTC_EXECUTABLE
+    TARGET Rust::Rustc PROPERTY IMPORTED_LOCATION
+)
 
 # Tell Cargo where our build directory is so it can find config.h.
 set(VARS_FOR_CARGO
@@ -70,5 +53,7 @@ set(VARS_FOR_CARGO
     "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
     "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
     "CURSES_LIBRARY_LIST=${CURSES_LIBRARY_LIST}"
+    "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
+    "CARGO_BUILD_RUSTC=${RUSTC_EXECUTABLE}"
     "${FISH_PCRE2_BUILDFLAG}"
 )

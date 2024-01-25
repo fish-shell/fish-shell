@@ -475,6 +475,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     let unescape_special = flags.contains(UnescapeFlags::SPECIAL);
     let allow_incomplete = flags.contains(UnescapeFlags::INCOMPLETE);
     let ignore_backslashes = flags.contains(UnescapeFlags::NO_BACKSLASHES);
+    let allow_percent_self = !feature_test(FeatureFlag::remove_percent_self);
 
     // The positions of open braces.
     let mut braces = vec![];
@@ -529,7 +530,11 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                 '%' => {
                     // Note that this only recognizes %self if the string is literally %self.
                     // %self/foo will NOT match this.
-                    if unescape_special && input_position == 0 && input == PROCESS_EXPAND_SELF_STR {
+                    if allow_percent_self
+                        && unescape_special
+                        && input_position == 0
+                        && input == PROCESS_EXPAND_SELF_STR
+                    {
                         to_append_or_none = Some(PROCESS_EXPAND_SELF);
                         input_position += PROCESS_EXPAND_SELF_STR.len() - 1; // skip over 'self's
                     }

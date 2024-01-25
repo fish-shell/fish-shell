@@ -25,7 +25,7 @@ use std::{
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsRawFd, RawFd},
+    os::fd::{AsFd, AsRawFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -490,7 +490,7 @@ impl HistoryImpl {
             // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
             // as if it did not fail. The risk is that we may get an incomplete history item; this
             // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(fd.as_raw_fd(), LOCK_SH) };
+            let locked = unsafe { Self::maybe_lock_file(&fd, LOCK_SH) };
             self.file_contents = HistoryFileContents::create(fd.as_raw_fd());
             self.history_file_id = if self.file_contents.is_some() {
                 file_id_for_fd(fd.as_raw_fd())
@@ -704,7 +704,7 @@ impl HistoryImpl {
                 // It's only OK to replace the file while holding the lock.
                 // Note any lock is released when target_fd_after is closed.
                 unsafe {
-                    Self::maybe_lock_file(target_fd_after.as_raw_fd(), LOCK_EX);
+                    Self::maybe_lock_file(target_fd_after, LOCK_EX);
                 }
                 new_file_id = file_id_for_path(&target_name);
             }
@@ -826,7 +826,7 @@ impl HistoryImpl {
             // forcing everything through the slow copy-move mode. We try to minimize this possibility
             // by writing with O_APPEND.
             unsafe {
-                Self::maybe_lock_file(fd.as_raw_fd(), LOCK_EX);
+                Self::maybe_lock_file(&fd, LOCK_EX);
             }
             let file_id = file_id_for_fd(fd.as_raw_fd());
             if file_id_for_path(&history_path) == file_id {
@@ -1319,8 +1319,10 @@ impl HistoryImpl {
     /// # Safety
     ///
     /// `fd` and `lock_type` must be valid arguments to `flock(2)`.
-    unsafe fn maybe_lock_file(fd: RawFd, lock_type: libc::c_int) -> bool {
+    unsafe fn maybe_lock_file(fd: impl AsFd, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
+
+        let raw_fd = fd.as_fd().as_raw_fd();
 
         // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
         // is on a remote filesystem.
@@ -1335,7 +1337,7 @@ impl HistoryImpl {
         }
 
         let start_time = SystemTime::now();
-        let retval = unsafe { flock(fd, lock_type) };
+        let retval = unsafe { flock(raw_fd, lock_type) };
         if let Ok(duration) = start_time.elapsed() {
             if duration > Duration::from_millis(250) {
                 FLOG!(

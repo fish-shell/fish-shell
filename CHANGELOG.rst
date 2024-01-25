@@ -15,6 +15,13 @@ We have tried to keep these to a minimum, but in some cases it is unavoidable.
 - ``functions --handlers`` will now list handlers in a different order.
   Now it is definition order, first to last, where before it was last to first.
   This was never specifically defined, and we recommend not relying on a specific order (:issue:`9944`).
+- The ``qmark-noglob`` feature flag, introduced in fish 3.0, is now turned on by default. That means ``?`` will no longer act as a single-character glob.
+  You can, for the time being, turn it back on by adding ``no-qmark-noglob`` to :envvar:`fish_features` and restarting fish::
+
+    set -Ua fish_features no-qmark-noglob
+
+  The flag will eventually be made read-only, making it impossible to turn off.
+
 
 Notable improvements and fixes
 ------------------------------

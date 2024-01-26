@@ -1,4 +1,15 @@
 function edit_command_buffer --description 'Edit the command buffer in an external editor'
+    set -l editor (__fish_anyeditor)
+    or begin
+        # Print the error message.
+        printf %s\n $editor
+        return 1
+    end
+
+    if test "$(commandline -p)" = "$(commandline)" && __fish_edit_command_if_at_cursor $editor
+        return 0
+    end
+
     set -l f (mktemp)
     or return 1
     if set -q f[1]
@@ -13,20 +24,6 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         end
         command touch $f
         or return 1
-    end
-
-    # Edit the command line with the users preferred editor or vim or emacs.
-    set -l editor
-    if set -q VISUAL
-        echo $VISUAL | read -at editor
-    else if set -q EDITOR
-        echo $EDITOR | read -at editor
-    else
-        echo
-        echo (_ 'External editor requested but $VISUAL or $EDITOR not set.')
-        echo (_ 'Please set VISUAL or EDITOR to your preferred editor.')
-        commandline -f repaint
-        return 1
     end
 
     commandline -b >$f

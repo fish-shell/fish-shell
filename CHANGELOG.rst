@@ -43,6 +43,7 @@ Interactive improvements
 - :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind \cc __fish_cancel_commandline`` (:issue:`10213`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
+- When the cursor is on a command that resolves to a script, :kbd:`Alt-O` will now open that script in your editor.
 - :kbd:`Alt-E` now passes the cursor position to the external editor also if the editor aliases a supported editor (via ``complete --wraps``).
 
 New or improved bindings

@@ -1573,7 +1573,7 @@ impl ReaderData {
         let mut buff_pos = el.position();
         while buff_pos != boundary {
             let idx = if move_right { buff_pos } else { buff_pos - 1 };
-            let c = self.command_line.at(idx);
+            let c = el.at(idx);
             if !state.consume_char(c) {
                 break;
             }

@@ -34,3 +34,11 @@ tmux-sleep
 isolated-tmux send-keys Enter
 # CHECK: prompt 2> echo no such command in history
 isolated-tmux capture-pane -p | grep 'prompt 2'
+isolated-tmux send-keys C-c
+
+isolated-tmux send-keys C-r hay/shmay
+isolated-tmux send-keys C-w C-h
+isolated-tmux send-keys Enter
+# CHECK: prompt 2> true hay ee hay
+isolated-tmux capture-pane -p | grep 'prompt 2>'
+isolated-tmux send-keys C-c

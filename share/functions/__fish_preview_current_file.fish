@@ -1,4 +1,9 @@
 function __fish_preview_current_file --description "Open the file at the cursor in a pager"
+    if __fish_edit_command_if_at_cursor
+        return 0
+    end
+
+
     set -l pager (__fish_anypager)
     or set pager cat
 

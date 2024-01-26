@@ -15,19 +15,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         or return 1
     end
 
-    # Edit the command line with the users preferred editor or vim or emacs.
-    set -l editor
-    if set -q VISUAL
-        echo $VISUAL | read -at editor
-    else if set -q EDITOR
-        echo $EDITOR | read -at editor
-    else
-        echo
-        echo (_ 'External editor requested but $VISUAL or $EDITOR not set.')
-        echo (_ 'Please set VISUAL or EDITOR to your preferred editor.')
-        commandline -f repaint
-        return 1
-    end
+    set -l editor (__fish_anyeditor)
+    or return 1
 
     commandline -b >$f
     set -l offset (commandline --cursor)

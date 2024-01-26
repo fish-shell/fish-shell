@@ -91,7 +91,7 @@ Running fish requires:
 -  curses or ncurses (preinstalled on most \*nix systems)
 -  some common \*nix system utilities (currently ``mktemp``), in
    addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
-   ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,
+   ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,
    ``uname`` and ``sed`` at least, but the full coreutils plus ``find`` and
    ``awk`` is preferred)
 -  The gettext library, if compiled with

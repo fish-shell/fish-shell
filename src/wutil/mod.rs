@@ -537,9 +537,15 @@ impl FileId {
         result.change_seconds = buf.st_ctime;
         result.mod_seconds = buf.st_mtime;
         #[allow(clippy::unnecessary_cast)] // platform-dependent
+        #[cfg(not(target_os = "netbsd"))]
         {
             result.change_nanoseconds = buf.st_ctime_nsec as _;
             result.mod_nanoseconds = buf.st_mtime_nsec as _;
+        }
+        #[cfg(target_os = "netbsd")]
+        {
+            result.change_nanoseconds = buf.st_ctimensec as _;
+            result.mod_nanoseconds = buf.st_mtimensec as _;
         }
         result
     }

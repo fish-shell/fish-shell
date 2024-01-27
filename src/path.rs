@@ -684,14 +684,14 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
         }
         let mnt_local = MNT_LOCAL();
         if mnt_local != 0 {
-            let mut buf: libc::statfs = unsafe { std::mem::zeroed() };
-            if unsafe { libc::statfs(narrow.as_ptr(), &mut buf) } < 0 {
+            let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
+            if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
                 return DirRemoteness::unknown;
             }
             // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
             // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
             #[allow(clippy::useless_conversion)]
-            return if u64::from(buf.f_flags) & mnt_local != 0 {
+            return if u64::from(buf.f_flag) & mnt_local != 0 {
                 DirRemoteness::local
             } else {
                 DirRemoteness::remote

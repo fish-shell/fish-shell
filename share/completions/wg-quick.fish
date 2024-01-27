@@ -1,7 +1,7 @@
 set -l valid_subcmds up down strip save
 
 function __fish_wg_complete_interfaces
-    wg show interfaces
+    wg show interfaces | string split " "
 end
 
 complete -c wg-quick -f

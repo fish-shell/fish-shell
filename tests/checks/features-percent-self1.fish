@@ -1,4 +1,4 @@
-#RUN: %fish --features=remove-percent-self -C 'set -g fish_indent %fish_indent' %s
+#RUN: %fish --features=remove-percent-self %s
 
 echo %self
 # CHECK: %self

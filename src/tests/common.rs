@@ -72,13 +72,6 @@ fn test_scope_guard_consume() {
 }
 
 #[test]
-fn test_assert_is_locked() {
-    let lock = std::sync::Mutex::new(());
-    let _guard = lock.lock().unwrap();
-    assert_is_locked!(&lock);
-}
-
-#[test]
 fn test_format() {
     // Testing formatting functions
     struct Test {

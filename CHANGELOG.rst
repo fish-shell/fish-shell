@@ -44,6 +44,7 @@ Interactive improvements
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
 - :kbd:`Alt-E` now passes the cursor position to the external editor also if the editor aliases a supported editor (via ``complete --wraps``).
+- Option completion now uses fuzzy subsequence filtering as well. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

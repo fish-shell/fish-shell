@@ -1435,21 +1435,18 @@ impl<'ctx> Completer<'ctx> {
                 if whole_opt.len() < s.len() {
                     continue;
                 }
-                let r#match = string_prefixes_string(s, &whole_opt);
-                if !r#match {
-                    let match_no_case = string_prefixes_string_case_insensitive(s, &whole_opt);
-                    if !match_no_case {
-                        continue;
-                    }
-                }
+                let anchor_start = !self.flags.fuzzy_match;
+                let Some(r#match) = string_fuzzy_match_string(s, &whole_opt, anchor_start) else {
+                    continue;
+                };
 
                 let mut offset = 0;
                 let mut flags = CompleteFlags::empty();
 
-                if r#match {
-                    offset = s.len();
-                } else {
+                if r#match.requires_full_replacement() {
                     flags = CompleteFlags::REPLACES_TOKEN;
+                } else {
+                    offset = s.len();
                 }
 
                 // does this switch have any known arguments

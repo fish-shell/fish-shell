@@ -593,3 +593,11 @@ complete -C'complete_unescaped_tokens "foo" bar\\ baz (qux) '
 # CHECK: foo
 # CHECK: bar baz
 # CHECK: (qux)
+
+## Fuzzy completion of options
+complete complete_long_option -f -l some-long-option
+complete -C'complete_long_option --slo'
+# CHECK: --some-long-option
+complete complete_long_option -f -o an-old-option
+complete -C'complete_long_option -ao'
+# CHECK: -an-old-option

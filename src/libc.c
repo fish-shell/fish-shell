@@ -182,6 +182,8 @@ int C_RLIMIT_NTHR() {
 #endif
 }
 
+#ifdef LC_GLOBAL_LOCALE
 locale_t C_LC_GLOBAL_LOCALE() {
     return LC_GLOBAL_LOCALE;
 }
+#endif

@@ -1,5 +1,5 @@
 function __fish_qdbus_complete
-    argparse system 'bus=' literal help -- (commandline --cut-at-cursor --expand-tokens) 2>/dev/null
+    argparse system 'bus=' literal help -- (commandline --cut-at-cursor --tokens-expanded) 2>/dev/null
     or return
     if set -q _flag_help
         return

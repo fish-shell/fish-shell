@@ -1,7 +1,7 @@
 function __fish_seen_argument --description 'Check whether argument is used'
     argparse --ignore-unknown 's/short=+' 'o/old=+' 'l/long=+' 'w/windows=+' -- $argv
 
-    set --local tokens (commandline --current-process --expand-tokens --cut-at-cursor)
+    set --local tokens (commandline --current-process --tokens-expanded --cut-at-cursor)
     set --erase tokens[1]
 
     for t in $tokens

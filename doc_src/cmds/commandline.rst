@@ -74,9 +74,9 @@ The following options change the way ``commandline`` prints the current commandl
 
 **-c** or **--cut-at-cursor**
     Only print selection up until the current cursor position.
-    If combined with ``--expand-tokens``, this will print up until the last completed token - excluding the token the cursor is in.
+    If combined with ``--tokens-expanded``, this will print up until the last completed token - excluding the token the cursor is in.
     This is typically what you would want for instance in completions.
-    To get both, use both ``commandline --cut-at-cursor --expand-tokens; commandline --cut-at-cursor --current-token``,
+    To get both, use both ``commandline --cut-at-cursor --tokens-expanded; commandline --cut-at-cursor --current-token``,
     or ``commandline -cx; commandline -ct`` for short.
 
 **-x** or **tokens-expanded**

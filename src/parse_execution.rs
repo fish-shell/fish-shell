@@ -568,15 +568,14 @@ impl<'a> ParseExecutionContext {
                 "The expanded command was empty."
             );
         }
-        // Complain if we've expanded to a subcommand keyword like "command" or "if".
-        // This is an attempt to defeat function resolution.
+        // Complain if we've expanded to a subcommand keyword like "command" or "if",
+        // because these will call the corresponding *builtin*,
+        // which won't be doing what the user asks for
         //
-        // Make an exception for "time" because that is frequently used as a command and does fundamentally the same thing.
         // (skipping in no-exec because we don't have the actual variable value)
         if !no_exec()
             && parser_keywords_is_subcommand(out_cmd)
-            && !unexp_cmd.starts_with(out_cmd.chars())
-            && out_cmd != L!("time")
+            && &unexp_cmd != out_cmd
         {
             return report_error!(
                 self,

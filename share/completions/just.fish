@@ -1,4 +1,4 @@
 function _justfile_targets
-    just --summary 2>/dev/null | string split ' '
+    just -l | tail -n +2 | string trim -l | string replace -r '(\s*#\s*)' '\t' | string replace -r '(\s*[\*\+][^\s]*)' ''
 end
-complete -c just -a '(_justfile_targets)' -f
+complete -c just -f -a '(_justfile_targets)'

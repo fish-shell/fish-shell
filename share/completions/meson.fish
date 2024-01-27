@@ -1,7 +1,7 @@
 # Completions for the meson build system (http://mesonbuild.com/)
 
 function __fish_meson_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     set -e cmd[1]
     argparse -s v/version -- $cmd 2>/dev/null
     or return 0
@@ -9,7 +9,7 @@ function __fish_meson_needs_command
 end
 
 function __fish_meson_using_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     set -e cmd[1]
     test (count $cmd) -eq 0
     and return 1
@@ -19,7 +19,7 @@ end
 
 function __fish_meson_builddir
     # Consider the value of -C option to detect the build directory
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     argparse -i 'C=' -- $cmd
     if set -q _flag_C
         echo $_flag_C

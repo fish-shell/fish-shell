@@ -50,7 +50,7 @@ function __fish_zfs_needs_command
 end
 
 function __fish_zfs_using_command # ZFS command whose completions are looked for
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -eq 1 # The token can only be 'zfs', so skip
         return 2
     end

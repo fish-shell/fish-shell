@@ -1,7 +1,7 @@
 function __fish_bind_test1
     set -l args
     set -l use_keys no
-    for i in (commandline -poc)
+    for i in (commandline -pxc)
         switch $i
             case -k --k --ke --key
                 set use_keys yes
@@ -25,7 +25,7 @@ end
 
 function __fish_bind_test2
     set -l args
-    for i in (commandline -poc)
+    for i in (commandline -pxc)
         switch $i
             case "-*"
 

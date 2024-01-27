@@ -5,7 +5,7 @@ end
 
 # Returns 0 if we're after `env` and all previous tokens have an equal sign
 function __fish_env_defining_vars
-    not string match -ev -- = (commandline -op)[2..-2] | string match -rq .
+    not string match -ev -- = (commandline -xp)[2..-2] | string match -rq .
 end
 
 # Returns 0 if we're after `env` and all previous tokens have not yet contained an equal sign
@@ -17,7 +17,7 @@ end
 function __fish_env_redefine_vars
     set -l vars (set --names -x)
 
-    set cmdline "$(commandline -op)"
+    set cmdline "$(commandline -xp)"
     for var in $vars
         if not string match -e -- $var= $cmdline
             echo $var=
@@ -56,7 +56,7 @@ end
 
 # Get the text after all env arguments and variables, so we can complete it as a regular command
 function __fish_env_remaining_args -V is_gnu
-    set -l argv (commandline -opc) (commandline -ct)
+    set -l argv (commandline -xpc) (commandline -ct)
     if set -q is_gnu[1]
         argparse -s i/ignore-environment u/unset= help version -- $argv 2>/dev/null
         or return 0

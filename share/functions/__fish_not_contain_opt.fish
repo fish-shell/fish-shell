@@ -26,7 +26,7 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
             continue
         end
 
-        if string match -qr -- "^-$i|^-[^-]*$i" (commandline -cpo)
+        if string match -qr -- "^-$i|^-[^-]*$i" (commandline -cpx)
             return 1
         end
 
@@ -40,7 +40,7 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
             continue
         end
 
-        if contains -- --$i (commandline -cpo)
+        if contains -- --$i (commandline -cpx)
             return 1
         end
     end

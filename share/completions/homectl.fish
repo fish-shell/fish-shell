@@ -6,7 +6,7 @@ function __homectl_users
 end
 
 function __homectl_subcommand_is
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     contains -- $cmd[-1] $argv
 end
 

@@ -38,7 +38,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     if functions -q ssh
         # Get alias and commandline options.
         set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
-        set -l ssh_command $ssh_func_tokens (commandline -cpo)
+        set -l ssh_command $ssh_func_tokens (commandline -cpx)
         # Extract ssh config path from last -F short option.
         if contains -- -F $ssh_command
             set -l ssh_config_path_is_next 1

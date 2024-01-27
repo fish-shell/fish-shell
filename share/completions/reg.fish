@@ -137,7 +137,7 @@ function __reg_save_complete_args -a previous_token
 end
 
 function __reg_complete_args -d 'Function to generate args'
-    set -l previous_token (commandline -oc)[-1]
+    set -l previous_token (commandline -xc)[-1]
 
     if __fish_seen_subcommand_from add
         __reg_add_complete_args $previous_token

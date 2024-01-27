@@ -342,7 +342,7 @@ function __fish_hg_mq_enabled
 end
 
 function __fish_hg_get_command
-    set -l cmdline (commandline -poc)
+    set -l cmdline (commandline -pxc)
     set -e cmdline[1]
     set -l lasttoken ""
     for token in $cmdline

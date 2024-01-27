@@ -1,7 +1,7 @@
 #completion for aptitude
 
 function __fish_apt_no_subcommand -d 'Test if aptitude has yet to be given the subcommand'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i autoclean clean forget-new keep-all update safe-upgrade changelog full-upgrade download forbid-version hold install keep markauto purge reinstall remove show unhold unmarkauto search help
             return 1
         end
@@ -10,7 +10,7 @@ function __fish_apt_no_subcommand -d 'Test if aptitude has yet to be given the s
 end
 
 function __fish_apt_use_package -d 'Test if aptitude command should have packages as potential completion'
-    for i in (commandline -opc)
+    for i in (commandline -xpc)
         if contains -- $i changelog full-upgrade download forbid-version hold install keep-all markauto purge reinstall remove show unhold unmarkauto
             return 0
         end

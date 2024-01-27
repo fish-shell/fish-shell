@@ -13,7 +13,7 @@ function __fish_systemctl --description 'Call systemctl with some options from t
     set opts $opts 1-no-pager 2-no-legend h/help 3-version
 
     set -l args $argv
-    set -l cmdline (commandline -opc) (commandline -ct)
+    set -l cmdline (commandline -xpc) (commandline -ct)
     set -e cmdline[1]
     argparse $opts -- $cmdline 2>/dev/null
     or return

@@ -5,7 +5,7 @@ function __fish_sops_no_subcommand --description "Test if there is a subcommand 
 end
 
 function __fish_sops_print_remaining_args --description "Print remaining argument given"
-    set -l cmd (commandline -poc) (commandline -ct)
+    set -l cmd (commandline -pxc) (commandline -ct)
     set -e cmd[1]
     set -l opts d/decrypt e/encrypt r/rotate i/in-place s/show-master-keys v/version
     set -a opts extract ignore-mac verbose enable-local-keyservice

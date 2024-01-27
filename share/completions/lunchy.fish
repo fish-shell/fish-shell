@@ -1,5 +1,5 @@
 function __fish_lunchy_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
 
     if test (count $cmd) -eq 1
         return 0
@@ -9,7 +9,7 @@ function __fish_lunchy_needs_command
 end
 
 function __fish_lunchy_using_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     set -l cmd_count (count $cmd)
 
     if test $cmd_count -lt 2

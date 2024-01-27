@@ -17,7 +17,7 @@ function __fish_complete_freebsd_service_actions
     # Use the output of `service -v foo` to retrieve the list of service-specific verbs
     # Output takes the form "[prefix1 prefix2 ..](cmd1 cmd2 cmd3)" where any combination
     # of zero or one prefixe(s) and any one command is a valid verb.
-    set -l service_name (commandline --tokenize --cut-at-cursor)[-1]
+    set -l service_name (commandline --expand-tokens --cut-at-cursor)[-1]
     set -l results (service $service_name -v 2>| string match -r '\\[(.*)\\]\\((.*)\\)')
     set -l prefixes "" (string split '|' -- $results[2])
     set -l commands (string split '|' -- $results[3])

@@ -1,5 +1,5 @@
 function __krita_complete_image_format
-    set -l previous_token (commandline -oc)[-1]
+    set -l previous_token (commandline -xc)[-1]
     set -l current_token (commandline -t)
 
     if test "$previous_token" = --new-image

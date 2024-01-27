@@ -214,7 +214,7 @@ function __schtasks_run_complete_args -a previous_token
 end
 
 function __schtasks_complete_args -d 'Function to generate args'
-    set --local previous_token (commandline -oc)[-1]
+    set --local previous_token (commandline -xc)[-1]
 
     if __fish_seen_argument -w change
         __schtasks_change_complete_args "$previous_token"

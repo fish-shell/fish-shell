@@ -3,7 +3,7 @@ function __history_completions --argument-names limit
         set limit 25
     end
 
-    set -l tokens (commandline --current-process --tokenize)
+    set -l tokens (commandline --current-process --expand-tokens)
     history --prefix (commandline) | string replace -r \^$tokens[1]\\s\* "" | head -n$limit
 end
 

@@ -25,7 +25,7 @@ expect_prompt("\r\n@GUARD:1@\r\n(.*)\r\n@/GUARD:1@\r\n")
 
 # printing the buffer with -o should remove quoting
 sendline(
-    "function handle_tilde; echo; echo '@GUARD:2@'; commandline -bo; echo '@/GUARD:2@'; commandline -b ''; end"
+    "function handle_tilde; echo; echo '@GUARD:2@'; commandline -bx; echo '@/GUARD:2@'; commandline -b ''; end"
 )
 expect_prompt()
 sendline("echo one \"two three\" four'five six'{7} 'eight~")

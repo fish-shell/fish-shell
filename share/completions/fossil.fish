@@ -6,37 +6,37 @@ function __fish_fossil
 end
 
 function __fish_fossil_needs_command
-    test (count (commandline -poc)) -eq 1
+    test (count (commandline -pxc)) -eq 1
 end
 
 function __fish_fossil_command
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     test (count $cmd) -gt 1
     and contains -- $cmd[2] $argv
 end
 
 function __fish_fossil_subcommand
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     test (count $cmd) -eq 2
     and test $argv[1] = $cmd[2]
 end
 
 function __fish_fossil_subsubcommand
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     test (count $cmd) -ge 3
     and test $argv[1] = $cmd[2]
     and test $argv[2] = $cmd[3]
 end
 
 function __fish_fossil_subsubcommand_only
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     test (count $cmd) -eq 3
     and test $argv[1] = $cmd[2]
     and test $argv[2] = $cmd[3]
 end
 
 function __fish_fossil_subsubsubcommand_only
-    set -l cmd (commandline -poc)
+    set -l cmd (commandline -pxc)
     test (count $cmd) -eq 4
     and test $argv[1] = $cmd[2]
     and test $argv[2] = $cmd[3]

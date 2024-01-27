@@ -37,7 +37,7 @@ complete -c mvn -f -o cpu -l check-plugin-updates -d "Ineffective, only kept for
 
 function __fish_mvn_complete_definition
     set -l current_token (commandline -t)
-    set -l previous_token (commandline -opc)[-1]
+    set -l previous_token (commandline -xpc)[-1]
     string match -qr -- '^(-D|--define\b)' $current_token $previous_token
     or return
     set -l keyval (string split --max=1 -- = $current_token)

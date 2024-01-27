@@ -1,7 +1,10 @@
 use super::prelude::*;
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
+use crate::complete::Completion;
+use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
+use crate::operation_context::{no_cancel, OperationContext};
 use crate::parse_constants::ParserTestErrorBits;
 use crate::parse_util::{
     parse_util_detect_errors, parse_util_job_extent, parse_util_lineno, parse_util_process_extent,
@@ -11,9 +14,8 @@ use crate::proc::is_interactive_session;
 use crate::reader::{
     commandline_get_state, commandline_set_buffer, reader_handle_command, reader_queue_ch,
 };
-use crate::tokenizer::TokenType;
-use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
+use crate::tokenizer::{TokenType, Tokenizer};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
@@ -35,6 +37,12 @@ enum AppendMode {
     Insert,
     // insert at end of current token/command/buffer
     Append,
+}
+
+enum TokenMode {
+    Expanded,
+    Raw,
+    Unescaped,
 }
 
 /// Replace/append/insert the selection with/at/after the specified string.
@@ -84,47 +92,85 @@ fn replace_part(
 /// \param begin start of selection
 /// \param end  end of selection
 /// \param cut_at_cursor whether printing should stop at the surrent cursor position
-/// \param tokenize whether the string should be tokenized, printing one string token on every line
 /// and skipping non-string tokens
 /// \param buffer the original command line buffer
 /// \param cursor_pos the position of the cursor in the command line
 fn write_part(
+    parser: &Parser,
     range: Range<usize>,
     cut_at_cursor: bool,
-    tokenize: bool,
+    token_mode: Option<TokenMode>,
     buffer: &wstr,
     cursor_pos: usize,
     streams: &mut IoStreams,
 ) {
     let pos = cursor_pos - range.start;
 
-    if tokenize {
-        let mut out = WString::new();
-        let buff = &buffer[range];
-        let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
-        while let Some(token) = tok.next() {
-            if cut_at_cursor && token.end() >= pos {
-                break;
-            }
-
-            if token.type_ == TokenType::string {
-                let tmp = tok.text_of(&token);
-                let unescaped =
-                    unescape_string(tmp, UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE))
-                        .unwrap();
-                out.push_utfstr(&unescaped);
-                out.push('\n');
-            }
-        }
-
-        streams.out.append(out);
-    } else {
+    let Some(token_mode) = token_mode else {
         if cut_at_cursor {
             streams.out.append(&buffer[range.start..range.start + pos]);
         } else {
             streams.out.append(&buffer[range]);
         }
         streams.out.push('\n');
+        return;
+    };
+
+    let buff = &buffer[range];
+    let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
+    let mut args = vec![];
+    while let Some(token) = tok.next() {
+        if cut_at_cursor && token.end() >= pos {
+            break;
+        }
+        if token.type_ != TokenType::string {
+            continue;
+        }
+
+        let token_text = tok.text_of(&token);
+
+        match token_mode {
+            TokenMode::Expanded => {
+                const COMMANDLINE_TOKENS_MAX_EXPANSION: usize = 512;
+
+                match expand_string(
+                    token_text.to_owned(),
+                    &mut args,
+                    ExpandFlags::SKIP_CMDSUBST,
+                    &OperationContext::foreground(
+                        parser.shared(),
+                        Box::new(no_cancel),
+                        COMMANDLINE_TOKENS_MAX_EXPANSION,
+                    ),
+                    None,
+                )
+                .result
+                {
+                    ExpandResultCode::error | ExpandResultCode::wildcard_no_match => {
+                        // Hit expansion limit, forward the unexpanded string.
+                        args.push(Completion::from_completion(token_text.to_owned()));
+                    }
+                    ExpandResultCode::cancel => {
+                        return;
+                    }
+                    ExpandResultCode::ok => (),
+                };
+            }
+            TokenMode::Raw => {
+                args.push(Completion::from_completion(token_text.to_owned()));
+            }
+            TokenMode::Unescaped => {
+                let unescaped = unescape_string(
+                    token_text,
+                    UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
+                )
+                .unwrap();
+                args.push(Completion::from_completion(unescaped));
+            }
+        }
+    }
+    for arg in args {
+        streams.out.appendln(arg.completion);
     }
 }
 
@@ -139,7 +185,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut function_mode = false;
     let mut selection_mode = false;
 
-    let mut tokenize = false;
+    let mut token_mode = None;
 
     let mut cursor_mode = false;
     let mut selection_start_mode = false;
@@ -155,7 +201,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let ld = parser.libdata();
 
-    const short_options: &wstr = L!(":abijpctforhI:CBELSsP");
+    const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
     let long_options: &[woption] = &[
         wopt(L!("append"), woption_argument_t::no_argument, 'a'),
         wopt(L!("insert"), woption_argument_t::no_argument, 'i'),
@@ -171,6 +217,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("current-token"), woption_argument_t::no_argument, 't'),
         wopt(L!("cut-at-cursor"), woption_argument_t::no_argument, 'c'),
         wopt(L!("function"), woption_argument_t::no_argument, 'f'),
+        wopt(L!("tokens-expanded"), woption_argument_t::no_argument, 'x'),
+        wopt(L!("tokens-raw"), woption_argument_t::no_argument, '\x02'),
         wopt(L!("tokenize"), woption_argument_t::no_argument, 'o'),
         wopt(L!("help"), woption_argument_t::no_argument, 'h'),
         wopt(L!("input"), woption_argument_t::required_argument, 'I'),
@@ -197,7 +245,23 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'j' => buffer_part = Some(TextScope::Job),
             'p' => buffer_part = Some(TextScope::Process),
             'f' => function_mode = true,
-            'o' => tokenize = true,
+            'x' | '\x02' | 'o' => {
+                if token_mode.is_some() {
+                    streams.err.append(wgettext_fmt!(
+                        BUILTIN_ERR_COMBO2,
+                        cmd,
+                        wgettext!("--tokens options are mutually exclusive")
+                    ));
+                    builtin_print_error_trailer(parser, streams.err, cmd);
+                    return STATUS_INVALID_ARGS;
+                }
+                token_mode = Some(match c {
+                    'x' => TokenMode::Expanded,
+                    '\x02' => TokenMode::Raw,
+                    'o' => TokenMode::Unescaped,
+                    _ => unreachable!(),
+                })
+            }
             'I' => {
                 // A historical, undocumented feature. TODO: consider removing this.
                 override_buffer = Some(w.woptarg.unwrap().to_owned());
@@ -234,7 +298,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         if buffer_part.is_some()
             || cut_at_cursor
             || append_mode.is_some()
-            || tokenize
+            || token_mode.is_some()
             || cursor_mode
             || line_mode
             || search_mode
@@ -310,7 +374,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if (buffer_part.is_some() || tokenize || cut_at_cursor)
+    if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor)
         && (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode)
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         && (buffer_part.is_none() || !cursor_mode)
@@ -320,11 +384,11 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if (tokenize || cut_at_cursor) && positional_args != 0 {
+    if (token_mode.is_some() || cut_at_cursor) && positional_args != 0 {
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
-            "--cut-at-cursor and --tokenize can not be used when setting the commandline"
+            "--cut-at-cursor and --tokens can not be used when setting the commandline"
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
@@ -475,9 +539,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if positional_args == 0 {
         write_part(
+            parser,
             range,
             cut_at_cursor,
-            tokenize,
+            token_mode,
             current_buffer,
             current_cursor_pos,
             streams,

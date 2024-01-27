@@ -1,6 +1,6 @@
 
 function __fish_no_arguments -d "Internal fish function"
-    set -l cmd (commandline -poc) (commandline -tc)
+    set -l cmd (commandline -pxc) (commandline -tc)
     set -e cmd[1]
     for i in $cmd
         switch $i

@@ -9,13 +9,13 @@ end
 
 function __fish_complete_eselect_actions
     set -l sedregexp 's/^  ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
-    set -l cmdl (commandline -poc)
+    set -l cmdl (commandline -pxc)
     __fish_eselect_cmd $cmdl[2..-1] usage | string match -r '^  [^ -]' | sed -r $sedregexp
 end
 
 function __fish_complete_eselect_action_options
     set -l parseregexp 's/^    ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
-    set -l cmdl (commandline -poc)
+    set -l cmdl (commandline -pxc)
 
     # Alter further php completion
     if test (__fish_print_cmd_args_without_options)[2] = php
@@ -44,7 +44,7 @@ end
 
 function __fish_complete_eselect_targets
     set -l sedregexp 's/^  \[([0-9]+)\][ ]*/\1\t/g'
-    set -l cmdl (commandline -poc)
+    set -l cmdl (commandline -pxc)
 
     # Disable further php completion
     if test (__fish_print_cmd_args_without_options)[2] = php

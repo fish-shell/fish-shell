@@ -1,7 +1,7 @@
 # Completion for bundler
 
 function __fish_bundle_no_command -d 'Test if bundle has been given no subcommand'
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -eq 1
         return 0
     end
@@ -9,7 +9,7 @@ function __fish_bundle_no_command -d 'Test if bundle has been given no subcomman
 end
 
 function __fish_bundle_using_command -d 'Test if bundle has been given a specific subcommand'
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -gt 1
         if test $argv[1] = $cmd[2]
             return 0

@@ -18,7 +18,7 @@ end
 
 function __fish_xinput_nth_token
     set -l n $argv[1]
-    set -l tokens (commandline -co)
+    set -l tokens (commandline -cx)
     set -e tokens[1] # remove command name
     # remove options
     set -l tokens (string replace -r --filter '^([^-].*)' '$1' -- $tokens)

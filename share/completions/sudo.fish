@@ -3,7 +3,7 @@
 #
 
 function __fish_sudo_print_remaining_args
-    set -l tokens (commandline -opc) (commandline -ct)
+    set -l tokens (commandline -xpc) (commandline -ct)
     set -e tokens[1]
     # These are all the options mentioned in the man page for Todd Miller's "sudo.ws" sudo (in that order).
     # If any other implementation has different options, this should be harmless, since they shouldn't be used anyway.

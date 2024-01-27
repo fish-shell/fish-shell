@@ -2,7 +2,7 @@
 
 # Check if command already given
 function __fish_prog_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     echo $cmd
     if test (count $cmd) -eq 1
         return 0

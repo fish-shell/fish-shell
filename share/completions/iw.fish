@@ -21,7 +21,7 @@ function __fish_iw_ssid
 end
 
 function __fish_complete_iw
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
 
     if string match --quiet -- '-*' $cmd[2]
         set -e cmd[2] # Allow other completions to complete as normal

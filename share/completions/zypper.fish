@@ -10,7 +10,7 @@ set -g __fish_zypper_download_modes only in-advance in-heaps as-needed
 set -g __fish_zypper_solver_focus_modes Job Installed Update
 
 function __fish_zypper_cmd_in_array
-    for i in (commandline -pco)
+    for i in (commandline -pcx)
         # -- is used to provide no options for contains
         # (if $i is equal to --optname without -- will be error)
         if contains -- $i $argv
@@ -53,7 +53,7 @@ function __fish_zypper_print_packages
     set -l repo
     set -l type
     set -l idx
-    set -l args (commandline -poc)
+    set -l args (commandline -pxc)
     while set -q args[1]
         switch $args[1]
             case -t --type

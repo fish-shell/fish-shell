@@ -3,7 +3,7 @@ function __fish_print_debian_services --description 'Prints services installed'
 end
 
 function __fish_invoke_rcd_has_service
-    set -l tokens (commandline -opc)
+    set -l tokens (commandline -xpc)
     if test (count $tokens) -eq 2
         return 0
     else

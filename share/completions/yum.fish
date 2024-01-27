@@ -6,7 +6,7 @@
 
 # Test if completing using package names is appropriate
 function __fish_yum_package_ok
-    for i in (commandline -poc)
+    for i in (commandline -pxc)
         if contains -- $i update upgrade remove erase install reinstall
             return 0
         end
@@ -43,13 +43,13 @@ complete -c yum -l obsoletes -d "Enables obsolets processing logic"
 complete -c yum -l rss-filename -d "Output rss-data to file" -r
 complete -c yum -l exclude -d "Exclude specified package from updates" -a "(__fish_print_rpm_packages)"
 
-complete -c yum -n 'contains list (commandline -poc)' -a all -d 'List all packages'
-complete -c yum -n 'contains list (commandline -poc)' -a available -d 'List packages available for installation'
-complete -c yum -n 'contains list (commandline -poc)' -a updates -d 'List packages with updates available'
-complete -c yum -n 'contains list (commandline -poc)' -a installed -d 'List installed packages'
-complete -c yum -n 'contains list (commandline -poc)' -a extras -d 'List packages not available in repositories'
-complete -c yum -n 'contains list (commandline -poc)' -a obsoletes -d 'List packages that are obsoleted by packages in repositories'
+complete -c yum -n 'contains list (commandline -pxc)' -a all -d 'List all packages'
+complete -c yum -n 'contains list (commandline -pxc)' -a available -d 'List packages available for installation'
+complete -c yum -n 'contains list (commandline -pxc)' -a updates -d 'List packages with updates available'
+complete -c yum -n 'contains list (commandline -pxc)' -a installed -d 'List installed packages'
+complete -c yum -n 'contains list (commandline -pxc)' -a extras -d 'List packages not available in repositories'
+complete -c yum -n 'contains list (commandline -pxc)' -a obsoletes -d 'List packages that are obsoleted by packages in repositories'
 
-complete -c yum -n 'contains clean (commandline -poc)' -x -a packages -d 'Delete cached package files'
-complete -c yum -n 'contains clean (commandline -poc)' -x -a headers -d 'Delete cached header files'
-complete -c yum -n 'contains clean (commandline -poc)' -x -a all -d 'Delete all cache contents'
+complete -c yum -n 'contains clean (commandline -pxc)' -x -a packages -d 'Delete cached package files'
+complete -c yum -n 'contains clean (commandline -pxc)' -x -a headers -d 'Delete cached header files'
+complete -c yum -n 'contains clean (commandline -pxc)' -x -a all -d 'Delete all cache contents'

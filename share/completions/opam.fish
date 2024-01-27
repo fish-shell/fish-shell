@@ -1,5 +1,5 @@
 function __fish_opam_using_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -gt 1
         if test $argv[1] = $cmd[2]
             return 0
@@ -9,7 +9,7 @@ function __fish_opam_using_command
 end
 
 function __fish_opam_at_color
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -gt 2
         if test $cmd[-1] = --color
             return 0
@@ -19,7 +19,7 @@ function __fish_opam_at_color
 end
 
 function __fish_opam_needs_command
-    set -l cmd (commandline -opc)
+    set -l cmd (commandline -xpc)
     if test (count $cmd) -eq 1
         return 0
     end

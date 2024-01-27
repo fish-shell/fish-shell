@@ -43,7 +43,7 @@ complete $common_opt -l debug -d "Turn on Ruby debugging"
 
 ##
 # cert
-set -l cert_opt -c gem -n 'contains cert (commandline -poc)'
+set -l cert_opt -c gem -n 'contains cert (commandline -pxc)'
 complete $cert_opt -s a -l add -d "Add a trusted certificate" -x
 complete $cert_opt -s l -l list -d "List trusted certificates"
 complete $cert_opt -s r -l remove -d "Remove trusted certificates containing STRING" -x
@@ -54,7 +54,7 @@ complete $cert_opt -s s -l sign -d "Sign a certificate with my key and certifica
 
 ##
 # check
-set -l check_opt -c gem -n 'contains check (commandline -poc)'
+set -l check_opt -c gem -n 'contains check (commandline -pxc)'
 complete $check_opt -s v -l verify -d "Verify gem file against its internal checksum" -x
 complete $check_opt -s a -l alien -d "Report 'unmanaged' or rogue files in the gem repository"
 complete $check_opt -s t -l test -d "Run unit tests for gem"
@@ -62,12 +62,12 @@ complete $check_opt -s V -l version -d "Specify version for which to run unit te
 
 ##
 # cleanup
-set -l cleanup_opt -c gem -n 'contains cleanup (commandline -poc)'
+set -l cleanup_opt -c gem -n 'contains cleanup (commandline -pxc)'
 complete $cleanup_opt -s d -l dryrun -d "Don't really cleanup"
 
 ##
 # contents
-set -l contents_opt -c gem -n 'contains contents (commandline -poc)'
+set -l contents_opt -c gem -n 'contains contents (commandline -pxc)'
 complete $contents_opt -s l -l list -d "List the files inside a Gem"
 complete $contents_opt -s V -l version -d "Specify version for gem to view"
 complete $contents_opt -s s -l spec-dir -d "Search for gems under specific paths" -x
@@ -75,7 +75,7 @@ complete $contents_opt -s v -l verbose -d "Be verbose when showing status"
 
 ##
 # dependency
-set -l dep_opt -c gem -n 'contains dependency (commandline -poc)'
+set -l dep_opt -c gem -n 'contains dependency (commandline -pxc)'
 complete $dep_opt -s v -l version -d "Specify version of gem to uninstall" -x
 complete $dep_opt -s r -l reverse-dependencies -d "Include reverse dependencies in the output"
 complete $dep_opt -l no-reverse-dependencies -d "Don't include reverse dependencies in the output"
@@ -83,17 +83,17 @@ complete $dep_opt -s p -l pipe -d "Pipe Format (name --version ver)"
 
 ##
 # environment
-set -l env_opt -c gem -n 'contains environment (commandline -poc)'
+set -l env_opt -c gem -n 'contains environment (commandline -pxc)'
 complete $env_opt -xa "packageversion\t'display the package version' gemdir\t'display the path where gems are installed' gempath\t'display path used to search for gems' version\t'display the gem format version' remotesources\t'display the remote gem servers'"
 
 ##
 # help
-set -l help_opt -c gem -n 'contains help (commandline -poc)'
+set -l help_opt -c gem -n 'contains help (commandline -pxc)'
 complete $help_opt -xa "commands\t'list all gem commands' examples\t'show some examples of usage' build cert check cleanup contents dependency environment help install list query rdoc search specification uninstall unpack update"
 
 ##
 # install
-set -l install_opt -c gem -n 'contains install (commandline -poc)'
+set -l install_opt -c gem -n 'contains install (commandline -pxc)'
 complete $install_opt -s v -l version -d "Specify version of gem to install" -x
 complete $install_opt -s l -l local -d "Restrict operations to the LOCAL domain (default)"
 complete $install_opt -s r -l remote -d "Restrict operations to the REMOTE domain"
@@ -113,7 +113,7 @@ complete $install_opt -s y -l include-dependencies -d "Unconditionally install t
 
 ##
 # list
-set -l list_opt -c gem -n 'contains list (commandline -poc)'
+set -l list_opt -c gem -n 'contains list (commandline -pxc)'
 complete $list_opt -s d -l details -d "Display detailed information of gem(s)"
 complete $list_opt -l no-details -d "Don't display detailed information of gem(s)"
 complete $list_opt -s l -l local -d "Restrict operations to the LOCAL domain (default)"
@@ -122,7 +122,7 @@ complete $list_opt -s b -l both -d "Allow LOCAL and REMOTE operations"
 
 ##
 # query
-set -l query_opt -c gem -n 'contains query (commandline -poc)'
+set -l query_opt -c gem -n 'contains query (commandline -pxc)'
 complete $query_opt -s n -l name-matches -d "Name of gem(s) to query on matches the provided REGEXP" -x
 complete $query_opt -s d -l details -d "Display detailed information of gem(s)"
 complete $query_opt -l no-details -d "Don't display detailed information of gem(s)"
@@ -132,7 +132,7 @@ complete $query_opt -s b -l both -d "Allow LOCAL and REMOTE operations"
 
 ##
 # rdoc
-set -l rdoc_opt -c gem -n 'contains rdoc (commandline -poc)'
+set -l rdoc_opt -c gem -n 'contains rdoc (commandline -pxc)'
 complete $rdoc_opt -l all -d "Generate RDoc/RI documentation for all installed gems"
 complete $rdoc_opt -l rdoc -d "Include RDoc generated documents"
 complete $rdoc_opt -l no-rdoc -d "Don't include RDoc generated documents"
@@ -142,7 +142,7 @@ complete $rdoc_opt -s v -l version -d "Specify version of gem to rdoc" -x
 
 ##
 # search
-set -l search_opt -c gem -n 'contains search (commandline -poc)'
+set -l search_opt -c gem -n 'contains search (commandline -pxc)'
 complete $search_opt -s d -l details -d "Display detailed information of gem(s)"
 complete $search_opt -l no-details -d "Don't display detailed information of gem(s)"
 complete $search_opt -s l -l local -d "Restrict operations to the LOCAL domain (default)"
@@ -151,7 +151,7 @@ complete $search_opt -s b -l both -d "Allow LOCAL and REMOTE operations"
 
 ##
 # specification
-set -l specification_opt -c gem -n 'contains specification (commandline -poc)'
+set -l specification_opt -c gem -n 'contains specification (commandline -pxc)'
 complete $specification_opt -s v -l version -d "Specify version of gem to examine" -x
 complete $specification_opt -s l -l local -d "Restrict operations to the LOCAL domain (default)"
 complete $specification_opt -s r -l remote -d "Restrict operations to the REMOTE domain"
@@ -160,7 +160,7 @@ complete $specification_opt -l all -d "Output specifications for all versions of
 
 ##
 # uninstall
-set -l uninstall_opt -c gem -n 'contains uninstall (commandline -poc)'
+set -l uninstall_opt -c gem -n 'contains uninstall (commandline -pxc)'
 complete $uninstall_opt -s a -l all -d "Uninstall all matching versions"
 complete $uninstall_opt -l no-all -d "Don't uninstall all matching versions"
 complete $uninstall_opt -s i -l ignore-dependencies -d "Ignore dependency requirements while uninstalling"
@@ -171,12 +171,12 @@ complete $uninstall_opt -s v -l version -d "Specify version of gem to uninstall"
 
 ##
 # unpack
-set -l unpack_opt -c gem -n 'contains unpack (commandline -poc)'
+set -l unpack_opt -c gem -n 'contains unpack (commandline -pxc)'
 complete $unpack_opt -s v -l version -d "Specify version of gem to unpack" -x
 
 ##
 # update
-set -l update_opt -c gem -n 'contains update (commandline -poc)'
+set -l update_opt -c gem -n 'contains update (commandline -pxc)'
 complete $update_opt -s i -l install-dir -d "Gem repository directory to get installed gems"
 complete $update_opt -s N -l no-document -d "Disable documentation generation on update"
 complete $update_opt -l document -a '(__fish_append , rdoc ri)' -d "Specify the documentation types you wish to generate"

@@ -1,5 +1,5 @@
 function __setx_complete_args -d 'Function to generate args'
-    set -l previous_token (commandline -oc)[-1]
+    set -l previous_token (commandline -xc)[-1]
 
     if test "$previous_token" = /u
         __fish_print_windows_users

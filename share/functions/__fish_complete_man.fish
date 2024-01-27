@@ -4,7 +4,7 @@ function __fish_complete_man
     # use [^)]*, which should match any section.
     set -l section ""
     set -l token (commandline -ct)
-    set -l prev (commandline -poc)
+    set -l prev (commandline -pxc)
     set -e prev[1]
     while set -q prev[1]
         switch $prev[1]

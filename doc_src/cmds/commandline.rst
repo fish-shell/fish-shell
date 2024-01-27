@@ -74,13 +74,20 @@ The following options change the way ``commandline`` prints the current commandl
 
 **-c** or **--cut-at-cursor**
     Only print selection up until the current cursor position.
-    If combined with ``--tokenize``, this will print up until the last completed token - excluding the token the cursor is in.
+    If combined with ``--expand-tokens``, this will print up until the last completed token - excluding the token the cursor is in.
     This is typically what you would want for instance in completions.
-    To get both, use both ``commandline --cut-at-cursor --tokenize; commandline --cut-at-cursor --current-token``,
-    or ``commandline -co; commandline -ct`` for short.
+    To get both, use both ``commandline --cut-at-cursor --expand-tokens; commandline --cut-at-cursor --current-token``,
+    or ``commandline -cx; commandline -ct`` for short.
 
-**-o** or **--tokenize**
-    Tokenize the selection and print one string-type token per line.
+**-x** or **tokens-expanded**
+    Perform argument expansion on the selection and print one argument per line.
+    Command substituions are not expanded but forwarded as-is.
+
+**tokens-raw**
+    Print arguments in the selection as they appear on the command line, one per line.
+
+**-o** or **tokenize**
+    Deprecated, do not use.
 
 If ``commandline`` is called during a call to complete a given string using ``complete -C STRING``, ``commandline`` will consider the specified string to be the current contents of the command line.
 
@@ -128,7 +135,7 @@ The most common use for something like completions is
 
 ::
 
-   set -l tokens (commandline -opc)
+   set -l tokens (commandline -xpc)
 
 which gives the current *process* (what is being completed), tokenized into separate entries, up to but excluding the currently being completed token
 

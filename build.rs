@@ -13,6 +13,16 @@ fn main() {
     let build_dir = format!("{}/build", env!("CARGO_MANIFEST_DIR"));
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&build_dir);
     rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
+    // We need to canonicalize (i.e. realpath)
+    // the manifest dir because we want to compare it simply as a string at runtime.
+    rsconf::set_env_value(
+        "CARGO_MANIFEST_DIR",
+        std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
+            .unwrap()
+            .as_path()
+            .to_str()
+            .unwrap(),
+    );
 
     cc::Build::new()
         .file("src/libc.c")

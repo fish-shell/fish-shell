@@ -5121,6 +5121,15 @@ impl ReaderData {
         }
     }
 
+    fn try_insert(&mut self, c: &Completion, tok: &wstr, token_range: Range<usize>) {
+        // If this is a replacement completion, check that we know how to replace it, e.g. that
+        // the token doesn't contain evil operators like {}.
+        if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags)
+        {
+            self.completion_insert(&c.completion, token_range.end, c.flags);
+        }
+    }
+
     /// Handle the list of completions. This means the following:
     ///
     /// - If the list is empty, flash the terminal.
@@ -5137,9 +5146,6 @@ impl ReaderData {
     ///
     /// Return true if we inserted text into the command line, false if we did not.
     fn handle_completions(&mut self, comp: &[Completion], token_range: Range<usize>) -> bool {
-        let mut done = false;
-        let mut success = false;
-
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
         // Check trivial cases.
@@ -5147,23 +5153,12 @@ impl ReaderData {
         if len == 0 {
             // No suitable completions found, flash screen and return.
             self.flash();
-            done = true;
+            return false;
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.
             let c = &comp[0];
-
-            // If this is a replacement completion, check that we know how to replace it, e.g. that
-            // the token doesn't contain evil operators like {}.
-            if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(&tok, c.flags)
-            {
-                self.completion_insert(&c.completion, token_range.end, c.flags);
-            }
-            done = true;
-            success = true;
-        }
-
-        if done {
-            return success;
+            self.try_insert(c, &tok, token_range);
+            return true;
         }
 
         let best_rank = get_best_rank(comp);
@@ -5214,12 +5209,7 @@ impl ReaderData {
             // out how to use it more.
             let c = &surviving_completions[0];
 
-            // If this is a replacement completion, check that we know how to replace it, e.g. that
-            // the token doesn't contain evil operators like {}.
-            if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(&tok, c.flags)
-            {
-                self.completion_insert(&c.completion, token_range.end, c.flags);
-            }
+            self.try_insert(c, &tok, token_range);
             return true;
         }
 

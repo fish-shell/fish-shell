@@ -4,7 +4,6 @@ use super::prelude::*;
 use crate::proc::{proc_wait_any, Job};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
-use crate::wutil;
 
 /// \return true if we can wait on a job.
 fn can_wait_on_job(j: &Job) -> bool {

@@ -573,10 +573,7 @@ impl<'a> ParseExecutionContext {
         // which won't be doing what the user asks for
         //
         // (skipping in no-exec because we don't have the actual variable value)
-        if !no_exec()
-            && parser_keywords_is_subcommand(out_cmd)
-            && &unexp_cmd != out_cmd
-        {
+        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && &unexp_cmd != out_cmd {
             return report_error!(
                 self,
                 ctx,

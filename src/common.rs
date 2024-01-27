@@ -27,7 +27,7 @@ use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard, TryLockError};
+use std::sync::{Arc, MutexGuard};
 use std::time;
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -988,15 +988,6 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
-fn debug_thread_error() {
-    // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
-    // thread.
-    use crate::signal::SigChecker;
-    use crate::topic_monitor::topic_t;
-    let sigint = SigChecker::new(topic_t::sighupint);
-    sigint.wait();
-}
-
 /// Exits without invoking destructors (via _exit), useful for code after fork.
 pub fn exit_without_destructors(code: libc::c_int) -> ! {
     unsafe { libc::_exit(code) };
@@ -1911,49 +1902,6 @@ where
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}
-
-pub fn assert_is_locked_impl_do_not_use_directly<T>(
-    mutex: &Mutex<T>,
-    who: &str,
-    lineno: usize,
-    filename: &str,
-) {
-    match mutex.try_lock() {
-        Err(TryLockError::WouldBlock) => {
-            // Expected case.
-        }
-        Err(TryLockError::Poisoned(_)) => {
-            panic!(
-                "Mutex {} is poisoned in {} at line {}",
-                who, filename, lineno
-            );
-        }
-        Ok(_) => {
-            FLOG!(
-                error,
-                who,
-                "is not locked when it should be in",
-                filename,
-                "at line",
-                lineno
-            );
-            FLOG!(error, "Break on debug_thread_error to debug.");
-            debug_thread_error();
-        }
-    }
-}
-
-macro_rules! assert_is_locked {
-    ($lock:expr) => {
-        crate::common::assert_is_locked_impl_do_not_use_directly(
-            $lock,
-            stringify!($lock),
-            line!() as usize,
-            file!(),
-        )
-    };
-}
-pub(crate) use assert_is_locked;
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a
 /// session within a terminal emulator inside a desktop environment or over SSH. Unfortunately

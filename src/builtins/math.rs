@@ -49,8 +49,8 @@ fn parse_cmd_opts(
                 if optarg == "max" {
                     opts.scale = 15;
                 } else {
-                    let scale = fish_wcstoi(optarg);
-                    if scale.is_err() || scale.unwrap() < 0 || scale.unwrap() > 15 {
+                    let scale = fish_wcstoi(optarg).unwrap_or(-1);
+                    if scale < 0 || scale > 15 {
                         streams.err.append(wgettext_fmt!(
                             "%ls: %ls: invalid base value\n",
                             cmd,
@@ -59,7 +59,7 @@ fn parse_cmd_opts(
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
-                    opts.scale = scale.unwrap() as usize;
+                    opts.scale = scale as usize;
                 }
             }
             'b' => {
@@ -69,8 +69,8 @@ fn parse_cmd_opts(
                 } else if optarg == "octal" {
                     opts.base = 8;
                 } else {
-                    let base = fish_wcstoi(optarg);
-                    if base.is_err() || (base.unwrap() != 8 && base.unwrap() != 16) {
+                    let base = fish_wcstoi(optarg).unwrap_or(-1);
+                    if base != 8 && base != 16 {
                         streams.err.append(wgettext_fmt!(
                             "%ls: %ls: invalid base value\n",
                             cmd,
@@ -79,7 +79,7 @@ fn parse_cmd_opts(
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is 8 or 16.
-                    opts.base = base.unwrap() as usize;
+                    opts.base = base as usize;
                 }
             }
             'h' => {

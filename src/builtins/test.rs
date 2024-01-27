@@ -425,17 +425,15 @@ mod test_expressions {
                 }
 
                 // Parse another expression.
-                let expr = self.parse_unary_expression(idx, end);
-                if expr.is_none() {
+                let Some(expr) = self.parse_unary_expression(idx, end) else {
                     self.add_error(idx, sprintf!("Missing argument at index %u", idx + 1));
                     if !first {
                         // Clean up the dangling combiner, since it never got its right hand expression.
                         combiners.pop();
                     }
                     break;
-                }
+                };
                 // Go to the end of this expression.
-                let expr = expr.unwrap();
                 idx = expr.range().end;
                 subjects.push(expr);
                 first = false;
@@ -773,11 +771,10 @@ mod test_expressions {
     fn parse_number(arg: &wstr, number: &mut Number, errors: &mut Vec<WString>) -> bool {
         let floating = parse_double(arg);
         let integral: Result<i64, Error> = fish_wcstol(arg);
-        let got_int = integral.is_ok();
-        if got_int {
+        if let Ok(int) = integral {
             // Here the value is just an integer; ignore the floating point parse because it may be
             // invalid (e.g. not a representable integer).
-            *number = Number::new(integral.unwrap(), 0.0);
+            *number = Number::new(int, 0.0);
             true
         } else if floating.is_ok()
             && integral.unwrap_err() != Error::Overflow
@@ -816,10 +813,10 @@ mod test_expressions {
                 } else {
                     errors.push(wgettext_fmt!("Argument is not a number: '%ls'", arg));
                 }
-            } else if floating.is_ok() && floating.unwrap().is_nan() {
+            } else if floating.map_or(false, |x| x.is_nan()) {
                 // NaN is an error as far as we're concerned.
                 errors.push(wgettext!("Not a number").to_owned());
-            } else if floating.is_ok() && floating.unwrap().is_infinite() {
+            } else if floating.map_or(false, |x| x.is_infinite()) {
                 errors.push(wgettext!("Number is infinite").to_owned());
             } else if integral == Err(Error::Overflow) {
                 errors.push(wgettext_fmt!("Result too large: %ls", arg));

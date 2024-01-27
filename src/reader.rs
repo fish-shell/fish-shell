@@ -5124,8 +5124,7 @@ impl ReaderData {
     fn try_insert(&mut self, c: &Completion, tok: &wstr, token_range: Range<usize>) {
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
-        if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags)
-        {
+        if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags) {
             self.completion_insert(&c.completion, token_range.end, c.flags);
         }
     }

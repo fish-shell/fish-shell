@@ -362,7 +362,7 @@ impl Term {
 /// error output to stderr in case of failure.
 ///
 /// Any existing references from `curses::term()` will be invalidated by this call!
-pub fn setup<F>(term: Option<&CStr>, configure: F) -> Option<Arc<Term>>
+pub fn setup<F>(term: Option<&str>, configure: F) -> Option<Arc<Term>>
 where
     F: Fn(&mut Term),
 {
@@ -371,7 +371,7 @@ where
     let mut global_term = TERM.lock().expect("Mutex poisoned!");
 
     let res = if let Some(term) = term {
-        terminfo::Database::from_name(term.to_str().unwrap())
+        terminfo::Database::from_name(term)
     } else {
         // For historical reasons getting "None" means to get it from the environment.
         terminfo::Database::from_env()

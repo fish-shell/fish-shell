@@ -206,17 +206,12 @@ impl binary_semaphore_t {
             }
             Self::Pipes(pipes) => {
                 // Write exactly one byte.
-                let success;
                 loop {
-                    let ret = unistd::write(pipes.write.fd(), &[0]);
-                    if ret.err() == Some(Errno::EINTR) {
-                        continue;
+                    match unistd::write(pipes.write.fd(), &[0]) {
+                        Err(Errno::EINTR) => continue,
+                        Err(_) => self.die("write"),
+                        Ok(_) => break,
                     }
-                    success = ret.is_ok();
-                    break;
-                }
-                if !success {
-                    self.die("write");
                 }
             }
         }
@@ -227,17 +222,13 @@ impl binary_semaphore_t {
     pub fn wait(&self) {
         match self {
             Self::Semaphore(sem) => {
-                let mut res;
                 loop {
-                    res = unsafe { libc::sem_wait(sem.get()) };
-                    if res < 0 && Errno::last() == Errno::EINTR {
-                        continue;
+                    match unsafe { libc::sem_wait(sem.get()) } {
+                        0.. => break,
+                        _ if Errno::last() == Errno::EINTR => continue,
+                        // Other errors here are very unexpected.
+                        _ => self.die("sem_wait"),
                     }
-                    break;
-                }
-                // Other errors here are very unexpected.
-                if res < 0 {
-                    self.die("sem_wait");
                 }
             }
             Self::Pipes(pipes) => {
@@ -252,15 +243,12 @@ impl binary_semaphore_t {
                             fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);
                     }
                     let mut ignored: u8 = 0;
-                    let amt = unistd::read(fd, std::slice::from_mut(&mut ignored));
-                    if amt.ok() == Some(1) {
-                        break;
-                    }
-                    // EAGAIN should only be returned in TSan case.
-                    if amt.is_err()
-                        && (amt.err() != Some(Errno::EINTR) && amt.err() != Some(Errno::EAGAIN))
-                    {
-                        self.die("read");
+                    match unistd::read(fd, std::slice::from_mut(&mut ignored)) {
+                        Ok(1) => break,
+                        Ok(_) => continue,
+                        // EAGAIN should only be possible if TSAN workarounds have been applied
+                        Err(Errno::EINTR) | Err(Errno::EAGAIN) => continue,
+                        Err(_) => self.die("read"),
                     }
                 }
             }

@@ -601,10 +601,17 @@ impl Screen {
         unsafe { libc::fstat(STDOUT_FILENO, &mut post_buff_1) };
         unsafe { libc::fstat(STDERR_FILENO, &mut post_buff_2) };
 
+        // Yes these differ in one `_`. I hate it.
+        #[cfg(not(target_os = "netbsd"))]
         let changed = self.prev_buff_1.st_mtime != post_buff_1.st_mtime
             || self.prev_buff_1.st_mtime_nsec != post_buff_1.st_mtime_nsec
             || self.prev_buff_2.st_mtime != post_buff_2.st_mtime
             || self.prev_buff_2.st_mtime_nsec != post_buff_2.st_mtime_nsec;
+        #[cfg(target_os = "netbsd")]
+        let changed = self.prev_buff_1.st_mtime != post_buff_1.st_mtime
+            || self.prev_buff_1.st_mtimensec != post_buff_1.st_mtimensec
+            || self.prev_buff_2.st_mtime != post_buff_2.st_mtime
+            || self.prev_buff_2.st_mtimensec != post_buff_2.st_mtimensec;
 
         if changed {
             // Ok, someone has been messing with our screen. We will want to repaint. However, we do not

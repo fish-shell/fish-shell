@@ -1,3 +1,4 @@
+#include <locale.h>
 #include <paths.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -180,3 +181,9 @@ int C_RLIMIT_NTHR() {
     return -1;
 #endif
 }
+
+#ifdef LC_GLOBAL_LOCALE
+locale_t C_LC_GLOBAL_LOCALE() {
+    return LC_GLOBAL_LOCALE;
+}
+#endif

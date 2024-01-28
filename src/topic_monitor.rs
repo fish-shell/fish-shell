@@ -28,7 +28,6 @@ use crate::wutil::perror;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::{Cell, UnsafeCell};
-use std::mem;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
@@ -172,7 +171,7 @@ impl binary_semaphore_t {
         #[cfg(target_os = "linux")]
         {
             // sem_t does not have an initializer in Rust so we use zeroed().
-            let sem = Box::pin(UnsafeCell::new(unsafe { mem::zeroed() }));
+            let sem = Box::pin(UnsafeCell::new(unsafe { std::mem::zeroed() }));
 
             let res = unsafe { libc::sem_init(sem.get(), 0, 0) };
             if res == 0 {

@@ -1262,7 +1262,7 @@ impl MoveWordStateMachine {
 }
 
 fn is_path_component_character(c: char) -> bool {
-    tok_is_string_character(c, None) && !L!("/={,}'\":@").as_char_slice().contains(&c)
+    tok_is_string_character(c, None) && !L!("/={,}'\":@#").as_char_slice().contains(&c)
 }
 
 /// The position of the equal sign in a variable assignment like foo=bar.

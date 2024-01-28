@@ -1,5 +1,6 @@
+use std::fs::File;
 use std::io::Write;
-use std::os::fd::AsRawFd;
+use std::os::fd::{AsRawFd, IntoRawFd};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -21,7 +22,7 @@ struct ItemMaker {
     pub total_calls: AtomicUsize,
     item_id: AtomicU64,
     pub always_exit: bool,
-    pub writer: Mutex<AutoCloseFd>,
+    pub writer: Mutex<Option<File>>,
 }
 
 impl ItemMaker {
@@ -43,7 +44,7 @@ impl ItemMaker {
             total_calls: 0.into(),
             item_id: 0.into(),
             always_exit: false,
-            writer: Mutex::new(pipes.write),
+            writer: Mutex::new(Some(File::from(pipes.write))),
         };
 
         config(&mut result);
@@ -53,7 +54,8 @@ impl ItemMaker {
             let result = Arc::clone(&result);
             move |fd: &mut AutoCloseFd, reason: ItemWakeReason| result.callback(fd, reason)
         };
-        let item = FdMonitorItem::new(pipes.read, timeout, Box::new(callback));
+        let fd = AutoCloseFd::new(pipes.read.into_raw_fd());
+        let item = FdMonitorItem::new(fd, timeout, Box::new(callback));
         let item_id = monitor.add(item);
         result.item_id.store(u64::from(item_id), Ordering::Relaxed);
 
@@ -97,6 +99,8 @@ impl ItemMaker {
         let buf = [0u8; 42];
         let mut writer = self.writer.lock().expect("Mutex poisoned!");
         writer
+            .as_mut()
+            .unwrap()
             .write_all(&buf)
             .expect("Error writing 42 bytes to pipe!");
     }
@@ -137,11 +141,7 @@ fn fd_monitor_items() {
     item42_timeout.write42();
     item42_no_timeout.write42();
     item42_then_close.write42();
-    item42_then_close
-        .writer
-        .lock()
-        .expect("Mutex poisoned!")
-        .close();
+    *item42_then_close.writer.lock().expect("Mutex poisoned!") = None;
     item_oneshot.write42();
 
     monitor.poke_item(item_pokee.item_id());

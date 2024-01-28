@@ -28,6 +28,7 @@ use crate::wutil::perror;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::{Cell, UnsafeCell};
+use std::os::fd::AsRawFd;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
@@ -187,7 +188,7 @@ impl binary_semaphore_t {
         // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
         // non-blocking (so reads will never block) and use select() to poll it.
         if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
-            let _ = make_fd_nonblocking(pipes.read.fd());
+            let _ = make_fd_nonblocking(pipes.read.as_raw_fd());
         }
 
         Self::Pipes(pipes)
@@ -207,7 +208,7 @@ impl binary_semaphore_t {
             Self::Pipes(pipes) => {
                 // Write exactly one byte.
                 loop {
-                    match unistd::write(pipes.write.fd(), &[0]) {
+                    match unistd::write(pipes.write.as_raw_fd(), &[0]) {
                         Err(Errno::EINTR) => continue,
                         Err(_) => self.die("write"),
                         Ok(_) => break,
@@ -232,7 +233,7 @@ impl binary_semaphore_t {
                 }
             }
             Self::Pipes(pipes) => {
-                let fd = pipes.read.fd();
+                let fd = pipes.read.as_raw_fd();
                 // We must read exactly one byte.
                 loop {
                     // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()

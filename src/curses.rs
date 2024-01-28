@@ -41,6 +41,7 @@ pub fn term() -> Option<Arc<Term>> {
 ///
 /// An extant `Term` instance means the curses `TERMINAL *cur_term` pointer is non-null. Any
 /// functionality that is normally performed using `cur_term` should be done via `Term` instead.
+#[derive(Default)]
 pub struct Term {
     // String capabilities. Any Some value is confirmed non-empty.
     pub enter_bold_mode: Option<CString>,
@@ -392,6 +393,79 @@ where
         *global_term = None;
         None
     }
+}
+
+pub fn setup_fallback_term() -> Arc<Term> {
+    let mut global_term = TERM.lock().expect("Mutex poisoned!");
+    // These values extracted from xterm-256color from ncurses 6.4
+    let term = Term {
+        enter_bold_mode: Some(CString::new("\x1b[1m").unwrap()),
+        enter_italics_mode: Some(CString::new("\x1b[3m").unwrap()),
+        exit_italics_mode: Some(CString::new("\x1b[23m").unwrap()),
+        enter_dim_mode: Some(CString::new("\x1b[2m").unwrap()),
+        enter_underline_mode: Some(CString::new("\x1b[4m").unwrap()),
+        exit_underline_mode: Some(CString::new("\x1b[24m").unwrap()),
+        enter_reverse_mode: Some(CString::new("\x1b[7m").unwrap()),
+        enter_standout_mode: Some(CString::new("\x1b[7m").unwrap()),
+        exit_standout_mode: Some(CString::new("\x1b[27m").unwrap()),
+        enter_blink_mode: Some(CString::new("\x1b[5m").unwrap()),
+        enter_secure_mode: Some(CString::new("\x1b[8m").unwrap()),
+        enter_alt_charset_mode: Some(CString::new("\x1b(0").unwrap()),
+        exit_alt_charset_mode: Some(CString::new("\x1b(B").unwrap()),
+        set_a_foreground: Some(
+            CString::new("\x1b[%?%p1%{8}%<%t3%p1%d%e%p1%{16}%<%t9%p1%{8}%-%d%e38;5;%p1%d%;m")
+                .unwrap(),
+        ),
+        set_a_background: Some(
+            CString::new("\x1b[%?%p1%{8}%<%t4%p1%d%e%p1%{16}%<%t10%p1%{8}%-%d%e48;5;%p1%d%;m")
+                .unwrap(),
+        ),
+        exit_attribute_mode: Some(CString::new("\x1b(B\x1b[m").unwrap()),
+        clear_screen: Some(CString::new("\x1b[H\x1b[2J").unwrap()),
+        cursor_up: Some(CString::new("\x1b[A").unwrap()),
+        cursor_down: Some(CString::new("\n").unwrap()),
+        cursor_left: Some(CString::new("\x08").unwrap()),
+        cursor_right: Some(CString::new("\x1b[C").unwrap()),
+        parm_left_cursor: Some(CString::new("\x1b[%p1%dD").unwrap()),
+        parm_right_cursor: Some(CString::new("\x1b[%p1%dC").unwrap()),
+        clr_eol: Some(CString::new("\x1b[K").unwrap()),
+        clr_eos: Some(CString::new("\x1b[J").unwrap()),
+        max_colors: Some(256),
+        init_tabs: Some(8),
+        eat_newline_glitch: true,
+        auto_right_margin: true,
+        key_a1: Some(CString::new("\x1bOw").unwrap()),
+        key_a3: Some(CString::new("\x1bOy").unwrap()),
+        key_b2: Some(CString::new("\x1bOu").unwrap()),
+        key_backspace: Some(CString::new("\x7f").unwrap()),
+        key_btab: Some(CString::new("\x1b[Z").unwrap()),
+        key_c1: Some(CString::new("\x1bOq").unwrap()),
+        key_c3: Some(CString::new("\x1bOs").unwrap()),
+        key_dc: Some(CString::new("\x1b[3~").unwrap()),
+        key_down: Some(CString::new("\x1bOB").unwrap()),
+        key_f1: Some(CString::new("\x1bOP").unwrap()),
+        key_home: Some(CString::new("\x1bOH").unwrap()),
+        key_ic: Some(CString::new("\x1b[2~").unwrap()),
+        key_left: Some(CString::new("\x1bOD").unwrap()),
+        key_npage: Some(CString::new("\x1b[6~").unwrap()),
+        key_ppage: Some(CString::new("\x1b[5~").unwrap()),
+        key_right: Some(CString::new("\x1bOC").unwrap()),
+        key_sdc: Some(CString::new("\x1b[3;2~").unwrap()),
+        key_send: Some(CString::new("\x1b[1;2F").unwrap()),
+        key_sf: Some(CString::new("\x1b[1;2B").unwrap()),
+        key_shome: Some(CString::new("\x1b[1;2H").unwrap()),
+        key_sic: Some(CString::new("\x1b[2;2~").unwrap()),
+        key_sleft: Some(CString::new("\x1b[1;2D").unwrap()),
+        key_snext: Some(CString::new("\x1b[6;2~").unwrap()),
+        key_sprevious: Some(CString::new("\x1b[5;2~").unwrap()),
+        key_sr: Some(CString::new("\x1b[1;2A").unwrap()),
+        key_sright: Some(CString::new("\x1b[1;2C").unwrap()),
+        key_up: Some(CString::new("\x1bOA").unwrap()),
+        ..Default::default()
+    };
+    let term = Arc::new(term);
+    *global_term = Some(term.clone());
+    term
 }
 
 /// Return a nonempty String capability from termcap, or None if missing or empty.

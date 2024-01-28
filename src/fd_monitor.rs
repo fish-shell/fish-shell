@@ -38,9 +38,9 @@ pub enum ItemWakeReason {
 /// Importantly this is async signal safe. Of course it is `CLO_EXEC` as well.
 pub struct FdEventSignaller {
     // Always the read end of the fd; maybe the write end as well.
-    fd: AutoCloseFd,
+    fd: OwnedFd,
     #[cfg(not(HAVE_EVENTFD))]
-    write: AutoCloseFd,
+    write: OwnedFd,
 }
 
 impl FdEventSignaller {
@@ -56,7 +56,7 @@ impl FdEventSignaller {
                 exit_without_destructors(1);
             }
             Self {
-                fd: AutoCloseFd::new(fd),
+                fd: unsafe { OwnedFd::from_raw_fd(fd) },
             }
         }
         #[cfg(not(HAVE_EVENTFD))]
@@ -66,8 +66,8 @@ impl FdEventSignaller {
                 perror("pipe");
                 exit_without_destructors(1);
             };
-            make_fd_nonblocking(pipes.read.fd()).unwrap();
-            make_fd_nonblocking(pipes.write.fd()).unwrap();
+            make_fd_nonblocking(pipes.read.as_raw_fd()).unwrap();
+            make_fd_nonblocking(pipes.write.as_raw_fd()).unwrap();
             Self {
                 fd: pipes.read,
                 write: pipes.write,
@@ -77,7 +77,7 @@ impl FdEventSignaller {
 
     /// \return the fd to read from, for notification.
     pub fn read_fd(&self) -> RawFd {
-        self.fd.fd()
+        self.fd.as_raw_fd()
     }
 
     /// If an event is signalled, consume it; otherwise return.
@@ -169,9 +169,9 @@ impl FdEventSignaller {
     /// \return the fd to write to.
     fn write_fd(&self) -> RawFd {
         #[cfg(HAVE_EVENTFD)]
-        return self.fd.fd();
+        return self.fd.as_raw_fd();
         #[cfg(not(HAVE_EVENTFD))]
-        return self.write.fd();
+        return self.write.as_raw_fd();
     }
 }
 

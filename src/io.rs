@@ -21,7 +21,7 @@ use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 
@@ -296,13 +296,12 @@ impl IoData for IoFile {
 pub struct IoPipe {
     fd: RawFd,
     // The pipe's fd. Conceptually this is dup2'd to io_data_t::fd.
-    pipe_fd: AutoCloseFd,
+    pipe_fd: OwnedFd,
     /// Whether this is an input pipe. This is used only for informational purposes.
     is_input: bool,
 }
 impl IoPipe {
-    pub fn new(fd: RawFd, is_input: bool, pipe_fd: AutoCloseFd) -> Self {
-        assert!(pipe_fd.is_valid(), "Pipe is not valid");
+    pub fn new(fd: RawFd, is_input: bool, pipe_fd: OwnedFd) -> Self {
         IoPipe {
             fd,
             pipe_fd,
@@ -318,7 +317,7 @@ impl IoData for IoPipe {
         self.fd
     }
     fn source_fd(&self) -> RawFd {
-        self.pipe_fd.fd()
+        self.pipe_fd.as_raw_fd()
     }
     fn print(&self) {
         eprintf!(
@@ -338,7 +337,7 @@ pub struct IoBufferfill {
     target: RawFd,
 
     /// Write end. The other end is connected to an io_buffer_t.
-    write_fd: AutoCloseFd,
+    write_fd: OwnedFd,
 
     /// The receiving buffer.
     buffer: Arc<IoBuffer>,
@@ -361,7 +360,7 @@ impl IoBufferfill {
         // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
         // because our fillthread needs to poll to decide if it should shut down, and also accept input
         // from direct buffer transfers.
-        match make_fd_nonblocking(pipes.read.fd()) {
+        match make_fd_nonblocking(pipes.read.as_raw_fd()) {
             Ok(_) => (),
             Err(e) => {
                 FLOG!(warning, PIPE_ERROR);
@@ -372,7 +371,6 @@ impl IoBufferfill {
         // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
         let buffer = Arc::new(IoBuffer::new(buffer_limit));
         begin_filling(&buffer, pipes.read);
-        assert!(pipes.write.is_valid(), "fd is not valid");
         Some(Arc::new(IoBufferfill {
             target,
             write_fd: pipes.write,
@@ -408,10 +406,14 @@ impl IoData for IoBufferfill {
         self.target
     }
     fn source_fd(&self) -> RawFd {
-        self.write_fd.fd()
+        self.write_fd.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!("bufferfill %d -> %d\n", self.write_fd.fd(), self.fd())
+        eprintf!(
+            "bufferfill %d -> %d\n",
+            self.write_fd.as_raw_fd(),
+            self.fd()
+        )
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -533,7 +535,7 @@ impl IoBuffer {
 }
 
 /// Begin the fill operation, reading from the given fd in the background.
-fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
+fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: OwnedFd) {
     assert!(!iobuffer.fillthread_running(), "Already have a fillthread");
 
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
@@ -570,14 +572,14 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
             if reason == ItemWakeReason::Readable {
                 // select() reported us as readable; read a bit.
                 let mut buf = iobuffer.buffer.lock().unwrap();
-                let ret = IoBuffer::read_once(fd.fd(), &mut buf);
+                let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
                 done = ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
             } else if iobuffer.shutdown_fillthread.load() {
                 // Here our caller asked us to shut down; read while we keep getting data.
                 // This will stop when the fd is closed or if we get EAGAIN.
                 let mut buf = iobuffer.buffer.lock().unwrap();
                 loop {
-                    let ret = IoBuffer::read_once(fd.fd(), &mut buf);
+                    let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
                     if ret <= 0 {
                         break;
                     }
@@ -599,6 +601,7 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: AutoCloseFd) {
         })
     };
 
+    let fd = AutoCloseFd::new(fd.into_raw_fd());
     let item_id = fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
     iobuffer.item_id.store(u64::from(item_id), Ordering::SeqCst);
 }

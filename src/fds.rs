@@ -120,13 +120,12 @@ impl Drop for AutoCloseFd {
 }
 
 /// Helper type returned from make_autoclose_pipes.
-#[derive(Default)]
 pub struct AutoClosePipes {
     /// Read end of the pipe.
-    pub read: AutoCloseFd,
+    pub read: OwnedFd,
 
     /// Write end of the pipe.
-    pub write: AutoCloseFd,
+    pub write: OwnedFd,
 }
 
 /// Construct a pair of connected pipes, set to close-on-exec.
@@ -152,19 +151,12 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
         return None;
     }
 
-    let readp = AutoCloseFd::new(pipes[0]);
-    let writep = AutoCloseFd::new(pipes[1]);
+    let readp = unsafe { OwnedFd::from_raw_fd(pipes[0]) };
+    let writep = unsafe { OwnedFd::from_raw_fd(pipes[1]) };
 
     // Ensure our fds are out of the user range.
-    let readp = heightenize_fd(readp, already_cloexec);
-    if !readp.is_valid() {
-        return None;
-    }
-
-    let writep = heightenize_fd(writep, already_cloexec);
-    if !writep.is_valid() {
-        return None;
-    }
+    let readp = heightenize_fd(readp, already_cloexec)?;
+    let writep = heightenize_fd(writep, already_cloexec)?;
 
     Some(AutoClosePipes {
         read: readp,
@@ -178,24 +170,23 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
 /// setting it again.
 /// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
-fn heightenize_fd(fd: AutoCloseFd, input_has_cloexec: bool) -> AutoCloseFd {
-    // Check if the fd is invalid or already in our high range.
-    if !fd.is_valid() {
-        return fd;
-    }
-    if fd.fd() >= FIRST_HIGH_FD {
+fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> Option<OwnedFd> {
+    let raw_fd = fd.as_raw_fd();
+
+    if raw_fd >= FIRST_HIGH_FD {
         if !input_has_cloexec {
-            set_cloexec(fd.fd(), true);
+            set_cloexec(raw_fd, true);
         }
-        return fd;
+        return Some(fd);
     }
     // Here we are asking the kernel to give us a cloexec fd.
-    let newfd = unsafe { libc::fcntl(fd.fd(), F_DUPFD_CLOEXEC, FIRST_HIGH_FD) };
+    let newfd = unsafe { libc::fcntl(raw_fd, F_DUPFD_CLOEXEC, FIRST_HIGH_FD) };
     if newfd < 0 {
         perror("fcntl");
-        return AutoCloseFd::default();
+        return None;
     }
-    return AutoCloseFd::new(newfd);
+
+    Some(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
@@ -306,7 +297,8 @@ fn test_pipes() {
         }
     }
     for pipe in pipes {
-        for fd in [pipe.read.fd(), pipe.write.fd()] {
+        for fd in [&pipe.read, &pipe.write] {
+            let fd = fd.as_raw_fd();
             assert!(fd >= FIRST_HIGH_FD);
             let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
             assert!(flags >= 0);

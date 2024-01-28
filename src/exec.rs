@@ -14,7 +14,7 @@ use crate::common::{
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
-use crate::fds::{make_autoclose_pipes, open_cloexec, AutoCloseFd, AutoClosePipes, PIPE_ERROR};
+use crate::fds::{make_autoclose_pipes, open_cloexec, PIPE_ERROR};
 use crate::flog::FLOGF;
 use crate::fork_exec::blocked_signals_for_job;
 use crate::fork_exec::postfork::{
@@ -57,7 +57,7 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
 use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicUsize, Arc};
@@ -106,7 +106,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     let _timer = push_timer(job.wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
-    let mut deferred_pipes = AutoClosePipes::default();
+    let mut deferred_pipes = PartialPipes::default();
     let deferred_process = get_deferred_process(job);
 
     // We may want to transfer tty ownership to the pgroup leader.
@@ -125,7 +125,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     //
     // Lastly, a process may experience a pipeline-aborting error, which prevents launching
     // further processes in the pipeline.
-    let mut pipe_next_read = AutoCloseFd::empty();
+    let mut pipe_next_read: Option<OwnedFd> = None;
     let mut aborted_pipeline = false;
     let mut procs_launched = 0;
     for i in 0..job.processes().len() {
@@ -133,7 +133,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         // proc_pipes is the pipes applied to this process. That is, it is the read end
         // containing the output of the previous process (if any), plus the write end that will
         // output to the next process (if any).
-        let mut proc_pipes = AutoClosePipes::default();
+        let mut proc_pipes = PartialPipes::default();
         std::mem::swap(&mut proc_pipes.read, &mut pipe_next_read);
         if !p.is_last_in_job {
             let Some(pipes) = make_autoclose_pipes() else {
@@ -143,8 +143,8 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
                 abort_pipeline_from(job, i);
                 break;
             };
-            pipe_next_read = pipes.read;
-            proc_pipes.write = pipes.write;
+            pipe_next_read = Some(pipes.read);
+            proc_pipes.write = Some(pipes.write);
 
             // Save any deferred process for last. By definition, the deferred process can
             // never be the last process in the job, so it's safe to nest this in the outer
@@ -179,7 +179,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
             transfer.to_job_group(job.group.as_ref().unwrap());
         }
     }
-    pipe_next_read.close();
+    drop(pipe_next_read);
 
     // If our pipeline was aborted before any process was successfully launched, then there is
     // nothing to reap, and we can perform an early return.
@@ -202,7 +202,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
                 job,
                 block_io,
                 deferred_pipes,
-                &AutoClosePipes::default(),
+                &PartialPipes::default(),
                 true,
             )
             .is_err()
@@ -1181,6 +1181,14 @@ fn exec_builtin_process(
     Ok(())
 }
 
+#[derive(Default)]
+struct PartialPipes {
+    /// Read end of the pipe.
+    read: Option<OwnedFd>,
+    /// Write end of the pipe.
+    write: Option<OwnedFd>,
+}
+
 /// Executes a process \p \p in \p job, using the pipes \p pipes (which may have invalid fds if this
 /// is the first or last process).
 /// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
@@ -1193,8 +1201,8 @@ fn exec_process_in_job(
     p: &Process,
     j: &Job,
     block_io: IoChain,
-    pipes: AutoClosePipes,
-    deferred_pipes: &AutoClosePipes,
+    pipes: PartialPipes,
+    deferred_pipes: &PartialPipes,
     is_deferred_run: bool,
 ) -> LaunchResult {
     // The write pipe (destined for stdout) needs to occur before redirections. For example,
@@ -1232,11 +1240,11 @@ fn exec_process_in_job(
     // The IO chain for this process.
     let mut process_net_io_chain = block_io;
 
-    if pipes.write.is_valid() {
+    if let Some(fd) = pipes.write {
         process_net_io_chain.push(Arc::new(IoPipe::new(
             p.pipe_write_fd,
             false, /* not input */
-            pipes.write,
+            fd,
         )));
     }
 
@@ -1249,16 +1257,17 @@ fn exec_process_in_job(
     }
 
     // Read pipe goes last.
-    if pipes.read.is_valid() {
-        let pipe_read = Arc::new(IoPipe::new(STDIN_FILENO, true /* input */, pipes.read));
+    if let Some(fd) = pipes.read {
+        let pipe_read = Arc::new(IoPipe::new(STDIN_FILENO, true /* input */, fd));
         process_net_io_chain.push(pipe_read);
     }
 
     // If we have stashed pipes, make sure those get closed in the child.
-    for afd in [&deferred_pipes.read, &deferred_pipes.write] {
-        if afd.is_valid() {
-            process_net_io_chain.push(Arc::new(IoClose::new(afd.fd())));
-        }
+    for afd in [&deferred_pipes.read, &deferred_pipes.write]
+        .into_iter()
+        .flatten()
+    {
+        process_net_io_chain.push(Arc::new(IoClose::new(afd.as_raw_fd())));
     }
 
     if p.typ != ProcessType::block_node {

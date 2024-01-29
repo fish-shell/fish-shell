@@ -341,7 +341,7 @@ fn test_autoload() {
         let fd = wopen_cloexec(
             path,
             OFlag::O_RDWR | OFlag::O_CREAT,
-            Mode::from_bits(0o666).unwrap(),
+            Mode::from_bits_truncate(0o666),
         )
         .unwrap();
         write_loop(&fd, "Hello".as_bytes()).unwrap();

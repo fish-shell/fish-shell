@@ -441,11 +441,7 @@ impl EnvUniversal {
 
         let mut res_fd = None;
         while res_fd.is_none() {
-            let fd = match wopen_cloexec(
-                &self.vars_path,
-                flags,
-                Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IROTH,
-            ) {
+            let fd = match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
                 Ok(fd) => fd,
                 Err(err) => {
                     if err == nix::Error::EINTR {

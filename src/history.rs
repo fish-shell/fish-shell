@@ -128,7 +128,7 @@ const HISTORY_SAVE_MAX: NonZeroUsize = unsafe { NonZeroUsize::new_unchecked(1024
 const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
 
 /// The file access mode we use for creating history files
-const HISTORY_FILE_MODE: Mode = Mode::S_IRUSR.union(Mode::S_IWUSR);
+const HISTORY_FILE_MODE: Mode = Mode::from_bits_truncate(0o600);
 
 /// How many times we retry to save
 /// Saving may fail if the file is modified in between our opening

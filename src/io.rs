@@ -1007,7 +1007,7 @@ const FILE_ERROR: &wstr = L!("An error occurred while redirecting file '%ls'");
 const NOCLOB_ERROR: &wstr = L!("The file '%ls' already exists");
 
 /// Base open mode to pass to calls to open.
-const OPEN_MASK: Mode = unsafe { Mode::from_bits_unchecked(0o666) };
+const OPEN_MASK: Mode = Mode::from_bits_truncate(0o666);
 
 /// Provide the fd monitor used for background fillthread operations.
 fn fd_monitor() -> &'static mut FdMonitor {

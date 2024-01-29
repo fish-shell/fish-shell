@@ -261,6 +261,9 @@ impl binary_semaphore_t {
     }
 }
 
+// sem_destroy has been deprecated since macOS 10.10 but we only use it under Linux so silence the
+// warning.
+#[cfg_attr(target_os = "macos", allow(deprecated))]
 impl Drop for binary_semaphore_t {
     fn drop(&mut self) {
         if let Self::Semaphore(sem) = self {

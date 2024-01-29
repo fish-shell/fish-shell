@@ -7,8 +7,7 @@ use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use errno::{errno, set_errno};
 use libc::{
-    c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_CLOEXEC,
-    O_NONBLOCK,
+    c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBLOCK,
 };
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;
@@ -139,7 +138,7 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
     let mut already_cloexec = false;
     #[cfg(HAVE_PIPE2)]
     {
-        if unsafe { libc::pipe2(&mut pipes[0], O_CLOEXEC) } < 0 {
+        if unsafe { libc::pipe2(&mut pipes[0], libc::O_CLOEXEC) } < 0 {
             FLOG!(warning, PIPE_ERROR);
             perror("pipe2");
             return None;

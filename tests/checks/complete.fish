@@ -601,3 +601,5 @@ complete -C'complete_long_option --slo'
 complete complete_long_option -f -o an-old-option
 complete -C'complete_long_option -ao'
 # CHECK: -an-old-option
+# But only if the user typed a dash
+complete -C'complete_long_option lo'

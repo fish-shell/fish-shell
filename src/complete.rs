@@ -1435,6 +1435,9 @@ impl<'ctx> Completer<'ctx> {
                 if whole_opt.len() < s.len() {
                     continue;
                 }
+                if !s.starts_with("-") {
+                    continue;
+                }
                 let anchor_start = !self.flags.fuzzy_match;
                 let Some(r#match) = string_fuzzy_match_string(s, &whole_opt, anchor_start) else {
                     continue;

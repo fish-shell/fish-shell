@@ -190,7 +190,7 @@ Examples
 
 ``math -s0 10.0 / 6.0`` outputs ``1``.
 
-``math -s3 10 / 6`` outputs ``1.666``.
+``math -s3 10 / 6`` outputs ``1.667``.
 
 ``math "sin(pi)"`` outputs ``0``.
 

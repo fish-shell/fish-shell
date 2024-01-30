@@ -1239,7 +1239,7 @@ reset\t'Exit a bisect session and reset HEAD'
 visualize\t'See remaining commits in gitk'
 replay\t'Replay a bisect log file'
 log\t'Record a bisect log file'
-run\t'Bisect automaically with the given command as discriminator'
+run\t'Bisect automatically with the given command as discriminator'
 help\t'Print a synopsis of all commands'
 "
 complete -c git -n '__fish_git_using_command bisect' -n '__fish_seen_argument --' -F

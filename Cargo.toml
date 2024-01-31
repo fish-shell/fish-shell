@@ -53,6 +53,7 @@ rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 widestring = "1.1.0"
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
+rust-embed = { version = "8.2.0", optional = true }
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic = { version = "1", default-features = false, features = [
@@ -83,8 +84,9 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = []
+default = ["installable"]
 benchmark = []
+installable = ["dep:rust-embed"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

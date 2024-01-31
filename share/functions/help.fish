@@ -181,7 +181,7 @@ function help --description 'Show help for the fish shell'
     set -l version_string (string split . -f 1,2 -- $version | string join .)
     set -l ext_url https://fishshell.com/docs/$version_string/$fish_help_page
     set -l page_url
-    if test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon
+    if set -q __fish_help_dir[1]; and test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon
         # Help is installed, use it
         set page_url file://$__fish_help_dir/$fish_help_page
 

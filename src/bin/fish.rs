@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(unstable_name_collisions)]
 #![allow(clippy::uninlined_format_args)]
 
+#[allow(unused_imports)]
+use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
     builtins::shared::{
@@ -71,8 +73,102 @@ use std::{env, ops::ControlFlow};
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
+const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
+
+#[cfg(feature = "installable")]
+fn install(confirm: bool) {
+    use rust_embed::RustEmbed;
+
+    #[derive(RustEmbed)]
+    #[folder = "share/"]
+    struct Asset;
+
+    use std::fs;
+    use std::io::ErrorKind;
+    use std::io::Write;
+    use std::io::{stderr, stdin};
+    let Some(home) = fish::env::get_home() else {
+        eprintln!("Can't find $HOME",);
+        std::process::exit(1);
+    };
+    let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);
+
+    // TODO: Translation,
+    // FLOG?
+    // - Install: Translations
+    // - Install: Manpages (build via build.rs)
+    // - Don't install: __fish_build_paths.fish.in
+    if confirm {
+        if isatty(libc::STDIN_FILENO) {
+            eprintln!(
+                "This will write fish's data files to '{}'.\n\
+                 Please enter 'yes' to continue.",
+                dir.display()
+            );
+            eprint!("> ");
+            let _ = stderr().flush();
+        }
+
+        let mut input = String::new();
+        if let Err(error) = stdin().read_line(&mut input) {
+            eprintln!("error: {error}")
+        }
+
+        if input != "yes\n" {
+            eprintln!("Exiting without writing any files\n");
+            std::process::exit(1);
+        }
+    } else {
+        eprintln!("Installing fish's data files to '{}'.", dir.display());
+    }
+
+    // Remove the install directory first, to clean out any removed files.
+    if let Err(err) = fs::remove_dir_all(dir.clone()) {
+        if err.kind() != ErrorKind::NotFound {
+            eprintln!("Removing '{}' failed: {}", dir.display(), err);
+            std::process::exit(1);
+        }
+    }
+
+    for file in Asset::iter() {
+        let path = dir.join(file.as_ref());
+        let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
+            eprintln!(
+                "Creating directory '{}' failed",
+                path.parent().unwrap().display()
+            );
+            std::process::exit(1);
+        };
+        let res = File::create(&path);
+        let Ok(mut f) = res else {
+            eprintln!("Creating file '{}' failed", path.display());
+            continue;
+        };
+        // This should be impossible.
+        let d = Asset::get(&file).expect("File was somehow not included???");
+        if let Err(error) = f.write_all(&d.data) {
+            eprintln!("error: {error}");
+            std::process::exit(1);
+        }
+    }
+    let verfile = dir.join("fish-install-version");
+    let res = File::create(&verfile);
+    if let Ok(mut f) = res {
+        f.write_all(fish::BUILD_VERSION.as_bytes())
+            .expect("FAILED TO WRITE");
+    } else {
+        eprintln!("Creating file '{}' failed", verfile.display());
+    };
+    std::process::exit(0);
+}
+
+#[cfg(not(feature = "installable"))]
+fn install(_confirm: bool) {
+    eprintln!("Fish was built without support for self-installation");
+    std::process::exit(1);
+}
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -207,12 +303,31 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
     if !done {
         // Fall back to what got compiled in.
+        let data = if cfg!(feature = "installable") {
+            let Some(home) = fish::env::get_home() else {
+                FLOG!(
+                    error,
+                    "Cannot find home directory and will refuse to read configuration"
+                );
+                return paths;
+            };
+
+            PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR)
+        } else {
+            PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR)
+        };
+        let bin = if cfg!(feature = "installable") {
+            exec_path.parent().map(|x| x.to_path_buf())
+        } else {
+            Some(PathBuf::from(BIN_DIR))
+        };
+
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
-            data: PathBuf::from(DATA_DIR).join("fish"),
+            data,
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
-            bin: Some(BIN_DIR.into()),
+            bin,
         }
     }
 
@@ -266,6 +381,49 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
     let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
+
+    #[cfg(feature = "installable")]
+    {
+        // (false-positive, is_none_or is a backport, this builds with 1.70)
+        #[allow(clippy::incompatible_msrv)]
+        if paths
+            .bin
+            .clone()
+            .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
+        {
+            // When fish is installable, we write the version to a file,
+            // now we check it.
+            let verfile =
+                PathBuf::from(fish::common::wcs2osstring(&datapath)).join("fish-install-version");
+            let version = match std::fs::read_to_string(verfile) {
+                Ok(x) => x,
+                Err(err) => {
+                    let escaped_pathname = escape(&datapath);
+                    FLOGF!(
+                        error,
+                        "Fish cannot find its asset files in '%ls'.\n\
+                         Refusing to read configuration because of this.\n\
+                         The underlying error is: '%ls'",
+                        escaped_pathname,
+                        err.to_string()
+                    );
+                    return;
+                }
+            };
+
+            if version != fish::BUILD_VERSION {
+                FLOGF!(
+                    error,
+                    "Asset files are version %s, this fish is version %s. Please run `fish --install` again",
+                    version,
+                    fish::BUILD_VERSION
+                );
+                // We could refuse to read any config,
+                // but that seems a bit harsh.
+                // return;
+            }
+        }
+    }
     if !source_config_in_directory(parser, &datapath) {
         // If we cannot read share/config.fish, our internal configuration,
         // something is wrong.
@@ -274,8 +432,14 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let escaped_pathname = escape(&datapath);
         FLOGF!(
             error,
-            "Fish cannot find its asset files in '%ls'. Refusing to read configuration.",
-            escaped_pathname
+            "Fish cannot find its asset files in '%ls'.\n\
+             Refusing to read configuration because of this.",
+            escaped_pathname,
+        );
+        #[cfg(feature = "installable")]
+        FLOG!(
+            error,
+            "If you installed via `cargo install`, please run `fish --install` and restart fish."
         );
         return;
     }
@@ -336,6 +500,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
+        wopt(L!("install"), OptionalArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -370,6 +535,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'f' => opts.features = w.woptarg.unwrap().to_owned(),
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
+            'I' => {
+                let noconfirm = match w.woptarg {
+                    None => false,
+                    Some(n) if n == L!("noconfirm") => true,
+                    _ => {
+                        FLOGF!(
+                            error,
+                            "Unknown argument to --install: '%ls'",
+                            w.woptarg.unwrap()
+                        );
+                        std::process::exit(1);
+                    }
+                };
+                install(!noconfirm);
+            }
             'l' => opts.is_login = true,
             'N' => {
                 opts.no_config = true;

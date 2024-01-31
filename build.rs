@@ -223,10 +223,10 @@ fn setup_paths() {
         var
     }
 
-    let prefix = if let Ok(pre) = env::var("PREFIX") {
-        PathBuf::from(pre)
+    let (prefix_from_home, prefix) = if let Ok(pre) = env::var("PREFIX") {
+        (false, PathBuf::from(pre))
     } else if let Ok(home) = env::var("HOME") {
-        PathBuf::from(home).join(".local/")
+        (true, PathBuf::from(home).join(".local/"))
     } else {
         panic!("Need either $PREFIX or $HOME");
     };
@@ -241,11 +241,24 @@ fn setup_paths() {
     rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DATADIR");
 
+    let datadir_subdir = if prefix_from_home {
+        "fish/install"
+    } else {
+        "fish"
+    };
+    rsconf::set_env_value("DATADIR_SUBDIR", datadir_subdir);
+
     let bindir = get_path("BINDIR", "bin/", prefix.clone());
     rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("BINDIR");
 
-    let sysconfdir = get_path("SYSCONFDIR", "etc/", datadir.clone());
+    let sysconfdir = get_path(
+        "SYSCONFDIR",
+        // If we get our prefix from $HOME, we should use the system's /etc/
+        // ~/.local/share/etc/ makes no sense
+        if prefix_from_home { "/etc/" } else { "etc/" },
+        datadir.clone(),
+    );
     rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
 

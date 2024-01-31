@@ -247,7 +247,8 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 }
 
 // Source the file config.fish in the given directory.
-fn source_config_in_directory(parser: &Parser, dir: &wstr) {
+// Returns true if successful, false if not.
+fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -263,7 +264,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) {
             "not sourcing %ls (not readable or does not exist)",
             escaped_pathname
         );
-        return;
+        return false;
     }
     FLOG!(config, "sourcing", escaped_pathname);
 
@@ -272,11 +273,25 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) {
     parser.libdata_mut().pods.within_fish_init = true;
     let _ = parser.eval(&cmd, &IoChain::new());
     parser.libdata_mut().pods.within_fish_init = false;
+    return true;
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    source_config_in_directory(parser, &str2wcstring(paths.data.as_os_str().as_bytes()));
+    let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
+    if !source_config_in_directory(parser, &datapath) {
+        // If we cannot read share/config.fish, our internal configuration,
+        // something is wrong.
+        // That also means that our functions won't be found,
+        // and so any config we get would almost certainly be broken.
+        let escaped_pathname = escape(&datapath);
+        FLOGF!(
+            error,
+            "Fish cannot find its asset files in '%ls'. Refusing to read configuration.",
+            escaped_pathname
+        );
+        return;
+    }
     source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));
 
     // We need to get the configuration directory before we can source the user configuration file.

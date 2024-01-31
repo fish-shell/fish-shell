@@ -65,6 +65,7 @@ function(FISH_LINK_DEPS_AND_SIGN target)
     ${Rust_CARGO} ARGS build --bin ${target}
       $<$<CONFIG:Release,RelWithDebInfo>:--release>
       --target ${Rust_CARGO_TARGET}
+      --no-default-features
       ${CARGO_FLAGS}
       ${FEATURES_ARG}
     DEPENDS ${sources} src/bin/${target}.rs

@@ -208,7 +208,14 @@ fn setup_paths() {
         var
     }
 
-    let prefix = PathBuf::from(env::var("PREFIX").unwrap_or("/usr/local".to_string()));
+    let prefix = if let Ok(pre) = env::var("PREFIX") {
+        PathBuf::from(pre)
+    } else if let Ok(home) = env::var("HOME") {
+        PathBuf::from(home).join(".local/")
+    } else {
+        panic!("Need either $PREFIX or $HOME");
+    };
+
     if prefix.is_relative() {
         panic!("Can't have relative prefix");
     }

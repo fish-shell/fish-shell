@@ -287,7 +287,9 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let escaped_pathname = escape(&datapath);
         FLOGF!(
             error,
-            "Fish cannot find its asset files in '%ls'. Refusing to read configuration.",
+            "Fish cannot find its asset files in '%ls'.\n\
+             Please copy the share/ directory from the fish repository there and restart fish.\n\
+             Refusing to read configuration because of this.",
             escaped_pathname
         );
         return;

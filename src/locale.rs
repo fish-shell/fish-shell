@@ -65,18 +65,17 @@ unsafe fn read_locale() -> Option<Locale> {
     extern "C" {
         fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
-    let LC_GLOBAL_LOCALE: libc::locale_t = unsafe { crate::libc::C_LC_GLOBAL_LOCALE() };
 
     const empty: [libc::c_char; 1] = [0];
-    let cur = libc::duplocale(LC_GLOBAL_LOCALE);
-    if cur.is_null() {
-        return None;
-    }
-    // Note that, counter-intuitively, newlocale() frees 'cur'.
-    let loc = libc::newlocale(libc::LC_NUMERIC_MASK, empty.as_ptr(), cur);
+
+    // We create a new locale (pass 0 locale_t base)
+    // and pass no "locale", so everything else is taken from the environment.
+    // This is fine because we're only using this for numbers.
+    let loc = libc::newlocale(libc::LC_NUMERIC_MASK, empty.as_ptr(), 0 as libc::locale_t);
     if loc.is_null() {
         return None;
     }
+
     let lconv = localeconv_l(loc);
     let result = if lconv.is_null() {
         None

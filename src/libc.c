@@ -8,11 +8,6 @@
 #include <term.h>
 #include <unistd.h>
 
-// LC_GLOBAL_LOCALE and locale_t are in xlocale.h on macOS
-#ifdef __APPLE__
-#include <xlocale.h>
-#endif
-
 #define UNUSED(x) (void)(x)
 
 size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
@@ -185,12 +180,4 @@ int C_RLIMIT_NTHR() {
 #else
     return -1;
 #endif
-}
-
-locale_t C_LC_GLOBAL_LOCALE() {
-    // LC_GLOBAL_LOCALE is usually -1, but not always (e.g. under NetBSD).
-#ifdef LC_GLOBAL_LOCALE
-    return LC_GLOBAL_LOCALE;
-#endif
-    return (locale_t)-1;
 }

@@ -182,8 +182,10 @@ int C_RLIMIT_NTHR() {
 #endif
 }
 
-#ifdef LC_GLOBAL_LOCALE
 locale_t C_LC_GLOBAL_LOCALE() {
+    // LC_GLOBAL_LOCALE is usually -1, but not always (e.g. under NetBSD).
+#ifdef LC_GLOBAL_LOCALE
     return LC_GLOBAL_LOCALE;
-}
 #endif
+    return (locale_t)-1;
+}

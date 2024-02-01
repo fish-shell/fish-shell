@@ -65,11 +65,7 @@ unsafe fn read_locale() -> Option<Locale> {
     extern "C" {
         fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
-    /// Rust libc does not provide LC_GLOBAL_LOCALE, but it is usually -1.
     #[cfg(not(target_os = "netbsd"))]
-    const LC_GLOBAL_LOCALE: libc::locale_t = (-1_isize) as libc::locale_t;
-    // On NetBSD it's not.
-    #[cfg(target_os = "netbsd")]
     let LC_GLOBAL_LOCALE: libc::locale_t = unsafe { crate::libc::C_LC_GLOBAL_LOCALE() };
 
     const empty: [libc::c_char; 1] = [0];

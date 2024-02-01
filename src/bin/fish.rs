@@ -39,12 +39,10 @@ use fish::{
     },
     eprintf,
     event::{self, Event},
-    fds::set_cloexec,
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
     fprintf, function, future_feature_flags as features, history,
     history::start_private_mode,
     io::IoChain,
-    libc::setlinebuf,
     nix::{getpid, isatty},
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -511,48 +509,26 @@ fn main() {
         opts.debug_output = env::var_os("FISH_DEBUG_OUTPUT");
     }
 
-    let mut debug_output = std::ptr::null_mut();
     if let Some(debug_path) = opts.debug_output {
-        let path = cstr_from_osstr(&debug_path);
-        let mode = CString::new("w").unwrap();
-        let debug_file = unsafe { libc::fopen(path.as_ptr(), mode.as_ptr()) };
-
-        if debug_file.is_null() {
-            eprintln!("Could not open file {:?}", debug_output);
-            let s = CString::new("fopen").unwrap();
-            unsafe { libc::perror(s.as_ptr()) }
-            std::process::exit(-1);
-        }
-
-        set_cloexec(unsafe { libc::fileno(debug_file) }, true);
-        unsafe { setlinebuf(debug_file) };
-        set_flog_file_fd(unsafe { libc::fileno(debug_file) });
-
-        debug_output = debug_file;
-
-        /* TODO: just use File when C++ does not need a *mut FILE
-
-        debug_output = match File::options()
+        match File::options()
             .write(true)
             .truncate(true)
             .create(true)
-            .open(debug_path)
+            .open(debug_path.clone())
         {
             Ok(dbg_file) => {
                 // Rust sets O_CLOEXEC by default
                 // https://github.com/rust-lang/rust/blob/07438b0928c6691d6ee734a5a77823ec143be94d/library/std/src/sys/unix/fs.rs#L1059
 
                 flog::set_flog_file_fd(dbg_file.as_raw_fd());
-                Some(dbg_file)
             }
             Err(e) => {
                 // TODO: should not be debug-print
-                eprintln!("Could not open file {:?}", debug_output);
+                eprintln!("Could not open file {:?}", debug_path);
                 eprintln!("{}", e);
                 std::process::exit(1);
             }
         };
-        */
     }
 
     // No-exec is prohibited when in interactive mode.
@@ -754,10 +730,6 @@ fn main() {
     history::save_all();
     if opts.print_rusage_self {
         print_rusage_self();
-    }
-
-    if !debug_output.is_null() {
-        unsafe { libc::fclose(debug_output) };
     }
 
     asan_maybe_exit(exit_status);

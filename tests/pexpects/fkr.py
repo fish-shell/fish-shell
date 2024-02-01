@@ -49,6 +49,10 @@ expect_str("char: \\e\r\n")
 expect_str("char: \\x7F")
 expect_str("""(aka "del")\r\nbind \\e\\x7F 'do something'\r\n""")
 
+send("\x1c")
+expect_str(r"char: \c\  (or \x1c)")
+expect_str(r"bind \x1c 'do something'")
+
 # Does it keep running if handed control sequences in the wrong order?
 send("\x03")
 sleep(0.010)

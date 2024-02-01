@@ -88,7 +88,7 @@ fn must_escape(c: char) -> bool {
 }
 
 fn ctrl_to_symbol(buf: &mut WString, c: char, bind_friendly: bool) {
-    let ctrl_symbolic_names: [&wstr; 28] = {
+    let ctrl_symbolic_names: [&wstr; 29] = {
         std::array::from_fn(|i| match i {
             8 => L!("\\b"),
             9 => L!("\\t"),

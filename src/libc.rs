@@ -103,7 +103,6 @@ extern "C" {
     fn C_RLIMIT_NTHR() -> i32; // ifndef: -1
 }
 
-#[cfg(target_os = "netbsd")]
 extern "C" {
     pub fn C_LC_GLOBAL_LOCALE() -> libc::locale_t;
 }

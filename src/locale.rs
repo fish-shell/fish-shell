@@ -65,7 +65,6 @@ unsafe fn read_locale() -> Option<Locale> {
     extern "C" {
         fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
-    #[cfg(not(target_os = "netbsd"))]
     let LC_GLOBAL_LOCALE: libc::locale_t = unsafe { crate::libc::C_LC_GLOBAL_LOCALE() };
 
     const empty: [libc::c_char; 1] = [0];

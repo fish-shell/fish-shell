@@ -24,6 +24,7 @@ fn main() {
             .unwrap(),
     );
 
+    rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)

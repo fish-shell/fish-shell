@@ -7,7 +7,7 @@ use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
-use crate::env_universal_common::{CallbackDataList, EnvUniversal};
+use crate::env_universal_common::CallbackDataList;
 use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
@@ -36,12 +36,7 @@ use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
-
-// Universal variables instance.
-lazy_static! {
-    static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());
-}
+use std::sync::Arc;
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

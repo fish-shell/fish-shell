@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::builtins::*;
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
-use crate::io::{IoChain, IoFd, OutputStream};
+use crate::io::{IoFd, OutputStream};
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{Block, BlockType, LoopStatus};
@@ -553,7 +553,7 @@ pub fn builtin_print_help_error(
     }
     let name_esc = escape(cmd);
     let mut cmd = sprintf!("__fish_print_help %ls ", &name_esc);
-    let mut ios = IoChain::new();
+    let mut ios = streams.io_chain.clone();
     if !error_message.is_empty() {
         cmd.push_utfstr(&escape(error_message));
         // If it's an error, redirect the output of __fish_print_help to stderr

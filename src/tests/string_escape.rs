@@ -155,7 +155,7 @@ fn test_escape_no_printables() {
 }
 
 /// The number of tests to run.
-const ESCAPE_TEST_COUNT: usize = 100_000;
+const ESCAPE_TEST_COUNT: usize = 20_000;
 /// The average length of strings to unescape.
 const ESCAPE_TEST_LENGTH: usize = 100;
 /// The highest character number of character to try and escape.

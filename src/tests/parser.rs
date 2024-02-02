@@ -690,7 +690,7 @@ fn test_expand_argument_list() {
 
 fn test_1_cancellation(src: &wstr) {
     let filler = IoBufferfill::create().unwrap();
-    let delay = Duration::from_millis(500);
+    let delay = Duration::from_millis(100);
     let thread = unsafe { libc::pthread_self() } as usize;
     iothread_perform(move || {
         // Wait a while and then SIGINT the main thread.

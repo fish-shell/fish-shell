@@ -102,7 +102,7 @@ add_definitions(-D_REENTRANT)
 # and then depend on it.
 add_custom_command(
   OUTPUT always_rebuild
-  COMMAND true
+  COMMAND echo
 )
 
 add_custom_command(

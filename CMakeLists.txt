@@ -94,6 +94,17 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 # Enable thread-safe errno on Solaris (#5611)
 add_definitions(-D_REENTRANT)
 
+# Cmake doesn't know when cargo should be rerun.
+# We could enumerate when (source files changed, Cargo.toml/lock, cargo update, ...),
+# but that's a pain and cargo takes <100ms when there's nothing to do,
+# so we can just always rerun it.
+# So this adds a dummy command that is successful but creates no output,
+# and then depend on it.
+add_custom_command(
+  OUTPUT always_rebuild
+  COMMAND true
+)
+
 add_custom_command(
   OUTPUT ${rust_target_dir}/${rust_profile}/libfish.rlib
   COMMAND ${CMAKE_COMMAND} -E env
@@ -107,6 +118,7 @@ add_custom_command(
       ${FEATURES_ARG}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   USES_TERMINAL
+  DEPENDS always_rebuild
   # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
   )
 add_custom_target(libfish DEPENDS ${rust_target_dir}/${rust_profile}/libfish.rlib)

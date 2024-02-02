@@ -264,9 +264,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l for-your-eyes-only -d "Set the 'for your eyes only' flag in the message"
     complete -c $__fish_complete_gpg_command -l no-for-your-eyes-only -d "Clear the 'for your eyes only' flag in the message"
 
-    complete -c $__fish_complete_gpg_command -l use-embedded-filename -d "Create file with name as given in data"
-    complete -c $__fish_complete_gpg_command -l no-use-embedded-filename -d "Don't create file with name as given in data"
-
     complete -c $__fish_complete_gpg_command -l completes-needed -x -d "Number of completely trusted users to introduce a new key signer (defaults to 1)"
     complete -c $__fish_complete_gpg_command -l marginals-needed -x -d "Number of marginally trusted users to introduce a new key signer (defaults to 3)"
 

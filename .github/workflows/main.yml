@@ -163,7 +163,7 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake -DWITH_GETTEXT=NO ..
+        cmake -DWITH_GETTEXT=NO -DCMAKE_BUILD_TYPE=Debug ..
     - name: make
       run: |
         make VERBOSE=1

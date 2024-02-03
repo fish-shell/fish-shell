@@ -76,7 +76,7 @@ A "normal" color tells the terminal to go back to its normal formatting options.
 interpret as instructions - for example, to change color. So ``set_color red`` produces the same
 effect as::
 
-  echo \e\[31mfoo
+  echo \e\[31m
 
 Although you can write your own escape sequences by hand, it's much easier to use ``set_color``.
 
@@ -114,7 +114,7 @@ First of all, since every command (except for :doc:`set <cmds/set>`) changes the
 
   set -l last_status $status
   
-And after that, you can set a string if it not zero::
+And after that, you can set a string if it is not zero::
   
   # Prompt status only if it's not 0
   set -l stat

@@ -32,6 +32,7 @@ The following ``argparse`` options are available. They must appear before all *O
 
 **-x** or **--exclusive** *OPTIONS*
     A comma separated list of options that are mutually exclusive. You can use this more than once to define multiple sets of mutually exclusive options.
+    You give either the short or long version of each option, and you still need to otherwise define the options.
 
 **-N** or **--min-args** *NUMBER*
     The minimum number of acceptable non-option arguments. The default is zero.
@@ -204,6 +205,37 @@ Some *OPTION_SPEC* examples:
 After parsing the arguments the ``argv`` variable is set with local scope to any values not already consumed during flag processing. If there are no unbound values the variable is set but ``count $argv`` will be zero.
 
 If an error occurs during argparse processing it will exit with a non-zero status and print error messages to stderr.
+
+Examples
+---------
+
+A simple use::
+
+    argparse h/help -- $argv
+    or return
+
+    if set -q _flag_help
+        # TODO: Print help here
+        return 0
+    end
+
+This just wants one option - ``-h`` / ``--help``. Any other option is an error. If it is given it prints help and exits.
+
+How :doc:`fish_add_path` parses its args::
+
+  argparse -x g,U -x P,U -x a,p g/global U/universal P/path p/prepend a/append h/help m/move v/verbose n/dry-run -- $argv
+
+There are a variety of boolean flags, all with long and short versions. A few of these cannot be used together, and that is what the ``-x`` flag is used for.
+``-x g,U`` means that ``--global`` and ``--universal`` or their short equivalents conflict, and if they are used together you get an error.
+In this case you only need to give the short or long flag, not the full option specification.
+
+After this it figures out which variable it should operate on according to the ``--path`` flag::
+
+    set -l var fish_user_paths
+    set -q _flag_path
+    and set var PATH
+
+
 
 Limitations
 -----------

@@ -1,12 +1,15 @@
 fish 3.8.0 (released ???)
 ===================================
 
-.. ignore: 9439 9440 9442 9452 9469 9480 9482
+.. ignore: 9439 9440 9442 9452 9469 9480 9482 9520 9536 9541 9544 9559 9561 9576 9575
+   9568 9588 9556 9563 9567 9585 9591 9593 9594 9603 9600 9599 9592 9612 9613 9619 9630 9638 9625 9654 9637 9673 9666 9626 9688 9725 9636 9735 
+
+The entirety of fish's code has been ported to rust from C++ (:issue:`9512`).
+This means a large change in dependencies and how to build fish.
+Packagers should see the :ref:`For Distributors <rust-packaging>` section at the end.
 
 Notable backwards-incompatible changes
 --------------------------------------
-fish is being (once you are reading this hopefully "has been") ported to rust, which unfortunately involves a few backwards-incompatible changes.
-We have tried to keep these to a minimum, but in some cases it is unavoidable.
 
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
@@ -67,10 +70,22 @@ Other improvements
 - ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
 - ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
 
+.. _rust-packaging:
+
 For distributors
 ----------------
+
+Fish has been entirely ported to rust. That means the dependencies have changed.
+
+It now requires rust 1.67 at least.
+
+CMake remains for now because cargo is unable to install the many asset files that fish needs. The minimum required CMake version has increased to 3.19.
+
+Some smaller changes:
+
+- The default build configuration has changed to "Debug".
+  Please pass ``-DCMAKE_BUILD_TYPE=Release`` if you want to build a package.
 - Xcode support has been removed (:issue:`9924`).
-- *Placeholder to fix Sphinx warning*
 
 --------------
 

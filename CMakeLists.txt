@@ -11,7 +11,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # We are C++11.
 set(CMAKE_CXX_STANDARD 11)
-set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+set(DEFAULT_BUILD_TYPE "Debug")
 
 # Generate Xcode schemas (but not for tests).
 set(CMAKE_XCODE_GENERATE_SCHEME 1)

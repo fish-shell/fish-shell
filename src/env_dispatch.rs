@@ -518,17 +518,9 @@ fn initialize_curses_using_fallbacks(vars: &EnvStack) {
 
         // `term` here is one of our hard-coded strings above; we can unwrap because we can
         // guarantee it doesn't contain any interior NULs.
-        success = curses::setup(Some(&term), |term| apply_term_hacks(vars, term)).is_some();
-        if is_interactive_session() {
-            if success {
-                FLOG!(warning, wgettext!("Using fallback terminal type"), term);
-            } else {
-                FLOG!(
-                    warning,
-                    wgettext!("Could not set up terminal using the fallback terminal type"),
-                    term,
-                );
-            }
+        success = curses::setup(Some(term), |term| apply_term_hacks(vars, term)).is_some();
+        if is_interactive_session() && success {
+            FLOG!(warning, wgettext!("Using fallback terminal type"), term);
         }
 
         if success {
@@ -661,15 +653,18 @@ fn init_curses(vars: &EnvStack) {
     if curses::setup(None, |term| apply_term_hacks(vars, term)).is_none() {
         if is_interactive_session() {
             let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
-            FLOG!(warning, wgettext!("Could not set up terminal."));
-            if let Some(term) = term {
-                FLOG!(warning, wgettext!("TERM environment variable set to"), term);
-                FLOG!(
-                    warning,
-                    wgettext!("Check that this terminal type is supported on this system.")
-                );
-            } else {
-                FLOG!(warning, wgettext!("TERM environment variable not set."));
+            // We do not warn for xterm-256color at all, we know that one.
+            if term != Some("xterm-256color".into()) {
+                FLOG!(warning, wgettext!("Could not set up terminal."));
+                if let Some(term) = term {
+                    FLOG!(warning, wgettext!("TERM environment variable set to"), term);
+                    FLOG!(
+                        warning,
+                        wgettext!("Check that this terminal type is supported on this system.")
+                    );
+                } else {
+                    FLOG!(warning, wgettext!("TERM environment variable not set."));
+                }
             }
         }
 

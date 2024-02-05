@@ -563,7 +563,6 @@ fn main() {
     let mut paths: Option<ConfigPaths> = None;
     // If we're not executing, there's no need to find the config.
     if !opts.no_exec {
-        // PORTING: C++ had not converted, we must revert
         paths = Some(determine_config_directory_paths(OsString::from_vec(
             wcs2string(&args[0]),
         )));
@@ -661,7 +660,6 @@ fn main() {
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
-        // C++ had not converted at this point, we must undo
         let n = wcs2string(&args[my_optind]);
         let path = OsStr::from_bytes(&n);
         my_optind += 1;
@@ -677,7 +675,6 @@ fn main() {
                 eprintln!("{}", e);
             }
             Ok(f) => {
-                // PORTING: the args were converted to WString here in C++
                 let list = &args[my_optind..];
                 parser.vars().set(
                     L!("argv"),

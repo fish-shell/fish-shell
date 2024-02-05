@@ -21,7 +21,6 @@ use crate::{
     wutil::wcstoi::wcstoi_partial,
 };
 
-// FIXME: (once localization works in Rust) These should separate `%ls: ` and the trailing `\n`, like in builtins/string
 const MISMATCHED_ARGS: &str = "%ls: given %d indexes but %d values\n";
 const UVAR_ERR: &str =
     "%ls: successfully set universal '%ls'; but a global by that name shadows it\n";
@@ -420,8 +419,6 @@ fn split_var_and_indexes_internal<'a>(
     mode: EnvMode,
     vars: &dyn Environment,
 ) -> Result<SplitVar<'a>, EnvArrayParseError> {
-    // PORTING: this should probably be made reusable in some way?
-
     let mut res = SplitVar::default();
     let open_bracket = arg.find_char('[');
     res.varname = open_bracket.map(|b| &arg[..b]).unwrap_or(arg);

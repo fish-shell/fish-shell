@@ -377,7 +377,7 @@ impl std::fmt::Display for EnvArrayParseError {
 struct SplitVar<'a> {
     varname: &'a wstr,
     var: Option<EnvVar>,
-    indexes: Vec<usize>,
+    indexes: Vec<isize>,
 }
 
 impl<'a> SplitVar<'a> {
@@ -428,8 +428,7 @@ fn split_var_and_indexes_internal<'a>(
         return Ok(res);
     };
 
-    // PORTING: this should return an error if there is no var,
-    // we need the length of the array to validate the indexes
+    // We need the length of the array to validate the indexes.
     let len = res
         .var
         .as_ref()
@@ -455,24 +454,15 @@ fn split_var_and_indexes_internal<'a>(
         }
 
         // Convert negative index to a positive index.
-        let signed_to_unsigned = |i: isize| -> Result<usize, EnvArrayParseError> {
-            match i.try_into() {
-                Ok(idx) => Ok(idx),
-                Err(_) => {
-                    let Some(idx) = len.checked_add_signed(i).map(|i| i + 1) else {
-                        // PORTING: this was not handled in C++, l_ind was just kept as an `i64`
-                        // this should have a separate error
-                        // also: in the case of `var[1 1]` we should probably either de-duplicate
-                        // or make that a hard error.
-                        // the behavior of `..` is also somewhat weird
-                        return Err(EnvArrayParseError::InvalidIndex(res.varname.to_owned()));
-                    };
-                    Ok(idx)
-                }
+        let convert_negative_index = |i: isize| -> isize {
+            if i >= 0 {
+                i
+            } else {
+                isize::try_from(len).unwrap() + i + 1
             }
         };
 
-        let l_ind: usize = signed_to_unsigned(l_ind)?;
+        let l_ind = convert_negative_index(l_ind);
 
         if c.char_at(0) == '.' && c.char_at(1) == '.' {
             // If we are at the last index range expression, a missing end-index means the range
@@ -493,7 +483,7 @@ fn split_var_and_indexes_internal<'a>(
                 }
             }
 
-            let l_ind2: usize = signed_to_unsigned(l_ind2)?;
+            let l_ind2 = convert_negative_index(l_ind2);
             if l_ind < l_ind2 {
                 res.indexes.extend(l_ind..=l_ind2);
             } else {
@@ -509,7 +499,7 @@ fn split_var_and_indexes_internal<'a>(
 
 /// Given a list of values and 1-based indexes, return a new list with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
-fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<usize>) -> Vec<WString> {
+fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WString> {
     // Sort our indexes into *descending* order.
     indexes.sort_by_key(|&index| std::cmp::Reverse(index));
 
@@ -518,6 +508,9 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<usize>) -> Vec<WS
 
     // Now when we walk indexes, we encounter larger indexes first.
     for idx in indexes {
+        let Ok(idx) = usize::try_from(idx) else {
+            continue;
+        };
         if idx > 0 && idx <= input.len() {
             // One-based indexing!
             input.remove(idx - 1);
@@ -605,7 +598,7 @@ fn query(
             // Increment for every index out of range.
             let varsize = split.varsize();
             for idx in split.indexes {
-                if idx < 1 || idx > varsize {
+                if idx < 1 || usize::try_from(idx).unwrap() > varsize {
                     retval += 1;
                 }
             }
@@ -873,7 +866,7 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
     // For each (index, argument) pair, set the element in our \p result to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.
     for (i, arg) in argv.iter().copied().enumerate() {
-        let lidx = split.indexes[i];
+        let lidx = usize::try_from(split.indexes[i]).unwrap();
         assert!(lidx >= 1, "idx should have been verified in range already");
         // Convert from 1-based to 0-based.
         let idx = lidx - 1;

@@ -946,4 +946,21 @@ set -e
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)
 
+while set -e undefined
+end
+
+set -e undefined[x..]
+# CHECKERR: set: Invalid index starting at 'undefined'
+# CHECKERR: checks/set.fish (line 952):
+# CHECKERR: set -e undefined[x..]
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+set -e undefined[1..]
+set -e undefined[..]
+set -e undefined[..1]
+
+set -l negative_oob 1 2 3
+set -q negative_oob[-10..1]
+
 exit 0

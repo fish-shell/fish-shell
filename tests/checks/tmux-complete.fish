@@ -77,3 +77,10 @@ isolated-tmux send-keys C-u echo Space old-arg Enter C-l foo2 Space Tab Tab M-.
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 5> foo2 aabc old-arg
+
+isolated-tmux send-keys C-u 'echo suggest this' Enter C-l
+tmux-sleep
+isolated-tmux send-keys 'echo sug' C-w C-z
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 6> echo suggest this

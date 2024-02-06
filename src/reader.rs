@@ -2932,6 +2932,7 @@ impl ReaderData {
                     self.flash();
                     return;
                 }
+                self.suppress_autosuggestion = false;
                 if elt == EditableLineTag::Commandline {
                     self.clear_pager();
                 }

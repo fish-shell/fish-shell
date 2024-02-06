@@ -1859,6 +1859,8 @@ impl ReaderData {
 
                     if elt == EditableLineTag::Commandline {
                         zelf.clear_pager();
+                        // We end history search. We could instead update the search string.
+                        zelf.history_search.reset();
                     }
                 } else {
                     // This can happen if the user presses a control char we don't recognize. No

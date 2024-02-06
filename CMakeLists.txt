@@ -114,8 +114,7 @@ add_custom_command(
   DEPENDS ${sources}
   DEPENDS Cargo.toml Cargo.lock build.rs
   # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
-  )
-add_custom_target(libfish DEPENDS ${rust_target_dir}/${rust_profile}/libfish.rlib)
+)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
@@ -129,7 +128,7 @@ function(FISH_LINK_DEPS_AND_SIGN target)
       --target ${Rust_CARGO_TARGET}
       ${CARGO_FLAGS}
       ${FEATURES_ARG}
-    DEPENDS libfish
+    DEPENDS ${rust_target_dir}/${rust_profile}/libfish.rlib
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL
     # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string

@@ -15,6 +15,7 @@ use crate::common::{
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
+use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::history::{history_session_id, History};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
@@ -1394,7 +1395,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
         expand_home_directory(&mut input, self.ctx.vars());
-        expand_percent_self(&mut input);
+        if !feature_test(FeatureFlag::remove_percent_self) {
+            expand_percent_self(&mut input);
+        }
         if !out.add(input) {
             return append_overflow_error(self.errors, None);
         }

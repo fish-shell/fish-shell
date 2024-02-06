@@ -19,6 +19,8 @@ pub enum FeatureFlag {
 
     /// Whether "&" is not-special if followed by a word character.
     ampersand_nobg_in_token,
+    /// Whether "%self" is expanded to fish's pid
+    remove_percent_self,
 }
 
 struct Features {
@@ -83,6 +85,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: true,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::remove_percent_self,
+        name: L!("remove-percent-self"),
+        groups: L!("3.8"),
+        description: L!("%self is no longer expanded (use $fish_pid)"),
+        default_value: false,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -142,6 +152,7 @@ impl Features {
                 AtomicBool::new(METADATA[1].default_value),
                 AtomicBool::new(METADATA[2].default_value),
                 AtomicBool::new(METADATA[3].default_value),
+                AtomicBool::new(METADATA[4].default_value),
             ],
         }
     }

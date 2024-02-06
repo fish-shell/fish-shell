@@ -798,7 +798,10 @@ impl Pager {
         // Ensure our suggested row start is not too early before it.
         if self.suggested_row_start + visible_row_count <= row_containing_selection {
             // The user moved south past the bottom completion.
-            if !self.fully_disclosed && rendering.remaining_to_disclose > 0 {
+            if matches!(direction, SelectionMotion::South | SelectionMotion::East)
+                && !self.fully_disclosed
+                && rendering.remaining_to_disclose > 0
+            {
                 self.fully_disclosed = true; // perform disclosure
             } else {
                 // Scroll

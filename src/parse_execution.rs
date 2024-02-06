@@ -34,6 +34,7 @@ use crate::parse_constants::{
 use crate::parse_tree::{NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::parser::{Block, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
+use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::pointer::ConstPointer;
 use crate::proc::{
@@ -565,6 +566,20 @@ impl<'a> ParseExecutionContext {
                 STATUS_ILLEGAL_CMD.unwrap(),
                 &statement.command,
                 "The expanded command was empty."
+            );
+        }
+        // Complain if we've expanded to a subcommand keyword like "command" or "if",
+        // because these will call the corresponding *builtin*,
+        // which won't be doing what the user asks for
+        //
+        // (skipping in no-exec because we don't have the actual variable value)
+        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && &unexp_cmd != out_cmd {
+            return report_error!(
+                self,
+                ctx,
+                STATUS_ILLEGAL_CMD.unwrap(),
+                &statement.command,
+                "The expanded command is a keyword."
             );
         }
         EndExecutionReason::ok

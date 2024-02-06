@@ -951,6 +951,7 @@ impl Pager {
         self.search_field_shown = false;
         self.search_field_line.clear();
         self.extra_progress_text.clear();
+        self.suggested_row_start = 0;
     }
 
     // Updates the completions list per the filter.

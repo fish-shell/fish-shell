@@ -19,6 +19,8 @@ else()
 endif()
 
 set(rust_profile $<IF:$<CONFIG:Debug>,debug,release>)
+set(rust_debugflags "$<$<CONFIG:Debug,RelWithDebInfo>:-g>")
+
 
 # Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the
 # truthiness of the strings if they are set.
@@ -56,4 +58,5 @@ set(VARS_FOR_CARGO
     "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
     "CARGO_BUILD_RUSTC=${RUSTC_EXECUTABLE}"
     "${FISH_PCRE2_BUILDFLAG}"
+    "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
 )

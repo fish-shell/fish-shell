@@ -102,7 +102,6 @@ add_custom_command(
   OUTPUT ${rust_target_dir}/${rust_profile}/libfish.rlib
   COMMAND ${CMAKE_COMMAND} -E env
       ${VARS_FOR_CARGO}
-      $<$<CONFIG:Debug,RelWithDebInfo>:RUSTFLAGS=-g>
     ${Rust_CARGO} ARGS
       build --lib
       $<$<CONFIG:Release,RelWithDebInfo>:--release>
@@ -122,7 +121,6 @@ function(FISH_LINK_DEPS_AND_SIGN target)
     OUTPUT ${rust_target_dir}/${rust_profile}/${target}
     COMMAND ${CMAKE_COMMAND} -E env
       ${VARS_FOR_CARGO}
-      $<$<CONFIG:Debug,RelWithDebInfo>:RUSTFLAGS=-g>
     ${Rust_CARGO} ARGS build --bin ${target}
       $<$<CONFIG:Release,RelWithDebInfo>:--release>
       --target ${Rust_CARGO_TARGET}

@@ -9,7 +9,10 @@
 //! used by fish
 
 use crate::common::ToCString;
+use crate::FLOGF;
+use std::env;
 use std::ffi::{CStr, CString};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -376,7 +379,31 @@ where
     } else {
         // For historical reasons getting "None" means to get it from the environment.
         terminfo::Database::from_env()
-    };
+    }
+    .or_else(|x| {
+        // Try some more paths
+        let t = if let Some(term) = term {
+            term.to_string()
+        } else if let Ok(name) = env::var("TERM") {
+            name
+        } else {
+            return Err(x);
+        };
+        let first_char = t.chars().next().unwrap().to_string();
+        for dir in [
+            "/run/current-system/sw/share/terminfo", // Nix
+            "/usr/pkg/share/terminfo",               // NetBSD
+        ] {
+            let mut path = PathBuf::from(dir);
+            path.push(first_char.clone());
+            path.push(t.clone());
+            FLOGF!(term_support, "Trying path '%ls'", path.to_str().unwrap());
+            if let Ok(db) = terminfo::Database::from_path(path) {
+                return Ok(db);
+            }
+        }
+        Err(x)
+    });
 
     // Safely store the new Term instance or replace the old one. We have the lock so it's safe to
     // drop the old TERM value and have its refcount decremented - no one will be cloning it.

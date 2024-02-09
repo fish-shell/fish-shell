@@ -45,7 +45,7 @@ complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 
 # Remote path
 # Get the list of remote files from the scp target.
-string match -rq 'OpenSSH_(?<major>\d+)\.*' -- (ssh -V 2>&1)
+string match -rq 'OpenSSH_\w*(?<major>\d+)\.*' -- (ssh -V 2>&1)
 if test "$major" -ge 9
     complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a "
     (__scp_remote_target):( \

@@ -75,9 +75,6 @@ const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
 pub const ENCODE_DIRECT_BASE: char = '\u{F600}';
 pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
 
-// The address where bug reports for this package should be sent.
-pub const PACKAGE_BUGREPORT: &str = "https://github.com/fish-shell/fish-shell/issues";
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
     Script(EscapeFlags),

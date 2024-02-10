@@ -3473,8 +3473,10 @@ impl<'s> Populator<'s> {
             // Now try parsing a node.
             if let Some(node) = self.try_parse::<ListType::ContentsNode>() {
                 // #7201: Minimize reallocations of contents vector
+                // Empirically, 99.97% of cases are 16 elements or fewer,
+                // with 75% being empty, so this works out best.
                 if contents.is_empty() {
-                    contents.reserve(64);
+                    contents.reserve(16);
                 }
                 contents.push(node);
             } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {

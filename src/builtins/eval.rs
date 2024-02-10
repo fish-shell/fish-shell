@@ -26,11 +26,11 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
     let mut stdout_fill = None;
     if streams.out_is_piped {
         match IoBufferfill::create_opts(parser.libdata().pods.read_limit, STDOUT_FILENO) {
-            None => {
+            Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
                 return STATUS_CMD_ERROR;
             }
-            Some(buffer) => {
+            Ok(buffer) => {
                 stdout_fill = Some(buffer.clone());
                 ios.push(buffer);
             }
@@ -41,11 +41,11 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
     let mut stderr_fill = None;
     if streams.err_is_piped {
         match IoBufferfill::create_opts(parser.libdata().pods.read_limit, STDERR_FILENO) {
-            None => {
+            Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
                 return STATUS_CMD_ERROR;
             }
-            Some(buffer) => {
+            Ok(buffer) => {
                 stderr_fill = Some(buffer.clone());
                 ios.push(buffer);
             }

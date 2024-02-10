@@ -6,9 +6,8 @@ use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
 use errno::{errno, set_errno};
-use libc::{
-    c_int, EINTR, FD_CLOEXEC, F_DUPFD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBLOCK,
-};
+use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBLOCK};
+use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;
 use std::io::{self, Read, Write};
@@ -130,35 +129,39 @@ pub struct AutoClosePipes {
 
 /// Construct a pair of connected pipes, set to close-on-exec.
 /// \return None on fd exhaustion.
-pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
-    let mut pipes: [c_int; 2] = [-1, -1];
-
+pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     #[allow(unused_mut, unused_assignments)]
     let mut already_cloexec = false;
     #[cfg(HAVE_PIPE2)]
-    {
-        if unsafe { libc::pipe2(&mut pipes[0], libc::O_CLOEXEC) } < 0 {
+    let pipes = match nix::unistd::pipe2(OFlag::O_CLOEXEC) {
+        Ok(pipes) => {
+            already_cloexec = true;
+            pipes
+        }
+        Err(err) => {
             FLOG!(warning, PIPE_ERROR);
             perror("pipe2");
-            return None;
+            return Err(err);
         }
-        already_cloexec = true;
-    }
+    };
     #[cfg(not(HAVE_PIPE2))]
-    if unsafe { libc::pipe(&mut pipes[0]) } < 0 {
-        FLOG!(warning, PIPE_ERROR);
-        perror("pipe2");
-        return None;
-    }
+    let pipes = match nix::unistd::pipe() {
+        Ok(pipes) => pipes,
+        Err(err) => {
+            FLOG!(warning, PIPE_ERROR);
+            perror("pipe2");
+            return Err(err);
+        }
+    };
 
-    let readp = unsafe { OwnedFd::from_raw_fd(pipes[0]) };
-    let writep = unsafe { OwnedFd::from_raw_fd(pipes[1]) };
+    let readp = unsafe { OwnedFd::from_raw_fd(pipes.0) };
+    let writep = unsafe { OwnedFd::from_raw_fd(pipes.1) };
 
     // Ensure our fds are out of the user range.
     let readp = heightenize_fd(readp, already_cloexec)?;
     let writep = heightenize_fd(writep, already_cloexec)?;
 
-    Some(AutoClosePipes {
+    Ok(AutoClosePipes {
         read: readp,
         write: writep,
     })
@@ -170,23 +173,26 @@ pub fn make_autoclose_pipes() -> Option<AutoClosePipes> {
 /// setting it again.
 /// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
-fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> Option<OwnedFd> {
+fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
     let raw_fd = fd.as_raw_fd();
 
     if raw_fd >= FIRST_HIGH_FD {
         if !input_has_cloexec {
             set_cloexec(raw_fd, true);
         }
-        return Some(fd);
-    }
-    // Here we are asking the kernel to give us a cloexec fd.
-    let newfd = unsafe { libc::fcntl(raw_fd, F_DUPFD_CLOEXEC, FIRST_HIGH_FD) };
-    if newfd < 0 {
-        perror("fcntl");
-        return None;
+        return Ok(fd);
     }
 
-    Some(unsafe { OwnedFd::from_raw_fd(newfd) })
+    // Here we are asking the kernel to give us a cloexec fd.
+    let newfd = match nix::fcntl::fcntl(raw_fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)) {
+        Ok(newfd) => newfd,
+        Err(err) => {
+            perror("fcntl");
+            return Err(err);
+        }
+    };
+
+    Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
 
 /// Sets CLO_EXEC on a given fd according to the value of \p should_set.
@@ -292,7 +298,7 @@ fn test_pipes() {
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     let mut pipes = vec![];
     for _i in 0..10 {
-        if let Some(pipe) = make_autoclose_pipes() {
+        if let Ok(pipe) = make_autoclose_pipes() {
             pipes.push(pipe);
         }
     }

@@ -21,6 +21,7 @@ use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
+use std::io;
 use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
@@ -345,14 +346,14 @@ pub struct IoBufferfill {
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
-    pub fn create() -> Option<Arc<IoBufferfill>> {
+    pub fn create() -> io::Result<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
     /// \returns nullptr on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
-    pub fn create_opts(buffer_limit: usize, target: RawFd) -> Option<Arc<IoBufferfill>> {
+    pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<IoBufferfill>> {
         assert!(target >= 0, "Invalid target fd");
 
         // Construct our pipes.
@@ -365,13 +366,13 @@ impl IoBufferfill {
             Err(e) => {
                 FLOG!(warning, PIPE_ERROR);
                 perror_io("fcntl", &e);
-                return None;
+                return Err(e);
             }
         }
         // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
         let buffer = Arc::new(IoBuffer::new(buffer_limit));
         begin_filling(&buffer, pipes.read);
-        Some(Arc::new(IoBufferfill {
+        Ok(Arc::new(IoBufferfill {
             target,
             write_fd: pipes.write,
             buffer,

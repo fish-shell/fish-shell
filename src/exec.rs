@@ -136,7 +136,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         let mut proc_pipes = PartialPipes::default();
         std::mem::swap(&mut proc_pipes.read, &mut pipe_next_read);
         if !p.is_last_in_job {
-            let Some(pipes) = make_autoclose_pipes() else {
+            let Ok(pipes) = make_autoclose_pipes() else {
                 FLOGF!(warning, "%ls", wgettext!(PIPE_ERROR));
                 perror("pipe");
                 aborted_pipeline = true;
@@ -1048,12 +1048,12 @@ fn exec_block_or_func_process(
     if piped_output_needs_buffering {
         // Be careful to handle failure, e.g. too many open fds.
         match IoBufferfill::create() {
-            Some(tmp) => {
+            Ok(tmp) => {
                 // Teach the job about its bufferfill, and add it to our io chain.
                 io_chain.push(tmp.clone());
                 block_output_bufferfill = Some(tmp);
             }
-            None => return Err(()),
+            Err(_) => return Err(()),
         }
     }
 
@@ -1477,8 +1477,7 @@ fn exec_subshell_internal(
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    let Some(bufferfill) =
-        IoBufferfill::create_opts(parser.libdata().pods.read_limit, STDOUT_FILENO)
+    let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().pods.read_limit, STDOUT_FILENO)
     else {
         *break_expand = true;
         return STATUS_CMD_ERROR.unwrap();

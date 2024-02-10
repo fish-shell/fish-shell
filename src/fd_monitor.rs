@@ -62,7 +62,7 @@ impl FdEventSignaller {
         #[cfg(not(HAVE_EVENTFD))]
         {
             // Implementation using pipes.
-            let Some(pipes) = make_autoclose_pipes() else {
+            let Ok(pipes) = make_autoclose_pipes() else {
                 perror("pipe");
                 exit_without_destructors(1);
             };

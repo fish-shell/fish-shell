@@ -98,23 +98,6 @@ add_definitions(-D_REENTRANT)
 # not run cargo, so we need to tell it *something*
 FILE(GLOB sources src/*)
 
-add_custom_command(
-  OUTPUT ${rust_target_dir}/${rust_profile}/libfish.rlib
-  COMMAND ${CMAKE_COMMAND} -E env
-      ${VARS_FOR_CARGO}
-    ${Rust_CARGO} ARGS
-      build --lib
-      $<$<CONFIG:Release,RelWithDebInfo>:--release>
-      --target ${Rust_CARGO_TARGET}
-      ${CARGO_FLAGS}
-      ${FEATURES_ARG}
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  USES_TERMINAL
-  DEPENDS ${sources}
-  DEPENDS Cargo.toml Cargo.lock build.rs
-  # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
-)
-
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
   add_custom_command(
@@ -126,7 +109,8 @@ function(FISH_LINK_DEPS_AND_SIGN target)
       --target ${Rust_CARGO_TARGET}
       ${CARGO_FLAGS}
       ${FEATURES_ARG}
-    DEPENDS ${rust_target_dir}/${rust_profile}/libfish.rlib
+    DEPENDS ${sources}
+    DEPENDS Cargo.toml Cargo.lock build.rs
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL
     # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string

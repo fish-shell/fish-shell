@@ -1,1 +1,1 @@
-source (cobra-cli completion fish | psub)
+cobra-cli completion fish | source

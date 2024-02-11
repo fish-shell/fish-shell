@@ -14,7 +14,6 @@ use crate::reader::{
 use crate::signal::signal_clear_cancel;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
-use errno::{set_errno, Errno};
 use once_cell::sync::{Lazy, OnceCell};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -1120,29 +1119,33 @@ fn create_input_terminfo() -> Box<[TerminfoMapping]> {
     ]);
 }
 
+/// Possible errors from from input_terminfo_get_sequence.
+pub enum GetSequenceError {
+    /// The mapping was not found.
+    NotFound,
+    /// The terminfo variable does not have a value.
+    NoSeq,
+}
+
 /// Return the sequence for the terminfo variable of the specified name.
 ///
 /// If no terminfo variable of the specified name could be found, return false and set errno to
 /// ENOENT. If the terminfo variable does not have a value, return false and set errno to EILSEQ.
-pub fn input_terminfo_get_sequence(name: &wstr, out_seq: &mut WString) -> bool {
-    // TODO: stop using errno for this.
+pub fn input_terminfo_get_sequence(name: &wstr) -> Result<WString, GetSequenceError> {
     let mappings = TERMINFO_MAPPINGS
         .get()
         .expect("TERMINFO_MAPPINGS not initialized");
     for m in mappings.iter() {
         if name == m.name {
             // Found the mapping.
-            if m.seq.is_none() {
-                set_errno(Errno(libc::EILSEQ));
-                return false;
+            return if let Some(seq) = &m.seq {
+                Ok(str2wcstring(seq))
             } else {
-                *out_seq = str2wcstring(m.seq.as_ref().unwrap());
-                return true;
-            }
+                Err(GetSequenceError::NoSeq)
+            };
         }
     }
-    set_errno(Errno(libc::ENOENT));
-    false
+    Err(GetSequenceError::NotFound)
 }
 
 /// Return the name of the terminfo variable with the specified sequence.

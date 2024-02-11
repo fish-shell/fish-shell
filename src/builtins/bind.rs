@@ -7,10 +7,9 @@ use crate::common::{
 use crate::highlight::{colorize, highlight_shell};
 use crate::input::{
     input_function_get_names, input_mappings, input_terminfo_get_name, input_terminfo_get_names,
-    input_terminfo_get_sequence, InputMappingSet,
+    input_terminfo_get_sequence, GetSequenceError, InputMappingSet,
 };
 use crate::nix::isatty;
-use nix::errno::Errno;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");
@@ -195,35 +194,27 @@ impl BuiltinBind {
 
     /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
     fn get_terminfo_sequence(&self, seq: &wstr, streams: &mut IoStreams) -> Option<WString> {
-        let mut tseq = WString::new();
-        if input_terminfo_get_sequence(seq, &mut tseq) {
-            return Some(tseq);
-        }
-        let err = Errno::last();
-
-        if !self.opts.silent {
-            let eseq = escape_string(seq, EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES));
-            if err == Errno::ENOENT {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: No key with name '%ls' found\n",
-                    "bind",
-                    eseq
-                ));
-            } else if err == Errno::EILSEQ {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: Key with name '%ls' does not have any mapping\n",
-                    "bind",
-                    eseq
-                ));
-            } else {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: Unknown error trying to bind to key named '%ls'\n",
-                    "bind",
-                    eseq
-                ));
+        match input_terminfo_get_sequence(seq) {
+            Ok(tseq) => Some(tseq),
+            Err(err) if !self.opts.silent => {
+                let eseq =
+                    escape_string(seq, EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES));
+                match err {
+                    GetSequenceError::NotFound => streams.err.append(wgettext_fmt!(
+                        "%ls: No key with name '%ls' found\n",
+                        "bind",
+                        eseq
+                    )),
+                    GetSequenceError::NoSeq => streams.err.append(wgettext_fmt!(
+                        "%ls: Key with name '%ls' does not have any mapping\n",
+                        "bind",
+                        eseq
+                    )),
+                };
+                None
             }
+            Err(_) => None,
         }
-        None
     }
 
     /// Add specified key binding.

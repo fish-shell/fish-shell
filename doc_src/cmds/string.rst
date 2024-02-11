@@ -22,6 +22,7 @@ Synopsis
                [STRING ...]
     string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [-N | --no-newline]
                   [-q | --quiet] [STRING ...]
+    string repeat [-N | --no-newline] [-q | --quiet] COUNT [STRING ...]
     string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
                    [-r | --regex] [-q | --quiet] PATTERN REPLACE [STRING ...]
     string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER]

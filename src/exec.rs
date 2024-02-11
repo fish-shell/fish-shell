@@ -138,7 +138,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         if !p.is_last_in_job {
             let Ok(pipes) = make_autoclose_pipes() else {
                 FLOGF!(warning, "%ls", wgettext!(PIPE_ERROR));
-                perror("pipe");
                 aborted_pipeline = true;
                 abort_pipeline_from(job, i);
                 break;

@@ -345,12 +345,12 @@ pub struct IoBufferfill {
 }
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns nullptr on failure, e.g. too many open fds.
+    /// \returns an error on failure, e.g. too many open fds.
     pub fn create() -> io::Result<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns nullptr on failure, e.g. too many open fds.
+    /// \returns an error on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
     pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<IoBufferfill>> {

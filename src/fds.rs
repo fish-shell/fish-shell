@@ -149,7 +149,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
         Ok(pipes) => pipes,
         Err(err) => {
             FLOG!(warning, PIPE_ERROR);
-            perror("pipe2");
+            perror("pipe");
             return Err(err);
         }
     };

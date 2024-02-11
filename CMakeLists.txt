@@ -109,7 +109,7 @@ function(FISH_LINK_DEPS_AND_SIGN target)
       --target ${Rust_CARGO_TARGET}
       ${CARGO_FLAGS}
       ${FEATURES_ARG}
-    DEPENDS ${sources}
+    DEPENDS ${sources} src/bin/${target}.rs
     DEPENDS Cargo.toml Cargo.lock build.rs
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL

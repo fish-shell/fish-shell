@@ -468,8 +468,20 @@ string repeat -n 2 foo
 string repeat --count 2 foo
 # CHECK: foofoo
 
+string repeat 2 foo
+# CHECK: foofoo
+
+string repeat 2 -n 3
+# CHECK: 222
+
 echo foo | string repeat -n 2
 # CHECK: foofoo
+
+echo foo | string repeat 2
+# CHECK: foofoo
+
+string repeat foo
+# CHECKERR: string repeat: Invalid count value 'foo'
 
 string repeat -n2 -q foo; and echo "exit 0"
 # CHECK: exit 0
@@ -566,8 +578,7 @@ string repeat -n; and echo "exit 0"
 # DONTCHECKERR: string repeat: Unknown option '-l'
 
 string repeat ""
-or echo string repeat empty string failed
-# CHECK: string repeat empty string failed
+# CHECKERR: string repeat: Invalid count value ''
 
 string repeat -n3 ""
 or echo string repeat empty string failed

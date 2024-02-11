@@ -3,8 +3,8 @@ use crate::wutil::fish_wcstol;
 
 #[derive(Default)]
 pub struct Repeat {
-    count: usize,
-    max: usize,
+    count: Option<usize>,
+    max: Option<usize>,
     quiet: bool,
     no_newline: bool,
 }
@@ -21,20 +21,50 @@ impl StringSubCommand<'_> for Repeat {
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'n' => {
-                self.count = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid count value '%ls'\n", name, arg))?
+                self.count =
+                    Some(fish_wcstol(arg.unwrap())?.try_into().map_err(|_| {
+                        invalid_args!("%ls: Invalid count value '%ls'\n", name, arg)
+                    })?)
             }
             'm' => {
-                self.max = fish_wcstol(arg.unwrap())?
-                    .try_into()
-                    .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?
+                self.max = Some(
+                    fish_wcstol(arg.unwrap())?
+                        .try_into()
+                        .map_err(|_| invalid_args!("%ls: Invalid max value '%ls'\n", name, arg))?,
+                )
             }
             'q' => self.quiet = true,
             'N' => self.no_newline = true,
             _ => return Err(StringError::UnknownOption),
         }
         return Ok(());
+    }
+
+    fn take_args(
+        &mut self,
+        optind: &mut usize,
+        args: &[&'_ wstr],
+        streams: &mut IoStreams,
+    ) -> Option<c_int> {
+        if self.count.is_some() || self.max.is_some() {
+            return STATUS_CMD_OK;
+        }
+
+        let name = args[0];
+
+        let Some(arg) = args.get(*optind) else {
+            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, name);
+            return STATUS_INVALID_ARGS;
+        };
+        *optind += 1;
+
+        let Ok(Ok(count)) = fish_wcstol(arg).map(|count| count.try_into()) else {
+            string_error!(streams, "%ls: Invalid count value '%ls'\n", name, arg);
+            return STATUS_INVALID_ARGS;
+        };
+
+        self.count = Some(count);
+        return STATUS_CMD_OK;
     }
 
     fn handle(
@@ -44,7 +74,10 @@ impl StringSubCommand<'_> for Repeat {
         optind: &mut usize,
         args: &[&wstr],
     ) -> Option<libc::c_int> {
-        if self.max == 0 && self.count == 0 {
+        let max = self.max.unwrap_or_default();
+        let count = self.count.unwrap_or_default();
+
+        if max == 0 && count == 0 {
             // XXX: This used to be allowed, but returned 1.
             // Keep it that way for now instead of adding an error.
             // streams.err.append(L"Count or max must be greater than zero");
@@ -75,13 +108,12 @@ impl StringSubCommand<'_> for Repeat {
 
             // The maximum size of the string is either the "max" characters,
             // or it's the "count" repetitions, whichever ends up lower.
-            let max = if self.max == 0
-                || (self.count > 0 && w.len().wrapping_mul(self.count) < self.max)
-            {
+            let max_repeat_len = w.len().wrapping_mul(count);
+            let max = if max == 0 || (count > 0 && max_repeat_len < max) {
                 // TODO: we should disallow overflowing unless max <= w.len().checked_mul(self.count).unwrap_or(usize::MAX)
-                w.len().wrapping_mul(self.count)
+                max_repeat_len
             } else {
-                self.max
+                max
             };
 
             // Reserve a string to avoid writing constantly.

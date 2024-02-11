@@ -13,6 +13,7 @@ complete -c ssh -n 'test (__fish_number_of_cmd_args_wo_opts) -ge 2' -d "Command 
 complete -c ssh -s a -d "Disables forwarding of the authentication agent"
 complete -c ssh -s B -d "Bind to the address of that interface" -xa '(__fish_print_interfaces)'
 complete -c ssh -s b -d "Local address to bind to" -xa '(__fish_print_addresses)'
+complete -c ssh -s D -d "Specify dynamic port forwarding" -x
 complete -c ssh -s E -d "Append debug logs to log_file" -rF
 complete -c ssh -s e -d "Escape character" -xa "\^ none"
 complete -c ssh -s f -d "Go to background"

@@ -96,7 +96,7 @@ add_definitions(-D_REENTRANT)
 # cargo needs to be rerun when the sources change.
 # This is imperfect, but the ninja generator really wants to
 # not run cargo, so we need to tell it *something*
-FILE(GLOB sources src/*)
+FILE(GLOB sources src/* src/*/* src/*/*/*)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)

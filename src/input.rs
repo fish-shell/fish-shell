@@ -574,11 +574,6 @@ impl Inputter {
         self.queue.push_back(ch);
     }
 
-    /// Enqueue a readline command. Convenience cover over queue_char().
-    pub fn queue_readline(&mut self, cmd: ReadlineCmd) {
-        self.queue_char(CharEvent::from_readline(cmd));
-    }
-
     /// Sets the return status of the most recently executed input function.
     pub fn function_set_status(&mut self, status: bool) {
         self.function_status = status;

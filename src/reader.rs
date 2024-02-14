@@ -814,7 +814,14 @@ pub fn reader_change_history(name: &wstr) {
 pub fn reader_change_cursor_selection_mode(selection_mode: CursorSelectionMode) {
     // We don't need to _change_ if we're not initialized yet.
     if let Some(data) = current_data() {
+        if data.cursor_selection_mode == selection_mode {
+            return;
+        }
+        let invalidates_selection = data.selection.is_some();
         data.cursor_selection_mode = selection_mode;
+        if invalidates_selection {
+            data.update_buff_pos(EditableLineTag::Commandline, None);
+        }
     }
 }
 
@@ -1159,13 +1166,24 @@ impl ReaderData {
     }
 
     /// Update the cursor position.
-    fn update_buff_pos(&mut self, elt: EditableLineTag, new_pos: Option<usize>) {
+    fn update_buff_pos(&mut self, elt: EditableLineTag, mut new_pos: Option<usize>) -> bool {
+        if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+            let el = self.edit_line(elt);
+            let mut pos = new_pos.unwrap_or(el.position());
+            if !el.is_empty() && pos == el.len() {
+                pos = el.len() - 1;
+                if el.position() == pos {
+                    return false;
+                }
+                new_pos = Some(pos);
+            }
+        }
         if let Some(pos) = new_pos {
             self.edit_line_mut(elt).set_position(pos);
         }
 
         if elt != EditableLineTag::Commandline {
-            return;
+            return true;
         }
         let buff_pos = self.command_line.position();
         let target_char = if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
@@ -1174,7 +1192,7 @@ impl ReaderData {
             0
         };
         let Some(selection) = self.selection.as_mut() else {
-            return;
+            return true;
         };
         if selection.begin <= buff_pos {
             selection.start = selection.begin;
@@ -1183,6 +1201,7 @@ impl ReaderData {
             selection.start = buff_pos;
             selection.stop = selection.begin + target_char;
         }
+        true
     }
 }
 
@@ -2025,7 +2044,7 @@ impl ReaderData {
             }
             rl::EndOfLine => {
                 let (_elt, el) = self.active_edit_line();
-                if el.position() == el.len() {
+                if self.is_at_end(el) {
                     self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
                 } else {
                     loop {
@@ -2040,7 +2059,9 @@ impl ReaderData {
                             }
                             position
                         };
-                        self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1));
+                        if !self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -2255,17 +2276,24 @@ impl ReaderData {
                 let yank_str = kill_yank();
                 self.insert_string(self.active_edit_line_tag(), &yank_str);
                 rls.yank_len = yank_str.len();
+                if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                    let (_elt, el) = self.active_edit_line();
+                    self.update_buff_pos(self.active_edit_line_tag(), Some(el.position() - 1));
+                }
             }
             rl::YankPop => {
                 if rls.yank_len != 0 {
                     let (elt, el) = self.active_edit_line();
                     let yank_str = kill_yank_rotate();
                     let new_yank_len = yank_str.len();
-                    self.replace_substring(
-                        elt,
-                        el.position() - rls.yank_len..el.position(),
-                        yank_str,
-                    );
+                    let bias = if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                        1
+                    } else {
+                        0
+                    };
+                    let begin = el.position() + bias - rls.yank_len;
+                    let end = el.position() + bias;
+                    self.replace_substring(elt, begin..end, yank_str);
                     self.update_buff_pos(elt, None);
                     rls.yank_len = new_yank_len;
                     self.suppress_autosuggestion = true;
@@ -2448,14 +2476,14 @@ impl ReaderData {
                 let (elt, el) = self.active_edit_line();
                 if self.is_navigating_pager_contents() {
                     self.select_completion_in_direction(SelectionMotion::East, false);
-                } else if el.position() != el.len() {
-                    self.update_buff_pos(elt, Some(el.position() + 1));
-                } else {
+                } else if self.is_at_end(el) {
                     self.accept_autosuggestion(
                         /*full=*/ c != rl::ForwardSingleChar,
                         /*single=*/ c == rl::ForwardSingleChar,
                         MoveWordStyle::Punctuation,
                     );
+                } else {
+                    self.update_buff_pos(elt, Some(el.position() + 1));
                 }
             }
             rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
@@ -2539,10 +2567,10 @@ impl ReaderData {
                     MoveWordStyle::Whitespace
                 };
                 let (elt, el) = self.active_edit_line();
-                if el.position() != el.len() {
-                    self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
-                } else {
+                if self.is_at_end(el) {
                     self.accept_autosuggestion(false, false, style);
+                } else {
+                    self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
                 }
             }
             rl::BeginningOfHistory | rl::EndOfHistory => {
@@ -2836,7 +2864,9 @@ impl ReaderData {
                     if el.position() == 0 || el.text().as_char_slice()[el.position() - 1] == '\n' {
                         break elt;
                     }
-                    self.update_buff_pos(elt, Some(el.position() - 1));
+                    if !self.update_buff_pos(elt, Some(el.position() - 1)) {
+                        break elt;
+                    }
                 };
                 self.insert_char(elt, '\n');
                 let (elt, el) = self.active_edit_line();
@@ -2849,7 +2879,9 @@ impl ReaderData {
                     {
                         break elt;
                     }
-                    self.update_buff_pos(elt, Some(el.position() + 1));
+                    if !self.update_buff_pos(elt, Some(el.position() + 1)) {
+                        break elt;
+                    }
                 };
                 self.insert_char(elt, '\n');
             }
@@ -3905,6 +3937,13 @@ impl ReaderData {
             zelf.autosuggest_completed(result);
         };
         debounce_autosuggestions().perform_with_completion(performer, completion);
+    }
+
+    fn is_at_end(&self, el: &EditableLine) -> bool {
+        match self.cursor_selection_mode {
+            CursorSelectionMode::Exclusive => el.position() == el.len(),
+            CursorSelectionMode::Inclusive => el.position() + 1 >= el.len(),
+        }
     }
 
     // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole

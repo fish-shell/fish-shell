@@ -235,7 +235,7 @@ enum Direction {
 }
 
 fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
-    let mut width: i32 = 0;
+    let mut width: isize = 0;
     for c in ins[start_pos..].chars() {
         let w = fish_wcwidth_visible(c);
         // We assume that this string is on its own line,

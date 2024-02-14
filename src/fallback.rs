@@ -7,12 +7,12 @@ use crate::widecharwidth::{WcLookupTable, WcWidth};
 use crate::{common::is_console_session, wchar::prelude::*};
 use once_cell::sync::Lazy;
 use std::cmp;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicIsize, Ordering};
 use std::{ffi::CString, mem, os::fd::RawFd};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
-pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
+pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 
 /// Width of emoji characters.
 ///
@@ -24,23 +24,24 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 /// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
 /// terminals use a width of 2 since Unicode 9.
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
-pub static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
+pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
 
 static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
 
 /// A safe wrapper around the system `wcwidth()` function
-pub fn wcwidth(c: char) -> i32 {
+pub fn wcwidth(c: char) -> isize {
     extern "C" {
         pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
     }
 
     const _: () = assert!(mem::size_of::<libc::wchar_t>() >= mem::size_of::<char>());
-    unsafe { wcwidth(c as libc::wchar_t) }
+    let width = unsafe { wcwidth(c as libc::wchar_t) };
+    isize::try_from(width).unwrap()
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is
 // EVERYWHERE (https://github.com/fish-shell/fish-shell/issues/2199)
-pub fn fish_wcwidth(c: char) -> i32 {
+pub fn fish_wcwidth(c: char) -> isize {
     // The system version of wcwidth should accurately reflect the ability to represent characters
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
@@ -84,7 +85,7 @@ pub fn fish_wcwidth(c: char) -> i32 {
 
 /// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.
-pub fn fish_wcswidth(s: &wstr) -> i32 {
+pub fn fish_wcswidth(s: &wstr) -> isize {
     let mut result = 0;
     for c in s.chars() {
         let w = fish_wcwidth(c);

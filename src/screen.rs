@@ -99,14 +99,12 @@ impl Line {
     /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
     /// treated as 0.
     pub fn wcswidth_min_0(&self, max: usize /* = usize::MAX */) -> usize {
-        let mut result = 0;
+        let mut result: usize = 0;
         for c in &self.text[..max.min(self.text.len())] {
             let w = fish_wcwidth_visible(c.character);
             // A backspace at the start of the line does nothing.
             if w > 0 || result > 0 {
-                result =
-                    usize::try_from(isize::try_from(result).unwrap() + isize::try_from(w).unwrap())
-                        .unwrap();
+                result = result.checked_add_signed(w).unwrap();
             }
         }
         result
@@ -1530,9 +1528,7 @@ fn measure_run_from(
             let w = fish_wcwidth_visible(input.char_at(idx));
             // A backspace at the start of the line does nothing.
             if w != -1 || width > 0 {
-                width =
-                    usize::try_from(isize::try_from(width).unwrap() + isize::try_from(w).unwrap())
-                        .unwrap();
+                width = width.checked_add_signed(w).unwrap();
             }
         }
         idx += 1;

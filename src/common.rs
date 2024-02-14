@@ -1542,7 +1542,7 @@ pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
             while pos < msg.len() && ![' ', '\n', '\r', '\t'].contains(&msg.char_at(pos)) {
                 // Check is token is wider than one line. If so we mark it as an overflow and break
                 // the token.
-                let width = fish_wcwidth(msg.char_at(pos)) as isize;
+                let width = fish_wcwidth(msg.char_at(pos));
                 if (tok_width + width) > (screen_width - 1) {
                     overflow = true;
                     break;

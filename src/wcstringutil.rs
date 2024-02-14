@@ -538,7 +538,7 @@ impl<'a> Iterator for LineIterator<'a> {
 }
 
 /// Like fish_wcwidth, but returns 0 for characters with no real width instead of -1.
-pub fn fish_wcwidth_visible(c: char) -> i32 {
+pub fn fish_wcwidth_visible(c: char) -> isize {
     if c == '\x08' {
         return -1;
     }

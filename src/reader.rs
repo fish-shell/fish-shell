@@ -4669,6 +4669,25 @@ impl ReaderData {
         }
     }
 
+    fn should_add_history(&mut self, text: &wstr) -> bool {
+        let parser = self.parser();
+        if !function::exists(L!("fish_should_add_history"), parser) {
+            // Historical behavior, if the command starts with a space we don't save it.
+            return text.as_char_slice()[0] != ' ';
+        }
+
+        let mut cmd: WString = L!("fish_should_add_history ").into();
+        cmd.push_utfstr(&escape(text));
+        let _not_interactive = scoped_push_replacer(
+            |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+            false,
+        );
+
+        let ret = exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false);
+
+        ret == STATUS_CMD_OK.unwrap()
+    }
+
     // Add the current command line contents to history.
     fn add_to_history(&mut self) {
         if self.conf.in_silent_mode {
@@ -4687,9 +4706,8 @@ impl ReaderData {
         self.history.remove_ephemeral_items();
 
         if !text.is_empty() {
-            // Mark this item as ephemeral if there is a leading space (#615).
-            let mode = if text.as_char_slice()[0] == ' ' {
-                // Leading spaces are ephemeral (#615).
+            // Mark this item as ephemeral if should_add_history says no (#615).
+            let mode = if !self.should_add_history(&text) {
                 PersistenceMode::Ephemeral
             } else if in_private_mode(self.vars()) {
                 PersistenceMode::Memory

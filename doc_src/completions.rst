@@ -11,48 +11,6 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
 
   complete -c myprog -s o -l output -a "yes no"
 
-
-In the complete call above, the ``-a`` arguments apply when the option -o/--output has been given, so this offers them for::
-
-  > myprog -o<TAB>
-  > myprog --output=<TAB>
-
-By default, option arguments are *optional*, so the candidates are only offered directly attached like that, so they aren't given in this case::
-
-  > myprog -o <TAB>
-
-Usually options *require* a parameter, so you would give ``--require-parameter`` / ``-r``::
-  
-  complete -c myprog -s o -l output -ra "yes no"
-
-which offers yes/no in these cases::
-
-  > myprog -o<TAB>
-  > myprog --output=<TAB>
-  > myprog -o <TAB>
-  > myprog --output <TAB>
-
-In the latter two cases, files will also be offered because file completion is enabled by default.
-
-You would either inhibit file completion for a single option::
-
-  complete -c myprog -s o -l output --no-files -ra "yes no"
-
-or with a specific condition::
-
-  complete -c myprog -f --condition '__fish_seen_subcommand_from somesubcommand'
-
-or you can disable file completions globally for the command::
-
-  complete -c myprog -f
-
-If you have disabled them globally, you can enable them just for a specific condition or option with the ``--force-files`` / ``-F`` option::
-
-  # Disable files by default
-  complete -c myprog -f
-  # but reenable them for --config-file
-  complete -c myprog -l config-file --force-files -r
-
 In the complete call above, the ``-a`` arguments apply when the option -o/--output has been given, so this offers them for::
 
   > myprog -o<TAB>

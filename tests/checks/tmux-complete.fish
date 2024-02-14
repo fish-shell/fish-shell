@@ -84,3 +84,13 @@ isolated-tmux send-keys 'echo sug' C-w C-z
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 6> echo suggest this
+
+isolated-tmux send-keys C-u 'bind \cs forward-single-char' Enter C-l
+isolated-tmux send-keys 'echo suggest thi'
+tmux-sleep
+isolated-tmux send-keys C-s
+tmux-sleep
+isolated-tmux send-keys C-s
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 7> echo suggest this

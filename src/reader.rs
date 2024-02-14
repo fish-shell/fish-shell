@@ -3944,12 +3944,14 @@ impl ReaderData {
                 self.autosuggestion.text.clone(),
             );
         } else if single {
-            self.replace_substring(
-                EditableLineTag::Commandline,
-                self.command_line.len()..self.command_line.len(),
-                self.autosuggestion.text[self.command_line.len()..self.command_line.len() + 1]
-                    .to_owned(),
-            );
+            let pos = self.command_line.len();
+            if pos + 1 < self.autosuggestion.text.len() {
+                self.replace_substring(
+                    EditableLineTag::Commandline,
+                    pos..pos,
+                    self.autosuggestion.text[pos..pos + 1].to_owned(),
+                );
+            }
         } else {
             // Accept characters according to the specified style.
             let mut state = MoveWordStateMachine::new(style);

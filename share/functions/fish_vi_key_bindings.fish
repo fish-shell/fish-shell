@@ -65,12 +65,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default l forward-char
     bind -s --preset -m insert \n execute
     bind -s --preset -m insert \r execute
-    bind -s --preset -m insert o insert-line-under repaint-mode
-    bind -s --preset -m insert O insert-line-over repaint-mode
+    bind -s --preset -m insert o 'set fish_cursor_end_mode exclusive' insert-line-under repaint-mode
+    bind -s --preset -m insert O 'set fish_cursor_end_modefish_cursor_end_modeexclusive' insert-line-over repaint-mode
     bind -s --preset -m insert i repaint-mode
     bind -s --preset -m insert I beginning-of-line repaint-mode
-    bind -s --preset -m insert a forward-single-char repaint-mode
-    bind -s --preset -m insert A end-of-line repaint-mode
+    bind -s --preset -m insert a 'set fish_cursor_end_mode exclusive' forward-single-char repaint-mode
+    bind -s --preset -m insert A 'set fish_cursor_end_mode exclusive' end-of-line repaint-mode
     bind -s --preset -m visual v begin-selection repaint-mode
 
     bind -s --preset gg beginning-of-buffer
@@ -98,8 +98,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset gE backward-bigword
     bind -s --preset w forward-word forward-single-char
     bind -s --preset W forward-bigword forward-single-char
-    bind -s --preset e forward-single-char forward-word backward-char
-    bind -s --preset E forward-single-char forward-bigword backward-char
+    bind -s --preset e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
 
     bind -s --preset -M insert \cn accept-autosuggestion
 
@@ -112,10 +112,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Vi moves the cursor back if, after deleting, it is at EOL.
     # To emulate that, move forward, then backward, which will be a NOP
     # if there is something to move forward to.
-    bind -s --preset -M default x delete-char forward-single-char backward-char
+    bind -s --preset -M default x delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
     bind -s --preset -M default X backward-delete-char
     bind -s --preset -M insert -k dc delete-char forward-single-char backward-char
-    bind -s --preset -M default -k dc delete-char forward-single-char backward-char
+    bind -s --preset -M default -k dc delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -s --preset -M insert -k backspace backward-delete-char
@@ -225,13 +225,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # in vim p means paste *after* current character, so go forward a char before pasting
     # also in vim, P means paste *at* current position (like at '|' with cursor = line),
     # \ so there's no need to go back a char, just paste it without moving
-    bind -s --preset p forward-char yank
+    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_modefish_cursor_end_modeinclusive' yank
     bind -s --preset P yank
     bind -s --preset gp yank-pop
 
     # same vim 'pasting' note as upper
-    bind -s --preset '"*p' forward-char "commandline -i ( xsel -p; echo )[1]"
-    bind -s --preset '"*P' "commandline -i ( xsel -p; echo )[1]"
+    bind -s --preset '"*p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
+    bind -s --preset '"*P' fish_clipboard_paste
 
     #
     # Lowercase r, enters replace_one mode
@@ -267,8 +267,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual gE backward-bigword
     bind -s --preset -M visual w forward-word
     bind -s --preset -M visual W forward-bigword
-    bind -s --preset -M visual e forward-word
-    bind -s --preset -M visual E forward-bigword
+    bind -s --preset -M visual e 'set fish_cursor_end_mode exclusive' forward-single-char forward-word backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M visual E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
     bind -s --preset -M visual f forward-jump
@@ -306,7 +306,22 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Therefore it needs to be before setting fish_bind_mode.
     fish_vi_cursor
     set -g fish_cursor_selection_mode inclusive
+    function __fish_vi_key_bindings_on_mode_change --on-variable fish_bind_mode
+        switch $fish_bind_mode
+            case insert
+                set -g fish_cursor_end_mode exclusive
+            case '*'
+                set -g fish_cursor_end_mode inclusive
+        end
+    end
+    function __fish_vi_key_bindings_remove_handlers --on-variable __fish_active_key_bindings
+        functions --erase __fish_vi_key_bindings_remove_handlers
+        functions --erase __fish_vi_key_bindings_on_mode_change
+        functions --erase fish_vi_cursor_handle
+        functions --erase fish_vi_cursor_handle_preexec
+        set -e -g fish_cursor_end_mode
+        set -e -g fish_cursor_selection_mode
+    end
 
     set fish_bind_mode $init_mode
-
 end

@@ -123,6 +123,7 @@ impl EditableLine {
         self.position
     }
     pub fn set_position(&mut self, position: usize) {
+        assert!(position <= self.len());
         self.position = position;
     }
 

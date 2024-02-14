@@ -9,8 +9,8 @@ use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_
 use crate::output::ColorSupport;
 use crate::proc::is_interactive_session;
 use crate::reader::{
-    reader_change_cursor_selection_mode, reader_change_history, reader_schedule_prompt_repaint,
-    reader_set_autosuggestion_enabled,
+    reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
+    reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
 };
 use crate::screen::screen_set_midnight_commander_hack;
 use crate::screen::LAYOUT_CACHE_SHARED;
@@ -84,6 +84,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(
             L!("fish_cursor_selection_mode"),
             handle_fish_cursor_selection_mode_change,
+        );
+        table.add_anon(
+            L!("fish_cursor_end_mode"),
+            handle_fish_cursor_end_mode_change,
         );
 
         table
@@ -257,6 +261,24 @@ fn handle_fish_cursor_selection_mode_change(vars: &EnvStack) {
     };
 
     reader_change_cursor_selection_mode(mode);
+}
+
+fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
+    use crate::reader::CursorEndMode;
+
+    let inclusive = vars
+        .get(L!("fish_cursor_end_mode"))
+        .as_ref()
+        .map(|v| v.as_string())
+        .map(|v| v == "inclusive")
+        .unwrap_or(false);
+    let mode = if inclusive {
+        CursorEndMode::Inclusive
+    } else {
+        CursorEndMode::Exclusive
+    };
+
+    reader_change_cursor_end_mode(mode);
 }
 
 fn handle_autosuggestion_change(vars: &EnvStack) {

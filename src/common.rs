@@ -988,8 +988,6 @@ pub const fn char_offset(base: char, offset: u32) -> char {
     }
 }
 
-#[no_mangle]
-#[inline(never)]
 fn debug_thread_error() {
     // Wait for a SIGINT. We can't use sigsuspend() because the signal may be delivered on another
     // thread.

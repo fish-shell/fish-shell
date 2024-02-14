@@ -16,15 +16,12 @@ pub const DEFAULT_READ_BYTE_LIMIT: usize = 100 * 1024 * 1024;
 
 /// The actual `read` limit in effect, defaulting to [`DEFAULT_READ_BYTE_LIMIT`] but overridable
 /// with `$fish_read_limit`.
-#[no_mangle]
 pub static READ_BYTE_LIMIT: AtomicUsize = AtomicUsize::new(DEFAULT_READ_BYTE_LIMIT);
 
 /// The curses `cur_term` TERMINAL pointer has been set up.
-#[no_mangle]
 pub static CURSES_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 /// Does the terminal have the "eat new line" glitch.
-#[no_mangle]
 pub static TERM_HAS_XN: AtomicBool = AtomicBool::new(false);
 
 static SETENV_LOCK: Mutex<()> = Mutex::new(());

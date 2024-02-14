@@ -12,7 +12,6 @@ use std::{ffi::CString, mem, os::fd::RawFd};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
-#[no_mangle]
 pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 /// Width of emoji characters.
@@ -25,7 +24,6 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicI32 = AtomicI32::new(1);
 /// Valid values are 1, and 2. 1 is the typical emoji width used in Unicode 8 while some newer
 /// terminals use a width of 2 since Unicode 9.
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
-#[no_mangle]
 pub static FISH_EMOJI_WIDTH: AtomicI32 = AtomicI32::new(1);
 
 static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);

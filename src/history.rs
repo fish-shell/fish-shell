@@ -1474,13 +1474,8 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 
     // Skip lines with backticks because we don't have that syntax,
     // Skip brace expansions and globs because they don't work like ours
-    // Skip lines with literal tabs since we don't handle them well and we don't know what they
-    // mean. It could just be whitespace or it's actually passed somewhere (like e.g. `sed`).
     // Skip lines that end with a backslash. We do not handle multiline commands from bash history.
-    if line
-        .chars()
-        .any(|c| matches!(c, '`' | '{' | '*' | '\t' | '\\'))
-    {
+    if line.chars().any(|c| matches!(c, '`' | '{' | '*' | '\\')) {
         return false;
     }
 

@@ -262,9 +262,7 @@ fn width_without_escapes(ins: &wstr, start_pos: usize) -> usize {
             pos += 1;
         }
     }
-    // we subtracted less than we added
-    debug_assert!(width >= 0, "line has negative width");
-    return width as usize;
+    usize::try_from(width).expect("line has negative width")
 }
 
 /// Empirically determined.

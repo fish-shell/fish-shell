@@ -827,6 +827,9 @@ impl Pager {
     pub fn set_selected_completion_index(&mut self, mut new_index: Option<usize>) {
         // Current users are off by one at most.
         assert!(new_index.is_none_or(|new_index| new_index <= self.completion_infos.len()));
+        if self.completion_infos.is_empty() {
+            return;
+        }
         if new_index == Some(self.completion_infos.len()) {
             new_index = Some(self.completion_infos.len() - 1);
         }

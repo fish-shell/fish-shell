@@ -922,10 +922,10 @@ impl Inputter {
                         return res;
                     }
                     ReadlineCmd::FuncAnd | ReadlineCmd::FuncOr => {
-                        // If previous function has bad status, we want to skip all functions that
-                        // follow us.
-                        // TODO: this line is too tricky.
-                        if (cmd == ReadlineCmd::FuncAnd) != self.function_status {
+                        // If previous function has bad status, skip all functions that follow us.
+                        if (!self.function_status && cmd == ReadlineCmd::FuncAnd)
+                            || (self.function_status && cmd == ReadlineCmd::FuncOr)
+                        {
                             self.drop_leading_readline_events();
                         }
                     }

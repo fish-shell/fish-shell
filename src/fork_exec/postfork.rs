@@ -52,16 +52,10 @@ pub(crate) fn report_setpgid_error(
     pid: pid_t,
     desired_pgid: pid_t,
     job_id: i64,
-    command_str: *const c_char,
-    argv0_str: *const c_char,
+    command: &CStr,
+    argv0: &CStr,
 ) {
     let cur_group = unsafe { libc::getpgid(pid) };
-
-    // TODO: command_str ought to be passed as a CStr.
-    // This is worth fixing as CStr::from_ptr may invoke libc strlen() which
-    // is not async signal safe on old versions of POSIX.
-    let command: &CStr = unsafe { CStr::from_ptr(command_str) };
-    let argv0: &CStr = unsafe { CStr::from_ptr(argv0_str) };
 
     FLOG_SAFE!(
         warning,
@@ -245,12 +239,10 @@ pub fn execute_fork() -> pid_t {
 
 pub(crate) fn safe_report_exec_error(
     err: i32,
-    actual_cmd: *const c_char,
+    actual_cmd: &CStr,
     argvv: *const *const c_char,
     envv: *const *const c_char,
 ) {
-    // TODO: actual_cmd may be passed as a CStr.
-    let actual_cmd: &CStr = unsafe { CStr::from_ptr(actual_cmd) };
     match err {
         libc::E2BIG => {
             let mut sz = 0;

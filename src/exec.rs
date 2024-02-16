@@ -421,7 +421,7 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd.as_ptr(), argv.get(), envv.get());
+    safe_report_exec_error(errno().0, actual_cmd, argv.get(), envv.get());
     exit_without_destructors(exit_code_from_exec_error(err.0));
 }
 
@@ -721,8 +721,8 @@ fn fork_child_for_process(
                     p.pid(),
                     pgid,
                     job.job_id().as_num(),
-                    narrow_cmd.as_ptr(),
-                    narrow_argv0.as_ptr(),
+                    &narrow_cmd,
+                    &narrow_argv0,
                 )
             }
         }
@@ -858,7 +858,7 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, actual_cmd.as_ptr(), argv.get(), envv.get());
+                safe_report_exec_error(err.0, &actual_cmd, argv.get(), envv.get());
                 p.status
                     .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(
                         err.0,

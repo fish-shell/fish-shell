@@ -37,7 +37,7 @@ add_custom_target(fish_run_tests
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
-  DEPENDS tests_dir funcs_dir tests_buildroot_target
+  DEPENDS tests_dir tests_buildroot_target
   USES_TERMINAL
 )
 
@@ -61,15 +61,6 @@ set(TEST_ROOT_DIR ${TEST_DIR}/root)
 
 # Copy needed directories for out-of-tree builds
 if(NOT FISH_IN_TREE_BUILD)
-  add_custom_target(funcs_dir)
-  add_custom_command(TARGET funcs_dir
-    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share
-    # Don't run ln twice or it will create a new link in the link.
-    COMMAND test -e ${CMAKE_BINARY_DIR}/share/functions || ln -sf
-                          ${CMAKE_SOURCE_DIR}/share/functions/ ${CMAKE_BINARY_DIR}/share/functions
-                       COMMENT "Symlinking fish functions to binary dir"
-                       VERBATIM)
-
   add_custom_target(tests_dir DEPENDS tests)
   add_custom_command(TARGET tests_dir
                        COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -94,7 +85,7 @@ set(CMAKE_XCODE_GENERATE_SCHEME 0)
 function(add_test_target NAME)
   string(REPLACE "/" "-" NAME ${NAME})
   add_custom_target("test_${NAME}" COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS tests_dir funcs_dir tests_buildroot_target USES_TERMINAL )
+    DEPENDS tests_dir tests_buildroot_target USES_TERMINAL )
 endfunction()
 
 add_custom_target(tests_buildroot_target

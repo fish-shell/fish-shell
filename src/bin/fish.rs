@@ -164,10 +164,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 manifest_dir.display()
             );
             done = true;
+            let build_path = exec_path.parent().unwrap();
             paths = ConfigPaths {
-                data: manifest_dir.join("share"),
+                data: build_path.join("share"),
                 sysconf: manifest_dir.join("etc"),
-                doc: manifest_dir.join("user_doc/html"),
+                doc: build_path.join("user_doc/html"),
                 bin: exec_path.clone(),
             }
         }

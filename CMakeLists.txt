@@ -98,6 +98,24 @@ add_definitions(-D_REENTRANT)
 # not run cargo, so we need to tell it *something*
 FILE(GLOB sources src/* src/*/* src/*/*/*)
 
+if(NOT FISH_IN_TREE_BUILD)
+  add_custom_target(data_dir ALL
+    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share
+    COMMAND # Don't run ln twice or it will create a new link in the link.
+            CreateLink() {
+                if ! test -e \"$$2\" ";" then
+                    ln -sf \"$$1\" \"$$2\" ";"
+                fi
+            }
+    COMMAND CreateLink ${CMAKE_SOURCE_DIR}/share/functions ${CMAKE_BINARY_DIR}/share/functions
+    COMMAND CreateLink ${CMAKE_SOURCE_DIR}/share/completions ${CMAKE_BINARY_DIR}/share/completions
+    COMMAND CreateLink ${CMAKE_SOURCE_DIR}/share/config.fish ${CMAKE_BINARY_DIR}/share/config.fish
+    COMMAND CreateLink ${CMAKE_SOURCE_DIR}/share/groff ${CMAKE_BINARY_DIR}/share/groff
+    COMMAND CreateLink ${CMAKE_SOURCE_DIR}/share/tools ${CMAKE_BINARY_DIR}/share/tools
+    COMMAND CreateLink ${CMAKE_BINARY_DIR}/user_doc/man ${CMAKE_BINARY_DIR}/share/man
+  )
+endif()
+
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
   add_custom_command(
@@ -115,11 +133,12 @@ function(FISH_LINK_DEPS_AND_SIGN target)
     USES_TERMINAL
     # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
   )
+
   add_custom_target(${target} ALL
     COMMAND "${CMAKE_COMMAND}" -E copy
       "${rust_target_dir}/${rust_profile}/${target}"
       "${CMAKE_CURRENT_BINARY_DIR}"
-    DEPENDS ${rust_target_dir}/${rust_profile}/${target}
+    DEPENDS ${rust_target_dir}/${rust_profile}/${target} data_dir
   )
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)

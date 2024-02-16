@@ -14,4 +14,4 @@ override_dh_auto_configure:
 # On CMake 3.5 (and possibly 3.6), the test target does not pick up its dependencies properly
 # Build tests_buildroot_target by hand (remove this once Ubuntu Xenial is out of support)
 override_dh_auto_build:
-	dh_auto_build -- all tests_dir funcs_dir tests_buildroot_target
+	dh_auto_build -- all tests_dir tests_buildroot_target

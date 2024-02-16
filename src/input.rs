@@ -820,18 +820,13 @@ impl Inputter {
         if have_mouse_tracking_csi(&mut peeker) {
             // fish recognizes but does not actually support mouse reporting. We never turn it on, and
             // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
-            // it off before exiting. We swallow the events to prevent garbage from piling up at the
-            // prompt, but don't do anything further with the received codes. To prevent this from
-            // breaking user interaction with the tty emulator, wasting CPU, and adding latency to the
-            // event queue, we turn off mouse reporting here.
+            // it off before exiting. We turn it off here to avoid wasting resources.
             //
             // Since this is only called when we detect an incoming mouse reporting payload, we know the
-            // terminal emulator supports the xterm ANSI extensions for mouse reporting and can safely
-            // issue this without worrying about termcap.
+            // terminal emulator supports mouse reporting, so no terminfo checks.
             FLOG!(reader, "Disabling mouse tracking");
 
-            // We can't/shouldn't directly manipulate stdout from `input.cpp`, so request the execution
-            // of a helper function to disable mouse tracking.
+            // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
             // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
             peeker.consume();
             self.push_front(CharEvent::from_readline(ReadlineCmd::DisableMouseTracking));

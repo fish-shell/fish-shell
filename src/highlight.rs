@@ -908,8 +908,7 @@ struct Highlighter<'s> {
     color_array: ColorArray,
     // A stack of variables that the current commandline probably defines.  We mark redirections
     // as valid if they use one of these variables, to avoid marking valid targets as error.
-    // TODO This should be &'s wstr
-    pending_variables: Vec<WString>,
+    pending_variables: Vec<&'s wstr>,
     done: bool,
 }
 
@@ -1319,7 +1318,7 @@ impl<'s> Highlighter<'s> {
             let equals_loc = varas.source_range().start() + offset;
             self.color_array[equals_loc] = HighlightSpec::with_fg(HighlightRole::operat);
             let var_name = &varas.source(self.buff)[..offset];
-            self.pending_variables.push(var_name.to_owned());
+            self.pending_variables.push(var_name);
         }
     }
     fn visit_semi_nl(&mut self, node: &dyn Node) {
@@ -1382,7 +1381,7 @@ impl<'s> Highlighter<'s> {
                 if is_set {
                     let arg = v.argument().source(self.buff);
                     if valid_var_name(arg) {
-                        self.pending_variables.push(arg.to_owned());
+                        self.pending_variables.push(arg);
                         is_set = false;
                     }
                 }
@@ -1407,7 +1406,7 @@ impl<'s> Highlighter<'s> {
         let pending_variables_count = self.pending_variables.len();
         if let Some(fh) = block.header.as_for_header() {
             let var_name = fh.var_name.source(self.buff);
-            self.pending_variables.push(var_name.to_owned());
+            self.pending_variables.push(var_name);
         }
         self.visit(&block.jobs);
         self.visit(&block.end);
@@ -1432,7 +1431,7 @@ fn has_cmdsub(src: &wstr) -> bool {
     ) != 0
 }
 
-fn contains_pending_variable(pending_variables: &[WString], haystack: &wstr) -> bool {
+fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bool {
     for var_name in pending_variables {
         let mut nextpos = 0;
         while let Some(relpos) = &haystack[nextpos..]

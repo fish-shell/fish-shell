@@ -42,3 +42,19 @@ isolated-tmux send-keys Enter
 # CHECK: prompt 2> true hay ee hay
 isolated-tmux capture-pane -p | grep 'prompt 2>'
 isolated-tmux send-keys C-c
+
+isolated-tmux send-keys "echo sdifjsdoifjsdoifj" Enter
+isolated-tmux capture-pane -p | grep "^sdifjsdoifjsdoifj\|prompt 3>"
+# CHECK: sdifjsdoifjsdoifj
+# CHECK: prompt 3>
+isolated-tmux send-keys C-e C-u C-r
+tmux-sleep
+isolated-tmux send-keys "echo sdifjsdoifjsdoifj"
+tmux-sleep
+isolated-tmux send-keys S-DC
+isolated-tmux capture-pane -p | grep "(no matches)"
+# CHECK: (no matches)
+isolated-tmux send-keys Enter C-e C-u "echo foo" Enter
+isolated-tmux capture-pane -p | grep "^foo\|prompt 4>"
+# CHECK: foo
+# CHECK: prompt 4>

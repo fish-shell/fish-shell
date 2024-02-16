@@ -267,20 +267,13 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     if opts.hist_cmd == HistCmd::HIST_UNDEF {
         opts.hist_cmd = HistCmd::HIST_SEARCH;
     }
-    if opts.search_type.is_none() {
-        if opts.hist_cmd == HistCmd::HIST_SEARCH {
-            opts.search_type = Some(history::SearchType::ContainsGlob);
-        }
-        if opts.hist_cmd == HistCmd::HIST_DELETE {
-            opts.search_type = Some(history::SearchType::Exact);
-        }
-    }
 
     let mut status = STATUS_CMD_OK;
     match opts.hist_cmd {
         HistCmd::HIST_SEARCH => {
             if !history.search(
-                opts.search_type.unwrap(),
+                opts.search_type
+                    .unwrap_or(history::SearchType::ContainsGlob),
                 args,
                 opts.show_time_format.as_deref(),
                 opts.max_items.unwrap_or(usize::MAX),
@@ -297,7 +290,8 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             // TODO: Move this code to the history module and support the other search types
             // including case-insensitive matches. At this time we expect the non-exact deletions to
             // be handled only by the history function's interactive delete feature.
-            if opts.search_type.unwrap() != history::SearchType::Exact {
+            if opts.search_type.unwrap_or(history::SearchType::Exact) != history::SearchType::Exact
+            {
                 streams
                     .err
                     .append(wgettext!("builtin history delete only supports --exact\n"));

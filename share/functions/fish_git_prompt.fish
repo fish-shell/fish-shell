@@ -299,9 +299,9 @@ function fish_git_prompt --description "Prompt function for Git"
                 # Ignored files are omitted by default
                 set -l stat (command git -c core.fsmonitor= status --porcelain -z $opt | string split0)
 
-                set dirtystate (string match -qr '^.[ACDMR]' -- $stat; and echo 1)
+                set dirtystate (string match -qr '^.[ACDMRT]' -- $stat; and echo 1)
                 if test -n "$sha"
-                    set stagedstate (string match -qr '^[ACDMR].' -- $stat; and echo 1)
+                    set stagedstate (string match -qr '^[ACDMRT].' -- $stat; and echo 1)
                 else
                     set invalidstate 1
                 end
@@ -422,8 +422,8 @@ function __fish_git_prompt_informative_status
     # The v2 format is better, but we don't actually care in this case.
     set -l stats (string sub -l 2 (git -c core.fsmonitor= status --porcelain -z $untr | string split0))
     set -l invalidstate (string match -r '^UU' $stats | count)
-    set -l stagedstate (string match -r '^[ACDMR].' $stats | count)
-    set -l dirtystate (string match -r '^.[ACDMR]' $stats | count)
+    set -l stagedstate (string match -r '^[ACDMRT].' $stats | count)
+    set -l dirtystate (string match -r '^.[ACDMRT]' $stats | count)
     set -l untrackedfiles (string match -r '^\?\?' $stats | count)
 
     set -l info

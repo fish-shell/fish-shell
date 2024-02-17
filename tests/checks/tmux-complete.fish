@@ -94,3 +94,11 @@ isolated-tmux send-keys C-s
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 7> echo suggest this
+
+isolated-tmux send-keys C-u
+isolated-tmux send-keys 'echo sugg' C-a
+tmux-sleep
+isolated-tmux send-keys C-e M-f Space nothing
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 7> echo suggest nothing

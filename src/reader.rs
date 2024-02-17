@@ -2043,21 +2043,27 @@ impl ReaderData {
                     self.update_buff_pos(elt, Some(position - 1));
                 }
             }
-            rl::EndOfLine => loop {
-                let position = {
-                    let (_elt, el) = self.active_edit_line();
-                    let position = el.position();
-                    if position == el.len() {
-                        self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
-                        break;
+            rl::EndOfLine => {
+                let (_elt, el) = self.active_edit_line();
+                if el.position() == el.len() {
+                    self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
+                } else {
+                    loop {
+                        let position = {
+                            let (_elt, el) = self.active_edit_line();
+                            let position = el.position();
+                            if position == el.len() {
+                                break;
+                            }
+                            if el.text().char_at(position) == '\n' {
+                                break;
+                            }
+                            position
+                        };
+                        self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1));
                     }
-                    if el.text().char_at(position) == '\n' {
-                        break;
-                    }
-                    position
-                };
-                self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1));
-            },
+                }
+            }
             rl::BeginningOfBuffer => {
                 self.update_buff_pos(EditableLineTag::Commandline, Some(0));
             }

@@ -1,0 +1,3 @@
+__fish_complete_magick magick
+__fish_complete_magick convert
+__fish_complete_magick "magick convert"

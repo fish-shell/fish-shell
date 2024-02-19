@@ -890,13 +890,8 @@ pub fn reader_reading_interrupted() -> i32 {
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(nchars: i32) -> Option<WString> {
-    let nchars = usize::try_from(nchars).unwrap();
-    let nchars = if nchars == 0 {
-        None
-    } else {
-        Some(NonZeroUsize::try_from(nchars).unwrap())
-    };
+pub fn reader_readline(nchars: usize) -> Option<WString> {
+    let nchars = NonZeroUsize::try_from(nchars).ok();
     let data = current_data().unwrap();
     // Apply any outstanding commandline changes (#8633).
     data.apply_commandline_state_changes();

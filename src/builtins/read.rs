@@ -49,7 +49,7 @@ struct Options {
     silent: bool,
     split_null: bool,
     to_stdout: bool,
-    nchars: i32,
+    nchars: usize,
     one_line: bool,
 }
 
@@ -136,18 +136,17 @@ fn parse_cmd_opts(
             }
             'n' => {
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
-                    Ok(n) => n,
-                    Err(err) => {
-                        if err == wutil::Error::Overflow {
-                            streams.err.append(wgettext_fmt!(
-                                "%ls: Argument '%ls' is out of range\n",
-                                cmd,
-                                w.woptarg.unwrap()
-                            ));
-                            builtin_print_error_trailer(parser, streams.err, cmd);
-                            return Err(STATUS_INVALID_ARGS);
-                        }
-
+                    Ok(n) if n >= 0 => n.try_into().unwrap(),
+                    Err(wutil::Error::Overflow) => {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: Argument '%ls' is out of range\n",
+                            cmd,
+                            w.woptarg.unwrap()
+                        ));
+                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        return Err(STATUS_INVALID_ARGS);
+                    }
+                    _ => {
                         streams.err.append(wgettext_fmt!(
                             BUILTIN_ERR_NOT_NUMBER,
                             cmd,
@@ -210,7 +209,7 @@ fn parse_cmd_opts(
 fn read_interactive(
     parser: &Parser,
     buff: &mut WString,
-    nchars: i32,
+    nchars: usize,
     shell: bool,
     silent: bool,
     prompt: &wstr,
@@ -253,12 +252,12 @@ fn read_interactive(
     };
     if let Some(line) = mline {
         *buff = line;
-        if nchars > 0 && usize::try_from(nchars).unwrap() < buff.len() {
+        if nchars > 0 && nchars < buff.len() {
             // Line may be longer than nchars if a keybinding used `commandline -i`
             // note: we're deliberately throwing away the tail of the commandline.
             // It shouldn't be unread because it was produced with `commandline -i`,
             // not typed.
-            buff.truncate(usize::try_from(nchars).unwrap());
+            buff.truncate(nchars);
         }
     } else {
         exit_res = STATUS_CMD_ERROR;
@@ -339,7 +338,7 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
 fn read_one_char_at_a_time(
     fd: RawFd,
     buff: &mut WString,
-    nchars: i32,
+    nchars: usize,
     split_null: bool,
 ) -> Option<c_int> {
     let mut exit_res = STATUS_CMD_OK;
@@ -398,7 +397,7 @@ fn read_one_char_at_a_time(
         }
 
         buff.push(res);
-        if nchars > 0 && usize::try_from(nchars).unwrap() <= buff.len() {
+        if nchars > 0 && nchars <= buff.len() {
             break;
         }
     }

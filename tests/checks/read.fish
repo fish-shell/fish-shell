@@ -393,3 +393,10 @@ echo read $status
 echo ' foo' | read -n 1 -la var
 set -S var
 #CHECK: $var: set in local scope, unexported, with 0 elements
+
+echo foo | read -n -1
+# CHECKERR: read: -1: invalid integer
+# CHECKERR: {{.*}}read.fish (line {{\d+}}):
+# CHECKERR: echo foo | read -n -1
+# CHECKERR: ^
+# CHECKERR: (Type 'help read' for related documentation)

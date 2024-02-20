@@ -18,14 +18,13 @@ use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 use fish::future::IsSomeAnd;
 use fish::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{scoped_push_replacer, shell_modes, str2wcstring, PROGRAM_NAME},
+    common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
     eprintf,
     fallback::fish_wcwidth,
     fprintf,
     input::input_terminfo_get_name,
     input_common::{CharEvent, InputEventQueue, InputEventQueuer},
-    parser::Parser,
     print_help::print_help,
     printf,
     proc::set_interactive_session,
@@ -280,12 +279,6 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> ! {
     threads::init();
     env_init(None, true, false);
     reader_init();
-
-    let parser = Parser::principal_parser();
-    let _interactive = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
-        true,
-    );
 
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,

@@ -89,6 +89,10 @@ Some smaller changes:
 - The default build configuration has changed to "Debug".
   Please pass ``-DCMAKE_BUILD_TYPE=Release`` if you want to build a package.
 - Xcode support has been removed (:issue:`9924`).
+- fish no longer links against the (n)curses library, opting to read the terminfo database via the terminfo crate.
+  This means hashed terminfo databases are no longer supported. From our research, they are basically unused.
+  When packaging fish, you likely want to add a dependency on the package containing your terminfo database instead of curses.
+  If it cannot find a terminfo database, fish will now fall back on an included xterm-256color definition.
 
 --------------
 

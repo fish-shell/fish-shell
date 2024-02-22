@@ -115,7 +115,9 @@ function funced --description 'Edit function definition'
                 if test "$new_checksum" = "$checksum"
                     echo (_ "Editor exited but the function was not modified")
                     echo (_ "If the editor is still running, check if it waits for completion, maybe a '--wait' option?")
-                    # Don't source or save an unmodified file.
+                    # Source but don't save an unmodified file.
+                    # (Source in case the file changed externally since we first loaded it.)
+                    source "$writepath"
                     break
                 end
             end

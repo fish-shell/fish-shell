@@ -3,7 +3,7 @@ complete -c pstree -s a -l arguments -d 'Show command line arguments'
 complete -c pstree -s A -l ascii -d 'use ASCII line drawing characters'
 complete -c pstree -s c -l compact -d 'don\'t compact identical subtrees'
 complete -c pstree -s h -l highlight-all -d 'highlight current process and its ancestors'
-complete -c pstree -s H -l highlight-pid -d 'highlight this process and its ancestors' -a '(ps -Ao pid | string trim)'
+complete -c pstree -s H -l highlight-pid -d 'highlight this process and its ancestors' -a '(__fish_complete_pids)'
 complete -c pstree -s g -l show-pgids -d 'show process group ids; implies -c'
 complete -c pstree -s G -l vt100 -d 'use VT100 line drawing characters'
 complete -c pstree -s l -l long -d 'don\'t truncate long lines'
@@ -18,5 +18,5 @@ complete -c pstree -s u -l uid-changes -d 'show uid transitions'
 complete -c pstree -s U -l unicode -d 'use UTF-8 line drawing characters'
 complete -c pstree -s V -l version -d 'display version information'
 complete -c pstree -s Z -l security-context -d 'show SELinux security contexts'
-complete -c pstree -a '(ps -Ao pid | string trim)' -d PID
-complete -c pstree -a '(cut -d: -f1 /etc/passwd)' -d USER
+complete -c pstree -a '(__fish_complete_pids)' -d PID
+complete -c pstree -a '(__fish_complete_users)' -d USER

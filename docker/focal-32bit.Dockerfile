@@ -13,7 +13,6 @@ RUN apt-get update \
     g++-multilib \
     gettext \
     git \
-    lib32ncurses5-dev \
     locales \
     ninja-build \
     pkg-config \

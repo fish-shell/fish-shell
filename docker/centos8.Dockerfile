@@ -17,7 +17,6 @@ RUN dnf -y install dnf-plugins-core \
     diffutils \
     gcc-c++ \
     git \
-    ncurses-devel \
     ninja-build \
     python3 \
     openssl \

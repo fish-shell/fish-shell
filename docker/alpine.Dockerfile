@@ -12,7 +12,6 @@ RUN apk add --no-cache \
   git \
   libintl \
   musl-dev \
-  ncurses-dev \
   ninja \
   pcre2-dev \
   python3 \

@@ -118,7 +118,6 @@
     { symbol: ["__uint32_t", "private", "<cstdint>", "public"] },
     { symbol: ["uint32_t", "private", "<cstdint>", "public"] },
     { symbol: ["intptr_t", "private", "<cstdint>", "public"] },
-    { symbol: ["tparm", "private", "<ncurses.h>", "public"] },
     { symbol: ["select", "private", "<sys/select.h>", "public"] },
     { symbol: ["_LIBCPP_VERSION", "private", "<cstddef>", "public"] },
     { symbol: ["_LIBCPP_VERSION", "private", "<unistd.h>", "public"] },

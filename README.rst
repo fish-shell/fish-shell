@@ -88,7 +88,8 @@ Dependencies
 
 Running fish requires:
 
--  curses or ncurses (preinstalled on most \*nix systems)
+-  A terminfo database, typically from curses or ncurses (preinstalled on most \*nix systems) - this needs to be the directory tree format, not the "hashed" database.
+   If this is unavailable, fish uses an included xterm-256color definition.
 -  some common \*nix system utilities (currently ``mktemp``), in
    addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
    ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,
@@ -124,7 +125,6 @@ Compiling fish from a tarball requires:
 
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
--  a curses implementation such as ncurses (headers and libraries)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 
@@ -179,20 +179,13 @@ Note that fish does *not* support static linking and will attempt to error out i
 Help, it didn’t build!
 ~~~~~~~~~~~~~~~~~~~~~~
 
-If fish reports that it could not find curses, try installing a curses
-development package and build again.
-
-On Debian or Ubuntu you want:
+On Debian or Ubuntu you want these packages:
 
 ::
 
-   sudo apt install build-essential cmake ncurses-dev libncurses5-dev libpcre2-dev gettext
+   sudo apt install build-essential cmake libpcre2-dev gettext
 
-On RedHat, CentOS, or Amazon EC2:
-
-::
-
-   sudo yum install ncurses-devel
+On RedHat, CentOS, or Amazon EC2 everything should be preinstalled.
 
 Contributing Changes to the Code
 --------------------------------

@@ -29,7 +29,6 @@ For that, you'll require:
 -  Rust (version 1.67 or later) - when in doubt, try rustup
 -  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
--  a curses implementation such as ncurses (headers and libraries)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 -  Sphinx - optional, to build the documentation

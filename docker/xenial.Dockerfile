@@ -10,7 +10,6 @@ RUN apt-get update \
     cmake \
     gettext \
     git \
-    libncurses5-dev \
     libpcre2-dev \
     locales \
     ninja-build \

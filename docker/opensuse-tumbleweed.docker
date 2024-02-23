@@ -10,7 +10,6 @@ RUN zypper --non-interactive install \
   diffutils \
   gcc-c++ \
   git-core \
-  ncurses-devel \
   ninja \
   pcre2-devel \
   python311 \

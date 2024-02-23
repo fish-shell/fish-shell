@@ -3,7 +3,6 @@ packages:
   - cargo
   - clang17-libclang
   - cmake
-  - ncurses-dev
   - ninja
   - pcre2-dev
   - py3-pexpect

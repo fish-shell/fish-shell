@@ -12,7 +12,6 @@ RUN apt-get update \
     clang-9 \
     gettext \
     git \
-    libncurses5-dev \
     libpcre2-dev \
     locales \
     ninja-build \

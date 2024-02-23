@@ -14,7 +14,6 @@ RUN apt-get update \
     g++ \
     gettext \
     git \
-    libncurses5-dev \
     libpcre2-dev \
     locales \
     ninja-build \

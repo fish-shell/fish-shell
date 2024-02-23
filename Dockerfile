@@ -3,7 +3,7 @@ FROM centos:latest
 # Build dependency
 RUN yum update -y &&\
   yum install -y epel-release &&\
-  yum install -y clang cmake3 gcc-c++ make ncurses-devel &&\
+  yum install -y clang cmake3 gcc-c++ make &&\
   yum clean all
 
 # Test dependency

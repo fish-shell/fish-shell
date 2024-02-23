@@ -6,7 +6,6 @@ RUN dnf install --assumeyes \
       diffutils \
       gcc-c++ \
       git-core \
-      ncurses-devel \
       ninja-build \
       pcre2-devel \
       python3 \

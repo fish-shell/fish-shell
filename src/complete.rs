@@ -977,9 +977,12 @@ impl<'ctx> Completer<'ctx> {
             return;
         }
 
-        let lookup_cmd: WString = [L!("__fish_describe_command "), &escape(cmd)]
-            .into_iter()
-            .collect();
+        let lookup_cmd: WString = [
+            L!("functions -q __fish_describe_command && __fish_describe_command "),
+            &escape(cmd),
+        ]
+        .into_iter()
+        .collect();
 
         // First locate a list of possible descriptions using a single call to apropos or a direct
         // search if we know the location of the whatis database. This can take some time on slower

@@ -71,6 +71,7 @@ use std::{env, ops::ControlFlow};
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
+const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
@@ -273,7 +274,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
-            data: PathBuf::from(DATA_DIR).join("fish"),
+            data: PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin: BIN_DIR.into(),

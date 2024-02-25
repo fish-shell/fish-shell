@@ -1411,6 +1411,7 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits and working tree'
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_complete_stashes)'
+complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_recent_commits --all)'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'

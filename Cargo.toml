@@ -42,7 +42,7 @@ rand_pcg = "0.3.1"
 serial_test = "0.4.0"
 
 [build-dependencies]
-cc = "1.0.83"
+cc = "1.0.88"
 rsconf = "0.1.2"
 
 [lib]

@@ -5,7 +5,7 @@ function __fish_cache_sourced_completions
 
     set -q argv[1]
     or return 1
-    
+
     set -l cmd (command -s $argv[1])
     or begin
         # If we have no command, we can't get an mtime
@@ -24,17 +24,17 @@ function __fish_cache_sourced_completions
 
     set -l cmtime 0
     path is -rf -- $stampfile
-    and read cmtime < $stampfile
+    and read cmtime <$stampfile
 
     # If either the timestamp or the completion file don't exist,
     # or the mtime differs, we rerun.
     #
     # That means we'll rerun if the command was up- or downgraded.
     if path is -vrf -- $stampfile $compfile || test "$cmtime" -ne "$mtime" 2>/dev/null
-        $argv > $compfile
+        $argv >$compfile
         # If the command exited unsuccessfully, we assume it didn't work.
         or return 2
-        echo -- $mtime > $stampfile
+        echo -- $mtime >$stampfile
     end
 
     if path is -rf -- $compfile

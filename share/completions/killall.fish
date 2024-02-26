@@ -19,7 +19,6 @@ for i in $__kill_signals
     and complete -c killall -s s -x -a "$number $name"
 end
 
-
 complete -c killall -xa '(__fish_complete_proc | string replace -r -- "^-" "")'
 
 if killall --version >/dev/null 2>/dev/null # GNU

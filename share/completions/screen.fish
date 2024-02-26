@@ -46,7 +46,6 @@ function __fish_complete_screen -d "Print a list of running screen sessions"
     string join \n (__fish_complete_screen_attached) (__fish_complete_screen_detached)
 end
 
-
 # detect socket directory for mac users
 __fish_detect_screen_socket_dir
 

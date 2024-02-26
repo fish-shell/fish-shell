@@ -1,7 +1,6 @@
 # Load completions shared by various ssh tools like ssh, scp and sftp.
 __fish_complete_ssh scp
 
-
 # Helper functions to simplify the completions.
 function __scp2ssh_port_number
     # There is a silly inconsistency between the ssh and scp commands regarding the short flag name

@@ -20,7 +20,6 @@ set -l runtime config_cache_reload \
 
 set -l scope rwlock mutex processing
 
-
 function __fish_string_in_command -a ch
     string match -rq $ch (commandline)
 end
@@ -67,7 +66,6 @@ function __fish_prepend -a prefix
     end
 end
 
-
 function __fish_list_nodes
     zabbix_server -R ha_status | tail -n+4 | awk '{print "ha_remove_node="$3}'
 end
@@ -78,7 +76,6 @@ complete -c zabbix_server -f -s f -l foreground -d "Run Zabbix server in foregro
 complete -c zabbix_server -f -s h -l help -d "Display this help message."
 complete -c zabbix_server -f -s V -l version -d "Display version number."
 complete -c zabbix_server -f -s R -l runtime-control -a "$runtime" -d "Perform administrative functions."
-
 
 # Log levels
 complete -c zabbix_server -r -f -s R -l runtime-control -n "__fish_string_in_command log_level_increase" -a "(__fish_prepend log_level_increase)"

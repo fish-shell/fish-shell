@@ -113,7 +113,6 @@ complete -c tar -l rmt-command -r -d "Use COMMAND instead of rmt"
 complete -c tar -l rsh-command -r -d "Use COMMAND instead of rsh"
 complete -c tar -l volno-file -r -d "keep track of which volume of a multi-volume archive it is working in FILE"
 
-
 complete -c tar -s f -l file -r -d "Archive file"
 complete -c tar -s f -l file -r -d "Archive file"
 complete -c tar -s f -l file -r -d "Archive file"

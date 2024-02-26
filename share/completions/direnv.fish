@@ -29,5 +29,4 @@ complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a version -d "prints the version or checks that direnv is VERSION_AT_LEAST or newer"
 
-
 complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F

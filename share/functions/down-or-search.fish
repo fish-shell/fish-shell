@@ -11,7 +11,6 @@ function down-or-search -d "search forward or move down 1 line"
         return
     end
 
-
     # We are not already in search mode.
     # If we are on the bottom line, start search mode,
     # otherwise move down

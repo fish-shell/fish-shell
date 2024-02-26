@@ -17,7 +17,6 @@ complete -c ls -s t -d "Sort by modified time, most recent first"
 complete -c ls -s u -d "Sort by access time, (-l) show atime"
 complete -c ls -s x -d "Multi-column output, horizontally listed"
 
-
 # Test if we are using GNU ls
 if ls --version >/dev/null 2>/dev/null
     complete -c ls -s a -l all -d "Show hidden"

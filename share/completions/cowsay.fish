@@ -1,5 +1,3 @@
-
-
 complete -c cowsay -s e -d "Specify eye string" -r
 complete -c cowsay -s f -d "Specify cow file" -x -a '(cowsay -l | tail -n +2 | string split " ")'
 complete -c cowsay -s h -d "Display help and exit"

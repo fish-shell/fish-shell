@@ -1,4 +1,3 @@
-
 # Completions for qubes-gpg-client.
 # These completions are mostly taken from fish's completions for gpg.
 #

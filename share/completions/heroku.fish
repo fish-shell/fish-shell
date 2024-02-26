@@ -141,7 +141,6 @@ complete $heroku_looking -xa auth:logout -d "clear local authentication credenti
 complete $heroku_looking -xa auth:token -d "display your api token"
 complete $heroku_looking -xa auth:whoami -d "display your heroku email address"
 
-
 # Config options and subcommands
 complete -c heroku -n '__fish_heroku_using_command config' -s s -l shell -d "output config vars in shell format"
 

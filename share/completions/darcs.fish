@@ -130,7 +130,6 @@ complete -c darcs -n __fish_darcs_use_optimize_command -x -a pristine -d 'Optimi
 complete -c darcs -n __fish_darcs_use_optimize_command -x -a upgrade -d 'Upgrade repository to latest compatible format'
 complete -c darcs -n __fish_darcs_use_optimize_command -x -a cache -d 'Garbage collect global cache'
 
-
 complete -c darcs -l help -d 'Show a brief description of the command and its options'
 complete -c darcs -l list-options -d 'Show plain list of available options and commands, for auto-completion'
 complete -c darcs -l run-posthook -d 'Run posthook command without prompting [DEFAULT]'

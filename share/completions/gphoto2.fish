@@ -1,4 +1,3 @@
-
 #Common options
 complete -c gphoto2 -s '?' -l help -d 'Print complete help message on program usage'
 complete -c gphoto2 -l usage -d 'Print short message on program usage'

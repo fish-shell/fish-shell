@@ -46,8 +46,6 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     set -q fish_prompt_fossil_status_order
     or set -g fish_prompt_fossil_status_order added modified renamed deleted missing untracked conflict
 
-
-
     echo -n ' ('
     set_color magenta
     echo -n "$branch"

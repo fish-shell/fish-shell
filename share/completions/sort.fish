@@ -1,4 +1,3 @@
-
 complete -c sort -s b -l ignore-leading-blanks -d "Ignore leading blanks"
 complete -c sort -s d -l dictionary-order -d "Consider only blanks and alphanumerics"
 complete -c sort -s f -l ignore-case -d "Ignore case"

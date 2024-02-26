@@ -158,7 +158,6 @@ function __fish_complete_gpg -d "Internal function for gpg completion code dedup
     complete -c $__fish_complete_gpg_command -l warranty -d "Display warranty and exit"
     complete -c $__fish_complete_gpg_command -s h -l help -d "Display help and exit"
 
-
     #
     # gpg options
     #

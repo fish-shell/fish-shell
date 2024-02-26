@@ -6,7 +6,6 @@ set -l manifest_subcommands print application-id version-name version-code min-s
 set -l dex_subcommands list references packages code
 set -l resources_subcommands package configs value name xml
 
-
 complete -f -n "not __fish_seen_subcommand_from $subcommands" -c apkanalyzer -a apk -d 'Analyze APK file attributes'
 complete -f -n "not __fish_seen_subcommand_from $subcommands" -c apkanalyzer -a files -d 'Analyze the files inside the APK file'
 complete -f -n "not __fish_seen_subcommand_from $subcommands" -c apkanalyzer -a manifest -d 'Analyze the contents of the manifest file'

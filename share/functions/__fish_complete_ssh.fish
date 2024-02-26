@@ -104,7 +104,6 @@ function __fish_complete_ssh -d "common completions for ssh commands" --argument
     complete -c $command -s v -d "Verbose mode"
 end
 
-
 function __fish_ssh_ciphers -d "List of possible SSH cipher algorithms"
     ssh -Q cipher
 end

@@ -53,17 +53,14 @@ complete -c rpm-ostree -n "not __fish_seen_subcommand_from $subcommands" -a upda
 # 2023-07-21: Any flag between rpm-ostree and usroverlay can cause Segmentation fault. https://github.com/coreos/rpm-ostree/issues/4508
 complete -c rpm-ostree -n "not __fish_seen_subcommand_from $subcommands -" -a usroverlay -d "Apply transient overlayfs to /usr"
 
-
 # apply-live
 complete -c rpm-ostree -n "__fish_seen_subcommand_from apply-live" -l target -d "Target provided commit"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from apply-live" -l reset -d "Reset back to booted commit"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from apply-live" -l allow-replacement -d "Allow replacement of packages/files"
 
-
 # cancel
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cancel" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cancel" -l peer -d "Force peer-to-peer connection"
-
 
 # cleanup
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l os -d "=OSNAME Operate on provided OSNAME"
@@ -73,7 +70,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l rollback -s r
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l repomd -s m -d "Delete cached rpm repo metadata"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l peer -d "Force peer-to-peer connection"
-
 
 # compose
 # All compose subcommands
@@ -189,7 +185,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from tree" -l parent -d "=REV Commit with specific parent revision"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and __fish_seen_subcommand_from tree" -r -F
 
-
 # db
 set -l db_subcommands diff list version
 complete -c rpm-ostree -n "__fish_seen_subcommand_from db; and not __fish_seen_subcommand_from $db_subcommands" -a diff -d "Show package changes between two commits"
@@ -211,7 +206,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from db; and __fish_seen_subco
 # db version
 complete -c rpm-ostree -n "__fish_seen_subcommand_from db; and __fish_seen_subcommand_from version" -l repo -s r -r -d "=REPO Path to OSTree repo"
 
-
 # deploy
 complete -c rpm-ostree -n "__fish_seen_subcommand_from deploy" -l os -d "=OSNAME Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from deploy" -l reboot -s r -d "Reboot after operation complete"
@@ -228,7 +222,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from deploy" -l peer -d "Force
 complete -c rpm-ostree -n "__fish_seen_subcommand_from deploy" -l install -d "=PKG Overlay additional package"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from deploy" -l uninstall -d "=PKG Remove overlayed additional package"
 
-
 # initramfs
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l os -d "=OSNAME Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l enable -d "Enable regenerating initramfs locally using dracut"
@@ -237,7 +230,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l disable -d 
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l reboot -s r -d "Reboot after operation complete"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs" -l peer -d "Force peer-to-peer connection"
-
 
 # initramfs-etc
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs-etc" -l os -d "=OSNAME Operate on provided OSNAME"
@@ -249,7 +241,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs-etc" -l reboot 
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs-etc" -l unchanged-exit-77 -d "Exit with 77 if no new deployment made"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs-etc" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from initramfs-etc" -l peer -d "Force peer-to-peer connection"
-
 
 # install, there is also compose install
 complete -c rpm-ostree -n "__fish_seen_subcommand_from install; and not __fish_seen_subcommand_from compose" -l uninstall -d "=PKG Remove overlayed additional package"
@@ -270,7 +261,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from install; and not __fish_s
 complete -c rpm-ostree -n "__fish_seen_subcommand_from install; and not __fish_seen_subcommand_from compose" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from install; and not __fish_seen_subcommand_from compose" -l peer -d "Force peer-to-peer connection"
 
-
 # kargs
 complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l os -d "=OSNAME Operation on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l deploy-index -d "=INDEX Modify kernel args of a deployment by index"
@@ -285,7 +275,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l import-proc-cmd
 complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l editor -d "Use editor to modify kernel arguments"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from kargs" -l peer -d "Force peer-to-peer connection"
-
 
 # override
 set -l override_subcommands remove replace reset
@@ -326,7 +315,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from reset" -l install -d "=PKG Overlay additional package"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from override; and __fish_seen_subcommand_from reset" -l uninstall -d "=PKG Remove overlayed package"
 
-
 # rebase
 complete -c rpm-ostree -n "__fish_seen_subcommand_from rebase" -l os -d "=OSNAME Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from rebase" -l branch -s b -x -d "=BRANCH Rebase to branch BRANCH"
@@ -345,18 +333,15 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from rebase" -l peer -d "Force
 complete -c rpm-ostree -n "__fish_seen_subcommand_from rebase" -l install -d "=PKG Overlay additional package"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from rebase" -l uninstall -d "=PKG Remove overlayed package"
 
-
 # refresh-md
 complete -c rpm-ostree -n "__fish_seen_subcommand_from refresh-md" -l os -d "=OSNAME Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from refresh-md" -l force -d "Expire current cache"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from refresh-md" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from refresh-md" -l peer -d "Force peer-to-peer connection"
 
-
 # reload
 complete -c rpm-ostree -n "__fish_seen_subcommand_from reload" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from refresh-md" -l peer -d "Force peer-to-peer connection"
-
 
 # reset, there is also override reset
 complete -c rpm-ostree -n "__fish_seen_subcommand_from reset; and not __fish_seen_subcommand_from override" -l os -d "=OSNAME Operate on provided OSNAME"
@@ -368,7 +353,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from reset; and not __fish_see
 complete -c rpm-ostree -n "__fish_seen_subcommand_from reset; and not __fish_seen_subcommand_from override" -l peer -d "Force peer-to-peer connection"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from reset; and not __fish_seen_subcommand_from override" -l install -d "=PKG Overlay additional package"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from reset; and not __fish_seen_subcommand_from override" -l uninstall -d "=PKG Remove overlayed package"
-
 
 # rollback
 complete -c rpm-ostree -n "__fish_seen_subcommand_from rollback" -l reboot -s r -d "Reboot after transaction"
@@ -384,8 +368,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from status" -l booted -s b -d
 complete -c rpm-ostree -n "__fish_seen_subcommand_from status" -l pending-exit-77 -d "If pending deployment available, exit 77"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from status" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from status" -l peer -d "Force peer-to-peer connection"
-
-
 
 # uninstall and remove, there is also override remove
 complete -c rpm-ostree -n "__fish_seen_subcommand_from uninstall remove; and not __fish_seen_subcommand_from override" -l install -d "=PKG Overlay additional package"
@@ -403,7 +385,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from uninstall remove; and not
 complete -c rpm-ostree -n "__fish_seen_subcommand_from uninstall remove; and not __fish_seen_subcommand_from override" -l sysroot -r -d "=SYSROOT Use system root"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from uninstall remove; and not __fish_seen_subcommand_from override" -l peer -d "Force peer-to-peer connection"
 
-
 # upgrade
 complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l os -d "=OSNAME Operate on provided OSNAME"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l reboot -s r -d "Reboot after operation"
@@ -418,7 +399,6 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l sysroo
 complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l peer -d "Force peer-to-peer connection"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l install -d "=PKG Overlay additional package"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from update upgrade" -l uninstall -d "=PKG Remove overlayed package"
-
 
 # usroverlay
 # Usage: rpm-ostree usroverlay

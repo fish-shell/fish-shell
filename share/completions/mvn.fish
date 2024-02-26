@@ -22,7 +22,6 @@
 # mvn jboss:start ejb:ejb
 # Attention: Multiple plugins can be given
 
-
 # Default lifecycles
 complete -c mvn -f -a 'pre-clean clean post-clean validate initialize generate-sources process-sources generate-resources process-resources compile process-classes generate-test-sources process-test-sources generate-test-resources process-test-resources test-compile process-test-classes testprepare-package package pre-integration-test integration-test post-integration-test verify install deploy pre-site site post-site site-deploy'
 
@@ -102,11 +101,9 @@ complete -c mvn -o DperformRelease -d "Use release profile (create javadoc and a
 complete -c mvn -o Dmaven.surefire.debug -d "Run surefire tests with debugging on port 5005"
 complete -c mvn -o Dmaven.javadoc.skip -d "Skip Javadoc generation"
 
-
 #
 # Plugin configurations
 #
-
 
 # More plugins
 complete -c mvn -a "clean:clean" -d "Clean the build"

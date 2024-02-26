@@ -59,7 +59,6 @@ function __fish_adb_list_packages
     __fish_adb_run_command pm list packages 2\>/dev/null | string replace 'package:' ''
 end
 
-
 function __fish_adb_list_uninstallable_packages
     # -3 doesn't exactly mean show uninstallable, but it's the closest you can get to with pm list
     __fish_adb_run_command pm list packages -3 | string replace 'package:' ''

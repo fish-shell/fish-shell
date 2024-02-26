@@ -64,7 +64,6 @@ set -g __fish_svn_prompt_char_token_stolen_color --bold purple
 set -g __fish_svn_prompt_char_token_broken_display B
 set -g __fish_svn_prompt_char_token_broken_color --bold magenta
 
-
 # ==============================
 
 function __fish_svn_prompt_parse_status --description "helper function that does pretty formatting on svn status"
@@ -87,7 +86,6 @@ function __fish_svn_prompt_parse_status --description "helper function that does
         end
     end
 end
-
 
 function fish_svn_prompt --description "Prompt function for svn"
     # if svn isn't installed or doesn't offer svnversion then don't do anything

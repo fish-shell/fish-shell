@@ -1,4 +1,3 @@
-
 # Checks if we are using GNU tools
 if mkdir --version >/dev/null 2>/dev/null
     complete -c mkdir -l version -d 'Output version'

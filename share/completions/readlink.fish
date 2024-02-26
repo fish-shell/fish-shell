@@ -1,4 +1,3 @@
-
 complete -c readlink -s f -l canonicalize -d 'Canonicalize, follow symlinks, last can be missing'
 complete -c readlink -s e -l canonicalize-existing -d 'Canonicalize, follow symlinks, none can be missing'
 complete -c readlink -s m -l canonicalize-missing -d 'Canonicalize, follow symlinks, all can be missing'

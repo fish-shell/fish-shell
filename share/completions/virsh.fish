@@ -94,7 +94,6 @@ function __fish_virsh_get_networks
     end
 end
 
-
 # virsh
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -x
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -l connect -s -x -d "Specify hypervisor connection URI"

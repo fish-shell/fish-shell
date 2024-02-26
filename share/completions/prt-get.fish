@@ -21,7 +21,6 @@ function __fish_prt_no_subcommand -d 'Test if prt-get has yet to be given the co
     return 0
 end
 
-
 # a function to verify if prt-get should have packages as potential completion
 function __fish_prt_use_package -d 'Test if prt-get should have packages as potential completion'
     for i in (commandline -xpc)

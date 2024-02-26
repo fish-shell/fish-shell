@@ -1,4 +1,3 @@
-
 complete -c msgfmt -s D -l directory -d "Add specified directory to list for input files search" -x -a "(__fish_complete_directories (commandline -ct))"
 
 set -l cond "not __fish_contains_opt -s j java java2 csharp csharp-resource tcl qt"
@@ -11,7 +10,6 @@ complete -c msgfmt -n $cond -l qt -d "Generate a Qt .qm file"
 
 complete -c msgfmt -s o -l output-file -d "Write output to specified file" -r
 complete -c msgfmt -l strict -d "Enable strict Uniforum mode"
-
 
 set -l cond "__fish_contains_opt -s j java java2 csharp csharp-resource tcl"
 complete -c msgfmt -n $cond -s r -l resource -d "Resource name"

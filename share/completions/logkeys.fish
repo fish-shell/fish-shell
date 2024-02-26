@@ -1,4 +1,3 @@
-
 complete -c logkeys -s s -l start -d 'Starts the keylogging daemon'
 complete -c logkeys -s k -l kill -d 'Terminates the logkeys daemon'
 complete -c logkeys -s o -l output -d 'Set output LOGFILE'

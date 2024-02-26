@@ -1,4 +1,3 @@
-
 complete -c lua -s e -d 'Execute string' -x
 # Try the most common lib directories, silencing errors in case they don't exist.
 complete -c lua -s l -d 'Require library' -xa "(find /usr/lib{,32,64}/lua/ -name \*.so -printf '%f\n' 2>/dev/null | string replace -r '.so\$' '')"

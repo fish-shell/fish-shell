@@ -47,7 +47,6 @@ end
 complete -c cargo -n '__fish_seen_subcommand_from add install' -n '__fish_is_nth_token 2' \
     -a "(__fish_cargo_search (commandline -ct))"
 
-
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
 # Manually massaged to improve some descriptions
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'

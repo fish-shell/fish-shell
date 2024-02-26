@@ -15,7 +15,6 @@ complete -c zabbix_sender -s N -l with-ns -d "Timestamps have nanosecond portion
 complete -c zabbix_sender -s r -l real-time -d "Send values as soon as they are received."
 complete -c zabbix_sender -s v -l verbose -d "Verbose mode, -vv for more details."
 
-
 # TLS
 complete -c zabbix_sender -f -r -l tls-connect -a "unencrypted psk cert" -d "How to connect to agent."
 complete -c zabbix_sender -l tls-ca-file -F -d "Full path of a with the top-level CA(s)."

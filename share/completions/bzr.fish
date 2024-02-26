@@ -2,7 +2,6 @@
 # see https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_seen_subcommand_from.fish
 # and https://github.com/fish-shell/fish-shell/blob/master/share/functions/__fish_use_subcommand.fish
 
-
 # help commands
 complete -f -c bzr -n __fish_use_subcommand -a help -d 'Show help'
 complete -f -c bzr -n '__fish_seen_subcommand_from help' -a topics -d 'List all help topics'

@@ -127,7 +127,8 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 },
                 output: WString::default(),
                 current_indent: 0,
-                gap_text_mask_newline: false,
+                // Start with true to ignore leading empty lines.
+                gap_text_mask_newline: true,
                 gaps: vec![],
                 preferred_semi_locations: vec![],
                 errors: None,
@@ -430,15 +431,16 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             if needs_nl {
                 self.emit_newline();
                 needs_nl = false;
-                if tok_text == "\n" {
-                    continue;
-                }
-            } else if self.gap_text_mask_newline {
-                // We only respect mask_newline the first time through the loop.
                 self.gap_text_mask_newline = false;
                 if tok_text == "\n" {
                     continue;
                 }
+            } else if self.gap_text_mask_newline {
+                // When told to mask newlines, we do it as long as we get semicolon or newline.
+                if tok.type_ == TokenType::end {
+                    continue;
+                }
+                self.gap_text_mask_newline = false;
             }
 
             if tok.type_ == TokenType::comment {
@@ -451,6 +453,8 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 // Newlines are preserved unless mask_newline is set.
                 if tok_text == "\n" {
                     self.emit_newline();
+                    // Ignore successive ends.
+                    self.gap_text_mask_newline = true;
                 }
             } else {
                 // Anything else we write a space.
@@ -619,11 +623,6 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 self.emit_semi();
             } else {
                 self.emit_newline();
-            }
-
-            // If it was a semi but we emitted a newline, swallow a subsequent newline.
-            if !prefer_semi && self.substr(range) == ";" {
-                self.gap_text_mask_newline = true;
             }
         }
     }

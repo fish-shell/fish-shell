@@ -74,7 +74,6 @@ end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end ar
 #CHECK: begin
 #CHECK: {{    }}echo hi
 #CHECK: 
-#CHECK: 
 #CHECK: end | cat | cat | begin
 #CHECK: {{    }}echo hi
 #CHECK: end | begin
@@ -96,10 +95,8 @@ end
 ' | $fish_indent
 
 #CHECK: switch aloha
-#CHECK: 
 #CHECK: {{    }}case alpha
 #CHECK: {{    }}{{    }}echo sup
-#CHECK: 
 #CHECK: {{    }}case beta gamma
 #CHECK: {{    }}{{    }}echo hi
 #CHECK: 
@@ -150,7 +147,6 @@ qqq
    case "*"
        echo sup
 end' | $fish_indent
-#CHECK: 
 #CHECK: echo alpha #comment1
 #CHECK: #comment2
 #CHECK: 
@@ -324,7 +320,6 @@ echo bye
 #CHECK: end
 #CHECK: 
 #CHECK: echo hi |
-#CHECK: 
 #CHECK: {{    }}echo bye
 
 echo 'a;;;;;;' | $fish_indent
@@ -449,3 +444,23 @@ echo "\'\\\\\x00\'" | string unescape | $fish_indent | string escape
 
 echo '\"\"\|\x00' | string unescape | $fish_indent | string unescape
 # CHECK: |
+
+echo 'a
+
+
+;
+
+
+b
+' | $fish_indent
+#CHECK: a
+#CHECK:
+#CHECK: b
+
+echo "
+
+
+
+echo this file starts late
+" | $fish_indent
+#CHECK: echo this file starts late

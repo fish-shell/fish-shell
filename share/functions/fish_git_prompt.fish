@@ -625,7 +625,6 @@ function __fish_git_prompt_set_color
     end
 end
 
-
 function __fish_git_prompt_validate_colors --description "fish_git_prompt helper, checks color variables"
 
     # Base color defaults to nothing (must be done first)

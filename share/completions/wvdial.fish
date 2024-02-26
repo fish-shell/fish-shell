@@ -23,7 +23,6 @@ function __fish_complete_wvdial_peers --description 'Complete wvdial peers' --ar
         string match -r '\[Dialer' <$file | string replace -r '\[Dialer (.+)\]' '$1'
     end | path sort -u | string match -v Defaults
 
-
 end
 
 complete -c wvdial -xa "(__fish_complete_wvdial_peers)" -d "wvdial connections"

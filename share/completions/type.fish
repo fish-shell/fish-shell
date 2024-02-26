@@ -1,4 +1,3 @@
-
 complete -c type -s h -l help -d "Display help and exit"
 complete -c type -s a -l all -d "Print all possible definitions of the specified name"
 complete -c type -s f -l no-functions -d "Suppress function and builtin lookup"

@@ -40,7 +40,6 @@ function __fish_tshark_decode_as
     end
 end
 
-
 function __fish_complete_wireshark
     set -l shark $argv
     complete -c $shark -s a -l autostop -d 'Specify a criterion to stop writing the capture file' -xa '

@@ -2,7 +2,6 @@
 # A part of the runit init system
 # Author: Leonardo da Rosa Eugênio <lelgenio@disroot.org>
 
-
 set -l commands \
     status up down once s u d o pause cont hup \
     alarm interrupt quit 1 2 term kill exit p c h \
@@ -26,10 +25,8 @@ end
 
 complete -f -c sv -a "(__fish_complete_sv_list_services)" -n "__fish_seen_subcommand_from $commands"
 
-
 complete -fc sv -s v -d "Report status for up, down, term, once, cont, and exit"
 complete -fc sv -s w -d "Override the default timeout to report status"
-
 
 set -l no_comm "not __fish_seen_subcommand_from $commands"
 

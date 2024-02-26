@@ -24,7 +24,6 @@ function __fish_list_kldload_options
     end
 end
 
-
 # Only attempt to match a local file if there isn't a match in /boot/kernel,
 # as odds are that is the desired source.
 complete -c kldload -xa '(__fish_list_kldload_options)'

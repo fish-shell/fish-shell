@@ -36,7 +36,6 @@ complete -c sbt -f -a '(string split "\n" "
 complete -c sbt -f -n 'test  (count (commandline -cpx)) = 1 ' -a new -d 'Create a new sbt project from the given template'
 complete -c sbt -f -n 'test  (count (commandline -cpx)) = 1 ' -a client -d 'Connect to a server with an interactive sbt prompt'
 
-
 ###########
 # OPTIONS #
 ###########

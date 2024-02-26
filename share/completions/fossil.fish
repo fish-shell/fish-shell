@@ -43,7 +43,6 @@ function __fish_fossil_subsubsubcommand_only
     and test $argv[3] = $cmd[4]
 end
 
-
 # add
 complete -c fossil -n __fish_fossil_needs_command -a add -x -d 'Add files to checkout'
 complete -c fossil -n '__fish_fossil_command add' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'
@@ -136,7 +135,6 @@ complete -c fossil -n '__fish_fossil_command co checkout' -l force -d 'Ignore ed
 complete -c fossil -n '__fish_fossil_command co checkout' -l force-missing -d 'Ignore missing content'
 complete -c fossil -n '__fish_fossil_command co checkout' -l keep -d 'Only update the manifest'
 complete -c fossil -n '__fish_fossil_command co checkout' -l latest -d 'Update to latest version'
-
 
 # clean
 complete -c fossil -n __fish_fossil_needs_command -a clean -d 'Delete all extra files'

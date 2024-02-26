@@ -1,4 +1,3 @@
-
 function __fish_obnam_nosubcommand
     if __fish_seen_subcommand_from add-key backup client-keys clients diff dump-repo force-lock forget fsck \
             generations genids help help-all kdirstat list-errors list-formats list-keys list-toplevels \

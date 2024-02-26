@@ -1,4 +1,3 @@
-
 if string match -q "OpenSSL*" (command openssl version)
     # This is real OpenSSL that has the list command.
     function __fish_openssl_subcommand_options --description "Print options for openssl subcommand"

@@ -3,7 +3,6 @@ function __fish_preview_current_file --description "Open the file at the cursor 
         return 0
     end
 
-
     set -l pager (__fish_anypager)
     or set pager cat
 

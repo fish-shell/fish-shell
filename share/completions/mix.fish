@@ -18,7 +18,6 @@ function __fish_mix_using_command
     return 1
 end
 
-
 complete -f -c mix -n __fish_mix_needs_command -a app.start -d "Starts all registered apps"
 complete -f -c mix -n __fish_mix_needs_command -a archive -d "Lists all archives"
 complete -f -c mix -n __fish_mix_needs_command -a archive.build -d "Archives this project into a .ez file"

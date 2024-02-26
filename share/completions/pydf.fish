@@ -1,4 +1,3 @@
-
 complete -c pydf -r -d 'Report colourised filesystem disk space usage'
 complete -c pydf -l help -d 'show this help message'
 complete -c pydf -s v -l version -d 'show version'

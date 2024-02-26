@@ -7,7 +7,6 @@ complete -c zabbix_get -f -s k -l key -d "Specify key of item to retrieve value 
 complete -c zabbix_get -f -s h -l help -d "Display this help and exit."
 complete -c zabbix_get -f -s V -l version -d "Output version information and exit."
 
-
 # TLS
 complete -c zabbix_get -f -r -l tls-connect -a "unencrypted psk cert" -d "How to connect to agent."
 complete -c zabbix_get -l tls-ca-file -F -d "Full path of a file with the top-level CA(s)."

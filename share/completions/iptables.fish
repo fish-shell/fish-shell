@@ -34,7 +34,6 @@ function __fish_iptables_user_chains
     end
 end
 
-
 function __fish_iptables_chains
     set -l table (__fish_iptables_current_table)
     test -z $table

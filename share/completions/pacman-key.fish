@@ -1,4 +1,3 @@
-
 complete -c pacman-key -s a -l add -d 'Add or update keys from <file>'
 complete -c pacman-key -l config -d 'Use an alternate config <file>'
 complete -c pacman-key -s d -l delete -d 'Remove the <keys> from the keyring'

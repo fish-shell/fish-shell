@@ -1,4 +1,3 @@
-
 complete -c pdftotext -s f -d "First page to convert"
 complete -c pdftotext -s l -d "Last page to convert"
 complete -c pdftotext -s r -d "Resolution, in DPI [75]"

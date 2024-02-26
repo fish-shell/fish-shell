@@ -45,7 +45,6 @@ complete -c $progname -n $noopt -s u -l update -d "(AUR) Update foreign packages
 complete -c $progname -n "$noopt; and not __fish_contains_opt -s d download" -s d -l download -d "(AUR) Clone the packages' build files"
 complete -c $progname -n "$noopt; and __fish_contains_opt -s d download" -s d -l download -d "Download dependencies recursively"
 
-
 # General options
 # Only offer these once a command has been given so they get prominent display
 complete -c $progname -n $noopt -s b -l dbpath -d 'Alternative database location' -xa '(__fish_complete_directories)'

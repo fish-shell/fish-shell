@@ -1,4 +1,3 @@
-
 complete -c root -s b -d 'Run in batch mode'
 complete -c root -s n -d 'Do not execute logon and logoff macros'
 complete -c root -s q -d 'Exit after processing commandline macro files'

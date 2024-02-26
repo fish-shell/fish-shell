@@ -1093,7 +1093,6 @@ complete -f -c git -n '__fish_git_using_command show' -l no-notes -d 'Do not sho
 complete -f -c git -n '__fish_git_using_command show' -s s -l no-patch -d 'Suppress diff output'
 complete -f -c git -n '__fish_git_using_command show' -l show-signature -d 'Check the validity of a signed commit object'
 
-
 ### show-branch
 complete -f -c git -n __fish_git_needs_command -a show-branch -d 'Show the commits on branches'
 complete -f -c git -n '__fish_git_using_command show-branch' -ka '(__fish_git_refs)' -d Rev
@@ -1216,7 +1215,6 @@ complete -f -c git -n '__fish_git_using_command apply' -s v -l verbose -d 'Repor
 complete -f -c git -n '__fish_git_using_command apply' -l recount -d 'Do not trust the line counts in the hunk headers'
 complete -F -c git -n '__fish_git_using_command apply' -l directory -d 'Prepend given path to all filenames'
 complete -f -c git -n '__fish_git_using_command apply' -l unsafe-paths -d 'Allow patches that work outside working area'
-
 
 ### archive
 complete -f -c git -n __fish_git_needs_command -a archive -d 'Create an archive of files from a tree'
@@ -1890,7 +1888,6 @@ complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_ran
 complete -f -c git -n '__fish_git_using_command range-diff' -l creation-factor -d 'Percentage by which creation is weighted'
 complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 'Use simple diff colors'
 
-
 ### push
 complete -f -c git -n __fish_git_needs_command -a push -d 'Push changes elsewhere'
 complete -f -c git -n '__fish_git_using_command push' -n 'not __fish_git_branch_for_remote' -a '(__fish_git_remotes)' -d 'Remote alias'
@@ -2226,7 +2223,6 @@ complete -f -c git -n '__fish_git_using_command format-patch log' -l textconv -d
 complete -f -c git -n '__fish_git_using_command format-patch log' -l no-prefix -d "Do not show source or destination prefix"
 complete -f -c git -n '__fish_git_using_command format-patch' -l numbered -s n -d "Name output in [Patch n/m] format, even with a single patch"
 complete -f -c git -n '__fish_git_using_command format-patch' -l no-numbered -s N -d "Name output in [Patch] format, even with multiple patches"
-
 
 ## git submodule
 set -l submodulecommands add status init deinit update set-branch set-url summary foreach sync absorbgitdirs

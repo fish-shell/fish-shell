@@ -20,5 +20,4 @@ function __fish_complete_lpr_option --description 'Complete lpr option'
             lpoptions -l 2>/dev/null | string replace -r '(.*)/(.*):.*$' '$1=\t$2'
     end
 
-
 end

@@ -14,7 +14,6 @@ function __fish_kitchen_list
     command kitchen list --bare
 end
 
-
 # help commands
 complete -c kitchen -f -n __fish_kitchen_no_command -a help -d "Describe available commands or one specific command"
 

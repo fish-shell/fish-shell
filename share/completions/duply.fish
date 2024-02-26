@@ -1,4 +1,3 @@
-
 # First parameter is the profile name, or 'usage'
 complete -c duply -f -n "__fish_is_nth_token 1" -a '(set -l files /etc/duply/* ~/.duply/*; string replace -r ".*/" "" --  $files)' -d Profile
 complete --command duply --no-files --arguments usage -d 'Get usage help text'

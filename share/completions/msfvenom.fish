@@ -44,7 +44,6 @@ function __fish_complete_msf_platforms
     echo $__fish_msf_cached_platforms
 end
 
-
 complete -c msfvenom -f
 
 complete -c msfvenom -s l -l list -xa 'payloads encoders nops platforms archs encrypt formats all' -d 'List all modules for type'

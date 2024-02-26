@@ -1,6 +1,5 @@
 # completion for xterm
 
-
 complete -c xterm -n 'string match "+*" -- (commandline -ct)' -a +ah -d 'Never highlight the text cursor'
 complete -c xterm -n 'string match "+*" -- (commandline -ct)' -a +ai -d 'Enable active icon support'
 complete -c xterm -n 'string match "+*" -- (commandline -ct)' -a +aw -d 'Disallow auto wraparound'

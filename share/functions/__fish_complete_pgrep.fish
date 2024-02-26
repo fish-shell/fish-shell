@@ -1,4 +1,3 @@
-
 function __fish_complete_pgrep -d 'Complete pgrep/pkill' --argument-names cmd
     complete -c $cmd -xa '(__fish_complete_proc)'
     complete -c $cmd -s f -d 'Match pattern against full command line'

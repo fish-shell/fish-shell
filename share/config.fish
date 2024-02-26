@@ -14,7 +14,6 @@ function __fish_default_command_not_found_handler
     printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
 end
 
-
 if not status --is-interactive
     # Hook up the default as the command_not_found handler
     # if we are not interactive to avoid custom handlers.

@@ -193,7 +193,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         # Shift-space (CSI u escape sequence) behaves like space because it's easy to mistype.
         bind --preset $argv \e\[32\;2u 'commandline -i " "; commandline -f expand-abbr'
 
-
         bind --preset $argv \n execute
         bind --preset $argv \r execute
         # Make Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.

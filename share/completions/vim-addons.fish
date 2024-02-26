@@ -1,4 +1,3 @@
-
 # Completion for vim-addons
 # =========================
 #
@@ -39,7 +38,6 @@ complete -c vim-addons -n "contains files (commandline -pxc)" -a "(vim-addons li
 # show
 complete -c vim-addons -n __fish_vim-addons_subcommand -a show -x -d "displays detailed information about the specified addons"
 complete -c vim-addons -n "contains show (commandline -pxc)" -a "(vim-addons list)" -x
-
 
 # Options
 # --------

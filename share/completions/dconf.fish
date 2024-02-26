@@ -33,7 +33,6 @@ complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a dump -d '
 complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a load -d 'Populate a subpath from stdin'
 complete -f -c dconf -n "not __fish_seen_subcommand_from $commands" -a help -d 'Display help and exit'
 
-
 ### Arguments to commands
 # Technically, reset/watch take a "PATH" (which is a dir or a key)
 # while read and write take a KEY, but for now this is close enough.

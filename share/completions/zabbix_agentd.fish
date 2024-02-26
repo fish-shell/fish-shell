@@ -4,7 +4,6 @@ set -l runtime userparameter_reload \
     log_level_decrease \
     log_level_decrease=
 
-
 function __fish_string_in_command -a ch
     string match -rq $ch (commandline)
 end

@@ -1,4 +1,3 @@
-
 function __fish_evince_complete_file_url
     set -l comp
 

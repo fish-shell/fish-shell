@@ -28,21 +28,17 @@ complete -c loginctl -x -n "not $seen $commands" -l signal -s s -d "Which signal
 complete -c loginctl -f -n "not $seen $commands" -l value -d "When showing properties, only print the value"
 complete -c loginctl -f -n "not $seen $commands" -l version -d "Show package version"
 
-
 function __fish_loginctl_list_sessions
     loginctl list-sessions --no-legend --no-pager --output=short | string replace -r '^\s*(\d+)\s+\d+\s+(\S+)\s+(\S+\s+)?(\S+\d+).*' '$1\t$2 at $4'
 end
-
 
 function __fish_loginctl_list_users
     loginctl list-users --no-legend --no-pager --output=short | string replace -r '(\d+) (\S+) .*' '$1\t$2'
 end
 
-
 function __fish_loginctl_list_seats
     loginctl list-seats --no-legend --no-pager --output=short
 end
-
 
 complete -c loginctl -n "$seen session-status show-session activate lock-session unlock-session terminate-session kill-session" -a '(__fish_loginctl_list_sessions)'
 complete -c loginctl -n "$seen user-status show-user enable-linger disable-linger terminate-user kill-user" -a '(__fish_loginctl_list_users)'

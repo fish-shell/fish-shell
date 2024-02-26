@@ -8,7 +8,6 @@ set -l runtime config_cache_reload \
     log_level_decrease \
     log_level_decrease=
 
-
 function __fish_string_in_command -a ch
     string match -rq $ch (commandline)
 end
@@ -42,7 +41,6 @@ function __fish_prepend -a prefix
         echo $prefix="$i"
     end
 end
-
 
 # General
 complete -c zabbix_proxy -s c -l config -d "Use an alternate config-file."

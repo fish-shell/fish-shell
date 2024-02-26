@@ -1,0 +1,22 @@
+complete -c pstree -f
+complete -c pstree -s a -l arguments -d 'Show command line arguments'
+complete -c pstree -s A -l ascii -d 'use ASCII line drawing characters'
+complete -c pstree -s c -l compact -d 'don\'t compact identical subtrees'
+complete -c pstree -s h -l highlight-all -d 'highlight current process and its ancestors'
+complete -c pstree -s H -l highlight-pid -d 'highlight this process and its ancestors' -a '(__fish_complete_pids)'
+complete -c pstree -s g -l show-pgids -d 'show process group ids; implies -c'
+complete -c pstree -s G -l vt100 -d 'use VT100 line drawing characters'
+complete -c pstree -s l -l long -d 'don\'t truncate long lines'
+complete -c pstree -s n -l numeric-sort -d 'sort output by PID'
+complete -c pstree -s N -l ns-sort -d 'sort by namespace type' -xa 'cgroup ipc mnt net pid user uts'
+complete -c pstree -s p -l show-pids -d 'show PIDs; implies -c'
+complete -c pstree -s s -l show-parents -d 'show parents of the selected process'
+complete -c pstree -s S -l ns-changes -d 'show namespace transitions'
+complete -c pstree -s t -l thread-names -d 'show full thread names'
+complete -c pstree -s T -l hide-threads -d 'hide threads, show only processes'
+complete -c pstree -s u -l uid-changes -d 'show uid transitions'
+complete -c pstree -s U -l unicode -d 'use UTF-8 line drawing characters'
+complete -c pstree -s V -l version -d 'display version information'
+complete -c pstree -s Z -l security-context -d 'show SELinux security contexts'
+complete -c pstree -a '(__fish_complete_pids)' -d PID
+complete -c pstree -a '(__fish_complete_users)' -d USER

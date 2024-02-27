@@ -2001,7 +2001,8 @@ pub enum StatementVariant {
     None,
     NotStatement(NotStatement),
     BlockStatement(BlockStatement),
-    IfStatement(IfStatement),
+    // IfStatement is much larger than the rest, so we box it.
+    IfStatement(Box<IfStatement>),
     SwitchStatement(SwitchStatement),
     DecoratedStatement(DecoratedStatement),
 }
@@ -2081,7 +2082,7 @@ impl StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node,
             StatementVariant::BlockStatement(node) => node,
-            StatementVariant::IfStatement(node) => node,
+            StatementVariant::IfStatement(node) => &**node,
             StatementVariant::SwitchStatement(node) => node,
             StatementVariant::DecoratedStatement(node) => node,
         }
@@ -3612,7 +3613,7 @@ impl<'s> Populator<'s> {
             }
             ParseKeyword::kw_if => {
                 let embedded = self.allocate_visit::<IfStatement>();
-                Box::new(StatementVariant::IfStatement(*embedded))
+                Box::new(StatementVariant::IfStatement(embedded))
             }
             ParseKeyword::kw_switch => {
                 let embedded = self.allocate_visit::<SwitchStatement>();

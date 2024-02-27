@@ -1,11 +1,11 @@
-use crate::common::{is_windows_subsystem_for_linux, read_blocked};
+use crate::common::{fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked};
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
 use crate::reader::reader_current_data;
 use crate::threads::{iothread_port, iothread_service_main};
 use crate::universal_notifier::default_notifier;
-use crate::wchar::prelude::*;
+use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, zero_mbstate};
 use crate::wutil::fish_wcstol;
 use std::collections::VecDeque;
@@ -374,6 +374,8 @@ pub trait InputEventQueuer {
     fn readch(&mut self) -> CharEvent {
         let mut res: char = '\0';
         let mut state = zero_mbstate();
+        let mut bytes = [0; 64 * 16];
+        let mut num_bytes = 0;
         loop {
             // Do we have something enqueued already?
             // Note this may be initially true, or it may become true through calls to
@@ -415,9 +417,10 @@ pub trait InputEventQueuer {
                         res = read_byte.into();
                         return CharEvent::from_char(res);
                     }
+                    let mut codepoint = u32::from(res);
                     let sz = unsafe {
                         mbrtowc(
-                            std::ptr::addr_of_mut!(res).cast(),
+                            std::ptr::addr_of_mut!(codepoint).cast(),
                             std::ptr::addr_of!(read_byte).cast(),
                             1,
                             &mut state,
@@ -430,16 +433,30 @@ pub trait InputEventQueuer {
                         }
                         -2 => {
                             // Sequence not yet complete.
+                            bytes[num_bytes] = read_byte;
+                            num_bytes += 1;
+                            continue;
                         }
                         0 => {
                             // Actual nul char.
                             return CharEvent::from_char('\0');
                         }
-                        _ => {
-                            // Sequence complete.
+                        _ => (),
+                    }
+                    if let Some(res) = char::from_u32(codepoint) {
+                        // Sequence complete.
+                        if !fish_reserved_codepoint(res) {
                             return CharEvent::from_char(res);
                         }
                     }
+                    bytes[num_bytes] = read_byte;
+                    num_bytes += 1;
+                    for &b in &bytes[1..num_bytes] {
+                        let c = CharEvent::from_char(encode_byte_to_char(b));
+                        self.push_back(c);
+                    }
+                    let res = CharEvent::from_char(encode_byte_to_char(bytes[0]));
+                    return res;
                 }
             }
         }

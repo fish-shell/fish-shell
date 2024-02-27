@@ -17,7 +17,7 @@ use std::sync::Mutex;
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
-    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
+    fish_reserved_codepoint, get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
     has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop, ScopeGuard,
     ScopeGuarding,
 };
@@ -1825,6 +1825,9 @@ fn compute_layout(
 // \n.
 // See https://unicode-table.com/en/blocks/control-pictures/
 fn rendered_character(c: char) -> char {
+    if fish_reserved_codepoint(c) {
+        return '�'; // replacement character
+    }
     if c <= '\x1F' {
         char::from_u32(u32::from(c) + 0x2400).unwrap()
     } else {

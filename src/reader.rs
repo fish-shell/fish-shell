@@ -39,10 +39,10 @@ use crate::ast::{self, Ast, Category, Traversal};
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
 use crate::common::{
-    escape, escape_string, exit_without_destructors, fish_reserved_codepoint, get_ellipsis_char,
-    get_obfuscation_read_char, redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx,
-    shell_modes, str2wcstring, wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard,
-    PROGRAM_NAME, UTF8_BOM_WCHAR,
+    escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
+    redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx, shell_modes, str2wcstring,
+    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
+    UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -1844,10 +1844,7 @@ impl ReaderData {
                     && zelf.active_edit_line().1.position() == 0
                 {
                     // This character is skipped.
-                } else if !fish_reserved_codepoint(c)
-                    && (c >= ' ' || c == '\n' || c == '\r')
-                    && c != '\x7F'
-                {
+                } else {
                     // Regular character.
                     let (elt, _el) = zelf.active_edit_line();
                     zelf.insert_char(elt, c);
@@ -1857,10 +1854,6 @@ impl ReaderData {
                         // We end history search. We could instead update the search string.
                         zelf.history_search.reset();
                     }
-                } else {
-                    // This can happen if the user presses a control char we don't recognize. No
-                    // reason to report this to the user unless they've enabled debugging output.
-                    FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
                 }
                 rls.last_cmd = None;
             }
@@ -1976,7 +1969,7 @@ impl ReaderData {
                 self.inputter
                     .read_char(allow_commands.then_some(&mut command_handler))
             };
-            if !event_is_normal_char(&evt) || !poll_fd_readable(self.conf.inputfd) {
+            if !evt.is_char() || !poll_fd_readable(self.conf.inputfd) {
                 event_needing_handling = Some(evt);
                 break;
             } else if evt.input_style == CharInputStyle::NotFirst
@@ -5333,13 +5326,4 @@ impl ReaderData {
         );
         self.set_buffer_maintaining_pager(&new_command_line, cursor, false);
     }
-}
-
-/// \return true if an event is a normal character that should be inserted into the buffer.
-fn event_is_normal_char(evt: &CharEvent) -> bool {
-    if !evt.is_char() {
-        return false;
-    }
-    let c = evt.get_char();
-    !fish_reserved_codepoint(c) && c > char::from(31) && c != char::from(127)
 }

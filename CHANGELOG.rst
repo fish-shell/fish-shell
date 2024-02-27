@@ -40,6 +40,10 @@ Scripting improvements
 - ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
 - Stack trace now shows line numbers for copied functions.
 - New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
+- An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
+- ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
+- ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
+- ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
 
 Interactive improvements
 ------------------------
@@ -68,10 +72,7 @@ Improved terminal support
 
 Other improvements
 ------------------
-- An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
-- ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
-- ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
-- ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
+- ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 
 .. _rust-packaging:
 

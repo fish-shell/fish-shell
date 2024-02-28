@@ -416,8 +416,13 @@ impl Parser {
 
     /// Get the "principal" parser, whatever that is.
     pub fn principal_parser() -> &'static Parser {
+        // XXX: We use `static mut` as a hack to work around the fact that Parser doesn't implement
+        // Sync! Even though we are wrapping it in Lazy<> and it compiles without an error, that
+        // doesn't mean this is safe to access across threads!
         static mut PRINCIPAL: Lazy<ParserRef> =
             Lazy::new(|| Parser::new(EnvStack::principal().clone(), true));
+        // XXX: Creating and using multiple (read or write!) references to the same mutable static
+        // is undefined behavior!
         unsafe {
             PRINCIPAL.assert_can_execute();
             &PRINCIPAL

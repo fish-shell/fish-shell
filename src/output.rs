@@ -449,6 +449,8 @@ impl Outputter {
         static mut STDOUTPUT: RefCell<Outputter> =
             RefCell::new(Outputter::new_from_fd(libc::STDOUT_FILENO));
         // Safety: this is only called from the main thread.
+        // XXX: creating and using multiple (read or write!) references to the same mutable static
+        // is undefined behavior!
         unsafe { &mut STDOUTPUT }
     }
 }

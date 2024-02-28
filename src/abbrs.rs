@@ -48,7 +48,7 @@ pub struct Abbreviation {
     /// If unset, the key is to be interpreted literally.
     /// Note that the fish interface enforces that regexes match the entire token;
     /// we accomplish this by surrounding the regex in ^ and $.
-    pub regex: Option<Regex>,
+    pub regex: Option<Box<Regex>>,
 
     /// Replacement string.
     pub replacement: WString,

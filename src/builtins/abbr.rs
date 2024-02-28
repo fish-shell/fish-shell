@@ -302,7 +302,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
     }
 
     let key: &wstr;
-    let regex: Option<Regex>;
+    let regex: Option<Box<Regex>>;
     if let Some(regex_pattern) = &opts.regex_pattern {
         // Compile the regex as given; if that succeeds then wrap it in our ^$ so it matches the
         // entire token.
@@ -329,9 +329,11 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
             return STATUS_INVALID_ARGS;
         }
         let anchored = regex_make_anchored(regex_pattern);
-        let re = builder
-            .build(to_boxed_chars(&anchored))
-            .expect("Anchored compilation should have succeeded");
+        let re = Box::new(
+            builder
+                .build(to_boxed_chars(&anchored))
+                .expect("Anchored compilation should have succeeded"),
+        );
 
         key = regex_pattern;
         regex = Some(re);

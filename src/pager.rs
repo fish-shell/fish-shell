@@ -558,7 +558,14 @@ impl Pager {
             }
 
             assert!(desc_remaining >= 2);
-            let paren_col = HighlightSpec::with_fg_bg(HighlightRole::pager_completion, bg_role);
+            let paren_col = HighlightSpec::with_fg_bg(
+                if selected {
+                    HighlightRole::pager_selected_completion
+                } else {
+                    HighlightRole::pager_completion
+                },
+                bg_role,
+            );
             desc_remaining -= print_max(L!("("), paren_col, 1, false, &mut line_data);
             desc_remaining -=
                 print_max(&c.desc, desc_col, desc_remaining - 1, false, &mut line_data);

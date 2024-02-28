@@ -636,17 +636,11 @@ impl Pager {
             None => {
                 // Handle the case of nothing selected yet.
                 match direction {
-                    SelectionMotion::South
-                    | SelectionMotion::PageSouth
-                    | SelectionMotion::Next
-                    | SelectionMotion::North
-                    | SelectionMotion::Prev => {
-                        // These directions do something sane.
-                        if matches!(direction, SelectionMotion::Prev | SelectionMotion::North) {
-                            self.selected_completion_idx = Some(self.completion_infos.len() - 1);
-                        } else {
-                            self.selected_completion_idx = Some(0);
-                        }
+                    SelectionMotion::South | SelectionMotion::PageSouth | SelectionMotion::Next => {
+                        self.selected_completion_idx = Some(0)
+                    }
+                    SelectionMotion::North | SelectionMotion::Prev => {
+                        self.selected_completion_idx = Some(self.completion_infos.len() - 1)
                     }
                     SelectionMotion::East
                     | SelectionMotion::West
@@ -967,10 +961,9 @@ impl Pager {
     // Updates the completions list per the filter.
     pub fn refilter_completions(&mut self) {
         self.completion_infos.clear();
-        for i in 0..self.unfiltered_completion_infos.len() {
-            if self.completion_info_passes_filter(&self.unfiltered_completion_infos[i]) {
-                self.completion_infos
-                    .push(self.unfiltered_completion_infos[i].clone());
+        for comp in &self.unfiltered_completion_infos {
+            if self.completion_info_passes_filter(comp) {
+                self.completion_infos.push(comp.clone());
             }
         }
     }

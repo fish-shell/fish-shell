@@ -1,5 +1,4 @@
 use pcre2::utf32::{Regex, RegexBuilder};
-use std::borrow::Cow;
 
 use super::*;
 use crate::future_feature_flags::{feature_test, FeatureFlag};

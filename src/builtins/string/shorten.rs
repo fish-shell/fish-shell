@@ -1,7 +1,6 @@
 use super::*;
 use crate::common::get_ellipsis_str;
 use crate::wcstringutil::split_string;
-use crate::wutil::fish_wcstol;
 
 pub struct Shorten<'args> {
     ellipsis: &'args wstr,

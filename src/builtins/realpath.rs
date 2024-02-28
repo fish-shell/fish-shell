@@ -4,7 +4,6 @@ use errno::errno;
 
 use super::prelude::*;
 use crate::env::Environment;
-use crate::io::IoStreams;
 use crate::{
     path::path_apply_working_directory,
     wutil::{normalize_path, wrealpath},

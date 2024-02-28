@@ -16,8 +16,6 @@ use crate::wutil::{
 use bitflags::bitflags;
 use libc::{mode_t, F_OK, PATH_MAX, R_OK, S_ISGID, S_ISUID, W_OK, X_OK};
 
-use super::shared::BuiltinCmd;
-
 macro_rules! path_error {
     (
     $streams:expr,

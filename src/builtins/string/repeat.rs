@@ -1,5 +1,4 @@
 use super::*;
-use crate::wutil::fish_wcstol;
 
 #[derive(Default)]
 pub struct Repeat {

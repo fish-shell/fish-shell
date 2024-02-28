@@ -1,8 +1,5 @@
-use std::borrow::Cow;
-
 use super::*;
 use crate::fallback::fish_wcwidth;
-use crate::wutil::fish_wcstol;
 
 pub struct Pad {
     char_to_pad: char,

@@ -5,8 +5,8 @@ use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::get_signals_with_handlers;
 use crate::{exec::is_thompson_shell_script, libc::_PATH_BSHELL};
-use errno::{self, Errno};
-use libc::{self, c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
+use errno::Errno;
+use libc::{c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
 use std::sync::atomic::Ordering;
 

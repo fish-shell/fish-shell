@@ -2,8 +2,6 @@ use super::prelude::*;
 use crate::abbrs::{self, Abbreviation, Position};
 use crate::common::{escape, escape_string, valid_func_name, EscapeStringStyle};
 use crate::env::{EnvMode, EnvStackSetResult};
-use crate::io::IoStreams;
-use crate::parser::Parser;
 use crate::re::{regex_make_anchored, to_boxed_chars};
 use pcre2::utf32::{Regex, RegexBuilder};
 

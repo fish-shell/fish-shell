@@ -10,7 +10,7 @@ use crate::{
     wutil::{fish_wcstoi, wgettext_fmt},
 };
 use libc::c_int;
-use libc::{self, SIGCONT};
+use libc::SIGCONT;
 
 /// Helper for builtin_disown.
 fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {

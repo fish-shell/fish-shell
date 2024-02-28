@@ -15,7 +15,6 @@ use crate::expand::expand_escape_string;
 use crate::expand::expand_escape_variable;
 use crate::history::history_session_id;
 use crate::history::History;
-use crate::wchar_ext::WExt;
 use crate::{
     env::{EnvMode, EnvVar, Environment},
     wutil::wcstoi::wcstoi_partial,

@@ -7,7 +7,7 @@ use crate::{
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
-use errno::{self, Errno};
+use errno::Errno;
 use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{os::fd::AsRawFd, sync::Arc};

@@ -59,7 +59,6 @@ use crate::{
     threads::{assert_is_background_thread, iothread_perform},
     util::find_subslice,
     wchar::prelude::*,
-    wchar_ext::WExt,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
     wutil::{

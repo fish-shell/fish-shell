@@ -3,7 +3,6 @@ use crate::wchar::prelude::*;
 use num_traits::{NumCast, PrimInt};
 use std::default::Default;
 use std::iter::{Fuse, Peekable};
-use std::result::Result;
 
 struct ParseResult {
     result: u64,

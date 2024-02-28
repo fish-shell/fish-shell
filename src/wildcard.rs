@@ -447,10 +447,8 @@ mod expander {
 
     use crate::{
         common::scoped_push,
-        complete::CompleteFlags,
         path::append_path_component,
-        wcstringutil::string_fuzzy_match_string,
-        wutil::{dir_iter::DirIter, normalize_path, waccess, FileId},
+        wutil::{dir_iter::DirIter, normalize_path, FileId},
     };
 
     use super::*;

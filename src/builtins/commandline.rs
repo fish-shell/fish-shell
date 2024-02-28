@@ -18,7 +18,6 @@ use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
 use std::ops::Range;
 
 /// Which part of the comandbuffer are we operating on.

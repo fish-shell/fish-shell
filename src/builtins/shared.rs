@@ -7,12 +7,10 @@ use crate::parse_util::parse_util_argument_is_help;
 use crate::parser::{Block, BlockType, LoopStatus};
 use crate::proc::{no_exec, ProcStatus};
 use crate::reader::reader_read;
-use crate::wchar::{wstr, WString, L};
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wchar::L;
 use errno::errno;
-use libc::{c_int, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 
-use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;

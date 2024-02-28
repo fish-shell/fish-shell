@@ -1,7 +1,6 @@
 use std::num::NonZeroI64;
 
 use super::*;
-use crate::wutil::fish_wcstol;
 
 #[derive(Default)]
 pub struct Sub {

@@ -8,7 +8,6 @@ use crate::event::{self};
 use crate::function;
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
-use crate::parser::Parser;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::termsize::termsize_last;
 

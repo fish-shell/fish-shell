@@ -1,5 +1,4 @@
 use super::prelude::*;
-use crate::builtins::shared::builtin_exists;
 use crate::common::str2wcstring;
 use crate::function;
 use crate::highlight::{colorize, highlight_shell};

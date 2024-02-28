@@ -1,5 +1,4 @@
 use super::prelude::*;
-use crate::builtins::shared::{builtin_exists, builtin_get_names};
 
 #[derive(Default)]
 struct builtin_cmd_opts_t {

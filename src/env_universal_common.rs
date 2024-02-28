@@ -12,7 +12,6 @@ use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::prelude::*;
-use crate::wchar::{wstr, WString};
 use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
 use crate::wutil::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,

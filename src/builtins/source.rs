@@ -7,7 +7,7 @@ use crate::{
     parser::Block,
     reader::reader_read,
 };
-use libc::{c_int, S_IFMT, S_IFREG};
+use libc::{S_IFMT, S_IFREG};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 
 use super::prelude::*;

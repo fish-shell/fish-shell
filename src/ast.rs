@@ -269,6 +269,7 @@ pub trait ConcreteNode {
     }
 }
 
+#[allow(unused)]
 trait ConcreteNodeMut {
     // Cast to any sub-trait.
     fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {

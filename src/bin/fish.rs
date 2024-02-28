@@ -174,50 +174,34 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
         if !done {
             // The next check is that we are in a reloctable directory tree
-            let installed_suffix = Path::new("/bin/fish");
-            let just_a_fish = Path::new("/fish");
-            let suffix = if exec_path.ends_with(installed_suffix) {
-                Some(installed_suffix)
-            } else if exec_path.ends_with(just_a_fish) {
+            if exec_path.ends_with("bin/fish") {
+                let base_path = exec_path.parent().unwrap().parent().unwrap();
+                paths = ConfigPaths {
+                    data: base_path.join("share/fish"),
+                    sysconf: base_path.join("etc/fish"),
+                    doc: base_path.join("share/doc/fish"),
+                    bin: base_path.join("bin"),
+                }
+            } else if exec_path.ends_with("fish") {
                 FLOG!(
                     config,
                     "'fish' not in a 'bin/', trying paths relative to source tree"
                 );
-                Some(just_a_fish)
-            } else {
-                None
-            };
-
-            if let Some(suffix) = suffix {
-                let seems_installed = suffix == installed_suffix;
-
-                let mut base_path = exec_path;
-                base_path.shrink_to(base_path.as_os_str().len() - suffix.as_os_str().len());
-                let base_path = base_path;
-
-                paths = if seems_installed {
-                    ConfigPaths {
-                        data: base_path.join("share/fish"),
-                        sysconf: base_path.join("etc/fish"),
-                        doc: base_path.join("share/doc/fish"),
-                        bin: base_path.join("bin"),
-                    }
-                } else {
-                    ConfigPaths {
-                        data: base_path.join("share"),
-                        sysconf: base_path.join("etc"),
-                        doc: base_path.join("user_doc/html"),
-                        bin: base_path,
-                    }
-                };
-
-                if paths.data.exists() && paths.sysconf.exists() {
-                    // The docs dir may not exist; in that case fall back to the compiled in path.
-                    if !paths.doc.exists() {
-                        paths.doc = PathBuf::from(DOC_DIR);
-                    }
-                    done = true;
+                let base_path = exec_path.parent().unwrap();
+                paths = ConfigPaths {
+                    data: base_path.join("share"),
+                    sysconf: base_path.join("etc"),
+                    doc: base_path.join("user_doc/html"),
+                    bin: base_path.to_path_buf(),
                 }
+            }
+
+            if paths.data.exists() && paths.sysconf.exists() {
+                // The docs dir may not exist; in that case fall back to the compiled in path.
+                if !paths.doc.exists() {
+                    paths.doc = PathBuf::from(DOC_DIR);
+                }
+                done = true;
             }
         }
     }

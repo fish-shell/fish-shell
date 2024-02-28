@@ -8,6 +8,7 @@
 //! of text around to handle text insertion.
 
 use crate::pager::{PageRendering, Pager};
+use crate::threads::MainThread;
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
 use std::io::Write;
@@ -176,7 +177,7 @@ pub struct Screen {
     pub autosuggestion_is_truncated: bool,
 
     /// Receiver for our output.
-    outp: &'static mut Outputter,
+    outp: &'static MainThread<Outputter>,
 
     /// The internal representation of the desired screen contents.
     desired: ScreenData,
@@ -208,7 +209,7 @@ pub struct Screen {
 impl Screen {
     pub fn new() -> Self {
         Self {
-            outp: Outputter::stdoutput().get_mut(),
+            outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
@@ -637,9 +638,9 @@ impl Screen {
             // Either issue a cr to go back to the beginning of this line, or a nl to go to the
             // beginning of the next one, depending on what we think is more efficient.
             if new_y <= zelf.actual.cursor.y {
-                zelf.outp.push(b'\r');
+                zelf.outp.with_mut(|outp| outp.push(b'\r'));
             } else {
-                zelf.outp.push(b'\n');
+                zelf.outp.with_mut(|outp| outp.push(b'\n'));
                 zelf.actual.cursor.y += 1;
             }
             // Either way we're not in the first column.
@@ -673,14 +674,16 @@ impl Screen {
             None
         };
 
-        for _ in 0..y_steps.abs_diff(0) {
-            zelf.outp.tputs_if_some(&s);
-        }
+        zelf.outp.with_mut(|outp| {
+            for _ in 0..y_steps.abs_diff(0) {
+                outp.tputs_if_some(&s);
+            }
+        });
 
         let mut x_steps =
             isize::try_from(new_x).unwrap() - isize::try_from(zelf.actual.cursor.x).unwrap();
         if x_steps != 0 && new_x == 0 {
-            zelf.outp.push(b'\r');
+            zelf.outp.with_mut(|outp| outp.push(b'\r'));
             x_steps = 0;
         }
 
@@ -700,10 +703,10 @@ impl Screen {
                 multi_str.as_ref().unwrap(),
                 i32::try_from(x_steps.abs_diff(0)).unwrap(),
             );
-            zelf.outp.tputs_if_some(&multi_param);
+            zelf.outp.with_mut(|outp| outp.tputs_if_some(&multi_param));
         } else {
             for _ in 0..x_steps.abs_diff(0) {
-                zelf.outp.tputs_if_some(&s);
+                zelf.outp.with_mut(|outp| outp.tputs_if_some(&s));
             }
         }
 
@@ -715,7 +718,7 @@ impl Screen {
     fn write_char(&mut self, c: char, width: isize) {
         let mut zelf = self.scoped_buffer();
         zelf.actual.cursor.x = zelf.actual.cursor.x.wrapping_add(width as usize);
-        zelf.outp.writech(c);
+        zelf.outp.with_mut(|outp| outp.writech(c));
         if Some(zelf.actual.cursor.x) == zelf.actual.screen_width && allow_soft_wrap() {
             zelf.soft_wrap_location = Some(Cursor {
                 x: 0,
@@ -732,16 +735,16 @@ impl Screen {
 
     /// Send the specified string through tputs and append the output to the screen's outputter.
     fn write_mbs(&mut self, s: &CStr) {
-        self.outp.tputs(s)
+        self.outp.with_mut(|outp| outp.tputs(s));
     }
 
     fn write_mbs_if_some(&mut self, s: &Option<impl AsRef<CStr>>) -> bool {
-        self.outp.tputs_if_some(s)
+        self.outp.with_mut(|outp| outp.tputs_if_some(s))
     }
 
     /// Convert a wide string to a multibyte string and append it to the buffer.
     fn write_str(&mut self, s: &wstr) {
-        self.outp.write_wstr(s)
+        self.outp.with_mut(|outp| outp.write_wstr(s));
     }
 
     /// Update the cursor as if soft wrapping had been performed.
@@ -766,9 +769,9 @@ impl Screen {
     }
 
     fn scoped_buffer(&mut self) -> impl ScopeGuarding<Target = &mut Screen> {
-        self.outp.begin_buffering();
+        self.outp.with_mut(Outputter::begin_buffering);
         ScopeGuard::new(self, |zelf| {
-            zelf.outp.end_buffering();
+            zelf.outp.with_mut(Outputter::end_buffering);
         })
     }
 
@@ -779,7 +782,7 @@ impl Screen {
         let mut set_color = |zelf: &mut Self, c| {
             let fg = color_resolver.resolve_spec(&c, false, vars);
             let bg = color_resolver.resolve_spec(&c, true, vars);
-            zelf.outp.set_color(fg, bg);
+            zelf.outp.with_mut(|outp| outp.set_color(fg, bg));
         };
 
         let mut cached_layouts = LAYOUT_CACHE_SHARED.lock().unwrap();
@@ -834,8 +837,9 @@ impl Screen {
             let mut start = 0;
             for line_break in left_prompt_layout.line_breaks {
                 zelf.write_str(&left_prompt[start..line_break]);
-                zelf.outp
-                    .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                zelf.outp.with_mut(|outp| {
+                    outp.tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                });
                 start = line_break;
             }
             zelf.write_str(&left_prompt[start..]);
@@ -1067,9 +1071,9 @@ impl Screen {
 
 /// Issues an immediate clr_eos.
 pub fn screen_force_clear_to_end() {
-    Outputter::stdoutput()
-        .get_mut()
-        .tputs_if_some(&term().unwrap().clr_eos);
+    Outputter::stdoutput().with_mut(|outp| {
+        outp.tputs_if_some(&term().unwrap().clr_eos);
+    });
 }
 
 /// Information about the layout of a prompt.

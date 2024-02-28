@@ -1902,8 +1902,7 @@ impl ReaderData {
                 perror("tcsetattr"); // return to previous mode
             }
             Outputter::stdoutput()
-                .get_mut()
-                .set_color(RgbColor::RESET, RgbColor::RESET);
+                .with_mut(|output| output.set_color(RgbColor::RESET, RgbColor::RESET));
         }
         rls.finished.then(|| zelf.command_line.text().to_owned())
     }
@@ -2942,8 +2941,9 @@ impl ReaderData {
                 el.end_edit_group();
             }
             rl::DisableMouseTracking => {
-                let outp = Outputter::stdoutput().get_mut();
-                outp.write_wstr(L!("\x1B[?1000l"));
+                Outputter::stdoutput().with_mut(|outp| {
+                    outp.write_wstr(L!("\x1B[?1000l"));
+                });
             }
             rl::ClearScreenAndRepaint => {
                 self.parser().libdata_mut().pods.is_repaint = true;
@@ -2954,8 +2954,9 @@ impl ReaderData {
                     // and *then* reexecute the prompt and overdraw it.
                     // This removes the flicker,
                     // while keeping the prompt up-to-date.
-                    let outp = Outputter::stdoutput().get_mut();
-                    outp.write_wstr(&clear);
+                    Outputter::stdoutput().with_mut(|outp| {
+                        outp.write_wstr(&clear);
+                    });
                     self.screen.reset_line(/*repaint_prompt=*/ true);
                     self.layout_and_repaint(L!("readline"));
                 }
@@ -3487,9 +3488,9 @@ fn reader_interactive_init(parser: &Parser) {
 
 /// Destroy data for interactive use.
 fn reader_interactive_destroy() {
-    Outputter::stdoutput()
-        .get_mut()
-        .set_color(RgbColor::RESET, RgbColor::RESET);
+    Outputter::stdoutput().with_mut(|outp| {
+        outp.set_color(RgbColor::RESET, RgbColor::RESET);
+    });
 }
 
 /// \return whether fish is currently unwinding the stack in preparation to exit.
@@ -3570,9 +3571,9 @@ pub fn reader_write_title(
         let _ = write_loop(&STDOUT_FILENO, &narrow);
     }
 
-    Outputter::stdoutput()
-        .get_mut()
-        .set_color(RgbColor::RESET, RgbColor::RESET);
+    Outputter::stdoutput().with_mut(|outp| {
+        outp.set_color(RgbColor::RESET, RgbColor::RESET);
+    });
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
         let _ = write_to_fd(b"\r", STDOUT_FILENO);
@@ -4583,9 +4584,8 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
             .set_one(L!("_"), EnvMode::GLOBAL, ft.to_owned());
     }
 
-    let outp = Outputter::stdoutput().get_mut();
     reader_write_title(cmd, parser, true);
-    outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL);
+    Outputter::stdoutput().with_mut(|outp| outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL));
     term_donate(false);
 
     let time_before = Instant::now();

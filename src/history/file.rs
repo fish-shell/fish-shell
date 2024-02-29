@@ -8,7 +8,7 @@ use std::{
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{read_loop, str2wcstring, subslice_position, wcs2string},
+    common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
     path::{path_get_config_remoteness, DirRemoteness},
 };
@@ -34,13 +34,13 @@ impl HistoryFileContents {
     /// Callers should ensure that the underlying `fd` is locked.
     pub fn create(fd: &impl AsRawFd) -> Option<Self> {
         // Check that the file is seekable, and its size.
+        let size = lseek(fd.as_raw_fd(), 0, Whence::SeekEnd)
+            .ok()?
+            .try_into()
+            .ok()
+            .filter(|len| *len != 0)?;
         let mut options = MmapOptions::new();
-        options.len(
-            lseek(fd.as_raw_fd(), 0, Whence::SeekEnd)
-                .ok()?
-                .try_into()
-                .ok()?,
-        );
+        options.len(size);
 
         let region = if should_mmap() {
             // SAFETY: It is not possible to ensure that
@@ -52,8 +52,7 @@ impl HistoryFileContents {
             lseek(fd.as_raw_fd(), 0, Whence::SeekSet).ok()?;
             // If we mapped anonymous memory, we have to read from the file.
             let buf = region.as_mut();
-            read_loop(fd, buf).ok()?;
-            buf.fill(0u8);
+            read_from_fd(fd, buf).ok()?;
             region.make_read_only()
         };
         region.ok()?.try_into().ok()
@@ -84,13 +83,14 @@ impl HistoryFileContents {
 }
 
 /// Try to infer the history file type based on inspecting the data.
-fn infer_file_type(contents: &[u8]) -> HistoryFileType {
-    assert!(!contents.is_empty(), "File should never be empty");
-    if contents[0] == b'#' {
-        HistoryFileType::Fish1_x
+fn infer_file_type(contents: &[u8]) -> Option<HistoryFileType> {
+    if contents.is_empty() {
+        None
+    } else if contents[0] == b'#' {
+        Some(HistoryFileType::Fish1_x)
     } else {
         // assume new fish
-        HistoryFileType::Fish2_0
+        Some(HistoryFileType::Fish2_0)
     }
 }
 
@@ -98,13 +98,29 @@ impl TryFrom<Mmap> for HistoryFileContents {
     type Error = ();
 
     fn try_from(region: Mmap) -> Result<Self, Self::Error> {
-        let type_ = infer_file_type(&region);
+        let type_ = infer_file_type(&region).ok_or(())?;
         if type_ == HistoryFileType::Fish1_x {
             FLOG!(error, "unsupported history file format 1.x");
             return Err(());
         }
         Ok(Self { region })
     }
+}
+
+/// Read from `fd` to fill `dest`, zeroing any unused space.
+fn read_from_fd(fd: &impl AsRawFd, mut dest: &mut [u8]) -> nix::Result<()> {
+    while !dest.is_empty() {
+        match nix::unistd::read(fd.as_raw_fd(), dest) {
+            Ok(0) => break,
+            Ok(amt) => {
+                dest = &mut dest[amt..];
+            }
+            Err(nix::Error::EINTR) => continue,
+            Err(err) => return Err(err),
+        }
+    }
+    dest.fill(0u8);
+    Ok(())
 }
 
 /// Append a history item to a buffer, in preparation for outputting it to the history file.

@@ -2,22 +2,19 @@
 
 use std::{
     io::Write,
-    ops::{Deref, DerefMut},
-    os::fd::RawFd,
+    os::fd::AsRawFd,
     time::{Duration, SystemTime, UNIX_EPOCH},
-};
-
-use libc::{
-    lseek, mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, SEEK_END,
-    SEEK_SET,
 };
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{str2wcstring, subslice_position, wcs2string},
+    common::{read_loop, str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
     path::{path_get_config_remoteness, DirRemoteness},
 };
+
+use memmap2::{Mmap, MmapOptions};
+use nix::unistd::{lseek, Whence};
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -26,122 +23,40 @@ pub enum HistoryFileType {
     Fish1_x,
 }
 
-/// A type wrapping up the logic around mmap and munmap.
-struct MmapRegion {
-    ptr: *mut u8,
-    len: usize,
-}
-
-impl MmapRegion {
-    /// Creates a new mmap'ed region.
-    ///
-    /// # Safety
-    ///
-    /// `ptr` must be the result of a successful `mmap()` call with length `len`.
-    unsafe fn new(ptr: *mut u8, len: usize) -> Self {
-        assert!(ptr.cast() != MAP_FAILED);
-        assert!(len > 0);
-        Self { ptr, len }
-    }
-
-    /// Map a region `[0, len)` from an `fd`.
-    /// Returns [`None`] on failure.
-    pub fn map_file(fd: RawFd, len: usize) -> Option<Self> {
-        if len == 0 {
-            return None;
-        }
-
-        let ptr = unsafe { mmap(std::ptr::null_mut(), len, PROT_READ, MAP_PRIVATE, fd, 0) };
-        if ptr == MAP_FAILED {
-            return None;
-        }
-
-        // SAFETY: mmap of `len` was successful and returned `ptr`
-        Some(unsafe { Self::new(ptr.cast(), len) })
-    }
-
-    /// Map anonymous memory of a given length.
-    /// Returns [`None`] on failure.
-    pub fn map_anon(len: usize) -> Option<Self> {
-        if len == 0 {
-            return None;
-        }
-
-        let ptr = unsafe {
-            mmap(
-                std::ptr::null_mut(),
-                len,
-                PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS,
-                -1,
-                0,
-            )
-        };
-        if ptr == MAP_FAILED {
-            return None;
-        }
-
-        // SAFETY: mmap of `len` was successful and returned `ptr`
-        Some(unsafe { Self::new(ptr.cast(), len) })
-    }
-}
-
-// SAFETY: MmapRegion has exclusive mutable access to the region
-unsafe impl Send for MmapRegion {}
-// SAFETY: MmapRegion does not offer interior mutability
-unsafe impl Sync for MmapRegion {}
-
-impl Deref for MmapRegion {
-    type Target = [u8];
-
-    fn deref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
-    }
-}
-
-impl DerefMut for MmapRegion {
-    fn deref_mut(&mut self) -> &mut [u8] {
-        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
-    }
-}
-
-impl Drop for MmapRegion {
-    fn drop(&mut self) {
-        unsafe { munmap(self.ptr.cast(), self.len) };
-    }
-}
-
 /// HistoryFileContents holds the read-only contents of a file.
 pub struct HistoryFileContents {
-    region: MmapRegion,
+    region: Mmap,
 }
 
 impl HistoryFileContents {
     /// Construct a history file contents from a file descriptor. The file descriptor is not closed.
-    pub fn create(fd: RawFd) -> Option<Self> {
+    ///
+    /// Callers should ensure that the underlying `fd` is locked.
+    pub fn create(fd: &impl AsRawFd) -> Option<Self> {
         // Check that the file is seekable, and its size.
-        let len = unsafe { lseek(fd, 0, SEEK_END) };
-        let Ok(len) = usize::try_from(len) else {
-            return None;
-        };
-        let mmap_file_directly = should_mmap();
-        let mut region = if mmap_file_directly {
-            MmapRegion::map_file(fd, len)?
+        let mut options = MmapOptions::new();
+        options.len(
+            lseek(fd.as_raw_fd(), 0, Whence::SeekEnd)
+                .ok()?
+                .try_into()
+                .ok()?,
+        );
+
+        let region = if should_mmap() {
+            // SAFETY: It is not possible to ensure that
+            // the underlying file is locked. Callers need
+            // to ensure this.
+            unsafe { options.map(fd) }
         } else {
-            MmapRegion::map_anon(len)?
+            let mut region = options.map_anon().ok()?;
+            lseek(fd.as_raw_fd(), 0, Whence::SeekSet).ok()?;
+            // If we mapped anonymous memory, we have to read from the file.
+            let buf = region.as_mut();
+            read_loop(fd, buf).ok()?;
+            buf.fill(0u8);
+            region.make_read_only()
         };
-
-        // If we mapped anonymous memory, we have to read from the file.
-        if !mmap_file_directly {
-            if unsafe { lseek(fd, 0, SEEK_SET) } != 0 {
-                return None;
-            }
-            if read_from_fd(fd, region.as_mut()).is_err() {
-                return None;
-            }
-        }
-
-        region.try_into().ok()
+        region.ok()?.try_into().ok()
     }
 
     /// Decode an item at a given offset.
@@ -179,10 +94,10 @@ fn infer_file_type(contents: &[u8]) -> HistoryFileType {
     }
 }
 
-impl TryFrom<MmapRegion> for HistoryFileContents {
+impl TryFrom<Mmap> for HistoryFileContents {
     type Error = ();
 
-    fn try_from(region: MmapRegion) -> Result<Self, Self::Error> {
+    fn try_from(region: Mmap) -> Result<Self, Self::Error> {
         let type_ = infer_file_type(&region);
         if type_ == HistoryFileType::Fish1_x {
             FLOG!(error, "unsupported history file format 1.x");
@@ -225,22 +140,6 @@ fn should_mmap() -> bool {
 
     // mmap only if we are known not-remote.
     return path_get_config_remoteness() == DirRemoteness::local;
-}
-
-/// Read from `fd` to fill `dest`, zeroing any unused space.
-fn read_from_fd(fd: RawFd, mut dest: &mut [u8]) -> nix::Result<()> {
-    while !dest.is_empty() {
-        match nix::unistd::read(fd, dest) {
-            Ok(0) => break,
-            Ok(amt) => {
-                dest = &mut dest[amt..];
-            }
-            Err(nix::Error::EINTR) => continue,
-            Err(err) => return Err(err),
-        }
-    }
-    dest.fill(0u8);
-    Ok(())
 }
 
 fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {

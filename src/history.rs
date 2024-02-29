@@ -490,7 +490,7 @@ impl HistoryImpl {
             // as if it did not fail. The risk is that we may get an incomplete history item; this
             // is unlikely because we only treat an item as valid if it has a terminating newline.
             let locked = unsafe { Self::maybe_lock_file(&fd, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(fd.as_raw_fd());
+            self.file_contents = HistoryFileContents::create(&fd);
             self.history_file_id = if self.file_contents.is_some() {
                 file_id_for_fd(fd.as_raw_fd())
             } else {
@@ -564,7 +564,7 @@ impl HistoryImpl {
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
         if let Some(existing_fd) = existing_fd {
-            if let Some(local_file) = HistoryFileContents::create(existing_fd) {
+            if let Some(local_file) = HistoryFileContents::create(&existing_fd) {
                 let mut cursor = 0;
                 while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
                     // Try decoding an old item.

@@ -22,10 +22,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
 
-pub const BUILD_VERSION: &str = match option_env!("FISH_BUILD_VERSION") {
-    Some(v) => v,
-    None => git_version::git_version!(args = ["--always", "--dirty=-dirty"], fallback = "unknown"),
-};
+pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
 
 #[macro_use]
 pub mod common;

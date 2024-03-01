@@ -24,6 +24,8 @@ fn main() {
             .unwrap(),
     );
 
+    rsconf::set_env_value("FISH_BUILD_VERSION", &get_version(build_dir));
+
     rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new()
         .file("src/libc.c")
@@ -192,4 +194,28 @@ fn setup_paths() {
     let docdir = get_path("DOCDIR", "doc/fish", datadir.clone());
     rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DOCDIR");
+}
+
+fn get_version(build_dir: &str) -> String {
+    use std::fs::read_to_string;
+    use std::process::Command;
+
+    if let Ok(var) = std::env::var("FISH_BUILD_VERSION") {
+        return var;
+    }
+
+    let path = PathBuf::from(build_dir).join("version");
+    if let Ok(strver) = read_to_string(path) {
+        return strver.to_string();
+    }
+
+    let args = &["describe", "--always", "--dirty=-dirty"];
+    if let Ok(output) = Command::new("git").args(args).output() {
+        let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !rev.is_empty() {
+            return rev;
+        }
+    }
+
+    "unknown".to_string()
 }

@@ -35,7 +35,6 @@ use crate::wutil::{perror, wgettext, wgettext_fmt};
 use libc::c_int;
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
@@ -414,19 +413,16 @@ impl Parser {
         false
     }
 
-    /// Get the "principal" parser, whatever that is.
+    /// Get the "principal" parser, whatever that is. Can only be called from the main thread.
     pub fn principal_parser() -> &'static Parser {
-        // XXX: We use `static mut` as a hack to work around the fact that Parser doesn't implement
-        // Sync! Even though we are wrapping it in Lazy<> and it compiles without an error, that
-        // doesn't mean this is safe to access across threads!
-        static mut PRINCIPAL: Lazy<ParserRef> =
-            Lazy::new(|| Parser::new(EnvStack::principal().clone(), true));
-        // XXX: Creating and using multiple (read or write!) references to the same mutable static
-        // is undefined behavior!
-        unsafe {
-            PRINCIPAL.assert_can_execute();
-            &PRINCIPAL
+        assert_is_main_thread();
+        thread_local! {
+            static PRINCIPAL: &'static ParserRef = {
+                Box::leak(Box::new(Parser::new(EnvStack::principal().clone(), true)))
+            };
         }
+
+        PRINCIPAL.with(|rc| *(rc))
     }
 
     /// Assert that this parser is allowed to execute on the current thread.

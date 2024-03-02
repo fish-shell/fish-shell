@@ -130,8 +130,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset d\$ kill-line
     bind -s --preset d\^ backward-kill-line
     bind -s --preset d0 backward-kill-line
-    bind -s --preset dw kill-word
-    bind -s --preset dW kill-bigword
+    bind -s --preset dw begin-selection forward-word kill-selection end-selection
+    bind -s --preset dW begin-selection forward-bigword kill-selection end-selection
     bind -s --preset diw forward-single-char forward-single-char backward-word kill-word
     bind -s --preset diW forward-single-char forward-single-char backward-bigword kill-bigword
     bind -s --preset daw forward-single-char forward-single-char backward-word kill-word

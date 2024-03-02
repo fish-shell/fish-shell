@@ -232,6 +232,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # same vim 'pasting' note as upper
     bind -s --preset '"*p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
     bind -s --preset '"*P' fish_clipboard_paste
+    bind -s --preset '"+p' 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' fish_clipboard_paste
+    bind -s --preset '"+P' fish_clipboard_paste
 
     #
     # Lowercase r, enters replace_one mode
@@ -290,6 +292,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default X kill-whole-line end-selection repaint-mode
     bind -s --preset -M visual -m default y kill-selection yank end-selection repaint-mode
     bind -s --preset -M visual -m default '"*y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
+    bind -s --preset -M visual -m default '"+y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
 
     bind -s --preset -M visual -m default \cc end-selection repaint-mode

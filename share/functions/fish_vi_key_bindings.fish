@@ -73,9 +73,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert A end-of-line repaint-mode
     bind -s --preset -m visual v begin-selection repaint-mode
 
-    #bind -s --preset -m insert o "commandline -a \n" down-line repaint-mode
-    #bind -s --preset -m insert O beginning-of-line "commandline -i \n" up-line repaint-mode # doesn't work
-
     bind -s --preset gg beginning-of-buffer
     bind -s --preset G end-of-buffer
 

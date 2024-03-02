@@ -27,7 +27,7 @@ use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
-use crate::threads::assert_is_main_thread;
+use crate::threads::{assert_is_main_thread, MainThread};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
@@ -414,19 +414,11 @@ impl Parser {
         false
     }
 
-    /// Get the "principal" parser, whatever that is.
+    /// Get the "principal" parser, whatever that is. Can only be called by the main thread.
     pub fn principal_parser() -> &'static Parser {
-        // XXX: We use `static mut` as a hack to work around the fact that Parser doesn't implement
-        // Sync! Even though we are wrapping it in Lazy<> and it compiles without an error, that
-        // doesn't mean this is safe to access across threads!
-        static mut PRINCIPAL: Lazy<ParserRef> =
-            Lazy::new(|| Parser::new(EnvStack::principal().clone(), true));
-        // XXX: Creating and using multiple (read or write!) references to the same mutable static
-        // is undefined behavior!
-        unsafe {
-            PRINCIPAL.assert_can_execute();
-            &PRINCIPAL
-        }
+        static PRINCIPAL: Lazy<MainThread<ParserRef>> =
+            Lazy::new(|| MainThread::new(Parser::new(EnvStack::principal().clone(), true)));
+        PRINCIPAL.get()
     }
 
     /// Assert that this parser is allowed to execute on the current thread.

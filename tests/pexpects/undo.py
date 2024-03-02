@@ -19,16 +19,8 @@ send("echo word")
 expect_str("echo word")
 expect_str("echo word")  # Not sure why we get this twice.
 
-# FIXME why does this only undo one character? It undoes the entire word when run interactively.
 send("Undo")
-expect_str("echo wor")
+expect_str("echo")
 
-send("Undo")
-expect_str("echo ")
-
-send("Redo")
-expect_str("echo wor")
-
-# FIXME see above.
 send("Redo")
 expect_str("echo word")

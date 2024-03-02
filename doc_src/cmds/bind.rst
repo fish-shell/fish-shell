@@ -32,7 +32,7 @@ To find out what sequence a key combination sends, you can use :doc:`fish_key_re
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` or :ref:`see below <special-input-functions>` for a list of these input functions.
 
 .. note::
-   The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` so that fish knows to redraw the prompt.
+    If a script changes the commandline, it should finish by calling the ``repaint`` special input function.
 
 If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
@@ -353,7 +353,7 @@ Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` 
 
 Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ +\ :kbd:`G` is pressed::
 
-   bind \cg 'git diff; commandline -f repaint'
+   bind \cg 'git diff' repaint
 
 .. _cmd-bind-termlimits:
 

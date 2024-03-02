@@ -248,7 +248,7 @@ fn input_get_bind_mode(vars: &dyn Environment) -> WString {
 }
 
 /// Set the current bind mode.
-fn input_set_bind_mode(parser: &Parser, bm: &wstr) {
+pub fn input_set_bind_mode(parser: &Parser, bm: &wstr) {
     // Only set this if it differs to not execute variable handlers all the time.
     // modes may not be empty - empty is a sentinel value meaning to not change the mode
     assert!(!bm.is_empty());
@@ -488,64 +488,28 @@ impl Inputter {
         self.event_storage.clear();
     }
 
-    /// Perform the action of the specified binding. allow_commands controls whether fish commands
-    /// should be executed, or should be deferred until later.
-    fn mapping_execute(
-        &mut self,
-        m: &InputMapping,
-        command_handler: &mut Option<&mut CommandHandler>,
-    ) {
-        // has_functions: there are functions that need to be put on the input queue
-        // has_commands: there are shell commands that need to be evaluated
-        let mut has_commands = false;
-        let mut has_functions = false;
-        for cmd in &m.commands {
-            if input_function_get_code(cmd).is_some() {
-                has_functions = true;
-            } else {
-                has_commands = true;
-            }
-            if has_functions && has_commands {
-                break;
-            }
+    /// Perform the action of the specified binding.
+    fn mapping_execute(&mut self, m: &InputMapping) {
+        let has_command = m
+            .commands
+            .iter()
+            .any(|cmd| input_function_get_code(cmd).is_none());
+        if has_command {
+            self.push_front(CharEvent::from_check_exit());
         }
-
-        // !has_functions && !has_commands: only set bind mode
-        if !has_commands && !has_functions {
-            if let Some(sets_mode) = m.sets_mode.as_ref() {
-                input_set_bind_mode(&self.parser, sets_mode);
-            }
-            return;
-        }
-
-        if has_commands && command_handler.is_none() {
-            // We don't want to run commands yet. Put the characters back and return check_exit.
-            self.insert_front(m.seq.chars().map(CharEvent::from_char));
-            self.push_front(CharEvent::from_check_exit());
-            return; // skip the input_set_bind_mode
-        } else if has_functions && !has_commands {
-            // Functions are added at the head of the input queue.
-            for cmd in m.commands.iter().rev() {
-                let code = input_function_get_code(cmd).unwrap();
-                self.function_push_args(code);
-                self.push_front(CharEvent::from_readline_seq(code, m.seq.clone()));
-            }
-        } else if has_commands && !has_functions {
-            // Execute all commands.
-            //
-            // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
-            // see that until all other commands have also been run.
-            let command_handler = command_handler.as_mut().unwrap();
-            command_handler(&m.commands);
-            self.push_front(CharEvent::from_check_exit());
-        } else {
-            // Invalid binding, mixed commands and functions.  We would need to execute these one by
-            // one.
-            self.push_front(CharEvent::from_check_exit());
+        for cmd in m.commands.iter().rev() {
+            let evt = match input_function_get_code(cmd) {
+                Some(code) => {
+                    self.function_push_args(code);
+                    CharEvent::from_readline_seq(code, m.seq.clone())
+                }
+                None => CharEvent::from_command(cmd.clone()),
+            };
+            self.push_front(evt);
         }
         // Missing bind mode indicates to not reset the mode (#2871)
         if let Some(sets_mode) = m.sets_mode.as_ref() {
-            input_set_bind_mode(&self.parser, sets_mode);
+            self.push_front(CharEvent::from_set_mode(sets_mode.clone()));
         }
     }
 
@@ -667,7 +631,7 @@ impl EventQueuePeeker<'_> {
     fn char_sequence_interrupted(&self) -> bool {
         self.peeked
             .iter()
-            .any(|evt| evt.is_readline() || evt.is_check_exit())
+            .any(|evt| evt.is_readline_or_command() || evt.is_check_exit())
     }
 
     /// Reset our index back to 0.
@@ -809,10 +773,7 @@ impl Inputter {
         }
     }
 
-    fn mapping_execute_matching_or_generic(
-        &mut self,
-        command_handler: &mut Option<&mut CommandHandler>,
-    ) {
+    fn mapping_execute_matching_or_generic(&mut self) {
         let vars = self.parser.vars_ref();
         let mut peeker = EventQueuePeeker::new(self);
         // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
@@ -837,7 +798,7 @@ impl Inputter {
         // Check for ordinary mappings.
         if let Some(mapping) = Self::find_mapping(&*vars, &mut peeker) {
             peeker.consume();
-            self.mapping_execute(&mapping, command_handler);
+            self.mapping_execute(&mapping);
             return;
         }
         peeker.restart();
@@ -868,7 +829,7 @@ impl Inputter {
         let evt_to_return: CharEvent;
         loop {
             let evt = self.readch();
-            if evt.is_readline() {
+            if evt.is_readline_or_command() {
                 saved_events.push(evt);
             } else {
                 evt_to_return = evt;
@@ -891,11 +852,7 @@ impl Inputter {
     /// to be an escape sequence for a special character (such as an arrow key), and readch attempts
     /// to parse it. If no more input follows after the escape key, it is assumed to be an actual
     /// escape key press, and is returned as such.
-    ///
-    /// \p command_handler is used to run commands. If empty (in the std::function sense), when a
-    /// character is encountered that would invoke a fish command, it is unread and
-    /// char_event_type_t::check_exit is returned. Note the handler is not stored.
-    pub fn read_char(&mut self, mut command_handler: Option<&mut CommandHandler>) -> CharEvent {
+    pub fn read_char(&mut self) -> CharEvent {
         // Clear the interrupted flag.
         reader_reset_interrupted();
 
@@ -933,6 +890,9 @@ impl Inputter {
                         return evt;
                     }
                 },
+                CharEventType::Command(_) | CharEventType::SetMode(_) => {
+                    return evt;
+                }
                 CharEventType::Eof => {
                     // If we have EOF, we need to immediately quit.
                     // There's no need to go through the input functions.
@@ -944,10 +904,7 @@ impl Inputter {
                 }
                 CharEventType::Char(_) => {
                     self.push_front(evt);
-                    self.mapping_execute_matching_or_generic(&mut command_handler);
-                    // Regarding allow_commands, we're in a loop, but if a fish command is executed,
-                    // check_exit is unread, so the next pass through the loop we'll break out and return
-                    // it.
+                    self.mapping_execute_matching_or_generic();
                 }
             }
         }

@@ -11,9 +11,7 @@ use crate::parse_util::{
     parse_util_token_extent,
 };
 use crate::proc::is_interactive_session;
-use crate::reader::{
-    commandline_get_state, commandline_set_buffer, reader_handle_command, reader_queue_ch,
-};
+use crate::reader::{commandline_get_state, commandline_set_buffer, reader_queue_ch};
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
 use crate::wchar::prelude::*;
@@ -332,18 +330,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 }
             }
 
-            // HACK: Execute these right here and now so they can affect any insertions/changes
-            // made via bindings. The correct solution is to change all `commandline`
-            // insert/replace operations into readline functions with associated data, so that
-            // all queued `commandline` operations - including buffer modifications - are
-            // executed in order
-            match cmd {
-                rl::BeginUndoGroup | rl::EndUndoGroup => reader_handle_command(cmd),
-                _ => {
-                    // Inserts the readline function at the back of the queue.
-                    reader_queue_ch(CharEvent::from_readline(cmd));
-                }
-            }
+            // Inserts the readline function at the back of the queue.
+            reader_queue_ch(CharEvent::from_readline(cmd));
         }
 
         return STATUS_CMD_OK;

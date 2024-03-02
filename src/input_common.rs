@@ -116,13 +116,19 @@ pub enum ReadlineCmd {
 }
 
 /// Represents an event on the character input stream.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum CharEventType {
     /// A character was entered.
     Char(char),
 
     /// A readline event.
     Readline(ReadlineCmd),
+
+    /// A shell command.
+    Command(WString),
+
+    /// A request to change the input mapping mode.
+    SetMode(WString),
 
     /// end-of-file was reached.
     Eof,
@@ -162,6 +168,13 @@ impl CharEvent {
         matches!(self.evt, CharEventType::Readline(_))
     }
 
+    pub fn is_readline_or_command(&self) -> bool {
+        matches!(
+            self.evt,
+            CharEventType::Readline(_) | CharEventType::Command(_) | CharEventType::SetMode(_)
+        )
+    }
+
     pub fn get_char(&self) -> char {
         let CharEventType::Char(c) = self.evt else {
             panic!("Not a char type");
@@ -184,6 +197,20 @@ impl CharEvent {
         c
     }
 
+    pub fn get_command(&self) -> Option<&wstr> {
+        match &self.evt {
+            CharEventType::Command(c) => Some(c),
+            _ => None,
+        }
+    }
+
+    pub fn get_mode(&self) -> Option<&wstr> {
+        match &self.evt {
+            CharEventType::SetMode(m) => Some(m),
+            _ => None,
+        }
+    }
+
     pub fn from_char(c: char) -> CharEvent {
         CharEvent {
             evt: CharEventType::Char(c),
@@ -201,6 +228,22 @@ impl CharEvent {
             evt: CharEventType::Readline(cmd),
             input_style: CharInputStyle::Normal,
             seq,
+        }
+    }
+
+    pub fn from_command(cmd: WString) -> CharEvent {
+        CharEvent {
+            evt: CharEventType::Command(cmd),
+            input_style: CharInputStyle::Normal,
+            seq: WString::new(),
+        }
+    }
+
+    pub fn from_set_mode(mode: WString) -> CharEvent {
+        CharEvent {
+            evt: CharEventType::SetMode(mode),
+            input_style: CharInputStyle::Normal,
+            seq: WString::new(),
         }
     }
 
@@ -587,7 +630,7 @@ pub trait InputEventQueuer {
     fn drop_leading_readline_events(&mut self) {
         let queue = self.get_queue_mut();
         while let Some(evt) = queue.front() {
-            if evt.is_readline() {
+            if evt.is_readline_or_command() {
                 queue.pop_front();
             } else {
                 break;

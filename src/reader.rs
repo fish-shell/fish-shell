@@ -67,8 +67,8 @@ use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
     SearchType,
 };
-use crate::input::init_input;
 use crate::input::Inputter;
+use crate::input::{init_input, input_set_bind_mode};
 use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -1800,8 +1800,8 @@ impl ReaderData {
                 continue;
             }
             assert!(
-                event_needing_handling.is_char() || event_needing_handling.is_readline(),
-                "Should have a char or readline"
+                event_needing_handling.is_char() || event_needing_handling.is_readline_or_command(),
+                "Should have a char, readline or command"
             );
 
             if !matches!(rls.last_cmd, Some(rl::Yank | rl::YankPop)) {
@@ -1837,6 +1837,10 @@ impl ReaderData {
                 }
 
                 rls.last_cmd = Some(readline_cmd);
+            } else if let Some(command) = event_needing_handling.get_command() {
+                zelf.run_input_command_scripts(command);
+            } else if let Some(mode) = event_needing_handling.get_mode() {
+                input_set_bind_mode(zelf.parser(), mode);
             } else {
                 // Ordinary char.
                 let c = event_needing_handling.get_char();
@@ -1913,13 +1917,11 @@ impl ReaderData {
     }
 
     /// Run a sequence of commands from an input binding.
-    fn run_input_command_scripts(&mut self, cmds: &[WString]) {
+    fn run_input_command_scripts(&mut self, cmd: &wstr) {
         let last_statuses = self.parser().vars().get_last_statuses();
-        for cmd in cmds {
-            self.update_commandline_state();
-            self.parser().eval(cmd, &IoChain::new());
-            self.apply_commandline_state_changes();
-        }
+        self.update_commandline_state();
+        self.parser().eval(cmd, &IoChain::new());
+        self.apply_commandline_state_changes();
         self.parser().set_last_statuses(last_statuses);
 
         // Restore tty to shell modes.
@@ -1957,22 +1959,8 @@ impl ReaderData {
         let mut last_exec_count = self.exec_count();
         let mut accumulated_chars = WString::new();
 
-        let mut command_handler = {
-            // TODO Remove this hack.
-            let zelf = self as *mut Self;
-            move |cmds: &[WString]| {
-                // Safety: this is a pinned pointer.
-                let zelf = unsafe { &mut *zelf };
-                zelf.run_input_command_scripts(cmds);
-            }
-        };
-
         while accumulated_chars.len() < limit {
-            let evt = {
-                let allow_commands = accumulated_chars.is_empty();
-                self.inputter
-                    .read_char(allow_commands.then_some(&mut command_handler))
-            };
+            let evt = self.inputter.read_char();
             if !evt.is_char() || !poll_fd_readable(self.conf.inputfd) {
                 event_needing_handling = Some(evt);
                 break;

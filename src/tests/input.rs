@@ -44,7 +44,7 @@ fn test_input() {
     }
 
     // Now test.
-    let evt = input.read_char(None);
+    let evt = input.read_char();
     if !evt.is_readline() {
         panic!("Event is not a readline");
     } else if evt.get_readline() != ReadlineCmd::DownLine {

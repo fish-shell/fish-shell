@@ -1844,6 +1844,10 @@ impl ReaderData {
                     && zelf.active_edit_line().1.position() == 0
                 {
                     // This character is skipped.
+                } else if c.is_control() {
+                    // This can happen if the user presses a control char we don't recognize. No
+                    // reason to report this to the user unless they've enabled debugging output.
+                    FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
                 } else {
                     // Regular character.
                     let (elt, _el) = zelf.active_edit_line();

@@ -104,6 +104,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset e forward-single-char forward-word backward-char
     bind -s --preset E forward-single-char forward-bigword backward-char
 
+    bind -s --preset -M insert \cn accept-autosuggestion
+
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
     bind -s --preset -M insert -k home beginning-of-line
     bind -s --preset -M default -k home beginning-of-line

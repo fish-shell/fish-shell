@@ -6,6 +6,7 @@ use crate::env::EnvVar;
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
+use std::cell::RefCell;
 use std::ffi::CStr;
 use std::io::{Result, Write};
 use std::os::fd::RawFd;
@@ -444,10 +445,10 @@ impl Outputter {
 
     /// Access the outputter for stdout.
     /// This should only be used from the main thread.
-    pub fn stdoutput() -> &'static MainThread<Outputter> {
-        static STDOUTPUT: MainThread<Outputter> =
-            MainThread::new(Outputter::new_from_fd(libc::STDOUT_FILENO));
-        &STDOUTPUT
+    pub fn stdoutput() -> &'static RefCell<Outputter> {
+        static STDOUTPUT: MainThread<RefCell<Outputter>> =
+            MainThread::new(RefCell::new(Outputter::new_from_fd(libc::STDOUT_FILENO)));
+        STDOUTPUT.get()
     }
 }
 

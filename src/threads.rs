@@ -4,7 +4,6 @@
 use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::ReaderData;
 use once_cell::race::OnceBox;
-use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -363,7 +362,7 @@ impl ThreadPool {
 /// A `Sync` and `Send` wrapper for non-`Sync`/`Send` types.
 /// Only allows access from the main thread.
 pub struct MainThread<T> {
-    data: RefCell<T>,
+    data: T,
     // Make type !Send and !Sync by default
     _marker: PhantomData<*const ()>,
 }
@@ -376,25 +375,14 @@ unsafe impl<T: 'static> Sync for MainThread<T> {}
 impl<T> MainThread<T> {
     pub const fn new(value: T) -> Self {
         Self {
-            data: RefCell::new(value),
+            data: value,
             _marker: PhantomData,
         }
     }
 
-    pub fn with<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce(&T) -> R,
-    {
+    pub fn get(&self) -> &T {
         assert_is_main_thread();
-        f(&self.data.borrow())
-    }
-
-    pub fn with_mut<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce(&mut T) -> R,
-    {
-        assert_is_main_thread();
-        f(&mut self.data.borrow_mut())
+        &self.data
     }
 }
 

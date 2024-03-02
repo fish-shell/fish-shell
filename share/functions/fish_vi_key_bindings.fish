@@ -1,4 +1,25 @@
-function fish_vi_key_bindings --description 'vi-like key bindings for fish'
+function fish_vi_key_bindings --description "Vi-style bindings that inherit emacs-style bindings in all modes"
+    set -l bindings_name $argv[1] fish_vi_key_bindings
+
+    bind --erase --all --preset # clear earlier bindings, if any
+
+    if test "$fish_key_bindings" != $bindings_name[1]
+        # Allow the user to set the variable universally
+        set -q fish_key_bindings
+        or set -g fish_key_bindings
+        # This triggers the handler, which calls us again and ensures the user_key_bindings
+        # are executed.
+        set fish_key_bindings $bindings_name[1]
+        return
+    end
+
+    for mode in default insert visual
+        fish_default_key_bindings -M $mode
+    end
+    __fish_vi_key_bindings --no-erase
+end
+
+function __fish_vi_key_bindings --description 'vi-like key bindings for fish'
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help" >&2

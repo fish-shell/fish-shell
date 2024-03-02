@@ -277,14 +277,11 @@ The fish editor features copy and paste, a :ref:`searchable history <history-sea
 Like bash and other shells, fish includes two sets of keyboard shortcuts (or key bindings): one inspired by the Emacs text editor, and one by the vi text editor. The default editing mode is Emacs. You can switch to vi mode by running :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>` and switch back with :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. You can also make your own key bindings by creating a function and setting the ``fish_key_bindings`` variable to its name. For example::
 
 
-    function fish_hybrid_key_bindings --description \
-    "Vi-style bindings that inherit emacs-style bindings in all modes"
-        for mode in default insert visual
-            fish_default_key_bindings -M $mode
-        end
-        fish_vi_key_bindings --no-erase
+    function my_key_bindings
+        fish_default_key_bindings_key_bindings # or fish_vi_key_bindings
+        bind \cg beginning-of-line 'commandline -i "# "'
     end
-    set -g fish_key_bindings fish_hybrid_key_bindings
+    set -g fish_key_bindings my_key_bindings
 
 While the key bindings included with fish include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`Alt`\ +\ :kbd:`E` by default) if you need the full power of your editor.
 

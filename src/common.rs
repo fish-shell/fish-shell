@@ -5,7 +5,6 @@ use crate::expand::{
     PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
 };
 use crate::fallback::fish_wcwidth;
-use crate::flog::FLOG;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
@@ -1696,6 +1695,7 @@ pub fn is_windows_subsystem_for_linux() -> bool {
         // this check: if the environment variable FISH_NO_WSL_CHECK is present, this test
         // is bypassed. We intentionally do not include this in the error message because
         // it'll only allow fish to run but not to actually work. Here be dragons!
+        use crate::flog::FLOG;
         if env::var_os("FISH_NO_WSL_CHECK").is_none() {
             FLOG!(
                 error,

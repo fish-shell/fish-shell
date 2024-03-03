@@ -1,10 +1,3 @@
-# -DLOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
-# -DPREFIX=L"${CMAKE_INSTALL_PREFIX}"
-# -DDATADIR=L"${CMAKE_INSTALL_FULL_DATADIR}"
-# -DSYSCONFDIR=L"${CMAKE_INSTALL_FULL_SYSCONFDIR}"
-# -DBINDIR=L"${CMAKE_INSTALL_FULL_BINDIR}"
-# -DDOCDIR=L"${CMAKE_INSTALL_FULL_DOCDIR}")
-
 set(CMAKE_INSTALL_MESSAGE NEVER)
 
 set(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/fish ${CMAKE_CURRENT_BINARY_DIR}/fish_indent ${CMAKE_CURRENT_BINARY_DIR}/fish_key_reader)
@@ -18,11 +11,6 @@ set(datadir ${CMAKE_INSTALL_FULL_DATADIR})
 file(RELATIVE_PATH rel_datadir ${CMAKE_INSTALL_PREFIX} ${datadir})
 
 set(docdir ${CMAKE_INSTALL_DOCDIR})
-
-# Comment at the top of some .in files
-set(configure_input
-"This file was generated from a corresponding .in file.\
- DO NOT MANUALLY EDIT THIS FILE!")
 
 set(rel_completionsdir "fish/vendor_completions.d")
 set(rel_functionsdir "fish/vendor_functions.d")

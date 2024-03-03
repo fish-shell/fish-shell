@@ -1,4 +1,3 @@
-# CMake 3.15 is required to support Corrosion
 # CMake 3.19 is needed for file(REAL_PATH)
 cmake_minimum_required(VERSION 3.19)
 
@@ -33,43 +32,6 @@ include(cmake/PCRE2.cmake)
 
 include(cmake/Rust.cmake)
 
-# Error out when linking statically, it doesn't work.
-if (CMAKE_EXE_LINKER_FLAGS MATCHES ".*-static.*")
-    message(FATAL_ERROR "Fish does not support static linking")
-endif()
-
-# Force colored warnings in Ninja's output, if the compiler has -fdiagnostics-color support.
-# Rationale in https://github.com/ninja-build/ninja/issues/814
-if (CMAKE_GENERATOR STREQUAL "Ninja" AND
-    ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9) OR
-     (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5) OR
-     (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)))
-      add_compile_options(-fdiagnostics-color=always)
-endif()
-
-# Enable a whole bunch of warnings, but turn off:
-# - comment because we use a bunch of those, and they're not really all that harmful.
-# - address, because that occurs for our mkostemp check (weak-linking requires us to compare `&mkostemp == nullptr`).
-add_compile_options(-Wall -Wextra -Wno-comment -Wno-address)
-
-if ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-  add_compile_options(-Wunused-template -Wunused-local-typedef -Wunused-macros)
-endif()
-
-# Disable exception handling.
-add_compile_options(-fno-exceptions)
-
-# Hide the CMake Rules directories in Xcode projects.
-source_group("CMake Rules" REGULAR_EXPRESSION "^$")
-
-# Put source and header files at top level under targets.
-source_group("Source Files" REGULAR_EXPRESSION ".*\\.cpp")
-source_group("Header Files" REGULAR_EXPRESSION ".*\\.h")
-source_group("Builtins" "builtins/")
-
-# Support folders.
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
 # Work around issue where archive-built libs go in the wrong place.
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
@@ -88,9 +50,6 @@ get_filename_component(REAL_CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
 get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
-
-# Enable thread-safe errno on Solaris (#5611)
-add_definitions(-D_REENTRANT)
 
 # cargo needs to be rerun when the sources change.
 # This is imperfect, but the ninja generator really wants to
@@ -149,15 +108,6 @@ include(cmake/Install.cmake)
 
 # Mac app.
 include(cmake/MacApp.cmake)
-
-# ThreadSanitizer likes to muck with signal handlers, which interferes
-# with fish_test_helper printing the ignored signal mask.
-# Ensure fish_test_helper does not use TSan.
-# Note the environment var is CXXFLAGS, but the CMake var is CMAKE_CXX_FLAGS.
-if (CMAKE_CXX_FLAGS MATCHES ".*-fsanitize=thread.*")
-  target_compile_options(fish_test_helper PRIVATE "-fno-sanitize=all")
-  target_link_libraries(fish_test_helper "-fno-sanitize=all")
-endif()
 
 include(FeatureSummary)
 feature_summary(WHAT ALL)

@@ -59,7 +59,7 @@ The following options control the interactive mode:
     Masks characters written to the terminal, replacing them with asterisks. This is useful for reading things like passwords or other sensitive information.
 
 **-p** or **--prompt** *PROMPT_CMD*
-    Uses the output of the shell command *PROMPT_CMD* as the prompt for the interactive mode. The default prompt command is ``set_color green; echo read; set_color normal; echo "> "``
+    Uses the output of the shell command *PROMPT_CMD* as the prompt for the interactive mode. The default prompt command is ``set_color green; echo -n read; set_color normal; echo -n "> "``
 
 **-P** or **--prompt-str** *PROMPT_STR*
     Uses the literal *PROMPT_STR* as the prompt for the interactive mode.

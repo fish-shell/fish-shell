@@ -198,8 +198,6 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut range = 0..0;
     let mut override_buffer = None;
 
-    let ld = parser.libdata();
-
     const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
     let long_options: &[woption] = &[
         wopt(L!("append"), woption_argument_t::no_argument, 'a'),
@@ -291,6 +289,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     let positional_args = w.argv.len() - w.woptind;
+
+    let ld = parser.libdata();
 
     if function_mode {
         // Check for invalid switch combinations.

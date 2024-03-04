@@ -20,4 +20,4 @@ or echo Invalid $status
 
 commandline --help >/dev/null
 echo Invalid $status
-# CHECK: 1
+# CHECK: 0

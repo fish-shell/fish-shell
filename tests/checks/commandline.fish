@@ -18,6 +18,6 @@ commandline --input 'echo $$' --is-valid
 or echo Invalid $status
 # CHECK: Invalid 1
 
-commandline --help >/dev/null
-echo Invalid $status
-# CHECK: 0
+commandline --help &>/dev/null
+echo Help $status
+# CHECK: Help 0

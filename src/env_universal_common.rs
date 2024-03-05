@@ -748,82 +748,75 @@ impl EnvUniversal {
     // Write our file contents.
     // \return true on success, false on failure.
     fn save(&mut self, directory: &wstr) -> bool {
+        use crate::common::ScopeGuard;
         assert!(self.ok_to_save, "It's not OK to save");
 
-        let mut private_file_path = WString::new();
-
         // Open adjacent temporary file.
+        let mut private_file_path = WString::new();
         let private_fd = self.open_temporary_file(directory, &mut private_file_path);
+        // unlink pfp upon failure. In case of success, it (already) won't exist.
+        let delete_pfp = ScopeGuard::new(private_file_path, |path| {
+            wunlink(path);
+        });
+        let private_file_path = &delete_pfp;
 
         // Write to it.
-        let mut success = self.write_to_fd(private_fd.as_raw_fd(), &private_file_path);
-        if !success {
+        if !self.write_to_fd(private_fd.as_raw_fd(), &private_file_path) {
             FLOG!(uvar_file, "universal log write_to_fd() failed");
+            return false;
         }
 
-        if success {
-            let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
+        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
 
-            // Ensure we maintain ownership and permissions (#2176).
-            // let mut sbuf : libc::stat = MaybeUninit::uninit();
-            if let Ok(md) = wstat(&real_path) {
-                if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                    FLOG!(uvar_file, "universal log fchown() failed");
-                }
-                #[allow(clippy::useless_conversion)]
-                let mode: libc::mode_t = md.mode().try_into().unwrap();
-                if unsafe { libc::fchmod(private_fd.as_raw_fd(), mode) } == -1 {
-                    FLOG!(uvar_file, "universal log fchmod() failed");
-                }
+        // Ensure we maintain ownership and permissions (#2176).
+        // let mut sbuf : libc::stat = MaybeUninit::uninit();
+        if let Ok(md) = wstat(&real_path) {
+            if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+                FLOG!(uvar_file, "universal log fchown() failed");
             }
-
-            // Linux by default stores the mtime with low precision, low enough that updates that occur
-            // in quick succession may result in the same mtime (even the nanoseconds field). So
-            // manually set the mtime of the new file to a high-precision clock. Note that this is only
-            // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
-            // platforms we tend to notice the file has changed due to a different inode (or file size!)
-            //
-            // The current time within the Linux kernel is cached, and generally only updated on a timer
-            // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
-            // only be updated once every 10 milliseconds.
-            //
-            // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
-            // unlikely to affect users.
-            #[cfg(any(target_os = "linux", target_os = "android"))]
-            {
-                let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
-                times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
-                if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
-                    unsafe {
-                        libc::futimens(private_fd.as_raw_fd(), &times[0]);
-                    }
-                }
-            }
-
-            // Apply new file.
-            success = self.move_new_vars_file_into_place(&private_file_path, &real_path);
-            if !success {
-                FLOG!(
-                    uvar_file,
-                    "universal log move_new_vars_file_into_place() failed"
-                );
+            #[allow(clippy::useless_conversion)]
+            let mode: libc::mode_t = md.mode().try_into().unwrap();
+            if unsafe { libc::fchmod(private_fd.as_raw_fd(), mode) } == -1 {
+                FLOG!(uvar_file, "universal log fchmod() failed");
             }
         }
 
-        if success {
-            // Since we moved the new file into place, clear the path so we don't try to unlink it.
-            private_file_path.clear();
+        // Linux by default stores the mtime with low precision, low enough that updates that occur
+        // in quick succession may result in the same mtime (even the nanoseconds field). So
+        // manually set the mtime of the new file to a high-precision clock. Note that this is only
+        // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
+        // platforms we tend to notice the file has changed due to a different inode (or file size!)
+        //
+        // The current time within the Linux kernel is cached, and generally only updated on a timer
+        // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
+        // only be updated once every 10 milliseconds.
+        //
+        // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
+        // unlikely to affect users.
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
+            times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
+            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
+                unsafe {
+                    libc::futimens(private_fd.as_raw_fd(), &times[0]);
+                }
+            }
         }
 
-        // Clean up.
-        if !private_file_path.is_empty() {
-            wunlink(&private_file_path);
+        // Apply new file.
+        if !self.move_new_vars_file_into_place(&private_file_path, &real_path) {
+            FLOG!(
+                uvar_file,
+                "universal log move_new_vars_file_into_place() failed"
+            );
+            return false;
         }
-        if success {
-            // All of our modified variables have now been written out.
-            self.modified.clear();
-        }
-        success
+
+        // Success at last. All of our modified variables have now been written out.
+        self.modified.clear();
+        ScopeGuard::cancel(delete_pfp);
+        true
     }
 }
 

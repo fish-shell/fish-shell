@@ -1814,6 +1814,12 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
         on_drop(&mut value);
         value
     }
+
+    /// Cancels the invocation of the callback, returning the original wrapped value.
+    pub fn cancel(mut guard: Self) -> T {
+        let (value, _) = guard.0.take().expect("Should always have Some value");
+        value
+    }
 }
 
 impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {

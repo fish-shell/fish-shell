@@ -21,17 +21,18 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
     ffi::CString,
-    io::{BufRead, Read, Write},
+    fs::File,
+    io::{BufRead, Read, Seek, SeekFrom, Write},
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsFd, AsRawFd, OwnedFd, RawFd},
+    os::fd::{AsFd, AsRawFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use bitflags::bitflags;
-use libc::{fchmod, fchown, flock, fstat, ftruncate, lseek, LOCK_EX, LOCK_SH, LOCK_UN, SEEK_SET};
+use libc::{fchmod, fchown, flock, fstat, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -475,8 +476,12 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
-                return;
+            let mut file = {
+                let Ok(fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
+                    return;
+                };
+                // TODO: Return `File` directly from wopen_cloexec
+                File::from(fd)
             };
 
             // Take a read lock to guard against someone else appending. This is released after
@@ -487,16 +492,16 @@ impl HistoryImpl {
             // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
             // as if it did not fail. The risk is that we may get an incomplete history item; this
             // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(&fd, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(fd.as_raw_fd());
+            let locked = unsafe { Self::maybe_lock_file(&file, LOCK_SH) };
+            self.file_contents = HistoryFileContents::create(&mut file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(fd.as_raw_fd())
+                file_id_for_fd(file.as_raw_fd())
             } else {
                 INVALID_FILE_ID
             };
             if locked {
                 unsafe {
-                    Self::unlock_file(fd.as_raw_fd());
+                    Self::unlock_file(file.as_raw_fd());
                 }
             }
 
@@ -551,7 +556,7 @@ impl HistoryImpl {
 
     /// Given the fd of an existing history file, write a new history file to `dst_fd`.
     /// Returns false on error, true on success
-    fn rewrite_to_temporary_file(&self, existing_fd: Option<RawFd>, dst_fd: RawFd) -> bool {
+    fn rewrite_to_temporary_file(&self, existing_fd: Option<&mut File>, dst_fd: RawFd) -> bool {
         // We are reading FROM existing_fd and writing TO dst_fd
         // dst_fd must be valid
         assert!(dst_fd >= 0);
@@ -654,37 +659,34 @@ impl HistoryImpl {
             wrealpath(&possibly_indirect_target_name).unwrap_or(possibly_indirect_target_name);
 
         // Make our temporary file
-        // Remember that we have to close this fd!
-        let Some((tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
+        let Some((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
             return;
         };
-        let tmp_fd = tmp_file.as_raw_fd();
         let mut done = false;
         for _i in 0..MAX_SAVE_TRIES {
             if done {
                 break;
             }
 
-            let target_fd_before = wopen_cloexec(
+            let target_file_before = wopen_cloexec(
                 &target_name,
                 OFlag::O_RDONLY | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
-            );
+            )
+            .map(File::from);
 
-            let orig_file_id = target_fd_before
+            let orig_file_id = target_file_before
                 .as_ref()
                 .map(|fd| file_id_for_fd(fd.as_raw_fd()))
                 .unwrap_or(INVALID_FILE_ID);
 
             // Open any target file, but do not lock it right away
-            if !self.rewrite_to_temporary_file(
-                target_fd_before.as_ref().map(AsRawFd::as_raw_fd).ok(),
-                tmp_fd,
-            ) {
+            if !self
+                .rewrite_to_temporary_file(target_file_before.ok().as_mut(), tmp_file.as_raw_fd())
+            {
                 // Failed to write, no good
                 break;
             }
-            drop(target_fd_before);
 
             // The crux! We rewrote the history file; see if the history file changed while we
             // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
@@ -692,7 +694,6 @@ impl HistoryImpl {
             let mut new_file_id = INVALID_FILE_ID;
 
             let target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-
             if let Ok(target_fd_after) = target_fd_after.as_ref() {
                 // critical to take the lock before checking file IDs,
                 // and hold it until after we are done replacing.
@@ -708,10 +709,8 @@ impl HistoryImpl {
             let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
             if !can_replace_file {
                 // The file has changed, so we're going to re-read it
-                // Truncate our tmp_fd so we can reuse it
-                if unsafe { ftruncate(tmp_fd, 0) } == -1
-                    || unsafe { lseek(tmp_fd, 0, SEEK_SET) } == -1
-                {
+                // Truncate our tmp_file so we can reuse it
+                if tmp_file.set_len(0).is_err() || tmp_file.seek(SeekFrom::Start(0)).is_err() {
                     FLOGF!(
                         history_file,
                         "Error %d when truncating temporary history file",
@@ -730,14 +729,14 @@ impl HistoryImpl {
                 if let Ok(target_fd_after) = target_fd_after.as_ref() {
                     let mut sbuf: libc::stat = unsafe { mem::zeroed() };
                     if unsafe { fstat(target_fd_after.as_raw_fd(), &mut sbuf) } >= 0 {
-                        if unsafe { fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) } == -1 {
+                        if unsafe { fchown(tmp_file.as_raw_fd(), sbuf.st_uid, sbuf.st_gid) } == -1 {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing ownership of history file",
                                 errno::errno().0
                             );
                         }
-                        if unsafe { fchmod(tmp_fd, sbuf.st_mode) } == -1 {
+                        if unsafe { fchmod(tmp_file.as_raw_fd(), sbuf.st_mode) } == -1 {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing mode of history file",
@@ -1364,7 +1363,7 @@ impl HistoryImpl {
 }
 
 // Returns the fd of an opened temporary file, or None on failure.
-fn create_temporary_file(name_template: &wstr) -> Option<(OwnedFd, WString)> {
+fn create_temporary_file(name_template: &wstr) -> Option<(File, WString)> {
     for _attempt in 0..10 {
         let narrow_str = wcs2zstring(name_template);
         if let Ok((fd, narrow_str)) = fish_mkstemp_cloexec(narrow_str) {

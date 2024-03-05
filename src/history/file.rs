@@ -1,16 +1,14 @@
 //! Implemention of history files.
 
 use std::{
-    io::Write,
+    fs::File,
+    io::{Read, Seek, SeekFrom, Write},
     ops::{Deref, DerefMut},
-    os::fd::RawFd,
+    os::fd::{AsRawFd, RawFd},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use libc::{
-    lseek, mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, SEEK_END,
-    SEEK_SET,
-};
+use libc::{mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
@@ -117,28 +115,21 @@ pub struct HistoryFileContents {
 }
 
 impl HistoryFileContents {
-    /// Construct a history file contents from a file descriptor. The file descriptor is not closed.
-    pub fn create(fd: RawFd) -> Option<Self> {
+    /// Construct a history file contents from a File reference.
+    pub fn create(file: &mut File) -> Option<Self> {
         // Check that the file is seekable, and its size.
-        let len = unsafe { lseek(fd, 0, SEEK_END) };
-        let Ok(len) = usize::try_from(len) else {
-            return None;
-        };
+        let len: usize = file.seek(SeekFrom::End(0)).ok()?.try_into().ok()?;
         let mmap_file_directly = should_mmap();
         let mut region = if mmap_file_directly {
-            MmapRegion::map_file(fd, len)?
+            MmapRegion::map_file(file.as_raw_fd(), len)
         } else {
-            MmapRegion::map_anon(len)?
-        };
+            MmapRegion::map_anon(len)
+        }?;
 
         // If we mapped anonymous memory, we have to read from the file.
         if !mmap_file_directly {
-            if unsafe { lseek(fd, 0, SEEK_SET) } != 0 {
-                return None;
-            }
-            if read_from_fd(fd, region.as_mut()).is_err() {
-                return None;
-            }
+            file.seek(SeekFrom::Start(0)).ok()?;
+            read_zero_padded(&mut *file, region.as_mut()).ok()?;
         }
 
         region.try_into().ok()
@@ -228,14 +219,14 @@ fn should_mmap() -> bool {
 }
 
 /// Read from `fd` to fill `dest`, zeroing any unused space.
-fn read_from_fd(fd: RawFd, mut dest: &mut [u8]) -> nix::Result<()> {
+fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()> {
     while !dest.is_empty() {
-        match nix::unistd::read(fd, dest) {
+        match file.read(dest) {
             Ok(0) => break,
             Ok(amt) => {
                 dest = &mut dest[amt..];
             }
-            Err(nix::Error::EINTR) => continue,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
             Err(err) => return Err(err),
         }
     }

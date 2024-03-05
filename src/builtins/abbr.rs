@@ -324,7 +324,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
                     .append(wgettext_fmt!("%ls: %ls\n", CMD, regex_pattern.as_utfstr()));
                 streams
                     .err
-                    .append(wgettext_fmt!("%ls: %*ls\n", CMD, offset, "^"));
+                    .append(sprintf!("%ls: %*ls\n", CMD, offset, "^"));
             }
             return STATUS_INVALID_ARGS;
         }

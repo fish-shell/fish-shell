@@ -6,7 +6,6 @@ use crate::common::{
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::fallback::fish_mkstemp_cloexec;
-use crate::fds::AutoCloseFd;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
@@ -493,39 +492,41 @@ impl EnvUniversal {
         res_fd
     }
 
-    fn open_temporary_file(&mut self, directory: &wstr, out_path: &mut WString) -> AutoCloseFd {
+    fn open_temporary_file(&mut self, directory: &wstr, out_path: &mut WString) -> OwnedFd {
         // Create and open a temporary file for writing within the given directory. Try to create a
         // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
         // This should almost always succeed on the first try.
         assert!(!string_suffixes_string(L!("/"), directory));
 
-        let mut saved_errno = Errno(0);
+        let mut attempt = 0;
         let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
-        let mut result = AutoCloseFd::empty();
-        let mut narrow_str = CString::default();
-        for _attempt in 0..10 {
-            if result.is_valid() {
-                break;
+        let result = loop {
+            attempt += 1;
+            let result = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
+            match (result, attempt) {
+                (Ok(r), _) => break r,
+                (Err(e), 10) => {
+                    FLOG!(
+                        error,
+                        // We previously used to log a copy of the buffer we expected mk(o)stemp to
+                        // update with the new path, but mkstemp(3) says the contents of the buffer
+                        // are undefined in case of EEXIST, but left unchanged in case of EINVAL. So
+                        // just log the original template we pass in to the function instead.
+                        wgettext_fmt!(
+                            "Unable to create temporary file '%ls': %s",
+                            &tmp_name_template,
+                            e.to_string()
+                        )
+                    );
+                }
+                _ => continue,
             }
-            let (fd, tmp_name) = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
-            result.reset(fd);
-            narrow_str = tmp_name;
-            saved_errno = errno();
-        }
-        *out_path = str2wcstring(narrow_str.as_bytes());
+        };
 
-        if !result.is_valid() {
-            FLOG!(
-                error,
-                wgettext_fmt!(
-                    "Unable to open temporary file '%ls': %s",
-                    out_path,
-                    saved_errno.to_string()
-                )
-            );
-        }
-        result
+        *out_path = str2wcstring(result.1.as_bytes());
+        result.0
     }
+
     /// Writes our state to the fd. path is provided only for error reporting.
     fn write_to_fd(&mut self, fd: RawFd, path: &wstr) -> bool {
         assert!(fd >= 0);
@@ -753,19 +754,11 @@ impl EnvUniversal {
 
         // Open adjacent temporary file.
         let private_fd = self.open_temporary_file(directory, &mut private_file_path);
-        let mut success = private_fd.is_valid();
-
-        if !success {
-            FLOG!(uvar_file, "universal log open_temporary_file() failed");
-        }
 
         // Write to it.
-        if success {
-            assert!(private_fd.is_valid());
-            success = self.write_to_fd(private_fd.fd(), &private_file_path);
-            if !success {
-                FLOG!(uvar_file, "universal log write_to_fd() failed");
-            }
+        let mut success = self.write_to_fd(private_fd.as_raw_fd(), &private_file_path);
+        if !success {
+            FLOG!(uvar_file, "universal log write_to_fd() failed");
         }
 
         if success {
@@ -774,12 +767,12 @@ impl EnvUniversal {
             // Ensure we maintain ownership and permissions (#2176).
             // let mut sbuf : libc::stat = MaybeUninit::uninit();
             if let Ok(md) = wstat(&real_path) {
-                if unsafe { libc::fchown(private_fd.fd(), md.uid(), md.gid()) } == -1 {
+                if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                     FLOG!(uvar_file, "universal log fchown() failed");
                 }
                 #[allow(clippy::useless_conversion)]
                 let mode: libc::mode_t = md.mode().try_into().unwrap();
-                if unsafe { libc::fchmod(private_fd.fd(), mode) } == -1 {
+                if unsafe { libc::fchmod(private_fd.as_raw_fd(), mode) } == -1 {
                     FLOG!(uvar_file, "universal log fchmod() failed");
                 }
             }
@@ -802,7 +795,7 @@ impl EnvUniversal {
                 times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
                 if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
                     unsafe {
-                        libc::futimens(private_fd.fd(), &times[0]);
+                        libc::futimens(private_fd.as_raw_fd(), &times[0]);
                     }
                 }
             }

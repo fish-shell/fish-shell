@@ -5,10 +5,12 @@
 
 use crate::widecharwidth::{WcLookupTable, WcWidth};
 use crate::{common::is_console_session, wchar::prelude::*};
+use errno::{errno, Errno};
 use once_cell::sync::Lazy;
 use std::cmp;
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::sync::atomic::{AtomicIsize, Ordering};
-use std::{ffi::CString, mem, os::fd::RawFd};
+use std::{ffi::CString, mem};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
@@ -100,7 +102,7 @@ pub fn fish_wcswidth(s: &wstr) -> isize {
 // Replacement for mkostemp(str, O_CLOEXEC)
 // This uses mkostemp if available,
 // otherwise it uses mkstemp followed by fcntl
-pub fn fish_mkstemp_cloexec(name_template: CString) -> (RawFd, CString) {
+pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(OwnedFd, CString), Errno> {
     let name = name_template.into_raw();
     #[cfg(not(target_os = "macos"))]
     let fd = {
@@ -116,7 +118,11 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> (RawFd, CString) {
         }
         fd
     };
-    (fd, unsafe { CString::from_raw(name) })
+    if fd == -1 {
+        Err(errno())
+    } else {
+        unsafe { Ok((OwnedFd::from_raw_fd(fd), CString::from_raw(name))) }
+    }
 }
 
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {

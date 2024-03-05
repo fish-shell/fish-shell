@@ -4,6 +4,7 @@
 use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::ReaderData;
 use once_cell::race::OnceBox;
+use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -355,6 +356,33 @@ impl ThreadPool {
 
             worker.run();
         })
+    }
+}
+
+/// A `Sync` and `Send` wrapper for non-`Sync`/`Send` types.
+/// Only allows access from the main thread.
+pub struct MainThread<T> {
+    data: T,
+    // Make type !Send and !Sync by default
+    _marker: PhantomData<*const ()>,
+}
+
+// Manually implement Send and Sync for MainThread<T> to ensure it can be shared across threads
+// as long as T is 'static.
+unsafe impl<T: 'static> Send for MainThread<T> {}
+unsafe impl<T: 'static> Sync for MainThread<T> {}
+
+impl<T> MainThread<T> {
+    pub const fn new(value: T) -> Self {
+        Self {
+            data: value,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn get(&self) -> &T {
+        assert_is_main_thread();
+        &self.data
     }
 }
 

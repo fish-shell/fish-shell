@@ -762,6 +762,7 @@ fn init_locale(vars: &EnvStack) {
                 _nl_msg_cat_cntr += 1;
             }
         }
+        crate::wutil::gettext::wgettext_clear_cache();
     }
 }
 

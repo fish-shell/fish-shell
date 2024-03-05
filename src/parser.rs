@@ -947,7 +947,7 @@ impl Parser {
                     &wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
                         &String::from_utf8_lossy(path),
-                        format!("{}", err)
+                        err.to_string()
                     )
                 );
                 return;

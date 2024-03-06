@@ -59,12 +59,13 @@ FILE(GLOB sources src/* src/*/* src/*/*/*)
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
   add_custom_command(
-    OUTPUT ${rust_target_dir}/${rust_profile}/${target}
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${Rust_CARGO_TARGET}/${rust_profile}/${target}
     COMMAND ${CMAKE_COMMAND} -E env
       ${VARS_FOR_CARGO}
     ${Rust_CARGO} ARGS build --bin ${target}
       $<$<CONFIG:Release,RelWithDebInfo>:--release>
       --target ${Rust_CARGO_TARGET}
+      --target-dir ${CMAKE_CURRENT_BINARY_DIR}
       ${CARGO_FLAGS}
       ${FEATURES_ARG}
     DEPENDS ${sources} src/bin/${target}.rs
@@ -75,9 +76,9 @@ function(FISH_LINK_DEPS_AND_SIGN target)
   )
   add_custom_target(${target} ALL
     COMMAND "${CMAKE_COMMAND}" -E copy
-      "${rust_target_dir}/${rust_profile}/${target}"
+    ${CMAKE_CURRENT_BINARY_DIR}/${Rust_CARGO_TARGET}/${rust_profile}/${target}
       "${CMAKE_CURRENT_BINARY_DIR}"
-    DEPENDS ${rust_target_dir}/${rust_profile}/${target}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${Rust_CARGO_TARGET}/${rust_profile}/${target}
   )
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)

@@ -2,7 +2,7 @@
 //! that's not directly exposed in any of the popular ncurses crates.
 //!
 //! In addition to exposing the C library ffi calls, we also shim around some functionality that's
-//! only made available via the the ncurses headers to C code via macro magic, such as polyfilling
+//! only made available via the ncurses headers to C code via macro magic, such as polyfilling
 //! missing capability strings to shoe-in missing support for certain terminal sequences.
 //!
 //! This is intentionally very bare bones and only implements the subset of curses functionality

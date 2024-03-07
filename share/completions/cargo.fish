@@ -26,7 +26,7 @@ end
 complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
     -xa "(__fish_cargo_packages)"
 
-# Look up crates.io crates matching the the single argument provided to this function
+# Look up crates.io crates matching the single argument provided to this function
 function __fish_cargo_search
     if test (string length -- "$argv[1]") -le 2
         # Don't waste time searching for strings with too many results to realistically

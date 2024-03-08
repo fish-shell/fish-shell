@@ -14,7 +14,7 @@ complete -c ollama -a rm -d "Remove a model"
 complete -c ollama -a help -d "Help about any command"
 complete -c ollama -s h -l help -d "help for ollama"
 complete -c ollama -s v -l version -d "Show version information"
-complete -c ollama -f -a "$(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from show' -d "Show information for a model"
-complete -c ollama -f -a "$(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from run' -d "Run a model"
-complete -c ollama -f -a "$(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from cp' -d "Copy a model"
-complete -c ollama -f -a "$(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from rm' -d "Remove a model"
+complete -c ollama -f -a "(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from show'
+complete -c ollama -f -a "(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from run'
+complete -c ollama -f -a "(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from cp'
+complete -c ollama -f -a "(__fish_complete_ollama_list)" --condition '__fish_seen_subcommand_from rm'

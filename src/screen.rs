@@ -832,6 +832,7 @@ impl Screen {
         // Output the left prompt if it has changed.
         if left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
+            zelf.write_mbs_if_some(&term.and_then(|term| term.prompt_start.as_ref()));
             let mut start = 0;
             for line_break in left_prompt_layout.line_breaks {
                 zelf.write_str(&left_prompt[start..line_break]);
@@ -1031,6 +1032,7 @@ impl Screen {
                 let Cursor { x, y } = zelf.actual.cursor;
                 zelf.r#move(x - right_prompt_width, y);
                 zelf.write_str(L!("\r"));
+                zelf.write_mbs_if_some(&term.and_then(|term| term.prompt_end.as_ref()));
                 zelf.actual.cursor.x = 0;
             }
         }

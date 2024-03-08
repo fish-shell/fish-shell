@@ -184,7 +184,7 @@ function fish_config --description "Launch fish's web based configuration"
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) Th
                     set_color normal
                     set_color $fish_color_autosuggestion || set_color $fish_color_normal
-                    echo is is an autosuggestion
+                    echo is an autosuggestion
                     echo
                 case show
                     set -l fish (status fish-path)

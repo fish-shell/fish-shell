@@ -334,7 +334,7 @@ pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
 /// Note the delimiters are the characters in \p seps, not \p seps itself.
 /// \p seps may contain the NUL character.
 /// Do not output more than \p max_results results. If we are to output exactly that much,
-/// the last output is the the remainder of the input, including leading delimiters,
+/// the last output is the remainder of the input, including leading delimiters,
 /// except for the first. This is historical behavior.
 /// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
 pub fn split_string_tok<'val>(

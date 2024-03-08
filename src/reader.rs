@@ -2115,6 +2115,9 @@ impl ReaderData {
                     }
                     // Else we repaint as normal.
                 }
+                if !self.conf.event.is_empty() {
+                    event::fire_generic(self.parser(), self.conf.event.to_owned(), vec![]);
+                }
                 self.exec_prompt();
                 self.screen.reset_line(/*repaint_prompt=*/ true);
                 self.layout_and_repaint(L!("readline"));

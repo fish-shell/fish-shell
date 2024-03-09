@@ -13,56 +13,104 @@ mod test_expressions {
     use std::collections::HashMap;
     use std::os::unix::prelude::*;
 
-    #[derive(Copy, Clone, PartialEq, Eq)]
-    pub(super) enum Token {
-        unknown, // arbitrary string
+    macro_rules! define_token {
+        (
+            {
+                $($unit_variant:ident)*
+            }
+            $(
+                $newtype_variant:ident($sub_type:ident) {
+                    $($sub_variant:ident)+
+                }
+            )*
+        ) => {
+            #[derive(Copy, Clone, PartialEq, Eq)]
+            pub(super) enum Token {
+                $($unit_variant,)*
+                $($newtype_variant($sub_type),)*
+            }
 
-        bang, // "!", inverts sense
+            $(
+                #[derive(Copy, Clone, PartialEq, Eq)]
+                pub(super) enum $sub_type { $($sub_variant,)+ }
 
-        filetype_b, // "-b", for block special files
-        filetype_c, // "-c", for character special files
-        filetype_d, // "-d", for directories
-        filetype_e, // "-e", for files that exist
-        filetype_f, // "-f", for for regular files
-        filetype_G, // "-G", for check effective group id
-        filetype_g, // "-g", for set-group-id
-        filetype_h, // "-h", for symbolic links
-        filetype_k, // "-k", for sticky bit
-        filetype_L, // "-L", same as -h
-        filetype_O, // "-O", for check effective user id
-        filetype_p, // "-p", for FIFO
-        filetype_S, // "-S", socket
+                impl From<$sub_type> for Token {
+                    fn from(value: $sub_type) -> Token {
+                        Token::$newtype_variant(value)
+                    }
+                }
+            )*
+        };
+    }
 
-        filesize_s, // "-s", size greater than zero
+    define_token! {
+        {
+            Unknown // arbitrary string
+            Bang    // "!", inverts sense
+        }
 
-        filedesc_t, // "-t", whether the fd is associated with a terminal
+        Filetype(FiletypeToken) {
+            b // "-b", for block special files
+            c // "-c", for character special files
+            d // "-d", for directories
+            e // "-e", for files that exist
+            f // "-f", for for regular files
+            G // "-G", for check effective group id
+            g // "-g", for set-group-id
+            h // "-h", for symbolic links
+            k // "-k", for sticky bit
+            L // "-L", same as -h
+            O // "-O", for check effective user id
+            p // "-p", for FIFO
+            S // "-S", socket
+        }
 
-        fileperm_r, // "-r", read permission
-        fileperm_u, // "-u", whether file is setuid
-        fileperm_w, // "-w", whether file write permission is allowed
-        fileperm_x, // "-x", whether file execute/search is allowed
+        Filesize(FilesizeToken) {
+            s // "-s", size greater than zero
+        }
 
-        string_n,         // "-n", non-empty string
-        string_z,         // "-z", true if length of string is 0
-        string_equal,     // "=", true if strings are identical
-        string_not_equal, // "!=", true if strings are not identical
+        Filedesc(FiledescToken) {
+            t // "-t", whether the fd is associated with a terminal
+        }
 
-        file_newer, // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
-        file_older, // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
-        file_same,  // f1 -ef f2, true if f1 and f2 exist and refer to same file
+        Fileperm(FilepermToken) {
+            r // "-r", read permission
+            u // "-u", whether file is setuid
+            w // "-w", whether file write permission is allowed
+            x // "-x", whether file execute/search is allowed
+        }
 
-        number_equal,         // "-eq", true if numbers are equal
-        number_not_equal,     // "-ne", true if numbers are not equal
-        number_greater,       // "-gt", true if first number is larger than second
-        number_greater_equal, // "-ge", true if first number is at least second
-        number_lesser,        // "-lt", true if first number is smaller than second
-        number_lesser_equal,  // "-le", true if first number is at most second
+        String(StringToken) {
+            n         // "-n", non-empty string
+            z         // "-z", true if length of string is 0
+            Equal     // "=", true if strings are identical
+            NotEqual  // "!=", true if strings are not identical
+        }
 
-        combine_and, // "-a", true if left and right are both true
-        combine_or,  // "-o", true if either left or right is true
+        File(FileToken) {
+            Newer // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
+            Older // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
+            Same  // f1 -ef f2, true if f1 and f2 exist and refer to same file
+        }
 
-        paren_open,  // "(", open paren
-        paren_close, // ")", close paren
+        Number(NumberComparison) {
+            Equal        // "-eq", true if numbers are equal
+            NotEqual     // "-ne", true if numbers are not equal
+            Greater      // "-gt", true if first number is larger than second
+            GreaterEqual // "-ge", true if first number is at least second
+            Lesser       // "-lt", true if first number is smaller than second
+            LesserEqual  // "-le", true if first number is at most second
+        }
+
+        Combine(Combiner) {
+            And // "-a", true if left and right are both true
+            Or  // "-o", true if either left or right is true
+        }
+
+        Paren(ParenToken) {
+            Open  // "(", open paren
+            Close // ")", close paren
+        }
     }
 
     /// Our number type. We support both doubles and long longs. We have to support these separately
@@ -112,7 +160,8 @@ mod test_expressions {
     }
 
     impl TokenInfo {
-        fn new(tok: Token, flags: u32) -> Self {
+        fn new(tok: impl Into<Token>, flags: u32) -> Self {
+            let tok = tok.into();
             Self { tok, flags }
         }
     }
@@ -130,44 +179,44 @@ mod test_expressions {
     static TOKEN_INFOS: Lazy<HashMap<&'static wstr, TokenInfo>> = Lazy::new(|| {
         #[rustfmt::skip]
         let pairs = [
-            (L!(""), TokenInfo::new(Token::unknown, 0)),
-            (L!("!"), TokenInfo::new(Token::bang, 0)),
-            (L!("-b"), TokenInfo::new(Token::filetype_b, UNARY_PRIMARY)),
-            (L!("-c"), TokenInfo::new(Token::filetype_c, UNARY_PRIMARY)),
-            (L!("-d"), TokenInfo::new(Token::filetype_d, UNARY_PRIMARY)),
-            (L!("-e"), TokenInfo::new(Token::filetype_e, UNARY_PRIMARY)),
-            (L!("-f"), TokenInfo::new(Token::filetype_f, UNARY_PRIMARY)),
-            (L!("-G"), TokenInfo::new(Token::filetype_G, UNARY_PRIMARY)),
-            (L!("-g"), TokenInfo::new(Token::filetype_g, UNARY_PRIMARY)),
-            (L!("-h"), TokenInfo::new(Token::filetype_h, UNARY_PRIMARY)),
-            (L!("-k"), TokenInfo::new(Token::filetype_k, UNARY_PRIMARY)),
-            (L!("-L"), TokenInfo::new(Token::filetype_L, UNARY_PRIMARY)),
-            (L!("-O"), TokenInfo::new(Token::filetype_O, UNARY_PRIMARY)),
-            (L!("-p"), TokenInfo::new(Token::filetype_p, UNARY_PRIMARY)),
-            (L!("-S"), TokenInfo::new(Token::filetype_S, UNARY_PRIMARY)),
-            (L!("-s"), TokenInfo::new(Token::filesize_s, UNARY_PRIMARY)),
-            (L!("-t"), TokenInfo::new(Token::filedesc_t, UNARY_PRIMARY)),
-            (L!("-r"), TokenInfo::new(Token::fileperm_r, UNARY_PRIMARY)),
-            (L!("-u"), TokenInfo::new(Token::fileperm_u, UNARY_PRIMARY)),
-            (L!("-w"), TokenInfo::new(Token::fileperm_w, UNARY_PRIMARY)),
-            (L!("-x"), TokenInfo::new(Token::fileperm_x, UNARY_PRIMARY)),
-            (L!("-n"), TokenInfo::new(Token::string_n, UNARY_PRIMARY)),
-            (L!("-z"), TokenInfo::new(Token::string_z, UNARY_PRIMARY)),
-            (L!("="), TokenInfo::new(Token::string_equal, BINARY_PRIMARY)),
-            (L!("!="), TokenInfo::new(Token::string_not_equal, BINARY_PRIMARY)),
-            (L!("-nt"), TokenInfo::new(Token::file_newer, BINARY_PRIMARY)),
-            (L!("-ot"), TokenInfo::new(Token::file_older, BINARY_PRIMARY)),
-            (L!("-ef"), TokenInfo::new(Token::file_same, BINARY_PRIMARY)),
-            (L!("-eq"), TokenInfo::new(Token::number_equal, BINARY_PRIMARY)),
-            (L!("-ne"), TokenInfo::new(Token::number_not_equal, BINARY_PRIMARY)),
-            (L!("-gt"), TokenInfo::new(Token::number_greater, BINARY_PRIMARY)),
-            (L!("-ge"), TokenInfo::new(Token::number_greater_equal, BINARY_PRIMARY)),
-            (L!("-lt"), TokenInfo::new(Token::number_lesser, BINARY_PRIMARY)),
-            (L!("-le"), TokenInfo::new(Token::number_lesser_equal, BINARY_PRIMARY)),
-            (L!("-a"), TokenInfo::new(Token::combine_and, 0)),
-            (L!("-o"), TokenInfo::new(Token::combine_or, 0)),
-            (L!("("), TokenInfo::new(Token::paren_open, 0)),
-            (L!(")"), TokenInfo::new(Token::paren_close, 0))
+            (L!(""), TokenInfo::new(Token::Unknown, 0)),
+            (L!("!"), TokenInfo::new(Token::Bang, 0)),
+            (L!("-b"), TokenInfo::new(FiletypeToken::b, UNARY_PRIMARY)),
+            (L!("-c"), TokenInfo::new(FiletypeToken::c, UNARY_PRIMARY)),
+            (L!("-d"), TokenInfo::new(FiletypeToken::d, UNARY_PRIMARY)),
+            (L!("-e"), TokenInfo::new(FiletypeToken::e, UNARY_PRIMARY)),
+            (L!("-f"), TokenInfo::new(FiletypeToken::f, UNARY_PRIMARY)),
+            (L!("-G"), TokenInfo::new(FiletypeToken::G, UNARY_PRIMARY)),
+            (L!("-g"), TokenInfo::new(FiletypeToken::g, UNARY_PRIMARY)),
+            (L!("-h"), TokenInfo::new(FiletypeToken::h, UNARY_PRIMARY)),
+            (L!("-k"), TokenInfo::new(FiletypeToken::k, UNARY_PRIMARY)),
+            (L!("-L"), TokenInfo::new(FiletypeToken::L, UNARY_PRIMARY)),
+            (L!("-O"), TokenInfo::new(FiletypeToken::O, UNARY_PRIMARY)),
+            (L!("-p"), TokenInfo::new(FiletypeToken::p, UNARY_PRIMARY)),
+            (L!("-S"), TokenInfo::new(FiletypeToken::S, UNARY_PRIMARY)),
+            (L!("-s"), TokenInfo::new(FilesizeToken::s, UNARY_PRIMARY)),
+            (L!("-t"), TokenInfo::new(FiledescToken::t, UNARY_PRIMARY)),
+            (L!("-r"), TokenInfo::new(FilepermToken::r, UNARY_PRIMARY)),
+            (L!("-u"), TokenInfo::new(FilepermToken::u, UNARY_PRIMARY)),
+            (L!("-w"), TokenInfo::new(FilepermToken::w, UNARY_PRIMARY)),
+            (L!("-x"), TokenInfo::new(FilepermToken::x, UNARY_PRIMARY)),
+            (L!("-n"), TokenInfo::new(StringToken::n, UNARY_PRIMARY)),
+            (L!("-z"), TokenInfo::new(StringToken::z, UNARY_PRIMARY)),
+            (L!("="), TokenInfo::new(StringToken::Equal, BINARY_PRIMARY)),
+            (L!("!="), TokenInfo::new(StringToken::NotEqual, BINARY_PRIMARY)),
+            (L!("-nt"), TokenInfo::new(FileToken::Newer, BINARY_PRIMARY)),
+            (L!("-ot"), TokenInfo::new(FileToken::Older, BINARY_PRIMARY)),
+            (L!("-ef"), TokenInfo::new(FileToken::Same, BINARY_PRIMARY)),
+            (L!("-eq"), TokenInfo::new(NumberComparison::Equal, BINARY_PRIMARY)),
+            (L!("-ne"), TokenInfo::new(NumberComparison::NotEqual, BINARY_PRIMARY)),
+            (L!("-gt"), TokenInfo::new(NumberComparison::Greater, BINARY_PRIMARY)),
+            (L!("-ge"), TokenInfo::new(NumberComparison::GreaterEqual, BINARY_PRIMARY)),
+            (L!("-lt"), TokenInfo::new(NumberComparison::Lesser, BINARY_PRIMARY)),
+            (L!("-le"), TokenInfo::new(NumberComparison::LesserEqual, BINARY_PRIMARY)),
+            (L!("-a"), TokenInfo::new(Combiner::And, 0)),
+            (L!("-o"), TokenInfo::new(Combiner::Or, 0)),
+            (L!("("), TokenInfo::new(ParenToken::Open, 0)),
+            (L!(")"), TokenInfo::new(ParenToken::Close, 0))
         ];
         pairs.into_iter().collect()
     });
@@ -251,8 +300,7 @@ mod test_expressions {
     /// we don't have to worry about precedence in the parser.
     struct CombiningExpression {
         subjects: Vec<Box<dyn Expression>>,
-        combiners: Vec<Token>,
-        token: Token,
+        combiners: Vec<Combiner>,
         range: Range,
     }
 
@@ -284,7 +332,7 @@ mod test_expressions {
 
     impl Expression for UnaryOperator {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
-            if self.token == Token::bang {
+            if self.token == Token::Bang {
                 !self.subject.evaluate(streams, errors)
             } else {
                 errors.push(L!("Unknown token type in unary_operator_evaluate").to_owned());
@@ -300,49 +348,45 @@ mod test_expressions {
     impl Expression for CombiningExpression {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
             let _res = self.subjects[0].evaluate(streams, errors);
-            if self.token == Token::combine_and || self.token == Token::combine_or {
-                assert!(!self.subjects.is_empty());
-                assert!(self.combiners.len() + 1 == self.subjects.len());
+            assert!(!self.subjects.is_empty());
+            assert!(self.combiners.len() + 1 == self.subjects.len());
 
-                // One-element case.
-                if self.subjects.len() == 1 {
-                    return self.subjects[0].evaluate(streams, errors);
+            // One-element case.
+            if self.subjects.len() == 1 {
+                return self.subjects[0].evaluate(streams, errors);
+            }
+
+            // Evaluate our lists, remembering that AND has higher precedence than OR. We can
+            // visualize this as a sequence of OR expressions of AND expressions.
+            let mut idx = 0;
+            let max = self.subjects.len();
+            let mut or_result = false;
+            while idx < max {
+                if or_result {
+                    // short circuit
+                    break;
                 }
-
-                // Evaluate our lists, remembering that AND has higher precedence than OR. We can
-                // visualize this as a sequence of OR expressions of AND expressions.
-                let mut idx = 0;
-                let max = self.subjects.len();
-                let mut or_result = false;
+                // Evaluate a stream of AND starting at given subject index. It may only have one
+                // element.
+                let mut and_result = true;
                 while idx < max {
-                    if or_result {
-                        // short circuit
+                    // Evaluate it, short-circuiting.
+                    and_result = and_result && self.subjects[idx].evaluate(streams, errors);
+
+                    // If the combiner at this index (which corresponding to how we combine with the
+                    // next subject) is not AND, then exit the loop.
+                    if idx + 1 < max && self.combiners[idx] != Combiner::And {
+                        idx += 1;
                         break;
                     }
-                    // Evaluate a stream of AND starting at given subject index. It may only have one
-                    // element.
-                    let mut and_result = true;
-                    while idx < max {
-                        // Evaluate it, short-circuiting.
-                        and_result = and_result && self.subjects[idx].evaluate(streams, errors);
 
-                        // If the combiner at this index (which corresponding to how we combine with the
-                        // next subject) is not AND, then exit the loop.
-                        if idx + 1 < max && self.combiners[idx] != Token::combine_and {
-                            idx += 1;
-                            break;
-                        }
-
-                        idx += 1;
-                    }
-
-                    // OR it in.
-                    or_result = or_result || and_result;
+                    idx += 1;
                 }
-                return or_result;
+
+                // OR it in.
+                or_result = or_result || and_result;
             }
-            errors.push(L!("Unknown token type in CombiningExpression.evaluate").to_owned());
-            false
+            return or_result;
         }
 
         fn range(&self) -> Range {
@@ -375,18 +419,15 @@ mod test_expressions {
                 return self.error(start, sprintf!("Missing argument at index %u", start + 1));
             }
             let tok = token_for_string(self.arg(start)).tok;
-            if tok == Token::bang {
-                let subject = self.parse_unary_expression(start + 1, end);
-                if let Some(subject) = subject {
-                    let range = start..subject.range().end;
-                    return UnaryOperator {
-                        subject,
-                        token: tok,
-                        range,
-                    }
-                    .into_some_box();
+            if tok == Token::Bang {
+                let subject = self.parse_unary_expression(start + 1, end)?;
+                let range = start..subject.range().end;
+                return UnaryOperator {
+                    subject,
+                    token: tok,
+                    range,
                 }
-                return None;
+                .into_some_box();
             }
             self.parse_primary(start, end)
         }
@@ -407,8 +448,7 @@ mod test_expressions {
             while idx < end {
                 if !first {
                     // This is not the first expression, so we expect a combiner.
-                    let combiner = token_for_string(self.arg(idx)).tok;
-                    if combiner != Token::combine_and && combiner != Token::combine_or {
+                    let Token::Combine(combiner) = token_for_string(self.arg(idx)).tok else {
                         /* Not a combiner, we're done */
                         self.errors.insert(
                             0,
@@ -419,7 +459,7 @@ mod test_expressions {
                         );
                         self.error_idx = idx;
                         break;
-                    }
+                    };
                     combiners.push(combiner);
                     idx += 1;
                 }
@@ -448,7 +488,6 @@ mod test_expressions {
             CombiningExpression {
                 subjects,
                 combiners,
-                token: Token::combine_and,
                 range: start..idx,
             }
             .into_some_box()
@@ -489,7 +528,7 @@ mod test_expressions {
             }
 
             let info = token_for_string(self.arg(start));
-            if info.tok != Token::unknown {
+            if info.tok != Token::Unknown {
                 return self.error(
                     start,
                     sprintf!("Unexpected argument type at index %u", start + 1),
@@ -500,7 +539,7 @@ mod test_expressions {
             // type.
             return UnaryPrimary {
                 arg: self.arg(start).to_owned(),
-                token: Token::string_n,
+                token: Token::String(StringToken::n),
                 range: start..start + 1,
             }
             .into_some_box();
@@ -540,7 +579,7 @@ mod test_expressions {
 
             // Must start with an open expression.
             let open_paren = token_for_string(self.arg(start));
-            if open_paren.tok != Token::paren_open {
+            if open_paren.tok != Token::Paren(ParenToken::Open) {
                 return None;
             }
 
@@ -557,7 +596,7 @@ mod test_expressions {
                 );
             }
             let close_paren = token_for_string(self.arg(close_index));
-            if close_paren.tok != Token::paren_close {
+            if close_paren.tok != Token::Paren(ParenToken::Close) {
                 return self.error(
                     close_index,
                     sprintf!("Expected close paren at index %u", close_index + 1),
@@ -599,31 +638,24 @@ mod test_expressions {
             end: usize,
         ) -> Option<Box<dyn Expression>> {
             assert!(end - start == 3);
-            let mut result = None;
+
             let center_token = token_for_string(self.arg(start + 1));
+
             if center_token.flags & BINARY_PRIMARY != 0 {
-                result = self.parse_binary_primary(start, end);
-            } else if center_token.tok == Token::combine_and
-                || center_token.tok == Token::combine_or
-            {
-                let left = self.parse_unary_expression(start, start + 1);
-                let right = self.parse_unary_expression(start + 2, start + 3);
-                if left.is_some() && right.is_some() {
-                    // Transfer ownership to the vector of subjects.
-                    let combiners = vec![center_token.tok];
-                    let subjects = vec![left.unwrap(), right.unwrap()];
-                    result = CombiningExpression {
-                        subjects,
-                        combiners,
-                        token: center_token.tok,
-                        range: start..end,
-                    }
-                    .into_some_box()
+                self.parse_binary_primary(start, end)
+            } else if let Token::Combine(combiner) = center_token.tok {
+                let left = self.parse_unary_expression(start, start + 1)?;
+                let right = self.parse_unary_expression(start + 2, start + 3)?;
+                // Transfer ownership to the vector of subjects.
+                CombiningExpression {
+                    subjects: vec![left, right],
+                    combiners: vec![combiner],
+                    range: start..end,
                 }
+                .into_some_box()
             } else {
-                result = self.parse_unary_expression(start, end);
+                self.parse_unary_expression(start, end)
             }
-            result
         }
 
         fn parse_4_arg_expression(
@@ -632,24 +664,22 @@ mod test_expressions {
             end: usize,
         ) -> Option<Box<dyn Expression>> {
             assert!(end - start == 4);
-            let mut result = None;
+
             let first_token = token_for_string(self.arg(start)).tok;
-            if first_token == Token::bang {
-                let subject = self.parse_3_arg_expression(start + 1, end);
-                if let Some(subject) = subject {
-                    result = UnaryOperator {
-                        subject,
-                        token: first_token,
-                        range: start..end,
-                    }
-                    .into_some_box();
+
+            if first_token == Token::Bang {
+                let subject = self.parse_3_arg_expression(start + 1, end)?;
+                UnaryOperator {
+                    subject,
+                    token: first_token,
+                    range: start..end,
                 }
-            } else if first_token == Token::paren_open {
-                result = self.parse_parenthetical(start, end);
+                .into_some_box()
+            } else if first_token == Token::Paren(ParenToken::Open) {
+                self.parse_parenthetical(start, end)
             } else {
-                result = self.parse_combining_expression(start, end);
+                self.parse_combining_expression(start, end)
             }
-            result
         }
 
         fn parse_expression(&mut self, start: usize, end: usize) -> Option<Box<dyn Expression>> {
@@ -831,43 +861,32 @@ mod test_expressions {
         right: &wstr,
         errors: &mut Vec<WString>,
     ) -> bool {
-        let mut ln = Number::default();
-        let mut rn = Number::default();
         match token {
-            Token::string_equal => left == right,
-            Token::string_not_equal => left != right,
-            Token::file_newer => file_id_for_path(right).older_than(&file_id_for_path(left)),
-            Token::file_older => file_id_for_path(left).older_than(&file_id_for_path(right)),
-            Token::file_same => file_id_for_path(left) == file_id_for_path(right),
-            Token::number_equal => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln == rn
+            Token::String(StringToken::Equal) => left == right,
+            Token::String(StringToken::NotEqual) => left != right,
+            Token::File(comparer) => {
+                let left = file_id_for_path(left);
+                let right = file_id_for_path(right);
+                match comparer {
+                    FileToken::Newer => right.older_than(&left),
+                    FileToken::Older => left.older_than(&right),
+                    FileToken::Same => left == right,
+                }
             }
-            Token::number_not_equal => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln != rn
-            }
-            Token::number_greater => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln > rn
-            }
-            Token::number_greater_equal => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln >= rn
-            }
-            Token::number_lesser => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln < rn
-            }
-            Token::number_lesser_equal => {
-                parse_number(left, &mut ln, errors)
-                    && parse_number(right, &mut rn, errors)
-                    && ln <= rn
+            Token::Number(comparer) => {
+                let mut ln = Number::default();
+                let mut rn = Number::default();
+                if !parse_number(left, &mut ln, errors) || !parse_number(right, &mut rn, errors) {
+                    return false;
+                }
+                match comparer {
+                    NumberComparison::Equal => ln == rn,
+                    NumberComparison::NotEqual => ln != rn,
+                    NumberComparison::Greater => ln > rn,
+                    NumberComparison::GreaterEqual => ln >= rn,
+                    NumberComparison::Lesser => ln < rn,
+                    NumberComparison::LesserEqual => ln <= rn,
+                }
             }
             _ => {
                 errors.push(L!("Unknown token type in binary_primary_evaluate").to_owned());
@@ -885,101 +904,71 @@ mod test_expressions {
         const S_ISGID: u32 = 0o2000;
         const S_ISVTX: u32 = 0o1000;
 
-        // Helper to call wstat and then apply a function to the result.
-        fn stat_and<F>(arg: &wstr, f: F) -> bool
-        where
-            F: FnOnce(std::fs::Metadata) -> bool,
-        {
-            wstat(arg).map_or(false, f)
-        }
-
         match token {
-            Token::filetype_b => {
-                // "-b", for block special files
-                stat_and(arg, |buf| buf.file_type().is_block_device())
+            Token::Filetype(filetype_token) => {
+                if let FiletypeToken::h | FiletypeToken::L = filetype_token {
+                    // "-h", for symbolic links
+                    // "-L", same as -h
+                    return lwstat(arg).is_ok_and(|symlink_md| symlink_md.file_type().is_symlink());
+                }
+
+                let Ok(md) = wstat(arg) else {
+                    return false;
+                };
+                match filetype_token {
+                    // "-b", for block special files
+                    FiletypeToken::b => md.file_type().is_block_device(),
+                    // "-c", for character special files
+                    FiletypeToken::c => md.file_type().is_char_device(),
+                    // "-d", for directories
+                    FiletypeToken::d => md.file_type().is_dir(),
+                    // "-e", for files that exist
+                    FiletypeToken::e => true,
+                    // "-f", for regular files
+                    FiletypeToken::f => md.file_type().is_file(),
+                    // "-G", for check effective group id
+                    FiletypeToken::G => crate::nix::getegid() == md.gid(),
+                    // "-g", for set-group-id
+                    FiletypeToken::g => md.permissions().mode() & S_ISGID != 0,
+                    // "-k", for sticky bit
+                    FiletypeToken::k => md.permissions().mode() & S_ISVTX != 0,
+                    // "-O", for check effective user id
+                    FiletypeToken::O => crate::nix::geteuid() == md.uid(),
+                    // "-p", for FIFO
+                    FiletypeToken::p => md.file_type().is_fifo(),
+                    // "-S", socket
+                    FiletypeToken::S => md.file_type().is_socket(),
+                    FiletypeToken::h | FiletypeToken::L => unreachable!(),
+                }
             }
-            Token::filetype_c => {
-                // "-c", for character special files
-                stat_and(arg, |buf: std::fs::Metadata| {
-                    buf.file_type().is_char_device()
-                })
-            }
-            Token::filetype_d => {
-                // "-d", for directories
-                stat_and(arg, |buf: std::fs::Metadata| buf.file_type().is_dir())
-            }
-            Token::filetype_e => {
-                // "-e", for files that exist
-                stat_and(arg, |_| true)
-            }
-            Token::filetype_f => {
-                // "-f", for regular files
-                stat_and(arg, |buf| buf.file_type().is_file())
-            }
-            Token::filetype_G => {
-                // "-G", for check effective group id
-                stat_and(arg, |buf| crate::nix::getegid() == buf.gid())
-            }
-            Token::filetype_g => {
-                // "-g", for set-group-id
-                stat_and(arg, |buf| buf.permissions().mode() & S_ISGID != 0)
-            }
-            Token::filetype_h | Token::filetype_L => {
-                // "-h", for symbolic links
-                // "-L", same as -h
-                lwstat(arg).map_or(false, |buf| buf.file_type().is_symlink())
-            }
-            Token::filetype_k => {
-                // "-k", for sticky bit
-                stat_and(arg, |buf| buf.permissions().mode() & S_ISVTX != 0)
-            }
-            Token::filetype_O => {
-                // "-O", for check effective user id
-                stat_and(arg, |buf: std::fs::Metadata| {
-                    crate::nix::geteuid() == buf.uid()
-                })
-            }
-            Token::filetype_p => {
-                // "-p", for FIFO
-                stat_and(arg, |buf: std::fs::Metadata| buf.file_type().is_fifo())
-            }
-            Token::filetype_S => {
-                // "-S", socket
-                stat_and(arg, |buf| buf.file_type().is_socket())
-            }
-            Token::filesize_s => {
+            Token::Filesize(FilesizeToken::s) => {
                 // "-s", size greater than zero
-                stat_and(arg, |buf| buf.len() > 0)
+                wstat(arg).is_ok_and(|md| md.len() > 0)
             }
-            Token::filedesc_t => {
+            Token::Filedesc(FiledescToken::t) => {
                 // "-t", whether the fd is associated with a terminal
                 let mut num = Number::default();
                 parse_number(arg, &mut num, errors) && num.isatty(streams)
             }
-            Token::fileperm_r => {
-                // "-r", read permission
-                waccess(arg, libc::R_OK) == 0
+            Token::Fileperm(fileperm_token) => {
+                match fileperm_token {
+                    // "-r", read permission
+                    FilepermToken::r => waccess(arg, libc::R_OK) == 0,
+                    // "-w", whether file write permission is allowed
+                    FilepermToken::w => waccess(arg, libc::W_OK) == 0,
+                    // "-x", whether file execute/search is allowed
+                    FilepermToken::x => waccess(arg, libc::X_OK) == 0,
+                    // "-u", whether file is setuid
+                    #[allow(clippy::unnecessary_cast)]
+                    FilepermToken::u => wstat(arg)
+                        .is_ok_and(|buf| buf.permissions().mode() & (libc::S_ISUID as u32) != 0),
+                }
             }
-            Token::fileperm_u => {
-                // "-u", whether file is setuid
-                #[allow(clippy::unnecessary_cast)]
-                stat_and(arg, |buf| {
-                    buf.permissions().mode() & (libc::S_ISUID as u32) != 0
-                })
-            }
-            Token::fileperm_w => {
-                // "-w", whether file write permission is allowed
-                waccess(arg, libc::W_OK) == 0
-            }
-            Token::fileperm_x => {
-                // "-x", whether file execute/search is allowed
-                waccess(arg, libc::X_OK) == 0
-            }
-            Token::string_n => {
+            Token::String(StringToken::n) => {
                 // "-n", non-empty string
                 !arg.is_empty()
             }
-            Token::string_z => {
+            Token::String(StringToken::z) => {
                 // "-z", true if length of string is 0
                 arg.is_empty()
             }

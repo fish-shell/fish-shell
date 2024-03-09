@@ -70,6 +70,7 @@ asan = []
 [lints]
 rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
+rust.unknown_lints = "allow"
 rust.unstable_name_collisions = "allow"
 clippy.assigning_clones = "allow"
 clippy.bool_assert_comparison = "allow"

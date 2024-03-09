@@ -1,5 +1,6 @@
 //! The fish_indent program.
 
+#![allow(unknown_lints)]
 // Delete this once we require Rust 1.74.
 #![allow(unstable_name_collisions)]
 #![allow(clippy::incompatible_msrv)]

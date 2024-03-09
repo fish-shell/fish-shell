@@ -1,6 +1,7 @@
 #![cfg_attr(feature = "benchmark", feature(test))]
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
+#![allow(unknown_lints)]
 #![allow(unstable_name_collisions)]
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::bool_assert_comparison)]

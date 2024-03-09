@@ -1,6 +1,5 @@
 use crate::flog::FLOG;
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::{Rc, Weak};
+use std::cell::{Ref, RefMut};
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 use std::sync::MutexGuard;
 
@@ -50,30 +49,6 @@ impl<T: ?Sized> AtomicRef<T> {
             value as *const &'static T as *mut &'static T,
             Ordering::Relaxed,
         )
-    }
-}
-
-pub struct SharedFromThisBase<T> {
-    weak: RefCell<Weak<T>>,
-}
-
-impl<T> SharedFromThisBase<T> {
-    pub fn new() -> SharedFromThisBase<T> {
-        SharedFromThisBase {
-            weak: RefCell::new(Weak::new()),
-        }
-    }
-
-    pub fn initialize(&self, r: &Rc<T>) {
-        *self.weak.borrow_mut() = Rc::downgrade(r);
-    }
-}
-
-pub trait SharedFromThis<T> {
-    fn get_base(&self) -> &SharedFromThisBase<T>;
-
-    fn shared_from_this(&self) -> Rc<T> {
-        self.get_base().weak.borrow().upgrade().unwrap()
     }
 }
 

@@ -1,8 +1,8 @@
-// Delete this once we require Rust 1.74.
 #![cfg_attr(feature = "benchmark", feature(test))]
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 #![allow(unstable_name_collisions)]
+#![allow(clippy::assigning_clones)]
 #![allow(clippy::bool_assert_comparison)]
 #![allow(clippy::box_default)]
 #![allow(clippy::collapsible_if)]
@@ -11,6 +11,7 @@
 #![allow(clippy::field_reassign_with_default)]
 #![allow(clippy::get_first)]
 #![allow(clippy::if_same_then_else)]
+#![allow(clippy::incompatible_msrv)]
 #![allow(clippy::len_without_is_empty)]
 #![allow(clippy::manual_is_ascii_check)]
 #![allow(clippy::mut_from_ref)]

@@ -2,6 +2,7 @@
 
 // Delete this once we require Rust 1.74.
 #![allow(unstable_name_collisions)]
+#![allow(clippy::incompatible_msrv)]
 #![allow(clippy::uninlined_format_args)]
 
 use std::ffi::{CString, OsStr};

@@ -809,8 +809,6 @@ pub fn use_posix_spawn() -> bool {
 
 /// Whether or not we are running on an OS where we allow ourselves to use `posix_spawn()`.
 const fn allow_use_posix_spawn() -> bool {
-    #![allow(clippy::if_same_then_else)]
-    #![allow(clippy::needless_bool)]
     // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
     // shebang-less script. Disable posix_spawn on OpenBSD.
     if cfg!(target_os = "openbsd") {

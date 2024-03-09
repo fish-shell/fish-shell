@@ -3,6 +3,7 @@
 // Delete this once we require Rust 1.74.
 #![allow(unstable_name_collisions)]
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::incompatible_msrv)] // false positive for is_some_and (we have a polyfill)
 
 use std::ffi::{CString, OsStr};
 use std::io::{stdin, Read, Write};

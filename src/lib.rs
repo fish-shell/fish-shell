@@ -21,6 +21,8 @@
 #![allow(clippy::redundant_slicing)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::assigning_clones)]
+#![allow(clippy::incompatible_msrv)] // false positive for is_some_and (1.70, but we have a polyfill)
 
 pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
 

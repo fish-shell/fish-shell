@@ -4669,14 +4669,14 @@ impl ReaderData {
         }
     }
 
-    fn should_add_history(&mut self, text: &wstr) -> bool {
+    fn should_add_to_history(&mut self, text: &wstr) -> bool {
         let parser = self.parser();
-        if !function::exists(L!("fish_should_add_history"), parser) {
+        if !function::exists(L!("fish_should_add_to_history"), parser) {
             // Historical behavior, if the command starts with a space we don't save it.
             return text.as_char_slice()[0] != ' ';
         }
 
-        let mut cmd: WString = L!("fish_should_add_history ").into();
+        let mut cmd: WString = L!("fish_should_add_to_history ").into();
         cmd.push_utfstr(&escape(text));
         let _not_interactive = scoped_push_replacer(
             |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
@@ -4706,8 +4706,8 @@ impl ReaderData {
         self.history.remove_ephemeral_items();
 
         if !text.is_empty() {
-            // Mark this item as ephemeral if should_add_history says no (#615).
-            let mode = if !self.should_add_history(&text) {
+            // Mark this item as ephemeral if should_add_to_history says no (#615).
+            let mode = if !self.should_add_to_history(&text) {
                 PersistenceMode::Ephemeral
             } else if in_private_mode(self.vars()) {
                 PersistenceMode::Memory

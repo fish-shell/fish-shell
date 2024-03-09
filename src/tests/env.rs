@@ -102,9 +102,9 @@ fn test_env_vars() {
         vec![L!("abc").to_owned(), L!("def").to_owned()],
         EnvVarFlags::EXPORT,
     );
-    assert!(v1 == v2 && !(v1 != v2));
-    assert!(v1 != v3 && !(v1 == v3));
-    assert!(v1 != v4 && !(v1 == v4));
+    assert_eq!(v1, v2);
+    assert_ne!(v1, v3);
+    assert_ne!(v1, v4);
 }
 
 #[test]

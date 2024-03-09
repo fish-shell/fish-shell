@@ -205,9 +205,7 @@ fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
         return None;
     }
 
-    let Some(mut result) = path_get_data() else {
-        return None;
-    };
+    let mut result = path_get_data()?;
 
     result.push('/');
     result.push_utfstr(session_id);

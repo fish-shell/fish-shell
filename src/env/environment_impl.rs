@@ -854,7 +854,7 @@ impl EnvStackImpl {
                 if val.exports() {
                     let mut node_ref = node.borrow_mut();
                     // Do NOT overwrite existing values, since we go from inner scopes outwards.
-                    if node_ref.env.get(key).is_none() {
+                    if !node_ref.env.contains_key(key) {
                         node_ref.env.insert(key.clone(), val.clone());
                     }
                     node_ref.changed_exported();

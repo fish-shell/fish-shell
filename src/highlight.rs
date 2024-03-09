@@ -296,12 +296,8 @@ fn autosuggest_parse_command(
     );
 
     // Find the first statement.
-    let Some(jc) = ast.top().as_job_list().unwrap().get(0) else {
-        return None;
-    };
-    let Some(first_statement) = jc.job.statement.contents.as_decorated_statement() else {
-        return None;
-    };
+    let jc = ast.top().as_job_list().unwrap().get(0)?;
+    let first_statement = jc.job.statement.contents.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
         let mut arg = WString::new();
@@ -1491,9 +1487,7 @@ fn statement_get_expanded_command(
     ctx: &OperationContext<'_>,
 ) -> Option<WString> {
     // Get the command. Try expanding it. If we cannot, it's an error.
-    let Some(cmd) = stmt.command.try_source(src) else {
-        return None;
-    };
+    let cmd = stmt.command.try_source(src)?;
     let mut out_cmd = WString::new();
     let err = expand_to_command_and_args(cmd, ctx, &mut out_cmd, None, None, false);
     (err == ExpandResultCode::ok).then_some(out_cmd)

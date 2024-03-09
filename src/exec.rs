@@ -15,7 +15,7 @@ use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
 use crate::fds::{make_autoclose_pipes, open_cloexec, PIPE_ERROR};
-use crate::flog::FLOGF;
+use crate::flog::{FLOG, FLOGF};
 use crate::fork_exec::blocked_signals_for_job;
 use crate::fork_exec::postfork::{
     child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
@@ -137,7 +137,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         std::mem::swap(&mut proc_pipes.read, &mut pipe_next_read);
         if !p.is_last_in_job {
             let Ok(pipes) = make_autoclose_pipes() else {
-                FLOGF!(warning, "%ls", wgettext!(PIPE_ERROR));
+                FLOG!(warning, wgettext!(PIPE_ERROR));
                 aborted_pipeline = true;
                 abort_pipeline_from(job, i);
                 break;
@@ -1002,9 +1002,8 @@ fn get_performer_for_process(
     } else {
         assert!(p.typ == ProcessType::function);
         let Some(props) = function::get_props(p.argv0().unwrap()) else {
-            FLOGF!(
+            FLOG!(
                 error,
-                "%ls",
                 wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
             );
             return None;

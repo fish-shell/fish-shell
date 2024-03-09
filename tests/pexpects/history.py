@@ -178,3 +178,27 @@ sendline("history clear-session")
 expect_prompt()
 sendline("history search --exact 'echo after' | cat")
 expect_prompt("\r\n")
+
+# Check history filtering
+# We store anything that starts with "echo ephemeral".
+sendline("function fish_should_add_to_history; string match -q 'echo ephemeral*' -- $argv; and return 2; return 0; end")
+expect_prompt("")
+# Check that matching the line works
+# (fish_should_add_to_history is itself stored in history so we match "ephemeral!" to avoid it)
+sendline("echo ephemeral! line")
+expect_prompt("ephemeral! line")
+sendline("echo nonephemeral! line")
+expect_prompt("nonephemeral! line")
+sendline("true")
+expect_prompt()
+sendline("echo a; history search '*ephemeral!*' | cat; echo b")
+expect_prompt("a\r\necho nonephemeral! line\r\nb\r\n")
+
+# If fish_should_add_to_history exists, it will completely take over,
+# so even lines with spaces are stored
+sendline(" echo spaced")
+expect_prompt("spaced")
+sendline("true")
+expect_prompt()
+sendline("echo a; history search '*spaced*' | cat; echo b")
+expect_prompt("a\r\n echo spaced\r\nb\r\n")

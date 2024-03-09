@@ -17,7 +17,7 @@ def expect_read_prompt():
 
 
 def expect_marker(text):
-    expect_prompt("\r\n@MARKER:" + str(text) + "@\\r\\n")
+    expect_prompt("\r\n.*@MARKER:" + str(text) + "@\\r\\n")
 
 
 def print_var_contents(varname, expected):

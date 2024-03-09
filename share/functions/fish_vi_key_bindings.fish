@@ -1,4 +1,6 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
+    set -l v1 __fish_bind_filter v1
+    set -l v2 __fish_bind_filter v2
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help" >&2
@@ -56,15 +58,19 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871
-    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
+    bind -s --preset -M insert [esc] "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
+    $v2 bind -s --preset -M insert [c-lbrack] "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
+    $v1 bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
 
     # Default (command) mode
     bind -s --preset :q exit
-    bind -s --preset -m insert \cc cancel-commandline repaint-mode
+    $v2 bind -s --preset -m insert [c-c] cancel-commandline repaint-mode
+    $v1 bind -s --preset -m insert \cc cancel-commandline repaint-mode
     bind -s --preset -M default h backward-char
     bind -s --preset -M default l forward-char
-    bind -s --preset -m insert \n execute
-    bind -s --preset -m insert \r execute
+    bind -s --preset -m insert [ret] execute
+    $v1 bind -s --preset -m insert \n execute
+    $v1 bind -s --preset -m insert \r execute
     bind -s --preset -m insert o 'set fish_cursor_selection_mode exclusive' insert-line-under repaint-mode
     bind -s --preset -m insert O 'set fish_cursor_selection_mode exclusive' insert-line-over repaint-mode
     bind -s --preset -m insert i repaint-mode
@@ -84,7 +90,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     end
 
     bind -s --preset u undo
-    bind -s --preset \cr redo
+    $v2 bind -s --preset [c-r] redo
+    $v1 bind -s --preset \cr redo
 
     bind -s --preset [ history-token-search-backward
     bind -s --preset ] history-token-search-forward
@@ -118,12 +125,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default -k dc delete-char 'set fish_cursor_selection_mode exclusive' forward-single-char backward-char 'set fish_cursor_selection_mode inclusive'
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
-    bind -s --preset -M insert -k backspace backward-delete-char
-    bind -s --preset -M default -k backspace backward-char
-    bind -s --preset -M insert \ch backward-delete-char
-    bind -s --preset -M default \ch backward-char
-    bind -s --preset -M insert \x7f backward-delete-char
-    bind -s --preset -M default \x7f backward-char
+    $v2 bind -s --preset -M insert [backspace] backward-delete-char
+    $v2 bind -s --preset -M insert [s-backspace] backward-delete-char
+    $v1 bind -s --preset -M insert -k backspace backward-delete-char
+    bind -s --preset -M default [backspace] backward-char
+    $v1 bind -s --preset -M default -k backspace backward-char
+    $v2 bind -s --preset -M insert [c-h] backward-delete-char
+    $v1 bind -s --preset -M insert \ch backward-delete-char
+    $v2 bind -s --preset -M default [c-h] backward-char
+    $v1 bind -s --preset -M default \ch backward-char
+    $v1 bind -s --preset -M insert \x7f backward-delete-char
+    $v1 bind -s --preset -M default \x7f backward-char
 
     bind -s --preset dd kill-whole-line
     bind -s --preset D kill-line
@@ -240,19 +252,27 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     bind -s --preset -m replace_one r repaint-mode
     bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
-    bind -s --preset -M replace_one -m default \r 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
-    bind -s --preset -M replace_one -m default \e cancel repaint-mode
+    bind -s --preset -M replace_one -m default [ret] 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
+    $v1 bind -s --preset -M replace_one -m default \r 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
+    bind -s --preset -M replace_one -m default [esc] cancel repaint-mode
+    $v2 bind -s --preset -M replace_one -m default [c-lbrack] cancel repaint-mode
+    $v1 bind -s --preset -M replace_one -m default \e cancel repaint-mode
 
     #
     # Uppercase R, enters replace mode
     #
     bind -s --preset -m replace R repaint-mode
     bind -s --preset -M replace '' delete-char self-insert
-    bind -s --preset -M replace -m insert \r execute repaint-mode
-    bind -s --preset -M replace -m default \e cancel repaint-mode
+    bind -s --preset -M replace -m insert [ret] execute repaint-mode
+    $v1 bind -s --preset -M replace -m insert \r execute repaint-mode
+    bind -s --preset -M replace -m default [esc] cancel repaint-mode
+    $v2 bind -s --preset -M replace -m default [c-lbrack] cancel repaint-mode
+    $v1 bind -s --preset -M replace -m default \e cancel repaint-mode
     # in vim (and maybe in vi), <BS> deletes the changes
     # but this binding just move cursor backward, not delete the changes
-    bind -s --preset -M replace -k backspace backward-char
+    $v2 bind -s --preset -M replace [backspace] backward-char
+    $v2 bind -s --preset -M replace [s-backspace] backward-char
+    $v1 bind -s --preset -M replace -k backspace backward-char
 
     #
     # visual mode
@@ -295,8 +315,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default '"+y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
 
-    bind -s --preset -M visual -m default \cc end-selection repaint-mode
-    bind -s --preset -M visual -m default \e end-selection repaint-mode
+    $v2 bind -s --preset -M visual -m default [c-c] end-selection repaint-mode
+    $v1 bind -s --preset -M visual -m default \cc end-selection repaint-mode
+    bind -s --preset -M visual -m default [esc] end-selection repaint-mode
+    $v2 bind -s --preset -M visual -m default [c-lbrack] end-selection repaint-mode
+    $v1 bind -s --preset -M visual -m default \e end-selection repaint-mode
 
     # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
     # the commenting chars so the command can be further edited then executed.

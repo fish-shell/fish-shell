@@ -22,10 +22,10 @@ sp.send("\x1b[TABCDEF")
 sp.expect_str("reader: Disabling mouse tracking")
 
 # Extended SGR sequences.
-sp.send("\x1b[<fooM")
+sp.send("\x1b[<1;2;3M")
 sp.expect_str("reader: Disabling mouse tracking")
 
-sp.send("\x1b[<foobarm")
+sp.send("\x1b[<1;2;3m")
 sp.expect_str("reader: Disabling mouse tracking")
 
 sp.sendline("echo done")

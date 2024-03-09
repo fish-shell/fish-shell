@@ -69,7 +69,7 @@ use crate::history::{
 };
 use crate::input::Inputter;
 use crate::input::{init_input, input_set_bind_mode};
-use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
+use crate::input_common::{restore_terminal, CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
@@ -132,7 +132,7 @@ pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode on startup, which we restore on exit.
-static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
+pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode we use to execute programs.
@@ -1819,7 +1819,9 @@ impl ReaderData {
                 continue;
             }
             assert!(
-                event_needing_handling.is_char() || event_needing_handling.is_readline_or_command(),
+                event_needing_handling.is_char()
+                    || event_needing_handling.get_chord().is_some()
+                    || event_needing_handling.is_readline_or_command(),
                 "Should have a char, readline or command"
             );
 
@@ -1862,24 +1864,22 @@ impl ReaderData {
                 input_set_bind_mode(zelf.parser(), mode);
             } else {
                 // Ordinary char.
-                let c = event_needing_handling.get_char();
+                let chord = event_needing_handling.get_chord().unwrap();
                 if event_needing_handling.input_style == CharInputStyle::NotFirst
                     && zelf.active_edit_line().1.position() == 0
                 {
                     // This character is skipped.
-                } else if c.is_control() {
-                    // This can happen if the user presses a control char we don't recognize. No
-                    // reason to report this to the user unless they've enabled debugging output.
-                    FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
                 } else {
                     // Regular character.
                     let (elt, _el) = zelf.active_edit_line();
-                    zelf.insert_char(elt, c);
+                    if let Some(c) = chord.underlying_codepoint() {
+                        zelf.insert_char(elt, c);
 
-                    if elt == EditableLineTag::Commandline {
-                        zelf.clear_pager();
-                        // We end history search. We could instead update the search string.
-                        zelf.history_search.reset();
+                        if elt == EditableLineTag::Commandline {
+                            zelf.clear_pager();
+                            // We end history search. We could instead update the search string.
+                            zelf.history_search.reset();
+                        }
                     }
                 }
                 rls.last_cmd = None;
@@ -1989,9 +1989,14 @@ impl ReaderData {
             {
                 // The cursor is at the beginning and nothing is accumulated, so skip this character.
                 continue;
-            } else {
-                accumulated_chars.push(evt.get_char());
             }
+
+            let chord = evt.get_chord().unwrap();
+            if let Some(c) = chord.underlying_codepoint() {
+                accumulated_chars.push(c);
+            } else {
+                continue;
+            };
 
             if last_exec_count != self.exec_count() {
                 last_exec_count = self.exec_count();
@@ -2307,6 +2312,7 @@ impl ReaderData {
                 self.parser()
                     .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
                 self.exit_loop_requested = true;
+                restore_terminal(); // TODO
                 check_exit_loop_maybe_warning(Some(self));
             }
             rl::DeleteOrExit | rl::DeleteChar => {
@@ -2320,6 +2326,7 @@ impl ReaderData {
                     self.parser()
                         .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
                     self.exit_loop_requested = true;
+                    restore_terminal(); // TODO
                     check_exit_loop_maybe_warning(Some(self));
                 }
             }

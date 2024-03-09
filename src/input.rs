@@ -1,11 +1,13 @@
-use crate::common::{get_by_sorted_name, shell_modes, str2wcstring, Named};
+use crate::common::{escape, get_by_sorted_name, shell_modes, str2wcstring, Named};
 use crate::curses;
 use crate::env::{EnvMode, Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
-    CharEvent, CharEventType, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    parse_key, CharEvent, CharEventType, CharInputStyle, InputEventQueuer, ReadlineCmd,
+    R_END_INPUT_FUNCTIONS,
 };
+use crate::key::{self, canonicalize, control, Chord};
 use crate::parser::Parser;
 use crate::proc::job_reap;
 use crate::reader::{
@@ -33,7 +35,7 @@ pub const NUL_MAPPING_NAME: &wstr = L!("nul");
 
 #[derive(Debug, Clone)]
 pub struct InputMappingName {
-    pub seq: WString,
+    pub seq: Vec<Chord>,
     pub mode: WString,
 }
 
@@ -41,7 +43,7 @@ pub struct InputMappingName {
 #[derive(Debug, Clone)]
 struct InputMapping {
     /// Character sequence which generates this event.
-    seq: WString,
+    seq: Vec<Chord>,
     /// Commands that should be evaluated by this mapping.
     commands: Vec<WString>,
     /// We wish to preserve the user-specified order. This is just an incrementing value.
@@ -50,15 +52,18 @@ struct InputMapping {
     mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
     sets_mode: Option<WString>,
+    /// Whether this sequence was specified via its terminfo name.
+    is_terminfo_key: bool,
 }
 
 impl InputMapping {
     /// Create a new mapping.
     fn new(
-        seq: WString,
+        seq: Vec<Chord>,
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
+        is_terminfo_key: bool,
     ) -> InputMapping {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
@@ -72,6 +77,7 @@ impl InputMapping {
             specification_order,
             mode,
             sets_mode,
+            is_terminfo_key,
         }
     }
 
@@ -283,10 +289,11 @@ impl InputMappingSet {
     /// Adds an input mapping.
     pub fn add(
         &mut self,
-        sequence: WString,
+        sequence: Vec<Chord>,
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
+        is_terminfo_key: bool,
         user: bool,
     ) {
         // Clear cached mappings.
@@ -308,20 +315,28 @@ impl InputMappingSet {
         }
 
         // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode);
+        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, is_terminfo_key);
         input_mapping_insert_sorted(ml, new_mapping);
     }
 
     // Like add(), but takes a single command.
     pub fn add1(
         &mut self,
-        sequence: WString,
+        sequence: Vec<Chord>,
         command: WString,
         mode: WString,
         sets_mode: Option<WString>,
+        is_terminfo_key: bool,
         user: bool,
     ) {
-        self.add(sequence, vec![command], mode, sets_mode, user);
+        self.add(
+            sequence,
+            vec![command],
+            mode,
+            sets_mode,
+            user,
+            is_terminfo_key,
+        );
     }
 }
 
@@ -339,35 +354,32 @@ pub fn init_input() {
     // If we have no keybindings, add a few simple defaults.
     if input_mapping.preset_mapping_list.is_empty() {
         // Helper for adding.
-        let mut add = |seq: &str, cmd: &str| {
+        let mut add = |chord: Vec<Chord>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(seq.into(), cmd.into(), mode, sets_mode, false);
+            input_mapping.add1(chord, cmd.into(), mode, sets_mode, false, false);
         };
 
-        add("", "self-insert");
-        add("\n", "execute");
-        add("\r", "execute");
-        add("\t", "complete");
-        add("\x03", "cancel-commandline");
-        add("\x04", "exit");
-        add("\x05", "bind");
-        // ctrl-s
-        add("\x13", "pager-toggle-search");
-        // ctrl-u
-        add("\x15", "backward-kill-line");
-        // del/backspace
-        add("\x7f", "backward-delete-char");
+        // TODO
+        add(vec![], "self-insert");
+        add(vec![Chord::from(key::Return)], "execute");
+        add(vec![Chord::from(key::Tab)], "complete");
+        add(vec![control('c')], "cancel-commandline");
+        add(vec![control('d')], "exit");
+        add(vec![control('e')], "bind");
+        add(vec![control('s')], "pager-toggle-search");
+        add(vec![control('u')], "backward-kill-line");
+        add(vec![Chord::from(key::Backspace)], "backward-delete-char");
         // Arrows - can't have functions, so *-or-search isn't available.
-        add("\x1B[A", "up-line");
-        add("\x1B[B", "down-line");
-        add("\x1B[C", "forward-char");
-        add("\x1B[D", "backward-char");
-        // emacs-style ctrl-p/n/b/f
-        add("\x10", "up-line");
-        add("\x0e", "down-line");
-        add("\x02", "backward-char");
-        add("\x06", "forward-char");
+        add(vec![Chord::from(key::Up)], "up-line");
+        add(vec![Chord::from(key::Down)], "down-line");
+        add(vec![Chord::from(key::Right)], "forward-char");
+        add(vec![Chord::from(key::Left)], "backward-char");
+        // Emacs style
+        add(vec![control('p')], "up-line");
+        add(vec![control('n')], "down-line");
+        add(vec![control('b')], "backward-char");
+        add(vec![control('f')], "forward-char");
     }
 }
 
@@ -379,6 +391,7 @@ pub type CommandHandler<'a> = dyn FnMut(&[WString]) + 'a;
 pub struct Inputter {
     in_fd: RawFd,
     queue: VecDeque<CharEvent>,
+    paste_buffer: Option<Vec<u8>>,
     // We need a parser to evaluate bindings.
     parser: Rc<Parser>,
     input_function_args: Vec<char>,
@@ -426,7 +439,9 @@ impl InputEventQueuer for Inputter {
         if reader_reading_interrupted() != 0 {
             let vintr = shell_modes().c_cc[libc::VINTR];
             if vintr != 0 {
-                self.push_front(CharEvent::from_char(vintr.into()));
+                self.push_front(CharEvent::from_chord(
+                    parse_key(vintr).unwrap_or(Chord::from(char::from(vintr))),
+                ));
             }
             return;
         }
@@ -436,6 +451,23 @@ impl InputEventQueuer for Inputter {
     fn uvar_change_notified(&mut self) {
         self.parser.sync_uvars_and_fire(true /* always */);
     }
+
+    fn paste_is_buffering(&self) -> bool {
+        self.paste_buffer.is_some()
+    }
+    fn paste_start_buffering(&mut self) {
+        self.paste_buffer = Some(vec![]);
+    }
+    fn paste_commit(&mut self) {
+        let buffer = self.paste_buffer.take().unwrap();
+        self.push_front(CharEvent::from_command(sprintf!(
+            "fish_clipboard_paste %s",
+            escape(&str2wcstring(&buffer))
+        )));
+    }
+    fn paste_push_char(&mut self, b: u8) {
+        self.paste_buffer.as_mut().unwrap().push(b)
+    }
 }
 
 impl Inputter {
@@ -444,6 +476,7 @@ impl Inputter {
         Inputter {
             in_fd,
             queue: VecDeque::new(),
+            paste_buffer: None,
             parser,
             input_function_args: Vec::new(),
             function_status: false,
@@ -473,9 +506,12 @@ impl Inputter {
             let arg: char;
             loop {
                 let evt = self.readch();
-                if evt.is_char() {
-                    arg = evt.get_char();
-                    break;
+                if let Some(chord) = evt.get_chord() {
+                    if let Some(c) = chord.underlying_codepoint() {
+                        // TODO forward the whole chord
+                        arg = c;
+                        break;
+                    }
                 }
                 skipped.push(evt);
             }
@@ -505,7 +541,17 @@ impl Inputter {
             let evt = match input_function_get_code(cmd) {
                 Some(code) => {
                     self.function_push_args(code);
-                    CharEvent::from_readline_seq(code, m.seq.clone())
+                    // At this point, the sequence is only used for reinserting the keys into
+                    // the event queue for self-insert. Modifiers make no sense here so drop
+                    // them silently.
+                    CharEvent::from_readline_seq(
+                        code,
+                        m.seq
+                            .iter()
+                            .filter(|chord| chord.modifiers.is_none())
+                            .map(|chord| chord.codepoint)
+                            .collect(),
+                    )
                 }
                 None => CharEvent::from_command(cmd.clone()),
             };
@@ -544,6 +590,8 @@ struct EventQueuePeeker<'q> {
 
     /// The current index. This never exceeds peeked.len().
     idx: usize,
+    /// The current index within a single chord.
+    subidx: usize,
 
     /// The queue from which to read more events.
     event_queue: &'q mut Inputter,
@@ -555,6 +603,7 @@ impl EventQueuePeeker<'_> {
             peeked: Vec::new(),
             had_timeout: false,
             idx: 0,
+            subidx: 0,
             event_queue,
         }
     }
@@ -571,12 +620,13 @@ impl EventQueuePeeker<'_> {
         }
         let res = self.peeked[self.idx].clone();
         self.idx += 1;
+        self.subidx = 0;
         res
     }
 
     /// Check if the next event is the given character. This advances the index on success only.
     /// If \p escaped is set, then return false if this (or any other) character had a timeout.
-    fn next_is_char(&mut self, c: char, escaped: bool) -> bool {
+    fn next_is_char(&mut self, chord: Chord, escaped: bool) -> bool {
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -606,16 +656,62 @@ impl EventQueuePeeker<'_> {
         }
         // Now we have peeked far enough; check the event.
         // If it matches the char, then increment the index.
-        if self.peeked[self.idx].maybe_char() == Some(c) {
+        let evt = &self.peeked[self.idx];
+        let Some(actual_chord) = evt.get_chord() else {
+            return false;
+        };
+        if actual_chord == chord {
             self.idx += 1;
+            self.subidx = 0;
             return true;
         }
+        if !evt.seq.is_empty() {
+            let actual_seq = evt.seq.as_char_slice();
+            let seq_char = actual_seq[self.subidx];
+            if canonicalize(Chord::from(seq_char)).unwrap() == chord {
+                self.subidx += 1;
+                if self.subidx == evt.seq.len() {
+                    self.idx += 1;
+                    self.subidx = 0;
+                }
+                return true;
+            }
+            FLOG!(
+                reader,
+                "match mapping's",
+                chord,
+                format!(
+                    "against actual char {}, next {} aka {}",
+                    u32::from(seq_char),
+                    actual_seq
+                        .get(self.subidx + 1)
+                        .cloned()
+                        .map(u32::from)
+                        .unwrap_or(0),
+                    actual_seq
+                        .get(self.subidx + 1)
+                        .map(|c| canonicalize(Chord::from(*c)).unwrap())
+                        .unwrap_or(Chord::from('\0'))
+                ),
+            );
+            if chord.modifiers.alt
+                && !chord.modifiers.control
+                && !chord.modifiers.shift
+                && seq_char == '\x1b'
+                && actual_seq
+                    .get(self.subidx + 1)
+                    .map(|&c| canonicalize(Chord::from(c)).unwrap())
+                    == Some(chord)
+            {
+                self.subidx += 2;
+                if self.subidx == evt.seq.len() {
+                    self.idx += 1;
+                    self.subidx = 0;
+                }
+                return true;
+            }
+        }
         false
-    }
-
-    /// \return the current index.
-    fn len(&self) -> usize {
-        self.idx
     }
 
     /// Consume all events up to the current index.
@@ -625,6 +721,7 @@ impl EventQueuePeeker<'_> {
         self.event_queue.insert_front(self.peeked.drain(self.idx..));
         self.peeked.clear();
         self.idx = 0;
+        self.subidx = 0;
     }
 
     /// Test if any of our peeked events are readline or check_exit.
@@ -637,82 +734,35 @@ impl EventQueuePeeker<'_> {
     /// Reset our index back to 0.
     fn restart(&mut self) {
         self.idx = 0;
+        self.subidx = 0;
     }
 }
 
 impl Drop for EventQueuePeeker<'_> {
     fn drop(&mut self) {
         assert!(
-            self.idx == 0,
+            self.idx == 0 && self.subidx == 0,
             "Events left on the queue - missing restart or consume?",
         );
         self.event_queue.insert_front(self.peeked.drain(self.idx..));
     }
 }
 
-/// Try reading a mouse-tracking CSI sequence, using the given \p peeker.
-/// Events are left on the peeker and the caller must restart or consume it.
-/// \return true if matched, false if not.
-fn have_mouse_tracking_csi(peeker: &mut EventQueuePeeker) -> bool {
-    // Maximum length of any CSI is NPAR (which is nominally 16), although this does not account for
-    // user input intermixed with pseudo input generated by the tty emulator.
-    // Check for the CSI first.
-    if !peeker.next_is_char('\x1b', false) || !peeker.next_is_char('[', true /* escaped */) {
-        return false;
-    }
-
-    let mut next = peeker.next().maybe_char();
-    let length;
-    if next == Some('M') {
-        // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6 chars
-        // (although in mode 1005, the characters may be unicode and not necessarily just one byte
-        // long) reporting the button that was clicked and its location.
-        length = 6;
-    } else if next == Some('<') {
-        // Extended (SGR/1006) mouse reporting mode, with semicolon-separated parameters for button
-        // code, Px, and Py, ending with 'M' for button press or 'm' for button release.
-        loop {
-            next = peeker.next().maybe_char();
-            if next == Some('M') || next == Some('m') {
-                // However much we've read, we've consumed the CSI in its entirety.
-                length = peeker.len();
-                break;
-            }
-            if peeker.len() >= 16 {
-                // This is likely a malformed mouse-reporting CSI but we can't do anything about it.
-                return false;
-            }
-        }
-    } else if next == Some('t') {
-        // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
-        length = 5;
-    } else if next == Some('T') {
-        // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
-        length = 9;
-    } else {
-        return false;
-    }
-
-    // Consume however many characters it takes to prevent the mouse tracking sequence from reaching
-    // the prompt, dependent on the class of mouse reporting as detected above.
-    while peeker.len() < length {
-        let _ = peeker.next();
-    }
-    true
-}
-
 /// \return true if a given \p peeker matches a given sequence of char events given by \p str.
-fn try_peek_sequence(peeker: &mut EventQueuePeeker, str: &wstr) -> bool {
-    assert!(!str.is_empty(), "Empty string passed to try_peek_sequence");
-    let mut prev = '\0';
-    for c in str.chars() {
+fn try_peek_sequence(peeker: &mut EventQueuePeeker, seq: &[Chord]) -> bool {
+    assert!(
+        !seq.is_empty(),
+        "Empty sequence passed to try_peek_sequence"
+    );
+    let mut prev = Chord::from('\0');
+    for chord in seq {
         // If we just read an escape, we need to add a timeout for the next char,
         // to distinguish between the actual escape key and an "alt"-modifier.
-        let escaped = prev == '\x1B';
-        if !peeker.next_is_char(c, escaped) {
+        let escaped = prev == Chord::from('\x1B');
+        if !peeker.next_is_char(*chord, escaped) {
             return false;
         }
-        prev = c;
+        prev = *chord;
     }
     true
 }
@@ -744,7 +794,7 @@ impl Inputter {
             if try_peek_sequence(peeker, &m.seq) {
                 // A binding for just escape should also be deferred
                 // so escape sequences take precedence.
-                if m.seq == "\x1B" {
+                if m.seq == [Chord::from('\x1B')] {
                     if escape.is_none() {
                         escape = Some(m);
                     }
@@ -776,27 +826,12 @@ impl Inputter {
     fn mapping_execute_matching_or_generic(&mut self) {
         let vars = self.parser.vars_ref();
         let mut peeker = EventQueuePeeker::new(self);
-        // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
-        // taking over.
-        if have_mouse_tracking_csi(&mut peeker) {
-            // fish recognizes but does not actually support mouse reporting. We never turn it on, and
-            // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
-            // it off before exiting. We turn it off here to avoid wasting resources.
-            //
-            // Since this is only called when we detect an incoming mouse reporting payload, we know the
-            // terminal emulator supports mouse reporting, so no terminfo checks.
-            FLOG!(reader, "Disabling mouse tracking");
-
-            // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
-            // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
-            peeker.consume();
-            self.push_front(CharEvent::from_readline(ReadlineCmd::DisableMouseTracking));
-            return;
-        }
-        peeker.restart();
-
         // Check for ordinary mappings.
         if let Some(mapping) = Self::find_mapping(&*vars, &mut peeker) {
+            FLOG!(
+                reader,
+                format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
+            );
             peeker.consume();
             self.mapping_execute(&mapping);
             return;
@@ -902,7 +937,17 @@ impl Inputter {
                     // Allow the reader to check for exit conditions.
                     return evt;
                 }
-                CharEventType::Char(_) => {
+                CharEventType::Char(chord) => {
+                    FLOG!(
+                        reader,
+                        "Read char ",
+                        chord,
+                        format!(
+                            " -- {:?} -- {:?}",
+                            chord,
+                            evt.seq.chars().map(u32::from).collect::<Vec<_>>()
+                        )
+                    );
                     self.push_front(evt);
                     self.mapping_execute_matching_or_generic();
                 }
@@ -946,7 +991,7 @@ impl InputMappingSet {
     }
 
     /// Erase binding for specified key sequence.
-    pub fn erase(&mut self, sequence: &wstr, mode: &wstr, user: bool) -> bool {
+    pub fn erase(&mut self, sequence: &[Chord], mode: &wstr, user: bool) -> bool {
         // Clear cached mappings.
         self.all_mappings_cache = RefCell::new(None);
 
@@ -970,11 +1015,12 @@ impl InputMappingSet {
     /// it exists, false if not.
     pub fn get<'a>(
         &'a self,
-        sequence: &wstr,
+        sequence: &[Chord],
         mode: &wstr,
         out_cmds: &mut &'a [WString],
         user: bool,
         out_sets_mode: &mut Option<&'a wstr>,
+        out_is_terminfo_key: &mut bool,
     ) -> bool {
         let ml = if user {
             &self.mapping_list
@@ -985,6 +1031,7 @@ impl InputMappingSet {
             if m.seq == sequence && m.mode == mode {
                 *out_cmds = &m.commands;
                 *out_sets_mode = m.sets_mode.as_deref();
+                *out_is_terminfo_key = m.is_terminfo_key;
                 return true;
             }
         }

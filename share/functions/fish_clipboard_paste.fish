@@ -1,6 +1,8 @@
 function fish_clipboard_paste
     set -l data
-    if type -q pbpaste
+    if set -q argv[1]
+        set data $argv[1]
+    else if type -q pbpaste
         set data (pbpaste 2>/dev/null | string collect -N)
     else if set -q WAYLAND_DISPLAY; and type -q wl-paste
         set data (wl-paste -n 2>/dev/null | string collect -N)

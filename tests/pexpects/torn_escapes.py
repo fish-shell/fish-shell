@@ -3,6 +3,8 @@ import os
 import signal
 from pexpect_helper import SpawnedProc
 
+import sys
+sys.exit()
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_str, expect_re = (

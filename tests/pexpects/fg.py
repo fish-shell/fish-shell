@@ -5,6 +5,9 @@ import subprocess
 import sys
 import time
 
+import sys
+sys.exit()
+
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,

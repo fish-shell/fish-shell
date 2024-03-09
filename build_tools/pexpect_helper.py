@@ -29,12 +29,14 @@ TIMEOUT_SECS = 5
 
 UNEXPECTED_SUCCESS = object()
 
-
 def get_prompt_re(counter):
     """Return a regular expression for matching a with a given prompt counter."""
     return re.compile(
         r"""(?:\r\n?|^)   # beginning of line
             (?:\x1b[\d\[KB(m]*)* # optional colors
+            (?:\x1b[>4;1m) # CSI u
+            (?:\x1b[>5u) # shifted key codes
+            (?:\x1b=) # shifted key codes
             (?:\[.\]\ )?  # optional vi mode prompt
          """
         + (r"prompt\ %d>" % counter)  # prompt with counter

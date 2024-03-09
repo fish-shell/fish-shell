@@ -59,3 +59,24 @@ complete -c bind -l user -d 'Operate on user bindings'
 
 complete -c bind -n __fish_bind_test1 -a '(bind --key-names)' -d 'Key name' -x
 complete -c bind -n __fish_bind_test2 -a '(bind --function-names)' -d 'Function name' -x
+
+function __fish_bind_complete
+    argparse M/mode= m/sets-mode= preset user s/silent k/key= K/key-names \
+        a/all function-names list-modes e/erase -- (commandline -xpc)[2..] 2>/dev/null
+    or return 1
+    set -l token (commandline -ct)
+    if test (count $argv) = 0
+        set -l key_names plus minus lbrack rbrack backspace del \
+            esc ret up down left right pageup pagedown home end \
+            ins tab space focus_in focus_out F(seq 12)
+        set -l modifiers c- a- s-
+        printf '[c-\tCtrl modifier…\n'
+        printf '[a-\tAlt modifier…\n'
+        printf '[s-\tShift modifier…\n'
+        printf '[%s]\tNamed key\n' $key_names
+        if string match -rq -- '.*\[([cas]-)*' $token
+            printf '%s]\tNamed key\n' $token$key_names
+        end
+    end
+end
+complete -c bind -k -a '(__fish_bind_complete)' -f

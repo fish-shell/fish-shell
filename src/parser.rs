@@ -15,7 +15,7 @@ use crate::expand::{
 use crate::fds::open_cloexec;
 use crate::flog::FLOGF;
 use crate::function;
-use crate::global_safety::{RelaxedAtomicBool, SharedFromThis, SharedFromThisBase};
+use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -42,7 +42,7 @@ use std::ffi::{CStr, OsStr};
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
 use std::pin::Pin;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use std::sync::{
     atomic::{AtomicIsize, AtomicU64, Ordering},
     Arc,
@@ -295,7 +295,7 @@ pub type BlockId = usize;
 pub type ParserRef = Rc<Parser>;
 
 pub struct Parser {
-    base: SharedFromThisBase<Parser>,
+    this: Weak<Self>,
 
     /// The current execution context.
     execution_context: RefCell<Option<ParseExecutionContext>>,
@@ -335,17 +335,11 @@ pub struct Parser {
     pub global_event_blocks: AtomicU64,
 }
 
-impl SharedFromThis<Parser> for Parser {
-    fn get_base(&self) -> &SharedFromThisBase<Parser> {
-        &self.base
-    }
-}
-
 impl Parser {
     /// Create a parser
     pub fn new(variables: EnvStackRef, is_principal: bool) -> ParserRef {
-        let result = Rc::new(Self {
-            base: SharedFromThisBase::new(),
+        let result = Rc::new_cyclic(|this: &Weak<Self>| Self {
+            this: Weak::clone(this),
             execution_context: RefCell::default(),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
@@ -372,7 +366,6 @@ impl Parser {
             }
         }
 
-        result.base.initialize(&result);
         result
     }
 
@@ -1075,7 +1068,7 @@ impl Parser {
 
     /// \return a shared pointer reference to this parser.
     pub fn shared(&self) -> ParserRef {
-        self.shared_from_this()
+        self.this.upgrade().unwrap()
     }
 
     /// \return the operation context for this parser.

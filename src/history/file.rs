@@ -340,9 +340,7 @@ fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
 fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (advance, line) = read_line(data);
     let line = trim_start(line);
-    let Some((key, value)) = extract_prefix_and_unescape_yaml(line) else {
-        return None;
-    };
+    let (key, value) = extract_prefix_and_unescape_yaml(line)?;
 
     if key != b"- cmd" {
         return None;
@@ -432,17 +430,11 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
 /// We know the string contains a newline, so stop when we reach it.
 fn parse_timestamp(s: &[u8]) -> Option<SystemTime> {
     let s = trim_start(s);
-
-    let Some(s) = s.strip_prefix(b"when:") else {
-        return None;
-    };
-
+    let s = s.strip_prefix(b"when:")?;
     let s = trim_start(s);
 
-    std::str::from_utf8(s)
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .map(time_from_seconds)
+    let t = std::str::from_utf8(s).ok()?.parse().ok()?;
+    Some(time_from_seconds(t))
 }
 
 fn complete_lines(s: &[u8]) -> impl Iterator<Item = &[u8]> {

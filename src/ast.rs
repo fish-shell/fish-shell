@@ -2288,9 +2288,7 @@ impl<'a> Traversal<'a> {
 impl<'a> Iterator for Traversal<'a> {
     type Item = &'a dyn Node;
     fn next(&mut self) -> Option<&'a dyn Node> {
-        let Some(node) = self.stack.pop() else {
-            return None;
-        };
+        let node = self.stack.pop()?;
         // We want to visit in reverse order so the first child ends up on top of the stack.
         node.accept(self, true /* reverse */);
         Some(node)

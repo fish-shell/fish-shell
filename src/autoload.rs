@@ -140,9 +140,7 @@ impl Autoload {
         }
 
         // Do we have an entry to load?
-        let Some(file) = self.cache.check(cmd, false) else {
-            return None;
-        };
+        let file = self.cache.check(cmd, false)?;
 
         // Is this file the same as what we previously autoloaded?
         if let Some(loaded_file) = self.autoloaded_files.get(cmd) {

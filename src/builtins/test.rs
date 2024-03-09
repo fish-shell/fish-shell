@@ -545,9 +545,7 @@ mod test_expressions {
             }
 
             // Parse a subexpression.
-            let Some(subexpr) = self.parse_expression(start + 1, end) else {
-                return None;
-            };
+            let subexpr = self.parse_expression(start + 1, end)?;
 
             // Parse a close paren.
             let close_index = subexpr.range().end;

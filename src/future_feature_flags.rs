@@ -4,6 +4,9 @@ use crate::wchar::prelude::*;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 
+#[cfg(test)]
+use std::cell::RefCell;
+
 /// The list of flags.
 #[repr(u8)]
 #[derive(Clone, Copy)]
@@ -97,7 +100,7 @@ pub const METADATA: &[FeatureMetadata] = &[
 
 thread_local!(
     #[cfg(test)]
-    static LOCAL_FEATURES: std::cell::RefCell<Option<Features>> = std::cell::RefCell::new(None);
+    static LOCAL_FEATURES: RefCell<Option<Features>> = const { RefCell::new(None) };
 );
 
 /// The singleton shared feature set.

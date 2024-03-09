@@ -8,7 +8,6 @@ use crate::parse_constants::{
 use crate::parse_util::{parse_util_detect_errors, BOOL_AFTER_BACKGROUND_ERROR_MSG};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use crate::wchar_ext::WExt;
 
 #[test]
 #[serial]

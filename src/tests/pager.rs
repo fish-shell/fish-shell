@@ -4,7 +4,6 @@ use crate::pager::{Pager, SelectionMotion};
 use crate::termsize::Termsize;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use crate::wchar_ext::WExt;
 use crate::wcstringutil::StringFuzzyMatch;
 
 #[test]

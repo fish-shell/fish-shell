@@ -197,10 +197,7 @@ where
 
 #[cfg(test)]
 mod test {
-    #![allow(overflowing_literals)]
-
     use super::{wcstod, Error};
-    use std::f64;
 
     #[test]
     #[allow(clippy::all)]

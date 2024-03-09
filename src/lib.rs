@@ -3,6 +3,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
 #![allow(unstable_name_collisions)]
+#![allow(unknown_lints)] // prevent stable from complaining about nightly-only lints
 #![allow(clippy::bool_assert_comparison)]
 #![allow(clippy::box_default)]
 #![allow(clippy::collapsible_if)]

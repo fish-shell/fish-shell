@@ -49,7 +49,8 @@ mod test_expressions {
             Bang    // "!", inverts sense
         }
 
-        Filetype(FiletypeToken) {
+        // Unary, based on stat()
+        FileStat(StatToken) {
             b // "-b", for block special files
             c // "-c", for character special files
             d // "-d", for directories
@@ -57,40 +58,40 @@ mod test_expressions {
             f // "-f", for for regular files
             G // "-G", for check effective group id
             g // "-g", for set-group-id
-            h // "-h", for symbolic links
             k // "-k", for sticky bit
-            L // "-L", same as -h
             O // "-O", for check effective user id
             p // "-p", for FIFO
             S // "-S", socket
-        }
-
-        Filesize(FilesizeToken) {
             s // "-s", size greater than zero
-        }
-
-        Filedesc(FiledescToken) {
-            t // "-t", whether the fd is associated with a terminal
-        }
-
-        Fileperm(FilepermToken) {
-            r // "-r", read permission
             u // "-u", whether file is setuid
+        }
+
+        // Unary, based on access()
+        FilePerm(FilePermission) {
+            r // "-r", read permission
             w // "-w", whether file write permission is allowed
             x // "-x", whether file execute/search is allowed
         }
 
-        String(StringToken) {
-            n         // "-n", non-empty string
-            z         // "-z", true if length of string is 0
-            Equal     // "=", true if strings are identical
-            NotEqual  // "!=", true if strings are not identical
+        // Unary, miscellaneous
+        FileType(FileTypeToken) {
+            h // "-h", for symbolic links
+            L // "-L", same as -h
+            t // "-t", whether the fd is associated with a terminal
         }
 
-        File(FileToken) {
+        // Binary, based on inode + more distinguishing info (see FileId struct)
+        FileId(FileComparison) {
             Newer // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
             Older // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
             Same  // f1 -ef f2, true if f1 and f2 exist and refer to same file
+        }
+
+        String(StringComparison) {
+            n        // "-n", non-empty string
+            z        // "-z", true if length of string is 0
+            Equal    // "=", true if strings are identical
+            NotEqual // "!=", true if strings are not identical
         }
 
         Number(NumberComparison) {
@@ -181,32 +182,32 @@ mod test_expressions {
         let pairs = [
             (L!(""), TokenInfo::new(Token::Unknown, 0)),
             (L!("!"), TokenInfo::new(Token::Bang, 0)),
-            (L!("-b"), TokenInfo::new(FiletypeToken::b, UNARY_PRIMARY)),
-            (L!("-c"), TokenInfo::new(FiletypeToken::c, UNARY_PRIMARY)),
-            (L!("-d"), TokenInfo::new(FiletypeToken::d, UNARY_PRIMARY)),
-            (L!("-e"), TokenInfo::new(FiletypeToken::e, UNARY_PRIMARY)),
-            (L!("-f"), TokenInfo::new(FiletypeToken::f, UNARY_PRIMARY)),
-            (L!("-G"), TokenInfo::new(FiletypeToken::G, UNARY_PRIMARY)),
-            (L!("-g"), TokenInfo::new(FiletypeToken::g, UNARY_PRIMARY)),
-            (L!("-h"), TokenInfo::new(FiletypeToken::h, UNARY_PRIMARY)),
-            (L!("-k"), TokenInfo::new(FiletypeToken::k, UNARY_PRIMARY)),
-            (L!("-L"), TokenInfo::new(FiletypeToken::L, UNARY_PRIMARY)),
-            (L!("-O"), TokenInfo::new(FiletypeToken::O, UNARY_PRIMARY)),
-            (L!("-p"), TokenInfo::new(FiletypeToken::p, UNARY_PRIMARY)),
-            (L!("-S"), TokenInfo::new(FiletypeToken::S, UNARY_PRIMARY)),
-            (L!("-s"), TokenInfo::new(FilesizeToken::s, UNARY_PRIMARY)),
-            (L!("-t"), TokenInfo::new(FiledescToken::t, UNARY_PRIMARY)),
-            (L!("-r"), TokenInfo::new(FilepermToken::r, UNARY_PRIMARY)),
-            (L!("-u"), TokenInfo::new(FilepermToken::u, UNARY_PRIMARY)),
-            (L!("-w"), TokenInfo::new(FilepermToken::w, UNARY_PRIMARY)),
-            (L!("-x"), TokenInfo::new(FilepermToken::x, UNARY_PRIMARY)),
-            (L!("-n"), TokenInfo::new(StringToken::n, UNARY_PRIMARY)),
-            (L!("-z"), TokenInfo::new(StringToken::z, UNARY_PRIMARY)),
-            (L!("="), TokenInfo::new(StringToken::Equal, BINARY_PRIMARY)),
-            (L!("!="), TokenInfo::new(StringToken::NotEqual, BINARY_PRIMARY)),
-            (L!("-nt"), TokenInfo::new(FileToken::Newer, BINARY_PRIMARY)),
-            (L!("-ot"), TokenInfo::new(FileToken::Older, BINARY_PRIMARY)),
-            (L!("-ef"), TokenInfo::new(FileToken::Same, BINARY_PRIMARY)),
+            (L!("-b"), TokenInfo::new(StatToken::b, UNARY_PRIMARY)),
+            (L!("-c"), TokenInfo::new(StatToken::c, UNARY_PRIMARY)),
+            (L!("-d"), TokenInfo::new(StatToken::d, UNARY_PRIMARY)),
+            (L!("-e"), TokenInfo::new(StatToken::e, UNARY_PRIMARY)),
+            (L!("-f"), TokenInfo::new(StatToken::f, UNARY_PRIMARY)),
+            (L!("-G"), TokenInfo::new(StatToken::G, UNARY_PRIMARY)),
+            (L!("-g"), TokenInfo::new(StatToken::g, UNARY_PRIMARY)),
+            (L!("-h"), TokenInfo::new(FileTypeToken::h, UNARY_PRIMARY)),
+            (L!("-k"), TokenInfo::new(StatToken::k, UNARY_PRIMARY)),
+            (L!("-L"), TokenInfo::new(FileTypeToken::L, UNARY_PRIMARY)),
+            (L!("-O"), TokenInfo::new(StatToken::O, UNARY_PRIMARY)),
+            (L!("-p"), TokenInfo::new(StatToken::p, UNARY_PRIMARY)),
+            (L!("-S"), TokenInfo::new(StatToken::S, UNARY_PRIMARY)),
+            (L!("-s"), TokenInfo::new(StatToken::s, UNARY_PRIMARY)),
+            (L!("-t"), TokenInfo::new(FileTypeToken::t, UNARY_PRIMARY)),
+            (L!("-r"), TokenInfo::new(FilePermission::r, UNARY_PRIMARY)),
+            (L!("-u"), TokenInfo::new(StatToken::u, UNARY_PRIMARY)),
+            (L!("-w"), TokenInfo::new(FilePermission::w, UNARY_PRIMARY)),
+            (L!("-x"), TokenInfo::new(FilePermission::x, UNARY_PRIMARY)),
+            (L!("-n"), TokenInfo::new(StringComparison::n, UNARY_PRIMARY)),
+            (L!("-z"), TokenInfo::new(StringComparison::z, UNARY_PRIMARY)),
+            (L!("="), TokenInfo::new(StringComparison::Equal, BINARY_PRIMARY)),
+            (L!("!="), TokenInfo::new(StringComparison::NotEqual, BINARY_PRIMARY)),
+            (L!("-nt"), TokenInfo::new(FileComparison::Newer, BINARY_PRIMARY)),
+            (L!("-ot"), TokenInfo::new(FileComparison::Older, BINARY_PRIMARY)),
+            (L!("-ef"), TokenInfo::new(FileComparison::Same, BINARY_PRIMARY)),
             (L!("-eq"), TokenInfo::new(NumberComparison::Equal, BINARY_PRIMARY)),
             (L!("-ne"), TokenInfo::new(NumberComparison::NotEqual, BINARY_PRIMARY)),
             (L!("-gt"), TokenInfo::new(NumberComparison::Greater, BINARY_PRIMARY)),
@@ -539,7 +540,7 @@ mod test_expressions {
             // type.
             return UnaryPrimary {
                 arg: self.arg(start).to_owned(),
-                token: Token::String(StringToken::n),
+                token: Token::String(StringComparison::n),
                 range: start..start + 1,
             }
             .into_some_box();
@@ -862,24 +863,24 @@ mod test_expressions {
         errors: &mut Vec<WString>,
     ) -> bool {
         match token {
-            Token::String(StringToken::Equal) => left == right,
-            Token::String(StringToken::NotEqual) => left != right,
-            Token::File(comparer) => {
+            Token::String(StringComparison::Equal) => left == right,
+            Token::String(StringComparison::NotEqual) => left != right,
+            Token::FileId(comparison) => {
                 let left = file_id_for_path(left);
                 let right = file_id_for_path(right);
-                match comparer {
-                    FileToken::Newer => right.older_than(&left),
-                    FileToken::Older => left.older_than(&right),
-                    FileToken::Same => left == right,
+                match comparison {
+                    FileComparison::Newer => right.older_than(&left),
+                    FileComparison::Older => left.older_than(&right),
+                    FileComparison::Same => left == right,
                 }
             }
-            Token::Number(comparer) => {
+            Token::Number(comparison) => {
                 let mut ln = Number::default();
                 let mut rn = Number::default();
                 if !parse_number(left, &mut ln, errors) || !parse_number(right, &mut rn, errors) {
                     return false;
                 }
-                match comparer {
+                match comparison {
                     NumberComparison::Equal => ln == rn,
                     NumberComparison::NotEqual => ln != rn,
                     NumberComparison::Greater => ln > rn,
@@ -901,74 +902,76 @@ mod test_expressions {
         streams: &mut IoStreams,
         errors: &mut Vec<WString>,
     ) -> bool {
-        const S_ISGID: u32 = 0o2000;
-        const S_ISVTX: u32 = 0o1000;
-
         match token {
-            Token::Filetype(filetype_token) => {
-                if let FiletypeToken::h | FiletypeToken::L = filetype_token {
-                    // "-h", for symbolic links
-                    // "-L", same as -h
-                    return lwstat(arg).is_ok_and(|symlink_md| symlink_md.file_type().is_symlink());
-                }
-
+            #[allow(clippy::unnecessary_cast)] // mode_t is u32 on many platforms, but not all
+            Token::FileStat(stat_token) => {
                 let Ok(md) = wstat(arg) else {
                     return false;
                 };
-                match filetype_token {
+
+                const S_ISUID: u32 = libc::S_ISUID as u32;
+                const S_ISGID: u32 = libc::S_ISGID as u32;
+                const S_ISVTX: u32 = libc::S_ISVTX as u32;
+
+                match stat_token {
                     // "-b", for block special files
-                    FiletypeToken::b => md.file_type().is_block_device(),
+                    StatToken::b => md.file_type().is_block_device(),
                     // "-c", for character special files
-                    FiletypeToken::c => md.file_type().is_char_device(),
+                    StatToken::c => md.file_type().is_char_device(),
                     // "-d", for directories
-                    FiletypeToken::d => md.file_type().is_dir(),
+                    StatToken::d => md.file_type().is_dir(),
                     // "-e", for files that exist
-                    FiletypeToken::e => true,
+                    StatToken::e => true,
                     // "-f", for regular files
-                    FiletypeToken::f => md.file_type().is_file(),
+                    StatToken::f => md.file_type().is_file(),
                     // "-G", for check effective group id
-                    FiletypeToken::G => crate::nix::getegid() == md.gid(),
+                    StatToken::G => md.gid() == crate::nix::getegid(),
                     // "-g", for set-group-id
-                    FiletypeToken::g => md.permissions().mode() & S_ISGID != 0,
+                    StatToken::g => md.permissions().mode() & S_ISGID != 0,
                     // "-k", for sticky bit
-                    FiletypeToken::k => md.permissions().mode() & S_ISVTX != 0,
+                    StatToken::k => md.permissions().mode() & S_ISVTX != 0,
                     // "-O", for check effective user id
-                    FiletypeToken::O => crate::nix::geteuid() == md.uid(),
+                    StatToken::O => md.uid() == crate::nix::geteuid(),
                     // "-p", for FIFO
-                    FiletypeToken::p => md.file_type().is_fifo(),
+                    StatToken::p => md.file_type().is_fifo(),
                     // "-S", socket
-                    FiletypeToken::S => md.file_type().is_socket(),
-                    FiletypeToken::h | FiletypeToken::L => unreachable!(),
-                }
-            }
-            Token::Filesize(FilesizeToken::s) => {
-                // "-s", size greater than zero
-                wstat(arg).is_ok_and(|md| md.len() > 0)
-            }
-            Token::Filedesc(FiledescToken::t) => {
-                // "-t", whether the fd is associated with a terminal
-                let mut num = Number::default();
-                parse_number(arg, &mut num, errors) && num.isatty(streams)
-            }
-            Token::Fileperm(fileperm_token) => {
-                match fileperm_token {
-                    // "-r", read permission
-                    FilepermToken::r => waccess(arg, libc::R_OK) == 0,
-                    // "-w", whether file write permission is allowed
-                    FilepermToken::w => waccess(arg, libc::W_OK) == 0,
-                    // "-x", whether file execute/search is allowed
-                    FilepermToken::x => waccess(arg, libc::X_OK) == 0,
+                    StatToken::S => md.file_type().is_socket(),
+                    // "-s", size greater than zero
+                    StatToken::s => md.len() > 0,
                     // "-u", whether file is setuid
-                    #[allow(clippy::unnecessary_cast)]
-                    FilepermToken::u => wstat(arg)
-                        .is_ok_and(|buf| buf.permissions().mode() & (libc::S_ISUID as u32) != 0),
+                    StatToken::u => md.permissions().mode() & S_ISUID != 0,
                 }
             }
-            Token::String(StringToken::n) => {
+            Token::FileType(file_type) => {
+                match file_type {
+                    // "-h", for symbolic links
+                    // "-L", same as -h
+                    FileTypeToken::h | FileTypeToken::L => {
+                        lwstat(arg).is_ok_and(|md| md.file_type().is_symlink())
+                    }
+                    // "-t", whether the fd is associated with a terminal
+                    FileTypeToken::t => {
+                        let mut num = Number::default();
+                        parse_number(arg, &mut num, errors) && num.isatty(streams)
+                    }
+                }
+            }
+            Token::FilePerm(permission) => {
+                let mode = match permission {
+                    // "-r", read permission
+                    FilePermission::r => libc::R_OK,
+                    // "-w", whether file write permission is allowed
+                    FilePermission::w => libc::W_OK,
+                    // "-x", whether file execute/search is allowed
+                    FilePermission::x => libc::X_OK,
+                };
+                waccess(arg, mode) == 0
+            }
+            Token::String(StringComparison::n) => {
                 // "-n", non-empty string
                 !arg.is_empty()
             }
-            Token::String(StringToken::z) => {
+            Token::String(StringComparison::z) => {
                 // "-z", true if length of string is 0
                 arg.is_empty()
             }

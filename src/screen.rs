@@ -740,6 +740,10 @@ impl Screen {
         self.outp.borrow_mut().tputs_if_some(s)
     }
 
+    fn write_mbs_bytes(&mut self, s: &[u8]) {
+        self.outp.borrow_mut().tputs_bytes(s);
+    }
+
     /// Convert a wide string to a multibyte string and append it to the buffer.
     fn write_str(&mut self, s: &wstr) {
         self.outp.borrow_mut().write_wstr(s);
@@ -832,7 +836,7 @@ impl Screen {
         // Output the left prompt if it has changed.
         if left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
-            zelf.write_mbs_if_some(&term.and_then(|term| term.prompt_start.as_ref()));
+            zelf.write_mbs_bytes(prompt_start);
             let mut start = 0;
             for line_break in left_prompt_layout.line_breaks {
                 zelf.write_str(&left_prompt[start..line_break]);
@@ -1032,7 +1036,7 @@ impl Screen {
                 let Cursor { x, y } = zelf.actual.cursor;
                 zelf.r#move(x - right_prompt_width, y);
                 zelf.write_str(L!("\r"));
-                zelf.write_mbs_if_some(&term.and_then(|term| term.prompt_end.as_ref()));
+                zelf.write_mbs_bytes(prompt_end);
                 zelf.actual.cursor.x = 0;
             }
         }
@@ -1841,4 +1845,21 @@ fn rendered_character(c: char) -> char {
 
 fn wcwidth_rendered(c: char) -> usize {
     usize::try_from(fish_wcwidth(rendered_character(c))).unwrap_or_default()
+}
+
+// OSC 133
+// docs: https://iterm2.com/documentation-escape-codes.html
+// Kitty support: https://sw.kovidgoyal.net/kitty/shell-integration/#notes-for-shell-developers
+
+pub const prompt_start: &[u8] =      b"\x1b133;A\x07";
+pub const prompt_start_ps2: &[u8] =  b"\x1b133;A;k=s\x07"; // todo
+pub const prompt_end: &[u8] =        b"\x1b133;B\x07";
+pub const command_start: &[u8] =     b"\x1b133;C\x07"; // todo
+
+fn write_command_end(output: &mut Outputter, exit_code: i32) { // todo
+    output.begin_buffering();
+    _ = output.write(b"\x1b133;D;");
+    _ = write!(output, "{exit_code}");
+    _ = output.write(b";\x07");
+    output.end_buffering();
 }

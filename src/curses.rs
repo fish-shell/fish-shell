@@ -79,13 +79,6 @@ pub struct Term {
     pub clr_eol: Option<CString>,
     pub clr_eos: Option<CString>,
 
-    // OSC 133  docs: https://iterm2.com/documentation-escape-codes.html
-    pub prompt_start: Option<CString>,  // "\x1b133;A\x07"
-    pub prompt_end: Option<CString>,    // "\x1b133;B\x07"
-    pub command_start: Option<CString>, // "\x1b133;C\x07"
-    // pub command_end_before_status: Option<CString>, // "\x1b133;D;<exitcode>;\x07"
-    // pub command_end_after_status: Option<CString>,
-
     // Number capabilities
     pub max_colors: Option<usize>,
     pub init_tabs: Option<usize>,
@@ -244,10 +237,6 @@ impl Term {
             parm_right_cursor: get_str_cap(&db, "RI"),
             clr_eol: get_str_cap(&db, "ce"),
             clr_eos: get_str_cap(&db, "cd"),
-
-            prompt_start: if support_osc133 { Some(CString::new("\x1b]133;A\x1b\x5c").unwrap()) } else { None },
-            prompt_end: if support_osc133 { Some(CString::new("\x1b]133;B\x1b\x5c").unwrap()) } else { None },
-            command_start: if support_osc133 { Some(CString::new("\x1b]133;C\x1b\x5c").unwrap()) } else { None },
 
             // Number capabilities
             max_colors: get_num_cap(&db, "Co"),

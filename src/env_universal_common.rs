@@ -6,7 +6,6 @@ use crate::common::{
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::fallback::fish_mkstemp_cloexec;
-use crate::fds::AutoCloseFd;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
@@ -24,7 +23,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -493,45 +492,53 @@ impl EnvUniversal {
         res_fd
     }
 
-    fn open_temporary_file(&mut self, directory: &wstr, out_path: &mut WString) -> AutoCloseFd {
+    fn open_temporary_file(
+        &mut self,
+        directory: &wstr,
+        out_path: &mut WString,
+    ) -> Result<OwnedFd, Errno> {
         // Create and open a temporary file for writing within the given directory. Try to create a
         // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
         // This should almost always succeed on the first try.
         assert!(!string_suffixes_string(L!("/"), directory));
 
-        let mut saved_errno = Errno(0);
+        let mut attempt = 0;
         let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
-        let mut result = AutoCloseFd::empty();
-        let mut narrow_str = CString::default();
-        for _attempt in 0..10 {
-            if result.is_valid() {
-                break;
+        let result = loop {
+            attempt += 1;
+            let result = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
+            match (result, attempt) {
+                (Ok(r), _) => break r,
+                (Err(e), 10) => {
+                    FLOG!(
+                        error,
+                        // We previously used to log a copy of the buffer we expected mk(o)stemp to
+                        // update with the new path, but mkstemp(3) says the contents of the buffer
+                        // are undefined in case of EEXIST, but left unchanged in case of EINVAL. So
+                        // just log the original template we pass in to the function instead.
+                        wgettext_fmt!(
+                            "Unable to create temporary file '%ls': %s",
+                            &tmp_name_template,
+                            e.to_string()
+                        )
+                    );
+                    return Err(e);
+                }
+                _ => continue,
             }
-            let (fd, tmp_name) = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
-            result.reset(fd);
-            narrow_str = tmp_name;
-            saved_errno = errno();
-        }
-        *out_path = str2wcstring(narrow_str.as_bytes());
+        };
 
-        if !result.is_valid() {
-            FLOG!(
-                error,
-                wgettext_fmt!(
-                    "Unable to open temporary file '%ls': %s",
-                    out_path,
-                    saved_errno.to_string()
-                )
-            );
-        }
-        result
+        *out_path = str2wcstring(result.1.as_bytes());
+        Ok(result.0)
     }
+
     /// Writes our state to the fd. path is provided only for error reporting.
-    fn write_to_fd(&mut self, fd: RawFd, path: &wstr) -> bool {
-        assert!(fd >= 0);
-        let mut success = true;
+    fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<usize> {
+        let fd = fd.as_fd();
         let contents = Self::serialize_with_vars(&self.vars);
-        if let Err(err) = write_loop(&fd, &contents) {
+        let res = write_loop(&fd, &contents);
+
+        if let Err(err) = res.as_ref() {
             let error = Errno(err.raw_os_error().unwrap());
             FLOG!(
                 error,
@@ -541,14 +548,13 @@ impl EnvUniversal {
                     error.to_string()
                 ),
             );
-            success = false;
         }
 
         // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-        self.last_read_file = file_id_for_fd(fd);
+        self.last_read_file = file_id_for_fd(fd.as_raw_fd());
 
         // We don't close the file.
-        success
+        res
     }
 
     fn move_new_vars_file_into_place(&mut self, src: &wstr, dst: &wstr) -> bool {
@@ -747,90 +753,77 @@ impl EnvUniversal {
     // Write our file contents.
     // \return true on success, false on failure.
     fn save(&mut self, directory: &wstr) -> bool {
+        use crate::common::ScopeGuard;
         assert!(self.ok_to_save, "It's not OK to save");
 
-        let mut private_file_path = WString::new();
-
         // Open adjacent temporary file.
-        let private_fd = self.open_temporary_file(directory, &mut private_file_path);
-        let mut success = private_fd.is_valid();
-
-        if !success {
-            FLOG!(uvar_file, "universal log open_temporary_file() failed");
-        }
+        let mut private_file_path = WString::new();
+        let Ok(private_fd) = self.open_temporary_file(directory, &mut private_file_path) else {
+            return false;
+        };
+        // unlink pfp upon failure. In case of success, it (already) won't exist.
+        let delete_pfp = ScopeGuard::new(private_file_path, |path| {
+            wunlink(path);
+        });
+        let private_file_path = &delete_pfp;
 
         // Write to it.
-        if success {
-            assert!(private_fd.is_valid());
-            success = self.write_to_fd(private_fd.fd(), &private_file_path);
-            if !success {
-                FLOG!(uvar_file, "universal log write_to_fd() failed");
+        if self.write_to_fd(&private_fd, private_file_path).is_err() {
+            FLOG!(uvar_file, "universal log write_to_fd() failed");
+            return false;
+        }
+
+        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
+
+        // Ensure we maintain ownership and permissions (#2176).
+        // let mut sbuf : libc::stat = MaybeUninit::uninit();
+        if let Ok(md) = wstat(&real_path) {
+            if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+                FLOG!(uvar_file, "universal log fchown() failed");
+            }
+            #[allow(clippy::useless_conversion)]
+            let mode: libc::mode_t = md.mode().try_into().unwrap();
+            if unsafe { libc::fchmod(private_fd.as_raw_fd(), mode) } == -1 {
+                FLOG!(uvar_file, "universal log fchmod() failed");
             }
         }
 
-        if success {
-            let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
-
-            // Ensure we maintain ownership and permissions (#2176).
-            // let mut sbuf : libc::stat = MaybeUninit::uninit();
-            if let Ok(md) = wstat(&real_path) {
-                if unsafe { libc::fchown(private_fd.fd(), md.uid(), md.gid()) } == -1 {
-                    FLOG!(uvar_file, "universal log fchown() failed");
-                }
-                #[allow(clippy::useless_conversion)]
-                let mode: libc::mode_t = md.mode().try_into().unwrap();
-                if unsafe { libc::fchmod(private_fd.fd(), mode) } == -1 {
-                    FLOG!(uvar_file, "universal log fchmod() failed");
-                }
-            }
-
-            // Linux by default stores the mtime with low precision, low enough that updates that occur
-            // in quick succession may result in the same mtime (even the nanoseconds field). So
-            // manually set the mtime of the new file to a high-precision clock. Note that this is only
-            // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
-            // platforms we tend to notice the file has changed due to a different inode (or file size!)
-            //
-            // The current time within the Linux kernel is cached, and generally only updated on a timer
-            // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
-            // only be updated once every 10 milliseconds.
-            //
-            // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
-            // unlikely to affect users.
-            #[cfg(any(target_os = "linux", target_os = "android"))]
-            {
-                let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
-                times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
-                if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
-                    unsafe {
-                        libc::futimens(private_fd.fd(), &times[0]);
-                    }
+        // Linux by default stores the mtime with low precision, low enough that updates that occur
+        // in quick succession may result in the same mtime (even the nanoseconds field). So
+        // manually set the mtime of the new file to a high-precision clock. Note that this is only
+        // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
+        // platforms we tend to notice the file has changed due to a different inode (or file size!)
+        //
+        // The current time within the Linux kernel is cached, and generally only updated on a timer
+        // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
+        // only be updated once every 10 milliseconds.
+        //
+        // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
+        // unlikely to affect users.
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
+            times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
+            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
+                unsafe {
+                    libc::futimens(private_fd.as_raw_fd(), &times[0]);
                 }
             }
-
-            // Apply new file.
-            success = self.move_new_vars_file_into_place(&private_file_path, &real_path);
-            if !success {
-                FLOG!(
-                    uvar_file,
-                    "universal log move_new_vars_file_into_place() failed"
-                );
-            }
         }
 
-        if success {
-            // Since we moved the new file into place, clear the path so we don't try to unlink it.
-            private_file_path.clear();
+        // Apply new file.
+        if !self.move_new_vars_file_into_place(private_file_path, &real_path) {
+            FLOG!(
+                uvar_file,
+                "universal log move_new_vars_file_into_place() failed"
+            );
+            return false;
         }
 
-        // Clean up.
-        if !private_file_path.is_empty() {
-            wunlink(&private_file_path);
-        }
-        if success {
-            // All of our modified variables have now been written out.
-            self.modified.clear();
-        }
-        success
+        // Success at last. All of our modified variables have now been written out.
+        self.modified.clear();
+        ScopeGuard::cancel(delete_pfp);
+        true
     }
 }
 

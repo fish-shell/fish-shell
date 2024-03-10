@@ -25,7 +25,7 @@ use std::{
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsFd, AsRawFd, RawFd},
+    os::fd::{AsFd, AsRawFd, OwnedFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -45,7 +45,7 @@ use crate::{
     env::{EnvMode, EnvStack, Environment},
     expand::{expand_one, ExpandFlags},
     fallback::fish_mkstemp_cloexec,
-    fds::{wopen_cloexec, AutoCloseFd},
+    fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
     history::file::{append_history_item_to_buffer, HistoryFileContents},
@@ -658,8 +658,7 @@ impl HistoryImpl {
         let Some((tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
             return;
         };
-        let tmp_fd = tmp_file.fd();
-        assert!(tmp_fd >= 0);
+        let tmp_fd = tmp_file.as_raw_fd();
         let mut done = false;
         for _i in 0..MAX_SAVE_TRIES {
             if done {
@@ -1363,13 +1362,11 @@ impl HistoryImpl {
 }
 
 // Returns the fd of an opened temporary file, or None on failure.
-fn create_temporary_file(name_template: &wstr) -> Option<(AutoCloseFd, WString)> {
+fn create_temporary_file(name_template: &wstr) -> Option<(OwnedFd, WString)> {
     for _attempt in 0..10 {
         let narrow_str = wcs2zstring(name_template);
-        let (fd, narrow_str) = fish_mkstemp_cloexec(narrow_str);
-        let out_fd = AutoCloseFd::new(fd);
-        if out_fd.is_valid() {
-            return Some((out_fd, str2wcstring(narrow_str.to_bytes())));
+        if let Ok((fd, narrow_str)) = fish_mkstemp_cloexec(narrow_str) {
+            return Some((fd, str2wcstring(narrow_str.to_bytes())));
         }
     }
     None

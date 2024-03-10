@@ -18,6 +18,7 @@ mod parser;
 mod reader;
 mod redirection;
 mod screen;
+mod std;
 mod string_escape;
 mod threads;
 mod tokenizer;

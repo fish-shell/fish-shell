@@ -536,22 +536,25 @@ impl EnvUniversal {
     fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<usize> {
         let fd = fd.as_fd();
         let contents = Self::serialize_with_vars(&self.vars);
+
         let res = write_loop(&fd, &contents);
-
-        if let Err(err) = res.as_ref() {
-            let error = Errno(err.raw_os_error().unwrap());
-            FLOG!(
-                error,
-                wgettext_fmt!(
-                    "Unable to write to universal variables file '%ls': %s",
-                    path,
-                    error.to_string()
-                ),
-            );
+        match res.as_ref() {
+            Ok(_) => {
+                // Since we just wrote out this file, it matches our internal state; pretend we read from it.
+                self.last_read_file = file_id_for_fd(fd.as_raw_fd());
+            }
+            Err(err) => {
+                let error = Errno(err.raw_os_error().unwrap());
+                FLOG!(
+                    error,
+                    wgettext_fmt!(
+                        "Unable to write to universal variables file '%ls': %s",
+                        path,
+                        error.to_string()
+                    ),
+                );
+            }
         }
-
-        // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-        self.last_read_file = file_id_for_fd(fd.as_raw_fd());
 
         // We don't close the file.
         res

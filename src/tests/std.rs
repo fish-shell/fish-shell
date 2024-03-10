@@ -10,7 +10,10 @@ fn test_fd_cloexec() {
     let file = File::create("test_file_for_fd_cloexec").unwrap();
     let fd = file.as_raw_fd();
     unsafe {
-        assert_eq!(libc::fcntl(fd, libc::F_GETFD) & libc::FD_CLOEXEC, libc::FD_CLOEXEC);
+        assert_eq!(
+            libc::fcntl(fd, libc::F_GETFD) & libc::FD_CLOEXEC,
+            libc::FD_CLOEXEC
+        );
     }
-    let _  = std::fs::remove_file("test_file_for_fd_cloexec");
+    let _ = std::fs::remove_file("test_file_for_fd_cloexec");
 }

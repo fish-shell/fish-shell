@@ -677,11 +677,9 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                         break;
                     };
                     let text = tok.text_of(&t);
-                    if let Some(out) = unescape_string(text, UnescapeStringStyle::default()) {
-                        parser.set_var_and_fire(argv[var_ptr], opts.place, vec![out]);
-                    } else {
-                        parser.set_var_and_fire(argv[var_ptr], opts.place, vec![text.to_owned()]);
-                    }
+                    let out = unescape_string(text, UnescapeStringStyle::default())
+                        .unwrap_or_else(|| text.to_owned());
+                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![out]);
                     var_ptr += 1;
                 }
 

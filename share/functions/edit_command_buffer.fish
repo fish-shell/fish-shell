@@ -30,11 +30,16 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
     set col (math $offset + 1)
 
-    set -l basename (string match -r '[^/]+$' -- $editor[1])
-    set -l wrap_targets (complete -- $basename | string replace -rf '^complete [^/]+ --wraps (.+)$' '$1')
+    set -l editor_basename (string match -r '[^/]+$' -- $editor[1])
+    set -l wrapped_commands
+    for wrap_target in (complete -- $editor_basename | string replace -rf '^complete [^/]+ --wraps (.+)$' '$1')
+        set -l tmp
+        string unescape -- $wrap_target | read -at tmp
+        set -a wrapped_commands $tmp[1]
+    end
     set -l found false
-    for alias in $basename $wrap_targets
-        switch $alias
+    for editor_command in $editor_basename $wrapped_commands
+        switch $editor_command
             case vi vim nvim
                 set -a editor +$line +"norm! $col|" $f
             case emacs emacsclient gedit kak

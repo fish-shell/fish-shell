@@ -54,7 +54,7 @@ Interactive improvements
 - After using :kbd:`Alt-E` to edit the commandline in an external editor, the editor's cursor position will be copied over to fish. This is currently supported for Vim and Kakoune.
 - When deciding how to pass the cursor position to and from the external editor, :kbd:`Alt-E` now resolves aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
 - Option completion now uses fuzzy subsequence filtering as well. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
-- ASCII control characters are now rendered using symbols from Unicode's Control Pictures block.
+- Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

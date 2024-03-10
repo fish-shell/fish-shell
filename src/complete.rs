@@ -9,10 +9,15 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{common::charptr2wcstring, util::wcsfilecmp};
+use crate::{
+    common::charptr2wcstring, expand::expand_is_clean, util::wcsfilecmp, wchar_ext::IntoCharIter,
+};
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
+
+#[allow(unused_imports)]
+use crate::future::IsSomeAnd;
 
 use crate::{
     abbrs::with_abbrs,
@@ -831,6 +836,9 @@ impl<'ctx> Completer<'ctx> {
 
         // Escape '[' in the argument before completing it.
         self.escape_opening_brackets(current_argument);
+
+        // Unescape '\[' and '\]' in completions if escaping is not necessary.
+        self.dont_escape_harmless_brackets(current_argument);
 
         // Lastly mark any completions that appear to already be present in arguments.
         self.mark_completions_duplicating_arguments(&cmdline, current_token, tokens);
@@ -2038,6 +2046,70 @@ impl<'ctx> Completer<'ctx> {
                 FLOG!(warning, "unexpected completion flag");
             }
             comp.completion.insert_utfstr(0, &unescaped_argument);
+        }
+    }
+
+    // TODO This has lots of false negatives. Should use the tokenizer.
+    fn dont_escape_harmless_brackets(&mut self, argument: &wstr) {
+        fn count_brackets(leftover: usize, arg: &wstr) -> Option<(usize, Option<usize>)> {
+            let mut count = leftover;
+            let mut last_unclosed = None;
+            for (i, c) in arg.chars().enumerate() {
+                if c == '[' {
+                    count += 1;
+                    last_unclosed = Some(i);
+                } else if c == ']' {
+                    count = count.checked_sub(1)?;
+                }
+            }
+            Some((count, last_unclosed))
+        }
+        // TODO this is wrong
+        fn is_clean(arg: &wstr) -> bool {
+            expand_is_clean(arg)
+                && !arg.chars().any(|c| {
+                    c <= ' '
+                        && matches!(
+                            c,
+                            '&' | '$'
+                                | ' '
+                                | '#'
+                                | '<'
+                                | '>'
+                                | '('
+                                | ')'
+                                | '{'
+                                | '}'
+                                | '?'
+                                | '*'
+                                | '|'
+                                | ';'
+                                | '"'
+                                | '%'
+                                | '~'
+                        )
+                })
+        }
+        if !is_clean(argument) {
+            return;
+        }
+        let Some((unclosed_count, existing_last_unclosed)) = count_brackets(0, argument) else {
+            return;
+        };
+        for c in self.completions.iter_mut() {
+            if !is_clean(&c.completion) {
+                continue;
+            }
+            if count_brackets(unclosed_count, &c.completion).is_some_and(
+                |(unclosed_count, last_unclosed)| {
+                    unclosed_count == 0
+                        || unclosed_count == 1
+                            && (existing_last_unclosed == Some(0)
+                                || (argument.is_empty() && last_unclosed == Some(0)))
+                },
+            ) {
+                c.flags |= CompleteFlags::DONT_ESCAPE;
+            }
         }
     }
 

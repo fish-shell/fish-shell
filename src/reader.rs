@@ -73,6 +73,7 @@ use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
+use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
@@ -548,8 +549,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
     // int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
     if fd == STDIN_FILENO {
         let mut t: libc::termios = unsafe { std::mem::zeroed() };
-        let a_tty = unsafe { libc::isatty(STDIN_FILENO) } != 0;
-        if a_tty {
+        if isatty(STDIN_FILENO) {
             interactive = true;
         } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1 && errno().0 == EIO {
             redirect_tty_output();

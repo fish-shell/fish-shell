@@ -492,7 +492,11 @@ impl EnvUniversal {
         res_fd
     }
 
-    fn open_temporary_file(&mut self, directory: &wstr, out_path: &mut WString) -> OwnedFd {
+    fn open_temporary_file(
+        &mut self,
+        directory: &wstr,
+        out_path: &mut WString,
+    ) -> Result<OwnedFd, Errno> {
         // Create and open a temporary file for writing within the given directory. Try to create a
         // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
         // This should almost always succeed on the first try.
@@ -518,13 +522,14 @@ impl EnvUniversal {
                             e.to_string()
                         )
                     );
+                    return Err(e);
                 }
                 _ => continue,
             }
         };
 
         *out_path = str2wcstring(result.1.as_bytes());
-        result.0
+        Ok(result.0)
     }
 
     /// Writes our state to the fd. path is provided only for error reporting.
@@ -753,7 +758,9 @@ impl EnvUniversal {
 
         // Open adjacent temporary file.
         let mut private_file_path = WString::new();
-        let private_fd = self.open_temporary_file(directory, &mut private_file_path);
+        let Ok(private_fd) = self.open_temporary_file(directory, &mut private_file_path) else {
+            return false;
+        };
         // unlink pfp upon failure. In case of success, it (already) won't exist.
         let delete_pfp = ScopeGuard::new(private_file_path, |path| {
             wunlink(path);

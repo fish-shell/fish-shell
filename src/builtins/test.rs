@@ -13,21 +13,52 @@ mod test_expressions {
     use std::collections::HashMap;
     use std::os::unix::prelude::*;
 
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub(super) enum Token {
+        Unknown,                         // Arbitrary string
+        UnaryPrimary(UnaryToken),        // Takes one string/file
+        BinaryPrimary(BinaryToken),      // Takes two strings/files/numbers
+        UnaryBoolean(UnaryBooleanToken), // Unary truth function
+        BinaryBoolean(Combiner),         // Binary truth function
+        ParenOpen,                       // (
+        ParenClose,                      // )
+    }
+
+    impl From<BinaryToken> for Token {
+        fn from(value: BinaryToken) -> Self {
+            Self::BinaryPrimary(value)
+        }
+    }
+
+    impl From<UnaryToken> for Token {
+        fn from(value: UnaryToken) -> Self {
+            Self::UnaryPrimary(value)
+        }
+    }
+
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub(super) enum UnaryBooleanToken {
+        Bang, // "!", inverts sense
+    }
+
+    #[derive(Copy, Clone, PartialEq, Eq)]
+    pub(super) enum Combiner {
+        And, // "-a", true if left and right are both true
+        Or,  // "-o", true if either left or right is true
+    }
+
     macro_rules! define_token {
         (
-            {
-                $($unit_variant:ident)*
-            }
+            enum $enum:ident;
             $(
-                $newtype_variant:ident($sub_type:ident) {
+                $variant:ident($sub_type:ident) {
                     $($sub_variant:ident)+
                 }
             )*
         ) => {
             #[derive(Copy, Clone, PartialEq, Eq)]
-            pub(super) enum Token {
-                $($unit_variant,)*
-                $($newtype_variant($sub_type),)*
+            pub(super) enum $enum {
+                $($variant($sub_type),)*
             }
 
             $(
@@ -36,7 +67,7 @@ mod test_expressions {
 
                 impl From<$sub_type> for Token {
                     fn from(value: $sub_type) -> Token {
-                        Token::$newtype_variant(value)
+                        $enum::$variant(value).into()
                     }
                 }
             )*
@@ -44,12 +75,9 @@ mod test_expressions {
     }
 
     define_token! {
-        {
-            Unknown // arbitrary string
-            Bang    // "!", inverts sense
-        }
+        enum UnaryToken;
 
-        // Unary, based on stat()
+        // based on stat()
         FileStat(StatToken) {
             b // "-b", for block special files
             c // "-c", for character special files
@@ -66,21 +94,30 @@ mod test_expressions {
             u // "-u", whether file is setuid
         }
 
-        // Unary, based on access()
+        // based on access()
         FilePerm(FilePermission) {
             r // "-r", read permission
             w // "-w", whether file write permission is allowed
             x // "-x", whether file execute/search is allowed
         }
 
-        // Unary, miscellaneous
-        FileType(FileTypeToken) {
+        // miscellaneous
+        FileType(FileTypePredicate) {
             h // "-h", for symbolic links
             L // "-L", same as -h
             t // "-t", whether the fd is associated with a terminal
         }
 
-        // Binary, based on inode + more distinguishing info (see FileId struct)
+        String(StringPredicate) {
+            n // "-n", non-empty string
+            z // "-z", true if length of string is 0
+        }
+    }
+
+    define_token! {
+        enum BinaryToken;
+
+        // based on inode + more distinguishing info (see FileId struct)
         FileId(FileComparison) {
             Newer // f1 -nt f2, true if f1 exists and is newer than f2, or there is no f2
             Older // f1 -ot f2, true if f2 exists and f1 does not, or f1 is older than f2
@@ -88,8 +125,6 @@ mod test_expressions {
         }
 
         String(StringComparison) {
-            n        // "-n", non-empty string
-            z        // "-z", true if length of string is 0
             Equal    // "=", true if strings are identical
             NotEqual // "!=", true if strings are not identical
         }
@@ -101,16 +136,6 @@ mod test_expressions {
             GreaterEqual // "-ge", true if first number is at least second
             Lesser       // "-lt", true if first number is smaller than second
             LesserEqual  // "-le", true if first number is at most second
-        }
-
-        Combine(Combiner) {
-            And // "-a", true if left and right are both true
-            Or  // "-o", true if either left or right is true
-        }
-
-        Paren(ParenToken) {
-            Open  // "(", open paren
-            Close // ")", close paren
         }
     }
 
@@ -152,72 +177,50 @@ mod test_expressions {
         }
     }
 
-    const UNARY_PRIMARY: u32 = 1 << 0;
-    const BINARY_PRIMARY: u32 = 1 << 1;
-
-    struct TokenInfo {
-        tok: Token,
-        flags: u32,
+    fn token_for_string(str: &wstr) -> Token {
+        TOKEN_INFOS.get(str).copied().unwrap_or(Token::Unknown)
     }
 
-    impl TokenInfo {
-        fn new(tok: impl Into<Token>, flags: u32) -> Self {
-            let tok = tok.into();
-            Self { tok, flags }
-        }
-    }
-
-    fn token_for_string(str: &wstr) -> &'static TokenInfo {
-        if let Some(res) = TOKEN_INFOS.get(str) {
-            res
-        } else {
-            TOKEN_INFOS
-                .get(L!(""))
-                .expect("Should have token for empty string")
-        }
-    }
-
-    static TOKEN_INFOS: Lazy<HashMap<&'static wstr, TokenInfo>> = Lazy::new(|| {
-        #[rustfmt::skip]
+    static TOKEN_INFOS: Lazy<HashMap<&'static wstr, Token>> = Lazy::new(|| {
         let pairs = [
-            (L!(""), TokenInfo::new(Token::Unknown, 0)),
-            (L!("!"), TokenInfo::new(Token::Bang, 0)),
-            (L!("-b"), TokenInfo::new(StatToken::b, UNARY_PRIMARY)),
-            (L!("-c"), TokenInfo::new(StatToken::c, UNARY_PRIMARY)),
-            (L!("-d"), TokenInfo::new(StatToken::d, UNARY_PRIMARY)),
-            (L!("-e"), TokenInfo::new(StatToken::e, UNARY_PRIMARY)),
-            (L!("-f"), TokenInfo::new(StatToken::f, UNARY_PRIMARY)),
-            (L!("-G"), TokenInfo::new(StatToken::G, UNARY_PRIMARY)),
-            (L!("-g"), TokenInfo::new(StatToken::g, UNARY_PRIMARY)),
-            (L!("-h"), TokenInfo::new(FileTypeToken::h, UNARY_PRIMARY)),
-            (L!("-k"), TokenInfo::new(StatToken::k, UNARY_PRIMARY)),
-            (L!("-L"), TokenInfo::new(FileTypeToken::L, UNARY_PRIMARY)),
-            (L!("-O"), TokenInfo::new(StatToken::O, UNARY_PRIMARY)),
-            (L!("-p"), TokenInfo::new(StatToken::p, UNARY_PRIMARY)),
-            (L!("-S"), TokenInfo::new(StatToken::S, UNARY_PRIMARY)),
-            (L!("-s"), TokenInfo::new(StatToken::s, UNARY_PRIMARY)),
-            (L!("-t"), TokenInfo::new(FileTypeToken::t, UNARY_PRIMARY)),
-            (L!("-r"), TokenInfo::new(FilePermission::r, UNARY_PRIMARY)),
-            (L!("-u"), TokenInfo::new(StatToken::u, UNARY_PRIMARY)),
-            (L!("-w"), TokenInfo::new(FilePermission::w, UNARY_PRIMARY)),
-            (L!("-x"), TokenInfo::new(FilePermission::x, UNARY_PRIMARY)),
-            (L!("-n"), TokenInfo::new(StringComparison::n, UNARY_PRIMARY)),
-            (L!("-z"), TokenInfo::new(StringComparison::z, UNARY_PRIMARY)),
-            (L!("="), TokenInfo::new(StringComparison::Equal, BINARY_PRIMARY)),
-            (L!("!="), TokenInfo::new(StringComparison::NotEqual, BINARY_PRIMARY)),
-            (L!("-nt"), TokenInfo::new(FileComparison::Newer, BINARY_PRIMARY)),
-            (L!("-ot"), TokenInfo::new(FileComparison::Older, BINARY_PRIMARY)),
-            (L!("-ef"), TokenInfo::new(FileComparison::Same, BINARY_PRIMARY)),
-            (L!("-eq"), TokenInfo::new(NumberComparison::Equal, BINARY_PRIMARY)),
-            (L!("-ne"), TokenInfo::new(NumberComparison::NotEqual, BINARY_PRIMARY)),
-            (L!("-gt"), TokenInfo::new(NumberComparison::Greater, BINARY_PRIMARY)),
-            (L!("-ge"), TokenInfo::new(NumberComparison::GreaterEqual, BINARY_PRIMARY)),
-            (L!("-lt"), TokenInfo::new(NumberComparison::Lesser, BINARY_PRIMARY)),
-            (L!("-le"), TokenInfo::new(NumberComparison::LesserEqual, BINARY_PRIMARY)),
-            (L!("-a"), TokenInfo::new(Combiner::And, 0)),
-            (L!("-o"), TokenInfo::new(Combiner::Or, 0)),
-            (L!("("), TokenInfo::new(ParenToken::Open, 0)),
-            (L!(")"), TokenInfo::new(ParenToken::Close, 0))
+            (L!(""), Token::Unknown),
+            (L!("!"), Token::UnaryBoolean(UnaryBooleanToken::Bang)),
+            (L!("-b"), StatToken::b.into()),
+            (L!("-c"), StatToken::c.into()),
+            (L!("-d"), StatToken::d.into()),
+            (L!("-e"), StatToken::e.into()),
+            (L!("-f"), StatToken::f.into()),
+            (L!("-G"), StatToken::G.into()),
+            (L!("-g"), StatToken::g.into()),
+            (L!("-h"), FileTypePredicate::h.into()),
+            (L!("-k"), StatToken::k.into()),
+            (L!("-L"), FileTypePredicate::L.into()),
+            (L!("-O"), StatToken::O.into()),
+            (L!("-p"), StatToken::p.into()),
+            (L!("-S"), StatToken::S.into()),
+            (L!("-s"), StatToken::s.into()),
+            (L!("-t"), FileTypePredicate::t.into()),
+            (L!("-r"), FilePermission::r.into()),
+            (L!("-u"), StatToken::u.into()),
+            (L!("-w"), FilePermission::w.into()),
+            (L!("-x"), FilePermission::x.into()),
+            (L!("-n"), StringPredicate::n.into()),
+            (L!("-z"), StringPredicate::z.into()),
+            (L!("="), StringComparison::Equal.into()),
+            (L!("!="), StringComparison::NotEqual.into()),
+            (L!("-nt"), FileComparison::Newer.into()),
+            (L!("-ot"), FileComparison::Older.into()),
+            (L!("-ef"), FileComparison::Same.into()),
+            (L!("-eq"), NumberComparison::Equal.into()),
+            (L!("-ne"), NumberComparison::NotEqual.into()),
+            (L!("-gt"), NumberComparison::Greater.into()),
+            (L!("-ge"), NumberComparison::GreaterEqual.into()),
+            (L!("-lt"), NumberComparison::Lesser.into()),
+            (L!("-le"), NumberComparison::LesserEqual.into()),
+            (L!("-a"), Token::BinaryBoolean(Combiner::And)),
+            (L!("-o"), Token::BinaryBoolean(Combiner::Or)),
+            (L!("("), Token::ParenOpen),
+            (L!(")"), Token::ParenClose),
         ];
         pairs.into_iter().collect()
     });
@@ -275,10 +278,16 @@ mod test_expressions {
         }
     }
 
-    /// Single argument like -n foo or "just a string".
+    /// Something that is not a token of any other type.
+    struct JustAString {
+        arg: WString,
+        range: Range,
+    }
+
+    /// Single argument like -n foo.
     struct UnaryPrimary {
         arg: WString,
-        token: Token,
+        token: UnaryToken,
         range: Range,
     }
 
@@ -286,14 +295,14 @@ mod test_expressions {
     struct BinaryPrimary {
         arg_left: WString,
         arg_right: WString,
-        token: Token,
+        token: BinaryToken,
         range: Range,
     }
 
     /// Unary operator like bang.
     struct UnaryOperator {
         subject: Box<dyn Expression>,
-        token: Token,
+        token: UnaryBooleanToken,
         range: Range,
     }
 
@@ -309,6 +318,16 @@ mod test_expressions {
     struct ParentheticalExpression {
         contents: Box<dyn Expression>,
         range: Range,
+    }
+
+    impl Expression for JustAString {
+        fn evaluate(&self, _streams: &mut IoStreams, _errors: &mut Vec<WString>) -> bool {
+            !self.arg.is_empty()
+        }
+
+        fn range(&self) -> Range {
+            self.range.clone()
+        }
     }
 
     impl Expression for UnaryPrimary {
@@ -333,11 +352,8 @@ mod test_expressions {
 
     impl Expression for UnaryOperator {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
-            if self.token == Token::Bang {
-                !self.subject.evaluate(streams, errors)
-            } else {
-                errors.push(L!("Unknown token type in unary_operator_evaluate").to_owned());
-                false
+            match self.token {
+                UnaryBooleanToken::Bang => !self.subject.evaluate(streams, errors),
             }
         }
 
@@ -419,13 +435,12 @@ mod test_expressions {
             if start >= end {
                 return self.error(start, sprintf!("Missing argument at index %u", start + 1));
             }
-            let tok = token_for_string(self.arg(start)).tok;
-            if tok == Token::Bang {
+            if let Token::UnaryBoolean(token) = token_for_string(self.arg(start)) {
                 let subject = self.parse_unary_expression(start + 1, end)?;
                 let range = start..subject.range().end;
                 return UnaryOperator {
                     subject,
-                    token: tok,
+                    token,
                     range,
                 }
                 .into_some_box();
@@ -449,7 +464,7 @@ mod test_expressions {
             while idx < end {
                 if !first {
                     // This is not the first expression, so we expect a combiner.
-                    let Token::Combine(combiner) = token_for_string(self.arg(idx)).tok else {
+                    let Token::BinaryBoolean(combiner) = token_for_string(self.arg(idx)) else {
                         /* Not a combiner, we're done */
                         self.errors.insert(
                             0,
@@ -507,40 +522,36 @@ mod test_expressions {
             }
 
             // All our unary primaries are prefix, so the operator is at start.
-            let info: &TokenInfo = token_for_string(self.arg(start));
-            if info.flags & UNARY_PRIMARY == 0 {
+            let Token::UnaryPrimary(token) = token_for_string(self.arg(start)) else {
                 return None;
-            }
+            };
             UnaryPrimary {
                 arg: self.arg(start + 1).to_owned(),
-                token: info.tok,
+                token,
                 range: start..start + 2,
             }
             .into_some_box()
         }
 
         fn parse_just_a_string(&mut self, start: usize, end: usize) -> Option<Box<dyn Expression>> {
-            // Handle a string as a unary primary that is not a token of any other type. e.g. 'test foo -a
-            // bar' should evaluate to true. We handle this with a unary primary of test_string_n.
+            // Handle a string as a unary primary that is not a token of any other type.
+            // e.g. 'test foo -a bar' should evaluate to true.
 
             // We need one argument.
             if start >= end {
                 return self.error(start, sprintf!("Missing argument at index %u", start + 1));
             }
 
-            let info = token_for_string(self.arg(start));
-            if info.tok != Token::Unknown {
+            let tok = token_for_string(self.arg(start));
+            if tok != Token::Unknown {
                 return self.error(
                     start,
                     sprintf!("Unexpected argument type at index %u", start + 1),
                 );
             }
 
-            // This is hackish; a nicer way to implement this would be with a "just a string" expression
-            // type.
-            return UnaryPrimary {
+            return JustAString {
                 arg: self.arg(start).to_owned(),
-                token: Token::String(StringComparison::n),
                 range: start..start + 1,
             }
             .into_some_box();
@@ -559,14 +570,13 @@ mod test_expressions {
             }
 
             // All our binary primaries are infix, so the operator is at start + 1.
-            let info = token_for_string(self.arg(start + 1));
-            if info.flags & BINARY_PRIMARY == 0 {
+            let Token::BinaryPrimary(token) = token_for_string(self.arg(start + 1)) else {
                 return None;
-            }
+            };
             BinaryPrimary {
                 arg_left: self.arg(start).to_owned(),
                 arg_right: self.arg(start + 2).to_owned(),
-                token: info.tok,
+                token,
                 range: start..start + 3,
             }
             .into_some_box()
@@ -579,8 +589,7 @@ mod test_expressions {
             }
 
             // Must start with an open expression.
-            let open_paren = token_for_string(self.arg(start));
-            if open_paren.tok != Token::Paren(ParenToken::Open) {
+            if token_for_string(self.arg(start)) != Token::ParenOpen {
                 return None;
             }
 
@@ -596,8 +605,7 @@ mod test_expressions {
                     sprintf!("Missing close paren at index %u", close_index + 1),
                 );
             }
-            let close_paren = token_for_string(self.arg(close_index));
-            if close_paren.tok != Token::Paren(ParenToken::Close) {
+            if token_for_string(self.arg(close_index)) != Token::ParenClose {
                 return self.error(
                     close_index,
                     sprintf!("Expected close paren at index %u", close_index + 1),
@@ -642,9 +650,9 @@ mod test_expressions {
 
             let center_token = token_for_string(self.arg(start + 1));
 
-            if center_token.flags & BINARY_PRIMARY != 0 {
+            if matches!(center_token, Token::BinaryPrimary(_)) {
                 self.parse_binary_primary(start, end)
-            } else if let Token::Combine(combiner) = center_token.tok {
+            } else if let Token::BinaryBoolean(combiner) = center_token {
                 let left = self.parse_unary_expression(start, start + 1)?;
                 let right = self.parse_unary_expression(start + 2, start + 3)?;
                 // Transfer ownership to the vector of subjects.
@@ -666,17 +674,17 @@ mod test_expressions {
         ) -> Option<Box<dyn Expression>> {
             assert!(end - start == 4);
 
-            let first_token = token_for_string(self.arg(start)).tok;
+            let first_token = token_for_string(self.arg(start));
 
-            if first_token == Token::Bang {
+            if let Token::UnaryBoolean(token) = first_token {
                 let subject = self.parse_3_arg_expression(start + 1, end)?;
                 UnaryOperator {
                     subject,
-                    token: first_token,
+                    token,
                     range: start..end,
                 }
                 .into_some_box()
-            } else if first_token == Token::Paren(ParenToken::Open) {
+            } else if first_token == Token::ParenOpen {
                 self.parse_parenthetical(start, end)
             } else {
                 self.parse_combining_expression(start, end)
@@ -857,15 +865,15 @@ mod test_expressions {
     }
 
     fn binary_primary_evaluate(
-        token: Token,
+        token: BinaryToken,
         left: &wstr,
         right: &wstr,
         errors: &mut Vec<WString>,
     ) -> bool {
         match token {
-            Token::String(StringComparison::Equal) => left == right,
-            Token::String(StringComparison::NotEqual) => left != right,
-            Token::FileId(comparison) => {
+            BinaryToken::String(StringComparison::Equal) => left == right,
+            BinaryToken::String(StringComparison::NotEqual) => left != right,
+            BinaryToken::FileId(comparison) => {
                 let left = file_id_for_path(left);
                 let right = file_id_for_path(right);
                 match comparison {
@@ -874,7 +882,7 @@ mod test_expressions {
                     FileComparison::Same => left == right,
                 }
             }
-            Token::Number(comparison) => {
+            BinaryToken::Number(comparison) => {
                 let mut ln = Number::default();
                 let mut rn = Number::default();
                 if !parse_number(left, &mut ln, errors) || !parse_number(right, &mut rn, errors) {
@@ -889,22 +897,18 @@ mod test_expressions {
                     NumberComparison::LesserEqual => ln <= rn,
                 }
             }
-            _ => {
-                errors.push(L!("Unknown token type in binary_primary_evaluate").to_owned());
-                false
-            }
         }
     }
 
     fn unary_primary_evaluate(
-        token: Token,
+        token: UnaryToken,
         arg: &wstr,
         streams: &mut IoStreams,
         errors: &mut Vec<WString>,
     ) -> bool {
         match token {
             #[allow(clippy::unnecessary_cast)] // mode_t is u32 on many platforms, but not all
-            Token::FileStat(stat_token) => {
+            UnaryToken::FileStat(stat_token) => {
                 let Ok(md) = wstat(arg) else {
                     return false;
                 };
@@ -942,21 +946,21 @@ mod test_expressions {
                     StatToken::u => md.permissions().mode() & S_ISUID != 0,
                 }
             }
-            Token::FileType(file_type) => {
+            UnaryToken::FileType(file_type) => {
                 match file_type {
                     // "-h", for symbolic links
                     // "-L", same as -h
-                    FileTypeToken::h | FileTypeToken::L => {
+                    FileTypePredicate::h | FileTypePredicate::L => {
                         lwstat(arg).is_ok_and(|md| md.file_type().is_symlink())
                     }
                     // "-t", whether the fd is associated with a terminal
-                    FileTypeToken::t => {
+                    FileTypePredicate::t => {
                         let mut num = Number::default();
                         parse_number(arg, &mut num, errors) && num.isatty(streams)
                     }
                 }
             }
-            Token::FilePerm(permission) => {
+            UnaryToken::FilePerm(permission) => {
                 let mode = match permission {
                     // "-r", read permission
                     FilePermission::r => libc::R_OK,
@@ -967,19 +971,12 @@ mod test_expressions {
                 };
                 waccess(arg, mode) == 0
             }
-            Token::String(StringComparison::n) => {
+            UnaryToken::String(predicate) => match predicate {
                 // "-n", non-empty string
-                !arg.is_empty()
-            }
-            Token::String(StringComparison::z) => {
+                StringPredicate::n => !arg.is_empty(),
                 // "-z", true if length of string is 0
-                arg.is_empty()
-            }
-            _ => {
-                // Unknown token.
-                errors.push(L!("Unknown token type in unary_primary_evaluate").to_owned());
-                false
-            }
+                StringPredicate::z => arg.is_empty(),
+            },
         }
     }
 }

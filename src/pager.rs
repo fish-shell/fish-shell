@@ -81,7 +81,7 @@ const PAGER_MAX_COLS: usize = 6;
 const PAGER_SEARCH_FIELD_WIDTH: usize = 12;
 
 /// Text we use for the search field.
-const SEARCH_FIELD_PROMPT: &wstr = L!("search: ");
+const SEARCH_FIELD_PROMPT: &str = "search: ";
 
 const PAGER_SELECTION_NONE: usize = usize::MAX;
 
@@ -326,7 +326,7 @@ impl Pager {
 
         let mut search_field_remaining = term_width - 1;
         search_field_remaining -= print_max(
-            SEARCH_FIELD_PROMPT,
+            wgettext!(SEARCH_FIELD_PROMPT),
             HighlightSpec::new(),
             search_field_remaining,
             false,
@@ -992,7 +992,7 @@ impl Pager {
 
     // Position of the cursor.
     pub fn cursor_position(&self) -> usize {
-        let mut result = SEARCH_FIELD_PROMPT.len() + self.search_field_line.position();
+        let mut result = wgettext!(SEARCH_FIELD_PROMPT).len() + self.search_field_line.position();
         // Clamp it to the right edge.
         if self.available_term_width > 0 && result + 1 > self.available_term_width {
             result = self.available_term_width - 1;

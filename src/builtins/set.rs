@@ -665,12 +665,9 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
             value,
             EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
         );
-        streams.out.append(sprintf!(
-            "$%ls[%d]: |%ls|\n",
-            var_name,
-            i + 1,
-            &escaped_val
-        ));
+        streams
+            .out
+            .append(sprintf!("$%ls[%d]: |%ls|\n", var_name, i + 1, &escaped_val));
     }
 }
 

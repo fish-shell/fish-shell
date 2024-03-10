@@ -18,8 +18,8 @@ mod test_expressions {
     #[derive(Copy, Clone, PartialEq, Eq)]
     pub(super) enum Token {
         Unknown,                         // Arbitrary string
-        UnaryPrimary(UnaryToken),        // Takes one string/file
-        BinaryPrimary(BinaryToken),      // Takes two strings/files/numbers
+        Unary(UnaryToken),               // Takes one string/file
+        Binary(BinaryToken),             // Takes two strings/files/numbers
         UnaryBoolean(UnaryBooleanToken), // Unary truth function
         BinaryBoolean(Combiner),         // Binary truth function
         ParenOpen,                       // (
@@ -28,13 +28,13 @@ mod test_expressions {
 
     impl From<BinaryToken> for Token {
         fn from(value: BinaryToken) -> Self {
-            Self::BinaryPrimary(value)
+            Self::Binary(value)
         }
     }
 
     impl From<UnaryToken> for Token {
         fn from(value: UnaryToken) -> Self {
-            Self::UnaryPrimary(value)
+            Self::Unary(value)
         }
     }
 
@@ -80,7 +80,7 @@ mod test_expressions {
         enum UnaryToken;
 
         // based on stat()
-        FileStat(StatToken) {
+        FileStat(StatPredicate) {
             b // "-b", for block special files
             c // "-c", for character special files
             d // "-d", for directories
@@ -104,7 +104,7 @@ mod test_expressions {
         }
 
         // miscellaneous
-        FileType(FileTypePredicate) {
+        FileType(FilePredicate) {
             h // "-h", for symbolic links
             L // "-L", same as -h
             t // "-t", whether the fd is associated with a terminal
@@ -187,23 +187,23 @@ mod test_expressions {
         let pairs = [
             (L!(""), Token::Unknown),
             (L!("!"), Token::UnaryBoolean(UnaryBooleanToken::Bang)),
-            (L!("-b"), StatToken::b.into()),
-            (L!("-c"), StatToken::c.into()),
-            (L!("-d"), StatToken::d.into()),
-            (L!("-e"), StatToken::e.into()),
-            (L!("-f"), StatToken::f.into()),
-            (L!("-G"), StatToken::G.into()),
-            (L!("-g"), StatToken::g.into()),
-            (L!("-h"), FileTypePredicate::h.into()),
-            (L!("-k"), StatToken::k.into()),
-            (L!("-L"), FileTypePredicate::L.into()),
-            (L!("-O"), StatToken::O.into()),
-            (L!("-p"), StatToken::p.into()),
-            (L!("-S"), StatToken::S.into()),
-            (L!("-s"), StatToken::s.into()),
-            (L!("-t"), FileTypePredicate::t.into()),
+            (L!("-b"), StatPredicate::b.into()),
+            (L!("-c"), StatPredicate::c.into()),
+            (L!("-d"), StatPredicate::d.into()),
+            (L!("-e"), StatPredicate::e.into()),
+            (L!("-f"), StatPredicate::f.into()),
+            (L!("-G"), StatPredicate::G.into()),
+            (L!("-g"), StatPredicate::g.into()),
+            (L!("-h"), FilePredicate::h.into()),
+            (L!("-k"), StatPredicate::k.into()),
+            (L!("-L"), FilePredicate::L.into()),
+            (L!("-O"), StatPredicate::O.into()),
+            (L!("-p"), StatPredicate::p.into()),
+            (L!("-S"), StatPredicate::S.into()),
+            (L!("-s"), StatPredicate::s.into()),
+            (L!("-t"), FilePredicate::t.into()),
             (L!("-r"), FilePermission::r.into()),
-            (L!("-u"), StatToken::u.into()),
+            (L!("-u"), StatPredicate::u.into()),
             (L!("-w"), FilePermission::w.into()),
             (L!("-x"), FilePermission::x.into()),
             (L!("-n"), StringPredicate::n.into()),
@@ -524,7 +524,7 @@ mod test_expressions {
             }
 
             // All our unary primaries are prefix, so the operator is at start.
-            let Token::UnaryPrimary(token) = token_for_string(self.arg(start)) else {
+            let Token::Unary(token) = token_for_string(self.arg(start)) else {
                 return None;
             };
             UnaryPrimary {
@@ -572,7 +572,7 @@ mod test_expressions {
             }
 
             // All our binary primaries are infix, so the operator is at start + 1.
-            let Token::BinaryPrimary(token) = token_for_string(self.arg(start + 1)) else {
+            let Token::Binary(token) = token_for_string(self.arg(start + 1)) else {
                 return None;
             };
             BinaryPrimary {
@@ -652,7 +652,7 @@ mod test_expressions {
 
             let center_token = token_for_string(self.arg(start + 1));
 
-            if matches!(center_token, Token::BinaryPrimary(_)) {
+            if matches!(center_token, Token::Binary(_)) {
                 self.parse_binary_primary(start, end)
             } else if let Token::BinaryBoolean(combiner) = center_token {
                 let left = self.parse_unary_expression(start, start + 1)?;
@@ -921,42 +921,42 @@ mod test_expressions {
 
                 match stat_token {
                     // "-b", for block special files
-                    StatToken::b => md.file_type().is_block_device(),
+                    StatPredicate::b => md.file_type().is_block_device(),
                     // "-c", for character special files
-                    StatToken::c => md.file_type().is_char_device(),
+                    StatPredicate::c => md.file_type().is_char_device(),
                     // "-d", for directories
-                    StatToken::d => md.file_type().is_dir(),
+                    StatPredicate::d => md.file_type().is_dir(),
                     // "-e", for files that exist
-                    StatToken::e => true,
+                    StatPredicate::e => true,
                     // "-f", for regular files
-                    StatToken::f => md.file_type().is_file(),
+                    StatPredicate::f => md.file_type().is_file(),
                     // "-G", for check effective group id
-                    StatToken::G => md.gid() == crate::nix::getegid(),
+                    StatPredicate::G => md.gid() == crate::nix::getegid(),
                     // "-g", for set-group-id
-                    StatToken::g => md.permissions().mode() & S_ISGID != 0,
+                    StatPredicate::g => md.permissions().mode() & S_ISGID != 0,
                     // "-k", for sticky bit
-                    StatToken::k => md.permissions().mode() & S_ISVTX != 0,
+                    StatPredicate::k => md.permissions().mode() & S_ISVTX != 0,
                     // "-O", for check effective user id
-                    StatToken::O => md.uid() == crate::nix::geteuid(),
+                    StatPredicate::O => md.uid() == crate::nix::geteuid(),
                     // "-p", for FIFO
-                    StatToken::p => md.file_type().is_fifo(),
+                    StatPredicate::p => md.file_type().is_fifo(),
                     // "-S", socket
-                    StatToken::S => md.file_type().is_socket(),
+                    StatPredicate::S => md.file_type().is_socket(),
                     // "-s", size greater than zero
-                    StatToken::s => md.len() > 0,
+                    StatPredicate::s => md.len() > 0,
                     // "-u", whether file is setuid
-                    StatToken::u => md.permissions().mode() & S_ISUID != 0,
+                    StatPredicate::u => md.permissions().mode() & S_ISUID != 0,
                 }
             }
             UnaryToken::FileType(file_type) => {
                 match file_type {
                     // "-h", for symbolic links
                     // "-L", same as -h
-                    FileTypePredicate::h | FileTypePredicate::L => {
+                    FilePredicate::h | FilePredicate::L => {
                         lwstat(arg).is_ok_and(|md| md.file_type().is_symlink())
                     }
                     // "-t", whether the fd is associated with a terminal
-                    FileTypePredicate::t => {
+                    FilePredicate::t => {
                         let mut num = Number::default();
                         parse_number(arg, &mut num, errors) && num.isatty(streams)
                     }

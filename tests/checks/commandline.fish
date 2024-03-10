@@ -21,3 +21,7 @@ or echo Invalid $status
 commandline --help &>/dev/null
 echo Help $status
 # CHECK: Help 0
+
+commandline -pC 0 --input "test | test"
+echo $status
+# CHECK: 0

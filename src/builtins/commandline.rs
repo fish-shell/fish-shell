@@ -517,7 +517,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     if cursor_mode {
         if positional_args != 0 {
             let arg = w.argv[w.woptind];
-            let new_pos = match fish_wcstol(&arg[range.start..]) {
+            let new_pos = match fish_wcstol(arg) {
                 Err(_) => {
                     streams
                         .err
@@ -528,7 +528,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 Ok(num) => num,
             };
 
-            let new_pos = std::cmp::min(new_pos.max(0) as usize, current_buffer.len());
+            let new_pos =
+                std::cmp::min(new_pos.max(0) as usize + range.start, current_buffer.len());
             commandline_set_buffer(current_buffer.to_owned(), Some(new_pos));
         } else {
             streams.out.append(sprintf!("%lu\n", current_cursor_pos));

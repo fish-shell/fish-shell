@@ -1265,7 +1265,9 @@ impl HistoryImpl {
     /// commandline. (So the most recent item is at index 1.)
     fn item_at_index(&mut self, mut idx: usize) -> Option<Cow<HistoryItem>> {
         // 0 is considered an invalid index.
-        assert!(idx > 0);
+        if idx == 0 {
+            return None;
+        }
         idx -= 1;
 
         // Determine how many "resolved" (non-pending) items we have. We can have at most one pending

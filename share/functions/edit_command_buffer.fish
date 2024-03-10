@@ -38,12 +38,34 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         set -a wrapped_commands $tmp[1]
     end
     set -l found false
+    set -l cursor_from_editor
     for editor_command in $editor_basename $wrapped_commands
         switch $editor_command
             case vi vim nvim
-                set -a editor +$line +"norm! $col|" $f
-            case emacs emacsclient gedit kak
+                if test $editor_command = vi && not set -l vi_version "$(vi --version 2>/dev/null)"
+                    if printf %s $vi_version | grep -q BusyBox
+                        break
+                    end
+                    set -a editor +{$line} $f
+                    set found true
+                    break
+                end
+                set cursor_from_editor (mktemp)
+                set -a editor +$line "+norm! $col|" $f \
+                    '+autocmd VimLeave * ++once call writefile(
+                        [printf("%s %s %s", shellescape(bufname()), line("."), col("."))],
+                        "'$cursor_from_editor'"
+                     )'
+            case emacs emacsclient gedit
                 set -a editor +$line:$col $f
+            case kak
+                set cursor_from_editor (mktemp)
+                set -a editor +$line:$col $f -e "
+                        hook -always -once global ClientClose %val{client} %{
+                            echo -to-file $cursor_from_editor -quoting shell \
+                                %val{buffile} %val{cursor_line} %val{cursor_column}
+                        }
+                    "
             case nano
                 set -a editor +$line,$col $f
             case joe ee
@@ -79,6 +101,22 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         echo
         echo (_ "Ignoring the output of your editor since its exit status was non-zero")
         echo (_ "or the file was empty")
+    end
+    if set -q cursor_from_editor[1]
+        eval set -l pos "$(cat $cursor_from_editor)"
+        if set -q pos[1] && test $pos[1] = $f
+            set -l line $pos[2]
+            set -l column $pos[3]
+            commandline -C 0
+            for _line in (seq $line)[2..]
+                commandline -f down-line
+            end
+            commandline -f beginning-of-line
+            for _column in (seq $column)[2..]
+                commandline -f forward-single-char
+            end
+        end
+        command rm $cursor_from_editor
     end
     command rm $f
     # We've probably opened something that messed with the screen.

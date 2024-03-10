@@ -51,7 +51,8 @@ Interactive improvements
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
 - When the cursor is on a command that resolves to a script, :kbd:`Alt-O` will now open that script in your editor.
-- :kbd:`Alt-E` now passes the cursor position to the external editor also if the editor aliases a supported editor (via ``complete --wraps``).
+- After using :kbd:`Alt-E` to edit the commandline in an external editor, the editor's cursor position will be copied over to fish. This is currently supported for Vim and Kakoune.
+- When deciding how to pass the cursor position to and from the external editor, :kbd:`Alt-E` now resolves aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
 - Option completion now uses fuzzy subsequence filtering as well. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 - ASCII control characters are now rendered using symbols from Unicode's Control Pictures block.
 

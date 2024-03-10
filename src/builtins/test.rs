@@ -4,6 +4,8 @@ use crate::common;
 mod test_expressions {
     use super::*;
 
+    #[allow(unused_imports)]
+    use crate::future::IsOkAnd;
     use crate::nix::isatty;
     use crate::wutil::{
         file_id_for_path, fish_wcswidth, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,

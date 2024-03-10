@@ -528,8 +528,12 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 Ok(num) => num,
             };
 
-            let new_pos =
-                std::cmp::min(new_pos.max(0) as usize + range.start, current_buffer.len());
+            let new_pos = std::cmp::min(
+                range
+                    .start
+                    .saturating_add_signed(isize::try_from(new_pos).unwrap()),
+                current_buffer.len(),
+            );
             commandline_set_buffer(current_buffer.to_owned(), Some(new_pos));
         } else {
             streams.out.append(sprintf!("%lu\n", current_cursor_pos));

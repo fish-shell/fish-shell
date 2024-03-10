@@ -67,7 +67,7 @@ fn print_all(hard: bool, streams: &mut IoStreams) {
         } else {
             "(kB, "
         };
-        streams.out.append(wgettext_fmt!(
+        streams.out.append(sprintf!(
             "%-*ls %10ls-%lc) ",
             w,
             resource.desc,

@@ -665,7 +665,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
             value,
             EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
         );
-        streams.out.append(wgettext_fmt!(
+        streams.out.append(sprintf!(
             "$%ls[%d]: |%ls|\n",
             var_name,
             i + 1,

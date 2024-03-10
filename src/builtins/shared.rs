@@ -921,7 +921,7 @@ fn builtin_breakpoint(
             .map_or(true, |b| b.typ() == BlockType::breakpoint)
         {
             streams.err.append(wgettext_fmt!(
-                "%ls: Command not valid at and interactive prompt\n",
+                "%ls: Command not valid at an interactive prompt\n",
                 cmd,
             ));
             return STATUS_ILLEGAL_CMD;

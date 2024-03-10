@@ -987,7 +987,7 @@ impl Parser {
                     which_line
                 )
             } else {
-                wgettext_fmt!("%ls: ", user_presentable_path(&filename, self.vars()))
+                sprintf!("%ls: ", user_presentable_path(&filename, self.vars()))
             }
         } else {
             L!("fish: ").to_owned()

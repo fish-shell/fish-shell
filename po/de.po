@@ -588,6 +588,8 @@ msgid ""
 "%ls: Can't put job %s, '%ls' to background because it is not under job "
 "control\n"
 msgstr ""
+"%ls: Kann job %s, '%ls' nicht in den Hintergrund schicken weil er nicht der "
+"Jobsteuerung unterliegt\n"
 
 #: src/builtins/shared.rs:924
 msgid "%ls: Command not valid at an interactive prompt\n"
@@ -595,7 +597,7 @@ msgstr "%ls: Befehl nicht interaktiv am Prompt gültig\n"
 
 #: src/builtins/wait.rs:193
 msgid "%ls: Could not find a job with process id '%d'\n"
-msgstr ""
+msgstr "%ls: Konnte keinen Job mit Prozessid '%d' finden\n"
 
 #: src/builtins/wait.rs:202
 msgid "%ls: Could not find child processes with the name '%ls'\n"
@@ -701,31 +703,31 @@ msgstr ""
 
 #: src/builtins/printf.rs:529
 msgid "%.*ls: invalid conversion specification"
-msgstr ""
+msgstr "%.*ls: Ungültige Umwandlungsspezifikation"
 
 #: src/builtins/string/repeat.rs:25
 msgid "%ls: Invalid count value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger 'count'-Wert '%ls'\n"
 
 #: src/builtins/string/sub.rs:40
 msgid "%ls: Invalid end value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger 'end'-Wert '%ls'\n"
 
 #: src/builtins/string.rs:175
 msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
-msgstr ""
+msgstr "%ls: Ungültige Escapesequenz in Muster \"%ls\"\n"
 
 #: src/builtins/string/escape.rs:24
 msgid "%ls: Invalid escape style '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Escapestil '%ls'\n"
 
 #: src/builtins/string/split.rs:133
 msgid "%ls: Invalid fields value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger 'fields'-Wert '%ls'\n"
 
 #: src/builtins/abbr.rs:357
 msgid "%ls: Invalid function name: %ls\n"
-msgstr ""
+msgstr "%ls: Ungültiger Funktionsname: %ls\n"
 
 #: src/builtins/set.rs:368
 msgid "%ls: Invalid index starting at '%ls'\n"
@@ -733,11 +735,11 @@ msgstr "%ls: Ungültiger Indexstart bei '%ls'\n"
 
 #: src/builtins/status.rs:254
 msgid "%ls: Invalid job control mode '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Jobkontrollmodus '%ls'\n"
 
 #: src/builtins/string/sub.rs:27
 msgid "%ls: Invalid length value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Längenwert '%ls'\n"
 
 #: src/builtins/status.rs:218
 msgid "%ls: Invalid level value '%ls'\n"
@@ -765,11 +767,11 @@ msgstr ""
 
 #: src/builtins/path.rs:278
 msgid "%ls: Invalid permission '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Rechtewert '%ls'\n"
 
 #: src/builtins/abbr.rs:493
 msgid "%ls: Invalid position '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültige Position '%ls'\n"
 
 #: src/builtins/string/split.rs:130
 msgid "%ls: Invalid range value for field '%ls'\n"
@@ -777,7 +779,7 @@ msgstr ""
 
 #: src/builtins/path.rs:680
 msgid "%ls: Invalid sort key '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Sortierschlüssel '%ls'\n"
 
 #: src/builtins/string/sub.rs:33
 msgid "%ls: Invalid start value '%ls'\n"

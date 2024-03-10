@@ -62,4 +62,7 @@ end
 
 xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/{ex,im}plicit/share/*/*.fish
 
+# Remove the tmpdir from the location to avoid churn
+sed -i 's_^#: /.*/share/_#: share/_' messages.pot
+
 rm -r $tmpdir

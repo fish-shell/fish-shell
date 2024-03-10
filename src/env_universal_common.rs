@@ -23,7 +23,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -533,11 +533,12 @@ impl EnvUniversal {
     }
 
     /// Writes our state to the fd. path is provided only for error reporting.
-    fn write_to_fd(&mut self, fd: RawFd, path: &wstr) -> bool {
-        assert!(fd >= 0);
-        let mut success = true;
+    fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<usize> {
+        let fd = fd.as_fd();
         let contents = Self::serialize_with_vars(&self.vars);
-        if let Err(err) = write_loop(&fd, &contents) {
+        let res = write_loop(&fd, &contents);
+
+        if let Err(err) = res.as_ref() {
             let error = Errno(err.raw_os_error().unwrap());
             FLOG!(
                 error,
@@ -547,14 +548,13 @@ impl EnvUniversal {
                     error.to_string()
                 ),
             );
-            success = false;
         }
 
         // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-        self.last_read_file = file_id_for_fd(fd);
+        self.last_read_file = file_id_for_fd(fd.as_raw_fd());
 
         // We don't close the file.
-        success
+        res
     }
 
     fn move_new_vars_file_into_place(&mut self, src: &wstr, dst: &wstr) -> bool {
@@ -768,7 +768,7 @@ impl EnvUniversal {
         let private_file_path = &delete_pfp;
 
         // Write to it.
-        if !self.write_to_fd(private_fd.as_raw_fd(), &private_file_path) {
+        if self.write_to_fd(&private_fd, private_file_path).is_err() {
             FLOG!(uvar_file, "universal log write_to_fd() failed");
             return false;
         }
@@ -812,7 +812,7 @@ impl EnvUniversal {
         }
 
         // Apply new file.
-        if !self.move_new_vars_file_into_place(&private_file_path, &real_path) {
+        if !self.move_new_vars_file_into_place(private_file_path, &real_path) {
             FLOG!(
                 uvar_file,
                 "universal log move_new_vars_file_into_place() failed"

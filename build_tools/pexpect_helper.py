@@ -253,7 +253,7 @@ class SpawnedProc(object):
         failtype = pexpect_error_type(err)
         # If we get an EOF, we check if the process exited with a signal.
         # This shows us e.g. if it crashed
-        if failtype == 'EOF' and self.spawn.signalstatus != 0:
+        if failtype == 'EOF' and self.spawn.signalstatus is not None and self.spawn.signalstatus != 0:
             failtype = "SIGNAL " + Signals(self.spawn.signalstatus).name
 
         fmtkeys = {"failtype": failtype, "pat": escape(pat)}

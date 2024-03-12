@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish --features test-require-arg %s
 #
 # Tests for the `test` builtin, aka `[`.
 test inf -gt 0
@@ -94,3 +94,51 @@ test epoch -ef old && echo bad ef || echo good ef
 #CHECK: good ef
 
 rm -f epoch old newest epochlink
+
+test -n
+echo -- -n $status
+#CHECK: -n 1
+test -z
+echo -- -z $status
+#CHECK: -z 0
+
+test -d
+#CHECKERR: test: Missing argument at index 2
+#CHECKERR: -d
+#CHECKERR: ^
+#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: test -d
+#CHECKERR: ^
+
+test "foo"
+#CHECKERR: test: Missing argument at index 2
+#CHECKERR: foo
+#CHECKERR: ^
+#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: test "foo"
+#CHECKERR: ^
+
+test ""
+#CHECKERR: test: Missing argument at index 2
+#CHECKERR: ^
+#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: test ""
+#CHECKERR: ^
+
+test -z "" -a foo
+#CHECKERR: test: Missing argument at index 5
+#CHECKERR: -z  -a foo
+#CHECKERR: ^
+#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: test -z "" -a foo
+#CHECKERR: ^
+
+echo $status
+#CHECK: 1
+
+test
+#CHECKERR: test: Expected at least one argument
+#CHECKERR: {{.*}}test.fish (line {{\d+}}): 
+#CHECKERR: test
+#CHECKERR: ^
+#CHECKERR: (Type 'help test' for related documentation)

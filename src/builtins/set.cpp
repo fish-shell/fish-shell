@@ -190,6 +190,7 @@ static int parse_cmd_opts(set_cmd_opts_t &opts, int *optind,  //!OCLINT(high ncs
 
 static int validate_cmd_opts(const wchar_t *cmd, const set_cmd_opts_t &opts, int argc,
                              const wchar_t *argv[], parser_t &parser, io_streams_t &streams) {
+    UNUSED(argv);
     // Can't query and erase or list.
     if (opts.query && (opts.erase || opts.list)) {
         streams.err.append_format(BUILTIN_ERR_COMBO, cmd);

@@ -262,7 +262,7 @@ static int abbr_add(const abbr_options_t &opts, io_streams_t &streams) {
     abbrs_position_t position = opts.position ? *opts.position : abbrs_position_t::command;
 
     // Note historically we have allowed overwriting existing abbreviations.
-    abbreviation_t abbr{std::move(name), std::move(key), std::move(replacement), position};
+    abbreviation_t abbr{name, std::move(key), std::move(replacement), position};
     abbr.regex = std::move(regex);
     abbr.replacement_is_function = opts.function.has_value();
     abbr.set_cursor_marker = opts.set_cursor_marker;

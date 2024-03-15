@@ -1326,7 +1326,7 @@ complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initiali
 ### commit
 complete -c git -n __fish_git_needs_command -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
-complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_files modified deleted modified-staged-deleted untracked)'
+complete -f -c git -n '__fish_git_using_command commit' -n 'not __fish_git_contains_opt fixup squash' -a '(__fish_git_files modified deleted modified-staged-deleted untracked)'
 complete -c git -n '__fish_git_using_command commit' -s a -l all -d 'Automatically stage modified and deleted files'
 complete -c git -n '__fish_git_using_command commit' -s p -l patch -d 'Use interactive patch selection interface'
 complete -f -c git -n '__fish_git_using_command commit' -l fixup -d 'Fixup commit to be used with rebase --autosquash'

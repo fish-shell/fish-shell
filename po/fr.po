@@ -2239,7 +2239,7 @@ msgstr "%s : Pile de dossiers vide…\\n"
 
 #: share/functions/psub.fish:1
 msgid "%s: Not inside of command substitution"
-msgstr "%s : hors de laa substitution de commande"
+msgstr "%s : hors de la substitution de commande"
 
 #: share/functions/realpath.fish:1
 msgid "%s: These flags are not allowed by fish realpath: '%s'"

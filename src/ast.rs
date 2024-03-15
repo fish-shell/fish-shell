@@ -446,6 +446,12 @@ pub trait List: Node {
     }
 }
 
+/// This is for optional values and for lists.
+trait CheckParse {
+    /// A true return means we should descend into the production, false means stop.
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
+}
+
 /// Implement the node trait.
 macro_rules! implement_node {
     (
@@ -520,7 +526,7 @@ macro_rules! implement_leaf {
 
 /// Define a node that implements the keyword trait.
 macro_rules! define_keyword_node {
-    ( $name:ident, $($allowed:expr),* $(,)? ) => {
+    ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
             parent: Option<*const dyn Node>,
@@ -553,7 +559,7 @@ macro_rules! define_keyword_node {
                 &mut self.keyword
             }
             fn allowed_keywords(&self) -> &'static [ParseKeyword] {
-                &[$($allowed),*]
+                &[$(ParseKeyword::$allowed),*]
             }
         }
     }
@@ -561,7 +567,7 @@ macro_rules! define_keyword_node {
 
 /// Define a node that implements the token trait.
 macro_rules! define_token_node {
-    ( $name:ident, $($allowed:expr),* $(,)? ) => {
+    ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
             parent: Option<*const dyn Node>,
@@ -594,8 +600,17 @@ macro_rules! define_token_node {
                 &mut self.parse_token_type
             }
             fn allowed_tokens(&self) -> &'static [ParseTokenType] {
-                &[$($allowed),*]
+                Self::ALLOWED_TOKENS
             }
+        }
+        impl CheckParse for $name {
+            fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+                let typ = pop.peek_type(0);
+                Self::ALLOWED_TOKENS.contains(&typ)
+            }
+        }
+        impl $name {
+            const ALLOWED_TOKENS: &'static [ParseTokenType] = &[$(ParseTokenType::$allowed),*];
         }
     }
 }
@@ -1081,6 +1096,11 @@ impl ConcreteNodeMut for Redirection {
         Some(self)
     }
 }
+impl CheckParse for Redirection {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_type(0) == ParseTokenType::redirection
+    }
+}
 
 define_list_node!(
     VariableAssignmentList,
@@ -1117,6 +1137,12 @@ impl ConcreteNode for ArgumentOrRedirection {
 impl ConcreteNodeMut for ArgumentOrRedirection {
     fn as_mut_argument_or_redirection(&mut self) -> Option<&mut ArgumentOrRedirection> {
         Some(self)
+    }
+}
+impl CheckParse for ArgumentOrRedirection {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let typ = pop.peek_type(0);
+        matches!(typ, ParseTokenType::string | ParseTokenType::redirection)
     }
 }
 
@@ -1222,6 +1248,17 @@ impl ConcreteNode for JobConjunction {
 impl ConcreteNodeMut for JobConjunction {
     fn as_mut_job_conjunction(&mut self) -> Option<&mut JobConjunction> {
         Some(self)
+    }
+}
+impl CheckParse for JobConjunction {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let token = pop.peek_token(0);
+        // These keywords end a job list.
+        token.typ == ParseTokenType::string
+            && !matches!(
+                token.keyword,
+                ParseKeyword::kw_end | ParseKeyword::kw_else | ParseKeyword::kw_case
+            )
     }
 }
 
@@ -1424,6 +1461,12 @@ impl ConcreteNodeMut for ElseifClause {
         Some(self)
     }
 }
+impl CheckParse for ElseifClause {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_token(0).keyword == ParseKeyword::kw_else
+            && pop.peek_token(1).keyword == ParseKeyword::kw_if
+    }
+}
 
 define_list_node!(ElseifClauseList, elseif_clause_list, ElseifClause);
 impl ConcreteNode for ElseifClauseList {
@@ -1460,6 +1503,11 @@ impl ConcreteNode for ElseClause {
 impl ConcreteNodeMut for ElseClause {
     fn as_mut_else_clause(&mut self) -> Option<&mut ElseClause> {
         Some(self)
+    }
+}
+impl CheckParse for ElseClause {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_token(0).keyword == ParseKeyword::kw_else
     }
 }
 
@@ -1522,6 +1570,11 @@ impl ConcreteNode for CaseItem {
 impl ConcreteNodeMut for CaseItem {
     fn as_mut_case_item(&mut self) -> Option<&mut CaseItem> {
         Some(self)
+    }
+}
+impl CheckParse for CaseItem {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_token(0).keyword == ParseKeyword::kw_case
     }
 }
 
@@ -1642,6 +1695,11 @@ impl ConcreteNodeMut for JobContinuation {
         Some(self)
     }
 }
+impl CheckParse for JobContinuation {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_type(0) == ParseTokenType::pipe
+    }
+}
 
 define_list_node!(JobContinuationList, job_continuation_list, JobContinuation);
 impl ConcreteNode for JobContinuationList {
@@ -1685,6 +1743,12 @@ impl ConcreteNodeMut for JobConjunctionContinuation {
         Some(self)
     }
 }
+impl CheckParse for JobConjunctionContinuation {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let typ = pop.peek_type(0);
+        matches!(typ, ParseTokenType::andand | ParseTokenType::oror)
+    }
+}
 
 /// An andor_job just wraps a job, but requires that the job have an 'and' or 'or' job_decorator.
 /// Note this is only used for andor_job_list; jobs that are not part of an andor_job_list are not
@@ -1704,6 +1768,18 @@ impl ConcreteNode for AndorJob {
 impl ConcreteNodeMut for AndorJob {
     fn as_mut_andor_job(&mut self) -> Option<&mut AndorJob> {
         Some(self)
+    }
+}
+impl CheckParse for AndorJob {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+            return false;
+        }
+        // Check that the argument to and/or is a string that's not help. Otherwise
+        // it's either 'and --help' or a naked 'and', and not part of this list.
+        let next_token = pop.peek_token(1);
+        next_token.typ == ParseTokenType::string && !next_token.is_help_argument
     }
 }
 
@@ -1816,6 +1892,25 @@ impl ConcreteNodeMut for VariableAssignment {
         Some(self)
     }
 }
+impl CheckParse for VariableAssignment {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        // Do we have a variable assignment at all?
+        if !pop.peek_token(0).may_be_variable_assignment {
+            return false;
+        }
+        // What is the token after it?
+        match pop.peek_type(1) {
+            // We have `a= cmd` and should treat it as a variable assignment.
+            ParseTokenType::string => true,
+            // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
+            ParseTokenType::terminate => pop.allow_incomplete(),
+            // We have e.g. `a= >` which is an error.
+            // Note that we do not produce an error here. Instead we return false
+            // so this the token will be seen by allocate_populate_statement_contents.
+            _ => false,
+        }
+    }
+}
 
 /// Zero or more newlines.
 #[derive(Default, Debug)]
@@ -1867,33 +1962,74 @@ impl ConcreteNodeMut for Argument {
         Some(self)
     }
 }
+impl CheckParse for Argument {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        pop.peek_type(0) == ParseTokenType::string
+    }
+}
 
-define_token_node!(SemiNl, ParseTokenType::end);
-define_token_node!(String_, ParseTokenType::string);
-define_token_node!(TokenBackground, ParseTokenType::background);
-#[rustfmt::skip]
-define_token_node!(TokenConjunction, ParseTokenType::andand, ParseTokenType::oror);
-define_token_node!(TokenPipe, ParseTokenType::pipe);
-define_token_node!(TokenRedirection, ParseTokenType::redirection);
+define_token_node!(SemiNl, end);
+define_token_node!(String_, string);
+define_token_node!(TokenBackground, background);
+define_token_node!(TokenConjunction, andand, oror);
+define_token_node!(TokenPipe, pipe);
+define_token_node!(TokenRedirection, redirection);
 
-#[rustfmt::skip]
-define_keyword_node!(DecoratedStatementDecorator, ParseKeyword::kw_command, ParseKeyword::kw_builtin, ParseKeyword::kw_exec);
-#[rustfmt::skip]
-define_keyword_node!(JobConjunctionDecorator, ParseKeyword::kw_and, ParseKeyword::kw_or);
-#[rustfmt::skip]
-define_keyword_node!(KeywordBegin, ParseKeyword::kw_begin);
-define_keyword_node!(KeywordCase, ParseKeyword::kw_case);
-define_keyword_node!(KeywordElse, ParseKeyword::kw_else);
-define_keyword_node!(KeywordEnd, ParseKeyword::kw_end);
-define_keyword_node!(KeywordFor, ParseKeyword::kw_for);
-define_keyword_node!(KeywordFunction, ParseKeyword::kw_function);
-define_keyword_node!(KeywordIf, ParseKeyword::kw_if);
-define_keyword_node!(KeywordIn, ParseKeyword::kw_in);
-#[rustfmt::skip]
-define_keyword_node!(KeywordNot, ParseKeyword::kw_not, ParseKeyword::kw_builtin, ParseKeyword::kw_exclam);
-define_keyword_node!(KeywordSwitch, ParseKeyword::kw_switch);
-define_keyword_node!(KeywordTime, ParseKeyword::kw_time);
-define_keyword_node!(KeywordWhile, ParseKeyword::kw_while);
+define_keyword_node!(DecoratedStatementDecorator, kw_command, kw_builtin, kw_exec);
+define_keyword_node!(JobConjunctionDecorator, kw_and, kw_or);
+define_keyword_node!(KeywordBegin, kw_begin);
+define_keyword_node!(KeywordCase, kw_case);
+define_keyword_node!(KeywordElse, kw_else);
+define_keyword_node!(KeywordEnd, kw_end);
+define_keyword_node!(KeywordFor, kw_for);
+define_keyword_node!(KeywordFunction, kw_function);
+define_keyword_node!(KeywordIf, kw_if);
+define_keyword_node!(KeywordIn, kw_in);
+define_keyword_node!(KeywordNot, kw_not, kw_builtin, kw_exclam);
+define_keyword_node!(KeywordSwitch, kw_switch);
+define_keyword_node!(KeywordTime, kw_time);
+define_keyword_node!(KeywordWhile, kw_while);
+
+impl CheckParse for JobConjunctionDecorator {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        // This is for a job conjunction like `and stuff`
+        // But if it's `and --help` then we treat it as an ordinary command.
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+            return false;
+        }
+        !pop.peek_token(1).is_help_argument
+    }
+}
+
+impl CheckParse for DecoratedStatementDecorator {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        // Here the keyword is 'command' or 'builtin' or 'exec'.
+        // `command stuff` executes a command called stuff.
+        // `command -n` passes the -n argument to the 'command' builtin.
+        // `command` by itself is a command.
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(
+            keyword,
+            ParseKeyword::kw_command | ParseKeyword::kw_builtin | ParseKeyword::kw_exec
+        ) {
+            return false;
+        }
+        let next_token = pop.peek_token(1);
+        next_token.typ == ParseTokenType::string && !next_token.is_dash_prefix_string()
+    }
+}
+
+impl CheckParse for KeywordTime {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        // Time keyword is only the time builtin if the next argument doesn't have a dash.
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(keyword, ParseKeyword::kw_time) {
+            return false;
+        }
+        !pop.peek_token(1).is_dash_prefix_string()
+    }
+}
 
 impl DecoratedStatement {
     /// \return the decoration for this statement.
@@ -3293,120 +3429,12 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// This is for optional values and for lists.
-    /// A true return means we should descend into the production, false means stop.
-    /// Note that the argument is always nullptr and should be ignored. It is provided strictly
-    /// for overloading purposes.
-    fn can_parse(&mut self, node: &dyn Node) -> bool {
-        match node.typ() {
-            Type::job_conjunction => {
-                let token = self.peek_token(0);
-                if token.typ != ParseTokenType::string {
-                    return false;
-                }
-                !matches!(
-                    token.keyword,
-                    // These end a job list.
-                    ParseKeyword::kw_end | ParseKeyword::kw_else | ParseKeyword::kw_case
-                )
-            }
-            Type::argument => self.peek_type(0) == ParseTokenType::string,
-            Type::redirection => self.peek_type(0) == ParseTokenType::redirection,
-            Type::argument_or_redirection => {
-                [ParseTokenType::string, ParseTokenType::redirection].contains(&self.peek_type(0))
-            }
-            Type::variable_assignment => {
-                // Do we have a variable assignment at all?
-                if !self.peek_token(0).may_be_variable_assignment {
-                    return false;
-                }
-                // What is the token after it?
-                match self.peek_type(1) {
-                    ParseTokenType::string => {
-                        // We have `a= cmd` and should treat it as a variable assignment.
-                        true
-                    }
-                    ParseTokenType::terminate => {
-                        // We have `a=` which is OK if we are allowing incomplete, an error
-                        // otherwise.
-                        self.allow_incomplete()
-                    }
-                    _ => {
-                        // We have e.g. `a= >` which is an error.
-                        // Note that we do not produce an error here. Instead we return false
-                        // so this the token will be seen by allocate_populate_statement_contents.
-                        false
-                    }
-                }
-            }
-            Type::token_base => node
-                .as_token()
-                .unwrap()
-                .allows_token(self.peek_token(0).typ),
-
-            // Note we have specific overloads for our keyword nodes, as they need custom logic.
-            Type::keyword_base => {
-                let keyword = node.as_keyword().unwrap();
-                match keyword.allowed_keywords() {
-                    // job conjunction decorator
-                    [ParseKeyword::kw_and, ParseKeyword::kw_or] => {
-                        // This is for a job conjunction like `and stuff`
-                        // But if it's `and --help` then we treat it as an ordinary command.
-                        keyword.allows_keyword(self.peek_token(0).keyword)
-                            && !self.peek_token(1).is_help_argument
-                    }
-                    // decorated statement decorator
-                    [ParseKeyword::kw_command, ParseKeyword::kw_builtin, ParseKeyword::kw_exec] => {
-                        // Here the keyword is 'command' or 'builtin' or 'exec'.
-                        // `command stuff` executes a command called stuff.
-                        // `command -n` passes the -n argument to the 'command' builtin.
-                        // `command` by itself is a command.
-                        if !keyword.allows_keyword(self.peek_token(0).keyword) {
-                            return false;
-                        }
-                        let tok1 = self.peek_token(1);
-                        tok1.typ == ParseTokenType::string && !tok1.is_dash_prefix_string()
-                    }
-                    [ParseKeyword::kw_time] => {
-                        // Time keyword is only the time builtin if the next argument doesn't
-                        // have a dash.
-                        keyword.allows_keyword(self.peek_token(0).keyword)
-                            && !self.peek_token(1).is_dash_prefix_string()
-                    }
-                    _ => panic!("Unexpected keyword in can_parse()"),
-                }
-            }
-            Type::job_continuation => self.peek_type(0) == ParseTokenType::pipe,
-            Type::job_conjunction_continuation => {
-                [ParseTokenType::andand, ParseTokenType::oror].contains(&self.peek_type(0))
-            }
-            Type::andor_job => {
-                match self.peek_token(0).keyword {
-                    ParseKeyword::kw_and | ParseKeyword::kw_or => {
-                        // Check that the argument to and/or is a string that's not help. Otherwise
-                        // it's either 'and --help' or a naked 'and', and not part of this list.
-                        let nexttok = self.peek_token(1);
-                        nexttok.typ == ParseTokenType::string && !nexttok.is_help_argument
-                    }
-                    _ => false,
-                }
-            }
-            Type::elseif_clause => {
-                self.peek_token(0).keyword == ParseKeyword::kw_else
-                    && self.peek_token(1).keyword == ParseKeyword::kw_if
-            }
-            Type::else_clause => self.peek_token(0).keyword == ParseKeyword::kw_else,
-            Type::case_item => self.peek_token(0).keyword == ParseKeyword::kw_case,
-            _ => panic!("Unexpected token type in can_parse()"),
-        }
-    }
-
     /// Given that we are a list of type ListNodeType, whose contents type is ContentsNode,
     /// populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
     fn populate_list<ListType: List>(&mut self, list: &mut ListType, exhaust_stream: bool)
     where
-        <ListType as List>::ContentsNode: NodeMut,
+        <ListType as List>::ContentsNode: NodeMut + CheckParse,
     {
         assert!(list.contents().is_empty(), "List is not initially empty");
 
@@ -3665,10 +3693,8 @@ impl<'s> Populator<'s> {
         })
     }
 
-    fn try_parse<T: NodeMut + Default>(&mut self) -> Option<Box<T>> {
-        // TODO Optimize this.
-        let prototype = T::default();
-        if !self.can_parse(&prototype) {
+    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<Box<T>> {
+        if !T::can_be_parsed(self) {
             return None;
         }
         Some(self.allocate_visit())

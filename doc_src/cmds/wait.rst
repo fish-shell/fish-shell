@@ -51,3 +51,9 @@ spawns five jobs in the background, and then waits until all of them finishes.
     wait sleep
 
 spawns five jobs and ``hoge`` in the background, and then waits until all ``sleep``\s finish, and doesn't wait for ``hoge`` finishing.
+
+See Also
+--------
+
+- ``command man wait`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/wait.html>

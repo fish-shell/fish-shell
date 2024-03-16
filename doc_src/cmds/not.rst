@@ -34,5 +34,3 @@ The following code reports an error and exits if no file named spoon can be foun
         echo There is no spoon
         exit 1
     end
-
-

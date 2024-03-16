@@ -53,3 +53,9 @@ Example
     >_ type fg
     fg is a builtin
 
+
+See Also
+--------
+
+- ``command man type`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/type.html>

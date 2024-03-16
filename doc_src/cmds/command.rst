@@ -40,3 +40,9 @@ Examples
 | ``command -s ls`` prints the path to the ``ls`` program.
 | ``command -q git; and command git log`` runs ``git log`` only if ``git`` exists.
 | ``command -sq git`` and ``command -q git`` and ``command -vq git`` return true (0) if a git command could be found and don't print anything.
+
+See Also
+--------
+
+- ``command man command`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/command.html>

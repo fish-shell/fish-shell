@@ -45,3 +45,9 @@ If only 123 and 789 exist, it will still background them and print an error abou
 ``bg 123 banana`` or ``bg banana 123`` will complain that "banana" is not a valid job specifier.
 
 ``bg %2`` will background job 2.
+
+See Also
+--------
+
+- ``command man bg`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/bg.html>

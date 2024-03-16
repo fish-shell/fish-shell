@@ -100,6 +100,8 @@ See Also
 --------
 
 - the :doc:`echo <echo>` command, for simpler output
+- ``command man printf`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/printf.html>
 
 Footnotes
 ---------

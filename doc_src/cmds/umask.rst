@@ -50,3 +50,9 @@ Example
 -------
 
 ``umask 177`` or ``umask u=rw`` sets the file creation mask to read and write for the owner and no permissions at all for any other users.
+
+See Also
+--------
+
+- ``command man umask`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/umask.html>

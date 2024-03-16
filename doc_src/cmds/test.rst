@@ -244,3 +244,9 @@ Other commands that may be useful as a condition, and are often easier to use:
 
 - :doc:`string`, which can do string operations including wildcard and regular expression matching
 - :doc:`path`, which can do file checks and operations, including filters on multiple paths at once
+
+See Also
+--------
+
+- ``command man test`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html>

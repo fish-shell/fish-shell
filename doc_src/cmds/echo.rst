@@ -79,3 +79,5 @@ See Also
 --------
 
 - the :doc:`printf <printf>` command, for more control over output formatting
+- ``command man echo`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/echo.html>

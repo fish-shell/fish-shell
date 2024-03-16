@@ -79,3 +79,9 @@ Inline variable assignments need to follow the ``time`` keyword::
    Executed in   90.00 secs      fish           external
       usr time    4.62 millis    4.62 millis    0.00 millis
       sys time    2.35 millis    0.41 millis    1.95 millis
+
+See Also
+--------
+
+- ``command man time`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/time.html>

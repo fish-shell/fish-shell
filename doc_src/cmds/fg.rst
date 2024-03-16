@@ -29,3 +29,9 @@ Example
 ``fg`` will put the last job in the foreground.
 
 ``fg %3`` will put job 3 into the foreground.
+
+See Also
+--------
+
+``command man fg``
+https://pubs.opengroup.org/onlinepubs/9699919799/utilities/fg.html

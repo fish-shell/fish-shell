@@ -52,3 +52,8 @@ Example
     trap "status --print-stack-trace" SIGUSR1
     # Prints a stack trace each time the SIGUSR1 signal is sent to the shell.
 
+See Also
+--------
+
+- ``command man trap`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#trap>

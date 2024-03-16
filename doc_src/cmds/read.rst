@@ -144,3 +144,8 @@ Delimiters given via "-d" are taken as one string::
     echo $c # nothing
 
 For an example on interactive use, see :ref:`Querying for user input <user-input>`.
+
+See Also
+--------
+- ``command man read`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/read.html>

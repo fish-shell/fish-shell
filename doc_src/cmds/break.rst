@@ -38,3 +38,5 @@ See Also
 --------
 
 - the :doc:`continue <continue>` command, to skip the remainder of the current iteration of the current inner loop
+- ``command man break`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#break>

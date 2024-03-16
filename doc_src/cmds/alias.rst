@@ -54,9 +54,11 @@ The following code will create ``rmi``, which runs ``rm`` with additional argume
     alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
 
 
-See more
+See Also
 --------
 
-1. The :doc:`function <function>` command this builds on.
-2. :ref:`Functions <syntax-function>`.
-3. :ref:`Defining aliases <syntax-aliases>`.
+- The :doc:`function <function>` command this builds on.
+- :ref:`Functions <syntax-function>`.
+- :ref:`Defining aliases <syntax-aliases>`.
+- ``command man alias`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/alias.html>

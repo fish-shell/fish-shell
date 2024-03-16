@@ -32,3 +32,8 @@ The following options are available:
 
 **-h** or **--help**
     Displays help about using this command.
+
+See Also
+--------
+
+- ``command man realpath`` -- show docs for the non-fish variant.

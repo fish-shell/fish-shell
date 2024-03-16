@@ -34,3 +34,9 @@ An implementation of the false command as a fish function:
     function false
         return 1
     end
+
+See Also
+--------
+
+- ``command man return`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#return>

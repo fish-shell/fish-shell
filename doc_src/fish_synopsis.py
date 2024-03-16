@@ -53,7 +53,7 @@ lexer_rules = [
         # Hack: treat the "[ expr ]" alias of builtin test as command token (not as grammar
         # metacharacter).  This works because we write it without spaces in the grammar (like
         # "[OPTIONS]").
-        (r"\[ | \]", Name.Constant),
+        (r"\. |! |\[ | \]", Name.Constant),
         # Statement separators.
         (r"\n", Text.Whitespace),
         (r";", Punctuation),

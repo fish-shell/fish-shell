@@ -231,7 +231,7 @@ which is logically equivalent to the following:
 Standards
 ---------
 
-Unlike many things in fish, ``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://www.unix.com/man-page/posix/1p/test/>`__. The following exceptions apply:
+Unlike many things in fish, ``test`` implements a subset of the `IEEE Std 1003.1-2008 (POSIX.1) standard <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html>`__. The following exceptions apply:
 
 - The ``<`` and ``>`` operators for comparing strings are not implemented.
 

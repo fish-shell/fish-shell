@@ -1,3 +1,8 @@
+function clasp_list_projects
+    clasp list --noShorten true 2>/dev/null |
+        string replace --regex '(.*) - https://script.google.com/d/(.*)/edit' '$2\\t$1'
+end
+
 # options
 complete -c clasp -s v -l version -d "output the current version"
 complete -c clasp -s A -l auth -d "path to an auth file or a folder with a '.clasprc.json' file."
@@ -38,9 +43,11 @@ complete -c clasp -n '__fish_seen_subcommand_from create' -l rootDir -d "Local r
 
 # clone options
 complete -c clasp -n '__fish_seen_subcommand_from clone' -l rootDir -d "Local root directory in which clasp will store your project files."
+complete -c clasp -n '__fish_seen_subcommand_from clone' -xa '(clasp_list_projects)'
 
 # pull options
 complete -c clasp -n '__fish_seen_subcommand_from pull' -l versionNumber -d "The version number of the project to retrieve."
+complete -c clasp -n '__fish_seen_subcommand_from pull' -xa '(clasp_list_projects)'
 
 # push options
 complete -c clasp -n '__fish_seen_subcommand_from push' -s f -l force -d "Forcibly overwrites the remote manifest."

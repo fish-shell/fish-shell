@@ -17,8 +17,7 @@ Description
 .. only:: builder_man
 
           NOTE: This page documents the fish builtin ``test``.
-          To see the documentation on the ``test`` command you might have,
-          use ``command man test``.
+          To see the documentation on any non-fish versions, use ``command man test``.
 
 ``test`` checks the given conditions and sets the exit status to 0 if they are true, 1 if they are false.
 

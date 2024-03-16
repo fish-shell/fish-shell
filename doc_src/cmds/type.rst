@@ -13,6 +13,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``type``.
+          To see the documentation on any non-fish versions, use ``command man type``.
+
 With no options, :command:`type` indicates how each *NAME* would be interpreted if used as a command name.
 
 The following options are available:

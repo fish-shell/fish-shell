@@ -13,6 +13,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``wait``.
+          To see the documentation on any non-fish versions, use ``command man wait``.
+
 ``wait`` waits for child jobs to complete.
 
 If a *PID* is specified, the command waits for the job that the process with that process ID belongs to.

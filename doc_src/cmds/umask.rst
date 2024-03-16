@@ -14,6 +14,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``umask``.
+          To see the documentation on any non-fish versions, use ``command man umask``.
+
 ``umask`` displays and manipulates the "umask", or file creation mode mask, which is used to restrict the default access to files.
 
 The umask may be expressed either as an octal number, which represents the rights that will be removed by default, or symbolically, which represents the only rights that will be granted by default.

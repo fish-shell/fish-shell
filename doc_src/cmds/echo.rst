@@ -13,6 +13,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``echo``.
+          To see the documentation on any non-fish versions, use ``command man echo``.
+
 ``echo`` displays *STRING* of text.
 
 The following options are available:

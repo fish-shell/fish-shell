@@ -22,6 +22,7 @@ use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
+use std::fs::File;
 use std::mem::MaybeUninit;
 use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
@@ -496,7 +497,7 @@ impl EnvUniversal {
         &mut self,
         directory: &wstr,
         out_path: &mut WString,
-    ) -> Result<OwnedFd, Errno> {
+    ) -> Result<File, Errno> {
         // Create and open a temporary file for writing within the given directory. Try to create a
         // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
         // This should almost always succeed on the first try.

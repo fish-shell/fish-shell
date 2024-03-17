@@ -1,16 +1,17 @@
 fish 3.7.1 (released ????)
 ====================================
 
-This release of fish contains a number of fixes for problems identified in fish 3.7.0, as well as some enhancements.
+This release of fish fixes the following problems identified in fish 3.7.0:
 
-Notable improvements and fixes
-------------------------------
 - Deleting the last history entry via ``history delete`` works again (:issue:`10190`).
-- Wildcards (``*``) would sometimes generate paths that did not exist, this has been fixed (:issue:`10205`).
-- Fish no longer crashes when trying to run an ELF with a missing interpreter . This crashed in the process after fork, so it is mainly a cosmetic issue (:issue:`10199`).
-- ``funced`` will now always ``source`` the file after it has written it, even if its editor did not change it. This prevents issues if the file was otherwise modified (:issue:`10318`).
+- Wildcards (``*``) will no longer sometimes generate paths that did not exist (:issue:`10205`).
+
+This release also contains some improvements:
+
+- A crash when trying to run an ELF program with a missing interpreter has been fixed. This crashed in the process after fork, so did not affect the fish process that tried to start the program (:issue:`10199`).
+- ``funced`` will now always ``source`` the file after it has written it, even if the contents did not change. This prevents issues if the file was otherwise modified (:issue:`10318`).
 - The warning for when a builtin returns a negative exit code was improved, now mentioning the original status (:issue:`10187`).
-- The completions for ``highlight`` were removed as they are shipped upstream (:issue:`10238`).
+- Some improvements to documentation and completions.
 
 --------------
 

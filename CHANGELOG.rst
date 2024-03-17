@@ -3,8 +3,18 @@ fish 3.8.0 (released ???)
 
 .. ignore: 9439 9440 9442 9452 9469 9480 9482 9520 9536 9541 9544 9559 9561 9576 9575
    9568 9588 9556 9563 9567 9585 9591 9593 9594 9603 9600 9599 9592 9612 9613 9619 9630 9638 9625 9654 9637 9673 9666 9626 9688 9725 9636 9735 
+   9542 9332 9566 9573 9579 9586 9589 9607 9608 9615 9616 9621 9641 9642 9643 9653 9658 9661
+   9671 9726 9729 9739 9745 9746 9754 9765 9767 9768 9771 9777 9778 9786 9816 9818 9821 9839
+   9845 9864 9916 9923 9962 9963 9990 9991 10121 10179 9856 9859 9861 9863 9867 9869 9874 9879
+   9881 9894 9896 9902 9873 10228 9925 9928 10145 10146 10161 10173 10195 10220 10222 10288
+   10342 10358 9927 9930 9947 9948 9950 9952 9966 9968 9980 9981 9984 10040 10061 10101 10090
+   10102 10108 10114 10115 10128 10129 10143 10174 10175 10180 10182 10184 10185 10186 10188
+   10198 10200 10201 10204 10210 10214 10219 10223 10227 10232 10235 10237 10243 10244 10245
+   10246 10251 10260 10267 10281 10347 10366 10368 10370 10371 10263 10270 10272 10276 10277
+   10278 10279 10291 10293 10305 10306 10309 10316 10317 10327 10328 10329 10330 10336 10340
+   10345 10346 10353 10354 10356 10372 10373
 
-The entirety of fish's code has been ported to rust from C++ (:issue:`9512`).
+The entirety of fish's C++ code has been ported to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
 Packagers should see the :ref:`For Distributors <rust-packaging>` section at the end.
 
@@ -28,37 +38,51 @@ Notable backwards-incompatible changes
 
 Notable improvements and fixes
 ------------------------------
-- ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
+- New function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
+- :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind \cc __fish_cancel_commandline`` (:issue:`10213`).
+- The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
 
 Deprecations and removed features
 ---------------------------------
 
 - ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in custom completions (:issue:`10212`).
+- A new feature flag, ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
 
 Scripting improvements
 ----------------------
-- ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively``.
+- ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively`` (:issue:`6575`).
 - Stack trace now shows line numbers for copied functions.
+- ``foo & && bar`` is now a syntax error, like in other shells (:issue:`9911`).
+- ``if -e foo; end`` now prints a more accurate error (:issue:`10000`).
+- Variables in command position that expand to a subcommand keyword are now forbidden to fix a likely user error. For example ``set editor command emacs; $editor`` is no longer allowed (:issue:`10249`).
 - New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
 - An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
 - ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
 - ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
 - ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
+- ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 
 Interactive improvements
 ------------------------
-- :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind \cc __fish_cancel_commandline`` (:issue:`10213`).
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
-- The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
-- When the cursor is on a command that resolves to a script, :kbd:`Alt-O` will now open that script in your editor.
-- After using :kbd:`Alt-E` to edit the commandline in an external editor, the editor's cursor position will be copied over to fish. This is currently supported for Vim and Kakoune.
-- When deciding how to pass the cursor position to and from the external editor, :kbd:`Alt-E` now resolves aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
-- Option completion now uses fuzzy subsequence filtering as well. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
-- Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block.
+- Option completion now uses fuzzy subsequence filtering, as non-option completion does. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
+- Autosuggestions were sometimes not shown after recalling a line from history, which has been fixed (:issue:`10287`).
+- Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block (:issue:`5274`).
+- When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
+- Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
+- `fish_vi_cursor` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
+- fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
+- ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
+- When the cursor is on a command that resolves to an executable script, :kbd:`Alt-O` will now open that script in your editor (:issue:`10266`).
+- Two improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
+  - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
+  - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
+- ``backward-kill-path-component`` and friends now treat ``#`` as part of a path component (:issue:`10271`).
 - The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
+- Vi mode now binds :kbd:`Control-N`  to accept autosuggestions (:issue:`10339`).
 
 Improved prompts
 ^^^^^^^^^^^^^^^^
@@ -69,20 +93,22 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Fish now checks for the ``ts`` capability in terminfo to determine if a terminal supports setting the window title.
+- Fish now checks for the ``ts`` capability in terminfo to determine if a terminal supports setting the window title (:issue:`10037`).
 
 Other improvements
 ------------------
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
+- The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
+- ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
 
 .. _rust-packaging:
 
 For distributors
 ----------------
 
-Fish has been entirely ported to rust. That means the dependencies have changed.
+Fish has been ported to Rust. That means the dependencies have changed.
 
-It now requires rust 1.67 at least.
+It now requires Rust 1.67 at least.
 
 CMake remains for now because cargo is unable to install the many asset files that fish needs. The minimum required CMake version has increased to 3.19.
 
@@ -94,7 +120,7 @@ Some smaller changes:
 - fish no longer links against the (n)curses library, opting to read the terminfo database via the terminfo crate.
   This means hashed terminfo databases are no longer supported. From our research, they are basically unused.
   When packaging fish, you likely want to add a dependency on the package containing your terminfo database instead of curses.
-  If it cannot find a terminfo database, fish will now fall back on an included xterm-256color definition.
+  If it cannot find a terminfo database, fish will now fall back on an included xterm-256color definition. See (:issue:`10269`).
 
 --------------
 

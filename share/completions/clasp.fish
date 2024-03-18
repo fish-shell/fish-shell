@@ -1,21 +1,21 @@
-function clasp_list_projects
+function __fish_clasp_list_projects
     clasp list --noShorten true 2>/dev/null |
         string replace --regex '(.*) - https://script.google.com/d/(.*)/edit' '$2\\t$1'
 end
 
-function clasp_list_versions
+function __fish_clasp_list_versions
     clasp versions 2>/dev/null |
         string replace --regex '(\\d+) - (.*)' '$1\\t$2' |
         sed -n '2,$p'
 end
 
-function clasp_list_deployments
+function __fish_clasp_list_deployments
     clasp deployments 2>/dev/null |
         string replace --regex -- '- (\\S+) @(\\S+).*' '$1\\tversion $2' |
         sed -n '2,$p'
 end
 
-function clasp_list_subcommands
+function __fish_clasp_list_subcommands
     clasp --help |
         string match --regex '^  [a-z]' --entire |
         string replace --regex '^\\s{2}([a-z]+).*' '$1'
@@ -66,10 +66,10 @@ complete -c clasp -n "$create_condition" -l rootDir -d "Path to a directory with
 # clone options
 set clone_condition '__fish_seen_subcommand_from clone'
 complete -c clasp -n "$clone_condition" -l rootDir -d "Path to a directory project files"
-complete -c clasp -n "$clone_condition" -x -a '(clasp_list_projects)'
+complete -c clasp -n "$clone_condition" -x -a '(__fish_clasp_list_projects)'
 
 # pull options
-complete -c clasp -n '__fish_seen_subcommand_from pull' -l versionNumber -x -a '(clasp_list_versions)' -d "A project version to pull"
+complete -c clasp -n '__fish_seen_subcommand_from pull' -l versionNumber -x -a '(__fish_clasp_list_versions)' -d "A project version to pull"
 
 # push options
 set push_condition '__fish_seen_subcommand_from push'
@@ -90,12 +90,12 @@ complete -c clasp -n "$open_condition" -l deploymentId -d "Use a custom deployme
 set deploy_condition '__fish_seen_subcommand_from deploy'
 complete -c clasp -n "$deploy_condition" -s V -l versionNumber -d "A project version"
 complete -c clasp -n "$deploy_condition" -s d -l description -d "A deployment description"
-complete -c clasp -n "$deploy_condition" -s i -l deploymentId -x -a '(clasp_list_deployments)' -d "A deployment ID to redeploy"
+complete -c clasp -n "$deploy_condition" -s i -l deploymentId -x -a '(__fish_clasp_list_deployments)' -d "A deployment ID to redeploy"
 
 # undeploy options
 set undeploy_condition '__fish_seen_subcommand_from undeploy'
 complete -c clasp -n "$undeploy_condition" -l all -d "Undeploy all deployments"
-complete -c clasp -n "$undeploy_condition" -x -a '(clasp_list_deployments)'
+complete -c clasp -n "$undeploy_condition" -x -a '(__fish_clasp_list_deployments)'
 
 # list options
 complete -c clasp -n '__fish_seen_subcommand_from list' -l noShorten -d "Do not shorten long names"
@@ -121,4 +121,4 @@ complete -c clasp -n "$apis_condition" -x -a disable -d 'Disable APIs'
 complete -c clasp -n "$apis_condition" -l open -d "Open API Console in a browser"
 
 # help subcommands
-complete -c clasp -n '__fish_seen_subcommand_from help' -x -a '(clasp_list_subcommands)'
+complete -c clasp -n '__fish_seen_subcommand_from help' -x -a '(__fish_clasp_list_subcommands)'

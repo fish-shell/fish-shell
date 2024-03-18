@@ -15,10 +15,49 @@ function __fish_clasp_list_deployments
         sed -n '2,$p'
 end
 
+function __fish_list_advanced_services
+    printf '%s\\t%s service\n' admin-sdk-directory 'Admin SDK Directory' \
+        admin-sdk-license-manager 'Admin SDK Enterprise License Manager' \
+        admin-sdk-groups-migration 'Admin SDK Groups Migration' \
+        admin-sdk-groups-settings 'Admin SDK Groups Settings' \
+        admin-sdk-reseller 'Admin SDK Google Workspace Reseller' \
+        admin-sdk-reports 'Admin SDK Reports' \
+        calendar 'Advanced Calendar' \
+        chat 'Advanced Chat' \
+        docs 'Advanced Docs' \
+        drive 'Advanced Drive' \
+        drive-activity 'Google Drive Activity' \
+        drive-labels 'Advanced Drive Labels' \
+        gmail 'Advanced Gmail' \
+        sheets 'Advanced Sheets' \
+        slides 'Advanced Slides' \
+        classroom Classroom \
+        people 'Advanced People' \
+        contacts-people 'Migrate from Contacts service to People API' \
+        tasks Tasks
+end
+
 function __fish_clasp_list_subcommands
     clasp --help |
         string match --regex '^  [a-z]' --entire |
         string replace --regex '^\\s{2}([a-z]+).*' '$1'
+end
+
+function __fish_seen_subcommands_from
+    set -l cmd (commandline -poc)
+    set -e cmd[1]
+
+    test (count $argv) -gt (count $cmd) && return 1
+
+    set -l i (count $argv)
+    set -l j (count $cmd)
+    while test $i -gt 0
+        contains -- $argv[$i] $cmd[$j] || return 1
+        set i (math $i - 1)
+        set j (math $j - 1)
+    end
+
+    return 0
 end
 
 # options
@@ -115,10 +154,12 @@ complete -c clasp -n "$run_condition" -s p -l params -d "Specify parameters for 
 
 # apis subcommands and options
 set apis_condition '__fish_seen_subcommand_from apis'
+set apis_subcommand_condition '__fish_seen_subcommands_from apis enable || __fish_seen_subcommands_from apis disable'
 complete -c clasp -n "$apis_condition" -x -a list -d 'List APIs'
 complete -c clasp -n "$apis_condition" -x -a enable -d 'Enable APIs'
 complete -c clasp -n "$apis_condition" -x -a disable -d 'Disable APIs'
 complete -c clasp -n "$apis_condition" -l open -d "Open API Console in a browser"
+complete -c clasp -n "$apis_subcommand_condition" -a '(__fish_list_advanced_services)'
 
 # help subcommands
 complete -c clasp -n '__fish_seen_subcommand_from help' -x -a '(__fish_clasp_list_subcommands)'

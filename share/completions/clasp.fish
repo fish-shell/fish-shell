@@ -37,6 +37,11 @@ function __fish_list_advanced_services
         tasks Tasks
 end
 
+function __fish_clasp_list_functions
+    grep --extended-regexp '^\\s*function\\s+\\w+' --recursive --include '*.js' --no-filename --color=never . |
+        string replace --regex '\\s*function\\s+(\\w+).*' '$1'
+end
+
 function __fish_clasp_list_subcommands
     clasp --help |
         string match --regex '^  [a-z]' --entire |
@@ -151,6 +156,7 @@ complete -c clasp -n "$logs_condition" -l simplified -d "Hide timestamps with lo
 set run_condition '__fish_seen_subcommand_from run'
 complete -c clasp -n "$run_condition" -l nondev -d "Run a function in non-development mode"
 complete -c clasp -n "$run_condition" -s p -l params -d "Specify parameters for a function as a JSON array"
+complete -c clasp -n "$run_condition" -x -a '(__fish_clasp_list_functions)'
 
 # apis subcommands and options
 set apis_condition '__fish_seen_subcommand_from apis'

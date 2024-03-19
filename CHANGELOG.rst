@@ -124,6 +124,31 @@ Some smaller changes:
 
 --------------
 
+fish 3.7.1 (released March 19, 2024)
+====================================
+
+This release of fish fixes the following problems identified in fish 3.7.0:
+
+- Deleting the last history entry via ``history delete`` works again (:issue:`10190`).
+- Wildcards (``*``) will no longer sometimes generate paths that did not exist (:issue:`10205`).
+
+This release also contains some improvements:
+
+- A crash when trying to run an ELF program with a missing interpreter has been fixed. This crashed in the process after fork, so did not affect the fish process that tried to start the program (:issue:`10199`).
+- ``funced`` will now always ``source`` the file after it has written it, even if the contents did not change. This prevents issues if the file was otherwise modified (:issue:`10318`).
+- The warning for when a builtin returns a negative exit code was improved, now mentioning the original status (:issue:`10187`).
+- Added completions for
+
+  - ``cobra-cli`` (:issue:`10293`)
+  - ``dmidecode`` (:issue:`10368`)
+  - ``mycli`` (:issue:`10309`)
+  - ``ollama`` (:issue:`10327`)
+  - ``pstree`` (:issue:`10317`)
+
+- Some improvements to documentation and completions.
+
+--------------
+
 fish 3.7.0 (released January 1, 2024)
 =====================================
 

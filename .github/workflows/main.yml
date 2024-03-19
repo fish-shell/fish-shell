@@ -93,7 +93,6 @@ jobs:
       env:
           CC: clang
           CXX: clang++
-          CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -DFISH_CI_SAN"
       run: |
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that

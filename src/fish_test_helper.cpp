@@ -181,11 +181,13 @@ static void print_stop_cont() {
 
 static void sigkill_self() {
     kill(getpid(), SIGKILL);
+    usleep(20000000);  // 20 secs
     abort();
 }
 
 static void sigint_self() {
     kill(getpid(), SIGINT);
+    usleep(20000000);  // 20 secs
     abort();
 }
 

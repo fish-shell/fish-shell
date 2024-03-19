@@ -35,7 +35,7 @@ use std::time::{Duration, Instant};
 use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{self, Ast, Category, Traversal};
+use crate::ast::{self, Ast, Category, Node, Traversal};
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
 use crate::common::{
@@ -4304,10 +4304,10 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
     let ast = Ast::parse(s, ast_flags, None);
 
     // Helper to check if a node is the command portion of an undecorated statement.
-    let is_command = |node: &dyn ast::Node| {
+    let is_command = |node: &dyn ast::Node| -> bool {
         let mut cursor = Some(node);
         while let Some(cur) = cursor {
-            if let Some(stmt) = cur.as_decorated_statement() {
+            if let ast::NodeRef::Branch(ast::BranchRef::DecoratedStatement(stmt)) = cur.as_node() {
                 if stmt.opt_decoration.is_none() && node.pointer_eq(&stmt.command) {
                     return true;
                 }
@@ -4360,7 +4360,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
             // Common case of no command substitutions in this leaf node.
             result.push(PositionedToken {
                 range,
-                is_cmd: is_command(node),
+                is_cmd: is_command(&node),
             })
         }
     }

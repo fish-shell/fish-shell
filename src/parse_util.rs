@@ -1,5 +1,8 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
+use crate::ast::{
+    self, Ast, BranchRef, Keyword, Leaf, LeafRef, List, ListRef, Node, NodeRef, NodeVisitor, Token,
+    TokenRef,
+};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -907,19 +910,19 @@ impl<'a> IndentVisitor<'a> {
 }
 impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
-    fn visit(&mut self, node: &'a dyn Node) {
+    fn visit(&mut self, node: NodeRef<'a>) {
         let mut inc = 0;
         let mut dec = 0;
         use ast::{Category, Type};
-        match node.typ() {
-            Type::job_list | Type::andor_job_list => {
+        match node {
+            NodeRef::List(ListRef::JobList(_) | ListRef::AndorJobList(_)) => {
                 // Job lists are never unwound.
                 inc = 1;
                 dec = 1;
             }
 
             // Increment indents for conditions in headers (#1665).
-            Type::job_conjunction => {
+            NodeRef::Branch(BranchRef::JobConjunction(_)) => {
                 if [Type::while_header, Type::if_clause].contains(&node.parent().unwrap().typ()) {
                     inc = 1;
                     dec = 1;
@@ -935,22 +938,22 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Type::job_continuation => {
-                if self.has_newline(&node.as_job_continuation().unwrap().newlines) {
+            NodeRef::Branch(BranchRef::JobContinuation(n)) => {
+                if self.has_newline(&n.newlines) {
                     inc = 1;
                     dec = 1;
                 }
             }
 
             // Likewise for && and ||.
-            Type::job_conjunction_continuation => {
-                if self.has_newline(&node.as_job_conjunction_continuation().unwrap().newlines) {
+            NodeRef::Branch(BranchRef::JobConjunctionContinuation(n)) => {
+                if self.has_newline(&n.newlines) {
                     inc = 1;
                     dec = 1;
                 }
             }
 
-            Type::case_item_list => {
+            NodeRef::List(ListRef::CaseItemList(_)) => {
                 // Here's a hack. Consider:
                 // switch abc
                 //    cas
@@ -969,16 +972,19 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 // To address this, if we see that the switch statement was not closed, do not
                 // decrement the indent afterwards.
                 inc = 1;
-                let switchs = node.parent().unwrap().as_switch_statement().unwrap();
+                let NodeRef::Branch(BranchRef::SwitchStatement(switchs)) =
+                    node.parent().unwrap().as_node()
+                else {
+                    panic!()
+                };
                 dec = if switchs.end.has_source() { 1 } else { 0 };
             }
-            Type::token_base => {
-                if node.parent().unwrap().typ() == Type::begin_header
-                    && node.as_token().unwrap().token_type() == ParseTokenType::end
-                {
+
+            NodeRef::Leaf(LeafRef::Token(TokenRef::SemiNl(n))) => {
+                if n.parent().unwrap().typ() == Type::begin_header {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
-                    if node.source(self.src) == "\n" {
+                    if n.source(self.src) == "\n" {
                         inc = 1;
                         dec = 1;
                     }
@@ -1108,59 +1114,80 @@ pub fn parse_util_detect_errors_in_ast(
     // Verify no variable expansions.
 
     for node in ast::Traversal::new(ast.top()) {
-        if let Some(jc) = node.as_job_continuation() {
-            // Somewhat clumsy way of checking for a statement without source in a pipeline.
-            // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
-                has_unclosed_pipe = true;
+        match node {
+            NodeRef::Branch(b) => match b {
+                BranchRef::JobContinuation(jc) => {
+                    // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                    // See if our pipe has source but our statement does not.
+                    if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                        has_unclosed_pipe = true;
+                    }
+                }
+                BranchRef::JobConjunction(job_conjunction) => {
+                    errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
+                }
+                BranchRef::JobConjunctionContinuation(jcc) => {
+                    // Somewhat clumsy way of checking for a job without source in a conjunction.
+                    // See if our conjunction operator (&& or ||) has source but our job does not.
+                    if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                        has_unclosed_conjunction = true;
+                    }
+                }
+                BranchRef::JobPipeline(job) => {
+                    // Disallow background in the following cases:
+                    //
+                    // foo & ; and bar
+                    // foo & ; or bar
+                    // if foo & ; end
+                    // while foo & ; end
+                    // If it's not a background job, nothing to do.
+                    if job.bg.is_some() {
+                        errored |= detect_errors_in_backgrounded_job(job, &mut out_errors);
+                    }
+                }
+                BranchRef::DecoratedStatement(stmt) => {
+                    errored |=
+                        detect_errors_in_decorated_statement(buff_src, stmt, &mut out_errors);
+                }
+                BranchRef::BlockStatement(block) => {
+                    // If our 'end' had no source, we are unsourced.
+                    if !block.end.has_source() {
+                        has_unclosed_block = true;
+                    }
+                    errored |= detect_errors_in_block_redirection_list(
+                        &block.args_or_redirs,
+                        &mut out_errors,
+                    );
+                }
+                BranchRef::IfStatement(ifs) => {
+                    // If our 'end' had no source, we are unsourced.
+                    if !ifs.end.has_source() {
+                        has_unclosed_block = true;
+                    }
+                    errored |= detect_errors_in_block_redirection_list(
+                        &ifs.args_or_redirs,
+                        &mut out_errors,
+                    );
+                }
+                BranchRef::SwitchStatement(switchs) => {
+                    // If our 'end' had no source, we are unsourced.
+                    if !switchs.end.has_source() {
+                        has_unclosed_block = true;
+                    }
+                    errored |= detect_errors_in_block_redirection_list(
+                        &switchs.args_or_redirs,
+                        &mut out_errors,
+                    );
+                }
+                _ => {}
+            },
+            NodeRef::Leaf(ast::LeafRef::Argument(arg)) => {
+                let arg_src = arg.source(buff_src);
+                res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                    .err()
+                    .unwrap_or_default();
             }
-        } else if let Some(job_conjunction) = node.as_job_conjunction() {
-            errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
-        } else if let Some(jcc) = node.as_job_conjunction_continuation() {
-            // Somewhat clumsy way of checking for a job without source in a conjunction.
-            // See if our conjunction operator (&& or ||) has source but our job does not.
-            if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
-                has_unclosed_conjunction = true;
-            }
-        } else if let Some(arg) = node.as_argument() {
-            let arg_src = arg.source(buff_src);
-            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
-                .err()
-                .unwrap_or_default();
-        } else if let Some(job) = node.as_job_pipeline() {
-            // Disallow background in the following cases:
-            //
-            // foo & ; and bar
-            // foo & ; or bar
-            // if foo & ; end
-            // while foo & ; end
-            // If it's not a background job, nothing to do.
-            if job.bg.is_some() {
-                errored |= detect_errors_in_backgrounded_job(job, &mut out_errors);
-            }
-        } else if let Some(stmt) = node.as_decorated_statement() {
-            errored |= detect_errors_in_decorated_statement(buff_src, stmt, &mut out_errors);
-        } else if let Some(block) = node.as_block_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !block.end.has_source() {
-                has_unclosed_block = true;
-            }
-            errored |=
-                detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
-        } else if let Some(ifs) = node.as_if_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !ifs.end.has_source() {
-                has_unclosed_block = true;
-            }
-            errored |=
-                detect_errors_in_block_redirection_list(&ifs.args_or_redirs, &mut out_errors);
-        } else if let Some(switchs) = node.as_switch_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !switchs.end.has_source() {
-                has_unclosed_block = true;
-            }
-            errored |=
-                detect_errors_in_block_redirection_list(&switchs.args_or_redirs, &mut out_errors);
+            _ => {}
         }
     }
 
@@ -1204,8 +1231,10 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
-    for arg in args.iter() {
+    let NodeRef::Branch(BranchRef::FreestandingArgumentList(arg_list)) = ast.top() else {
+        panic!()
+    };
+    for arg in &arg_list.arguments {
         let arg_src = arg.source(arg_list_src);
         if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
             return get_error_text(&errors);
@@ -1433,18 +1462,20 @@ fn detect_errors_in_backgrounded_job(
         return false;
     };
 
-    let mut errored = false;
     // Disallow background in the following cases:
     // foo & ; and bar
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    let Some(job_conj) = job.parent().unwrap().as_job_conjunction() else {
+    let NodeRef::Branch(BranchRef::JobConjunction(job_conj)) = job.parent().unwrap().as_node()
+    else {
         return false;
     };
 
-    if job_conj.parent().unwrap().as_if_clause().is_some()
-        || job_conj.parent().unwrap().as_while_header().is_some()
+    let mut errored = false;
+
+    if let NodeRef::Branch(BranchRef::IfClause(_) | BranchRef::WhileHeader(_)) =
+        job_conj.parent().unwrap().as_node()
     {
         errored = append_syntax_error!(
             parse_errors,
@@ -1452,7 +1483,7 @@ fn detect_errors_in_backgrounded_job(
             source_range.length(),
             BACKGROUND_IN_CONDITIONAL_ERROR_MSG
         );
-    } else if let Some(jlist) = job_conj.parent().unwrap().as_job_list() {
+    } else if let NodeRef::List(ListRef::JobList(jlist)) = job_conj.parent().unwrap().as_node() {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Find the index of ourselves in the job list.
         let index = jlist
@@ -1505,14 +1536,18 @@ fn detect_errors_in_decorated_statement(
     }
 
     // Get the statement we are part of.
-    let st = dst.parent().unwrap().as_statement().unwrap();
+    let NodeRef::Branch(BranchRef::Statement(st)) = dst.parent().unwrap().as_node() else {
+        panic!()
+    };
 
     // Walk up to the job.
     let mut job = None;
     let mut cursor = dst.parent();
     while job.is_none() {
         let c = cursor.expect("Reached root without finding a job");
-        job = c.as_job_pipeline();
+        if let NodeRef::Branch(BranchRef::JobPipeline(j)) = c.as_node() {
+            job = Some(j);
+        }
         cursor = c.parent();
     }
     let job = job.expect("Should have found the job");
@@ -1625,7 +1660,7 @@ fn detect_errors_in_decorated_statement(
             let mut found_loop = false;
             let mut ancestor: Option<&dyn Node> = Some(dst);
             while let Some(anc) = ancestor {
-                if let Some(block) = anc.as_block_statement() {
+                if let NodeRef::Branch(BranchRef::BlockStatement(block)) = anc.as_node() {
                     if [ast::Type::for_header, ast::Type::while_header]
                         .contains(&block.header.typ())
                     {

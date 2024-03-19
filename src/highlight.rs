@@ -1,8 +1,9 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, DecoratedStatement, Keyword,
-    Leaf, List, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
+    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BranchRef,
+    DecoratedStatement, Keyword, Leaf, LeafRef, List, Node, NodeRef, NodeVisitor, Redirection,
+    Token, TokenRef, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::RgbColor;
@@ -296,7 +297,10 @@ fn autosuggest_parse_command(
     );
 
     // Find the first statement.
-    let jc = ast.top().as_job_list().unwrap().get(0)?;
+    let NodeRef::List(ast::ListRef::JobList(job_list)) = ast.top() else {
+        panic!()
+    };
+    let jc = job_list.get(0)?;
     let first_statement = jc.job.statement.contents.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
@@ -999,7 +1003,7 @@ impl<'s> Highlighter<'s> {
         );
     }
     // Color a node as if it were an argument.
-    fn color_as_argument(&mut self, node: &dyn ast::Node, options_allowed: bool /* = true */) {
+    fn color_as_argument(&mut self, node: impl Node, options_allowed: bool /* = true */) {
         // node does not necessarily have type symbol_argument here.
         let source_range = node.source_range();
         let arg_str = self.get_source(source_range);
@@ -1074,7 +1078,7 @@ impl<'s> Highlighter<'s> {
         }
     }
     // Colors the source range of a node with a given color.
-    fn color_node(&mut self, node: &dyn ast::Node, color: HighlightSpec) {
+    fn color_node(&mut self, node: impl Node, color: HighlightSpec) {
         self.color_range(node.source_range(), color)
     }
     // Colors a range with a given color.
@@ -1084,11 +1088,11 @@ impl<'s> Highlighter<'s> {
     }
 
     // Visit the children of a node.
-    fn visit_children(&mut self, node: &dyn Node) {
+    fn visit_children(&mut self, node: impl Node) {
         node.accept(self, false);
     }
     // AST visitor implementations.
-    fn visit_keyword(&mut self, node: &dyn Keyword) {
+    fn visit_keyword(&mut self, node: impl Keyword) {
         let mut role = HighlightRole::normal;
         match node.keyword() {
             ParseKeyword::kw_begin
@@ -1111,9 +1115,9 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::kw_time => role = HighlightRole::operat,
             ParseKeyword::none => (),
         };
-        self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(node, HighlightSpec::with_fg(role));
     }
-    fn visit_token(&mut self, tok: &dyn Token) {
+    fn visit_token(&mut self, tok: impl Token) {
         let mut role = HighlightRole::normal;
         match tok.token_type() {
             ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
@@ -1128,11 +1132,11 @@ impl<'s> Highlighter<'s> {
             }
             _ => (),
         }
-        self.color_node(tok.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(tok, HighlightSpec::with_fg(role));
     }
     // Visit an argument, perhaps knowing that our command is cd.
     fn visit_argument(&mut self, arg: &Argument, cmd_is_cd: bool, options_allowed: bool) {
-        self.color_as_argument(arg.as_node(), options_allowed);
+        self.color_as_argument(arg, options_allowed);
         if !self.io_still_ok() {
             return;
         }
@@ -1156,10 +1160,7 @@ impl<'s> Highlighter<'s> {
                         PathFlags::PATH_EXPAND_TILDE,
                     );
                     if !is_valid_path {
-                        self.color_node(
-                            arg.as_node(),
-                            HighlightSpec::with_fg(HighlightRole::error),
-                        );
+                        self.color_node(arg, HighlightSpec::with_fg(HighlightRole::error));
                     }
                 }
             }
@@ -1188,10 +1189,7 @@ impl<'s> Highlighter<'s> {
         // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
         // If so, color the whole thing invalid and stop.
         if !oper.is_valid() {
-            self.color_node(
-                redir.as_node(),
-                HighlightSpec::with_fg(HighlightRole::error),
-            );
+            self.color_node(redir, HighlightSpec::with_fg(HighlightRole::error));
             return;
         }
 
@@ -1205,7 +1203,7 @@ impl<'s> Highlighter<'s> {
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
         if has_cmdsub(&target) {
-            self.color_as_argument(redir.target.leaf_as_node(), true);
+            self.color_as_argument(&redir.target, true);
         } else {
             // No command substitution, so we can highlight the target file or fd. For example,
             // disallow redirections into a non-existent directory.
@@ -1298,7 +1296,7 @@ impl<'s> Highlighter<'s> {
                 }
             }
             self.color_node(
-                redir.target.leaf_as_node(),
+                &redir.target,
                 HighlightSpec::with_fg(if target_is_valid {
                     HighlightRole::redirection
                 } else {
@@ -1317,7 +1315,7 @@ impl<'s> Highlighter<'s> {
             self.pending_variables.push(var_name);
         }
     }
-    fn visit_semi_nl(&mut self, node: &dyn Node) {
+    fn visit_semi_nl(&mut self, node: NodeRef<'_>) {
         self.color_node(
             node,
             HighlightSpec::with_fg(HighlightRole::statement_terminator),
@@ -1393,19 +1391,19 @@ impl<'s> Highlighter<'s> {
     fn visit_block_statement(&mut self, block: &BlockStatement) {
         match &*block.header {
             BlockStatementHeaderVariant::None => panic!(),
-            BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::FunctionHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::BeginHeader(node) => self.visit(node),
+            BlockStatementHeaderVariant::ForHeader(node) => self.visit(node.as_node()),
+            BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node.as_node()),
+            BlockStatementHeaderVariant::FunctionHeader(node) => self.visit(node.as_node()),
+            BlockStatementHeaderVariant::BeginHeader(node) => self.visit(node.as_node()),
         }
-        self.visit(&block.args_or_redirs);
+        self.visit(block.args_or_redirs.as_node());
         let pending_variables_count = self.pending_variables.len();
         if let Some(fh) = block.header.as_for_header() {
             let var_name = fh.var_name.source(self.buff);
             self.pending_variables.push(var_name);
         }
-        self.visit(&block.jobs);
-        self.visit(&block.end);
+        self.visit(block.jobs.as_node());
+        self.visit(block.end.as_node());
         self.pending_variables.truncate(pending_variables_count);
     }
 }
@@ -1451,28 +1449,24 @@ fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bo
 }
 
 impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
-    fn visit(&mut self, node: &'a dyn Node) {
-        if let Some(keyword) = node.as_keyword() {
-            return self.visit_keyword(keyword);
-        }
-        if let Some(token) = node.as_token() {
-            if token.token_type() == ParseTokenType::end {
-                self.visit_semi_nl(node);
-                return;
-            }
-            self.visit_token(token);
-            return;
-        }
-        match node.typ() {
-            Type::argument => self.visit_argument(node.as_argument().unwrap(), false, true),
-            Type::redirection => self.visit_redirection(node.as_redirection().unwrap()),
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_variable_assignment().unwrap())
-            }
-            Type::decorated_statement => {
-                self.visit_decorated_statement(node.as_decorated_statement().unwrap())
-            }
-            Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
+    fn visit(&mut self, node: NodeRef<'a>) {
+        match node {
+            NodeRef::Leaf(l) => match l {
+                LeafRef::Keyword(n) => self.visit_keyword(n),
+                LeafRef::Token(TokenRef::SemiNl(n)) => self.visit_semi_nl(n.as_node()),
+                LeafRef::Token(token) => self.visit_token(token),
+                LeafRef::Argument(n) => self.visit_argument(n, false, true),
+                LeafRef::VariableAssignment(n) => self.visit_variable_assignment(n),
+                _ => self.visit_children(l),
+            },
+
+            NodeRef::Branch(b) => match b {
+                BranchRef::Redirection(n) => self.visit_redirection(n),
+                BranchRef::DecoratedStatement(n) => self.visit_decorated_statement(n),
+                BranchRef::BlockStatement(n) => self.visit_block_statement(n),
+                _ => self.visit_children(b),
+            },
+
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }

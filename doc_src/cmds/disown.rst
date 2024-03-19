@@ -14,6 +14,7 @@ Description
 -----------
 
 ``disown`` removes the specified :ref:`job <syntax-job-control>` from the list of jobs. The job itself continues to exist, but fish does not keep track of it any longer.
+This will make fish lose all knowledge of the job, so functions defined with ``--on-process-exit`` or ``--on-job-exit`` will no longer fire.
 
 Jobs in the list of jobs are sent a hang-up signal when fish terminates, which usually causes the job to terminate; ``disown`` allows these processes to continue regardless.
 

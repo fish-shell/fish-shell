@@ -1,4 +1,4 @@
-fish 3.7.1 (released ????)
+fish 3.7.1 (released March 19, 2024)
 ====================================
 
 This release of fish fixes the following problems identified in fish 3.7.0:

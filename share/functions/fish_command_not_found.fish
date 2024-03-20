@@ -5,11 +5,8 @@
 # This has a "ID=" line that defines the exact distribution,
 # and an "ID_LIKE=" line that defines what it is derived from or otherwise like.
 # For our purposes, we use both.
-set -l os
-if test -r /etc/os-release
-    set os (string match -r '^ID(?:_LIKE)?\s*=.*' < /etc/os-release | \
+set -l os (string match -r '^ID(?:_LIKE)?\s*=.*' <?/etc/os-release | \
     string replace -r '^ID(?:_LIKE)?\s*=(.*)' '$1' | string trim -c '\'"' | string split " ")
-end
 
 function __fish_default_command_not_found_handler
     printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2

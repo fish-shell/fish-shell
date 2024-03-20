@@ -6,6 +6,6 @@ function __fish_complete_groups --description "Print a list of local groups, wit
     else
         while read -l line
             string split -f 1,4 : -- $line | string join \t
-        end </etc/group
+        end <?/etc/group
     end
 end

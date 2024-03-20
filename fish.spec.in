@@ -73,11 +73,15 @@ make %{?_smp_mflags}
 %endif
 %find_lang %{name}
 # OpenSUSE has strong opinions about categories which do not apply to other systems
+# and uses a different path for the documentation
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
-%endif
+cp -a README.rst %{buildroot}%{_datadir}/doc/packages/fish/
+cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/packages/fish/
+%else
 cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
 cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
+%endif
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -110,7 +114,11 @@ fi
 %defattr(-,root,root,-)
 
 # The documentation directory
+%if 0%{?suse_version}
+%doc %{_datadir}/doc/packages/fish/
+%else
 %doc %{_datadir}/doc/fish/
+%endif
 
 # man files
 %{_mandir}/man1/*

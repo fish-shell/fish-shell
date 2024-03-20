@@ -11,6 +11,7 @@ pub enum RedirectionMode {
     overwrite, // normal redirection: > file.txt
     append,    // appending redirection: >> file.txt
     input,     // input redirection: < file.txt
+    try_input, // try-input redirection: <? file.txt
     fd,        // fd redirection: 2>&1
     noclob,    // noclobber redirection: >? file.txt
 }
@@ -38,7 +39,7 @@ impl RedirectionMode {
             RedirectionMode::append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
             RedirectionMode::overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
             RedirectionMode::noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
-            RedirectionMode::input => Some(OFlag::O_RDONLY),
+            RedirectionMode::input | RedirectionMode::try_input => Some(OFlag::O_RDONLY),
             _ => None,
         }
     }

@@ -646,6 +646,35 @@ impl IoChain {
     #[allow(clippy::collapsible_else_if)]
     pub fn append_from_specs(&mut self, specs: &RedirectionSpecList, pwd: &wstr) -> bool {
         let mut have_error = false;
+
+        let print_error = |err, target: &wstr| {
+            // If the error is that the file doesn't exist
+            // or there's a non-directory component,
+            // find the first problematic component for a better message.
+            if [ENOENT, ENOTDIR].contains(&err) {
+                FLOGF!(warning, FILE_ERROR, target);
+                let mut dname: &wstr = target;
+                while !dname.is_empty() {
+                    let next: &wstr = wdirname(dname);
+                    if let Ok(md) = wstat(next) {
+                        if !md.is_dir() {
+                            FLOGF!(warning, "Path '%ls' is not a directory", next);
+                        } else {
+                            FLOGF!(warning, "Path '%ls' does not exist", dname);
+                        }
+                        break;
+                    }
+                    dname = next;
+                }
+            } else if err != EINTR {
+                // If we get EINTR we had a cancel signal.
+                // That's expected (ctrl-c on the commandline),
+                // so no warning.
+                FLOGF!(warning, FILE_ERROR, target);
+                perror("open");
+            }
+        };
+
         for spec in specs {
             match spec.mode {
                 RedirectionMode::fd => {
@@ -671,50 +700,35 @@ impl IoChain {
                         Err(err) => {
                             if oflags.intersects(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else {
+                            } else if spec.mode != RedirectionMode::try_input {
                                 if should_flog!(warning) {
-                                    let err = errno::errno().0;
-                                    // If the error is that the file doesn't exist
-                                    // or there's a non-directory component,
-                                    // find the first problematic component for a better message.
-                                    if [ENOENT, ENOTDIR].contains(&err) {
-                                        FLOGF!(warning, FILE_ERROR, spec.target);
-                                        let mut dname: &wstr = &spec.target;
-                                        while !dname.is_empty() {
-                                            let next: &wstr = wdirname(dname);
-                                            if let Ok(md) = wstat(next) {
-                                                if !md.is_dir() {
-                                                    FLOGF!(
-                                                        warning,
-                                                        "Path '%ls' is not a directory",
-                                                        next
-                                                    );
-                                                } else {
-                                                    FLOGF!(
-                                                        warning,
-                                                        "Path '%ls' does not exist",
-                                                        dname
-                                                    );
-                                                }
-                                                break;
-                                            }
-                                            dname = next;
-                                        }
-                                    } else if err != EINTR {
-                                        // If we get EINTR we had a cancel signal.
-                                        // That's expected (ctrl-c on the commandline),
-                                        // so no warning.
-                                        FLOGF!(warning, FILE_ERROR, spec.target);
-                                        perror("open");
-                                    }
+                                    print_error(errno::errno().0, &spec.target);
                                 }
                             }
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
                             // the shell a chance to gracefully regain control of the shell (see #7038).
-                            self.push(Arc::new(IoClose::new(spec.fd)));
-                            have_error = true;
-                            continue;
+                            if spec.mode != RedirectionMode::try_input {
+                                self.push(Arc::new(IoClose::new(spec.fd)));
+                                have_error = true;
+                                continue;
+                            } else {
+                                // If we're told to try via `<?`, we use /dev/null
+                                match wopen_cloexec(L!("/dev/null"), oflags, OPEN_MASK) {
+                                    Ok(fd) => {
+                                        self.push(Arc::new(IoFile::new(spec.fd, fd)));
+                                    }
+                                    _ => {
+                                        // /dev/null can't be opened???
+                                        if should_flog!(warning) {
+                                            print_error(errno::errno().0, L!("/dev/null"));
+                                        }
+                                        self.push(Arc::new(IoClose::new(spec.fd)));
+                                        have_error = true;
+                                        continue;
+                                    }
+                                }
+                            }
                         }
                     }
                 }

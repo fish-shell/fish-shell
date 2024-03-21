@@ -53,7 +53,7 @@ is simple but incompatible with other shell languages.
 
 %build
 # CMake macros define the wrong sysconfdir arguments
-EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -DCMAKE_INSTALL_DOCDIR=%{_docdir}/fish"
 %if 0%{?rhel} && 0%{?rhel} < 8
 %cmake3 $EXTRA_CMAKE_FLAGS
 %else
@@ -73,14 +73,8 @@ make %{?_smp_mflags}
 %endif
 %find_lang %{name}
 # OpenSUSE has strong opinions about categories which do not apply to other systems
-# and uses a different path for the documentation
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
-cp -a README.rst %{buildroot}%{_datadir}/doc/packages/fish/
-cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/packages/fish/
-%else
-cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
-cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 %endif
 
 %check
@@ -114,11 +108,8 @@ fi
 %defattr(-,root,root,-)
 
 # The documentation directory
-%if 0%{?suse_version}
-%doc %{_datadir}/doc/packages/fish/
-%else
-%doc %{_datadir}/doc/fish/
-%endif
+%doc %{_docdir}/fish
+%doc CONTRIBUTING.rst README.rst
 
 # man files
 %{_mandir}/man1/*

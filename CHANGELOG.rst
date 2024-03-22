@@ -41,6 +41,7 @@ Notable improvements and fixes
 - New function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind \cc __fish_cancel_commandline`` (:issue:`10213`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
+- The :kbd:`Control-R` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line commandline by recalling previous commands.
 
 Deprecations and removed features
 ---------------------------------

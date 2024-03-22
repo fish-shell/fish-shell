@@ -2423,7 +2423,7 @@ impl ReaderData {
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()
                 {
-                    parse_util_escape_wildcards(self.command_line.text())
+                    parse_util_escape_wildcards(self.command_line.line_at_cursor())
                 } else {
                     // If we have an actual history search already going, reuse that term
                     // - this is if the user looks around a bit and decides to switch to the pager.
@@ -4138,9 +4138,7 @@ fn history_pager_search(
             item.str().to_owned(),
             L!("").to_owned(),
             StringFuzzyMatch::exact_match(),
-            CompleteFlags::REPLACES_COMMANDLINE
-                | CompleteFlags::DONT_ESCAPE
-                | CompleteFlags::DONT_SORT,
+            CompleteFlags::REPLACES_LINE | CompleteFlags::DONT_ESCAPE | CompleteFlags::DONT_SORT,
         ));
 
         next_match_found = search.go_to_next_match(direction);
@@ -4877,6 +4875,28 @@ fn unescaped_quote(s: &wstr, pos: usize) -> Option<char> {
     result
 }
 
+fn replace_line_at_cursor(
+    text: &wstr,
+    inout_cursor_pos: &mut usize,
+    replacement: &wstr,
+) -> WString {
+    let cursor = *inout_cursor_pos;
+    let start = text[0..cursor]
+        .as_char_slice()
+        .iter()
+        .rposition(|&c| c == '\n')
+        .map(|newline| newline + 1)
+        .unwrap_or(0);
+    let end = text[cursor..]
+        .as_char_slice()
+        .iter()
+        .position(|&c| c == '\n')
+        .map(|pos| cursor + pos)
+        .unwrap_or(text.len());
+    *inout_cursor_pos = start + replacement.len();
+    text[..start].to_owned() + replacement + &text[end..]
+}
+
 /// Apply a completion string. Exposed for testing only.
 ///
 /// Insert the string in the given command line at the given cursor position. The function checks if
@@ -4900,8 +4920,8 @@ pub fn completion_apply_to_command_line(
     append_only: bool,
 ) -> WString {
     let add_space = !flags.contains(CompleteFlags::NO_SPACE);
-    let do_replace = flags.contains(CompleteFlags::REPLACES_TOKEN);
-    let do_replace_commandline = flags.contains(CompleteFlags::REPLACES_COMMANDLINE);
+    let do_replace_token = flags.contains(CompleteFlags::REPLACES_TOKEN);
+    let do_replace_line = flags.contains(CompleteFlags::REPLACES_LINE);
     let do_escape = !flags.contains(CompleteFlags::DONT_ESCAPE);
     let no_tilde = flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
 
@@ -4909,13 +4929,12 @@ pub fn completion_apply_to_command_line(
     let mut back_into_trailing_quote = false;
     let have_space_after_token = command_line.char_at(cursor_pos) == ' ';
 
-    if do_replace_commandline {
+    if do_replace_line {
         assert!(!do_escape, "unsupported completion flag");
-        *inout_cursor_pos = val_str.len();
-        return val_str.to_owned();
+        return replace_line_at_cursor(command_line, inout_cursor_pos, val_str);
     }
 
-    if do_replace {
+    if do_replace_token {
         let mut move_cursor;
         let mut range = 0..0;
         parse_util_token_extent(command_line, cursor_pos, &mut range, None);

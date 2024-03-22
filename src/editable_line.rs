@@ -139,6 +139,23 @@ impl EditableLine {
         self.text.char_at(idx)
     }
 
+    pub fn line_at_cursor(&self) -> &wstr {
+        let start = self.text[0..self.position()]
+            .as_char_slice()
+            .iter()
+            .rposition(|&c| c == '\n')
+            .map(|newline| newline + 1)
+            .unwrap_or(0);
+        let end = self.text[self.position()..]
+            .as_char_slice()
+            .iter()
+            .position(|&c| c == '\n')
+            .map(|pos| self.position() + pos)
+            .unwrap_or(self.len());
+        // Remove any traililng newline
+        self.text[start..end].trim_matches('\n')
+    }
+
     pub fn clear(&mut self) {
         self.undo_history.clear();
         if self.is_empty() {

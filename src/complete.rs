@@ -109,8 +109,8 @@ bitflags! {
         const DONT_SORT = 1 << 5;
         /// This completion looks to have the same string as an existing argument.
         const DUPLICATES_ARGUMENT = 1 << 6;
-        /// This completes not just a token but replaces the entire commandline.
-        const REPLACES_COMMANDLINE = 1 << 7;
+        /// This completes not just a token but replaces an entire line.
+        const REPLACES_LINE = 1 << 7;
     }
 }
 
@@ -193,8 +193,8 @@ impl Completion {
     }
 
     /// Returns whether this replaces the entire commandline.
-    pub fn replaces_commandline(&self) -> bool {
-        self.flags.contains(CompleteFlags::REPLACES_COMMANDLINE)
+    pub fn replaces_line(&self) -> bool {
+        self.flags.contains(CompleteFlags::REPLACES_LINE)
     }
 
     /// Returns the completion's match rank. Lower ranks are better completions.

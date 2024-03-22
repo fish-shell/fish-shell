@@ -40,9 +40,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv --key btab complete-and-search
     bind --preset $argv -k sdc history-pager-delete or backward-delete-char # shifted delete
 
-    bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
-    bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"
-
     bind --preset $argv -k down down-or-search
     bind --preset $argv -k up up-or-search
     bind --preset $argv \e\[A up-or-search
@@ -190,6 +187,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv \e\[27\;2\;13~ "commandline -f expand-abbr; commandline -i \n"
         # Shift+Return CSI u sequence, sent with XTerm.vt100.formatOtherKeys: 1
         bind --preset $argv \e\[13\;2u "commandline -f expand-abbr; commandline -i \n"
+        bind --preset $argv \e\n "commandline -f expand-abbr; commandline -i \n"
+        bind --preset $argv \e\r "commandline -f expand-abbr; commandline -i \n"
         # Closing a command substitution expands abbreviations
         bind --preset $argv ")" self-insert expand-abbr
         # Ctrl-space inserts space without expanding abbrs

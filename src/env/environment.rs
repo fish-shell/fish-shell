@@ -11,7 +11,7 @@ use crate::env_universal_common::CallbackDataList;
 use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input::init_input;
+use crate::input::{init_input, FISH_BIND_MODE_VAR};
 use crate::libc::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
@@ -727,8 +727,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     }
 
     // Set fish_bind_mode to "default".
-    // FIXME: this was a constant FISH_BIND_MODE_VAR from input.cpp
-    vars.set_one(L!("fish_bind_mode"), EnvMode::GLOBAL, "default".into());
+    vars.set_one(FISH_BIND_MODE_VAR, EnvMode::GLOBAL, "default".into());
 
     // Allow changes to variables to produce events.
     env_dispatch_init(vars);

@@ -56,7 +56,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode
     # See #2871
-    bind -s --preset -M insert \e "if commandline -P; commandline -f cancel; else; set fish_bind_mode default; commandline -f backward-char repaint-mode; end"
+    bind -s --preset -M insert \e '
+        if commandline -P
+            commandline -f cancel
+        else
+            set fish_bind_mode default
+            if test (count (commandline --cut-at-cursor | tail -c2)) != 2
+                commandline -f backward-char
+            end
+            commandline -f repaint-mode
+        end
+    '
 
     # Default (command) mode
     bind -s --preset :q exit

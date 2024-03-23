@@ -54,7 +54,7 @@ add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 # cargo needs to be rerun when the sources change.
 # This is imperfect, but the ninja generator really wants to
 # not run cargo, so we need to tell it *something*
-FILE(GLOB sources src/* src/*/* src/*/*/*)
+FILE(GLOB sources src/* src/*/* src/*/*/* macros/Cargo.toml macros/src/*)
 
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)

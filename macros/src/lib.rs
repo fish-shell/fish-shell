@@ -25,6 +25,25 @@ pub fn define_node(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     stream.into()
 }
 
+/// Given a trait definition such as:
+/// ```
+/// trait Node {
+///     type ParseError;
+///     const NODE_TYPE: NodeType;
+///     fn source_range(&self) -> SourceRange;
+/// }
+/// ```
+/// Generate an implementation of the form:
+/// ```
+/// impl<T: Node> Node for &T {
+///     type ParseError = T::ParseError;
+///     const NODE_TYPE: NodeType = T::NODE_TYPE;
+///     fn source_range(&self) -> SourceRange {
+///         T::source_range(self)
+///     }
+/// }
+/// ```
+/// A similar `impl` will be generated for `&mut T`.
 #[proc_macro_attribute]
 pub fn blanket_ref(
     _attr: proc_macro::TokenStream,
@@ -37,6 +56,7 @@ pub fn blanket_ref(
     output.into()
 }
 
+/// Like [`macro@blanket_ref`], but only generates an `impl` for `&mut T`.
 #[proc_macro_attribute]
 pub fn blanket_mut(
     _attr: proc_macro::TokenStream,

@@ -9,8 +9,8 @@ Group:                  System/Shells
 URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
-# Corrosion requires git, and it's not always preinstalled
-BuildRequires:          cargo gettext gcc-c++ xz pcre2-devel git
+# Corrosion requires git-core, and it's not always preinstalled
+BuildRequires:          cargo gettext gcc-c++ xz pcre2-devel git-core
 BuildRequires:          rust >= 1.67
 
 %if 0%{?rhel} && 0%{?rhel} < 8

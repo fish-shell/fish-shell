@@ -144,7 +144,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Bind the starting sequence in every bind mode, even user-defined ones.
     # Exclude paste mode or there'll be an additional binding after switching between emacs and vi
     for mode in (bind --list-modes | string match -v paste)
-        bind --preset -M $mode -m paste \e\[200~ __fish_start_bracketed_paste
+        bind --preset -M $mode -m paste \e\[200~ "__fish_start_bracketed_paste $mode"
     end
     # This sequence ends paste-mode and returns to the previous mode we have saved before.
     bind --preset -M paste \e\[201~ __fish_stop_bracketed_paste
@@ -214,7 +214,7 @@ end
 
 function __fish_start_bracketed_paste
     # Save the last bind mode so we can restore it.
-    set -g __fish_last_bind_mode $fish_bind_mode
+    set -g __fish_last_bind_mode $argv[1]
     # If the token is currently single-quoted,
     # we escape single-quotes (and backslashes).
     string match -q 'single*' (__fish_tokenizer_state -- (commandline -ct | string collect))

@@ -20,6 +20,7 @@ mod redirection;
 mod screen;
 mod std;
 mod string_escape;
+mod termsize;
 mod threads;
 mod tokenizer;
 mod topic_monitor;

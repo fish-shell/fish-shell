@@ -21,6 +21,7 @@ use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_
 use once_cell::sync::OnceCell;
 use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
+use std::io::{Read, Write};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
@@ -1514,6 +1515,49 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
         }
     }
 }
+
+/// Provides write methods for types implementing [`Write`] that continue on
+/// EINTR or EAGAIN. Like [`Write::write_all`] but also handles EAGAIN.
+trait LoopedWrite {
+    #[inline(always)]
+    fn write_retry(&mut self, buf: &[u8]) -> std::io::Result<usize>
+    where
+        Self: Write,
+    {
+        let mut written = 0;
+        while written != buf.len() {
+            match self.write(&buf[written..]) {
+                Ok(bytes) => written += bytes,
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => continue,
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(written)
+    }
+}
+
+/// Provides read methods for types implementing [`Read`] that continue on
+/// EINTR or EAGAIN.
+trait LoopedRead {
+    #[inline(always)]
+    fn read_retry(&mut self, buf: &mut [u8]) -> std::io::Result<usize>
+    where
+        Self: Read,
+    {
+        loop {
+            match self.read(buf) {
+                Ok(read) => return Ok(read),
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => continue,
+                Err(e) => return Err(e),
+            }
+        }
+    }
+}
+
+impl<W: Write> LoopedWrite for W {}
+impl<R: Read> LoopedRead for R {}
 
 /// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {

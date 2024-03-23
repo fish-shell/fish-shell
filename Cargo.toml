@@ -38,7 +38,7 @@ terminfo = { git = "https://github.com/meh/rust-terminfo", rev = "870327dd79beae
 
 [dev-dependencies]
 rand_pcg = "0.3.1"
-serial_test = "0.4.0"
+serial_test = "1.0.0"
 
 [build-dependencies]
 cc = "1.0.88"

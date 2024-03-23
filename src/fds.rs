@@ -267,7 +267,7 @@ pub fn wopen_dir(pathname: &wstr, mode: nix::sys::stat::Mode) -> nix::Result<Own
 
 /// Narrow version of wopen_dir().
 pub fn open_dir(path: &CStr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
-    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(|file| OwnedFd::from(file))
+    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
 }
 
 /// Close a file descriptor \p fd, retrying on EINTR.

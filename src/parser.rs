@@ -12,7 +12,7 @@ use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
-use crate::fds::open_cloexec;
+use crate::fds::open_dir;
 use crate::flog::FLOGF;
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
@@ -33,7 +33,6 @@ use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use libc::c_int;
-use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
@@ -353,11 +352,7 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_cloexec(
-            CStr::from_bytes_with_nul(b".\0").unwrap(),
-            OFlag::O_RDONLY,
-            Mode::empty(),
-        ) {
+        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }

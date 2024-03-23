@@ -232,7 +232,7 @@ pub fn wopen_cloexec(
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
-/// Narrow versions of wopen_cloexec.
+/// Narrow versions of wopen_cloexec().
 pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
@@ -244,7 +244,6 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
         let ret = ret.map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
-
         match ret {
             Ok(fd) => {
                 set_errno(saved_errno);
@@ -257,6 +256,17 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
             }
         }
     }
+}
+
+/// Wide character version of open_dir() that also sets the close-on-exec flag (atomically when
+/// possible).
+pub fn wopen_dir(pathname: &wstr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+    open_dir(wcs2zstring(pathname).as_c_str(), mode)
+}
+
+/// Narrow version of wopen_dir().
+pub fn open_dir(path: &CStr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(|file| OwnedFd::from(file))
 }
 
 /// Close a file descriptor \p fd, retrying on EINTR.

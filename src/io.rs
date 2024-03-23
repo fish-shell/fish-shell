@@ -669,7 +669,7 @@ impl IoChain {
                             self.push(Arc::new(IoFile::new(spec.fd, fd)));
                         }
                         Err(err) => {
-                            if oflags.intersects(OFlag::O_EXCL) && err == nix::Error::EEXIST {
+                            if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
                             } else {
                                 if should_flog!(warning) {

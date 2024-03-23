@@ -447,7 +447,7 @@ impl EnvUniversal {
                     Err(nix::Error::EINTR) => continue,
                     Err(err) => {
                         if !O_EXLOCK.is_empty() {
-                            if flags.intersects(O_EXLOCK)
+                            if flags.contains(O_EXLOCK)
                                 && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
                             {
                                 // Filesystem probably does not support locking. Give up on locking.

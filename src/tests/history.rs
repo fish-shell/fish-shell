@@ -594,14 +594,12 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file = std::fs::File::from(
-        wopen_cloexec(
-            L!("tests/history_sample_bash"),
-            OFlag::O_RDONLY,
-            Mode::empty(),
-        )
-        .unwrap(),
-    );
+    let file = wopen_cloexec(
+        L!("tests/history_sample_bash"),
+        OFlag::O_RDONLY,
+        Mode::empty(),
+    )
+    .unwrap();
     test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
     assert_eq!(test_history_imported_from_bash.get_history(), expected);
     test_history_imported_from_bash.clear();

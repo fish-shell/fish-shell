@@ -387,10 +387,10 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty()) else {
+        let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
+        else {
             return false;
         };
-        let mut file = File::from(fd);
 
         FLOG!(uvar_file, "universal log reading from file");
         self.load_from_fd(&mut file, callbacks);
@@ -443,7 +443,7 @@ impl EnvUniversal {
         loop {
             let mut file =
                 match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
-                    Ok(fd) => File::from(fd),
+                    Ok(file) => file,
                     Err(nix::Error::EINTR) => continue,
                     Err(err) => {
                         if !O_EXLOCK.is_empty() {

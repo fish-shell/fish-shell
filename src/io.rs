@@ -666,8 +666,7 @@ impl IoChain {
                     let oflags = spec.oflags();
 
                     match wopen_cloexec(&path, oflags, OPEN_MASK) {
-                        Ok(fd) => {
-                            let file = File::from(fd);
+                        Ok(file) => {
                             self.push(Arc::new(IoFile::new(spec.fd, file)));
                         }
                         Err(err) => {

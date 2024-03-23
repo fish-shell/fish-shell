@@ -4665,11 +4665,9 @@ impl ReaderData {
                 var.map_or_else(|| L!("~/.bash_history").to_owned(), |var| var.as_string());
             expand_tilde(&mut path, self.vars());
 
-            let Ok(fd) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
+            let Ok(file) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
-
-            let file = std::fs::File::from(fd);
             self.history.populate_from_bash(BufReader::new(file));
         }
     }

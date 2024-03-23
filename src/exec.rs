@@ -367,9 +367,8 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     }
     let e = errno();
     let mut res = false;
-    let fd = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty());
-    if let Ok(fd) = fd {
-        let mut file = std::fs::File::from(fd);
+    if let Ok(mut file) = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty())
+    {
         let mut buf = [b'\0'; 256];
         if let Ok(got) = file.read(&mut buf) {
             if is_thompson_shell_payload(&buf[..got]) {

@@ -338,13 +338,12 @@ fn test_autoload() {
         use std::fs::File;
         use std::io::Write;
 
-        let fd = wopen_cloexec(
+        let mut file = wopen_cloexec(
             path,
             OFlag::O_RDWR | OFlag::O_CREAT,
             Mode::from_bits_truncate(0o666),
         )
         .unwrap();
-        let mut file = File::from(fd);
         file.write_all(b"Hello").unwrap();
     }
 

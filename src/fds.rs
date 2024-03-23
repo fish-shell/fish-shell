@@ -10,6 +10,7 @@ use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBL
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::os::unix::prelude::*;
 
@@ -228,12 +229,12 @@ pub fn wopen_cloexec(
     pathname: &wstr,
     flags: OFlag,
     mode: nix::sys::stat::Mode,
-) -> nix::Result<OwnedFd> {
+) -> nix::Result<File> {
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
 /// Narrow versions of wopen_cloexec().
-pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<File> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     let saved_errno = errno();
@@ -243,11 +244,11 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
+        let ret = ret.map(|raw_fd| unsafe { File::from_raw_fd(raw_fd) });
         match ret {
-            Ok(fd) => {
+            Ok(file) => {
                 set_errno(saved_errno);
-                return Ok(fd);
+                return Ok(file);
             }
             Err(err) => {
                 if err != nix::Error::EINTR || signal_check_cancel() != 0 {

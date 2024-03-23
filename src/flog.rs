@@ -79,6 +79,8 @@ pub mod categories {
 
         (warning_path, "warning-path", "Warnings about unusable paths for config/history (on by default)", true);
 
+        (deprecated_test, "deprecated-test", "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future.");
+
         (config, "config", "Finding and reading configuration");
 
         (event, "event", "Firing events");

@@ -320,7 +320,7 @@ impl AutoloadFileCache {
 #[serial]
 fn test_autoload() {
     test_init();
-    use crate::common::{charptr2wcstring, wcs2zstring, write_loop};
+    use crate::common::{charptr2wcstring, wcs2zstring};
     use crate::fds::wopen_cloexec;
     use crate::wutil::sprintf;
     use nix::fcntl::OFlag;
@@ -335,6 +335,8 @@ fn test_autoload() {
 
     fn touch_file(path: &wstr) {
         use nix::sys::stat::Mode;
+        use std::fs::File;
+        use std::io::Write;
 
         let fd = wopen_cloexec(
             path,
@@ -342,7 +344,8 @@ fn test_autoload() {
             Mode::from_bits_truncate(0o666),
         )
         .unwrap();
-        write_loop(&fd, "Hello".as_bytes()).unwrap();
+        let mut file = File::from(fd);
+        file.write_all(b"Hello").unwrap();
     }
 
     let mut t1 = "/tmp/fish_test_autoload.XXXXXX\0".as_bytes().to_vec();

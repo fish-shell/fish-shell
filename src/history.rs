@@ -495,13 +495,13 @@ impl HistoryImpl {
             let locked = unsafe { Self::maybe_lock_file(&file, LOCK_SH) };
             self.file_contents = HistoryFileContents::create(&mut file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(file.as_raw_fd())
+                file_id_for_fd(file.as_fd())
             } else {
                 INVALID_FILE_ID
             };
             if locked {
                 unsafe {
-                    Self::unlock_file(file.as_raw_fd());
+                    Self::unlock_file(&mut file);
                 }
             }
 
@@ -677,7 +677,7 @@ impl HistoryImpl {
 
             let orig_file_id = target_file_before
                 .as_ref()
-                .map(|fd| file_id_for_fd(fd.as_raw_fd()))
+                .map(|fd| file_id_for_fd(fd.as_fd()))
                 .unwrap_or(INVALID_FILE_ID);
 
             // Open any target file, but do not lock it right away
@@ -804,7 +804,7 @@ impl HistoryImpl {
         // After locking it, we need to stat the file at the path; if there is a new file there, it
         // means the file was replaced and we have to try again.
         // Limit our max tries so we don't do this forever.
-        let mut history_fd = None;
+        let mut history_file = None;
         for _i in 0..MAX_SAVE_TRIES {
             let Ok(fd) = wopen_cloexec(
                 &history_path,
@@ -814,6 +814,7 @@ impl HistoryImpl {
                 // can't open, we're hosed
                 break;
             };
+            let mut file = File::from(fd);
 
             // Exclusive lock on the entire file. This is released when we close the file (below). This
             // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
@@ -821,21 +822,21 @@ impl HistoryImpl {
             // forcing everything through the slow copy-move mode. We try to minimize this possibility
             // by writing with O_APPEND.
             unsafe {
-                Self::maybe_lock_file(&fd, LOCK_EX);
+                Self::maybe_lock_file(&mut file, LOCK_EX);
             }
-            let file_id = file_id_for_fd(fd.as_raw_fd());
+            let file_id = file_id_for_fd(file.as_fd());
             if file_id_for_path(&history_path) == file_id {
                 // File IDs match, so the file we opened is still at that path
                 // We're going to use this fd
                 if file_id != self.history_file_id {
                     file_changed = true;
                 }
-                history_fd = Some(fd);
+                history_file = Some(file);
                 break;
             }
         }
 
-        if let Some(history_fd) = history_fd {
+        if let Some(history_file) = history_file {
             // We (hopefully successfully) took the exclusive lock. Append to the file.
             // Note that this is sketchy for a few reasons:
             //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -866,7 +867,7 @@ impl HistoryImpl {
                     append_history_item_to_buffer(item, &mut buffer);
                     res = flush_to_fd(
                         &mut buffer,
-                        history_fd.as_raw_fd(),
+                        history_file.as_raw_fd(),
                         HISTORY_OUTPUT_BUFFER_SIZE,
                     );
                     if res.is_err() {
@@ -878,7 +879,7 @@ impl HistoryImpl {
             }
 
             if res.is_ok() {
-                res = flush_to_fd(&mut buffer, history_fd.as_raw_fd(), 0);
+                res = flush_to_fd(&mut buffer, history_file.as_raw_fd(), 0);
             }
 
             // Since we just modified the file, update our history_file_id to match its current state
@@ -886,11 +887,11 @@ impl HistoryImpl {
             // write.
             // We don't update the mapping since we only appended to the file, and everything we
             // appended remains in our new_items
-            self.history_file_id = file_id_for_fd(history_fd.as_raw_fd());
+            self.history_file_id = file_id_for_fd(history_file.as_fd());
 
             ok = res.is_ok();
 
-            drop(history_fd);
+            drop(history_file);
         }
 
         // If someone has replaced the file, forget our file state.
@@ -1355,9 +1356,9 @@ impl HistoryImpl {
     /// # Safety
     ///
     /// `fd` must be a valid argument to `flock(2)` with `LOCK_UN`.
-    unsafe fn unlock_file(fd: RawFd) {
+    unsafe fn unlock_file(file: &mut File) {
         unsafe {
-            libc::flock(fd, LOCK_UN);
+            libc::flock(file.as_raw_fd(), LOCK_UN);
         }
     }
 }

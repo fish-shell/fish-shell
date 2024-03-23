@@ -1,6 +1,7 @@
 use super::prelude::*;
 use crate::common;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::should_flog;
 
 mod test_expressions {
     use super::*;
@@ -1036,17 +1037,31 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 return STATUS_CMD_OK;
             }
         }
-    } else {
-        if argc == 0 {
-            return STATUS_INVALID_ARGS; // Per 1003.1, exit false.
-        } else if argc == 1 {
-            // Per 1003.1, exit true if the arg is non-empty.
-            return if args[0].is_empty() {
-                STATUS_CMD_ERROR
-            } else {
-                STATUS_CMD_OK
-            };
+    } else if argc == 0 {
+        if should_flog!(deprecated_test) {
+            streams.err.appendln(wgettext_fmt!(
+                "%ls: called with no arguments. This will be an error in future.",
+                program_name
+            ));
+            streams.err.append(parser.current_line());
         }
+        return STATUS_INVALID_ARGS; // Per 1003.1, exit false.
+    } else if argc == 1 {
+        if should_flog!(deprecated_test) {
+            if args[0] != "-z" {
+                streams.err.appendln(wgettext_fmt!(
+                    "%ls: called with one argument. This will return false in future.",
+                    program_name
+                ));
+                streams.err.append(parser.current_line());
+            }
+        }
+        // Per 1003.1, exit true if the arg is non-empty.
+        return if args[0].is_empty() {
+            STATUS_CMD_ERROR
+        } else {
+            STATUS_CMD_OK
+        };
     }
 
     // Try parsing

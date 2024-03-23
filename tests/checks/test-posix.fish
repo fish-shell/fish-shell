@@ -25,3 +25,24 @@ echo $status
 test -z "" -a foo
 echo $status
 #CHECK: 0
+
+set -l fish (status fish-path)
+echo 'test foo; test; test -z; test -n; test -d; echo oops' | $fish -d 'deprecated-*' >/dev/null
+#CHECKERR: test: called with one argument. This will return false in future.
+#CHECKERR: Standard input (line 1):
+#CHECKERR: test foo; test; test -z; test -n; test -d; echo oops
+#CHECKERR: ^
+#CHECKERR: test: called with no arguments. This will be an error in future.
+#CHECKERR: Standard input (line 1):
+#CHECKERR: test foo; test; test -z; test -n; test -d; echo oops
+#CHECKERR:           ^
+#CHECKERR: test: called with one argument. This will return false in future.
+# (yes, `test -z` is skipped because it would behave the same)
+#CHECKERR: Standard input (line 1):
+#CHECKERR: test foo; test; test -z; test -n; test -d; echo oops
+#CHECKERR:                          ^
+#CHECKERR: test: called with one argument. This will return false in future.
+#CHECKERR: Standard input (line 1):
+#CHECKERR: test foo; test; test -z; test -n; test -d; echo oops
+#CHECKERR: ^
+

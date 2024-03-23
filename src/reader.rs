@@ -67,9 +67,9 @@ use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
     SearchType,
 };
-use crate::input::init_input;
 use crate::input::Inputter;
-use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
+use crate::input::{init_input, input_set_bind_mode};
+use crate::input_common::{restore_terminal, CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
@@ -133,7 +133,7 @@ pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode on startup, which we restore on exit.
-static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
+pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode we use to execute programs.
@@ -814,7 +814,14 @@ pub fn reader_change_history(name: &wstr) {
 pub fn reader_change_cursor_selection_mode(selection_mode: CursorSelectionMode) {
     // We don't need to _change_ if we're not initialized yet.
     if let Some(data) = current_data() {
+        if data.cursor_selection_mode == selection_mode {
+            return;
+        }
+        let invalidates_selection = data.selection.is_some();
         data.cursor_selection_mode = selection_mode;
+        if invalidates_selection {
+            data.update_buff_pos(EditableLineTag::Commandline, None);
+        }
     }
 }
 
@@ -1159,13 +1166,24 @@ impl ReaderData {
     }
 
     /// Update the cursor position.
-    fn update_buff_pos(&mut self, elt: EditableLineTag, new_pos: Option<usize>) {
+    fn update_buff_pos(&mut self, elt: EditableLineTag, mut new_pos: Option<usize>) -> bool {
+        if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+            let el = self.edit_line(elt);
+            let mut pos = new_pos.unwrap_or(el.position());
+            if !el.is_empty() && pos == el.len() {
+                pos = el.len() - 1;
+                if el.position() == pos {
+                    return false;
+                }
+                new_pos = Some(pos);
+            }
+        }
         if let Some(pos) = new_pos {
             self.edit_line_mut(elt).set_position(pos);
         }
 
         if elt != EditableLineTag::Commandline {
-            return;
+            return true;
         }
         let buff_pos = self.command_line.position();
         let target_char = if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
@@ -1174,7 +1192,7 @@ impl ReaderData {
             0
         };
         let Some(selection) = self.selection.as_mut() else {
-            return;
+            return true;
         };
         if selection.begin <= buff_pos {
             selection.start = selection.begin;
@@ -1183,6 +1201,7 @@ impl ReaderData {
             selection.start = buff_pos;
             selection.stop = selection.begin + target_char;
         }
+        true
     }
 }
 
@@ -1800,8 +1819,10 @@ impl ReaderData {
                 continue;
             }
             assert!(
-                event_needing_handling.is_char() || event_needing_handling.is_readline(),
-                "Should have a char or readline"
+                event_needing_handling.is_char()
+                    || event_needing_handling.get_chord().is_some()
+                    || event_needing_handling.is_readline_or_command(),
+                "Should have a char, readline or command"
             );
 
             if !matches!(rls.last_cmd, Some(rl::Yank | rl::YankPop)) {
@@ -1837,26 +1858,28 @@ impl ReaderData {
                 }
 
                 rls.last_cmd = Some(readline_cmd);
+            } else if let Some(command) = event_needing_handling.get_command() {
+                zelf.run_input_command_scripts(command);
+            } else if let Some(mode) = event_needing_handling.get_mode() {
+                input_set_bind_mode(zelf.parser(), mode);
             } else {
                 // Ordinary char.
-                let c = event_needing_handling.get_char();
+                let chord = event_needing_handling.get_chord().unwrap();
                 if event_needing_handling.input_style == CharInputStyle::NotFirst
                     && zelf.active_edit_line().1.position() == 0
                 {
                     // This character is skipped.
-                } else if c.is_control() {
-                    // This can happen if the user presses a control char we don't recognize. No
-                    // reason to report this to the user unless they've enabled debugging output.
-                    FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
                 } else {
                     // Regular character.
                     let (elt, _el) = zelf.active_edit_line();
-                    zelf.insert_char(elt, c);
+                    if let Some(c) = chord.underlying_codepoint() {
+                        zelf.insert_char(elt, c);
 
-                    if elt == EditableLineTag::Commandline {
-                        zelf.clear_pager();
-                        // We end history search. We could instead update the search string.
-                        zelf.history_search.reset();
+                        if elt == EditableLineTag::Commandline {
+                            zelf.clear_pager();
+                            // We end history search. We could instead update the search string.
+                            zelf.history_search.reset();
+                        }
                     }
                 }
                 rls.last_cmd = None;
@@ -1913,13 +1936,11 @@ impl ReaderData {
     }
 
     /// Run a sequence of commands from an input binding.
-    fn run_input_command_scripts(&mut self, cmds: &[WString]) {
+    fn run_input_command_scripts(&mut self, cmd: &wstr) {
         let last_statuses = self.parser().vars().get_last_statuses();
-        for cmd in cmds {
-            self.update_commandline_state();
-            self.parser().eval(cmd, &IoChain::new());
-            self.apply_commandline_state_changes();
-        }
+        self.update_commandline_state();
+        self.parser().eval(cmd, &IoChain::new());
+        self.apply_commandline_state_changes();
         self.parser().set_last_statuses(last_statuses);
 
         // Restore tty to shell modes.
@@ -1957,22 +1978,8 @@ impl ReaderData {
         let mut last_exec_count = self.exec_count();
         let mut accumulated_chars = WString::new();
 
-        let mut command_handler = {
-            // TODO Remove this hack.
-            let zelf = self as *mut Self;
-            move |cmds: &[WString]| {
-                // Safety: this is a pinned pointer.
-                let zelf = unsafe { &mut *zelf };
-                zelf.run_input_command_scripts(cmds);
-            }
-        };
-
         while accumulated_chars.len() < limit {
-            let evt = {
-                let allow_commands = accumulated_chars.is_empty();
-                self.inputter
-                    .read_char(allow_commands.then_some(&mut command_handler))
-            };
+            let evt = self.inputter.read_char();
             if !evt.is_char() || !poll_fd_readable(self.conf.inputfd) {
                 event_needing_handling = Some(evt);
                 break;
@@ -1982,9 +1989,14 @@ impl ReaderData {
             {
                 // The cursor is at the beginning and nothing is accumulated, so skip this character.
                 continue;
-            } else {
-                accumulated_chars.push(evt.get_char());
             }
+
+            let chord = evt.get_chord().unwrap();
+            if let Some(c) = chord.underlying_codepoint() {
+                accumulated_chars.push(c);
+            } else {
+                continue;
+            };
 
             if last_exec_count != self.exec_count() {
                 last_exec_count = self.exec_count();
@@ -2052,7 +2064,9 @@ impl ReaderData {
                             }
                             position
                         };
-                        self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1));
+                        if !self.update_buff_pos(self.active_edit_line_tag(), Some(position + 1)) {
+                            break;
+                        }
                     }
                 }
             }
@@ -2267,17 +2281,24 @@ impl ReaderData {
                 let yank_str = kill_yank();
                 self.insert_string(self.active_edit_line_tag(), &yank_str);
                 rls.yank_len = yank_str.len();
+                if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                    let (_elt, el) = self.active_edit_line();
+                    self.update_buff_pos(self.active_edit_line_tag(), Some(el.position() - 1));
+                }
             }
             rl::YankPop => {
                 if rls.yank_len != 0 {
                     let (elt, el) = self.active_edit_line();
                     let yank_str = kill_yank_rotate();
                     let new_yank_len = yank_str.len();
-                    self.replace_substring(
-                        elt,
-                        el.position() - rls.yank_len..el.position(),
-                        yank_str,
-                    );
+                    let bias = if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                        1
+                    } else {
+                        0
+                    };
+                    let begin = el.position() + bias - rls.yank_len;
+                    let end = el.position() + bias;
+                    self.replace_substring(elt, begin..end, yank_str);
                     self.update_buff_pos(elt, None);
                     rls.yank_len = new_yank_len;
                     self.suppress_autosuggestion = true;
@@ -2291,6 +2312,7 @@ impl ReaderData {
                 self.parser()
                     .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
                 self.exit_loop_requested = true;
+                restore_terminal(); // TODO
                 check_exit_loop_maybe_warning(Some(self));
             }
             rl::DeleteOrExit | rl::DeleteChar => {
@@ -2304,6 +2326,7 @@ impl ReaderData {
                     self.parser()
                         .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
                     self.exit_loop_requested = true;
+                    restore_terminal(); // TODO
                     check_exit_loop_maybe_warning(Some(self));
                 }
             }
@@ -2848,7 +2871,9 @@ impl ReaderData {
                     if el.position() == 0 || el.text().as_char_slice()[el.position() - 1] == '\n' {
                         break elt;
                     }
-                    self.update_buff_pos(elt, Some(el.position() - 1));
+                    if !self.update_buff_pos(elt, Some(el.position() - 1)) {
+                        break elt;
+                    }
                 };
                 self.insert_char(elt, '\n');
                 let (elt, el) = self.active_edit_line();
@@ -2861,7 +2886,9 @@ impl ReaderData {
                     {
                         break elt;
                     }
-                    self.update_buff_pos(elt, Some(el.position() + 1));
+                    if !self.update_buff_pos(elt, Some(el.position() + 1)) {
+                        break elt;
+                    }
                 };
                 self.insert_char(elt, '\n');
             }

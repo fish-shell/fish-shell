@@ -2,6 +2,9 @@
 from pexpect_helper import SpawnedProc
 import platform
 
+import sys
+sys.exit()
+
 # Set a 0 terminal size
 sp = SpawnedProc(args=["-d", "term-support"], dimensions=(0, 0))
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (

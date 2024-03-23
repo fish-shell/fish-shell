@@ -20,95 +20,91 @@ bind -M bind_mode \cX true
 bind | string match -v '*backward-delete-char'
 bind --user --preset | string match -v '*backward-delete-char'
 # CHECK: bind --preset '' self-insert
-# CHECK: bind --preset \n execute
-# CHECK: bind --preset \r execute
-# CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc cancel-commandline
-# CHECK: bind --preset \cd exit
-# CHECK: bind --preset \ce bind
-# CHECK: bind --preset \cs pager-toggle-search
-# CHECK: bind --preset \cu backward-kill-line
-# CHECK: bind --preset \e\[A up-line
-# CHECK: bind --preset \e\[B down-line
-# CHECK: bind --preset \e\[C forward-char
-# CHECK: bind --preset \e\[D backward-char
-# CHECK: bind --preset \cp up-line
-# CHECK: bind --preset \cn down-line
-# CHECK: bind --preset \cb backward-char
-# CHECK: bind --preset \cf forward-char
-# CHECK: bind -M bind_mode \cx true
+# CHECK: bind --preset [ret] execute
+# CHECK: bind --preset [tab] complete
+# CHECK: bind --preset [c-c] cancel-commandline
+# CHECK: bind --preset [c-d] exit
+# CHECK: bind --preset [c-e] bind
+# CHECK: bind --preset [c-s] pager-toggle-search
+# CHECK: bind --preset [c-u] backward-kill-line
+# CHECK: bind --preset [up] up-line
+# CHECK: bind --preset [down] down-line
+# CHECK: bind --preset [right] forward-char
+# CHECK: bind --preset [left] backward-char
+# CHECK: bind --preset [c-p] up-line
+# CHECK: bind --preset [c-n] down-line
+# CHECK: bind --preset [c-b] backward-char
+# CHECK: bind --preset [c-f] forward-char
+# CHECK: bind -M bind_mode [c-x] true
 # CHECK: bind --preset '' self-insert
-# CHECK: bind --preset \n execute
-# CHECK: bind --preset \r execute
-# CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc cancel-commandline
-# CHECK: bind --preset \cd exit
-# CHECK: bind --preset \ce bind
-# CHECK: bind --preset \cs pager-toggle-search
-# CHECK: bind --preset \cu backward-kill-line
-# CHECK: bind --preset \e\[A up-line
-# CHECK: bind --preset \e\[B down-line
-# CHECK: bind --preset \e\[C forward-char
-# CHECK: bind --preset \e\[D backward-char
-# CHECK: bind --preset \cp up-line
-# CHECK: bind --preset \cn down-line
-# CHECK: bind --preset \cb backward-char
-# CHECK: bind --preset \cf forward-char
-# CHECK: bind -M bind_mode \cx true
+# CHECK: bind --preset [ret] execute
+# CHECK: bind --preset [tab] complete
+# CHECK: bind --preset [c-c] cancel-commandline
+# CHECK: bind --preset [c-d] exit
+# CHECK: bind --preset [c-e] bind
+# CHECK: bind --preset [c-s] pager-toggle-search
+# CHECK: bind --preset [c-u] backward-kill-line
+# CHECK: bind --preset [up] up-line
+# CHECK: bind --preset [down] down-line
+# CHECK: bind --preset [right] forward-char
+# CHECK: bind --preset [left] backward-char
+# CHECK: bind --preset [c-p] up-line
+# CHECK: bind --preset [c-n] down-line
+# CHECK: bind --preset [c-b] backward-char
+# CHECK: bind --preset [c-f] forward-char
+# CHECK: bind -M bind_mode [c-x] true
 
 # Preset only
 bind --preset | string match -v '*backward-delete-char'
 # CHECK: bind --preset '' self-insert
-# CHECK: bind --preset \n execute
-# CHECK: bind --preset \r execute
-# CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc cancel-commandline
-# CHECK: bind --preset \cd exit
-# CHECK: bind --preset \ce bind
-# CHECK: bind --preset \cs pager-toggle-search
-# CHECK: bind --preset \cu backward-kill-line
-# CHECK: bind --preset \e\[A up-line
-# CHECK: bind --preset \e\[B down-line
-# CHECK: bind --preset \e\[C forward-char
-# CHECK: bind --preset \e\[D backward-char
-# CHECK: bind --preset \cp up-line
-# CHECK: bind --preset \cn down-line
-# CHECK: bind --preset \cb backward-char
-# CHECK: bind --preset \cf forward-char
+# CHECK: bind --preset [ret] execute
+# CHECK: bind --preset [tab] complete
+# CHECK: bind --preset [c-c] cancel-commandline
+# CHECK: bind --preset [c-d] exit
+# CHECK: bind --preset [c-e] bind
+# CHECK: bind --preset [c-s] pager-toggle-search
+# CHECK: bind --preset [c-u] backward-kill-line
+# CHECK: bind --preset [up] up-line
+# CHECK: bind --preset [down] down-line
+# CHECK: bind --preset [right] forward-char
+# CHECK: bind --preset [left] backward-char
+# CHECK: bind --preset [c-p] up-line
+# CHECK: bind --preset [c-n] down-line
+# CHECK: bind --preset [c-b] backward-char
+# CHECK: bind --preset [c-f] forward-char
 
 # User only
 bind --user | string match -v '*backward-delete-char'
-# CHECK: bind -M bind_mode \cx true
+# CHECK: bind -M bind_mode [c-x] true
 
 # Adding bindings
 bind \t 'echo banana'
 bind | string match -v '*backward-delete-char'
 # CHECK: bind --preset '' self-insert
-# CHECK: bind --preset \n execute
-# CHECK: bind --preset \r execute
-# CHECK: bind --preset \t complete
-# CHECK: bind --preset \cc cancel-commandline
-# CHECK: bind --preset \cd exit
-# CHECK: bind --preset \ce bind
-# CHECK: bind --preset \cs pager-toggle-search
-# CHECK: bind --preset \cu backward-kill-line
-# CHECK: bind --preset \e\[A up-line
-# CHECK: bind --preset \e\[B down-line
-# CHECK: bind --preset \e\[C forward-char
-# CHECK: bind --preset \e\[D backward-char
-# CHECK: bind --preset \cp up-line
-# CHECK: bind --preset \cn down-line
-# CHECK: bind --preset \cb backward-char
-# CHECK: bind --preset \cf forward-char
-# CHECK: bind -M bind_mode \cx true
-# CHECK: bind \t 'echo banana'
+# CHECK: bind --preset [ret] execute
+# CHECK: bind --preset [tab] complete
+# CHECK: bind --preset [c-c] cancel-commandline
+# CHECK: bind --preset [c-d] exit
+# CHECK: bind --preset [c-e] bind
+# CHECK: bind --preset [c-s] pager-toggle-search
+# CHECK: bind --preset [c-u] backward-kill-line
+# CHECK: bind --preset [up] up-line
+# CHECK: bind --preset [down] down-line
+# CHECK: bind --preset [right] forward-char
+# CHECK: bind --preset [left] backward-char
+# CHECK: bind --preset [c-p] up-line
+# CHECK: bind --preset [c-n] down-line
+# CHECK: bind --preset [c-b] backward-char
+# CHECK: bind --preset [c-f] forward-char
+# CHECK: bind -M bind_mode [c-x] true
+# CHECK: bind [tab] 'echo banana'
 
 # Erasing bindings
 bind --erase \t
 bind \t
 bind \t 'echo wurst'
-# CHECK: bind --preset \t complete
-bind --erase --user --preset \t
+# CHECK: bind --preset [tab] complete
+bind --erase --user --preset [tab]
 bind \t
 # CHECKERR: bind: No binding found for sequence '\t'
 

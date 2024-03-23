@@ -21,7 +21,7 @@ sendline(
 )
 expect_prompt()
 sendline("echo \en one \"two three\" four'five six'{7} 'eight~")
-expect_prompt("\r\n@GUARD:1@\r\n(.*)\r\n@/GUARD:1@\r\n")
+expect_prompt("\r\n.*@GUARD:1@\r\n(.*)\r\n@/GUARD:1@\r\n")
 
 # printing the buffer with -o should remove quoting
 sendline(
@@ -29,7 +29,7 @@ sendline(
 )
 expect_prompt()
 sendline("echo one \"two three\" four'five six'{7} 'eight~")
-expect_prompt("\r\n@GUARD:2@\r\n(.*)\r\n@/GUARD:2@\r\n")
+expect_prompt("\r\n.*@GUARD:2@\r\n(.*)\r\n@/GUARD:2@\r\n")
 
 # Check that we don't infinitely loop here.
 sendline("function fish_mode_prompt; commandline -f repaint; end")

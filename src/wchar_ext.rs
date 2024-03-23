@@ -277,6 +277,16 @@ pub trait WExt {
         iter_prefixes_iter(prefix.chars(), self.as_char_slice().iter().copied())
     }
 
+    fn strip_prefix<Prefix: IntoCharIter>(&self, prefix: Prefix) -> &wstr {
+        let iter = prefix.chars();
+        let prefix_len = iter.clone().count();
+        if iter_prefixes_iter(iter, self.as_char_slice().iter().copied()) {
+            self.slice_from(prefix_len)
+        } else {
+            self.slice_from(0)
+        }
+    }
+
     /// \return whether we end with a given Suffix.
     /// The Suffix can be a char, a &str, a &wstr, or a &WString.
     fn ends_with<Suffix: IntoCharIter>(&self, suffix: Suffix) -> bool {

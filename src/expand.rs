@@ -331,7 +331,7 @@ const UNCLEAN: &wstr = L!("$*?\\\"'({})");
 /// the expansion process.
 ///
 /// \param in the string to test
-fn expand_is_clean(input: &wstr) -> bool {
+pub(crate) fn expand_is_clean(input: &wstr) -> bool {
     if input.is_empty() {
         return true;
     }

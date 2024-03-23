@@ -3,7 +3,7 @@ use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BranchRef,
     DecoratedStatement, Keyword, Leaf, LeafRef, List, Node, NodeRef, NodeVisitor, Redirection,
-    Token, TokenRef, VariableAssignment,
+    SemiNl, Token, TokenRef, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::RgbColor;
@@ -1315,7 +1315,7 @@ impl<'s> Highlighter<'s> {
             self.pending_variables.push(var_name);
         }
     }
-    fn visit_semi_nl(&mut self, node: NodeRef<'_>) {
+    fn visit_semi_nl(&mut self, node: &SemiNl) {
         self.color_node(
             node,
             HighlightSpec::with_fg(HighlightRole::statement_terminator),
@@ -1453,7 +1453,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
         match node {
             NodeRef::Leaf(l) => match l {
                 LeafRef::Keyword(n) => self.visit_keyword(n),
-                LeafRef::Token(TokenRef::SemiNl(n)) => self.visit_semi_nl(n.as_node()),
+                LeafRef::Token(TokenRef::SemiNl(n)) => self.visit_semi_nl(n),
                 LeafRef::Token(token) => self.visit_token(token),
                 LeafRef::Argument(n) => self.visit_argument(n, false, true),
                 LeafRef::VariableAssignment(n) => self.visit_variable_assignment(n),

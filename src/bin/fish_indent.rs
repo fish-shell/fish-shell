@@ -605,7 +605,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         self.output.push(';');
     }
 
-    fn visit_semi_nl(&mut self, node: impl ast::Token) {
+    fn visit_semi_nl(&mut self, node: &ast::SemiNl) {
         // These are semicolons or newlines which are part of the ast. That means it includes e.g.
         // ones terminating a job or 'if' header, but not random semis in job lists. We respect
         // preferred_semi_locations to decide whether or not these should stay as newlines or

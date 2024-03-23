@@ -335,7 +335,6 @@ fn test_autoload() {
 
     fn touch_file(path: &wstr) {
         use nix::sys::stat::Mode;
-        use std::fs::File;
         use std::io::Write;
 
         let mut file = wopen_cloexec(

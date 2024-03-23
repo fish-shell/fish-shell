@@ -199,6 +199,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset K 'man (commandline -t) 2>/dev/null; or echo -n \a'
 
     bind -s --preset yy kill-whole-line yank
+    for seq in '"*yy' '"*Y' '"+yy' '"+Y'
+        bind -s --preset $seq fish_clipboard_copy
+    end
     bind -s --preset Y kill-whole-line yank
     bind -s --preset y\$ kill-line yank
     bind -s --preset y\^ backward-kill-line yank

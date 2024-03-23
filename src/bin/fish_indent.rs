@@ -281,7 +281,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     // \return gap text flags for the gap text that comes *before* a given node type.
-    fn gap_text_flags_before_node(&self, node: impl Node) -> GapFlags {
+    fn gap_text_flags_before_node(&self, node: &impl Node) -> GapFlags {
         let mut result = GapFlags::default();
         match node.as_node() {
             // Allow escaped newlines before leaf nodes that can be part of a long command.
@@ -573,7 +573,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
-    fn emit_node_text(&mut self, node: impl Node) {
+    fn emit_node_text(&mut self, node: ast::LeafRef<'_>) {
         // Weird special-case: a token may end in an escaped newline. Notably, the newline is
         // not part of the following gap text, handle indentation here (#8197).
         let mut range = node.source_range();
@@ -582,7 +582,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
             range.length -= 2;
         }
 
-        self.emit_text(range, self.gap_text_flags_before_node(node));
+        self.emit_text(range, self.gap_text_flags_before_node(&node));
 
         if ends_with_escaped_nl {
             // By convention, escaped newlines are preceded with a space.

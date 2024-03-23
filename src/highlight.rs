@@ -952,7 +952,7 @@ impl<'s> Highlighter<'s> {
             | ParseTreeFlags::SHOW_EXTRA_SEMIS;
         let ast = Ast::parse(self.buff, ast_flags, None);
 
-        self.visit_children(ast.top());
+        self.visit_children(&ast.top());
         if self.ctx.check_cancel() {
             return std::mem::take(&mut self.color_array);
         }
@@ -1003,7 +1003,7 @@ impl<'s> Highlighter<'s> {
         );
     }
     // Color a node as if it were an argument.
-    fn color_as_argument(&mut self, node: impl Node, options_allowed: bool /* = true */) {
+    fn color_as_argument(&mut self, node: &impl Node, options_allowed: bool /* = true */) {
         // node does not necessarily have type symbol_argument here.
         let source_range = node.source_range();
         let arg_str = self.get_source(source_range);
@@ -1078,7 +1078,7 @@ impl<'s> Highlighter<'s> {
         }
     }
     // Colors the source range of a node with a given color.
-    fn color_node(&mut self, node: impl Node, color: HighlightSpec) {
+    fn color_node(&mut self, node: &impl Node, color: HighlightSpec) {
         self.color_range(node.source_range(), color)
     }
     // Colors a range with a given color.
@@ -1088,11 +1088,11 @@ impl<'s> Highlighter<'s> {
     }
 
     // Visit the children of a node.
-    fn visit_children(&mut self, node: impl Node) {
+    fn visit_children(&mut self, node: &impl Node) {
         node.accept(self, false);
     }
     // AST visitor implementations.
-    fn visit_keyword(&mut self, node: impl Keyword) {
+    fn visit_keyword(&mut self, node: &impl Keyword) {
         let mut role = HighlightRole::normal;
         match node.keyword() {
             ParseKeyword::kw_begin
@@ -1115,9 +1115,9 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::kw_time => role = HighlightRole::operat,
             ParseKeyword::none => (),
         };
-        self.color_node(node, HighlightSpec::with_fg(role));
+        self.color_node(&node, HighlightSpec::with_fg(role));
     }
-    fn visit_token(&mut self, tok: impl Token) {
+    fn visit_token(&mut self, tok: TokenRef<'_>) {
         let mut role = HighlightRole::normal;
         match tok.token_type() {
             ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
@@ -1132,7 +1132,7 @@ impl<'s> Highlighter<'s> {
             }
             _ => (),
         }
-        self.color_node(tok, HighlightSpec::with_fg(role));
+        self.color_node(&tok, HighlightSpec::with_fg(role));
     }
     // Visit an argument, perhaps knowing that our command is cd.
     fn visit_argument(&mut self, arg: &Argument, cmd_is_cd: bool, options_allowed: bool) {
@@ -1452,23 +1452,23 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
     fn visit(&mut self, node: NodeRef<'a>) {
         match node {
             NodeRef::Leaf(l) => match l {
-                LeafRef::Keyword(n) => self.visit_keyword(n),
+                LeafRef::Keyword(n) => self.visit_keyword(&n),
                 LeafRef::Token(TokenRef::SemiNl(n)) => self.visit_semi_nl(n),
                 LeafRef::Token(token) => self.visit_token(token),
                 LeafRef::Argument(n) => self.visit_argument(n, false, true),
                 LeafRef::VariableAssignment(n) => self.visit_variable_assignment(n),
-                _ => self.visit_children(l),
+                _ => self.visit_children(&l),
             },
 
             NodeRef::Branch(b) => match b {
                 BranchRef::Redirection(n) => self.visit_redirection(n),
                 BranchRef::DecoratedStatement(n) => self.visit_decorated_statement(n),
                 BranchRef::BlockStatement(n) => self.visit_block_statement(n),
-                _ => self.visit_children(b),
+                _ => self.visit_children(&b),
             },
 
             // Default implementation is to just visit children.
-            _ => self.visit_children(node),
+            _ => self.visit_children(&node),
         }
     }
 }

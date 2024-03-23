@@ -12,7 +12,7 @@ fish 3.8.0 (released ???)
    10198 10200 10201 10204 10210 10214 10219 10223 10227 10232 10235 10237 10243 10244 10245
    10246 10251 10260 10267 10281 10347 10366 10368 10370 10371 10263 10270 10272 10276 10277
    10278 10279 10291 10293 10305 10306 10309 10316 10317 10327 10328 10329 10330 10336 10340
-   10345 10346 10353 10354 10356 10372 10373
+   10345 10346 10353 10354 10356 10372 10373 3299 10360
 
 The entirety of fish's C++ code has been ported to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
@@ -84,7 +84,12 @@ New or improved bindings
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
 - ``backward-kill-path-component`` and friends now treat ``#`` as part of a path component (:issue:`10271`).
 - The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
-- Vi mode now binds :kbd:`Control-N`  to accept autosuggestions (:issue:`10339`).
+- Vi mode has seen some improvements although it continues to lack development.
+  - Insert-mode :kbd:`Control-N` accepts autosuggestions (:issue:`10339`).
+  - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
+  - When the cursor is at the end of the commandline, a single :kbd:`l` will accept an autosuggestion (:issue:`10286`)
+  - The cursor position after pasting (:kbd:`p`) has been corrected.
+  - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
 
 Improved prompts
 ^^^^^^^^^^^^^^^^

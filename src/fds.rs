@@ -106,6 +106,12 @@ impl AsRawFd for AutoCloseFd {
     }
 }
 
+impl AsFd for AutoCloseFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        unsafe { BorrowedFd::borrow_raw(self.fd()) }
+    }
+}
+
 impl Default for AutoCloseFd {
     fn default() -> AutoCloseFd {
         AutoCloseFd { fd_: -1 }

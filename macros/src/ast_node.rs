@@ -3,6 +3,15 @@ use quote::{format_ident, quote, ToTokens};
 use std::collections::HashMap;
 use syn::{parse_quote, punctuated::Punctuated, Fields, Ident, ItemEnum, Token};
 
+#[derive(Copy, Clone, PartialEq)]
+enum Flavor {
+    Val,
+    Ref,
+    Mut,
+}
+
+const FLAVORS: [Flavor; 3] = [Flavor::Val, Flavor::Ref, Flavor::Mut];
+
 pub struct State<'a> {
     enums: &'a [ItemEnum],
     tree: HashMap<&'a Ident, Vec<&'a Ident>>,
@@ -99,15 +108,6 @@ impl<'a> State<'a> {
         }
     }
 }
-
-#[derive(Copy, Clone, PartialEq)]
-enum Flavor {
-    Val,
-    Ref,
-    Mut,
-}
-
-const FLAVORS: [Flavor; 3] = [Flavor::Val, Flavor::Ref, Flavor::Mut];
 
 impl Flavor {
     fn transform(self, def: &ItemEnum, is_enum: impl Fn(&Ident) -> bool) -> ItemEnum {

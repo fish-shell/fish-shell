@@ -1472,48 +1472,47 @@ fn detect_errors_in_backgrounded_job(
         return false;
     };
 
-    let mut errored = false;
-
-    if let NodeRef::Branch(BranchRef::IfClause(_) | BranchRef::WhileHeader(_)) =
-        job_conj.parent().unwrap().as_node()
-    {
-        errored = append_syntax_error!(
-            parse_errors,
-            source_range.start(),
-            source_range.length(),
-            BACKGROUND_IN_CONDITIONAL_ERROR_MSG
-        );
-    } else if let NodeRef::List(ListRef::JobList(jlist)) = job_conj.parent().unwrap().as_node() {
-        // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
-        // Find the index of ourselves in the job list.
-        let index = jlist
-            .iter()
-            .position(|job| job.pointer_eq(job_conj))
-            .expect("Should have found the job in the list");
-
-        // Try getting the next job and check its decorator.
-        if let Some(next) = jlist.get(index + 1) {
-            if let Some(deco) = &next.decorator {
-                assert!(
-                    [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&deco.keyword()),
-                    "Unexpected decorator keyword"
-                );
-                let deco_name = if deco.keyword() == ParseKeyword::kw_and {
-                    L!("and")
-                } else {
-                    L!("or")
-                };
-                errored = append_syntax_error!(
-                    parse_errors,
-                    deco.source_range().start(),
-                    deco.source_range().length(),
-                    BOOL_AFTER_BACKGROUND_ERROR_MSG,
-                    deco_name
-                );
-            }
+    match job_conj.parent().unwrap().as_node() {
+        NodeRef::Branch(BranchRef::IfClause(_) | BranchRef::WhileHeader(_)) => {
+            append_syntax_error!(
+                parse_errors,
+                source_range.start(),
+                source_range.length(),
+                BACKGROUND_IN_CONDITIONAL_ERROR_MSG
+            )
         }
+        NodeRef::List(ListRef::JobList(jlist)) => {
+            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
+            // Find the index of ourselves in the job list.
+            let index = jlist
+                .iter()
+                .position(|job| job.pointer_eq(job_conj))
+                .expect("Should have found the job in the list");
+
+            // Try getting the next job and check its decorator.
+            let Some(deco) = jlist.get(index + 1).and_then(|n| n.decorator.as_ref()) else {
+                return false;
+            };
+
+            assert!(
+                [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&deco.keyword()),
+                "Unexpected decorator keyword"
+            );
+            let deco_name = if deco.keyword() == ParseKeyword::kw_and {
+                L!("and")
+            } else {
+                L!("or")
+            };
+            append_syntax_error!(
+                parse_errors,
+                deco.source_range().start(),
+                deco.source_range().length(),
+                BOOL_AFTER_BACKGROUND_ERROR_MSG,
+                deco_name
+            )
+        }
+        _ => false,
     }
-    errored
 }
 
 /// Given a source buffer \p buff_src and decorated statement \p dst within it, return true if there
@@ -1541,16 +1540,14 @@ fn detect_errors_in_decorated_statement(
     };
 
     // Walk up to the job.
-    let mut job = None;
     let mut cursor = dst.parent();
-    while job.is_none() {
+    let job = loop {
         let c = cursor.expect("Reached root without finding a job");
         if let NodeRef::Branch(BranchRef::JobPipeline(j)) = c.as_node() {
-            job = Some(j);
+            break j;
         }
         cursor = c.parent();
-    }
-    let job = job.expect("Should have found the job");
+    };
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {

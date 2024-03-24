@@ -32,18 +32,18 @@ use fish::{
         scoped_push_replacer, str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE,
         PROGRAM_NAME,
     },
-    env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
-        ConfigPaths, EnvMode,
+        ConfigPaths, EnvMode, Statuses,
     },
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
-    fprintf, function, future_feature_flags as features, history,
-    history::start_private_mode,
+    fprintf, function, future_feature_flags as features,
+    history::{self, start_private_mode},
     io::IoChain,
     nix::{getpid, isatty},
+    panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
@@ -465,6 +465,10 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
 }
 
 fn main() {
+    panic_handler(throwing_main)
+}
+
+fn throwing_main() {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();

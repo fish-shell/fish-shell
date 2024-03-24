@@ -11,6 +11,7 @@ use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::Ordering;
 
+use fish::panic::panic_handler;
 use libc::{LC_ALL, STDOUT_FILENO};
 
 use fish::ast::{
@@ -737,8 +738,11 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
 }
 
 fn main() {
-    PROGRAM_NAME.set(L!("fish_indent")).unwrap();
+    panic_handler(throwing_main)
+}
 
+fn throwing_main() {
+    PROGRAM_NAME.set(L!("fish_indent")).unwrap();
     topic_monitor_init();
     threads::init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's

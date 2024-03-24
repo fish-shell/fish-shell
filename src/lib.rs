@@ -68,6 +68,7 @@ pub mod null_terminated_array;
 pub mod operation_context;
 pub mod output;
 pub mod pager;
+pub mod panic;
 pub mod parse_constants;
 pub mod parse_execution;
 pub mod parse_tree;

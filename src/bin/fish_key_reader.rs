@@ -25,6 +25,7 @@ use fish::{
     fprintf,
     input::input_terminfo_get_name,
     input_common::{CharEvent, InputEventQueue, InputEventQueuer},
+    panic::panic_handler,
     print_help::print_help,
     printf,
     proc::set_interactive_session,
@@ -364,6 +365,10 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
 }
 
 fn main() {
+    panic_handler(throwing_main)
+}
+
+fn throwing_main() {
     PROGRAM_NAME.set(L!("fish_key_reader")).unwrap();
     let mut continuous_mode = false;
     let mut verbose = false;

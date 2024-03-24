@@ -9,7 +9,7 @@ use std::sync::Mutex;
 #[test]
 #[serial]
 fn test_termsize() {
-    test_init();
+    let _cleanup = test_init();
     let env_global = EnvMode::GLOBAL;
     let parser = Parser::principal_parser();
     let vars = parser.vars();

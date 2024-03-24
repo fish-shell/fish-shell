@@ -9,7 +9,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_abbreviations() {
-    test_init();
+    let _cleanup = test_init();
     {
         let mut abbrs = abbrs_get_set();
         abbrs.add(Abbreviation::new(

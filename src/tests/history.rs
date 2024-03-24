@@ -43,7 +43,7 @@ fn random_string() -> WString {
 #[test]
 #[serial]
 fn test_history() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! test_history_matches {
         ($search:expr, $expected:expr) => {
             let expected: Vec<&wstr> = $expected;
@@ -226,7 +226,7 @@ fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
 }
 
 fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
-    test_init();
+    let _cleanup = test_init();
     // Called in child thread to modify history.
     let hist = History::new(L!("race_test"));
     let hist_lines = generate_history_lines(item_count, idx);
@@ -239,7 +239,7 @@ fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
 #[test]
 #[serial]
 fn test_history_races() {
-    test_init();
+    let _cleanup = test_init();
     // This always fails under WSL
     if is_windows_subsystem_for_linux() {
         return;
@@ -340,7 +340,7 @@ fn test_history_races() {
 #[test]
 #[serial]
 fn test_history_merge() {
-    test_init();
+    let _cleanup = test_init();
     // In a single fish process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
@@ -449,7 +449,7 @@ fn test_history_merge() {
 #[test]
 #[serial]
 fn test_history_path_detection() {
-    test_init();
+    let _cleanup = test_init();
     // Regression test for #7582.
     let tmpdirbuff = CString::new("/tmp/fish_test_history.XXXXXX").unwrap();
     let tmpdir = unsafe { libc::mkdtemp(tmpdirbuff.into_raw()) };
@@ -565,7 +565,7 @@ fn install_sample_history(name: &wstr) {
 #[test]
 #[serial]
 fn test_history_formats() {
-    test_init();
+    let _cleanup = test_init();
     // Test inferring and reading legacy and bash history formats.
     let name = L!("history_sample_fish_2_0");
     install_sample_history(name);

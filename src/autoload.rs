@@ -319,7 +319,7 @@ impl AutoloadFileCache {
 #[test]
 #[serial]
 fn test_autoload() {
-    test_init();
+    let _cleanup = test_init();
     use crate::common::{charptr2wcstring, wcs2zstring};
     use crate::fds::wopen_cloexec;
     use crate::wutil::sprintf;

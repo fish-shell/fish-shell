@@ -15,7 +15,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_debounce() {
-    test_init();
+    let _cleanup = test_init();
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
     let db = Debounce::new(Duration::from_secs(0));
@@ -88,7 +88,7 @@ fn test_debounce() {
 #[test]
 #[serial]
 fn test_debounce_timeout() {
-    test_init();
+    let _cleanup = test_init();
     // Verify that debounce doesn't wait forever.
     // Use a shared_ptr so we don't have to join our threads.
     let timeout = Duration::from_millis(500);

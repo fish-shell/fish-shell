@@ -168,7 +168,7 @@ pub use wgettext_maybe_fmt;
 #[test]
 #[serial]
 fn test_untranslated() {
-    test_init();
+    let _cleanup = test_init();
     let s: &'static wstr = wgettext!("abc");
     assert_eq!(s, "abc");
     let s2: &'static wstr = wgettext!("static");

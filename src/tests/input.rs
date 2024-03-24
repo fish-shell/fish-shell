@@ -8,7 +8,7 @@ use std::sync::Arc;
 #[test]
 #[serial]
 fn test_input() {
-    test_init();
+    let _cleanup = test_init();
     use crate::env::EnvStack;
     let parser = Parser::new(Arc::pin(EnvStack::new()), false);
     let mut input = Inputter::new(parser, libc::STDIN_FILENO);

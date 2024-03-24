@@ -109,7 +109,7 @@ impl ItemMaker {
 #[test]
 #[serial]
 fn fd_monitor_items() {
-    test_init();
+    let _cleanup = test_init();
     let monitor = FdMonitor::new();
 
     // Items which will never receive data or be called.

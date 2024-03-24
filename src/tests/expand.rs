@@ -65,7 +65,7 @@ fn expand_test_impl(
 #[test]
 #[serial]
 fn test_expand() {
-    test_init();
+    let _cleanup = test_init();
     /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
     ///
     /// \param in the string to expand
@@ -349,7 +349,7 @@ fn test_expand() {
 #[test]
 #[serial]
 fn test_expand_overflow() {
-    test_init();
+    let _cleanup = test_init();
     // Testing overflowing expansions
     // Ensure that we have sane limits on number of expansions - see #7497.
 
@@ -386,7 +386,7 @@ fn test_expand_overflow() {
 #[test]
 #[serial]
 fn test_abbreviations() {
-    test_init();
+    let _cleanup = test_init();
     // Testing abbreviations
 
     with_abbrs_mut(|abbrset| {

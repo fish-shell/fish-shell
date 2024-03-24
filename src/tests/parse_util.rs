@@ -12,7 +12,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_error_messages() {
-    test_init();
+    let _cleanup = test_init();
     // Given a format string, returns a list of non-empty strings separated by format specifiers. The
     // format specifiers themselves are omitted.
     fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {

@@ -5,7 +5,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_string() {
-    test_init();
+    let _cleanup = test_init();
     use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::builtins::string::string;
     use crate::common::escape;
@@ -15,7 +15,7 @@ fn test_string() {
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
 
-    test_init();
+    let _cleanup = test_init();
 
     // avoid 1.3k L!()'s
     macro_rules! test_cases {

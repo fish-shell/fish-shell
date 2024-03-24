@@ -310,7 +310,7 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
 #[test]
 #[serial]
 fn test_pipes() {
-    test_init();
+    let _cleanup = test_init();
     // Here we just test that each pipe has CLOEXEC set and is in the high range.
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     let mut pipes = vec![];

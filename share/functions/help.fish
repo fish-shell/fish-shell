@@ -225,17 +225,12 @@ function help --description 'Show help for the fish shell'
         end
     end
 
+    printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
     # cmd.exe and powershell needs more coaxing.
     if string match -qr 'powershell\.exe$|cmd\.exe$' -- $fish_browser[1]
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
     else if contains -- $fish_browser[1] $graphical_browsers
-        switch $fish_browser[1]
-            case htmlview x-www-browser
-                printf (_ 'help: Help is being displayed in your default browser.\n')
-            case '*'
-                printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
-        end
         $fish_browser $page_url &
         disown $last_pid >/dev/null 2>&1
     else

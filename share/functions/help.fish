@@ -57,11 +57,9 @@ function help --description 'Show help for the fish shell'
                 end
             end
 
-            # If we have an open _command_ we use it - otherwise it's our function,
-            # which might not have a backend to use.
-            # Note that we prefer xdg-open, because this open might also be a symlink to "openvt"
-            # like it is on Debian.
-            if command -sq open
+            # We use the macOS open, but not otherwise.
+            # On Debian, there is an open command that's a symlink to openvt.
+            if uname | string match -q Darwin && command -sq open
                 set fish_browser open
                 # The open command needs a trampoline because the macOS version can't handle #-fragments.
                 set need_trampoline 1

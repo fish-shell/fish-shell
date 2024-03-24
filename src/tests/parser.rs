@@ -34,7 +34,11 @@ fn test_parser() {
         if ast.errored() {
             return Err(ParserTestErrorBits::ERROR);
         }
-        let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+        let ast::NodeRef::Branch(ast::BranchRef::FreestandingArgumentList(arg_list)) = ast.top()
+        else {
+            panic!()
+        };
+        let args = &arg_list.arguments;
         let first_arg = args.get(0).expect("Failed to parse an argument");
         let mut errors = None;
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
@@ -407,7 +411,7 @@ fn test_new_parser_ll2() {
         // Get the statement. Should only have one.
         let mut statement = None;
         for n in Traversal::new(ast.top()) {
-            if let Some(tmp) = n.as_decorated_statement() {
+            if let ast::NodeRef::Branch(ast::BranchRef::DecoratedStatement(tmp)) = n {
                 assert!(
                     statement.is_none(),
                     "More than one decorated statement found in '{}'",

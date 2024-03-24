@@ -7,7 +7,9 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
+use core::panic;
 use std::{
+    ops::ControlFlow,
     os::unix::prelude::OsStrExt,
     time::{Duration, Instant},
 };
@@ -29,10 +31,7 @@ use fish::{
     print_help::print_help,
     printf,
     proc::set_interactive_session,
-    reader::{
-        check_exit_loop_maybe_warning, reader_init, reader_test_and_clear_interrupted,
-        restore_term_mode,
-    },
+    reader::{check_exit_loop_maybe_warning, reader_init, reader_test_and_clear_interrupted},
     signal::signal_set_handlers,
     threads,
     topic_monitor::topic_monitor_init,
@@ -222,7 +221,7 @@ fn output_elapsed_time(prev_timestamp: Instant, first_char_seen: bool, verbose: 
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(continuous_mode: bool, verbose: bool) {
+fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
     let mut first_char_seen = false;
     let mut prev_timestamp = Instant::now()
         .checked_sub(Duration::from_millis(1000))
@@ -243,7 +242,7 @@ fn process_input(continuous_mode: bool, verbose: bool) {
         if evt.as_ref().is_none_or(|evt| !evt.is_char()) {
             output_bind_command(&mut bind_chars);
             if first_char_seen && !continuous_mode {
-                return;
+                return 0;
             }
             continue;
         }
@@ -271,15 +270,16 @@ fn process_input(continuous_mode: bool, verbose: bool) {
 
         first_char_seen = true;
     }
+    0
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> ! {
+fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     set_interactive_session(true);
     topic_monitor_init();
     threads::init();
     env_init(None, true, false);
-    reader_init();
+    let _restore_term = reader_init();
 
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
@@ -298,12 +298,10 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> ! {
         eprintf!("\n");
     }
 
-    process_input(continuous_mode, verbose);
-    restore_term_mode();
-    std::process::exit(0);
+    process_input(continuous_mode, verbose)
 }
 
-fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
+fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> ControlFlow<i32> {
     let short_opts: &wstr = L!("+chvV");
     let long_opts: &[woption] = &[
         wopt(L!("continuous"), woption_argument_t::no_argument, 'c'),
@@ -324,7 +322,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
             }
             'h' => {
                 print_help("fish_key_reader");
-                std::process::exit(0);
+                return ControlFlow::Break(0);
             }
             'v' => {
                 printf!(
@@ -335,7 +333,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
                         fish::BUILD_VERSION
                     )
                 );
-                std::process::exit(0);
+                return ControlFlow::Break(0);
             }
             'V' => {
                 *verbose = true;
@@ -349,7 +347,7 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
                         w.argv[w.woptind - 1]
                     )
                 );
-                return false;
+                return ControlFlow::Break(1);
             }
             _ => panic!(),
         }
@@ -358,29 +356,29 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> bool {
     let argc = args.len() - w.woptind;
     if argc != 0 {
         eprintf!("Expected no arguments, got %d\n", argc);
-        return false;
+        return ControlFlow::Break(1);
     }
 
-    true
+    ControlFlow::Continue(())
 }
 
 fn main() {
     panic_handler(throwing_main)
 }
 
-fn throwing_main() {
+fn throwing_main() -> i32 {
     PROGRAM_NAME.set(L!("fish_key_reader")).unwrap();
     let mut continuous_mode = false;
     let mut verbose = false;
 
-    if !parse_flags(&mut continuous_mode, &mut verbose) {
-        std::process::exit(1);
+    if let ControlFlow::Break(i) = parse_flags(&mut continuous_mode, &mut verbose) {
+        return i;
     }
 
     if unsafe { libc::isatty(STDIN_FILENO) } == 0 {
         eprintf!("Stdin must be attached to a tty.\n");
-        std::process::exit(1);
+        return 1;
     }
 
-    setup_and_process_keys(continuous_mode, verbose);
+    setup_and_process_keys(continuous_mode, verbose)
 }

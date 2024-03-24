@@ -41,8 +41,8 @@ use crate::color::RgbColor;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
     redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx, shell_modes, str2wcstring,
-    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
-    UTF8_BOM_WCHAR,
+    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding,
+    PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -757,7 +757,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
 }
 
 /// Initialize the reader.
-pub fn reader_init() {
+pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
     // Save the initial terminal mode.
     let mut terminal_mode_on_startup = TERMINAL_MODE_ON_STARTUP.lock().unwrap();
     unsafe { libc::tcgetattr(STDIN_FILENO, &mut *terminal_mode_on_startup) };
@@ -784,6 +784,9 @@ pub fn reader_init() {
     if is_interactive_session() && unsafe { libc::getpgrp() == libc::tcgetpgrp(STDIN_FILENO) } {
         term_donate(/*quiet=*/ true);
     }
+    ScopeGuard::new((), |()| {
+        restore_term_mode();
+    })
 }
 
 /// Restore the term mode if we own the terminal and are interactive (#8705).

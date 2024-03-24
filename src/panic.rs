@@ -5,15 +5,21 @@ use libc::STDIN_FILENO;
 use crate::{
     common::{read_blocked, PROGRAM_NAME},
     nix::isatty,
+    threads::asan_maybe_exit,
 };
 
-pub fn panic_handler(main: impl FnOnce() + UnwindSafe) -> ! {
+pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
+    let exit_status = panic_handler_impl(main);
+    asan_maybe_exit(exit_status);
+    std::process::exit(exit_status)
+}
+
+fn panic_handler_impl(main: impl FnOnce() -> i32 + UnwindSafe) -> i32 {
     if !isatty(STDIN_FILENO) {
-        main();
-        unreachable!();
+        return main();
     }
-    if catch_unwind(main).is_ok() {
-        unreachable!();
+    if let Ok(status) = catch_unwind(main) {
+        return status;
     }
     printf!(
         "%s with PID %d crashed, please report a bug. Press Enter to exit",
@@ -23,11 +29,12 @@ pub fn panic_handler(main: impl FnOnce() + UnwindSafe) -> ! {
     let mut buf = [0_u8; 1];
     loop {
         let Ok(n) = read_blocked(STDIN_FILENO, &mut buf) else {
-            std::process::exit(110);
+            break;
         };
         if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {
             printf!("\n");
-            std::process::exit(110);
+            break;
         }
     }
+    110
 }

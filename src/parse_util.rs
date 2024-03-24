@@ -391,7 +391,7 @@ fn job_or_process_extent(
 
     let mut result = cmdsub_range.clone();
     for token in Tokenizer::new(
-        &buff[cmdsub_range],
+        &buff[cmdsub_range.clone()],
         TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS,
     ) {
         let tok_begin = token.offset();
@@ -408,10 +408,10 @@ fn job_or_process_extent(
             {
                 if tok_begin >= pos {
                     finished = true;
-                    result.end = tok_begin;
+                    result.end = cmdsub_range.start + tok_begin;
                 } else {
                     // Statement at cursor might start after this token.
-                    result.start = tok_begin + token.length();
+                    result.start = cmdsub_range.start + tok_begin + token.length();
                     out_tokens.as_mut().map(|tokens| tokens.clear());
                 }
                 continue; // Do not add this to tokens

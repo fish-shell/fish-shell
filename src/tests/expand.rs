@@ -422,7 +422,7 @@ fn test_abbreviations() {
 
     // Helper to expand an abbreviation, enforcing we have no more than one result.
     let abbr_expand_1 = |token, pos| -> Option<WString> {
-        let result = with_abbrs(|abbrset| abbrset.r#match(token, pos));
+        let result = with_abbrs(|abbrset| abbrset.r#match(token, pos, L!("")));
         if result.is_empty() {
             return None;
         }

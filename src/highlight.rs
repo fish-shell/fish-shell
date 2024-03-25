@@ -257,7 +257,7 @@ fn command_is_valid(
 
     // Abbreviations
     if !is_valid && abbreviation_ok {
-        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command))
+        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")))
     };
 
     // Regular commands

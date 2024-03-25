@@ -4569,19 +4569,33 @@ pub fn reader_expand_abbreviation_at_cursor(
 ) -> Option<abbrs::Replacement> {
     // Find the token containing the cursor. Usually users edit from the end, so walk backwards.
     let tokens = extract_tokens(cmdline);
-    let token = tokens
-        .into_iter()
-        .rev()
-        .find(|token| token.range.contains_inclusive(cursor_pos))?;
+    let mut token: Option<_> = None;
+    let mut cmdtok: Option<_> = None;
+
+    for t in tokens.into_iter().rev() {
+        let range = t.range;
+        let is_cmd = t.is_cmd;
+        if t.range.contains_inclusive(cursor_pos) {
+            token = Some(t);
+        }
+        // The command is at or *before* the token the cursor is on,
+        // and once we have a command we can stop.
+        if token.is_some() && is_cmd {
+            cmdtok = Some(range);
+            break;
+        }
+    }
+    let token = token?;
     let range = token.range;
     let position = if token.is_cmd {
         abbrs::Position::Command
     } else {
         abbrs::Position::Anywhere
     };
+    let cmd = cmdtok.map(|t| &cmdline[Range::<usize>::from(t)]);
 
     let token_str = &cmdline[Range::<usize>::from(range)];
-    let replacers = abbrs_match(token_str, position);
+    let replacers = abbrs_match(token_str, position, cmd.unwrap_or(L!("")));
     for replacer in replacers {
         if let Some(replacement) = expand_replacer(range, token_str, &replacer, parser) {
             return Some(replacement);

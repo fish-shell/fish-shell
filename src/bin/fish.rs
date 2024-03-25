@@ -523,8 +523,7 @@ fn throwing_main() -> i32 {
             Ok(dbg_file) => {
                 // Rust sets O_CLOEXEC by default
                 // https://github.com/rust-lang/rust/blob/07438b0928c6691d6ee734a5a77823ec143be94d/library/std/src/sys/unix/fs.rs#L1059
-
-                set_flog_file_fd(dbg_file.as_raw_fd());
+                set_flog_file_fd(dbg_file.into_raw_fd());
             }
             Err(e) => {
                 // TODO: should not be debug-print

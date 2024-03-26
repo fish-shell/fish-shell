@@ -33,3 +33,4 @@ fish_color_option cyan
 fish_color_keyword blue
 fish_color_host_remote yellow
 fish_color_status red
+fish_color_at normal

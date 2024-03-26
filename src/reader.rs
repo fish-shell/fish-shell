@@ -709,8 +709,8 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
             Err(err) => {
                 if err == nix::Error::EINTR {
                     continue;
-                } else if err == nix::Error::EAGAIN
-                    || err == nix::Error::EWOULDBLOCK && make_fd_blocking(fd).is_ok()
+                } else if (err == nix::Error::EAGAIN || err == nix::Error::EWOULDBLOCK)
+                    && make_fd_blocking(fd).is_ok()
                 {
                     // We succeeded in making the fd blocking, keep going.
                     continue;

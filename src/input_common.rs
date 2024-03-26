@@ -111,6 +111,7 @@ pub enum ReadlineCmd {
     DisableMouseTracking,
     // ncurses uses the obvious name
     ClearScreenAndRepaint,
+    MoveJumpAnchor,
     // NOTE: This one has to be last.
     ReverseRepeatJump,
 }

@@ -201,6 +201,9 @@ impl Term {
     /// Initialize a new `Term` instance, prepopulating the values of all the curses string
     /// capabilities we care about in the process.
     fn new(db: terminfo::Database) -> Self {
+        // todo: how to do feature detection of OSC 133?
+        let support_osc133 = false;
+
         Term {
             // String capabilities
             enter_bold_mode: get_str_cap(&db, "md"),

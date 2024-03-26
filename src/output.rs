@@ -427,8 +427,12 @@ impl Outputter {
     /// Emit a terminfo string, like tputs.
     /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
     pub fn tputs(&mut self, str: &CStr) {
+        self.tputs_bytes(str.to_bytes());
+    }
+
+    pub fn tputs_bytes(&mut self, str: &[u8]) {
         self.begin_buffering();
-        let _ = self.write(str.to_bytes());
+        let _ = self.write(str);
         self.end_buffering();
     }
 

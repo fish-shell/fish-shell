@@ -97,7 +97,7 @@ Improved prompts
 
 Completions
 ^^^^^^^^^^^
-- Added completions for:
+- Added completions for: ``magick``
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -4337,7 +4337,7 @@ fn expand_replacer(
     ))
 }
 
-// Extract all the token ranges in \p str, along with whether they are an undecorated command.
+// Extract all the token ranges in \p str, along with whether they are a command.
 // Tokens containing command substitutions are skipped; this ensures tokens are non-overlapping.
 struct PositionedToken {
     range: SourceRange,
@@ -4350,7 +4350,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         | ParseTreeFlags::LEAVE_UNTERMINATED;
     let ast = Ast::parse(s, ast_flags, None);
 
-    // Helper to check if a node is the command portion of an undecorated statement.
+    // Helper to check if a node is the command portion of a decorated statement.
     let is_command = |node: &dyn ast::Node| {
         let mut cursor = Some(node);
         while let Some(cur) = cursor {

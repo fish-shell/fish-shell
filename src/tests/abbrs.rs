@@ -131,7 +131,7 @@ fn test_abbreviations() {
     // Others should not be.
     validate!("of gc", None);
 
-    // Others should not be.
+    // Other decorations generally should be.
     validate!("command gc", None, "command git checkout");
 
     // yin/yang expands everywhere.

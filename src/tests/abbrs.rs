@@ -132,7 +132,7 @@ fn test_abbreviations() {
     validate!("of gc", None);
 
     // Others should not be.
-    validate!("command gc", None);
+    validate!("command gc", None, "command git checkout");
 
     // yin/yang expands everywhere.
     validate!("command yin", None, "command yang");

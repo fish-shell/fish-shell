@@ -4355,7 +4355,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         let mut cursor = Some(node);
         while let Some(cur) = cursor {
             if let Some(stmt) = cur.as_decorated_statement() {
-                if stmt.opt_decoration.is_none() && node.pointer_eq(&stmt.command) {
+                if node.pointer_eq(&stmt.command) {
                     return true;
                 }
             }

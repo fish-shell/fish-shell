@@ -44,4 +44,6 @@ Examples
 See Also
 --------
 
-Navigate directories using the :ref:`directory history <directory-history>` or the :ref:`directory stack <directory-stack>`
+- Navigate directories using the :ref:`directory history <directory-history>` or the :ref:`directory stack <directory-stack>`
+- ``command man cd`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cd.html>

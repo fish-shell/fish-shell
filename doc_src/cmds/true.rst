@@ -22,3 +22,5 @@ See Also
 
 - :doc:`false <false>` command
 - :ref:`$status <variables-status>` variable
+- ``command man true`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/true.html>

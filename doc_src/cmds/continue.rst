@@ -36,3 +36,5 @@ See Also
 --------
 
 - the :doc:`break <break>` command, to stop the current inner loop
+- ``command man continue`` -- show docs for the non-fish variant.
+- <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#continue>

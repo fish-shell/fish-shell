@@ -54,3 +54,9 @@ Example
    Job Group   State   Command
    2   26012   running nc -l 55232 < /dev/random &
    1   26011   running python tests/test_11.py &
+
+See Also
+--------
+
+- ``command man jobs`` -- show docs for the non-fish variant.
+- The POSIX variant: <https://pubs.opengroup.org/onlinepubs/9699919799/utilities/jobs.html>

@@ -74,6 +74,7 @@ Interactive improvements
 - `fish_vi_cursor` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
+- Command abbreviations (those with ``--position command`` or without a ``--position``) now also expand after decorators like ``command`` (:issue:`10396`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

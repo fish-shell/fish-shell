@@ -35,6 +35,7 @@ pub enum ReadlineCmd {
     ForwardChar,
     BackwardChar,
     ForwardSingleChar,
+    ForwardCharPassive,
     ForwardWord,
     BackwardWord,
     ForwardBigword,

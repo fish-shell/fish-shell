@@ -153,6 +153,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("force-repaint"), ReadlineCmd::ForceRepaint),
     make_md(L!("forward-bigword"), ReadlineCmd::ForwardBigword),
     make_md(L!("forward-char"), ReadlineCmd::ForwardChar),
+    make_md(L!("forward-char-passive"), ReadlineCmd::ForwardCharPassive),
     make_md(L!("forward-jump"), ReadlineCmd::ForwardJump),
     make_md(L!("forward-jump-till"), ReadlineCmd::ForwardJumpTill),
     make_md(L!("forward-single-char"), ReadlineCmd::ForwardSingleChar),

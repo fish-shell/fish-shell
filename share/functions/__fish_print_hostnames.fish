@@ -18,10 +18,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         string split ' '
 
     # Print nfs servers from /etc/fstab
-    if test -r /etc/fstab
-        string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:|^[a-zA-Z\.]*:' </etc/fstab |
-            string replace -r ':.*' ''
-    end
+    string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:|^[a-zA-Z\.]*:' <?/etc/fstab |
+    string replace -r ':.*' ''
 
     # Check hosts known to ssh.
     # Yes, seriously - the default specifies both with and without "2".
@@ -65,13 +63,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         function _recursive --no-scope-shadowing
             set -l paths
             for config in $argv
-                if test -r "$config" -a -f "$config"
-                    set paths $paths (
-                    # Keep only Include lines and remove Include syntax
-                    string replace -rfi '^\s*Include\s+' '' <$config \
-                    # Normalize whitespace
-                    | string trim | string replace -r -a '\s+' ' ')
-                end
+                set paths $paths (
+                # Keep only Include lines and remove Include syntax
+                string replace -rfi '^\s*Include\s+' '' <?$config \
+                # Normalize whitespace
+                | string trim | string replace -r -a '\s+' ' ')
             end
 
             set -l new_paths
@@ -117,9 +113,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
     # Read all files and operate on their combined content
     for file in $known_hosts
-        if test -r $file
-            read -z <$file
-        end
+        read -z <?$file
     end |
         # Ignore hosts that are hashed, commented or @-marked and strip the key
         # Handle multiple comma-separated hostnames sharing a key, too.

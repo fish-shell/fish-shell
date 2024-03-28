@@ -1235,7 +1235,7 @@ impl<'s> Highlighter<'s> {
                             };
                         }
                     }
-                    RedirectionMode::input => {
+                    RedirectionMode::input | RedirectionMode::try_input => {
                         // Input redirections must have a readable non-directory.
                         target_is_valid = waccess(&target_path, R_OK) == 0
                             && match wstat(&target_path) {

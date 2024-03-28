@@ -168,6 +168,7 @@ Each stream has a number called the file descriptor (FD): 0 for stdin, 1 for std
 The destination of a stream can be changed using something called *redirection*. For example, ``echo hello > output.txt``, redirects the standard output of the ``echo`` command to a text file.
 
 - To read standard input from a file, use ``<SOURCE_FILE``.
+- To read standard input from a file or /dev/null if it can't be read, use ``<?SOURCE_FILE``.
 - To write standard output to a file, use ``>DESTINATION``.
 - To write standard error to a file, use ``2>DESTINATION``. [#]_
 - To append standard output to a file, use ``>>DESTINATION_FILE``.
@@ -187,6 +188,8 @@ Any arbitrary file descriptor can be used in a redirection by prefixing the redi
 - To redirect the input of descriptor N, use ``N<DESTINATION``.
 - To redirect the output of descriptor N, use ``N>DESTINATION``.
 - To append the output of descriptor N to a file, use ``N>>DESTINATION_FILE``.
+
+File descriptors cannot be used with a ``<?`` input redirection, only a regular ``<`` one.
 
 For example::
 
@@ -212,6 +215,9 @@ For example::
       echo stdout
       echo stderr >&2 # <- this goes to stderr!
   end >/dev/null # ignore stdout, so this prints "stderr"
+
+  # print all lines that include "foo" from myfile, or nothing if it doesn't exist.
+  string match '*foo*' <?myfile
 
 It is an error to redirect a builtin, function, or block to a file descriptor above 2. However this is supported for external commands.
 

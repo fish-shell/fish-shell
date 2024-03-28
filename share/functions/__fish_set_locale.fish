@@ -26,15 +26,13 @@ function __fish_set_locale
     # but we operate under the assumption that the locale can't include whitespace. Other whitespace
     # shouldn't concern us, but a quoted "locale.LANG=SOMETHING" as a value to something else might.
     # Here the last definition of a variable takes precedence.
-    if test -r /proc/cmdline
-        for var in (string match -ra 'locale.[^=]+=\S+' < /proc/cmdline)
-            set -l kv (string replace 'locale.' '' -- $var | string split '=')
-            # Only set locale variables, not other stuff contained in these files - this also
-            # automatically ignores comments.
-            if contains -- $kv[1] $LOCALE_VARS
-                and set -q kv[2]
-                set -gx $kv[1] (string trim -c '\'"' -- $kv[2])
-            end
+    for var in (string match -ra 'locale.[^=]+=\S+' <?/proc/cmdline)
+        set -l kv (string replace 'locale.' '' -- $var | string split '=')
+        # Only set locale variables, not other stuff contained in these files - this also
+        # automatically ignores comments.
+        if contains -- $kv[1] $LOCALE_VARS
+            and set -q kv[2]
+            set -gx $kv[1] (string trim -c '\'"' -- $kv[2])
         end
     end
 
@@ -54,18 +52,16 @@ function __fish_set_locale
     # full POSIX-shell script.
     set -l user_cfg_dir (set -q XDG_CONFIG_HOME; and echo $XDG_CONFIG_HOME; or echo ~/.config)
     for f in $user_cfg_dir/locale.conf /etc/locale.conf /etc/env.d/02locale /etc/sysconfig/i18n /etc/default/locale
-        if test -r $f
-            while read -l kv
-                set kv (string split '=' -- $kv)
-                if contains -- $kv[1] $LOCALE_VARS
-                    and set -q kv[2]
-                    # Do not set already set variables again - this makes the merging happen.
-                    if not set -q $kv[1]
-                        set -gx $kv[1] (string trim -c '\'"' -- $kv[2])
-                    end
+        while read -l kv
+            set kv (string split '=' -- $kv)
+            if contains -- $kv[1] $LOCALE_VARS
+                and set -q kv[2]
+                # Do not set already set variables again - this makes the merging happen.
+                if not set -q $kv[1]
+                    set -gx $kv[1] (string trim -c '\'"' -- $kv[2])
                 end
-            end <$f
-        end
+            end
+        end <?$f
     end
 
     # If we really cannot get anything, at least set character encoding to UTF-8.

@@ -990,6 +990,9 @@ impl TryFrom<&wstr> for PipeOrRedir {
                 consume(&mut cursor, '<');
                 if try_consume(&mut cursor, '&') {
                     result.mode = RedirectionMode::fd;
+                } else if try_consume(&mut cursor, '?') {
+                    // <? foo try-input redirection (uses /dev/null if file can't be used).
+                    result.mode = RedirectionMode::try_input;
                 } else {
                     result.mode = RedirectionMode::input;
                 }

@@ -17,7 +17,7 @@ struct Options {
     query: bool,
     function: Option<WString>,
     regex_pattern: Option<WString>,
-    command: Option<WString>,
+    commands: Vec<WString>,
     position: Option<Position>,
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
@@ -155,7 +155,7 @@ fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
                 add_arg(L!("--function"));
                 add_arg(&escape_string(&abbr.replacement, style));
             }
-            if let Some(cmd) = &abbr.command {
+            for cmd in &abbr.commands {
                 add_arg(L!("--command"));
                 add_arg(&escape_string(cmd, style));
             }
@@ -377,14 +377,15 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
         replacement
     };
 
-    let position = opts.position.unwrap_or_else(|| {
-        if opts.command.is_some() {
-            Position::Anywhere
-        } else {
+    let position = opts.position.unwrap_or({
+        if opts.commands.is_empty() {
             Position::Command
+        } else {
+            // If it is valid for a command, the abbr can't be in command-position.
+            Position::Anywhere
         }
     });
-    if opts.command.is_some() && position == Position::Command {
+    if !opts.commands.is_empty() && position == Position::Command {
         streams.err.appendln(wgettext_fmt!(
             "%ls: --command cannot be combined with --position command",
             CMD,
@@ -403,7 +404,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
             position,
             set_cursor_marker: opts.set_cursor_marker.clone(),
             from_universal: false,
-            command: opts.command.clone(),
+            commands: opts.commands.clone(),
         })
     });
 
@@ -496,7 +497,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 }
             }
             'a' => opts.add = true,
-            'c' => opts.command = w.woptarg.map(|x| x.to_owned()),
+            'c' => opts.commands.push(w.woptarg.map(|x| x.to_owned()).unwrap()),
             'p' => {
                 if opts.position.is_some() {
                     streams.err.append(wgettext_fmt!(

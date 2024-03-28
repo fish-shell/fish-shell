@@ -50,7 +50,8 @@ pub struct Abbreviation {
     /// we accomplish this by surrounding the regex in ^ and $.
     pub regex: Option<Box<Regex>>,
 
-    pub command: Option<WString>,
+    /// The commands this abbr is valid for (or empty if any)
+    pub commands: Vec<WString>,
 
     /// Replacement string.
     pub replacement: WString,
@@ -82,7 +83,7 @@ impl Abbreviation {
             name,
             key,
             regex: None,
-            command: None,
+            commands: vec![],
             replacement,
             replacement_is_function: false,
             position,
@@ -101,8 +102,8 @@ impl Abbreviation {
         if !self.matches_position(position) {
             return false;
         }
-        if let Some(cmd) = &self.command {
-            if cmd != command {
+        if !self.commands.is_empty() {
+            if !self.commands.contains(&command.to_owned()) {
                 return false;
             }
         }
@@ -289,7 +290,7 @@ fn rename_abbrs() {
                 name: name.into(),
                 key: name.into(),
                 regex: None,
-                command: None,
+                commands: vec![],
                 replacement: repl.into(),
                 replacement_is_function: false,
                 position,

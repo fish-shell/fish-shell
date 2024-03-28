@@ -191,6 +191,10 @@ The following special input functions are available:
     move one character to the right; or if at the end of the commandline, accept the current autosuggestion.
     If the completion pager is active, select the next completion instead.
 
+``forward-char-passive``
+    move one character to the right, but do not trigger any non-movement-related operations. If the cursor is at the end of the
+    commandline, does not accept the current autosuggestion (if any). If the completion pager is active, does nothing.
+
 ``forward-single-char``
     move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.
 

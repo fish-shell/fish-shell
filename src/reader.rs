@@ -2511,6 +2511,16 @@ impl ReaderData {
                     self.update_buff_pos(elt, Some(el.position() + 1));
                 }
             }
+            rl::ForwardCharPassive => {
+                let (elt, el) = self.active_edit_line();
+                if self.is_navigating_pager_contents() {
+                    // Do nothing
+                } else if self.is_at_end(el) {
+                    // Do nothing
+                } else {
+                    self.update_buff_pos(elt, Some(el.position() + 1));
+                }
+            }
             rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
                 let style = match c {
                     rl::BackwardKillBigword => MoveWordStyle::Whitespace,
@@ -4495,6 +4505,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::HistoryPager
         | rl::BackwardChar
         | rl::ForwardChar
+        | rl::ForwardCharPassive
         | rl::ForwardSingleChar
         | rl::UpLine
         | rl::DownLine

@@ -119,6 +119,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("and"), ReadlineCmd::FuncAnd),
     make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
     make_md(L!("backward-char"), ReadlineCmd::BackwardChar),
+    make_md(L!("backward-char-passive"), ReadlineCmd::BackwardCharPassive),
     make_md(L!("backward-delete-char"), ReadlineCmd::BackwardDeleteChar),
     make_md(L!("backward-jump"), ReadlineCmd::BackwardJump),
     make_md(L!("backward-jump-till"), ReadlineCmd::BackwardJumpTill),

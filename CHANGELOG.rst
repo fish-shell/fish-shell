@@ -102,7 +102,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Fish now checks for the ``ts`` capability in terminfo to determine if a terminal supports setting the window title (:issue:`10037`).
+- Fish now sets the terminal window title unconditionally (:issue:`10037`).
 
 Other improvements
 ------------------

@@ -40,9 +40,6 @@ const CURSES_VARIABLES: [&wstr; 3] = [
 /// Whether to use `posix_spawn()` when possible.
 static USE_POSIX_SPAWN: AtomicBool = AtomicBool::new(false);
 
-/// Whether we think we can set the terminal title or not.
-static CAN_SET_TERM_TITLE: AtomicBool = AtomicBool::new(false);
-
 /// The variable dispatch table. This is set at startup and cannot be modified after.
 static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
     once_cell::sync::Lazy::new(|| {
@@ -601,62 +598,6 @@ fn apply_non_term_hacks(vars: &EnvStack) {
     }
 }
 
-/// This is a pretty lame heuristic for detecting terminals that do not support setting the title.
-/// If we recognise the terminal name as that of a virtual terminal, we assume it supports setting
-/// the title. If we recognise it as that of a console, we assume it does not support setting the
-/// title. Otherwise we check the ttyname and see if we believe it is a virtual terminal.
-///
-/// One situation in which this breaks down is with screen, since screen supports setting the
-/// terminal title if the underlying terminal does so, but will print garbage on terminals that
-/// don't. Since we can't see the underlying terminal below screen there is no way to fix this.
-fn does_term_support_setting_title(vars: &EnvStack) -> bool {
-    #[rustfmt::skip]
-    const TITLE_TERMS: &[&wstr] = &[
-        L!("xterm"), L!("screen"),    L!("tmux"),    L!("nxterm"),
-        L!("rxvt"),  L!("alacritty"), L!("wezterm"), L!("rio"),
-        L!("foot"),
-    ];
-
-    let Some(term) = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string()) else {
-        return false;
-    };
-    let term: &wstr = term.as_ref();
-
-    if curses::term().map(|term| term.set_title.is_some()) == Some(true) {
-        return true;
-    }
-
-    let recognized = TITLE_TERMS.contains(&term)
-        || term.starts_with(L!("xterm-"))
-        || term.starts_with(L!("screen-"))
-        || term.starts_with(L!("tmux-"));
-    if !recognized {
-        if [
-            L!("linux"),
-            L!("dumb"),
-            L!("vt100"), // NetBSD
-            L!("wsvt25"),
-        ]
-        .contains(&term)
-        {
-            return false;
-        }
-
-        let mut buf = [b'\0'; libc::PATH_MAX as usize];
-        let retval =
-            unsafe { libc::ttyname_r(libc::STDIN_FILENO, buf.as_mut_ptr().cast(), buf.len()) };
-        let buf = &buf[..buf.iter().position(|c| *c == b'\0').unwrap()];
-        if retval != 0
-            || buf.windows(b"tty".len()).any(|w| w == b"tty")
-            || buf.windows(b"/vc/".len()).any(|w| w == b"/vc/")
-        {
-            return false;
-        }
-    }
-
-    true
-}
-
 // Initialize the curses subsystem
 fn init_curses(vars: &EnvStack) {
     for var_name in CURSES_VARIABLES {
@@ -697,7 +638,6 @@ fn init_curses(vars: &EnvStack) {
     apply_non_term_hacks(vars);
 
     // Store some global variables that reflect the term's capabilities
-    CAN_SET_TERM_TITLE.store(does_term_support_setting_title(vars), Ordering::Relaxed);
     if let Some(term) = curses::term() {
         TERM_HAS_XN.store(term.eat_newline_glitch, Ordering::Relaxed);
     }
@@ -844,9 +784,4 @@ const fn allow_use_posix_spawn() -> bool {
         // See https://github.com/rust-lang/libc/issues/1412
         true
     }
-}
-
-/// Returns true if we think the terminal support setting its title.
-pub fn term_supports_setting_title() -> bool {
-    CAN_SET_TERM_TITLE.load(Ordering::Relaxed)
 }

@@ -50,7 +50,6 @@ use crate::complete::{
 };
 use crate::editable_line::{Edit, EditableLine};
 use crate::env::{EnvMode, Environment, Statuses};
-use crate::env_dispatch::term_supports_setting_title;
 use crate::exec::exec_subshell;
 use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
 use crate::fallback::fish_wcwidth;
@@ -3588,10 +3587,6 @@ pub fn reader_write_title(
     parser: &Parser,
     reset_cursor_position: bool, /* = true */
 ) {
-    if !term_supports_setting_title() {
-        return;
-    }
-
     let _noninteractive = scoped_push_replacer(
         |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
         false,

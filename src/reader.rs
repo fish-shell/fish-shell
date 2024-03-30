@@ -21,6 +21,7 @@ use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
+use std::cmp;
 use std::io::BufReader;
 use std::num::NonZeroUsize;
 use std::ops::Range;
@@ -305,6 +306,8 @@ pub struct CommandlineState {
     pub pager_mode: bool,
     /// pager already shows everything if possible
     pub pager_fully_disclosed: bool,
+    /// The search field, if shown.
+    pub search_field: Option<(WString, usize)>,
     /// pager is visible and search is active
     pub search_mode: bool,
     /// if false, the reader has not yet been entered
@@ -320,6 +323,7 @@ impl CommandlineState {
             history: None,
             pager_mode: false,
             pager_fully_disclosed: false,
+            search_field: None,
             search_mode: false,
             initialized: false,
         }
@@ -937,8 +941,15 @@ pub fn commandline_get_state() -> CommandlineState {
 /// will pick it up when it is done executing.
 pub fn commandline_set_buffer(text: WString, cursor_pos: Option<usize>) {
     let mut state = commandline_state_snapshot();
-    state.cursor_pos = std::cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
+    state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
     state.text = text;
+}
+
+pub fn commandline_set_search_field(text: WString, cursor_pos: Option<usize>) {
+    let mut state = commandline_state_snapshot();
+    assert!(state.search_field.is_some());
+    let new_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
+    state.search_field = Some((text, new_pos));
 }
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
@@ -1163,6 +1174,12 @@ impl ReaderData {
         snapshot.selection = self.get_selection();
         snapshot.pager_mode = !self.pager.is_empty();
         snapshot.pager_fully_disclosed = self.current_page_rendering.remaining_to_disclose == 0;
+        snapshot.search_field = self.pager.search_field_shown.then(|| {
+            (
+                self.pager.search_field_line.text().to_owned(),
+                self.pager.search_field_line.position(),
+            )
+        });
         snapshot.search_mode = self.history_search.active();
         snapshot.initialized = true;
     }
@@ -1179,6 +1196,20 @@ impl ReaderData {
             self.clear_pager();
             self.set_buffer_maintaining_pager(&state.text, state.cursor_pos, false);
             self.reset_loop_state = true;
+        } else if let Some((new_search_field, new_cursor_pos)) = state.search_field {
+            if !self.pager.search_field_shown {
+                return; // Not yet supported.
+            }
+            if new_search_field == self.pager.search_field_line.text()
+                && new_cursor_pos == self.pager.search_field_line.position()
+            {
+                return;
+            }
+            self.push_edit(
+                EditableLineTag::SearchField,
+                Edit::new(0..self.pager.search_field_line.len(), new_search_field),
+            );
+            self.pager.search_field_line.set_position(new_cursor_pos);
         }
     }
 

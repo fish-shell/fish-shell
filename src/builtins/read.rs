@@ -7,15 +7,16 @@ use crate::common::scoped_push_replacer;
 use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
-use crate::common::ScopeGuard;
 use crate::common::UnescapeStringStyle;
 use crate::env::EnvMode;
 use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
+use crate::input_common::terminal_protocols_enable_scoped;
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
+use crate::reader::reader_current_data;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
@@ -26,9 +27,7 @@ use crate::wutil;
 use crate::wutil::encoding::mbrtowc;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
-use crate::wutil::write_to_fd;
 use libc::SEEK_CUR;
-use libc::STDOUT_FILENO;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
@@ -592,12 +591,9 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
 
     let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
 
-    let _maybe_disable_bracketed_paste = stream_stdin_is_a_tty.then(|| {
-        let _ = write_to_fd(b"\x1b[?2004h", STDOUT_FILENO);
-        ScopeGuard::new((), |()| {
-            let _ = write_to_fd(b"\x1b[?2004l", STDOUT_FILENO);
-        })
-    });
+    // Enable terminal protocols if noninteractive.
+    let _terminal_protocols = (stream_stdin_is_a_tty && reader_current_data().is_none())
+        .then(terminal_protocols_enable_scoped);
 
     // Normally, we either consume a line of input or all available input. But if we are reading a
     // line at a time, we need a middle ground where we only consume as many lines as we need to

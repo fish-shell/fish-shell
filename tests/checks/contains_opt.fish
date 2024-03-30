@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 function commandline
     if test $argv[1] = -ct
         echo --long4\n-4

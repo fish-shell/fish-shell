@@ -29,38 +29,32 @@ expect_str("Press a key:")
 
 # Is a single control char echoed correctly?
 send("\x07")
-expect_str("char: \\cG\r\nbind \\cG 'do something'\r\n")
+expect_str("bind ctrl-g 'do something'\r\n")
 
 # Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
 sleep(0.020)
-# send "\x1B\xE1\x88\xB4"
-send("\x1B\u1234")
-expect_str("char: ሴ\r\nbind \\eሴ 'do something'\r\n")
+send("\x1B")
+expect_str("bind escape 'do something'\r\n")
+send("\u1234")
+expect_str("bind ሴ 'do something'\r\n")
 
 # Is a NULL char echoed correctly?
 sleep(0.020)
 send("\x00")
-expect_str("char: \\c@\r\nbind -k nul 'do something'\r\n")
+expect_str("bind ctrl-space 'do something'\r\n")
 
-# Ensure we only name the sequence if we match all of it.
-# Otherwise we end up calling escape+backspace "backspace"!
 send("\x1b\x7f")
-expect_str("char: \\e\r\n")
-expect_str("char: \\x7F")
-expect_str("""(aka "del")\r\nbind \\e\\x7F 'do something'\r\n""")
+expect_str("bind alt-backspace 'do something'\r\n")
 
 send("\x1c")
-expect_str(r"char: \c\  (or \x1c)")
-expect_str(r"bind \x1c 'do something'")
+expect_str(r"bind ctrl-\\ 'do something'")
 
 # Does it keep running if handed control sequences in the wrong order?
 send("\x03")
 sleep(0.010)
 send("\x04")
-expect_str("char: \\cD\r\n")
 
-# Now send a second [ctrl-D]. Does that terminate the process like it should?
+# Now send a second ctrl-d. Does that terminate the process like it should?
 sleep(0.050)
 send("\x04\x04")
-expect_str("char: \\cD\r\n")
 expect_str("Exiting at your request.\r\n")

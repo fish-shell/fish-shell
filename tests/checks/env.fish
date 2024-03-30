@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 
 function getenvs
     env | string match FISH_ENV_TEST_\*

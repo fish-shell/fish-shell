@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
 
 exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'

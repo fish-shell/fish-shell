@@ -1,3 +1,3 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 # Check we can handle more than 64 threads (if not this HANGS!):
 true (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true  (true )))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))

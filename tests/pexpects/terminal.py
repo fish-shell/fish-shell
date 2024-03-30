@@ -24,6 +24,7 @@ expect_prompt()
 # See if $LINES/$COLUMNS change in response to sigwinch, also in a --on-signal function
 sendline("function on-winch --on-signal winch; echo $LINES $COLUMNS; end")
 expect_prompt()
+sleep(4)
 sp.spawn.setwinsize(40, 50)
 expect_str("40 50")
 sendline("echo $LINES $COLUMNS")
@@ -54,8 +55,9 @@ expect_prompt("0")
 # a pexpect issue?
 # So disable it everywhere but linux for now.
 if platform.system() in ["Linux"]:
-    # Confirm flow control in the shell is disabled - we should ignore the ctrl-s in there.
-    sendline("echo hello\x13hello")
+    # Flow control does not work in CSI u mode, but it works while we are running an external process.
+    sendline("sleep 2")
+    sendline("hello\x13hello")
     # This should not match because we should not get any output.
     # Unfortunately we have to wait for the timeout to expire - set it to a second.
     expect_str("hellohello", timeout=1, shouldfail=True)

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 # Check that we correctly detect an overflow of fish's function stack.
 # This is dependent on the internal max stack depth of course.

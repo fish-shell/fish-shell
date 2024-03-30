@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 # Regression test for issue #4443
 eval set -l previously_undefined foo
 echo $previously_undefined

@@ -7,10 +7,10 @@ fn test_push_front_back() {
     queue.push_front(CharEvent::from_char('b'));
     queue.push_back(CharEvent::from_char('c'));
     queue.push_back(CharEvent::from_char('d'));
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'b');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'a');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'c');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'd');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'c');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'd');
     assert!(queue.try_pop().is_none());
 }
 
@@ -27,15 +27,15 @@ fn test_promote_interruptions_to_front() {
 
     assert_eq!(queue.try_pop().unwrap().get_readline(), ReadlineCmd::Undo);
     assert_eq!(queue.try_pop().unwrap().get_readline(), ReadlineCmd::Redo);
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'a');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'b');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'c');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'd');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'c');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'd');
     assert!(!queue.has_lookahead());
 
     queue.push_back(CharEvent::from_char('e'));
     queue.promote_interruptions_to_front();
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'e');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'e');
     assert!(!queue.has_lookahead());
 }
 
@@ -51,9 +51,9 @@ fn test_insert_front() {
         CharEvent::from_char('C'),
     ];
     queue.insert_front(events);
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'A');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'B');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'C');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'a');
-    assert_eq!(queue.try_pop().unwrap().get_char().unwrap(), 'b');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'A');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'B');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'C');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'a');
+    assert_eq!(queue.try_pop().unwrap().get_char(), 'b');
 }

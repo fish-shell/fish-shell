@@ -12,6 +12,7 @@ mod highlight;
 mod history;
 mod input;
 mod input_common;
+mod key;
 mod pager;
 mod parse_util;
 mod parser;

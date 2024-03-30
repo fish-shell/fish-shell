@@ -1,4 +1,4 @@
-#RUN: %fish --no-config %s
+#RUN: %fish --no-config %s | %filter-ctrlseqs
 
 functions | string match help
 # CHECK: help

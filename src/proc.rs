@@ -11,6 +11,7 @@ use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
+use crate::input_common::terminal_protocols_enable;
 use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
 use crate::parse_tree::ParsedSourceRef;
@@ -1412,6 +1413,9 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             let status = ProcStatus::from_waitpid(statusv);
             handle_child_status(j, proc, &status);
             if status.stopped() {
+                if is_interactive_session() && j.group().wants_terminal() {
+                    terminal_protocols_enable();
+                }
                 j.group().set_is_foreground(false);
             }
             if status.continued() {

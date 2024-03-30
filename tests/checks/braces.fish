@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 echo x-{1}
 #CHECK: x-{1}
@@ -22,7 +22,7 @@ echo foo-{""} # still expands to foo-{}
 #CHECK: foo-{}
 
 echo foo-{$undefinedvar} # still expands to nothing
-#CHECK: 
+#CHECK:
 
 echo foo-{,,,} # four empty items in the braces.
 #CHECK: foo- foo- foo- foo-

@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 
 # Ensure that, if variable expansion results in multiple strings
 # and one of them fails a glob, that we don't fail the entire expansion.

@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish_indent %fish_indent' %s
+# RUN: %fish -C 'set -g fish_indent %fish_indent' %s | %filter-ctrlseqs
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
@@ -73,7 +73,7 @@ end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end ar
 
 #CHECK: begin
 #CHECK: {{    }}echo hi
-#CHECK: 
+#CHECK:
 #CHECK: end | cat | cat | begin
 #CHECK: {{    }}echo hi
 #CHECK: end | begin
@@ -99,7 +99,7 @@ end
 #CHECK: {{    }}{{    }}echo sup
 #CHECK: {{    }}case beta gamma
 #CHECK: {{    }}{{    }}echo hi
-#CHECK: 
+#CHECK:
 #CHECK: end
 
 echo -n '
@@ -117,15 +117,15 @@ function hello_world
 ' | $fish_indent
 
 #CHECK: function hello_world
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}begin
 #CHECK: {{    }}{{    }}echo hi
 #CHECK: {{    }}end | cat
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}echo sup
 #CHECK: {{    }}echo sup
 #CHECK: {{    }}echo hello
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}echo hello
 #CHECK: end
 
@@ -149,13 +149,13 @@ qqq
 end' | $fish_indent
 #CHECK: echo alpha #comment1
 #CHECK: #comment2
-#CHECK: 
+#CHECK:
 #CHECK: #comment3
 #CHECK: for i in abc #comment1
 #CHECK: {{    }}#comment2
 #CHECK: {{    }}echo hi
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: switch foo #abc
 #CHECK: {{    }}# bar
 #CHECK: {{    }}case bar
@@ -299,26 +299,26 @@ echo bye
 #CHECK: {{    }}echo yes
 #CHECK: en\
 #CHECK: d
-#CHECK: 
+#CHECK:
 #CHECK: while true
 #CHECK: {{    }}builtin yes
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: alpha | beta
-#CHECK: 
+#CHECK:
 #CHECK: gamma | \
 #CHECK: # comment3
 #CHECK: delta
-#CHECK: 
+#CHECK:
 #CHECK: if true
 #CHECK: {{    }}echo abc
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: if false # comment4
 #CHECK: {{    }}and true && false
 #CHECK: {{    }}echo abc
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: echo hi |
 #CHECK: {{    }}echo bye
 

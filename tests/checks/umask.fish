@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
 # Test the umask command. In particular the symbolic modes since they've been
 # broken for four years (see issue #738) at the time I added these tests.
 

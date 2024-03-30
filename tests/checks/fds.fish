@@ -1,4 +1,4 @@
-# RUN: %fish -C "set helper %fish_test_helper" %s
+# RUN: %fish -C "set helper %fish_test_helper" %s | %filter-ctrlseqs
 
 # Check that we don't leave stray FDs.
 

@@ -7,48 +7,66 @@ Synopsis
 
 .. synopsis::
 
-    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] [-k | --key] SEQUENCE COMMAND ...
-    bind [(-M | --mode) MODE] [-k | --key] [--preset] [--user] SEQUENCE
-    bind (-K | --key-names) [-a | --all] [--preset] [--user]
+    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] KEYS COMMAND ...
+    bind [(-M | --mode) MODE] [--preset] [--user] [KEYS]
+    bind [-a | --all] [--preset] [--user]
     bind (-f | --function-names)
     bind (-L | --list-modes)
-    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] [-a | --all] | [-k | --key] SEQUENCE ...
+    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] [-a | --all] | KEYS ...
 
 Description
 -----------
 
-``bind`` manages bindings.
+``bind`` manages key bindings.
 
-It can add bindings if given a SEQUENCE of characters to bind to. These should be written as :ref:`fish escape sequences <escapes>`. The most important of these are ``\c`` for the control key, and ``\e`` for escape, and because of historical reasons also the Alt key (sometimes also called "Meta").
+If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a binding in ``MODE``.
+If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be printed.
 
-For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``, and :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+``KEYS`` is a comma-separated list of key names.
+Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-`` and ``shift-``.
+For example, :kbd:`Alt`\ +\ :kbd:`w` is written as ``alt-w``.
+Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
 
-The generic key binding that matches if no other binding does can be set by specifying a ``SEQUENCE`` of the empty string (``''``). For most key bindings, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+Some keys have names, usually because they don't have an obvious printable character representation.
+They are:
 
-If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
+``plus`` (``+``),
+``minus`` (``-``),
+``comma`` (``,``),
+``backspace``,
+``delete``,
+``escape``,
+``enter``,
+the arrow keys ``up``, ``down``, ``left`` and ``right``,
+``pageup``,
+``pagedown``,
+``home``,
+``end``,
+``insert``,
+``tab``,
+``space`` and
+``F1`` through ``F12``.
 
-To find out what sequence a key combination sends, you can use :doc:`fish_key_reader <fish_key_reader>`.
+An empty value (``''``) for ``KEYS`` designates the generic binding. For most bind modes, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+
+To find the name of a key combination you can use :doc:`fish_key_reader <fish_key_reader>`.
 
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` or :ref:`see below <special-input-functions>` for a list of these input functions.
 
 .. note::
     If a script changes the commandline, it should finish by calling the ``repaint`` special input function.
 
-If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
+If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed. If ``KEYS`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
 Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
+
+To bind a sequence of keys, separate them with ``,``.
 
 To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
 Options
 -------
 The following options are available:
-
-**-k** or **--key**
-    Specify a key name, such as 'left' or 'backspace' instead of a character sequence
-
-**-K** or **--key-names**
-    Display a list of available key names. Specifying **-a** or **--all** includes keys that don't have a known mapping
 
 **-f** or **--function-names**
     Display a list of available input functions
@@ -69,7 +87,7 @@ The following options are available:
     Specifying **-a** or **--all** without **-M** or **--mode** erases all binds in all modes regardless of sequence.
 
 **-a** or **--all**
-    See **--erase** and **--key-names**
+    See **--erase**
 
 **--preset** and **--user**
     Specify if bind should operate on user or preset bindings.
@@ -349,7 +367,7 @@ Examples
 
 Exit the shell when :kbd:`Control`\ +\ :kbd:`D` is pressed::
 
-    bind \cd 'exit'
+    bind ctrl-d 'exit'
 
 Perform a history search when :kbd:`Page Up` is pressed::
 

@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper %fish %s
+# RUN: env fth=%fish_test_helper %fish %s | %filter-ctrlseqs
 
 set -g SIGUSR1_COUNT 0
 

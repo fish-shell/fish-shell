@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 prompt_pwd -d 1 /foo/bar/baz
 # CHECK: /f/b/baz

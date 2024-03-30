@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 #REQUIRES: command -v tmux
 
 isolated-tmux-start

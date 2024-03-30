@@ -64,7 +64,7 @@ expect_prompt("\r\nmno pqrt\r\n")
 
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
-expect_prompt("\r\ndefault\r\npaste", unmatched="Unexpected bind modes")
+expect_prompt("\r\ndefault", unmatched="Unexpected bind modes")
 
 # Test vi key bindings.
 # This should leave vi mode in the insert state.
@@ -244,7 +244,7 @@ expect_prompt("foo")
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(
-    "\r\ndefault\r\ninsert\r\npaste\r\nreplace\r\nreplace_one\r\nvisual\r\n",
+    "default\r\ninsert\r\nreplace\r\nreplace_one\r\nvisual\r\n",
     unmatched="Unexpected vi bind modes",
 )
 
@@ -273,36 +273,14 @@ expect_prompt(
     "\r\ndef abc\r\n", unmatched="emacs transpose words fail, 200ms timeout: no delay"
 )
 
-# Same test as above but with a slight delay less than the escape timeout.
-send("echo ghi jkl")
-send("\033")
-sleep(0.020)
-send("t\r")
-expect_prompt(
-    "\r\njkl ghi\r\n",
-    unmatched="emacs transpose words fail, 200ms timeout: short delay",
-)
-
-# Now test with a delay > the escape timeout. The transposition should not
-# occur and the "t" should become part of the text that is echoed.
-send("echo mno pqr")
-send("\033")
-sleep(0.350)
-send("t\r")
-# emacs transpose words, 100ms timeout: long delay
-expect_prompt(
-    "\r\nmno pqrt\r\n",
-    unmatched="emacs transpose words fail, 200ms timeout: long delay",
-)
-
 # Verify special characters, such as \cV, are not intercepted by the kernel
 # tty driver. Rather, they can be bound and handled by fish.
-sendline("bind \\cV 'echo ctrl-v seen'")
+sendline("bind ctrl-v 'echo ctrl-v seen'")
 expect_prompt()
 send("\026\r")
 expect_prompt("ctrl-v seen", unmatched="ctrl-v not seen")
 
-send("bind \\cO 'echo ctrl-o seen'\r")
+send("bind ctrl-o 'echo ctrl-o seen'\r")
 expect_prompt()
 send("\017\r")
 expect_prompt("ctrl-o seen", unmatched="ctrl-o not seen")
@@ -346,7 +324,7 @@ sendline("qqqecho qqq")
 expect_prompt("qqq", unmatched="Leading qs not stripped")
 
 # Test bigword with single-character words.
-sendline("bind \cg kill-bigword")
+sendline("bind ctrl-g kill-bigword")
 expect_prompt()
 send("a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
@@ -355,12 +333,12 @@ expect_prompt("\nb c d")
 
 # Test that overriding the escape binding works
 # and does not inhibit other escape sequences (up-arrow in this case).
-sendline("bind \\x1b 'echo foo'")
+sendline("bind escape 'echo foo'")
 expect_prompt()
 send("\x1b")
 expect_str("foo")
 send("\x1b[A")
-expect_str("bind \\x1b 'echo foo'")
+expect_str("bind escape 'echo foo'")
 sendline("")
 expect_prompt()
 
@@ -370,7 +348,7 @@ sendline("echo")
 expect_prompt("\nb c d")
 
 # Check that ctrl-z can be bound
-sendline('bind \cz "echo bound ctrl-z"')
+sendline('bind ctrl-z "echo bound ctrl-z"')
 expect_prompt()
 send("\x1A")
 expect_str("bound ctrl-z")
@@ -382,7 +360,7 @@ expect_prompt("fooBAR")
 
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
-sendline("function myexit; echo exit; exit; end; bind \cz myexit")
+sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")
 expect_prompt()
 send("\x1A")
 expect_str("exit")

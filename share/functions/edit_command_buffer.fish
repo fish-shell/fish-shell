@@ -86,13 +86,10 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         set -a editor $f
     end
 
-    __fish_disable_bracketed_paste
     $editor
-    set -l editor_status $status
-    __fish_enable_bracketed_paste
 
     # Here we're checking the exit status of the editor.
-    if test $editor_status -eq 0 -a -s $f
+    if test $status -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.
         commandline -r -- (command cat $f)

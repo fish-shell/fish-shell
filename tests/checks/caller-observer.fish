@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 # Verify the '--on-job-exit caller' misfeature.
 function make_call_observer -a type

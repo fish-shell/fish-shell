@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 echo $(echo 1\n2)
 # CHECK: 1 2

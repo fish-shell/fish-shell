@@ -1,4 +1,4 @@
-# RUN: %fish -C "set fish %fish" %s
+# RUN: %fish -C "set fish %fish" %s | %filter-ctrlseqs
 # Set term again explicitly to ensure behavior.
 set -gx TERM xterm
 # Read with no vars is not an error
@@ -155,7 +155,7 @@ echo $foo
 echo newline | read -lz foo
 echo $foo
 #CHECK: newline
-#CHECK: 
+#CHECK:
 echo -n 'test ing' | read -lz foo bar
 print_vars foo bar
 #CHECK: 1 'test' 1 'ing'
@@ -303,7 +303,7 @@ echo $foo
 echo $bar
 #CHECK: b
 echo $baz
-#CHECK: 
+#CHECK:
 
 # Multi-char delimiters with -d
 echo a...b...c | read -l -d "..." a b c

@@ -1,4 +1,4 @@
-#RUN: %fish -i %s
+#RUN: %fish -i %s | %filter-ctrlseqs
 # Note: ^ this is interactive so we test interactive behavior,
 # e.g. the fish_git_prompt variable handlers test `status is-interactive`.
 #REQUIRES: command -v git
@@ -198,4 +198,3 @@ end
 
 $fish -c 'complete -C "git -C ./.gi"'
 # CHECK: ./.git/	Directory
-

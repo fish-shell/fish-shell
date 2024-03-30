@@ -1,4 +1,4 @@
-#RUN: env FISH_PATH=%fish FILE_PATH=%s %fish %s
+#RUN: env FISH_PATH=%raw_fish FILE_PATH=%s %fish %s
 
 status line-number
 # CHECK: 3

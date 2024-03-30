@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %raw_fish' %s
 
 # Test that fish -n doesn't check for command existence - function autoloading throws a wrench in that.
 echo "type foo" | $fish -n

@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %fish -C 'set -g fish %raw_fish' %s
 
 set -g fish (realpath $fish)
 

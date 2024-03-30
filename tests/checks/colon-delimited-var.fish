@@ -1,4 +1,4 @@
-# RUN: env PATH="a::b" CDPATH="d::e" MANPATH="x::y" %fish %s
+# RUN: env PATH="a::b" CDPATH="d::e" MANPATH="x::y" %raw_fish %s
 
 # In PATH and CDPATH, empty elements are treated the same as "."
 # In fish we replace them explicitly. Ensure that works.

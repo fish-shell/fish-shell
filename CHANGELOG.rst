@@ -1,3 +1,26 @@
+- Fish now asks the terminal to speak the keyboard protocol CSI u mixed with XTerm's ``modifyOtherKeys`` and Kitty's progressive enhancements.
+  This allows to bind a lot more key combinations, including arbitrary combinations of modifiers ``ctrl``, ``alt`` and ``shift``.
+- There is a new syntax for specifying keys to builtin ``bind``.
+  The new syntax introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point. The old syntax remains mostly supported but the new one is preferred.
+  - Existing bindings that use the new names have a different meaning now.
+    For example
+    - ``bind up 'do something'`` maps the up arrow instead of the two keys ``u`` and ``p``.
+    - ``bind ctrl-x,alt-c 'do something'`` maps a sequence of two keys.
+    Since ``,`` and ``-`` act as separators, there are some cases where they need to be given as ``comma`` and ``minus`` instead.
+  - To minimize breakage, the ``KEYS`` argument to ``bind`` is parsed using the old syntax in two cases:
+    - If ``KEYS`` starts with a raw escape character (``\e``) or a raw ASCII control character (``\c``).
+    - If ``KEYS`` consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
+- Specifying key names as terminfo name (``bind -k``) is deprecated and may be removed in a future version.
+- Legacy bindings that use raw escape sequences instead of named modifiers/keys continue to be included in the default configuration.
+- ``fish_key_reader --verbose`` is now ignored, so it no longer shows raw byte values or timing information (though the latter might still be useful for users of ``fish_sequence_key_delay_ms``).
+- When a terminal pastes text into fish using bracketed paste, fish used to switch to a special ``paste`` bind mode.
+  This bind mode has been removed. The behavior on paste is currently not meant to be configurable.
+- Focus reporting is enabled unconditionally, not just inside tmux.
+  To use it, define functions that handle events ``fish_focus_in`` and ``fish_focus_out``.
+- When fish is stopped or terminated by a signal that cannot be caught (SIGSTOP or SIGKILL), it may leave the terminal in a state where keypresses with modifiers are sent as CSI u sequences instead of traditional control characters or escape sequecnes (that are recognized by bash/readline). If this happens, you can use the ``reset`` command from ``ncurses`` to restore the terminal state.
+- If the terminal supports CSI u, ``shift-enter`` now inserts a newline instead of executing the command line.
+- Flow control -- which if enabled by ``stty ixon ixoff`` allows to pause terminal input with ``ctrl-s`` and resume it with ``ctrl-q`` -- now works only while fish is executing an external command.
+
 fish 3.8.0 (released ???)
 ===================================
 
@@ -12,7 +35,7 @@ fish 3.8.0 (released ???)
    10198 10200 10201 10204 10210 10214 10219 10223 10227 10232 10235 10237 10243 10244 10245
    10246 10251 10260 10267 10281 10347 10366 10368 10370 10371 10263 10270 10272 10276 10277
    10278 10279 10291 10293 10305 10306 10309 10316 10317 10327 10328 10329 10330 10336 10340
-   10345 10346 10353 10354 10356 10372 10373 3299 10360
+   10345 10346 10353 10354 10356 10372 10373 3299 10360 10359
 
 The entirety of fish's C++ code has been ported to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
@@ -39,7 +62,7 @@ Notable backwards-incompatible changes
 Notable improvements and fixes
 ------------------------------
 - New function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
-- :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind \cc __fish_cancel_commandline`` (:issue:`10213`).
+- :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
 - The :kbd:`Control-R` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line commandline by recalling previous commands.
 
@@ -78,7 +101,7 @@ Interactive improvements
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- Bindings can now mix special input functions and shell commands, so ``bind \cg expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
+- Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
 - When the cursor is on a command that resolves to an executable script, :kbd:`Alt-O` will now open that script in your editor (:issue:`10266`).
 - Two improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.

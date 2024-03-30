@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish_indent %fish_indent' %s
+# RUN: %fish -C 'set -g fish_indent %raw_fish_indent' %s
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 

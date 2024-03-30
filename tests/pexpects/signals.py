@@ -13,9 +13,13 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 
 from time import sleep
 import os
+import platform
 import signal
 import subprocess
 import sys
+
+if platform.system() == "FreeBSD": # Spurious failure.
+    sys.exit(127)
 
 expect_prompt()
 

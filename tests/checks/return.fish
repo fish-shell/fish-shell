@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %raw_fish' %s
 # Some tests of the "return" builtin.
 
 $fish -c 'return 5'

@@ -59,7 +59,6 @@ function __fish_complete_special_vars
         fish_key_bindings "name of function that sets binds" \
         fish_autosuggestion_enabled "turns autosuggestions on or off" \
         fish_ambiguous_width "affects computed width of east asian chars" \
-        fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
         fish_greeting "The message to display at start (also a function)" \
         fish_history "The session id to store history under" \
         fish_trace "Enables execution tracing (if set to non-empty value)" \

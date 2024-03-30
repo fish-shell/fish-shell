@@ -1,4 +1,4 @@
-# RUN: env fish_test_helper=%fish_test_helper %fish -C 'set -l fish %fish' %s
+# RUN: env fish_test_helper=%fish_test_helper %fish -C 'set -l fish %raw_fish' %s
 
 $fish -c 'function main; exit 4; true; end; main'
 echo $status

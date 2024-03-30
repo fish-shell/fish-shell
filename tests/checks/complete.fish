@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %raw_fish' %s
 function complete_test_alpha1
     echo $argv
 end

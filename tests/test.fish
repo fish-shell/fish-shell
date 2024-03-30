@@ -40,7 +40,8 @@ if set -q files_to_test[1]
 
     $python -S ../littlecheck.py \
         --progress $force_color \
-        -s fish=../test/root/bin/fish \
+        -s raw_fish=../test/root/bin/fish \
+        -s fish='../tests/filter-terminal-protocol-negotiation.sh ../test/root/bin/fish' \
         -s fish_test_helper=../test/root/bin/fish_test_helper \
         $files_to_test
 

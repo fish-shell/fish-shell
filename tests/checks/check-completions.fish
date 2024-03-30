@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %raw_fish' %s
 # Test all completions where the command exists
 
 # No output is good output

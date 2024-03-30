@@ -198,4 +198,3 @@ end
 
 $fish -c 'complete -C "git -C ./.gi"'
 # CHECK: ./.git/	Directory
-

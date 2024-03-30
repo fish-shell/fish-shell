@@ -69,7 +69,9 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input::Inputter;
-use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
+use crate::input_common::{
+    terminal_protocols_enable_scoped, CharEvent, CharInputStyle, ReadlineCmd,
+};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
@@ -133,7 +135,7 @@ pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode on startup, which we restore on exit.
-static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
+pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode we use to execute programs.
@@ -784,10 +786,15 @@ pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    if is_interactive_session() && unsafe { libc::getpgrp() == libc::tcgetpgrp(STDIN_FILENO) } {
-        term_donate(/*quiet=*/ true);
+    let mut terminal_protocols = None;
+    if is_interactive_session() {
+        terminal_protocols = Some(terminal_protocols_enable_scoped());
+        if unsafe { libc::getpgrp() == libc::tcgetpgrp(STDIN_FILENO) } {
+            term_donate(/*quiet=*/ true);
+        }
     }
-    ScopeGuard::new((), |()| {
+    ScopeGuard::new((), move |()| {
+        let _terminal_protocols = terminal_protocols;
         restore_term_mode();
     })
 }
@@ -1912,26 +1919,23 @@ impl ReaderData {
                 CharEvent::Command(command) => {
                     zelf.run_input_command_scripts(&command);
                 }
-                CharEvent::Char(cevt) => {
+                CharEvent::Key(kevt) => {
                     // Ordinary char.
-                    let c = cevt.char;
-                    if cevt.input_style == CharInputStyle::NotFirst
+                    if kevt.input_style == CharInputStyle::NotFirst
                         && zelf.active_edit_line().1.position() == 0
                     {
                         // This character is skipped.
-                    } else if c.is_control() {
-                        // This can happen if the user presses a control char we don't recognize. No
-                        // reason to report this to the user unless they've enabled debugging output.
-                        FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
                     } else {
                         // Regular character.
                         let (elt, _el) = zelf.active_edit_line();
-                        zelf.insert_char(elt, c);
+                        if let Some(c) = kevt.key.codepoint_text() {
+                            zelf.insert_char(elt, c);
 
-                        if elt == EditableLineTag::Commandline {
-                            zelf.clear_pager();
-                            // We end history search. We could instead update the search string.
-                            zelf.history_search.reset();
+                            if elt == EditableLineTag::Commandline {
+                                zelf.clear_pager();
+                                // We end history search. We could instead update the search string.
+                                zelf.history_search.reset();
+                            }
                         }
                     }
                     rls.last_cmd = None;
@@ -2036,7 +2040,7 @@ impl ReaderData {
 
         while accumulated_chars.len() < limit {
             let evt = self.inputter.read_char();
-            let CharEvent::Char(cevt) = &evt else {
+            let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);
                 break;
             };
@@ -2044,15 +2048,19 @@ impl ReaderData {
                 event_needing_handling = Some(evt);
                 break;
             }
-            if cevt.input_style == CharInputStyle::NotFirst
+            if kevt.input_style == CharInputStyle::NotFirst
                 && accumulated_chars.is_empty()
                 && self.active_edit_line().1.position() == 0
             {
                 // The cursor is at the beginning and nothing is accumulated, so skip this character.
                 continue;
-            } else {
-                accumulated_chars.push(cevt.char);
             }
+
+            if let Some(c) = kevt.key.codepoint_text() {
+                accumulated_chars.push(c);
+            } else {
+                continue;
+            };
 
             if last_exec_count != self.exec_count() {
                 last_exec_count = self.exec_count();
@@ -3046,6 +3054,12 @@ impl ReaderData {
                 Outputter::stdoutput()
                     .borrow_mut()
                     .write_wstr(L!("\x1B[?1000l"));
+            }
+            rl::FocusIn => {
+                event::fire_generic(self.parser(), L!("fish_focus_in").to_owned(), vec![]);
+            }
+            rl::FocusOut => {
+                event::fire_generic(self.parser(), L!("fish_focus_out").to_owned(), vec![]);
             }
             rl::ClearScreenAndRepaint => {
                 self.parser().libdata_mut().pods.is_repaint = true;

@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish (builtin realpath %fish)' %s
+#RUN: %fish -C 'set -g fish (builtin realpath %raw_fish)' %s
 # Test that using variables as command names work correctly.
 
 $EMPTY_VARIABLE

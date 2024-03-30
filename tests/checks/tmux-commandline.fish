@@ -3,7 +3,7 @@
 
 isolated-tmux-start
 
-isolated-tmux send-keys 'bind \eg "commandline -p -C -- -4"' Enter C-l
+isolated-tmux send-keys 'bind alt-g "commandline -p -C -- -4"' Enter C-l
 isolated-tmux send-keys 'echo bar|cat' \eg foo
 tmux-sleep
 isolated-tmux capture-pane -p

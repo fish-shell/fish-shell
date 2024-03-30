@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+#RUN: %fish -C 'set -g fish %raw_fish' %s
 
 # A $status used as a command should not impact the location of other errors.
 echo 'echo foo | exec grep # this exec is not allowed!

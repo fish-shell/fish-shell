@@ -1,4 +1,4 @@
-#RUN: %fish -C "set fish %fish" %s
+#RUN: %fish -C "set fish %raw_fish" %s
 # Check that switch with an argument expanding to nothing still works.
 switch $foo
     case a

@@ -1565,10 +1565,6 @@ You can change the settings of fish by changing the values of certain variables.
 
    the name of the function that sets up the keyboard shortcuts for the :ref:`command-line editor <editor>`.
 
-.. envvar:: fish_escape_delay_ms
-
-   sets how long fish waits for another key after seeing an escape, to distinguish pressing the escape key from the start of an escape sequence. The default is 30ms. Increasing it increases the latency but allows pressing escape instead of alt for alt+character bindings. For more information, see :ref:`the chapter in the bind documentation <cmd-bind-escape>`.
-
 .. envvar:: fish_sequence_key_delay_ms
 
    sets how long fish waits for another key after seeing a key that is part of a longer sequence, to disambiguate. For instance if you had bound ``\cx\ce`` to open an editor, fish would wait for this long in milliseconds to see a ctrl-e after a ctrl-x. If the time elapses, it will handle it as a ctrl-x (by default this would copy the current commandline to the clipboard). See also :ref:`Key sequences <interactive-key-sequences>`.

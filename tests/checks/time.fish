@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %raw_fish' %s
 time sleep 0
 
 # These are a tad awkward because it picks the correct unit and adapts whitespace.

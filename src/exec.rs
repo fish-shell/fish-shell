@@ -24,6 +24,9 @@ use crate::fork_exec::postfork::{
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
+use crate::input_common::{
+    terminal_protocols_disable, terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS,
+};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
@@ -39,7 +42,7 @@ use crate::proc::{
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
     TtyTransfer, INVALID_PID,
 };
-use crate::reader::{reader_run_count, restore_term_mode};
+use crate::reader::{reader_current_data, reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::timer::push_timer;
@@ -71,6 +74,15 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     if no_exec() {
         return true;
     }
+
+    let _terminal_protocols_disabled = (
+        // If interactive or inside noninteractive builtin read.
+        reader_current_data().is_some() &&
+                // If we try to start an external process.
+                job.group().wants_terminal()
+                    && TERMINAL_PROTOCOLS.get().borrow().is_some()
+    )
+    .then(terminal_protocols_disable_scoped);
 
     // Handle an exec call.
     if job.processes()[0].typ == ProcessType::exec {
@@ -439,6 +451,9 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
 
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
+    if reader_current_data().is_some() && TERMINAL_PROTOCOLS.get().borrow().is_some() {
+        terminal_protocols_disable();
+    }
     // Bounce to launch_process. This never returns.
     safe_launch_process(p, &actual_cmd, &argv, &*envp);
 }

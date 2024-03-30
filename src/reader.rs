@@ -66,8 +66,8 @@ use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
     SearchType,
 };
+use crate::input::init_input;
 use crate::input::Inputter;
-use crate::input::{init_input, input_set_bind_mode};
 use crate::input_common::{CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -1882,8 +1882,6 @@ impl ReaderData {
                 rls.last_cmd = Some(readline_cmd);
             } else if let Some(command) = event_needing_handling.get_command() {
                 zelf.run_input_command_scripts(command);
-            } else if let Some(mode) = event_needing_handling.get_mode() {
-                input_set_bind_mode(zelf.parser(), mode);
             } else {
                 // Ordinary char.
                 let c = event_needing_handling.get_char();

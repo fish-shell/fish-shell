@@ -1380,7 +1380,7 @@ impl ReaderData {
             let selection_color =
                 HighlightSpec::with_fg_bg(HighlightRole::selection, HighlightRole::selection);
             let end = std::cmp::min(selection.stop, colors.len());
-            for color in &mut colors[selection.start..end] {
+            for color in &mut colors[selection.start.min(end)..end] {
                 *color = selection_color;
             }
         }

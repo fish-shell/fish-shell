@@ -1,6 +1,6 @@
-use crate::common::{get_by_sorted_name, shell_modes, str2wcstring, Named};
+use crate::common::{escape, get_by_sorted_name, shell_modes, str2wcstring, Named};
 use crate::curses;
-use crate::env::{EnvMode, Environment, CURSES_INITIALIZED};
+use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
@@ -246,17 +246,6 @@ fn input_get_bind_mode(vars: &dyn Environment) -> WString {
         mode.as_string()
     } else {
         DEFAULT_BIND_MODE.to_owned()
-    }
-}
-
-/// Set the current bind mode.
-pub fn input_set_bind_mode(parser: &Parser, bm: &wstr) {
-    // Only set this if it differs to not execute variable handlers all the time.
-    // modes may not be empty - empty is a sentinel value meaning to not change the mode
-    assert!(!bm.is_empty());
-    if input_get_bind_mode(parser.vars()) != bm {
-        // Must send events here - see #6653.
-        parser.set_var_and_fire(FISH_BIND_MODE_VAR, EnvMode::GLOBAL, vec![bm.to_owned()]);
     }
 }
 
@@ -510,8 +499,12 @@ impl Inputter {
             self.push_front(evt);
         }
         // Missing bind mode indicates to not reset the mode (#2871)
-        if let Some(sets_mode) = m.sets_mode.as_ref() {
-            self.push_front(CharEvent::from_set_mode(sets_mode.clone()));
+        if let Some(mode) = m.sets_mode.as_ref() {
+            self.push_front(CharEvent::from_command(sprintf!(
+                "set --global %s %s",
+                FISH_BIND_MODE_VAR,
+                escape(mode)
+            )));
         }
     }
 
@@ -892,7 +885,7 @@ impl Inputter {
                         return evt;
                     }
                 },
-                CharEventType::Command(_) | CharEventType::SetMode(_) => {
+                CharEventType::Command(_) => {
                     return evt;
                 }
                 CharEventType::Eof => {

@@ -129,9 +129,6 @@ pub enum CharEventType {
     /// A shell command.
     Command(WString),
 
-    /// A request to change the input mapping mode.
-    SetMode(WString),
-
     /// end-of-file was reached.
     Eof,
 
@@ -173,7 +170,7 @@ impl CharEvent {
     pub fn is_readline_or_command(&self) -> bool {
         matches!(
             self.evt,
-            CharEventType::Readline(_) | CharEventType::Command(_) | CharEventType::SetMode(_)
+            CharEventType::Readline(_) | CharEventType::Command(_)
         )
     }
 
@@ -206,13 +203,6 @@ impl CharEvent {
         }
     }
 
-    pub fn get_mode(&self) -> Option<&wstr> {
-        match &self.evt {
-            CharEventType::SetMode(m) => Some(m),
-            _ => None,
-        }
-    }
-
     pub fn from_char(c: char) -> CharEvent {
         CharEvent {
             evt: CharEventType::Char(c),
@@ -236,14 +226,6 @@ impl CharEvent {
     pub fn from_command(cmd: WString) -> CharEvent {
         CharEvent {
             evt: CharEventType::Command(cmd),
-            input_style: CharInputStyle::Normal,
-            seq: WString::new(),
-        }
-    }
-
-    pub fn from_set_mode(mode: WString) -> CharEvent {
-        CharEvent {
-            evt: CharEventType::SetMode(mode),
             input_style: CharInputStyle::Normal,
             seq: WString::new(),
         }

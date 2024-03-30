@@ -1842,69 +1842,72 @@ impl ReaderData {
                 reader_sighup();
                 continue;
             }
-            assert!(
-                event_needing_handling.is_char() || event_needing_handling.is_readline_or_command(),
-                "Should have a char, readline or command"
-            );
 
             if !matches!(rls.last_cmd, Some(rl::Yank | rl::YankPop)) {
                 rls.yank_len = 0;
             }
 
-            if event_needing_handling.is_readline() {
-                let readline_cmd = event_needing_handling.get_readline();
-                if readline_cmd == rl::Cancel && zelf.is_navigating_pager_contents() {
-                    zelf.clear_transient_edit();
-                }
-
-                // Clear the pager if necessary.
-                let focused_on_search_field =
-                    zelf.active_edit_line_tag() == EditableLineTag::SearchField;
-                if !zelf.history_search.active()
-                    && command_ends_paging(readline_cmd, focused_on_search_field)
-                {
-                    zelf.clear_pager();
-                }
-
-                zelf.handle_readline_command(readline_cmd, &mut rls);
-
-                if zelf.history_search.active() && command_ends_history_search(readline_cmd) {
-                    // "cancel" means to abort the whole thing, other ending commands mean to finish the
-                    // search.
-                    if readline_cmd == rl::Cancel {
-                        // Go back to the search string by simply undoing the history-search edit.
+            match event_needing_handling {
+                CharEvent::Readline(readline_cmd_evt) => {
+                    let readline_cmd = readline_cmd_evt.cmd;
+                    if readline_cmd == rl::Cancel && zelf.is_navigating_pager_contents() {
                         zelf.clear_transient_edit();
                     }
-                    zelf.history_search.reset();
-                    zelf.command_line_has_transient_edit = false;
-                }
 
-                rls.last_cmd = Some(readline_cmd);
-            } else if let Some(command) = event_needing_handling.get_command() {
-                zelf.run_input_command_scripts(command);
-            } else {
-                // Ordinary char.
-                let c = event_needing_handling.get_char();
-                if event_needing_handling.input_style == CharInputStyle::NotFirst
-                    && zelf.active_edit_line().1.position() == 0
-                {
-                    // This character is skipped.
-                } else if c.is_control() {
-                    // This can happen if the user presses a control char we don't recognize. No
-                    // reason to report this to the user unless they've enabled debugging output.
-                    FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
-                } else {
-                    // Regular character.
-                    let (elt, _el) = zelf.active_edit_line();
-                    zelf.insert_char(elt, c);
-
-                    if elt == EditableLineTag::Commandline {
+                    // Clear the pager if necessary.
+                    let focused_on_search_field =
+                        zelf.active_edit_line_tag() == EditableLineTag::SearchField;
+                    if !zelf.history_search.active()
+                        && command_ends_paging(readline_cmd, focused_on_search_field)
+                    {
                         zelf.clear_pager();
-                        // We end history search. We could instead update the search string.
-                        zelf.history_search.reset();
                     }
+
+                    zelf.handle_readline_command(readline_cmd, &mut rls);
+
+                    if zelf.history_search.active() && command_ends_history_search(readline_cmd) {
+                        // "cancel" means to abort the whole thing, other ending commands mean to finish the
+                        // search.
+                        if readline_cmd == rl::Cancel {
+                            // Go back to the search string by simply undoing the history-search edit.
+                            zelf.clear_transient_edit();
+                        }
+                        zelf.history_search.reset();
+                        zelf.command_line_has_transient_edit = false;
+                    }
+
+                    rls.last_cmd = Some(readline_cmd);
                 }
-                rls.last_cmd = None;
+                CharEvent::Command(command) => {
+                    zelf.run_input_command_scripts(&command);
+                }
+                CharEvent::Char(cevt) => {
+                    // Ordinary char.
+                    let c = cevt.char;
+                    if cevt.input_style == CharInputStyle::NotFirst
+                        && zelf.active_edit_line().1.position() == 0
+                    {
+                        // This character is skipped.
+                    } else if c.is_control() {
+                        // This can happen if the user presses a control char we don't recognize. No
+                        // reason to report this to the user unless they've enabled debugging output.
+                        FLOG!(reader, wgettext_fmt!("Unknown key binding 0x%X", c));
+                    } else {
+                        // Regular character.
+                        let (elt, _el) = zelf.active_edit_line();
+                        zelf.insert_char(elt, c);
+
+                        if elt == EditableLineTag::Commandline {
+                            zelf.clear_pager();
+                            // We end history search. We could instead update the search string.
+                            zelf.history_search.reset();
+                        }
+                    }
+                    rls.last_cmd = None;
+                }
+                CharEvent::Eof | CharEvent::CheckExit => {
+                    panic!("Should have a char, readline or command")
+                }
             }
         }
 
@@ -2002,17 +2005,22 @@ impl ReaderData {
 
         while accumulated_chars.len() < limit {
             let evt = self.inputter.read_char();
-            if !evt.is_char() || !poll_fd_readable(self.conf.inputfd) {
+            let CharEvent::Char(cevt) = &evt else {
                 event_needing_handling = Some(evt);
                 break;
-            } else if evt.input_style == CharInputStyle::NotFirst
+            };
+            if !poll_fd_readable(self.conf.inputfd) {
+                event_needing_handling = Some(evt);
+                break;
+            }
+            if cevt.input_style == CharInputStyle::NotFirst
                 && accumulated_chars.is_empty()
                 && self.active_edit_line().1.position() == 0
             {
                 // The cursor is at the beginning and nothing is accumulated, so skip this character.
                 continue;
             } else {
-                accumulated_chars.push(evt.get_char());
+                accumulated_chars.push(cevt.char);
             }
 
             if last_exec_count != self.exec_count() {

@@ -56,6 +56,7 @@ tmux-sleep
 isolated-tmux send-keys "echo sdifjsdoifjsdoifj"
 tmux-sleep
 isolated-tmux send-keys F1
+tmux-sleep
 isolated-tmux capture-pane -p | grep "(no matches)"
 # CHECK: (no matches)
 isolated-tmux send-keys Enter C-e C-u "echo foo" Enter

@@ -11,7 +11,9 @@ use crate::parse_util::{
     parse_util_token_extent,
 };
 use crate::proc::is_interactive_session;
-use crate::reader::{commandline_get_state, commandline_set_buffer, reader_queue_ch};
+use crate::reader::{
+    commandline_get_state, commandline_set_buffer, commandline_set_search_field, reader_queue_ch,
+};
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
 use crate::wchar::prelude::*;
@@ -57,6 +59,7 @@ fn replace_part(
     insert_mode: AppendMode,
     buff: &wstr,
     cursor_pos: usize,
+    search_field_mode: bool,
 ) {
     let mut out_pos = cursor_pos;
     let mut out = buff[..range.start].to_owned();
@@ -81,7 +84,11 @@ fn replace_part(
     }
 
     out.push_utfstr(&buff[range.end..]);
-    commandline_set_buffer(out, Some(out_pos));
+    if search_field_mode {
+        commandline_set_search_field(out, Some(out_pos));
+    } else {
+        commandline_set_buffer(out, Some(out_pos));
+    }
 }
 
 /// Output the specified selection.
@@ -191,6 +198,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut search_mode = false;
     let mut paging_mode = false;
     let mut paging_full_mode = false;
+    let mut search_field_mode = false;
     let mut is_valid = false;
 
     let mut range = 0..0;
@@ -224,6 +232,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("search-mode"), woption_argument_t::no_argument, 'S'),
         wopt(L!("paging-mode"), woption_argument_t::no_argument, 'P'),
         wopt(L!("paging-full-mode"), woption_argument_t::no_argument, 'F'),
+        wopt(L!("search-field"), woption_argument_t::no_argument, '\x03'),
         wopt(L!("is-valid"), woption_argument_t::no_argument, '\x01'),
     ];
 
@@ -269,6 +278,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             's' => selection_mode = true,
             'P' => paging_mode = true,
             'F' => paging_full_mode = true,
+            '\x03' => search_field_mode = true,
             '\x01' => is_valid = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
@@ -361,10 +371,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor)
+    if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor || search_field_mode)
         && (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode)
         // Special case - we allow to get/set cursor position relative to the process/job/token.
-        && (buffer_part.is_none() || !cursor_mode)
+        && ((buffer_part.is_none() && !search_field_mode) || !cursor_mode)
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -377,6 +387,12 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             cmd,
             "--cut-at-cursor and --tokens can not be used when setting the commandline"
         ));
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if search_field_mode && buffer_part.is_some() {
+        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd,));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
@@ -447,7 +463,15 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let current_buffer;
     let current_cursor_pos;
     let transient;
-    if let Some(override_buffer) = &override_buffer {
+
+    if search_field_mode {
+        let Some((search_field_text, cursor_pos)) = commandline_get_state().search_field else {
+            return STATUS_CMD_ERROR;
+        };
+        transient = search_field_text;
+        current_buffer = &transient;
+        current_cursor_pos = cursor_pos;
+    } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
     } else if !ld.transient_commandlines.is_empty() && !cursor_mode {
@@ -487,18 +511,22 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         };
     }
 
-    match buffer_part {
-        TextScope::String => {
-            range = 0..current_buffer.len();
-        }
-        TextScope::Job => {
-            range = parse_util_job_extent(current_buffer, current_cursor_pos, None);
-        }
-        TextScope::Process => {
-            range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
-        }
-        TextScope::Token => {
-            parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+    if search_field_mode {
+        range = 0..current_buffer.len();
+    } else {
+        match buffer_part {
+            TextScope::String => {
+                range = 0..current_buffer.len();
+            }
+            TextScope::Job => {
+                range = parse_util_job_extent(current_buffer, current_cursor_pos, None);
+            }
+            TextScope::Process => {
+                range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
+            }
+            TextScope::Token => {
+                parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+            }
         }
     }
 
@@ -546,10 +574,18 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             append_mode,
             current_buffer,
             current_cursor_pos,
+            search_field_mode,
         );
     } else {
         let sb = join_strings(&w.argv[w.woptind..], '\n');
-        replace_part(range, &sb, append_mode, current_buffer, current_cursor_pos);
+        replace_part(
+            range,
+            &sb,
+            append_mode,
+            current_buffer,
+            current_cursor_pos,
+            search_field_mode,
+        );
     }
 
     STATUS_CMD_OK

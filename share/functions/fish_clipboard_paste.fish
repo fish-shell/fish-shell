@@ -26,6 +26,11 @@ function fish_clipboard_paste
     # Also split on \r, otherwise it looks confusing
     set data (string split \r -- $data | string split \n)
 
+    if commandline --search-field >/dev/null
+        commandline --search-field -i -- $data
+        return
+    end
+
     # If the current token has an unmatched single-quote,
     # escape all single-quotes (and backslashes) in the paste,
     # in order to turn it into a single literal token.

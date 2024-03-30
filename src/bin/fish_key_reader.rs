@@ -248,7 +248,7 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
         }
         let evt = evt.unwrap();
 
-        let c = evt.get_char();
+        let c = evt.get_char().unwrap();
         prev_timestamp = output_elapsed_time(prev_timestamp, first_char_seen, verbose);
         // Hack for #3189. Do not suggest \c@ as the binding for nul, because a string containing
         // nul cannot be passed to builtin_bind since it uses C strings. We'll output the name of

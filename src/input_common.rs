@@ -138,77 +138,97 @@ pub enum CharEventType {
 }
 
 #[derive(Debug, Clone)]
-pub struct CharEvent {
-    pub evt: CharEventType,
-
-    // The style to use when inserting characters into the command line.
-    //  todo!("This is only needed if the type is Readline")
-    pub input_style: CharInputStyle,
-
+pub struct ReadlineCmdEvent {
+    pub cmd: ReadlineCmd,
     /// The sequence of characters in the input mapping which generated this event.
     /// Note that the generic self-insert case does not have any characters, so this would be empty.
+    /// This is also empty for invalid Unicode code points, which produce multiple characters.
     pub seq: WString,
+}
+
+#[derive(Debug, Clone)]
+pub struct PlainCharEvent {
+    // The key.
+    pub char: char,
+    // The style to use when inserting characters into the command line.
+    pub input_style: CharInputStyle,
+    /// The sequence of characters in the input mapping which generated this event.
+    /// Note that the generic self-insert case does not have any characters, so this would be empty.
+    /// This is also empty for invalid Unicode code points, which produce multiple characters.
+    pub seq: WString,
+}
+
+#[derive(Debug, Clone)]
+pub enum CharEvent {
+    /// A character was entered.
+    Char(PlainCharEvent),
+
+    /// A readline event.
+    Readline(ReadlineCmdEvent),
+
+    /// A shell command.
+    Command(WString),
+
+    /// end-of-file was reached.
+    Eof,
+
+    /// An event was handled internally, or an interrupt was received. Check to see if the reader
+    /// loop should exit.
+    CheckExit,
 }
 
 impl CharEvent {
     pub fn is_char(&self) -> bool {
-        matches!(self.evt, CharEventType::Char(_))
+        matches!(self, CharEvent::Char(_))
     }
 
     pub fn is_eof(&self) -> bool {
-        matches!(self.evt, CharEventType::Eof)
+        matches!(self, CharEvent::Eof)
     }
 
     pub fn is_check_exit(&self) -> bool {
-        matches!(self.evt, CharEventType::CheckExit)
+        matches!(self, CharEvent::CheckExit)
     }
 
     pub fn is_readline(&self) -> bool {
-        matches!(self.evt, CharEventType::Readline(_))
+        matches!(self, CharEvent::Readline(_))
     }
 
     pub fn is_readline_or_command(&self) -> bool {
-        matches!(
-            self.evt,
-            CharEventType::Readline(_) | CharEventType::Command(_)
-        )
-    }
-
-    pub fn get_char(&self) -> char {
-        let CharEventType::Char(c) = self.evt else {
-            panic!("Not a char type");
-        };
-        c
-    }
-
-    pub fn maybe_char(&self) -> Option<char> {
-        if let CharEventType::Char(c) = self.evt {
-            Some(c)
-        } else {
-            None
-        }
+        matches!(self, CharEvent::Readline(_) | CharEvent::Command(_))
     }
 
     pub fn get_readline(&self) -> ReadlineCmd {
-        let CharEventType::Readline(c) = self.evt else {
+        let CharEvent::Readline(c) = self else {
             panic!("Not a readline type");
         };
-        c
+        c.cmd
     }
 
     pub fn get_command(&self) -> Option<&wstr> {
-        match &self.evt {
-            CharEventType::Command(c) => Some(c),
+        match self {
+            CharEvent::Command(c) => Some(c),
             _ => None,
         }
     }
 
     pub fn from_char(c: char) -> CharEvent {
-        CharEvent {
-            evt: CharEventType::Char(c),
-            input_style: CharInputStyle::Normal,
-            seq: WString::new(),
+        Self::from_char_seq(c, WString::new())
+    }
+
+    pub fn get_char(&self) -> Option<char> {
+        match self {
+            CharEvent::Char(cevt) => Some(cevt.char),
+            _ => None,
         }
+    }
+
+    pub fn from_char_seq(c: char, seq: WString) -> CharEvent {
+        CharEvent::Char(PlainCharEvent {
+            char: c,
+            input_style: CharInputStyle::Normal,
+            seq,
+        })
     }
 
     pub fn from_readline(cmd: ReadlineCmd) -> CharEvent {
@@ -216,35 +236,11 @@ impl CharEvent {
     }
 
     pub fn from_readline_seq(cmd: ReadlineCmd, seq: WString) -> CharEvent {
-        CharEvent {
-            evt: CharEventType::Readline(cmd),
-            input_style: CharInputStyle::Normal,
-            seq,
-        }
-    }
-
-    pub fn from_command(cmd: WString) -> CharEvent {
-        CharEvent {
-            evt: CharEventType::Command(cmd),
-            input_style: CharInputStyle::Normal,
-            seq: WString::new(),
-        }
+        CharEvent::Readline(ReadlineCmdEvent { cmd, seq })
     }
 
     pub fn from_check_exit() -> CharEvent {
-        CharEvent {
-            evt: CharEventType::CheckExit,
-            input_style: CharInputStyle::Normal,
-            seq: WString::new(),
-        }
-    }
-
-    pub fn from_eof() -> CharEvent {
-        CharEvent {
-            evt: CharEventType::Eof,
-            input_style: CharInputStyle::Normal,
-            seq: WString::new(),
-        }
+        CharEvent::CheckExit
     }
 }
 
@@ -420,7 +416,7 @@ pub trait InputEventQueuer {
             let rr = readb(self.get_in_fd());
             match rr {
                 ReadbResult::Eof => {
-                    return CharEvent::from_eof();
+                    return CharEvent::Eof;
                 }
 
                 ReadbResult::Interrupted => {

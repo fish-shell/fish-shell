@@ -100,6 +100,10 @@ The following special input functions are available:
     move one character to the left.
     If the completion pager is active, select the previous completion instead.
 
+``backward-char-passive``
+    move one character to the left, but do not trigger any non-movement-related operations. If the cursor is at the start of
+    the commandline, does nothing. Does not change the selected item in the completion pager UI when shown.
+
 ``backward-bigword``
     move one whitespace-delimited word to the left
 
@@ -190,6 +194,11 @@ The following special input functions are available:
 ``forward-char``
     move one character to the right; or if at the end of the commandline, accept the current autosuggestion.
     If the completion pager is active, select the next completion instead.
+
+``forward-char-passive``
+    move one character to the right, but do not trigger any non-movement-related operations. If the cursor is at the end of the
+    commandline, does not accept the current autosuggestion (if any). Does not change the selected item in the completion pager,
+    if shown.
 
 ``forward-single-char``
     move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.

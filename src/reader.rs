@@ -2497,6 +2497,14 @@ impl ReaderData {
                     self.update_buff_pos(elt, Some(el.position() - 1));
                 }
             }
+            rl::BackwardCharPassive => {
+                let (elt, el) = self.active_edit_line();
+                if el.position() != 0 {
+                    if elt == EditableLineTag::SearchField || !self.is_navigating_pager_contents() {
+                        self.update_buff_pos(elt, Some(el.position() - 1));
+                    }
+                }
+            }
             rl::ForwardChar | rl::ForwardSingleChar => {
                 let (elt, el) = self.active_edit_line();
                 if self.is_navigating_pager_contents() {
@@ -2509,6 +2517,14 @@ impl ReaderData {
                     );
                 } else {
                     self.update_buff_pos(elt, Some(el.position() + 1));
+                }
+            }
+            rl::ForwardCharPassive => {
+                let (elt, el) = self.active_edit_line();
+                if !self.is_at_end(el) {
+                    if elt == EditableLineTag::SearchField || !self.is_navigating_pager_contents() {
+                        self.update_buff_pos(elt, Some(el.position() + 1));
+                    }
                 }
             }
             rl::BackwardKillWord | rl::BackwardKillPathComponent | rl::BackwardKillBigword => {
@@ -4494,7 +4510,9 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::CompleteAndSearch
         | rl::HistoryPager
         | rl::BackwardChar
+        | rl::BackwardCharPassive
         | rl::ForwardChar
+        | rl::ForwardCharPassive
         | rl::ForwardSingleChar
         | rl::UpLine
         | rl::DownLine

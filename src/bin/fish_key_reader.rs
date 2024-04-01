@@ -363,11 +363,11 @@ fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> ControlFlow<i3
 }
 
 fn main() {
+    PROGRAM_NAME.set(L!("fish_key_reader")).unwrap();
     panic_handler(throwing_main)
 }
 
 fn throwing_main() -> i32 {
-    PROGRAM_NAME.set(L!("fish_key_reader")).unwrap();
     let mut continuous_mode = false;
     let mut verbose = false;
 

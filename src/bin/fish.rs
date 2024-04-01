@@ -464,6 +464,7 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
 }
 
 fn main() {
+    PROGRAM_NAME.set(L!("fish")).unwrap();
     panic_handler(throwing_main)
 }
 
@@ -471,10 +472,6 @@ fn throwing_main() -> i32 {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-
-    PROGRAM_NAME
-        .set(L!("fish"))
-        .expect("multiple entrypoints setting PROGRAM_NAME");
 
     let mut res = 1;
 

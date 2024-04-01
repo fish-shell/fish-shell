@@ -738,11 +738,11 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
 }
 
 fn main() {
+    PROGRAM_NAME.set(L!("fish_indent")).unwrap();
     panic_handler(throwing_main)
 }
 
 fn throwing_main() -> i32 {
-    PROGRAM_NAME.set(L!("fish_indent")).unwrap();
     topic_monitor_init();
     threads::init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's

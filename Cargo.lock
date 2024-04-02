@@ -505,7 +505,7 @@ dependencies = [
 [[package]]
 name = "terminfo"
 version = "0.8.0"
-source = "git+https://github.com/meh/rust-terminfo?rev=870327dd79beaecf50db09a15931d5ee1de2a24d#870327dd79beaecf50db09a15931d5ee1de2a24d"
+source = "git+https://github.com/meh/rust-terminfo?rev=7259f5aa5786a9d396162da0d993e268f6163fb2#7259f5aa5786a9d396162da0d993e268f6163fb2"
 dependencies = [
  "fnv",
  "nom",

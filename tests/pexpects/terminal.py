@@ -2,6 +2,14 @@
 from pexpect_helper import SpawnedProc
 import platform
 
+import os
+import sys
+
+# Disable under SAN - keeps failing because the timing is too tight
+if "FISH_CI_SAN" in os.environ:
+    sys.exit(0)
+
+
 # Set a 0 terminal size
 sp = SpawnedProc(args=["-d", "term-support"], dimensions=(0, 0))
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (

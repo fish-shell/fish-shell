@@ -456,11 +456,13 @@ impl InputEventQueuer for Inputter {
 
     fn paste_start_buffering(&mut self) {
         self.paste_buffer = Some(vec![]);
+        self.push_front(CharEvent::from_readline(ReadlineCmd::BeginUndoGroup));
     }
     fn paste_is_buffering(&self) -> bool {
         self.paste_buffer.is_some()
     }
     fn paste_commit(&mut self) {
+        self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
         let buffer = self.paste_buffer.take().unwrap();
         self.push_front(CharEvent::Command(sprintf!(
             "__fish_paste %s",

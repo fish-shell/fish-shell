@@ -869,11 +869,9 @@ pub trait InputEventQueuer {
                 } // rxvt style
                 200 => {
                     self.paste_start_buffering();
-                    self.push_front(CharEvent::from_readline(ReadlineCmd::BeginUndoGroup));
                     return Some(Key::from_raw(key::Invalid));
                 }
                 201 => {
-                    self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
                     self.paste_commit();
                     return Some(Key::from_raw(key::Invalid));
                 }

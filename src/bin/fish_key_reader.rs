@@ -20,7 +20,7 @@ use fish::{
     eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{CharEvent, InputEventQueue, InputEventQueuer},
-    key::Key,
+    key::{self, Key},
     panic::panic_handler,
     print_help::print_help,
     printf,
@@ -117,6 +117,9 @@ fn process_input(continuous_mode: bool) -> i32 {
             continue;
         };
         let c = kevt.key.codepoint;
+        if c == key::Invalid {
+            continue;
+        }
         bind_chars.push((kevt.key, kevt.seq));
         output_bind_command(&mut bind_chars);
         if output_matching_key_name(&mut recent_chars1, c) {

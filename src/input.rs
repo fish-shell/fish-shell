@@ -1090,9 +1090,6 @@ fn create_input_terminfo() -> Box<[TerminfoMapping]> {
         terminfo_add!(key_f1), terminfo_add!(key_f2), terminfo_add!(key_f3), terminfo_add!(key_f4),
         terminfo_add!(key_f5), terminfo_add!(key_f6), terminfo_add!(key_f7), terminfo_add!(key_f8),
         terminfo_add!(key_f9), terminfo_add!(key_f10), terminfo_add!(key_f11), terminfo_add!(key_f12),
-        terminfo_add!(key_f13), terminfo_add!(key_f14), terminfo_add!(key_f15), terminfo_add!(key_f16),
-        terminfo_add!(key_f17), terminfo_add!(key_f18), terminfo_add!(key_f19), terminfo_add!(key_f20),
-        // Note key_f21 through key_f63 are available but no actual keyboard supports them.
         terminfo_add!(key_find), terminfo_add!(key_help), terminfo_add!(key_home),
         terminfo_add!(key_ic), terminfo_add!(key_il), terminfo_add!(key_left), terminfo_add!(key_ll),
         terminfo_add!(key_mark), terminfo_add!(key_message), terminfo_add!(key_move),

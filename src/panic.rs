@@ -13,7 +13,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
         let standard_hook = take_hook();
         set_hook(Box::new(move |panic_info| {
             standard_hook(panic_info);
-            printf!(
+            eprintf!(
                 "%s crashed, please report a bug. Debug PID %d or press Enter to exit",
                 PROGRAM_NAME.get().unwrap(),
                 unsafe { libc::getpid() }
@@ -24,7 +24,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                     break;
                 };
                 if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {
-                    printf!("\n");
+                    eprintf!("\n");
                     break;
                 }
             }

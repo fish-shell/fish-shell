@@ -83,10 +83,10 @@ expect_prompt()
 # Save the pids for later to check if they are still running.
 pids = []
 send("sleep 130 & echo $last_pid\r")
-pids += [expect_re("\d+\r\n").group().strip()]
+pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 131 & echo $last_pid\r")
-pids += [expect_re("\d+\r\n").group().strip()]
+pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 9999999\r")
 sleep(0.500)  # ensure fish kicks off the above sleep before it gets HUP - see #7288

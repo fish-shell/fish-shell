@@ -65,7 +65,7 @@ expect_prompt("echo start2.*\r\necho start1")
 # Verify searching with a request for timestamps includes the timestamps.
 sendline("history search --show-time='# %F %T%n' --prefix 'echo start'")
 expect_prompt(
-    "# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start2; .*\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start1;"
+    "# \\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\r\necho start2; .*\r\n# \\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\r\necho start1;"
 )
 
 # ==========

@@ -1413,7 +1413,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             let status = ProcStatus::from_waitpid(statusv);
             handle_child_status(j, proc, &status);
             if status.stopped() {
-                if is_interactive_session() && j.group().wants_terminal() {
+                if is_interactive_session() {
                     terminal_protocols_enable();
                 }
                 j.group().set_is_foreground(false);

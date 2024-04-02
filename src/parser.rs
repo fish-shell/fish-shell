@@ -16,6 +16,7 @@ use crate::fds::open_dir;
 use crate::flog::FLOGF;
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -26,6 +27,7 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
+use crate::reader::reader_current_data;
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::{assert_is_main_thread, MainThread};
 use crate::util::get_time;
@@ -563,6 +565,12 @@ impl Parser {
             Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
+        let terminal_protocols_disabled = (
+            // If interactive or inside noninteractive builtin read.
+            reader_current_data().is_some() && TERMINAL_PROTOCOLS.get().borrow().is_some()
+        )
+        .then(terminal_protocols_disable_scoped);
+
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().pods.exec_count;
         let prev_status_count = self.libdata().pods.status_count;
@@ -574,6 +582,7 @@ impl Parser {
         let new_exec_count = self.libdata().pods.exec_count;
         let new_status_count = self.libdata().pods.status_count;
 
+        drop(terminal_protocols_disabled);
         ScopeGuarding::commit(exc);
         self.pop_block(scope_block);
 

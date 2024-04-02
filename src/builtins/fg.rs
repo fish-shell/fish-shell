@@ -1,8 +1,7 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
-use crate::input_common::terminal_protocols_disable_scoped;
-use crate::proc::is_interactive_session;
+use crate::input_common::TERMINAL_PROTOCOLS;
 use crate::reader::reader_write_title;
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -157,8 +156,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
             }
         }
     }
-    let _terminal_protocols = (is_interactive_session() && job.group().wants_terminal())
-        .then(terminal_protocols_disable_scoped);
+    assert!(TERMINAL_PROTOCOLS.get().borrow().is_none());
     let mut transfer = TtyTransfer::new();
     transfer.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();

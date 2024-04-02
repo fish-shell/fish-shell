@@ -24,9 +24,7 @@ use crate::fork_exec::postfork::{
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
-use crate::input_common::{
-    terminal_protocols_disable, terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS,
-};
+use crate::input_common::{terminal_protocols_disable, TERMINAL_PROTOCOLS};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
@@ -74,15 +72,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     if no_exec() {
         return true;
     }
-
-    let _terminal_protocols_disabled = (
-        // If interactive or inside noninteractive builtin read.
-        reader_current_data().is_some() &&
-                // If we try to start an external process.
-                job.group().wants_terminal()
-                    && TERMINAL_PROTOCOLS.get().borrow().is_some()
-    )
-    .then(terminal_protocols_disable_scoped);
 
     // Handle an exec call.
     if job.processes()[0].typ == ProcessType::exec {

@@ -148,7 +148,7 @@ fn ascii_control(c: char) -> char {
 }
 
 pub(crate) fn canonicalize_keyed_control_char(c: char) -> char {
-    if c == ascii_control('m') || c == ascii_control('j') {
+    if c == ascii_control('m') {
         return Enter;
     }
     if c == ascii_control('i') {

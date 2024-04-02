@@ -376,7 +376,7 @@ impl BuiltinBind {
                         streams.err.append(wgettext_fmt!(
                             "%ls: No binding found for key '%ls'\n",
                             cmd,
-                            eseq
+                            seq[0]
                         ));
                     } else {
                         streams.err.append(wgettext_fmt!(

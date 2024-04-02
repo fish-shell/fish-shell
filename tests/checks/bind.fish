@@ -113,4 +113,11 @@ bind tab
 bind ctrl-\b
 # CHECKERR: bind: Cannot add control modifier to control character 'ctrl-h'
 
+# Either Return or ctrl-m.
+bind \r
+# CHECK: bind --preset enter execute
+# Never Return, probably always ctrl-j.
+bind \n 2>&1
+# CHECK: bind: No binding found for key 'ctrl-j'
+
 exit 0

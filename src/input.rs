@@ -667,7 +667,10 @@ impl EventQueuePeeker<'_> {
             return true;
         }
         let actual_seq = kevt.seq.as_char_slice();
-        if !actual_seq.is_empty() {
+        let is_csi_u = actual_seq.get(0) == Some(&'\x1b')
+            && actual_seq.get(1) == Some(&'[')
+            && actual_seq.last() == Some(&'u');
+        if !actual_seq.is_empty() && !is_csi_u {
             let seq_char = actual_seq[self.subidx];
             FLOG!(
                 reader,

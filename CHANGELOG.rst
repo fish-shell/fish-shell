@@ -23,19 +23,22 @@ Notable backwards-incompatible changes
 
 - Fish now decodes keyboard input into human-readable key names.
   To make this for for a wide range of terminals, fish asks terminals to speak several keyboard protocols,
-  including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/).
+  including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`.
   Depending on terminal support, this allows to bind a lot more key combinations,
   including arbitrary combinations of modifiers ``ctrl``, ``alt`` and ``shift``.
 
   This comes with a new syntax for specifying keys to builtin ``bind``.
   The new syntax introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point.
   The old syntax remains mostly supported but the new one is preferred.
+
   - Existing bindings that use the new names have a different meaning now.
     For example
+
     - ``bind up 'do something'`` binds the up arrow key instead of a two-key sequence.
     - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
-    Since ``,`` and ``-`` act as separators, there are some cases where they need to be written as ``comma`` and ``minus`` respectively.
+      Since ``,`` and ``-`` act as separators, there are some cases where they need to be written as ``comma`` and ``minus`` respectively.
   - To minimize gratuitous breakage, the key argument to ``bind`` is parsed using the old syntax in two cases:
+
     - If key starts with a raw escape character (``\e``) or a raw ASCII control character (``\c``).
     - If key consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
 

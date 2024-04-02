@@ -557,6 +557,8 @@ To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_
 
   > fish_key_reader # Press Alt + right-arrow
   Press a key:
+  bind alt-right 'do something'
+  
 Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them.
 
 Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.

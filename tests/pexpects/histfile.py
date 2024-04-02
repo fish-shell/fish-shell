@@ -87,6 +87,7 @@ expect_prompt()
 # Verify that if we spawn fish with a HISTFILE env var it uses that file.
 # Start by shutting down the previous shell.
 sendline("exit")
+sendline("exit")
 sp.spawn.wait()
 
 # Set the fish_history env var.

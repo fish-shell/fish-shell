@@ -14,7 +14,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
         set_hook(Box::new(move |panic_info| {
             standard_hook(panic_info);
             printf!(
-                "%s with crashed, please report a bug. Debug PID %d or press Enter to exit",
+                "%s crashed, please report a bug. Debug PID %d or press Enter to exit",
                 PROGRAM_NAME.get().unwrap(),
                 unsafe { libc::getpid() }
             );

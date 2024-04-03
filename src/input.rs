@@ -463,7 +463,9 @@ impl InputEventQueuer for Inputter {
     }
     fn paste_commit(&mut self) {
         self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
-        let buffer = self.paste_buffer.take().unwrap();
+        let Some(buffer) = self.paste_buffer.take() else {
+            return;
+        };
         self.push_front(CharEvent::Command(sprintf!(
             "__fish_paste %s",
             escape(&str2wcstring(&buffer))

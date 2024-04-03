@@ -232,7 +232,7 @@ end" >$__fish_config_dir/config.fish
             or test "$TERM_PROGRAM" = iTerm.app
         end
         function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            if status --is-command-substitution || set -q INSIDE_EMACS
+            if status --is-command-substitution
                 return
             end
             printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)

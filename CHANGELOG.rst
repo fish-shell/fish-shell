@@ -42,6 +42,7 @@ Notable backwards-incompatible changes
     - If key starts with a raw escape character (``\e``) or a raw ASCII control character (``\c``).
     - If key consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
 
+- Fish no longer supports terminals that mishandle OSC or CSI sequences they don't recognize. We are not aware of a need to do so.
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
   The seed was never guaranteed to give the same result across systems,
@@ -130,7 +131,8 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-- Fish now sets the terminal window title unconditionally (:issue:`10037`).
+- Fish now reports the working directory (via OSC 7) unconditionally instead of only for some terminals (:issue:`9955`).
+- Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
 - Focus reporting is enabled unconditionally, not just inside tmux.
   To use it, define functions that handle events ``fish_focus_in`` and ``fish_focus_out``.
 
@@ -228,7 +230,6 @@ Interactive improvements
 - Vi mode now uses :envvar:`fish_cursor_external` to set the cursor shape for external commands (:issue:`4656`).
 - Opening the history search in vi mode switches to insert mode correctly (:issue:`10141`).
 - Vi mode cursor shaping is now enabled in iTerm2 (:issue:`9698`).
-- Working directory reporting is enabled for iTerm2 (:issue:`9955`).
 - Completing commands as root includes commands not owned by root, fixing a regression introduced in fish 3.2.0 (:issue:`9699`).
 - Selection uses ``fish_color_selection`` for the foreground and background colors, as intended, rather than just the background (:issue:`9717`).
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).

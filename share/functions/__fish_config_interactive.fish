@@ -220,25 +220,11 @@ end" >$__fish_config_dir/config.fish
         end
     end
 
-    # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, iTerm.app, foot, and kitty support this.
-    if not set -q FISH_UNIT_TESTS_RUNNING
-        and begin
-            string match -q -- 'foot*' $TERM
-            or string match -q -- 'xterm-kitty*' $TERM
-            or test 0"$VTE_VERSION" -ge 3405
-            or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
-            or test "$TERM_PROGRAM" = WezTerm
-            or test "$TERM_PROGRAM" = iTerm.app
-        end
-        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            if status --is-command-substitution
-                return
-            end
-            printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
-        end
-        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
+    # Notify terminals when $PWD changes via OSC 7 (issue #906).
+    function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
+        printf \e\]7\;file://%s%s\a $hostname (string escape --style=url -- $PWD)
     end
+    __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
 
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.

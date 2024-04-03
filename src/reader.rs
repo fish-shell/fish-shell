@@ -4631,6 +4631,8 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::EndOfHistory
             | rl::Repaint
             | rl::ForceRepaint
+            | rl::FocusIn
+            | rl::FocusOut
     )
 }
 

@@ -594,6 +594,9 @@ pub trait InputEventQueuer {
                     }
                     let mut seq = WString::new();
                     let mut key = key_with_escape;
+                    if key == Some(Key::from_raw(key::Invalid)) {
+                        continue;
+                    }
                     let mut consumed = 0;
                     for i in 0..buffer.len() {
                         self.parse_codepoint(

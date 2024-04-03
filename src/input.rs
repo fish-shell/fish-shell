@@ -674,19 +674,14 @@ impl EventQueuePeeker<'_> {
             && actual_seq.last() == Some(&'u');
         if !actual_seq.is_empty() && !is_csi_u {
             let seq_char = actual_seq[self.subidx];
-            FLOG!(
-                reader,
-                "match mapping's",
-                key,
-                format!("against actual char {}", u32::from(seq_char)),
-            );
             if Key::from_single_char(seq_char) == key {
                 self.subidx += 1;
                 if self.subidx == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;
                 }
-                FLOG!(reader, "matched legacy sequence");
+                // These FLOGs are extremely chatty because this is run a bunch of times.
+                // FLOG!(reader, "matched legacy sequence for", key);
                 return true;
             }
             if key.modifiers.alt
@@ -697,7 +692,7 @@ impl EventQueuePeeker<'_> {
                 if self.subidx + 1 == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;
-                    FLOG!(reader, "matched escape prefix of legacy alt sequence");
+                    // FLOG!(reader, "matched escape prefix of legacy alt sequence for", key);
                     return self.next_is_char(Key::from_raw(key.codepoint), true);
                 } else if actual_seq
                     .get(self.subidx + 1)
@@ -710,7 +705,7 @@ impl EventQueuePeeker<'_> {
                         self.idx += 1;
                         self.subidx = 0;
                     }
-                    FLOG!(reader, "matched legacy alt sequence");
+                    // FLOG!(reader, "matched legacy alt sequence for", key);
                     return true;
                 }
             }

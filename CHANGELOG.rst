@@ -234,6 +234,7 @@ Interactive improvements
 - The completion pager will no longer sometimes skip the last entry when moving through a long list (:issue:`9833`).
 - The interactive ``history delete`` interface now allows specifying index ranges like "1..5" (:issue:`9736`), and ``history delete --exact`` now properly saves the history (:issue:`10066`).
 - Command completion will now call the stock ``manpath`` on macOS, instead of a potential Homebrew version. This prevents awkward error messages (:issue:`9817`).
+- the ``redo`` special input function restores the pre-undo cursor position.
 - A new bind function ``history-pager-delete``, bound to :kbd:`Shift` + :kbd:`Delete` by default, will delete the currently-selected history pager item from history (:issue:`9454`).
 - ``fish_key_reader`` will now use printable characters as-is, so pressing "ö" no longer leads to it telling you to bind ``\u00F6`` (:issue:`9986`).
 - ``open`` can be used to launch terminal programs again, as an ``xdg-open`` bug has been fixed and a workaround has been removed  (:issue:`10045`).

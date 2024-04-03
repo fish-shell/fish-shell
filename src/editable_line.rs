@@ -8,6 +8,7 @@ use crate::wchar::prelude::*;
 pub struct Edit {
     /// When undoing the edit we use this to restore the previous cursor position.
     pub cursor_position_before_edit: usize,
+    pub cursor_position_before_undo: Option<usize>,
 
     /// The span of text that is replaced by this edit.
     pub range: std::ops::Range<usize>,
@@ -25,6 +26,7 @@ impl Edit {
     pub fn new(range: std::ops::Range<usize>, replacement: WString) -> Self {
         Self {
             cursor_position_before_edit: 0,
+            cursor_position_before_undo: None,
             range,
             old: WString::new(),
             replacement,
@@ -224,6 +226,8 @@ impl EditableLine {
     pub fn undo(&mut self) -> bool {
         let mut did_undo = false;
         let mut last_group_id = None;
+        let position_before_undo = self.position();
+        let end = self.undo_history.edits_applied;
         while self.undo_history.edits_applied != 0 {
             let edit = &self.undo_history.edits[self.undo_history.edits_applied - 1];
             if did_undo
@@ -246,6 +250,10 @@ impl EditableLine {
             apply_edit(&mut self.text, &mut self.colors, &inverse);
             self.set_position(old_position);
             did_undo = true;
+        }
+        if did_undo {
+            let edit = &mut self.undo_history.edits[end - 1];
+            edit.cursor_position_before_undo = Some(position_before_undo);
         }
 
         self.end_edit_group();
@@ -270,7 +278,7 @@ impl EditableLine {
             last_group_id = edit.group_id;
             self.undo_history.edits_applied += 1;
             apply_edit(&mut self.text, &mut self.colors, edit);
-            self.set_position(cursor_position_after_edit(edit));
+            self.set_position(edit.cursor_position_before_undo.unwrap());
             did_redo = true;
         }
 

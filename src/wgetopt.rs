@@ -179,18 +179,13 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     pub fn wgetopt_long(&mut self) -> Option<char> {
-        assert!(self.woptind <= self.argc(), "woptind is out of range");
+        assert!(self.woptind <= self.argv.len(), "woptind is out of range");
         let mut ignored = 0;
         return self._wgetopt_internal(&mut ignored, false);
     }
 
     pub fn wgetopt_long_idx(&mut self, opt_index: &mut usize) -> Option<char> {
         return self._wgetopt_internal(opt_index, false);
-    }
-
-    /// \return the number of arguments.
-    fn argc(&self) -> usize {
-        return self.argv.len();
     }
 
     /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
@@ -271,7 +266,8 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     /// Advance to the next ARGV-element.
     /// \return Some(\0) on success, or None or another value if we should stop.
     fn _advance_to_next_argv(&mut self) -> Option<char> {
-        let argc = self.argc();
+        let argc = self.argv.len();
+
         if self.ordering == Ordering::PERMUTE {
             // If we have just processed some options following some non-options, exchange them so
             // that the options come first.
@@ -384,7 +380,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 // If we end this ARGV-element by taking the rest as an arg, we must advance to
                 // the next element now.
                 self.woptind += 1;
-            } else if self.woptind == self.argc() {
+            } else if self.woptind == self.argv.len() {
                 self.woptopt = c;
                 c = if self.missing_arg_return_colon {
                     ':'
@@ -422,7 +418,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 return;
             }
         } else if pfound.has_arg == woption_argument_t::required_argument {
-            if self.woptind < self.argc() {
+            if self.woptind < self.argv.len() {
                 self.woptarg = Some(self.argv[self.woptind]);
                 self.woptind += 1;
             } else {
@@ -588,7 +584,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         // "u".
         //
         // This distinction seems to be the most useful approach.
-        if !self.longopts.is_empty() && self.woptind < self.argc() {
+        if !self.longopts.is_empty() && self.woptind < self.argv.len() {
             let arg = self.argv[self.woptind];
 
             let try_long =

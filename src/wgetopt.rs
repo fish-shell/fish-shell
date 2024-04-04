@@ -261,7 +261,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Advance to the next ARGV-element.
     /// \return Some(\0) on success, or None or another value if we should stop.
-    fn next_argv(&mut self) -> Option<char> {
+    fn next_argv(&mut self) -> Result<(), Option<char>> {
         let argc = self.argv.len();
 
         if self.ordering == Ordering::Permute {
@@ -315,18 +315,18 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             if self.first_nonopt != self.last_nonopt {
                 self.wopt_index = self.first_nonopt;
             }
-            return None;
+            return Err(None);
         }
 
         // If we have come to a non-option and did not permute it, either stop the scan or describe
         // it to the caller and pass it by.
         if self.argv[self.wopt_index].char_at(0) != '-' || self.argv[self.wopt_index].len() == 1 {
             if self.ordering == Ordering::RequireOrder {
-                return None;
+                return Err(None);
             }
             self.woptarg = Some(self.argv[self.wopt_index]);
             self.wopt_index += 1;
-            return Some(NON_OPTION_CHAR);
+            return Err(Some(NON_OPTION_CHAR));
         }
 
         // We have found another option-ARGV-element. Skip the initial punctuation.
@@ -336,7 +336,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             1
         };
         self.nextchar = self.argv[self.wopt_index][skip..].into();
-        Some(char::from(0))
+        Ok(())
     }
 
     /// Check for a matching short opt.
@@ -550,8 +550,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.woptarg = None;
 
         if self.nextchar.is_empty() {
-            let narg = self.next_argv();
-            if narg != Some(char::from(0)) {
+            if let Err(narg) = self.next_argv() {
                 return narg;
             }
         }

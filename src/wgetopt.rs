@@ -257,12 +257,6 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.wopt_index != argc && self.argv[self.wopt_index] == "--" {
             self.wopt_index += 1;
 
-            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.wopt_index {
-                self.exchange();
-            } else if self.first_nonopt == self.last_nonopt {
-                self.first_nonopt = self.wopt_index;
-            }
-
             if self.first_nonopt == self.last_nonopt {
                 self.first_nonopt = self.wopt_index;
             } else if self.last_nonopt != self.wopt_index {

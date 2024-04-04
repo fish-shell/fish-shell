@@ -181,11 +181,11 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     pub fn wgetopt_long(&mut self) -> Option<char> {
         assert!(self.woptind <= self.argv.len(), "woptind is out of range");
         let mut ignored = 0;
-        self.wgetopt_inner(&mut ignored, false)
+        self.wgetopt_inner(&mut ignored)
     }
 
     pub fn wgetopt_long_idx(&mut self, opt_index: &mut usize) -> Option<char> {
-        self.wgetopt_inner(opt_index, false)
+        self.wgetopt_inner(opt_index)
     }
 
     /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
@@ -472,7 +472,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Check for a matching long opt.
-    fn handle_long_opt(&mut self, longind: &mut usize, long_only: bool, retval: &mut char) -> bool {
+    fn handle_long_opt(&mut self, longind: &mut usize, retval: &mut char) -> bool {
         let mut exact = false;
         let mut ambig = false;
         let mut indfound: usize = 0;
@@ -499,8 +499,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
         // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
         // short option.
-        if !long_only
-            || self.argv[self.woptind].char_at(1) == '-'
+        if self.argv[self.woptind].char_at(1) == '-'
             || !self
                 .shortopts
                 .as_char_slice()
@@ -554,7 +553,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     /// long-named option has been found by the most recent call.
     ///
     /// If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
-    fn wgetopt_inner(&mut self, longind: &mut usize, long_only: bool) -> Option<char> {
+    fn wgetopt_inner(&mut self, longind: &mut usize) -> Option<char> {
         if !self.initialized {
             self.initialize();
         }
@@ -586,14 +585,12 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             let try_long =
                 // matches options like `--foo`
                 arg.char_at(0) == '-' && arg.char_at(1) == '-'
-                // matches options like `-fu`
-                || (long_only && arg.len() >= 3)
                 // matches options like `-f` if `f` is not a valid shortopt.
                 || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
                 let mut retval = '\0';
-                if self.handle_long_opt(longind, long_only, &mut retval) {
+                if self.handle_long_opt(longind, &mut retval) {
                     return Some(retval);
                 }
             }

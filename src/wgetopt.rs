@@ -181,11 +181,11 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     pub fn wgetopt_long(&mut self) -> Option<char> {
         assert!(self.woptind <= self.argv.len(), "woptind is out of range");
         let mut ignored = 0;
-        return self._wgetopt_internal(&mut ignored, false);
+        return self.wgetopt_inner(&mut ignored, false);
     }
 
     pub fn wgetopt_long_idx(&mut self, opt_index: &mut usize) -> Option<char> {
-        return self._wgetopt_internal(opt_index, false);
+        return self.wgetopt_inner(opt_index, false);
     }
 
     /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
@@ -233,7 +233,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Initialize the internal data when the first call is made.
-    fn _wgetopt_initialize(&mut self) {
+    fn initialize(&mut self) {
         // Start processing options with ARGV-element 1 (since ARGV-element 0 is the program name); the
         // sequence of previously skipped non-option ARGV-elements is empty.
         self.first_nonopt = 1;
@@ -265,7 +265,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
 
     /// Advance to the next ARGV-element.
     /// \return Some(\0) on success, or None or another value if we should stop.
-    fn _advance_to_next_argv(&mut self) -> Option<char> {
+    fn next_argv(&mut self) -> Option<char> {
         let argc = self.argv.len();
 
         if self.ordering == Ordering::PERMUTE {
@@ -336,7 +336,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Check for a matching short opt.
-    fn _handle_short_opt(&mut self) -> char {
+    fn handle_short_opt(&mut self) -> char {
         // Look at and handle the next short option-character.
         let mut c = self.nextchar.char_at(0);
         self.nextchar = &self.nextchar[1..];
@@ -399,7 +399,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         return c;
     }
 
-    fn _update_long_opt(
+    fn update_long_opt(
         &mut self,
         pfound: &woption,
         nameend: usize,
@@ -438,7 +438,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Find a matching long opt.
-    fn _find_matching_long_opt(
+    fn find_matching_long_opt(
         &self,
         nameend: usize,
         exact: &mut bool,
@@ -471,12 +471,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Check for a matching long opt.
-    fn _handle_long_opt(
-        &mut self,
-        longind: &mut usize,
-        long_only: bool,
-        retval: &mut char,
-    ) -> bool {
+    fn handle_long_opt(&mut self, longind: &mut usize, long_only: bool, retval: &mut char) -> bool {
         let mut exact = false;
         let mut ambig = false;
         let mut indfound: usize = 0;
@@ -486,7 +481,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             nameend += 1;
         }
 
-        let pfound = self._find_matching_long_opt(nameend, &mut exact, &mut ambig, &mut indfound);
+        let pfound = self.find_matching_long_opt(nameend, &mut exact, &mut ambig, &mut indfound);
 
         if ambig && !exact {
             self.nextchar = empty_wstr();
@@ -496,7 +491,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         }
 
         if let Some(pfound) = pfound {
-            self._update_long_opt(&pfound, nameend, longind, indfound, retval);
+            self.update_long_opt(&pfound, nameend, longind, indfound, retval);
             return true;
         }
 
@@ -558,14 +553,14 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     /// long-named option has been found by the most recent call.
     ///
     /// If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
-    fn _wgetopt_internal(&mut self, longind: &mut usize, long_only: bool) -> Option<char> {
+    fn wgetopt_inner(&mut self, longind: &mut usize, long_only: bool) -> Option<char> {
         if !self.initialized {
-            self._wgetopt_initialize();
+            self.initialize();
         }
         self.woptarg = None;
 
         if self.nextchar.is_empty() {
-            let narg = self._advance_to_next_argv();
+            let narg = self.next_argv();
             if narg != Some(char::from(0)) {
                 return narg;
             }
@@ -597,12 +592,12 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
 
             if try_long {
                 let mut retval = '\0';
-                if self._handle_long_opt(longind, long_only, &mut retval) {
+                if self.handle_long_opt(longind, long_only, &mut retval) {
                     return Some(retval);
                 }
             }
         }
 
-        return Some(self._handle_short_opt());
+        return Some(self.handle_short_opt());
     }
 }

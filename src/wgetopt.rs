@@ -409,10 +409,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         option_index: usize,
     ) -> char {
         self.wopt_index += 1;
-        assert!(
-            self.remaining_text.char_at(name_end) == '\0'
-                || self.remaining_text.char_at(name_end) == '='
-        );
+        assert!(matches!(self.remaining_text.char_at(name_end), '\0' | '='));
         if self.remaining_text.char_at(name_end) == '=' {
             if opt_found.has_arg != ArgType::NoArgument {
                 self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
@@ -476,9 +473,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let mut index_found: usize = 0;
         let mut name_end = 0;
 
-        while self.remaining_text.char_at(name_end) != '\0'
-            && self.remaining_text.char_at(name_end) != '='
-        {
+        while !matches!(self.remaining_text.char_at(name_end), '\0' | '=') {
             name_end += 1;
         }
 

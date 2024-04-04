@@ -403,7 +403,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         &mut self,
         pfound: &WOption,
         nameend: usize,
-        longind: &mut usize,
+        longopt_index: &mut usize,
         option_index: usize,
     ) -> char {
         self.wopt_index += 1;
@@ -426,7 +426,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         self.nextchar = empty_wstr();
-        *longind = option_index;
+        *longopt_index = option_index;
         pfound.val
     }
 
@@ -465,7 +465,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     }
 
     /// Check for a matching long opt.
-    fn handle_long_opt(&mut self, longind: &mut usize) -> Option<char> {
+    fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
         let mut exact = false;
         let mut ambig = false;
         let mut indfound: usize = 0;
@@ -484,7 +484,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         if let Some(pfound) = pfound {
-            return Some(self.update_long_opt(&pfound, nameend, longind, indfound));
+            return Some(self.update_long_opt(&pfound, nameend, longopt_index, indfound));
         }
 
         // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
@@ -543,7 +543,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     /// long-named option has been found by the most recent call.
     ///
     /// If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
-    fn wgetopt_inner(&mut self, longind: &mut usize) -> Option<char> {
+    fn wgetopt_inner(&mut self, longopt_index: &mut usize) -> Option<char> {
         if !self.initialized {
             self.initialize();
         }
@@ -578,7 +578,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
-                let retval = self.handle_long_opt(longind);
+                let retval = self.handle_long_opt(longopt_index);
                 if retval.is_some() {
                     return retval;
                 }

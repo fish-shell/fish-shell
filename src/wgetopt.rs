@@ -181,11 +181,11 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     pub fn wgetopt_long(&mut self) -> Option<char> {
         assert!(self.woptind <= self.argv.len(), "woptind is out of range");
         let mut ignored = 0;
-        return self.wgetopt_inner(&mut ignored, false);
+        self.wgetopt_inner(&mut ignored, false)
     }
 
     pub fn wgetopt_long_idx(&mut self, opt_index: &mut usize) -> Option<char> {
-        return self.wgetopt_inner(opt_index, false);
+        self.wgetopt_inner(opt_index, false)
     }
 
     /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
@@ -332,7 +332,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             1
         };
         self.nextchar = self.argv[self.woptind][skip..].into();
-        return Some(char::from(0));
+        Some(char::from(0))
     }
 
     /// Check for a matching short opt.
@@ -396,7 +396,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             self.nextchar = empty_wstr();
         }
 
-        return c;
+        c
     }
 
     fn update_long_opt(
@@ -467,7 +467,8 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 }
             }
         }
-        return pfound;
+
+        pfound
     }
 
     /// Check for a matching long opt.
@@ -511,7 +512,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             return true;
         }
 
-        return false;
+        false
     }
 
     /// Scan elements of ARGV (whose length is ARGC) for option characters given in OPTSTRING.
@@ -598,6 +599,6 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             }
         }
 
-        return Some(self.handle_short_opt());
+        Some(self.handle_short_opt())
     }
 }

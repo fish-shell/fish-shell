@@ -196,34 +196,34 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     /// `first_nonopt` and `last_nonopt` are relocated so that they describe the new indices of the
     /// non-options in ARGV after they are moved.
     fn exchange(&mut self) {
-        let mut bottom = self.first_nonopt;
+        let mut left = self.first_nonopt;
         let middle = self.last_nonopt;
-        let mut top = self.woptind;
+        let mut right = self.woptind;
 
         // Exchange the shorter segment with the far end of the longer segment. That puts the shorter
         // segment into the right place. It leaves the longer segment in the right place overall, but it
         // consists of two parts that need to be swapped next.
-        while top > middle && middle > bottom {
-            if top - middle > middle - bottom {
+        while right > middle && middle > left {
+            if right - middle > middle - left {
                 // Bottom segment is the short one.
-                let len = middle - bottom;
+                let len = middle - left;
 
                 // Swap it with the top part of the top segment.
                 for i in 0..len {
-                    self.argv.swap(bottom + i, top - (middle - bottom) + i);
+                    self.argv.swap(left + i, right - (middle - left) + i);
                 }
                 // Exclude the moved bottom segment from further swapping.
-                top -= len;
+                right -= len;
             } else {
                 // Top segment is the short one.
-                let len = top - middle;
+                let len = right - middle;
 
                 // Swap it with the bottom part of the bottom segment.
                 for i in 0..len {
-                    self.argv.swap(bottom + i, middle + i);
+                    self.argv.swap(left + i, middle + i);
                 }
                 // Exclude the moved top segment from further swapping.
-                bottom += len;
+                left += len;
             }
         }
 

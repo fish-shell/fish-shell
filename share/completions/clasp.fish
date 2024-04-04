@@ -38,7 +38,7 @@ function __fish_list_advanced_services
 end
 
 function __fish_clasp_list_functions
-    find . -name '*.js' -exec sed -n -E '/^\s*function\s+\w+/ s|^\s*function\s+(\w+).*$|\1|p' {} \;
+    find . -name '*.js' -exec fish --command "cat {} | string replace --regex --filter '^\s*function\s+(\w+).*\$' '\$1'" \;
 end
 
 function __fish_clasp_list_subcommands

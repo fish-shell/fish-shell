@@ -298,6 +298,13 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             } else if self.first_nonopt == self.last_nonopt {
                 self.first_nonopt = self.woptind;
             }
+
+            if self.first_nonopt == self.last_nonopt {
+                self.first_nonopt = self.woptind;
+            } else if self.last_nonopt != self.woptind {
+                self.exchange();
+            }
+
             self.last_nonopt = argc;
             self.woptind = argc;
         }

@@ -436,11 +436,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     fn find_matching_long_opt(
         &self,
         name_end: usize,
-        exact: &mut bool,
-        ambig: &mut bool,
-        index_found: &mut usize,
-    ) -> Option<WOption<'opts>> {
+        mut index_found: usize,
+    ) -> (Option<WOption<'opts>>, bool, bool, usize) {
         let mut opt_found: Option<WOption> = None;
+        let mut exact = false;
+        let mut ambig = false;
 
         // Test all long options for either exact match or abbreviated matches.
         for (opt_i, opt) in self.longopts.iter().enumerate() {
@@ -449,36 +449,32 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 if name_end == opt.name.len() {
                     // The current option is exact match of this long option
                     opt_found = Some(*opt);
-                    *index_found = opt_i;
-                    *exact = true;
+                    index_found = opt_i;
+                    exact = true;
                     break;
                 } else if opt_found.is_none() {
                     // current option is first prefix match but not exact match
                     opt_found = Some(*opt);
-                    *index_found = opt_i;
+                    index_found = opt_i;
                 } else {
                     // current option is second or later prefix match but not exact match
-                    *ambig = true;
+                    ambig = true;
                 }
             }
         }
 
-        opt_found
+        (opt_found, exact, ambig, index_found)
     }
 
     /// Check for a matching long opt.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
-        let mut exact = false;
-        let mut ambig = false;
-        let mut index_found: usize = 0;
         let mut name_end = 0;
 
         while !matches!(self.remaining_text.char_at(name_end), '\0' | '=') {
             name_end += 1;
         }
 
-        let opt_found =
-            self.find_matching_long_opt(name_end, &mut exact, &mut ambig, &mut index_found);
+        let (opt_found, exact, ambig, index_found) = self.find_matching_long_opt(name_end, 0);
 
         if ambig && !exact {
             self.remaining_text = empty_wstr();

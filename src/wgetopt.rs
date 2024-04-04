@@ -591,20 +591,13 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         if !self.longopts.is_empty() && self.woptind < self.argc() {
             let arg = self.argv[self.woptind];
 
-            #[allow(clippy::if_same_then_else)]
-            #[allow(clippy::needless_bool)]
-            let try_long = if arg.char_at(0) == '-' && arg.char_at(1) == '-' {
-                // Like --foo
-                true
-            } else if long_only && arg.len() >= 3 {
-                // Like -fu
-                true
-            } else if !self.shortopts.as_char_slice().contains(&arg.char_at(1)) {
-                // Like -f, but f is not a short arg.
-                true
-            } else {
-                false
-            };
+            let try_long =
+                // matches options like `--foo`
+                arg.char_at(0) == '-' && arg.char_at(1) == '-'
+                // matches options like `-fu`
+                || (long_only && arg.len() >= 3)
+                // matches options like `-f` if `f` is not a valid shortopt.
+                || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
                 let mut retval = '\0';

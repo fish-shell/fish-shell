@@ -37,18 +37,18 @@ fn parse_options(
             's' => opts.no_symlinks = true,
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected retval from wgetopt_long"),
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// An implementation of the external realpath command. Doesn't support any options.

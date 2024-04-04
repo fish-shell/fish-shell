@@ -161,7 +161,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                     parser,
                     streams,
                     L!("set_color"),
-                    argv[w.woptind - 1],
+                    argv[w.wopt_index - 1],
                     true, /* print_hints */
                 );
                 return STATUS_INVALID_ARGS;
@@ -169,8 +169,8 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             _ => unreachable!("unexpected retval from wgeopter_t::wgetopt_long"),
         }
     }
-    // We want to reclaim argv so grab woptind now.
-    let mut woptind = w.woptind;
+    // We want to reclaim argv so grab wopt_index now.
+    let mut wopt_index = w.wopt_index;
 
     let mut bg = RgbColor::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(RgbColor::NONE);
     if bgcolor.is_some() && bg.is_none() {
@@ -189,25 +189,25 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         if bgcolor.is_some() && bg.is_special() {
             bg = RgbColor::from_wstr(L!("")).unwrap_or(RgbColor::NONE);
         }
-        let args = &argv[woptind..argc];
+        let args = &argv[wopt_index..argc];
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
         return STATUS_CMD_OK;
     }
 
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
-    while woptind < argc {
-        let fg = RgbColor::from_wstr(argv[woptind]).unwrap_or(RgbColor::NONE);
+    while wopt_index < argc {
+        let fg = RgbColor::from_wstr(argv[wopt_index]).unwrap_or(RgbColor::NONE);
         if fg.is_none() {
             streams.err.append(wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
                 argv[0],
-                argv[woptind]
+                argv[wopt_index]
             ));
             return STATUS_INVALID_ARGS;
         };
         fgcolors.push(fg);
-        woptind += 1;
+        wopt_index += 1;
     }
 
     // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground

@@ -62,24 +62,30 @@ trait StringSubCommand<'args> {
             match c {
                 ':' => {
                     streams.err.append(L!("string ")); // clone of string_error
-                    builtin_missing_argument(parser, streams, cmd, args_read[w.woptind - 1], false);
+                    builtin_missing_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args_read[w.wopt_index - 1],
+                        false,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    string_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                    string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 c => {
                     let retval = self.parse_opt(cmd, c, w.woptarg);
                     if let Err(e) = retval {
-                        e.print_error(&args_read, parser, streams, w.woptarg, w.woptind);
+                        e.print_error(&args_read, parser, streams, w.woptarg, w.wopt_index);
                         return Err(e.retval());
                     }
                 }
             }
         }
 
-        return Ok(w.woptind);
+        return Ok(w.wopt_index);
     }
 
     /// Take any positional arguments after options have been parsed.

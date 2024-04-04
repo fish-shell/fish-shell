@@ -379,11 +379,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!("unexpected retval from wgetopt_long"),
@@ -409,12 +409,12 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         return STATUS_INVALID_ARGS;
     }
 
-    if w.woptind != argc {
+    if w.wopt_index != argc {
         // Use one left-over arg as the do-complete argument
         // to enable `complete -C "git check"`.
-        if do_complete && do_complete_param.is_none() && argc == w.woptind + 1 {
+        if do_complete && do_complete_param.is_none() && argc == w.wopt_index + 1 {
             do_complete_param = Some(argv[argc - 1].to_owned());
-        } else if !do_complete && cmd_to_complete.is_empty() && argc == w.woptind + 1 {
+        } else if !do_complete && cmd_to_complete.is_empty() && argc == w.wopt_index + 1 {
             // Or use one left-over arg as the command to complete
             cmd_to_complete.push(argv[argc - 1].to_owned());
         } else {

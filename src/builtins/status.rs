@@ -281,18 +281,18 @@ fn parse_cmd_opts(
             }
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!("unexpected retval from wgetopt_long"),
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
 
     return STATUS_CMD_OK;
 }

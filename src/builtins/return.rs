@@ -25,14 +25,14 @@ fn parse_options(
         match c {
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // We would normally invoke builtin_unknown_option() and return an error.
                 // But for this command we want to let it try and parse the value as a negative
                 // return value.
-                return Ok((opts, w.woptind - 1));
+                return Ok((opts, w.wopt_index - 1));
             }
             _ => {
                 panic!("unexpected retval from wgetopt_long");
@@ -40,7 +40,7 @@ fn parse_options(
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Function for handling the return builtin.

@@ -237,11 +237,11 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -267,7 +267,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     let what: c_uint = opts.what.try_into().unwrap();
 
     let argc = w.argv.len();
-    let arg_count = argc - w.woptind;
+    let arg_count = argc - w.wopt_index;
     if arg_count == 0 {
         print(what, opts.hard, streams);
         return STATUS_CMD_OK;
@@ -288,32 +288,32 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         soft = true;
     }
 
-    let new_limit: rlim_t = if w.woptind == argc {
+    let new_limit: rlim_t = if w.wopt_index == argc {
         streams.err.append(wgettext_fmt!(
             "%ls: New limit cannot be an empty string\n",
             cmd
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
-    } else if wcscasecmp(w.argv[w.woptind], L!("unlimited")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
         RLIM_INFINITY
-    } else if wcscasecmp(w.argv[w.woptind], L!("hard")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("hard")) == Ordering::Equal {
         match get(what, true) {
             Some(limit) => limit,
             None => return STATUS_CMD_ERROR,
         }
-    } else if wcscasecmp(w.argv[w.woptind], L!("soft")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("soft")) == Ordering::Equal {
         match get(what, soft) {
             Some(limit) => limit,
             None => return STATUS_CMD_ERROR,
         }
-    } else if let Ok(limit) = fish_wcstol(w.argv[w.woptind]) {
+    } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         limit as rlim_t * get_multiplier(what)
     } else {
         streams.err.append(wgettext_fmt!(
             "%ls: Invalid limit '%ls'\n",
             cmd,
-            w.argv[w.woptind]
+            w.argv[w.wopt_index]
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;

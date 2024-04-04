@@ -281,18 +281,18 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!(),
         }
     }
 
-    let positional_args = w.argv.len() - w.woptind;
+    let positional_args = w.argv.len() - w.wopt_index;
 
     let ld = parser.libdata();
 
@@ -320,7 +320,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         }
 
         type rl = ReadlineCmd;
-        for arg in &w.argv[w.woptind..] {
+        for arg in &w.argv[w.wopt_index..] {
             let Some(cmd) = input_function_get_code(arg) else {
                 streams
                     .err
@@ -528,7 +528,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if cursor_mode {
         if positional_args != 0 {
-            let arg = w.argv[w.woptind];
+            let arg = w.argv[w.wopt_index];
             let new_pos = match fish_wcstol(arg) {
                 Err(_) => {
                     streams
@@ -566,14 +566,14 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if positional_args == 1 {
         replace_part(
             range,
-            args[w.woptind],
+            args[w.wopt_index],
             append_mode,
             current_buffer,
             current_cursor_pos,
             search_field_mode,
         );
     } else {
-        let sb = join_strings(&w.argv[w.woptind..], '\n');
+        let sb = join_strings(&w.argv[w.wopt_index..], '\n');
         replace_part(
             range,
             &sb,

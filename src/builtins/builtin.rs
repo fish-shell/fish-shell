@@ -29,11 +29,11 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -60,7 +60,7 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     if opts.query {
-        let optind = w.woptind;
+        let optind = w.wopt_index;
         for arg in argv.iter().take(argc).skip(optind) {
             if builtin_exists(arg) {
                 return STATUS_CMD_OK;

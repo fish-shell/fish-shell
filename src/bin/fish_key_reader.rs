@@ -205,7 +205,7 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
                     wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         "fish_key_reader",
-                        w.argv[w.woptind - 1]
+                        w.argv[w.wopt_index - 1]
                     )
                 );
                 return ControlFlow::Break(1);
@@ -214,7 +214,7 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
         }
     }
 
-    let argc = args.len() - w.woptind;
+    let argc = args.len() - w.wopt_index;
     if argc != 0 {
         eprintf!("Expected no arguments, got %d\n", argc);
         return ControlFlow::Break(1);

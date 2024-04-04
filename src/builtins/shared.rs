@@ -664,13 +664,19 @@ impl HelpOnlyCmdOpts {
                         parser,
                         streams,
                         cmd,
-                        args[w.woptind - 1],
+                        args[w.wopt_index - 1],
                         print_hints,
                     );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                    builtin_unknown_option(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
@@ -681,7 +687,7 @@ impl HelpOnlyCmdOpts {
 
         Ok(HelpOnlyCmdOpts {
             print_help,
-            optind: w.woptind,
+            optind: w.wopt_index,
         })
     }
 }

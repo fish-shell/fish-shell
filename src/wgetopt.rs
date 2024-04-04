@@ -45,7 +45,7 @@ use crate::wchar::prelude::*;
 ///
 /// The special argument `--` forces an end of option-scanning regardless of the value of
 /// `ordering`.  In the case of RETURN_IN_ORDER, only `--` can cause `getopt` to return EOF with
-/// `woptind` != ARGC.
+/// `wopt_index` != ARGC.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum Ordering {
     RequireOrder,
@@ -87,10 +87,10 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     /// When `getopt` returns EOF, this is the index of the first of the non-option elements that the
     /// caller should itself scan.
     ///
-    /// Otherwise, `woptind` communicates from one call to the next how much of ARGV has been scanned
+    /// Otherwise, `wopt_index` communicates from one call to the next how much of ARGV has been scanned
     /// so far.
     // XXX 1003.2 says this must be 1 before any call.
-    pub woptind: usize,
+    pub wopt_index: usize,
 
     /// Set to an option character which was unrecognized.
     unrecognized_opt: char,
@@ -166,12 +166,15 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             nextchar: Default::default(),
             ordering: Ordering::Permute,
             woptarg: None,
-            woptind: 0,
+            wopt_index: 0,
         };
     }
 
     pub fn wgetopt_long(&mut self) -> Option<char> {
-        assert!(self.woptind <= self.argv.len(), "woptind is out of range");
+        assert!(
+            self.wopt_index <= self.argv.len(),
+            "wopt_index is out of range"
+        );
         let mut ignored = 0;
         self.wgetopt_inner(&mut ignored)
     }
@@ -182,7 +185,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
     /// [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
-    /// other is elements [last_nonopt,woptind), which contains all the options processed since those
+    /// other is elements [last_nonopt,wopt_index), which contains all the options processed since those
     /// non-options were skipped.
     ///
     /// `first_nonopt` and `last_nonopt` are relocated so that they describe the new indices of the
@@ -190,7 +193,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     fn exchange(&mut self) {
         let mut left = self.first_nonopt;
         let middle = self.last_nonopt;
-        let mut right = self.woptind;
+        let mut right = self.wopt_index;
 
         // Exchange the shorter segment with the far end of the longer segment. That puts the shorter
         // segment into the right place. It leaves the longer segment in the right place overall, but it
@@ -220,8 +223,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         // Update records for the slots the non-options now occupy.
-        self.first_nonopt += self.woptind - self.last_nonopt;
-        self.last_nonopt = self.woptind;
+        self.first_nonopt += self.wopt_index - self.last_nonopt;
+        self.last_nonopt = self.wopt_index;
     }
 
     /// Initialize the internal data when the first call is made.
@@ -230,7 +233,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // sequence of previously skipped non-option ARGV-elements is empty.
         self.first_nonopt = 1;
         self.last_nonopt = 1;
-        self.woptind = 1;
+        self.wopt_index = 1;
         self.nextchar = empty_wstr();
 
         let mut optstring = self.shortopts;
@@ -263,74 +266,75 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.ordering == Ordering::Permute {
             // If we have just processed some options following some non-options, exchange them so
             // that the options come first.
-            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.woptind {
+            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.wopt_index {
                 self.exchange();
-            } else if self.last_nonopt != self.woptind {
-                self.first_nonopt = self.woptind;
+            } else if self.last_nonopt != self.wopt_index {
+                self.first_nonopt = self.wopt_index;
             }
 
             // Skip any additional non-options and extend the range of non-options previously
             // skipped.
-            while self.woptind < argc
-                && (self.argv[self.woptind].char_at(0) != '-' || self.argv[self.woptind].len() == 1)
+            while self.wopt_index < argc
+                && (self.argv[self.wopt_index].char_at(0) != '-'
+                    || self.argv[self.wopt_index].len() == 1)
             {
-                self.woptind += 1;
+                self.wopt_index += 1;
             }
-            self.last_nonopt = self.woptind;
+            self.last_nonopt = self.wopt_index;
         }
 
         // The special ARGV-element `--' means premature end of options. Skip it like a null option,
         // then exchange with previous non-options as if it were an option, then skip everything
         // else like a non-option.
-        if self.woptind != argc && self.argv[self.woptind] == "--" {
-            self.woptind += 1;
+        if self.wopt_index != argc && self.argv[self.wopt_index] == "--" {
+            self.wopt_index += 1;
 
-            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.woptind {
+            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.wopt_index {
                 self.exchange();
             } else if self.first_nonopt == self.last_nonopt {
-                self.first_nonopt = self.woptind;
+                self.first_nonopt = self.wopt_index;
             }
 
             if self.first_nonopt == self.last_nonopt {
-                self.first_nonopt = self.woptind;
-            } else if self.last_nonopt != self.woptind {
+                self.first_nonopt = self.wopt_index;
+            } else if self.last_nonopt != self.wopt_index {
                 self.exchange();
             }
 
             self.last_nonopt = argc;
-            self.woptind = argc;
+            self.wopt_index = argc;
         }
 
         // If we have done all the ARGV-elements, stop the scan and back over any non-options that
         // we skipped and permuted.
 
-        if self.woptind == argc {
+        if self.wopt_index == argc {
             // Set the next-arg-index to point at the non-options that we previously skipped, so the
             // caller will digest them.
             if self.first_nonopt != self.last_nonopt {
-                self.woptind = self.first_nonopt;
+                self.wopt_index = self.first_nonopt;
             }
             return None;
         }
 
         // If we have come to a non-option and did not permute it, either stop the scan or describe
         // it to the caller and pass it by.
-        if self.argv[self.woptind].char_at(0) != '-' || self.argv[self.woptind].len() == 1 {
+        if self.argv[self.wopt_index].char_at(0) != '-' || self.argv[self.wopt_index].len() == 1 {
             if self.ordering == Ordering::RequireOrder {
                 return None;
             }
-            self.woptarg = Some(self.argv[self.woptind]);
-            self.woptind += 1;
+            self.woptarg = Some(self.argv[self.wopt_index]);
+            self.wopt_index += 1;
             return Some(NON_OPTION_CHAR);
         }
 
         // We have found another option-ARGV-element. Skip the initial punctuation.
-        let skip = if !self.longopts.is_empty() && self.argv[self.woptind].char_at(1) == '-' {
+        let skip = if !self.longopts.is_empty() && self.argv[self.wopt_index].char_at(1) == '-' {
             2
         } else {
             1
         };
-        self.nextchar = self.argv[self.woptind][skip..].into();
+        self.nextchar = self.argv[self.wopt_index][skip..].into();
         Some(char::from(0))
     }
 
@@ -345,16 +349,16 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             None => L!(""),
         };
 
-        // Increment `woptind' when we start to process its last character.
+        // Increment `wopt_index' when we start to process its last character.
         if self.nextchar.is_empty() {
-            self.woptind += 1;
+            self.wopt_index += 1;
         }
 
         if temp.is_empty() || c == ':' {
             self.unrecognized_opt = c;
 
             if !self.nextchar.is_empty() {
-                self.woptind += 1;
+                self.wopt_index += 1;
             }
             return '?';
         }
@@ -367,7 +371,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             // This is an option that accepts an argument optionally.
             if !self.nextchar.is_empty() {
                 self.woptarg = Some(self.nextchar);
-                self.woptind += 1;
+                self.wopt_index += 1;
             } else {
                 self.woptarg = None;
             }
@@ -378,8 +382,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.woptarg = Some(self.nextchar);
                 // If we end this ARGV-element by taking the rest as an arg, we must advance to
                 // the next element now.
-                self.woptind += 1;
-            } else if self.woptind == self.argv.len() {
+                self.wopt_index += 1;
+            } else if self.wopt_index == self.argv.len() {
                 self.unrecognized_opt = c;
                 c = if self.missing_arg_return_colon {
                     ':'
@@ -387,10 +391,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                     '?'
                 };
             } else {
-                // We already incremented `woptind' once; increment it again when taking next
+                // We already incremented `wopt_index' once; increment it again when taking next
                 // ARGV-elt as argument.
-                self.woptarg = Some(self.argv[self.woptind]);
-                self.woptind += 1;
+                self.woptarg = Some(self.argv[self.wopt_index]);
+                self.wopt_index += 1;
             }
             self.nextchar = empty_wstr();
         }
@@ -405,7 +409,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         longind: &mut usize,
         option_index: usize,
     ) -> char {
-        self.woptind += 1;
+        self.wopt_index += 1;
         assert!(self.nextchar.char_at(nameend) == '\0' || self.nextchar.char_at(nameend) == '=');
         if self.nextchar.char_at(nameend) == '=' {
             if pfound.has_arg != ArgType::NoArgument {
@@ -415,9 +419,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 return '?';
             }
         } else if pfound.has_arg == ArgType::RequiredArgument {
-            if self.woptind < self.argv.len() {
-                self.woptarg = Some(self.argv[self.woptind]);
-                self.woptind += 1;
+            if self.wopt_index < self.argv.len() {
+                self.woptarg = Some(self.argv[self.wopt_index]);
+                self.wopt_index += 1;
             } else {
                 self.nextchar = empty_wstr();
                 return if self.missing_arg_return_colon {
@@ -482,7 +486,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         if ambig && !exact {
             self.nextchar = empty_wstr();
-            self.woptind += 1;
+            self.wopt_index += 1;
             return Some('?');
         }
 
@@ -493,14 +497,14 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
         // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
         // short option.
-        if self.argv[self.woptind].char_at(1) == '-'
+        if self.argv[self.wopt_index].char_at(1) == '-'
             || !self
                 .shortopts
                 .as_char_slice()
                 .contains(&self.nextchar.char_at(0))
         {
             self.nextchar = empty_wstr();
-            self.woptind += 1;
+            self.wopt_index += 1;
             return Some('?');
         }
 
@@ -514,11 +518,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     /// `getopt` is called repeatedly, it returns successively each of the option characters from each of
     /// the option elements.
     ///
-    /// If `getopt` finds another option character, it returns that character, updating `woptind` and
+    /// If `getopt` finds another option character, it returns that character, updating `wopt_index` and
     /// `nextchar` so that the next call to `getopt` can resume the scan with the following option
     /// character or ARGV-element.
     ///
-    /// If there are no more option characters, `getopt` returns `EOF`. Then `woptind` is the index in
+    /// If there are no more option characters, `getopt` returns `EOF`. Then `wopt_index` is the index in
     /// ARGV of the first ARGV-element that is not an option.  (The ARGV-elements have been permuted so
     /// that those that are not options now come last.)
     ///
@@ -572,8 +576,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // "u".
         //
         // This distinction seems to be the most useful approach.
-        if !self.longopts.is_empty() && self.woptind < self.argv.len() {
-            let arg = self.argv[self.woptind];
+        if !self.longopts.is_empty() && self.wopt_index < self.argv.len() {
+            let arg = self.argv[self.wopt_index];
 
             let try_long =
                 // matches options like `--foo`

@@ -168,11 +168,11 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!("unexpected retval from wgetopt_long"),
@@ -190,8 +190,8 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         return STATUS_CMD_ERROR;
     }
 
-    if w.woptind < argc {
-        for arg in &w.argv[w.woptind..] {
+    if w.wopt_index < argc {
+        for arg in &w.argv[w.wopt_index..] {
             let j;
             if arg.char_at(0) == '%' {
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {

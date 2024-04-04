@@ -415,21 +415,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             '?' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             _ => panic!("unexpected retval from WGetopter"),
         }
     }
-    let optind = w.woptind;
+    let optind = w.wopt_index;
 
     // If our command name begins with a dash that implies we're a login shell.
     opts.is_login |= args[0].char_at(0) == '-';

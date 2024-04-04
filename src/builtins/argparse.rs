@@ -528,13 +528,13 @@ fn parse_cmd_opts<'args>(
                     parser,
                     streams,
                     cmd,
-                    args[w.woptind - 1],
+                    args[w.wopt_index - 1],
                     /* print_hints */ false,
                 );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!("unexpected retval from wgetopt_long"),
@@ -545,11 +545,11 @@ fn parse_cmd_opts<'args>(
         return STATUS_CMD_OK;
     }
 
-    if "--" == args_read[w.woptind - 1] {
-        w.woptind -= 1;
+    if "--" == args_read[w.wopt_index - 1] {
+        w.wopt_index -= 1;
     }
 
-    if argc == w.woptind {
+    if argc == w.wopt_index {
         // The user didn't specify any option specs.
         streams
             .err
@@ -565,7 +565,7 @@ fn parse_cmd_opts<'args>(
             .unwrap_or_else(|| L!("argparse").to_owned());
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     return collect_option_specs(opts, optind, argc, args, streams);
 }
 
@@ -763,14 +763,14 @@ fn argparse_parse_flags<'args>(
                     parser,
                     streams,
                     &opts.name,
-                    args_read[w.woptind - 1],
+                    args_read[w.wopt_index - 1],
                     false,
                 );
                 STATUS_INVALID_ARGS
             }
             '?' => {
                 // It's not a recognized flag. See if it's an implicit int flag.
-                let arg_contents = &args_read[w.woptind - 1].slice_from(1);
+                let arg_contents = &args_read[w.wopt_index - 1].slice_from(1);
 
                 if is_implicit_int(opts, arg_contents) {
                     validate_and_store_implicit_int(
@@ -785,16 +785,16 @@ fn argparse_parse_flags<'args>(
                     streams.err.append(wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
-                        args_read[w.woptind - 1]
+                        args_read[w.wopt_index - 1]
                     ));
                     STATUS_INVALID_ARGS
                 } else {
                     // Any unrecognized option is put back if ignore_unknown is used.
                     // This allows reusing the same argv in multiple argparse calls,
                     // or just ignoring the error (e.g. in completions).
-                    opts.args.push(args_read[w.woptind - 1]);
+                    opts.args.push(args_read[w.wopt_index - 1]);
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
-                    if w.woptind == argc {
+                    if w.wopt_index == argc {
                         break;
                     }
                     // Explain to wgetopt that we want to skip to the next arg,
@@ -809,7 +809,7 @@ fn argparse_parse_flags<'args>(
                 // otherwise we'd get ignored options first and normal arguments later.
                 // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w
                 // tango`.
-                opts.args.push(args_read[w.woptind - 1]);
+                opts.args.push(args_read[w.wopt_index - 1]);
                 continue;
             }
             // It's a recognized flag.
@@ -828,7 +828,7 @@ fn argparse_parse_flags<'args>(
         long_idx = usize::MAX;
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     return STATUS_CMD_OK;
 }
 

@@ -25,11 +25,11 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -41,8 +41,8 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let mut start = 0;
     let mut end = 32767;
     let mut step = 1;
-    let arg_count = argc - w.woptind;
-    let i = w.woptind;
+    let arg_count = argc - w.wopt_index;
+    let i = w.wopt_index;
     if arg_count >= 1 && argv[i] == "choice" {
         if arg_count == 1 {
             streams

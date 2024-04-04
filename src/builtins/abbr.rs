@@ -538,7 +538,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 streams.err.append(wgettext_fmt!(
                     "%ls: Warning: Option '%ls' was removed and is now ignored",
                     cmd,
-                    argv_read[w.woptind - 1]
+                    argv_read[w.wopt_index - 1]
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
@@ -547,11 +547,11 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -560,7 +560,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
     }
 
-    for arg in argv_read[w.woptind..].iter() {
+    for arg in argv_read[w.wopt_index..].iter() {
         opts.args.push((*arg).into());
     }
 

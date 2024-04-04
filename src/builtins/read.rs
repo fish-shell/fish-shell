@@ -183,11 +183,11 @@ fn parse_cmd_opts(
                 opts.split_null = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
@@ -196,7 +196,7 @@ fn parse_cmd_opts(
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and

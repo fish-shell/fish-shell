@@ -86,13 +86,13 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], print_hints);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // For most commands this is an error. We ignore it because a math expression
                 // can begin with a minus sign.
-                return Ok((opts, w.woptind - 1));
+                return Ok((opts, w.wopt_index - 1));
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -110,7 +110,7 @@ fn parse_cmd_opts(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Return a formatted version of the value `v` respecting the given `opts`.

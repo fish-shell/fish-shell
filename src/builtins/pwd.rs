@@ -26,14 +26,14 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
                 return STATUS_CMD_OK;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!("unexpected retval from wgetopt_long"),
         }
     }
 
-    if w.woptind != argc {
+    if w.wopt_index != argc {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));

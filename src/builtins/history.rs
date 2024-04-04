@@ -202,15 +202,15 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
                 // Try to parse it as a number; e.g., "-123".
-                match fish_wcstol(&w.argv[w.woptind - 1][1..]) {
+                match fish_wcstol(&w.argv[w.wopt_index - 1][1..]) {
                     Ok(x) => opts.max_items = Some(x as _), // todo!("historical behavior is to cast")
                     Err(_) => {
-                        builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                        builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                         return STATUS_INVALID_ARGS;
                     }
                 }
@@ -222,7 +222,7 @@ fn parse_cmd_opts(
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     STATUS_CMD_OK
 }
 

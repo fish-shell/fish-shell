@@ -845,7 +845,7 @@ fn throwing_main() -> i32 {
         }
     }
 
-    let args = &w.argv[w.woptind..];
+    let args = &w.argv[w.wopt_index..];
 
     // Direct any debug output right away.
     if let Some(debug_output) = debug_output {

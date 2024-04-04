@@ -155,12 +155,12 @@ impl Options {
                     opts.preserve_failure_exit_status = false;
                 }
                 ':' => {
-                    builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                    builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     // Specifically detect `set -o` because people might be bringing over bashisms.
-                    let optind = w.woptind;
+                    let optind = w.wopt_index;
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
                         // TODO: translate this
@@ -189,7 +189,7 @@ impl Options {
             }
         }
 
-        let optind = w.woptind;
+        let optind = w.wopt_index;
 
         if opts.print_help {
             builtin_print_help(parser, streams, cmd);

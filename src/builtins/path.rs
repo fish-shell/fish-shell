@@ -235,11 +235,11 @@ fn parse_opts<'args>(
         match c {
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error
-                builtin_missing_argument(parser, streams, cmd, args_read[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args_read[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                 return STATUS_INVALID_ARGS;
             }
             'q' => {
@@ -330,13 +330,13 @@ fn parse_opts<'args>(
                 continue;
             }
             _ => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                 return STATUS_INVALID_ARGS;
             }
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
 
     if n_req_args != 0 {
         assert!(n_req_args == 1);

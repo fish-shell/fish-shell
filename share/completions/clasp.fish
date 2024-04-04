@@ -38,8 +38,7 @@ function __fish_list_advanced_services
 end
 
 function __fish_clasp_list_functions
-    grep --extended-regexp '^\\s*function\\s+\\w+' --recursive --include '*.js' --no-filename --color=never . |
-        string replace --regex '\\s*function\\s+(\\w+).*' '$1'
+    find . -name '*.js' -exec sed -n -E '/^\s*function\s+\w+/ s|^\s*function\s+(\w+).*$|\1|p' {} \;
 end
 
 function __fish_clasp_list_subcommands

@@ -1,16 +1,3 @@
-function __funced_md5
-    if type -q md5sum
-        # GNU systems
-        echo (md5sum $argv[1] | string split ' ')[1]
-        return 0
-    else if type -q md5
-        # BSD systems
-        md5 -q $argv[1]
-        return 0
-    end
-    return 1
-end
-
 function funced --description 'Edit function definition'
     set -l options h/help 'e/editor=' i/interactive s/save
     argparse -n funced --max-args=1 $options -- $argv
@@ -103,7 +90,7 @@ function funced --description 'Edit function definition'
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
     while true
-        set -l checksum (__funced_md5 "$tmpname")
+        set -l checksum (__fish_md5 "$tmpname")
 
         if not $editor_cmd $tmpname
             echo (_ "Editing failed or was cancelled")
@@ -111,7 +98,7 @@ function funced --description 'Edit function definition'
             # Verify the checksum (if present) to detect potential problems
             # with the editor command
             if set -q checksum[1]
-                set -l new_checksum (__funced_md5 "$tmpname")
+                set -l new_checksum (__fish_md5 "$tmpname")
                 if test "$new_checksum" = "$checksum"
                     echo (_ "Editor exited but the function was not modified")
                     echo (_ "If the editor is still running, check if it waits for completion, maybe a '--wait' option?")

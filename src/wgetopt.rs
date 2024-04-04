@@ -406,8 +406,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         nameend: usize,
         longind: &mut usize,
         option_index: usize,
-        retval: &mut char,
-    ) {
+    ) -> char {
         self.woptind += 1;
         assert!(self.nextchar.char_at(nameend) == '\0' || self.nextchar.char_at(nameend) == '=');
         if self.nextchar.char_at(nameend) == '=' {
@@ -415,8 +414,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 self.woptarg = Some(self.nextchar[(nameend + 1)..].into());
             } else {
                 self.nextchar = empty_wstr();
-                *retval = '?';
-                return;
+                return '?';
             }
         } else if pfound.has_arg == woption_argument_t::required_argument {
             if self.woptind < self.argv.len() {
@@ -424,18 +422,17 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 self.woptind += 1;
             } else {
                 self.nextchar = empty_wstr();
-                *retval = if self.missing_arg_return_colon {
+                return if self.missing_arg_return_colon {
                     ':'
                 } else {
                     '?'
                 };
-                return;
             }
         }
 
         self.nextchar = empty_wstr();
         *longind = option_index;
-        *retval = pfound.val;
+        pfound.val
     }
 
     /// Find a matching long opt.
@@ -473,7 +470,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     }
 
     /// Check for a matching long opt.
-    fn handle_long_opt(&mut self, longind: &mut usize, retval: &mut char) -> bool {
+    fn handle_long_opt(&mut self, longind: &mut usize) -> Option<char> {
         let mut exact = false;
         let mut ambig = false;
         let mut indfound: usize = 0;
@@ -488,13 +485,11 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         if ambig && !exact {
             self.nextchar = empty_wstr();
             self.woptind += 1;
-            *retval = '?';
-            return true;
+            return Some('?');
         }
 
         if let Some(pfound) = pfound {
-            self.update_long_opt(&pfound, nameend, longind, indfound, retval);
-            return true;
+            return Some(self.update_long_opt(&pfound, nameend, longind, indfound));
         }
 
         // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
@@ -508,11 +503,10 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         {
             self.nextchar = empty_wstr();
             self.woptind += 1;
-            *retval = '?';
-            return true;
+            return Some('?');
         }
 
-        false
+        None
     }
 
     /// Scan elements of ARGV (whose length is ARGC) for option characters given in OPTSTRING.
@@ -590,8 +584,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
                 || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
-                let mut retval = '\0';
-                if self.handle_long_opt(longind, &mut retval) {
+                if let Some(retval) = self.handle_long_opt(longind) {
                     return Some(retval);
                 }
             }

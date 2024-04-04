@@ -578,8 +578,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 || !self.shortopts.as_char_slice().contains(&arg.char_at(1));
 
             if try_long {
-                if let Some(retval) = self.handle_long_opt(longind) {
-                    return Some(retval);
+                let retval = self.handle_long_opt(longind);
+                if retval.is_some() {
+                    return retval;
                 }
             }
         }

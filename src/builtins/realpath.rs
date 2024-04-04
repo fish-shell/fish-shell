@@ -30,7 +30,7 @@ fn parse_options(
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let mut w = WGetopter::new(short_options, long_options, args);
 
     while let Some(c) = w.wgetopt_long() {
         match c {

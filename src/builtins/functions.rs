@@ -75,7 +75,7 @@ fn parse_cmd_opts<'args>(
 ) -> Option<c_int> {
     let cmd = L!("functions");
     let print_hints = false;
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.wgetopt_long() {
         match opt {
             'v' => opts.verbose = true,

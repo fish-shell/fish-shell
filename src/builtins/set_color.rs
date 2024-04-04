@@ -134,7 +134,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut reverse = false;
     let mut print = false;
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'b' => {

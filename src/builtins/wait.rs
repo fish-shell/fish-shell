@@ -139,7 +139,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         wopt(L!("help"), woption_argument_t::no_argument, 'h'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
+    let mut w = WGetopter::new(shortopts, longopts, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'n' => {

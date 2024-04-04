@@ -205,7 +205,7 @@ fn parse_cmd_opts(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'L' => {

@@ -456,7 +456,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     ];
 
     let mut opts = Options::default();
-    let mut w = wgetopter_t::new(short_options, longopts, argv);
+    let mut w = WGetopter::new(short_options, longopts, argv);
 
     while let Some(c) = w.wgetopt_long() {
         match c {

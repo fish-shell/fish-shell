@@ -96,7 +96,7 @@ fn parse_cmd_opts(
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
     let mut opts = Options::new();
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(opt) = w.wgetopt_long() {
         match opt {
             'a' => {

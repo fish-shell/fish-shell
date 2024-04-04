@@ -22,7 +22,7 @@ fn parse_options(
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'h' => opts.print_help = true,

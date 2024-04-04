@@ -44,7 +44,7 @@ use fish::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMME
 use fish::topic_monitor::topic_monitor_init;
 use fish::wchar::prelude::*;
 use fish::wcstringutil::count_preceding_backslashes;
-use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use fish::wgetopt::{WGetopter, wopt, woption, woption_argument_t};
 use fish::wutil::perror;
 use fish::wutil::{fish_iswalnum, write_to_fd};
 use fish::{
@@ -808,7 +808,7 @@ fn throwing_main() -> i32 {
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(short_opts, long_opts, &mut shim_args);
+    let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
 
     while let Some(c) = w.wgetopt_long() {
         match c {

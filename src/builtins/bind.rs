@@ -448,7 +448,7 @@ fn parse_cmd_opts(
         wopt(L!("user"), no_argument, 'u'),
     ];
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'a' => opts.all = true,

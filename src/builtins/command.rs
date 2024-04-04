@@ -23,7 +23,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         wopt(L!("search"), woption_argument_t::no_argument, 's'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
+    let mut w = WGetopter::new(shortopts, longopts, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'a' => opts.all = true,

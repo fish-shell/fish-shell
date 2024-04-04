@@ -236,7 +236,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("is-valid"), woption_argument_t::no_argument, '\x01'),
     ];
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let mut w = WGetopter::new(short_options, long_options, args);
     let cmd = w.argv[0];
     while let Some(c) = w.wgetopt_long() {
         match c {

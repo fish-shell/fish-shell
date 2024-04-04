@@ -61,7 +61,7 @@ fn empty_wstr() -> &'static wstr {
     Default::default()
 }
 
-pub struct wgetopter_t<'opts, 'args, 'argarray> {
+pub struct WGetopter<'opts, 'args, 'argarray> {
     /// Argv.
     pub argv: &'argarray mut [&'args wstr],
 
@@ -150,13 +150,13 @@ pub const fn wopt(name: &wstr, has_arg: woption_argument_t, val: char) -> woptio
     woption { name, has_arg, val }
 }
 
-impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
+impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     pub fn new(
         shortopts: &'opts wstr,
         longopts: &'opts [woption],
         argv: &'argarray mut [&'args wstr],
     ) -> Self {
-        return wgetopter_t {
+        return Self {
             woptopt: '?',
             argv,
             shortopts,

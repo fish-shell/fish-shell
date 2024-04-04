@@ -30,7 +30,7 @@ use fish::{
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t},
+    wgetopt::{WGetopter, wopt, woption, woption_argument_t},
 };
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -177,7 +177,7 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(short_opts, long_opts, &mut shim_args);
+    let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
     while let Some(opt) = w.wgetopt_long() {
         match opt {
             'c' => {

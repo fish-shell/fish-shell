@@ -286,7 +286,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
     let mut have_x = false;
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(opt) = w.wgetopt_long() {
         match opt {
             'x' => {

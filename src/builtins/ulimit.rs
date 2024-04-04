@@ -221,7 +221,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
 
     while let Some(c) = w.wgetopt_long() {
         match c {

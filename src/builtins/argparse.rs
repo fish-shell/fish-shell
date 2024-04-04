@@ -485,7 +485,7 @@ fn parse_cmd_opts<'args>(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'n' => opts.name = w.woptarg.unwrap().to_owned(),
@@ -668,7 +668,7 @@ fn validate_and_store_implicit_int<'args>(
     parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     val: &'args wstr,
-    w: &mut wgetopter_t,
+    w: &mut WGetopter,
     is_long_flag: bool,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
@@ -755,7 +755,7 @@ fn argparse_parse_flags<'args>(
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
     let mut long_idx: usize = usize::MAX;
-    let mut w = wgetopter_t::new(&short_options, &long_options, args);
+    let mut w = WGetopter::new(&short_options, &long_options, args);
     while let Some(opt) = w.wgetopt_long_idx(&mut long_idx) {
         let retval = match opt {
             ':' => {

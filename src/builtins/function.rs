@@ -79,7 +79,7 @@ fn parse_cmd_opts(
     let cmd = L!("function");
     let print_hints = false;
     let mut handling_named_arguments = false;
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.wgetopt_long() {
         // NONOPTION_CHAR_CODE is returned when we reach a non-permuted non-option.
         if opt != 'a' && opt != NONOPTION_CHAR_CODE {

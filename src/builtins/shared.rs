@@ -653,7 +653,7 @@ impl HelpOnlyCmdOpts {
         const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
 
         let mut print_help = false;
-        let mut w = wgetopter_t::new(shortopts, longopts, args);
+        let mut w = WGetopter::new(shortopts, longopts, args);
         while let Some(c) = w.wgetopt_long() {
             match c {
                 'h' => {

@@ -35,7 +35,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
         wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
+    let mut w = WGetopter::new(shortopts, longopts, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'a' => opts.all = true,

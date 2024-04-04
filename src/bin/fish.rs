@@ -313,7 +313,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
+    use fish::wgetopt::{WGetopter, wopt, woption, woption_argument_t::*};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
@@ -349,7 +349,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     ];
 
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'c' => opts
@@ -430,7 +430,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 );
                 return ControlFlow::Break(1);
             }
-            _ => panic!("unexpected retval from wgetopter_t"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
     let optind = w.woptind;

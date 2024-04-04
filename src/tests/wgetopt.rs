@@ -1,6 +1,6 @@
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wgetopt::{WGetopter, wopt, woption, woption_argument_t};
 
 #[test]
 fn test_wgetopt() {
@@ -14,7 +14,7 @@ fn test_wgetopt() {
         L!("emacs"),
         L!("-nw"),
     ];
-    let mut w = wgetopter_t::new(short_options, long_options, &mut argv);
+    let mut w = WGetopter::new(short_options, long_options, &mut argv);
     let mut a_count = 0;
     let mut arguments = vec![];
     while let Some(opt) = w.wgetopt_long() {

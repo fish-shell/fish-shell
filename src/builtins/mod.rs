@@ -55,7 +55,7 @@ mod prelude {
         parser::Parser,
         wchar::prelude::*,
         wgetopt::{
-            wgetopter_t, wopt, woption,
+            WGetopter, wopt, woption,
             woption_argument_t::{self, *},
             NONOPTION_CHAR_CODE,
         },

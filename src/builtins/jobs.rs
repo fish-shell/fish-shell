@@ -10,7 +10,7 @@ use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
 use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, INVALID_PID};
 use crate::wchar_ext::WExt;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wgetopt::{WGetopter, wopt, woption, woption_argument_t};
 use crate::wutil::wgettext;
 use crate::{
     builtins::shared::STATUS_CMD_OK,
@@ -145,7 +145,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let mut mode = JobsPrintMode::Default;
     let mut print_last = false;
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(c) = w.wgetopt_long() {
         match c {
             'p' => {

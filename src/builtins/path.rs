@@ -230,7 +230,7 @@ fn parse_opts<'args>(
 
     let short_opts = construct_short_opts(opts);
 
-    let mut w = wgetopter_t::new(&short_opts, &LONG_OPTIONS, args);
+    let mut w = WGetopter::new(&short_opts, &LONG_OPTIONS, args);
     while let Some(c) = w.wgetopt_long() {
         match c {
             ':' => {

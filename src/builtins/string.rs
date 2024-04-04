@@ -57,7 +57,7 @@ trait StringSubCommand<'args> {
         let mut args_read = Vec::with_capacity(args.len());
         args_read.extend_from_slice(args);
 
-        let mut w = wgetopter_t::new(Self::SHORT_OPTIONS, Self::LONG_OPTIONS, args);
+        let mut w = WGetopter::new(Self::SHORT_OPTIONS, Self::LONG_OPTIONS, args);
         while let Some(c) = w.wgetopt_long() {
             match c {
                 ':' => {

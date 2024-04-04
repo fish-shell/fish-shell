@@ -16,7 +16,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
+    let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(opt) = w.wgetopt_long() {
         match opt {
             'L' => resolve_symlinks = false,

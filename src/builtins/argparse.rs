@@ -683,7 +683,7 @@ fn validate_and_store_implicit_int<'args>(
     opt_spec.vals.clear();
     opt_spec.vals.push(val.into());
     opt_spec.num_seen += 1;
-    w.nextchar = L!("");
+    w.remaining_text = L!("");
 
     return STATUS_CMD_OK;
 }
@@ -799,7 +799,7 @@ fn argparse_parse_flags<'args>(
                     }
                     // Explain to wgetopt that we want to skip to the next arg,
                     // because we can't handle this opt group.
-                    w.nextchar = L!("");
+                    w.remaining_text = L!("");
                     STATUS_CMD_OK
                 }
             }

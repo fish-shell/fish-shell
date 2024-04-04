@@ -77,7 +77,7 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     /// returned was found. This allows us to pick up the scan where we left off.
     ///
     /// If this is empty, it means resume the scan by advancing to the next ARGV-element.
-    pub nextchar: &'args wstr,
+    pub remaining_text: &'args wstr,
 
     /// Index in ARGV of the next element to be scanned. This is used for communication to and from
     /// the caller and for communication between successive calls to `getopt`.
@@ -164,7 +164,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             initialized: false,
             last_nonopt: 0,
             return_colon: false,
-            nextchar: Default::default(),
+            remaining_text: Default::default(),
             ordering: Ordering::Permute,
             woptarg: None,
             wopt_index: 0,
@@ -235,7 +235,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.first_nonopt = 1;
         self.last_nonopt = 1;
         self.wopt_index = 1;
-        self.nextchar = empty_wstr();
+        self.remaining_text = empty_wstr();
 
         let mut optstring = self.shortopts;
 
@@ -335,15 +335,15 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         } else {
             1
         };
-        self.nextchar = self.argv[self.wopt_index][skip..].into();
+        self.remaining_text = self.argv[self.wopt_index][skip..].into();
         Ok(())
     }
 
     /// Check for a matching short opt.
     fn handle_short_opt(&mut self) -> char {
         // Look at and handle the next short option-character.
-        let mut c = self.nextchar.char_at(0);
-        self.nextchar = &self.nextchar[1..];
+        let mut c = self.remaining_text.char_at(0);
+        self.remaining_text = &self.remaining_text[1..];
 
         let temp = match self.shortopts.chars().position(|sc| sc == c) {
             Some(pos) => &self.shortopts[pos..],
@@ -351,14 +351,14 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         };
 
         // Increment `wopt_index' when we start to process its last character.
-        if self.nextchar.is_empty() {
+        if self.remaining_text.is_empty() {
             self.wopt_index += 1;
         }
 
         if temp.is_empty() || c == ':' {
             self.unrecognized_opt = c;
 
-            if !self.nextchar.is_empty() {
+            if !self.remaining_text.is_empty() {
                 self.wopt_index += 1;
             }
             return '?';
@@ -370,17 +370,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         if temp.char_at(2) == ':' {
             // This is an option that accepts an argument optionally.
-            if !self.nextchar.is_empty() {
-                self.woptarg = Some(self.nextchar);
+            if !self.remaining_text.is_empty() {
+                self.woptarg = Some(self.remaining_text);
                 self.wopt_index += 1;
             } else {
                 self.woptarg = None;
             }
-            self.nextchar = empty_wstr();
+            self.remaining_text = empty_wstr();
         } else {
             // This is an option that requires an argument.
-            if !self.nextchar.is_empty() {
-                self.woptarg = Some(self.nextchar);
+            if !self.remaining_text.is_empty() {
+                self.woptarg = Some(self.remaining_text);
                 // If we end this ARGV-element by taking the rest as an arg, we must advance to
                 // the next element now.
                 self.wopt_index += 1;
@@ -393,7 +393,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;
             }
-            self.nextchar = empty_wstr();
+            self.remaining_text = empty_wstr();
         }
 
         c
@@ -407,12 +407,15 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         option_index: usize,
     ) -> char {
         self.wopt_index += 1;
-        assert!(self.nextchar.char_at(nameend) == '\0' || self.nextchar.char_at(nameend) == '=');
-        if self.nextchar.char_at(nameend) == '=' {
+        assert!(
+            self.remaining_text.char_at(nameend) == '\0'
+                || self.remaining_text.char_at(nameend) == '='
+        );
+        if self.remaining_text.char_at(nameend) == '=' {
             if pfound.has_arg != ArgType::NoArgument {
-                self.woptarg = Some(self.nextchar[(nameend + 1)..].into());
+                self.woptarg = Some(self.remaining_text[(nameend + 1)..].into());
             } else {
-                self.nextchar = empty_wstr();
+                self.remaining_text = empty_wstr();
                 return '?';
             }
         } else if pfound.has_arg == ArgType::RequiredArgument {
@@ -420,12 +423,12 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;
             } else {
-                self.nextchar = empty_wstr();
+                self.remaining_text = empty_wstr();
                 return if self.return_colon { ':' } else { '?' };
             }
         }
 
-        self.nextchar = empty_wstr();
+        self.remaining_text = empty_wstr();
         *longopt_index = option_index;
         pfound.val
     }
@@ -443,7 +446,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // Test all long options for either exact match or abbreviated matches.
         for (option_index, p) in self.longopts.iter().enumerate() {
             // Check if current option is prefix of long opt
-            if p.name.starts_with(&self.nextchar[..nameend]) {
+            if p.name.starts_with(&self.remaining_text[..nameend]) {
                 if nameend == p.name.len() {
                     // The current option is exact match of this long option
                     pfound = Some(*p);
@@ -471,14 +474,16 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let mut indfound: usize = 0;
 
         let mut nameend = 0;
-        while self.nextchar.char_at(nameend) != '\0' && self.nextchar.char_at(nameend) != '=' {
+        while self.remaining_text.char_at(nameend) != '\0'
+            && self.remaining_text.char_at(nameend) != '='
+        {
             nameend += 1;
         }
 
         let pfound = self.find_matching_long_opt(nameend, &mut exact, &mut ambig, &mut indfound);
 
         if ambig && !exact {
-            self.nextchar = empty_wstr();
+            self.remaining_text = empty_wstr();
             self.wopt_index += 1;
             return Some('?');
         }
@@ -494,9 +499,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             || !self
                 .shortopts
                 .as_char_slice()
-                .contains(&self.nextchar.char_at(0))
+                .contains(&self.remaining_text.char_at(0))
         {
-            self.nextchar = empty_wstr();
+            self.remaining_text = empty_wstr();
             self.wopt_index += 1;
             return Some('?');
         }
@@ -512,7 +517,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     /// the option elements.
     ///
     /// If `getopt` finds another option character, it returns that character, updating `wopt_index` and
-    /// `nextchar` so that the next call to `getopt` can resume the scan with the following option
+    /// `remaining_text` so that the next call to `getopt` can resume the scan with the following option
     /// character or ARGV-element.
     ///
     /// If there are no more option characters, `getopt` returns `EOF`. Then `wopt_index` is the index in
@@ -549,7 +554,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
         self.woptarg = None;
 
-        if self.nextchar.is_empty() {
+        if self.remaining_text.is_empty() {
             if let Err(narg) = self.next_argv() {
                 return narg;
             }

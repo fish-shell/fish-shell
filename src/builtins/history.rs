@@ -214,7 +214,7 @@ fn parse_cmd_opts(
                         return STATUS_INVALID_ARGS;
                     }
                 }
-                w.nextchar = L!("");
+                w.remaining_text = L!("");
             }
             _ => {
                 panic!("unexpected retval from wgetopt_long");

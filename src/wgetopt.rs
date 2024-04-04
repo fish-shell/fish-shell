@@ -335,6 +335,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         } else {
             1
         };
+
         self.remaining_text = self.argv[self.wopt_index][skip..].into();
         Ok(())
     }
@@ -345,10 +346,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let mut c = self.remaining_text.char_at(0);
         self.remaining_text = &self.remaining_text[1..];
 
-        let temp = match self.shortopts.chars().position(|sc| sc == c) {
-            Some(pos) => &self.shortopts[pos..],
-            None => L!(""),
-        };
+        let temp = self
+            .shortopts
+            .chars()
+            .position(|sc| sc == c)
+            .map_or(L!(""), |pos| &self.shortopts[pos..]);
 
         // Increment `wopt_index' when we start to process its last character.
         if self.remaining_text.is_empty() {
@@ -401,24 +403,24 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     fn update_long_opt(
         &mut self,
-        pfound: &WOption,
-        nameend: usize,
+        opt_found: &WOption,
+        name_end: usize,
         longopt_index: &mut usize,
         option_index: usize,
     ) -> char {
         self.wopt_index += 1;
         assert!(
-            self.remaining_text.char_at(nameend) == '\0'
-                || self.remaining_text.char_at(nameend) == '='
+            self.remaining_text.char_at(name_end) == '\0'
+                || self.remaining_text.char_at(name_end) == '='
         );
-        if self.remaining_text.char_at(nameend) == '=' {
-            if pfound.has_arg != ArgType::NoArgument {
-                self.woptarg = Some(self.remaining_text[(nameend + 1)..].into());
+        if self.remaining_text.char_at(name_end) == '=' {
+            if opt_found.has_arg != ArgType::NoArgument {
+                self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
             } else {
                 self.remaining_text = empty_wstr();
                 return '?';
             }
-        } else if pfound.has_arg == ArgType::RequiredArgument {
+        } else if opt_found.has_arg == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;
@@ -430,33 +432,33 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         self.remaining_text = empty_wstr();
         *longopt_index = option_index;
-        pfound.val
+        opt_found.val
     }
 
     /// Find a matching long opt.
     fn find_matching_long_opt(
         &self,
-        nameend: usize,
+        name_end: usize,
         exact: &mut bool,
         ambig: &mut bool,
-        indfound: &mut usize,
+        index_found: &mut usize,
     ) -> Option<WOption<'opts>> {
-        let mut pfound: Option<WOption> = None;
+        let mut opt_found: Option<WOption> = None;
 
         // Test all long options for either exact match or abbreviated matches.
-        for (option_index, p) in self.longopts.iter().enumerate() {
+        for (opt_i, opt) in self.longopts.iter().enumerate() {
             // Check if current option is prefix of long opt
-            if p.name.starts_with(&self.remaining_text[..nameend]) {
-                if nameend == p.name.len() {
+            if opt.name.starts_with(&self.remaining_text[..name_end]) {
+                if name_end == opt.name.len() {
                     // The current option is exact match of this long option
-                    pfound = Some(*p);
-                    *indfound = option_index;
+                    opt_found = Some(*opt);
+                    *index_found = opt_i;
                     *exact = true;
                     break;
-                } else if pfound.is_none() {
+                } else if opt_found.is_none() {
                     // current option is first prefix match but not exact match
-                    pfound = Some(*p);
-                    *indfound = option_index;
+                    opt_found = Some(*opt);
+                    *index_found = opt_i;
                 } else {
                     // current option is second or later prefix match but not exact match
                     *ambig = true;
@@ -464,23 +466,24 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         }
 
-        pfound
+        opt_found
     }
 
     /// Check for a matching long opt.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
         let mut exact = false;
         let mut ambig = false;
-        let mut indfound: usize = 0;
+        let mut index_found: usize = 0;
+        let mut name_end = 0;
 
-        let mut nameend = 0;
-        while self.remaining_text.char_at(nameend) != '\0'
-            && self.remaining_text.char_at(nameend) != '='
+        while self.remaining_text.char_at(name_end) != '\0'
+            && self.remaining_text.char_at(name_end) != '='
         {
-            nameend += 1;
+            name_end += 1;
         }
 
-        let pfound = self.find_matching_long_opt(nameend, &mut exact, &mut ambig, &mut indfound);
+        let opt_found =
+            self.find_matching_long_opt(name_end, &mut exact, &mut ambig, &mut index_found);
 
         if ambig && !exact {
             self.remaining_text = empty_wstr();
@@ -488,8 +491,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             return Some('?');
         }
 
-        if let Some(pfound) = pfound {
-            return Some(self.update_long_opt(&pfound, nameend, longopt_index, indfound));
+        if let Some(opt_found) = opt_found {
+            return Some(self.update_long_opt(&opt_found, name_end, longopt_index, index_found));
         }
 
         // Can't find it as a long option.  If this is not getopt_long_only, or the option starts

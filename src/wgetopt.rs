@@ -105,7 +105,8 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     pub first_nonopt: usize,
     pub last_nonopt: usize,
 
-    missing_arg_return_colon: bool,
+    // Return `:` if an arg is missing.
+    return_colon: bool,
     initialized: bool,
 }
 
@@ -162,7 +163,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             first_nonopt: 0,
             initialized: false,
             last_nonopt: 0,
-            missing_arg_return_colon: false,
+            return_colon: false,
             nextchar: Default::default(),
             ordering: Ordering::Permute,
             woptarg: None,
@@ -250,7 +251,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         if optstring.char_at(0) == ':' {
-            self.missing_arg_return_colon = true;
+            self.return_colon = true;
             optstring = &optstring[1..];
         }
 
@@ -385,11 +386,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.wopt_index += 1;
             } else if self.wopt_index == self.argv.len() {
                 self.unrecognized_opt = c;
-                c = if self.missing_arg_return_colon {
-                    ':'
-                } else {
-                    '?'
-                };
+                c = if self.return_colon { ':' } else { '?' };
             } else {
                 // We already incremented `wopt_index' once; increment it again when taking next
                 // ARGV-elt as argument.
@@ -424,11 +421,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.wopt_index += 1;
             } else {
                 self.nextchar = empty_wstr();
-                return if self.missing_arg_return_colon {
-                    ':'
-                } else {
-                    '?'
-                };
+                return if self.return_colon { ':' } else { '?' };
             }
         }
 

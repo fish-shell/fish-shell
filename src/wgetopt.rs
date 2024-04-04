@@ -25,122 +25,92 @@ Cambridge, MA 02139, USA.  */
 
 use crate::wchar::prelude::*;
 
-/// Describe how to deal with options that follow non-option ARGV-elements.
+/// Describes how to deal with options that follow non-option elements in `argv`.
 ///
-/// If the caller did not specify anything, the default is PERMUTE.
-///
-/// REQUIRE_ORDER means don't recognize them as options; stop option processing when the first
-/// non-option is seen. This is what Unix does. This mode of operation is selected by using `+'
-/// as the first character of the list of option characters.
-///
-/// PERMUTE is the default.  We permute the contents of ARGV as we scan, so that eventually all
-/// the non-options are at the end.  This allows options to be given in any order, even with
-/// programs that were not written to expect this.
-///
-/// RETURN_IN_ORDER is an option available to programs that were written to expect options and
-/// other ARGV-elements in any order and that care about the ordering of the two.  We describe
-/// each non-option ARGV-element as if it were the argument of an option with character code 1.
-/// Using `-` as the first character of the list of option characters selects this mode of
-/// operation.
-///
-/// The special argument `--` forces an end of option-scanning regardless of the value of
-/// `ordering`.  In the case of RETURN_IN_ORDER, only `--` can cause `getopt` to return EOF with
-/// `wopt_index` != ARGC.
+/// Note that any arguments passed after `--` will be treated as non-option elements,
+/// regardless of [Ordering].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum Ordering {
+    /// Stop processing options when the first non-option element is encountered.
+    /// Traditionally used by Unix systems.
+    ///
+    /// Indicated by using `+` as the first character in the optstring.
     RequireOrder,
+    /// The eleemnts in `argv` are reordered so that non-option arguments end up
+    /// at the end. This allows options to be given in any order, even with programs
+    /// that were not written to expect this.
     #[default]
     Permute,
+    /// Return both options and non-options in the order. Non-option arguments are
+    /// treated as if they were arguments to an option identified by [NON_OPTION_CHAR].
+    ///
+    /// Indicated by using `-` as the first character in the optstring.
     ReturnInOrder,
 }
 
-/// The special character code, enabled via RETURN_IN_ORDER, indicating a non-option argument.
+/// Special char used with [Ordering::ReturnInOrder].
 pub const NON_OPTION_CHAR: char = '\x01';
 
+/// Utility function to quickly return a reference to an empty wstr.
 fn empty_wstr() -> &'static wstr {
     Default::default()
 }
 
 pub struct WGetopter<'opts, 'args, 'argarray> {
-    /// Argv.
+    /// List of arguments. Will not be resized, but can be modified.
     pub argv: &'argarray mut [&'args wstr],
-
-    /// For communication from `getopt` to the caller. When `getopt` finds an option that takes an
-    /// argument, the argument value is returned here. Also, when `ordering` is RETURN_IN_ORDER, each
-    /// non-option ARGV-element is returned here.
+    /// Stores the arg of an argument-taking option, including the pseudo-arguments
+    /// used by [Ordering::ReturnInOrder].
     pub woptarg: Option<&'args wstr>,
-
+    /// Stores the optstring for short-named options.
     shortopts: &'opts wstr,
+    /// Stores the data for long options.
     longopts: &'opts [WOption<'opts>],
-
-    /// The next char to be scanned in the option-element in which the last option character we
-    /// returned was found. This allows us to pick up the scan where we left off.
-    ///
-    /// If this is empty, it means resume the scan by advancing to the next ARGV-element.
+    /// The remaining text of the current element, recorded so that we can pick up the
+    /// scan from where we left off.
     pub remaining_text: &'args wstr,
-
-    /// Index in ARGV of the next element to be scanned. This is used for communication to and from
-    /// the caller and for communication between successive calls to `getopt`.
-    ///
-    /// On entry to `getopt`, zero means this is the first call; initialize.
-    ///
-    /// When `getopt` returns EOF, this is the index of the first of the non-option elements that the
-    /// caller should itself scan.
-    ///
-    /// Otherwise, `wopt_index` communicates from one call to the next how much of ARGV has been scanned
-    /// so far.
+    /// Index of the next element in `argv` to be scanned. If the value is `0`, then
+    /// the next call will initialize. When scanning is finished, this marks the index
+    /// of the first non-option element that should be parsed by the caller.
     // XXX 1003.2 says this must be 1 before any call.
     pub wopt_index: usize,
-
-    /// Set to an option character which was unrecognized.
+    /// Set when a (short) option is unrecognized.
     unrecognized_opt: char,
-
-    /// Describe how to deal with options that follow non-option ARGV-elements.
+    /// How to deal with non-option elements following options.
     ordering: Ordering,
-
-    /// Handle permutation of arguments.
-    ///
-    /// Describe the part of ARGV that contains non-options that have been skipped.  `first_nonopt`
-    /// is the index in ARGV of the first of them; `last_nonopt` is the index after the last of them.
+    /// Used when reordering elements. After scanning is finished, indicates the index
+    /// of the first non-option skipped during parsing.
     pub first_nonopt: usize,
+    /// Used when reordering elements. After scanning is finished, indicates the index
+    /// after the final non-option skipped during parsing.
     pub last_nonopt: usize,
-
-    // Return `:` if an arg is missing.
+    /// Return `:` if an arg is missing.
     return_colon: bool,
+    /// Prevents redundant initialization.
     initialized: bool,
 }
 
-/// Names for the values of the `has_arg` field of `WOption`.
+/// Indicates whether a long-named takes an argument, and whether that argument
+/// is optional.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArgType {
+    /// The option takes no arguments.
     NoArgument,
+    /// The option takes a required argument.
     RequiredArgument,
+    /// The option takes an optional argument.
     OptionalArgument,
 }
 
-/// Describe the long-named options requested by the application. The LONG_OPTIONS argument to
-/// getopt_long or getopt_long_only is a vector of `struct option' terminated by an element
-/// containing a name which is zero.
-///
-/// The field `has_arg` is:
-/// NoArgument    (or 0) if the option does not take an argument,
-/// RequiredArgument  (or 1) if the option requires an argument,
-/// OptionalArgument   (or 2) if the option takes an optional argument.
-///
-/// If the field `flag` is not NULL, it points to a variable that is set to the value given in the
-/// field `val` when the option is found, but left unchanged if the option is not found.
-///
-/// To have a long-named option do something other than set an `int` to a compiled-in constant, such
-/// as set a value from `optarg`, set the option's `flag` field to zero and its `val` field to a
-/// nonzero value (the equivalent single-letter option character, if there is one).  For long
-/// options that have a zero `flag` field, `getopt` returns the contents of the `val` field.
+/// Used to describe the properties of a long-named option.
 #[derive(Debug, Clone, Copy)]
 pub struct WOption<'a> {
-    /// Long name for switch.
+    /// The long name of the option.
     pub name: &'a wstr,
+    /// Whether the option takes an argument.
     pub has_arg: ArgType,
-    /// If \c flag is non-null, this is the value that flag will be set to. Otherwise, this is the
-    /// return-value of the function call.
+    /// Contains the return value of the function call.
+    // unsure as to what this does in this version of the code
     pub val: char,
 }
 
@@ -184,54 +154,49 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.wgetopt_inner(opt_index)
     }
 
-    /// Exchange two adjacent subsequences of ARGV. One subsequence is elements
-    /// [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
-    /// other is elements [last_nonopt,wopt_index), which contains all the options processed since those
-    /// non-options were skipped.
+    /// Divides `argv` into two lists, the one which contains all non-options skipped
+    /// during scanning, and the other which contains all options scanned afterwards.
     ///
-    /// `first_nonopt` and `last_nonopt` are relocated so that they describe the new indices of the
-    /// non-options in ARGV after they are moved.
+    /// Elements are then swapped between the list so that all options end up
+    /// in the former list, and non-options in the latter.
     fn exchange(&mut self) {
         let mut left = self.first_nonopt;
         let middle = self.last_nonopt;
         let mut right = self.wopt_index;
 
-        // Exchange the shorter segment with the far end of the longer segment. That puts the shorter
-        // segment into the right place. It leaves the longer segment in the right place overall, but it
-        // consists of two parts that need to be swapped next.
         while right > middle && middle > left {
             if right - middle > middle - left {
-                // Bottom segment is the short one.
+                // The left segment is the short one.
                 let len = middle - left;
 
-                // Swap it with the top part of the top segment.
+                // Swap it with the top part of the right segment.
                 for i in 0..len {
                     self.argv.swap(left + i, right - (middle - left) + i);
                 }
-                // Exclude the moved bottom segment from further swapping.
+                // Exclude the moved elements from further swapping.
                 right -= len;
             } else {
-                // Top segment is the short one.
+                // The right segment is the short one.
                 let len = right - middle;
 
-                // Swap it with the bottom part of the bottom segment.
+                // Swap it with the bottom part of the left segment.
                 for i in 0..len {
                     self.argv.swap(left + i, middle + i);
                 }
-                // Exclude the moved top segment from further swapping.
+                // Exclude the moved elements from further swapping.
                 left += len;
             }
         }
 
-        // Update records for the slots the non-options now occupy.
+        // Update the indices to indicate the new positions of the non-option
+        // arguments.
         self.first_nonopt += self.wopt_index - self.last_nonopt;
         self.last_nonopt = self.wopt_index;
     }
 
     /// Initialize the internal data when the first call is made.
     fn initialize(&mut self) {
-        // Start processing options with ARGV-element 1 (since ARGV-element 0 is the program name); the
-        // sequence of previously skipped non-option ARGV-elements is empty.
+        // Skip the first element since it's just the program name.
         self.first_nonopt = 1;
         self.last_nonopt = 1;
         self.wopt_index = 1;
@@ -239,7 +204,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         let mut optstring = self.shortopts;
 
-        // Determine how to handle the ordering of options and nonoptions.
+        // Set ordering and strip markers.
         if optstring.char_at(0) == '-' {
             self.ordering = Ordering::ReturnInOrder;
             optstring = &optstring[1..];
@@ -259,14 +224,13 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.initialized = true;
     }
 
-    /// Advance to the next ARGV-element.
-    /// \return Some(\0) on success, or None or another value if we should stop.
+    /// Advance to the next element in `argv`. Returns nothing on success, or
+    /// an optional value if we need to stop.
     fn next_argv(&mut self) -> Result<(), Option<char>> {
         let argc = self.argv.len();
 
         if self.ordering == Ordering::Permute {
-            // If we have just processed some options following some non-options, exchange them so
-            // that the options come first.
+            // Permute the args if we've found options following non-options.
             if self.last_nonopt != self.wopt_index {
                 if self.first_nonopt != self.last_nonopt {
                     self.exchange();
@@ -275,20 +239,21 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 }
             }
 
-            // Skip any additional non-options and extend the range of non-options previously
-            // skipped.
+            // Skip any further non-options, adjusting the relevant indices as
+            // needed.
             while self.wopt_index < argc
                 && (self.argv[self.wopt_index].char_at(0) != '-'
                     || self.argv[self.wopt_index].len() == 1)
             {
                 self.wopt_index += 1;
             }
+
             self.last_nonopt = self.wopt_index;
         }
 
-        // The special ARGV-element `--' means premature end of options. Skip it like a null option,
-        // then exchange with previous non-options as if it were an option, then skip everything
-        // else like a non-option.
+        // The `--` element prevents any further scanning of options. We skip it like
+        // a null option, then swap with non-options as if were an option, then skip
+        // everything else like a non-option.
         if self.wopt_index != argc && self.argv[self.wopt_index] == "--" {
             self.wopt_index += 1;
 
@@ -308,19 +273,19 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             self.wopt_index = argc;
         }
 
-        // If we have done all the ARGV-elements, stop the scan and back over any non-options that
-        // we skipped and permuted.
-
+        // If we're done with all the elements, stop scanning and back over any
+        // non-options that were skipped and permuted.
         if self.wopt_index == argc {
-            // Set the next-arg-index to point at the non-options that we previously skipped, so the
-            // caller will digest them.
+            // Set `wopt_index` to point at the skipped non-options so that the
+            // caller knows where to begin.
             if self.first_nonopt != self.last_nonopt {
                 self.wopt_index = self.first_nonopt;
             }
+
             return Err(None);
         }
 
-        // If we have come to a non-option and did not permute it, either stop the scan or describe
+        // If we find a non-option and don't permute it, either stop the scan or describe
         // it to the caller and pass it by.
         if self.argv[self.wopt_index].char_at(0) != '-' || self.argv[self.wopt_index].len() == 1 {
             if self.ordering == Ordering::RequireOrder {
@@ -328,10 +293,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
             self.woptarg = Some(self.argv[self.wopt_index]);
             self.wopt_index += 1;
+
             return Err(Some(NON_OPTION_CHAR));
         }
 
-        // We have found another option-ARGV-element. Skip the initial punctuation.
+        // We've found an option, so we need to skip the initial punctuation.
         let skip = if !self.longopts.is_empty() && self.argv[self.wopt_index].char_at(1) == '-' {
             2
         } else {
@@ -342,9 +308,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         Ok(())
     }
 
-    /// Check for a matching short opt.
+    /// Check for a matching short-named option.
     fn handle_short_opt(&mut self) -> char {
-        // Look at and handle the next short option-character.
+        // Look at and handle the next short-named option
         let mut c = self.remaining_text.char_at(0);
         self.remaining_text = &self.remaining_text[1..];
 
@@ -354,7 +320,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             .position(|sc| sc == c)
             .map_or(L!(""), |pos| &self.shortopts[pos..]);
 
-        // Increment `wopt_index' when we start to process its last character.
+        // Increment `wopt_index' when we run out of text.
         if self.remaining_text.is_empty() {
             self.wopt_index += 1;
         }
@@ -373,26 +339,28 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         if temp.char_at(2) == ':' {
-            // This is an option that accepts an argument optionally.
+            // This option accepts an optional argument.
             if !self.remaining_text.is_empty() {
+                // Consume the remaining text.
                 self.woptarg = Some(self.remaining_text);
                 self.wopt_index += 1;
             } else {
                 self.woptarg = None;
             }
         } else {
-            // This is an option that requires an argument.
+            // This option requires an argument.
             if !self.remaining_text.is_empty() {
+                // Consume the remaining text.
                 self.woptarg = Some(self.remaining_text);
-                // If we end this ARGV-element by taking the rest as an arg, we must advance to
-                // the next element now.
                 self.wopt_index += 1;
             } else if self.wopt_index == self.argv.len() {
+                // If there's nothing in `remaining_text` and there's
+                // no following element to consume, then the option
+                // has no argument.
                 self.unrecognized_opt = c;
                 c = if self.return_colon { ':' } else { '?' };
             } else {
-                // We already incremented `wopt_index' once; increment it again when taking next
-                // ARGV-elt as argument.
+                // Consume the next element.
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;
             }
@@ -434,7 +402,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         opt_found.val
     }
 
-    /// Find a matching long opt.
+    /// Find a matching long-named option.
     fn find_matching_long_opt(
         &self,
         name_end: usize,
@@ -449,17 +417,18 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             // Check if current option is prefix of long opt
             if opt.name.starts_with(&self.remaining_text[..name_end]) {
                 if name_end == opt.name.len() {
-                    // The current option is exact match of this long option
+                    // The option matches the text exactly, so we're finished.
                     opt_found = Some(*opt);
                     index_found = opt_i;
                     exact = true;
                     break;
                 } else if opt_found.is_none() {
-                    // current option is first prefix match but not exact match
+                    // The option begins with text, but isn't an exact match.
                     opt_found = Some(*opt);
                     index_found = opt_i;
                 } else {
-                    // current option is second or later prefix match but not exact match
+                    // There are multiple options that match the text, so
+                    // it's ambiguous.
                     ambig = true;
                 }
             }
@@ -468,7 +437,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         (opt_found, exact, ambig, index_found)
     }
 
-    /// Check for a matching long opt.
+    /// Check for a matching long-named option.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
         let mut name_end = 0;
 
@@ -488,9 +457,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             return Some(self.update_long_opt(&opt_found, name_end, longopt_index, index_found));
         }
 
-        // Can't find it as a long option.  If this is not getopt_long_only, or the option starts
-        // with '--' or is not a valid short option, then it's an error. Otherwise interpret it as a
-        // short option.
+        // If we can't find a long option, try to interpret it as a short option.
+        // If it isn't a short option either, return an error.
         if self.argv[self.wopt_index].char_at(1) == '-'
             || !self
                 .shortopts
@@ -505,45 +473,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         None
     }
 
-    /// Scan elements of ARGV (whose length is ARGC) for option characters given in OPTSTRING.
-    ///
-    /// If an element of ARGV starts with '-', and is not exactly "-" or "--", then it is an option
-    /// element.  The characters of this element (aside from the initial '-') are option characters.  If
-    /// `getopt` is called repeatedly, it returns successively each of the option characters from each of
-    /// the option elements.
-    ///
-    /// If `getopt` finds another option character, it returns that character, updating `wopt_index` and
-    /// `remaining_text` so that the next call to `getopt` can resume the scan with the following option
-    /// character or ARGV-element.
-    ///
-    /// If there are no more option characters, `getopt` returns `EOF`. Then `wopt_index` is the index in
-    /// ARGV of the first ARGV-element that is not an option.  (The ARGV-elements have been permuted so
-    /// that those that are not options now come last.)
-    ///
-    /// OPTSTRING is a string containing the legitimate option characters. If an option character is seen
-    /// that is not listed in OPTSTRING, return '?'.
-    ///
-    /// If a char in OPTSTRING is followed by a colon, that means it wants an arg, so the following text
-    /// in the same ARGV-element, or the text of the following ARGV-element, is returned in `optarg`.
-    /// Two colons mean an option that wants an optional arg; if there is text in the current
-    /// ARGV-element, it is returned in `w.woptarg`, otherwise `w.woptarg` is set to zero.
-    ///
-    /// If OPTSTRING starts with `-` or `+', it requests different methods of handling the non-option
-    /// ARGV-elements. See the comments about RETURN_IN_ORDER and REQUIRE_ORDER, above.
-    ///
-    /// Long-named options begin with `--` instead of `-`. Their names may be abbreviated as long as the
-    /// abbreviation is unique or is an exact match for some defined option.  If they have an argument,
-    /// it follows the option name in the same ARGV-element, separated from the option name by a `=', or
-    /// else the in next ARGV-element. When `getopt` finds a long-named option, it returns 0 if that
-    /// option's `flag` field is nonzero, the value of the option's `val` field if the `flag` field is
-    /// zero.
-    ///
-    /// LONGOPTS is a vector of `struct option' terminated by an element containing a name which is zero.
-    ///
-    /// LONGIND returns the index in LONGOPT of the long-named option found. It is only valid when a
-    /// long-named option has been found by the most recent call.
-    ///
-    /// If LONG_ONLY is nonzero, '-' as well as '--' can introduce long-named options.
+    /// `longopt_index` contains the index of the most recent long-named option
+    /// found by the most recent call. Returns the next short-named option if
+    /// found.
     fn wgetopt_inner(&mut self, longopt_index: &mut usize) -> Option<char> {
         if !self.initialized {
             self.initialize();
@@ -556,19 +488,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         }
 
-        // Decode the current option-ARGV-element.
-
-        // Check whether the ARGV-element is a long option.
-        //
-        // If long_only and the ARGV-element has the form "-f", where f is a valid short option, don't
-        // consider it an abbreviated form of a long option that starts with f.  Otherwise there would
-        // be no way to give the -f short option.
-        //
-        // On the other hand, if there's a long option "fubar" and the ARGV-element is "-fu", do
-        // consider that an abbreviation of the long option, just like "--fu", and not "-f" with arg
-        // "u".
-        //
-        // This distinction seems to be the most useful approach.
+        // We set things up so that `-f` is parsed as a short-named option if there
+        // is a valid option to match it to, otherwise we parse it as a long-named
+        // option. We also make sure that `-fu` is *not* parsed as `-f` with
+        // an arg `u`.
         if !self.longopts.is_empty() && self.wopt_index < self.argv.len() {
             let arg = self.argv[self.wopt_index];
 

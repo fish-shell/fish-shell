@@ -155,20 +155,20 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         longopts: &'opts [WOption],
         argv: &'argarray mut [&'args wstr],
     ) -> Self {
-        return Self {
-            unrecognized_opt: '?',
+        Self {
             argv,
+            woptarg: None,
             shortopts,
             longopts,
+            remaining_text: Default::default(),
+            wopt_index: 0,
+            unrecognized_opt: '?',
             first_nonopt: 0,
-            initialized: false,
+            ordering: Ordering::Permute,
             last_nonopt: 0,
             return_colon: false,
-            remaining_text: Default::default(),
-            ordering: Ordering::Permute,
-            woptarg: None,
-            wopt_index: 0,
-        };
+            initialized: false,
+        }
     }
 
     pub fn wgetopt_long(&mut self) -> Option<char> {

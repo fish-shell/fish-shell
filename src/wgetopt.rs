@@ -46,21 +46,16 @@ use crate::wchar::prelude::*;
 /// The special argument `--` forces an end of option-scanning regardless of the value of
 /// `ordering`.  In the case of RETURN_IN_ORDER, only `--` can cause `getopt` to return EOF with
 /// `woptind` != ARGC.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 enum Ordering {
     RequireOrder,
+    #[default]
     Permute,
     ReturnInOrder,
 }
 
 /// The special character code, enabled via RETURN_IN_ORDER, indicating a non-option argument.
 pub const NONOPTION_CHAR_CODE: char = '\x01';
-
-impl Default for Ordering {
-    fn default() -> Self {
-        Ordering::Permute
-    }
-}
 
 fn empty_wstr() -> &'static wstr {
     Default::default()

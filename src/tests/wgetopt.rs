@@ -28,7 +28,7 @@ fn test_wgetopt() {
             }
             '?' => {
                 // unrecognized option
-                if let Some(arg) = w.argv.get(w.woptind - 1) {
+                if let Some(arg) = w.argv.get(w.wopt_index - 1) {
                     arguments.push(arg.to_owned());
                 }
             }

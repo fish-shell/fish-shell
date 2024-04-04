@@ -267,10 +267,12 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.ordering == Ordering::Permute {
             // If we have just processed some options following some non-options, exchange them so
             // that the options come first.
-            if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.wopt_index {
-                self.exchange();
-            } else if self.last_nonopt != self.wopt_index {
-                self.first_nonopt = self.wopt_index;
+            if self.last_nonopt != self.wopt_index {
+                if self.first_nonopt != self.last_nonopt {
+                    self.exchange();
+                } else {
+                    self.first_nonopt = self.wopt_index;
+                }
             }
 
             // Skip any additional non-options and extend the range of non-options previously

@@ -10,7 +10,7 @@ use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
 use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, INVALID_PID};
 use crate::wchar_ext::WExt;
-use crate::wgetopt::{WGetopter, wopt, woption, woption_argument_t};
+use crate::wgetopt::{wopt, woption, woption_argument_t, WGetopter};
 use crate::wutil::wgettext;
 use crate::{
     builtins::shared::STATUS_CMD_OK,

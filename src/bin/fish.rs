@@ -313,7 +313,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{WGetopter, wopt, woption, woption_argument_t::*};
+    use fish::wgetopt::{wopt, woption, woption_argument_t::*, WGetopter};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;

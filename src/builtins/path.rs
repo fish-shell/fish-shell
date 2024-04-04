@@ -213,7 +213,7 @@ const LONG_OPTIONS: [woption<'static>; 10] = [
     wopt(L!("relative"), no_argument, 'R'),
     wopt(L!("reverse"), no_argument, 'r'),
     wopt(L!("unique"), no_argument, 'u'),
-    wopt(L!("key"), required_argument, NONOPTION_CHAR_CODE),
+    wopt(L!("key"), required_argument, NON_OPTION_CHAR),
 ];
 
 fn parse_opts<'args>(
@@ -324,7 +324,7 @@ fn parse_opts<'args>(
                 opts.relative = true;
                 continue;
             }
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 assert!(w.woptarg.is_some());
                 opts.key = w.woptarg;
                 continue;

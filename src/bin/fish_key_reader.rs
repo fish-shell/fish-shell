@@ -30,7 +30,7 @@ use fish::{
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
-    wgetopt::{WGetopter, wopt, woption, woption_argument_t},
+    wgetopt::{wopt, woption, woption_argument_t, WGetopter},
 };
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.

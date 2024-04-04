@@ -81,12 +81,12 @@ fn parse_cmd_opts(
     let mut handling_named_arguments = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.wgetopt_long() {
-        // NONOPTION_CHAR_CODE is returned when we reach a non-permuted non-option.
-        if opt != 'a' && opt != NONOPTION_CHAR_CODE {
+        // NON_OPTION_CHAR is returned when we reach a non-permuted non-option.
+        if opt != 'a' && opt != NON_OPTION_CHAR {
             handling_named_arguments = false;
         }
         match opt {
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 // A positional argument we got because we use RETURN_IN_ORDER.
                 let woptarg = w.woptarg.unwrap().to_owned();
                 if handling_named_arguments {

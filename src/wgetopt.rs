@@ -55,7 +55,7 @@ enum Ordering {
 }
 
 /// The special character code, enabled via RETURN_IN_ORDER, indicating a non-option argument.
-pub const NONOPTION_CHAR_CODE: char = '\x01';
+pub const NON_OPTION_CHAR: char = '\x01';
 
 fn empty_wstr() -> &'static wstr {
     Default::default()
@@ -323,7 +323,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
             self.woptarg = Some(self.argv[self.woptind]);
             self.woptind += 1;
-            return Some(NONOPTION_CHAR_CODE);
+            return Some(NON_OPTION_CHAR);
         }
 
         // We have found another option-ARGV-element. Skip the initial punctuation.

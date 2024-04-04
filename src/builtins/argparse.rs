@@ -803,7 +803,7 @@ fn argparse_parse_flags<'args>(
                     STATUS_CMD_OK
                 }
             }
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 // A non-option argument.
                 // We use `-` as the first option-string-char to disable GNU getopt's reordering,
                 // otherwise we'd get ignored options first and normal arguments later.

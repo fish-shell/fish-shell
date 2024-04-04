@@ -55,9 +55,9 @@ mod prelude {
         parser::Parser,
         wchar::prelude::*,
         wgetopt::{
-            WGetopter, wopt, woption,
+            wopt, woption,
             woption_argument_t::{self, *},
-            NONOPTION_CHAR_CODE,
+            WGetopter, NON_OPTION_CHAR,
         },
         wutil::{fish_wcstoi, fish_wcstol, fish_wcstoul},
     };

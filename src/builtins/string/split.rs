@@ -102,7 +102,7 @@ impl<'args> TryFrom<&'args wstr> for Fields {
 }
 
 impl<'args> StringSubCommand<'args> for Split<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("right"), NoArgument, 'r'),
         wopt(L!("max"), RequiredArgument, 'm'),

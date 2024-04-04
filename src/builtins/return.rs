@@ -15,7 +15,7 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":h");
-    const LONG_OPTS: &[woption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+    const LONG_OPTS: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
     let mut opts = Options::default();
 

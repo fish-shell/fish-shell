@@ -28,7 +28,7 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!("+:Eens");
-    const LONG_OPTS: &[woption] = &[];
+    const LONG_OPTS: &[WOption] = &[];
 
     let mut opts = Options::default();
 

@@ -19,7 +19,7 @@ impl Default for Join<'_> {
 }
 
 impl<'args> StringSubCommand<'args> for Join<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("no-empty"), NoArgument, 'n'),
     ];

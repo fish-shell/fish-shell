@@ -44,7 +44,7 @@ use fish::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMME
 use fish::topic_monitor::topic_monitor_init;
 use fish::wchar::prelude::*;
 use fish::wcstringutil::count_preceding_backslashes;
-use fish::wgetopt::{wopt, woption, ArgType, WGetopter};
+use fish::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use fish::wutil::perror;
 use fish::wutil::{fish_iswalnum, write_to_fd};
 use fish::{
@@ -781,7 +781,7 @@ fn throwing_main() -> i32 {
     let mut debug_output = None;
 
     let short_opts: &wstr = L!("+d:hvwicD:");
-    let long_opts: &[woption] = &[
+    let long_opts: &[WOption] = &[
         wopt(L!("debug"), ArgType::RequiredArgument, 'd'),
         wopt(L!("debug-output"), ArgType::RequiredArgument, 'o'),
         wopt(L!("debug-stack-frames"), ArgType::RequiredArgument, 'D'),

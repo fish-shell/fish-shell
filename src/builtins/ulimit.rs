@@ -176,7 +176,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
     const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
 
-    const LONG_OPTS: &[woption] = &[
+    const LONG_OPTS: &[WOption] = &[
         wopt(L!("all"), ArgType::NoArgument, 'a'),
         wopt(L!("hard"), ArgType::NoArgument, 'H'),
         wopt(L!("soft"), ArgType::NoArgument, 'S'),

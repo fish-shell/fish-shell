@@ -72,7 +72,7 @@ impl ArgParseCmdOpts<'_> {
 }
 
 const SHORT_OPTIONS: &wstr = L!("+:hn:six:N:X:");
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
     wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
     wopt(L!("name"), ArgType::RequiredArgument, 'n'),
@@ -572,7 +572,7 @@ fn parse_cmd_opts<'args>(
 fn populate_option_strings<'args>(
     opts: &ArgParseCmdOpts<'args>,
     short_options: &mut WString,
-    long_options: &mut Vec<woption<'args>>,
+    long_options: &mut Vec<WOption<'args>>,
 ) {
     for opt_spec in opts.options.values() {
         if opt_spec.short_flag_valid {

@@ -15,7 +15,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut opts: command_cmd_opts_t = Default::default();
 
     const shortopts: &wstr = L!(":hasqv");
-    const longopts: &[woption] = &[
+    const longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("all"), ArgType::NoArgument, 'a'),
         wopt(L!("query"), ArgType::NoArgument, 'q'),

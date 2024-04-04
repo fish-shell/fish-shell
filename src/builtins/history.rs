@@ -64,7 +64,7 @@ struct HistoryCmdOpts {
 /// supported at least until fish 3.0 and possibly longer to avoid breaking everyones
 /// config.fish and other scripts.
 const short_options: &wstr = L!(":CRcehmn:pt::z");
-const longopts: &[woption] = &[
+const longopts: &[WOption] = &[
     wopt(L!("prefix"), ArgType::NoArgument, 'p'),
     wopt(L!("contains"), ArgType::NoArgument, 'c'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),

@@ -7,7 +7,7 @@ pub struct Collect {
 }
 
 impl StringSubCommand<'_> for Collect {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("allow-empty"), NoArgument, 'a'),
         wopt(L!("no-trim-newlines"), NoArgument, 'N'),
     ];

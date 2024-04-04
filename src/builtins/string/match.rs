@@ -22,7 +22,7 @@ pub struct Match<'args> {
 }
 
 impl<'args> StringSubCommand<'args> for Match<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("all"), NoArgument, 'a'),
         wopt(L!("entire"), NoArgument, 'e'),
         wopt(L!("groups-only"), NoArgument, 'g'),

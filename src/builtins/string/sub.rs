@@ -11,7 +11,7 @@ pub struct Sub {
 }
 
 impl StringSubCommand<'_> for Sub {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("length"), RequiredArgument, 'l'),
         wopt(L!("start"), RequiredArgument, 's'),
         wopt(L!("end"), RequiredArgument, 'e'),

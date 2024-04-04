@@ -16,7 +16,7 @@ struct Options {
 }
 
 const short_options: &wstr = L!("+:hs");
-const long_options: &[woption] = &[
+const long_options: &[WOption] = &[
     wopt(L!("no-symlinks"), NoArgument, 's'),
     wopt(L!("help"), NoArgument, 'h'),
 ];

@@ -31,7 +31,7 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":eghl");
-    const LONG_OPTS: &[woption] = &[
+    const LONG_OPTS: &[WOption] = &[
         wopt(L!("erase"), ArgType::NoArgument, 'e'),
         wopt(L!("local"), ArgType::NoArgument, 'l'),
         wopt(L!("global"), ArgType::NoArgument, 'g'),

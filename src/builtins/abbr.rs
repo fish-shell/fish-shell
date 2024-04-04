@@ -435,7 +435,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     // could be given literally, for example `abbr e emacs -nw`.
     const short_options: &wstr = L!("-:af:r:seqgUh");
 
-    const longopts: &[woption] = &[
+    const longopts: &[WOption] = &[
         wopt(L!("add"), ArgType::NoArgument, 'a'),
         wopt(L!("position"), ArgType::RequiredArgument, 'p'),
         wopt(L!("regex"), ArgType::RequiredArgument, 'r'),

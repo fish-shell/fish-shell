@@ -10,7 +10,7 @@ use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
 use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, INVALID_PID};
 use crate::wchar_ext::WExt;
-use crate::wgetopt::{wopt, woption, ArgType, WGetopter};
+use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
 use crate::{
     builtins::shared::STATUS_CMD_OK,
@@ -127,7 +127,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
 }
 
 const SHORT_OPTIONS: &wstr = L!(":cghlpq");
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("command"), ArgType::NoArgument, 'c'),
     wopt(L!("group"), ArgType::NoArgument, 'g'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),

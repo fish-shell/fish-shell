@@ -8,7 +8,7 @@ pub struct Escape {
 }
 
 impl StringSubCommand<'_> for Escape {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("no-quoted"), NoArgument, 'n'),
         wopt(L!("style"), RequiredArgument, NON_OPTION_CHAR),
     ];

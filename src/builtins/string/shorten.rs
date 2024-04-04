@@ -25,7 +25,7 @@ impl Default for Shorten<'_> {
 }
 
 impl<'args> StringSubCommand<'args> for Shorten<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         // FIXME: documentation says it's --char
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("max"), RequiredArgument, 'm'),

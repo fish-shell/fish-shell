@@ -104,7 +104,7 @@ fn print_colors(
 }
 
 const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("background"), ArgType::RequiredArgument, 'b'),
     wopt(L!("help"), ArgType::NoArgument, 'h'),
     wopt(L!("bold"), ArgType::NoArgument, 'o'),

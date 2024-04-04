@@ -102,7 +102,7 @@ impl Options {
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
         const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
-        const LONG_OPTS: &[woption] = &[
+        const LONG_OPTS: &[WOption] = &[
             wopt(L!("export"), NoArgument, 'x'),
             wopt(L!("global"), NoArgument, 'g'),
             wopt(L!("function"), NoArgument, 'f'),

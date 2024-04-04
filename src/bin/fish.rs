@@ -313,14 +313,14 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{wopt, woption, ArgType::*, WGetopter};
+    use fish::wgetopt::{wopt, ArgType::*, WGetopter, WOption};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
     const PROFILE_STARTUP_ARG: char = 3 as char;
 
     const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
-    const LONG_OPTS: &[woption<'static>] = &[
+    const LONG_OPTS: &[WOption<'static>] = &[
         wopt(L!("command"), RequiredArgument, 'c'),
         wopt(L!("init-command"), RequiredArgument, 'C'),
         wopt(L!("features"), RequiredArgument, 'f'),

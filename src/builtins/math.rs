@@ -25,7 +25,7 @@ fn parse_cmd_opts(
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
     const SHORT_OPTS: &wstr = L!("+:hs:b:");
-    const LONG_OPTS: &[woption] = &[
+    const LONG_OPTS: &[WOption] = &[
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),

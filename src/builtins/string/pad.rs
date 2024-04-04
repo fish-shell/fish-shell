@@ -20,7 +20,7 @@ impl Default for Pad {
 }
 
 impl StringSubCommand<'_> for Pad {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         // FIXME docs say `--char`, there was no long_opt with `--char` in C++
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("right"), NoArgument, 'r'),

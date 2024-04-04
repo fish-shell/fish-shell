@@ -8,7 +8,7 @@ pub struct Unescape {
 }
 
 impl StringSubCommand<'_> for Unescape {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         // FIXME: this flag means nothing, but was present in the C++ code
         // should be removed
         wopt(L!("no-quoted"), NoArgument, 'n'),

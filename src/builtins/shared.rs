@@ -650,7 +650,7 @@ impl HelpOnlyCmdOpts {
         let print_hints = true;
 
         const shortopts: &wstr = L!("+:h");
-        const longopts: &[woption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+        const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
         let mut print_help = false;
         let mut w = WGetopter::new(shortopts, longopts, args);

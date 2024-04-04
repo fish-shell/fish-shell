@@ -20,7 +20,7 @@ impl Default for Trim<'_> {
 }
 
 impl<'args> StringSubCommand<'args> for Trim<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("chars"), RequiredArgument, 'c'),
         wopt(L!("left"), NoArgument, 'l'),
         wopt(L!("right"), NoArgument, 'r'),

@@ -49,7 +49,7 @@ const NO_METADATA_SHORT: char = 2 as char;
 
 const SHORT_OPTIONS: &wstr = L!(":Ht:Dacd:ehnqv");
 #[rustfmt::skip]
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("erase"), ArgType::NoArgument, 'e'),
     wopt(L!("description"), ArgType::RequiredArgument, 'd'),
     wopt(L!("names"), ArgType::NoArgument, 'n'),

@@ -240,7 +240,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut unescape_output = true;
 
     const short_options: &wstr = L!(":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
-    const long_options: &[woption] = &[
+    const long_options: &[WOption] = &[
         wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
         wopt(L!("no-files"), ArgType::NoArgument, 'f'),
         wopt(L!("force-files"), ArgType::NoArgument, 'F'),

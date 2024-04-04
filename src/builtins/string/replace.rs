@@ -15,7 +15,7 @@ pub struct Replace<'args> {
 }
 
 impl<'args> StringSubCommand<'args> for Replace<'args> {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("all"), NoArgument, 'a'),
         wopt(L!("filter"), NoArgument, 'f'),
         wopt(L!("ignore-case"), NoArgument, 'i'),

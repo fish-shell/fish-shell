@@ -9,7 +9,7 @@ pub struct Repeat {
 }
 
 impl StringSubCommand<'_> for Repeat {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         wopt(L!("count"), RequiredArgument, 'n'),
         wopt(L!("max"), RequiredArgument, 'm'),
         wopt(L!("quiet"), NoArgument, 'q'),

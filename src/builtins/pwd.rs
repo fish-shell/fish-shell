@@ -6,7 +6,7 @@ use crate::{env::Environment, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
-const long_options: &[woption] = &[
+const long_options: &[WOption] = &[
     wopt(L!("help"), NoArgument, 'h'),
     wopt(L!("logical"), NoArgument, 'L'),
     wopt(L!("physical"), NoArgument, 'P'),

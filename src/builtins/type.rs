@@ -23,7 +23,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let mut opts: type_cmd_opts_t = Default::default();
 
     const shortopts: &wstr = L!(":hasftpPq");
-    const longopts: &[woption] = &[
+    const longopts: &[WOption] = &[
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("all"), ArgType::NoArgument, 'a'),
         wopt(L!("short"), ArgType::NoArgument, 's'),

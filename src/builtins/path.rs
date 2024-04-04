@@ -203,7 +203,7 @@ fn construct_short_opts(opts: &Options) -> WString {
 /// Note that several long flags share the same short flag. That is okay. The caller is expected
 /// to indicate that a max of one of the long flags sharing a short flag is valid.
 /// Remember: adjust the completions in share/completions/ when options change
-const LONG_OPTIONS: [woption<'static>; 10] = [
+const LONG_OPTIONS: [WOption<'static>; 10] = [
     wopt(L!("quiet"), NoArgument, 'q'),
     wopt(L!("null-in"), NoArgument, 'z'),
     wopt(L!("null-out"), NoArgument, 'Z'),

@@ -62,7 +62,7 @@ impl Options {
 }
 
 const SHORT_OPTIONS: &wstr = L!(":ac:d:fghiLln:p:sStuxzP:UR:L");
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("array"), ArgType::NoArgument, 'a'),
     wopt(L!("command"), ArgType::RequiredArgument, 'c'),
     wopt(L!("delimiter"), ArgType::RequiredArgument, 'd'),

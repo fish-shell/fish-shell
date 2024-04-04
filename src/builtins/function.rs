@@ -40,7 +40,7 @@ impl Default for FunctionCmdOpts {
 // This is needed due to the semantics of the -a/--argument-names flag.
 const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:");
 #[rustfmt::skip]
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("description"), ArgType::RequiredArgument, 'd'),
     wopt(L!("on-signal"), ArgType::RequiredArgument, 's'),
     wopt(L!("on-job-exit"), ArgType::RequiredArgument, 'j'),

@@ -37,7 +37,7 @@ fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr
 
 trait StringSubCommand<'args> {
     const SHORT_OPTIONS: &'static wstr;
-    const LONG_OPTIONS: &'static [woption<'static>];
+    const LONG_OPTIONS: &'static [WOption<'static>];
 
     /// Parse and store option specified by the associated short or long option.
     fn parse_opt(

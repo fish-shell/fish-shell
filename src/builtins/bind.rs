@@ -433,7 +433,7 @@ fn parse_cmd_opts(
 ) -> Option<i32> {
     let cmd = argv[0];
     let short_options = L!(":aehkKfM:Lm:s");
-    const long_options: &[woption] = &[
+    const long_options: &[WOption] = &[
         wopt(L!("all"), NoArgument, 'a'),
         wopt(L!("erase"), NoArgument, 'e'),
         wopt(L!("function-names"), NoArgument, 'f'),

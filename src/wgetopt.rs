@@ -71,7 +71,7 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     pub woptarg: Option<&'args wstr>,
 
     shortopts: &'opts wstr,
-    longopts: &'opts [woption<'opts>],
+    longopts: &'opts [WOption<'opts>],
 
     /// The next char to be scanned in the option-element in which the last option character we
     /// returned was found. This allows us to pick up the scan where we left off.
@@ -109,7 +109,7 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     initialized: bool,
 }
 
-/// Names for the values of the `has_arg` field of `woption`.
+/// Names for the values of the `has_arg` field of `WOption`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArgType {
     NoArgument,
@@ -134,26 +134,24 @@ pub enum ArgType {
 /// nonzero value (the equivalent single-letter option character, if there is one).  For long
 /// options that have a zero `flag` field, `getopt` returns the contents of the `val` field.
 #[derive(Debug, Clone, Copy)]
-pub struct woption<'a> {
+pub struct WOption<'a> {
     /// Long name for switch.
     pub name: &'a wstr,
-
     pub has_arg: ArgType,
-
     /// If \c flag is non-null, this is the value that flag will be set to. Otherwise, this is the
     /// return-value of the function call.
     pub val: char,
 }
 
-/// Helper function to create a woption.
-pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> woption<'_> {
-    woption { name, has_arg, val }
+/// Helper function to create a WOption.
+pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> WOption<'_> {
+    WOption { name, has_arg, val }
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     pub fn new(
         shortopts: &'opts wstr,
-        longopts: &'opts [woption],
+        longopts: &'opts [WOption],
         argv: &'argarray mut [&'args wstr],
     ) -> Self {
         return Self {
@@ -402,7 +400,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     fn update_long_opt(
         &mut self,
-        pfound: &woption,
+        pfound: &WOption,
         nameend: usize,
         longind: &mut usize,
         option_index: usize,
@@ -442,8 +440,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         exact: &mut bool,
         ambig: &mut bool,
         indfound: &mut usize,
-    ) -> Option<woption<'opts>> {
-        let mut pfound: Option<woption> = None;
+    ) -> Option<WOption<'opts>> {
+        let mut pfound: Option<WOption> = None;
 
         // Test all long options for either exact match or abbreviated matches.
         for (option_index, p) in self.longopts.iter().enumerate() {

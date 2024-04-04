@@ -141,7 +141,7 @@ const IS_INTERACTIVE_JOB_CTRL_SHORT: char = '\x03';
 const IS_NO_JOB_CTRL_SHORT: char = '\x04';
 
 const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
-const LONG_OPTIONS: &[woption] = &[
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("help"), NoArgument, 'h'),
     wopt(L!("current-filename"), NoArgument, 'f'),
     wopt(L!("current-line-number"), NoArgument, 'n'),

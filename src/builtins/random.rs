@@ -14,7 +14,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let print_hints = false;
 
     const shortopts: &wstr = L!("+:h");
-    const longopts: &[woption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
+    const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
     #[allow(clippy::never_loop)]

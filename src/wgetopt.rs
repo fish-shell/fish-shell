@@ -380,7 +380,6 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             } else {
                 self.woptarg = None;
             }
-            self.remaining_text = empty_wstr();
         } else {
             // This is an option that requires an argument.
             if !self.remaining_text.is_empty() {
@@ -397,9 +396,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;
             }
-            self.remaining_text = empty_wstr();
         }
 
+        self.remaining_text = empty_wstr();
         c
     }
 
@@ -412,6 +411,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     ) -> char {
         self.wopt_index += 1;
         assert!(matches!(self.remaining_text.char_at(name_end), '\0' | '='));
+
         if self.remaining_text.char_at(name_end) == '=' {
             if opt_found.has_arg != ArgType::NoArgument {
                 self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());

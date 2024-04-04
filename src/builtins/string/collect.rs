@@ -8,8 +8,8 @@ pub struct Collect {
 
 impl StringSubCommand<'_> for Collect {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("allow-empty"), no_argument, 'a'),
-        wopt(L!("no-trim-newlines"), no_argument, 'N'),
+        wopt(L!("allow-empty"), NoArgument, 'a'),
+        wopt(L!("no-trim-newlines"), NoArgument, 'N'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":Na");
 

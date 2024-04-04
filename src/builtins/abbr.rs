@@ -436,23 +436,23 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     const short_options: &wstr = L!("-:af:r:seqgUh");
 
     const longopts: &[woption] = &[
-        wopt(L!("add"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("position"), woption_argument_t::required_argument, 'p'),
-        wopt(L!("regex"), woption_argument_t::required_argument, 'r'),
+        wopt(L!("add"), ArgType::NoArgument, 'a'),
+        wopt(L!("position"), ArgType::RequiredArgument, 'p'),
+        wopt(L!("regex"), ArgType::RequiredArgument, 'r'),
         wopt(
             L!("set-cursor"),
-            woption_argument_t::optional_argument,
+            ArgType::OptionalArgument,
             SET_CURSOR_SHORT,
         ),
-        wopt(L!("function"), woption_argument_t::required_argument, 'f'),
-        wopt(L!("rename"), woption_argument_t::no_argument, RENAME_SHORT),
-        wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("show"), woption_argument_t::no_argument, 's'),
-        wopt(L!("list"), woption_argument_t::no_argument, 'l'),
-        wopt(L!("global"), woption_argument_t::no_argument, 'g'),
-        wopt(L!("universal"), woption_argument_t::no_argument, 'U'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+        wopt(L!("function"), ArgType::RequiredArgument, 'f'),
+        wopt(L!("rename"), ArgType::NoArgument, RENAME_SHORT),
+        wopt(L!("erase"), ArgType::NoArgument, 'e'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("show"), ArgType::NoArgument, 's'),
+        wopt(L!("list"), ArgType::NoArgument, 'l'),
+        wopt(L!("global"), ArgType::NoArgument, 'g'),
+        wopt(L!("universal"), ArgType::NoArgument, 'U'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options::default();

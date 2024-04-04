@@ -103,13 +103,13 @@ impl<'args> TryFrom<&'args wstr> for Fields {
 
 impl<'args> StringSubCommand<'args> for Split<'args> {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("right"), no_argument, 'r'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("no-empty"), no_argument, 'n'),
-        wopt(L!("fields"), required_argument, 'f'),
+        wopt(L!("quiet"), NoArgument, 'q'),
+        wopt(L!("right"), NoArgument, 'r'),
+        wopt(L!("max"), RequiredArgument, 'm'),
+        wopt(L!("no-empty"), NoArgument, 'n'),
+        wopt(L!("fields"), RequiredArgument, 'f'),
         // FIXME: allow-empty is not documented
-        wopt(L!("allow-empty"), no_argument, 'a'),
+        wopt(L!("allow-empty"), NoArgument, 'a'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":qrm:nf:a");
 

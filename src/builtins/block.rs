@@ -32,10 +32,10 @@ fn parse_options(
 
     const SHORT_OPTS: &wstr = L!(":eghl");
     const LONG_OPTS: &[woption] = &[
-        wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("local"), woption_argument_t::no_argument, 'l'),
-        wopt(L!("global"), woption_argument_t::no_argument, 'g'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+        wopt(L!("erase"), ArgType::NoArgument, 'e'),
+        wopt(L!("local"), ArgType::NoArgument, 'l'),
+        wopt(L!("global"), ArgType::NoArgument, 'g'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options::default();

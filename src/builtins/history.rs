@@ -65,20 +65,20 @@ struct HistoryCmdOpts {
 /// config.fish and other scripts.
 const short_options: &wstr = L!(":CRcehmn:pt::z");
 const longopts: &[woption] = &[
-    wopt(L!("prefix"), woption_argument_t::no_argument, 'p'),
-    wopt(L!("contains"), woption_argument_t::no_argument, 'c'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("show-time"), woption_argument_t::optional_argument, 't'),
-    wopt(L!("exact"), woption_argument_t::no_argument, 'e'),
-    wopt(L!("max"), woption_argument_t::required_argument, 'n'),
-    wopt(L!("null"), woption_argument_t::no_argument, 'z'),
-    wopt(L!("case-sensitive"), woption_argument_t::no_argument, 'C'),
-    wopt(L!("delete"), woption_argument_t::no_argument, '\x01'),
-    wopt(L!("search"), woption_argument_t::no_argument, '\x02'),
-    wopt(L!("save"), woption_argument_t::no_argument, '\x03'),
-    wopt(L!("clear"), woption_argument_t::no_argument, '\x04'),
-    wopt(L!("merge"), woption_argument_t::no_argument, '\x05'),
-    wopt(L!("reverse"), woption_argument_t::no_argument, 'R'),
+    wopt(L!("prefix"), ArgType::NoArgument, 'p'),
+    wopt(L!("contains"), ArgType::NoArgument, 'c'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("show-time"), ArgType::OptionalArgument, 't'),
+    wopt(L!("exact"), ArgType::NoArgument, 'e'),
+    wopt(L!("max"), ArgType::RequiredArgument, 'n'),
+    wopt(L!("null"), ArgType::NoArgument, 'z'),
+    wopt(L!("case-sensitive"), ArgType::NoArgument, 'C'),
+    wopt(L!("delete"), ArgType::NoArgument, '\x01'),
+    wopt(L!("search"), ArgType::NoArgument, '\x02'),
+    wopt(L!("save"), ArgType::NoArgument, '\x03'),
+    wopt(L!("clear"), ArgType::NoArgument, '\x04'),
+    wopt(L!("merge"), ArgType::NoArgument, '\x05'),
+    wopt(L!("reverse"), ArgType::NoArgument, 'R'),
 ];
 
 /// Remember the history subcommand and disallow selecting more than one history subcommand.

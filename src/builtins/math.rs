@@ -26,9 +26,9 @@ fn parse_cmd_opts(
     // This is needed because of the minus, `-`, operator in math expressions.
     const SHORT_OPTS: &wstr = L!("+:hs:b:");
     const LONG_OPTS: &[woption] = &[
-        wopt(L!("scale"), woption_argument_t::required_argument, 's'),
-        wopt(L!("base"), woption_argument_t::required_argument, 'b'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+        wopt(L!("scale"), ArgType::RequiredArgument, 's'),
+        wopt(L!("base"), ArgType::RequiredArgument, 'b'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options {

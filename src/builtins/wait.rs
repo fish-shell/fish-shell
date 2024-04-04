@@ -135,8 +135,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
 
     const shortopts: &wstr = L!(":nh");
     const longopts: &[woption] = &[
-        wopt(L!("any"), woption_argument_t::no_argument, 'n'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+        wopt(L!("any"), ArgType::NoArgument, 'n'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);

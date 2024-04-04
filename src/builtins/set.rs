@@ -103,22 +103,22 @@ impl Options {
         // we stop scanning for flags when the first non-flag argument is seen.
         const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
         const LONG_OPTS: &[woption] = &[
-            wopt(L!("export"), no_argument, 'x'),
-            wopt(L!("global"), no_argument, 'g'),
-            wopt(L!("function"), no_argument, 'f'),
-            wopt(L!("local"), no_argument, 'l'),
-            wopt(L!("erase"), no_argument, 'e'),
-            wopt(L!("names"), no_argument, 'n'),
-            wopt(L!("unexport"), no_argument, 'u'),
-            wopt(L!("universal"), no_argument, 'U'),
-            wopt(L!("long"), no_argument, 'L'),
-            wopt(L!("query"), no_argument, 'q'),
-            wopt(L!("show"), no_argument, 'S'),
-            wopt(L!("append"), no_argument, 'a'),
-            wopt(L!("prepend"), no_argument, 'p'),
-            wopt(L!("path"), no_argument, PATH_ARG),
-            wopt(L!("unpath"), no_argument, UNPATH_ARG),
-            wopt(L!("help"), no_argument, 'h'),
+            wopt(L!("export"), NoArgument, 'x'),
+            wopt(L!("global"), NoArgument, 'g'),
+            wopt(L!("function"), NoArgument, 'f'),
+            wopt(L!("local"), NoArgument, 'l'),
+            wopt(L!("erase"), NoArgument, 'e'),
+            wopt(L!("names"), NoArgument, 'n'),
+            wopt(L!("unexport"), NoArgument, 'u'),
+            wopt(L!("universal"), NoArgument, 'U'),
+            wopt(L!("long"), NoArgument, 'L'),
+            wopt(L!("query"), NoArgument, 'q'),
+            wopt(L!("show"), NoArgument, 'S'),
+            wopt(L!("append"), NoArgument, 'a'),
+            wopt(L!("prepend"), NoArgument, 'p'),
+            wopt(L!("path"), NoArgument, PATH_ARG),
+            wopt(L!("unpath"), NoArgument, UNPATH_ARG),
+            wopt(L!("help"), NoArgument, 'h'),
         ];
 
         let mut opts = Self::default();

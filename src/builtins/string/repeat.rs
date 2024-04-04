@@ -10,10 +10,10 @@ pub struct Repeat {
 
 impl StringSubCommand<'_> for Repeat {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("count"), required_argument, 'n'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("no-newline"), no_argument, 'N'),
+        wopt(L!("count"), RequiredArgument, 'n'),
+        wopt(L!("max"), RequiredArgument, 'm'),
+        wopt(L!("quiet"), NoArgument, 'q'),
+        wopt(L!("no-newline"), NoArgument, 'N'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":n:m:qN");
 

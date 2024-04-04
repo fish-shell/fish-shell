@@ -10,8 +10,8 @@ pub struct Length {
 
 impl StringSubCommand<'_> for Length {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("visible"), no_argument, 'V'),
+        wopt(L!("quiet"), NoArgument, 'q'),
+        wopt(L!("visible"), NoArgument, 'V'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":qV");
 

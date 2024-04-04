@@ -23,14 +23,14 @@ pub struct Match<'args> {
 
 impl<'args> StringSubCommand<'args> for Match<'args> {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("all"), no_argument, 'a'),
-        wopt(L!("entire"), no_argument, 'e'),
-        wopt(L!("groups-only"), no_argument, 'g'),
-        wopt(L!("ignore-case"), no_argument, 'i'),
-        wopt(L!("invert"), no_argument, 'v'),
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("regex"), no_argument, 'r'),
-        wopt(L!("index"), no_argument, 'n'),
+        wopt(L!("all"), NoArgument, 'a'),
+        wopt(L!("entire"), NoArgument, 'e'),
+        wopt(L!("groups-only"), NoArgument, 'g'),
+        wopt(L!("ignore-case"), NoArgument, 'i'),
+        wopt(L!("invert"), NoArgument, 'v'),
+        wopt(L!("quiet"), NoArgument, 'q'),
+        wopt(L!("regex"), NoArgument, 'r'),
+        wopt(L!("index"), NoArgument, 'n'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":aegivqrn");
 

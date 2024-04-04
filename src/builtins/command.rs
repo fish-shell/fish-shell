@@ -16,11 +16,11 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     const shortopts: &wstr = L!(":hasqv");
     const longopts: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("search"), woption_argument_t::no_argument, 's'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("all"), ArgType::NoArgument, 'a'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("quiet"), ArgType::NoArgument, 'q'),
+        wopt(L!("search"), ArgType::NoArgument, 's'),
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);

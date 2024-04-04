@@ -111,10 +111,10 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
 
 /// Names for the values of the `has_arg` field of `woption`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum woption_argument_t {
-    no_argument,
-    required_argument,
-    optional_argument,
+pub enum ArgType {
+    NoArgument,
+    RequiredArgument,
+    OptionalArgument,
 }
 
 /// Describe the long-named options requested by the application. The LONG_OPTIONS argument to
@@ -122,9 +122,9 @@ pub enum woption_argument_t {
 /// containing a name which is zero.
 ///
 /// The field `has_arg` is:
-/// no_argument    (or 0) if the option does not take an argument,
-/// required_argument  (or 1) if the option requires an argument,
-/// optional_argument   (or 2) if the option takes an optional argument.
+/// NoArgument    (or 0) if the option does not take an argument,
+/// RequiredArgument  (or 1) if the option requires an argument,
+/// OptionalArgument   (or 2) if the option takes an optional argument.
 ///
 /// If the field `flag` is not NULL, it points to a variable that is set to the value given in the
 /// field `val` when the option is found, but left unchanged if the option is not found.
@@ -138,7 +138,7 @@ pub struct woption<'a> {
     /// Long name for switch.
     pub name: &'a wstr,
 
-    pub has_arg: woption_argument_t,
+    pub has_arg: ArgType,
 
     /// If \c flag is non-null, this is the value that flag will be set to. Otherwise, this is the
     /// return-value of the function call.
@@ -146,7 +146,7 @@ pub struct woption<'a> {
 }
 
 /// Helper function to create a woption.
-pub const fn wopt(name: &wstr, has_arg: woption_argument_t, val: char) -> woption<'_> {
+pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> woption<'_> {
     woption { name, has_arg, val }
 }
 
@@ -410,13 +410,13 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.woptind += 1;
         assert!(self.nextchar.char_at(nameend) == '\0' || self.nextchar.char_at(nameend) == '=');
         if self.nextchar.char_at(nameend) == '=' {
-            if pfound.has_arg != woption_argument_t::no_argument {
+            if pfound.has_arg != ArgType::NoArgument {
                 self.woptarg = Some(self.nextchar[(nameend + 1)..].into());
             } else {
                 self.nextchar = empty_wstr();
                 return '?';
             }
-        } else if pfound.has_arg == woption_argument_t::required_argument {
+        } else if pfound.has_arg == ArgType::RequiredArgument {
             if self.woptind < self.argv.len() {
                 self.woptarg = Some(self.argv[self.woptind]);
                 self.woptind += 1;

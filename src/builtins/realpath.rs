@@ -17,8 +17,8 @@ struct Options {
 
 const short_options: &wstr = L!("+:hs");
 const long_options: &[woption] = &[
-    wopt(L!("no-symlinks"), no_argument, 's'),
-    wopt(L!("help"), no_argument, 'h'),
+    wopt(L!("no-symlinks"), NoArgument, 's'),
+    wopt(L!("help"), NoArgument, 'h'),
 ];
 
 fn parse_options(

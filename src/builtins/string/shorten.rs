@@ -27,11 +27,11 @@ impl Default for Shorten<'_> {
 impl<'args> StringSubCommand<'args> for Shorten<'args> {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
         // FIXME: documentation says it's --char
-        wopt(L!("chars"), required_argument, 'c'),
-        wopt(L!("max"), required_argument, 'm'),
-        wopt(L!("no-newline"), no_argument, 'N'),
-        wopt(L!("left"), no_argument, 'l'),
-        wopt(L!("quiet"), no_argument, 'q'),
+        wopt(L!("chars"), RequiredArgument, 'c'),
+        wopt(L!("max"), RequiredArgument, 'm'),
+        wopt(L!("no-newline"), NoArgument, 'N'),
+        wopt(L!("left"), NoArgument, 'l'),
+        wopt(L!("quiet"), NoArgument, 'q'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":c:m:Nlq");
 

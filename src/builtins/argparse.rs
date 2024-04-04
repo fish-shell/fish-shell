@@ -73,13 +73,13 @@ impl ArgParseCmdOpts<'_> {
 
 const SHORT_OPTIONS: &wstr = L!("+:hn:six:N:X:");
 const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("stop-nonopt"), woption_argument_t::no_argument, 's'),
-    wopt(L!("ignore-unknown"), woption_argument_t::no_argument, 'i'),
-    wopt(L!("name"), woption_argument_t::required_argument, 'n'),
-    wopt(L!("exclusive"), woption_argument_t::required_argument, 'x'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("min-args"), woption_argument_t::required_argument, 'N'),
-    wopt(L!("max-args"), woption_argument_t::required_argument, 'X'),
+    wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
+    wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
+    wopt(L!("name"), ArgType::RequiredArgument, 'n'),
+    wopt(L!("exclusive"), ArgType::RequiredArgument, 'x'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("min-args"), ArgType::RequiredArgument, 'N'),
+    wopt(L!("max-args"), ArgType::RequiredArgument, 'X'),
 ];
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
@@ -584,15 +584,15 @@ fn populate_option_strings<'args>(
                 if opt_spec.short_flag_valid {
                     short_options.push_str("::");
                 }
-                woption_argument_t::optional_argument
+                ArgType::OptionalArgument
             }
             ArgCardinality::Once | ArgCardinality::AtLeastOnce => {
                 if opt_spec.short_flag_valid {
                     short_options.push_str(":");
                 }
-                woption_argument_t::required_argument
+                ArgType::RequiredArgument
             }
-            ArgCardinality::None => woption_argument_t::no_argument,
+            ArgCardinality::None => ArgType::NoArgument,
         };
 
         if !opt_spec.long_flag.is_empty() {

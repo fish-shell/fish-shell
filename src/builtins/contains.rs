@@ -16,8 +16,8 @@ fn parse_options(
 
     const SHORT_OPTS: &wstr = L!("+:hi");
     const LONG_OPTS: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("index"), woption_argument_t::no_argument, 'i'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("index"), ArgType::NoArgument, 'i'),
     ];
 
     let mut opts = Options::default();

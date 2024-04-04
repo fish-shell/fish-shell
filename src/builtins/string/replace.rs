@@ -16,11 +16,11 @@ pub struct Replace<'args> {
 
 impl<'args> StringSubCommand<'args> for Replace<'args> {
     const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("all"), no_argument, 'a'),
-        wopt(L!("filter"), no_argument, 'f'),
-        wopt(L!("ignore-case"), no_argument, 'i'),
-        wopt(L!("quiet"), no_argument, 'q'),
-        wopt(L!("regex"), no_argument, 'r'),
+        wopt(L!("all"), NoArgument, 'a'),
+        wopt(L!("filter"), NoArgument, 'f'),
+        wopt(L!("ignore-case"), NoArgument, 'i'),
+        wopt(L!("quiet"), NoArgument, 'q'),
+        wopt(L!("regex"), NoArgument, 'r'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":afiqr");
 

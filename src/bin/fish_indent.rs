@@ -44,7 +44,7 @@ use fish::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMME
 use fish::topic_monitor::topic_monitor_init;
 use fish::wchar::prelude::*;
 use fish::wcstringutil::count_preceding_backslashes;
-use fish::wgetopt::{wopt, woption, woption_argument_t, WGetopter};
+use fish::wgetopt::{wopt, woption, ArgType, WGetopter};
 use fish::wutil::perror;
 use fish::wutil::{fish_iswalnum, write_to_fd};
 use fish::{
@@ -782,26 +782,18 @@ fn throwing_main() -> i32 {
 
     let short_opts: &wstr = L!("+d:hvwicD:");
     let long_opts: &[woption] = &[
-        wopt(L!("debug"), woption_argument_t::required_argument, 'd'),
-        wopt(
-            L!("debug-output"),
-            woption_argument_t::required_argument,
-            'o',
-        ),
-        wopt(
-            L!("debug-stack-frames"),
-            woption_argument_t::required_argument,
-            'D',
-        ),
-        wopt(L!("dump-parse-tree"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("no-indent"), woption_argument_t::no_argument, 'i'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("version"), woption_argument_t::no_argument, 'v'),
-        wopt(L!("write"), woption_argument_t::no_argument, 'w'),
-        wopt(L!("html"), woption_argument_t::no_argument, '\x01'),
-        wopt(L!("ansi"), woption_argument_t::no_argument, '\x02'),
-        wopt(L!("pygments"), woption_argument_t::no_argument, '\x03'),
-        wopt(L!("check"), woption_argument_t::no_argument, 'c'),
+        wopt(L!("debug"), ArgType::RequiredArgument, 'd'),
+        wopt(L!("debug-output"), ArgType::RequiredArgument, 'o'),
+        wopt(L!("debug-stack-frames"), ArgType::RequiredArgument, 'D'),
+        wopt(L!("dump-parse-tree"), ArgType::NoArgument, 'P'),
+        wopt(L!("no-indent"), ArgType::NoArgument, 'i'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("version"), ArgType::NoArgument, 'v'),
+        wopt(L!("write"), ArgType::NoArgument, 'w'),
+        wopt(L!("html"), ArgType::NoArgument, '\x01'),
+        wopt(L!("ansi"), ArgType::NoArgument, '\x02'),
+        wopt(L!("pygments"), ArgType::NoArgument, '\x03'),
+        wopt(L!("check"), ArgType::NoArgument, 'c'),
     ];
 
     let args: Vec<WString> = std::env::args_os()

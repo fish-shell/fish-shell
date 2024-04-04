@@ -434,18 +434,18 @@ fn parse_cmd_opts(
     let cmd = argv[0];
     let short_options = L!(":aehkKfM:Lm:s");
     const long_options: &[woption] = &[
-        wopt(L!("all"), no_argument, 'a'),
-        wopt(L!("erase"), no_argument, 'e'),
-        wopt(L!("function-names"), no_argument, 'f'),
-        wopt(L!("help"), no_argument, 'h'),
-        wopt(L!("key"), no_argument, 'k'),
-        wopt(L!("key-names"), no_argument, 'K'),
-        wopt(L!("list-modes"), no_argument, 'L'),
-        wopt(L!("mode"), required_argument, 'M'),
-        wopt(L!("preset"), no_argument, 'p'),
-        wopt(L!("sets-mode"), required_argument, 'm'),
-        wopt(L!("silent"), no_argument, 's'),
-        wopt(L!("user"), no_argument, 'u'),
+        wopt(L!("all"), NoArgument, 'a'),
+        wopt(L!("erase"), NoArgument, 'e'),
+        wopt(L!("function-names"), NoArgument, 'f'),
+        wopt(L!("help"), NoArgument, 'h'),
+        wopt(L!("key"), NoArgument, 'k'),
+        wopt(L!("key-names"), NoArgument, 'K'),
+        wopt(L!("list-modes"), NoArgument, 'L'),
+        wopt(L!("mode"), RequiredArgument, 'M'),
+        wopt(L!("preset"), NoArgument, 'p'),
+        wopt(L!("sets-mode"), RequiredArgument, 'm'),
+        wopt(L!("silent"), NoArgument, 's'),
+        wopt(L!("user"), NoArgument, 'u'),
     ];
 
     let mut w = WGetopter::new(short_options, long_options, argv);

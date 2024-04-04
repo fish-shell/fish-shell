@@ -105,14 +105,14 @@ fn print_colors(
 
 const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
 const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("background"), woption_argument_t::required_argument, 'b'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("bold"), woption_argument_t::no_argument, 'o'),
-    wopt(L!("underline"), woption_argument_t::no_argument, 'u'),
-    wopt(L!("italics"), woption_argument_t::no_argument, 'i'),
-    wopt(L!("dim"), woption_argument_t::no_argument, 'd'),
-    wopt(L!("reverse"), woption_argument_t::no_argument, 'r'),
-    wopt(L!("print-colors"), woption_argument_t::no_argument, 'c'),
+    wopt(L!("background"), ArgType::RequiredArgument, 'b'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("bold"), ArgType::NoArgument, 'o'),
+    wopt(L!("underline"), ArgType::NoArgument, 'u'),
+    wopt(L!("italics"), ArgType::NoArgument, 'i'),
+    wopt(L!("dim"), ArgType::NoArgument, 'd'),
+    wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+    wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
 ];
 
 /// set_color builtin.

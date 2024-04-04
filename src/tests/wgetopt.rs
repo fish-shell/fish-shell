@@ -1,12 +1,12 @@
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
-use crate::wgetopt::{wopt, woption, woption_argument_t, WGetopter};
+use crate::wgetopt::{wopt, woption, ArgType, WGetopter};
 
 #[test]
 fn test_wgetopt() {
     // Regression test for a crash.
     const short_options: &wstr = L!("-a");
-    const long_options: &[woption] = &[wopt(L!("add"), woption_argument_t::no_argument, 'a')];
+    const long_options: &[woption] = &[wopt(L!("add"), ArgType::NoArgument, 'a')];
     let mut argv = [
         L!("abbr"),
         L!("--add"),

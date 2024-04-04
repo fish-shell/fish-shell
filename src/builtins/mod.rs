@@ -56,7 +56,7 @@ mod prelude {
         wchar::prelude::*,
         wgetopt::{
             wopt, woption,
-            woption_argument_t::{self, *},
+            ArgType::{self, *},
             WGetopter, NON_OPTION_CHAR,
         },
         wutil::{fish_wcstoi, fish_wcstol, fish_wcstoul},

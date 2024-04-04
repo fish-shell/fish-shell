@@ -204,16 +204,16 @@ fn construct_short_opts(opts: &Options) -> WString {
 /// to indicate that a max of one of the long flags sharing a short flag is valid.
 /// Remember: adjust the completions in share/completions/ when options change
 const LONG_OPTIONS: [woption<'static>; 10] = [
-    wopt(L!("quiet"), no_argument, 'q'),
-    wopt(L!("null-in"), no_argument, 'z'),
-    wopt(L!("null-out"), no_argument, 'Z'),
-    wopt(L!("perm"), required_argument, 'p'),
-    wopt(L!("type"), required_argument, 't'),
-    wopt(L!("invert"), no_argument, 'v'),
-    wopt(L!("relative"), no_argument, 'R'),
-    wopt(L!("reverse"), no_argument, 'r'),
-    wopt(L!("unique"), no_argument, 'u'),
-    wopt(L!("key"), required_argument, NON_OPTION_CHAR),
+    wopt(L!("quiet"), NoArgument, 'q'),
+    wopt(L!("null-in"), NoArgument, 'z'),
+    wopt(L!("null-out"), NoArgument, 'Z'),
+    wopt(L!("perm"), RequiredArgument, 'p'),
+    wopt(L!("type"), RequiredArgument, 't'),
+    wopt(L!("invert"), NoArgument, 'v'),
+    wopt(L!("relative"), NoArgument, 'R'),
+    wopt(L!("reverse"), NoArgument, 'r'),
+    wopt(L!("unique"), NoArgument, 'u'),
+    wopt(L!("key"), RequiredArgument, NON_OPTION_CHAR),
 ];
 
 fn parse_opts<'args>(

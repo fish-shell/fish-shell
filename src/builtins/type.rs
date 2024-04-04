@@ -24,15 +24,15 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
     const shortopts: &wstr = L!(":hasftpPq");
     const longopts: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("short"), woption_argument_t::no_argument, 's'),
-        wopt(L!("no-functions"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("type"), woption_argument_t::no_argument, 't'),
-        wopt(L!("path"), woption_argument_t::no_argument, 'p'),
-        wopt(L!("force-path"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("all"), ArgType::NoArgument, 'a'),
+        wopt(L!("short"), ArgType::NoArgument, 's'),
+        wopt(L!("no-functions"), ArgType::NoArgument, 'f'),
+        wopt(L!("type"), ArgType::NoArgument, 't'),
+        wopt(L!("path"), ArgType::NoArgument, 'p'),
+        wopt(L!("force-path"), ArgType::NoArgument, 'P'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("quiet"), ArgType::NoArgument, 'q'),
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);

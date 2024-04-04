@@ -41,17 +41,17 @@ impl Default for FunctionCmdOpts {
 const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:");
 #[rustfmt::skip]
 const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("description"), woption_argument_t::required_argument, 'd'),
-    wopt(L!("on-signal"), woption_argument_t::required_argument, 's'),
-    wopt(L!("on-job-exit"), woption_argument_t::required_argument, 'j'),
-    wopt(L!("on-process-exit"), woption_argument_t::required_argument, 'p'),
-    wopt(L!("on-variable"), woption_argument_t::required_argument, 'v'),
-    wopt(L!("on-event"), woption_argument_t::required_argument, 'e'),
-    wopt(L!("wraps"), woption_argument_t::required_argument, 'w'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("argument-names"), woption_argument_t::required_argument, 'a'),
-    wopt(L!("no-scope-shadowing"), woption_argument_t::no_argument, 'S'),
-    wopt(L!("inherit-variable"), woption_argument_t::required_argument, 'V'),
+    wopt(L!("description"), ArgType::RequiredArgument, 'd'),
+    wopt(L!("on-signal"), ArgType::RequiredArgument, 's'),
+    wopt(L!("on-job-exit"), ArgType::RequiredArgument, 'j'),
+    wopt(L!("on-process-exit"), ArgType::RequiredArgument, 'p'),
+    wopt(L!("on-variable"), ArgType::RequiredArgument, 'v'),
+    wopt(L!("on-event"), ArgType::RequiredArgument, 'e'),
+    wopt(L!("wraps"), ArgType::RequiredArgument, 'w'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("argument-names"), ArgType::RequiredArgument, 'a'),
+    wopt(L!("no-scope-shadowing"), ArgType::NoArgument, 'S'),
+    wopt(L!("inherit-variable"), ArgType::RequiredArgument, 'V'),
 ];
 
 /// \return the internal_job_id for a pid, or None if none.

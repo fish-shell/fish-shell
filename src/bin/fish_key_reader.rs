@@ -30,7 +30,7 @@ use fish::{
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
-    wgetopt::{wopt, woption, woption_argument_t, WGetopter},
+    wgetopt::{wopt, woption, ArgType, WGetopter},
 };
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -167,10 +167,10 @@ fn setup_and_process_keys(continuous_mode: bool) -> i32 {
 fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
     let short_opts: &wstr = L!("+chvV");
     let long_opts: &[woption] = &[
-        wopt(L!("continuous"), woption_argument_t::no_argument, 'c'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("version"), woption_argument_t::no_argument, 'v'),
-        wopt(L!("verbose"), woption_argument_t::no_argument, 'V'), // Removed
+        wopt(L!("continuous"), ArgType::NoArgument, 'c'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("version"), ArgType::NoArgument, 'v'),
+        wopt(L!("verbose"), ArgType::NoArgument, 'V'), // Removed
     ];
 
     let args: Vec<WString> = std::env::args_os()

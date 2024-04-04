@@ -48,7 +48,7 @@ function __fish_clasp_list_subcommands
         string replace --regex '^\\s{2}([a-z]+).*' '$1'
 end
 
-function __fish_seen_subcommands_from
+function __fish_clasp_seen_subcommands_from
     set -l cmd (commandline -poc)
     set -e cmd[1]
 
@@ -160,7 +160,7 @@ complete -c clasp -n "$run_condition" -x -a '(__fish_clasp_list_functions)'
 
 # apis subcommands and options
 set apis_condition '__fish_seen_subcommand_from apis'
-set apis_subcommand_condition '__fish_seen_subcommands_from apis enable || __fish_seen_subcommands_from apis disable'
+set apis_subcommand_condition '__fish_clasp_seen_subcommands_from apis enable || __fish_clasp_seen_subcommands_from apis disable'
 complete -c clasp -n "$apis_condition" -x -a list -d 'List APIs'
 complete -c clasp -n "$apis_condition" -x -a enable -d 'Enable APIs'
 complete -c clasp -n "$apis_condition" -x -a disable -d 'Disable APIs'

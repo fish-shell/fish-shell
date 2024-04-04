@@ -47,11 +47,10 @@ use crate::wchar::prelude::*;
 /// `ordering`.  In the case of RETURN_IN_ORDER, only `--` can cause `getopt` to return EOF with
 /// `woptind` != ARGC.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(clippy::upper_case_acronyms)]
 enum Ordering {
-    REQUIRE_ORDER,
-    PERMUTE,
-    RETURN_IN_ORDER,
+    RequireOrder,
+    Permute,
+    ReturnInOrder,
 }
 
 /// The special character code, enabled via RETURN_IN_ORDER, indicating a non-option argument.
@@ -59,7 +58,7 @@ pub const NONOPTION_CHAR_CODE: char = '\x01';
 
 impl Default for Ordering {
     fn default() -> Self {
-        Ordering::PERMUTE
+        Ordering::Permute
     }
 }
 
@@ -172,7 +171,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
             last_nonopt: 0,
             missing_arg_return_colon: false,
             nextchar: Default::default(),
-            ordering: Ordering::PERMUTE,
+            ordering: Ordering::Permute,
             woptarg: None,
             woptind: 0,
         };
@@ -245,13 +244,13 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
 
         // Determine how to handle the ordering of options and nonoptions.
         if optstring.char_at(0) == '-' {
-            self.ordering = Ordering::RETURN_IN_ORDER;
+            self.ordering = Ordering::ReturnInOrder;
             optstring = &optstring[1..];
         } else if optstring.char_at(0) == '+' {
-            self.ordering = Ordering::REQUIRE_ORDER;
+            self.ordering = Ordering::RequireOrder;
             optstring = &optstring[1..];
         } else {
-            self.ordering = Ordering::PERMUTE;
+            self.ordering = Ordering::Permute;
         }
 
         if optstring.char_at(0) == ':' {
@@ -268,7 +267,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
     fn next_argv(&mut self) -> Option<char> {
         let argc = self.argv.len();
 
-        if self.ordering == Ordering::PERMUTE {
+        if self.ordering == Ordering::Permute {
             // If we have just processed some options following some non-options, exchange them so
             // that the options come first.
             if self.first_nonopt != self.last_nonopt && self.last_nonopt != self.woptind {
@@ -324,7 +323,7 @@ impl<'opts, 'args, 'argarray> wgetopter_t<'opts, 'args, 'argarray> {
         // If we have come to a non-option and did not permute it, either stop the scan or describe
         // it to the caller and pass it by.
         if self.argv[self.woptind].char_at(0) != '-' || self.argv[self.woptind].len() == 1 {
-            if self.ordering == Ordering::REQUIRE_ORDER {
+            if self.ordering == Ordering::RequireOrder {
                 return None;
             }
             self.woptarg = Some(self.argv[self.woptind]);

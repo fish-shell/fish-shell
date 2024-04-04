@@ -93,7 +93,7 @@ pub struct WGetopter<'opts, 'args, 'argarray> {
     pub woptind: usize,
 
     /// Set to an option character which was unrecognized.
-    woptopt: char,
+    unrecognized_opt: char,
 
     /// Describe how to deal with options that follow non-option ARGV-elements.
     ordering: Ordering,
@@ -155,7 +155,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         argv: &'argarray mut [&'args wstr],
     ) -> Self {
         return Self {
-            woptopt: '?',
+            unrecognized_opt: '?',
             argv,
             shortopts,
             longopts,
@@ -351,7 +351,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         if temp.is_empty() || c == ':' {
-            self.woptopt = c;
+            self.unrecognized_opt = c;
 
             if !self.nextchar.is_empty() {
                 self.woptind += 1;
@@ -380,7 +380,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 // the next element now.
                 self.woptind += 1;
             } else if self.woptind == self.argv.len() {
-                self.woptopt = c;
+                self.unrecognized_opt = c;
                 c = if self.missing_arg_return_colon {
                     ':'
                 } else {

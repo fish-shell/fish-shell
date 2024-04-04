@@ -146,6 +146,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             self.wopt_index <= self.argv.len(),
             "wopt_index is out of range"
         );
+
         let mut ignored = 0;
         self.wgetopt_inner(&mut ignored)
     }
@@ -173,6 +174,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 for i in 0..len {
                     self.argv.swap(left + i, right - (middle - left) + i);
                 }
+
                 // Exclude the moved elements from further swapping.
                 right -= len;
             } else {
@@ -183,6 +185,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 for i in 0..len {
                     self.argv.swap(left + i, middle + i);
                 }
+
                 // Exclude the moved elements from further swapping.
                 left += len;
             }
@@ -285,9 +288,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             if self.ordering == Ordering::RequireOrder {
                 return Err(None);
             }
+
             self.woptarg = Some(self.argv[self.wopt_index]);
             self.wopt_index += 1;
-
             return Err(Some(NON_OPTION_CHAR));
         }
 
@@ -321,7 +324,6 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         if temp.is_empty() || c == ':' {
             self.unrecognized_opt = c;
-
             if !self.remaining_text.is_empty() {
                 self.wopt_index += 1;
             }
@@ -461,6 +463,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         {
             self.remaining_text = empty_wstr();
             self.wopt_index += 1;
+
             return Some('?');
         }
 
@@ -474,8 +477,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if !self.initialized {
             self.initialize();
         }
-        self.woptarg = None;
 
+        self.woptarg = None;
         if self.remaining_text.is_empty() {
             if let Err(narg) = self.next_argv() {
                 return narg;

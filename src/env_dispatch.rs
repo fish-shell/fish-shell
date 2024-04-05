@@ -496,7 +496,7 @@ fn update_fish_color_support(vars: &EnvStack) {
 
 /// Apply any platform- or environment-specific hacks to our terminfo [`Term`] instance.
 fn apply_term_hacks(vars: &EnvStack, term: &mut Term) {
-    if cfg!(target_os = "macos") {
+    if cfg!(apple) {
         // Hack in missing italics and dim capabilities omitted from macOS xterm-256color terminfo.
         // Improves the user experience under Terminal.app and iTerm.
         let term_prog = vars

@@ -88,6 +88,7 @@ fn detect_cfgs(target: &mut Target) {
             "",
             &(|_: &Target| Ok(false)) as &dyn Fn(&Target) -> Result<bool, Box<dyn Error>>,
         ),
+        ("apple", &detect_apple),
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
         ("small_main_stack", &has_small_stack),
@@ -121,6 +122,10 @@ fn detect_cfgs(target: &mut Target) {
             Ok(enabled) => rsconf::declare_cfg(name, enabled),
         }
     }
+}
+
+fn detect_apple(_: &Target) -> Result<bool, Box<dyn Error>> {
+    Ok(cfg!(any(target_os = "ios", target_os = "macos")))
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with
@@ -199,14 +204,14 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
 /// 0.5 MiB is small enough that we'd have to drastically reduce MAX_STACK_DEPTH to less than 10, so
 /// we instead use a workaround to increase the main thread size.
 fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
-    #[cfg(not(any(target_os = "macos", target_os = "netbsd")))]
+    #[cfg(not(any(target_os = "ios", target_os = "macos", target_os = "netbsd")))]
     return Ok(false);
 
     // NetBSD 10 also needs this but can't find pthread_get_stacksize_np.
     #[cfg(target_os = "netbsd")]
     return Ok(true);
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "ios", target_os = "macos"))]
     {
         use core::ffi;
 

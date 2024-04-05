@@ -1,7 +1,7 @@
 use once_cell::sync::OnceCell;
 use std::os::fd::RawFd;
 
-#[cfg(target_os = "macos")]
+#[cfg(apple)]
 mod notifyd;
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -53,7 +53,7 @@ impl UniversalNotifier for NullNotifier {
 
 /// Create a notifier.
 pub fn create_notifier() -> Box<dyn UniversalNotifier> {
-    #[cfg(target_os = "macos")]
+    #[cfg(apple)]
     if let Some(notifier) = notifyd::NotifydNotifier::new() {
         return Box::new(notifier);
     }

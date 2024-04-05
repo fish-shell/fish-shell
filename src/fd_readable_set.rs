@@ -42,14 +42,14 @@ pub fn poll_fd_readable(fd: i32) -> bool {
 /// This allows accumulating a set of fds and then seeing if they are readable.
 /// This only handles readability.
 /// Apple's `man poll`: "The poll() system call currently does not support devices."
-#[cfg(target_os = "macos")]
+#[cfg(apple)]
 pub struct FdReadableSet {
     // The underlying fdset and nfds value to pass to select().
     fdset_: libc::fd_set,
     nfds_: c_int,
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(apple)]
 impl FdReadableSet {
     /// Construct an empty set.
     pub fn new() -> FdReadableSet {
@@ -124,12 +124,12 @@ impl FdReadableSet {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(apple))]
 pub struct FdReadableSet {
     pollfds_: Vec<libc::pollfd>,
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(not(apple))]
 impl FdReadableSet {
     /// Construct an empty set.
     pub fn new() -> FdReadableSet {

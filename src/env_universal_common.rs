@@ -28,10 +28,10 @@ use std::os::fd::{AsFd, AsRawFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
-#[cfg(any(bsd, target_os = "macos"))]
+#[cfg(any(apple, bsd))]
 const O_EXLOCK: OFlag = OFlag::O_EXLOCK;
 
-#[cfg(not(any(bsd, target_os = "macos")))]
+#[cfg(not(any(apple, bsd)))]
 const O_EXLOCK: OFlag = OFlag::empty();
 
 /// Callback data, reflecting a change in universal variables.

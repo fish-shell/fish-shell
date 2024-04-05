@@ -263,7 +263,7 @@ mod o_search {
     /// On macOS we have O_SEARCH, which is defined as O_EXEC | O_DIRECTORY,
     /// where O_EXEC is 0x40000000. This is only on macOS 12.0+ or later; however
     /// prior macOS versions ignores O_EXEC so it is treated the same as O_RDONLY.
-    #[cfg(target_os = "macos")]
+    #[cfg(apple)]
     pub const BEST_O_SEARCH: OFlag = OFlag::from_bits_truncate(libc::O_DIRECTORY | 0x40000000);
 
     /// On FreeBSD, we have O_SEARCH = 0x00040000.
@@ -277,10 +277,10 @@ mod o_search {
 
     /// Fall back to O_RDONLY.
     #[cfg(not(any(
+        apple,
         target_os = "linux",
         target_os = "android",
         target_os = "freebsd",
-        target_os = "macos"
     )))]
     pub const BEST_O_SEARCH: OFlag = OFlag::O_RDONLY;
 }

@@ -401,10 +401,10 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGSYS, "Bad system call"),
     signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
 
-    #[cfg(any(bsd, target_os = "macos"))]
+    #[cfg(any(apple, bsd))]
     signal_entry!(SIGEMT, "Unused signal"),
 
-    #[cfg(any(bsd, target_os = "macos"))]
+    #[cfg(any(apple, bsd))]
     signal_entry!(SIGINFO, "Information request"),
 
     #[cfg(target_os = "linux")]

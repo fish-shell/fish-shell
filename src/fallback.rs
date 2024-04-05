@@ -110,12 +110,12 @@ pub fn fish_wcswidth(s: &wstr) -> isize {
 // otherwise it uses mkstemp followed by fcntl
 pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), Errno> {
     let name = name_template.into_raw();
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_os = "ios")))]
     let fd = {
         use libc::O_CLOEXEC;
         unsafe { libc::mkostemp(name, O_CLOEXEC) }
     };
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     let fd = {
         use libc::{FD_CLOEXEC, F_SETFD};
         let fd = unsafe { libc::mkstemp(name) };

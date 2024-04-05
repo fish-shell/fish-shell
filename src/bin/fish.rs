@@ -237,7 +237,7 @@ fn tv_to_msec(tv: &libc::timeval) -> i64 {
 
 fn print_rusage_self() {
     let rs = getrusage(RUsage::RSelf);
-    let rss_kb = if cfg!(target_os = "macos") {
+    let rss_kb = if cfg!(any(target_os = "macos", target_os = "ios")) {
         // mac use bytes.
         rs.ru_maxrss / 1024
     } else {

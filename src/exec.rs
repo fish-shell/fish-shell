@@ -317,7 +317,7 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
             // The file is not executable for various reasons.
             STATUS_NOT_EXECUTABLE.unwrap()
         }
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
         libc::EBADARCH => {
             // This is for e.g. running ARM app on Intel Mac.
             STATUS_NOT_EXECUTABLE.unwrap()

@@ -119,6 +119,15 @@ pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> WOption<'_> {
     WOption { name, has_arg, val }
 }
 
+#[derive(Default)]
+enum LongOptMatch<'a> {
+    Exact(WOption<'a>, usize),
+    NonExact(WOption<'a>, usize),
+    Ambiguous,
+    #[default]
+    NoMatch,
+}
+
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     pub fn new(
         shortopts: &'opts wstr,
@@ -407,12 +416,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     }
 
     /// Find a matching long-named option.
-    fn find_matching_long_opt(
-        &self,
-        name_end: usize,
-        mut index_found: usize,
-    ) -> (Option<WOption<'opts>>, bool, bool, usize) {
-        let mut opt_found: Option<WOption> = None;
+    fn find_matching_long_opt(&self, name_end: usize) -> LongOptMatch<'opts> {
+        let mut opt_found = None;
+        let mut index_found = 0;
         let mut exact = false;
         let mut ambig = false;
 
@@ -438,7 +444,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         }
 
-        (opt_found, exact, ambig, index_found)
+        if let Some(opt) = opt_found {
+            if exact {
+                LongOptMatch::Exact(opt, index_found)
+            } else if ambig {
+                LongOptMatch::Ambiguous
+            } else {
+                LongOptMatch::NonExact(opt, index_found)
+            }
+        } else {
+            LongOptMatch::NoMatch
+        }
     }
 
     /// Check for a matching long-named option.
@@ -449,16 +465,18 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             name_end += 1;
         }
 
-        let (opt_found, exact, ambig, index_found) = self.find_matching_long_opt(name_end, 0);
+        let match_state = self.find_matching_long_opt(name_end);
 
-        if ambig && !exact {
-            self.remaining_text = empty_wstr();
-            self.wopt_index += 1;
-            return Some('?');
-        }
-
-        if let Some(opt_found) = opt_found {
-            return Some(self.update_long_opt(&opt_found, name_end, longopt_index, index_found));
+        match match_state {
+            LongOptMatch::Exact(opt, index) | LongOptMatch::NonExact(opt, index) => {
+                return Some(self.update_long_opt(&opt, name_end, longopt_index, index));
+            }
+            LongOptMatch::Ambiguous => {
+                self.remaining_text = empty_wstr();
+                self.wopt_index += 1;
+                return Some('?');
+            }
+            LongOptMatch::NoMatch => {}
         }
 
         // If we can't find a long option, try to interpret it as a short option.

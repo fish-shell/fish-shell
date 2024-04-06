@@ -94,7 +94,7 @@ complete -c set -n "__fish_is_nth_token 1" -l unpath -d "Make variable not as a 
 
 # Complete using preexisting variable names
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -l | string match -rv '^__' | string replace ' ' \t'Local Variable: ')"
-complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace ' ' \t'Global Variable: ')"
+complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -g | string match -rv '^__' | string replace -r '^((?:history|fish_killring) ) .*' '$1' | string replace ' ' \t'Global Variable: ')"
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase; and not __fish_seen_argument -s l -s g -s U -l local -l global -l universal' -x -a "(set -U | string match -rv '^__' | string replace ' ' \t'Universal Variable: ')"
 # Complete some fish configuration variables even if they aren't set.
 complete -c set -n '__fish_is_nth_token 1; and not __fish_seen_argument -s e -l erase' -x -a "(__fish_complete_special_vars)"

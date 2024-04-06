@@ -200,7 +200,6 @@ end" >$__fish_config_dir/config.fish
         if set -q VTE_VERSION
             # Same for these terminals
             or string match -q -- 'alacritty*' $TERM
-            or string match -q -- '*kitty' $TERM
             or test "$TERM_PROGRAM" = WezTerm
             set -g fish_handle_reflow 0
         else if set -q KONSOLE_VERSION

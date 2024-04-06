@@ -23,6 +23,7 @@ use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
+use std::io::Write;
 use std::num::NonZeroUsize;
 use std::ops::Range;
 use std::os::fd::RawFd;
@@ -625,6 +626,7 @@ fn read_i(parser: &Parser) -> i32 {
         data.update_buff_pos(EditableLineTag::Commandline, Some(0));
         data.command_line.clear();
         data.command_line_changed(EditableLineTag::Commandline);
+        data.screen.write_bytes(b"\x1b]133;C\x07");
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();
@@ -636,6 +638,11 @@ fn read_i(parser: &Parser) -> i32 {
         data.exit_loop_requested |= parser.libdata().pods.exit_current_script;
         parser.libdata_mut().pods.exit_current_script = false;
 
+        let _ = write!(
+            Outputter::stdoutput().borrow_mut(),
+            "\x1b]133;D;{}\x07",
+            parser.get_last_status()
+        );
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();

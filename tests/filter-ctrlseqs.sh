@@ -7,10 +7,8 @@ escape=$(printf '\033')
 ""$escape\[>4;1m""\
 ""$escape\[>5u""\
 ""$escape=""\
-""($escape\[\?1004h)?""\
 ""|""\
 ""$escape\[\?2004l""\
 ""$escape\[>4;0m""\
 ""$escape\[<1u""\
-""$escape>""\
-""$escape\[\?1004l"
+""$escape>"

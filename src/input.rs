@@ -571,9 +571,6 @@ impl Inputter {
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
     /// actually reading from fd 0.
     pub fn queue_char(&mut self, ch: CharEvent) {
-        if ch.is_readline() {
-            self.function_push_args(ch.get_readline());
-        }
         self.queue.push_back(ch);
     }
 

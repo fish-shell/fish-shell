@@ -135,6 +135,7 @@ Improved terminal support
 - Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
 - Focus reporting is enabled unconditionally, not just inside tmux.
   To use it, define functions that handle events ``fish_focus_in`` and ``fish_focus_out``.
+- Focus reporting is no longer disabled on the first prompt.
 
 Other improvements
 ------------------

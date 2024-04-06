@@ -70,7 +70,8 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input::Inputter;
 use crate::input_common::{
-    terminal_protocols_enable_scoped, CharEvent, CharInputStyle, ReadlineCmd,
+    focus_events_enable_ifn, terminal_protocols_enable_scoped, CharEvent, CharInputStyle,
+    ReadlineCmd,
 };
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -2039,6 +2040,7 @@ impl ReaderData {
         let mut accumulated_chars = WString::new();
 
         while accumulated_chars.len() < limit {
+            focus_events_enable_ifn();
             let evt = self.inputter.read_char();
             let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);

@@ -1,5 +1,4 @@
 use libc::STDOUT_FILENO;
-use once_cell::sync::OnceCell;
 
 use crate::common::{
     fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes, ScopeGuard,
@@ -458,18 +457,25 @@ pub fn terminal_protocols_disable_scoped() -> impl ScopeGuarding<Target = ()> {
     })
 }
 
-pub struct TerminalProtocols {}
+pub struct TerminalProtocols {
+    focus_events: bool,
+}
 
 impl TerminalProtocols {
     fn new() -> Self {
         terminal_protocols_enable_impl();
-        TerminalProtocols {}
+        Self {
+            focus_events: false,
+        }
     }
 }
 
 impl Drop for TerminalProtocols {
     fn drop(&mut self) {
         terminal_protocols_disable_impl();
+        if self.focus_events {
+            let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
+        }
     }
 }
 
@@ -477,28 +483,17 @@ fn terminal_protocols_enable_impl() {
     // Interactive or inside builtin read.
     assert!(is_interactive_session() || reader_current_data().is_some());
 
-    let mut sequences = concat!(
+    let sequences = concat!(
         "\x1b[?2004h", // Bracketed paste
         "\x1b[>4;1m",  // XTerm's modifyOtherKeys
         "\x1b[>5u",    // CSI u with kitty progressive enhancement
         "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
-        "\x1b[?1004h", // enable focus notify
     );
-
-    // Note: Don't call this initially because, even though we're in a fish_prompt event,
-    // tmux reacts sooo quickly that we'll still get a sequence before we're prepared for it.
-    // So this means that we won't get focus events until you've run at least one command,
-    // but that's preferable to always seeing "^[[I" when starting fish.
-    static FIRST_CALL_HACK: OnceCell<()> = OnceCell::new();
-    if FIRST_CALL_HACK.get().is_none() {
-        sequences = sequences.strip_suffix("\x1b[?1004h").unwrap();
-    }
-    FIRST_CALL_HACK.get_or_init(|| ());
 
     FLOG!(
         term_protocols,
         format!(
-            "Enabling extended keys, bracketed paste and focus reporting: {:?}",
+            "Enabling extended keys and bracketed paste: {:?}",
             sequences
         )
     );
@@ -513,16 +508,26 @@ fn terminal_protocols_disable_impl() {
         "\x1b[>4;0m",
         "\x1b[<1u", // Konsole breaks unless we pass an explicit number of entries to pop.
         "\x1b>",
-        "\x1b[?1004l",
     );
     FLOG!(
         term_protocols,
         format!(
-            "Disabling extended keys, bracketed paste and focus reporting: {:?}",
+            "Disabling extended keys and bracketed paste: {:?}",
             sequences
         )
     );
     let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+}
+
+pub(crate) fn focus_events_enable_ifn() {
+    let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
+    let Some(term_protocols) = term_protocols.as_mut() else {
+        panic!()
+    };
+    if !term_protocols.focus_events {
+        term_protocols.focus_events = true;
+        let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
+    }
 }
 
 fn parse_mask(mask: u32) -> Modifiers {
@@ -1011,6 +1016,7 @@ pub trait InputEventQueuer {
         if let Some(evt) = self.try_pop() {
             return Some(evt);
         }
+        focus_events_enable_ifn();
 
         // We are not prepared to handle a signal immediately; we only want to know if we get input on
         // our fd before the timeout. Use pselect to block all signals; we will handle signals

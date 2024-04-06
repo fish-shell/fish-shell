@@ -452,7 +452,8 @@ pub fn terminal_protocols_disable_scoped() -> impl ScopeGuarding<Target = ()> {
     ScopeGuard::new((), |()| {
         // If a child is stopped, this will already be enabled.
         if TERMINAL_PROTOCOLS.get().borrow().is_none() {
-            terminal_protocols_enable()
+            terminal_protocols_enable();
+            reader_current_data().unwrap().save_screen_state();
         }
     })
 }
@@ -527,6 +528,7 @@ pub(crate) fn focus_events_enable_ifn() {
     if !term_protocols.focus_events {
         term_protocols.focus_events = true;
         let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
+        reader_current_data().unwrap().save_screen_state();
     }
 }
 

@@ -1142,9 +1142,11 @@ impl ReaderData {
         &self.parser_ref
     }
 
-    /// Convenience cover over exec_count.
-    fn exec_count(&self) -> u64 {
-        self.parser().libdata().pods.exec_count
+    // We repaint our prompt if fstat reports the tty as having changed.
+    // But don't react to tty changes that we initiated, because of commands or
+    // on-variable events (e.g. for fish_bind_mode). See #3481.
+    pub(crate) fn save_screen_state(&mut self) {
+        self.screen.save_status();
     }
 
     /// Do what we need to do whenever our command line changes.
@@ -2037,10 +2039,6 @@ impl ReaderData {
             READAHEAD_MAX,
         );
 
-        // We repaint our prompt if fstat reports the tty as having changed.
-        // But don't react to tty changes that we initiated, because of commands or
-        // on-variable events (e.g. for fish_bind_mode). See #3481.
-        let mut last_exec_count = self.exec_count();
         let mut accumulated_chars = WString::new();
 
         while accumulated_chars.len() < limit {
@@ -2067,11 +2065,6 @@ impl ReaderData {
             } else {
                 continue;
             };
-
-            if last_exec_count != self.exec_count() {
-                last_exec_count = self.exec_count();
-                self.screen.save_status();
-            }
         }
 
         if !accumulated_chars.is_empty() {
@@ -2085,14 +2078,6 @@ impl ReaderData {
 
             // Since we handled a normal character, we don't have a last command.
             rls.last_cmd = None;
-        }
-
-        if last_exec_count != self.exec_count() {
-            #[allow(unused_assignments)]
-            {
-                last_exec_count = self.exec_count();
-            }
-            self.screen.save_status();
         }
 
         event_needing_handling

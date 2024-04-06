@@ -2078,6 +2078,10 @@ Fish already has the following named events for the ``--on-event`` switch:
 
 - ``fish_cancel`` is emitted when a commandline is cleared.
 
+- ``fish_focus_in`` is emitted when fish's terminal gains focus.
+
+- ``fish_focus_out`` is emitted when fish's terminal loses focus.
+
 Events can be fired with the :doc:`emit <cmds/emit>` command, and do not have to be defined before. The names just need to match. For example::
 
   function handler --on-event imdone

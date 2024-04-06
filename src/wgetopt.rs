@@ -165,29 +165,37 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let middle = self.last_nonopt;
         let mut right = self.wopt_index;
 
-        while right > middle && middle > left {
-            if right - middle > middle - left {
-                // The left segment is the short one.
-                let len = middle - left;
+        // If the two lists are equal in length, we swap them directly.
+        // Otherwise we do it manually.
+        if right - middle + 1 == middle - left {
+            // ... I *think* this implementation makes sense?
+            let (front, mut back) = self.argv.get_mut(left..right).unwrap().split_at_mut(middle);
+            front.swap_with_slice(&mut back);
+        } else {
+            while right > middle && middle > left {
+                if right - middle > middle - left {
+                    // The left segment is the short one.
+                    let len = middle - left;
 
-                // Swap it with the top part of the right segment.
-                for i in 0..len {
-                    self.argv.swap(left + i, right - (middle - left) + i);
+                    // Swap it with the top part of the right segment.
+                    for i in 0..len {
+                        self.argv.swap(left + i, right - len + i);
+                    }
+
+                    // Exclude the moved elements from further swapping.
+                    right -= len;
+                } else {
+                    // The right segment is the short one.
+                    let len = right - middle;
+
+                    // Swap it with the bottom part of the left segment.
+                    for i in 0..len {
+                        self.argv.swap(left + i, middle + i);
+                    }
+
+                    // Exclude the moved elements from further swapping.
+                    left += len;
                 }
-
-                // Exclude the moved elements from further swapping.
-                right -= len;
-            } else {
-                // The right segment is the short one.
-                let len = right - middle;
-
-                // Swap it with the bottom part of the left segment.
-                for i in 0..len {
-                    self.argv.swap(left + i, middle + i);
-                }
-
-                // Exclude the moved elements from further swapping.
-                left += len;
             }
         }
 

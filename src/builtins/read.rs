@@ -16,7 +16,6 @@ use crate::input_common::terminal_protocols_enable_scoped;
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
-use crate::reader::reader_current_data;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
@@ -592,8 +591,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
 
     // Enable terminal protocols if noninteractive.
-    let _terminal_protocols = (stream_stdin_is_a_tty && reader_current_data().is_none())
-        .then(terminal_protocols_enable_scoped);
+    let _terminal_protocols = stream_stdin_is_a_tty.then(terminal_protocols_enable_scoped);
 
     // Normally, we either consume a line of input or all available input. But if we are reading a
     // line at a time, we need a middle ground where we only consume as many lines as we need to

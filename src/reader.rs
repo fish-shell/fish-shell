@@ -110,6 +110,7 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
+use crate::trace::{should_suppress_trace, TraceCategory};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{
     count_preceding_backslashes, join_strings, string_prefixes_string,
@@ -1751,10 +1752,14 @@ impl ReaderData {
         let mut zelf = scoped_push_replacer_ctx(
             self,
             |zelf, new_value| {
-                std::mem::replace(
-                    &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
-                    new_value,
-                )
+                if should_suppress_trace(TraceCategory::Bind) {
+                    std::mem::replace(
+                        &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
+                        new_value,
+                    )
+                } else {
+                    false // Don't care
+                }
             },
             true,
         );
@@ -3644,15 +3649,17 @@ pub fn reader_write_title(
         |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
         false,
     );
-    let _in_title = scoped_push_replacer(
-        |new_value| {
-            std::mem::replace(
-                &mut parser.libdata_mut().pods.suppress_fish_trace,
-                new_value,
-            )
-        },
-        true,
-    );
+    let _in_title = should_suppress_trace(TraceCategory::Title).then(|| {
+        scoped_push_replacer(
+            |new_value| {
+                std::mem::replace(
+                    &mut parser.libdata_mut().pods.suppress_fish_trace,
+                    new_value,
+                )
+            },
+            true,
+        )
+    });
 
     let mut fish_title_command = DEFAULT_TITLE.to_owned();
     if function::exists(L!("fish_title"), parser) {
@@ -3721,10 +3728,14 @@ impl ReaderData {
         let mut zelf = scoped_push_replacer_ctx(
             self,
             |zelf, new_value| {
-                std::mem::replace(
-                    &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
-                    new_value,
-                )
+                if should_suppress_trace(TraceCategory::Prompt) {
+                    std::mem::replace(
+                        &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
+                        new_value,
+                    )
+                } else {
+                    false // Don't care
+                }
             },
             true,
         );

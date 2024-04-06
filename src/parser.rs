@@ -1286,8 +1286,8 @@ pub struct library_data_pod_t {
     /// Whether we are currently interactive.
     pub is_interactive: bool,
 
-    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
-    /// bindings.
+    /// Whether to suppress fish_trace output. This may occur in prompt, title, event handlers,
+    /// and key bindings.
     pub suppress_fish_trace: bool,
 
     /// Whether we should break or continue the current loop.

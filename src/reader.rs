@@ -1996,13 +1996,17 @@ impl ReaderData {
         rls.finished.then(|| zelf.command_line.text().to_owned())
     }
 
+    fn eval_bind_cmd(&mut self, cmd: &wstr) {
+        let last_statuses = self.parser().vars().get_last_statuses();
+        self.parser().eval(cmd, &IoChain::new());
+        self.parser().set_last_statuses(last_statuses);
+    }
+
     /// Run a sequence of commands from an input binding.
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
-        let last_statuses = self.parser().vars().get_last_statuses();
         self.update_commandline_state();
-        self.parser().eval(cmd, &IoChain::new());
+        self.eval_bind_cmd(cmd);
         self.apply_commandline_state_changes();
-        self.parser().set_last_statuses(last_statuses);
 
         // Restore tty to shell modes.
         // Some input commands will take over the tty - see #2114 for an example where vim is invoked
@@ -2615,9 +2619,7 @@ impl ReaderData {
             }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
-                    let last_statuses = self.parser().vars().get_last_statuses();
-                    self.parser().eval(L!("prevd"), &IoChain::new());
-                    self.parser().set_last_statuses(last_statuses);
+                    self.eval_bind_cmd(L!("prevd"));
                     self.force_exec_prompt_and_repaint = true;
                     self.inputter
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
@@ -2639,9 +2641,7 @@ impl ReaderData {
             }
             rl::ForwardWord | rl::ForwardBigword | rl::NextdOrForwardWord => {
                 if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
-                    let last_statuses = self.parser().vars().get_last_statuses();
-                    self.parser().eval(L!("nextd"), &IoChain::new());
-                    self.parser().set_last_statuses(last_statuses);
+                    self.eval_bind_cmd(L!("nextd"));
                     self.force_exec_prompt_and_repaint = true;
                     self.inputter
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));

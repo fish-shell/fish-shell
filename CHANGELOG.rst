@@ -42,7 +42,7 @@ Notable backwards-incompatible changes
     - If key starts with a raw escape character (``\e``) or a raw ASCII control character (``\c``).
     - If key consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
 
-- Fish no longer supports terminals that mishandle OSC or CSI sequences they don't recognize. We are not aware of a need to do so.
+- Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize. In particular, some terminals will display the raw sequences instead of silently ignoring them.
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
   The seed was never guaranteed to give the same result across systems,

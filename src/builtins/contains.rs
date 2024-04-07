@@ -23,7 +23,7 @@ fn parse_options(
     let mut opts = Options::default();
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'h' => opts.print_help = true,
             'i' => opts.print_index = true,
@@ -36,7 +36,7 @@ fn parse_options(
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }

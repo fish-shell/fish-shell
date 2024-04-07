@@ -58,7 +58,7 @@ trait StringSubCommand<'args> {
         args_read.extend_from_slice(args);
 
         let mut w = WGetopter::new(Self::SHORT_OPTIONS, Self::LONG_OPTIONS, args);
-        while let Some(c) = w.wgetopt_long() {
+        while let Some(c) = w.next_opt() {
             match c {
                 ':' => {
                     streams.err.append(L!("string ")); // clone of string_error

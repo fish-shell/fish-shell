@@ -654,7 +654,7 @@ impl HelpOnlyCmdOpts {
 
         let mut print_help = false;
         let mut w = WGetopter::new(shortopts, longopts, args);
-        while let Some(c) = w.wgetopt_long() {
+        while let Some(c) = w.next_opt() {
             match c {
                 'h' => {
                     print_help = true;
@@ -680,7 +680,7 @@ impl HelpOnlyCmdOpts {
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopter::wgetopt_long()");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }

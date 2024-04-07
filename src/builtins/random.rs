@@ -18,7 +18,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
     #[allow(clippy::never_loop)]
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'h' => {
                 builtin_print_help(parser, streams, cmd);
@@ -33,7 +33,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgeopter.next()");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }

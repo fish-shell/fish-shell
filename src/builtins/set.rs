@@ -124,7 +124,7 @@ impl Options {
         let mut opts = Self::default();
 
         let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
-        while let Some(c) = w.wgetopt_long() {
+        while let Some(c) = w.next_opt() {
             match c {
                 'a' => opts.append = true,
                 'e' => {
@@ -184,7 +184,7 @@ impl Options {
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopt_long");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }

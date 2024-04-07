@@ -140,7 +140,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => {
                 any_flag = true;

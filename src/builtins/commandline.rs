@@ -234,7 +234,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let mut w = WGetopter::new(short_options, long_options, args);
     let cmd = w.argv[0];
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => append_mode = Some(AppendMode::Append),
             'b' => buffer_part = Some(TextScope::String),

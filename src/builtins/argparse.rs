@@ -486,7 +486,7 @@ fn parse_cmd_opts<'args>(
     args_read.extend_from_slice(args);
 
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => opts.name = w.woptarg.unwrap().to_owned(),
             's' => opts.stop_nonopt = true,
@@ -537,7 +537,7 @@ fn parse_cmd_opts<'args>(
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from opt"),
         }
     }
 
@@ -721,7 +721,7 @@ fn handle_flag<'args>(
 
     match opt_spec.num_allowed {
         ArgCardinality::Optional | ArgCardinality::Once => {
-            // We're depending on `wgetopt_long()` to report that a mandatory value is missing if
+            // We're depending on `next_opt()` to report that a mandatory value is missing if
             // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
             // the mandatory arg is missing.
             opt_spec.vals.clear();
@@ -756,7 +756,7 @@ fn argparse_parse_flags<'args>(
 
     let mut long_idx: usize = usize::MAX;
     let mut w = WGetopter::new(&short_options, &long_options, args);
-    while let Some(opt) = w.wgetopt_long_idx(&mut long_idx) {
+    while let Some(opt) = w.opt_at(&mut long_idx) {
         let retval = match opt {
             ':' => {
                 builtin_missing_argument(
@@ -832,7 +832,7 @@ fn argparse_parse_flags<'args>(
     return STATUS_CMD_OK;
 }
 
-// This function mimics the `wgetopt_long()` usage found elsewhere in our other builtin commands.
+// This function mimics the `next_opt()` usage found elsewhere in our other builtin commands.
 // It's different in that the short and long option structures are constructed dynamically based on
 // arguments provided to the `argparse` command.
 fn argparse_parse_args<'args>(

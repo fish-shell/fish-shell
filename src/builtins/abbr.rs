@@ -458,7 +458,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let mut opts = Options::default();
     let mut w = WGetopter::new(short_options, longopts, argv);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             NON_OPTION_ARGUMENT => {
                 // If --add is specified (or implied by specifying no other commands), all

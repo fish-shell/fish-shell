@@ -207,7 +207,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.report_all = true,
             'H' => opts.hard = true,
@@ -245,7 +245,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }

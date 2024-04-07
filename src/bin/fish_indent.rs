@@ -802,7 +802,7 @@ fn throwing_main() -> i32 {
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
     let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {

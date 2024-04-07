@@ -24,7 +24,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
             'q' => opts.quiet = true,

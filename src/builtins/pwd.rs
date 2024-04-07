@@ -17,7 +17,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
     let argc = argv.len();
     let mut resolve_symlinks = false;
     let mut w = WGetopter::new(short_options, long_options, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    while let Some(opt) = w.next_opt() {
         match opt {
             'L' => resolve_symlinks = false,
             'P' => resolve_symlinks = true,
@@ -29,7 +29,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 

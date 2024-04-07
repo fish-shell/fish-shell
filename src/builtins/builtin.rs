@@ -20,7 +20,7 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     ];
 
     let mut w = WGetopter::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'q' => opts.query = true,
             'n' => opts.list_names = true,
@@ -37,7 +37,7 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgeopter.next()");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }

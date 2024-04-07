@@ -135,7 +135,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut print = false;
 
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'b' => {
                 assert!(w.woptarg.is_some(), "Arg should have been set");
@@ -166,7 +166,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 );
                 return STATUS_INVALID_ARGS;
             }
-            _ => unreachable!("unexpected retval from wgeopter_t::wgetopt_long"),
+            _ => unreachable!("unexpected retval from WGetopter"),
         }
     }
     // We want to reclaim argv so grab wopt_index now.

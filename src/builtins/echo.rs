@@ -36,7 +36,7 @@ fn parse_options(
     let mut oldoptind = 0;
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => opts.print_newline = false,
             'e' => opts.interpret_special_chars = true,
@@ -50,7 +50,7 @@ fn parse_options(
                 return Ok((oldopts, w.wopt_index - 1));
             }
             _ => {
-                panic!("unexpected retval from wgetopter::wgetopt_long()");
+                panic!("unexpected retval from WGetopter");
             }
         }
 

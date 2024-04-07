@@ -231,7 +231,7 @@ fn parse_opts<'args>(
     let short_opts = construct_short_opts(opts);
 
     let mut w = WGetopter::new(&short_opts, &LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error

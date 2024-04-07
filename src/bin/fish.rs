@@ -346,7 +346,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
 
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'c' => opts
                 .batch_cmds

@@ -139,7 +139,7 @@ fn parse_cmd_opts(
 ) -> Option<c_int> {
     let cmd = argv[0];
     let mut w = WGetopter::new(short_options, longopts, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    while let Some(opt) = w.next_opt() {
         match opt {
             '\x01' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_DELETE, streams) {
@@ -217,7 +217,7 @@ fn parse_cmd_opts(
                 w.remaining_text = L!("");
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }

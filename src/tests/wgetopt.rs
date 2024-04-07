@@ -17,7 +17,7 @@ fn test_wgetopt() {
     let mut w = WGetopter::new(short_options, long_options, &mut argv);
     let mut a_count = 0;
     let mut arguments = vec![];
-    while let Some(opt) = w.wgetopt_long() {
+    while let Some(opt) = w.next_opt() {
         match opt {
             'a' => {
                 a_count += 1;

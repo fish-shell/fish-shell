@@ -206,7 +206,7 @@ fn parse_cmd_opts(
     args_read.extend_from_slice(args);
 
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'L' => {
                 opts.level = {
@@ -288,7 +288,7 @@ fn parse_cmd_opts(
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 

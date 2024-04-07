@@ -80,7 +80,7 @@ fn parse_cmd_opts(
     let print_hints = false;
     let mut handling_named_arguments = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    while let Some(opt) = w.next_opt() {
         // NON_OPTION_CHAR is returned when we reach a non-permuted non-option.
         if opt != 'a' && opt != NON_OPTION_CHAR {
             handling_named_arguments = false;
@@ -205,7 +205,7 @@ fn parse_cmd_opts(
                 return STATUS_INVALID_ARGS;
             }
             other => {
-                panic!("Unexpected retval from wgetopt_long: {}", other);
+                panic!("Unexpected retval from WGetopter: {}", other);
             }
         }
     }

@@ -76,7 +76,7 @@ fn parse_cmd_opts<'args>(
     let cmd = L!("functions");
     let print_hints = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    while let Some(opt) = w.next_opt() {
         match opt {
             'v' => opts.verbose = true,
             'e' => opts.erase = true,
@@ -104,7 +104,7 @@ fn parse_cmd_opts<'args>(
                 return STATUS_INVALID_ARGS;
             }
             other => {
-                panic!("Unexpected retval from wgetopt_long: {}", other);
+                panic!("Unexpected retval from WGetopter: {}", other);
             }
         }
     }

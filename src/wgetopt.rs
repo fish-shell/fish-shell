@@ -188,7 +188,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // Otherwise we do it manually.
         if right - middle + 1 == middle - left {
             // ... I *think* this implementation makes sense?
-            let (front, back) = self.argv.get_mut(left..right).unwrap().split_at_mut(middle);
+            let (front, back) = self.argv.get_mut(left..right).unwrap().split_at_mut(middle - left);
             front.swap_with_slice(back);
         } else {
             while right > middle && middle > left {

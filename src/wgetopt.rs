@@ -83,7 +83,11 @@ pub struct WOption<'a> {
 
 /// Helper function to create a WOption.
 pub const fn wopt(name: &wstr, arg_type: ArgType, val: char) -> WOption<'_> {
-    WOption { name, arg_type, val }
+    WOption {
+        name,
+        arg_type,
+        val,
+    }
 }
 
 /// Used internally by [Wgetopter::find_matching_long_opt]. See there for further

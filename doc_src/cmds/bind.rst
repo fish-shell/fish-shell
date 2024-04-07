@@ -23,7 +23,7 @@ If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a bindin
 If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be printed.
 
 ``KEYS`` is a comma-separated list of key names.
-Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-`` and ``shift-``.
+Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``/``c-``, ``alt-``/``a-`` and ``shift-``.
 For example, :kbd:`Alt`\ +\ :kbd:`w` is written as ``alt-w``.
 Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
 

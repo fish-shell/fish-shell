@@ -75,15 +75,15 @@ pub struct WOption<'a> {
     /// The long name of the option.
     pub name: &'a wstr,
     /// Whether the option takes an argument.
-    pub has_arg: ArgType,
+    pub arg_type: ArgType,
     /// Contains the return value of the function call.
     // unsure as to what this does in this version of the code
     pub val: char,
 }
 
 /// Helper function to create a WOption.
-pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> WOption<'_> {
-    WOption { name, has_arg, val }
+pub const fn wopt(name: &wstr, arg_type: ArgType, val: char) -> WOption<'_> {
+    WOption { name, arg_type, val }
 }
 
 /// Used internally by [Wgetopter::find_matching_long_opt]. See there for further
@@ -399,13 +399,13 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         assert!(matches!(self.remaining_text.char_at(name_end), '\0' | '='));
 
         if self.remaining_text.char_at(name_end) == '=' {
-            if opt_found.has_arg != ArgType::NoArgument {
+            if opt_found.arg_type != ArgType::NoArgument {
                 self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
             } else {
                 self.remaining_text = empty_wstr();
                 return '?';
             }
-        } else if opt_found.has_arg == ArgType::RequiredArgument {
+        } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
                 self.woptarg = Some(self.argv[self.wopt_index]);
                 self.wopt_index += 1;

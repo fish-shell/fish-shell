@@ -1,4 +1,5 @@
-//! A version of the getopt library for use with wide character strings.
+//! A version of the getopt library for use with wide character strings, rewritten in
+//! Rust from getopt.
 //!
 //! Note wgetopter expects an mutable array of const strings. It modifies the order of the
 //! strings, but not their contents.
@@ -499,6 +500,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         None
     }
 
+    // cut out a lot of documentation here, but I think everything important was
+    // covered by the remaining comments
     /// `longopt_index` contains the index of the most recent long-named option
     /// found by the most recent call. Returns the next short-named option if
     /// found.

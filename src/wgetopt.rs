@@ -186,7 +186,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         // If the two lists are equal in length, we swap them directly.
         // Otherwise we do it manually.
-        if right - middle + 1 == middle - left {
+        if right - middle == middle - left {
             // ... I *think* this implementation makes sense?
             let (front, back) = self
                 .argv

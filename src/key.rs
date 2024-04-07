@@ -414,8 +414,11 @@ fn ascii_printable_to_symbol(buf: &mut WString, c: char) {
 fn char_to_symbol(c: char) -> WString {
     let mut buff = WString::new();
     let buf = &mut buff;
-    assert!(c >= ' ');
-    if c < '\u{80}' {
+    if c <= ' ' {
+        // Most ascii control characters like \x01 are canonicalized like ctrl-a, except if we
+        // are given the control character directly with CSI u.
+        sprintf!(=> buf, "\\x%02x", u8::try_from(c).unwrap());
+    } else if c < '\u{80}' {
         // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, c);
     } else if fish_wcwidth(c) > 0 {

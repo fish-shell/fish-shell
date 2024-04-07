@@ -128,6 +128,7 @@ Improved prompts
 Completions
 ^^^^^^^^^^^
 - Added completions for:
+- Improved some completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

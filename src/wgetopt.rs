@@ -1,5 +1,5 @@
 //! A version of the getopt library for use with wide character strings, rewritten in
-//! Rust from getopt.
+//! Rust.
 //!
 //! Note wgetopter expects an mutable array of const strings. It modifies the order of the
 //! strings, but not their contents.
@@ -57,7 +57,7 @@ enum Ordering {
     ReturnInOrder,
 }
 
-/// Indicates whether a long-named takes an argument, and whether that argument
+/// Indicates whether an option takes an argument, and whether that argument
 /// is optional.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArgType {
@@ -450,12 +450,12 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                     exact = true;
                     break;
                 } else if opt.is_none() {
-                    // The option begins with text, but isn't an exact match.
+                    // The option begins with the matching text, but is not
+                    // exactly equal.
                     opt = Some(*potential_match);
                     index = i;
                 } else {
-                    // There are multiple options that match the text, so
-                    // it's ambiguous.
+                    // There are multiple options that match the text non-exactly.
                     ambiguous = true;
                 }
             }

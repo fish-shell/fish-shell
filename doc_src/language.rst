@@ -750,7 +750,23 @@ The ``$`` symbol can also be used multiple times, as a kind of "dereference" ope
 
 ``$$foo[$i]`` is "the value of the variable named by ``$foo[$i]``".
 
-When using this feature together with list brackets, the brackets will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
+This can also be used to give a variable name to a function::
+
+  function print_var
+      for arg in $argv
+          echo Variable $arg is $$arg
+      end
+  end
+
+  set -g foo 1 2 3
+  set -g bar a b c
+
+  print_var foo bar
+  # prints "Variable foo is 1 2 3" and "Variable bar is a b c"
+
+Of course the variable will have to be accessible from the function, so it needs to be :ref:`global/universal <variables-scope>` or :ref:`exported <variables-export>`. It also can't clash with a variable name used inside the function. So if we had made $foo there a local variable, or if we had named it "arg" instead, it would not have worked.
+
+When using this feature together with :ref:`slices <expand-slices>`, the slices will be used from the inside out. ``$$foo[5]`` will use the fifth element of ``$foo`` as a variable name, instead of giving the fifth element of all the variables $foo refers to. That would instead be expressed as ``$$foo[1..-1][5]`` (take all elements of ``$foo``, use them as variable names, then give the fifth element of those).
 
 Some more examples::
 
@@ -800,15 +816,21 @@ Command substitution
 
 A ``command substitution`` is an expansion that uses the *output* of a command as the arguments to another. For example::
 
-  echo (pwd)
+  echo $(pwd)
 
 This executes the :doc:`pwd <cmds/pwd>` command, takes its output (more specifically what it wrote to the standard output "stdout" stream) and uses it as arguments to :doc:`echo <cmds/echo>`. So the inner command (the ``pwd``) is run first and has to complete before the outer command can even be started.
 
 If the inner command prints multiple lines, fish will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
 
-A command substitution can also be spelled with a dollar sign like ``outercommand $(innercommand)``. This variant is also allowed inside double quotes. When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
+Command substitutions can also be double-quoted::
+
+  echo "$(pwd)"
+
+When using double quotes, the command output is not split up by lines, but trailing empty lines are still removed.
 
 If the output is piped to :doc:`string split or string split0 <cmds/string-split>` as the last step, those splits are used as they appear instead of splitting lines.
+
+Fish also allows spelling command substitutions without the dollar, like ``echo (pwd)``. This variant will not be expanded in double-quotes (``echo "(pwd)"`` will print ``(pwd)``).
 
 The exit status of the last run command substitution is available in the :ref:`status <variables-status>` variable if the substitution happens in the context of a :doc:`set <cmds/set>` command (so ``if set -l (something)`` checks if ``something`` returned true).
 
@@ -2055,6 +2077,10 @@ Fish already has the following named events for the ``--on-event`` switch:
 - ``fish_exit`` is emitted right before fish exits.
 
 - ``fish_cancel`` is emitted when a commandline is cleared.
+
+- ``fish_focus_in`` is emitted when fish's terminal gains focus.
+
+- ``fish_focus_out`` is emitted when fish's terminal loses focus.
 
 Events can be fired with the :doc:`emit <cmds/emit>` command, and do not have to be defined before. The names just need to match. For example::
 

@@ -12,6 +12,7 @@ mod highlight;
 mod history;
 mod input;
 mod input_common;
+mod key;
 mod pager;
 mod parse_util;
 mod parser;
@@ -20,12 +21,14 @@ mod redirection;
 mod screen;
 mod std;
 mod string_escape;
+mod termsize;
 mod threads;
 mod tokenizer;
 mod topic_monitor;
 mod wgetopt;
 
 pub mod prelude {
+    use crate::common::ScopeGuarding;
     use crate::env::{env_init, misc_init};
     use crate::reader::reader_init;
     use crate::signal::signal_reset_handlers;
@@ -59,7 +62,7 @@ pub mod prelude {
         EnvStack::principal().set_pwd_from_getcwd();
     }
 
-    pub fn test_init() {
+    pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         static DONE: OnceCell<()> = OnceCell::new();
         DONE.get_or_init(|| {
             set_current_dir(env!("FISH_BUILD_DIR")).unwrap();
@@ -74,7 +77,6 @@ pub mod prelude {
             proc_init();
             env_init(None, true, false);
             misc_init();
-            reader_init();
 
             // Set default signal handlers, so we can ctrl-C out of this.
             signal_reset_handlers();
@@ -82,6 +84,7 @@ pub mod prelude {
             // Set PWD from getcwd - fixes #5599
             EnvStack::principal().set_pwd_from_getcwd();
         });
+        reader_init()
     }
 
     pub use serial_test::serial;

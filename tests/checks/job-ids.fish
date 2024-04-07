@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 
 # Ensure that job IDs are sequential.
 

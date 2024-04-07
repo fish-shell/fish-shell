@@ -394,7 +394,7 @@ fn job_or_process_extent(
 
     let mut result = cmdsub_range.clone();
     for token in Tokenizer::new(
-        &buff[cmdsub_range],
+        &buff[cmdsub_range.clone()],
         TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS,
     ) {
         let tok_begin = token.offset();
@@ -411,10 +411,10 @@ fn job_or_process_extent(
             {
                 if tok_begin >= pos {
                     finished = true;
-                    result.end = tok_begin;
+                    result.end = cmdsub_range.start + tok_begin;
                 } else {
                     // Statement at cursor might start after this token.
-                    result.start = tok_begin + token.length();
+                    result.start = cmdsub_range.start + tok_begin + token.length();
                     out_tokens.as_mut().map(|tokens| tokens.clear());
                 }
                 continue; // Do not add this to tokens
@@ -1862,7 +1862,7 @@ const var_err_len: usize = 16;
 #[test]
 #[serial]
 fn test_parse_util_cmdsubst_extent() {
-    test_init();
+    let _cleanup = test_init();
     const a: &wstr = L!("echo (echo (echo hi");
     assert_eq!(parse_util_cmdsubst_extent(a, 0), 0..a.len());
     assert_eq!(parse_util_cmdsubst_extent(a, 1), 0..a.len());
@@ -1881,7 +1881,7 @@ fn test_parse_util_cmdsubst_extent() {
 #[test]
 #[serial]
 fn test_parse_util_slice_length() {
-    test_init();
+    let _cleanup = test_init();
     assert_eq!(parse_util_slice_length(L!("[2]")), Some(3));
     assert_eq!(parse_util_slice_length(L!("[12]")), Some(4));
     assert_eq!(parse_util_slice_length(L!("[\"foo\"]")), Some(7));
@@ -1891,7 +1891,7 @@ fn test_parse_util_slice_length() {
 #[test]
 #[serial]
 fn test_escape_quotes() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! validate {
         ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
             assert_eq!(
@@ -1934,7 +1934,7 @@ fn test_escape_quotes() {
 #[test]
 #[serial]
 fn test_indents() {
-    test_init();
+    let _cleanup = test_init();
     // A struct which is either text or a new indent.
     struct Segment {
         // The indent to set

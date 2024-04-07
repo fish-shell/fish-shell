@@ -59,7 +59,7 @@ fn test_wdirname_wbasename() {
 #[test]
 #[serial]
 fn test_wwrite_to_fd() {
-    test_init();
+    let _cleanup = test_init();
     let (_fd, filename) =
         fish_mkstemp_cloexec(CString::new("/tmp/fish_test_wwrite.XXXXXX").unwrap()).unwrap();
     let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];

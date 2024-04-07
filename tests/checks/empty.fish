@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 
 # See issue 5692
 

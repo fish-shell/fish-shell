@@ -1,4 +1,4 @@
-#RUN: %fish -C "set helper %fish_test_helper" %s
+#RUN: %fish -C "set helper %fish_test_helper" %s | %filter-ctrlseqs
 # This hangs on OpenBSD
 #REQUIRES: test "$(uname)" != OpenBSD
 

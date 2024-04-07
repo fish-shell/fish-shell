@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 # "Basic && and || support"
 
 echo first && echo second

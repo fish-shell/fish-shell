@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 #
 # Tests for the `test` builtin, aka `[`.
 test inf -gt 0

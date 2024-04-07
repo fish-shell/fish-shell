@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+#RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
 begin
     set -l dir $PWD/(dirname (status -f))
     set -gx XDG_CONFIG_HOME $dir/broken-config/

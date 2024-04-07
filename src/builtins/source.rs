@@ -28,8 +28,8 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         return STATUS_CMD_OK;
     }
 
-    // If we open a file, this ensures we close it.
-    let opened_fd;
+    // If we open a file, this ensures it stays open until the end of scope.
+    let opened_file;
 
     // The fd that we read from, either from opened_fd or stdin.
     let fd;
@@ -52,8 +52,8 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         fd = streams.stdin_fd;
     } else {
         match wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) {
-            Ok(fd) => {
-                opened_fd = fd;
+            Ok(file) => {
+                opened_file = file;
             }
             Err(_) => {
                 let esc = escape(args[optind]);
@@ -67,7 +67,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             }
         };
 
-        fd = opened_fd.as_raw_fd();
+        fd = opened_file.as_raw_fd();
         let mut buf: libc::stat = unsafe { std::mem::zeroed() };
         if unsafe { libc::fstat(fd, &mut buf) } == -1 {
             let esc = escape(args[optind]);

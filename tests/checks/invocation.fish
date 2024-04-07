@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
 
 $fish -c "echo 1.2.3.4."
 # CHECK: 1.2.3.4.
@@ -107,4 +107,3 @@ $fish --no-config -c 'echo notprinted | and true'
 
 # Regression test for a hang.
 echo "set -L" | $fish > /dev/null
-

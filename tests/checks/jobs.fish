@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 
 # Verify zombies are not left by disown (#7183, #5342)
 # Do this first to avoid colliding with the other disowned processes below, which may

@@ -51,33 +51,24 @@ get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
-# cargo needs to be rerun when the sources change.
-# This is imperfect, but the ninja generator really wants to
-# not run cargo, so we need to tell it *something*
-FILE(GLOB sources Cargo.* src/* src/*/* src/*/*/* macros/* macros/*/*)
-
 # Define a function to link dependencies.
 function(FISH_LINK_DEPS_AND_SIGN target)
-  add_custom_command(
-    OUTPUT ${rust_target_dir}/${rust_profile}/${target}
-    COMMAND ${CMAKE_COMMAND} -E env
-      ${VARS_FOR_CARGO}
-    ${Rust_CARGO} ARGS build --bin ${target}
-      $<$<CONFIG:Release,RelWithDebInfo>:--release>
-      --target ${Rust_CARGO_TARGET}
-      ${CARGO_FLAGS}
-      ${FEATURES_ARG}
-    DEPENDS ${sources} src/bin/${target}.rs
-    DEPENDS Cargo.toml Cargo.lock build.rs
+  add_custom_target(
+    ${target} ALL
+    COMMAND
+      "${CMAKE_COMMAND}" -E
+        env ${VARS_FOR_CARGO}
+          ${Rust_CARGO}
+            build --bin ${target}
+            $<$<CONFIG:Release,RelWithDebInfo>:--release>
+            --target ${Rust_CARGO_TARGET}
+            ${CARGO_FLAGS}
+            ${FEATURES_ARG}
+      &&
+      "${CMAKE_COMMAND}" -E
+        copy "${rust_target_dir}/${rust_profile}/${target}" "${CMAKE_CURRENT_BINARY_DIR}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL
-    # Don't use VERBATIM here, to allow the generator expressions above to expand to nothing rather than an empty string
-  )
-  add_custom_target(${target} ALL
-    COMMAND "${CMAKE_COMMAND}" -E copy
-      "${rust_target_dir}/${rust_profile}/${target}"
-      "${CMAKE_CURRENT_BINARY_DIR}"
-    DEPENDS ${rust_target_dir}/${rust_profile}/${target}
   )
   codesign_on_mac(${target})
 endfunction(FISH_LINK_DEPS_AND_SIGN)

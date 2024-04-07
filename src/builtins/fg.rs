@@ -1,6 +1,7 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
+use crate::input_common::TERMINAL_PROTOCOLS;
 use crate::reader::reader_write_title;
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -155,6 +156,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
             }
         }
     }
+    assert!(TERMINAL_PROTOCOLS.get().borrow().is_none());
     let mut transfer = TtyTransfer::new();
     transfer.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();

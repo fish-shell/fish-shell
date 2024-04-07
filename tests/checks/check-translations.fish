@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
 #REQUIRES: msgfmt --help
 
 set -l fail_count 0

@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
 
 set -g fish (realpath $fish)
 

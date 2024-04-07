@@ -24,7 +24,7 @@ use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::File;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -235,14 +235,13 @@ impl EnvUniversal {
         FLOG!(uvar_file, "universal log performing full sync");
 
         // Open the file.
-        let vars_fd = self.open_and_acquire_lock();
-        let Some(vars_fd) = vars_fd else {
+        let Some(mut vars_file) = self.open_and_acquire_lock() else {
             FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
             return false;
         };
 
         // Read from it.
-        self.load_from_fd(vars_fd.as_raw_fd(), callbacks);
+        self.load_from_fd(&mut vars_file, callbacks);
 
         if self.ok_to_save {
             self.save(&directory)
@@ -388,24 +387,27 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty()) else {
+        let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
+        else {
             return false;
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_fd(fd.as_raw_fd(), callbacks);
+        self.load_from_fd(&mut file, callbacks);
         true
     }
 
-    fn load_from_fd(&mut self, fd: RawFd, callbacks: &mut CallbackDataList) {
+    // Load environment variables from the opened [`File`] `file`. It must be mutable because we
+    // will read from the underlying fd.
+    fn load_from_fd(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
         // Get the dev / inode.
-        let current_file = file_id_for_fd(fd);
+        let current_file = file_id_for_fd(file.as_fd());
         if current_file == self.last_read_file {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
-            let format = Self::read_message_internal(fd, &mut new_vars);
+            let format = Self::read_message_internal(file.as_raw_fd(), &mut new_vars);
 
             // Hacky: if the read format is in the future, avoid overwriting the file: never try to
             // save.
@@ -423,7 +425,7 @@ impl EnvUniversal {
     }
 
     // Functions concerned with saving.
-    fn open_and_acquire_lock(&mut self) -> Option<OwnedFd> {
+    fn open_and_acquire_lock(&mut self) -> Option<File> {
         // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
         // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
         // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -438,59 +440,54 @@ impl EnvUniversal {
             locked_by_open = true;
         }
 
-        let mut res_fd = None;
-        while res_fd.is_none() {
-            let fd = match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
-                Ok(fd) => fd,
-                Err(err) => {
-                    if err == nix::Error::EINTR {
-                        continue; // signaled; try again
-                    }
-
-                    if !O_EXLOCK.is_empty() {
-                        if flags.intersects(O_EXLOCK)
-                            && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
-                        {
-                            // Filesystem probably does not support locking. Give up on locking.
-                            // Note that on Linux the two errno symbols have the same value but on BSD they're
-                            // different.
-                            flags &= !O_EXLOCK;
-                            self.do_flock = false;
-                            locked_by_open = false;
-                            continue;
+        loop {
+            let mut file =
+                match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
+                    Ok(file) => file,
+                    Err(nix::Error::EINTR) => continue,
+                    Err(err) => {
+                        if !O_EXLOCK.is_empty() {
+                            if flags.contains(O_EXLOCK)
+                                && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
+                            {
+                                // Filesystem probably does not support locking. Give up on locking.
+                                // Note that on Linux the two errno symbols have the same value but on BSD they're
+                                // different.
+                                flags &= !O_EXLOCK;
+                                self.do_flock = false;
+                                locked_by_open = false;
+                                continue;
+                            }
                         }
+                        FLOG!(
+                            error,
+                            wgettext_fmt!(
+                                "Unable to open universal variable file '%s': %s",
+                                &self.vars_path,
+                                err.to_string()
+                            )
+                        );
+                        return None;
                     }
-                    FLOG!(
-                        error,
-                        wgettext_fmt!(
-                            "Unable to open universal variable file '%s': %s",
-                            &self.vars_path,
-                            err.to_string()
-                        )
-                    );
-                    break;
-                }
-            };
+                };
 
             // Lock if we want to lock and open() didn't do it for us.
             // If flock fails, give up on locking forever.
             if self.do_flock && !locked_by_open {
-                if !flock_uvar_file(fd.as_raw_fd()) {
+                if !flock_uvar_file(&mut file) {
                     self.do_flock = false;
                 }
             }
 
             // Hopefully we got the lock. However, it's possible the file changed out from under us
             // while we were waiting for the lock. Make sure that didn't happen.
-            if file_id_for_fd(fd.as_raw_fd()) != file_id_for_path(&self.vars_path) {
+            if file_id_for_fd(file.as_fd()) != file_id_for_path(&self.vars_path) {
                 // Oops, it changed! Try again.
-                drop(fd);
+                drop(file);
             } else {
-                res_fd = Some(fd);
+                return Some(file);
             }
         }
-
-        res_fd
     }
 
     fn open_temporary_file(
@@ -542,7 +539,7 @@ impl EnvUniversal {
         match res.as_ref() {
             Ok(_) => {
                 // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-                self.last_read_file = file_id_for_fd(fd.as_raw_fd());
+                self.last_read_file = file_id_for_fd(fd);
             }
             Err(err) => {
                 let error = Errno(err.raw_os_error().unwrap());
@@ -1009,9 +1006,9 @@ fn encode_serialized(vals: &[WString]) -> WString {
 
 /// Try locking the file.
 /// \return true on success, false on error.
-fn flock_uvar_file(fd: RawFd) -> bool {
+fn flock_uvar_file(file: &mut File) -> bool {
     let start_time = timef();
-    while unsafe { libc::flock(fd, LOCK_EX) } == -1 {
+    while unsafe { libc::flock(file.as_raw_fd(), LOCK_EX) } == -1 {
         if errno().0 != EINTR {
             return false; // do nothing per issue #2149
         }

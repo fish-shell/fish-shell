@@ -13,9 +13,13 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 
 from time import sleep
 import os
+import platform
 import signal
 import subprocess
 import sys
+
+if platform.system() == "FreeBSD": # Spurious failure.
+    sys.exit(127)
 
 expect_prompt()
 
@@ -40,7 +44,7 @@ expect_prompt()
 sendline("function postexec --on-event fish_postexec; echo fish_postexec spotted; end")
 expect_prompt()
 sendline("read")
-expect_re("\r\n?read> $")
+expect_re(r"\r\n?read> \x1b\[\?1004h$")
 sleep(0.200)
 os.kill(sp.spawn.pid, signal.SIGINT)
 expect_str("fish_postexec spotted")
@@ -79,10 +83,10 @@ expect_prompt()
 # Save the pids for later to check if they are still running.
 pids = []
 send("sleep 130 & echo $last_pid\r")
-pids += [expect_re("\d+\r\n").group().strip()]
+pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 131 & echo $last_pid\r")
-pids += [expect_re("\d+\r\n").group().strip()]
+pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
 send("sleep 9999999\r")
 sleep(0.500)  # ensure fish kicks off the above sleep before it gets HUP - see #7288

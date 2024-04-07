@@ -561,17 +561,17 @@ impl FileId {
 
 pub const INVALID_FILE_ID: FileId = FileId::new();
 
-pub fn file_id_for_fd(fd: RawFd) -> FileId {
+pub fn file_id_for_fd(fd: BorrowedFd<'_>) -> FileId {
     let mut result = INVALID_FILE_ID;
     let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-    if fd >= 0 && unsafe { libc::fstat(fd, &mut buf) } == 0 {
+    if unsafe { libc::fstat(fd.as_raw_fd(), &mut buf) } == 0 {
         result = FileId::from_stat(&buf);
     }
     result
 }
 
 pub fn file_id_for_autoclose_fd(fd: &AutoCloseFd) -> FileId {
-    file_id_for_fd(fd.fd())
+    file_id_for_fd(fd.as_fd())
 }
 
 pub fn file_id_for_path(path: &wstr) -> FileId {

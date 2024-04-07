@@ -534,38 +534,31 @@ Custom bindings
 In addition to the standard bindings listed here, you can also define your own with :doc:`bind <cmds/bind>`::
 
   # Just clear the commandline on control-c
-  bind \cc 'commandline -r ""'
+  bind ctrl-c 'commandline -r ""'
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 
 If you change your mind on a binding and want to go back to fish's default, you can simply erase it again::
 
-  bind --erase \cc
+  bind --erase ctrl-c
 
 Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
 
 If you use :ref:`vi bindings <vi-mode>`, note that ``bind`` will by default bind keys in :ref:`command mode <vi-mode-command>`. To bind something in :ref:`insert mode <vi-mode-insert>`::
 
-  bind --mode insert \cc 'commandline -r ""'
+  bind --mode insert ctrl-c 'commandline -r ""'
 
 .. _interactive-key-sequences:
 
 Key sequences
 """""""""""""
 
-The terminal tells fish which keys you pressed by sending some sequences of bytes to describe that key. For some keys, this is easy - pressing :kbd:`a` simply means the terminal sends "a". In others it's more complicated and terminals disagree on which they send.
+To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_reader>`.
 
-In these cases, :doc:`fish_key_reader <cmds/fish_key_reader>` can tell you how to write the key sequence for your terminal. Just start it and press the keys you are interested in::
-
-  > fish_key_reader # pressing control-c
+  > fish_key_reader # Press Alt + right-arrow
   Press a key:
-  Press [ctrl-C] again to exit
-  bind \cC 'do something'
-
-  > fish_key_reader # pressing the right-arrow
-  Press a key:
-  bind \e\[C 'do something'
-
+  bind alt-right 'do something'
+  
 Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them.
 
 Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
@@ -576,10 +569,10 @@ If you want to be able to press :kbd:`Escape` and then a character and have it c
 
 Similarly, to disambiguate *other* keypresses where you've bound a subsequence and a longer sequence, fish has :envvar:`fish_sequence_key_delay_ms`::
 
-  # This binds "jk" to switch to normal mode in vi mode.
+  # This binds the sequence j,k to switch to normal mode in vi mode.
   # If you kept it like that, every time you press "j",
   # fish would wait for a "k" or other key to disambiguate
-  bind -M insert -m default jk cancel repaint-mode
+  bind -M insert -m default j,k cancel repaint-mode
 
   # After setting this, fish only waits 200ms for the "k",
   # or decides to treat the "j" as a separate sequence, inserting it.

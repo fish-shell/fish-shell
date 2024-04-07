@@ -191,52 +191,6 @@ end" >$__fish_config_dir/config.fish
     # Load key bindings
     __fish_reload_key_bindings
 
-    # Enable bracketed paste exception when running unit tests so we don't have to add
-    # the sequences to bind.expect
-    if not set -q FISH_UNIT_TESTS_RUNNING
-        # Enable bracketed paste before every prompt (see __fish_shared_bindings for the bindings).
-        # We used to do this for read, but that would break non-interactive use and
-        # compound commandlines like `read; cat`, because
-        # it won't disable it after the read.
-        function __fish_enable_bracketed_paste --on-event fish_prompt
-            printf "\e[?2004h"
-        end
-
-        # Disable BP before every command because that might not support it.
-        function __fish_disable_bracketed_paste --on-event fish_preexec --on-event fish_exit
-            printf "\e[?2004l"
-        end
-
-        # Tell the terminal we support BP. Since we are in __f_c_i, the first fish_prompt
-        # has already fired.
-        # But only if we're interactive, in case we are in `read`
-        status is-interactive
-        and __fish_enable_bracketed_paste
-    end
-
-    # Similarly, enable TMUX's focus reporting when in tmux.
-    # This will be handled by
-    # - The keybindings (reading the sequence and triggering an event)
-    # - Any listeners (like the vi-cursor)
-    if set -q TMUX
-        and not set -q FISH_UNIT_TESTS_RUNNING
-        # Allow overriding these - we're called very late,
-        # and so it's otherwise awkward to disable focus reporting again.
-        not functions -q __fish_enable_focus
-        and function __fish_enable_focus --on-event fish_postexec
-            echo -n \e\[\?1004h
-        end
-        not functions -q __fish_disable_focus
-        and function __fish_disable_focus --on-event fish_preexec
-            echo -n \e\[\?1004l
-        end
-        # Note: Don't call this initially because, even though we're in a fish_prompt event,
-        # tmux reacts sooo quickly that we'll still get a sequence before we're prepared for it.
-        # So this means that we won't get focus events until you've run at least one command, but that's preferable
-        # to always seeing `^[[I` when starting fish.
-        # __fish_enable_focus
-    end
-
     # Detect whether the terminal reflows on its own
     # If it does we shouldn't do it.
     # Allow $fish_handle_reflow to override it.
@@ -246,7 +200,6 @@ end" >$__fish_config_dir/config.fish
         if set -q VTE_VERSION
             # Same for these terminals
             or string match -q -- 'alacritty*' $TERM
-            or string match -q -- '*kitty' $TERM
             or test "$TERM_PROGRAM" = WezTerm
             set -g fish_handle_reflow 0
         else if set -q KONSOLE_VERSION
@@ -266,25 +219,11 @@ end" >$__fish_config_dir/config.fish
         end
     end
 
-    # Notify terminals when $PWD changes (issue #906).
-    # VTE based terminals, Terminal.app, iTerm.app, foot, and kitty support this.
-    if not set -q FISH_UNIT_TESTS_RUNNING
-        and begin
-            string match -q -- 'foot*' $TERM
-            or string match -q -- 'xterm-kitty*' $TERM
-            or test 0"$VTE_VERSION" -ge 3405
-            or test "$TERM_PROGRAM" = Apple_Terminal && test (string match -r '\d+' 0"$TERM_PROGRAM_VERSION") -ge 309
-            or test "$TERM_PROGRAM" = WezTerm
-            or test "$TERM_PROGRAM" = iTerm.app
-        end
-        function __update_cwd_osc --on-variable PWD --description 'Notify capable terminals when $PWD changes'
-            if status --is-command-substitution || set -q INSIDE_EMACS
-                return
-            end
-            printf \e\]7\;file://%s%s\a $hostname (string escape --style=url $PWD)
-        end
-        __update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
+    # Notify terminals when $PWD changes via OSC 7 (issue #906).
+    function __fish_update_cwd_osc --on-variable PWD --description 'Notify terminals when $PWD changes'
+        printf \e\]7\;file://%s%s\a $hostname (string escape --style=url -- $PWD)
     end
+    __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
 
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.

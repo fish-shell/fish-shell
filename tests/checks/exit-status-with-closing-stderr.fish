@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 argparse r-require= -- --require 2>/dev/null
 echo $status
 # CHECK: 2

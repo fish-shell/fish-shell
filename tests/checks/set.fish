@@ -1,5 +1,5 @@
 # Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
-# RUN: env FISH=%fish %fish %s
+# RUN: env FISH=%fish %fish %s | %filter-ctrlseqs
 # Environment variable tests
 
 # Test if variables can be properly set

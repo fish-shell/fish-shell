@@ -740,6 +740,10 @@ impl Screen {
         self.outp.borrow_mut().tputs_if_some(s)
     }
 
+    pub(crate) fn write_bytes(&mut self, s: &[u8]) {
+        self.outp.borrow_mut().tputs_bytes(s);
+    }
+
     /// Convert a wide string to a multibyte string and append it to the buffer.
     fn write_str(&mut self, s: &wstr) {
         self.outp.borrow_mut().write_wstr(s);
@@ -832,6 +836,7 @@ impl Screen {
         // Output the left prompt if it has changed.
         if left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
+            zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
             let mut start = 0;
             for line_break in left_prompt_layout.line_breaks {
                 zelf.write_str(&left_prompt[start..line_break]);

@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
 
 function fooc; true; end;
 

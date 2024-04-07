@@ -8,7 +8,7 @@ use std::sync::{
 #[test]
 #[serial]
 fn test_topic_monitor() {
-    test_init();
+    let _cleanup = test_init();
     let monitor = topic_monitor_t::default();
     let gens = GenerationsList::new();
     let t = topic_t::sigchld;
@@ -34,7 +34,7 @@ fn test_topic_monitor() {
 #[test]
 #[serial]
 fn test_topic_monitor_torture() {
-    test_init();
+    let _cleanup = test_init();
     let monitor = Arc::new(topic_monitor_t::default());
     const THREAD_COUNT: usize = 64;
     let t1 = topic_t::sigchld;

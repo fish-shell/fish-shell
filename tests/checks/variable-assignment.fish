@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 
 # erase all lowercase variables to make sure they don't break our tests
 for varname in (set -xn | string match -r '^[a-z].*')

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 echo $foo[0]
 #CHECKERR: {{.*}}checks/zero_based_array.fish (line {{\d+}}): array indices start at 1, not 0.
 #CHECKERR: echo $foo[0]

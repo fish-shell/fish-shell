@@ -18,8 +18,6 @@ function __fish_edit_command_if_at_cursor --description 'If cursor is at the com
 
     set -l editor (__fish_anyeditor)
     or return 0 # We already printed a warning, so tell the caller to finish.
-    __fish_disable_bracketed_paste
     $editor $command_path
-    __fish_enable_bracketed_paste
     return 0
 end

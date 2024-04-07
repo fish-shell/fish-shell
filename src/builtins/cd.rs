@@ -3,13 +3,13 @@
 use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment},
-    fds::wopen_cloexec,
+    fds::wopen_dir,
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
 use errno::Errno;
 use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
-use nix::{fcntl::OFlag, sys::stat::Mode};
+use nix::sys::stat::Mode;
 use std::{os::fd::AsRawFd, sync::Arc};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
@@ -87,8 +87,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        let res =
-            wopen_cloexec(&norm_dir, OFlag::O_RDONLY, Mode::empty()).map_err(|err| err as i32);
+        let res = wopen_dir(&norm_dir, Mode::empty()).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
             if unsafe { fchdir(fd.as_raw_fd()) } == 0 {

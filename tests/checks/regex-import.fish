@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 # Tests for importing named regex groups as fish variables
 
 # Invalid variable name?

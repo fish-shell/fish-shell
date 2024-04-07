@@ -7,7 +7,7 @@ use crate::wcstringutil::join_strings;
 #[test]
 #[serial]
 fn test_complete() {
-    test_init();
+    let _cleanup = test_init();
     let mut lc = LayoutCache::new();
     assert_eq!(lc.escape_code_length(L!("")), 0);
     assert_eq!(lc.escape_code_length(L!("abcd")), 0);
@@ -42,7 +42,7 @@ fn test_complete() {
 #[test]
 #[serial]
 fn test_layout_cache() {
-    test_init();
+    let _cleanup = test_init();
     let mut seqs = LayoutCache::new();
 
     // Verify escape code cache.
@@ -116,7 +116,7 @@ fn test_layout_cache() {
 #[test]
 #[serial]
 fn test_prompt_truncation() {
-    test_init();
+    let _cleanup = test_init();
     let mut cache = LayoutCache::new();
     let mut trunc = WString::new();
 

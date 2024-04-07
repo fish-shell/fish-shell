@@ -123,7 +123,7 @@ fn test_format() {
     let mut buff1 = [0_u8; 64];
     let mut buff2 = [0_u8; 64];
     format_llong_safe(&mut buff1, q);
-    unsafe { libc::snprintf(buff2.as_mut_ptr().cast(), 128, "%ld\0".as_ptr().cast(), q) };
+    unsafe { libc::snprintf(buff2.as_mut_ptr().cast(), 64, "%ld\0".as_ptr().cast(), q) };
     assert_eq!(cstr2wcstring(&buff1), cstr2wcstring(&buff2));
 }
 

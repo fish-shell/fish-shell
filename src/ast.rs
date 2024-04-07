@@ -3411,7 +3411,7 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
 #[test]
 #[serial]
 fn test_ast_parse() {
-    test_init();
+    let _cleanup = test_init();
     let src = L!("echo");
     let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);

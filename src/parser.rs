@@ -12,10 +12,9 @@ use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
-use crate::fds::open_cloexec;
-use crate::flog::FLOGF;
-use crate::function;
+use crate::fds::open_dir;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -26,14 +25,15 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
+use crate::reader::reader_current_data;
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::{assert_is_main_thread, MainThread};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
+use crate::{function, FLOG};
 use libc::c_int;
-use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
@@ -353,11 +353,7 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_cloexec(
-            CStr::from_bytes_with_nul(b".\0").unwrap(),
-            OFlag::O_RDONLY,
-            Mode::empty(),
-        ) {
+        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }
@@ -570,6 +566,12 @@ impl Parser {
             Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
+        let terminal_protocols_disabled = (
+            // If interactive or inside noninteractive builtin read.
+            reader_current_data().is_some() && TERMINAL_PROTOCOLS.get().borrow().is_some()
+        )
+        .then(terminal_protocols_disable_scoped);
+
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().pods.exec_count;
         let prev_status_count = self.libdata().pods.status_count;
@@ -581,6 +583,7 @@ impl Parser {
         let new_exec_count = self.libdata().pods.exec_count;
         let new_status_count = self.libdata().pods.status_count;
 
+        drop(terminal_protocols_disabled);
         ScopeGuarding::commit(exc);
         self.pop_block(scope_block);
 
@@ -945,10 +948,9 @@ impl Parser {
         let f = match std::fs::File::create(OsStr::from_bytes(path)) {
             Ok(f) => f,
             Err(err) => {
-                FLOGF!(
+                FLOG!(
                     warning,
-                    "%s",
-                    &wgettext_fmt!(
+                    wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
                         &String::from_utf8_lossy(path),
                         err.to_string()

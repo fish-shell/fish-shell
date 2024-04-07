@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 #REQUIRES: command -v tmux
 
 isolated-tmux-start
@@ -19,3 +19,13 @@ isolated-tmux capture-pane -p
 # CHECK: prompt 0> begin
 # CHECK: echo 123
 # CHECK: end
+
+# regression test
+isolated-tmux send-keys C-c # not sure why we need to wait after this
+tmux-sleep
+isolated-tmux send-keys 'bind S begin-selection' Enter C-l
+tmux-sleep
+isolated-tmux send-keys 'echo one two threeS' C-u C-y
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 1> echo one two three

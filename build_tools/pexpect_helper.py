@@ -34,7 +34,11 @@ def get_prompt_re(counter):
     """Return a regular expression for matching a with a given prompt counter."""
     return re.compile(
         r"""(?:\r\n?|^)   # beginning of line
-            (?:\x1b[\d\[KB(m]*)* # optional colors
+            (?:\x1b[\d[KB(m]*)* # optional colors
+            (?:\x1b[\?2004h) # Bracketed paste
+            (?:\x1b[>4;1m) # XTerm's modifyOtherKeys
+            (?:\x1b[>5u) # CSI u with kitty progressive enhancement
+            (?:\x1b=) # set application keypad mode, so the keypad keys send unique codes
             (?:\[.\]\ )?  # optional vi mode prompt
          """
         + (r"prompt\ %d>" % counter)  # prompt with counter

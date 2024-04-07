@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 set -l max 9223372036854775807
 set -l close_max 9223372036854775806
 set -l min -9223372036854775807

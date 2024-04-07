@@ -169,7 +169,7 @@ fn test_test() {
 #[test]
 #[serial]
 fn test_test_builtin() {
-    test_init();
+    let _cleanup = test_init();
     test_test_brackets();
     test_test();
 }

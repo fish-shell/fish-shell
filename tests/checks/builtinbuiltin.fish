@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 # Tests for the "builtin" builtin/keyword.
 builtin -q string; and echo String exists
 #CHECK: String exists

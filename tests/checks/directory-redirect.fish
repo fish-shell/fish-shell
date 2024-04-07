@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 begin
 end >.
 status -b; and echo "status -b returned true after bad redirect on a begin block"

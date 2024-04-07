@@ -25,7 +25,7 @@ fn comma_join(lst: Vec<WString>) -> WString {
 #[test]
 #[serial]
 fn test_complete() {
-    test_init();
+    let _cleanup = test_init();
     let vars = PwdEnvironment {
         parent: TestEnvironment {
             vars: HashMap::from([
@@ -433,7 +433,7 @@ fn test_complete() {
 #[test]
 #[serial]
 fn test_autosuggest_suggest_special() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! perform_one_autosuggestion_cd_test {
         ($command:literal, $expected:literal, $vars:expr) => {
             let mut comps = complete(
@@ -596,7 +596,7 @@ fn test_autosuggest_suggest_special() {
 #[test]
 #[serial]
 fn test_autosuggestion_ignores() {
-    test_init();
+    let _cleanup = test_init();
     // Testing scenarios that should produce no autosuggestions
     macro_rules! perform_one_autosuggestion_should_ignore_test {
         ($command:literal) => {

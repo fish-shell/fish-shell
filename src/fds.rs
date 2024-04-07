@@ -10,6 +10,7 @@ use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBL
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::os::unix::prelude::*;
 
@@ -103,6 +104,12 @@ impl FromRawFd for AutoCloseFd {
 impl AsRawFd for AutoCloseFd {
     fn as_raw_fd(&self) -> RawFd {
         self.fd()
+    }
+}
+
+impl AsFd for AutoCloseFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        unsafe { BorrowedFd::borrow_raw(self.fd()) }
     }
 }
 
@@ -222,12 +229,12 @@ pub fn wopen_cloexec(
     pathname: &wstr,
     flags: OFlag,
     mode: nix::sys::stat::Mode,
-) -> nix::Result<OwnedFd> {
+) -> nix::Result<File> {
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
-/// Narrow versions of wopen_cloexec.
-pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+/// Narrow versions of wopen_cloexec().
+pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<File> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     let saved_errno = errno();
@@ -237,12 +244,11 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
-
+        let ret = ret.map(|raw_fd| unsafe { File::from_raw_fd(raw_fd) });
         match ret {
-            Ok(fd) => {
+            Ok(file) => {
                 set_errno(saved_errno);
-                return Ok(fd);
+                return Ok(file);
             }
             Err(err) => {
                 if err != nix::Error::EINTR || signal_check_cancel() != 0 {
@@ -251,6 +257,17 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
             }
         }
     }
+}
+
+/// Wide character version of open_dir() that also sets the close-on-exec flag (atomically when
+/// possible).
+pub fn wopen_dir(pathname: &wstr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+    open_dir(wcs2zstring(pathname).as_c_str(), mode)
+}
+
+/// Narrow version of wopen_dir().
+pub fn open_dir(path: &CStr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
 }
 
 /// Close a file descriptor \p fd, retrying on EINTR.
@@ -293,7 +310,7 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
 #[test]
 #[serial]
 fn test_pipes() {
-    test_init();
+    let _cleanup = test_init();
     // Here we just test that each pipe has CLOEXEC set and is in the high range.
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     let mut pipes = vec![];

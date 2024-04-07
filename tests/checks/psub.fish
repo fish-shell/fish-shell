@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 set -l filename (echo foo | psub --testing)
 test -f $filename
 or echo 'psub is not a regular file' >&2

@@ -9,7 +9,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_abbreviations() {
-    test_init();
+    let _cleanup = test_init();
     {
         let mut abbrs = abbrs_get_set();
         abbrs.add(Abbreviation::new(
@@ -131,8 +131,8 @@ fn test_abbreviations() {
     // Others should not be.
     validate!("of gc", None);
 
-    // Others should not be.
-    validate!("command gc", None);
+    // Other decorations generally should be.
+    validate!("command gc", None, "command git checkout");
 
     // yin/yang expands everywhere.
     validate!("command yin", None, "command yang");

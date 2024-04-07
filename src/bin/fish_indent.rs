@@ -11,6 +11,7 @@ use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::Ordering;
 
+use fish::panic::panic_handler;
 use libc::{LC_ALL, STDOUT_FILENO};
 
 use fish::ast::{
@@ -722,7 +723,10 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
 
 fn main() {
     PROGRAM_NAME.set(L!("fish_indent")).unwrap();
+    panic_handler(throwing_main)
+}
 
+fn throwing_main() -> i32 {
     topic_monitor_init();
     threads::init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
@@ -795,7 +799,7 @@ fn main() {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
                 print_help("fish_indent");
-                std::process::exit(STATUS_CMD_OK.unwrap());
+                return STATUS_CMD_OK.unwrap();
             }
             'v' => {
                 printf!(
@@ -806,7 +810,7 @@ fn main() {
                         fish::BUILD_VERSION
                     )
                 );
-                std::process::exit(STATUS_CMD_OK.unwrap());
+                return STATUS_CMD_OK.unwrap();
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
@@ -829,7 +833,7 @@ fn main() {
             'o' => {
                 debug_output = Some(w.woptarg.unwrap());
             }
-            _ => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+            _ => return STATUS_CMD_ERROR.unwrap(),
         }
     }
 
@@ -845,7 +849,7 @@ fn main() {
         if file.is_null() {
             eprintf!("Could not open file %s\n", debug_output);
             perror("fopen");
-            std::process::exit(-1);
+            return -1;
         }
         let fd = unsafe { libc::fileno(file) };
         set_cloexec(fd, true);
@@ -867,11 +871,11 @@ fn main() {
                         PROGRAM_NAME.get().unwrap()
                     )
                 );
-                std::process::exit(STATUS_CMD_ERROR.unwrap());
+                return STATUS_CMD_ERROR.unwrap();
             }
             match read_file(stdin()) {
                 Ok(s) => src = s,
-                Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+                Err(()) => return STATUS_CMD_ERROR.unwrap(),
             }
         } else {
             let arg = args[i];
@@ -879,7 +883,7 @@ fn main() {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
-                        Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+                        Err(()) => return STATUS_CMD_ERROR.unwrap(),
                     }
                     output_location = arg;
                 }
@@ -888,7 +892,7 @@ fn main() {
                         "%s",
                         wgettext_fmt!("Opening \"%s\" failed: %s\n", arg, err.to_string())
                     );
-                    std::process::exit(STATUS_CMD_ERROR.unwrap());
+                    return STATUS_CMD_ERROR.unwrap();
                 }
             }
         }
@@ -933,7 +937,7 @@ fn main() {
                                 err.to_string()
                             )
                         );
-                        std::process::exit(STATUS_CMD_ERROR.unwrap());
+                        return STATUS_CMD_ERROR.unwrap();
                     }
                 }
             }
@@ -963,7 +967,7 @@ fn main() {
         let _ = write_to_fd(&colored_output, STDOUT_FILENO);
         i += 1;
     }
-    std::process::exit(retval)
+    retval
 }
 
 static DUMP_PARSE_TREE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

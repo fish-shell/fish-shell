@@ -5,14 +5,16 @@ use crate::parse_constants::{
     ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
     ERROR_NO_VAR_NAME,
 };
-use crate::parse_util::{parse_util_detect_errors, BOOL_AFTER_BACKGROUND_ERROR_MSG};
+use crate::parse_util::{
+    parse_util_detect_errors, parse_util_process_extent, BOOL_AFTER_BACKGROUND_ERROR_MSG,
+};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 
 #[test]
 #[serial]
 fn test_error_messages() {
-    test_init();
+    let _cleanup = test_init();
     // Given a format string, returns a list of non-empty strings separated by format specifiers. The
     // format specifiers themselves are omitted.
     fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
@@ -84,4 +86,17 @@ fn test_error_messages() {
         "echo 1 && echo 2 & && echo 3",
         BOOL_AFTER_BACKGROUND_ERROR_MSG
     );
+}
+
+#[test]
+fn test_parse_util_process_extent() {
+    macro_rules! validate {
+        ($commandline:literal, $cursor:expr, $expected_range:expr) => {
+            assert_eq!(
+                parse_util_process_extent(L!($commandline), $cursor, None),
+                $expected_range
+            );
+        };
+    }
+    validate!("for file in (path base\necho", 22, 13..22);
 }

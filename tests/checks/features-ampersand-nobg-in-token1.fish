@@ -1,4 +1,4 @@
-#RUN: %fish --features=ampersand-nobg-in-token -C 'set -g fish_indent %fish_indent' %s
+#RUN: %fish --features=ampersand-nobg-in-token -C 'set -g fish_indent %fish_indent' %s | %filter-ctrlseqs
 
 echo no&background
 # CHECK: no&background

@@ -22,11 +22,11 @@ testproc = "sleep 500" if platform.system() != "NetBSD" else "cat"
 sendline(testproc)
 sendline("set -l foo bar; echo $foo")
 expect_str("")
-sleep(0.2)
+sleep(1.2)
 
 # ctrl-z - send job to background
 send("\x1A")
-sleep(0.2)
+sleep(1.2)
 expect_prompt()
 sendline("set -l foo bar; echo $foo")
 expect_str("bar")
@@ -80,7 +80,7 @@ sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
 # Regression test for #2214: foregrounding from a key binding works!
-sendline(r"bind \cr 'fg >/dev/null 2>/dev/null'")
+sendline(r"bind ctrl-r 'fg >/dev/null 2>/dev/null'")
 expect_prompt()
 sendline("$fish_test_helper print_stop_cont")
 sleep(0.2)

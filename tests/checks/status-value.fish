@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
 
 # Empty commands should be 123
 set empty_var

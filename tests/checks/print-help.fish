@@ -1,4 +1,4 @@
-# RUN: %fish %s
+# RUN: %fish %s | %filter-ctrlseqs
 # Test redirecting builtin help with a pipe
 
 set -lx __fish_data_dir (mktemp -d)

@@ -3,7 +3,7 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn main() {
     setup_paths();
@@ -24,7 +24,12 @@ fn main() {
             .unwrap(),
     );
 
-    rsconf::set_env_value("FISH_BUILD_VERSION", &get_version(build_dir));
+    // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
+    // the source directory is the current working directory of the build script
+    rsconf::set_env_value(
+        "FISH_BUILD_VERSION",
+        &get_version(&env::current_dir().unwrap()),
+    );
 
     rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new()
@@ -196,7 +201,7 @@ fn setup_paths() {
     rsconf::rebuild_if_env_changed("DOCDIR");
 }
 
-fn get_version(build_dir: &str) -> String {
+fn get_version(src_dir: &Path) -> String {
     use std::fs::read_to_string;
     use std::process::Command;
 
@@ -204,7 +209,7 @@ fn get_version(build_dir: &str) -> String {
         return var;
     }
 
-    let path = PathBuf::from(build_dir).join("version");
+    let path = PathBuf::from(src_dir).join("version");
     if let Ok(strver) = read_to_string(path) {
         return strver.to_string();
     }

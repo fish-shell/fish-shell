@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: %fish %s | %filter-ctrlseqs
 # Avoid regressions of issue \#3860 wherein the first word of the alias ends with a semicolon
 function foo
     echo ran foo

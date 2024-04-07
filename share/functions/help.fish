@@ -57,11 +57,9 @@ function help --description 'Show help for the fish shell'
                 end
             end
 
-            # If we have an open _command_ we use it - otherwise it's our function,
-            # which might not have a backend to use.
-            # Note that we prefer xdg-open, because this open might also be a symlink to "openvt"
-            # like it is on Debian.
-            if command -sq open
+            # We use the macOS open, but not otherwise.
+            # On Debian, there is an open command that's a symlink to openvt.
+            if uname | string match -q Darwin && command -sq open
                 set fish_browser open
                 # The open command needs a trampoline because the macOS version can't handle #-fragments.
                 set need_trampoline 1
@@ -227,17 +225,12 @@ function help --description 'Show help for the fish shell'
         end
     end
 
+    printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
     # cmd.exe and powershell needs more coaxing.
     if string match -qr 'powershell\.exe$|cmd\.exe$' -- $fish_browser[1]
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
     else if contains -- $fish_browser[1] $graphical_browsers
-        switch $fish_browser[1]
-            case htmlview x-www-browser
-                printf (_ 'help: Help is being displayed in your default browser.\n')
-            case '*'
-                printf (_ 'help: Help is being displayed in %s.\n') $fish_browser[1]
-        end
         $fish_browser $page_url &
         disown $last_pid >/dev/null 2>&1
     else

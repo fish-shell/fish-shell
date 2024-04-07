@@ -461,15 +461,9 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Check for a matching long-named option.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
-        let mut name_end = 0;
+        let name_end = self.remaining_text.chars().take_while(|c| !matches!(c, '\0' | '=')).count();
 
-        while !matches!(self.remaining_text.char_at(name_end), '\0' | '=') {
-            name_end += 1;
-        }
-
-        let match_state = self.find_matching_long_opt(name_end);
-
-        match match_state {
+        match self.find_matching_long_opt(name_end) {
             LongOptMatch::Exact(opt, index) | LongOptMatch::NonExact(opt, index) => {
                 return Some(self.update_long_opt(&opt, name_end, longopt_index, index));
             }

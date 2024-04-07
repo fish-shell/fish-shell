@@ -457,12 +457,14 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         }
 
-        opt.map_or(LongOptMatch::NoMatch, |opt| if exact {
-            LongOptMatch::Exact(opt, index)
-        } else if ambiguous {
-            LongOptMatch::Ambiguous
-        } else {
-            LongOptMatch::NonExact(opt, index)
+        opt.map_or(LongOptMatch::NoMatch, |opt| {
+            if exact {
+                LongOptMatch::Exact(opt, index)
+            } else if ambiguous {
+                LongOptMatch::Ambiguous
+            } else {
+                LongOptMatch::NonExact(opt, index)
+            }
         })
     }
 

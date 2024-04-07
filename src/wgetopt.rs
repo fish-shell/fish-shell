@@ -119,6 +119,8 @@ pub const fn wopt(name: &wstr, has_arg: ArgType, val: char) -> WOption<'_> {
     WOption { name, has_arg, val }
 }
 
+/// Used internally by [Wgetopter::find_matching_long_opt]. See there for further
+/// details.
 #[derive(Default)]
 enum LongOptMatch<'a> {
     Exact(WOption<'a>, usize),

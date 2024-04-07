@@ -39,7 +39,6 @@ def get_prompt_re(counter):
             (?:\x1b[>4;1m) # XTerm's modifyOtherKeys
             (?:\x1b[>5u) # CSI u with kitty progressive enhancement
             (?:\x1b=) # set application keypad mode, so the keypad keys send unique codes
-            (?:\x1b[\?1004h)? # enable focus notify
             (?:\[.\]\ )?  # optional vi mode prompt
          """
         + (r"prompt\ %d>" % counter)  # prompt with counter

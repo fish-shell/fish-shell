@@ -23,6 +23,7 @@ use once_cell::sync::Lazy;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
+use std::io::Write;
 use std::num::NonZeroUsize;
 use std::ops::Range;
 use std::os::fd::RawFd;
@@ -70,7 +71,8 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input::Inputter;
 use crate::input_common::{
-    terminal_protocols_enable_scoped, CharEvent, CharInputStyle, ReadlineCmd,
+    focus_events_enable_ifn, terminal_protocols_enable_scoped, CharEvent, CharInputStyle,
+    ReadlineCmd,
 };
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -624,6 +626,7 @@ fn read_i(parser: &Parser) -> i32 {
         data.update_buff_pos(EditableLineTag::Commandline, Some(0));
         data.command_line.clear();
         data.command_line_changed(EditableLineTag::Commandline);
+        data.screen.write_bytes(b"\x1b]133;C\x07");
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();
@@ -635,6 +638,11 @@ fn read_i(parser: &Parser) -> i32 {
         data.exit_loop_requested |= parser.libdata().pods.exit_current_script;
         parser.libdata_mut().pods.exit_current_script = false;
 
+        let _ = write!(
+            Outputter::stdoutput().borrow_mut(),
+            "\x1b]133;D;{}\x07",
+            parser.get_last_status()
+        );
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();
@@ -1141,9 +1149,11 @@ impl ReaderData {
         &self.parser_ref
     }
 
-    /// Convenience cover over exec_count.
-    fn exec_count(&self) -> u64 {
-        self.parser().libdata().pods.exec_count
+    // We repaint our prompt if fstat reports the tty as having changed.
+    // But don't react to tty changes that we initiated, because of commands or
+    // on-variable events (e.g. for fish_bind_mode). See #3481.
+    pub(crate) fn save_screen_state(&mut self) {
+        self.screen.save_status();
     }
 
     /// Do what we need to do whenever our command line changes.
@@ -1995,13 +2005,17 @@ impl ReaderData {
         rls.finished.then(|| zelf.command_line.text().to_owned())
     }
 
+    fn eval_bind_cmd(&mut self, cmd: &wstr) {
+        let last_statuses = self.parser().vars().get_last_statuses();
+        self.parser().eval(cmd, &IoChain::new());
+        self.parser().set_last_statuses(last_statuses);
+    }
+
     /// Run a sequence of commands from an input binding.
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
-        let last_statuses = self.parser().vars().get_last_statuses();
         self.update_commandline_state();
-        self.parser().eval(cmd, &IoChain::new());
+        self.eval_bind_cmd(cmd);
         self.apply_commandline_state_changes();
-        self.parser().set_last_statuses(last_statuses);
 
         // Restore tty to shell modes.
         // Some input commands will take over the tty - see #2114 for an example where vim is invoked
@@ -2032,13 +2046,10 @@ impl ReaderData {
             READAHEAD_MAX,
         );
 
-        // We repaint our prompt if fstat reports the tty as having changed.
-        // But don't react to tty changes that we initiated, because of commands or
-        // on-variable events (e.g. for fish_bind_mode). See #3481.
-        let mut last_exec_count = self.exec_count();
         let mut accumulated_chars = WString::new();
 
         while accumulated_chars.len() < limit {
+            focus_events_enable_ifn();
             let evt = self.inputter.read_char();
             let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);
@@ -2061,11 +2072,6 @@ impl ReaderData {
             } else {
                 continue;
             };
-
-            if last_exec_count != self.exec_count() {
-                last_exec_count = self.exec_count();
-                self.screen.save_status();
-            }
         }
 
         if !accumulated_chars.is_empty() {
@@ -2079,14 +2085,6 @@ impl ReaderData {
 
             // Since we handled a normal character, we don't have a last command.
             rls.last_cmd = None;
-        }
-
-        if last_exec_count != self.exec_count() {
-            #[allow(unused_assignments)]
-            {
-                last_exec_count = self.exec_count();
-            }
-            self.screen.save_status();
         }
 
         event_needing_handling
@@ -2613,9 +2611,7 @@ impl ReaderData {
             }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
-                    let last_statuses = self.parser().vars().get_last_statuses();
-                    self.parser().eval(L!("prevd"), &IoChain::new());
-                    self.parser().set_last_statuses(last_statuses);
+                    self.eval_bind_cmd(L!("prevd"));
                     self.force_exec_prompt_and_repaint = true;
                     self.inputter
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
@@ -2637,9 +2633,7 @@ impl ReaderData {
             }
             rl::ForwardWord | rl::ForwardBigword | rl::NextdOrForwardWord => {
                 if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
-                    let last_statuses = self.parser().vars().get_last_statuses();
-                    self.parser().eval(L!("nextd"), &IoChain::new());
-                    self.parser().set_last_statuses(last_statuses);
+                    self.eval_bind_cmd(L!("nextd"));
                     self.force_exec_prompt_and_repaint = true;
                     self.inputter
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));

@@ -412,7 +412,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if search_mode {
-        return if commandline_get_state().search_mode {
+        return if rstate.search_mode {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -420,7 +420,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if paging_mode {
-        return if commandline_get_state().pager_mode {
+        return if rstate.pager_mode {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -428,8 +428,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if paging_full_mode {
-        let state = commandline_get_state();
-        return if state.pager_mode && state.pager_fully_disclosed {
+        return if rstate.pager_mode && rstate.pager_fully_disclosed {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -461,7 +460,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let transient;
 
     if search_field_mode {
-        let Some((search_field_text, cursor_pos)) = commandline_get_state().search_field else {
+        let Some((search_field_text, cursor_pos)) = rstate.search_field else {
             return STATUS_CMD_ERROR;
         };
         transient = search_field_text;

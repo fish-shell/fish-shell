@@ -13,8 +13,6 @@ use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
 use crate::fds::open_dir;
-use crate::flog::FLOGF;
-use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
@@ -34,6 +32,7 @@ use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
+use crate::{function, FLOG};
 use libc::c_int;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
@@ -945,10 +944,9 @@ impl Parser {
         let f = match std::fs::File::create(OsStr::from_bytes(path)) {
             Ok(f) => f,
             Err(err) => {
-                FLOGF!(
+                FLOG!(
                     warning,
-                    "%s",
-                    &wgettext_fmt!(
+                    wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
                         &String::from_utf8_lossy(path),
                         err.to_string()

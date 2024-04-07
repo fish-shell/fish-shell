@@ -1,5 +1,5 @@
 use crate::input::{input_mappings, Inputter, DEFAULT_BIND_MODE};
-use crate::input_common::{CharEvent, ReadlineCmd};
+use crate::input_common::{terminal_protocols_enable_scoped, CharEvent, ReadlineCmd};
 use crate::key::Key;
 use crate::parser::Parser;
 use crate::tests::prelude::*;

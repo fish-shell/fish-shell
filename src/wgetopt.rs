@@ -25,6 +25,14 @@ Cambridge, MA 02139, USA.  */
 
 use crate::wchar::prelude::*;
 
+/// Special char used with [Ordering::ReturnInOrder].
+pub const NON_OPTION_CHAR: char = '\x01';
+
+/// Utility function to quickly return a reference to an empty wstr.
+fn empty_wstr() -> &'static wstr {
+    Default::default()
+}
+
 /// Describes how to deal with options that follow non-option elements in `argv`.
 ///
 /// Note that any arguments passed after `--` will be treated as non-option elements,
@@ -46,48 +54,6 @@ enum Ordering {
     ///
     /// Indicated by using `-` as the first character in the optstring.
     ReturnInOrder,
-}
-
-/// Special char used with [Ordering::ReturnInOrder].
-pub const NON_OPTION_CHAR: char = '\x01';
-
-/// Utility function to quickly return a reference to an empty wstr.
-fn empty_wstr() -> &'static wstr {
-    Default::default()
-}
-
-pub struct WGetopter<'opts, 'args, 'argarray> {
-    /// List of arguments. Will not be resized, but can be modified.
-    pub argv: &'argarray mut [&'args wstr],
-    /// Stores the arg of an argument-taking option, including the pseudo-arguments
-    /// used by [Ordering::ReturnInOrder].
-    pub woptarg: Option<&'args wstr>,
-    /// Stores the optstring for short-named options.
-    shortopts: &'opts wstr,
-    /// Stores the data for long options.
-    longopts: &'opts [WOption<'opts>],
-    /// The remaining text of the current element, recorded so that we can pick up the
-    /// scan from where we left off.
-    pub remaining_text: &'args wstr,
-    /// Index of the next element in `argv` to be scanned. If the value is `0`, then
-    /// the next call will initialize. When scanning is finished, this marks the index
-    /// of the first non-option element that should be parsed by the caller.
-    // XXX 1003.2 says this must be 1 before any call.
-    pub wopt_index: usize,
-    /// Set when a (short) option is unrecognized.
-    unrecognized_opt: char,
-    /// How to deal with non-option elements following options.
-    ordering: Ordering,
-    /// Used when reordering elements. After scanning is finished, indicates the index
-    /// of the first non-option skipped during parsing.
-    pub first_nonopt: usize,
-    /// Used when reordering elements. After scanning is finished, indicates the index
-    /// after the final non-option skipped during parsing.
-    pub last_nonopt: usize,
-    /// Return `:` if an arg is missing.
-    return_colon: bool,
-    /// Prevents redundant initialization.
-    initialized: bool,
 }
 
 /// Indicates whether a long-named takes an argument, and whether that argument
@@ -128,6 +94,40 @@ enum LongOptMatch<'a> {
     Ambiguous,
     #[default]
     NoMatch,
+}
+
+pub struct WGetopter<'opts, 'args, 'argarray> {
+    /// List of arguments. Will not be resized, but can be modified.
+    pub argv: &'argarray mut [&'args wstr],
+    /// Stores the arg of an argument-taking option, including the pseudo-arguments
+    /// used by [Ordering::ReturnInOrder].
+    pub woptarg: Option<&'args wstr>,
+    /// Stores the optstring for short-named options.
+    shortopts: &'opts wstr,
+    /// Stores the data for long options.
+    longopts: &'opts [WOption<'opts>],
+    /// The remaining text of the current element, recorded so that we can pick up the
+    /// scan from where we left off.
+    pub remaining_text: &'args wstr,
+    /// Index of the next element in `argv` to be scanned. If the value is `0`, then
+    /// the next call will initialize. When scanning is finished, this marks the index
+    /// of the first non-option element that should be parsed by the caller.
+    // XXX 1003.2 says this must be 1 before any call.
+    pub wopt_index: usize,
+    /// Set when a (short) option is unrecognized.
+    unrecognized_opt: char,
+    /// How to deal with non-option elements following options.
+    ordering: Ordering,
+    /// Used when reordering elements. After scanning is finished, indicates the index
+    /// of the first non-option skipped during parsing.
+    pub first_nonopt: usize,
+    /// Used when reordering elements. After scanning is finished, indicates the index
+    /// after the final non-option skipped during parsing.
+    pub last_nonopt: usize,
+    /// Return `:` if an arg is missing.
+    return_colon: bool,
+    /// Prevents redundant initialization.
+    initialized: bool,
 }
 
 impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {

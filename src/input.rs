@@ -616,6 +616,7 @@ impl EventQueuePeeker<'_> {
 
     /// \return the next event.
     fn next(&mut self) -> CharEvent {
+        assert!(self.subidx == 0);
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -660,16 +661,12 @@ impl EventQueuePeeker<'_> {
         let Some(kevt) = evt.get_key() else {
             return false;
         };
-        if kevt.key == key {
+        if self.subidx == 0 && kevt.key == key {
             self.idx += 1;
-            self.subidx = 0;
             return true;
         }
         let actual_seq = kevt.seq.as_char_slice();
-        let is_csi_u = actual_seq.get(0) == Some(&'\x1b')
-            && actual_seq.get(1) == Some(&'[')
-            && actual_seq.last() == Some(&'u');
-        if !actual_seq.is_empty() && !is_csi_u {
+        if !actual_seq.is_empty() {
             let seq_char = actual_seq[self.subidx];
             if Key::from_single_char(seq_char) == key {
                 self.subidx += 1;

@@ -427,7 +427,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // Test all long options for either exact match or abbreviated matches.
         for (i, potential_match) in self.longopts.iter().enumerate() {
             // Check if current option is prefix of long opt
-            if potential_match.name.starts_with(&self.remaining_text[..name_end]) {
+            if potential_match
+                .name
+                .starts_with(&self.remaining_text[..name_end])
+            {
                 if name_end == potential_match.name.len() {
                     // The option matches the text exactly, so we're finished.
                     opt = Some(*potential_match);
@@ -461,7 +464,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Check for a matching long-named option.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
-        let name_end = self.remaining_text.chars().take_while(|c| !matches!(c, '\0' | '=')).count();
+        let name_end = self
+            .remaining_text
+            .chars()
+            .take_while(|c| !matches!(c, '\0' | '='))
+            .count();
 
         match self.find_matching_long_opt(name_end) {
             LongOptMatch::Exact(opt, index) | LongOptMatch::NonExact(opt, index) => {

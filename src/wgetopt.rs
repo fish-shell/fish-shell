@@ -26,7 +26,7 @@ Cambridge, MA 02139, USA.  */
 
 use crate::wchar::prelude::*;
 
-/// Special char used with [Ordering::ReturnInOrder].
+/// Special char used with [`Ordering::ReturnInOrder`].
 pub const NON_OPTION_CHAR: char = '\x01';
 
 /// Utility function to quickly return a reference to an empty wstr.
@@ -81,7 +81,7 @@ pub struct WOption<'a> {
     pub val: char,
 }
 
-/// Helper function to create a WOption.
+/// Helper function to create a `WOption`.
 pub const fn wopt(name: &wstr, arg_type: ArgType, val: char) -> WOption<'_> {
     WOption {
         name,
@@ -187,8 +187,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         // Otherwise we do it manually.
         if right - middle + 1 == middle - left {
             // ... I *think* this implementation makes sense?
-            let (front, mut back) = self.argv.get_mut(left..right).unwrap().split_at_mut(middle);
-            front.swap_with_slice(&mut back);
+            let (front, back) = self.argv.get_mut(left..right).unwrap().split_at_mut(middle);
+            front.swap_with_slice(back);
         } else {
             while right > middle && middle > left {
                 if right - middle > middle - left {
@@ -261,10 +261,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         if self.ordering == Ordering::Permute {
             // Permute the args if we've found options following non-options.
             if self.last_nonopt != self.wopt_index {
-                if self.first_nonopt != self.last_nonopt {
-                    self.exchange();
-                } else {
+                if self.first_nonopt == self.last_nonopt {
                     self.first_nonopt = self.wopt_index;
+                } else {
+                    self.exchange();
                 }
             }
 
@@ -403,11 +403,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         assert!(matches!(self.remaining_text.char_at(name_end), '\0' | '='));
 
         if self.remaining_text.char_at(name_end) == '=' {
-            if opt_found.arg_type != ArgType::NoArgument {
-                self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
-            } else {
+            if opt_found.arg_type == ArgType::NoArgument {
                 self.remaining_text = empty_wstr();
                 return '?';
+            } else {
+                self.woptarg = Some(self.remaining_text[(name_end + 1)..].into());
             }
         } else if opt_found.arg_type == ArgType::RequiredArgument {
             if self.wopt_index < self.argv.len() {
@@ -456,17 +456,13 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
             }
         }
 
-        if let Some(opt) = opt {
-            if exact {
-                LongOptMatch::Exact(opt, index)
-            } else if ambiguous {
-                LongOptMatch::Ambiguous
-            } else {
-                LongOptMatch::NonExact(opt, index)
-            }
+        opt.map_or(LongOptMatch::NoMatch, |opt| if exact {
+            LongOptMatch::Exact(opt, index)
+        } else if ambiguous {
+            LongOptMatch::Ambiguous
         } else {
-            LongOptMatch::NoMatch
-        }
+            LongOptMatch::NonExact(opt, index)
+        })
     }
 
     /// Check for a matching long-named option.

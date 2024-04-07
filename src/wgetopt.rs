@@ -419,40 +419,40 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Find a matching long-named option.
     fn find_matching_long_opt(&self, name_end: usize) -> LongOptMatch<'opts> {
-        let mut opt_found = None;
-        let mut index_found = 0;
+        let mut opt = None;
+        let mut index = 0;
         let mut exact = false;
-        let mut ambig = false;
+        let mut ambiguous = false;
 
         // Test all long options for either exact match or abbreviated matches.
-        for (opt_i, opt) in self.longopts.iter().enumerate() {
+        for (i, potential_match) in self.longopts.iter().enumerate() {
             // Check if current option is prefix of long opt
-            if opt.name.starts_with(&self.remaining_text[..name_end]) {
-                if name_end == opt.name.len() {
+            if potential_match.name.starts_with(&self.remaining_text[..name_end]) {
+                if name_end == potential_match.name.len() {
                     // The option matches the text exactly, so we're finished.
-                    opt_found = Some(*opt);
-                    index_found = opt_i;
+                    opt = Some(*potential_match);
+                    index = i;
                     exact = true;
                     break;
-                } else if opt_found.is_none() {
+                } else if opt.is_none() {
                     // The option begins with text, but isn't an exact match.
-                    opt_found = Some(*opt);
-                    index_found = opt_i;
+                    opt = Some(*potential_match);
+                    index = i;
                 } else {
                     // There are multiple options that match the text, so
                     // it's ambiguous.
-                    ambig = true;
+                    ambiguous = true;
                 }
             }
         }
 
-        if let Some(opt) = opt_found {
+        if let Some(opt) = opt {
             if exact {
-                LongOptMatch::Exact(opt, index_found)
-            } else if ambig {
+                LongOptMatch::Exact(opt, index)
+            } else if ambiguous {
                 LongOptMatch::Ambiguous
             } else {
-                LongOptMatch::NonExact(opt, index_found)
+                LongOptMatch::NonExact(opt, index)
             }
         } else {
             LongOptMatch::NoMatch

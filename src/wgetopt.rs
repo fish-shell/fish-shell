@@ -157,7 +157,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
     }
 
-    /// Try to get the next argument option.
+    /// Try to get the next option.
     pub fn next_opt(&mut self) -> Option<char> {
         assert!(
             self.wopt_index <= self.argv.len(),
@@ -168,9 +168,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.wgetopt_inner(&mut ignored)
     }
 
-    /// Try to get an argument option at a specific index.
-    pub fn opt_at(&mut self, opt_index: &mut usize) -> Option<char> {
-        self.wgetopt_inner(opt_index)
+    /// Try to get an option at a specific index (based on
+    /// the list of long-named options).
+    pub fn opt_at(&mut self, longopt_index: &mut usize) -> Option<char> {
+        self.wgetopt_inner(longopt_index)
     }
 
     /// Divides `argv` into two lists, the one which contains all non-options skipped

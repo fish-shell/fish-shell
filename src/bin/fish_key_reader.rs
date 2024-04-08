@@ -82,30 +82,10 @@ fn sequence_name(recent_chars: &mut Vec<u8>, c: char) -> Option<WString> {
     input_terminfo_get_name(&str2wcstring(recent_chars))
 }
 
-fn output_bind_command(bind_chars: &mut Vec<(Key, WString)>) {
-    if !bind_chars.is_empty() {
-        printf!("bind ");
-        for (key, _seq) in &*bind_chars {
-            printf!("%s", key);
-        }
-        printf!(" 'do something'\n");
-        bind_chars.clear();
-    }
-}
-
-fn output_matching_key_name(recent_chars: &mut Vec<u8>, c: char) -> bool {
-    if let Some(name) = sequence_name(recent_chars, c) {
-        printf!("bind -k %ls 'do something'\n", name);
-        return true;
-    }
-    false
-}
-
 /// Process the characters we receive as the user presses keys.
 fn process_input(continuous_mode: bool) -> i32 {
     let mut first_char_seen = false;
     let mut queue = InputEventQueue::new(STDIN_FILENO);
-    let mut bind_chars = vec![];
     let mut recent_chars1 = vec![];
     let mut recent_chars2 = vec![];
     eprintf!("Press a key:\n");
@@ -120,10 +100,9 @@ fn process_input(continuous_mode: bool) -> i32 {
         if c == key::Invalid {
             continue;
         }
-        bind_chars.push((kevt.key, kevt.seq));
-        output_bind_command(&mut bind_chars);
-        if output_matching_key_name(&mut recent_chars1, c) {
-            output_bind_command(&mut bind_chars);
+        printf!("bind %s 'do something'\n", kevt.key);
+        if let Some(name) = sequence_name(&mut recent_chars1, c) {
+            printf!("bind -k %ls 'do something'\n", name);
         }
 
         if continuous_mode && should_exit(&mut recent_chars2, kevt.key) {

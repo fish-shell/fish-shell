@@ -38,6 +38,13 @@ pub struct InputMappingName {
     pub mode: WString,
 }
 
+#[derive(Clone, Debug)]
+pub enum KeyNameStyle {
+    Plain,
+    RawEscapeSequence,
+    Terminfo(WString),
+}
+
 /// Struct representing a keybinding. Returned by input_get_mappings.
 #[derive(Debug, Clone)]
 struct InputMapping {
@@ -51,8 +58,8 @@ struct InputMapping {
     mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
     sets_mode: Option<WString>,
-    /// Whether this sequence was specified via its terminfo name.
-    terminfo_name: Option<WString>,
+    /// Perhaps this binding was created using a raw escape sequence or terminfo.
+    key_name_style: KeyNameStyle,
 }
 
 impl InputMapping {
@@ -62,7 +69,7 @@ impl InputMapping {
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
-        terminfo_name: Option<WString>,
+        key_name_style: KeyNameStyle,
     ) -> InputMapping {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
@@ -76,7 +83,7 @@ impl InputMapping {
             specification_order,
             mode,
             sets_mode,
-            terminfo_name,
+            key_name_style,
         }
     }
 
@@ -282,7 +289,7 @@ impl InputMappingSet {
     pub fn add(
         &mut self,
         sequence: Vec<Key>,
-        terminfo_name: Option<WString>,
+        key_name_style: KeyNameStyle,
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
@@ -307,7 +314,7 @@ impl InputMappingSet {
         }
 
         // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, terminfo_name);
+        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, key_name_style);
         input_mapping_insert_sorted(ml, new_mapping);
     }
 
@@ -315,7 +322,7 @@ impl InputMappingSet {
     pub fn add1(
         &mut self,
         sequence: Vec<Key>,
-        terminfo_name: Option<WString>,
+        key_name_style: KeyNameStyle,
         command: WString,
         mode: WString,
         sets_mode: Option<WString>,
@@ -323,7 +330,7 @@ impl InputMappingSet {
     ) {
         self.add(
             sequence,
-            terminfo_name,
+            key_name_style,
             vec![command],
             mode,
             sets_mode,
@@ -349,7 +356,7 @@ pub fn init_input() {
         let mut add = |key: Vec<Key>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(key, None, cmd.into(), mode, sets_mode, false);
+            input_mapping.add1(key, KeyNameStyle::Plain, cmd.into(), mode, sets_mode, false);
         };
 
         add(vec![], "self-insert");
@@ -372,18 +379,22 @@ pub fn init_input() {
         add(vec![ctrl('b')], "backward-char");
         add(vec![ctrl('f')], "forward-char");
 
-        let mut add_legacy = |escape_sequence: &str, cmd: &str| {
-            add(
-                canonicalize_raw_escapes(
-                    escape_sequence.chars().map(Key::from_single_char).collect(),
-                ),
-                cmd,
+        let mut add_raw = |escape_sequence: &str, cmd: &str| {
+            let mode = DEFAULT_BIND_MODE.to_owned();
+            let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
+            input_mapping.add1(
+                canonicalize_raw_escapes(escape_sequence.chars().map(Key::from_raw).collect()),
+                KeyNameStyle::RawEscapeSequence,
+                cmd.into(),
+                mode,
+                sets_mode,
+                false,
             );
         };
-        add_legacy("\x1B[A", "up-line");
-        add_legacy("\x1B[B", "down-line");
-        add_legacy("\x1B[C", "forward-char");
-        add_legacy("\x1B[D", "backward-char");
+        add_raw("\x1B[A", "up-line");
+        add_raw("\x1B[B", "down-line");
+        add_raw("\x1B[C", "forward-char");
+        add_raw("\x1B[D", "backward-char");
     }
 }
 
@@ -1008,7 +1019,7 @@ impl InputMappingSet {
         out_cmds: &mut &'a [WString],
         user: bool,
         out_sets_mode: &mut Option<&'a wstr>,
-        out_terminfo_name: &mut Option<WString>,
+        out_key_name_style: &mut KeyNameStyle,
     ) -> bool {
         let ml = if user {
             &self.mapping_list
@@ -1019,7 +1030,7 @@ impl InputMappingSet {
             if m.seq == sequence && m.mode == mode {
                 *out_cmds = &m.commands;
                 *out_sets_mode = m.sets_mode.as_deref();
-                *out_terminfo_name = m.terminfo_name.clone();
+                *out_key_name_style = m.key_name_style.clone();
                 return true;
             }
         }

@@ -1,4 +1,4 @@
-use crate::input::{input_mappings, Inputter, DEFAULT_BIND_MODE};
+use crate::input::{input_mappings, Inputter, KeyNameStyle, DEFAULT_BIND_MODE};
 use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::key::Key;
 use crate::parser::Parser;
@@ -26,7 +26,7 @@ fn test_input() {
         let mut input_mapping = input_mappings();
         input_mapping.add1(
             prefix_binding,
-            None,
+            KeyNameStyle::Plain,
             WString::from_str("up-line"),
             default_mode(),
             None,
@@ -34,7 +34,7 @@ fn test_input() {
         );
         input_mapping.add1(
             desired_binding.clone(),
-            None,
+            KeyNameStyle::Plain,
             WString::from_str("down-line"),
             default_mode(),
             None,

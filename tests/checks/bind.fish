@@ -15,8 +15,8 @@ bind -M bind-mode \cX true
 bind -M bind_mode \cX true
 
 # Listing bindings
-bind | string match -v '*escape,\\[*' # Hide legacy bindings.
-bind --user --preset | string match -v '*escape,\\[*'
+bind | string match -v '*\e\\[*' # Hide raw bindings.
+bind --user --preset | string match -v '*\e\\[*'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -55,7 +55,7 @@ bind --user --preset | string match -v '*escape,\\[*'
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Preset only
-bind --preset | string match -v '*escape,\\[*'
+bind --preset | string match -v '*\e\\[*'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete
@@ -75,12 +75,12 @@ bind --preset | string match -v '*escape,\\[*'
 # CHECK: bind --preset ctrl-f forward-char
 
 # User only
-bind --user | string match -v '*escape,\\[*'
+bind --user | string match -v '*\e\\[*'
 # CHECK: bind -M bind_mode ctrl-x true
 
 # Adding bindings
 bind tab 'echo banana'
-bind | string match -v '*escape,\\[*'
+bind | string match -v '*\e\\[*'
 # CHECK: bind --preset '' self-insert
 # CHECK: bind --preset enter execute
 # CHECK: bind --preset tab complete

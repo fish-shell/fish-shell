@@ -7,9 +7,9 @@ use crate::common::{
 use crate::highlight::{colorize, highlight_shell};
 use crate::input::{
     input_function_get_names, input_mappings, input_terminfo_get_names,
-    input_terminfo_get_sequence, GetSequenceError, InputMappingSet,
+    input_terminfo_get_sequence, GetSequenceError, InputMappingSet, KeyNameStyle,
 };
-use crate::key::{self, canonicalize_raw_escapes, parse_keys, Key};
+use crate::key::{self, canonicalize_raw_escapes, char_to_symbol, parse_keys, Key, Modifiers};
 use crate::nix::isatty;
 use std::sync::MutexGuard;
 
@@ -84,7 +84,7 @@ impl BuiltinBind {
     ) -> bool {
         let mut ecmds: &[_] = &[];
         let mut sets_mode = None;
-        let mut terminfo_name = None;
+        let mut key_name_style = KeyNameStyle::Plain;
         let mut out = WString::new();
         if !self.input_mappings.get(
             seq,
@@ -92,7 +92,7 @@ impl BuiltinBind {
             &mut ecmds,
             user,
             &mut sets_mode,
-            &mut terminfo_name,
+            &mut key_name_style,
         ) {
             return false;
         }
@@ -115,21 +115,39 @@ impl BuiltinBind {
             }
         }
 
-        if let Some(tname) = terminfo_name {
-            // Note that we show -k here because we have an input key name.
-            out.push_str(" -k ");
-            out.push_utfstr(&tname);
-        } else {
-            out.push(' ');
-            // Append the name.
-            for (i, key) in seq.iter().enumerate() {
-                if i != 0 {
-                    out.push(key::KEY_SEPARATOR);
+        out.push(' ');
+        match key_name_style {
+            KeyNameStyle::Plain => {
+                // Append the name.
+                for (i, key) in seq.iter().enumerate() {
+                    if i != 0 {
+                        out.push(key::KEY_SEPARATOR);
+                    }
+                    out.push_utfstr(&WString::from(*key));
                 }
-                out.push_utfstr(&WString::from(*key));
+                if seq.is_empty() {
+                    out.push_str("''");
+                }
             }
-            if seq.is_empty() {
-                out.push_str("''");
+            KeyNameStyle::RawEscapeSequence => {
+                for key in seq {
+                    if key.modifiers == Modifiers::ALT {
+                        out.push_utfstr(&char_to_symbol('\x1b'));
+                        out.push_utfstr(&char_to_symbol(if key.codepoint == key::Escape {
+                            '\x1b'
+                        } else {
+                            key.codepoint
+                        }));
+                    } else {
+                        assert!(key.modifiers.is_none());
+                        out.push_utfstr(&char_to_symbol(key.codepoint));
+                    }
+                }
+            }
+            KeyNameStyle::Terminfo(tname) => {
+                // Note that we show -k here because we have an input key name.
+                out.push_str("-k ");
+                out.push_utfstr(&tname);
             }
         }
 
@@ -236,22 +254,23 @@ impl BuiltinBind {
         cmds: &[&wstr],
         mode: WString,
         sets_mode: Option<WString>,
-        is_terminfo_key: bool,
         user: bool,
         streams: &mut IoStreams,
     ) -> bool {
         let cmds = cmds.iter().map(|&s| s.to_owned()).collect();
+        let is_raw_escape_sequence = seq.len() > 2 && seq.char_at(0) == '\x1b';
         let Some(key_seq) = self.compute_seq(streams, seq) else {
             return true;
         };
-        self.input_mappings.add(
-            key_seq,
-            is_terminfo_key.then(|| seq.to_owned()),
-            cmds,
-            mode,
-            sets_mode,
-            user,
-        );
+        let key_name_style = if self.opts.use_terminfo {
+            KeyNameStyle::Terminfo(seq.to_owned())
+        } else if is_raw_escape_sequence {
+            KeyNameStyle::RawEscapeSequence
+        } else {
+            KeyNameStyle::Plain
+        };
+        self.input_mappings
+            .add(key_seq, key_name_style, cmds, mode, sets_mode, user);
         false
     }
 
@@ -396,7 +415,6 @@ impl BuiltinBind {
                 &argv[optind + 1..],
                 self.opts.bind_mode.to_owned(),
                 self.opts.sets_bind_mode.to_owned(),
-                self.opts.use_terminfo,
                 self.opts.user,
                 streams,
             ) {

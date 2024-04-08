@@ -66,6 +66,11 @@ impl Modifiers {
             shift: false,
         }
     }
+    pub(crate) const ALT: Self = {
+        let mut m = Self::new();
+        m.alt = true;
+        m
+    };
     pub(crate) fn is_some(&self) -> bool {
         self.ctrl || self.alt || self.shift
     }
@@ -396,6 +401,33 @@ impl From<Key> for WString {
     }
 }
 
+fn ctrl_to_symbol(buf: &mut WString, c: char) {
+    // Most ascii control characters like \x01 are canonicalized as ctrl-a, except
+    // 1. if we are explicitly given a codepoint < 32 via CSI u.
+    // 2. key names that are given as raw escape sequence (\e123); those we want to display
+    // similar to how they are given.
+
+    let ctrl_symbolic_names: [&wstr; 28] = {
+        std::array::from_fn(|i| match i {
+            8 => L!("\\b"),
+            9 => L!("\\t"),
+            10 => L!("\\n"),
+            13 => L!("\\r"),
+            27 => L!("\\e"),
+            _ => L!(""),
+        })
+    };
+
+    let c = u8::try_from(c).unwrap();
+    let cu = usize::from(c);
+
+    if !ctrl_symbolic_names[cu].is_empty() {
+        sprintf!(=> buf, "%s", ctrl_symbolic_names[cu]);
+    } else {
+        sprintf!(=> buf, "\\x%02x", c);
+    }
+}
+
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
 fn must_escape(c: char) -> bool {
@@ -411,13 +443,11 @@ fn ascii_printable_to_symbol(buf: &mut WString, c: char) {
 }
 
 /// Convert a wide-char to a symbol that can be used in our output.
-fn char_to_symbol(c: char) -> WString {
+pub(crate) fn char_to_symbol(c: char) -> WString {
     let mut buff = WString::new();
     let buf = &mut buff;
     if c <= ' ' {
-        // Most ascii control characters like \x01 are canonicalized like ctrl-a, except if we
-        // are given the control character directly with CSI u.
-        sprintf!(=> buf, "\\x%02x", u8::try_from(c).unwrap());
+        ctrl_to_symbol(buf, c);
     } else if c < '\u{80}' {
         // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, c);

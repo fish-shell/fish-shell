@@ -265,7 +265,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     _ if modifier == "shift" => modifiers.shift = true,
                     _ => {
                         return Err(wgettext_fmt!(
-                            "unknown modififer '%s' in '%s'",
+                            "unknown modifier '%s' in '%s'",
                             modifier,
                             full_key_name
                         ))
@@ -431,7 +431,7 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
 fn must_escape(c: char) -> bool {
-    "[]()<>{}*\\?$#;&|'\"".contains(c)
+    "~[]()<>{}*\\?$#;&|'\"".contains(c)
 }
 
 fn ascii_printable_to_symbol(buf: &mut WString, c: char) {

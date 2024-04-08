@@ -1,4 +1,23 @@
 #RUN: %fish %s | %filter-ctrlseqs
+#REQUIRES: command -v diff
+
+set -l fish (status fish-path)
+
+set -l tmpdir (mktemp -d)
+for bindings in true fish_default_key_bindings fish_vi_key_bindings
+    $fish -c "
+        $bindings
+        bind > $tmpdir/old
+        bind --erase --all --preset
+        bind --erase --all
+        source $tmpdir/old
+        bind >$tmpdir/new
+        diff -u $tmpdir/{old,new}
+    "
+end
+echo >&2 bind output evaluation works
+# CHECKERR: bind output evaluation works
+
 # Test various `bind` command invocations. This is meant to verify that
 # invalid flags, mode names, etc. are caught as well as to verify that valid
 # ones are allowed.

@@ -25,6 +25,7 @@ use std::cmp;
 use std::io::BufReader;
 use std::io::Write;
 use std::num::NonZeroUsize;
+use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::RawFd;
 use std::pin::Pin;
@@ -1752,7 +1753,6 @@ impl ReaderData {
     /// Read a command to execute, respecting input bindings.
     /// \return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
-        type rl = ReadlineCmd;
         let mut rls = ReadlineLoopState::new();
 
         // Suppress fish_trace during executing key bindings.
@@ -1824,135 +1824,12 @@ impl ReaderData {
         }
         zelf.exec_prompt();
 
-        // A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
-        let color_suggest_repaint_now = |zelf: &mut Self| {
-            if zelf.conf.inputfd == STDIN_FILENO {
-                zelf.update_autosuggestion();
-                zelf.super_highlight_me_plenty();
-            }
-            if zelf.is_repaint_needed(None) {
-                zelf.layout_and_repaint(L!("toplevel"));
-            }
-            zelf.force_exec_prompt_and_repaint = false;
-        };
-
         // Start out as initially dirty.
         zelf.force_exec_prompt_and_repaint = true;
 
         while !rls.finished && !check_exit_loop_maybe_warning(Some(&mut zelf)) {
-            if zelf.reset_loop_state {
-                zelf.reset_loop_state = false;
-                rls.last_cmd = None;
-                rls.complete_did_insert = false;
-            }
-            // Perhaps update the termsize. This is cheap if it has not changed.
-            zelf.update_termsize();
-
-            // Repaint as needed.
-            color_suggest_repaint_now(&mut zelf);
-
-            if rls
-                .nchars
-                .is_some_and(|nchars| usize::from(nchars) <= zelf.command_line.len())
-            {
-                // We've already hit the specified character limit.
-                rls.finished = true;
+            if zelf.handle_char_event(&mut rls, None).is_break() {
                 break;
-            }
-
-            let event_needing_handling = loop {
-                let event_needing_handling = zelf.read_normal_chars(&mut rls);
-                if event_needing_handling.is_some() {
-                    break event_needing_handling;
-                }
-                if rls
-                    .nchars
-                    .is_some_and(|nchars| usize::from(nchars) <= zelf.command_line.len())
-                {
-                    break None;
-                }
-            };
-
-            // If we ran `exit` anywhere, exit.
-            zelf.exit_loop_requested =
-                zelf.exit_loop_requested || zelf.parser().libdata().pods.exit_current_script;
-            zelf.parser().libdata_mut().pods.exit_current_script = false;
-            if zelf.exit_loop_requested {
-                continue;
-            }
-
-            let Some(event_needing_handling) = event_needing_handling else {
-                continue;
-            };
-            if event_needing_handling.is_check_exit() {
-                continue;
-            } else if event_needing_handling.is_eof() {
-                reader_sighup();
-                continue;
-            }
-
-            if !matches!(rls.last_cmd, Some(rl::Yank | rl::YankPop)) {
-                rls.yank_len = 0;
-            }
-
-            match event_needing_handling {
-                CharEvent::Readline(readline_cmd_evt) => {
-                    let readline_cmd = readline_cmd_evt.cmd;
-                    if readline_cmd == rl::Cancel && zelf.is_navigating_pager_contents() {
-                        zelf.clear_transient_edit();
-                    }
-
-                    // Clear the pager if necessary.
-                    let focused_on_search_field =
-                        zelf.active_edit_line_tag() == EditableLineTag::SearchField;
-                    if !zelf.history_search.active()
-                        && command_ends_paging(readline_cmd, focused_on_search_field)
-                    {
-                        zelf.clear_pager();
-                    }
-
-                    zelf.handle_readline_command(readline_cmd, &mut rls);
-
-                    if zelf.history_search.active() && command_ends_history_search(readline_cmd) {
-                        // "cancel" means to abort the whole thing, other ending commands mean to finish the
-                        // search.
-                        if readline_cmd == rl::Cancel {
-                            // Go back to the search string by simply undoing the history-search edit.
-                            zelf.clear_transient_edit();
-                        }
-                        zelf.history_search.reset();
-                        zelf.command_line_has_transient_edit = false;
-                    }
-
-                    rls.last_cmd = Some(readline_cmd);
-                }
-                CharEvent::Command(command) => {
-                    zelf.run_input_command_scripts(&command);
-                }
-                CharEvent::Key(kevt) => {
-                    // Ordinary char.
-                    if kevt.input_style == CharInputStyle::NotFirst
-                        && zelf.active_edit_line().1.position() == 0
-                    {
-                        // This character is skipped.
-                    } else {
-                        // Regular character.
-                        let (elt, _el) = zelf.active_edit_line();
-                        if let Some(c) = kevt.key.codepoint_text() {
-                            zelf.insert_char(elt, c);
-
-                            if elt == EditableLineTag::Commandline {
-                                zelf.clear_pager();
-                                // We end history search. We could instead update the search string.
-                                zelf.history_search.reset();
-                            }
-                        }
-                    }
-                    rls.last_cmd = None;
-                }
-                CharEvent::Eof | CharEvent::CheckExit => {
-                    panic!("Should have a char, readline or command")
-                }
             }
         }
 
@@ -2088,6 +1965,142 @@ impl ReaderData {
         }
 
         event_needing_handling
+    }
+}
+
+impl ReaderData {
+    // A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
+    fn color_suggest_repaint_now(&mut self) {
+        if self.conf.inputfd == STDIN_FILENO {
+            self.update_autosuggestion();
+            self.super_highlight_me_plenty();
+        }
+        if self.is_repaint_needed(None) {
+            self.layout_and_repaint(L!("toplevel"));
+        }
+        self.force_exec_prompt_and_repaint = false;
+    }
+
+    fn handle_char_event(
+        &mut self,
+        rls: &mut ReadlineLoopState,
+        injected_event: Option<CharEvent>,
+    ) -> ControlFlow<()> {
+        if self.reset_loop_state {
+            self.reset_loop_state = false;
+            rls.last_cmd = None;
+            rls.complete_did_insert = false;
+        }
+        // Perhaps update the termsize. This is cheap if it has not changed.
+        self.update_termsize();
+
+        // Repaint as needed.
+        self.color_suggest_repaint_now();
+
+        if rls
+            .nchars
+            .is_some_and(|nchars| usize::from(nchars) <= self.command_line.len())
+        {
+            // We've already hit the specified character limit.
+            rls.finished = true;
+            return ControlFlow::Break(());
+        }
+
+        let event_needing_handling = injected_event.or_else(|| loop {
+            let event_needing_handling = self.read_normal_chars(rls);
+            if event_needing_handling.is_some() {
+                break event_needing_handling;
+            }
+            if rls
+                .nchars
+                .is_some_and(|nchars| usize::from(nchars) <= self.command_line.len())
+            {
+                break None;
+            }
+        });
+
+        // If we ran `exit` anywhere, exit.
+        self.exit_loop_requested =
+            self.exit_loop_requested || self.parser().libdata().pods.exit_current_script;
+        self.parser().libdata_mut().pods.exit_current_script = false;
+        if self.exit_loop_requested {
+            return ControlFlow::Continue(());
+        }
+
+        let Some(event_needing_handling) = event_needing_handling else {
+            return ControlFlow::Continue(());
+        };
+        if event_needing_handling.is_check_exit() {
+            return ControlFlow::Continue(());
+        } else if event_needing_handling.is_eof() {
+            reader_sighup();
+            return ControlFlow::Continue(());
+        }
+
+        if !matches!(rls.last_cmd, Some(ReadlineCmd::Yank | ReadlineCmd::YankPop)) {
+            rls.yank_len = 0;
+        }
+
+        match event_needing_handling {
+            CharEvent::Readline(readline_cmd_evt) => {
+                let readline_cmd = readline_cmd_evt.cmd;
+                if readline_cmd == ReadlineCmd::Cancel && self.is_navigating_pager_contents() {
+                    self.clear_transient_edit();
+                }
+
+                // Clear the pager if necessary.
+                let focused_on_search_field =
+                    self.active_edit_line_tag() == EditableLineTag::SearchField;
+                if !self.history_search.active()
+                    && command_ends_paging(readline_cmd, focused_on_search_field)
+                {
+                    self.clear_pager();
+                }
+
+                self.handle_readline_command(readline_cmd, rls);
+
+                if self.history_search.active() && command_ends_history_search(readline_cmd) {
+                    // "cancel" means to abort the whole thing, other ending commands mean to finish the
+                    // search.
+                    if readline_cmd == ReadlineCmd::Cancel {
+                        // Go back to the search string by simply undoing the history-search edit.
+                        self.clear_transient_edit();
+                    }
+                    self.history_search.reset();
+                    self.command_line_has_transient_edit = false;
+                }
+
+                rls.last_cmd = Some(readline_cmd);
+            }
+            CharEvent::Command(command) => {
+                self.run_input_command_scripts(&command);
+            }
+            CharEvent::Key(kevt) => {
+                // Ordinary char.
+                if kevt.input_style == CharInputStyle::NotFirst
+                    && self.active_edit_line().1.position() == 0
+                {
+                    // This character is skipped.
+                } else {
+                    // Regular character.
+                    let (elt, _el) = self.active_edit_line();
+                    if let Some(c) = kevt.key.codepoint_text() {
+                        self.insert_char(elt, c);
+
+                        if elt == EditableLineTag::Commandline {
+                            self.clear_pager();
+                            // We end history search. We could instead update the search string.
+                            self.history_search.reset();
+                        }
+                    }
+                }
+                rls.last_cmd = None;
+            }
+            CharEvent::Eof | CharEvent::CheckExit => {
+                panic!("Should have a char, readline or command")
+            }
+        }
+        ControlFlow::Continue(())
     }
 }
 

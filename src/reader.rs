@@ -373,8 +373,6 @@ enum JumpPrecision {
 }
 
 /// readline_loop_state_t encapsulates the state used in a readline loop.
-/// It is always stack allocated transient. This state should not be "publicly visible"; public
-/// state should be in reader_data_t.
 struct ReadlineLoopState {
     /// The last command that was executed.
     last_cmd: Option<ReadlineCmd>,
@@ -550,6 +548,8 @@ pub struct ReaderData {
     /// If these differs from the text of the command line, then we must kick off a new request.
     in_flight_highlight_request: WString,
     in_flight_autosuggest_request: WString,
+
+    rls: Option<ReadlineLoopState>,
 }
 
 /// Read commands from \c fd until encountering EOF.
@@ -1093,6 +1093,7 @@ impl ReaderData {
             last_jump_precision: JumpPrecision::To,
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
+            rls: None,
         }))
     }
 
@@ -1141,6 +1142,13 @@ impl ReaderData {
     /// Access the parser.
     fn parser(&self) -> &Parser {
         &self.parser_ref
+    }
+
+    fn rls(&self) -> &ReadlineLoopState {
+        self.rls.as_ref().unwrap()
+    }
+    fn rls_mut(&mut self) -> &mut ReadlineLoopState {
+        self.rls.as_mut().unwrap()
     }
 
     // We repaint our prompt if fstat reports the tty as having changed.
@@ -1746,7 +1754,7 @@ impl ReaderData {
     /// Read a command to execute, respecting input bindings.
     /// \return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
-        let mut rls = ReadlineLoopState::new();
+        self.rls = Some(ReadlineLoopState::new());
 
         // Suppress fish_trace during executing key bindings.
         // This is simply to reduce noise.
@@ -1763,7 +1771,7 @@ impl ReaderData {
 
         // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
         // SIZE_MAX.
-        rls.nchars = nchars;
+        zelf.rls_mut().nchars = nchars;
 
         // The command line before completion.
         zelf.cycle_command_line.clear();
@@ -1820,8 +1828,8 @@ impl ReaderData {
         // Start out as initially dirty.
         zelf.force_exec_prompt_and_repaint = true;
 
-        while !rls.finished && !check_exit_loop_maybe_warning(Some(&mut zelf)) {
-            if zelf.handle_char_event(&mut rls, None).is_break() {
+        while !zelf.rls().finished && !check_exit_loop_maybe_warning(Some(&mut zelf)) {
+            if zelf.handle_char_event(None).is_break() {
                 break;
             }
         }
@@ -1833,7 +1841,7 @@ impl ReaderData {
         }
 
         // Finish syntax highlighting (but do not wait forever).
-        if rls.finished {
+        if zelf.rls().finished {
             zelf.finish_highlighting_before_exec();
         }
 
@@ -1872,7 +1880,12 @@ impl ReaderData {
                 .borrow_mut()
                 .set_color(RgbColor::RESET, RgbColor::RESET);
         }
-        rls.finished.then(|| zelf.command_line.text().to_owned())
+        let result = zelf
+            .rls()
+            .finished
+            .then(|| zelf.command_line.text().to_owned());
+        zelf.rls = None;
+        result
     }
 
     fn eval_bind_cmd(&mut self, cmd: &wstr) {
@@ -1907,10 +1920,10 @@ impl ReaderData {
 
     /// Read normal characters, inserting them into the command line.
     /// \return the next unhandled event.
-    fn read_normal_chars(&mut self, rls: &mut ReadlineLoopState) -> Option<CharEvent> {
+    fn read_normal_chars(&mut self) -> Option<CharEvent> {
         let mut event_needing_handling = None;
         let limit = std::cmp::min(
-            rls.nchars.map_or(usize::MAX, |nchars| {
+            self.rls().nchars.map_or(usize::MAX, |nchars| {
                 usize::from(nchars) - self.command_line.len()
             }),
             READAHEAD_MAX,
@@ -1954,7 +1967,7 @@ impl ReaderData {
             }
 
             // Since we handled a normal character, we don't have a last command.
-            rls.last_cmd = None;
+            self.rls_mut().last_cmd = None;
         }
 
         event_needing_handling
@@ -1974,15 +1987,11 @@ impl ReaderData {
         self.force_exec_prompt_and_repaint = false;
     }
 
-    fn handle_char_event(
-        &mut self,
-        rls: &mut ReadlineLoopState,
-        injected_event: Option<CharEvent>,
-    ) -> ControlFlow<()> {
+    fn handle_char_event(&mut self, injected_event: Option<CharEvent>) -> ControlFlow<()> {
         if self.reset_loop_state {
             self.reset_loop_state = false;
-            rls.last_cmd = None;
-            rls.complete_did_insert = false;
+            self.rls_mut().last_cmd = None;
+            self.rls_mut().complete_did_insert = false;
         }
         // Perhaps update the termsize. This is cheap if it has not changed.
         self.update_termsize();
@@ -1990,21 +1999,23 @@ impl ReaderData {
         // Repaint as needed.
         self.color_suggest_repaint_now();
 
-        if rls
+        if self
+            .rls()
             .nchars
             .is_some_and(|nchars| usize::from(nchars) <= self.command_line.len())
         {
             // We've already hit the specified character limit.
-            rls.finished = true;
+            self.rls_mut().finished = true;
             return ControlFlow::Break(());
         }
 
         let event_needing_handling = injected_event.or_else(|| loop {
-            let event_needing_handling = self.read_normal_chars(rls);
+            let event_needing_handling = self.read_normal_chars();
             if event_needing_handling.is_some() {
                 break event_needing_handling;
             }
-            if rls
+            if self
+                .rls()
                 .nchars
                 .is_some_and(|nchars| usize::from(nchars) <= self.command_line.len())
             {
@@ -2030,8 +2041,11 @@ impl ReaderData {
             return ControlFlow::Continue(());
         }
 
-        if !matches!(rls.last_cmd, Some(ReadlineCmd::Yank | ReadlineCmd::YankPop)) {
-            rls.yank_len = 0;
+        if !matches!(
+            self.rls().last_cmd,
+            Some(ReadlineCmd::Yank | ReadlineCmd::YankPop)
+        ) {
+            self.rls_mut().yank_len = 0;
         }
 
         match event_needing_handling {
@@ -2050,7 +2064,7 @@ impl ReaderData {
                     self.clear_pager();
                 }
 
-                self.handle_readline_command(readline_cmd, rls);
+                self.handle_readline_command(readline_cmd);
 
                 if self.history_search.active() && command_ends_history_search(readline_cmd) {
                     // "cancel" means to abort the whole thing, other ending commands mean to finish the
@@ -2063,7 +2077,7 @@ impl ReaderData {
                     self.command_line_has_transient_edit = false;
                 }
 
-                rls.last_cmd = Some(readline_cmd);
+                self.rls_mut().last_cmd = Some(readline_cmd);
             }
             CharEvent::Command(command) => {
                 self.run_input_command_scripts(&command);
@@ -2087,7 +2101,7 @@ impl ReaderData {
                         }
                     }
                 }
-                rls.last_cmd = None;
+                self.rls_mut().last_cmd = None;
             }
             CharEvent::Eof | CharEvent::CheckExit => {
                 panic!("Should have a char, readline or command")
@@ -2098,7 +2112,7 @@ impl ReaderData {
 }
 
 impl ReaderData {
-    fn handle_readline_command(&mut self, c: ReadlineCmd, rls: &mut ReadlineLoopState) {
+    fn handle_readline_command(&mut self, c: ReadlineCmd) {
         type rl = ReadlineCmd;
         match c {
             rl::BeginningOfLine => {
@@ -2163,8 +2177,11 @@ impl ReaderData {
                 // but never complete{,_and_search})
                 //
                 // Also paging is already cancelled above.
-                if rls.complete_did_insert
-                    && matches!(rls.last_cmd, Some(rl::Complete | rl::CompleteAndSearch))
+                if self.rls().complete_did_insert
+                    && matches!(
+                        self.rls().last_cmd,
+                        Some(rl::Complete | rl::CompleteAndSearch)
+                    )
                 {
                     let (elt, el) = self.active_edit_line_mut();
                     el.undo();
@@ -2208,9 +2225,9 @@ impl ReaderData {
                     return;
                 }
                 if self.is_navigating_pager_contents()
-                    || (!rls.comp.is_empty()
-                        && !rls.complete_did_insert
-                        && rls.last_cmd == Some(rl::Complete))
+                    || (!self.rls().comp.is_empty()
+                        && !self.rls().complete_did_insert
+                        && self.rls().last_cmd == Some(rl::Complete))
                 {
                     // The user typed complete more than once in a row. If we are not yet fully
                     // disclosed, then become so; otherwise cycle through our available completions.
@@ -2228,7 +2245,7 @@ impl ReaderData {
                     }
                 } else {
                     // Either the user hit tab only once, or we had no visible completion list.
-                    self.compute_and_apply_completions(c, rls);
+                    self.compute_and_apply_completions(c);
                 }
             }
             rl::PagerToggleSearch => {
@@ -2266,7 +2283,12 @@ impl ReaderData {
 
                 let range = begin..end;
                 if !range.is_empty() {
-                    self.kill(elt, range, Kill::Append, rls.last_cmd != Some(rl::KillLine));
+                    self.kill(
+                        elt,
+                        range,
+                        Kill::Append,
+                        self.rls().last_cmd != Some(rl::KillLine),
+                    );
                 }
             }
             rl::BackwardKillLine => {
@@ -2297,7 +2319,7 @@ impl ReaderData {
                     elt,
                     end - len..end,
                     Kill::Prepend,
-                    rls.last_cmd != Some(rl::BackwardKillLine),
+                    self.rls().last_cmd != Some(rl::BackwardKillLine),
                 );
             }
             rl::KillWholeLine | rl::KillInnerLine => {
@@ -2342,20 +2364,25 @@ impl ReaderData {
                 assert!(end >= begin);
 
                 if end > begin {
-                    self.kill(elt, begin..end, Kill::Append, rls.last_cmd != Some(c));
+                    self.kill(
+                        elt,
+                        begin..end,
+                        Kill::Append,
+                        self.rls().last_cmd != Some(c),
+                    );
                 }
             }
             rl::Yank => {
                 let yank_str = kill_yank();
                 self.insert_string(self.active_edit_line_tag(), &yank_str);
-                rls.yank_len = yank_str.len();
+                self.rls_mut().yank_len = yank_str.len();
                 if self.cursor_end_mode == CursorEndMode::Inclusive {
                     let (_elt, el) = self.active_edit_line();
                     self.update_buff_pos(self.active_edit_line_tag(), Some(el.position() - 1));
                 }
             }
             rl::YankPop => {
-                if rls.yank_len != 0 {
+                if self.rls().yank_len != 0 {
                     let (elt, el) = self.active_edit_line();
                     let yank_str = kill_yank_rotate();
                     let new_yank_len = yank_str.len();
@@ -2364,11 +2391,11 @@ impl ReaderData {
                     } else {
                         0
                     };
-                    let begin = el.position() + bias - rls.yank_len;
+                    let begin = el.position() + bias - self.rls().yank_len;
                     let end = el.position() + bias;
                     self.replace_substring(elt, begin..end, yank_str);
                     self.update_buff_pos(elt, None);
-                    rls.yank_len = new_yank_len;
+                    self.rls_mut().yank_len = new_yank_len;
                     self.suppress_autosuggestion = true;
                 }
             }
@@ -2397,7 +2424,7 @@ impl ReaderData {
                 }
             }
             rl::Execute => {
-                if !self.handle_execute(rls) {
+                if !self.handle_execute() {
                     event::fire_generic(
                         self.parser(),
                         L!("fish_posterror").to_owned(),
@@ -2584,7 +2611,7 @@ impl ReaderData {
                 };
                 // Is this the same killring item as the last kill?
                 let newv = !matches!(
-                    rls.last_cmd,
+                    self.rls().last_cmd,
                     Some(
                         rl::BackwardKillWord
                             | rl::BackwardKillPathComponent
@@ -2612,7 +2639,7 @@ impl ReaderData {
                     MoveWordDir::Right,
                     /*erase=*/ true,
                     style,
-                    rls.last_cmd != Some(c),
+                    self.rls().last_cmd != Some(c),
                 );
             }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
@@ -2938,7 +2965,7 @@ impl ReaderData {
                 self.update_buff_pos(self.active_edit_line_tag(), Some(tmp));
             }
             rl::KillSelection => {
-                let newv = rls.last_cmd != Some(rl::KillSelection);
+                let newv = self.rls().last_cmd != Some(rl::KillSelection);
                 if let Some(selection) = self.get_selection() {
                     self.kill(EditableLineTag::Commandline, selection, Kill::Append, newv);
                 }
@@ -3099,7 +3126,7 @@ impl ReaderData {
     // unfinished. It may also set 'finished' and 'cmd' inside the rls.
     // \return true on success, false if we got an error, in which case the caller should fire the
     // error event.
-    fn handle_execute(&mut self, rls: &mut ReadlineLoopState) -> bool {
+    fn handle_execute(&mut self) -> bool {
         // Evaluate. If the current command is unfinished, or if the charater is escaped
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
@@ -3169,7 +3196,7 @@ impl ReaderData {
         }
 
         self.add_to_history();
-        rls.finished = true;
+        self.rls_mut().finished = true;
         self.update_buff_pos(elt, Some(self.command_line.len()));
         true
     }
@@ -5176,7 +5203,7 @@ fn get_best_rank(comp: &[Completion]) -> u32 {
 
 impl ReaderData {
     /// Compute completions and update the pager and/or commandline as needed.
-    fn compute_and_apply_completions(&mut self, c: ReadlineCmd, rls: &mut ReadlineLoopState) {
+    fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
         assert!(matches!(
             c,
             ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch
@@ -5236,8 +5263,8 @@ impl ReaderData {
                 return;
             }
             ExpandResultCode::ok => {
-                rls.comp.clear();
-                rls.complete_did_insert = false;
+                self.rls_mut().comp.clear();
+                self.rls_mut().complete_did_insert = false;
                 self.push_edit(
                     EditableLineTag::Commandline,
                     Edit::new(token_range, wc_expanded),
@@ -5258,31 +5285,38 @@ impl ReaderData {
             CompletionRequestOptions::normal(),
             &self.parser().context(),
         );
-        rls.comp = comp;
+        self.rls_mut().comp = comp;
 
+        let el = &self.command_line;
         // User-supplied completions may have changed the commandline - prevent buffer
         // overflow.
         token_range.start = std::cmp::min(token_range.start, el.text().len());
         token_range.end = std::cmp::min(token_range.end, el.text().len());
 
         // Munge our completions.
-        sort_and_prioritize(&mut rls.comp, CompletionRequestOptions::default());
+        sort_and_prioritize(
+            &mut self.rls_mut().comp,
+            CompletionRequestOptions::default(),
+        );
 
+        let el = &self.command_line;
         // Record our cycle_command_line.
         self.cycle_command_line = el.text().to_owned();
         self.cycle_cursor_pos = token_range.end;
 
-        rls.complete_did_insert = self.handle_completions(&rls.comp, token_range);
+        self.rls_mut().complete_did_insert = self.handle_completions(token_range);
 
         // Show the search field if requested and if we printed a list of completions.
-        if c == ReadlineCmd::CompleteAndSearch && !rls.complete_did_insert && !self.pager.is_empty()
+        if c == ReadlineCmd::CompleteAndSearch
+            && !self.rls().complete_did_insert
+            && !self.pager.is_empty()
         {
             self.pager.set_search_field_shown(true);
             self.select_completion_in_direction(SelectionMotion::Next, false);
         }
     }
 
-    fn try_insert(&mut self, c: &Completion, tok: &wstr, token_range: Range<usize>) {
+    fn try_insert(&mut self, c: Completion, tok: &wstr, token_range: Range<usize>) {
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
         if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags) {
@@ -5305,9 +5339,10 @@ impl ReaderData {
     /// \param token_end the position after the token to complete
     ///
     /// Return true if we inserted text into the command line, false if we did not.
-    fn handle_completions(&mut self, comp: &[Completion], token_range: Range<usize>) -> bool {
+    fn handle_completions(&mut self, token_range: Range<usize>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
 
+        let comp = &self.rls().comp;
         // Check trivial cases.
         let len = comp.len();
         if len == 0 {
@@ -5317,7 +5352,7 @@ impl ReaderData {
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.
             let c = &comp[0];
-            self.try_insert(c, &tok, token_range);
+            self.try_insert(c.clone(), &tok, token_range);
             return true;
         }
 
@@ -5367,7 +5402,7 @@ impl ReaderData {
             // the token is "cma" and the options are "cmake/" and "CMakeLists.txt"
             // it would be nice if we could figure
             // out how to use it more.
-            let c = &surviving_completions[0];
+            let c = std::mem::take(&mut surviving_completions[0]);
 
             self.try_insert(c, &tok, token_range);
             return true;

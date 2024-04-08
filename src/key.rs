@@ -233,6 +233,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
         && !value.contains('-')
         && !value.contains(KEY_SEPARATOR)
         && !KEY_NAMES.iter().any(|(_codepoint, name)| name == value))
+        && value.as_char_slice()[0] != 'F'
         || (first == '\x1b' || first == ascii_control(first))
     {
         // Hack: treat as legacy syntax (meaning: not comma separated) if
@@ -282,9 +283,8 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     Ok(n) if (1..=12).contains(&n) => function_key(u32::try_from(n).unwrap()),
                     _ => {
                         return Err(wgettext_fmt!(
-                            "only F1 through F12 are supported, not '%s'",
+                            "only F1 through F12 are supported, not 'F%s'",
                             num,
-                            full_key_name
                         ));
                     }
                 };

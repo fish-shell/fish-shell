@@ -12,7 +12,8 @@ use crate::parse_util::{
 };
 use crate::proc::is_interactive_session;
 use crate::reader::{
-    commandline_get_state, commandline_set_buffer, commandline_set_search_field, reader_queue_ch,
+    commandline_get_state, commandline_set_buffer, commandline_set_search_field,
+    reader_execute_readline_cmd,
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
@@ -298,8 +299,6 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let positional_args = w.argv.len() - w.woptind;
 
-    let ld = parser.libdata();
-
     if function_mode {
         // Check for invalid switch combinations.
         if buffer_part.is_some()
@@ -335,13 +334,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
             if matches!(cmd, rl::RepaintMode | rl::ForceRepaint | rl::Repaint) {
-                if ld.pods.is_repaint {
+                if parser.libdata().pods.is_repaint {
                     continue;
                 }
             }
 
             // Inserts the readline function at the back of the queue.
-            reader_queue_ch(CharEvent::from_readline(cmd));
+            reader_execute_readline_cmd(CharEvent::from_readline(cmd));
         }
 
         return STATUS_CMD_OK;
@@ -473,8 +472,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if !ld.transient_commandlines.is_empty() && !cursor_mode {
-        transient = ld.transient_commandlines.last().unwrap().clone();
+    } else if !parser.libdata().transient_commandlines.is_empty() && !cursor_mode {
+        transient = parser
+            .libdata()
+            .transient_commandlines
+            .last()
+            .unwrap()
+            .clone();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
     } else if rstate.initialized {

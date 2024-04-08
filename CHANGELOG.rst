@@ -107,6 +107,8 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
+- Special input functions run from bindings via ``commandline -f`` are now applied immediately instead of after the currently executing binding.
+  For example, ``commandline -f yank -f yank-pop`` inserts the last-but-one entry from the kill ring.
 - When the cursor is on a command that resolves to an executable script, :kbd:`Alt-O` will now open that script in your editor (:issue:`10266`).
 - Two improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.

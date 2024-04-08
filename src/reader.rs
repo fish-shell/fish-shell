@@ -904,10 +904,14 @@ pub fn reader_schedule_prompt_repaint() {
     }
 }
 
-/// Enqueue an event to the back of the reader's input queue.
-pub fn reader_queue_ch(ch: CharEvent) {
+pub fn reader_execute_readline_cmd(ch: CharEvent) {
     if let Some(data) = current_data() {
-        data.inputter.queue_char(ch);
+        if data.rls.is_none() {
+            data.rls = Some(ReadlineLoopState::new());
+        }
+        data.apply_commandline_state_changes();
+        data.handle_char_event(Some(ch));
+        data.update_commandline_state();
     }
 }
 

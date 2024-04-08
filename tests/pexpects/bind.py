@@ -358,6 +358,20 @@ send('\x02\x02\x02') # ctrl-b, backward-char
 sendline('\x1bu') # alt+u, upcase word
 expect_prompt("fooBAR")
 
+send("""
+    bind ctrl-g "
+        commandline --insert 'echo foo ar'
+        commandline -f backward-word
+        commandline --insert b
+        commandline -f backward-char
+        commandline -f backward-char
+        commandline -f delete-char
+    "
+""")
+send('\x07') # ctrl-g
+send('\r')
+expect_prompt("foobar")
+
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
 sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")

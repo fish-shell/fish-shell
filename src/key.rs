@@ -1,10 +1,12 @@
-use std::ops;
 use std::rc::Rc;
 
 use libc::VERASE;
 
 use crate::{
-    fallback::fish_wcwidth, reader::TERMINAL_MODE_ON_STARTUP, wchar::prelude::*, wutil::fish_wcstoi,
+    fallback::fish_wcwidth,
+    reader::TERMINAL_MODE_ON_STARTUP,
+    wchar::prelude::*,
+    wutil::{fish_is_pua, fish_wcstoi},
 };
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
@@ -27,8 +29,6 @@ pub(crate) fn function_key(n: u32) -> char {
     assert!((1..=12).contains(&n));
     char::from_u32(u32::from(Invalid) + n).unwrap()
 }
-
-const NAMED_KEYS_RANGE: ops::Range<u32> = 0xF500..(Invalid as u32 + 12);
 
 const KEY_NAMES: &[(char, &wstr)] = &[
     ('+', L!("plus")),
@@ -212,7 +212,7 @@ pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {
             // Shift + ASCII letters is just the uppercase letter.
             key.modifiers.shift = false;
             key.codepoint = key.codepoint.to_ascii_uppercase();
-        } else if !NAMED_KEYS_RANGE.contains(&u32::from(key.codepoint)) {
+        } else if !fish_is_pua(key.codepoint) {
             // Shift + any other printable character is not allowed.
             return Err(wgettext_fmt!(
                 "Shift modifier is only supported on special keys and lowercase ASCII, not '%s'",
@@ -351,7 +351,7 @@ impl Key {
         if c == Tab {
             return Some('\t');
         }
-        if NAMED_KEYS_RANGE.contains(&u32::from(c)) || u32::from(c) <= 27 {
+        if fish_is_pua(c) || u32::from(c) <= 27 {
             return None;
         }
         Some(c)

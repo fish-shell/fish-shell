@@ -478,7 +478,7 @@ const PUA1_END: char = '\u{F900}';
 // const PUA3_END: char = '\u{10FFFE}';
 
 /// Return one if the code point is in a Unicode private use area.
-fn fish_is_pua(c: char) -> bool {
+pub(crate) fn fish_is_pua(c: char) -> bool {
     PUA1_START <= c && c < PUA1_END
 }
 

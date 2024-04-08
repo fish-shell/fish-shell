@@ -421,6 +421,9 @@ fn char_to_symbol(c: char) -> WString {
     } else if c < '\u{80}' {
         // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, c);
+    } else if ('\u{e000}'..='\u{f8ff}').contains(&c) {
+        // Unmapped key from https://sw.kovidgoyal.net/kitty/keyboard-protocol/#functional-key-definitions
+        sprintf!(=> buf, "\\u%04X", u32::from(c));
     } else if fish_wcwidth(c) > 0 {
         sprintf!(=> buf, "%lc", c);
     } else if c <= '\u{FFFF}' {

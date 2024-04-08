@@ -126,6 +126,7 @@ pub enum ReadlineCmd {
     FocusOut,
     // ncurses uses the obvious name
     ClearScreenAndRepaint,
+    MoveJumpAnchor,
     // NOTE: This one has to be last.
     ReverseRepeatJump,
 }

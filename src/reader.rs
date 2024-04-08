@@ -904,13 +904,6 @@ pub fn reader_schedule_prompt_repaint() {
     }
 }
 
-pub fn reader_handle_command(cmd: ReadlineCmd) {
-    if let Some(data) = current_data() {
-        let mut rls = ReadlineLoopState::new();
-        data.handle_readline_command(cmd, &mut rls);
-    }
-}
-
 /// Enqueue an event to the back of the reader's input queue.
 pub fn reader_queue_ch(ch: CharEvent) {
     if let Some(data) = current_data() {

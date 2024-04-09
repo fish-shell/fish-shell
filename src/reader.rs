@@ -909,6 +909,7 @@ pub fn reader_execute_readline_cmd(ch: CharEvent) {
         if data.rls.is_none() {
             data.rls = Some(ReadlineLoopState::new());
         }
+        data.save_screen_state();
         data.apply_commandline_state_changes();
         data.handle_char_event(Some(ch));
         data.update_commandline_state();

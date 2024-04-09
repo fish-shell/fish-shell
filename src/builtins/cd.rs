@@ -2,15 +2,13 @@
 
 use super::prelude::*;
 use crate::{
+    common::wcs2zstring,
     env::{EnvMode, Environment},
-    fds::wopen_dir,
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
 use errno::Errno;
-use libc::{fchdir, EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
-use nix::sys::stat::Mode;
-use std::{os::fd::AsRawFd, sync::Arc};
+use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -87,18 +85,10 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        let res = wopen_dir(&norm_dir, Mode::empty()).map_err(|err| err as i32);
+        let res = nix::unistd::chdir(wcs2zstring(&norm_dir).as_c_str()).map_err(|e| e as c_int);
 
-        let res = res.and_then(|fd| {
-            if unsafe { fchdir(fd.as_raw_fd()) } == 0 {
-                Ok(fd)
-            } else {
-                Err(errno::errno().0)
-            }
-        });
-
-        let fd = match res {
-            Ok(fd) => fd,
+        match res {
+            Ok(_) => {},
             Err(err) => {
                 // Some errors we skip and only report if nothing worked.
                 // ENOENT in particular is very low priority
@@ -123,12 +113,6 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
                 break;
             }
         };
-
-        // We need to keep around the fd for this directory, in the parser.
-        let dir_fd = Arc::new(fd);
-
-        // Stash the fd for the cwd in the parser.
-        parser.libdata_mut().cwd_fd = Some(dir_fd);
 
         parser.set_var_and_fire(L!("PWD"), EnvMode::EXPORT | EnvMode::GLOBAL, vec![norm_dir]);
         return STATUS_CMD_OK;

@@ -12,7 +12,6 @@ use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
-use crate::fds::open_dir;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
@@ -31,15 +30,14 @@ use crate::threads::{assert_is_main_thread, MainThread};
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
-use crate::wutil::{perror, wgettext, wgettext_fmt};
+use crate::wutil::{wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
-use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
-use std::ffi::{CStr, OsStr};
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::ffi::OsStr;
+use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
 use std::pin::Pin;
 use std::rc::{Rc, Weak};
@@ -222,10 +220,6 @@ pub struct LibraryData {
     /// the command line.
     pub transient_commandlines: Vec<WString>,
 
-    /// A file descriptor holding the current working directory, for use in openat().
-    /// This is never null and never invalid.
-    pub cwd_fd: Option<Arc<OwnedFd>>,
-
     pub status_vars: StatusVars,
 }
 
@@ -352,15 +346,6 @@ impl Parser {
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
         });
-
-        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
-            Ok(fd) => {
-                result.libdata_mut().cwd_fd = Some(Arc::new(fd));
-            }
-            Err(_) => {
-                perror("Unable to open the current working directory");
-            }
-        }
 
         result
     }

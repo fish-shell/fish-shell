@@ -29,6 +29,22 @@ TIMEOUT_SECS = 5
 
 UNEXPECTED_SUCCESS = object()
 
+# When rendering fish's output, remove the control sequences that modify terminal state,
+# to avoid confusing the calling terminal. No need to replace things like colors and cursor
+# movement that are harmless and/or will not leak anyway.
+SANITIZE_FOR_PRINTING_RE = re.compile(
+    r"""
+          \x1b\[\?1004[hl]
+        | \x1b\[\?2004[hl]
+        | \x1b\[>4;[10]m
+        | \x1b\[>5u
+        | \x1b\[<1u
+        | \x1b=
+        | \x1b>
+        | \x1b\].*?\x07
+    """,
+    re.VERBOSE)
+
 
 def get_prompt_re(counter):
     """Return a regular expression for matching a with a given prompt counter."""
@@ -287,7 +303,7 @@ class SpawnedProc(object):
         print("")
         print("{CYAN}When written to the tty, this looks like:{RESET}".format(**colors))
         print("{CYAN}<-------{RESET}".format(**colors))
-        sys.stdout.write(self.spawn.before)
+        sys.stdout.write(SANITIZE_FOR_PRINTING_RE.sub('', self.spawn.before))
         sys.stdout.flush()
         maybe_nl=""
         if not self.spawn.before.endswith("\n"):

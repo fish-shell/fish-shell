@@ -279,8 +279,7 @@ impl CharEvent {
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1B is read before assuming that escape key was pressed, and not an
 /// escape sequence.
-const WAIT_ON_ESCAPE_DEFAULT: usize = 30;
-static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_ESCAPE_DEFAULT);
+static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(0);
 
 const WAIT_ON_SEQUENCE_KEY_INFINITE: usize = usize::MAX;
 static WAIT_ON_SEQUENCE_KEY_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_SEQUENCE_KEY_INFINITE);
@@ -382,7 +381,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
 pub fn update_wait_on_escape_ms(vars: &EnvStack) {
     let fish_escape_delay_ms = vars.get_unless_empty(L!("fish_escape_delay_ms"));
     let Some(fish_escape_delay_ms) = fish_escape_delay_ms else {
-        WAIT_ON_ESCAPE_MS.store(WAIT_ON_ESCAPE_DEFAULT, Ordering::Relaxed);
+        WAIT_ON_ESCAPE_MS.store(0, Ordering::Relaxed);
         return;
     };
     let fish_escape_delay_ms = fish_escape_delay_ms.as_string();
@@ -1000,6 +999,10 @@ pub trait InputEventQueuer {
     }
 
     fn readch_timed_esc(&mut self) -> Option<CharEvent> {
+        let wait_ms = WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed);
+        if wait_ms == 0 {
+            return None;
+        }
         self.readch_timed(WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed))
     }
 

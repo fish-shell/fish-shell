@@ -279,7 +279,7 @@ impl CharEvent {
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1B is read before assuming that escape key was pressed, and not an
 /// escape sequence.
-static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(0);
+pub(crate) static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(0);
 
 const WAIT_ON_SEQUENCE_KEY_INFINITE: usize = usize::MAX;
 static WAIT_ON_SEQUENCE_KEY_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_SEQUENCE_KEY_INFINITE);

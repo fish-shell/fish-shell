@@ -5,8 +5,9 @@ use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
     CharEvent, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    WAIT_ON_ESCAPE_MS,
 };
-use crate::key::{self, canonicalize_raw_escapes, ctrl, Key};
+use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::parser::Parser;
 use crate::proc::job_reap;
 use crate::reader::{
@@ -667,6 +668,15 @@ impl EventQueuePeeker<'_> {
         let Some(kevt) = evt.get_key() else {
             return false;
         };
+        if WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed) != 0
+            && kevt.key == Key::from_raw(key::Escape)
+            && key.modifiers == Modifiers::ALT
+        {
+            self.idx += 1;
+            self.subidx = 0;
+            FLOG!(reader, "matched delayed escape prefix in alt sequence");
+            return self.next_is_char(Key::from_raw(key.codepoint), true);
+        }
         if self.subidx == 0 && kevt.key == key {
             self.idx += 1;
             return true;
@@ -684,11 +694,7 @@ impl EventQueuePeeker<'_> {
                 // FLOG!(reader, "matched legacy sequence for", key);
                 return true;
             }
-            if key.modifiers.alt
-                && !key.modifiers.ctrl
-                && !key.modifiers.shift
-                && seq_char == '\x1b'
-            {
+            if key.modifiers == Modifiers::ALT && seq_char == '\x1b' {
                 if self.subidx + 1 == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;

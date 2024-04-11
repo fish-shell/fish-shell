@@ -3,19 +3,16 @@
 
 function __fish_list_current_token -d "List contents of token under the cursor if it is a directory, otherwise list the contents of the current directory"
     set -l val (commandline -t | string replace -r '^~' "$HOME")
-    printf "\n"
+    set -l cmd
     if test -d $val
-        ls $val
+        set cmd ls $val
     else
         set -l dir (dirname -- $val)
         if test $dir != . -a -d $dir
-            ls $dir
+            set cmd ls $dir
         else
-            ls
+            set cmd ls
         end
     end
-
-    string repeat -N \n --count=(math (count (fish_prompt)) - 1)
-
-    commandline -f repaint
+    __fish_echo $cmd
 end

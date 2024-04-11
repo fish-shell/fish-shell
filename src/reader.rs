@@ -657,10 +657,6 @@ fn read_i(parser: &Parser) -> i32 {
             // Reset the warning.
             data.did_warn_for_bg_jobs = false;
         }
-
-        // Apply any command line update from this command or fish_postexec, etc.
-        // See #8807.
-        data.apply_commandline_state_changes();
     }
     reader_pop();
 
@@ -910,7 +906,6 @@ pub fn reader_execute_readline_cmd(ch: CharEvent) {
             data.rls = Some(ReadlineLoopState::new());
         }
         data.save_screen_state();
-        data.apply_commandline_state_changes();
         data.handle_char_event(Some(ch));
         data.update_commandline_state();
     }
@@ -941,8 +936,6 @@ pub fn reader_reading_interrupted() -> i32 {
 pub fn reader_readline(nchars: usize) -> Option<WString> {
     let nchars = NonZeroUsize::try_from(nchars).ok();
     let data = current_data().unwrap();
-    // Apply any outstanding commandline changes (#8633).
-    data.apply_commandline_state_changes();
     data.readline(nchars)
 }
 
@@ -954,16 +947,22 @@ pub fn commandline_get_state() -> CommandlineState {
 /// Set the command line text and position. This may be called on a background thread; the reader
 /// will pick it up when it is done executing.
 pub fn commandline_set_buffer(text: WString, cursor_pos: Option<usize>) {
-    let mut state = commandline_state_snapshot();
-    state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
-    state.text = text;
+    {
+        let mut state = commandline_state_snapshot();
+        state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
+        state.text = text;
+    }
+    current_data().map(|data| data.apply_commandline_state_changes());
 }
 
 pub fn commandline_set_search_field(text: WString, cursor_pos: Option<usize>) {
-    let mut state = commandline_state_snapshot();
-    assert!(state.search_field.is_some());
-    let new_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
-    state.search_field = Some((text, new_pos));
+    {
+        let mut state = commandline_state_snapshot();
+        assert!(state.search_field.is_some());
+        let new_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
+        state.search_field = Some((text, new_pos));
+    }
+    current_data().map(|data| data.apply_commandline_state_changes());
 }
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
@@ -1903,7 +1902,6 @@ impl ReaderData {
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
         self.update_commandline_state();
         self.eval_bind_cmd(cmd);
-        self.apply_commandline_state_changes();
 
         // Restore tty to shell modes.
         // Some input commands will take over the tty - see #2114 for an example where vim is invoked

@@ -271,3 +271,25 @@ end
 complete -C'cd .'
 # CHECK: ../
 # CHECK: ./
+
+# Check that cd works with minimal permissions (issue #10432)
+begin
+    set -l oldpwd (pwd)
+    set -l tmp (mktemp -d)
+    cd $tmp
+    mkdir -p a/b/c
+    chmod -r a
+
+    cd a; pwd
+    # CHECK: {{.*}}/a
+
+    cd b
+    pwd
+    ls
+    # CHECK: {{.*}}/a/b
+    # CHECK: c
+
+    cd $oldpwd
+    chmod -R +rx $tmp # we must be able to list the directory to delete its children
+    rm -rf $tmp
+end

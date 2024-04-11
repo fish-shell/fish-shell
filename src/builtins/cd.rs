@@ -89,7 +89,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
         let res = chdir(wcs2zstring(&norm_dir).as_c_str()).map_err(|e| e as i32);
 
         match res {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(err) => {
                 // Some errors we skip and only report if nothing worked.
                 // ENOENT in particular is very low priority

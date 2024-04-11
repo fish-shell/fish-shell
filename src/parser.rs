@@ -239,6 +239,17 @@ impl LibraryData {
             ..Default::default()
         }
     }
+
+    pub fn update_cwd_fd(&mut self) {
+        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
+            Ok(fd) => {
+                self.cwd_fd = Some(Arc::new(fd));
+            }
+            Err(_) => {
+                perror("Unable to open the current working directory");
+            }
+        }
+    }
 }
 
 impl Default for LoopStatus {
@@ -353,14 +364,7 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
-            Ok(fd) => {
-                result.libdata_mut().cwd_fd = Some(Arc::new(fd));
-            }
-            Err(_) => {
-                perror("Unable to open the current working directory");
-            }
-        }
+        result.libdata_mut().update_cwd_fd();
 
         result
     }

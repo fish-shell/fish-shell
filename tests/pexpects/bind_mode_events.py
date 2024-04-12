@@ -5,7 +5,6 @@ import sys
 import signal
 import platform
 
-# Fails on macOS CI
 if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 

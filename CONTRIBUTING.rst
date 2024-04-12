@@ -8,7 +8,7 @@ Fish is free and open source software, distributed under the terms of the GPLv2.
 
 Contributions are welcome, and there are many ways to contribute!
 
-Whether you want to change some of the core rust/C++ source, enhance or add a completion script or function,
+Whether you want to change some of the core Rust source, enhance or add a completion script or function,
 improve the documentation or translate something, this document will tell you how.
 
 Getting Set Up
@@ -27,7 +27,6 @@ Also, for most changes you want to run the tests and so you'd get a setup to com
 For that, you'll require:
 
 -  Rust (version 1.67 or later) - when in doubt, try rustup
--  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
 -  CMake (version 3.5 or later)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
@@ -90,36 +89,6 @@ To build it locally, run from the main fish-shell directory::
 which will build the docs as html in /tmp/fish-doc. You can open it in a browser and see that it looks okay.
 
 The builtins and various functions shipped with fish are documented in doc_src/cmds/.
-
-Contributing to fish's Rust/C++ core
-====================================
-
-As of now, fish is in the process of switching from C++11 to Rust, so this is in flux.
-
-See doc_internal/rust-devel.md for some information on the port.
-
-Importantly, the initial port strives for fidelity with the existing C++ codebase,
-so it won't be 100% idiomatic rust - in some cases it'll have some awkward interface code
-in order to interact with the C++.
-
-Linters
--------
-
-Automated analysis tools like cppcheck can point out
-potential bugs or code that is extremely hard to understand. They also
-help ensure the code has a consistent style and that it avoids patterns
-that tend to confuse people.
-
-To make linting the code easy there are two make targets: ``lint``,
-to lint any modified but not committed ``*.cpp`` files, and
-``lint-all`` to lint all files.
-
-Fish has custom cppcheck rules in the file ``.cppcheck.rule``. These
-help catch mistakes such as using ``wcwidth()`` rather than
-``fish_wcwidth()``. Please add a new rule if you find similar mistakes
-being made.
-
-We use ``clippy`` for Rust.
 
 Code Style
 ==========
@@ -201,49 +170,6 @@ made to run fish_indent via e.g.
 
    (add-hook 'fish-mode-hook (lambda ()
        (add-hook 'before-save-hook 'fish_indent-before-save)))
-
-C++ Style Guide
----------------
-
-1. The `Google C++ Style
-   Guide <https://google.github.io/styleguide/cppguide.html>`__ forms
-   the basis of the fish C++ style guide. There are two major deviations
-   for the fish project. First, a four, rather than two, space indent.
-   Second, line lengths up to 100, rather than 80, characters.
-
-2. The ``clang-format`` command is authoritative with respect to
-   indentation, whitespace around operators, etc.
-
-3. All names in code should be ``small_snake_case``. No Hungarian
-   notation is used. The names for classes and structs should be
-   followed by ``_t``.
-
-4. Always attach braces to the surrounding context.
-
-5. Indent with spaces, not tabs and use four spaces per indent.
-
-6. Document the purpose of a function or class with doxygen-style
-   comment blocks. e.g.:
-
-::
-
-   /**
-    * Sum numbers in a vector.
-    *
-    * @param values Container whose values are summed.
-    * @return sum of `values`, or 0.0 if `values` is empty.
-    */
-   double sum(std::vector<double> & const values) {
-       ...
-   }
-    */
-
-or
-
-::
-
-   /// brief description of somefunction()
-   void somefunction() {
 
 Rust Style Guide
 ----------------

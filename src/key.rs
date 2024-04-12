@@ -31,7 +31,6 @@ pub(crate) fn function_key(n: u32) -> char {
 }
 
 const KEY_NAMES: &[(char, &wstr)] = &[
-    ('+', L!("plus")),
     ('-', L!("minus")),
     (',', L!("comma")),
     (Backspace, L!("backspace")),

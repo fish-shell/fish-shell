@@ -104,7 +104,9 @@ function funced --description 'Edit function definition'
                     echo (_ "If the editor is still running, check if it waits for completion, maybe a '--wait' option?")
                     # Source but don't save an unmodified file.
                     # (Source in case the file changed externally since we first loaded it.)
-                    source "$writepath"
+                    if set -q writepath[1]
+                        source "$writepath"
+                    end
                     break
                 end
             end

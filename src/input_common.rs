@@ -11,7 +11,6 @@ use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
     Key, Modifiers,
 };
-use crate::proc::is_interactive_session;
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, iothread_service_main, MainThread};
 use crate::universal_notifier::default_notifier;
@@ -480,9 +479,6 @@ impl Drop for TerminalProtocols {
 }
 
 fn terminal_protocols_enable_impl() {
-    // Interactive or inside builtin read.
-    assert!(is_interactive_session() || reader_current_data().is_some());
-
     let sequences = concat!(
         "\x1b[?2004h", // Bracketed paste
         "\x1b[>4;1m",  // XTerm's modifyOtherKeys
@@ -501,8 +497,6 @@ fn terminal_protocols_enable_impl() {
 }
 
 fn terminal_protocols_disable_impl() {
-    // Interactive or inside builtin read.
-    assert!(is_interactive_session() || reader_current_data().is_some());
     let sequences = concat!(
         "\x1b[?2004l",
         "\x1b[>4;0m",

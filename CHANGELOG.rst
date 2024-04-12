@@ -103,6 +103,7 @@ Interactive improvements
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 - Command abbreviations (those with ``--position command`` or without a ``--position``) now also expand after decorators like ``command`` (:issue:`10396`).
+- When exporting interactively defined functions (using ``type``, ``functions`` or ``funcsave``) the function body is now indented, same as in command line editor (:issue:`8603`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

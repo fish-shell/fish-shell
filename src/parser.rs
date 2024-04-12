@@ -247,6 +247,7 @@ impl LibraryData {
             }
             Err(_) => {
                 perror("Unable to open the current working directory");
+                self.cwd_fd = None;
             }
         }
     }

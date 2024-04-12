@@ -5119,7 +5119,10 @@ pub fn completion_apply_to_command_line(
         return replace_line_at_cursor(command_line, inout_cursor_pos, val_str);
     }
 
-    let mut escape_flags = EscapeFlags::NO_QUOTED;
+    let mut escape_flags = EscapeFlags::empty();
+    if append_only || !add_space {
+        escape_flags.insert(EscapeFlags::NO_QUOTED);
+    }
     if no_tilde {
         escape_flags.insert(EscapeFlags::NO_TILDE);
     }
@@ -5132,17 +5135,7 @@ pub fn completion_apply_to_command_line(
         let mut sb = command_line[..range.start].to_owned();
 
         if do_escape {
-            let escaped = escape_string(
-                val_str,
-                EscapeStringStyle::Script(
-                    EscapeFlags::NO_QUOTED
-                        | if no_tilde {
-                            EscapeFlags::NO_TILDE
-                        } else {
-                            EscapeFlags::empty()
-                        },
-                ),
-            );
+            let escaped = escape_string(val_str, EscapeStringStyle::Script(escape_flags));
             sb.push_utfstr(&escaped);
             move_cursor = escaped.len();
         } else {
@@ -5168,8 +5161,10 @@ pub fn completion_apply_to_command_line(
         let mut tok = 0..0;
         parse_util_token_extent(command_line, cursor_pos, &mut tok, None);
         // Find the last quote in the token to complete.
+        let mut have_token = false;
         if tok.contains(&cursor_pos) || cursor_pos == tok.end {
             quote = get_quote(&command_line[tok.clone()], cursor_pos - tok.start);
+            have_token = !tok.is_empty();
         }
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
@@ -5183,6 +5178,10 @@ pub fn completion_apply_to_command_line(
                 quote = trailing_quote;
                 back_into_trailing_quote = true;
             }
+        }
+
+        if have_token {
+            escape_flags.insert(EscapeFlags::NO_QUOTED);
         }
 
         parse_util_escape_string_with_quote(val_str, quote, escape_flags)

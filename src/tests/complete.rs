@@ -159,7 +159,7 @@ fn test_complete() {
         &mut cursor,
         false,
     );
-    assert_eq!(newcmdline, L!("touch test/complete_test/bracket\\[abc\\] "));
+    assert_eq!(newcmdline, L!("touch 'test/complete_test/bracket[abc]' "));
 
     // #8820
     let mut cursor_pos = 11;
@@ -191,7 +191,7 @@ fn test_complete() {
         );
         assert_eq!(
             newcmdline,
-            L!(r"touch test/complete_test/gnarlybracket\\\[abc\] ")
+            L!(r"touch 'test/complete_test/gnarlybracket\\[abc]' ")
         );
     }
 

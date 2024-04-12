@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 # Validate some things about command wrapping.
 
 set -g LANG C # For predictable error messages.

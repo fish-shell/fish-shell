@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 #
 # Tests for the `type` builtin
 # First type --query, which is the most important part.

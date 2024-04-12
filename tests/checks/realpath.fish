@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 # $XDG_DATA_HOME can itself be a relative path. So force it to an absolute
 # path so we can remove it from any resolved paths below. This is needed
 # because the contents of the builtin realpath.out file can't include any $PWD

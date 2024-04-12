@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 #
 # This deals with $PATH manipulation. We need to be careful not to step on anything.
 

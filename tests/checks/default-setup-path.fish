@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -g fish %fish' %s
 
 if command -q getconf
     # (no env -u, some systems don't support that)

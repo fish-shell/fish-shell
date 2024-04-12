@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 #
 # These lines left around because we need the line numbers.
 # This file in general requires careful editing in the middle, I recommend appending.

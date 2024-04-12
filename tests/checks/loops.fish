@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -g fish %fish' %s
 
 function never_runs
     while false

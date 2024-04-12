@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 #REQUIRES: command -v diff
 
 set -l fish (status fish-path)

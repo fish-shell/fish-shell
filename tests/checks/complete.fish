@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -l fish %fish' %s
 function complete_test_alpha1
     echo $argv
 end

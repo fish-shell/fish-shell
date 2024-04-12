@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 # Do not run under sanitizers in CI, as they intercept a busted posix_spawn
 # which mishandles shebangless scripts.

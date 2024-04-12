@@ -1,2 +1,2 @@
-#RUN: %fish -C 'echo init-command' | %filter-ctrlseqs
+#RUN: %fish -C 'echo init-command'
 # CHECK: init-command

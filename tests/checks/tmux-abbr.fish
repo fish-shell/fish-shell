@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 #REQUIRES: command -v tmux
 
 set -g isolated_tmux_fish_extra_args -C '

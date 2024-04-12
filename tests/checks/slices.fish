@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 set n 10
 set test (seq $n)
 echo $test[1..$n] # normal range

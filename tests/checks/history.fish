@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 # Verify that specifying unexpected options or arguments results in an error.
 
 # First using the legacy, now deprecated, long options to specify a

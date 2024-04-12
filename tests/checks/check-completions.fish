@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -l fish %fish' %s
 # Test all completions where the command exists
 
 # No output is good output

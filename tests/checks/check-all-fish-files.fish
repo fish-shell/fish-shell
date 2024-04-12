@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -l fish %fish' %s
 # Test ALL THE FISH FILES
 # in share/, that is - the tests are exempt because they contain syntax errors, on purpose
 

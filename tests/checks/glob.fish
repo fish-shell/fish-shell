@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 set -l oldpwd $PWD
 cd (mktemp -d)

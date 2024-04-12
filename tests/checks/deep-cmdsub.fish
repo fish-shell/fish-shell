@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 # Ensure we don't hang on deep command substitutions - see #6503.
 

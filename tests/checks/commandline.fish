@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 
 commandline --input "echo foo | bar" --is-valid
 and echo Valid

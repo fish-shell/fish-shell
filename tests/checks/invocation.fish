@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -l fish %fish' %s | %filter-control-sequences
 
 $fish -c "echo 1.2.3.4."
 # CHECK: 1.2.3.4.

@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper %fish %s | %filter-ctrlseqs
+# RUN: env fth=%fish_test_helper %fish %s
 
 # These tests check how installed trap handlers are listed. Run separately from the main trap
 # handler to ensure a clean environment.

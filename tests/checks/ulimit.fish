@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 
 ulimit --core-size
 #CHECK: {{unlimited|\d+}}

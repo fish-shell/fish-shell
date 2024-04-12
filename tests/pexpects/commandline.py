@@ -53,7 +53,7 @@ expect_prompt("foo")
 sendline("complete -c foo -xa '(commandline)'")
 expect_prompt()
 send("foo bar \t")
-expect_str("foo bar foo\ bar\ ")
+expect_str("foo bar 'foo bar '")
 send("\b" * 64)
 
 # Commandline works when run on its own (#8807).

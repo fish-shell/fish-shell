@@ -674,48 +674,6 @@ fn error_for_character(c: char) -> WString {
     }
 }
 
-/// Calculates information on the parameter at the specified index.
-///
-/// \param cmd The command to be analyzed
-/// \param pos An index in the string which is inside the parameter
-/// \return the type of quote used by the parameter: either ' or " or \0.
-pub fn parse_util_get_quote_type(cmd: &wstr, pos: usize) -> Option<char> {
-    let mut tok = Tokenizer::new(cmd, TOK_ACCEPT_UNFINISHED);
-    while let Some(token) = tok.next() {
-        if token.type_ == TokenType::string && token.location_in_or_at_end_of_source_range(pos) {
-            return get_quote(tok.text_of(&token), pos - token.offset());
-        }
-    }
-    None
-}
-
-fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
-    let cmd = cmd_str.as_char_slice();
-    let mut i = 0;
-    while i < cmd.len() {
-        if cmd[i] == '\\' {
-            i += 1;
-            if i == cmd_str.len() {
-                return None;
-            }
-            i += 1;
-        } else if cmd[i] == '\'' || cmd[i] == '"' {
-            match quote_end(cmd_str, i, cmd[i]) {
-                Some(end) => {
-                    if end > len {
-                        return Some(cmd[i]);
-                    }
-                    i = end + 1;
-                }
-                None => return Some(cmd[i]),
-            }
-        } else {
-            i += 1;
-        }
-    }
-    None
-}
-
 /// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
 /// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
 /// thus escaping should be with backslashes). Optionally do not escape tildes.

@@ -52,6 +52,7 @@ pub enum TokenizerError {
     expected_bclose_found_pclose,
 }
 
+#[derive(Debug)]
 pub struct Tok {
     // Offset of the token.
     pub offset: u32,

@@ -95,6 +95,7 @@ Interactive improvements
 ------------------------
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
 - Option completion now uses fuzzy subsequence filtering, as non-option completion does. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
+- Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
 - Autosuggestions were sometimes not shown after recalling a line from history, which has been fixed (:issue:`10287`).
 - Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block (:issue:`5274`).
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).

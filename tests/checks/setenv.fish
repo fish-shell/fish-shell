@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 # Verify the correct behavior of the `setenv` compatibility shim.
 

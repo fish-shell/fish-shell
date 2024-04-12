@@ -1,5 +1,5 @@
 # Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
-# RUN: env FISH=%fish %fish %s | %filter-ctrlseqs
+# RUN: env FISH=%fish %fish -C 'set -l filter_ctrls %filter-control-sequences' %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -346,27 +346,29 @@ or echo testu undef in top level shell
 $FISH -c 'set -q testu; or echo testu undef in sub shell'
 # CHECK: testu undef in sub shell
 
-# test SHLVL
-# use a subshell to ensure a clean slate
-env SHLVL= $FISH -ic 'echo SHLVL: $SHLVL; $FISH -ic \'echo SHLVL: $SHLVL\''
-# CHECK: SHLVL: 1
-# CHECK: SHLVL: 2
+begin
+    # test SHLVL
+    # use a subshell to ensure a clean slate
+    env SHLVL= $FISH -ic 'echo SHLVL: $SHLVL; $FISH -ic \'echo SHLVL: $SHLVL\''
+    # CHECK: SHLVL: 1
+    # CHECK: SHLVL: 2
 
-# exec should decrement SHLVL - outer fish increments by 1, decrements for exec,
-# inner fish increments again so the value stays the same.
-env SHLVL=1 $FISH -ic 'echo SHLVL: $SHLVL; exec $FISH -ic \'echo SHLVL: $SHLVL\''
-# CHECK: SHLVL: 2
-# CHECK: SHLVL: 2
+    # exec should decrement SHLVL - outer fish increments by 1, decrements for exec,
+    # inner fish increments again so the value stays the same.
+    env SHLVL=1 $FISH -ic 'echo SHLVL: $SHLVL; exec $FISH -ic \'echo SHLVL: $SHLVL\''
+    # CHECK: SHLVL: 2
+    # CHECK: SHLVL: 2
 
-# garbage SHLVLs should be treated as garbage
-env SHLVL=3foo $FISH -ic 'echo SHLVL: $SHLVL'
-# CHECK: SHLVL: 1
+    # garbage SHLVLs should be treated as garbage
+    env SHLVL=3foo $FISH -ic 'echo SHLVL: $SHLVL'
+    # CHECK: SHLVL: 1
 
-# whitespace is allowed though (for bash compatibility)
-env SHLVL="3  " $FISH -ic 'echo SHLVL: $SHLVL'
-env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
-# CHECK: SHLVL: 4
-# CHECK: SHLVL: 4
+    # whitespace is allowed though (for bash compatibility)
+    env SHLVL="3  " $FISH -ic 'echo SHLVL: $SHLVL'
+    env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
+    # CHECK: SHLVL: 4
+    # CHECK: SHLVL: 4
+end | $filter_ctrls
 
 # Non-interactive fish doesn't touch $SHLVL
 env SHLVL=2 $FISH -c 'echo SHLVL: $SHLVL'
@@ -951,7 +953,7 @@ end
 
 set -e undefined[x..]
 # CHECKERR: set: Invalid index starting at 'undefined'
-# CHECKERR: checks/set.fish (line 952):
+# CHECKERR: checks/set.fish (line 954):
 # CHECKERR: set -e undefined[x..]
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)

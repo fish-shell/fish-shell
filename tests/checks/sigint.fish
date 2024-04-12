@@ -1,4 +1,4 @@
-#RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s | %filter-ctrlseqs
+#RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s
 
 # Check that nohup is propagated.
 set output_path (mktemp)

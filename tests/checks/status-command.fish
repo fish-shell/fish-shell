@@ -1,4 +1,4 @@
-#RUN: env FISH_PATH=%fish FILE_PATH=%s %fish %s | %filter-ctrlseqs
+#RUN: env FISH_PATH=%fish FILE_PATH=%s %fish %s
 
 status line-number
 # CHECK: 3

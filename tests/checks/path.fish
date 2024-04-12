@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 # The "path" builtin for dealing with paths
 
 # Extension - for figuring out the file extension of a given path.

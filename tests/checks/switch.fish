@@ -1,4 +1,4 @@
-#RUN: %fish -C "set fish %fish" %s | %filter-ctrlseqs
+#RUN: %fish -C "set fish %fish" %s
 # Check that switch with an argument expanding to nothing still works.
 switch $foo
     case a

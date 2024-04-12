@@ -1,4 +1,4 @@
-# RUN: env fish_test_helper=%fish_test_helper %fish %s | %filter-ctrlseqs
+# RUN: env fish_test_helper=%fish_test_helper %fish %s
 
 # Ensure that a job which attempts to disown itself does not explode.
 # Here fish_test_helper is the process group leader; we attempt to disown

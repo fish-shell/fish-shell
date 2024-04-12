@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 # OpenBSD doesn't do hex numbers in str/wcstod (like C99 requires).
 # So let's skip this.
 #REQUIRES: test "$(uname)" != OpenBSD

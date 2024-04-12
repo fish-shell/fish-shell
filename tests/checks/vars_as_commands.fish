@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish (builtin realpath %fish)' %s | %filter-ctrlseqs
+#RUN: %fish -C 'set -g fish (builtin realpath %fish)' %s
 # Test that using variables as command names work correctly.
 
 $EMPTY_VARIABLE

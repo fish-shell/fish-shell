@@ -1,4 +1,4 @@
-# RUN: env fth=%fish_test_helper fish=%fish %fish %s | %filter-ctrlseqs
+# RUN: env fth=%fish_test_helper fish=%fish %fish %s
 
 status job-control full
 

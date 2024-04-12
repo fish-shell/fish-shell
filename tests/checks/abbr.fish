@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 
 # Universal abbreviations are imported.
 set -U _fish_abbr_cuckoo somevalue

@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 
 set -xl LANG C # uniform quotes
 

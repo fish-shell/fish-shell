@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s | %filter-ctrlseqs
+# RUN: %fish -C 'set -g fish %fish' %s
 #
 # Test function, loops, conditionals and some basic elements
 #

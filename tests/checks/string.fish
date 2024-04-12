@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 # Tests for string builtin. Mostly taken from man page examples.
 
 string match -r -v "c.*" dog can cat diz; and echo "exit 0"

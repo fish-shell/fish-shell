@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 # This tests various corner cases involving command substitution.
 

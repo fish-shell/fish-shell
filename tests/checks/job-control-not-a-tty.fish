@@ -1,4 +1,4 @@
-#RUN: echo 'status job-control full; command echo A ; echo B;' | %fish | %filter-ctrlseqs
+#RUN: echo 'status job-control full; command echo A ; echo B;' | %fish
 
 # Regression test for #6573.
 

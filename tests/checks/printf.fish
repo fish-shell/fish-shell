@@ -1,4 +1,4 @@
-# RUN: %fish %s | %filter-ctrlseqs
+# RUN: %fish %s
 
 printf "%d %d\n" 1 2 3
 # CHECK: 1 2

@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 status -b
 and echo '"status -b" unexpectedly returned true at top level'
 

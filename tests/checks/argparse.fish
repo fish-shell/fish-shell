@@ -1,4 +1,4 @@
-#RUN: %fish %s | %filter-ctrlseqs
+#RUN: %fish %s
 ##########
 
 # NOTE: This uses argparse, which touches the local variables.

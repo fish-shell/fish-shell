@@ -722,14 +722,10 @@ fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
 pub fn parse_util_escape_string_with_quote(
     cmd: &wstr,
     quote: Option<char>,
-    no_tilde: bool,
+    escape_flags: EscapeFlags,
 ) -> WString {
     let Some(quote) = quote else {
-        let mut flags = EscapeFlags::NO_QUOTED;
-        if no_tilde {
-            flags |= EscapeFlags::NO_TILDE;
-        }
-        return escape_string(cmd, EscapeStringStyle::Script(flags));
+        return escape_string(cmd, EscapeStringStyle::Script(escape_flags));
     };
     // Here we are going to escape a string with quotes.
     // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
@@ -1863,40 +1859,70 @@ fn test_escape_quotes() {
     macro_rules! validate {
         ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
             assert_eq!(
-                parse_util_escape_string_with_quote(L!($cmd), $quote, $no_tilde),
+                parse_util_escape_string_with_quote(
+                    L!($cmd),
+                    $quote,
+                    if $no_tilde {
+                        EscapeFlags::NO_TILDE
+                    } else {
+                        EscapeFlags::empty()
+                    }
+                ),
+                L!($expected)
+            );
+        };
+    }
+    macro_rules! validate_no_quoted {
+        ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
+            assert_eq!(
+                parse_util_escape_string_with_quote(
+                    L!($cmd),
+                    $quote,
+                    EscapeFlags::NO_QUOTED
+                        | if $no_tilde {
+                            EscapeFlags::NO_TILDE
+                        } else {
+                            EscapeFlags::empty()
+                        }
+                ),
                 L!($expected)
             );
         };
     }
 
-    // These are "raw string literals"
-    validate!("abc", None, false, "abc");
-    validate!("abc~def", None, false, "abc\\~def");
+    validate!("abc~def", None, false, "'abc~def'");
     validate!("abc~def", None, true, "abc~def");
-    validate!("abc\\~def", None, false, "abc\\\\\\~def");
-    validate!("abc\\~def", None, true, "abc\\\\~def");
-    validate!("~abc", None, false, "\\~abc");
+    validate!("~abc", None, false, "'~abc'");
     validate!("~abc", None, true, "~abc");
-    validate!("~abc|def", None, false, "\\~abc\\|def");
-    validate!("|abc~def", None, false, "\\|abc\\~def");
-    validate!("|abc~def", None, true, "\\|abc~def");
-    validate!("foo\nbar", None, false, "foo\\nbar");
+
+    // These are "raw string literals"
+    validate_no_quoted!("abc", None, false, "abc");
+    validate_no_quoted!("abc~def", None, false, "abc\\~def");
+    validate_no_quoted!("abc~def", None, true, "abc~def");
+    validate_no_quoted!("abc\\~def", None, false, "abc\\\\\\~def");
+    validate_no_quoted!("abc\\~def", None, true, "abc\\\\~def");
+    validate_no_quoted!("~abc", None, false, "\\~abc");
+    validate_no_quoted!("~abc", None, true, "~abc");
+    validate_no_quoted!("~abc|def", None, false, "\\~abc\\|def");
+    validate_no_quoted!("|abc~def", None, false, "\\|abc\\~def");
+    validate_no_quoted!("|abc~def", None, true, "\\|abc~def");
+    validate_no_quoted!("foo\nbar", None, false, "foo\\nbar");
 
     // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
-    validate!("abc", Some('\''), false, "abc");
-    validate!("abc\\def", Some('\''), false, "abc\\\\def");
-    validate!("abc'def", Some('\''), false, "abc\\'def");
-    validate!("~abc'def", Some('\''), false, "~abc\\'def");
-    validate!("~abc'def", Some('\''), true, "~abc\\'def");
-    validate!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
-    validate!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
+    validate_no_quoted!("abc", Some('\''), false, "abc");
+    validate_no_quoted!("abc\\def", Some('\''), false, "abc\\\\def");
+    validate_no_quoted!("abc'def", Some('\''), false, "abc\\'def");
+    validate_no_quoted!("~abc'def", Some('\''), false, "~abc\\'def");
+    validate_no_quoted!("~abc'def", Some('\''), true, "~abc\\'def");
+    validate_no_quoted!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
+    validate_no_quoted!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
 
-    validate!("abc", Some('"'), false, "abc");
-    validate!("abc\\def", Some('"'), false, "abc\\\\def");
-    validate!("~abc'def", Some('"'), false, "~abc'def");
-    validate!("~abc'def", Some('"'), true, "~abc'def");
-    validate!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
-    validate!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
+    validate_no_quoted!("abc", Some('"'), false, "abc");
+    validate_no_quoted!("abc\\def", Some('"'), false, "abc\\\\def");
+    validate_no_quoted!("~abc'def", Some('"'), false, "~abc'def");
+    validate_no_quoted!("~abc'def", Some('"'), true, "~abc'def");
+    validate_no_quoted!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
+    validate_no_quoted!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
 }
 
 #[test]

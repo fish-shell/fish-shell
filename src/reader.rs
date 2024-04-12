@@ -5091,6 +5091,11 @@ pub fn completion_apply_to_command_line(
         return replace_line_at_cursor(command_line, inout_cursor_pos, val_str);
     }
 
+    let mut escape_flags = EscapeFlags::NO_QUOTED;
+    if no_tilde {
+        escape_flags.insert(EscapeFlags::NO_TILDE);
+    }
+
     if do_replace_token {
         let mut move_cursor;
         let mut range = 0..0;
@@ -5157,7 +5162,7 @@ pub fn completion_apply_to_command_line(
             }
         }
 
-        parse_util_escape_string_with_quote(val_str, quote, no_tilde)
+        parse_util_escape_string_with_quote(val_str, quote, escape_flags)
     } else {
         val_str.to_owned()
     };

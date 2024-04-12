@@ -260,6 +260,9 @@ echo \x07 | string escape
 # CHECK: \cg
 
 string escape --style=script 'a b#c"\'d'
+# CHECK: 'a b#c"\'d'
+
+string escape --no-quoted --style=script 'a b#c"\'d'
 # CHECK: a\ b\#c\"\'d
 
 string escape --style=url 'a b#c"\'d'

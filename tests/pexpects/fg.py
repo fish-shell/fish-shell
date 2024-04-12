@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
 import platform
 import subprocess
 import sys

@@ -110,9 +110,10 @@ New or improved bindings
 - Special input functions run from bindings via ``commandline -f`` are now applied immediately instead of after the currently executing binding.
   For example, ``commandline -f yank -f yank-pop`` inserts the last-but-one entry from the kill ring.
 - When the cursor is on a command that resolves to an executable script, :kbd:`Alt-O` will now open that script in your editor (:issue:`10266`).
-- Two improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
+- Some improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
+  - Multiline commands are indented before being sent to the editor, which matches the rendering in fish.
 - ``backward-kill-path-component`` and friends now treat ``#`` as part of a path component (:issue:`10271`).
 - The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 - If the terminal supports shifted key codes from the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/), ``shift-enter`` now inserts a newline instead of executing the command line.

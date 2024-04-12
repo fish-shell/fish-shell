@@ -1,5 +1,6 @@
 use super::prelude::*;
 use crate::common;
+use crate::future_feature_flags::{feature_test, FeatureFlag};
 
 mod test_expressions {
     use super::*;
@@ -552,6 +553,10 @@ mod test_expressions {
                 );
             }
 
+            if feature_test(FeatureFlag::test_require_arg) {
+                return self.error(start, sprintf!("Unknown option at index %u", start));
+            }
+
             return JustAString {
                 arg: self.arg(start).to_owned(),
                 range: start..start + 1,
@@ -718,9 +723,6 @@ mod test_expressions {
             err: &mut WString,
             program_name: &wstr,
         ) -> Option<Box<dyn Expression>> {
-            // Empty list and one-arg list should be handled by caller.
-            assert!(args.len() > 1);
-
             let mut parser = TestParser {
                 strings: args,
                 errors: Vec::new(),
@@ -1019,15 +1021,32 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         .collect();
     let args: &[WString] = &args;
 
-    if argc == 0 {
-        return STATUS_INVALID_ARGS; // Per 1003.1, exit false.
-    } else if argc == 1 {
-        // Per 1003.1, exit true if the arg is non-empty.
-        return if args[0].is_empty() {
-            STATUS_CMD_ERROR
-        } else {
-            STATUS_CMD_OK
-        };
+    if feature_test(FeatureFlag::test_require_arg) {
+        if argc == 0 {
+            streams.err.appendln(wgettext_fmt!(
+                "%ls: Expected at least one argument",
+                program_name
+            ));
+            builtin_print_error_trailer(parser, streams.err, program_name);
+            return STATUS_INVALID_ARGS;
+        } else if argc == 1 {
+            if args[0] == "-n" {
+                return STATUS_CMD_ERROR;
+            } else if args[0] == "-z" {
+                return STATUS_CMD_OK;
+            }
+        }
+    } else {
+        if argc == 0 {
+            return STATUS_INVALID_ARGS; // Per 1003.1, exit false.
+        } else if argc == 1 {
+            // Per 1003.1, exit true if the arg is non-empty.
+            return if args[0].is_empty() {
+                STATUS_CMD_ERROR
+            } else {
+                STATUS_CMD_OK
+            };
+        }
     }
 
     // Try parsing

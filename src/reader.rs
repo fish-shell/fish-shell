@@ -85,6 +85,7 @@ use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_tree::ParsedSource;
+use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
     parse_util_detect_errors, parse_util_detect_errors_in_ast, parse_util_escape_string_with_quote,
@@ -2770,7 +2771,9 @@ impl ReaderData {
                         let total_offset_new = parse_util_get_offset(
                             el.text(),
                             line_new,
-                            line_offset_old - 4 * (indent_new - indent_old),
+                            line_offset_old
+                                - isize::try_from(SPACES_PER_INDENT).unwrap()
+                                    * (indent_new - indent_old),
                         );
                         self.update_buff_pos(elt, total_offset_new);
                     }

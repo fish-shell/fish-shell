@@ -25,6 +25,12 @@ The following options are available:
 **-i** or **--no-indent**
     Do not indent commands; only reformat to one job per line.
 
+**--only-indent**
+    Do not reformat, only indent each line.
+
+**--only-unindent**
+    Do not reformat, only unindent each line.
+
 **-c** or **--check**
     Do not indent, only return 0 if the code is already indented as fish_indent would, the number of failed files otherwise. Also print the failed filenames if not reading from standard input.
 

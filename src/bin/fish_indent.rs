@@ -36,7 +36,7 @@ use fish::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
 use fish::libc::setlinebuf;
 use fish::operation_context::OperationContext;
 use fish::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use fish::parse_util::parse_util_compute_indents;
+use fish::parse_util::{apply_indents, parse_util_compute_indents, SPACES_PER_INDENT};
 use fish::print_help::print_help;
 use fish::printf;
 use fish::threads;
@@ -51,10 +51,6 @@ use fish::{
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd},
     future_feature_flags,
 };
-
-// The number of spaces per indent isn't supposed to be configurable.
-// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
-const SPACES_PER_INDENT: usize = 4;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -777,6 +773,8 @@ fn throwing_main() -> i32 {
     let mut output_type = OutputType::PlainText;
     let mut output_location = L!("");
     let mut do_indent = true;
+    let mut only_indent = false;
+    let mut only_unindent = false;
     // File path for debug output.
     let mut debug_output = None;
 
@@ -795,6 +793,8 @@ fn throwing_main() -> i32 {
         ),
         wopt(L!("dump-parse-tree"), woption_argument_t::no_argument, 'P'),
         wopt(L!("no-indent"), woption_argument_t::no_argument, 'i'),
+        wopt(L!("only-indent"), woption_argument_t::no_argument, '\x04'),
+        wopt(L!("only-unindent"), woption_argument_t::no_argument, '\x05'),
         wopt(L!("help"), woption_argument_t::no_argument, 'h'),
         wopt(L!("version"), woption_argument_t::no_argument, 'v'),
         wopt(L!("write"), woption_argument_t::no_argument, 'w'),
@@ -830,6 +830,8 @@ fn throwing_main() -> i32 {
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
+            '\x04' => only_indent = true,
+            '\x05' => only_unindent = true,
             '\x01' => output_type = OutputType::Html,
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
@@ -920,7 +922,45 @@ fn throwing_main() -> i32 {
             continue;
         }
 
-        let output_wtext = prettify(&src, do_indent);
+        let output_wtext = if only_indent || only_unindent {
+            let indents = parse_util_compute_indents(&src);
+            if only_indent {
+                apply_indents(&src, &indents)
+            } else {
+                // Only unindent.
+                let mut indented_everywhere = true;
+                for (i, c) in src.chars().enumerate() {
+                    if c != '\n' || i + 1 == src.len() {
+                        continue;
+                    }
+                    let num_spaces = SPACES_PER_INDENT * usize::try_from(indents[i + 1]).unwrap();
+                    if src.len() < i + 1 + num_spaces
+                        || !src[i + 1..].chars().take(num_spaces).all(|c| c == ' ')
+                    {
+                        indented_everywhere = false;
+                        break;
+                    }
+                }
+                if indented_everywhere {
+                    let mut out = WString::new();
+                    let mut i = 0;
+                    while i < src.len() {
+                        let c = src.as_char_slice()[i];
+                        out.push(c);
+                        i += 1;
+                        if c != '\n' || i == src.len() {
+                            continue;
+                        }
+                        i += SPACES_PER_INDENT * usize::try_from(indents[i]).unwrap();
+                    }
+                    out
+                } else {
+                    src.clone()
+                }
+            }
+        } else {
+            prettify(&src, do_indent)
+        };
 
         // Maybe colorize.
         let mut colors = vec![];

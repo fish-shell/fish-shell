@@ -844,6 +844,24 @@ pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
     indents
 }
 
+// The number of spaces per indent isn't supposed to be configurable.
+// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
+pub const SPACES_PER_INDENT: usize = 4;
+
+pub fn apply_indents(src: &wstr, indents: &[i32]) -> WString {
+    let mut indented = WString::new();
+    for (i, c) in src.chars().enumerate() {
+        indented.push(c);
+        if c != '\n' || i + 1 == src.len() {
+            continue;
+        }
+        indented.extend(
+            std::iter::repeat(' ').take(SPACES_PER_INDENT * usize::try_from(indents[i]).unwrap()),
+        );
+    }
+    indented
+}
+
 // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
 // visiting its children.
 struct IndentVisitor<'a> {
@@ -1008,7 +1026,12 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 
         // If this is a leaf node, apply the current indentation.
         if node.category() == Category::leaf && range.length() != 0 {
-            self.indents[range.start()..range.end()].fill(self.indent);
+            let leading_spaces = self.src[..range.start()]
+                .chars()
+                .rev()
+                .take_while(|&c| c == ' ')
+                .count();
+            self.indents[range.start() - leading_spaces..range.end()].fill(self.indent);
             self.last_leaf_end = range.end();
             self.last_indent = self.indent;
         }

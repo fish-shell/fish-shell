@@ -464,3 +464,35 @@ echo "
 echo this file starts late
 " | $fish_indent
 #CHECK: echo this file starts late
+
+echo 'foo|bar; begin
+echo' | $fish_indent --only-indent
+# CHECK: foo|bar; begin
+# CHECK: {{^}}    echo
+
+echo 'begin
+    echo
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}begin
+# CHECK: {{^}}echo
+# CHECK: {{^}}end
+
+echo 'if true
+    begin
+        echo
+    end
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}if true
+# CHECK: {{^}}begin
+# CHECK: {{^}}echo
+# CHECK: {{^}}end
+# CHECK: {{^}}end
+
+echo 'begin
+    echo
+  not indented properly
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}begin
+# CHECK: {{^}}    echo
+# CHECK: {{^}}  not indented properly
+# CHECK: {{^}}end

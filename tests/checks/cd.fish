@@ -280,7 +280,9 @@ begin
     mkdir -p a/b/c
     chmod -r a
 
-    cd a; pwd
+    cd a
+    # CHECKERR: Unable to open the current working directory: Permission denied
+    pwd
     # CHECK: {{.*}}/a
 
     cd b

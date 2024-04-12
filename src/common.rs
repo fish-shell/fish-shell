@@ -9,6 +9,7 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::libc::MB_CUR_MAX;
+use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2string_callback;
@@ -190,6 +191,9 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
     let mut need_escape = false;
     let mut need_complex_escape = false;
+    let mut double_quotes = 0;
+    let mut single_quotes = 0;
+    let mut dollars = 0;
 
     if !no_quoted && input.is_empty() {
         return L!("''").to_owned();
@@ -267,7 +271,9 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
             }
             '\\' | '\'' => {
                 need_escape = true;
-                need_complex_escape = true;
+                if c == '\'' {
+                    single_quotes += 1;
+                }
                 if escape_printables || (c == '\\' && !symbolic) {
                     out.push('\\');
                 }
@@ -286,6 +292,12 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
             '&' | '$' | ' ' | '#' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*'
             | '|' | ';' | '"' | '%' | '~' => {
+                if c == '"' {
+                    double_quotes += 1;
+                }
+                if c == '$' {
+                    dollars += 1;
+                }
                 let char_is_normal = (c == '~' && no_tilde) || (c == '?' && no_qmark);
                 if !char_is_normal {
                     need_escape = true;
@@ -327,12 +339,20 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
     // Use quoted escaping if possible, since most people find it easier to read.
     if !no_quoted && need_escape && !need_complex_escape && escape_printables {
-        let single_quote = '\'';
+        let quote = if single_quotes > double_quotes + dollars {
+            '"'
+        } else {
+            '\''
+        };
         out.clear();
         out.reserve(2 + input.len());
-        out.push(single_quote);
-        out.push_utfstr(input);
-        out.push(single_quote);
+        out.push(quote);
+        out.push_utfstr(&parse_util_escape_string_with_quote(
+            input,
+            Some(quote),
+            EscapeFlags::empty(),
+        ));
+        out.push(quote);
     }
 
     out

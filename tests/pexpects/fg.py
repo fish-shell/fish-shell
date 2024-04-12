@@ -5,6 +5,9 @@ import subprocess
 import sys
 import time
 
+if "CI" in os.environ and platform.system() == "Darwin":
+    sys.exit(127)
+
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,

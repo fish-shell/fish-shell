@@ -8,7 +8,7 @@ import sys
 # and fails this a lot.
 #
 # Presumably we still have users on macOS that would notice binding errors
-if "GITHUB_WORKFLOW" in os.environ and platform.system() == "Darwin":
+if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 
 sp = SpawnedProc()

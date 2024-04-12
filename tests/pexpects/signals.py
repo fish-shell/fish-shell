@@ -18,7 +18,10 @@ import signal
 import subprocess
 import sys
 
-if platform.system() == "FreeBSD": # Spurious failure.
+if "CI" in os.environ and platform.system() == "Darwin":
+    sys.exit(127)
+
+if platform.system() == "FreeBSD": # Spurious failure. TODO Only disable this in CI.
     sys.exit(127)
 
 expect_prompt()

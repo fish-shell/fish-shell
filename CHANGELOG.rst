@@ -115,6 +115,7 @@ New or improved bindings
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
 - ``backward-kill-path-component`` and friends now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
+- `history-prefix-search-{backward,forward}` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 - If the terminal supports shifted key codes from the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/), ``shift-enter`` now inserts a newline instead of executing the command line.
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.

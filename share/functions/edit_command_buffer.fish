@@ -18,7 +18,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     set -l editor (__fish_anyeditor)
     or return 1
 
-    commandline -b >$f
+    set -l indented_lines (commandline -b | fish_indent --only-indent)
+    string join -- \n $indented_lines >$f
     set -l offset (commandline --cursor)
     # compute cursor line/column
     set -l lines (commandline)\n
@@ -28,7 +29,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         set line (math $line + 1)
         set -e lines[1]
     end
-    set col (math $offset + 1)
+    set -l indent 1 + (string length -- $indented_lines[$line]) - (string length -- $lines[1])
+    set -l col (math $offset + 1 + $indent)
 
     set -l editor_basename (string match -r '[^/]+$' -- $editor[1])
     set -l wrapped_commands
@@ -88,11 +90,14 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
 
     $editor
 
+    set -l raw_lines (command cat $f)
+    set -l unindented_lines (string join -- \n $raw_lines | fish_indent --only-unindent)
+
     # Here we're checking the exit status of the editor.
     if test $status -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.
-        commandline -r -- (command cat $f)
+        commandline -r -- $unindented_lines
         commandline -C 999999
     else
         echo
@@ -103,7 +108,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         eval set -l pos "$(cat $cursor_from_editor)"
         if set -q pos[1] && test $pos[1] = $f
             set -l line $pos[2]
-            set -l column $pos[3]
+            set -l indent (math (string length -- $raw_lines[$line]) - (string length -- $unindented_lines[$line]))
+            set -l column (math $pos[3] - $indent)
             commandline -C 0
             for _line in (seq $line)[2..]
                 commandline -f down-line

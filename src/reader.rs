@@ -1595,6 +1595,10 @@ impl ReaderData {
                 0..self.command_line.len(),
                 new_text,
             );
+            if self.history_search.by_prefix() {
+                self.command_line
+                    .set_position(self.history_search.search_string().len());
+            }
         }
         self.command_line_has_transient_edit = true;
         self.update_buff_pos(EditableLineTag::Commandline, None);

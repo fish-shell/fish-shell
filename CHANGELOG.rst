@@ -182,6 +182,7 @@ Other improvements
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
+- `cd` into a directory that is not readable but accessile (permissions `--x`) is now possible (:issue:`10432`).
 
 .. _rust-packaging:
 

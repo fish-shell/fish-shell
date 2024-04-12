@@ -39,7 +39,7 @@ pub struct InputMappingName {
     pub mode: WString,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum KeyNameStyle {
     Plain,
     RawEscapeSequence,
@@ -640,7 +640,7 @@ impl EventQueuePeeker<'_> {
 
     /// Check if the next event is the given character. This advances the index on success only.
     /// If \p escaped is set, then return false if this (or any other) character had a timeout.
-    fn next_is_char(&mut self, key: Key, escaped: bool) -> bool {
+    fn next_is_char(&mut self, style: &KeyNameStyle, key: Key, escaped: bool) -> bool {
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -653,13 +653,16 @@ impl EventQueuePeeker<'_> {
         // Use either readch or readch_timed, per our param.
         if self.idx == self.peeked.len() {
             let Some(newevt) = (if escaped {
+                FLOG!(reader, "reading timed escape");
                 self.event_queue.readch_timed_esc()
             } else {
+                FLOG!(reader, "readch timed sequence key");
                 self.event_queue.readch_timed_sequence_key()
             }) else {
                 self.had_timeout = true;
                 return false;
             };
+            FLOG!(reader, format!("adding peeked {:?}", newevt));
             self.peeked.push(newevt);
         }
         // Now we have peeked far enough; check the event.
@@ -675,11 +678,16 @@ impl EventQueuePeeker<'_> {
             self.idx += 1;
             self.subidx = 0;
             FLOG!(reader, "matched delayed escape prefix in alt sequence");
-            return self.next_is_char(Key::from_raw(key.codepoint), true);
+            return self.next_is_char(style, Key::from_raw(key.codepoint), true);
         }
-        if self.subidx == 0 && kevt.key == key {
-            self.idx += 1;
-            return true;
+        if *style == KeyNameStyle::Plain {
+            if kevt.key == key {
+                assert!(self.subidx == 0);
+                self.idx += 1;
+                FLOG!(reader, "matched full key", key);
+                return true;
+            }
+            return false;
         }
         let actual_seq = kevt.seq.as_char_slice();
         if !actual_seq.is_empty() {
@@ -690,16 +698,23 @@ impl EventQueuePeeker<'_> {
                     self.idx += 1;
                     self.subidx = 0;
                 }
-                // These FLOGs are extremely chatty because this is run a bunch of times.
-                // FLOG!(reader, "matched legacy sequence for", key);
+                FLOG!(
+                    reader,
+                    format!(
+                        "matched char {} with offset {} within raw sequence of length {}",
+                        key,
+                        self.subidx,
+                        actual_seq.len()
+                    )
+                );
                 return true;
             }
             if key.modifiers == Modifiers::ALT && seq_char == '\x1b' {
                 if self.subidx + 1 == actual_seq.len() {
                     self.idx += 1;
                     self.subidx = 0;
-                    // FLOG!(reader, "matched escape prefix of legacy alt sequence for", key);
-                    return self.next_is_char(Key::from_raw(key.codepoint), true);
+                    FLOG!(reader, "matched escape prefix in raw escape sequence");
+                    return self.next_is_char(style, Key::from_raw(key.codepoint), true);
                 } else if actual_seq
                     .get(self.subidx + 1)
                     .cloned()
@@ -711,7 +726,7 @@ impl EventQueuePeeker<'_> {
                         self.idx += 1;
                         self.subidx = 0;
                     }
-                    // FLOG!(reader, "matched legacy alt sequence for", key);
+                    FLOG!(reader, format!("matched {key} against raw escape sequence"));
                     return true;
                 }
             }
@@ -754,7 +769,7 @@ impl Drop for EventQueuePeeker<'_> {
 }
 
 /// \return true if a given \p peeker matches a given sequence of char events given by \p str.
-fn try_peek_sequence(peeker: &mut EventQueuePeeker, seq: &[Key]) -> bool {
+fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &[Key]) -> bool {
     assert!(
         !seq.is_empty(),
         "Empty sequence passed to try_peek_sequence"
@@ -764,7 +779,7 @@ fn try_peek_sequence(peeker: &mut EventQueuePeeker, seq: &[Key]) -> bool {
         // If we just read an escape, we need to add a timeout for the next char,
         // to distinguish between the actual escape key and an "alt"-modifier.
         let escaped = prev == Key::from_raw(key::Escape);
-        if !peeker.next_is_char(*key, escaped) {
+        if !peeker.next_is_char(style, *key, escaped) {
             return false;
         }
         prev = *key;
@@ -803,7 +818,8 @@ impl Inputter {
                 continue;
             }
 
-            if try_peek_sequence(peeker, &m.seq) {
+            // FLOG!(reader, "trying mapping", format!("{:?}", m));
+            if try_peek_sequence(peeker, &m.key_name_style, &m.seq) {
                 // A binding for just escape should also be deferred
                 // so escape sequences take precedence.
                 if m.seq == vec![Key::from_raw(key::Escape)] {

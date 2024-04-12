@@ -3,6 +3,7 @@ use crate::common::str2wcstring;
 use crate::function;
 use crate::highlight::{colorize, highlight_shell};
 
+use crate::parse_util::{apply_indents, parse_util_compute_indents};
 use crate::path::{path_get_path, path_get_paths};
 
 #[derive(Default)]
@@ -128,6 +129,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                             comment,
                             props.annotated_definition(arg)
                         ));
+                        if props.definition_file().is_none() {
+                            def = apply_indents(&def, &parse_util_compute_indents(&def));
+                        }
 
                         if streams.out_is_terminal() {
                             let mut color = vec![];

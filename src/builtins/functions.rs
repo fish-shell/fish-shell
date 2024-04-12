@@ -8,6 +8,8 @@ use crate::event::{self};
 use crate::function;
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
+use crate::parse_util::apply_indents;
+use crate::parse_util::parse_util_compute_indents;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::termsize::termsize_last;
 
@@ -405,6 +407,10 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             ));
         } else {
             def = props.annotated_definition(arg);
+        }
+
+        if props.definition_file().is_none() {
+            def = apply_indents(&def, &parse_util_compute_indents(&def));
         }
 
         if streams.out_is_terminal() {

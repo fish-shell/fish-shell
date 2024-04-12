@@ -89,8 +89,8 @@ use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
     parse_util_detect_errors, parse_util_detect_errors_in_ast, parse_util_escape_string_with_quote,
     parse_util_escape_wildcards, parse_util_get_line_from_offset, parse_util_get_offset,
-    parse_util_get_offset_from_line, parse_util_get_quote_type, parse_util_lineno,
-    parse_util_locate_cmdsubst_range, parse_util_token_extent,
+    parse_util_get_offset_from_line, parse_util_lineno, parse_util_locate_cmdsubst_range,
+    parse_util_token_extent,
 };
 use crate::parser::{BlockType, EvalRes, Parser, ParserRef};
 use crate::proc::{
@@ -108,6 +108,7 @@ use crate::threads::{
     assert_is_background_thread, assert_is_main_thread, iothread_service_main_with_timeout,
     Debounce,
 };
+use crate::tokenizer::quote_end;
 use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
@@ -5054,6 +5055,33 @@ fn replace_line_at_cursor(
     text[..start].to_owned() + replacement + &text[end..]
 }
 
+fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
+    let cmd = cmd_str.as_char_slice();
+    let mut i = 0;
+    while i < cmd.len() {
+        if cmd[i] == '\\' {
+            i += 1;
+            if i == cmd_str.len() {
+                return None;
+            }
+            i += 1;
+        } else if cmd[i] == '\'' || cmd[i] == '"' {
+            match quote_end(cmd_str, i, cmd[i]) {
+                Some(end) => {
+                    if end > len {
+                        return Some(cmd[i]);
+                    }
+                    i = end + 1;
+                }
+                None => return Some(cmd[i]),
+            }
+        } else {
+            i += 1;
+        }
+    }
+    None
+}
+
 /// Apply a completion string. Exposed for testing only.
 ///
 /// Insert the string in the given command line at the given cursor position. The function checks if
@@ -5144,10 +5172,17 @@ pub fn completion_apply_to_command_line(
         // Find the last quote in the token to complete. By parsing only the string inside any
         // command substitution, we prevent the tokenizer from treating the entire command
         // substitution as one token.
-        quote = parse_util_get_quote_type(
-            &command_line[cmdsub_range.clone()],
-            cursor_pos - cmdsub_range.start,
-        );
+        let mut tokenizer =
+            Tokenizer::new(&command_line[cmdsub_range.clone()], TOK_ACCEPT_UNFINISHED);
+        let rel_pos = cursor_pos - cmdsub_range.start;
+        while let Some(cur_tok) = tokenizer.next() {
+            if cur_tok.type_ == TokenType::string
+                && cur_tok.location_in_or_at_end_of_source_range(rel_pos)
+            {
+                quote = get_quote(tokenizer.text_of(&cur_tok), rel_pos - cur_tok.offset());
+                break;
+            }
+        }
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can
         // modify the command line, then delete the trailing quote so that we can insert within

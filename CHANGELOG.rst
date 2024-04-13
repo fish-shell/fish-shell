@@ -23,7 +23,7 @@ Notable backwards-incompatible changes
 
 - Fish now decodes keyboard input into human-readable key names.
   To make this for for a wide range of terminals, fish asks terminals to speak several keyboard protocols,
-  including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`.
+  including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
   Depending on terminal support, this allows to bind a lot more key combinations,
   including arbitrary combinations of modifiers ``ctrl``, ``alt`` and ``shift``.
 
@@ -112,6 +112,7 @@ New or improved bindings
 - Special input functions run from bindings via ``commandline -f`` are now applied immediately instead of after the currently executing binding.
   For example, ``commandline -f yank -f yank-pop`` inserts the last-but-one entry from the kill ring.
 - When the cursor is on a command that resolves to an executable script, :kbd:`Alt-O` will now open that script in your editor (:issue:`10266`).
+- During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager.
 - Two improvements to the :kbd:`Alt-E` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.

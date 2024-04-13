@@ -229,7 +229,7 @@ The following special input functions are available:
     invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
 
 ``history-pager-delete``
-    permanently delete the history item selected in the history pager
+    permanently delete the current history item, either from the history pager or from an active up-arrow history search
 
 ``history-search-backward``
     search the history for the previous match

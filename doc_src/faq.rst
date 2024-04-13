@@ -154,23 +154,23 @@ in :ref:`config.fish <configuration>`.
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the :kbd:`↑` (up) or :kbd:`↓` (down) arrow keys to navigate through history matches, or press :kbd:`Control`\ +\ :kbd:`R` to open the history in a searchable pager. In this pager you can press :kbd:`Control`\ +\ :kbd:`R` or :kbd:`Control`\ +\ :kbd:`S` to move to older or younger history respectively.
+Type some part of the command, and then hit the :kbd:`up` (``↑``) or :kbd:`ctrl-down` (``↓``) arrow keys to navigate through history matches, or press :kbd:`ctrl-r` to open the history in a searchable pager. In this pager you can press :kbd:`ctrl-r` or :kbd:`ctrl-s` to move to older or younger history respectively.
 
-Additional default key bindings include :kbd:`Control`\ +\ :kbd:`P` (up) and :kbd:`Control`\ +\ :kbd:`N` (down). See :ref:`Searchable command history <history-search>` for more information.
+Additional default key bindings include :kbd:`ctrl-p` (up) and :kbd:`ctrl-n` (down). See :ref:`Searchable command history <history-search>` for more information.
 
 Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
 Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
 
-As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`Alt`\ +\ :kbd:`S`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
+As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`alt-s`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
 
 In general, fish's history recall works like this:
 
-- Like other shells, the Up arrow, :kbd:`↑` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would just hit the up-arrow.
+- Like other shells, the Up arrow, ``up`` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would just hit the up-arrow.
 
-- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press :kbd:`Ctrl`\ +\ :kbd:`R` to open the history in the pager.
+- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press ``ctlr-b`` to open the history in the pager.
 
-- :kbd:`Alt`\ +\ :kbd:`↑` recalls individual arguments, starting from the last argument in the last executed line. This can be used instead of "!$".
+- ``alt-up`` recalls individual arguments, starting from the last argument in the last executed line. This can be used instead of "!$".
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 

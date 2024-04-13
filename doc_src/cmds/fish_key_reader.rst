@@ -31,8 +31,8 @@ Usage Notes
 
 ``fish_key_reader`` intentionally disables handling of many signals. To terminate ``fish_key_reader`` in ``--continuous`` mode do:
 
-- press :kbd:`Control`\ +\ :kbd:`C` twice, or
-- press :kbd:`Control`\ +\ :kbd:`D` twice, or
+- press :kbd:`ctrl-c` twice, or
+- press :kbd:`ctrl-d` twice, or
 - type ``exit``, or
 - type ``quit``
 

@@ -19,7 +19,7 @@ The ``fish_clipboard_copy`` function copies text to the system clipboard.
 
 If stdin is not a terminal (see :doc:`isatty <isatty>`), it will read all input from there and copy it. If it is, it will use the current commandline, or the current selection if there is one.
 
-It is bound to :kbd:`Control`\ +\ :kbd:`X` by default.
+It is bound to :kbd:`ctrl-x` by default.
 
 ``fish_clipboard_copy`` works by calling a system-specific backend. If it doesn't appear to work you may need to install yours.
 

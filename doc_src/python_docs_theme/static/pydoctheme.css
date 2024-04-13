@@ -695,10 +695,6 @@ div.documentwrapper {
 
 kbd {
   background-color: var(--td-background);
-  border: 1px solid;
-  border-color: var(--sidebar-border-color);
-  border-radius: .2em;
-  padding: 0.1em 0.3em;
 }
 
 div.body a {

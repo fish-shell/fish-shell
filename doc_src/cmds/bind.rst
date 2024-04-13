@@ -24,7 +24,7 @@ If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be pr
 
 ``KEYS`` is a comma-separated list of key names.
 Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``/``c-``, ``alt-``/``a-`` and ``shift-``.
-For example, :kbd:`Alt`\ +\ :kbd:`w` is written as ``alt-w``.
+For example, pressing :kbd:`w` while holding the Alt modifier is written as ``alt-w``.
 Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
 
 Some keys have names, usually because they don't have an obvious printable character representation.
@@ -364,22 +364,22 @@ The following functions are included as normal functions, but are particularly u
 Examples
 --------
 
-Exit the shell when :kbd:`Control`\ +\ :kbd:`D` is pressed::
+Exit the shell when :kbd:`ctrl-d` is pressed::
 
     bind ctrl-d 'exit'
 
-Perform a history search when :kbd:`Page Up` is pressed::
+Perform a history search when :kbd:`pageup` is pressed::
 
-    bind -k ppage history-search-backward
+    bind pageup history-search-backward
 
-Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
+Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`ctrl-c` to clear the input line::
 
     set -g fish_key_bindings fish_vi_key_bindings
-    bind -M insert \cc kill-whole-line repaint
+    bind -M insert ctrl-c kill-whole-line repaint
 
-Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ +\ :kbd:`G` is pressed::
+Launch ``git diff`` and repaint the commandline afterwards when :kbd:`ctrl-g` is pressed::
 
-   bind \cg 'git diff' repaint
+   bind ctrl-g 'git diff' repaint
 
 .. _cmd-bind-termlimits:
 
@@ -390,10 +390,10 @@ Unix terminals, like the ones fish operates in, are at heart 70s technology. The
 
 For instance, the control key modifies a character by setting the top three bits to 0. This means:
 
-- Many characters + control are indistinguishable from other keys. :kbd:`Control`\ +\ :kbd:`I` *is* tab, :kbd:`Control`\ +\ :kbd:`J` *is* newline (``\n``).
+- Many characters + control are indistinguishable from other keys: :kbd:`ctrl-i` *is* :kbd:`tab`, :kbd:`ctrl-j` *is* newline (``\n``).
 - Control and shift don't work simultaneously
 
-Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`→` (Right) often sends ``\e\[C``. These can differ from terminal to terminal, and the mapping is typically available in `terminfo(5)`. Sometimes however a terminal identifies as e.g. ``xterm-256color`` for compatibility, but then implements xterm's sequences incorrectly.
+Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`right` (``→``) often sends ``\e\[C``. These can differ from terminal to terminal, and the mapping is typically available in `terminfo(5)`. Sometimes however a terminal identifies as e.g. ``xterm-256color`` for compatibility, but then implements xterm's sequences incorrectly.
 
 .. _cmd-bind-escape:
 

@@ -283,7 +283,7 @@ Example::
 
 will start the emacs text editor in the background. :doc:`fg <cmds/fg>` can be used to bring it into the foreground again when needed.
 
-Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`Control`\ +\ :kbd:`Z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :doc:`fg <cmds/fg>` (foreground) command.
+Most programs allow you to suspend the program's execution and return control to fish by pressing :kbd:`ctrl-z` (also referred to as ``^Z``). Once back at the fish commandline, you can start other programs and do anything you want. If you then want you can go back to the suspended command by using the :doc:`fg <cmds/fg>` (foreground) command.
 
 If you instead want to put a suspended job into the background, use the :doc:`bg <cmds/bg>` command.
 
@@ -2107,7 +2107,7 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 ----------------------
 
-Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`Control`\ +\ :kbd:`D`.
+Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`ctrl-d`.
 
 To start a debug session simply insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
 

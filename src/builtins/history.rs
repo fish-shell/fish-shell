@@ -243,7 +243,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
 
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
-    let history = commandline_get_state()
+    let history = commandline_get_state(true)
         .history
         .unwrap_or_else(|| History::with_name(&history_session_id(parser.vars())));
 

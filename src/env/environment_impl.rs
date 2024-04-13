@@ -353,7 +353,7 @@ impl EnvScopedImpl {
             if !is_main_thread() {
                 return None;
             }
-            let history = commandline_get_state().history.unwrap_or_else(|| {
+            let history = commandline_get_state(true).history.unwrap_or_else(|| {
                 let fish_history_var = self.getf(L!("fish_history"), EnvMode::default());
                 let session_id = history_session_id_from_var(fish_history_var);
                 History::with_name(&session_id)

@@ -181,7 +181,7 @@ fn write_part(
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
 pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    let rstate = commandline_get_state();
+    let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;
     let mut cut_at_cursor = false;

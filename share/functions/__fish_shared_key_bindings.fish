@@ -124,10 +124,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv ">" self-insert expand-abbr
         bind --preset $argv "<" self-insert expand-abbr
         bind --preset $argv shift-enter expand-abbr "commandline -i \n"
-        # Shift+Return as sent with XTerm.vt100.formatOtherKeys: 0
-        $legacy_bind --preset $argv \e\[27\;2\;13~ expand-abbr "commandline -i \n"
-        # Shift+Return CSI u sequence, sent with XTerm.vt100.formatOtherKeys: 1
-        $legacy_bind --preset $argv \e\[13\;2u expand-abbr "commandline -i \n"
+        $legacy_bind --preset $argv \e\[27\;2\;13~ expand-abbr "commandline -i \n" # Sent with XTerm.vt100.formatOtherKeys: 0
         bind --preset $argv alt-enter expand-abbr "commandline -i \n"
         # Closing a command substitution expands abbreviations
         bind --preset $argv ")" self-insert expand-abbr
@@ -136,7 +133,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
         # Shift-space behaves like space because it's easy to mistype.
         bind --preset $argv shift-space 'commandline -i " "; commandline -f expand-abbr'
-        $legacy_bind --preset $argv \e\[32\;2u 'commandline -i " "; commandline -f expand-abbr' # CSI u escape sequence
 
         bind --preset $argv enter execute
         bind --preset $argv ctrl-j execute
@@ -144,6 +140,5 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         # Make Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.
         bind --preset $argv ctrl-enter execute
         $legacy_bind --preset $argv \e\[27\;5\;13~ execute # Sent with XTerm.vt100.formatOtherKeys: 0
-        $legacy_bind --preset $argv \e\[13\;5u execute # CSI u sequence, sent with XTerm.vt100.formatOtherKeys: 1
     end
 end

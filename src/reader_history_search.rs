@@ -133,6 +133,14 @@ impl ReaderHistorySearch {
         self.skips.insert(s)
     }
 
+    pub fn handle_deletion(&mut self) {
+        assert!(!self.is_at_end());
+        self.matches.remove(self.match_index);
+        self.match_index -= 1;
+        self.search_mut().prepare_to_search_after_deletion();
+        self.move_backwards();
+    }
+
     /// Reset, beginning a new line or token mode search.
     pub fn reset_to_mode(
         &mut self,

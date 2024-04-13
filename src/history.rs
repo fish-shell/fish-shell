@@ -1843,6 +1843,12 @@ impl HistorySearch {
         &self.orig_term
     }
 
+    pub fn prepare_to_search_after_deletion(&mut self) {
+        assert!(self.current_index != 0);
+        self.current_index -= 1;
+        self.current_item = None;
+    }
+
     /// Finds the next search result. Returns `true` if one was found.
     pub fn go_to_next_match(&mut self, direction: SearchDirection) -> bool {
         let invalid_index = match direction {

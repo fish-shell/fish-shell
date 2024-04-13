@@ -2562,6 +2562,16 @@ impl ReaderData {
                 self.insert_string(EditableLineTag::SearchField, &search_string);
             }
             rl::HistoryPagerDelete => {
+                // Also applies to ordinary history search.
+                if !self.history_search.is_at_end() {
+                    self.history
+                        .remove(self.history_search.current_result().to_owned());
+                    self.history.save();
+                    self.history_search.handle_deletion();
+                    self.update_command_line_from_history_search();
+                    self.inputter.function_set_status(true);
+                    return;
+                }
                 if !self.history_pager_active {
                     self.inputter.function_set_status(false);
                     return;
@@ -4674,6 +4684,7 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::HistorySearchForward
             | rl::HistoryTokenSearchBackward
             | rl::HistoryTokenSearchForward
+            | rl::HistoryPagerDelete
             | rl::BeginningOfHistory
             | rl::EndOfHistory
             | rl::Repaint

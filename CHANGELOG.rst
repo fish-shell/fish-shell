@@ -90,6 +90,7 @@ Scripting improvements
 - ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
 - ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
+- Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
 
 Interactive improvements
 ------------------------

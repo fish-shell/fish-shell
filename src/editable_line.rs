@@ -278,7 +278,8 @@ impl EditableLine {
             last_group_id = edit.group_id;
             self.undo_history.edits_applied += 1;
             apply_edit(&mut self.text, &mut self.colors, edit);
-            self.set_position(edit.cursor_position_before_undo.unwrap());
+            edit.cursor_position_before_undo
+                .map(|pos| self.set_position(pos));
             did_redo = true;
         }
 

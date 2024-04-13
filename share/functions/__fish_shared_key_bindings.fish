@@ -19,17 +19,10 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv left backward-char
     $legacy_bind --preset $argv -k right forward-char
     $legacy_bind --preset $argv -k left backward-char
-    $legacy_bind --preset $argv \e\[C forward-char
-    $legacy_bind --preset $argv \e\[D backward-char
-    # Some terminals output these when they're in in keypad mode.
-    $legacy_bind --preset $argv \eOC forward-char
-    $legacy_bind --preset $argv \eOD backward-char
 
     # Ctrl-left/right - these also work in vim.
     bind --preset $argv ctrl-right forward-word
     bind --preset $argv ctrl-left backward-word
-    $legacy_bind --preset $argv \e\[1\;5C forward-word
-    $legacy_bind --preset $argv \e\[1\;5D backward-word
 
     bind --preset $argv pageup beginning-of-history
     bind --preset $argv pagedown end-of-history
@@ -55,10 +48,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv -k down down-or-search
     bind --preset $argv up up-or-search
     $legacy_bind --preset $argv -k up up-or-search
-    $legacy_bind --preset $argv \e\[A up-or-search
-    $legacy_bind --preset $argv \e\[B down-or-search
-    $legacy_bind --preset $argv \eOA up-or-search
-    $legacy_bind --preset $argv \eOB down-or-search
 
     bind --preset $argv shift-right forward-bigword
     bind --preset $argv shift-left backward-bigword
@@ -71,12 +60,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv \e\eOD prevd-or-backward-word
     $legacy_bind --preset $argv \e\e\[C nextd-or-forward-word
     $legacy_bind --preset $argv \e\e\[D prevd-or-backward-word
-    $legacy_bind --preset $argv \eO3C nextd-or-forward-word
-    $legacy_bind --preset $argv \eO3D prevd-or-backward-word
-    $legacy_bind --preset $argv \e\[3C nextd-or-forward-word
-    $legacy_bind --preset $argv \e\[3D prevd-or-backward-word
-    $legacy_bind --preset $argv \e\[1\;3C nextd-or-forward-word
-    $legacy_bind --preset $argv \e\[1\;3D prevd-or-backward-word
     $legacy_bind --preset $argv \e\[1\;9C nextd-or-forward-word #iTerm2
     $legacy_bind --preset $argv \e\[1\;9D prevd-or-backward-word #iTerm2
 
@@ -86,12 +69,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv \e\eOB history-token-search-forward
     $legacy_bind --preset $argv \e\e\[A history-token-search-backward
     $legacy_bind --preset $argv \e\e\[B history-token-search-forward
-    $legacy_bind --preset $argv \eO3A history-token-search-backward
-    $legacy_bind --preset $argv \eO3B history-token-search-forward
-    $legacy_bind --preset $argv \e\[3A history-token-search-backward
-    $legacy_bind --preset $argv \e\[3B history-token-search-forward
-    $legacy_bind --preset $argv \e\[1\;3A history-token-search-backward
-    $legacy_bind --preset $argv \e\[1\;3B history-token-search-forward
     $legacy_bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2
     $legacy_bind --preset $argv \e\[1\;9B history-token-search-forward # iTerm2
     # Bash compatibility
@@ -106,9 +83,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv ctrl-u backward-kill-line
     bind --preset $argv ctrl-w backward-kill-path-component
     bind --preset $argv end end-of-line
-    $legacy_bind --preset $argv \e\[F end-of-line
     bind --preset $argv home beginning-of-line
-    $legacy_bind --preset $argv \e\[H beginning-of-line
 
     bind --preset $argv alt-d 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
     bind --preset $argv ctrl-d delete-or-exit

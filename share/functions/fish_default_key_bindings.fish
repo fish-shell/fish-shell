@@ -35,22 +35,12 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
-    $legacy_bind --preset $argv \eOC forward-char
-    $legacy_bind --preset $argv \eOD backward-char
-    $legacy_bind --preset $argv \e\[C forward-char
-    $legacy_bind --preset $argv \e\[D backward-char
     $legacy_bind --preset $argv -k right forward-char
     $legacy_bind --preset $argv -k left backward-char
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
     bind --preset $argv shift-backspace backward-delete-char
-
-    # for PuTTY
-    # https://github.com/fish-shell/fish-shell/issues/180
-    $legacy_bind --preset $argv \e\[1~ beginning-of-line
-    $legacy_bind --preset $argv \e\[3~ delete-char
-    $legacy_bind --preset $argv \e\[4~ end-of-line
 
     bind --preset $argv home beginning-of-line
     $legacy_bind --preset $argv -k home beginning-of-line
@@ -99,10 +89,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
             # This is a workaround, there will be additions in he future.
             $legacy_bind --preset $argv \e\[P delete-char
             $legacy_bind --preset $argv \e\[Z up-line
-        case 'rxvt*'
-            $legacy_bind --preset $argv \e\[8~ end-of-line
-            $legacy_bind --preset $argv \eOc forward-word
-            $legacy_bind --preset $argv \eOd backward-word
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:

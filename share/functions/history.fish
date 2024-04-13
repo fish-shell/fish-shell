@@ -70,7 +70,7 @@ function history --description "display or manipulate interactive command histor
     # command. This allows the flags to appear before or after the subcommand.
     if not set -q hist_cmd[1]
         and set -q argv[1]
-        if contains $argv[1] search delete merge save clear clear-session
+        if contains $argv[1] search delete merge save clear clear-session append
             set hist_cmd $argv[1]
             set -e argv[1]
         end
@@ -226,6 +226,13 @@ function history --description "display or manipulate interactive command histor
 
             builtin history clear-session -- $argv
             printf (_ "Command history for session cleared!\n")
+        case append
+            set -l newitem $argv
+            if not set -q argv[1]
+                read -P "Command: " newitem
+            end
+
+            builtin history append -- $newitem
         case '*'
             printf "%ls: unexpected subcommand '%ls'\n" $cmd $hist_cmd
             return 2

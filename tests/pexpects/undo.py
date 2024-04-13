@@ -12,12 +12,14 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
-sendline("bind Undo undo; bind Redo redo")
+sendline("set -g fish_autosuggestion_enabled 0")
+sendline("bind U,n,d,o undo; bind R,e,d,o redo")
 expect_prompt()
 
 send("echo word")
 expect_str("echo word")
-expect_str("echo word")  # Not sure why we get this twice.
+expect_str("echo word")
+expect_str("echo word")
 
 send("Undo")
 expect_str("echo")

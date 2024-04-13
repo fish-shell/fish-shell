@@ -5165,23 +5165,11 @@ pub fn completion_apply_to_command_line(
 
     let mut quote = None;
     let replaced = if do_escape {
-        // We need to figure out whether the token we complete has unclosed quotes. Since the token
-        // may be inside a command substitutions we must first determine the extents of the
-        // innermost command substitution.
-        let cmdsub_range = parse_util_cmdsubst_extent(command_line, cursor_pos);
-        // Find the last quote in the token to complete. By parsing only the string inside any
-        // command substitution, we prevent the tokenizer from treating the entire command
-        // substitution as one token.
-        let mut tokenizer =
-            Tokenizer::new(&command_line[cmdsub_range.clone()], TOK_ACCEPT_UNFINISHED);
-        let rel_pos = cursor_pos - cmdsub_range.start;
-        while let Some(cur_tok) = tokenizer.next() {
-            if cur_tok.type_ == TokenType::string
-                && cur_tok.location_in_or_at_end_of_source_range(rel_pos)
-            {
-                quote = get_quote(tokenizer.text_of(&cur_tok), rel_pos - cur_tok.offset());
-                break;
-            }
+        let mut tok = 0..0;
+        parse_util_token_extent(command_line, cursor_pos, &mut tok, None);
+        // Find the last quote in the token to complete.
+        if tok.contains(&cursor_pos) || cursor_pos == tok.end {
+            quote = get_quote(&command_line[tok.clone()], cursor_pos - tok.start);
         }
 
         // If the token is reported as unquoted, but ends with a (unescaped) quote, and we can

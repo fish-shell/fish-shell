@@ -29,6 +29,9 @@ expect_str(r"<beta >")
 send(r"echo alpha ?")
 expect_str(r"<echo alpha >")
 
+send(r"alpha;?")
+expect_str(r"<beta;>")
+
 # Abbreviation expansions may have multiple words.
 sendline(r"abbr --add emacsnw emacs -nw -l")
 expect_prompt()

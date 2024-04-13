@@ -465,7 +465,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         let do_complete_param = match do_complete_param {
             None => {
                 // No argument given, try to use the current commandline.
-                let commandline_state = commandline_get_state();
+                let commandline_state = commandline_get_state(true);
                 if !commandline_state.initialized {
                     // This corresponds to using 'complete -C' in non-interactive mode.
                     // See #2361    .

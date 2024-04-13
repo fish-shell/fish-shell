@@ -156,8 +156,8 @@ static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
 /// This is set from a signal handler.
 static SIGHUP_RECEIVED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-/// A singleton snapshot of the reader state. This is updated when the reader changes. This is
-/// factored out for thread-safety reasons: it may be fetched on a background thread.
+/// A singleton snapshot of the reader state. This is factored out for thread-safety reasons:
+/// it may be fetched on a background thread.
 fn commandline_state_snapshot() -> MutexGuard<'static, CommandlineState> {
     static STATE: Mutex<CommandlineState> = Mutex::new(CommandlineState::new());
     STATE.lock().unwrap()
@@ -233,7 +233,6 @@ fn reader_push_ret(
     if reader_data_stack().len() == 1 {
         reader_interactive_init(parser);
     }
-    data.update_commandline_state();
     data
 }
 
@@ -252,7 +251,6 @@ pub fn reader_pop() {
         new_reader
             .screen
             .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
-        new_reader.update_commandline_state();
     } else {
         reader_interactive_destroy();
         *commandline_state_snapshot() = CommandlineState::new();
@@ -907,7 +905,6 @@ pub fn reader_execute_readline_cmd(ch: CharEvent) {
         }
         data.save_screen_state();
         data.handle_char_event(Some(ch));
-        data.update_commandline_state();
     }
 }
 
@@ -940,7 +937,10 @@ pub fn reader_readline(nchars: usize) -> Option<WString> {
 }
 
 /// Get the command line state. This may be fetched on a background thread.
-pub fn commandline_get_state() -> CommandlineState {
+pub fn commandline_get_state(sync: bool) -> CommandlineState {
+    if sync {
+        current_data().map(|data| data.update_commandline_state());
+    }
     commandline_state_snapshot().clone()
 }
 
@@ -1182,27 +1182,34 @@ impl ReaderData {
                 self.pager_selection_changed();
             }
         }
-        // Ensure that the commandline builtin sees our new state.
-        self.update_commandline_state();
     }
 
     /// Reflect our current data in the command line state snapshot.
-    /// This is called before we run any fish script, so that the commandline builtin can see our
-    /// state.
     fn update_commandline_state(&self) {
         let mut snapshot = commandline_state_snapshot();
-        snapshot.text = self.command_line.text().to_owned();
+        if snapshot.text != self.command_line.text() {
+            snapshot.text = self.command_line.text().to_owned();
+        }
         snapshot.cursor_pos = self.command_line.position();
         snapshot.history = Some(self.history.clone());
         snapshot.selection = self.get_selection();
         snapshot.pager_mode = !self.pager.is_empty();
         snapshot.pager_fully_disclosed = self.current_page_rendering.remaining_to_disclose == 0;
-        snapshot.search_field = self.pager.search_field_shown.then(|| {
-            (
-                self.pager.search_field_line.text().to_owned(),
-                self.pager.search_field_line.position(),
-            )
-        });
+        if snapshot
+            .search_field
+            .as_ref()
+            .is_none_or(|(text, position)| {
+                text != self.pager.search_field_line.text()
+                    || *position != self.pager.search_field_line.position()
+            })
+        {
+            snapshot.search_field = self.pager.search_field_shown.then(|| {
+                (
+                    self.pager.search_field_line.text().to_owned(),
+                    self.pager.search_field_line.position(),
+                )
+            });
+        }
         snapshot.search_mode = self.history_search.active();
         snapshot.initialized = true;
     }
@@ -1211,7 +1218,7 @@ impl ReaderData {
     /// incorporating changes from the commandline builtin.
     fn apply_commandline_state_changes(&mut self) {
         // Only the text and cursor position may be changed.
-        let state = commandline_get_state();
+        let state = commandline_get_state(false);
         if state.text != self.command_line.text()
             || state.cursor_pos != self.command_line.position()
         {
@@ -1904,7 +1911,6 @@ impl ReaderData {
 
     /// Run a sequence of commands from an input binding.
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
-        self.update_commandline_state();
         self.eval_bind_cmd(cmd);
 
         // Restore tty to shell modes.
@@ -4554,7 +4560,6 @@ impl ReaderData {
         let (elt, el) = self.active_edit_line();
         if self.conf.expand_abbrev_ok && elt == EditableLineTag::Commandline {
             // Try expanding abbreviations.
-            self.update_commandline_state();
             let cursor_pos = el.position().saturating_sub(cursor_backtrack);
             if let Some(replacement) =
                 reader_expand_abbreviation_at_cursor(el.text(), cursor_pos, self.parser())
@@ -5283,9 +5288,6 @@ impl ReaderData {
         // Construct a copy of the string from the beginning of the command substitution
         // up to the end of the token we're completing.
         let cmdsub = &el.text()[cmdsub_range.start..token_range.end];
-
-        // Ensure that `commandline` inside the completions gets the current state.
-        self.update_commandline_state();
 
         let (comp, _needs_load) = complete(
             cmdsub,

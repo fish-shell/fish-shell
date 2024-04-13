@@ -16,6 +16,7 @@ enum HistCmd {
     #[default]
     HIST_UNDEF,
     HIST_CLEAR_SESSION,
+    HIST_APPEND,
 }
 
 impl HistCmd {
@@ -28,6 +29,7 @@ impl HistCmd {
             HistCmd::HIST_SAVE => L!("save"),
             HistCmd::HIST_UNDEF => panic!(),
             HistCmd::HIST_CLEAR_SESSION => L!("clear-session"),
+            HistCmd::HIST_APPEND => L!("append"),
         }
     }
 }
@@ -42,6 +44,7 @@ impl TryFrom<&wstr> for HistCmd {
             _ if val == "merge" => Ok(HistCmd::HIST_MERGE),
             _ if val == "save" => Ok(HistCmd::HIST_SAVE),
             _ if val == "clear-session" => Ok(HistCmd::HIST_CLEAR_SESSION),
+            _ if val == "append" => Ok(HistCmd::HIST_APPEND),
             _ => Err(()),
         }
     }
@@ -343,6 +346,11 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             history.save();
         }
         HistCmd::HIST_UNDEF => panic!("Unexpected HIST_UNDEF seen"),
+        HistCmd::HIST_APPEND => {
+            for &arg in args {
+                history.add_commandline(arg.to_owned());
+            }
+        }
     }
 
     status

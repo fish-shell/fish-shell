@@ -17,6 +17,7 @@ Synopsis
     history save
     history clear
     history clear-session
+    history append COMMAND ...
 
 Description
 -----------
@@ -42,6 +43,9 @@ The following operations (sub-commands) are available:
 
 **clear-session**
     Clears the history file from all activity of the current session. Note: If ``history merge`` or ``builtin history merge`` is run in a session, only the history after this will be erased.
+
+**append**
+    Appends commands to the history without needing to execute them.
 
 The following options are available:
 
@@ -83,10 +87,10 @@ Example
 
     history clear
     # Deletes all history items
-    
+
     history search --contains "foo"
     # Outputs a list of all previous commands containing the string "foo".
-    
+
     history delete --prefix "foo"
     # Interactively deletes commands which start with "foo" from the history.
     # You can select more than one entry by entering their IDs separated by a space.

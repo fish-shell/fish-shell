@@ -1493,7 +1493,6 @@ impl History {
         self.imp().add(item, pending, true)
     }
 
-    /// Exposed for testing.
     pub fn add_commandline(&self, s: WString) {
         let mut imp = self.imp();
         let when = imp.timestamp_now();

@@ -197,6 +197,10 @@ fn test_history() {
         assert_eq!(bef.get_required_paths(), aft.get_required_paths());
     }
 
+    // Items should be explicitly added to the history.
+    history.add_commandline(L!("test-command").into());
+    assert!(history_contains(&history, L!("test-command")));
+
     // Clean up after our tests.
     history.clear();
 }

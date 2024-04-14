@@ -1,5 +1,7 @@
+use crate::common::char_offset;
 use crate::common::wcs2osstring;
 use crate::common::ScopeGuard;
+use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
 use crate::parser::Parser;
@@ -109,6 +111,13 @@ fn test_universal_output() {
             flag_pathvar,
         ),
     );
+    vars.insert(
+        L!("varF").to_owned(),
+        EnvVar::new_vec(
+            vec![WString::from_chars([char_offset(ENCODE_DIRECT_BASE, 0xfc)])],
+            EnvVarFlags::empty(),
+        ),
+    );
 
     let text = EnvUniversal::serialize_with_vars(&vars);
     let expected = concat!(
@@ -119,6 +128,7 @@ fn test_universal_output() {
         "SETUVAR varC:ValC1\n",
         "SETUVAR --export --path varD:ValD1\n",
         "SETUVAR --path varE:ValE1\\x1eValE2\n",
+        "SETUVAR varF:\\xfc\n",
     )
     .as_bytes();
     assert_eq!(text, expected);

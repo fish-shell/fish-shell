@@ -8,6 +8,7 @@ use crate::fallback::fish_wcwidth;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::key;
 use crate::libc::MB_CUR_MAX;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::termsize::Termsize;
@@ -1783,7 +1784,7 @@ pub fn is_windows_subsystem_for_linux() -> bool {
 // TODO: Actually implement the replacement as documented above.
 pub fn fish_reserved_codepoint(c: char) -> bool {
     (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
-        || (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END)
+        || (c >= key::Backspace && c < ENCODE_DIRECT_END)
 }
 
 pub fn redirect_tty_output() {

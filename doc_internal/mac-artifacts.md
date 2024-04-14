@@ -23,10 +23,10 @@ Steps:
 
 ## Building locally (no code signing)
 
-To build locally without notarizing and code signing, use the `build_tools/make_pkg.sh` script:
+To build locally without notarizing and code signing, use the `build_tools/make_macos_pkg.sh` script:
 
 ```
-> ./build_tools/make_pkg.sh
+> ./build_tools/make_macos_pkg.sh
 ```
 
 Packages will be placed in `~/fish_built` by default.
@@ -45,7 +45,7 @@ You will need the following:
 An example run:
 
 ```
-> ./build_tools/make_pkg.sh -s \
+> ./build_tools/make_macos_pkg.sh -s \
     -f fish-developer-id-application.p12 \
     -i fish-developer-id-installer.p12 \
     -p "$NOTARIZE_PASSWORD"  \

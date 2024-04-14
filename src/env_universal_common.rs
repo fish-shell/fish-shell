@@ -10,7 +10,7 @@ use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
-use crate::wchar::prelude::*;
+use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
 use crate::wutil::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,
@@ -904,6 +904,8 @@ fn full_escape(input: &wstr) -> WString {
             out.push(c);
         } else if c.is_ascii() {
             sprintf!(=> &mut out, "\\x%.2x", u32::from(c));
+        } else if let Some(encoded_byte) = decode_byte_from_char(c) {
+            sprintf!(=> &mut out, "\\x%.2x", u32::from(encoded_byte));
         } else if u32::from(c) < 65536 {
             sprintf!(=> &mut out, "\\u%.4x", u32::from(c));
         } else {

@@ -2566,8 +2566,7 @@ impl ReaderData {
             rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
                 if !self.history_search.is_at_end() {
-                    self.history
-                        .remove(self.history_search.current_result().to_owned());
+                    self.history.remove(self.history_search.current_result());
                     self.history.save();
                     self.history_search.handle_deletion();
                     self.update_command_line_from_history_search();
@@ -2582,7 +2581,7 @@ impl ReaderData {
                 if let Some(completion) =
                     self.pager.selected_completion(&self.current_page_rendering)
                 {
-                    self.history.remove(completion.completion.clone());
+                    self.history.remove(&completion.completion);
                     self.history.save();
                     self.fill_history_pager(
                         HistoryPagerInvocation::Refresh,

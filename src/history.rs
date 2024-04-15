@@ -1015,9 +1015,9 @@ impl HistoryImpl {
     }
 
     /// Remove a history item.
-    fn remove(&mut self, str_to_remove: WString) {
+    fn remove(&mut self, str_to_remove: &wstr) {
         // Add to our list of deleted items.
-        self.deleted_items.insert(str_to_remove.clone(), false);
+        self.deleted_items.insert(str_to_remove.to_owned(), false);
 
         for idx in (0..self.new_items.len()).rev() {
             let matched = self.new_items[idx].str() == str_to_remove;
@@ -1528,7 +1528,7 @@ impl History {
     }
 
     /// Remove a history item.
-    pub fn remove(&self, s: WString) {
+    pub fn remove(&self, s: &wstr) {
         self.imp().remove(s)
     }
 

@@ -12,7 +12,7 @@ use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
 };
-use crate::fds::open_dir;
+use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
@@ -34,7 +34,6 @@ use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
-use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
@@ -353,7 +352,7 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap()) {
+        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }

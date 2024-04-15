@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     env::{EnvMode, Environment},
-    fds::wopen_dir,
+    fds::{wopen_dir, BEST_O_SEARCH},
     path::path_apply_cdpath,
     wutil::{normalize_path, wperror, wreadlink},
 };
@@ -86,7 +86,7 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
 
         errno::set_errno(Errno(0));
 
-        let res = wopen_dir(&norm_dir).map_err(|err| err as i32);
+        let res = wopen_dir(&norm_dir, BEST_O_SEARCH).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
             if unsafe { fchdir(fd.as_raw_fd()) } == 0 {

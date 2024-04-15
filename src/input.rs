@@ -653,15 +653,26 @@ impl EventQueuePeeker<'_> {
         // Grab a new event if we have exhausted what we have already peeked.
         // Use either readch or readch_timed, per our param.
         if self.idx == self.peeked.len() {
-            let Some(newevt) = (if escaped {
+            let newevt = if escaped {
                 FLOG!(reader, "reading timed escape");
-                self.event_queue.readch_timed_esc()
+                match self.event_queue.readch_timed_esc(style) {
+                    Ok(evt) => evt,
+                    Err(timed_out) => {
+                        if timed_out {
+                            self.had_timeout = true;
+                        }
+                        return false;
+                    }
+                }
             } else {
                 FLOG!(reader, "readch timed sequence key");
-                self.event_queue.readch_timed_sequence_key()
-            }) else {
-                self.had_timeout = true;
-                return false;
+                match self.event_queue.readch_timed_sequence_key() {
+                    Some(evt) => evt,
+                    None => {
+                        self.had_timeout = true;
+                        return false;
+                    }
+                }
             };
             FLOG!(reader, format!("adding peeked {:?}", newevt));
             self.peeked.push(newevt);

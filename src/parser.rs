@@ -353,7 +353,7 @@ impl Parser {
             global_event_blocks: AtomicU64::new(0),
         });
 
-        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), Mode::empty()) {
+        match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap()) {
             Ok(fd) => {
                 result.libdata_mut().cwd_fd = Some(Arc::new(fd));
             }

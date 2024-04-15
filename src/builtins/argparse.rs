@@ -754,9 +754,8 @@ fn argparse_parse_flags<'args>(
     let mut long_options = vec![];
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
-    let mut long_idx: usize = usize::MAX;
     let mut w = WGetopter::new(&short_options, &long_options, args);
-    while let Some(opt) = w.opt_at(&mut long_idx) {
+    while let Some((opt, long_idx)) = w.next_opt_indexed() {
         let retval = match opt {
             ':' => {
                 builtin_missing_argument(
@@ -825,7 +824,6 @@ fn argparse_parse_flags<'args>(
         if retval != STATUS_CMD_OK {
             return retval;
         }
-        long_idx = usize::MAX;
     }
 
     *optind = w.wopt_index;

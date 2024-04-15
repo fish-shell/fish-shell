@@ -76,8 +76,7 @@ pub struct WOption<'a> {
     pub name: &'a wstr,
     /// Whether the option takes an argument.
     pub arg_type: ArgType,
-    /// Contains the return value of the function call.
-    // unsure as to what this does in this version of the code
+    /// If the option is found during scanning, this value will be returned to identify it.
     pub val: char,
 }
 
@@ -99,6 +98,13 @@ enum LongOptMatch<'a> {
     Ambiguous,
     #[default]
     NoMatch,
+}
+
+/// Used internally by [Wgetopter::next_argv]. See there for further details.
+enum NextArgv {
+    Finished,
+    UnpermutedNonOption,
+    FoundOption,
 }
 
 pub struct WGetopter<'opts, 'args, 'argarray> {
@@ -168,14 +174,18 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.wgetopt_inner(&mut ignored)
     }
 
-    /// Try to get an option at a specific index (based on
-    /// the list of long-named options).
-    pub fn opt_at(&mut self, longopt_index: &mut usize) -> Option<char> {
-        self.wgetopt_inner(longopt_index)
+    // Tries to get the next option, additionally returning the index of the long option
+    // if found.
+    pub fn next_opt_indexed(&mut self) -> Option<(char, usize)> {
+        let mut longopt_index = 0;
+        let option = self.wgetopt_inner(&mut longopt_index);
+        option.map(|c| (c, longopt_index))
     }
 
-    /// Divides `argv` into two lists, the one which contains all non-options skipped
-    /// during scanning, and the other which contains all options scanned afterwards.
+    /// Swaps two subsequences in `argv`, one which contains all non-options skipped
+    /// during scanning (defined by the range `[first_nonopt, last_nonopt)`), and
+    /// the other containing all options scanned after (defined by the range
+    /// `[last_nonopt, wopt_index)`).
     ///
     /// Elements are then swapped between the list so that all options end up
     /// in the former list, and non-options in the latter.
@@ -184,41 +194,29 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let middle = self.last_nonopt;
         let mut right = self.wopt_index;
 
-        // If the two lists are equal in length, we swap them directly.
-        // Otherwise we do it manually.
-        if right - middle == middle - left {
-            // ... I *think* this implementation makes sense?
-            let (front, back) = self
-                .argv
-                .get_mut(left..right)
-                .unwrap()
-                .split_at_mut(middle - left);
-            front.swap_with_slice(back);
-        } else {
-            while right > middle && middle > left {
-                if right - middle > middle - left {
-                    // The left segment is the short one.
-                    let len = middle - left;
+        while right > middle && middle > left {
+            if right - middle > middle - left {
+                // The left segment is the short one.
+                let len = middle - left;
 
-                    // Swap it with the top part of the right segment.
-                    for i in 0..len {
-                        self.argv.swap(left + i, right - len + i);
-                    }
-
-                    // Exclude the moved elements from further swapping.
-                    right -= len;
-                } else {
-                    // The right segment is the short one.
-                    let len = right - middle;
-
-                    // Swap it with the bottom part of the left segment.
-                    for i in 0..len {
-                        self.argv.swap(left + i, middle + i);
-                    }
-
-                    // Exclude the moved elements from further swapping.
-                    left += len;
+                // Swap it with the top part of the right segment.
+                for i in 0..len {
+                    self.argv.swap(left + i, right - len + i);
                 }
+
+                // Exclude the moved elements from further swapping.
+                right -= len;
+            } else {
+                // The right segment is the short one.
+                let len = right - middle;
+
+                // Swap it with the bottom part of the left segment.
+                for i in 0..len {
+                    self.argv.swap(left + i, middle + i);
+                }
+
+                // Exclude the moved elements from further swapping.
+                left += len;
             }
         }
 
@@ -258,9 +256,8 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         self.initialized = true;
     }
 
-    /// Advance to the next element in `argv`. Returns nothing on success, or
-    /// an optional value if we need to stop.
-    fn next_argv(&mut self) -> Result<(), Option<char>> {
+    /// Advance to the next element in `argv`.
+    fn next_argv(&mut self) -> NextArgv {
         let argc = self.argv.len();
 
         if self.ordering == Ordering::Permute {
@@ -310,19 +307,19 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
                 self.wopt_index = self.first_nonopt;
             }
 
-            return Err(None);
+            return NextArgv::Finished;
         }
 
-        // If we find a non-option and don't permute it, either stop the scan or describe
+        // If we find a non-option and don't permute it, either stop the scan or signal
         // it to the caller and pass it by.
         if self.argv[self.wopt_index].char_at(0) != '-' || self.argv[self.wopt_index].len() == 1 {
             if self.ordering == Ordering::RequireOrder {
-                return Err(None);
+                return NextArgv::Finished;
             }
 
             self.woptarg = Some(self.argv[self.wopt_index]);
             self.wopt_index += 1;
-            return Err(Some(NON_OPTION_CHAR));
+            return NextArgv::UnpermutedNonOption;
         }
 
         // We've found an option, so we need to skip the initial punctuation.
@@ -333,7 +330,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         };
 
         self.remaining_text = self.argv[self.wopt_index][skip..].into();
-        Ok(())
+        NextArgv::FoundOption
     }
 
     /// Check for a matching short-named option.
@@ -474,11 +471,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     /// Check for a matching long-named option.
     fn handle_long_opt(&mut self, longopt_index: &mut usize) -> Option<char> {
-        let name_end = self
-            .remaining_text
-            .chars()
-            .take_while(|c| !matches!(c, '\0' | '='))
-            .count();
+        let name_end = if let Some(index) = self.remaining_text.find(['=']) {
+            index
+        } else {
+            self.remaining_text.len()
+        };
 
         match self.find_matching_long_opt(name_end) {
             LongOptMatch::Exact(opt, index) | LongOptMatch::NonExact(opt, index) => {
@@ -509,8 +506,17 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         None
     }
 
-    // cut out a lot of documentation here, but I think everything important was
-    // covered by the remaining comments
+    /// Goes through `argv` to try and find options.
+    ///
+    /// Any element that begins with `-` or `--` and is not just `-` or `--` is an option
+    /// element. The characters of this element (aside from the initial `-` or `--`) are
+    /// option characters. Repeated calls return each option character successively.
+    ///
+    /// Options that begin with `--` are long-named. Long-named options can be abbreviated
+    /// so long as the abbreviation is unique or is an exact match for some defined option.
+    ///
+    /// Arguments to options follow their option name, optionally separated by an `=`.
+    ///
     /// `longopt_index` contains the index of the most recent long-named option
     /// found by the most recent call. Returns the next short-named option if
     /// found.
@@ -521,8 +527,10 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
         self.woptarg = None;
         if self.remaining_text.is_empty() {
-            if let Err(narg) = self.next_argv() {
-                return narg;
+            match self.next_argv() {
+                NextArgv::UnpermutedNonOption => return Some(NON_OPTION_CHAR),
+                NextArgv::Finished => return None,
+                NextArgv::FoundOption => (),
             }
         }
 

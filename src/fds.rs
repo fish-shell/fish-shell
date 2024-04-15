@@ -272,11 +272,19 @@ mod o_search {
     pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_SEARCH) };
     /// On Linux we can use O_PATH, it has nearly the same semantics. we can use the fd for openat / fchdir, with only requiring
     /// x permission on the directory.
-    #[cfg(all(not(any(target_os = "macos", target_os = "freebsd")), any(target_os = "linux", target_os = "android")))]
+    #[cfg(all(
+        not(any(target_os = "macos", target_os = "freebsd")),
+        any(target_os = "linux", target_os = "android")
+    ))]
     pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_PATH) };
 
     /// Fall back to O_RDONLY, this is what fish did before.
-    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "freebsd", target_os = "macos")))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "android",
+        target_os = "freebsd",
+        target_os = "macos"
+    )))]
     pub const BEST_O_SEARCH: OFlag = OFlag::O_RDONLY;
 }
 
@@ -288,7 +296,8 @@ pub fn wopen_dir(pathname: &wstr, flags: OFlag) -> nix::Result<OwnedFd> {
 
 /// Narrow version of wopen_dir().
 pub fn open_dir(path: &CStr, flags: OFlag) -> nix::Result<OwnedFd> {
-    open_cloexec(path, flags | OFlag::O_DIRECTORY, nix::sys::stat::Mode::empty()).map(OwnedFd::from)
+    let mode = nix::sys::stat::Mode::empty();
+    open_cloexec(path, flags | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
 }
 
 /// Close a file descriptor \p fd, retrying on EINTR.

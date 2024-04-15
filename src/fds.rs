@@ -261,13 +261,13 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
 
 /// Wide character version of open_dir() that also sets the close-on-exec flag (atomically when
 /// possible).
-pub fn wopen_dir(pathname: &wstr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
-    open_dir(wcs2zstring(pathname).as_c_str(), mode)
+pub fn wopen_dir(pathname: &wstr) -> nix::Result<OwnedFd> {
+    open_dir(wcs2zstring(pathname).as_c_str())
 }
 
 /// Narrow version of wopen_dir().
-pub fn open_dir(path: &CStr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
-    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
+pub fn open_dir(path: &CStr) -> nix::Result<OwnedFd> {
+    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, nix::sys::stat::Mode::empty()).map(OwnedFd::from)
 }
 
 /// Close a file descriptor `fd`, retrying on EINTR.

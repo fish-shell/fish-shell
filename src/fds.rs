@@ -259,15 +259,36 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     }
 }
 
+/// POSIX specifies an open option O_SEARCH for opening directories for later
+/// `fchdir` or `openat`, not for `readdir`. The read permission is not checked,
+/// and the x permission is checked on opening. Not all platforms have this,
+/// so we fall back to O_PATH or O_RDONLY according to the platform.
+pub use o_search::BEST_O_SEARCH;
+
+mod o_search {
+    use super::OFlag;
+    /// On FreeBSD or MacOS we have O_SEARCH.
+    #[cfg(any(target_os = "freebsd", target_os = "macos"))]
+    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_SEARCH) };
+    /// On Linux we can use O_PATH, it has nearly the same semantics. we can use the fd for openat / fchdir, with only requiring
+    /// x permission on the directory.
+    #[cfg(all(not(any(target_os = "macos", target_os = "freebsd")), any(target_os = "linux", target_os = "android")))]
+    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_PATH) };
+
+    /// Fall back to O_RDONLY, this is what fish did before.
+    #[cfg(not(any(target_os = "linux", target_os = "android", target_os = "freebsd", target_os = "macos")))]
+    pub const BEST_O_SEARCH: OFlag = OFlag::O_RDONLY;
+}
+
 /// Wide character version of open_dir() that also sets the close-on-exec flag (atomically when
 /// possible).
-pub fn wopen_dir(pathname: &wstr) -> nix::Result<OwnedFd> {
-    open_dir(wcs2zstring(pathname).as_c_str())
+pub fn wopen_dir(pathname: &wstr, flags: OFlag) -> nix::Result<OwnedFd> {
+    open_dir(wcs2zstring(pathname).as_c_str(), flags)
 }
 
 /// Narrow version of wopen_dir().
-pub fn open_dir(path: &CStr) -> nix::Result<OwnedFd> {
-    open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, nix::sys::stat::Mode::empty()).map(OwnedFd::from)
+pub fn open_dir(path: &CStr, flags: OFlag) -> nix::Result<OwnedFd> {
+    open_cloexec(path, flags | OFlag::O_DIRECTORY, nix::sys::stat::Mode::empty()).map(OwnedFd::from)
 }
 
 /// Close a file descriptor `fd`, retrying on EINTR.

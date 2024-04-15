@@ -7,6 +7,7 @@ use crate::common::{
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
+use crate::input::KeyNameStyle;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
     Key, Modifiers,
@@ -993,12 +994,16 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
-    fn readch_timed_esc(&mut self) -> Option<CharEvent> {
+    fn readch_timed_esc(&mut self, style: &KeyNameStyle) -> Result<CharEvent, bool> {
         let wait_ms = WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed);
         if wait_ms == 0 {
-            return None;
+            if *style == KeyNameStyle::Plain {
+                return self.readch_timed_sequence_key().ok_or(true);
+            }
+            return Err(false); // Not timed out
         }
         self.readch_timed(WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed))
+            .ok_or(true) // Timed out
     }
 
     fn readch_timed_sequence_key(&mut self) -> Option<CharEvent> {

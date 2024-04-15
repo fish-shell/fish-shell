@@ -55,9 +55,6 @@ end" >$__fish_config_dir/config.fish
         __init_uvar fish_color_cwd green
         __init_uvar fish_color_cwd_root red
 
-        # Background color for search matches
-        __init_uvar fish_color_search_match bryellow --background=brblack
-
         # Background color for selections
         __init_uvar fish_color_selection white --bold --background=brblack
 
@@ -74,6 +71,13 @@ end" >$__fish_config_dir/config.fish
         # Directory history colors
         #
         __init_uvar fish_color_history_current --bold
+    end
+    if test $__fish_initialized -lt 3800
+        # Background color for search matches
+        __init_uvar fish_color_search_match white --background=brblack
+        if test "$fish_color_search_match[1]" = bryellow
+            set --universal fish_color_search_match[1] white
+        end
     end
 
     #
@@ -227,7 +231,7 @@ end" >$__fish_config_dir/config.fish
 
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
-    set __fish_initialized 3400
+    set __fish_initialized 3800
 
     functions -e __fish_config_interactive
 end

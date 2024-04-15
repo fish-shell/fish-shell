@@ -1433,6 +1433,7 @@ impl ReaderData {
             }
 
             for color in &mut colors[data.history_search_range.unwrap().start()..end] {
+                color.foreground = HighlightRole::search_match;
                 color.background = HighlightRole::search_match;
             }
         }
@@ -3316,7 +3317,8 @@ impl ReaderData {
         // Save off the colors and set the background.
         let saved_colors = data.colors.clone();
         for i in 0..self.command_line.position() {
-            data.colors[i] = HighlightSpec::with_bg(HighlightRole::search_match);
+            data.colors[i].foreground = HighlightRole::search_match;
+            data.colors[i].background = HighlightRole::search_match;
         }
         self.rendered_layout = data.clone(); // need to copy the data since we will use it again.
         self.paint_layout(L!("flash"));

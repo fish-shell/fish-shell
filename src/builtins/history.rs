@@ -307,8 +307,8 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 return STATUS_INVALID_ARGS;
             }
 
-            for &delete_string in args {
-                history.remove(delete_string.to_owned());
+            for delete_string in args {
+                history.remove(delete_string);
             }
         }
         HistCmd::HIST_CLEAR => {

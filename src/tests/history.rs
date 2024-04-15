@@ -147,7 +147,7 @@ fn test_history() {
     // Test item removal case-sensitive.
     let mut searcher = HistorySearch::new(history.clone(), L!("Alpha").to_owned());
     test_history_matches!(searcher, vec![L!("Alpha")]);
-    history.remove(L!("Alpha").to_owned());
+    history.remove(L!("Alpha"));
     let mut searcher = HistorySearch::new(history.clone(), L!("Alpha").to_owned());
     test_history_matches!(searcher, vec![]);
 

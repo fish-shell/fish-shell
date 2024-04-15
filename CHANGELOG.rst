@@ -26,6 +26,7 @@ Notable backwards-incompatible changes
   including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
   Depending on terminal support, this allows to bind a lot more key combinations,
   including arbitrary combinations of modifiers ``ctrl``, ``alt`` and ``shift``.
+  Previously one could only use the Control key for the 32 ASCII control characters.
 
   This comes with a new syntax for specifying keys to builtin ``bind``.
   The new syntax introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point.
@@ -39,10 +40,11 @@ Notable backwards-incompatible changes
       Since ``,`` and ``-`` act as separators, there are some cases where they need to be written as ``comma`` and ``minus`` respectively.
   - To minimize gratuitous breakage, the key argument to ``bind`` is parsed using the old syntax in two cases:
 
-    - If key starts with a raw escape character (``\e``) or a raw ASCII control character (``\c``).
-    - If key consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
+    - If the key argument starts with a raw escape character (``\e``). Besides backwards compatibility, these "raw" bindings can be useful for keys that fish can't decode yet.
+    - If the key argument consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
 
-- Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize. In particular, some terminals will display the raw sequences instead of silently ignoring them.
+- Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize.
+  The typical problem is that terminals echo the raw sequences sent by fish instead of silently ignoring them.
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
   The seed was never guaranteed to give the same result across systems,
@@ -63,7 +65,7 @@ Notable improvements and fixes
 - New function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`Control-C` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
 - The :kbd:`Control-R` history search now uses glob syntax (:issue:`10131`).
-- The :kbd:`Control-R` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line commandline by recalling previous commands.
+- The :kbd:`Control-R` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line command by recalling previous commands.
 
 Deprecations and removed features
 ---------------------------------

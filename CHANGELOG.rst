@@ -101,6 +101,7 @@ Interactive improvements
 - Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
 - Autosuggestions were sometimes not shown after recalling a line from history, which has been fixed (:issue:`10287`).
 - Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block (:issue:`5274`).
+- Up-arrow search matches are no longer highlighted with low contrast.
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
 - Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
 - `fish_vi_cursor` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).

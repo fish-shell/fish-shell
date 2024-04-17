@@ -44,8 +44,7 @@ complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 
 # Remote path
 # Get the list of remote files from the scp target.
-string match -rq 'OpenSSH(_for_Windows)?_(?<major>\d+)\.*' -- (ssh -V 2>&1)
-if test "$major" -ge 9
+if string match -rq 'OpenSSH(_for_Windows)?_(?<major>\d+)\.*' -- (ssh -V 2>&1) && test "$major" -ge 9
     complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a "
     (__scp_remote_target):( \
             command ssh (__scp2ssh_port_number) -o 'BatchMode yes' (__scp_remote_target) command\ ls\ -dp\ (__scp_remote_path_prefix)\* 2>/dev/null

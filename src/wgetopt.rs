@@ -197,6 +197,7 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         let mut left = self.first_nonopt;
         let middle = self.last_nonopt;
         let mut right = self.wopt_index;
+        debug_assert!(left <= middle && middle <= right, "Indexes out of order");
 
         while right > middle && middle > left {
             if right - middle > middle - left {
@@ -560,5 +561,43 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
         }
 
         Some(self.handle_short_opt())
+    }
+}
+
+#[test]
+fn test_exchange() {
+    let base_argv = [
+        L!("0"),
+        L!("1"),
+        L!("2"),
+        L!("3"),
+        L!("4"),
+        L!("5"),
+        L!("6"),
+    ];
+    let argc = base_argv.len();
+    for start in 0..=argc {
+        for mid in start..=argc {
+            for end in mid..=argc {
+                let mut argv: Vec<&wstr> = base_argv.to_vec();
+                // After exchange, we expect the start..mid and mid..end ranges to be swapped.
+                let mut expected = argv[mid..end].to_vec();
+                expected.extend(argv[start..mid].iter());
+
+                let mut w = WGetopter::new(L!(""), &[], &mut argv);
+
+                w.first_nonopt = start;
+                w.last_nonopt = mid;
+                w.wopt_index = end;
+                w.exchange();
+
+                // Non-options were permuted to the end.
+                let options_scanned = end - mid;
+                assert_eq!(w.first_nonopt, start + options_scanned);
+                assert_eq!(w.last_nonopt, mid + options_scanned);
+                assert_eq!(w.wopt_index, end);
+                assert_eq!(&w.argv[start..end], expected);
+            }
+        }
     }
 }

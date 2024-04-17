@@ -37,7 +37,7 @@ fn string_unknown_option(parser: &Parser, streams: &mut IoStreams, subcmd: &wstr
 
 trait StringSubCommand<'args> {
     const SHORT_OPTIONS: &'static wstr;
-    const LONG_OPTIONS: &'static [woption<'static>];
+    const LONG_OPTIONS: &'static [WOption<'static>];
 
     /// Parse and store option specified by the associated short or long option.
     fn parse_opt(
@@ -57,29 +57,35 @@ trait StringSubCommand<'args> {
         let mut args_read = Vec::with_capacity(args.len());
         args_read.extend_from_slice(args);
 
-        let mut w = wgetopter_t::new(Self::SHORT_OPTIONS, Self::LONG_OPTIONS, args);
-        while let Some(c) = w.wgetopt_long() {
+        let mut w = WGetopter::new(Self::SHORT_OPTIONS, Self::LONG_OPTIONS, args);
+        while let Some(c) = w.next_opt() {
             match c {
                 ':' => {
                     streams.err.append(L!("string ")); // clone of string_error
-                    builtin_missing_argument(parser, streams, cmd, args_read[w.woptind - 1], false);
+                    builtin_missing_argument(
+                        parser,
+                        streams,
+                        cmd,
+                        args_read[w.wopt_index - 1],
+                        false,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    string_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                    string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 c => {
                     let retval = self.parse_opt(cmd, c, w.woptarg);
                     if let Err(e) = retval {
-                        e.print_error(&args_read, parser, streams, w.woptarg, w.woptind);
+                        e.print_error(&args_read, parser, streams, w.woptarg, w.wopt_index);
                         return Err(e.retval());
                     }
                 }
             }
         }
 
-        return Ok(w.woptind);
+        return Ok(w.wopt_index);
     }
 
     /// Take any positional arguments after options have been parsed.

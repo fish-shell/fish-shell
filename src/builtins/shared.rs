@@ -650,11 +650,11 @@ impl HelpOnlyCmdOpts {
         let print_hints = true;
 
         const shortopts: &wstr = L!("+:h");
-        const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
+        const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
         let mut print_help = false;
-        let mut w = wgetopter_t::new(shortopts, longopts, args);
-        while let Some(c) = w.wgetopt_long() {
+        let mut w = WGetopter::new(shortopts, longopts, args);
+        while let Some(c) = w.next_opt() {
             match c {
                 'h' => {
                     print_help = true;
@@ -664,24 +664,30 @@ impl HelpOnlyCmdOpts {
                         parser,
                         streams,
                         cmd,
-                        args[w.woptind - 1],
+                        args[w.wopt_index - 1],
                         print_hints,
                     );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                    builtin_unknown_option(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopter::wgetopt_long()");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }
 
         Ok(HelpOnlyCmdOpts {
             print_help,
-            optind: w.woptind,
+            optind: w.wopt_index,
         })
     }
 }

@@ -102,29 +102,29 @@ impl Options {
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
         const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
-        const LONG_OPTS: &[woption] = &[
-            wopt(L!("export"), no_argument, 'x'),
-            wopt(L!("global"), no_argument, 'g'),
-            wopt(L!("function"), no_argument, 'f'),
-            wopt(L!("local"), no_argument, 'l'),
-            wopt(L!("erase"), no_argument, 'e'),
-            wopt(L!("names"), no_argument, 'n'),
-            wopt(L!("unexport"), no_argument, 'u'),
-            wopt(L!("universal"), no_argument, 'U'),
-            wopt(L!("long"), no_argument, 'L'),
-            wopt(L!("query"), no_argument, 'q'),
-            wopt(L!("show"), no_argument, 'S'),
-            wopt(L!("append"), no_argument, 'a'),
-            wopt(L!("prepend"), no_argument, 'p'),
-            wopt(L!("path"), no_argument, PATH_ARG),
-            wopt(L!("unpath"), no_argument, UNPATH_ARG),
-            wopt(L!("help"), no_argument, 'h'),
+        const LONG_OPTS: &[WOption] = &[
+            wopt(L!("export"), NoArgument, 'x'),
+            wopt(L!("global"), NoArgument, 'g'),
+            wopt(L!("function"), NoArgument, 'f'),
+            wopt(L!("local"), NoArgument, 'l'),
+            wopt(L!("erase"), NoArgument, 'e'),
+            wopt(L!("names"), NoArgument, 'n'),
+            wopt(L!("unexport"), NoArgument, 'u'),
+            wopt(L!("universal"), NoArgument, 'U'),
+            wopt(L!("long"), NoArgument, 'L'),
+            wopt(L!("query"), NoArgument, 'q'),
+            wopt(L!("show"), NoArgument, 'S'),
+            wopt(L!("append"), NoArgument, 'a'),
+            wopt(L!("prepend"), NoArgument, 'p'),
+            wopt(L!("path"), NoArgument, PATH_ARG),
+            wopt(L!("unpath"), NoArgument, UNPATH_ARG),
+            wopt(L!("help"), NoArgument, 'h'),
         ];
 
         let mut opts = Self::default();
 
-        let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-        while let Some(c) = w.wgetopt_long() {
+        let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+        while let Some(c) = w.next_opt() {
             match c {
                 'a' => opts.append = true,
                 'e' => {
@@ -155,12 +155,12 @@ impl Options {
                     opts.preserve_failure_exit_status = false;
                 }
                 ':' => {
-                    builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                    builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     // Specifically detect `set -o` because people might be bringing over bashisms.
-                    let optind = w.woptind;
+                    let optind = w.wopt_index;
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
                         // TODO: translate this
@@ -184,12 +184,12 @@ impl Options {
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopt_long");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }
 
-        let optind = w.woptind;
+        let optind = w.wopt_index;
 
         if opts.print_help {
             builtin_print_help(parser, streams, cmd);

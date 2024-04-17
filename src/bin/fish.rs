@@ -313,44 +313,40 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
-    use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
+    use fish::wgetopt::{wopt, ArgType::*, WGetopter, WOption};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
     const PROFILE_STARTUP_ARG: char = 3 as char;
 
     const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
-    const LONG_OPTS: &[woption<'static>] = &[
-        wopt(L!("command"), required_argument, 'c'),
-        wopt(L!("init-command"), required_argument, 'C'),
-        wopt(L!("features"), required_argument, 'f'),
-        wopt(L!("debug"), required_argument, 'd'),
-        wopt(L!("debug-output"), required_argument, 'o'),
-        wopt(L!("debug-stack-frames"), required_argument, 'D'),
-        wopt(L!("interactive"), no_argument, 'i'),
-        wopt(L!("login"), no_argument, 'l'),
-        wopt(L!("no-config"), no_argument, 'N'),
-        wopt(L!("no-execute"), no_argument, 'n'),
-        wopt(L!("print-rusage-self"), no_argument, RUSAGE_ARG),
+    const LONG_OPTS: &[WOption<'static>] = &[
+        wopt(L!("command"), RequiredArgument, 'c'),
+        wopt(L!("init-command"), RequiredArgument, 'C'),
+        wopt(L!("features"), RequiredArgument, 'f'),
+        wopt(L!("debug"), RequiredArgument, 'd'),
+        wopt(L!("debug-output"), RequiredArgument, 'o'),
+        wopt(L!("debug-stack-frames"), RequiredArgument, 'D'),
+        wopt(L!("interactive"), NoArgument, 'i'),
+        wopt(L!("login"), NoArgument, 'l'),
+        wopt(L!("no-config"), NoArgument, 'N'),
+        wopt(L!("no-execute"), NoArgument, 'n'),
+        wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
         wopt(
             L!("print-debug-categories"),
-            no_argument,
+            NoArgument,
             PRINT_DEBUG_CATEGORIES_ARG,
         ),
-        wopt(L!("profile"), required_argument, 'p'),
-        wopt(
-            L!("profile-startup"),
-            required_argument,
-            PROFILE_STARTUP_ARG,
-        ),
-        wopt(L!("private"), no_argument, 'P'),
-        wopt(L!("help"), no_argument, 'h'),
-        wopt(L!("version"), no_argument, 'v'),
+        wopt(L!("profile"), RequiredArgument, 'p'),
+        wopt(L!("profile-startup"), RequiredArgument, PROFILE_STARTUP_ARG),
+        wopt(L!("private"), NoArgument, 'P'),
+        wopt(L!("help"), NoArgument, 'h'),
+        wopt(L!("version"), NoArgument, 'v'),
     ];
 
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
+    while let Some(c) = w.next_opt() {
         match c {
             'c' => opts
                 .batch_cmds
@@ -419,21 +415,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             '?' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
-            _ => panic!("unexpected retval from wgetopter_t"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
-    let optind = w.woptind;
+    let optind = w.wopt_index;
 
     // If our command name begins with a dash that implies we're a login shell.
     opts.is_login |= args[0].char_at(0) == '-';

@@ -31,17 +31,17 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":eghl");
-    const LONG_OPTS: &[woption] = &[
-        wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("local"), woption_argument_t::no_argument, 'l'),
-        wopt(L!("global"), woption_argument_t::no_argument, 'g'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    const LONG_OPTS: &[WOption] = &[
+        wopt(L!("erase"), ArgType::NoArgument, 'e'),
+        wopt(L!("local"), ArgType::NoArgument, 'l'),
+        wopt(L!("global"), ArgType::NoArgument, 'g'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             'h' => {
                 opts.print_help = true;
@@ -56,20 +56,20 @@ fn parse_options(
                 opts.erase = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// The block builtin, used for temporarily blocking events.

@@ -240,54 +240,34 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut unescape_output = true;
 
     const short_options: &wstr = L!(":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
-    const long_options: &[woption] = &[
-        wopt(L!("exclusive"), woption_argument_t::no_argument, 'x'),
-        wopt(L!("no-files"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("force-files"), woption_argument_t::no_argument, 'F'),
-        wopt(
-            L!("require-parameter"),
-            woption_argument_t::no_argument,
-            'r',
-        ),
-        wopt(L!("path"), woption_argument_t::required_argument, 'p'),
-        wopt(L!("command"), woption_argument_t::required_argument, 'c'),
-        wopt(
-            L!("short-option"),
-            woption_argument_t::required_argument,
-            's',
-        ),
-        wopt(
-            L!("long-option"),
-            woption_argument_t::required_argument,
-            'l',
-        ),
-        wopt(L!("old-option"), woption_argument_t::required_argument, 'o'),
-        wopt(L!("subcommand"), woption_argument_t::required_argument, 'S'),
-        wopt(
-            L!("description"),
-            woption_argument_t::required_argument,
-            'd',
-        ),
-        wopt(L!("arguments"), woption_argument_t::required_argument, 'a'),
-        wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("unauthoritative"), woption_argument_t::no_argument, 'u'),
-        wopt(L!("authoritative"), woption_argument_t::no_argument, 'A'),
-        wopt(L!("condition"), woption_argument_t::required_argument, 'n'),
-        wopt(L!("wraps"), woption_argument_t::required_argument, 'w'),
-        wopt(
-            L!("do-complete"),
-            woption_argument_t::optional_argument,
-            'C',
-        ),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("keep-order"), woption_argument_t::no_argument, 'k'),
-        wopt(L!("escape"), woption_argument_t::no_argument, OPT_ESCAPE),
+    const long_options: &[WOption] = &[
+        wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
+        wopt(L!("no-files"), ArgType::NoArgument, 'f'),
+        wopt(L!("force-files"), ArgType::NoArgument, 'F'),
+        wopt(L!("require-parameter"), ArgType::NoArgument, 'r'),
+        wopt(L!("path"), ArgType::RequiredArgument, 'p'),
+        wopt(L!("command"), ArgType::RequiredArgument, 'c'),
+        wopt(L!("short-option"), ArgType::RequiredArgument, 's'),
+        wopt(L!("long-option"), ArgType::RequiredArgument, 'l'),
+        wopt(L!("old-option"), ArgType::RequiredArgument, 'o'),
+        wopt(L!("subcommand"), ArgType::RequiredArgument, 'S'),
+        wopt(L!("description"), ArgType::RequiredArgument, 'd'),
+        wopt(L!("arguments"), ArgType::RequiredArgument, 'a'),
+        wopt(L!("erase"), ArgType::NoArgument, 'e'),
+        wopt(L!("unauthoritative"), ArgType::NoArgument, 'u'),
+        wopt(L!("authoritative"), ArgType::NoArgument, 'A'),
+        wopt(L!("condition"), ArgType::RequiredArgument, 'n'),
+        wopt(L!("wraps"), ArgType::RequiredArgument, 'w'),
+        wopt(L!("do-complete"), ArgType::OptionalArgument, 'C'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("keep-order"), ArgType::NoArgument, 'k'),
+        wopt(L!("escape"), ArgType::NoArgument, OPT_ESCAPE),
     ];
 
     let mut have_x = false;
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    let mut w = WGetopter::new(short_options, long_options, argv);
+    while let Some(opt) = w.next_opt() {
         match opt {
             'x' => {
                 result_mode.no_files = true;
@@ -399,14 +379,14 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
@@ -429,12 +409,12 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         return STATUS_INVALID_ARGS;
     }
 
-    if w.woptind != argc {
+    if w.wopt_index != argc {
         // Use one left-over arg as the do-complete argument
         // to enable `complete -C "git check"`.
-        if do_complete && do_complete_param.is_none() && argc == w.woptind + 1 {
+        if do_complete && do_complete_param.is_none() && argc == w.wopt_index + 1 {
             do_complete_param = Some(argv[argc - 1].to_owned());
-        } else if !do_complete && cmd_to_complete.is_empty() && argc == w.woptind + 1 {
+        } else if !do_complete && cmd_to_complete.is_empty() && argc == w.wopt_index + 1 {
             // Or use one left-over arg as the command to complete
             cmd_to_complete.push(argv[argc - 1].to_owned());
         } else {

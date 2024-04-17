@@ -51,19 +51,19 @@ const NO_METADATA_SHORT: char = 2 as char;
 
 const SHORT_OPTIONS: &wstr = L!(":Ht:Dacd:ehnqv");
 #[rustfmt::skip]
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-    wopt(L!("description"), woption_argument_t::required_argument, 'd'),
-    wopt(L!("names"), woption_argument_t::no_argument, 'n'),
-    wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-    wopt(L!("copy"), woption_argument_t::no_argument, 'c'),
-    wopt(L!("details"), woption_argument_t::no_argument, 'D'),
-    wopt(L!("no-details"), woption_argument_t::no_argument, NO_METADATA_SHORT),
-    wopt(L!("verbose"), woption_argument_t::no_argument, 'v'),
-    wopt(L!("handlers"), woption_argument_t::no_argument, 'H'),
-    wopt(L!("handlers-type"), woption_argument_t::required_argument, 't'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("erase"), ArgType::NoArgument, 'e'),
+    wopt(L!("description"), ArgType::RequiredArgument, 'd'),
+    wopt(L!("names"), ArgType::NoArgument, 'n'),
+    wopt(L!("all"), ArgType::NoArgument, 'a'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("query"), ArgType::NoArgument, 'q'),
+    wopt(L!("copy"), ArgType::NoArgument, 'c'),
+    wopt(L!("details"), ArgType::NoArgument, 'D'),
+    wopt(L!("no-details"), ArgType::NoArgument, NO_METADATA_SHORT),
+    wopt(L!("verbose"), ArgType::NoArgument, 'v'),
+    wopt(L!("handlers"), ArgType::NoArgument, 'H'),
+    wopt(L!("handlers-type"), ArgType::RequiredArgument, 't'),
 ];
 
 /// Parses options to builtin function, populating opts.
@@ -77,8 +77,8 @@ fn parse_cmd_opts<'args>(
 ) -> Option<c_int> {
     let cmd = L!("functions");
     let print_hints = false;
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    while let Some(opt) = w.next_opt() {
         match opt {
             'v' => opts.verbose = true,
             'e' => opts.erase = true,
@@ -98,20 +98,20 @@ fn parse_cmd_opts<'args>(
                 opts.handlers_type = Some(w.woptarg.unwrap());
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             other => {
-                panic!("Unexpected retval from wgetopt_long: {}", other);
+                panic!("Unexpected retval from WGetopter: {}", other);
             }
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     STATUS_CMD_OK
 }
 

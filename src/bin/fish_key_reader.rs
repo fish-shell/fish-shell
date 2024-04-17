@@ -30,7 +30,7 @@ use fish::{
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
-    wgetopt::{wgetopter_t, wopt, woption, woption_argument_t},
+    wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
@@ -145,19 +145,19 @@ fn setup_and_process_keys(continuous_mode: bool) -> i32 {
 
 fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
     let short_opts: &wstr = L!("+chvV");
-    let long_opts: &[woption] = &[
-        wopt(L!("continuous"), woption_argument_t::no_argument, 'c'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("version"), woption_argument_t::no_argument, 'v'),
-        wopt(L!("verbose"), woption_argument_t::no_argument, 'V'), // Removed
+    let long_opts: &[WOption] = &[
+        wopt(L!("continuous"), ArgType::NoArgument, 'c'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("version"), ArgType::NoArgument, 'v'),
+        wopt(L!("verbose"), ArgType::NoArgument, 'V'), // Removed
     ];
 
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(short_opts, long_opts, &mut shim_args);
-    while let Some(opt) = w.wgetopt_long() {
+    let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
+    while let Some(opt) = w.next_opt() {
         match opt {
             'c' => {
                 *continuous_mode = true;
@@ -184,7 +184,7 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
                     wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         "fish_key_reader",
-                        w.argv[w.woptind - 1]
+                        w.argv[w.wopt_index - 1]
                     )
                 );
                 return ControlFlow::Break(1);
@@ -193,7 +193,7 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
         }
     }
 
-    let argc = args.len() - w.woptind;
+    let argc = args.len() - w.wopt_index;
     if argc != 0 {
         eprintf!("Expected no arguments, got %d\n", argc);
         return ControlFlow::Break(1);

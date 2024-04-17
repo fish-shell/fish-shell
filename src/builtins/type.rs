@@ -24,20 +24,20 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let mut opts: type_cmd_opts_t = Default::default();
 
     const shortopts: &wstr = L!(":hasftpPq");
-    const longopts: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("short"), woption_argument_t::no_argument, 's'),
-        wopt(L!("no-functions"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("type"), woption_argument_t::no_argument, 't'),
-        wopt(L!("path"), woption_argument_t::no_argument, 'p'),
-        wopt(L!("force-path"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
+    const longopts: &[WOption] = &[
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("all"), ArgType::NoArgument, 'a'),
+        wopt(L!("short"), ArgType::NoArgument, 's'),
+        wopt(L!("no-functions"), ArgType::NoArgument, 'f'),
+        wopt(L!("type"), ArgType::NoArgument, 't'),
+        wopt(L!("path"), ArgType::NoArgument, 'p'),
+        wopt(L!("force-path"), ArgType::NoArgument, 'P'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("quiet"), ArgType::NoArgument, 'q'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(shortopts, longopts, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
             's' => opts.short_output = true,
@@ -51,11 +51,11 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -71,7 +71,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
     let mut res = false;
 
-    let optind = w.woptind;
+    let optind = w.wopt_index;
     for arg in argv.iter().take(argc).skip(optind) {
         let mut found = 0;
         if !opts.force_path && !opts.no_functions {

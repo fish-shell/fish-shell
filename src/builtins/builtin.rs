@@ -13,14 +13,14 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut opts: builtin_cmd_opts_t = Default::default();
 
     const shortopts: &wstr = L!(":hnq");
-    const longopts: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("names"), woption_argument_t::no_argument, 'n'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
+    const longopts: &[WOption] = &[
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("names"), ArgType::NoArgument, 'n'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(shortopts, longopts, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'q' => opts.query = true,
             'n' => opts.list_names = true,
@@ -29,15 +29,15 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgeopter.next()");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
@@ -60,7 +60,7 @@ pub fn r#builtin(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     if opts.query {
-        let optind = w.woptind;
+        let optind = w.wopt_index;
         for arg in argv.iter().take(argc).skip(optind) {
             if builtin_exists(arg) {
                 return STATUS_CMD_OK;

@@ -134,13 +134,13 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let print_hints = false;
 
     const shortopts: &wstr = L!(":nh");
-    const longopts: &[woption] = &[
-        wopt(L!("any"), woption_argument_t::no_argument, 'n'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    const longopts: &[WOption] = &[
+        wopt(L!("any"), ArgType::NoArgument, 'n'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(shortopts, longopts, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => {
                 any_flag = true;
@@ -149,11 +149,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -167,7 +167,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         return STATUS_CMD_OK;
     }
 
-    if w.woptind == argc {
+    if w.wopt_index == argc {
         // No jobs specified.
         // Note this may succeed with an empty wait list.
         return wait_for_completion(parser, &get_all_wait_handles(parser), any_flag);
@@ -175,7 +175,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
 
     // Get the list of wait handles for our waiting.
     let mut wait_handles: Vec<WaitHandleRef> = Vec::new();
-    let optind = w.woptind;
+    let optind = w.wopt_index;
     for item in &argv[optind..argc] {
         if iswnumeric(item) {
             // argument is pid

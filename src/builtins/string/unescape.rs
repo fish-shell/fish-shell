@@ -8,18 +8,18 @@ pub struct Unescape {
 }
 
 impl StringSubCommand<'_> for Unescape {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
         // FIXME: this flag means nothing, but was present in the C++ code
         // should be removed
-        wopt(L!("no-quoted"), no_argument, 'n'),
-        wopt(L!("style"), required_argument, NONOPTION_CHAR_CODE),
+        wopt(L!("no-quoted"), NoArgument, 'n'),
+        wopt(L!("style"), RequiredArgument, NON_OPTION_CHAR),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":n");
 
     fn parse_opt(&mut self, name: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'n' => self.no_quoted = true,
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 self.style = arg
                     .unwrap()
                     .try_into()

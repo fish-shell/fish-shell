@@ -10,7 +10,7 @@ use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
 use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, INVALID_PID};
 use crate::wchar_ext::WExt;
-use crate::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
 use crate::{
     builtins::shared::STATUS_CMD_OK,
@@ -127,14 +127,14 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
 }
 
 const SHORT_OPTIONS: &wstr = L!(":cghlpq");
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("command"), woption_argument_t::no_argument, 'c'),
-    wopt(L!("group"), woption_argument_t::no_argument, 'g'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("last"), woption_argument_t::no_argument, 'l'),
-    wopt(L!("pid"), woption_argument_t::no_argument, 'p'),
-    wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
-    wopt(L!("query"), woption_argument_t::no_argument, 'q'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("command"), ArgType::NoArgument, 'c'),
+    wopt(L!("group"), ArgType::NoArgument, 'g'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("last"), ArgType::NoArgument, 'l'),
+    wopt(L!("pid"), ArgType::NoArgument, 'p'),
+    wopt(L!("quiet"), ArgType::NoArgument, 'q'),
+    wopt(L!("query"), ArgType::NoArgument, 'q'),
 ];
 
 /// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
@@ -145,8 +145,8 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let mut mode = JobsPrintMode::Default;
     let mut print_last = false;
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'p' => {
                 mode = JobsPrintMode::PrintPid;
@@ -168,14 +168,14 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
@@ -190,8 +190,8 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         return STATUS_CMD_ERROR;
     }
 
-    if w.woptind < argc {
-        for arg in &w.argv[w.woptind..] {
+    if w.wopt_index < argc {
+        for arg in &w.argv[w.wopt_index..] {
             let j;
             if arg.char_at(0) == '%' {
                 match fish_wcstoi(&arg[1..]).ok().filter(|&job_id| job_id >= 0) {

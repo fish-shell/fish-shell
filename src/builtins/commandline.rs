@@ -206,40 +206,36 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut override_buffer = None;
 
     const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
-    let long_options: &[woption] = &[
-        wopt(L!("append"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("insert"), woption_argument_t::no_argument, 'i'),
-        wopt(L!("replace"), woption_argument_t::no_argument, 'r'),
-        wopt(L!("current-buffer"), woption_argument_t::no_argument, 'b'),
-        wopt(L!("current-job"), woption_argument_t::no_argument, 'j'),
-        wopt(L!("current-process"), woption_argument_t::no_argument, 'p'),
-        wopt(
-            L!("current-selection"),
-            woption_argument_t::no_argument,
-            's',
-        ),
-        wopt(L!("current-token"), woption_argument_t::no_argument, 't'),
-        wopt(L!("cut-at-cursor"), woption_argument_t::no_argument, 'c'),
-        wopt(L!("function"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("tokens-expanded"), woption_argument_t::no_argument, 'x'),
-        wopt(L!("tokens-raw"), woption_argument_t::no_argument, '\x02'),
-        wopt(L!("tokenize"), woption_argument_t::no_argument, 'o'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("input"), woption_argument_t::required_argument, 'I'),
-        wopt(L!("cursor"), woption_argument_t::no_argument, 'C'),
-        wopt(L!("selection-start"), woption_argument_t::no_argument, 'B'),
-        wopt(L!("selection-end"), woption_argument_t::no_argument, 'E'),
-        wopt(L!("line"), woption_argument_t::no_argument, 'L'),
-        wopt(L!("search-mode"), woption_argument_t::no_argument, 'S'),
-        wopt(L!("paging-mode"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("paging-full-mode"), woption_argument_t::no_argument, 'F'),
-        wopt(L!("search-field"), woption_argument_t::no_argument, '\x03'),
-        wopt(L!("is-valid"), woption_argument_t::no_argument, '\x01'),
+    let long_options: &[WOption] = &[
+        wopt(L!("append"), ArgType::NoArgument, 'a'),
+        wopt(L!("insert"), ArgType::NoArgument, 'i'),
+        wopt(L!("replace"), ArgType::NoArgument, 'r'),
+        wopt(L!("current-buffer"), ArgType::NoArgument, 'b'),
+        wopt(L!("current-job"), ArgType::NoArgument, 'j'),
+        wopt(L!("current-process"), ArgType::NoArgument, 'p'),
+        wopt(L!("current-selection"), ArgType::NoArgument, 's'),
+        wopt(L!("current-token"), ArgType::NoArgument, 't'),
+        wopt(L!("cut-at-cursor"), ArgType::NoArgument, 'c'),
+        wopt(L!("function"), ArgType::NoArgument, 'f'),
+        wopt(L!("tokens-expanded"), ArgType::NoArgument, 'x'),
+        wopt(L!("tokens-raw"), ArgType::NoArgument, '\x02'),
+        wopt(L!("tokenize"), ArgType::NoArgument, 'o'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("input"), ArgType::RequiredArgument, 'I'),
+        wopt(L!("cursor"), ArgType::NoArgument, 'C'),
+        wopt(L!("selection-start"), ArgType::NoArgument, 'B'),
+        wopt(L!("selection-end"), ArgType::NoArgument, 'E'),
+        wopt(L!("line"), ArgType::NoArgument, 'L'),
+        wopt(L!("search-mode"), ArgType::NoArgument, 'S'),
+        wopt(L!("paging-mode"), ArgType::NoArgument, 'P'),
+        wopt(L!("paging-full-mode"), ArgType::NoArgument, 'F'),
+        wopt(L!("search-field"), ArgType::NoArgument, '\x03'),
+        wopt(L!("is-valid"), ArgType::NoArgument, '\x01'),
     ];
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let mut w = WGetopter::new(short_options, long_options, args);
     let cmd = w.argv[0];
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => append_mode = Some(AppendMode::Append),
             'b' => buffer_part = Some(TextScope::String),
@@ -286,18 +282,18 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!(),
         }
     }
 
-    let positional_args = w.argv.len() - w.woptind;
+    let positional_args = w.argv.len() - w.wopt_index;
 
     if function_mode {
         // Check for invalid switch combinations.
@@ -323,7 +319,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         }
 
         type rl = ReadlineCmd;
-        for arg in &w.argv[w.woptind..] {
+        for arg in &w.argv[w.wopt_index..] {
             let Some(cmd) = input_function_get_code(arg) else {
                 streams
                     .err
@@ -535,7 +531,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if cursor_mode {
         if positional_args != 0 {
-            let arg = w.argv[w.woptind];
+            let arg = w.argv[w.wopt_index];
             let new_pos = match fish_wcstol(arg) {
                 Err(_) => {
                     streams
@@ -573,14 +569,14 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if positional_args == 1 {
         replace_part(
             range,
-            args[w.woptind],
+            args[w.wopt_index],
             append_mode,
             current_buffer,
             current_cursor_pos,
             search_field_mode,
         );
     } else {
-        let sb = join_strings(&w.argv[w.woptind..], '\n');
+        let sb = join_strings(&w.argv[w.wopt_index..], '\n');
         replace_part(
             range,
             &sb,

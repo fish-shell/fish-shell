@@ -25,10 +25,10 @@ fn parse_cmd_opts(
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
     const SHORT_OPTS: &wstr = L!("+:hs:b:");
-    const LONG_OPTS: &[woption] = &[
-        wopt(L!("scale"), woption_argument_t::required_argument, 's'),
-        wopt(L!("base"), woption_argument_t::required_argument, 'b'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    const LONG_OPTS: &[WOption] = &[
+        wopt(L!("scale"), ArgType::RequiredArgument, 's'),
+        wopt(L!("base"), ArgType::RequiredArgument, 'b'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options {
@@ -39,8 +39,8 @@ fn parse_cmd_opts(
 
     let mut have_scale = false;
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             's' => {
                 let optarg = w.woptarg.unwrap();
@@ -86,13 +86,13 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], print_hints);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // For most commands this is an error. We ignore it because a math expression
                 // can begin with a minus sign.
-                return Ok((opts, w.woptind - 1));
+                return Ok((opts, w.wopt_index - 1));
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -110,7 +110,7 @@ fn parse_cmd_opts(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Return a formatted version of the value `v` respecting the given `opts`.

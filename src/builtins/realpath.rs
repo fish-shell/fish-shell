@@ -16,9 +16,9 @@ struct Options {
 }
 
 const short_options: &wstr = L!("+:hs");
-const long_options: &[woption] = &[
-    wopt(L!("no-symlinks"), no_argument, 's'),
-    wopt(L!("help"), no_argument, 'h'),
+const long_options: &[WOption] = &[
+    wopt(L!("no-symlinks"), NoArgument, 's'),
+    wopt(L!("help"), NoArgument, 'h'),
 ];
 
 fn parse_options(
@@ -30,25 +30,25 @@ fn parse_options(
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let mut w = WGetopter::new(short_options, long_options, args);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             's' => opts.no_symlinks = true,
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// An implementation of the external realpath command. Doesn't support any options.

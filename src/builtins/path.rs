@@ -203,17 +203,17 @@ fn construct_short_opts(opts: &Options) -> WString {
 /// Note that several long flags share the same short flag. That is okay. The caller is expected
 /// to indicate that a max of one of the long flags sharing a short flag is valid.
 /// Remember: adjust the completions in share/completions/ when options change
-const LONG_OPTIONS: [woption<'static>; 10] = [
-    wopt(L!("quiet"), no_argument, 'q'),
-    wopt(L!("null-in"), no_argument, 'z'),
-    wopt(L!("null-out"), no_argument, 'Z'),
-    wopt(L!("perm"), required_argument, 'p'),
-    wopt(L!("type"), required_argument, 't'),
-    wopt(L!("invert"), no_argument, 'v'),
-    wopt(L!("relative"), no_argument, 'R'),
-    wopt(L!("reverse"), no_argument, 'r'),
-    wopt(L!("unique"), no_argument, 'u'),
-    wopt(L!("key"), required_argument, NONOPTION_CHAR_CODE),
+const LONG_OPTIONS: [WOption<'static>; 10] = [
+    wopt(L!("quiet"), NoArgument, 'q'),
+    wopt(L!("null-in"), NoArgument, 'z'),
+    wopt(L!("null-out"), NoArgument, 'Z'),
+    wopt(L!("perm"), RequiredArgument, 'p'),
+    wopt(L!("type"), RequiredArgument, 't'),
+    wopt(L!("invert"), NoArgument, 'v'),
+    wopt(L!("relative"), NoArgument, 'R'),
+    wopt(L!("reverse"), NoArgument, 'r'),
+    wopt(L!("unique"), NoArgument, 'u'),
+    wopt(L!("key"), RequiredArgument, NON_OPTION_CHAR),
 ];
 
 fn parse_opts<'args>(
@@ -230,16 +230,16 @@ fn parse_opts<'args>(
 
     let short_opts = construct_short_opts(opts);
 
-    let mut w = wgetopter_t::new(&short_opts, &LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(&short_opts, &LONG_OPTIONS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error
-                builtin_missing_argument(parser, streams, cmd, args_read[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args_read[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                 return STATUS_INVALID_ARGS;
             }
             'q' => {
@@ -324,19 +324,19 @@ fn parse_opts<'args>(
                 opts.relative = true;
                 continue;
             }
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 assert!(w.woptarg.is_some());
                 opts.key = w.woptarg;
                 continue;
             }
             _ => {
-                path_unknown_option(parser, streams, cmd, args_read[w.woptind - 1]);
+                path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
                 return STATUS_INVALID_ARGS;
             }
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
 
     if n_req_args != 0 {
         assert!(n_req_args == 1);

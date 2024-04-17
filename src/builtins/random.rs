@@ -14,26 +14,26 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let print_hints = false;
 
     const shortopts: &wstr = L!("+:h");
-    const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
+    const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
+    let mut w = WGetopter::new(shortopts, longopts, argv);
     #[allow(clippy::never_loop)]
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgeopter.next()");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
@@ -41,8 +41,8 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let mut start = 0;
     let mut end = 32767;
     let mut step = 1;
-    let arg_count = argc - w.woptind;
-    let i = w.woptind;
+    let arg_count = argc - w.wopt_index;
+    let i = w.wopt_index;
     if arg_count >= 1 && argv[i] == "choice" {
         if arg_count == 1 {
             streams

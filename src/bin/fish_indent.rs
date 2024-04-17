@@ -781,7 +781,7 @@ fn throwing_main() -> i32 {
     let short_opts: &wstr = L!("+d:hvwicD:");
     let long_opts: &[WOption] = &[
         wopt(L!("debug"), ArgType::RequiredArgument, 'd'),
-        wopt(L!("debug-output"), ArgType::RequiredArgument,'o'),
+        wopt(L!("debug-output"), ArgType::RequiredArgument, 'o'),
         wopt(L!("debug-stack-frames"), ArgType::RequiredArgument, 'D'),
         wopt(L!("dump-parse-tree"), ArgType::NoArgument, 'P'),
         wopt(L!("no-indent"), ArgType::NoArgument, 'i'),

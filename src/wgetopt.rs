@@ -194,36 +194,11 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
     /// Elements are then swapped between the list so that all options end up
     /// in the former list, and non-options in the latter.
     fn exchange(&mut self) {
-        let mut left = self.first_nonopt;
+        let left = self.first_nonopt;
         let middle = self.last_nonopt;
-        let mut right = self.wopt_index;
+        let right = self.wopt_index;
         debug_assert!(left <= middle && middle <= right, "Indexes out of order");
-
-        while right > middle && middle > left {
-            if right - middle > middle - left {
-                // The left segment is the short one.
-                let len = middle - left;
-
-                // Swap it with the top part of the right segment.
-                for i in 0..len {
-                    self.argv.swap(left + i, right - len + i);
-                }
-
-                // Exclude the moved elements from further swapping.
-                right -= len;
-            } else {
-                // The right segment is the short one.
-                let len = right - middle;
-
-                // Swap it with the bottom part of the left segment.
-                for i in 0..len {
-                    self.argv.swap(left + i, middle + i);
-                }
-
-                // Exclude the moved elements from further swapping.
-                left += len;
-            }
-        }
+        self.argv[left..right].rotate_left(middle - left);
 
         // Update the indices to indicate the new positions of the non-option
         // arguments.

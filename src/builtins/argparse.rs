@@ -755,6 +755,8 @@ fn argparse_parse_flags<'args>(
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
     let mut w = WGetopter::new(&short_options, &long_options, args);
+    let mut is_long_flag = true;
+
     while let Some((opt, long_idx)) = w.next_opt_indexed() {
         let retval = match opt {
             ':' => {
@@ -777,7 +779,7 @@ fn argparse_parse_flags<'args>(
                         opts,
                         arg_contents,
                         &mut w,
-                        long_idx != usize::MAX,
+                        is_long_flag,
                         streams,
                     )
                 } else if !opts.ignore_unknown {
@@ -824,6 +826,7 @@ fn argparse_parse_flags<'args>(
         if retval != STATUS_CMD_OK {
             return retval;
         }
+        is_long_flag = false;
     }
 
     *optind = w.wopt_index;

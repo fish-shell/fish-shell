@@ -15,13 +15,17 @@ end
 ###
 
 function __fish_print_magento_modules -d "Lists all Magento modules"
-    set -l modules (magento module:status)
+    test -f app/etc/config.php; or return
+    command -q php; or return
 
-    for i in $test
-        if test -n "$i" -a "$i" != None
-            echo $i
-        end
-    end
+    php -r '
+        $config  = include "app/etc/config.php";
+        
+        foreach ($config["modules"] as $module => $state) {
+            if ($module === "" || $module === "None") continue;
+            echo $module . PHP_EOL;
+        }
+    '
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"

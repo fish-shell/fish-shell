@@ -537,7 +537,7 @@ fn parse_cmd_opts<'args>(
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from opt"),
+            _ => panic!("unexpected retval from next_opt"),
         }
     }
 
@@ -755,9 +755,8 @@ fn argparse_parse_flags<'args>(
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
     let mut w = WGetopter::new(&short_options, &long_options, args);
-    let mut is_long_flag = true;
-
-    while let Some((opt, long_idx)) = w.next_opt_indexed() {
+    while let Some((opt, longopt_idx)) = w.next_opt_indexed() {
+        let is_long_flag = longopt_idx.is_some();
         let retval = match opt {
             ':' => {
                 builtin_missing_argument(
@@ -814,19 +813,11 @@ fn argparse_parse_flags<'args>(
                 continue;
             }
             // It's a recognized flag.
-            _ => handle_flag(
-                parser,
-                opts,
-                opt,
-                long_idx != usize::MAX,
-                w.woptarg,
-                streams,
-            ),
+            _ => handle_flag(parser, opts, opt, is_long_flag, w.woptarg, streams),
         };
         if retval != STATUS_CMD_OK {
             return retval;
         }
-        is_long_flag = false;
     }
 
     *optind = w.wopt_index;

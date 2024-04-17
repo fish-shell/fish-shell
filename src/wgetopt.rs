@@ -176,10 +176,14 @@ impl<'opts, 'args, 'argarray> WGetopter<'opts, 'args, 'argarray> {
 
     // Tries to get the next option, additionally returning the index of the long option
     // if found.
-    pub fn next_opt_indexed(&mut self) -> Option<(char, usize)> {
-        let mut longopt_index = 0;
+    pub fn next_opt_indexed(&mut self) -> Option<(char, Option<usize>)> {
+        let mut longopt_index = usize::MAX;
         let option = self.wgetopt_inner(&mut longopt_index);
-        option.map(|c| (c, longopt_index))
+        if longopt_index != usize::MAX {
+            option.map(|c| (c, Some(longopt_index)))
+        } else {
+            option.map(|c| (c, None))
+        }
     }
 
     /// Swaps two subsequences in `argv`, one which contains all non-options skipped

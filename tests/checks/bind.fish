@@ -120,6 +120,15 @@ bind | string match -v '*\e\\[*'
 # CHECK: bind -M bind_mode ctrl-x true
 # CHECK: bind tab 'echo banana'
 
+# Legacy
+bind \cx\cax 'echo foo'
+bind \cx\cax
+# CHECK: bind ctrl-x,ctrl-a,x 'echo foo'
+bind \ef forward-word
+bind \ef
+# CHECK: bind alt-f forward-word
+
+
 # Erasing bindings
 bind --erase tab
 bind tab

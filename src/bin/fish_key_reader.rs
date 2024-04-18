@@ -1,7 +1,7 @@
 //! A small utility to print information related to pressing keys. This is similar to using tools
 //! like `xxd` and `od -tx1z` but provides more information such as the time delay between each
 //! character. It also allows pressing and interpreting keys that are normally special such as
-//! [ctrl-C] (interrupt the program) or [ctrl-D] (EOF to signal the program should exit).
+//! [ctrl-c] (interrupt the program) or [ctrl-d] (EOF to signal the program should exit).
 //! And unlike those other tools this one disables ICRNL mode so it can distinguish between
 //! carriage-return (\cM) and newline (\cJ).
 //!
@@ -46,8 +46,8 @@ fn should_exit(recent_keys: &mut Vec<Key>, key: Key) -> bool {
                 return true;
             }
             eprintf!(
-                "Press [ctrl-%c] again to exit\n",
-                char::from(modes.c_cc[evt] + 0x40)
+                "Press ctrl-%c again to exit\n",
+                char::from(modes.c_cc[evt] + 0x60)
             );
             return false;
         }
@@ -133,9 +133,9 @@ fn setup_and_process_keys(continuous_mode: bool) -> i32 {
         eprintf!("To terminate this program type \"exit\" or \"quit\" in this window,\n");
         let modes = shell_modes();
         eprintf!(
-            "or press [ctrl-%c] or [ctrl-%c] twice in a row.\n",
-            char::from(modes.c_cc[VINTR] + 0x40),
-            char::from(modes.c_cc[VEOF] + 0x40)
+            "or press ctrl-%c or ctrl-%c twice in a row.\n",
+            char::from(modes.c_cc[VINTR] + 0x60),
+            char::from(modes.c_cc[VEOF] + 0x60)
         );
         eprintf!("\n");
     }

@@ -238,7 +238,8 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
         && !value.contains(KEY_SEPARATOR)
         && !KEY_NAMES.iter().any(|(_codepoint, name)| name == value)
         && value.as_char_slice()[0] != 'F')
-        || first == '\x1b' || first < ' '
+        || first == '\x1b'
+        || first < ' '
     {
         // Hack: treat as legacy syntax (meaning: not comma separated) if
         // 1. it doesn't contain '-' or ',' and is short enough to probably not be a key name.

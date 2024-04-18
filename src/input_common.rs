@@ -7,6 +7,7 @@ use crate::common::{
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
+use crate::global_safety::RelaxedAtomicBool;
 use crate::input::KeyNameStyle;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
@@ -515,7 +516,12 @@ fn terminal_protocols_disable_impl() {
     let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
 }
 
+pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 pub(crate) fn focus_events_enable_ifn() {
+    if !IS_TMUX.load() {
+        return;
+    }
     let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
     let Some(term_protocols) = term_protocols.as_mut() else {
         panic!()

@@ -71,6 +71,7 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input::Inputter;
+use crate::input_common::IS_TMUX;
 use crate::input_common::{
     focus_events_enable_ifn, terminal_protocols_enable_scoped, CharEvent, CharInputStyle,
     ReadlineCmd,
@@ -3660,6 +3661,8 @@ fn reader_interactive_init(parser: &Parser) {
     parser
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
+
+    IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
 }
 
 /// Destroy data for interactive use.

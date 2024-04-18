@@ -148,4 +148,7 @@ bind \r
 bind \n 2>&1
 # CHECK: bind: No binding found for key 'ctrl-j'
 
+bind _\cx_\ci_\ei_\\_\'_ 'echo foo'
+# CHECKERR: bind: cannot parse key '_\cx_\t_\ei_\\_'_'
+
 exit 0

@@ -3,6 +3,7 @@ use std::rc::Rc;
 use libc::VERASE;
 
 use crate::{
+    common::{escape_string, EscapeFlags, EscapeStringStyle},
     fallback::fish_wcwidth,
     reader::TERMINAL_MODE_ON_STARTUP,
     wchar::prelude::*,
@@ -224,6 +225,13 @@ pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {
 
 pub const KEY_SEPARATOR: char = ',';
 
+fn escape_nonprintables(key_name: &wstr) -> WString {
+    escape_string(
+        key_name,
+        EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+    )
+}
+
 pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
     let mut res = vec![];
     if value.is_empty() {
@@ -267,7 +275,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                         return Err(wgettext_fmt!(
                             "unknown modifier '%s' in '%s'",
                             modifier,
-                            full_key_name
+                            escape_nonprintables(full_key_name)
                         ))
                     }
                 }
@@ -298,7 +306,10 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     codepoint,
                 }
             } else {
-                return Err(wgettext_fmt!("cannot parse key '%s'", full_key_name));
+                return Err(wgettext_fmt!(
+                    "cannot parse key '%s'",
+                    escape_nonprintables(full_key_name)
+                ));
             };
             res.push(key);
         }

@@ -77,8 +77,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-\< beginning-of-buffer
     bind --preset $argv alt-\> end-of-buffer
 
-    bind --preset $argv alt-d kill-word
-
     bind --preset $argv ctrl-r history-pager
 
     # term-specific special bindings

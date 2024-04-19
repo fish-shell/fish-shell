@@ -9,7 +9,11 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crate::{common::charptr2wcstring, util::wcsfilecmp};
+use crate::{
+    common::charptr2wcstring,
+    reader::{get_quote, is_backslashed},
+    util::wcsfilecmp,
+};
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
 use printf_compat::sprintf;
@@ -1522,6 +1526,7 @@ impl<'ctx> Completer<'ctx> {
             flags -= ExpandFlags::GEN_DESCRIPTIONS;
         }
 
+        // Expand words separated by '=' separately, unless '=' is escaped or quoted.
         // We have the following cases:
         //
         // --foo=bar => expand just bar
@@ -1529,13 +1534,25 @@ impl<'ctx> Completer<'ctx> {
         // foo=bar => expand the whole thing, and also just bar
         //
         // We also support colon separator (#2178). If there's more than one, prefer the last one.
-        let sep_index = s.chars().rposition(|c| c == '=' || c == ':');
+        let sep_index = if get_quote(s, s.len()).is_some() {
+            None
+        } else {
+            let mut end = s.len();
+            loop {
+                match s[..end].chars().rposition(|c| c == '=' || c == ':') {
+                    Some(pos) => {
+                        if !is_backslashed(s, pos) {
+                            break Some(pos);
+                        }
+                        end = pos;
+                    }
+                    None => break None,
+                }
+            }
+        };
         let complete_from_start = sep_index.is_none() || !string_prefixes_string(L!("-"), s);
 
         if let Some(sep_index) = sep_index {
-            // FIXME: This just cuts the token,
-            // so any quoting or braces gets lost.
-            // See #4954.
             let sep_string = s.slice_from(sep_index + 1);
             let mut local_completions = Vec::new();
             if expand_string(

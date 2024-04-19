@@ -903,6 +903,19 @@ pub fn reader_schedule_prompt_repaint() {
 
 pub fn reader_execute_readline_cmd(ch: CharEvent) {
     if let Some(data) = current_data() {
+        let CharEvent::Readline(readline_cmd_evt) = &ch else {
+            panic!()
+        };
+        if matches!(
+            readline_cmd_evt.cmd,
+            ReadlineCmd::ClearScreenAndRepaint
+                | ReadlineCmd::RepaintMode
+                | ReadlineCmd::Repaint
+                | ReadlineCmd::ForceRepaint
+        ) {
+            data.inputter.queue_char(ch);
+            return;
+        }
         if data.rls.is_none() {
             data.rls = Some(ReadlineLoopState::new());
         }

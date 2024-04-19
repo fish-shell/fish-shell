@@ -2,19 +2,37 @@
 #REQUIRES: command -v tmux
 
 set -g isolated_tmux_fish_extra_args -C '
-    function fish_prompt; printf "prompt $status_generation> <$prompt_var> "; end
+    function fish_prompt
+        printf "prompt $status_generation> <status=$status> <$prompt_var> "
+        set prompt_var ''
+    end
     function on_prompt_var --on-variable prompt_var
         commandline -f repaint
     end
+    function token-info
+        __fish_echo echo "current token is <$(commandline -t)>"
+    end
+    bind ctrl-g token-info
 '
 
 isolated-tmux-start
 
 isolated-tmux capture-pane -p
-# CHECK: prompt 0> <>
+# CHECK: prompt 0> <status=0> <>
 
 set -q CI && set sleep sleep 10
 set -U prompt_var changed
 tmux-sleep
+isolated-tmux send-keys Enter
+# CHECK: prompt 0> <status=0> <changed>
+
+isolated-tmux send-keys echo Space 123
+tmux-sleep
+isolated-tmux send-keys C-g
+
+# CHECK: prompt 0> <status=0> <> echo 123
+# CHECK: current token is <123>
+# CHECK: prompt 0> <status=0> <> echo 123
+tmux-sleep
+
 isolated-tmux capture-pane -p
-# CHECK: prompt 0> <changed>

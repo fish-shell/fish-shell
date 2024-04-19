@@ -10,7 +10,7 @@ use std::{
 };
 
 use crate::{
-    common::charptr2wcstring,
+    common::{charptr2wcstring, escape_string, EscapeFlags, EscapeStringStyle},
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
 };
@@ -727,11 +727,12 @@ impl<'ctx> Completer<'ctx> {
 
         if cmd_tok.location_in_or_at_end_of_source_range(cursor_pos) {
             let equals_sign_pos = variable_assignment_equals_pos(current_token);
-            if equals_sign_pos.is_some() {
+            if let Some(pos) = equals_sign_pos {
                 self.complete_param_expand(
-                    current_token,
-                    true,  /* do_file */
-                    false, /* handle_as_special_cd */
+                    &current_token[..pos + 1],
+                    &current_token[pos + 1..],
+                    /*do_file=*/ true,
+                    /*handle_as_special_cd=*/ false,
                 );
                 return;
             }
@@ -831,10 +832,7 @@ impl<'ctx> Completer<'ctx> {
         }
 
         // This function wants the unescaped string.
-        self.complete_param_expand(current_argument, do_file, handle_as_special_cd);
-
-        // Escape '[' in the argument before completing it.
-        self.escape_opening_brackets(current_argument);
+        self.complete_param_expand(L!(""), current_argument, do_file, handle_as_special_cd);
 
         // Lastly mark any completions that appear to already be present in arguments.
         self.mark_completions_duplicating_arguments(&cmdline, current_token, tokens);
@@ -1501,7 +1499,13 @@ impl<'ctx> Completer<'ctx> {
     }
 
     /// Perform generic (not command-specific) expansions on the specified string.
-    fn complete_param_expand(&mut self, s: &wstr, do_file: bool, handle_as_special_cd: bool) {
+    fn complete_param_expand(
+        &mut self,
+        variable_override_prefix: &wstr,
+        s: &wstr,
+        do_file: bool,
+        handle_as_special_cd: bool,
+    ) {
         if self.ctx.check_cancel() {
             return;
         }
@@ -1534,7 +1538,8 @@ impl<'ctx> Completer<'ctx> {
         // foo=bar => expand the whole thing, and also just bar
         //
         // We also support colon separator (#2178). If there's more than one, prefer the last one.
-        let sep_index = if get_quote(s, s.len()).is_some() {
+        let quoted = get_quote(s, s.len()).is_some();
+        let sep_index = if quoted {
             None
         } else {
             let mut end = s.len();
@@ -1570,6 +1575,14 @@ impl<'ctx> Completer<'ctx> {
 
             // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
             // inserting our separator and prefix.
+            Self::escape_opening_brackets(&mut local_completions, s);
+            Self::escape_separators(
+                &mut local_completions,
+                variable_override_prefix,
+                self.flags.autosuggestion,
+                true,
+                quoted,
+            );
             let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
             for comp in &mut local_completions {
                 comp.prepend_token_prefix(prefix_with_sep);
@@ -1586,14 +1599,56 @@ impl<'ctx> Completer<'ctx> {
                 flags -= ExpandFlags::FUZZY_MATCH;
             }
 
+            let first = self.completions.len();
             if expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None).result
                 == ExpandResultCode::error
             {
                 FLOGF!(complete, "Error while expanding string '%ls'", s);
             }
+            Self::escape_opening_brackets(&mut self.completions[first..], s);
+            let have_token = !s.is_empty();
+            Self::escape_separators(
+                &mut self.completions[first..],
+                variable_override_prefix,
+                self.flags.autosuggestion,
+                have_token,
+                quoted,
+            );
         }
     }
 
+    fn escape_separators(
+        completions: &mut [Completion],
+        variable_override_prefix: &wstr,
+        append_only: bool,
+        have_token: bool,
+        is_quoted: bool,
+    ) {
+        for c in completions {
+            if is_quoted && !c.replaces_token() {
+                continue;
+            }
+            // clone of completion_apply_to_command_line
+            let add_space = !c.flags.contains(CompleteFlags::NO_SPACE);
+            let no_tilde = c.flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
+            let mut escape_flags = EscapeFlags::SEPARATORS;
+            if append_only || !add_space || (!c.replaces_token() && have_token) {
+                escape_flags.insert(EscapeFlags::NO_QUOTED);
+            }
+            if no_tilde {
+                escape_flags.insert(EscapeFlags::NO_TILDE);
+            }
+            if c.replaces_token() {
+                c.completion = variable_override_prefix.to_owned()
+                    + &escape_string(&c.completion, EscapeStringStyle::Script(escape_flags))[..];
+            } else {
+                c.completion =
+                    escape_string(&c.completion, EscapeStringStyle::Script(escape_flags));
+            }
+            assert!(!c.flags.contains(CompleteFlags::DONT_ESCAPE));
+            c.flags |= CompleteFlags::DONT_ESCAPE;
+        }
+    }
     /// Complete the specified string as an environment variable.
     /// Returns `true` if this was a variable, so we should stop completion.
     fn complete_variable(&mut self, s: &wstr, start_offset: usize) -> bool {
@@ -2008,7 +2063,7 @@ impl<'ctx> Completer<'ctx> {
     ///
     /// Check if there is any unescaped, unquoted '['; if yes, make the completions replace the entire
     /// argument instead of appending, so '[' will be escaped.
-    fn escape_opening_brackets(&mut self, argument: &wstr) {
+    fn escape_opening_brackets(completions: &mut [Completion], argument: &wstr) {
         let mut have_unquoted_unescaped_bracket = false;
         let mut quote = None;
         let mut escaped = false;
@@ -2040,7 +2095,7 @@ impl<'ctx> Completer<'ctx> {
         ) else {
             return;
         };
-        for comp in self.completions.get_list_mut() {
+        for comp in completions {
             if comp.flags.contains(CompleteFlags::REPLACES_TOKEN) {
                 continue;
             }

@@ -95,8 +95,13 @@ fn test_complete() {
     std::fs::create_dir_all("test/complete_test").unwrap();
     std::fs::write("test/complete_test/has space", []).unwrap();
     std::fs::write("test/complete_test/bracket[abc]", []).unwrap();
-    #[cfg(not(windows))] // Square brackets are not legal path characters on WIN32/CYGWIN
     std::fs::write(r"test/complete_test/gnarlybracket\[abc]", []).unwrap();
+    #[cfg(not(windows))] // Square brackets are not legal path characters on WIN32/CYGWIN
+    {
+        std::fs::write(r"test/complete_test/gnarlybracket\[abc]", []).unwrap();
+        std::fs::write(r"test/complete_test/colon:abc", []).unwrap();
+    }
+    std::fs::write(r"test/complete_test/equal=abc", []).unwrap();
     std::fs::write("test/complete_test/testfile", []).unwrap();
     let testfile = CString::new("test/complete_test/testfile").unwrap();
     assert_eq!(unsafe { libc::chmod(testfile.as_ptr(), 0o700,) }, 0);
@@ -158,20 +163,44 @@ fn test_complete() {
     // Brackets - see #5831
     unique_completion_applies_as!(
         "touch test/complete_test/bracket[",
-        "test/complete_test/bracket[abc]",
+        r"'test/complete_test/bracket[abc]'",
         "touch 'test/complete_test/bracket[abc]' ",
     );
     unique_completion_applies_as!(
         "echo (ls test/complete_test/bracket[",
-        "test/complete_test/bracket[abc]",
+        r"'test/complete_test/bracket[abc]'",
         "echo (ls 'test/complete_test/bracket[abc]' ",
     );
     #[cfg(not(windows))] // Square brackets are not legal path characters on WIN32/CYGWIN
     {
         unique_completion_applies_as!(
             r"touch test/complete_test/gnarlybracket\\[",
-            r"test/complete_test/gnarlybracket\[abc]",
+            r"'test/complete_test/gnarlybracket\\[abc]'",
             r"touch 'test/complete_test/gnarlybracket\\[abc]' ",
+        );
+        unique_completion_applies_as!(
+            r"a=test/complete_test/bracket[",
+            r"a='test/complete_test/bracket[abc]'",
+            r"a='test/complete_test/bracket[abc]' ",
+        );
+    }
+
+    #[cfg(not(windows))]
+    {
+        unique_completion_applies_as!(
+            r"touch test/complete_test/colon",
+            r"\:abc",
+            r"touch test/complete_test/colon\:abc ",
+        );
+        unique_completion_applies_as!(
+            r"touch test/complete_test/colon\:",
+            r"abc",
+            r"touch test/complete_test/colon\:abc ",
+        );
+        unique_completion_applies_as!(
+            r#"touch "test/complete_test/colon:"#,
+            r"abc",
+            r#"touch "test/complete_test/colon:abc" "#,
         );
     }
 
@@ -427,8 +456,9 @@ fn test_autosuggest_suggest_special() {
     let _cleanup = test_init();
     macro_rules! perform_one_autosuggestion_cd_test {
         ($command:literal, $expected:literal, $vars:expr) => {
+            let command = L!($command);
             let mut comps = complete(
-                L!($command),
+                command,
                 CompletionRequestOptions::autosuggest(),
                 &OperationContext::background($vars, EXPANSION_LIMIT_BACKGROUND),
             )
@@ -440,7 +470,15 @@ fn test_autosuggest_suggest_special() {
             if !expects_error {
                 sort_and_prioritize(&mut comps, CompletionRequestOptions::default());
                 let suggestion = &comps[0];
-                assert_eq!(suggestion.completion, L!($expected));
+                let mut cursor = command.len();
+                let newcmdline = completion_apply_to_command_line(
+                    &suggestion.completion,
+                    suggestion.flags,
+                    command,
+                    &mut cursor,
+                    /*append_only=*/ true,
+                );
+                assert_eq!(newcmdline.strip_prefix(command).unwrap(), L!($expected));
             }
         };
     }
@@ -512,24 +550,24 @@ fn test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/0", "foobar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/1", "foo bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/1", "foo bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/1", "foo bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/2", "foo  bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/2", "foo  bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/2", "foo  bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/1", r"foo\ bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/1", r"foo bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/1", r"foo bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/2", r"foo\ \ bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/2", r"foo  bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/2", r"foo  bar/", &vars);
     #[cfg(not(windows))]
     {
-        perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/3", "foo\\bar/", &vars);
-        perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/3", "foo\\bar/", &vars);
-        perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/3", "foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/3", r"foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/3", r"foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/3", r"foo\\bar/", &vars);
     }
-    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/4", "foo'bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/4", r"foo\'bar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/4", "foo'bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/4", "foo'bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/5", "foo\"bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/5", "foo\"bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/5", "foo\"bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/4", r"foo\'bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/5", r#"foo\"bar/"#, &vars);
+    perform_one_autosuggestion_cd_test!("cd \"test/autosuggest_test/5", r#"foo\"bar/"#, &vars);
+    perform_one_autosuggestion_cd_test!("cd 'test/autosuggest_test/5", r#"foo"bar/"#, &vars);
 
     vars.parent
         .vars
@@ -549,24 +587,24 @@ fn test_autosuggest_suggest_special() {
     perform_one_autosuggestion_cd_test!("cd 0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd '0", "foobar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 1", "foo bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 1", r"foo\ bar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"1", "foo bar/", &vars);
     perform_one_autosuggestion_cd_test!("cd '1", "foo bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 2", "foo  bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 2", r"foo\ \ bar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"2", "foo  bar/", &vars);
     perform_one_autosuggestion_cd_test!("cd '2", "foo  bar/", &vars);
     #[cfg(not(windows))]
     {
-        perform_one_autosuggestion_cd_test!("cd 3", "foo\\bar/", &vars);
-        perform_one_autosuggestion_cd_test!("cd \"3", "foo\\bar/", &vars);
-        perform_one_autosuggestion_cd_test!("cd '3", "foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd 3", r"foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd \"3", r"foo\\bar/", &vars);
+        perform_one_autosuggestion_cd_test!("cd '3", r"foo\\bar/", &vars);
     }
-    perform_one_autosuggestion_cd_test!("cd 4", "foo'bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd \"4", "foo'bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd '4", "foo'bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd 5", "foo\"bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd \"5", "foo\"bar/", &vars);
-    perform_one_autosuggestion_cd_test!("cd '5", "foo\"bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 4", r"foo\'bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd \"4", r"foo'bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd '4", r"foo\'bar/", &vars);
+    perform_one_autosuggestion_cd_test!("cd 5", r#"foo\"bar/"#, &vars);
+    perform_one_autosuggestion_cd_test!("cd \"5", r#"foo\"bar/"#, &vars);
+    perform_one_autosuggestion_cd_test!("cd '5", r#"foo"bar/"#, &vars);
 
     // A single quote should defeat tilde expansion.
     perform_one_autosuggestion_cd_test!("cd '~/test_autosuggest_suggest_specia'", "<error>", &vars);

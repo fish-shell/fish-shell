@@ -40,8 +40,8 @@ Notable backwards-incompatible changes
       Since ``,`` and ``-`` act as separators, there are some cases where they need to be written as ``comma`` and ``minus`` respectively.
   - To minimize gratuitous breakage, the key argument to ``bind`` is parsed using the old syntax in two cases:
 
-    - If the key argument starts with a raw escape character (``\e``) or ascii control character. Besides backwards compatibility, these "raw" bindings can be useful for keys that fish can't decode yet.
-    - If the key argument consists of exactly two characters, contains none of ``,`` or ``-`` and is not a named key.
+    - If the key argument starts with an ASCII control character (usually the escape character, ``\e``) or ASCII control character. Besides backwards compatibility, these "raw" bindings can be useful for keys that fish can't decode yet.
+    - If the key argument consists of two or three characters, contains none of ``,`` or ``-`` and is not a named key.
 
 - Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize.
   The typical problem is that terminals echo the raw sequences sent by fish instead of silently ignoring them.

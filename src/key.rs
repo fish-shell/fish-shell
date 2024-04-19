@@ -241,17 +241,17 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
     if value.len() == 1 {
         // Hack: allow singular comma.
         res.push(canonicalize_key(Key::from_raw(first)).unwrap());
-    } else if (value.len() == 2
+    } else if ((2..=3).contains(&value.len())
         && !value.contains('-')
         && !value.contains(KEY_SEPARATOR)
         && !KEY_NAMES.iter().any(|(_codepoint, name)| name == value)
         && value.as_char_slice()[0] != 'F')
-        || first == '\x1b'
         || first < ' '
     {
         // Hack: treat as legacy syntax (meaning: not comma separated) if
         // 1. it doesn't contain '-' or ',' and is short enough to probably not be a key name.
-        // 2. it starts with raw escape (\e) or a raw ASCII control character (\c).
+        // 2. it starts with an ASCII control character. This can be either a multi-key binding
+        //    or a single-key that is sent as escape sequence (starting with \e).
         for c in value.chars() {
             res.push(canonicalize_key(Key::from_raw(c)).unwrap());
         }

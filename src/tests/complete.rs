@@ -133,37 +133,51 @@ fn test_complete() {
     assert_eq!(completions.len(), 1);
     assert_eq!(completions[0].completion, L!("space"));
 
-    // Brackets - see #5831
-    completions = do_complete(
-        L!("echo (ls test/complete_test/bracket["),
-        CompletionRequestOptions::default(),
-    );
-    assert_eq!(completions.len(), 1);
-    assert_eq!(
-        completions[0].completion,
-        L!("test/complete_test/bracket[abc]")
-    );
+    macro_rules! unique_completion_applies_as {
+        ( $cmdline:expr, $completion_result:expr, $applied:expr $(,)? ) => {
+            let cmdline = L!($cmdline);
+            let completions = do_complete(cmdline, CompletionRequestOptions::default());
+            assert_eq!(completions.len(), 1);
+            assert_eq!(
+                completions[0].completion,
+                L!($completion_result),
+                "completion mismatch"
+            );
+            let mut cursor = cmdline.len();
+            let newcmdline = completion_apply_to_command_line(
+                &completions[0].completion,
+                completions[0].flags,
+                cmdline,
+                &mut cursor,
+                false,
+            );
+            assert_eq!(newcmdline, L!($applied), "apply result mismatch");
+        };
+    }
 
-    let mut cmdline = L!("touch test/complete_test/bracket[");
-    completions = do_complete(cmdline, CompletionRequestOptions::default());
-    assert_eq!(completions.len(), 1);
-    assert_eq!(
-        completions[0].completion,
-        L!("test/complete_test/bracket[abc]")
+    // Brackets - see #5831
+    unique_completion_applies_as!(
+        "touch test/complete_test/bracket[",
+        "test/complete_test/bracket[abc]",
+        "touch 'test/complete_test/bracket[abc]' ",
     );
-    let mut cursor = cmdline.len();
-    let newcmdline = completion_apply_to_command_line(
-        &completions[0].completion,
-        completions[0].flags,
-        cmdline,
-        &mut cursor,
-        false,
+    unique_completion_applies_as!(
+        "echo (ls test/complete_test/bracket[",
+        "test/complete_test/bracket[abc]",
+        "echo (ls 'test/complete_test/bracket[abc]' ",
     );
-    assert_eq!(newcmdline, L!("touch 'test/complete_test/bracket[abc]' "));
+    #[cfg(not(windows))] // Square brackets are not legal path characters on WIN32/CYGWIN
+    {
+        unique_completion_applies_as!(
+            r"touch test/complete_test/gnarlybracket\\[",
+            r"test/complete_test/gnarlybracket\[abc]",
+            r"touch 'test/complete_test/gnarlybracket\\[abc]' ",
+        );
+    }
 
     // #8820
     let mut cursor_pos = 11;
-    let mut newcmdline = completion_apply_to_command_line(
+    let newcmdline = completion_apply_to_command_line(
         L!("Debug/"),
         CompleteFlags::REPLACES_TOKEN | CompleteFlags::NO_SPACE,
         L!("mv debug debug"),
@@ -171,29 +185,6 @@ fn test_complete() {
         true,
     );
     assert_eq!(newcmdline, L!("mv debug Debug/"));
-
-    #[cfg(not(windows))] // Square brackets are not legal path characters on WIN32/CYGWIN
-    {
-        cmdline = L!(r"touch test/complete_test/gnarlybracket\\[");
-        completions = do_complete(cmdline, CompletionRequestOptions::default());
-        assert_eq!(completions.len(), 1);
-        assert_eq!(
-            completions[0].completion,
-            L!(r"test/complete_test/gnarlybracket\[abc]")
-        );
-        let mut cursor = cmdline.len();
-        newcmdline = completion_apply_to_command_line(
-            &completions[0].completion,
-            completions[0].flags,
-            cmdline,
-            &mut cursor,
-            false,
-        );
-        assert_eq!(
-            newcmdline,
-            L!(r"touch 'test/complete_test/gnarlybracket\\[abc]' ")
-        );
-    }
 
     // Add a function and test completing it in various ways.
     parser.eval(L!("function scuttlebutt; end"), &IoChain::new());

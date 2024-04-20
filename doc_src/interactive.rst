@@ -555,13 +555,17 @@ Key sequences
 
 To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_reader>`.
 
+::
+
   > fish_key_reader # Press Alt + right-arrow
   Press a key:
   bind alt-right 'do something'
   
-Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them.
+Note that the historical way the terminal encodes keys and sends them to the application (fish, in this case) makes a lot of combinations indistinguishable or unbindable. In the usual encoding, :kbd:`ctrl-i` *is the same* as the tab key, and shift cannot be detected when ctrl is also pressed.
 
-Also, :kbd:`escape` is the same thing as :kbd:`alt` in a terminal. To distinguish between pressing :kbd:`escape` and then another key, and pressing :kbd:`alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
+There are more powerful encoding schemes, and fish tries to tell the terminal to turn them on, but there are still many terminals that do not support them. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them, and there isn't anything fish can do about it. It is our hope that these schemes will become more widespread, making input more flexible.
+
+In the historical scheme, :kbd:`escape` is the same thing as :kbd:`alt` in a terminal. To distinguish between pressing :kbd:`escape` and then another key, and pressing :kbd:`alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
 
 If you want to be able to press :kbd:`escape` and then a character and have it count as :kbd:`alt`\ +\ that character, set it to a higher value, e.g.::
 

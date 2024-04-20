@@ -26,27 +26,30 @@ If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be pr
 Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``/``c-``, ``alt-``/``a-`` and ``shift-``.
 For example, pressing :kbd:`w` while holding the Alt modifier is written as ``alt-w``.
 Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
+``ctrl-x,ctrl-e`` would mean pressing :kbd:`ctrl-x` followed by :kbd:`ctrl-e`.
 
 Some keys have names, usually because they don't have an obvious printable character representation.
 They are:
 
-``minus`` (``-``),
-``comma`` (``,``),
-``backspace``,
-``delete``,
-``escape``,
-``enter``,
-the arrow keys ``up``, ``down``, ``left`` and ``right``,
-``pageup``,
-``pagedown``,
-``home``,
-``end``,
-``insert``,
-``tab``,
-``space`` and
-``F1`` through ``F12``.
+- the arrow keys ``up``, ``down``, ``left`` and ``right``,
+- ``backspace``,
+- ``comma`` (``,``),
+- ``delete``,
+- ``end``,
+- ``enter``,
+- ``escape``,
+- ``F1`` through ``F12``.
+- ``home``,
+- ``insert``,
+- ``minus`` (``-``),
+- ``pageup``,
+- ``pagedown``,
+- ``space`` and
+- ``tab``,
 
-An empty value (``''``) for ``KEYS`` designates the generic binding. For most bind modes, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+These names are case-sensitive.
+
+An empty value (``''``) for ``KEYS`` designates the generic binding that will be used if nothing else matches. For most bind modes, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes that have no bindings otherwise. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
 
 To find the name of a key combination you can use :doc:`fish_key_reader <fish_key_reader>`.
 
@@ -58,8 +61,6 @@ To find the name of a key combination you can use :doc:`fish_key_reader <fish_ke
 If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed. If ``KEYS`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
 Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
-
-To bind a sequence of keys, separate them with ``,``.
 
 To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
@@ -388,12 +389,16 @@ Terminal Limitations
 
 Unix terminals, like the ones fish operates in, are at heart 70s technology. They have some limitations that applications running inside them can't workaround.
 
-For instance, the control key modifies a character by setting the top three bits to 0. This means:
+For instance, historically the control key modifies a character by setting the top three bits to 0. This means:
 
 - Many characters + control are indistinguishable from other keys: :kbd:`ctrl-i` *is* :kbd:`tab`, :kbd:`ctrl-j` *is* newline (``\n``).
-- Control and shift don't work simultaneously
+- Control and shift don't work simultaneously - :kbd:`ctrl-X` is the same as :kbd:`ctrl-x`.
 
-Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`right` (``→``) often sends ``\e\[C``. These can differ from terminal to terminal, and the mapping is typically available in `terminfo(5)`. Sometimes however a terminal identifies as e.g. ``xterm-256color`` for compatibility, but then implements xterm's sequences incorrectly.
+Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`right` (``→``) usually sends ``\e\[C``.
+
+Some modern terminals support newer encodings for keys, that allow distinguishing more characters and modifiers, and fish enables as many of these as it can, automatically.
+
+When in doubt, run :doc:`fish_key_reader`. If that tells you that pressing :kbd:`ctrl-i` sends tab, your terminal does not support these better encodings, and so fish is limited to what it sends.
 
 .. _cmd-bind-escape:
 
@@ -404,16 +409,13 @@ When you've bound a sequence of multiple characters, there is always the possibi
 
 For example::
 
-  bind jk 'commandline -i foo'
+  bind j,k 'commandline -i foo'
+  # or `bind jk`
 
 will bind the sequence ``jk`` to insert "foo" into the commandline. When you've only pressed "j", fish doesn't know if it should insert the "j" (because of the default self-insert), or wait for the "k".
 
 You can enable a timeout for this, by setting the :envvar:`fish_sequence_key_delay_ms` variable to the timeout in milliseconds. If the timeout elapses, fish will no longer wait for the sequence to be completed, and do what it can with the characters it already has.
 
-The escape key is a special case, because it can be used standalone as a real key or as part of a longer escape sequence, like function or arrow keys.
-
-Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a".
-
-So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
+The escape key is a special case, because it can be used standalone as a real key or as part of a longer escape sequence, like function or arrow keys. Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a". So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
 
 See also :ref:`Key sequences <interactive-key-sequences>`.

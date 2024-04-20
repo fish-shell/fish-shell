@@ -30,7 +30,6 @@ Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w
 Some keys have names, usually because they don't have an obvious printable character representation.
 They are:
 
-``plus`` (``+``),
 ``minus`` (``-``),
 ``comma`` (``,``),
 ``backspace``,

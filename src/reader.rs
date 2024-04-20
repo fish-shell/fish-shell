@@ -4592,7 +4592,12 @@ pub fn reader_expand_abbreviation_at_cursor(
     } else {
         abbrs::Position::Anywhere
     };
-    let cmd = cmdtok.map(|t| &cmdline[Range::<usize>::from(t)]);
+    // If the token itself is the command, we have no command to pass.
+    let cmd = if !token.is_cmd {
+        cmdtok.map(|t| &cmdline[Range::<usize>::from(t)])
+    } else {
+        None
+    };
 
     let token_str = &cmdline[Range::<usize>::from(range)];
     let replacers = abbrs_match(token_str, position, cmd.unwrap_or(L!("")));

@@ -277,14 +277,11 @@ pub trait WExt {
         iter_prefixes_iter(prefix.chars(), self.as_char_slice().iter().copied())
     }
 
-    fn strip_prefix<Prefix: IntoCharIter>(&self, prefix: Prefix) -> &wstr {
+    fn strip_prefix<Prefix: IntoCharIter>(&self, prefix: Prefix) -> Option<&wstr> {
         let iter = prefix.chars();
         let prefix_len = iter.clone().count();
-        if iter_prefixes_iter(iter, self.as_char_slice().iter().copied()) {
-            self.slice_from(prefix_len)
-        } else {
-            self.slice_from(0)
-        }
+        iter_prefixes_iter(iter, self.as_char_slice().iter().copied())
+            .then(|| self.slice_from(prefix_len))
     }
 
     /// \return whether we end with a given Suffix.

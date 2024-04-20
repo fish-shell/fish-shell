@@ -291,7 +291,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     codepoint,
                 })?
             } else if codepoint.is_none() && key_name.starts_with('F') && key_name.len() <= 3 {
-                let num = key_name.strip_prefix('F');
+                let num = key_name.strip_prefix('F').unwrap();
                 let codepoint = match fish_wcstoi(num) {
                     Ok(n) if (1..=12).contains(&n) => function_key(u32::try_from(n).unwrap()),
                     _ => {

@@ -15,7 +15,8 @@ function fish_clipboard_copy
     if type -q pbcopy
         printf '%s' $cmdline | pbcopy
     else if set -q WAYLAND_DISPLAY; and type -q wl-copy
-        printf '%s' $cmdline | wl-copy
+        printf '%s' $cmdline | wl-copy &
+        disown
     else if set -q DISPLAY; and type -q xsel
         printf '%s' $cmdline | xsel --clipboard
     else if set -q DISPLAY; and type -q xclip

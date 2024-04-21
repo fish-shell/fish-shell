@@ -438,7 +438,7 @@ fn terminal_protocols_enable() {
         .replace(Some(TerminalProtocols::new()));
 }
 
-pub fn terminal_protocols_disable() {
+fn terminal_protocols_disable() {
     assert!(TERMINAL_PROTOCOLS.get().borrow().is_some());
     TERMINAL_PROTOCOLS.get().replace(None);
 }
@@ -454,7 +454,9 @@ pub fn terminal_protocols_disable_scoped() -> impl ScopeGuarding<Target = ()> {
         // If a child is stopped, this will already be enabled.
         if TERMINAL_PROTOCOLS.get().borrow().is_none() {
             terminal_protocols_enable();
-            reader_current_data().unwrap().save_screen_state();
+            if let Some(data) = reader_current_data() {
+                data.save_screen_state();
+            }
         }
     })
 }
@@ -529,7 +531,9 @@ pub(crate) fn focus_events_enable_ifn() {
     if !term_protocols.focus_events {
         term_protocols.focus_events = true;
         let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
-        reader_current_data().unwrap().save_screen_state();
+        if let Some(data) = reader_current_data() {
+            data.save_screen_state();
+        }
     }
 }
 

@@ -25,7 +25,6 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
-use crate::reader::reader_current_data;
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::{assert_is_main_thread, MainThread};
 use crate::util::get_time;
@@ -564,11 +563,10 @@ impl Parser {
             Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
-        let terminal_protocols_disabled = (
-            // If interactive or inside noninteractive builtin read.
-            reader_current_data().is_some() && TERMINAL_PROTOCOLS.get().borrow().is_some()
-        )
-        .then(terminal_protocols_disable_scoped);
+        // If interactive or inside noninteractive builtin read.
+        let terminal_protocols_enabled = TERMINAL_PROTOCOLS.get().borrow().is_some();
+        let terminal_protocols_disabled =
+            terminal_protocols_enabled.then(terminal_protocols_disable_scoped);
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().pods.exec_count;

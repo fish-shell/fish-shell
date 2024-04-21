@@ -24,6 +24,9 @@ pub enum FeatureFlag {
     ampersand_nobg_in_token,
     /// Whether "%self" is expanded to fish's pid
     remove_percent_self,
+
+    /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
+    test_require_arg,
 }
 
 struct Features {
@@ -96,6 +99,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: false,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::test_require_arg,
+        name: L!("test-require-arg"),
+        groups: L!("3.8"),
+        description: L!("builtin test requires an argument"),
+        default_value: false,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -156,6 +167,7 @@ impl Features {
                 AtomicBool::new(METADATA[2].default_value),
                 AtomicBool::new(METADATA[3].default_value),
                 AtomicBool::new(METADATA[4].default_value),
+                AtomicBool::new(METADATA[5].default_value),
             ],
         }
     }

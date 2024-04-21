@@ -58,6 +58,7 @@ status features
 #CHECK: regex-easyesc           on  3.1 string replace -r needs fewer \'s
 #CHECK: ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separator
 #CHECK: remove-percent-self     off 3.8 %self is no longer expanded (use $fish_pid)
+#CHECK: test-require-arg        off 3.8 builtin test requires an argument
 status test-feature stderr-nocaret
 echo $status
 #CHECK: 0

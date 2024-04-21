@@ -431,7 +431,7 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 pub static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
     MainThread::new(RefCell::new(None));
 
-pub fn terminal_protocols_enable() {
+fn terminal_protocols_enable() {
     assert!(TERMINAL_PROTOCOLS.get().borrow().is_none());
     TERMINAL_PROTOCOLS
         .get()

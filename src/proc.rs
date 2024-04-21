@@ -615,13 +615,11 @@ impl Process {
         Default::default()
     }
 
-    /// Retrieves the associated [`libc::pid_t`] or panics if no pid has been set (not yet set or
-    /// process does not get a pid).
+    /// Retrieves the associated [`libc::pid_t`], 0 if unset.
     ///
     /// See [`Process::has_pid()]` to safely check if the process has a pid.
     pub fn pid(&self) -> libc::pid_t {
         let value = self.pid.load(Ordering::Relaxed);
-        assert!(value != 0, "Process::pid() called but pid not set!");
         #[allow(clippy::useless_conversion)]
         value.into()
     }

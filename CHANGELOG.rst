@@ -72,6 +72,9 @@ Deprecations and removed features
 
 - ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in custom completions (:issue:`10212`).
 - A new feature flag, ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
+- A new feature flag, ``test-require-arg``, will disable ``test``'s one-argument mode. That means ``test -n`` without an additional argument will return false, ``test -z`` will keep returning true. Any other option without an argument, anything that is not an option and no argument will be an error. This also goes for ``[``, test's alternate name.
+  This is a frequent source of confusion and so we are breaking with POSIX explicitly in this regard.
+  In addition to the feature flag, there is a debug category "deprecated-test". Running fish with ``fish -d deprecated-test`` will show warnings whenever a ``test`` invocation that would change is used. (:issue:`10365`).
 - Specifying key names as terminfo name (``bind -k``) is deprecated and may be removed in a future version.
 - Flow control -- which if enabled by ``stty ixon ixoff`` allows to pause terminal input with :kbd:`ctrl-s` and resume it with :kbd:`ctrl-q` -- now works only while fish is executing an external command.
 - When a terminal pastes text into fish using bracketed paste, fish used to switch to a special ``paste`` bind mode.
@@ -93,6 +96,8 @@ Scripting improvements
 - ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 - Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
+- A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
+  This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
 
 Interactive improvements
 ------------------------

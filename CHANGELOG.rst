@@ -21,28 +21,9 @@ Packagers should see the :ref:`For Distributors <rust-packaging>` section at the
 Notable backwards-incompatible changes
 --------------------------------------
 
-- Fish now decodes keyboard input into human-readable key names.
-  To make this for for a wide range of terminals, fish asks terminals to speak several keyboard protocols,
-  including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
-  Depending on terminal support, this allows to bind a lot more key combinations,
-  including arbitrary combinations of modifiers :kbd:`ctrl`, :kbd:`alt` and :kbd:`shift`.
-  Previously one could only use the Control key for the 32 ASCII control characters.
-
-  This comes with a new syntax for specifying keys to builtin ``bind``.
-  The new syntax introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point.
-  The old syntax remains mostly supported but the new one is preferred.
-
-  - Existing bindings that use the new names have a different meaning now.
-    For example
-
-    - ``bind up 'do something'`` binds the up arrow key instead of a two-key sequence.
-    - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
-      Since ``,`` and ``-`` act as separators, there are some cases where they need to be written as ``comma`` and ``minus`` respectively.
-  - To minimize gratuitous breakage, the key argument to ``bind`` is parsed using the old syntax in two cases:
-
-    - If the key argument starts with an ASCII control character (usually the escape character, ``\e``) or ASCII control character. Besides backwards compatibility, these "raw" bindings can be useful for keys that fish can't decode yet.
-    - If the key argument consists of two or three characters, contains none of ``,`` or ``-`` and is not a named key.
-
+- As part of a larger binding rework, ``bind`` gained a new key notation.
+  In most cases the old notation should keep working, but in rare cases you may have to change a ``bind`` invocation to use the new notation.
+  See :ref:`below <changelog-new-bindings>` for details.
 - Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize.
   The typical problem is that terminals echo the raw sequences sent by fish instead of silently ignoring them.
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
@@ -62,7 +43,22 @@ Notable backwards-incompatible changes
 
 Notable improvements and fixes
 ------------------------------
-- New function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
+.. _changelog-new-bindings:
+
+-  Fish now decodes keyboard input into human-readable key names.
+   To make this for for a wide range of terminals, fish asks terminals to speak several keyboard protocols,
+   including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
+   Depending on terminal support, this allows to bind a lot more key combinations, including arbitrary combinations of modifiers :kbd:`ctrl`, :kbd:`alt` and :kbd:`shift`,
+   and telling e.g. :kbd:`ctrl-i` from :kbd:`tab`.
+
+   This comes with a new syntax for specifying keys to builtin ``bind``, which introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point, instead of relying on byte sequences directly.
+   For example
+     
+   - ``bind up 'do something'`` binds the up arrow key instead of a two-key sequence ("u" and then "p")
+   - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
+
+   Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long and not a named key and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings. This should cover the majority of bindings in use.
+- A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
 - The :kbd:`ctrl-r` history search now uses glob syntax (:issue:`10131`).
 - The :kbd:`ctrl-r` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line command by recalling previous commands.

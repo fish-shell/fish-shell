@@ -14,15 +14,11 @@ Synopsis
 Description
 -----------
 
-``block`` prevents events triggered by ``fish`` or the :doc:`emit <emit>` command from being delivered and acted upon while the block is in place.
-
-In functions, ``block`` can be useful while performing work that should not be interrupted by the shell.
-
-The block can be removed. Any events which triggered while the block was in place will then be delivered.
+``block`` delays delivery of all events triggered by ``fish`` or the :doc:`emit <emit>`, thus delaying the execution of any function registered ``--on-event``, ``--on-process-exit``, ``--on-job-exit``, ``--on-variable`` and ``--on-signal`` until after the block is removed.
 
 Event blocks should not be confused with code blocks, which are created with ``begin``, ``if``, ``while`` or ``for``
 
-Without options, the ``block`` command acts with function scope.
+Without options, ``block`` sets up a block that is released automatically at the end of the current function scope.
 
 The following options are available:
 
@@ -36,7 +32,7 @@ The following options are available:
     Release global block.
 
 **-h** or **--help**
-    Displays help about using this command.
+    Display help about using this command.
 
 Example
 -------
@@ -57,4 +53,4 @@ Example
 Notes
 -----
 
-Events are only received from the current fish process as there is no way to send events from one fish process to another (yet).
+Events are only received from the current fish process as there is no way to send events from one fish process to another.

@@ -67,10 +67,18 @@ Deprecations and removed features
 ---------------------------------
 
 - ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in custom completions (:issue:`10212`).
-- A new feature flag, ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
-- A new feature flag, ``test-require-arg``, will disable ``test``'s one-argument mode. That means ``test -n`` without an additional argument will return false, ``test -z`` will keep returning true. Any other option without an argument, anything that is not an option and no argument will be an error. This also goes for ``[``, test's alternate name.
-  This is a frequent source of confusion and so we are breaking with POSIX explicitly in this regard.
-  In addition to the feature flag, there is a debug category "deprecated-test". Running fish with ``fish -d deprecated-test`` will show warnings whenever a ``test`` invocation that would change is used. (:issue:`10365`).
+- Two new feature flags:
+
+  - ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
+  - ``test-require-arg``, will disable ``test``'s one-argument mode. That means ``test -n`` without an additional argument will return false, ``test -z`` will keep returning true. Any other option without an argument, anything that is not an option and no argument will be an error. This also goes for ``[``, test's alternate name.
+    This is a frequent source of confusion and so we are breaking with POSIX explicitly in this regard.
+    In addition to the feature flag, there is a debug category "deprecated-test". Running fish with ``fish -d deprecated-test`` will show warnings whenever a ``test`` invocation that would change is used. (:issue:`10365`).
+
+  as always these can be enabled with::
+
+    set -Ua fish_features remove-percent-self test-require-arg
+
+  They are available as a preview now, it is our intention to enable them by default in future, and after that eventually make them read-only.
 - Specifying key names as terminfo name (``bind -k``) is deprecated and may be removed in a future version.
 - Flow control -- which if enabled by ``stty ixon ixoff`` allows to pause terminal input with :kbd:`ctrl-s` and resume it with :kbd:`ctrl-q` -- now works only while fish is executing an external command.
 - When a terminal pastes text into fish using bracketed paste, fish used to switch to a special ``paste`` bind mode.
@@ -129,12 +137,12 @@ New or improved bindings
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
   - Multiline commands are indented before being sent to the editor, which matches the rendering in fish.
-- ``backward-kill-path-component`` and friends now treat ``#`` as part of a path component (:issue:`10271`).
+- The ``-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
 - ``alt-d`` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - `history-prefix-search-{backward,forward}` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
-- If the terminal supports shifted key codes from the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/), ``shift-enter`` now inserts a newline instead of executing the command line.
+- If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, ``shift-enter`` now inserts a newline instead of executing the command line.
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
@@ -153,9 +161,9 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Fish now marks the prompt and command-output regions (via OSC 133) to enable terminal shell integration (:issue:`10352`).
 - Fish now reports the working directory (via OSC 7) unconditionally instead of only for some terminals (:issue:`9955`).
 - Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
-- Fish now marks the prompt and command-output regions (via OSC 133) to enable terminal shell integration (:issue:`10352`).
   Shell integration shortcuts can scroll to the next/previous prompt or show the last command output in a pager.
 - Focus reporting in tmux is no longer disabled on the first prompt.
 

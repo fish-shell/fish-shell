@@ -162,9 +162,9 @@ Completions
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Fish now marks the prompt and command-output regions (via OSC 133) to enable terminal shell integration (:issue:`10352`).
+  Shell integration shortcuts can scroll to the next/previous prompt or show the last command output in a pager.
 - Fish now reports the working directory (via OSC 7) unconditionally instead of only for some terminals (:issue:`9955`).
 - Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
-  Shell integration shortcuts can scroll to the next/previous prompt or show the last command output in a pager.
 - Focus reporting in tmux is no longer disabled on the first prompt.
 
 Other improvements

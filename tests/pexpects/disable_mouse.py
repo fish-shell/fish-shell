@@ -21,6 +21,9 @@ sp.expect_str("reader: Disabling mouse tracking")
 sp.send("\x1b[TABCDEF")
 sp.expect_str("reader: Disabling mouse tracking")
 
+# sleep to catch up under ASAN
+sp.sleep(0.5)
+
 # Extended SGR sequences.
 sp.send("\x1b[<1;2;3M")
 sp.expect_str("reader: Disabling mouse tracking")

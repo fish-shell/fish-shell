@@ -157,7 +157,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@1.67
     - name: Install deps
       run: |
-        sudo pip3 install pexpect
+        # --break-system-packages because homebrew has now declared itself "externally managed".
+        # this is CI so we don't actually care.
+        sudo pip3 install --break-system-packages pexpect
         brew install tmux
     - name: cmake
       run: |

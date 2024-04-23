@@ -18,8 +18,6 @@ expect_prompt()
 
 send("echo word")
 expect_str("echo word")
-expect_str("echo word")
-expect_str("echo word")
 
 send("Undo")
 expect_str("echo")

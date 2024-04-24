@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN]
+    abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN] [-c | --command COMMAND]
                     [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
@@ -69,6 +69,8 @@ Combining these features, it is possible to create custom syntaxes, where a regu
 
 With **--position command**, the abbreviation will only expand when it is positioned as a command, not as an argument to another command. With **--position anywhere** the abbreviation may expand anywhere in the command line. The default is **command**.
 
+With **--command COMMAND**, the abbreviation will only expand when it is used as an argument to the given COMMAND. Multiple **--command** can be used together, and the abbreviation will expand for each. An empty **COMMAND** means it will expand only when there *is* no command. **--command** implies **--position anywhere** and disallows **--position command**. Even with different **COMMANDS**, the **NAME** of the abbreviation needs to be unique. Consider using **--regex** if you want to expand the same word differently for multiple commands.
+
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 
 With **--set-cursor=MARKER**, the cursor is moved to the first occurrence of **MARKER** in the expansion. The **MARKER** value is erased. The **MARKER** may be omitted (i.e. simply ``--set-cursor``), in which case it defaults to ``%``.
@@ -121,6 +123,11 @@ This first creates a function ``vim_edit`` which prepends ``vim`` before its arg
     abbr 4DIRS --set-cursor=! "$(string join \n -- 'for dir in */' 'cd $dir' '!' 'cd ..' 'end')"
 
 This creates an abbreviation "4DIRS" which expands to a multi-line loop "template." The template enters each directory and then leaves it. The cursor is positioned ready to enter the command to run in each directory, at the location of the ``!``, which is itself erased.
+
+::
+   abbr --command git co checkout
+
+Turns "co" as an argument to "git" into "checkout". Multiple commands are possible, ``--command={git,hg}`` would expand "co" to "checkout" for both git and hg.
 
 Other subcommands
 --------------------

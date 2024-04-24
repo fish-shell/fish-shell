@@ -17,6 +17,7 @@ struct Options {
     query: bool,
     function: Option<WString>,
     regex_pattern: Option<WString>,
+    commands: Vec<WString>,
     position: Option<Position>,
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
@@ -153,6 +154,10 @@ fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
             if abbr.replacement_is_function {
                 add_arg(L!("--function"));
                 add_arg(&escape_string(&abbr.replacement, style));
+            }
+            for cmd in &abbr.commands {
+                add_arg(L!("--command"));
+                add_arg(&escape_string(cmd, style));
             }
             add_arg(L!("--"));
             // Literal abbreviations have the name and key as the same.
@@ -372,7 +377,21 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
         replacement
     };
 
-    let position = opts.position.unwrap_or(Position::Command);
+    let position = opts.position.unwrap_or({
+        if opts.commands.is_empty() {
+            Position::Command
+        } else {
+            // If it is valid for a command, the abbr can't be in command-position.
+            Position::Anywhere
+        }
+    });
+    if !opts.commands.is_empty() && position == Position::Command {
+        streams.err.appendln(wgettext_fmt!(
+            "%ls: --command cannot be combined with --position command",
+            CMD,
+        ));
+        return STATUS_INVALID_ARGS;
+    }
 
     // Note historically we have allowed overwriting existing abbreviations.
     abbrs::with_abbrs_mut(move |abbrs| {
@@ -385,6 +404,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
             position,
             set_cursor_marker: opts.set_cursor_marker.clone(),
             from_universal: false,
+            commands: opts.commands.clone(),
         })
     });
 
@@ -433,10 +453,11 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    const short_options: &wstr = L!("-:af:r:seqgUh");
+    const short_options: &wstr = L!("-:ac:f:r:seqgUh");
 
     const longopts: &[WOption] = &[
         wopt(L!("add"), ArgType::NoArgument, 'a'),
+        wopt(L!("command"), ArgType::RequiredArgument, 'c'),
         wopt(L!("position"), ArgType::RequiredArgument, 'p'),
         wopt(L!("regex"), ArgType::RequiredArgument, 'r'),
         wopt(
@@ -476,6 +497,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 }
             }
             'a' => opts.add = true,
+            'c' => opts.commands.push(w.woptarg.map(|x| x.to_owned()).unwrap()),
             'p' => {
                 if opts.position.is_some() {
                     streams.err.append(wgettext_fmt!(

@@ -1,4 +1,6 @@
 #RUN: %fish -C 'set -l fish %fish' %s
+# disable on CI ASAN because it's suuuper slow
+#REQUIRES: test -z "$FISH_CI_SAN"
 # Test all completions where the command exists
 
 # No output is good output

@@ -1,4 +1,6 @@
 #RUN: %fish -C 'set -l fish %fish' %s
+# disable on CI ASAN because it's suuuper slow
+#REQUIRES: test -z "$FISH_CI_SAN"
 # Test ALL THE FISH FILES
 # in share/, that is - the tests are exempt because they contain syntax errors, on purpose
 

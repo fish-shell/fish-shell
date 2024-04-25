@@ -2,7 +2,7 @@
 
 # Do not run under sanitizers in CI, as they intercept a busted posix_spawn
 # which mishandles shebangless scripts.
-# REQUIRES: sh 'test -z $FISH_CI_SAN'
+# REQUIRES: test -z "$FISH_CI_SAN"
 
 # Test for shebangless scripts - see 7802.
 
@@ -45,18 +45,17 @@ sleep 0.1
 chmod a+x file.fish
 set -g fish_use_posix_spawn 0
 ./file.fish
+#CHECKERR: exec: {{.*}}
+#CHECKERR: exec: {{.*}}
 echo $status
+#CHECK: 126
 set -g fish_use_posix_spawn 1
 ./file.fish
+#CHECKERR: exec: {{.*}}
+#CHECKERR: exec: {{.*}}
 echo $status
+#CHECK: 126
 rm file.fish
-#CHECK: 126
-#CHECKERR: exec: {{.*}}{{.*}}
-#CHECKERR: exec: {{.*}}
-
-#CHECK: 126
-#CHECKERR: exec: {{.*}}
-#CHECKERR: exec: {{.*}}
 
 
 # On to NUL bytes.
@@ -73,8 +72,10 @@ sleep 0.1
 runfile
 #CHECK: 126
 #CHECKERR: exec: {{.*}}
+#CHECKERR: exec: {{.*}}
 
 #CHECK: 126
+#CHECKERR: exec: {{.*}}
 #CHECKERR: exec: {{.*}}
 
 # Doesn't meet our heuristic as there is no lowercase before newline.
@@ -83,8 +84,10 @@ sleep 0.1
 runfile
 #CHECK: 126
 #CHECKERR: exec: {{.*}}
+#CHECKERR: exec: {{.*}}
 
 #CHECK: 126
+#CHECKERR: exec: {{.*}}
 #CHECKERR: exec: {{.*}}
 
 echo 'echo foo' >./-

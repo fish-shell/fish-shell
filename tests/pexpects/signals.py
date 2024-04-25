@@ -47,10 +47,9 @@ expect_prompt()
 sendline("function postexec --on-event fish_postexec; echo fish_postexec spotted; end")
 expect_prompt()
 sendline("read")
-sleep(0.200)
-expect_re(r"\r\n?read> (\x1b\[\?1004h)?$")
+expect_re(r"\r\n?read> (\x1b\[\?1004h)?$", timeout=10)
 os.kill(sp.spawn.pid, signal.SIGINT)
-expect_str("fish_postexec spotted")
+expect_str("fish_postexec spotted", timeout=10)
 expect_prompt()
 
 # Verify that the fish_kill_signal is set.

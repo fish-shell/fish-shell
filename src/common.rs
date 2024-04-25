@@ -122,6 +122,8 @@ bitflags! {
         const SYMBOLIC = 1 << 3;
         /// Escape : and =
         const SEPARATORS = 1 << 4;
+        /// Escape ,
+        const COMMA = 1 << 5;
     }
 }
 
@@ -183,6 +185,7 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
     let escape_separators = flags.contains(EscapeFlags::SEPARATORS);
+    let escape_comma = flags.contains(EscapeFlags::COMMA);
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
     let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
     let no_qmark = feature_test(FeatureFlag::qmark_noglob);
@@ -295,6 +298,13 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
             }
             ':' | '=' => {
                 if escape_separators {
+                    need_escape = true;
+                    out.push('\\');
+                }
+                out.push(c);
+            }
+            ',' => {
+                if escape_comma {
                     need_escape = true;
                     out.push('\\');
                 }

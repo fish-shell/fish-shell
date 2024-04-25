@@ -8,9 +8,9 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    char_offset, charptr2wcstring, escape, escape_string_for_double_quotes, unescape_string,
-    valid_var_name_char, wcs2zstring, UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE,
-    EXPAND_RESERVED_END,
+    char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
+    unescape_string, valid_var_name_char, wcs2zstring, EscapeFlags, EscapeStringStyle,
+    UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
@@ -1096,7 +1096,7 @@ pub fn expand_cmdsubst(
     }
 
     for sub_item in sub_res {
-        let sub_item2 = escape(&sub_item);
+        let sub_item2 = escape_string(&sub_item, EscapeStringStyle::Script(EscapeFlags::COMMA));
         for tail_item in &*tail_expand {
             let mut whole_item = WString::new();
             whole_item.reserve(paren_begin + 1 + sub_item2.len() + 1 + tail_item.completion.len());

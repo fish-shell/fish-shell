@@ -120,6 +120,16 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         # Shift-space behaves like space because it's easy to mistype.
         bind --preset $argv shift-space 'commandline -i " "' expand-abbr-backtrack
 
+        bind --preset $argv "(" __fish_insert_subshell
+        function __fish_insert_subshell
+            if string match -qr '^\s*$' -- (commandline --current-process --cut-at-cursor | string collect) &&
+                    not string match -qr '\($' -- (commandline --cut-at-cursor)
+                commandline -i '$SHELL -c (( '
+            else
+                commandline -i "("
+            end
+        end
+
         bind --preset $argv enter execute
         bind --preset $argv ctrl-j execute
         bind --preset $argv ctrl-m execute

@@ -82,11 +82,11 @@ The following options change the way ``commandline`` prints the current commandl
     To get both, use both ``commandline --cut-at-cursor --tokens-expanded; commandline --cut-at-cursor --current-token``,
     or ``commandline -cx; commandline -ct`` for short.
 
-**-x** or **tokens-expanded**
+**-x** or **--tokens-expanded**
     Perform argument expansion on the selection and print one argument per line.
     Command substituions are not expanded but forwarded as-is.
 
-**tokens-raw**
+**--tokens-raw**
     Print arguments in the selection as they appear on the command line, one per line.
 
 **-o** or **tokenize**

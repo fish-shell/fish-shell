@@ -48,3 +48,6 @@ world}
 end
 #CHECK: '{hello
 #CHECK: world}'
+
+echo {a(echo ,)b}
+#CHECK: {a,b}

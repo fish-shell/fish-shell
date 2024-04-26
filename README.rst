@@ -3,7 +3,7 @@
       :alt: Cirrus CI Build Status
 
 `fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
-=================================================================================
+=============================================================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux,
 and the rest of the family. fish includes features like syntax

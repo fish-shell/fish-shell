@@ -85,7 +85,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv end end-of-line
     bind --preset $argv home beginning-of-line
 
-    bind --preset $argv alt-d 'if test "$(commandline)." = .; __fish_echo dirh; else; commandline -f kill-word; end'
+    bind --preset $argv alt-d 'if test "$(commandline; printf .)" = \n.; __fish_echo dirh; else; commandline -f kill-word; end'
     bind --preset $argv ctrl-d delete-or-exit
 
     bind --preset $argv alt-s 'for cmd in sudo doas please; if command -q $cmd; fish_commandline_prepend $cmd; break; end; end'

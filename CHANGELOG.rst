@@ -130,6 +130,7 @@ Interactive improvements
 - When exporting interactively defined functions (using ``type``, ``functions`` or ``funcsave``) the function body is now indented, same as in the interactive command line editor (:issue:`8603`).
 - :kbd:`ctrl-x` (``fish_clipboard_copy``) on multiline commands now includes indentation (:issue:`10437`).
 - When using :kbd:`ctrl-x` on Wayland in the VSCode terminal, the clipboard is no longer cleared on :kbd:`ctrl-c`.
+- Measuring a command with `time` now considers the time taken for command substitution (:issue:`9100`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

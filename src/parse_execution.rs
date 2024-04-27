@@ -538,24 +538,30 @@ impl<'a> ParseExecutionContext {
             Some(&mut errors),
             false,
         );
-        if expand_err == ExpandResultCode::error {
-            // Issue #5812 - the expansions were done on the command token,
-            // excluding prefixes such as " " or "if ".
-            // This means that the error positions are relative to the beginning
-            // of the token; we need to make them relative to the original source.
-            parse_error_offset_source_start(&mut errors, pos_of_command_token);
-            return self.report_errors(ctx, STATUS_ILLEGAL_CMD.unwrap(), &errors);
-        } else if expand_err == ExpandResultCode::wildcard_no_match {
-            return report_error!(
-                self,
-                ctx,
-                STATUS_UNMATCHED_WILDCARD.unwrap(),
-                statement,
-                WILDCARD_ERR_MSG,
-                &self.node_source(statement)
-            );
+        match expand_err.result {
+            ExpandResultCode::error => {
+                // Issue #5812 - the expansions were done on the command token,
+                // excluding prefixes such as " " or "if ".
+                // This means that the error positions are relative to the beginning
+                // of the token; we need to make them relative to the original source.
+                parse_error_offset_source_start(&mut errors, pos_of_command_token);
+                return self.report_errors(ctx, STATUS_ILLEGAL_CMD.unwrap(), &errors);
+            }
+            ExpandResultCode::wildcard_no_match => {
+                return report_error!(
+                    self,
+                    ctx,
+                    STATUS_UNMATCHED_WILDCARD.unwrap(),
+                    statement,
+                    WILDCARD_ERR_MSG,
+                    &self.node_source(statement)
+                );
+            }
+            ExpandResultCode::cancel => {
+                return EndExecutionReason::cancelled;
+            }
+            ExpandResultCode::ok => {}
         }
-        assert!(expand_err == ExpandResultCode::ok);
 
         // Complain if the resulting expansion was empty, or expanded to an empty string.
         // For no-exec it's okay, as we can't really perform the expansion.

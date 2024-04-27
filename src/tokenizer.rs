@@ -603,7 +603,7 @@ impl Tokenizer {
                         1,
                     );
                 }
-                if paran_offsets.is_empty() {
+                if paran_offsets.pop().is_none() {
                     return self.call_error(
                         TokenizerError::closing_unopened_subshell,
                         self.token_cursor,
@@ -612,7 +612,6 @@ impl Tokenizer {
                         1,
                     );
                 }
-                paran_offsets.pop();
                 if paran_offsets.is_empty() {
                     mode &= !TOK_MODE_SUBSHELL;
                 }

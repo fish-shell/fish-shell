@@ -9,17 +9,19 @@ Group:                  System/Shells
 URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
+Source1:                %{name}_@VERSION@.orig-cargo-vendor.tar.xz
 BuildRequires:          cargo gettext gcc-c++ xz pcre2-devel
 BuildRequires:          rust >= 1.70
+# Packaging guidelines say to use a BuildRequires: rust-packaging, but it adds no value for our package
 
-%if 0%{?rhel} && 0%{?rhel} < 8
-BuildRequires: cmake3
-%else
-BuildRequires: cmake
-%endif
+BuildRequires: cmake >= 3.19
 
 %if 0%{?suse_version}
 BuildRequires: update-desktop-files
+# for tests
+BuildRequires: groff
+%else
+BuildRequires: groff-base
 %endif
 
 # for tests
@@ -49,9 +51,12 @@ focused on user friendliness and discoverability. The language syntax
 is simple but incompatible with other shell languages.
 
 %prep
-%setup -q -n %{name}-@VERSION@
+# Unpack the source tarball and overlay the vendor tarball
+%setup -q -n %{name}-@VERSION@ -a 1
+# Should use cargo_prep here, it overrides our vendor config changes though
 
 %build
+export CARGO_NET_OFFLINE=true
 # CMake macros define the wrong sysconfdir arguments
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -DCMAKE_INSTALL_DOCDIR=%{_docdir}/fish"
 %if 0%{?rhel} && 0%{?rhel} < 8

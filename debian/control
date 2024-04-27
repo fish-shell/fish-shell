@@ -3,8 +3,7 @@ Section: shells
 Priority: optional
 Maintainer: ridiculous_fish <corydoras@ridiculousfish.com>
 Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
-# Debhelper should be bumped to >= 10 once Ubuntu Xenial is no longer supported
-Build-Depends: debhelper (>= 9.20160115), cmake (>= 3.19.0) | cmake-mozilla (>= 3.19.0), gettext,
+Build-Depends: debhelper (>= 12), cmake (>= 3.19.0) | cmake-mozilla (>= 3.19.0), gettext,
  rustc (>= 1.70), cargo (>= 0.66) | cargo-mozilla (>= 0.66), libpcre2-dev,
 # Test dependencies
  locales-all, python3

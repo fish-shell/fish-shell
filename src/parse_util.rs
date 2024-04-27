@@ -27,6 +27,7 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::count_newlines;
 use crate::wcstringutil::truncate;
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use std::ops::Range;
 use std::{iter, ops};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
@@ -80,6 +81,37 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
     None
 }
 
+#[derive(Debug, Default, Eq, PartialEq)]
+pub struct Parentheses {
+    range: Range<usize>,
+    num_closing: usize,
+}
+
+impl Parentheses {
+    pub fn start(&self) -> usize {
+        self.range.start
+    }
+    pub fn end(&self) -> usize {
+        self.range.end
+    }
+    pub fn opening(&self) -> Range<usize> {
+        self.range.start..self.range.start + 1
+    }
+    pub fn closing(&self) -> Range<usize> {
+        self.range.end - self.num_closing..self.range.end
+    }
+    pub fn command(&self) -> Range<usize> {
+        self.range.start + 1..self.range.end - self.num_closing
+    }
+}
+
+#[derive(Eq, PartialEq, Debug)]
+pub enum MaybeParentheses {
+    Error,
+    None,
+    CommandSubstitution(Parentheses),
+}
+
 /// Alternative API. Iterate over command substitutions.
 ///
 /// \param str the string to search for subshells
@@ -94,50 +126,32 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
 /// \param out_has_dollar whether the command substitution has the optional leading $.
 /// \return -1 on syntax error, 0 if no subshells exist and 1 on success
 #[allow(clippy::too_many_arguments)]
-pub fn parse_util_locate_cmdsubst_range<'a>(
-    s: &'a wstr,
+pub fn parse_util_locate_cmdsubst_range(
+    s: &wstr,
     inout_cursor_offset: &mut usize,
-    mut out_contents: Option<&mut &'a wstr>,
-    out_start: &mut usize,
-    out_end: &mut usize,
     accept_incomplete: bool,
     inout_is_quoted: Option<&mut bool>,
     out_has_dollar: Option<&mut bool>,
-) -> i32 {
-    // Clear the return values.
-    out_contents.as_mut().map(|s| **s = L!(""));
-    *out_start = 0;
-    *out_end = s.len();
-
+) -> MaybeParentheses {
     // Nothing to do if the offset is at or past the end of the string.
     if *inout_cursor_offset >= s.len() {
-        return 0;
+        return MaybeParentheses::None;
     }
 
     // Defer to the wonky version.
     let ret = parse_util_locate_cmdsub(
         s,
         *inout_cursor_offset,
-        out_start,
-        out_end,
         accept_incomplete,
         inout_is_quoted,
         out_has_dollar,
     );
-    if ret <= 0 {
-        return ret;
+    match &ret {
+        MaybeParentheses::Error | MaybeParentheses::None => (),
+        MaybeParentheses::CommandSubstitution(parens) => {
+            *inout_cursor_offset = parens.end();
+        }
     }
-
-    // Assign the substring to the out_contents.
-    let interior_begin = *out_start + 1;
-    out_contents
-        .as_mut()
-        .map(|contents| **contents = &s[interior_begin..*out_end]);
-
-    // Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though
-    // overflow is not likely.
-    *inout_cursor_offset = 1 + *out_end;
-
     ret
 }
 
@@ -152,51 +166,46 @@ pub fn parse_util_locate_cmdsubst_range<'a>(
 /// \param b the end of the searched string
 pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usize> {
     // The tightest command substitution found so far.
-    let mut ap = 0;
-    let mut bp = buff.len();
+    let mut result = 0..buff.len();
     let mut pos = 0;
     loop {
-        let mut begin = 0;
-        let mut end = 0;
-        if parse_util_locate_cmdsub(buff, pos, &mut begin, &mut end, true, None, None) <= 0 {
+        let parens = match parse_util_locate_cmdsub(buff, pos, true, None, None) {
             // No subshell found, all done.
-            break;
-        }
+            MaybeParentheses::Error | MaybeParentheses::None => break,
+            MaybeParentheses::CommandSubstitution(parens) => parens,
+        };
 
-        if begin < cursor && end >= cursor {
+        let command = parens.command();
+        if command.start <= cursor && command.end >= cursor {
             // This command substitution surrounds the cursor, so it's a tighter fit.
-            begin += 1;
-            ap = begin;
-            bp = end;
+            result = command;
             // pos is where to begin looking for the next one. But if we reached the end there's no
             // next one.
-            if begin >= end {
+            if result.start >= result.end {
                 break;
             }
-            pos = begin + 1;
-        } else if begin >= cursor {
+            pos = result.start + 1;
+        } else if cursor < command.start {
             // This command substitution starts at or after the cursor. Since it was the first
             // command substitution in the string, we're done.
             break;
         } else {
             // This command substitution ends before the cursor. Skip it.
-            assert!(end < cursor);
-            pos = end + 1;
+            assert!(command.end < cursor);
+            pos = parens.end();
             assert!(pos <= buff.len());
         }
     }
-    ap..bp
+    result
 }
 
 fn parse_util_locate_cmdsub(
     input: &wstr,
     cursor: usize,
-    out_start: &mut usize,
-    out_end: &mut usize,
     allow_incomplete: bool,
     mut inout_is_quoted: Option<&mut bool>,
     mut out_has_dollar: Option<&mut bool>,
-) -> i32 {
+) -> MaybeParentheses {
     let input = input.as_char_slice();
 
     let mut escaped = false;
@@ -327,21 +336,25 @@ fn parse_util_locate_cmdsub(
     syntax_error |= paran_count > 0 && !allow_incomplete;
 
     if syntax_error {
-        return -1;
+        return MaybeParentheses::Error;
     }
 
     let Some(paran_begin) = paran_begin else {
-        return 0;
+        return MaybeParentheses::None;
     };
 
-    *out_start = paran_begin;
-    *out_end = if paran_count != 0 {
+    let end = if paran_count != 0 {
         input.len()
     } else {
-        paran_end.unwrap()
+        paran_end.unwrap() + 1
     };
 
-    1
+    let parens = Parentheses {
+        range: paran_begin..end,
+        num_closing: if paran_count == 0 { 1 } else { 0 },
+    };
+
+    MaybeParentheses::CommandSubstitution(parens)
 }
 
 /// Find the beginning and end of the process definition under the cursor
@@ -1305,58 +1318,52 @@ pub fn parse_util_detect_errors_in_argument(
 
     let mut cursor = 0;
     let mut checked = 0;
-    let mut subst = L!("");
 
     let mut do_loop = true;
     let mut is_quoted = false;
     while do_loop {
-        let mut paren_begin = 0;
-        let mut paren_end = 0;
         let mut has_dollar = false;
         match parse_util_locate_cmdsubst_range(
             arg_src,
             &mut cursor,
-            Some(&mut subst),
-            &mut paren_begin,
-            &mut paren_end,
             false,
             Some(&mut is_quoted),
             Some(&mut has_dollar),
         ) {
-            -1 => {
+            MaybeParentheses::Error => {
                 err |= ParserTestErrorBits::ERROR;
                 append_syntax_error!(out_errors, source_start, 1, "Mismatched parenthesis");
                 return Err(err);
             }
-            0 => {
+            MaybeParentheses::None => {
                 do_loop = false;
             }
-            1 => {
+            MaybeParentheses::CommandSubstitution(parens) => {
                 err |= check_subtoken(
                     checked,
-                    paren_begin - if has_dollar { 1 } else { 0 },
+                    parens.start() - if has_dollar { 1 } else { 0 },
                     out_errors,
                 );
-                assert!(paren_begin < paren_end, "Parens out of order?");
                 let mut subst_errors = ParseErrorList::new();
-                if let Err(subst_err) =
-                    parse_util_detect_errors(subst, Some(&mut subst_errors), false)
-                {
+                if let Err(subst_err) = parse_util_detect_errors(
+                    &arg_src[parens.command()],
+                    Some(&mut subst_errors),
+                    false,
+                ) {
                     err |= subst_err;
                 }
 
                 // Our command substitution produced error offsets relative to its source. Tweak the
                 // offsets of the errors in the command substitution to account for both its offset
                 // within the string, and the offset of the node.
-                let error_offset = paren_begin + 1 + source_start;
+                let error_offset = parens.start() + 1 + source_start;
                 parse_error_offset_source_start(&mut subst_errors, error_offset);
                 if let Some(ref mut out_errors) = out_errors {
                     out_errors.extend(subst_errors);
                 }
 
-                checked = paren_end + 1;
+                checked = parens.end();
             }
-            _ => panic!("unexpected parse_util_locate_cmdsubst() return value"),
         }
     }
 

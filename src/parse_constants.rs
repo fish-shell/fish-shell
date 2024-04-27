@@ -30,7 +30,7 @@ bitflags! {
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Default, Eq, PartialEq)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct ParserTestErrorBits: u8 {
         const ERROR = 1;
         const INCOMPLETE = 2;

@@ -28,7 +28,9 @@ use crate::output::{parse_color, Outputter};
 use crate::parse_constants::{
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
 };
-use crate::parse_util::{parse_util_locate_cmdsubst_range, parse_util_slice_length};
+use crate::parse_util::{
+    parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
+};
 use crate::path::{
     path_apply_working_directory, path_as_implicit_cd, path_get_cdpath, path_get_path,
     paths_are_same_file,
@@ -1023,42 +1025,27 @@ impl<'s> Highlighter<'s> {
 
         // Now do command substitutions.
         let mut cmdsub_cursor = 0;
-        let mut cmdsub_start = 0;
-        let mut cmdsub_end = 0;
-        let mut cmdsub_contents = L!("");
         let mut is_quoted = false;
-
-        while parse_util_locate_cmdsubst_range(
+        while let MaybeParentheses::CommandSubstitution(parens) = parse_util_locate_cmdsubst_range(
             arg_str,
             &mut cmdsub_cursor,
-            Some(&mut cmdsub_contents),
-            &mut cmdsub_start,
-            &mut cmdsub_end,
             /*accept_incomplete=*/ true,
             Some(&mut is_quoted),
             None,
-        ) > 0
-        {
-            // The cmdsub_start is the open paren. cmdsub_end is either the close paren or the end of
-            // the string. cmdsub_contents extends from one past cmdsub_start to cmdsub_end.
-            assert!(cmdsub_end > cmdsub_start);
-            assert!(cmdsub_end - cmdsub_start - 1 == cmdsub_contents.len());
-
-            // Found a command substitution. Compute the position of the start and end of the cmdsub
-            // contents, within our overall src.
-            let arg_subcmd_start = arg_start + cmdsub_start;
-            let arg_subcmd_end = arg_start + cmdsub_end;
-
-            // Highlight the parens. The open paren must exist; the closed paren may not if it was
+        ) {
+            // Highlight the parens. The open parens must exist; the closed paren may not if it was
             // incomplete.
-            assert!(cmdsub_start < arg_str.len());
-            self.color_array[arg_subcmd_start] = HighlightSpec::with_fg(HighlightRole::operat);
-            if arg_subcmd_end < self.buff.len() {
-                self.color_array[arg_subcmd_end] = HighlightSpec::with_fg(HighlightRole::operat);
-            }
+            assert!(parens.start() < arg_str.len());
+            self.color_array[arg_start..][parens.opening()]
+                .fill(HighlightSpec::with_fg(HighlightRole::operat));
+            self.color_array[arg_start..][parens.closing()]
+                .fill(HighlightSpec::with_fg(HighlightRole::operat));
 
             // Highlight it recursively.
-            let arg_cursor = self.cursor.map(|c| c.wrapping_sub(arg_subcmd_start));
+            let arg_cursor = self
+                .cursor
+                .map(|c| c.wrapping_sub(arg_start + parens.start()));
+            let cmdsub_contents = &arg_str[parens.command()];
             let mut cmdsub_highlighter = Highlighter::new(
                 cmdsub_contents,
                 arg_cursor,
@@ -1070,7 +1057,7 @@ impl<'s> Highlighter<'s> {
 
             // Copy out the subcolors back into our array.
             assert!(subcolors.len() == cmdsub_contents.len());
-            self.color_array[arg_subcmd_start + 1..arg_subcmd_end].copy_from_slice(&subcolors);
+            self.color_array[arg_start..][parens.command()].copy_from_slice(&subcolors);
         }
     }
     // Colors the source range of a node with a given color.
@@ -1413,18 +1400,11 @@ impl<'s> Highlighter<'s> {
 /// \return whether a string contains a command substitution.
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
-    let mut start = 0;
-    let mut end = 0;
-    parse_util_locate_cmdsubst_range(
-        src,
-        &mut cursor,
-        None,
-        &mut start,
-        &mut end,
-        true,
-        None,
-        None,
-    ) != 0
+    match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
+        MaybeParentheses::Error => return false,
+        MaybeParentheses::None => return false,
+        MaybeParentheses::CommandSubstitution(_) => return true,
+    }
 }
 
 fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bool {

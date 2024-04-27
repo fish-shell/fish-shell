@@ -86,6 +86,7 @@ use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_tree::ParsedSource;
+use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
@@ -4529,29 +4530,26 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
 
         // If we have command subs, then we don't include this token; instead we recurse.
         let mut has_cmd_subs = false;
-        let mut cmdsub_contents = L!("");
         let mut cmdsub_cursor = range.start();
-        let mut cmdsub_start = 0;
-        let mut cmdsub_end = 0;
-        while parse_util_locate_cmdsubst_range(
-            s,
-            &mut cmdsub_cursor,
-            Some(&mut cmdsub_contents),
-            &mut cmdsub_start,
-            &mut cmdsub_end,
-            /*accept_incomplete=*/ true,
-            None,
-            None,
-        ) > 0
-        {
-            if cmdsub_start >= range.end() {
-                break;
-            }
-            has_cmd_subs = true;
-            for mut t in extract_tokens(cmdsub_contents) {
-                // cmdsub_start is the open paren; the contents start one after it.
-                t.range.start += u32::try_from(cmdsub_start + 1).unwrap();
-                result.push(t);
+        loop {
+            match parse_util_locate_cmdsubst_range(
+                s,
+                &mut cmdsub_cursor,
+                /*accept_incomplete=*/ true,
+                None,
+                None,
+            ) {
+                MaybeParentheses::Error | MaybeParentheses::None => break,
+                MaybeParentheses::CommandSubstitution(parens) => {
+                    if parens.start() >= range.end() {
+                        break;
+                    }
+                    has_cmd_subs = true;
+                    for mut t in extract_tokens(&s[parens.command()]) {
+                        t.range.start += u32::try_from(parens.command().start).unwrap();
+                        result.push(t);
+                    }
+                }
             }
         }
 

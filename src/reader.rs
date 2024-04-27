@@ -2579,11 +2579,20 @@ impl ReaderData {
             }
             rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
-                if !self.history_search.is_at_end() {
-                    self.history.remove(self.history_search.current_result());
+                let is_history_search = !self.history_search.is_at_end();
+                if is_history_search || !self.autosuggestion.is_empty() {
+                    self.history.remove(if is_history_search {
+                        self.history_search.current_result()
+                    } else {
+                        &self.autosuggestion.text
+                    });
                     self.history.save();
-                    self.history_search.handle_deletion();
-                    self.update_command_line_from_history_search();
+                    if is_history_search {
+                        self.history_search.handle_deletion();
+                        self.update_command_line_from_history_search();
+                    } else {
+                        self.autosuggestion.clear();
+                    }
                     self.inputter.function_set_status(true);
                     return;
                 }

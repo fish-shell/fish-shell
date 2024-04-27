@@ -49,7 +49,7 @@ function fish_delta
         end
         # We don't care about generated completions.
         # They shouldn't be compared at all.
-        contains -- $dir $default_complete_path $__fish_user_data_dir/generated_completions
+        contains -- $dir $default_complete_path $__fish_cache_dir/generated_completions
         or set -a user_complete_path $dir
     end
 

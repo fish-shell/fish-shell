@@ -1136,11 +1136,11 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if not args.stdout and not args.directory:
-        # Default to ~/.local/share/fish/generated_completions/
+        # Default to ~/.cache/fish/generated_completions
         # Create it if it doesn't exist
-        xdg_data_home = os.getenv("XDG_DATA_HOME", "~/.local/share")
+        xdg_cache_home = os.getenv("XDG_CACHE_HOME", "~/.cache")
         args.directory = os.path.expanduser(
-            xdg_data_home + "/fish/generated_completions/"
+            xdg_cache_home + "/fish/generated_completions/"
         )
         try:
             os.makedirs(args.directory)

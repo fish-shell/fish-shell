@@ -88,7 +88,7 @@ end" >$__fish_config_dir/config.fish
         # Check if our manpage completion script exists because some distros split it out.
         # (#7183)
         set -l script $__fish_data_dir/tools/create_manpage_completions.py
-        if not test -d $__fish_user_data_dir/generated_completions; and test -e "$script"
+        if not test -d $__fish_cache_dir/generated_completions; and test -e "$script"
             # Generating completions from man pages needs python (see issue #3588).
 
             # We cannot simply do `fish_update_completions &` because it is a function.
@@ -96,7 +96,7 @@ end" >$__fish_config_dir/config.fish
             # We don't want to call `fish -c` since that is unnecessary and sources config.fish again.
             # Hence we'll call python directly.
             # c_m_p.py should work with any python version.
-            set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in '~/.config/fish/completions' --cleanup-in '~/.config/fish/generated_completions'
+            set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in ~/.config/fish/completions --cleanup-in $__fish_config_dir/generated_completions --cleanup-in $__fish_cache_dir/generated_completions
             if set -l python (__fish_anypython)
                 # Run python directly in the background and swallow all output
                 $python $update_args >/dev/null 2>&1 &

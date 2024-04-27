@@ -155,7 +155,7 @@ By default, Fish searches the following for completions, using the first availab
 - A user-specified directory for third-party vendor completions, usually ``~/.local/share/fish/vendor_completions.d`` (controlled by the ``XDG_DATA_HOME`` environment variable);
 - A directory for third-party software vendors to ship their own completions for their software, usually ``/usr/share/fish/vendor_completions.d``;
 - The completions shipped with fish, usually installed in ``/usr/share/fish/completions``; and
-- Completions automatically generated from the operating system's manual, usually stored in ``~/.local/share/fish/generated_completions``.
+- Completions automatically generated from the operating system's manual, usually stored in ``~/.cache/fish/generated_completions`` (controlled by ``XDG_CACHE_HOME`` environment variable).
 
 These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
 

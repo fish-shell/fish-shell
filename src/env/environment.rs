@@ -16,8 +16,8 @@ use crate::libc::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
-    path_emit_config_directory_messages, path_get_config, path_get_data, path_make_canonical,
-    paths_are_same_file,
+    path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
+    path_make_canonical, paths_are_same_file,
 };
 use crate::proc::is_interactive_session;
 use crate::termsize;
@@ -429,6 +429,7 @@ const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
 const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
 const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
 const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
+const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
 /// Maximum length of hostname. Longer hostnames are truncated.
 const HOSTNAME_LEN: usize = 255;
@@ -648,6 +649,12 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         user_data_dir.unwrap_or_default(),
     );
 
+    let user_cache_dir = path_get_cache();
+    vars.set_one(
+        FISH_CACHE_DIR,
+        EnvMode::GLOBAL,
+        user_cache_dir.unwrap_or_default(),
+    );
     // Set up a default PATH
     setup_path();
 

@@ -34,13 +34,29 @@ pub fn path_get_config() -> Option<WString> {
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///
-/// Volatile files presumed to be local to the machine, such as the fish_history and all the
-/// generated_completions, will be stored in this directory.
+/// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
 ///
 /// \param path The directory as an out param
 /// \return whether the directory was returned successfully
 pub fn path_get_data() -> Option<WString> {
     let dir = get_data_directory();
+    if dir.success() {
+        Some(dir.path.to_owned())
+    } else {
+        None
+    }
+}
+
+/// Returns the user cache directory for fish. If the directory or one of its parents doesn't exist,
+/// they are first created.
+///
+/// Volatile files presumed to be local to the machine such as all the
+/// generated_completions, will be stored in this directory.
+///
+/// \param path The directory as an out param
+/// \return whether the directory was returned successfully
+pub fn path_get_cache() -> Option<WString> {
+    let dir = get_cache_directory();
     if dir.success() {
         Some(dir.path.to_owned())
     } else {
@@ -704,6 +720,12 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
 fn get_data_directory() -> &'static BaseDirectory {
     static DIR: Lazy<BaseDirectory> =
         Lazy::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
+    &DIR
+}
+
+fn get_cache_directory() -> &'static BaseDirectory {
+    static DIR: Lazy<BaseDirectory> =
+        Lazy::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
     &DIR
 }
 

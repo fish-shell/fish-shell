@@ -163,6 +163,7 @@ Completions
 ^^^^^^^^^^^
 - Added completions for:
 - Improved some completions
+- Generated completions are now stored in `$XDG_CACHE_HOME/fish` or `~/.cache/fish` by default (:issue:`10369`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

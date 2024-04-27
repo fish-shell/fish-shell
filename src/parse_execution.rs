@@ -1585,13 +1585,18 @@ impl<'a> ParseExecutionContext {
             0
         };
 
+        let job_wants_timing = job_node_wants_timing(job_node);
+        let job_is_background = job_node.bg.is_some();
+        let job_is_simple_node = self.job_is_simple_block(job_node);
+
+        // Start the timer here to ensure command substitution is measured
+        let _timer = push_timer(job_wants_timing && (job_is_simple_node || !job_is_background));
+
         // When we encounter a block construct (e.g. while loop) in the general case, we create a "block
         // process" containing its node. This allows us to handle block-level redirections.
         // However, if there are no redirections, then we can just jump into the block directly, which
         // is significantly faster.
-        if self.job_is_simple_block(job_node) {
-            let do_time = job_node.time.is_some();
-            let _timer = push_timer(do_time);
+        if job_is_simple_node {
             let mut block = None;
             let mut result =
                 self.apply_variable_assignments(ctx, None, &job_node.variables, &mut block);
@@ -1639,17 +1644,16 @@ impl<'a> ParseExecutionContext {
         }
 
         let mut props = JobProperties::default();
-        props.initial_background = job_node.bg.is_some();
+        props.initial_background = job_is_background;
         {
             let parser = ctx.parser();
             let ld = &parser.libdata().pods;
             props.skip_notification =
                 ld.is_subshell || parser.is_block() || ld.is_event != 0 || !parser.is_interactive();
             props.from_event_handler = ld.is_event != 0;
-            props.wants_timing = job_node_wants_timing(job_node);
 
             // It's an error to have 'time' in a background job.
-            if props.wants_timing && props.initial_background {
+            if job_wants_timing && job_is_background {
                 return report_error!(
                     self,
                     ctx,

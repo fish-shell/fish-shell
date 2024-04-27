@@ -740,9 +740,6 @@ pub struct JobProperties {
     /// initial state should be.
     pub initial_background: bool,
 
-    /// Whether the job has the 'time' prefix and so we should print timing for this job.
-    pub wants_timing: bool,
-
     /// Whether this job was created as part of an event handler.
     pub from_event_handler: bool,
 }
@@ -882,11 +879,6 @@ impl Job {
     /// Access mutable job flags.
     pub fn mut_flags(&self) -> RefMut<JobFlags> {
         self.job_flags.borrow_mut()
-    }
-
-    // \return whether we should print timing information.
-    pub fn wants_timing(&self) -> bool {
-        self.properties.wants_timing
     }
 
     /// \return if we want job control.

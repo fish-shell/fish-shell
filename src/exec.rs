@@ -42,7 +42,6 @@ use crate::proc::{
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
-use crate::timer::push_timer;
 use crate::trace::trace_if_enabled_with_args;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
@@ -103,7 +102,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         }
         return false;
     }
-    let _timer = push_timer(job.wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     let mut deferred_pipes = PartialPipes::default();

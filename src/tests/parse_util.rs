@@ -230,7 +230,7 @@ fn test_indents() {
         assert_eq!(indents, expected_indents);
     }
     macro_rules! validate {
-        ( $( $(,)? $indent:literal, $text:literal )* ) => {
+        ( $( $(,)? $indent:literal, $text:literal )* $(,)?  ) => {
             let segments = vec![
                 $(
                     Segment{ indent: $indent, text: $text },
@@ -391,6 +391,49 @@ fn test_indents() {
             2, "\n",
             1, "\n",
             0, "\nend"
+        );
+        validate!(
+            0, "if", 1,  " true",
+            1, "\n    begin",
+            2,  "\n        echo",
+            1,  "\n    end",
+            0,  "\nend",
+        );
+
+        // Quotes and command substitutions.
+        validate!(
+            0, "if", 1, " foo \"",
+            0, "\nquoted",
+        );
+        validate!(
+            0, "if", 1, " foo \"",
+            0, "\n",
+        );
+        validate!(
+            0, "echo (",
+            1, "\n", // )
+        );
+        validate!(
+            0, "echo \"$(",
+            1, "\n" // )
+        );
+        validate!(
+            0, "echo (", // )
+            1, "\necho \"",
+            0, "\n"
+        );
+        validate!(
+            0, "echo (", // )
+            1, "\necho (", // )
+            2, "\necho"
+        );
+        validate!(
+            0, "if", 1, " true",
+            1, "\n    echo \"line1",
+            0, "\nline2 ", 1, "$(",
+            2, "\n    echo line3",
+            0, "\n) line4",
+            0, "\nline5\"",
         );
     })();
 }

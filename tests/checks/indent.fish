@@ -496,3 +496,32 @@ end' | $fish_indent --only-unindent
 # CHECK: {{^}}    echo
 # CHECK: {{^}}  not indented properly
 # CHECK: {{^}}end
+
+
+echo 'echo (
+if true
+echo
+end
+)' | $fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo
+# CHECK: {{^}}    end
+# CHECK: {{^}})
+
+echo 'echo (
+if true
+echo "
+multi
+line
+"
+end
+)' | $fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo "
+# CHECK: {{^}}multi
+# CHECK: {{^}}line
+# CHECK: {{^}}"
+# CHECK: {{^}}    end
+# CHECK: {{^}})

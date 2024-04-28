@@ -13,11 +13,11 @@ use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, StatementDecoration,
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
-    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
-    ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
+    ParseTokenType, ParseTreeFlags, ParserTestErrorBits, PipelinePosition, SourceRange,
+    StatementDecoration, ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1,
+    ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+    ERROR_NOT_PID, ERROR_NOT_STATUS, ERROR_NO_VAR_NAME, INVALID_BREAK_ERR_MSG,
+    INVALID_CONTINUE_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, UNKNOWN_BUILTIN_ERR_MSG,
 };
 use crate::tokenizer::{
     comment_end, is_token_delimiter, quote_end, Tok, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
@@ -746,6 +746,10 @@ pub fn parse_util_escape_string_with_quote(
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.
 pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
+    compute_indents(src, 0)
+}
+
+fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
     // to 0.
     let mut indents = vec![0; src.len()];
@@ -768,7 +772,7 @@ pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
         None,
     );
     {
-        let mut iv = IndentVisitor::new(src, &mut indents);
+        let mut iv = IndentVisitor::new(src, &mut indents, initial_indent);
         iv.visit(ast.top());
         iv.record_line_continuations_until(iv.indents.len());
         iv.indents[iv.last_leaf_end..].fill(iv.last_indent);
@@ -787,7 +791,8 @@ pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
             idx -= 1;
             if src[idx] == '\n' {
                 let empty_middle_line = src.get(idx + 1) == Some(&'\n');
-                if !empty_middle_line {
+                let is_trailing_unclosed = idx == src.len() - 1 && iv.unclosed;
+                if !empty_middle_line && !is_trailing_unclosed {
                     iv.indents[idx] = next_indent;
                 }
             } else {
@@ -838,6 +843,9 @@ struct IndentVisitor<'a> {
     // The last indent which we assigned.
     last_indent: i32,
 
+    // Whether we have an unfinished quote or command substitution.
+    unclosed: bool,
+
     // The source we are indenting.
     src: &'a wstr,
 
@@ -852,13 +860,14 @@ struct IndentVisitor<'a> {
     line_continuations: Vec<usize>,
 }
 impl<'a> IndentVisitor<'a> {
-    fn new(src: &'a wstr, indents: &'a mut Vec<i32>) -> Self {
+    fn new(src: &'a wstr, indents: &'a mut Vec<i32>, initial_indent: i32) -> Self {
         Self {
             last_leaf_end: 0,
-            last_indent: -1,
+            last_indent: initial_indent - 1,
+            unclosed: false,
             src,
             indents,
-            indent: -1,
+            indent: initial_indent - 1,
             line_continuations: vec![],
         }
     }
@@ -885,6 +894,95 @@ impl<'a> IndentVisitor<'a> {
                 Some(nextnl) => newline = newline + 1 + nextnl,
                 None => break,
             }
+        }
+    }
+
+    fn indent_leaf(&mut self, range: SourceRange) {
+        let node_src = &self.src[range.start()..range.end()];
+        // Common case optimization.
+        if node_src.contains('(') /*)*/ && !node_src.contains('\n') {
+            self.indents[range.start()..range.end()].fill(self.indent);
+            return;
+        }
+
+        let mut done = range.start();
+        let mut cursor = 0;
+        let mut is_double_quoted = false;
+        let mut was_double_quoted;
+        loop {
+            was_double_quoted = is_double_quoted;
+            let parens = match parse_util_locate_cmdsubst_range(
+                node_src,
+                &mut cursor,
+                /*accept_incomplete=*/ true,
+                Some(&mut is_double_quoted),
+                None,
+            ) {
+                MaybeParentheses::Error => break,
+                MaybeParentheses::None => {
+                    break;
+                }
+                MaybeParentheses::CommandSubstitution(parens) => parens,
+            };
+
+            let command = parens.command();
+            self.indent_string_part(done..range.start() + command.start, was_double_quoted);
+            let cmdsub_contents = &node_src[command.clone()];
+            let indents = compute_indents(cmdsub_contents, self.indent + 1);
+            self.indents[range.start() + command.start..range.start() + command.end]
+                .copy_from_slice(&indents);
+
+            done = range.start() + command.end;
+            if parens.closing().len() < 1 {
+                self.unclosed = true;
+            }
+        }
+        self.indent_string_part(done..range.end(), was_double_quoted);
+    }
+
+    fn indent_string_part(&mut self, range: Range<usize>, is_double_quoted: bool) {
+        let mut done = range.start;
+        let mut quoted = false;
+        {
+            if is_double_quoted {
+                match quote_end(self.src, range.start, '"') {
+                    Some(q_end) => {
+                        // We may be (in) a multi-line string, so don't indent.
+                        done = q_end + 1;
+                    }
+                    None => quoted = true,
+                }
+            }
+            let part = &self.src[done..range.end];
+            if !quoted {
+                let mut callback = |offset| {
+                    if !quoted {
+                        // Quote open event. Indent unquoted part, including the opening quote.
+                        self.indents[done..range.start + offset + 1].fill(self.indent);
+                        done = range.start + offset + 1;
+                    } else {
+                        // Quote close. Don't indent, in case it's a multiline string.
+                        // Mark the first line as indented but only to make tests look prettier.
+                        let first_line_length = self.src[range.start..range.start + offset]
+                            .chars()
+                            .take_while(|&c| c != '\n')
+                            .count();
+                        self.indents[range.start..range.start + first_line_length]
+                            .fill(self.indent);
+                        done = range.start + offset;
+                    }
+                    quoted = !quoted;
+                };
+                for _token in
+                    Tokenizer::with_quote_events(part, TOK_ACCEPT_UNFINISHED, &mut callback)
+                {
+                }
+            }
+        }
+        if !quoted {
+            self.indents[done..range.end].fill(self.indent);
+        } else {
+            self.unclosed = true;
         }
     }
 }
@@ -996,7 +1094,8 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 .rev()
                 .take_while(|&c| c == ' ')
                 .count();
-            self.indents[range.start() - leading_spaces..range.end()].fill(self.indent);
+            self.indents[range.start() - leading_spaces..range.start()].fill(self.indent);
+            self.indent_leaf(range);
             self.last_leaf_end = range.end();
             self.last_indent = self.indent;
         }

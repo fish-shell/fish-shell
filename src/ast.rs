@@ -2626,7 +2626,7 @@ struct TokenStream<'a> {
     src: &'a wstr,
 
     // The tokenizer to generate new tokens.
-    tok: Tokenizer,
+    tok: Tokenizer<'static>,
 
     /// Any comment nodes are collected here.
     /// These are only collected if parse_flag_include_comments is set.

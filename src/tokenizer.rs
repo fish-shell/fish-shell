@@ -245,7 +245,7 @@ impl Tok {
 }
 
 /// The tokenizer struct.
-pub struct Tokenizer {
+pub struct Tokenizer<'c> {
     /// A pointer into the original string, showing where the next token begins.
     token_cursor: usize,
     /// The start of the original string.
@@ -262,9 +262,11 @@ pub struct Tokenizer {
     continue_after_error: bool,
     /// Whether to continue the previous line after the comment.
     continue_line_after_comment: bool,
+    /// Called on every quote change.
+    on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
     /// should not be freed by the caller until after the tokenizer is destroyed.
     ///
@@ -273,6 +275,20 @@ impl Tokenizer {
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
     pub fn new(start: &wstr, flags: TokFlags) -> Self {
+        Self::new_impl(start, flags, None)
+    }
+    pub fn with_quote_events(
+        start: &wstr,
+        flags: TokFlags,
+        on_quote_toggle: &'c mut dyn FnMut(usize),
+    ) -> Self {
+        Self::new_impl(start, flags, Some(on_quote_toggle))
+    }
+    fn new_impl(
+        start: &wstr,
+        flags: TokFlags,
+        on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
+    ) -> Self {
         Tokenizer {
             token_cursor: 0,
             start: start.to_owned(),
@@ -282,11 +298,12 @@ impl Tokenizer {
             show_blank_lines: flags & TOK_SHOW_BLANK_LINES,
             continue_after_error: flags & TOK_CONTINUE_AFTER_ERROR,
             continue_line_after_comment: false,
+            on_quote_toggle,
         }
     }
 }
 
-impl Iterator for Tokenizer {
+impl<'c> Iterator for Tokenizer<'c> {
     type Item = Tok;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -491,7 +508,7 @@ fn iswspace_not_nl(c: char) -> bool {
     }
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Returns the text of a token, as a string.
     pub fn text_of(&self, tok: &Tok) -> &wstr {
         tok.get_source(&self.start)
@@ -537,7 +554,7 @@ impl Tokenizer {
     }
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Read the next token as a string.
     fn read_string(&mut self) -> Tok {
         let mut mode = TOK_MODE_REGULAR_TEXT;
@@ -555,11 +572,17 @@ impl Tokenizer {
             paran_offsets: &Vec<usize>,
             quote: char,
         ) -> Result<(), usize> {
+            this.on_quote_toggle
+                .as_mut()
+                .map(|cb| (cb)(this.token_cursor));
             if let Some(end) = quote_end(&this.start, this.token_cursor, quote) {
+                let mut one_past_end = end + 1;
                 if this.start.char_at(end) == '$' {
+                    one_past_end = end;
                     quoted_cmdsubs.push(paran_offsets.len());
                 }
                 this.token_cursor = end;
+                this.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
                 Ok(())
             } else {
                 let error_loc = this.token_cursor;

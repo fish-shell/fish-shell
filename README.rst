@@ -138,7 +138,7 @@ Dependencies, git master
 
 Building from git master currently requires, in addition to the dependencies for a tarball:
 
--  Rust (version 1.67 or later)
+-  Rust (version 1.70 or later)
 -  CMake (version 3.19 or later)
 -  libclang, even if you are compiling with GCC
 -  an Internet connection

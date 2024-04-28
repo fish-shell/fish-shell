@@ -103,7 +103,7 @@ freebsd_task:
         - mkdir build && cd build
         - chown -R fish-user ..
         - sudo -u fish-user -s whoami
-        # FreeBSD's pkg currently has rust 1.66.0 while we need rust 1.67.0+. Use rustup to install
+        # FreeBSD's pkg currently has rust 1.66.0 while we need rust 1.70.0+. Use rustup to install
         # the latest, but note that it only installs rust per-user.
         - sudo -u fish-user -s fetch -qo - https://sh.rustup.rs > rustup.sh
         - sudo -u fish-user -s sh ./rustup.sh -y --profile=minimal

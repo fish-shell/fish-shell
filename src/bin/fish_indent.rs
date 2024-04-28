@@ -30,7 +30,7 @@ use fish::expand::INTERNAL_SEPARATOR;
 use fish::fds::set_cloexec;
 use fish::fprintf;
 #[allow(unused_imports)]
-use fish::future::{IsOkAnd, IsSomeAnd, IsSorted};
+use fish::future::{IsSomeAnd, IsSorted};
 use fish::global_safety::RelaxedAtomicBool;
 use fish::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
 use fish::libc::setlinebuf;

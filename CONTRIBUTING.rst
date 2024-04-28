@@ -26,8 +26,8 @@ This will create a copy of the fish repository in the directory fish-shell in yo
 Also, for most changes you want to run the tests and so you'd get a setup to compile fish.
 For that, you'll require:
 
--  Rust (version 1.67 or later) - when in doubt, try rustup
--  CMake (version 3.5 or later)
+-  Rust - when in doubt, try rustup
+-  CMake
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 -  Sphinx - optional, to build the documentation

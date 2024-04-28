@@ -63,13 +63,13 @@ Combining these features, it is possible to create custom syntaxes, where a regu
 .. synopsis::
 
     abbr [-a | --add] NAME [--position command | anywhere] [-r | --regex PATTERN]
-         [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
+         [-c | --command COMMAND] [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
 
 With **--position command**, the abbreviation will only expand when it is positioned as a command, not as an argument to another command. With **--position anywhere** the abbreviation may expand anywhere in the command line. The default is **command**.
 
-With **--command COMMAND**, the abbreviation will only expand when it is used as an argument to the given COMMAND. Multiple **--command** can be used together, and the abbreviation will expand for each. An empty **COMMAND** means it will expand only when there *is* no command. **--command** implies **--position anywhere** and disallows **--position command**. Even with different **COMMANDS**, the **NAME** of the abbreviation needs to be unique. Consider using **--regex** if you want to expand the same word differently for multiple commands.
+With **--command COMMAND**, the abbreviation will only expand when it is used as an argument to the given COMMAND. Multiple **--command** can be used together, and the abbreviation will expand for each. An empty **COMMAND** means it will expand only when there is no command. **--command** implies **--position anywhere** and disallows **--position command**. Even with different **COMMANDS**, the **NAME** of the abbreviation needs to be unique. Consider using **--regex** if you want to expand the same word differently for multiple commands.
 
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 

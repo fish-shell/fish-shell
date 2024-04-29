@@ -146,10 +146,10 @@ New or improved bindings
   - Multiline commands are indented before being sent to the editor, which matches the rendering in fish.
 - The ``-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
-- ``alt-d`` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
+- :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - `history-prefix-search-{backward,forward}` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
-- The ``E`` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
-- If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, ``shift-enter`` now inserts a newline instead of executing the command line.
+- The :kbd:`E` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
+- If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, :kbd:`shift-enter` now inserts a newline instead of executing the command line.
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.

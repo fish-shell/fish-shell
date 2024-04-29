@@ -48,6 +48,7 @@ sendline("function postexec --on-event fish_postexec; echo fish_postexec spotted
 expect_prompt()
 sendline("read")
 expect_re(r"\r\n?read> (\x1b\[\?1004h)?$", timeout=10)
+sleep(0.1)
 os.kill(sp.spawn.pid, signal.SIGINT)
 expect_str("fish_postexec spotted", timeout=10)
 expect_prompt()

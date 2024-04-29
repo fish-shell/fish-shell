@@ -25,7 +25,7 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
     end
 
     set -l max_cmd_len 32
-    set cmd_line (string shorten -m$max_cmd_len -- $cmd_line)
+    set cmd_line (string shorten -m$max_cmd_len -- $cmd_line | string collect)
 
     set -l message
     switch $signal_or_end_name

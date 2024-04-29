@@ -625,8 +625,8 @@ fn read_i(parser: &Parser) -> i32 {
             continue;
         }
 
-        data.update_buff_pos(EditableLineTag::Commandline, Some(0));
         data.command_line.clear();
+        data.update_buff_pos(EditableLineTag::Commandline, None);
         data.command_line_changed(EditableLineTag::Commandline);
         data.screen.write_bytes(b"\x1b]133;C\x07");
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);

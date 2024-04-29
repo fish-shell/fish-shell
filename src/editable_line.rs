@@ -160,17 +160,13 @@ impl EditableLine {
     }
 
     pub fn clear(&mut self) {
-        self.undo_history.clear();
         if self.is_empty() {
             return;
         }
-        let len = self.len();
-        apply_edit(
-            &mut self.text,
-            &mut self.colors,
-            &Edit::new(0..len, L!("").to_owned()),
+        self.push_edit(
+            Edit::new(0..self.len(), L!("").to_owned()),
+            /*allow_coalesce=*/ false,
         );
-        self.set_position(0);
     }
 
     /// Modify the commandline according to @edit. Most modifications to the

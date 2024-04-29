@@ -60,6 +60,7 @@ Notable improvements and fixes
    Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long and not a named key and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings. This should cover the majority of bindings in use.
 - A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
+- Undo history is no longer truncated after every command but kept for the lifetime of the shell process.
 - The :kbd:`ctrl-r` history search now uses glob syntax (:issue:`10131`).
 - The :kbd:`ctrl-r` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line command by recalling previous commands.
 - Abbreviations can now be restricted to specific commands. For instance::

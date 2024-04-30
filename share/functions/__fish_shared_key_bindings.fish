@@ -105,7 +105,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         or exit # protect against invalid $argv
 
         # Space and other command terminators expands abbrs _and_ inserts itself.
-        bind --preset $argv " " self-insert expand-abbr-backtrack
+        bind --preset $argv space self-insert expand-abbr-backtrack
         bind --preset $argv ";" self-insert expand-abbr-backtrack
         bind --preset $argv "|" self-insert expand-abbr-backtrack
         bind --preset $argv "&" self-insert expand-abbr-backtrack

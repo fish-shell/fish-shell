@@ -4550,6 +4550,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
                         result.push(t);
                     }
                 }
+                MaybeParentheses::QuotedCommand(_) => (),
             }
         }
 
@@ -5119,6 +5120,7 @@ fn replace_line_at_cursor(
     text[..start].to_owned() + replacement + &text[end..]
 }
 
+// TODO fix for raw quotes?
 pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
     let cmd = cmd_str.as_char_slice();
     let mut i = 0;

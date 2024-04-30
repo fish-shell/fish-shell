@@ -1,5 +1,7 @@
 #RUN: %fish %s
 
+set -l fish (status fish-path)
+
 echo x-{1}
 #CHECK: x-{1}
 
@@ -12,11 +14,10 @@ echo foo-{1,2{3,4}}
 echo foo-{} # literal "{}" expands to itself
 #CHECK: foo-{}
 
-echo foo-{{},{}} # the inner "{}" expand to themselves, the outer pair expands normally.
-#CHECK: foo-{} foo-{}
-
-echo foo-{{a},{}} # also works with something in the braces.
-#CHECK: foo-{a} foo-{}
+$fish -c 'echo foo-{{},{}}'
+#CHECKERR: fish: Unexpected '}' for unopened brace expansion
+#CHECKERR: echo foo-{{^|\{\{\},\{\}\}|^}}
+#CHECKERR:            ^
 
 echo foo-{""} # still expands to foo-{}
 #CHECK: foo-{}
@@ -51,3 +52,9 @@ end
 
 echo {a(echo ,)b}
 #CHECK: {a,b}
+
+echo {{\xyz}}
+#CHECK: \xyz
+
+echo {{a,b}}
+#CHECK: a,b

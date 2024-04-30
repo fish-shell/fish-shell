@@ -927,24 +927,27 @@ pub fn expand_cmdsubst(
     let mut cursor = 0;
     let mut is_quoted = false;
     let mut has_dollar = false;
-    let parens = match parse_util_locate_cmdsubst_range(
-        &input,
-        &mut cursor,
-        false,
-        Some(&mut is_quoted),
-        Some(&mut has_dollar),
-    ) {
-        MaybeParentheses::Error => {
-            append_syntax_error!(errors, SOURCE_LOCATION_UNKNOWN, "Mismatched parenthesis");
-            return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
-        }
-        MaybeParentheses::None => {
-            if !out.add(input) {
-                return append_overflow_error(errors, None);
+    let parens = loop {
+        match parse_util_locate_cmdsubst_range(
+            &input,
+            &mut cursor,
+            false,
+            Some(&mut is_quoted),
+            Some(&mut has_dollar),
+        ) {
+            MaybeParentheses::Error => {
+                append_syntax_error!(errors, SOURCE_LOCATION_UNKNOWN, "Mismatched parenthesis");
+                return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
             }
-            return ExpandResult::ok();
-        }
-        MaybeParentheses::CommandSubstitution(parens) => parens,
+            MaybeParentheses::None => {
+                if !out.add(input) {
+                    return append_overflow_error(errors, None);
+                }
+                return ExpandResult::ok();
+            }
+            MaybeParentheses::CommandSubstitution(parens) => break parens,
+            MaybeParentheses::QuotedCommand(_) => (),
+        };
     };
 
     let mut sub_res = vec![];
@@ -1319,24 +1322,27 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         }
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
-            match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                MaybeParentheses::Error => {
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
-                }
-                MaybeParentheses::None => {
-                    if !out.add(input) {
-                        return append_overflow_error(self.errors, None);
+            loop {
+                match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
+                    MaybeParentheses::Error => {
+                        return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
                     }
-                    return ExpandResult::ok();
-                }
-                MaybeParentheses::CommandSubstitution(parens) => {
-                    append_cmdsub_error!(
+                    MaybeParentheses::None => {
+                        if !out.add(input) {
+                            return append_overflow_error(self.errors, None);
+                        }
+                        return ExpandResult::ok();
+                    }
+                    MaybeParentheses::CommandSubstitution(parens) => {
+                        append_cmdsub_error!(
                                 self.errors,
                                 parens.start(),
                                 parens.end()-1,
                                 "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
                             );
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                        return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                    }
+                    MaybeParentheses::QuotedCommand(_) => (),
                 }
             }
         } else {

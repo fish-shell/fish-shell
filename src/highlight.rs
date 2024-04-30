@@ -460,6 +460,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
         unquoted,
         single_quoted,
         double_quoted,
+        raw_quoted(usize),
     }
     let mut mode = Mode::unquoted;
     let mut unclosed_quote_offset = None;
@@ -467,7 +468,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
     let mut in_pos = 0;
     while in_pos < buff_len {
         let c = buffstr.as_char_slice()[in_pos];
-        match mode {
+        match &mut mode {
             Mode::unquoted => {
                 if c == '\\' {
                     let mut fill_color = HighlightRole::escape; // may be set to highlight_error
@@ -577,8 +578,16 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                         }
                         '{' => {
-                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            bracket_count += 1;
+                            if buffstr.char_at(in_pos + 1) == '{' {
+                                mode = Mode::raw_quoted(1);
+                                unclosed_quote_offset = Some(in_pos);
+                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+                                colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::quote);
+                                in_pos += 1;
+                            } else {
+                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
+                                bracket_count += 1;
+                            }
                         }
                         '}' => {
                             colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
@@ -648,6 +657,23 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                         in_pos -= 1;
                     }
                     _ => (), // we ignore all other characters
+                }
+            }
+            Mode::raw_quoted(count) => {
+                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
+                match c {
+                    '{' => *count += 1,
+                    '}' => {
+                        *count -= 1;
+                        if *count == 0 {
+                            if buffstr.char_at(in_pos + 1) == '}' {
+                                colors[in_pos + 1] = HighlightSpec::with_fg(HighlightRole::quote);
+                                in_pos += 1;
+                                mode = Mode::unquoted;
+                            }
+                        }
+                    }
+                    _ => (),
                 }
             }
         }
@@ -1026,20 +1052,24 @@ impl<'s> Highlighter<'s> {
         // Now do command substitutions.
         let mut cmdsub_cursor = 0;
         let mut is_quoted = false;
-        while let MaybeParentheses::CommandSubstitution(parens) = parse_util_locate_cmdsubst_range(
-            arg_str,
-            &mut cmdsub_cursor,
-            /*accept_incomplete=*/ true,
-            Some(&mut is_quoted),
-            None,
-        ) {
+        loop {
+            let (parens, role) = match parse_util_locate_cmdsubst_range(
+                arg_str,
+                &mut cmdsub_cursor,
+                /*accept_incomplete=*/ true,
+                Some(&mut is_quoted),
+                None,
+            ) {
+                MaybeParentheses::CommandSubstitution(parens) => (parens, HighlightRole::operat),
+                MaybeParentheses::QuotedCommand(parens) => (parens, HighlightRole::quote),
+                _ => break,
+            };
+
             // Highlight the parens. The open parens must exist; the closed paren may not if it was
             // incomplete.
             assert!(parens.start() < arg_str.len());
-            self.color_array[arg_start..][parens.opening()]
-                .fill(HighlightSpec::with_fg(HighlightRole::operat));
-            self.color_array[arg_start..][parens.closing()]
-                .fill(HighlightSpec::with_fg(HighlightRole::operat));
+            self.color_array[arg_start..][parens.opening()].fill(HighlightSpec::with_fg(role));
+            self.color_array[arg_start..][parens.closing()].fill(HighlightSpec::with_fg(role));
 
             // Highlight it recursively.
             let arg_cursor = self
@@ -1400,10 +1430,13 @@ impl<'s> Highlighter<'s> {
 /// \return whether a string contains a command substitution.
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
-    match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
-        MaybeParentheses::Error => return false,
-        MaybeParentheses::None => return false,
-        MaybeParentheses::CommandSubstitution(_) => return true,
+    loop {
+        match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {
+            MaybeParentheses::Error => return false,
+            MaybeParentheses::None => return false,
+            MaybeParentheses::CommandSubstitution(_) => return true,
+            MaybeParentheses::QuotedCommand(_) => (),
+        }
     }
 }
 

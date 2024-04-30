@@ -113,6 +113,7 @@ pub enum ParseErrorCode {
     // Tokenizer errors.
     tokenizer_unterminated_quote,
     tokenizer_unterminated_subshell,
+    tokenizer_unterminated_raw_quote,
     tokenizer_unterminated_slice,
     tokenizer_unterminated_escape,
     tokenizer_other,

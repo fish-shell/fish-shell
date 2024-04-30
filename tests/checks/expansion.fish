@@ -66,7 +66,7 @@ end
 #CHECK: Amy
 
 echo {{a,b}}
-#CHECK: {a} {b}
+#CHECK: a,b
 
 # Test expansion of variables
 

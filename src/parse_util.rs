@@ -84,6 +84,7 @@ pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
 #[derive(Debug, Default, Eq, PartialEq)]
 pub struct Parentheses {
     range: Range<usize>,
+    is_quoted: bool,
     num_closing: usize,
 }
 
@@ -95,13 +96,20 @@ impl Parentheses {
         self.range.end
     }
     pub fn opening(&self) -> Range<usize> {
-        self.range.start..self.range.start + 1
+        self.range.start..self.range.start + self.num_opening()
     }
     pub fn closing(&self) -> Range<usize> {
         self.range.end - self.num_closing..self.range.end
     }
     pub fn command(&self) -> Range<usize> {
-        self.range.start + 1..self.range.end - self.num_closing
+        self.range.start + self.num_opening()..self.range.end - self.num_closing
+    }
+    fn num_opening(&self) -> usize {
+        if self.is_quoted {
+            2
+        } else {
+            1
+        }
     }
 }
 
@@ -110,6 +118,7 @@ pub enum MaybeParentheses {
     Error,
     None,
     CommandSubstitution(Parentheses),
+    QuotedCommand(Parentheses),
 }
 
 /// Alternative API. Iterate over command substitutions.
@@ -148,7 +157,7 @@ pub fn parse_util_locate_cmdsubst_range(
     );
     match &ret {
         MaybeParentheses::Error | MaybeParentheses::None => (),
-        MaybeParentheses::CommandSubstitution(parens) => {
+        MaybeParentheses::CommandSubstitution(parens) | MaybeParentheses::QuotedCommand(parens) => {
             *inout_cursor_offset = parens.end();
         }
     }
@@ -173,6 +182,7 @@ pub fn parse_util_cmdsubst_extent(buff: &wstr, cursor: usize) -> ops::Range<usiz
             // No subshell found, all done.
             MaybeParentheses::Error | MaybeParentheses::None => break,
             MaybeParentheses::CommandSubstitution(parens) => parens,
+            MaybeParentheses::QuotedCommand(parens) => parens,
         };
 
         let command = parens.command();
@@ -212,6 +222,7 @@ fn parse_util_locate_cmdsub(
     let mut is_token_begin = true;
     let mut syntax_error = false;
     let mut paran_count = 0;
+    let mut quoted_command = None;
     let mut quoted_cmdsubs = vec![];
 
     let mut pos = cursor;
@@ -261,7 +272,32 @@ fn parse_util_locate_cmdsub(
 
     while pos < input.len() {
         let c = input[pos];
-        if !escaped {
+        if let Some(goal) = quoted_command {
+            match c {
+                '(' => {
+                    paran_count += 1;
+                }
+                ')' => {
+                    if paran_count == goal + 1 {
+                        syntax_error = true;
+                        break;
+                    }
+                    paran_count -= 1;
+                    if paran_count == goal + 1 {
+                        if input.get(pos + 1) == Some(&')') {
+                            paran_count -= 1;
+                            pos += 1;
+                            quoted_command = None;
+                            if paran_count == 0 && paran_end.is_none() {
+                                paran_end = Some(pos);
+                                break;
+                            }
+                        }
+                    }
+                }
+                _ => (),
+            }
+        } else if !escaped {
             if ['\'', '"'].contains(&c) {
                 match process_opening_quote(
                     input,
@@ -288,7 +324,15 @@ fn parse_util_locate_cmdsub(
                         .as_mut()
                         .map(|has_dollar| **has_dollar = last_dollar == Some(pos.wrapping_sub(1)));
                 }
-
+                if input.get(pos + 1) == Some(&'(') {
+                    quoted_command = Some(paran_count);
+                    if last_dollar == Some(pos.wrapping_sub(1)) {
+                        syntax_error = true;
+                        break;
+                    }
+                    paran_count += 1;
+                    pos += 1;
+                }
                 paran_count += 1;
             } else if c == ')' {
                 paran_count -= 1;
@@ -349,12 +393,28 @@ fn parse_util_locate_cmdsub(
         paran_end.unwrap() + 1
     };
 
-    let parens = Parentheses {
+    let mut parens = Parentheses {
         range: paran_begin..end,
-        num_closing: if paran_count == 0 { 1 } else { 0 },
+        is_quoted: false,
+        num_closing: usize::MAX,
     };
 
-    MaybeParentheses::CommandSubstitution(parens)
+    if input.get(paran_begin + 1) == Some(&'(')
+    // )
+    {
+        if let Some(goal) = quoted_command {
+            // TODO simplify
+            assert_ne!(paran_count, goal);
+            parens.num_closing = if paran_count == goal + 1 { 1 } else { 0 };
+        } else {
+            parens.num_closing = 2;
+        }
+        parens.is_quoted = true;
+        MaybeParentheses::QuotedCommand(parens)
+    } else {
+        parens.num_closing = if paran_count == 0 { 1 } else { 0 };
+        MaybeParentheses::CommandSubstitution(parens)
+    }
 }
 
 /// Find the beginning and end of the process definition under the cursor
@@ -749,6 +809,8 @@ pub fn parse_util_compute_indents(src: &wstr) -> Vec<i32> {
     compute_indents(src, 0)
 }
 
+/// Given a string, parse it as fish code and then return the indents. The return value has the same
+/// size as the string.
 fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // Make a vector the same size as the input string, which contains the indents. Initialize them
     // to 0.
@@ -923,6 +985,7 @@ impl<'a> IndentVisitor<'a> {
                     break;
                 }
                 MaybeParentheses::CommandSubstitution(parens) => parens,
+                MaybeParentheses::QuotedCommand(parens) => parens,
             };
 
             let command = parens.command();
@@ -933,7 +996,7 @@ impl<'a> IndentVisitor<'a> {
                 .copy_from_slice(&indents);
 
             done = range.start() + command.end;
-            if parens.closing().len() < 1 {
+            if parens.closing().len() < parens.num_opening() {
                 self.unclosed = true;
             }
         }
@@ -1134,6 +1197,7 @@ pub fn parse_util_detect_errors(
             if [
                 ParseErrorCode::tokenizer_unterminated_quote,
                 ParseErrorCode::tokenizer_unterminated_subshell,
+                ParseErrorCode::tokenizer_unterminated_raw_quote,
             ]
             .contains(&parse_error.code)
             {
@@ -1463,6 +1527,7 @@ pub fn parse_util_detect_errors_in_argument(
 
                 checked = parens.end();
             }
+            MaybeParentheses::QuotedCommand(_) => (),
         }
     }
 

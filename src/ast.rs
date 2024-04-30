@@ -3773,6 +3773,7 @@ impl<'s> Populator<'s> {
                 && [
                     TokenizerError::unterminated_quote,
                     TokenizerError::unterminated_subshell,
+                    TokenizerError::unterminated_raw_quote,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {
@@ -3809,6 +3810,7 @@ impl<'s> Populator<'s> {
                 && [
                     TokenizerError::unterminated_quote,
                     TokenizerError::unterminated_subshell,
+                    TokenizerError::unterminated_raw_quote,
                 ]
                 .contains(&self.peek_token(0).tok_error)
             {

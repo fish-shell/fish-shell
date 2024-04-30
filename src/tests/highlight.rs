@@ -636,4 +636,17 @@ fn test_highlighting() {
         (">", fg(HighlightRole::error)),
         ("echo", fg(HighlightRole::error)),
     );
+
+    validate!(
+        ("echo", fg(HighlightRole::command)),
+        ("((", fg(HighlightRole::quote)),
+        ("echo", fg(HighlightRole::command)),
+        ("test/somewhere", fg(HighlightRole::param)),
+        ("))", fg(HighlightRole::quote)),
+    );
+
+    validate!(
+        ("echo", fg(HighlightRole::command)),
+        ("{{some raw  string}}", fg(HighlightRole::quote)),
+    );
 }

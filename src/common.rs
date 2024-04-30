@@ -524,6 +524,8 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
         Unquoted,
         SingleQuotes,
         DoubleQuotes,
+        QuotedSubshell(usize),
+        RawQuoted(usize),
     }
     let mut mode = Mode::Unquoted;
 
@@ -603,7 +605,15 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     }
                 }
                 '{' => {
-                    if unescape_special {
+                    if input.char_at(input_position + 1) == '{' {
+                        input_position += 1;
+                        mode = Mode::RawQuoted(1);
+                        to_append_or_none = if unescape_special {
+                            Some(INTERNAL_SEPARATOR)
+                        } else {
+                            None
+                        };
+                    } else if unescape_special {
                         brace_count += 1;
                         to_append_or_none = Some(BRACE_BEGIN);
                         // We need to store where the brace *ends up* in the output.
@@ -670,6 +680,17 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     } else {
                         None
                     };
+                }
+                '(' => {
+                    if input.char_at(input_position + 1) == '(' {
+                        input_position += 1;
+                        mode = Mode::QuotedSubshell(1);
+                        to_append_or_none = if unescape_special {
+                            Some(INTERNAL_SEPARATOR)
+                        } else {
+                            None
+                        };
+                    }
                 }
                 _ => (),
             }
@@ -743,6 +764,52 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     if unescape_special {
                         to_append_or_none = Some(VARIABLE_EXPAND_SINGLE);
                         vars_or_seps.push(input_position);
+                    }
+                }
+                _ => (),
+            }
+        } else if let Mode::QuotedSubshell(count) = &mut mode {
+            // Assumed valid here.
+            match c {
+                '(' => {
+                    *count += 1;
+                }
+                ')' => {
+                    *count -= 1;
+                    if *count == 0 {
+                        // Skip the second closing parenthesis.
+                        if input_position + 1 < input.len() {
+                            input_position += 1;
+                        }
+                        mode = Mode::Unquoted;
+                        to_append_or_none = if unescape_special {
+                            Some(INTERNAL_SEPARATOR)
+                        } else {
+                            None
+                        };
+                    }
+                }
+                _ => (),
+            }
+        } else if let Mode::RawQuoted(count) = &mut mode {
+            // Assumed valid here.
+            match c {
+                '{' => {
+                    *count += 1;
+                }
+                '}' => {
+                    *count -= 1;
+                    if *count == 0 {
+                        // Skip the second closing brace.
+                        if input_position + 1 < input.len() {
+                            input_position += 1;
+                        }
+                        mode = Mode::Unquoted;
+                        to_append_or_none = if unescape_special {
+                            Some(INTERNAL_SEPARATOR)
+                        } else {
+                            None
+                        };
                     }
                 }
                 _ => (),

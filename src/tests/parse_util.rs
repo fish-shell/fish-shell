@@ -435,5 +435,19 @@ fn test_indents() {
             0, "\n) line4",
             0, "\nline5\"",
         );
+
+        validate!(
+            0, "echo1 (", // )
+            1, "\necho2 ((" // ))
+        );
+        validate!(
+            0, "echo ((",
+            1, "\necho", // ))
+        );
+        validate!(
+            0, "echo ((",
+            1, "\necho",
+            0, ")" // )
+        );
     })();
 }

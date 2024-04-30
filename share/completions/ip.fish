@@ -401,7 +401,7 @@ function __fish_complete_ip
                             case netns
                             case link-netnsid
                             case vf mac
-                            case {{max,min}_tx_,}rate
+                            case {max,min}_tx_rate rate
                             case node_guid port_guid
                             case state
                                 echo auto

@@ -39,6 +39,7 @@ pub enum TokenizerError {
     none,
     unterminated_quote,
     unterminated_subshell,
+    unterminated_raw_quote,
     unterminated_slice,
     unterminated_escape,
     invalid_redirect,
@@ -180,6 +181,9 @@ impl From<TokenizerError> for &'static wstr {
             }
             TokenizerError::unterminated_brace => {
                 wgettext!("Unexpected end of string, incomplete parameter expansion")
+            }
+            TokenizerError::unterminated_raw_quote => {
+                wgettext!("Unexpected end of string, incomplete raw quote")
             }
             TokenizerError::expected_pclose_found_bclose => {
                 wgettext!("Unexpected '}' found, expecting ')'")
@@ -559,6 +563,7 @@ impl<'c> Tokenizer<'c> {
     fn read_string(&mut self) -> Tok {
         let mut mode = TOK_MODE_REGULAR_TEXT;
         let mut paran_offsets = vec![];
+        let mut raw_or_subshell_quote = None;
         let mut brace_offsets = vec![];
         let mut expecting = vec![];
         let mut quoted_cmdsubs = vec![];
@@ -598,6 +603,46 @@ impl<'c> Tokenizer<'c> {
             if mode & TOK_MODE_CHAR_ESCAPE {
                 mode &= !TOK_MODE_CHAR_ESCAPE;
                 // and do nothing more
+            } else if mode & (TOK_MODE_QUOTED_SUBSHELL | TOK_MODE_RAW_QUOTED) {
+                let (quote_mode, opening, closing, closing_unopened_error) =
+                    if mode & TOK_MODE_QUOTED_SUBSHELL {
+                        (
+                            TOK_MODE_QUOTED_SUBSHELL,
+                            '(',
+                            ')',
+                            TokenizerError::closing_unopened_subshell,
+                        )
+                    } else {
+                        (
+                            TOK_MODE_RAW_QUOTED,
+                            '{',
+                            '}',
+                            TokenizerError::closing_unopened_brace,
+                        )
+                    };
+                let goal = raw_or_subshell_quote.as_mut().unwrap();
+                if c == opening {
+                    *goal += 1;
+                } else if c == closing {
+                    *goal -= 1;
+                    if *goal == 1 && self.token_cursor + 1 < self.start.len() {
+                        if self.start.char_at(self.token_cursor + 1) == closing {
+                            self.token_cursor += 1;
+                            mode &= !quote_mode;
+                            self.on_quote_toggle
+                                .as_mut()
+                                .map(|cb| (cb)(self.token_cursor + 1));
+                        } else {
+                            return self.call_error(
+                                closing_unopened_error,
+                                self.token_cursor,
+                                self.token_cursor,
+                                Some(1),
+                                1,
+                            );
+                        }
+                    }
+                }
             } else if myal(c) {
                 // Early exit optimization in case the character is just a letter,
                 // which has no special meaning to the tokenizer, i.e. the same mode continues.
@@ -610,10 +655,27 @@ impl<'c> Tokenizer<'c> {
                 self.token_cursor = comment_end(&self.start, self.token_cursor) - 1;
             } else if c == '(' {
                 paran_offsets.push(self.token_cursor);
+                if self.start.char_at(self.token_cursor + 1) == '(' {
+                    assert!(raw_or_subshell_quote.is_none());
+                    raw_or_subshell_quote = Some(2);
+                    self.token_cursor += 2;
+                    mode |= TOK_MODE_QUOTED_SUBSHELL;
+                    continue;
+                }
                 expecting.push(')');
                 mode |= TOK_MODE_SUBSHELL;
             } else if c == '{' {
                 brace_offsets.push(self.token_cursor);
+                if self.start.char_at(self.token_cursor + 1) == '{' {
+                    assert!(raw_or_subshell_quote.is_none());
+                    raw_or_subshell_quote = Some(2);
+                    mode |= TOK_MODE_RAW_QUOTED;
+                    self.on_quote_toggle
+                        .as_mut()
+                        .map(|cb| (cb)(self.token_cursor));
+                    self.token_cursor += 2;
+                    continue;
+                }
                 expecting.push('}');
                 mode |= TOK_MODE_CURLY_BRACES;
             } else if c == ')' {
@@ -754,7 +816,7 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_SUBSHELL {
+            } else if mode & (TOK_MODE_SUBSHELL | TOK_MODE_QUOTED_SUBSHELL) {
                 assert!(!paran_offsets.is_empty());
                 let offset_of_open_paran = *paran_offsets.last().unwrap();
 
@@ -765,12 +827,16 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_CURLY_BRACES {
+            } else if mode & (TOK_MODE_CURLY_BRACES | TOK_MODE_RAW_QUOTED) {
                 assert!(!brace_offsets.is_empty());
                 let offset_of_open_brace = *brace_offsets.last().unwrap();
 
                 return self.call_error(
-                    TokenizerError::unterminated_brace,
+                    if mode & TOK_MODE_RAW_QUOTED {
+                        TokenizerError::unterminated_raw_quote
+                    } else {
+                        TokenizerError::unterminated_brace
+                    },
                     buff_start,
                     offset_of_open_brace,
                     None,
@@ -848,11 +914,19 @@ const TOK_MODE_SUBSHELL: TokModes = TokModes(1 << 0); // inside of subshell pare
 const TOK_MODE_ARRAY_BRACKETS: TokModes = TokModes(1 << 1); // inside of array brackets
 const TOK_MODE_CURLY_BRACES: TokModes = TokModes(1 << 2);
 const TOK_MODE_CHAR_ESCAPE: TokModes = TokModes(1 << 3);
+const TOK_MODE_QUOTED_SUBSHELL: TokModes = TokModes(1 << 4); // inside of (( ))
+const TOK_MODE_RAW_QUOTED: TokModes = TokModes(1 << 5); // inside of {{ }}
 
 impl BitAnd for TokModes {
     type Output = bool;
     fn bitand(self, rhs: Self) -> Self::Output {
         (self.0 & rhs.0) != 0
+    }
+}
+impl BitOr for TokModes {
+    type Output = TokModes;
+    fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
     }
 }
 impl BitAndAssign for TokModes {

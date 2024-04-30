@@ -94,6 +94,22 @@ fn test_tokenizer() {
         assert_eq!(token.error_offset_within_token, 4);
     }
 
+    {
+        let mut t = Tokenizer::new(L!(r#"(( echo \ " ' \xyz ))"#), TokFlags(0));
+        let token = t.next().unwrap();
+        assert_eq!(token.type_, TokenType::string);
+        let next = t.next();
+        assert!(t.next().is_none(), "Unexpected token: {:?}", next.unwrap());
+    }
+
+    {
+        let mut t = Tokenizer::new(L!(r#"{{ echo \ " ' \xyz }}"#), TokFlags(0));
+        let token = t.next().unwrap();
+        assert_eq!(token.type_, TokenType::string);
+        let next = t.next();
+        assert!(t.next().is_none(), "Unexpected token: {:?}", next.unwrap());
+    }
+
     // Test some redirection parsing.
     macro_rules! pipe_or_redir {
         ($s:literal) => {

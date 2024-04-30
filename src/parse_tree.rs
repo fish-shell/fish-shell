@@ -90,6 +90,9 @@ impl From<TokenizerError> for ParseErrorCode {
             TokenizerError::unterminated_subshell => {
                 ParseErrorCode::tokenizer_unterminated_subshell
             }
+            TokenizerError::unterminated_raw_quote => {
+                ParseErrorCode::tokenizer_unterminated_raw_quote
+            }
             TokenizerError::unterminated_slice => ParseErrorCode::tokenizer_unterminated_slice,
             TokenizerError::unterminated_escape => ParseErrorCode::tokenizer_unterminated_escape,
             _ => ParseErrorCode::tokenizer_other,

@@ -5,7 +5,6 @@ use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
     CharEvent, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
-    WAIT_ON_ESCAPE_MS,
 };
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::parser::Parser;
@@ -654,12 +653,10 @@ impl EventQueuePeeker<'_> {
         if self.idx == self.peeked.len() {
             let newevt = if escaped {
                 FLOG!(reader, "reading timed escape");
-                match self.event_queue.readch_timed_esc(style) {
-                    Ok(evt) => evt,
-                    Err(timed_out) => {
-                        if timed_out {
-                            self.had_timeout = true;
-                        }
+                match self.event_queue.readch_timed_esc() {
+                    Some(evt) => evt,
+                    None => {
+                        self.had_timeout = true;
                         return false;
                     }
                 }
@@ -682,10 +679,7 @@ impl EventQueuePeeker<'_> {
         let Some(kevt) = evt.get_key() else {
             return false;
         };
-        if WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed) != 0
-            && kevt.seq == L!("\x1b")
-            && key.modifiers == Modifiers::ALT
-        {
+        if kevt.seq == L!("\x1b") && key.modifiers == Modifiers::ALT {
             self.idx += 1;
             self.subidx = 0;
             FLOG!(reader, "matched delayed escape prefix in alt sequence");
@@ -789,7 +783,7 @@ fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &
     for key in seq {
         // If we just read an escape, we need to add a timeout for the next char,
         // to distinguish between the actual escape key and an "alt"-modifier.
-        let escaped = prev == Key::from_raw(key::Escape);
+        let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::Escape);
         if !peeker.next_is_char(style, *key, escaped) {
             return false;
         }

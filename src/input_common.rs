@@ -8,7 +8,6 @@ use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input::KeyNameStyle;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
     Key, Modifiers,
@@ -281,7 +280,8 @@ impl CharEvent {
 /// Time in milliseconds to wait for another byte to be available for reading
 /// after \x1B is read before assuming that escape key was pressed, and not an
 /// escape sequence.
-pub(crate) static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(0);
+const WAIT_ON_ESCAPE_DEFAULT: usize = 30;
+static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_ESCAPE_DEFAULT);
 
 const WAIT_ON_SEQUENCE_KEY_INFINITE: usize = usize::MAX;
 static WAIT_ON_SEQUENCE_KEY_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_SEQUENCE_KEY_INFINITE);
@@ -384,7 +384,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
 pub fn update_wait_on_escape_ms(vars: &EnvStack) {
     let fish_escape_delay_ms = vars.get_unless_empty(L!("fish_escape_delay_ms"));
     let Some(fish_escape_delay_ms) = fish_escape_delay_ms else {
-        WAIT_ON_ESCAPE_MS.store(0, Ordering::Relaxed);
+        WAIT_ON_ESCAPE_MS.store(WAIT_ON_ESCAPE_DEFAULT, Ordering::Relaxed);
         return;
     };
     let fish_escape_delay_ms = fish_escape_delay_ms.as_string();
@@ -1026,16 +1026,8 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
-    fn readch_timed_esc(&mut self, style: &KeyNameStyle) -> Result<CharEvent, bool> {
-        let wait_ms = WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed);
-        if wait_ms == 0 {
-            if *style == KeyNameStyle::Plain {
-                return self.readch_timed_sequence_key().ok_or(true);
-            }
-            return Err(false); // Not timed out
-        }
+    fn readch_timed_esc(&mut self) -> Option<CharEvent> {
         self.readch_timed(WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed))
-            .ok_or(true) // Timed out
     }
 
     fn readch_timed_sequence_key(&mut self) -> Option<CharEvent> {

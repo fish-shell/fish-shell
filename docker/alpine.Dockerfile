@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM alpine:3.19
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG C.UTF-8
@@ -15,7 +15,8 @@ RUN apk add --no-cache \
   ninja \
   pcre2-dev \
   python3 \
-  py3-pexpect
+  py3-pexpect \
+  cargo
 
 RUN addgroup -g 1000 fishuser
 

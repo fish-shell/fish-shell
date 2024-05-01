@@ -167,7 +167,7 @@ impl RegexError {
                     &WString::from(e.error_message())
                 );
                 string_error!(streams, "%ls: %ls\n", cmd, pattern);
-                string_error!(streams, "%ls: %*ls\n", cmd, e.offset().unwrap(), "^");
+                string_error!(streams, "%ls: %*ls\n", cmd, e.offset().unwrap_or(0), "^");
             }
             InvalidCaptureGroupName(name) => {
                 streams.err.append(wgettext_fmt!(

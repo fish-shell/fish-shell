@@ -195,7 +195,7 @@ impl BuiltinBind {
     fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
         let lst = self.input_mappings.get_names(user);
         for binding in lst {
-            if bind_mode.is_some() && bind_mode.unwrap() != binding.mode {
+            if bind_mode.is_some_and(|m| m != binding.mode) {
                 continue;
             }
 

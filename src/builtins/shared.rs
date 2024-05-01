@@ -786,14 +786,14 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         }
 
         // assert!(num_bytes == self.buffer.len());
-        let (end, want_newline) = match (&self.split_behavior, self.buffer.last().unwrap()) {
+        let (end, want_newline) = match (&self.split_behavior, self.buffer.last()) {
             // remove the newline — consumers do not expect it
-            (Newline, b'\n') => (num_bytes - 1, true),
+            (Newline, Some(b'\n')) => (num_bytes - 1, true),
             // we are missing a trailing newline!
             (Newline, _) => (num_bytes, false),
             // consumers do not expect to deal with the null
             // "want_newline" is not currently relevant for Null
-            (Null, b'\0') => (num_bytes - 1, false),
+            (Null, Some(b'\0')) => (num_bytes - 1, false),
             // we are missing a null!
             (Null, _) => (num_bytes, false),
             (Never, _) => (num_bytes, false),

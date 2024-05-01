@@ -150,16 +150,14 @@ fn parse_cmd_opts(
                     let pid: i32 = getpid();
                     e = EventDescription::ProcessExit { pid };
                 } else {
-                    let pid = fish_wcstoi(woptarg);
-                    if pid.is_err() || pid.unwrap() < 0 {
+                    let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
                         streams.err.append(wgettext_fmt!(
                             "%ls: %ls: invalid process id",
                             cmd,
                             woptarg
                         ));
                         return STATUS_INVALID_ARGS;
-                    }
-                    let pid = pid.unwrap();
+                    };
                     if opt == 'p' {
                         e = EventDescription::ProcessExit { pid };
                     } else {

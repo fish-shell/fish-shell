@@ -816,9 +816,8 @@ mod test_expressions {
             // invalid (e.g. not a representable integer).
             *number = Number::new(int, 0.0);
             true
-        } else if floating.is_ok()
-            && integral.unwrap_err() != Error::Overflow
-            && floating.unwrap().is_finite()
+        } else if floating.is_ok_and(|f| f.is_finite())
+            && integral.is_err_and(|i| i != Error::Overflow)
         {
             // Here we parsed an (in range) floating point value that could not be parsed as an integer.
             // Break the floating point value into base and delta. Ensure that base is <= the floating

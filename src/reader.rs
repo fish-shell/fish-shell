@@ -2570,7 +2570,17 @@ impl ReaderData {
                 let search_string = if !self.history_search.active()
                     || self.history_search.search_string().is_empty()
                 {
-                    parse_util_escape_wildcards(self.command_line.line_at_cursor())
+                    let cmdsub = parse_util_cmdsubst_extent(
+                        self.command_line.text(),
+                        self.command_line.position(),
+                    );
+                    let cmdsub = &self.command_line.text()[cmdsub];
+                    let needle = if !cmdsub.contains('\n') {
+                        cmdsub
+                    } else {
+                        self.command_line.line_at_cursor()
+                    };
+                    parse_util_escape_wildcards(needle)
                 } else {
                     // If we have an actual history search already going, reuse that term
                     // - this is if the user looks around a bit and decides to switch to the pager.
@@ -5180,7 +5190,13 @@ pub fn completion_apply_to_command_line(
 
     if do_replace_line {
         assert!(!do_escape, "unsupported completion flag");
-        return replace_line_at_cursor(command_line, inout_cursor_pos, val_str);
+        let cmdsub = parse_util_cmdsubst_extent(command_line, cursor_pos);
+        return if !command_line[cmdsub.clone()].contains('\n') {
+            *inout_cursor_pos = cmdsub.start + val_str.len();
+            command_line[..cmdsub.start].to_owned() + val_str + &command_line[cmdsub.end..]
+        } else {
+            replace_line_at_cursor(command_line, inout_cursor_pos, val_str)
+        };
     }
 
     let mut escape_flags = EscapeFlags::empty();

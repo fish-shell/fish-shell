@@ -62,7 +62,7 @@ Notable improvements and fixes
 - :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
 - Undo history is no longer truncated after every command but kept for the lifetime of the shell process.
 - The :kbd:`ctrl-r` history search now uses glob syntax (:issue:`10131`).
-- The :kbd:`ctrl-r` history search now operates only on the line at cursor, making it easier to quickly compose a multi-line command by recalling previous commands.
+- The :kbd:`ctrl-r` history search now operates only on the line or command substitution at cursor, making it easier to combine commands from history.
 - Abbreviations can now be restricted to specific commands. For instance::
 
     abbr --add --command git back 'reset --hard HEAD^'

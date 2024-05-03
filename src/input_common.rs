@@ -114,7 +114,6 @@ pub enum ReadlineCmd {
     FuncAnd,
     FuncOr,
     ExpandAbbr,
-    ExpandAbbrBacktrack,
     DeleteOrExit,
     Exit,
     CancelCommandline,

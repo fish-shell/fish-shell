@@ -105,20 +105,20 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         or exit # protect against invalid $argv
 
         # Space and other command terminators expands abbrs _and_ inserts itself.
-        bind --preset $argv space self-insert expand-abbr-backtrack
-        bind --preset $argv ";" self-insert expand-abbr-backtrack
-        bind --preset $argv "|" self-insert expand-abbr-backtrack
-        bind --preset $argv "&" self-insert expand-abbr-backtrack
-        bind --preset $argv ">" self-insert expand-abbr-backtrack
-        bind --preset $argv "<" self-insert expand-abbr-backtrack
-        bind --preset $argv shift-enter "commandline -i \n" expand-abbr-backtrack
-        $legacy_bind --preset $argv \e\[27\;2\;13~ "commandline -i \n" expand-abbr-backtrack # Sent with XTerm.vt100.formatOtherKeys: 0
-        bind --preset $argv alt-enter "commandline -i \n" expand-abbr-backtrack
-        bind --preset $argv ")" self-insert expand-abbr-backtrack # Closing a command substitution.
+        bind --preset $argv space self-insert expand-abbr
+        bind --preset $argv ";" self-insert expand-abbr
+        bind --preset $argv "|" self-insert expand-abbr
+        bind --preset $argv "&" self-insert expand-abbr
+        bind --preset $argv ">" self-insert expand-abbr
+        bind --preset $argv "<" self-insert expand-abbr
+        bind --preset $argv shift-enter "commandline -i \n" expand-abbr
+        $legacy_bind --preset $argv \e\[27\;2\;13~ "commandline -i \n" expand-abbr # Sent with XTerm.vt100.formatOtherKeys: 0
+        bind --preset $argv alt-enter "commandline -i \n" expand-abbr
+        bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
         bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " "'
         bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
         # Shift-space behaves like space because it's easy to mistype.
-        bind --preset $argv shift-space 'commandline -i " "' expand-abbr-backtrack
+        bind --preset $argv shift-space 'commandline -i " "' expand-abbr
 
         bind --preset $argv enter execute
         bind --preset $argv ctrl-j execute

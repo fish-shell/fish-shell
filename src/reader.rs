@@ -3116,13 +3116,6 @@ impl ReaderData {
                     self.inputter.function_set_status(false);
                 }
             }
-            rl::ExpandAbbrBacktrack => {
-                if self.expand_abbreviation_at_cursor(2) {
-                    self.inputter.function_set_status(true);
-                } else {
-                    self.inputter.function_set_status(false);
-                }
-            }
             rl::Undo | rl::Redo => {
                 let (elt, el) = self.active_edit_line_mut();
                 let ok = if c == rl::Undo { el.undo() } else { el.redo() };

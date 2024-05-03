@@ -30,17 +30,12 @@ struct TimerSnapshot {
     cpu_children: libc::rusage,
 }
 
-/// If `enabled`, create a `TimerSnapshot` and return a `PrintElapsedOnDrop` object that will print
-/// upon being dropped the delta between now and the time that it is dropped at. Otherwise return
-/// `None`.
-pub fn push_timer(enabled: bool) -> Option<PrintElapsedOnDrop> {
-    if !enabled {
-        return None;
-    }
-
-    Some(PrintElapsedOnDrop {
+/// Create a `TimerSnapshot` and return a `PrintElapsedOnDrop` object that will print upon
+/// being dropped the delta between now and the time that it is dropped at.
+pub fn push_timer() -> PrintElapsedOnDrop {
+    PrintElapsedOnDrop {
         start: TimerSnapshot::take(),
-    })
+    }
 }
 
 /// An enumeration of supported libc rusage types used by [`getrusage()`].

@@ -68,7 +68,7 @@ $fish -c 'echo {$,}'
 
 echo "bind -M" | $fish
 # CHECKERR: bind: -M: option requires an argument
-# CHECKERR: Standard input (line 1): 
+# CHECKERR: Standard input (line 1):
 # CHECKERR: bind -M
 # CHECKERR: ^
 # CHECKERR: (Type 'help bind' for related documentation)
@@ -116,6 +116,11 @@ $fish -c 'echo (time echo foo &)'
 # CHECKERR: in command substitution
 # CHECKERR: fish: Invalid arguments
 # CHECKERR: echo (time echo foo &)
+# CHECKERR: ^~~~~~~~~~~~~~~~^
+
+$fish -c 'time begin; end &'
+# CHECKERR: fish: 'time' is not supported for background jobs. Consider using 'command time'.
+# CHECKERR: time begin; end &
 # CHECKERR: ^~~~~~~~~~~~~~~~^
 
 $fish -c 'echo (set -l foo 1 2 3; for $foo in foo; end)'

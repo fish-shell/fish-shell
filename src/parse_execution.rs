@@ -1585,18 +1585,27 @@ impl<'a> ParseExecutionContext {
             0
         };
 
-        let job_wants_timing = job_node_wants_timing(job_node);
         let job_is_background = job_node.bg.is_some();
-        let job_is_simple_node = self.job_is_simple_block(job_node);
-
-        // Start the timer here to ensure command substitution is measured
-        let _timer = push_timer(job_wants_timing && (job_is_simple_node || !job_is_background));
+        let _timer = {
+            let wants_timing = job_node_wants_timing(job_node);
+            // It's an error to have 'time' in a background job.
+            if wants_timing && job_is_background {
+                return report_error!(
+                    self,
+                    ctx,
+                    STATUS_INVALID_ARGS.unwrap(),
+                    job_node,
+                    ERROR_TIME_BACKGROUND
+                );
+            }
+            wants_timing.then(push_timer)
+        };
 
         // When we encounter a block construct (e.g. while loop) in the general case, we create a "block
         // process" containing its node. This allows us to handle block-level redirections.
         // However, if there are no redirections, then we can just jump into the block directly, which
         // is significantly faster.
-        if job_is_simple_node {
+        if self.job_is_simple_block(job_node) {
             let mut block = None;
             let mut result =
                 self.apply_variable_assignments(ctx, None, &job_node.variables, &mut block);
@@ -1651,17 +1660,6 @@ impl<'a> ParseExecutionContext {
             props.skip_notification =
                 ld.is_subshell || parser.is_block() || ld.is_event != 0 || !parser.is_interactive();
             props.from_event_handler = ld.is_event != 0;
-
-            // It's an error to have 'time' in a background job.
-            if job_wants_timing && job_is_background {
-                return report_error!(
-                    self,
-                    ctx,
-                    STATUS_INVALID_ARGS.unwrap(),
-                    job_node,
-                    ERROR_TIME_BACKGROUND
-                );
-            }
         }
 
         let mut job = Job::new(props, self.node_source(job_node));

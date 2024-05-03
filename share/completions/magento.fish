@@ -16,16 +16,9 @@ end
 
 function __fish_print_magento_modules -d "Lists all Magento modules"
     test -f app/etc/config.php; or return
-    command -q php; or return
+    command -q sed; or return
 
-    php -r '
-        $config  = include "app/etc/config.php";
-        
-        foreach ($config["modules"] as $module => $state) {
-            if ($module === "" || $module === "None") continue;
-            echo $module . PHP_EOL;
-        }
-    '
+    command sed -n '/modules.*\[/,/\]/p' app/etc/config.php | sed -E '1d;$d;s/^\s*|\s*=>.*$|"|\'//g'
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"

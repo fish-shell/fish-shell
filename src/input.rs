@@ -683,7 +683,7 @@ impl EventQueuePeeker<'_> {
             return false;
         };
         if WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed) != 0
-            && kevt.key == Key::from_raw(key::Escape)
+            && kevt.seq == L!("\x1b")
             && key.modifiers == Modifiers::ALT
         {
             self.idx += 1;

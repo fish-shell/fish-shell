@@ -933,7 +933,7 @@ impl<'a> IndentVisitor<'a> {
                 .copy_from_slice(&indents);
 
             done = range.start() + command.end;
-            if parens.closing().len() < 1 {
+            if parens.closing().is_empty() {
                 self.unclosed = true;
             }
         }

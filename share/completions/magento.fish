@@ -495,6 +495,13 @@ __fish_magento_register_command_option module:enable -f -l all -d "Enable all mo
 __fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files"
 
 #
+# module:status
+#
+__fish_magento_register_command_option module:status -f -a "(__fish_print_magento_modules)" -d "Module name"
+__fish_magento_register_command_option module:status -f -l enabled -d "Print only enabled modules"
+__fish_magento_register_command_option module:status -f -l disabled -d "Print only disabled modules"
+
+#
 # module:uninstall
 #
 __fish_magento_register_command_option module:uninstall -f -a "(__fish_print_magento_modules)" -d "Module name"

@@ -215,6 +215,22 @@ function __rustup_installed_components
     __rustup_strip_common_suffix_strict $installed
 end
 
+
+function __rustup_targets
+    rustup target list | string replace -rf "^(\S+).*" '$1'
+end
+
+function __rustup_installed_targets
+    rustup target list | string replace -rf "^(\S+) \(installed\)" '$1'
+end
+
+# All valid targets excluding installed
+function __rustup_installable_targets
+    comm -2 -3 (__rustup_targets | psub -F) (__rustup_installed_targets | psub -F) \
+        # Ignore warnings about lists not being in sorted order, as we are aware of their contents
+        2>/dev/null
+end
+
 # Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"
 set -l __rustup_toolchains (rustup toolchain list | string replace -r "\s+.*" '')
 # By default, the long name of a toolchain is used (e.g. nightly-x86_64-unknown-linux-gnu),
@@ -247,6 +263,11 @@ complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_ar
     -xa "(__rustup_installed_components)"
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in add install" \
     -xa "(__rustup_components)"
+
+complete -c rustup -n "__fish_seen_subcommand_from target; and __fish_prev_arg_in add install" \
+    -xa "(__rustup_installable_targets)"
+complete -c rustup -n "__fish_seen_subcommand_from target; and __fish_prev_arg_in remove uninstall" \
+    -xa "(__rustup_installed_targets)"
 
 complete -c rustup -n "__fish_seen_subcommand_from show;" -xa "$rustup_show"
 

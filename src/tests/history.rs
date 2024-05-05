@@ -1,13 +1,11 @@
-use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring};
+use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string};
 use crate::env::{EnvMode, EnvStack};
-use crate::fds::wopen_cloexec;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::random;
 use std::collections::VecDeque;
 use std::ffi::CString;
@@ -560,7 +558,9 @@ fn test_history_path_detection() {
 fn install_sample_history(name: &wstr) {
     let path = path_get_data().expect("Failed to get data directory");
     std::fs::copy(
-        wcs2osstring(&(L!("tests/").to_owned() + &name[..])),
+        env!("CARGO_MANIFEST_DIR").to_owned()
+            + "/tests/"
+            + std::str::from_utf8(&wcs2string(&name[..])).unwrap(),
         wcs2osstring(&(path + L!("/") + &name[..] + L!("_history"))),
     )
     .unwrap();
@@ -598,12 +598,9 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file = wopen_cloexec(
-        L!("tests/history_sample_bash"),
-        OFlag::O_RDONLY,
-        Mode::empty(),
-    )
-    .unwrap();
+    let file =
+        std::fs::File::open(env!("CARGO_MANIFEST_DIR").to_owned() + "/tests/history_sample_bash")
+            .unwrap();
     test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
     assert_eq!(test_history_imported_from_bash.get_history(), expected);
     test_history_imported_from_bash.clear();

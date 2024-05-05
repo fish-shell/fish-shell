@@ -572,7 +572,15 @@ mod test {
     fn test_sep(input: &str, val: Result<f64, Error>, decimalsep: char) {
         let mut consumed = 0;
         let result = wcstod(input, decimalsep, &mut consumed);
-        assert_eq!(result, val);
+        // There are fundamental issues with f64 accuracy under x87. See #10474 and https://github.com/rust-lang/rust/issues/114479
+        if cfg!(all(target_arch = "x86", not(target_feature = "sse2"))) {
+            assert_eq!(result, val);
+        } else {
+            // Make sure the result is at least somewhat sane. We might need to change f64::EPSILON
+            // to a bigger value if we are testing the result after operations that have multiple
+            // opportunities for rounding loss in the future.
+            assert!(result == val || (result.unwrap() - val.unwrap()).abs() < f64::EPSILON);
+        }
         if result.is_ok() {
             assert_eq!(consumed, input.chars().count());
             assert_eq!(

@@ -65,6 +65,9 @@ pub mod prelude {
     pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         static DONE: OnceCell<()> = OnceCell::new();
         DONE.get_or_init(|| {
+            // If we are building with `cargo build` and have build w/ `cmake`, FISH_BUILD_DIR might
+            // not yet exist.
+            std::fs::create_dir_all(env!("FISH_BUILD_DIR")).unwrap();
             set_current_dir(env!("FISH_BUILD_DIR")).unwrap();
             {
                 let s = CString::new("").unwrap();

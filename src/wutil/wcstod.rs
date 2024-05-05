@@ -573,7 +573,7 @@ mod test {
         let mut consumed = 0;
         let result = wcstod(input, decimalsep, &mut consumed);
         // There are fundamental issues with f64 accuracy under x87. See #10474 and https://github.com/rust-lang/rust/issues/114479
-        if cfg!(all(target_arch = "x86", not(target_feature = "sse2"))) {
+        if cfg!(any(not(target_arch = "x86"), target_feature = "sse2")) {
             assert_eq!(result, val);
         } else {
             // Make sure the result is at least somewhat sane. We might need to change f64::EPSILON

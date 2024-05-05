@@ -53,11 +53,15 @@ os.kill(sp.spawn.pid, signal.SIGINT)
 expect_str("fish_postexec spotted", timeout=10)
 expect_prompt()
 
+# Ensure that we catch up.
+sendline("echo 'hello' 'world'")
+expect_prompt("hello world")
+
 # Verify that the fish_kill_signal is set.
 sendline(
     "functions -e postexec; function postexec --on-event fish_postexec; echo fish_kill_signal $fish_kill_signal; end"
 )
-expect_prompt()
+expect_prompt("fish_kill_signal 0")
 sendline("sleep 5")
 sleep(0.300)
 subprocess.call(["pkill", "-INT", "-P", str(sp.spawn.pid), "sleep"])
@@ -85,12 +89,16 @@ expect_prompt()
 #
 # Save the pids for later to check if they are still running.
 pids = []
-send("sleep 130 & echo $last_pid\r")
+send("sleep 1300 & echo $last_pid\r")
 pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
-send("sleep 131 & echo $last_pid\r")
+sendline("echo 'catch' 'up' 'A'")
+expect_prompt("catch up A")
+send("sleep 1310 & echo $last_pid\r")
 pids += [expect_re("\\d+\r\n").group().strip()]
 expect_prompt()
+sendline("echo 'catch' 'up' 'B'")
+expect_prompt("catch up B")
 send("sleep 9999999\r")
 sleep(0.500)  # ensure fish kicks off the above sleep before it gets HUP - see #7288
 os.kill(sp.spawn.pid, signal.SIGHUP)

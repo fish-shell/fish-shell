@@ -1292,7 +1292,7 @@ pub fn format_size(mut sz: i64) -> WString {
             if sz < (1024 * 1024) || i == sz_names.len() - 1 {
                 let isz = sz / 1024;
                 if isz > 9 {
-                    result += &sprintf!("%ld%ls", isz, *sz_name)[..];
+                    result += &sprintf!("%lld%ls", isz, *sz_name)[..];
                 } else {
                     result += &sprintf!("%.1f%ls", sz as f64 / 1024.0, *sz_name)[..];
                 }

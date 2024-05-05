@@ -28,18 +28,18 @@ expect_prompt()
 
 # Verify that SIGINT inside a command sub cancels it.
 # Negate the pid to send to the pgroup (which should include sleep).
-sendline("while true; echo (sleep 1000); end")
+sendline("while true; echo (sleep 2000); end")
 sleep(0.5)
 os.kill(-sp.spawn.pid, signal.SIGINT)
 expect_prompt()
 
-sendline("sleep 10 &")
+# SIGINT should be ignored by background processes.
+sendline("sleep 1234 &")
 expect_prompt()
-
-send("\x03")
+os.kill(-sp.spawn.pid, signal.SIGINT)
 sleep(0.010)
 sendline("jobs")
-expect_prompt("sleep.10")
+expect_prompt("sleep 1234")
 sendline("kill %1")
 expect_prompt()
 

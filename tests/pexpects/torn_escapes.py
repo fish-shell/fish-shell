@@ -63,6 +63,9 @@ expect_prompt()
 sendline(r"bind a,b,c,\e,d,e,f wacky_handler")
 expect_prompt()
 
+sendline("echo 'Catch' 'up'")
+expect_prompt("Catch up")
+
 # We can respond to SIGUSR1.
 sleep(1)
 os.kill(sp.spawn.pid, signal.SIGUSR1)

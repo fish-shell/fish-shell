@@ -320,6 +320,15 @@ pub fn function(
         })
         .collect();
 
+    for named in &opts.named_arguments {
+        if !valid_var_name(&named) {
+            streams
+                .err
+                .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, named));
+            return STATUS_INVALID_ARGS;
+        }
+    }
+
     // We have what we need to actually define the function.
     let props = function::FunctionProperties {
         func_node,

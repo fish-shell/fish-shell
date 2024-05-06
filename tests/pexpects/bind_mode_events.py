@@ -25,6 +25,9 @@ send(
 )
 expect_prompt()
 
+sendline("echo 'Catch' 'up'")
+expect_prompt("Catch up")
+
 # normal mode
 send("\033")
 sleep(10 if "CI" in os.environ else 1)

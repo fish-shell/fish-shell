@@ -594,7 +594,34 @@ impl BaseDirectory {
 /// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
 /// set, use that directory; otherwise use the path \p non_xdg_homepath rooted in $HOME. \return the
 /// result; see the base_directory_t fields.
+#[cfg_attr(test, allow(unused_variables), allow(unreachable_code))]
 fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory {
+    #[cfg(test)]
+    // If running under `cargo test`, contain ourselves to the build directory and do not try to use
+    // the actual $HOME or $XDG_XXX directories. This prevents the tests from failing and/or stops
+    // the tests polluting the user's actual $HOME if a sandbox environment has not been set up.
+    {
+        use crate::common::str2wcstring;
+        use std::path::PathBuf;
+
+        let mut build_dir = PathBuf::from(env!("FISH_BUILD_DIR"));
+        build_dir.push("fish_root");
+
+        let err = match std::fs::create_dir_all(&build_dir) {
+            Ok(_) => 0,
+            Err(e) => e
+                .raw_os_error()
+                .expect("Failed to create fish base directory, but it wasn't an OS error!"),
+        };
+
+        return BaseDirectory {
+            path: str2wcstring(build_dir.as_os_str().as_bytes()),
+            remoteness: DirRemoteness::unknown,
+            used_xdg: false,
+            err,
+        };
+    }
+
     // The vars we fetch must be exported. Allowing them to be universal doesn't make sense and
     // allowing that creates a lock inversion that deadlocks the shell since we're called before
     // uvars are available.

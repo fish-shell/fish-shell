@@ -299,9 +299,9 @@ function fish_git_prompt --description "Prompt function for Git"
                 # Ignored files are omitted by default
                 set -l stat (command git -c core.fsmonitor= status --porcelain -z $opt | string split0)
 
-                set dirtystate (string match -qr '^.[ACDMRT]' -- $stat; and echo 1)
+                set dirtystate (string match -qr '^.[ACDMRTU]' -- $stat; and echo 1)
                 if test -n "$sha"
-                    set stagedstate (string match -qr '^[ACDMRT].' -- $stat; and echo 1)
+                    set stagedstate (string match -qr '^[ACDMRTU].' -- $stat; and echo 1)
                 else
                     set invalidstate 1
                 end

@@ -380,7 +380,7 @@ impl Outputter {
         self.maybe_flush();
     }
 
-    /// \return the "output" contents.
+    /// Return the "output" contents.
     pub fn contents(&self) -> &[u8] {
         &self.contents
     }

@@ -5,12 +5,12 @@ use crate::proc::{proc_wait_any, Job};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 
-/// \return true if we can wait on a job.
+/// Return true if we can wait on a job.
 fn can_wait_on_job(j: &Job) -> bool {
     j.is_constructed() && !j.is_foreground() && !j.is_stopped()
 }
 
-/// \return true if a wait handle matches a pid or a process name.
+/// Return true if a wait handle matches a pid or a process name.
 fn wait_handle_matches(query: WaitHandleQuery, wh: &WaitHandleRef) -> bool {
     match query {
         WaitHandleQuery::Pid(pid) => wh.pid == pid,
@@ -18,7 +18,7 @@ fn wait_handle_matches(query: WaitHandleQuery, wh: &WaitHandleRef) -> bool {
     }
 }
 
-/// \return true if all chars are numeric.
+/// Return true if all chars are numeric.
 fn iswnumeric(s: &wstr) -> bool {
     s.chars().all(|c| c.is_ascii_digit())
 }
@@ -31,7 +31,7 @@ enum WaitHandleQuery<'a> {
 
 /// Walk the list of jobs, looking for a process with the given pid or proc name.
 /// Append all matching wait handles to `handles`.
-/// \return true if we found a matching job (even if not waitable), false if not.
+/// Return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
     parser: &Parser,
@@ -93,7 +93,7 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 
 /// Wait for the given wait handles to be marked as completed.
 /// If `any_flag` is set, wait for the first one; otherwise wait for all.
-/// \return a status code.
+/// Return a status code.
 fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
     if whs.is_empty() {
         return Some(0);

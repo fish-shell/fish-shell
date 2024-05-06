@@ -25,7 +25,7 @@ pub struct WaitHandle {
 }
 
 impl WaitHandle {
-    /// \return true if this wait handle is completed.
+    /// Return true if this wait handle is completed.
     pub fn is_completed(&self) -> bool {
         self.status.get().is_some()
     }
@@ -34,7 +34,7 @@ impl WaitHandle {
         self.status.set(Some(status));
     }
 
-    /// \return the status, or None if not yet completed.
+    /// Return the status, or None if not yet completed.
     pub fn status(&self) -> Option<i32> {
         self.status.get()
     }
@@ -82,7 +82,7 @@ impl WaitHandleStore {
         self.cache.put(wh.pid, wh);
     }
 
-    /// \return the wait handle for a pid, or None if there is none.
+    /// Return the wait handle for a pid, or None if there is none.
     /// This is a fast lookup.
     pub fn get_by_pid(&self, pid: pid_t) -> Option<WaitHandleRef> {
         self.cache.peek(&pid).cloned()

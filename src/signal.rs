@@ -18,7 +18,7 @@ static MAIN_PID: AtomicI32 = AtomicI32::new(0);
 /// It's possible that we receive a signal after we have forked, but before we have reset the signal
 /// handlers (or even run the pthread_atfork calls). In that event we will do something dumb like
 /// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not, reset
-/// and re-raise the signal. \return whether we re-raised the signal.
+/// and re-raise the signal. Return whether we re-raised the signal.
 fn reraise_if_forked_child(sig: i32) -> bool {
     // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
     if getpid() == MAIN_PID.load(Ordering::Relaxed) {
@@ -43,7 +43,7 @@ pub fn signal_clear_cancel() {
     CANCELLATION_SIGNAL.store(0, Ordering::Relaxed);
 }
 
-/// \return the most recent cancellation signal received by the fish process.
+/// Return the most recent cancellation signal received by the fish process.
 /// Currently only SIGINT is considered a cancellation signal.
 /// This is thread safe.
 pub fn signal_check_cancel() -> i32 {

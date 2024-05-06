@@ -51,12 +51,12 @@ pub struct DirEntry {
 }
 
 impl DirEntry {
-    /// \return the type of this entry if it is already available, otherwise none().
+    /// Return the type of this entry if it is already available, otherwise none().
     pub fn fast_type(&self) -> Option<DirEntryType> {
         self.typ.get()
     }
 
-    /// \return the type of this entry, falling back to stat() if necessary.
+    /// Return the type of this entry, falling back to stat() if necessary.
     /// If stat() fails because the file has disappeared, this will return none().
     /// If stat() fails because of a broken symlink, this will return type lnk.
     pub fn check_type(&self) -> Option<DirEntryType> {
@@ -67,16 +67,16 @@ impl DirEntry {
         self.typ.get()
     }
 
-    /// \return whether this is a directory. This may call stat().
+    /// Return whether this is a directory. This may call stat().
     pub fn is_dir(&self) -> bool {
         self.check_type() == Some(DirEntryType::dir)
     }
 
-    /// \return false if we know this can't be a link via d_type, true if it could be.
+    /// Return false if we know this can't be a link via d_type, true if it could be.
     pub fn is_possible_link(&self) -> Option<bool> {
         self.possible_link
     }
-    /// \return the stat buff for this entry, invoking stat() if necessary.
+    /// Return the stat buff for this entry, invoking stat() if necessary.
     pub fn stat(&self) -> Option<libc::stat> {
         if self.stat.get().is_none() {
             self.do_stat();
@@ -231,7 +231,7 @@ impl DirIter {
         })
     }
 
-    /// \return the underlying file descriptor.
+    /// Return the underlying file descriptor.
     pub fn fd(&self) -> RawFd {
         self.dir.fd()
     }

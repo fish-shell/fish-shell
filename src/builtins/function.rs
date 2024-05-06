@@ -54,7 +54,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("inherit-variable"), ArgType::RequiredArgument, 'V'),
 ];
 
-/// \return the internal_job_id for a pid, or None if none.
+/// Return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
 fn job_id_for_pid(pid: i32, parser: &Parser) -> Option<u64> {
     if let Some(job) = parser.job_get_from_pid(pid) {

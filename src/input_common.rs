@@ -549,7 +549,7 @@ fn parse_mask(mask: u32) -> Modifiers {
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.
 pub trait InputEventQueuer {
-    /// \return the next event in the queue, or none if the queue is empty.
+    /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
         self.get_queue_mut().pop_front()
     }
@@ -1040,7 +1040,7 @@ pub trait InputEventQueuer {
 
     /// Like readch(), except it will wait at most wait_time_ms milliseconds for a
     /// character to be available for reading.
-    /// \return None on timeout, the event on success.
+    /// Return None on timeout, the event on success.
     fn readch_timed(&mut self, wait_time_ms: usize) -> Option<CharEvent> {
         if let Some(evt) = self.try_pop() {
             return Some(evt);
@@ -1189,7 +1189,7 @@ pub trait InputEventQueuer {
     /// The default does nothing.
     fn uvar_change_notified(&mut self) {}
 
-    /// \return if we have any lookahead.
+    /// Return if we have any lookahead.
     fn has_lookahead(&self) -> bool {
         !self.get_queue().is_empty()
     }

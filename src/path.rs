@@ -21,7 +21,7 @@ use std::os::unix::prelude::*;
 /// doesn't exist, they are first created.
 ///
 /// \param path The directory as an out param
-/// \return whether the directory was returned successfully
+/// Return whether the directory was returned successfully
 pub fn path_get_config() -> Option<WString> {
     let dir = get_config_directory();
     if dir.success() {
@@ -37,7 +37,7 @@ pub fn path_get_config() -> Option<WString> {
 /// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
 ///
 /// \param path The directory as an out param
-/// \return whether the directory was returned successfully
+/// Return whether the directory was returned successfully
 pub fn path_get_data() -> Option<WString> {
     let dir = get_data_directory();
     if dir.success() {
@@ -54,7 +54,7 @@ pub fn path_get_data() -> Option<WString> {
 /// generated_completions, will be stored in this directory.
 ///
 /// \param path The directory as an out param
-/// \return whether the directory was returned successfully
+/// Return whether the directory was returned successfully
 pub fn path_get_cache() -> Option<WString> {
     let dir = get_cache_directory();
     if dir.success() {
@@ -74,7 +74,7 @@ pub enum DirRemoteness {
     remote,
 }
 
-/// \return the remoteness of the fish data directory.
+/// Return the remoteness of the fish data directory.
 /// This will be remote for filesystems like NFS, SMB, etc.
 pub fn path_get_data_remoteness() -> DirRemoteness {
     get_data_directory().remoteness
@@ -187,7 +187,7 @@ fn maybe_issue_path_warning(
 }
 
 /// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.
-/// \returns the path if found, none if not.
+/// Returns the path if found, none if not.
 pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
     let result = path_try_get_path(cmd, vars);
     if result.err.is_some() {
@@ -276,7 +276,7 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
 fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult {
     let noent_res = GetPathResult::new(Some(Errno(ENOENT)), WString::new());
     // Test if the given path can be executed.
-    // \return 0 on success, an errno value on failure.
+    // Return 0 on success, an errno value on failure.
     let test_path = |path: &wstr| -> Result<(), Errno> {
         let narrow = wcs2zstring(path);
         if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
@@ -346,7 +346,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
 /// \param dir The name of the directory.
 /// \param wd The working directory. The working directory must end with a slash.
 /// \param vars The environment variables to use (for the CDPATH variable)
-/// \return the command, or none() if it could not be found.
+/// Return the command, or none() if it could not be found.
 pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<WString> {
     let mut err = ENOENT;
     if dir.is_empty() {
@@ -592,7 +592,7 @@ impl BaseDirectory {
 }
 
 /// Attempt to get a base directory, creating it if necessary. If a variable named `xdg_var` is
-/// set, use that directory; otherwise use the path `non_xdg_homepath` rooted in $HOME. \return the
+/// set, use that directory; otherwise use the path `non_xdg_homepath` rooted in $HOME. Return the
 /// result; see the base_directory_t fields.
 #[cfg_attr(test, allow(unused_variables), allow(unreachable_code))]
 fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory {
@@ -665,7 +665,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 /// Make sure the specified directory exists. If needed, try to create it and any currently not
 /// existing parent directories, like mkdir -p,.
 ///
-/// \return 0 if, at the time of function return the directory exists, -1 otherwise.
+/// Return 0 if, at the time of function return the directory exists, -1 otherwise.
 fn create_directory(d: &wstr) -> bool {
     let md = loop {
         match wstat(d) {
@@ -683,7 +683,7 @@ fn create_directory(d: &wstr) -> bool {
     }
 }
 
-/// \return whether the given path is on a remote filesystem.
+/// Return whether the given path is on a remote filesystem.
 fn path_remoteness(path: &wstr) -> DirRemoteness {
     let narrow = wcs2zstring(path);
     #[cfg(target_os = "linux")]

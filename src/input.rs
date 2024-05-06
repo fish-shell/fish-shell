@@ -87,7 +87,7 @@ impl InputMapping {
         }
     }
 
-    /// \return true if this is a generic mapping, i.e. acts as a fallback.
+    /// Return true if this is a generic mapping, i.e. acts as a fallback.
     fn is_generic(&self) -> bool {
         self.seq.is_empty()
     }
@@ -620,7 +620,7 @@ impl EventQueuePeeker<'_> {
         }
     }
 
-    /// \return the next event.
+    /// Return the next event.
     fn next(&mut self) -> CharEvent {
         assert!(self.subidx == 0);
         assert!(
@@ -773,7 +773,7 @@ impl Drop for EventQueuePeeker<'_> {
     }
 }
 
-/// \return true if a given `peeker` matches a given sequence of char events given by `str`.
+/// Return true if a given `peeker` matches a given sequence of char events given by `str`.
 fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &[Key]) -> bool {
     assert!(
         !seq.is_empty(),
@@ -799,9 +799,9 @@ fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &
     true
 }
 
-/// \return the first mapping that matches, walking first over the user's mapping list, then the
+/// Return the first mapping that matches, walking first over the user's mapping list, then the
 /// preset list.
-/// \return none if nothing matches, or if we may have matched a longer sequence but it was
+/// Return none if nothing matches, or if we may have matched a longer sequence but it was
 /// interrupted by a readline event.
 impl Inputter {
     fn find_mapping(vars: &dyn Environment, peeker: &mut EventQueuePeeker) -> Option<InputMapping> {
@@ -1064,7 +1064,7 @@ impl InputMappingSet {
         false
     }
 
-    /// \return a snapshot of the list of input mappings.
+    /// Return a snapshot of the list of input mappings.
     fn all_mappings(&self) -> Arc<Box<[InputMapping]>> {
         // Populate the cache if needed.
         let mut cache = self.all_mappings_cache.borrow_mut();

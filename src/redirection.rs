@@ -73,7 +73,7 @@ impl RedirectionSpec {
     pub fn new(fd: RawFd, mode: RedirectionMode, target: WString) -> Self {
         Self { fd, mode, target }
     }
-    /// \return if this is a close-type redirection.
+    /// Return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
         self.mode == RedirectionMode::fd && self.target == "-"
     }
@@ -83,7 +83,7 @@ impl RedirectionSpec {
         fish_wcstoi(&self.target).ok()
     }
 
-    /// \return the open flags for this redirection.
+    /// Return the open flags for this redirection.
     pub fn oflags(&self) -> OFlag {
         match self.mode.oflags() {
             Some(flags) => flags,
@@ -113,12 +113,12 @@ impl Dup2List {
     pub fn new() -> Self {
         Default::default()
     }
-    /// \return the list of dup2 actions.
+    /// Return the list of dup2 actions.
     pub fn get_actions(&self) -> &[Dup2Action] {
         &self.actions
     }
 
-    /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
+    /// Return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
     /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will
     /// return 5. If the target is not referenced in the chain, returns target.
     pub fn fd_for_target_fd(&self, target: RawFd) -> RawFd {

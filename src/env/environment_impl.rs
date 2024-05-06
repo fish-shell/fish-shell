@@ -696,7 +696,7 @@ pub struct EnvStackImpl {
 }
 
 impl EnvStackImpl {
-    /// \return a new impl representing global variables, with a single local scope.
+    /// Return a new impl representing global variables, with a single local scope.
     pub fn new() -> EnvMutex<EnvStackImpl> {
         let globals = GLOBAL_NODE.clone();
         let locals = EnvNodeRef::new(false, None);

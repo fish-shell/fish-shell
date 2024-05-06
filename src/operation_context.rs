@@ -58,12 +58,12 @@ impl<'a> OperationContext<'a> {
         }
     }
 
-    // \return an "empty" context which contains no variables, no parser, and never cancels.
+    // Return an "empty" context which contains no variables, no parser, and never cancels.
     pub fn empty() -> OperationContext<'static> {
         OperationContext::background(&**nullenv, EXPANSION_LIMIT_DEFAULT)
     }
 
-    // \return an operation context that contains only global variables, no parser, and never
+    // Return an operation context that contains only global variables, no parser, and never
     // cancels.
     pub fn globals() -> OperationContext<'static> {
         OperationContext::background(&**EnvStack::globals(), EXPANSION_LIMIT_DEFAULT)
@@ -136,13 +136,13 @@ impl<'a> OperationContext<'a> {
             Vars::TestOnly(parser, _) => parser,
         }
     }
-    // Invoke the cancel checker. \return if we should cancel.
+    // Invoke the cancel checker. Return if we should cancel.
     pub fn check_cancel(&self) -> bool {
         (self.cancel_checker)()
     }
 }
 
-/// \return an operation context for a background operation..
+/// Return an operation context for a background operation..
 /// Crucially the operation context itself does not contain a parser.
 /// It is the caller's responsibility to ensure the environment lives as long as the result.
 pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext {

@@ -877,7 +877,7 @@ pub fn is_token_delimiter(c: char, next: Option<char>) -> bool {
     c == '(' || !tok_is_string_character(c, next)
 }
 
-/// \return the first token from the string, skipping variable assignments like A=B.
+/// Return the first token from the string, skipping variable assignments like A=B.
 pub fn tok_command(str: &wstr) -> WString {
     let mut t = Tokenizer::new(str, TokFlags(0));
     while let Some(token) = t.next() {
@@ -1062,18 +1062,18 @@ impl TryFrom<&wstr> for PipeOrRedir {
 }
 
 impl PipeOrRedir {
-    /// \return the oflags (as in open(2)) for this redirection.
+    /// Return the oflags (as in open(2)) for this redirection.
     pub fn oflags(&self) -> Option<OFlag> {
         self.mode.oflags()
     }
 
-    // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
+    // Return if we are "valid". Here "valid" means only that the source fd did not overflow.
     // For example 99999999999> is invalid.
     pub fn is_valid(&self) -> bool {
         self.fd >= 0
     }
 
-    // \return the token type for this redirection.
+    // Return the token type for this redirection.
     pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
             TokenType::pipe

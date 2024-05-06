@@ -148,7 +148,7 @@ impl<'a> IntoCharIter for CharsUtf32<'a> {
     }
 }
 
-/// \return true if `prefix` is a prefix of `contents`.
+/// Return true if `prefix` is a prefix of `contents`.
 fn iter_prefixes_iter<Prefix, Contents>(prefix: Prefix, mut contents: Contents) -> bool
 where
     Prefix: Iterator,
@@ -235,7 +235,7 @@ pub trait WExt {
         }
     }
 
-    /// \return an iterator over substrings, split by a given char.
+    /// Return an iterator over substrings, split by a given char.
     /// The split char is not included in the substrings.
     fn split(&self, c: char) -> WStrCharSplitIter {
         WStrCharSplitIter {
@@ -262,7 +262,7 @@ pub trait WExt {
         WString::from_chars(s)
     }
 
-    /// \return the index of the first occurrence of the given char, or None.
+    /// Return the index of the first occurrence of the given char, or None.
     fn find_char(&self, c: char) -> Option<usize> {
         self.as_char_slice().iter().position(|&x| x == c)
     }
@@ -271,7 +271,7 @@ pub trait WExt {
         self.as_char_slice().iter().any(|&x| x == c)
     }
 
-    /// \return whether we start with a given Prefix.
+    /// Return whether we start with a given Prefix.
     /// The Prefix can be a char, a &str, a &wstr, or a &WString.
     fn starts_with<Prefix: IntoCharIter>(&self, prefix: Prefix) -> bool {
         iter_prefixes_iter(prefix.chars(), self.as_char_slice().iter().copied())
@@ -284,7 +284,7 @@ pub trait WExt {
             .then(|| self.slice_from(prefix_len))
     }
 
-    /// \return whether we end with a given Suffix.
+    /// Return whether we end with a given Suffix.
     /// The Suffix can be a char, a &str, a &wstr, or a &WString.
     fn ends_with<Suffix: IntoCharIter>(&self, suffix: Suffix) -> bool {
         iter_prefixes_iter(

@@ -1096,7 +1096,7 @@ pub static EMPTY_STRING: WString = WString::new();
 pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 
 /// A function type to check for cancellation.
-/// \return true if execution should cancel.
+/// Return true if execution should cancel.
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")
 pub type CancelChecker = Box<dyn Fn() -> bool>;
 
@@ -1258,7 +1258,7 @@ pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
     });
 }
 
-/// \return the count of initial characters in `in` which are ASCII.
+/// Return the count of initial characters in `in` which are ASCII.
 fn count_ascii_prefix(inp: &[u8]) -> usize {
     // The C++ version had manual vectorization.
     inp.iter().take_while(|c| c.is_ascii()).count()
@@ -1489,7 +1489,7 @@ fn can_be_encoded(wc: char) -> bool {
 }
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
-/// \return the number of bytes read, or 0 on EOF, or an error.
+/// Return the number of bytes read, or 0 on EOF, or an error.
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
         let res = nix::unistd::read(fd, buf);
@@ -2048,8 +2048,8 @@ pub trait Named {
     fn name(&self) -> &'static wstr;
 }
 
-/// \return a pointer to the first entry with the given name, assuming the entries are sorted by
-/// name. \return nullptr if not found.
+/// Return a pointer to the first entry with the given name, assuming the entries are sorted by
+/// name. Return nullptr if not found.
 pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&'static T> {
     match vals.binary_search_by_key(&name, |val| val.name()) {
         Ok(index) => Some(&vals[index]),

@@ -82,7 +82,7 @@ impl TryFrom<&wstr> for JobControl {
 /// A number of clock ticks.
 pub type ClockTicks = u64;
 
-/// \return clock ticks in seconds, or 0 on failure.
+/// Return clock ticks in seconds, or 0 on failure.
 /// This uses sysconf(_SC_CLK_TCK) to convert to seconds.
 pub fn clock_ticks_to_seconds(ticks: ClockTicks) -> f64 {
     let clock_ticks_per_sec = unsafe { libc::sysconf(_SC_CLK_TCK) };
@@ -200,44 +200,44 @@ impl ProcStatus {
         ProcStatus::new(0, empty)
     }
 
-    /// \return if we are stopped (as in SIGSTOP).
+    /// Return if we are stopped (as in SIGSTOP).
     pub fn stopped(&self) -> bool {
         WIFSTOPPED(self.status())
     }
 
-    /// \return if we are continued (as in SIGCONT).
+    /// Return if we are continued (as in SIGCONT).
     pub fn continued(&self) -> bool {
         WIFCONTINUED(self.status())
     }
 
-    /// \return if we exited normally (not a signal).
+    /// Return if we exited normally (not a signal).
     pub fn normal_exited(&self) -> bool {
         WIFEXITED(self.status())
     }
 
-    /// \return if we exited because of a signal.
+    /// Return if we exited because of a signal.
     pub fn signal_exited(&self) -> bool {
         WIFSIGNALED(self.status())
     }
 
-    /// \return the signal code, given that we signal exited.
+    /// Return the signal code, given that we signal exited.
     pub fn signal_code(&self) -> libc::c_int {
         assert!(self.signal_exited(), "Process is not signal exited");
         WTERMSIG(self.status())
     }
 
-    /// \return the exit code, given that we normal exited.
+    /// Return the exit code, given that we normal exited.
     pub fn exit_code(&self) -> libc::c_int {
         assert!(self.normal_exited(), "Process is not normal exited");
         WEXITSTATUS(self.status())
     }
 
-    /// \return if this status represents success.
+    /// Return if this status represents success.
     pub fn is_success(&self) -> bool {
         self.normal_exited() && self.exit_code() == EXIT_SUCCESS
     }
 
-    /// \return the value appropriate to populate $status.
+    /// Return the value appropriate to populate $status.
     pub fn status_value(&self) -> i32 {
         if self.signal_exited() {
             128 + self.signal_code()
@@ -273,7 +273,7 @@ impl InternalProc {
         }
     }
 
-    /// \return if this process has exited.
+    /// Return if this process has exited.
     pub fn exited(&self) -> bool {
         self.exited.load(Ordering::Acquire)
     }
@@ -683,7 +683,7 @@ impl Process {
         }
     }
 
-    /// \return whether this process type is internal (block, function, or builtin).
+    /// Return whether this process type is internal (block, function, or builtin).
     pub fn is_internal(&self) -> bool {
         match self.typ {
             ProcessType::builtin | ProcessType::function | ProcessType::block_node => true,
@@ -691,7 +691,7 @@ impl Process {
         }
     }
 
-    /// \return the wait handle for the process, if it exists.
+    /// Return the wait handle for the process, if it exists.
     pub fn get_wait_handle(&self) -> Option<WaitHandleRef> {
         self.wait_handle.borrow().clone()
     }
@@ -821,7 +821,7 @@ impl Job {
         &mut self.processes
     }
 
-    /// \return whether it is OK to reap a given process. Sometimes we want to defer reaping a
+    /// Return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might
     /// also reap the process group and then we cannot add new processes to the group.
     pub fn can_reap(&self, p: &ProcessPtr) -> bool {
@@ -848,13 +848,13 @@ impl Job {
         result.to_owned() + L!("...")
     }
 
-    /// \return our pgid, or none if we don't have one, or are internal to fish
+    /// Return our pgid, or none if we don't have one, or are internal to fish
     /// This never returns fish's own pgroup.
     pub fn get_pgid(&self) -> Option<libc::pid_t> {
         self.group().get_pgid()
     }
 
-    /// \return the pid of the last external process in the job.
+    /// Return the pid of the last external process in the job.
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This will never be fish's own pid.
     pub fn get_last_pid(&self) -> Option<libc::pid_t> {
@@ -881,12 +881,12 @@ impl Job {
         self.job_flags.borrow_mut()
     }
 
-    /// \return if we want job control.
+    /// Return if we want job control.
     pub fn wants_job_control(&self) -> bool {
         self.group().wants_job_control()
     }
 
-    /// \return whether this job is initially going to run in the background, because & was
+    /// Return whether this job is initially going to run in the background, because & was
     /// specified.
     pub fn is_initially_background(&self) -> bool {
         self.properties.initial_background
@@ -898,14 +898,14 @@ impl Job {
         self.mut_flags().constructed = true;
     }
 
-    /// \return whether we have internal or external procs, respectively.
+    /// Return whether we have internal or external procs, respectively.
     /// Internal procs are builtins, blocks, and functions.
     /// External procs include exec and external.
     pub fn has_external_proc(&self) -> bool {
         self.processes().iter().any(|p| !p.is_internal())
     }
 
-    /// \return whether this job, when run, will want a job ID.
+    /// Return whether this job, when run, will want a job ID.
     /// Jobs that are only a single internal block do not get a job ID.
     pub fn wants_job_id(&self) -> bool {
         self.processes().len() > 1
@@ -949,12 +949,12 @@ impl Job {
         self.properties.from_event_handler
     }
 
-    /// \return whether this job's group is in the foreground.
+    /// Return whether this job's group is in the foreground.
     pub fn is_foreground(&self) -> bool {
         self.group().is_foreground()
     }
 
-    /// \return whether we should post job_exit events.
+    /// Return whether we should post job_exit events.
     pub fn posts_job_exit_events(&self) -> bool {
         // Only report root job exits.
         // For example in `ls | begin ; cat ; end` we don't need to report the cat sub-job.
@@ -1004,7 +1004,7 @@ impl Job {
     }
 
     /// Prepare to resume a stopped job by sending SIGCONT and clearing the stopped flag.
-    /// \return true on success, false if we failed to send the signal.
+    /// Return true on success, false if we failed to send the signal.
     pub fn resume(&self) -> bool {
         self.mut_flags().notified_of_stop = false;
         if !self.signal(SIGCONT) {
@@ -1024,7 +1024,7 @@ impl Job {
     }
 
     /// Send the specified signal to all processes in this job.
-    /// \return true on success, false on failure.
+    /// Return true on success, false on failure.
     pub fn signal(&self, signal: i32) -> bool {
         if let Some(pgid) = self.group().get_pgid() {
             if unsafe { libc::killpg(pgid, signal) } == -1 {
@@ -1049,7 +1049,7 @@ impl Job {
         true
     }
 
-    /// \returns the statuses for this job.
+    /// Returns the statuses for this job.
     pub fn get_statuses(&self) -> Option<Statuses> {
         let mut st = Statuses::default();
         let mut has_status = false;
@@ -1146,7 +1146,7 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8)
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
-/// \return whether text was printed to stdout.
+/// Return whether text was printed to stdout.
 pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
     parser.assert_can_execute();
 
@@ -1159,7 +1159,7 @@ pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
     process_clean_after_marking(parser, allow_interactive)
 }
 
-/// \return the list of background jobs which we should warn the user about, if the user attempts to
+/// Return the list of background jobs which we should warn the user about, if the user attempts to
 /// exit. An empty result (common) means no such jobs.
 pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
     let mut result = vec![];
@@ -1505,7 +1505,7 @@ fn generate_job_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
     out_evts.push(Event::caller_exit(j.internal_job_id, j.job_id()));
 }
 
-/// \return whether to emit a fish_job_summary call for a process.
+/// Return whether to emit a fish_job_summary call for a process.
 fn proc_wants_summary(j: &Job, p: &Process) -> bool {
     // Are we completed with a pid?
     if !p.is_completed() || !p.has_pid() {
@@ -1527,7 +1527,7 @@ fn proc_wants_summary(j: &Job, p: &Process) -> bool {
     true
 }
 
-/// \return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
+/// Return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
 /// its individual processes.
 fn job_wants_summary(j: &Job) -> bool {
     // Do we just skip notifications?
@@ -1550,7 +1550,7 @@ fn job_wants_summary(j: &Job) -> bool {
     true
 }
 
-/// \return whether we want to emit a fish_job_summary call for a job or any of its processes.
+/// Return whether we want to emit a fish_job_summary call for a job or any of its processes.
 fn job_or_proc_wants_summary(j: &Job) -> bool {
     job_wants_summary(j) || j.processes().iter().any(|p| proc_wants_summary(j, p))
 }
@@ -1565,7 +1565,7 @@ fn call_job_summary(parser: &Parser, cmd: &wstr) {
     parser.pop_block(b);
 }
 
-// \return a command which invokes fish_job_summary.
+// Return a command which invokes fish_job_summary.
 // The process pointer may be null, in which case it represents the entire job.
 // Note this implements the arguments which fish_job_summary expects.
 fn summary_command(j: &Job, p: Option<&Process>) -> WString {
@@ -1668,7 +1668,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 }
 
 /// Remove completed jobs from the job list, printing status messages as appropriate.
-/// \return whether something was printed.
+/// Return whether something was printed.
 fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool {
     parser.assert_can_execute();
 

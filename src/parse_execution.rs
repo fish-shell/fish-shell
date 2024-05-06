@@ -258,7 +258,7 @@ impl<'a> ParseExecutionContext {
     }
 
     // Check to see if we should end execution.
-    // \return the eval result to end with, or none() to continue on.
+    // Return the eval result to end with, or none() to continue on.
     // This will never return end_execution_reason_t::ok.
     fn check_end_execution(&self, ctx: &OperationContext<'_>) -> Option<EndExecutionReason> {
         // If one of our jobs ended with SIGINT, we stop execution.
@@ -1932,7 +1932,7 @@ impl<'a> ParseExecutionContext {
         j.mut_flags().is_group_root = true;
     }
 
-    // \return whether we should apply job control to our processes.
+    // Return whether we should apply job control to our processes.
     fn use_job_control(&self, ctx: &OperationContext<'_>) -> bool {
         if ctx.parser().is_command_substitution() {
             return false;

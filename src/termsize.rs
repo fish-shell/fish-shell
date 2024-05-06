@@ -36,7 +36,7 @@ fn var_to_int_or(var: Option<EnvVar>, default: isize) -> isize {
     default
 }
 
-/// \return a termsize from ioctl, or None on error or if not supported.
+/// Return a termsize from ioctl, or None on error or if not supported.
 fn read_termsize_from_tty() -> Option<Termsize> {
     let mut ret: Option<Termsize> = None;
     // Note: historically we've supported libc::winsize not existing.
@@ -101,7 +101,7 @@ impl TermsizeData {
         }
     }
 
-    /// \return the current termsize from this data.
+    /// Return the current termsize from this data.
     fn current(&self) -> Termsize {
         // This encapsulates our ordering logic. If we have a termsize from a tty, use it; otherwise use
         // what we have seen from the environment.
@@ -139,7 +139,7 @@ pub struct TermsizeContainer {
 }
 
 impl TermsizeContainer {
-    /// \return the termsize without applying any updates.
+    /// Return the termsize without applying any updates.
     /// Return the default termsize if none.
     pub fn last(&self) -> Termsize {
         self.data.lock().unwrap().current()
@@ -167,7 +167,7 @@ impl TermsizeContainer {
     /// If our termsize is stale, update it, using `parser` to fire any events that may be
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
-    /// \return the updated termsize.
+    /// Return the updated termsize.
     pub fn updating(&self, parser: &Parser) -> Termsize {
         let new_size;
         let prev_size;

@@ -276,7 +276,7 @@ impl CompletionReceiver {
     }
 
     /// Add a completion.
-    /// \return true on success, false if this would overflow the limit.
+    /// Return true on success, false if this would overflow the limit.
     #[must_use]
     pub fn add(&mut self, comp: impl Into<Completion>) -> bool {
         if self.completions.len() >= self.limit {

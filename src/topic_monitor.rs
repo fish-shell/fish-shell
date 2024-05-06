@@ -111,7 +111,7 @@ impl GenerationsList {
         }
     }
 
-    /// \return the value for a topic.
+    /// Return the value for a topic.
     pub fn get(&self, topic: topic_t) -> generation_t {
         match topic {
             topic_t::sighupint => self.sighupint.get(),
@@ -120,7 +120,7 @@ impl GenerationsList {
         }
     }
 
-    /// \return ourselves as an array.
+    /// Return ourselves as an array.
     pub fn as_array(&self) -> [generation_t; 3] {
         [
             self.sighupint.get(),
@@ -136,12 +136,12 @@ impl GenerationsList {
         }
     }
 
-    /// \return whether a topic is valid.
+    /// Return whether a topic is valid.
     pub fn is_valid(&self, topic: topic_t) -> bool {
         self.get(topic) != INVALID_GENERATION
     }
 
-    /// \return whether any topic is valid.
+    /// Return whether any topic is valid.
     pub fn any_valid(&self) -> bool {
         let mut valid = false;
         for gen in self.as_array() {
@@ -398,7 +398,7 @@ impl topic_monitor_t {
 
     /// Apply any pending updates to the data.
     /// This accepts data because it must be locked.
-    /// \return the updated generation list.
+    /// Return the updated generation list.
     fn updated_gens_in_data(&self, data: &mut MutexGuard<data_t>) -> GenerationsList {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
@@ -439,7 +439,7 @@ impl topic_monitor_t {
         return data.current.clone();
     }
 
-    /// \return the current generation list, opportunistically applying any pending updates.
+    /// Return the current generation list, opportunistically applying any pending updates.
     fn updated_gens(&self) -> GenerationsList {
         let mut data = self.data_.lock().unwrap();
         return self.updated_gens_in_data(&mut data);
@@ -517,7 +517,7 @@ impl topic_monitor_t {
     }
 
     /// Wait for some entry in the list of generations to change.
-    /// \return the new gens.
+    /// Return the new gens.
     fn await_gens(&self, input_gens: &GenerationsList) -> GenerationsList {
         let mut gens = input_gens.clone();
         while &gens == input_gens {
@@ -550,7 +550,7 @@ impl topic_monitor_t {
     /// For each valid topic in `gens`, check to see if the current topic is larger than
     /// the value in `gens`.
     /// If `wait` is set, then wait if there are no changes; otherwise return immediately.
-    /// \return true if some topic changed, false if none did.
+    /// Return true if some topic changed, false if none did.
     /// On a true return, this updates the generation list `gens`.
     pub fn check(&self, gens: &GenerationsList, wait: bool) -> bool {
         if !gens.any_valid() {

@@ -247,7 +247,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 /// \param outputs if set, the list to insert output into.
 /// \param apply_exit_status if set, update $status within the parser, otherwise do not.
 ///
-/// \return a value appropriate for populating $status.
+/// Return a value appropriate for populating $status.
 pub fn exec_subshell(
     cmd: &wstr,
     parser: &Parser,
@@ -303,7 +303,7 @@ static FORK_COUNT: AtomicUsize = AtomicUsize::new(0);
 /// etc.
 type LaunchResult = Result<(), ()>;
 
-/// Given an error `err` returned from either posix_spawn or exec, \return a process exit code.
+/// Given an error `err` returned from either posix_spawn or exec, Return a process exit code.
 fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
     assert!(err != 0, "Zero is success, not an error");
     match err {
@@ -329,7 +329,7 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
 }
 
 /// This is a 'looks like text' check.
-/// \return true if either there is no NUL byte, or there is a line containing a lowercase letter
+/// Return true if either there is no NUL byte, or there is a line containing a lowercase letter
 /// before the first NUL byte.
 fn is_thompson_shell_payload(p: &[u8]) -> bool {
     if !p.contains(&b'\0') {
@@ -744,7 +744,7 @@ fn fork_child_for_process(
     Ok(())
 }
 
-/// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
+/// Return an newly allocated output stream for the given fd, which is typically stdout or stderr.
 /// This inspects the io_chain and decides what sort of output stream to return.
 /// If `piped_output_needs_buffering` is set, and if the output is going to a pipe, then the other
 /// end then synchronously writing to the pipe risks deadlock, so we must buffer it.
@@ -958,7 +958,7 @@ type ProcPerformer = dyn FnOnce(
     Option<&mut OutputStream>,
 ) -> ProcStatus;
 
-// \return a function which may be to run the given process \p.
+// Return a function which may be to run the given process \p.
 // May return an empty std::function in the rare case that the to-be called fish function no longer
 // exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
@@ -1366,7 +1366,7 @@ fn abort_pipeline_from(job: &Job, offset: usize) {
 
 // Given that we are about to execute an exec() call, check if the parser is interactive and there
 // are extant background jobs. If so, warn the user and do not exec().
-// \return true if we should allow exec, false to disallow it.
+// Return true if we should allow exec, false to disallow it.
 fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
     // If we're not interactive, we cannot warn.
     if !parser.is_interactive() {
@@ -1436,7 +1436,7 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 /// If `apply_exit_status` is false, then reset $status back to its original value.
 /// `is_subcmd` controls whether we apply a read limit.
 /// `break_expand` is used to propagate whether the result should be "expansion breaking" in the
-/// sense that subshells used during string expansion should halt that expansion. \return the value
+/// sense that subshells used during string expansion should halt that expansion. Return the value
 /// of $status.
 fn exec_subshell_internal(
     cmd: &wstr,

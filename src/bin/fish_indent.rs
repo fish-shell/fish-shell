@@ -278,7 +278,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         usize::try_from(self.indents[index]).unwrap()
     }
 
-    // \return gap text flags for the gap text that comes *before* a given node type.
+    // Return gap text flags for the gap text that comes *before* a given node type.
     fn gap_text_flags_before_node(&self, node: &dyn Node) -> GapFlags {
         let mut result = GapFlags::default();
         match node.typ() {
@@ -324,12 +324,12 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         result
     }
 
-    // \return whether we are at the start of a new line.
+    // Return whether we are at the start of a new line.
     fn at_line_start(&self) -> bool {
         self.output.chars().next_back().is_none_or(|c| c == '\n')
     }
 
-    // \return whether we have a space before the output.
+    // Return whether we have a space before the output.
     // This ignores escaped spaces and escaped newlines.
     fn has_preceding_space(&self) -> bool {
         let mut idx = isize::try_from(self.output.len()).unwrap() - 1;
@@ -355,7 +355,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         })
     }
 
-    // \return a substring of source.
+    // Return a substring of source.
     fn substr(&self, r: SourceRange) -> &wstr {
         &self.source[r.start()..r.end()]
     }
@@ -467,7 +467,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         needs_nl
     }
 
-    /// \return the gap text ending at a given index into the string, or empty if none.
+    /// Return the gap text ending at a given index into the string, or empty if none.
     fn gap_text_to(&self, end: usize) -> SourceRange {
         match self.gaps.binary_search_by(|r| r.end().cmp(&end)) {
             Ok(pos) => self.gaps[pos],
@@ -478,7 +478,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
-    /// \return whether a range `r` overlaps an error range from our ast.
+    /// Return whether a range `r` overlaps an error range from our ast.
     fn range_contained_error(&self, r: SourceRange) -> bool {
         let errs = self.errors.as_ref().unwrap();
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
@@ -727,7 +727,7 @@ impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
     }
 }
 
-/// \return whether a character at a given index is escaped.
+/// Return whether a character at a given index is escaped.
 /// A character is escaped if it has an odd number of backslashes.
 fn char_is_escaped(text: &wstr, idx: usize) -> bool {
     count_preceding_backslashes(text, idx) % 2 == 1

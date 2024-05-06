@@ -221,7 +221,7 @@ pub fn current_data() -> Option<&'static mut ReaderData> {
 pub use current_data as reader_current_data;
 
 /// Add a new reader to the reader stack.
-/// \return a shared pointer to it.
+/// Return a shared pointer to it.
 fn reader_push_ret(
     parser: &Parser,
     history_name: &wstr,
@@ -1342,7 +1342,7 @@ pub fn combine_command_and_autosuggestion(cmdline: &wstr, autosuggestion: &wstr)
 }
 
 impl ReaderData {
-    /// \return true if the command line has changed and repainting is needed. If `colors` is not
+    /// Return true if the command line has changed and repainting is needed. If `colors` is not
     /// null, then also return true if the colors have changed.
     fn is_repaint_needed(&self, mcolors: Option<&[HighlightSpec]>) -> bool {
         // Note: this function is responsible for detecting all of the ways that the command line may
@@ -1785,7 +1785,7 @@ impl ReaderData {
 
 impl ReaderData {
     /// Read a command to execute, respecting input bindings.
-    /// \return the command, or none if we were asked to cancel (e.g. SIGHUP).
+    /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
         self.rls = Some(ReadlineLoopState::new());
 
@@ -1950,7 +1950,7 @@ impl ReaderData {
     }
 
     /// Read normal characters, inserting them into the command line.
-    /// \return the next unhandled event.
+    /// Return the next unhandled event.
     fn read_normal_chars(&mut self) -> Option<CharEvent> {
         let mut event_needing_handling = None;
         let limit = std::cmp::min(
@@ -3185,7 +3185,7 @@ fn text_ends_in_comment(text: &wstr) -> bool {
 impl ReaderData {
     // Handle readline_cmd_t::execute. This may mean inserting a newline if the command is
     // unfinished. It may also set 'finished' and 'cmd' inside the rls.
-    // \return true on success, false if we got an error, in which case the caller should fire the
+    // Return true on success, false if we got an error, in which case the caller should fire the
     // error event.
     fn handle_execute(&mut self) -> bool {
         // Evaluate. If the current command is unfinished, or if the charater is escaped
@@ -3264,7 +3264,7 @@ impl ReaderData {
 
     // Expand abbreviations before execution.
     // Replace the command line with any abbreviations as needed.
-    // \return the test result, which may be incomplete to insert a newline, or an error.
+    // Return the test result, which may be incomplete to insert a newline, or an error.
     fn expand_for_execute(&mut self) -> Result<(), ParserTestErrorBits> {
         // Expand abbreviations at the cursor.
         // The first expansion is "user visible" and enters into history.
@@ -3698,7 +3698,7 @@ fn reader_interactive_destroy() {
         .set_color(RgbColor::RESET, RgbColor::RESET);
 }
 
-/// \return whether fish is currently unwinding the stack in preparation to exit.
+/// Return whether fish is currently unwinding the stack in preparation to exit.
 pub fn fish_is_unwinding_for_exit() -> bool {
     let exit_state = EXIT_STATE.load(Ordering::Relaxed);
     let exit_state: ExitState = unsafe { std::mem::transmute(exit_state) };
@@ -3920,7 +3920,7 @@ impl Autosuggestion {
         self.search_string.clear();
     }
 
-    // \return whether we have empty text.
+    // Return whether we have empty text.
     fn is_empty(&self) -> bool {
         self.text.is_empty()
     }
@@ -4438,7 +4438,7 @@ impl ReaderData {
 }
 
 /// Expand an abbreviation replacer, which may mean running its function.
-/// \return the replacement, or none to skip it. This may run fish script!
+/// Return the replacement, or none to skip it. This may run fish script!
 fn expand_replacer(
     range: SourceRange,
     token: &wstr,
@@ -4570,7 +4570,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
 
 /// Expand at most one abbreviation at the given cursor position, updating the position if the
 /// abbreviation wants to move the cursor. Use the parser to run any abbreviations which want
-/// function calls. \return none if no abbreviations were expanded, otherwise the resulting
+/// function calls. Return none if no abbreviations were expanded, otherwise the resulting
 /// replacement.
 pub fn reader_expand_abbreviation_at_cursor(
     cmdline: &wstr,
@@ -4975,7 +4975,7 @@ impl ReaderData {
 }
 
 /// Check if we should exit the reader loop.
-/// \return true if we should exit.
+/// Return true if we should exit.
 pub fn check_exit_loop_maybe_warning(data: Option<&mut ReaderData>) -> bool {
     // sighup always forces exit.
     if reader_received_sighup() {
@@ -5163,7 +5163,7 @@ pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
 /// \param append_only Whether we can only append to the command line, or also modify previous
 /// characters. This is used to determine whether we go inside a trailing quote.
 ///
-/// \return The completed string
+/// Return The completed string
 pub fn completion_apply_to_command_line(
     val_str: &wstr,
     flags: CompleteFlags,

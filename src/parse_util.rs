@@ -31,7 +31,7 @@ use std::ops::Range;
 use std::{iter, ops};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
-/// \return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
+/// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
     const openc: char = '[';
@@ -124,7 +124,7 @@ pub enum MaybeParentheses {
 /// \param accept_incomplete whether to permit missing closing parenthesis
 /// \param inout_is_quoted whether the cursor is in a double-quoted context.
 /// \param out_has_dollar whether the command substitution has the optional leading $.
-/// \return -1 on syntax error, 0 if no subshells exist and 1 on success
+/// Return -1 on syntax error, 0 if no subshells exist and 1 on success
 #[allow(clippy::too_many_arguments)]
 pub fn parse_util_locate_cmdsubst_range(
     s: &wstr,
@@ -649,7 +649,7 @@ fn parser_is_pipe_forbidden(word: &wstr) -> bool {
     .contains(&word)
 }
 
-// \return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
+// Return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if
 // there are no arguments.
 fn get_first_arg(list: &ast::ArgumentOrRedirectionList) -> Option<&ast::Argument> {
     for v in list.iter() {
@@ -871,7 +871,7 @@ impl<'a> IndentVisitor<'a> {
             line_continuations: vec![],
         }
     }
-    /// \return whether a maybe_newlines node contains at least one newline.
+    /// Return whether a maybe_newlines node contains at least one newline.
     fn has_newline(&self, nls: &ast::MaybeNewlines) -> bool {
         nls.source(self.src).chars().any(|c| c == '\n')
     }

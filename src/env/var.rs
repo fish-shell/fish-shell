@@ -272,7 +272,7 @@ pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
 assert_sorted_by_name!(ELECTRIC_VARIABLES);
 
 impl ElectricVar {
-    /// \return the ElectricVar with the given name, if any
+    /// Return the ElectricVar with the given name, if any
     pub fn for_name(name: &wstr) -> Option<&'static ElectricVar> {
         match ELECTRIC_VARIABLES.binary_search_by(|ev| ev.name.cmp(name)) {
             Ok(idx) => Some(&ELECTRIC_VARIABLES[idx]),

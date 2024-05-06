@@ -140,7 +140,7 @@ pub const PROCESS_EXPAND_SELF_STR: &wstr = L!("%self");
 /// \param ctx The parser, variables, and cancellation checker for this operation.  The parser may
 /// be null. \param errors Resulting errors, or nullptr to ignore
 ///
-/// \return An expand_result_t.
+/// Return An expand_result_t.
 /// wildcard_no_match and wildcard_match are normal exit conditions used only on
 /// strings containing wildcards to tell if the wildcard produced any matches.
 pub fn expand_string(
@@ -177,7 +177,7 @@ pub fn expand_to_receiver(
 /// null.
 /// \param errors Resulting errors, or nullptr to ignore
 ///
-/// \return Whether expansion succeeded.
+/// Return Whether expansion succeeded.
 pub fn expand_one(
     s: &mut WString,
     flags: ExpandFlags,
@@ -208,7 +208,7 @@ pub fn expand_one(
 /// that API does not distinguish between expansion resulting in an empty command (''), and
 /// expansion resulting in no command (e.g. unset variable).
 /// If `skip_wildcards` is true, then do not do wildcard expansion
-/// \return an expand error.
+/// Return an expand error.
 pub fn expand_to_command_and_args(
     instr: &wstr,
     ctx: &OperationContext<'_>,
@@ -556,7 +556,7 @@ fn parse_slice(
 /// actually starts operating on last_idx-1. As such, to process a string fully, pass string.size()
 /// as last_idx instead of string.size()-1.
 ///
-/// \return the result of expansion.
+/// Return the result of expansion.
 fn expand_variables(
     instr: WString,
     out: &mut CompletionReceiver,
@@ -917,7 +917,7 @@ fn expand_braces(
 }
 
 /// Expand a command substitution `input`, executing on `ctx`, and inserting the results into
-/// `out_list`, or any errors into `errors`. \return an expand result.
+/// `out_list`, or any errors into `errors`. Return an expand result.
 pub fn expand_cmdsubst(
     input: WString,
     ctx: &OperationContext,

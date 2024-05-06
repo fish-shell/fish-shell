@@ -71,7 +71,7 @@ struct FunctionSet {
 
 impl FunctionSet {
     /// Remove a function.
-    /// \return true if successful, false if it doesn't exist.
+    /// Return true if successful, false if it doesn't exist.
     fn remove(&mut self, name: &wstr) -> bool {
         if self.funcs.remove(name).is_some() {
             event::remove_function_handlers(name);
@@ -86,7 +86,7 @@ impl FunctionSet {
         self.funcs.get(name).cloned()
     }
 
-    /// \return true if we should allow autoloading a given function.
+    /// Return true if we should allow autoloading a given function.
     fn allow_autoload(&self, name: &wstr) -> bool {
         // Prohibit autoloading if we have a non-autoload (explicit) function, or if the function is
         // tombstoned.
@@ -202,7 +202,7 @@ pub fn add(name: WString, props: Arc<FunctionProperties>) {
     );
 }
 
-/// \return the properties for a function, or None. This does not trigger autoloading.
+/// Return the properties for a function, or None. This does not trigger autoloading.
 pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
     if parser_keywords_is_reserved(name) {
         None
@@ -211,7 +211,7 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
     }
 }
 
-/// \return the properties for a function, or None, perhaps triggering autoloading.
+/// Return the properties for a function, or None, perhaps triggering autoloading.
 pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionProperties>> {
     parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
@@ -253,7 +253,7 @@ pub fn remove(name: &wstr) {
     funcset.autoload_tombstones.insert(name.to_owned());
 }
 
-// \return the body of a function (everything after the header, up to but not including the 'end').
+// Return the body of a function (everything after the header, up to but not including the 'end').
 fn get_function_body_source(props: &FunctionProperties) -> &wstr {
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.

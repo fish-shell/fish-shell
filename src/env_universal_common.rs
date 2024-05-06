@@ -47,7 +47,7 @@ impl CallbackData {
     pub fn new(key: WString, val: Option<EnvVar>) -> Self {
         Self { key, val }
     }
-    /// \return whether this callback represents an erased variable.
+    /// Return whether this callback represents an erased variable.
     pub fn is_erase(&self) -> bool {
         self.val.is_none()
     }
@@ -110,7 +110,7 @@ impl EnvUniversal {
     pub fn get(&self, name: &wstr) -> Option<EnvVar> {
         self.vars.get(name).cloned()
     }
-    // \return flags from the variable with the given name.
+    // Return flags from the variable with the given name.
     pub fn get_flags(&self, name: &wstr) -> Option<EnvVarFlags> {
         self.vars.get(name).map(|var| var.get_flags())
     }
@@ -252,7 +252,7 @@ impl EnvUniversal {
 
     /// Populate a variable table `out_vars` from a `s` string.
     /// This is exposed for testing only.
-    /// \return the format of the file that we read.
+    /// Return the format of the file that we read.
     pub fn populate_variables(s: &[u8], out_vars: &mut VarTable) -> UvarFormat {
         // Decide on the format.
         let format = Self::format_for_contents(s);
@@ -290,7 +290,7 @@ impl EnvUniversal {
     }
 
     /// Guess a file format. Exposed for testing only.
-    /// \return the format corresponding to file contents `s`.
+    /// Return the format corresponding to file contents `s`.
     pub fn format_for_contents(s: &[u8]) -> UvarFormat {
         // Walk over leading comments, looking for one like '# version'
         let iter = LineIterator::new(s);
@@ -367,7 +367,7 @@ impl EnvUniversal {
         self.export_generation
     }
 
-    /// \return whether we are initialized.
+    /// Return whether we are initialized.
     fn initialized(&self) -> bool {
         !self.vars_path.is_empty()
     }
@@ -752,7 +752,7 @@ impl EnvUniversal {
     }
 
     // Write our file contents.
-    // \return true on success, false on failure.
+    // Return true on success, false on failure.
     fn save(&mut self, directory: &wstr) -> bool {
         use crate::common::ScopeGuard;
         assert!(self.ok_to_save, "It's not OK to save");
@@ -828,7 +828,7 @@ impl EnvUniversal {
     }
 }
 
-/// \return the default variable path, or an empty string on failure.
+/// Return the default variable path, or an empty string on failure.
 pub fn default_vars_path() -> WString {
     if let Some(mut path) = default_vars_path_directory() {
         path.push_str("/fish_variables");
@@ -862,7 +862,7 @@ mod fish3_uvars {
     pub const PATH: &[u8] = b"--path";
 }
 
-/// \return the default variable path, or an empty string on failure.
+/// Return the default variable path, or an empty string on failure.
 fn default_vars_path_directory() -> Option<WString> {
     path_get_config()
 }
@@ -1007,7 +1007,7 @@ fn encode_serialized(vals: &[WString]) -> WString {
 }
 
 /// Try locking the file.
-/// \return true on success, false on error.
+/// Return true on success, false on error.
 fn flock_uvar_file(file: &mut File) -> bool {
     let start_time = timef();
     while unsafe { libc::flock(file.as_raw_fd(), LOCK_EX) } == -1 {

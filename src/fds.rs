@@ -135,7 +135,7 @@ pub struct AutoClosePipes {
 }
 
 /// Construct a pair of connected pipes, set to close-on-exec.
-/// \return None on fd exhaustion.
+/// Return None on fd exhaustion.
 pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     #[allow(unused_mut, unused_assignments)]
     let mut already_cloexec = false;
@@ -178,7 +178,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 /// zsh calls this movefd().
 /// `input_has_cloexec` describes whether the input has CLOEXEC already set, so we can avoid
 /// setting it again.
-/// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
+/// Return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
 fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
     let raw_fd = fd.as_raw_fd();

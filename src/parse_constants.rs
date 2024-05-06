@@ -164,7 +164,7 @@ impl SourceRange {
         }
     }
 
-    // \return true if a location is in this range, including one-past-the-end.
+    // Return true if a location is in this range, including one-past-the-end.
     pub fn contains_inclusive(&self, loc: usize) -> bool {
         self.start() <= loc && loc - self.start() <= self.length()
     }

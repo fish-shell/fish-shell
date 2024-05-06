@@ -407,7 +407,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
-/// \return -1 on error in which case errno will have been set. In this event, the number of bytes
+/// Return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
 pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
@@ -416,7 +416,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     let maxaccum: usize = std::mem::size_of_val(&accum);
 
     // Helper to perform a write to 'fd', looping as necessary.
-    // \return true on success, false on error.
+    // Return true on success, false on error.
     let mut total_written = 0;
 
     fn do_write(fd: RawFd, total_written: &mut usize, mut buf: &[u8]) -> bool {
@@ -550,7 +550,7 @@ impl FileId {
         result
     }
 
-    /// \return true if \param rhs has higher mtime seconds than this file_id_t.
+    /// Return true if \param rhs has higher mtime seconds than this file_id_t.
     /// If identical, nanoseconds are compared.
     pub fn older_than(&self, rhs: &FileId) -> bool {
         let lhs = (self.mod_seconds, self.mod_nanoseconds);

@@ -910,7 +910,7 @@ impl Pager {
         rendering
     }
 
-    // \return true if the given rendering needs to be updated.
+    // Return true if the given rendering needs to be updated.
     pub fn rendering_needs_update(&self, rendering: &PageRendering) -> bool {
         if self.have_unrendered_completions {
             return true;

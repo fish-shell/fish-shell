@@ -127,7 +127,7 @@ impl Block {
         self.block_type
     }
 
-    /// \return if we are a function call (with or without shadowing).
+    /// Return if we are a function call (with or without shadowing).
     pub fn is_function_call(&self) -> bool {
         [BlockType::function_call, BlockType::function_call_no_shadow].contains(&self.typ())
     }
@@ -202,7 +202,7 @@ impl ProfileItem {
     pub fn new() -> Self {
         Default::default()
     }
-    /// \return the current time as a microsecond timestamp since the epoch.
+    /// Return the current time as a microsecond timestamp since the epoch.
     pub fn now() -> Microseconds {
         get_time()
     }
@@ -374,7 +374,7 @@ impl Parser {
         self.jobs_mut().insert(0, job);
     }
 
-    /// \return whether we are currently evaluating a function.
+    /// Return whether we are currently evaluating a function.
     pub fn is_function(&self) -> bool {
         let blocks = self.blocks();
         for b in blocks.iter().rev() {
@@ -388,7 +388,7 @@ impl Parser {
         false
     }
 
-    /// \return whether we are currently evaluating a command substitution.
+    /// Return whether we are currently evaluating a command substitution.
     pub fn is_command_substitution(&self) -> bool {
         let blocks = self.blocks();
         for b in blocks.iter().rev() {
@@ -425,7 +425,7 @@ impl Parser {
     /// \param job_group if set, the job group to give to spawned jobs.
     /// \param block_type The type of block to push on the block stack, which must be either 'top'
     /// or 'subst'.
-    /// \return the result of evaluation.
+    /// Return the result of evaluation.
     pub fn eval_with(
         &self,
         cmd: &wstr,
@@ -693,7 +693,7 @@ impl Parser {
             .and_then(|ctx| ctx.get_current_line_number())
     }
 
-    /// \return whether we are currently evaluating a "block" such as an if statement.
+    /// Return whether we are currently evaluating a "block" such as an if statement.
     /// This supports 'status is-block'.
     pub fn is_block(&self) -> bool {
         // Note historically this has descended into 'source', unlike 'is_function'.
@@ -706,7 +706,7 @@ impl Parser {
         false
     }
 
-    /// \return whether we have a breakpoint block.
+    /// Return whether we have a breakpoint block.
     pub fn is_breakpoint(&self) -> bool {
         let blocks = self.blocks();
         for b in blocks.iter().rev() {
@@ -792,7 +792,7 @@ impl Parser {
     }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
-    /// \return a value like ENV_OK.
+    /// Return a value like ENV_OK.
     pub fn set_var_and_fire(
         &self,
         key: &wstr,
@@ -1043,7 +1043,7 @@ impl Parser {
         trace
     }
 
-    /// \return whether the number of functions in the stack exceeds our stack depth limit.
+    /// Return whether the number of functions in the stack exceeds our stack depth limit.
     pub fn function_stack_is_overflowing(&self) -> bool {
         // We are interested in whether the count of functions on the stack exceeds
         // FISH_MAX_STACK_DEPTH. We don't separately track the number of functions, but we can have a
@@ -1066,12 +1066,12 @@ impl Parser {
         self.syncs_uvars.store(flag);
     }
 
-    /// \return a shared pointer reference to this parser.
+    /// Return a shared pointer reference to this parser.
     pub fn shared(&self) -> ParserRef {
         self.this.upgrade().unwrap()
     }
 
-    /// \return the operation context for this parser.
+    /// Return the operation context for this parser.
     pub fn context(&self) -> OperationContext<'static> {
         OperationContext::foreground(
             self.shared(),

@@ -102,7 +102,7 @@ struct FishCmdOpts {
     enable_private_mode: bool,
 }
 
-/// \return a timeval converted to milliseconds.
+/// Return a timeval converted to milliseconds.
 #[allow(clippy::unnecessary_cast)]
 fn tv_to_msec(tv: &libc::timeval) -> i64 {
     // milliseconds per second

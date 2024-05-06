@@ -73,7 +73,7 @@ pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
 /// Case-insensitive string search, modeled after std::string::find().
 /// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
 /// expanded to include symbolic characters (#3584).
-/// \return the offset of the first case-insensitive matching instance of `needle` within
+/// Return the offset of the first case-insensitive matching instance of `needle` within
 /// `haystack`, or `string::npos()` if no results were found.
 pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Option<usize> {
     if needle.is_empty() {
@@ -140,15 +140,15 @@ impl StringFuzzyMatch {
     pub fn exact_match() -> Self {
         Self::new(ContainType::exact, CaseFold::samecase)
     }
-    /// \return whether this is a samecase exact match.
+    /// Return whether this is a samecase exact match.
     pub fn is_samecase_exact(&self) -> bool {
         self.typ == ContainType::exact && self.case_fold == CaseFold::samecase
     }
-    /// \return if we are exact or prefix match.
+    /// Return if we are exact or prefix match.
     pub fn is_exact_or_prefix(&self) -> bool {
         matches!(self.typ, ContainType::exact | ContainType::prefix)
     }
-    // \return if our match requires a full replacement, i.e. is not a strict extension of our
+    // Return if our match requires a full replacement, i.e. is not a strict extension of our
     // existing string. This is false only if our case matches, and our type is prefix or exact.
     pub fn requires_full_replacement(&self) -> bool {
         if self.case_fold != CaseFold::samecase {
@@ -274,7 +274,7 @@ pub fn string_fuzzy_match_string(
 /// Implementation of wcs2string that accepts a callback.
 /// This invokes `func` with (const char*, size_t) pairs.
 /// If `func` returns false, it stops; otherwise it continues.
-/// \return false if the callback returned false, otherwise true.
+/// Return false if the callback returned false, otherwise true.
 pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     let mut state = zero_mbstate();
     let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
@@ -488,7 +488,7 @@ pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
     result.split_off(prefix)
 }
 
-/// \return the number of escaping backslashes before a character.
+/// Return the number of escaping backslashes before a character.
 /// `idx` may be "one past the end."
 pub fn count_preceding_backslashes(text: &wstr, idx: usize) -> usize {
     assert!(idx <= text.len(), "Out of bounds");

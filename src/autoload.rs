@@ -82,23 +82,23 @@ impl Autoload {
         assert!(removed, "cmd was not being autoloaded");
     }
 
-    /// \return whether a command is currently being autoloaded.
+    /// Return whether a command is currently being autoloaded.
     pub fn autoload_in_progress(&self, cmd: &wstr) -> bool {
         self.current_autoloading.contains(cmd)
     }
 
-    /// \return whether a command could potentially be autoloaded.
+    /// Return whether a command could potentially be autoloaded.
     /// This does not actually mark the command as being autoloaded.
     pub fn can_autoload(&mut self, cmd: &wstr) -> bool {
         self.cache.check(cmd, true /* allow stale */).is_some()
     }
 
-    /// \return whether autoloading has been attempted for a command.
+    /// Return whether autoloading has been attempted for a command.
     pub fn has_attempted_autoload(&self, cmd: &wstr) -> bool {
         self.cache.is_cached(cmd)
     }
 
-    /// \return the names of all commands that have been autoloaded. Note this includes "in-flight"
+    /// Return the names of all commands that have been autoloaded. Note this includes "in-flight"
     /// commands.
     pub fn get_autoloaded_commands(&self) -> Vec<WString> {
         let mut result = Vec::with_capacity(self.autoloaded_files.len());
@@ -214,7 +214,7 @@ impl AutoloadFileCache {
         Self::with_dirs(vec![])
     }
 
-    /// \return the directories.
+    /// Return the directories.
     fn dirs(&self) -> &[WString] {
         &self.dirs
     }
@@ -269,24 +269,24 @@ impl AutoloadFileCache {
         file
     }
 
-    /// \return true if a command is cached (either as a hit or miss).
+    /// Return true if a command is cached (either as a hit or miss).
     fn is_cached(&self, cmd: &wstr) -> bool {
         self.known_files.contains_key(cmd) || self.misses_cache.contains(cmd)
     }
 
-    /// \return the current timestamp.
+    /// Return the current timestamp.
     fn current_timestamp() -> Timestamp {
         Timestamp::now()
     }
 
-    /// \return whether a timestamp is fresh enough to use.
+    /// Return whether a timestamp is fresh enough to use.
     fn is_fresh(then: Timestamp, now: Timestamp) -> bool {
         let seconds = now.duration_since(then).as_secs();
         seconds < AUTOLOAD_STALENESS_INTERVALL
     }
 
     /// Attempt to find an autoloadable file by searching our path list for a given command.
-    /// \return the file, or none() if none.
+    /// Return the file, or none() if none.
     fn locate_file(&self, cmd: &wstr) -> Option<AutoloadableFile> {
         // If the command is empty or starts with NULL (i.e. is empty as a path)
         // we'd try to source the *directory*, which exists.

@@ -652,7 +652,7 @@ fn validate_arg<'opts>(
     Some(retval)
 }
 
-/// \return whether the option 'opt' is an implicit integer option.
+/// Return whether the option 'opt' is an implicit integer option.
 fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
     if opts.implicit_int_flag == '\0' {
         // There is no implicit integer option.

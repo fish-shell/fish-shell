@@ -92,12 +92,12 @@ impl Abbreviation {
         }
     }
 
-    // \return true if this is a regex abbreviation.
+    // Return true if this is a regex abbreviation.
     pub fn is_regex(&self) -> bool {
         self.regex.is_some()
     }
 
-    // \return true if we match a token at a given position.
+    // Return true if we match a token at a given position.
     pub fn matches(&self, token: &wstr, position: Position, command: &wstr) -> bool {
         if !self.matches_position(position) {
             return false;
@@ -115,7 +115,7 @@ impl Abbreviation {
         }
     }
 
-    // \return if we expand in a given position.
+    // Return if we expand in a given position.
     fn matches_position(&self, position: Position) -> bool {
         return self.position == Position::Anywhere || self.position == position;
     }
@@ -183,7 +183,7 @@ pub struct AbbreviationSet {
 }
 
 impl AbbreviationSet {
-    /// \return the list of replacers for an input token, in priority order.
+    /// Return the list of replacers for an input token, in priority order.
     /// The `position` is given to describe where the token was found.
     pub fn r#match(&self, token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
         let mut result = vec![];
@@ -201,7 +201,7 @@ impl AbbreviationSet {
         return result;
     }
 
-    /// \return whether we would have at least one replacer for a given token.
+    /// Return whether we would have at least one replacer for a given token.
     pub fn has_match(&self, token: &wstr, position: Position, cmd: &wstr) -> bool {
         self.abbrs
             .iter()
@@ -243,7 +243,7 @@ impl AbbreviationSet {
     }
 
     /// Erase an abbreviation by name.
-    /// \return true if erased, false if not found.
+    /// Return true if erased, false if not found.
     pub fn erase(&mut self, name: &wstr) -> bool {
         let erased = self.used_names.remove(name);
         if !erased {
@@ -258,18 +258,18 @@ impl AbbreviationSet {
         panic!("Unable to find named abbreviation");
     }
 
-    /// \return true if we have an abbreviation with the given name.
+    /// Return true if we have an abbreviation with the given name.
     pub fn has_name(&self, name: &wstr) -> bool {
         self.used_names.contains(name)
     }
 
-    /// \return a reference to the abbreviation list.
+    /// Return a reference to the abbreviation list.
     pub fn list(&self) -> &[Abbreviation] {
         &self.abbrs
     }
 }
 
-/// \return the list of replacers for an input token, in priority order, using the global set.
+/// Return the list of replacers for an input token, in priority order, using the global set.
 /// The `position` is given to describe where the token was found.
 pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
     with_abbrs(|set| set.r#match(token, position, cmd))

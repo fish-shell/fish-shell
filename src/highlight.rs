@@ -131,7 +131,7 @@ impl HighlightColorResolver {
     pub fn new() -> Self {
         Default::default()
     }
-    /// \return an RGB color for a given highlight spec.
+    /// Return an RGB color for a given highlight spec.
     pub fn resolve_spec(
         &mut self,
         highlight: &HighlightSpec,
@@ -977,7 +977,7 @@ impl<'s> Highlighter<'s> {
         std::mem::take(&mut self.color_array)
     }
 
-    /// \return a substring of our buffer.
+    /// Return a substring of our buffer.
     pub fn get_source(&self, r: SourceRange) -> &'s wstr {
         assert!(r.end() >= r.start(), "Overflow");
         assert!(r.end() <= self.buff.len(), "Out of range");
@@ -1397,7 +1397,7 @@ impl<'s> Highlighter<'s> {
     }
 }
 
-/// \return whether a string contains a command substitution.
+/// Return whether a string contains a command substitution.
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
     match parse_util_locate_cmdsubst_range(src, &mut cursor, true, None, None) {

@@ -82,17 +82,17 @@ impl SeparatedBuffer {
         }
     }
 
-    /// \return the buffer limit size, or 0 for no limit.
+    /// Return the buffer limit size, or 0 for no limit.
     pub fn limit(&self) -> usize {
         self.buffer_limit
     }
 
-    /// \return the contents size.
+    /// Return the contents size.
     pub fn len(&self) -> usize {
         self.contents_size
     }
 
-    /// \return whether the output has been discarded.
+    /// Return whether the output has been discarded.
     pub fn discarded(&self) -> bool {
         self.discard
     }
@@ -110,7 +110,7 @@ impl SeparatedBuffer {
         result
     }
 
-    /// \return the list of elements.
+    /// Return the list of elements.
     pub fn elements(&self) -> &[BufferElement] {
         &self.elements
     }
@@ -140,12 +140,12 @@ impl SeparatedBuffer {
         self.discard = false;
     }
 
-    /// \return true if our last element has an inferred separation type.
+    /// Return true if our last element has an inferred separation type.
     fn last_inferred(&self) -> bool {
         !self.elements.is_empty() && !self.elements.last().unwrap().is_explicitly_separated()
     }
 
-    /// Mark that we are about to add the given size `delta` to the buffer. \return true if we
+    /// Mark that we are about to add the given size `delta` to the buffer. Return true if we
     /// succeed, false if we exceed buffer_limit.
     fn try_add_size(&mut self, delta: usize) -> bool {
         if self.discard {
@@ -346,12 +346,12 @@ pub struct IoBufferfill {
 }
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns an error on failure, e.g. too many open fds.
+    /// Returns an error on failure, e.g. too many open fds.
     pub fn create() -> io::Result<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns an error on failure, e.g. too many open fds.
+    /// Returns an error on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
     pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<IoBufferfill>> {
@@ -389,7 +389,7 @@ impl IoBufferfill {
     }
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
-    /// of the buffer. \return the buffer.
+    /// of the buffer. Return the buffer.
     pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
@@ -462,13 +462,13 @@ impl IoBuffer {
         self.buffer.lock().unwrap().append(data, typ)
     }
 
-    /// \return true if output was discarded due to exceeding the read limit.
+    /// Return true if output was discarded due to exceeding the read limit.
     pub fn discarded(&self) -> bool {
         self.buffer.lock().unwrap().discarded()
     }
 
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
-    /// held. \return positive on success, 0 if closed, -1 on error (in which case errno will be
+    /// held. Return positive on success, 0 if closed, -1 on error (in which case errno will be
     /// set).
     pub fn read_once(fd: RawFd, buffer: &mut MutexGuard<'_, SeparatedBuffer>) -> isize {
         assert!(fd >= 0, "Invalid fd");
@@ -636,14 +636,14 @@ impl IoChain {
         true
     }
 
-    /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
+    /// Return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
     pub fn io_for_fd(&self, fd: RawFd) -> Option<IoDataRef> {
         self.0.iter().rev().find(|data| data.fd() == fd).cloned()
     }
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
-    /// \return true on success, false on error, in which case an error will have been printed.
+    /// Return true on success, false on error, in which case an error will have been printed.
     #[allow(clippy::collapsible_else_if)]
     pub fn append_from_specs(&mut self, specs: &RedirectionSpecList, pwd: &wstr) -> bool {
         let mut have_error = false;
@@ -771,7 +771,7 @@ pub enum OutputStream {
 }
 
 impl OutputStream {
-    /// \return any internally buffered contents.
+    /// Return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
     /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
     pub fn contents(&self) -> &wstr {
@@ -930,7 +930,7 @@ impl StringOutputStream {
         self.contents.push_utfstr(s);
         true
     }
-    /// \return the wcstring containing the output.
+    /// Return the wcstring containing the output.
     fn contents(&self) -> &wstr {
         &self.contents
     }

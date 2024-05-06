@@ -380,7 +380,7 @@ struct SplitVar<'a> {
 }
 
 impl<'a> SplitVar<'a> {
-    /// \return the number of elements in our variable, or 0 if missing.
+    /// Return the number of elements in our variable, or 0 if missing.
     fn varsize(&self) -> usize {
         self.var.as_ref().map_or(0, |var| var.as_list().len())
     }

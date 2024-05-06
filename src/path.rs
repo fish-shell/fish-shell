@@ -186,7 +186,7 @@ fn maybe_issue_path_warning(
     printf!("\n");
 }
 
-/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
+/// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.
 /// \returns the path if found, none if not.
 pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
     let result = path_try_get_path(cmd, vars);
@@ -206,7 +206,7 @@ pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
     ]
 });
 
-/// Finds the path of an executable named \p cmd, by looking in $PATH taken from \p vars.
+/// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.
 /// On success, err will be 0 and the path is returned.
 /// On failure, we return the "best path" with err set appropriately.
 /// For example, if we find a non-executable file, we will return its path and EACCESS.
@@ -591,8 +591,8 @@ impl BaseDirectory {
     }
 }
 
-/// Attempt to get a base directory, creating it if necessary. If a variable named \p xdg_var is
-/// set, use that directory; otherwise use the path \p non_xdg_homepath rooted in $HOME. \return the
+/// Attempt to get a base directory, creating it if necessary. If a variable named `xdg_var` is
+/// set, use that directory; otherwise use the path `non_xdg_homepath` rooted in $HOME. \return the
 /// result; see the base_directory_t fields.
 #[cfg_attr(test, allow(unused_variables), allow(unreachable_code))]
 fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory {

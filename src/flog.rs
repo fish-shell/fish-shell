@@ -228,7 +228,7 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     }
 }
 
-/// Set the active flog categories according to the given wildcard \p wc.
+/// Set the active flog categories according to the given wildcard `wc`.
 pub fn activate_flog_categories_by_pattern(wc_ptr: &wstr) {
     let mut wc: WString = wc_ptr.into();
     // Normalize underscores to dashes, allowing the user to be sloppy.

@@ -148,7 +148,7 @@ impl<'a> IntoCharIter for CharsUtf32<'a> {
     }
 }
 
-/// \return true if \p prefix is a prefix of \p contents.
+/// \return true if `prefix` is a prefix of `contents`.
 fn iter_prefixes_iter<Prefix, Contents>(prefix: Prefix, mut contents: Contents) -> bool
 where
     Prefix: Iterator,

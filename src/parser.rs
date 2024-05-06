@@ -807,7 +807,7 @@ impl Parser {
     }
 
     /// Update any universal variables and send event handlers.
-    /// If \p always is set, then do it even if we have no pending changes (that is, look for
+    /// If `always` is set, then do it even if we have no pending changes (that is, look for
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
     pub fn sync_uvars_and_fire(&self, always: bool) {
         if self.syncs_uvars.load() {
@@ -1128,7 +1128,7 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
     }
 }
 
-/// Append stack trace info for the block \p b to \p trace.
+/// Append stack trace info for the block `b` to `trace`.
 fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &mut WString) {
     let mut print_call_site = false;
     match b.typ() {

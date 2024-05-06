@@ -113,7 +113,7 @@ impl ParseExecutionContext {
     }
 }
 
-// Report an error, setting $status to \p status. Always returns
+// Report an error, setting $status to `status`. Always returns
 // 'end_execution_reason_t::error'.
 macro_rules! report_error {
     ( $self:ident, $ctx:expr, $status:expr, $node:expr, $fmt:expr $(, $arg:expr )* $(,)? ) => {

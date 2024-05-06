@@ -327,7 +327,7 @@ impl EnvStack {
     }
 
     /// Synchronizes universal variable changes.
-    /// If \p always is set, perform synchronization even if there's no pending changes from this
+    /// If `always` is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// \return a list of events for changed variables.
     #[allow(clippy::vec_box)]

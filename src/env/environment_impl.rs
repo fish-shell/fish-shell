@@ -480,7 +480,7 @@ impl EnvScopedImpl {
         let query = Query::new(flags);
         let mut names: HashSet<WString> = HashSet::new();
 
-        // Helper to add the names of variables from \p envs to names, respecting show_exported and
+        // Helper to add the names of variables from `envs` to names, respecting show_exported and
         // show_unexported.
         let add_keys = |envs: &VarTable, names: &mut HashSet<WString>| {
             for (key, val) in envs.iter() {
@@ -707,7 +707,7 @@ impl EnvStackImpl {
         })
     }
 
-    /// Set a variable under the name \p key, using the given \p mode, setting its value to \p val.
+    /// Set a variable under the name `key`, using the given `mode`, setting its value to `val`.
     pub fn set(&mut self, key: &wstr, mode: EnvMode, mut val: Vec<WString>) -> ModResult {
         let query = Query::new(mode);
         // Handle electric and read-only variables.
@@ -788,7 +788,7 @@ impl EnvStackImpl {
         result
     }
 
-    /// Remove a variable under the name \p key.
+    /// Remove a variable under the name `key`.
     pub fn remove(&mut self, key: &wstr, mode: EnvMode) -> ModResult {
         let query = Query::new(mode);
         // Users can't remove read-only keys.
@@ -891,7 +891,7 @@ impl EnvStackImpl {
         var_names
     }
 
-    /// Find the first node in the chain starting at \p node which contains the given key \p key.
+    /// Find the first node in the chain starting at `node` which contains the given key `key`.
     fn find_in_chain(node: &EnvNodeRef, key: &wstr) -> Option<EnvNodeRef> {
         #[allow(clippy::manual_find)]
         for cur in node.iter() {
@@ -902,7 +902,7 @@ impl EnvStackImpl {
         None
     }
 
-    /// Remove a variable from the chain \p node.
+    /// Remove a variable from the chain `node`.
     /// Return true if the variable was found and removed.
     fn remove_from_chain(node: &mut EnvNodeRef, key: &wstr) -> bool {
         for cur in node.iter() {
@@ -917,9 +917,9 @@ impl EnvStackImpl {
         false
     }
 
-    /// Try setting \p key as an electric or readonly variable, whose value is provided by reference in \p val.
+    /// Try setting `key` as an electric or readonly variable, whose value is provided by reference in `val`.
     /// Return an error code, or NOne if not an electric or readonly variable.
-    /// \p val will not be modified upon a None return.
+    /// `val` will not be modified upon a None return.
     fn try_set_electric(
         &mut self,
         key: &wstr,
@@ -1015,7 +1015,7 @@ impl EnvStackImpl {
         locked_uvars.set(key, new_var);
     }
 
-    /// Set a variable in a given node \p node.
+    /// Set a variable in a given node `node`.
     fn set_in_node(node: &mut EnvNodeRef, key: &wstr, mut val: Vec<WString>, flags: VarFlags) {
         // Read the var from the node. In C++ this was node->env[key] which establishes a default.
         let mut node_ref = node.borrow_mut();

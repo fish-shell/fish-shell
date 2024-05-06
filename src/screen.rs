@@ -61,7 +61,7 @@ impl Line {
         self.text.clear();
     }
 
-    /// Append a single character \p txt to the line with color \p c.
+    /// Append a single character `txt` to the line with color `c`.
     pub fn append(&mut self, character: char, highlight: HighlightSpec) {
         self.text.push(HighlightedChar {
             highlight,
@@ -69,7 +69,7 @@ impl Line {
         })
     }
 
-    /// Append a nul-terminated string \p txt to the line, giving each character \p color.
+    /// Append a nul-terminated string `txt` to the line, giving each character `color`.
     pub fn append_str(&mut self, txt: &wstr, highlight: HighlightSpec) {
         for c in txt.chars() {
             self.append(c, highlight);
@@ -91,12 +91,12 @@ impl Line {
         self.text[idx].highlight
     }
 
-    /// Append the contents of \p line to this line.
+    /// Append the contents of `line` to this line.
     pub fn append_line(&mut self, line: &Line) {
         self.text.extend_from_slice(&line.text);
     }
 
-    /// \return the width of this line, counting up to no more than \p max characters.
+    /// \return the width of this line, counting up to no more than `max` characters.
     /// This follows fish_wcswidth() semantics, except that characters whose width would be -1 are
     /// treated as 0.
     pub fn wcswidth_min_0(&self, max: usize /* = usize::MAX */) -> usize {
@@ -1133,7 +1133,7 @@ impl LayoutCache {
         self.esc_cache.len()
     }
 
-    /// Insert the entry \p str in its sorted position, if it is not already present in the cache.
+    /// Insert the entry `str` in its sorted position, if it is not already present in the cache.
     pub fn add_escape_code(&mut self, s: WString) {
         if let Err(pos) = self.esc_cache.binary_search(&s) {
             self.esc_cache.insert(pos, s);
@@ -1158,7 +1158,7 @@ impl LayoutCache {
         esc_seq_len
     }
 
-    /// \return the length of a string that matches a prefix of \p entry.
+    /// \return the length of a string that matches a prefix of `entry`.
     pub fn find_escape_code(&self, entry: &wstr) -> usize {
         // Do a binary search and see if the escape code right before our entry is a prefix of our
         // entry. Note this assumes that escape codes are prefix-free: no escape code is a prefix of
@@ -1177,7 +1177,7 @@ impl LayoutCache {
         0
     }
 
-    /// Computes a prompt layout for \p prompt_str, perhaps truncating it to \p max_line_width.
+    /// Computes a prompt layout for `prompt_str`, perhaps truncating it to `max_line_width`.
     /// \return the layout, and optionally the truncated prompt itself, by reference.
     pub fn calc_prompt_layout(
         &mut self,
@@ -1494,13 +1494,13 @@ fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
     None
 }
 
-/// \return whether \p c ends a measuring run.
+/// \return whether `c` ends a measuring run.
 fn is_run_terminator(c: char) -> bool {
     matches!(c, '\0' | '\n' | '\r' | '\x0C')
 }
 
-/// Measure a run of characters in \p input starting at \p start.
-/// Stop when we reach a run terminator, and return its index in \p out_end (if not null).
+/// Measure a run of characters in `input` starting at `start`.
+/// Stop when we reach a run terminator, and return its index in `out_end` (if not null).
 /// Note \0 is a run terminator so there will always be one.
 /// We permit escape sequences to have run terminators other than \0. That is, escape sequences may
 /// have embedded newlines, etc.; it's unclear if this is possible but we allow it.
@@ -1532,7 +1532,7 @@ fn measure_run_from(
     width
 }
 
-/// Attempt to truncate the prompt run \p run, which has width \p width, to \p no more than
+/// Attempt to truncate the prompt run `run`, which has width `width`, to `no` more than
 /// desired_width. \return the resulting width and run by reference.
 fn truncate_run(
     run: &mut WString,

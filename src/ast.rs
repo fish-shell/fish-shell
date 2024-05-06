@@ -518,7 +518,7 @@ macro_rules! implement_leaf {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {}
         }
     };
@@ -672,7 +672,7 @@ macro_rules! define_list_node {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {
                 for i in 0..self.count() {
                     self[i].parent = Some(self);
@@ -771,7 +771,7 @@ macro_rules! implement_acceptor_for_branch {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {
                 $(
                     set_parent_of_field!(self, $field_name, $field_type);
@@ -2476,9 +2476,9 @@ impl Default for Ast {
 }
 
 impl Ast {
-    /// Construct an ast by parsing \p src as a job list.
-    /// The ast attempts to produce \p type as the result.
-    /// \p type may only be JobList or FreestandingArgumentList.
+    /// Construct an ast by parsing `src` as a job list.
+    /// The ast attempts to produce `type` as the result.
+    /// `type` may only be JobList or FreestandingArgumentList.
     pub fn parse(
         src: &wstr,
         flags: ParseTreeFlags,
@@ -2511,7 +2511,7 @@ impl Ast {
     }
 
     /// \return a textual representation of the tree.
-    /// Pass the original source as \p orig.
+    /// Pass the original source as `orig`.
     pub fn dump(&self, orig: &wstr) -> WString {
         let mut result = WString::new();
 
@@ -2749,7 +2749,7 @@ macro_rules! internal_error {
     };
 }
 
-/// Report an error based on \p fmt for the tokens' range
+/// Report an error based on `fmt` for the tokens' range
 macro_rules! parse_error {
     (
         $self:ident,
@@ -2764,7 +2764,7 @@ macro_rules! parse_error {
     }
 }
 
-/// Report an error based on \p fmt for the source range \p range.
+/// Report an error based on `fmt` for the source range `range`.
 macro_rules! parse_error_range {
     (
         $self:ident,
@@ -3134,7 +3134,7 @@ impl<'s> Populator<'s> {
         self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
-    /// \return whether a list type \p type allows arbitrary newlines in it.
+    /// \return whether a list type `type` allows arbitrary newlines in it.
     fn list_type_chomps_newlines(&self, typ: Type) -> bool {
         match typ {
             Type::argument_list => {
@@ -3187,7 +3187,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// \return whether a list type \p type allows arbitrary semicolons in it.
+    /// \return whether a list type `type` allows arbitrary semicolons in it.
     fn list_type_chomps_semis(&self, typ: Type) -> bool {
         match typ {
             Type::argument_list => {
@@ -3264,7 +3264,7 @@ impl<'s> Populator<'s> {
         typ == Type::job_list && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
-    /// \return a reference to a non-comment token at index \p idx.
+    /// \return a reference to a non-comment token at index `idx`.
     fn peek_token(&mut self, idx: usize) -> &ParseToken {
         self.tokens.peek(idx)
     }

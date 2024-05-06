@@ -385,7 +385,7 @@ impl Outputter {
         &self.contents
     }
 
-    /// Output any buffered data to the given \p fd.
+    /// Output any buffered data to the given `fd`.
     fn flush_to(&mut self, fd: RawFd) {
         if fd >= 0 && !self.contents.is_empty() {
             let _ = common::write_loop(&fd, &self.contents);

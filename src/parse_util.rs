@@ -31,7 +31,7 @@ use std::ops::Range;
 use std::{iter, ops};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
-/// \return the length of the slice starting at \p in, or 0 if there is no slice, or None on error.
+/// \return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn parse_util_slice_length(input: &wstr) -> Option<usize> {
     const openc: char = '[';
@@ -1566,8 +1566,8 @@ fn detect_errors_in_backgrounded_job(
     errored
 }
 
-/// Given a source buffer \p buff_src and decorated statement \p dst within it, return true if there
-/// is an error and false if not. \p storage may be used to reduce allocations.
+/// Given a source buffer `buff_src` and decorated statement `dst` within it, return true if there
+/// is an error and false if not. `storage` may be used to reduce allocations.
 fn detect_errors_in_decorated_statement(
     buff_src: &wstr,
     dst: &ast::DecoratedStatement,

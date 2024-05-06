@@ -269,7 +269,7 @@ fn test_normalize_path() {
     assert_eq!(norm_path(L!("foo/././bar/.././baz")), "foo/baz");
 }
 
-/// Given an input path \p path and a working directory \p wd, do a "normalizing join" in a way
+/// Given an input path `path` and a working directory `wd`, do a "normalizing join" in a way
 /// appropriate for cd. That is, return effectively wd + path while resolving leading ../s from
 /// path. The intent here is to allow 'cd' out of a directory which may no longer exist, without
 /// allowing 'cd' into a directory that may not exist; see #5341.
@@ -586,7 +586,7 @@ pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
     }
     result
 }
-/// Given that \p cursor is a pointer into \p base, return the offset in characters.
+/// Given that `cursor` is a pointer into `base`, return the offset in characters.
 /// This emulates C pointer arithmetic:
 ///    `wstr_offset_in(cursor, base)` is equivalent to C++ `cursor - base`.
 pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {

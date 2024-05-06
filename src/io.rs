@@ -115,7 +115,7 @@ impl SeparatedBuffer {
         &self.elements
     }
 
-    /// Append the given data with separation type \p sep.
+    /// Append the given data with separation type `sep`.
     pub fn append(&mut self, data: &[u8], sep: SeparationType) -> bool {
         if !self.try_add_size(data.len()) {
             return false;
@@ -145,7 +145,7 @@ impl SeparatedBuffer {
         !self.elements.is_empty() && !self.elements.last().unwrap().is_explicitly_separated()
     }
 
-    /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
+    /// Mark that we are about to add the given size `delta` to the buffer. \return true if we
     /// succeed, false if we exceed buffer_limit.
     fn try_add_size(&mut self, delta: usize) -> bool {
         if self.discard {

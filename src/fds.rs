@@ -176,7 +176,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 
 /// If the given fd is in the "user range", move it to a new fd in the "high range".
 /// zsh calls this movefd().
-/// \p input_has_cloexec describes whether the input has CLOEXEC already set, so we can avoid
+/// `input_has_cloexec` describes whether the input has CLOEXEC already set, so we can avoid
 /// setting it again.
 /// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
@@ -202,7 +202,7 @@ fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> 
     Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
 
-/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+/// Sets CLO_EXEC on a given fd according to the value of `should_set`.
 pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.
@@ -270,7 +270,7 @@ pub fn open_dir(path: &CStr, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd>
     open_cloexec(path, OFlag::O_RDONLY | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
 }
 
-/// Close a file descriptor \p fd, retrying on EINTR.
+/// Close a file descriptor `fd`, retrying on EINTR.
 pub fn exec_close(fd: RawFd) {
     assert!(fd >= 0, "Invalid fd");
     while unsafe { libc::close(fd) } == -1 {

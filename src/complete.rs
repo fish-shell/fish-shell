@@ -1968,11 +1968,11 @@ impl<'ctx> Completer<'ctx> {
         );
     }
 
-    // Invoke command-specific completions given by \p arg_data.
+    // Invoke command-specific completions given by `arg_data`.
     // Then, for each target wrapped by the given command, update the command
     // line with that target and invoke this recursively.
-    // The command whose completions to use is given by \p cmd. The full command line is given by \p
-    // cmdline and the command's range in it is given by \p cmdrange. Note: the command range
+    // The command whose completions to use is given by `cmd`. The full command line is given by \p
+    // cmdline and the command's range in it is given by `cmdrange`. Note: the command range
     // may have a different length than the command itself, because the command is unescaped (i.e.
     // quotes removed).
     fn walk_wrap_chain(

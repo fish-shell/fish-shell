@@ -1249,7 +1249,7 @@ pub fn wcs2zstring(input: &wstr) -> CString {
     CString::new(until_nul).unwrap()
 }
 
-/// Like wcs2string, but appends to \p receiver instead of returning a new string.
+/// Like wcs2string, but appends to `receiver` instead of returning a new string.
 pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
     output.reserve(input.len());
     wcs2string_callback(input, |buff| {
@@ -1258,7 +1258,7 @@ pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
     });
 }
 
-/// \return the count of initial characters in \p in which are ASCII.
+/// \return the count of initial characters in `in` which are ASCII.
 fn count_ascii_prefix(inp: &[u8]) -> usize {
     // The C++ version had manual vectorization.
     inp.iter().take_while(|c| c.is_ascii()).count()
@@ -1553,7 +1553,7 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
     }
 }
 
-/// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
+/// Write the given paragraph of output, redoing linebreaks to fit `termsize`.
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 

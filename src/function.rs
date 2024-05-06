@@ -177,7 +177,7 @@ fn autoload_names(names: &mut HashSet<WString>, get_hidden: bool) {
     }
 }
 
-/// Add a function. This may mutate \p props to set is_autoload.
+/// Add a function. This may mutate `props` to set is_autoload.
 pub fn add(name: WString, props: Arc<FunctionProperties>) {
     let mut funcset = FUNCTION_SET.lock().unwrap();
 
@@ -221,7 +221,7 @@ pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionPr
     get_props(name)
 }
 
-/// Returns true if the function named \p cmd exists.
+/// Returns true if the function named `cmd` exists.
 /// This may autoload.
 pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
     parser.assert_can_execute();
@@ -231,7 +231,7 @@ pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
     get_props_autoload(cmd, parser).is_some()
 }
 
-/// Returns true if the function \p cmd either is loaded, or exists on disk in an autoload
+/// Returns true if the function `cmd` either is loaded, or exists on disk in an autoload
 /// directory.
 pub fn exists_no_autoload(cmd: &wstr) -> bool {
     if !valid_func_name(cmd) {

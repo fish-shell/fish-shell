@@ -207,7 +207,7 @@ pub fn expand_one(
 /// If the expansion resulted in no or an empty command, the command will be an empty string. Note
 /// that API does not distinguish between expansion resulting in an empty command (''), and
 /// expansion resulting in no command (e.g. unset variable).
-/// If \p skip_wildcards is true, then do not do wildcard expansion
+/// If `skip_wildcards` is true, then do not do wildcard expansion
 /// \return an expand error.
 pub fn expand_to_command_and_args(
     instr: &wstr,
@@ -792,7 +792,7 @@ fn expand_variables(
     ExpandResult::ok()
 }
 
-/// Perform brace expansion, placing the expanded strings into \p out.
+/// Perform brace expansion, placing the expanded strings into `out`.
 fn expand_braces(
     input: WString,
     flags: ExpandFlags,
@@ -916,8 +916,8 @@ fn expand_braces(
     ExpandResult::ok()
 }
 
-/// Expand a command substitution \p input, executing on \p ctx, and inserting the results into
-/// \p out_list, or any errors into \p errors. \return an expand result.
+/// Expand a command substitution `input`, executing on `ctx`, and inserting the results into
+/// `out_list`, or any errors into `errors`. \return an expand result.
 pub fn expand_cmdsubst(
     input: WString,
     ctx: &OperationContext,

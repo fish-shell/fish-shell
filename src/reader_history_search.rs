@@ -79,7 +79,7 @@ impl ReaderHistorySearch {
         self.mode == SearchMode::Prefix
     }
 
-    /// Move the history search in the given direction \p dir.
+    /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {
         if dir == SearchDirection::Forward {
             self.move_forwards()

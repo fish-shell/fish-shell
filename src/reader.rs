@@ -240,8 +240,8 @@ fn reader_push_ret(
     data
 }
 
-/// Push a new reader environment controlled by \p conf, using the given history name.
-/// If \p history_name is empty, then save history in-memory only; do not write it to disk.
+/// Push a new reader environment controlled by `conf`, using the given history name.
+/// If `history_name` is empty, then save history in-memory only; do not write it to disk.
 pub fn reader_push(parser: &Parser, history_name: &wstr, conf: ReaderConfig) {
     // Public variant which discards the return value.
     reader_push_ret(parser, history_name, conf);
@@ -1342,7 +1342,7 @@ pub fn combine_command_and_autosuggestion(cmdline: &wstr, autosuggestion: &wstr)
 }
 
 impl ReaderData {
-    /// \return true if the command line has changed and repainting is needed. If \p colors is not
+    /// \return true if the command line has changed and repainting is needed. If `colors` is not
     /// null, then also return true if the colors have changed.
     fn is_repaint_needed(&self, mcolors: Option<&[HighlightSpec]>) -> bool {
         // Note: this function is responsible for detecting all of the ways that the command line may
@@ -1394,7 +1394,7 @@ impl ReaderData {
     }
 
     /// Generate a new layout data from the current state of the world.
-    /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
+    /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn make_layout_data(&self) -> LayoutData {
         let mut result = LayoutData::default();
         let focused_on_pager = self.active_edit_line_tag() == EditableLineTag::SearchField;
@@ -1417,14 +1417,14 @@ impl ReaderData {
     }
 
     /// Generate a new layout data from the current state of the world, and paint with it.
-    /// If \p mcolors has a value, then apply it; otherwise extend existing colors.
+    /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
         self.rendered_layout = self.make_layout_data();
         self.paint_layout(reason);
     }
 
     /// Paint the last rendered layout.
-    /// \p reason is used in FLOG to explain why.
+    /// `reason` is used in FLOG to explain why.
     fn paint_layout(&mut self, reason: &wstr) {
         FLOGF!(reader_render, "Repainting from %ls", reason);
         let data = &self.rendered_layout;
@@ -4493,7 +4493,7 @@ fn expand_replacer(
     ))
 }
 
-// Extract all the token ranges in \p str, along with whether they are a command.
+// Extract all the token ranges in `str`, along with whether they are a command.
 // Tokens containing command substitutions are skipped; this ensures tokens are non-overlapping.
 struct PositionedToken {
     range: SourceRange,
@@ -4997,8 +4997,8 @@ pub fn check_exit_loop_maybe_warning(data: Option<&mut ReaderData>) -> bool {
     true
 }
 
-/// Given that the user is tab-completing a token \p wc whose cursor is at \p pos in the token,
-/// try expanding it as a wildcard, populating \p result with the expanded string.
+/// Given that the user is tab-completing a token `wc` whose cursor is at `pos` in the token,
+/// try expanding it as a wildcard, populating `result` with the expanded string.
 fn try_expand_wildcard(
     parser: &Parser,
     wc: WString,

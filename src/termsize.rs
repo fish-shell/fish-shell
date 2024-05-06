@@ -164,7 +164,7 @@ impl TermsizeContainer {
         data.current()
     }
 
-    /// If our termsize is stale, update it, using \p parser to fire any events that may be
+    /// If our termsize is stale, update it, using `parser` to fire any events that may be
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// \return the updated termsize.

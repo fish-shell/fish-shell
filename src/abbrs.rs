@@ -149,7 +149,7 @@ pub struct Replacement {
 
 impl Replacement {
     /// Construct a replacement from a replacer.
-    /// The \p range is the range of the text matched by the replacer in the command line.
+    /// The `range` is the range of the text matched by the replacer in the command line.
     /// The text is passed in separately as it may be the output of the replacer's function.
     pub fn new(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
         let mut cursor = None;
@@ -184,7 +184,7 @@ pub struct AbbreviationSet {
 
 impl AbbreviationSet {
     /// \return the list of replacers for an input token, in priority order.
-    /// The \p position is given to describe where the token was found.
+    /// The `position` is given to describe where the token was found.
     pub fn r#match(&self, token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
         let mut result = vec![];
 
@@ -270,7 +270,7 @@ impl AbbreviationSet {
 }
 
 /// \return the list of replacers for an input token, in priority order, using the global set.
-/// The \p position is given to describe where the token was found.
+/// The `position` is given to describe where the token was found.
 pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
     with_abbrs(|set| set.r#match(token, position, cmd))
         .into_iter()

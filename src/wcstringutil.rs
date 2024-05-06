@@ -157,9 +157,9 @@ impl StringFuzzyMatch {
         matches!(self.typ, ContainType::substr | ContainType::subseq)
     }
 
-    /// Try creating a fuzzy match for \p string against \p match_against.
-    /// \p string is something like "foo" and \p match_against is like "FooBar".
-    /// If \p anchor_start is set, then only exact and prefix matches are permitted.
+    /// Try creating a fuzzy match for `string` against `match_against`.
+    /// `string` is something like "foo" and `match_against` is like "FooBar".
+    /// If `anchor_start` is set, then only exact and prefix matches are permitted.
     pub fn try_create(
         string: &wstr,
         match_against: &wstr,
@@ -272,8 +272,8 @@ pub fn string_fuzzy_match_string(
 }
 
 /// Implementation of wcs2string that accepts a callback.
-/// This invokes \p func with (const char*, size_t) pairs.
-/// If \p func returns false, it stops; otherwise it continues.
+/// This invokes `func` with (const char*, size_t) pairs.
+/// If `func` returns false, it stops; otherwise it continues.
 /// \return false if the callback returned false, otherwise true.
 pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     let mut state = zero_mbstate();
@@ -330,10 +330,10 @@ pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
     val.split(sep).map(wstr::to_owned).collect()
 }
 
-/// Split a string by runs of any of the separator characters provided in \p seps.
-/// Note the delimiters are the characters in \p seps, not \p seps itself.
-/// \p seps may contain the NUL character.
-/// Do not output more than \p max_results results. If we are to output exactly that much,
+/// Split a string by runs of any of the separator characters provided in `seps`.
+/// Note the delimiters are the characters in `seps`, not `seps` itself.
+/// `seps` may contain the NUL character.
+/// Do not output more than `max_results` results. If we are to output exactly that much,
 /// the last output is the remainder of the input, including leading delimiters,
 /// except for the first. This is historical behavior.
 /// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
@@ -489,7 +489,7 @@ pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
 }
 
 /// \return the number of escaping backslashes before a character.
-/// \p idx may be "one past the end."
+/// `idx` may be "one past the end."
 pub fn count_preceding_backslashes(text: &wstr, idx: usize) -> usize {
     assert!(idx <= text.len(), "Out of bounds");
     text.chars()

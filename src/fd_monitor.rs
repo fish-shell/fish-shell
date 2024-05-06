@@ -138,7 +138,7 @@ impl FdEventSignaller {
     }
 
     /// Perform a poll to see if an event is received.
-    /// If \p wait is set, wait until it is readable; this does not consume the event
+    /// If `wait` is set, wait until it is readable; this does not consume the event
     /// but guarantees that the next call to wait() will not block.
     /// \return true if readable, false if not readable, or not interrupted by a signal.
     pub fn poll(&self, wait: bool /* = false */) -> bool {

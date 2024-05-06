@@ -638,7 +638,7 @@ impl EventQueuePeeker<'_> {
     }
 
     /// Check if the next event is the given character. This advances the index on success only.
-    /// If \p escaped is set, then return false if this (or any other) character had a timeout.
+    /// If `escaped` is set, then return false if this (or any other) character had a timeout.
     fn next_is_char(&mut self, style: &KeyNameStyle, key: Key, escaped: bool) -> bool {
         assert!(
             self.idx <= self.peeked.len(),
@@ -773,7 +773,7 @@ impl Drop for EventQueuePeeker<'_> {
     }
 }
 
-/// \return true if a given \p peeker matches a given sequence of char events given by \p str.
+/// \return true if a given `peeker` matches a given sequence of char events given by `str`.
 fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &[Key]) -> bool {
     assert!(
         !seq.is_empty(),

@@ -129,7 +129,7 @@ impl GenerationsList {
         ]
     }
 
-    /// Set the value of \p topic to the smaller of our value and the value in \p other.
+    /// Set the value of `topic` to the smaller of our value and the value in `other`.
     pub fn set_min_from(&mut self, topic: topic_t, other: &Self) {
         if self.get(topic) > other.get(topic) {
             self.set(topic, other.get(topic));
@@ -456,11 +456,11 @@ impl topic_monitor_t {
     }
 
     /// Given a list of input generations, attempt to update them to something newer.
-    /// If \p gens is older, then just return those by reference, and directly return false (not
+    /// If `gens` is older, then just return those by reference, and directly return false (not
     /// becoming the reader).
-    /// If \p gens is current and there is not a reader, then do not update \p gens and return true,
+    /// If `gens` is current and there is not a reader, then do not update `gens` and return true,
     /// indicating we should become the reader. Now it is our responsibility to wait on the
-    /// semaphore and notify on a change via the condition variable. If \p gens is current, and
+    /// semaphore and notify on a change via the condition variable. If `gens` is current, and
     /// there is already a reader, then wait until the reader notifies us and try again.
     fn try_update_gens_maybe_becoming_reader(&self, gens: &mut GenerationsList) -> bool {
         let mut become_reader = false;
@@ -547,11 +547,11 @@ impl topic_monitor_t {
         return gens;
     }
 
-    /// For each valid topic in \p gens, check to see if the current topic is larger than
-    /// the value in \p gens.
-    /// If \p wait is set, then wait if there are no changes; otherwise return immediately.
+    /// For each valid topic in `gens`, check to see if the current topic is larger than
+    /// the value in `gens`.
+    /// If `wait` is set, then wait if there are no changes; otherwise return immediately.
     /// \return true if some topic changed, false if none did.
-    /// On a true return, this updates the generation list \p gens.
+    /// On a true return, this updates the generation list `gens`.
     pub fn check(&self, gens: &GenerationsList, wait: bool) -> bool {
         if !gens.any_valid() {
             return false;

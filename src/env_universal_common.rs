@@ -250,7 +250,7 @@ impl EnvUniversal {
         }
     }
 
-    /// Populate a variable table \p out_vars from a \p s string.
+    /// Populate a variable table `out_vars` from a `s` string.
     /// This is exposed for testing only.
     /// \return the format of the file that we read.
     pub fn populate_variables(s: &[u8], out_vars: &mut VarTable) -> UvarFormat {
@@ -290,7 +290,7 @@ impl EnvUniversal {
     }
 
     /// Guess a file format. Exposed for testing only.
-    /// \return the format corresponding to file contents \p s.
+    /// \return the format corresponding to file contents `s`.
     pub fn format_for_contents(s: &[u8]) -> UvarFormat {
         // Walk over leading comments, looking for one like '# version'
         let iter = LineIterator::new(s);

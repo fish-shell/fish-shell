@@ -38,7 +38,7 @@ pub struct Autoload {
 }
 
 impl Autoload {
-    /// Construct an autoloader that loads from the paths given by \p env_var_name.
+    /// Construct an autoloader that loads from the paths given by `env_var_name`.
     pub fn new(env_var_name: &'static wstr) -> Self {
         Self {
             env_var_name,
@@ -219,8 +219,8 @@ impl AutoloadFileCache {
         &self.dirs
     }
 
-    /// Check if a command \p cmd can be loaded.
-    /// If \p allow_stale is true, allow stale entries; otherwise discard them.
+    /// Check if a command `cmd` can be loaded.
+    /// If `allow_stale` is true, allow stale entries; otherwise discard them.
     /// This returns an autoloadable file, or none() if there is no such file.
     fn check(&mut self, cmd: &wstr, allow_stale: bool) -> Option<AutoloadableFile> {
         // Check hits.

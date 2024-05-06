@@ -316,7 +316,7 @@ fn autosuggest_parse_command(
     None
 }
 
-/// Given an item \p item from the history which is a proposed autosuggestion, return whether the
+/// Given an item `item` from the history which is a proposed autosuggestion, return whether the
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
 pub fn autosuggest_validate_from_history(

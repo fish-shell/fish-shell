@@ -387,7 +387,7 @@ impl<'a> SplitVar<'a> {
 }
 
 /// Extract indexes from an argument of the form `var_name[index1 index2...]`.
-/// The argument \p arg is split into a variable name and list of indexes, which is returned by
+/// The argument `arg` is split into a variable name and list of indexes, which is returned by
 /// reference. Indexes are "expanded" in the sense that range expressions .. and negative values are
 /// handled.
 ///
@@ -809,7 +809,7 @@ fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
     })
 }
 
-/// Return a list of new values for the variable \p varname, respecting the \p opts.
+/// Return a list of new values for the variable `varname`, respecting the `opts`.
 /// This handles the simple case where there are no indexes.
 fn new_var_values(
     varname: &wstr,
@@ -859,7 +859,7 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
         result = var.as_list().to_owned();
     }
 
-    // For each (index, argument) pair, set the element in our \p result to the replacement string.
+    // For each (index, argument) pair, set the element in our `result` to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.
     for (i, arg) in argv.iter().copied().enumerate() {
         let lidx = usize::try_from(split.indexes[i]).unwrap();

@@ -478,7 +478,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
-    /// \return whether a range \p r overlaps an error range from our ast.
+    /// \return whether a range `r` overlaps an error range from our ast.
     fn range_contained_error(&self, r: SourceRange) -> bool {
         let errs = self.errors.as_ref().unwrap();
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
@@ -526,7 +526,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         added_newline
     }
 
-    /// Given a string \p input, remove unnecessary quotes, etc.
+    /// Given a string `input`, remove unnecessary quotes, etc.
     fn clean_text(&self, input: &wstr) -> WString {
         // Unescape the string - this leaves special markers around if there are any
         // expansions or anything. We specifically tell it to not compute backslash-escapes
@@ -557,7 +557,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     // Emit a range of original text. This indents as needed, and also inserts preceding gap text.
-    // If \p tolerate_line_splitting is set, then permit escaped newlines; otherwise collapse such
+    // If `tolerate_line_splitting` is set, then permit escaped newlines; otherwise collapse such
     // lines.
     fn emit_text(&mut self, r: SourceRange, flags: GapFlags) {
         self.emit_gap_text_before(r, flags);

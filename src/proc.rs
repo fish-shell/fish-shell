@@ -153,7 +153,7 @@ impl ProcStatus {
         (status, empty)
     }
 
-    /// Encode a return value \p ret and signal \p sig into a status value like waitpid() does.
+    /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
     const fn w_exitcode(ret: i32, sig: i32) -> i32 {
         #[cfg(HAVE_WAITSTATUS_SIGNAL_RET)]
         // It's encoded signal and then status
@@ -1145,7 +1145,7 @@ pub fn set_job_control_mode(mode: JobControl) {
 static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8);
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
-/// If \p interactive is set, allow removing interactive jobs; otherwise skip them.
+/// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// \return whether text was printed to stdout.
 pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
     parser.assert_can_execute();
@@ -1243,7 +1243,7 @@ pub fn proc_init() {
     signal_set_handlers_once(false);
 }
 
-/// Set the status of \p proc to \p status.
+/// Set the status of `proc` to `status`.
 fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
     proc.status.update(status);
     if status.stopped() {
@@ -1288,7 +1288,7 @@ pub fn proc_wait_any(parser: &Parser) {
     process_clean_after_marking(parser, is_interactive);
 }
 
-/// Send SIGHUP to the list \p jobs, excepting those which are in fish's pgroup.
+/// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
 pub fn hup_jobs(jobs: &JobList) {
     let fish_pgrp = unsafe { libc::getpgrp() };
     for j in jobs {
@@ -1476,7 +1476,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
     reap_disowned_pids();
 }
 
-/// Generate process_exit events for any completed processes in \p j.
+/// Generate process_exit events for any completed processes in `j`.
 fn generate_process_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
     // Historically we have avoided generating events for foreground jobs from event handlers, as an
     // event handler may itself produce a new event.

@@ -30,7 +30,7 @@ enum WaitHandleQuery<'a> {
 }
 
 /// Walk the list of jobs, looking for a process with the given pid or proc name.
-/// Append all matching wait handles to \p handles.
+/// Append all matching wait handles to `handles`.
 /// \return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
@@ -92,7 +92,7 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 }
 
 /// Wait for the given wait handles to be marked as completed.
-/// If \p any_flag is set, wait for the first one; otherwise wait for all.
+/// If `any_flag` is set, wait for the first one; otherwise wait for all.
 /// \return a status code.
 fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
     if whs.is_empty() {

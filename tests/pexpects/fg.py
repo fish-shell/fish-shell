@@ -2,6 +2,7 @@
 from pexpect_helper import SpawnedProc
 import os
 import platform
+import signal
 import subprocess
 import sys
 import time
@@ -33,22 +34,23 @@ send("\x1A")
 sleep(1.2)
 expect_prompt()
 sendline("set -l foo bar; echo $foo")
-expect_str("bar")
+expect_prompt("bar")
 
-expect_prompt()
 sendline("fg")
 expect_str("Send job 1 (" + testproc + ") to foreground")
 sleep(0.2)
 sendline("set -l foo bar; echo $foo")
 expect_str("")
-# ctrl-c - cancel
-send("\x03")
+# Beware: Mac pkill requires that the -P argument come before the process name,
+# else the -P argument is ignored.
+subprocess.call(["pkill", "-INT", "-P", str(sp.spawn.pid), "sleep"])
 
 expect_prompt()
 sendline("set -l foo bar; echo $foo")
-expect_str("bar")
+expect_prompt("bar")
 
-expect_prompt()
+sendline("echo 'Catch' 'up'")
+expect_prompt("Catch up")
 
 # Regression test for #7483.
 # Ensure we can background a job after a different backgrounded job completes.

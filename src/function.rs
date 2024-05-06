@@ -458,10 +458,8 @@ impl FunctionProperties {
 
         let named = &self.named_arguments;
         if !named.is_empty() {
-            out.push_str(" --argument");
             for name in named {
-                // TODO: should these names be escaped?
-                sprintf!(=> &mut out, " %ls", name);
+                sprintf!(=> &mut out, " --argument-names %ls", name);
             }
         }
 

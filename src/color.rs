@@ -467,4 +467,56 @@ mod tests {
             let _ = color.to_name_index();
         }
     }
+
+    #[test]
+    fn parse_short_hex_with_hash() {
+        assert_eq!(
+            RgbColor::try_parse_rgb(L!("#F3A")),
+            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+        );
+    }
+
+    #[test]
+    fn parse_long_hex_with_hash() {
+        assert_eq!(
+            RgbColor::try_parse_rgb(L!("#F3A035")),
+            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+        );
+    }
+
+    #[test]
+    fn parse_short_hex_without_hash() {
+        assert_eq!(
+            RgbColor::try_parse_rgb(L!("F3A")),
+            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+        );
+    }
+
+    #[test]
+    fn parse_long_hex_without_hash() {
+        assert_eq!(
+            RgbColor::try_parse_rgb(L!("F3A035")),
+            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+        );
+    }
+
+    #[test]
+    fn invalid_hex_length() {
+        assert_eq!(RgbColor::try_parse_rgb(L!("#F3A03")), None);
+        assert_eq!(RgbColor::try_parse_rgb(L!("F3A0")), None);
+    }
+
+    #[test]
+    fn invalid_hex_character() {
+        assert_eq!(RgbColor::try_parse_rgb(L!("#GFA")), None);
+        assert_eq!(RgbColor::try_parse_rgb(L!("F3G035")), None);
+    }
+
+    #[test]
+    fn invalid_hash_combinations() {
+        assert_eq!(RgbColor::try_parse_rgb(L!("##F3A")), None);
+        assert_eq!(RgbColor::try_parse_rgb(L!("###F3A035")), None);
+        assert_eq!(RgbColor::try_parse_rgb(L!("F3A#")), None);
+        assert_eq!(RgbColor::try_parse_rgb(L!("#F#3A")), None);
+    }
 }

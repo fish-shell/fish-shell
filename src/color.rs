@@ -257,34 +257,36 @@ impl RgbColor {
     /// - `FA3`
     /// - `F3A035`
 
+    /// Parses input in the form of `#RGB` or `#RRGGBB` with an optional single leading `#` into
+    /// an instance of [`RgbColor`].
+    ///
+    /// Returns `None` if the input contains invalid hexadecimal characters or is not in the
+    /// expected `#RGB` or `#RRGGBB` formats.
     fn try_parse_rgb(mut s: &wstr) -> Option<Self> {
-        // Skip any leading #.
+        // Skip one leading #
         if s.chars().next()? == '#' {
             s = &s[1..];
         }
 
-        let hex_digit = |i| -> Option<u8> {
-            s.char_at(i)
-                .to_digit(16)
-                .map(|n| n.try_into().expect("hex digit should always be < 256"))
-        };
+        let mut hex = s.chars().map_while(|c| c.to_digit(16).map(|b| b as u8));
 
-        let r;
-        let g;
-        let b;
-        if s.len() == 3 {
-            // Format: FA3
-            r = hex_digit(0)? * 16 + hex_digit(0)?;
-            g = hex_digit(1)? * 16 + hex_digit(1)?;
-            b = hex_digit(2)? * 16 + hex_digit(2)?;
+        let (r, g, b) = if s.len() == 3 {
+            // Expected format: FA3
+            (
+                hex.next().map(|d| d * 16 + d)?,
+                hex.next().map(|d| d * 16 + d)?,
+                hex.next().map(|d| d * 16 + d)?,
+            )
         } else if s.len() == 6 {
-            // Format: F3A035
-            r = hex_digit(0)? * 16 + hex_digit(1)?;
-            g = hex_digit(2)? * 16 + hex_digit(3)?;
-            b = hex_digit(4)? * 16 + hex_digit(5)?;
+            // Expected format: F3A035
+            (
+                hex.next()? * 16 + hex.next()?,
+                hex.next()? * 16 + hex.next()?,
+                hex.next()? * 16 + hex.next()?,
+            )
         } else {
             return None;
-        }
+        };
         Some(RgbColor::from_rgb(r, g, b))
     }
 

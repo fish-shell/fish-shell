@@ -216,10 +216,13 @@ impl RgbColor {
 
     /// Returns the names of all named colors.
     pub fn named_color_names() -> Vec<&'static wstr> {
-        let mut v: Vec<_> = NAMED_COLORS
-            .iter()
-            .filter_map(|&NamedColor { name, hidden, .. }| (!hidden).then_some(name))
-            .collect();
+        // We don't use all the NAMED_COLORS but we also need room for one more.
+        let mut v = Vec::with_capacity(NAMED_COLORS.len());
+        v.extend(
+            NAMED_COLORS
+                .iter()
+                .filter_map(|&NamedColor { name, hidden, .. }| (!hidden).then_some(name)),
+        );
 
         // "normal" isn't really a color and does not have a color palette index or
         // RGB value. Therefore, it does not appear in the NAMED_COLORS table.

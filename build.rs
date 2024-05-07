@@ -10,8 +10,11 @@ fn main() {
 
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
-    let build_dir = format!("{}/build", env!("CARGO_MANIFEST_DIR"));
-    let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&build_dir);
+
+    // FISH_BUILD_DIR is set by CMake, if we are using it.
+    // OUT_DIR is set by Cargo when the build script is running (not compiling)
+    let default_build_dir = env::var("OUT_DIR").unwrap();
+    let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
     rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
     // We need to canonicalize (i.e. realpath)
     // the manifest dir because we want to compare it simply as a string at runtime.

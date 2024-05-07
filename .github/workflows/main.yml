@@ -152,6 +152,10 @@ jobs:
 
     runs-on: macos-latest
 
+    env:
+      # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
+      # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@1.70

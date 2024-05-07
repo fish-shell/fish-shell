@@ -249,7 +249,7 @@ pub struct Tokenizer<'c> {
     /// A pointer into the original string, showing where the next token begins.
     token_cursor: usize,
     /// The start of the original string.
-    start: WString, // TODO Avoid copying once we drop the FFI.
+    start: &'c wstr,
     /// Whether we have additional tokens.
     has_next: bool,
     /// Whether incomplete tokens are accepted.
@@ -274,24 +274,24 @@ impl<'c> Tokenizer<'c> {
     /// \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-    pub fn new(start: &wstr, flags: TokFlags) -> Self {
+    pub fn new(start: &'c wstr, flags: TokFlags) -> Self {
         Self::new_impl(start, flags, None)
     }
     pub fn with_quote_events(
-        start: &wstr,
+        start: &'c wstr,
         flags: TokFlags,
         on_quote_toggle: &'c mut dyn FnMut(usize),
     ) -> Self {
         Self::new_impl(start, flags, Some(on_quote_toggle))
     }
     fn new_impl(
-        start: &wstr,
+        start: &'c wstr,
         flags: TokFlags,
         on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
     ) -> Self {
         Tokenizer {
             token_cursor: 0,
-            start: start.to_owned(),
+            start: start,
             has_next: true,
             accept_unfinished: flags & TOK_ACCEPT_UNFINISHED,
             show_comments: flags & TOK_SHOW_COMMENTS,

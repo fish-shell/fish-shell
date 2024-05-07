@@ -12,4 +12,5 @@ isolated-tmux capture-pane -p
 # CHECK: prompt 0> sleep 0.5 &
 # CHECK: prompt 0> echo hello
 # CHECK: fish: Job 1, 'sleep 0.5 &' has ended
-# CHECK: prompt 0> echo hello world
+# (I've seen this print " world", I guess it depends on tmux version and how big it thinks the terminal is)
+# CHECK: {{.*}} world

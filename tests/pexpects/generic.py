@@ -18,8 +18,8 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 expect_prompt()
 
 # ensure the Apple key () is typeable
-sendline("echo ")
-expect_prompt("")
+sendline("echo \xf8ff")
+expect_prompt("\xf8ff")
 
 # check that history is returned in the right order (#2028)
 # first send 'echo stuff'

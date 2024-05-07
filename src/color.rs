@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use std::cmp::Ordering;
 
 use crate::wchar::prelude::*;
@@ -31,24 +32,16 @@ pub enum Type {
     Reset,
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct Flags {
-    pub bold: bool,
-    pub underline: bool,
-    pub italics: bool,
-    pub dim: bool,
-    pub reverse: bool,
-}
-
-impl Flags {
-    // const eval workaround
-    const DEFAULT: Self = Flags {
-        bold: false,
-        underline: false,
-        italics: false,
-        dim: false,
-        reverse: false,
-    };
+bitflags! {
+    #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
+    pub struct Flags: u8 {
+        const DEFAULT = 0;
+        const BOLD = 1<<0;
+        const UNDERLINE = 1<<1;
+        const ITALICS = 1<<2;
+        const DIM = 1<<3;
+        const REVERSE = 1<<4;
+    }
 }
 
 /// A type that represents a color.
@@ -136,52 +129,52 @@ impl RgbColor {
 
     /// Returns whether the color is bold.
     pub const fn is_bold(self) -> bool {
-        self.flags.bold
+        self.flags.contains(Flags::BOLD)
     }
 
     /// Set whether the color is bold.
     pub fn set_bold(&mut self, bold: bool) {
-        self.flags.bold = bold;
+        self.flags.set(Flags::BOLD, bold)
     }
 
     /// Returns whether the color is underlined.
     pub const fn is_underline(self) -> bool {
-        self.flags.underline
+        self.flags.contains(Flags::UNDERLINE)
     }
 
     /// Set whether the color is underline.
     pub fn set_underline(&mut self, underline: bool) {
-        self.flags.underline = underline;
+        self.flags.set(Flags::UNDERLINE, underline)
     }
 
     /// Returns whether the color is italics.
     pub const fn is_italics(self) -> bool {
-        self.flags.italics
+        self.flags.contains(Flags::ITALICS)
     }
 
     /// Set whether the color is italics.
     pub fn set_italics(&mut self, italics: bool) {
-        self.flags.italics = italics;
+        self.flags.set(Flags::ITALICS, italics)
     }
 
     /// Returns whether the color is dim.
     pub const fn is_dim(self) -> bool {
-        self.flags.dim
+        self.flags.contains(Flags::DIM)
     }
 
     /// Set whether the color is dim.
     pub fn set_dim(&mut self, dim: bool) {
-        self.flags.dim = dim;
+        self.flags.set(Flags::DIM, dim)
     }
 
     /// Returns whether the color is reverse.
     pub const fn is_reverse(self) -> bool {
-        self.flags.reverse
+        self.flags.contains(Flags::REVERSE)
     }
 
     /// Set whether the color is reverse.
     pub fn set_reverse(&mut self, reverse: bool) {
-        self.flags.reverse = reverse;
+        self.flags.set(Flags::REVERSE, reverse)
     }
 
     /// Returns the name index for the given color. Requires that the color be named or RGB.

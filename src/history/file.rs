@@ -331,11 +331,12 @@ fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
 fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (advance, line) = read_line(data);
     let line = trim_start(line);
-    let (key, value) = extract_prefix_and_unescape_yaml(line)?;
-
-    if key != b"- cmd" {
+    // Check this early *before* anything else.
+    if !line.starts_with(b"- cmd") {
         return None;
     }
+
+    let (_key, value) = extract_prefix_and_unescape_yaml(line)?;
 
     data = &data[advance..];
     let cmd = str2wcstring(&value);

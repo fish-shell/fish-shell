@@ -32,6 +32,7 @@ sendline("while true; echo (sleep 2000); end")
 sleep(0.5)
 os.kill(-sp.spawn.pid, signal.SIGINT)
 expect_prompt()
+sleep(0.2)
 
 # SIGINT should be ignored by background processes.
 sendline("sleep 1234 &")

@@ -22,8 +22,9 @@ set -l rustup_show \
     help
 
 # rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
+# Just print the list of installable x86_64-unknown-linux-gnu components for everyone
 function __rustup_components
-    rustup component list | string match -r "^\S+" | string replace -f -- -x86_64-unknown-linux-gnu ""
+    rustup component list | string match -r "\S+" | string replace -rf -- "-x86_64-unknown-linux-gnu.*" ""
 end
 
 # function __rustup_installable_components

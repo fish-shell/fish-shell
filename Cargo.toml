@@ -69,6 +69,7 @@ benchmark = []
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []
+tsan = []
 
 [lints]
 rust.non_camel_case_types = "allow"

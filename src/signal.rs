@@ -230,7 +230,7 @@ pub fn signal_set_handlers(interactive: bool) {
         set_interactive_handlers();
     }
 
-    if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+    if cfg!(feature = "tsan") {
         // Work around the following TSAN bug:
         // The structure containing signal information for a thread is lazily allocated by TSAN.
         // It is possible for the same thread to receive two allocations, if the signal handler

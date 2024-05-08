@@ -442,9 +442,9 @@ pub const FISH_MAX_STACK_DEPTH: usize = 128;
 
 /// Maximum number of nested string substitutions (in lieu of evals)
 /// Reduced under TSAN: our CI test creates 500 jobs and this is very slow with TSAN.
-#[cfg(feature = "FISH_TSAN_WORKAROUNDS")]
+#[cfg(feature = "tsan")]
 pub const FISH_MAX_EVAL_DEPTH: usize = 250;
-#[cfg(not(feature = "FISH_TSAN_WORKAROUNDS"))]
+#[cfg(not(feature = "tsan"))]
 pub const FISH_MAX_EVAL_DEPTH: usize = 500;
 
 /// Error message on a function that calls itself immediately.

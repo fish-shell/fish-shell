@@ -187,7 +187,7 @@ impl binary_semaphore_t {
         // a signal call, so if we're blocked in read() (like the topic monitor wants to be!),
         // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
         // non-blocking (so reads will never block) and use select() to poll it.
-        if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+        if cfg!(feature = "tsan") {
             let _ = make_fd_nonblocking(pipes.read.as_raw_fd());
         }
 
@@ -239,7 +239,7 @@ impl binary_semaphore_t {
                     // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
                     // call until data is available (that is, fish would use 100% cpu while waiting for
                     // processes). This call prevents that.
-                    if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+                    if cfg!(feature = "tsan") {
                         let _ =
                             fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);
                     }

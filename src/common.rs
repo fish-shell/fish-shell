@@ -1232,21 +1232,30 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
 }
 
 /// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
+/// Note: if `input` contains any interior NUL bytes, the result will be truncated at the first!
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
         return CString::default();
     }
 
-    let mut result = vec![];
+    let mut vec = Vec::with_capacity(input.len() + 1);
     wcs2string_callback(input, |buff| {
-        result.extend_from_slice(buff);
+        vec.extend_from_slice(buff);
         true
     });
-    let until_nul = match result.iter().position(|c| *c == b'\0') {
-        Some(pos) => &result[..pos],
-        None => &result[..],
-    };
-    CString::new(until_nul).unwrap()
+    vec.push(b'\0');
+
+    match CString::from_vec_with_nul(vec) {
+        Ok(cstr) => cstr,
+        Err(err) => {
+            // `input` contained a NUL in the middle; we can retrieve `vec`, though
+            let mut vec = err.into_bytes();
+            let pos = vec.iter().position(|c| *c == b'\0').unwrap();
+            vec.truncate(pos + 1);
+            // Safety: We truncated after the first NUL
+            unsafe { CString::from_vec_with_nul_unchecked(vec) }
+        }
+    }
 }
 
 /// Like wcs2string, but appends to `receiver` instead of returning a new string.

@@ -1719,10 +1719,10 @@ pub fn is_windows_subsystem_for_linux() -> bool {
 
         let release: Vec<_> = release
             .iter()
-            .skip_while(|c| **c != b'-')
+            .copied()
+            .skip_while(|c| *c != b'-')
             .skip(1) // the dash itself
             .take_while(|c| c.is_ascii_digit())
-            .copied()
             .collect();
         let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
         match build {

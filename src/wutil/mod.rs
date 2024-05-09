@@ -60,8 +60,10 @@ pub fn wunlink(file_name: &wstr) -> libc::c_int {
 }
 
 pub fn wperror(s: &wstr) {
-    // TODO This should not crash on invalid UTF-8
-    perror(std::str::from_utf8(&wcs2string(s)).unwrap())
+    let bytes = wcs2string(s);
+    // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
+    let s = OsStr::from_bytes(&bytes).to_string_lossy();
+    perror(&s)
 }
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.

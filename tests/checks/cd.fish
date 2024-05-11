@@ -272,8 +272,16 @@ complete -C'cd .'
 # CHECK: ../
 # CHECK: ./
 
-# Check that cd works with minimal permissions (issue #10432)
-begin
+# Check that cd works with minimal permissions (issue #10432).
+# This is first supported on macOS 12.
+# `sysctl kern.osproductversion` emits something like:
+#   kern.osproductversion: 14.3.1
+if test (uname) = "Darwin" && test (sysctl kern.osproductversion | string match -r \\d+) -lt 12
+    # Not supported. Satisfy the CHECKs below.
+    echo fake/a
+    echo fake/a/b
+    echo c
+else
     set -l oldpwd (pwd)
     set -l tmp (mktemp -d)
     cd $tmp

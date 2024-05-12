@@ -21,11 +21,13 @@ use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
 pub use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
-pub use printf::sprintf;
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
+
+extern crate printf as extern_printf;
+pub use extern_printf::sprintf;
 
 pub use wcstoi::*;
 

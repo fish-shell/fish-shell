@@ -41,8 +41,8 @@ impl ToWString for MaybeJobId {
     }
 }
 
-impl<'a> printf_compat::args::ToArg<'a> for MaybeJobId {
-    fn to_arg(self) -> printf_compat::args::Arg<'a> {
+impl<'a> printf::ToArg<'a> for MaybeJobId {
+    fn to_arg(self) -> printf::Arg<'a> {
         self.as_num().to_arg()
     }
 }

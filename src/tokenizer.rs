@@ -191,9 +191,10 @@ impl From<TokenizerError> for &'static wstr {
     }
 }
 
-impl printf_compat::args::ToArg<'static> for TokenizerError {
-    fn to_arg(self) -> printf_compat::args::Arg<'static> {
-        printf_compat::args::Arg::Str(self.into())
+impl printf::ToArg<'static> for TokenizerError {
+    fn to_arg(self) -> printf::Arg<'static> {
+        let msg: &'static wstr = self.into();
+        printf::Arg::WStr(msg)
     }
 }
 

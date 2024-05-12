@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "printf"
 ]
 
 [workspace.package]

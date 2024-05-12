@@ -1,5 +1,5 @@
 /// Support for the "current locale."
-pub use printf_compat::locale::{Locale, C_LOCALE};
+pub use printf::locale::{Locale, C_LOCALE};
 use std::sync::Mutex;
 
 /// Lock guarding libc `setlocale()` or `localeconv()` calls to avoid races.

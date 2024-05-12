@@ -16,7 +16,7 @@ use crate::{
 };
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
-use printf_compat::sprintf;
+use printf::sprintf;
 
 use crate::{
     abbrs::with_abbrs,

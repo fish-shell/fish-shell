@@ -291,7 +291,7 @@ impl<'c> Tokenizer<'c> {
     ) -> Self {
         Tokenizer {
             token_cursor: 0,
-            start: start,
+            start,
             has_next: true,
             accept_unfinished: flags & TOK_ACCEPT_UNFINISHED,
             show_comments: flags & TOK_SHOW_COMMENTS,
@@ -328,7 +328,7 @@ impl<'c> Iterator for Tokenizer<'c> {
         while self.start.char_at(self.token_cursor) == '#' {
             // We have a comment, walk over the comment.
             let comment_start = self.token_cursor;
-            self.token_cursor = comment_end(&self.start, self.token_cursor);
+            self.token_cursor = comment_end(self.start, self.token_cursor);
             let comment_len = self.token_cursor - comment_start;
 
             // If we are going to continue after the comment, skip any trailing newline.
@@ -511,7 +511,7 @@ fn iswspace_not_nl(c: char) -> bool {
 impl<'c> Tokenizer<'c> {
     /// Returns the text of a token, as a string.
     pub fn text_of(&self, tok: &Tok) -> &wstr {
-        tok.get_source(&self.start)
+        tok.get_source(self.start)
     }
 
     /// Return an error token and mark that we no longer have a next token.
@@ -575,7 +575,7 @@ impl<'c> Tokenizer<'c> {
             this.on_quote_toggle
                 .as_mut()
                 .map(|cb| (cb)(this.token_cursor));
-            if let Some(end) = quote_end(&this.start, this.token_cursor, quote) {
+            if let Some(end) = quote_end(this.start, this.token_cursor, quote) {
                 let mut one_past_end = end + 1;
                 if this.start.char_at(end) == '$' {
                     one_past_end = end;
@@ -607,7 +607,7 @@ impl<'c> Tokenizer<'c> {
             else if c == '\\' {
                 mode |= TOK_MODE_CHAR_ESCAPE;
             } else if c == '#' && is_token_begin {
-                self.token_cursor = comment_end(&self.start, self.token_cursor) - 1;
+                self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
             } else if c == '(' {
                 paran_offsets.push(self.token_cursor);
                 expecting.push(')');

@@ -321,7 +321,7 @@ pub fn function(
         .collect();
 
     for named in &opts.named_arguments {
-        if !valid_var_name(&named) {
+        if !valid_var_name(named) {
             streams
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, named));

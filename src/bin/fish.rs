@@ -741,13 +741,13 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
     result
 }
 
-fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]) -> bool {
+fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -> bool {
     if cmds.len() != 1 {
         return false;
     }
 
     let mut result = false;
-    let cmd = cmds.get(0).unwrap();
+    let cmd = &cmds[0];
     if cmd == "exec \"${@}\"" || cmd == "exec \"$@\"" {
         // We're going to construct a new command that starts with exec, and then has the
         // remaining arguments escaped.

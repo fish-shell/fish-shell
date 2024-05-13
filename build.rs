@@ -16,8 +16,8 @@ fn main() {
     let default_build_dir = env::var("OUT_DIR").unwrap();
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
     rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
-    // We need to canonicalize (i.e. realpath)
-    // the manifest dir because we want to compare it simply as a string at runtime.
+    // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
+    // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
         std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
@@ -110,7 +110,7 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
     if !target.chars().all(|c| c.is_ascii_lowercase()) {
         target = target.to_ascii_lowercase();
     }
-    let result = target.ends_with("bsd") || target.ends_with("dragonfly");
+    let is_bsd = target.ends_with("bsd") || target.ends_with("dragonfly");
     #[cfg(any(
         target_os = "dragonfly",
         target_os = "freebsd",
@@ -118,7 +118,7 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
         target_os = "openbsd",
     ))]
     assert!(result, "Target incorrectly detected as not BSD!");
-    Ok(result)
+    Ok(is_bsd)
 }
 
 /// Detect libintl/gettext and its needed symbols to enable internationalization/localization

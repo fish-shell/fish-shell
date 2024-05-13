@@ -117,7 +117,7 @@ fn detect_bsd(_: &Target) -> Result<bool, Box<dyn Error>> {
         target_os = "netbsd",
         target_os = "openbsd",
     ))]
-    assert!(result, "Target incorrectly detected as not BSD!");
+    assert!(is_bsd, "Target incorrectly detected as not BSD!");
     Ok(is_bsd)
 }
 

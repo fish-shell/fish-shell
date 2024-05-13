@@ -500,6 +500,7 @@ pub struct ReaderData {
 
     /// The source of input events.
     inputter: Inputter,
+    queued_repaint: bool,
     /// The history.
     history: Arc<History>,
     /// The history search.
@@ -914,6 +915,9 @@ pub fn reader_execute_readline_cmd(ch: CharEvent) {
                 | ReadlineCmd::Repaint
                 | ReadlineCmd::ForceRepaint
         ) {
+            data.queued_repaint = true;
+        }
+        if data.queued_repaint {
             data.inputter.queue_char(ch);
             return;
         }
@@ -1091,6 +1095,7 @@ impl ReaderData {
             last_flash: Default::default(),
             screen: Screen::new(),
             inputter,
+            queued_repaint: false,
             history,
             history_search: Default::default(),
             history_pager_active: Default::default(),
@@ -2220,6 +2225,7 @@ impl ReaderData {
                 }
             }
             rl::RepaintMode | rl::ForceRepaint | rl::Repaint => {
+                self.queued_repaint = false;
                 self.parser().libdata_mut().pods.is_repaint = true;
                 if c == rl::RepaintMode {
                     // Repaint the mode-prompt only if possible.

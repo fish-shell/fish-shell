@@ -108,6 +108,7 @@ Scripting improvements
 - Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
 - A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
   This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
+- ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
 
 Interactive improvements
 ------------------------

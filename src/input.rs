@@ -16,14 +16,13 @@ use crate::signal::signal_clear_cancel;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
-use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::os::fd::RawFd;
 use std::rc::Rc;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
-    Arc, Mutex, MutexGuard,
+    Mutex, MutexGuard,
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
@@ -241,7 +240,6 @@ pub fn describe_char(c: i32) -> WString {
 pub struct InputMappingSet {
     mapping_list: Vec<InputMapping>,
     preset_mapping_list: Vec<InputMapping>,
-    all_mappings_cache: RefCell<Option<Arc<Box<[InputMapping]>>>>,
 }
 
 /// Access the singleton input mapping set.
@@ -295,9 +293,6 @@ impl InputMappingSet {
         sets_mode: Option<WString>,
         user: bool,
     ) {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
         // Update any existing mapping with this sequence.
         // FIXME: this makes adding multiple bindings quadratic.
         let ml = if user {
@@ -809,8 +804,9 @@ impl Inputter {
         let bind_mode = input_get_bind_mode(vars);
         let mut escape: Option<&InputMapping> = None;
 
-        let ml = input_mappings().all_mappings();
-        for m in ml.iter() {
+        let ip = input_mappings();
+        let ml = ip.mapping_list.iter().chain(ip.preset_mapping_list.iter());
+        for m in ml {
             if m.mode != bind_mode {
                 continue;
             }
@@ -1004,9 +1000,6 @@ impl InputMappingSet {
 
     /// Erase all bindings.
     pub fn clear(&mut self, mode: Option<&wstr>, user: bool) {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
         let ml = if user {
             &mut self.mapping_list
         } else {
@@ -1018,9 +1011,6 @@ impl InputMappingSet {
 
     /// Erase binding for specified key sequence.
     pub fn erase(&mut self, sequence: &[Key], mode: &wstr, user: bool) -> bool {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
         let ml = if user {
             &mut self.mapping_list
         } else {
@@ -1062,20 +1052,6 @@ impl InputMappingSet {
             }
         }
         false
-    }
-
-    /// Return a snapshot of the list of input mappings.
-    fn all_mappings(&self) -> Arc<Box<[InputMapping]>> {
-        // Populate the cache if needed.
-        let mut cache = self.all_mappings_cache.borrow_mut();
-        if cache.is_none() {
-            let mut all_mappings =
-                Vec::with_capacity(self.mapping_list.len() + self.preset_mapping_list.len());
-            all_mappings.extend(self.mapping_list.iter().cloned());
-            all_mappings.extend(self.preset_mapping_list.iter().cloned());
-            *cache = Some(Arc::new(all_mappings.into_boxed_slice()));
-        }
-        Arc::clone(cache.as_ref().unwrap())
     }
 }
 

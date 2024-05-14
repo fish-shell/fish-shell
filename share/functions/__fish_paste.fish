@@ -1,6 +1,7 @@
 function __fish_paste
     # Also split on \r, otherwise it looks confusing
     set -l data (string split \r -- $argv[1] | string split \n)
+    set data (string replace -ra [[:cntrl:]] '' -- $data)
 
     if commandline --search-field >/dev/null
         commandline --search-field -i -- $data

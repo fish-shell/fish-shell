@@ -417,6 +417,8 @@ This includes things like:
         baz &
     done
 
+Fish does not currently have subshells. You will have to find a different solution. The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can use ``fish -c 'your code here'`` to do so explicitly.
+
 ``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in fish::
 
     (foo; bar) | baz
@@ -436,8 +438,6 @@ The pipe will simply be run in the same process, so ``while read`` loops can set
     jobs # will show "baz"
 
 Subshells are also frequently confused with :ref:`command substitutions <bash-command-substitutions>`, which bash writes as ```command``` or ``$(command)`` and fish writes as ``$(command)`` or ``(command)``. Bash also *uses* subshells to implement them.
-
-The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can always use ``fish -c 'your code here'`` to do so explicitly.
 
 Builtins and other commands
 ---------------------------

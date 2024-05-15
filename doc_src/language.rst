@@ -922,19 +922,25 @@ To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 Combining lists
 ^^^^^^^^^^^^^^^
 
-When lists are expanded with other parts attached, they are expanded with these parts still attached. That means any string before a list will be concatenated to each element, and two lists will be expanded in all combinations  - every element of the first with every element of the second.
+Fish expands lists like :ref:`brace expansions <expand-brace>`::
 
-This works basically like :ref:`brace expansion <expand-brace>`.
+  >_ set -l foo x y z
+  >_ echo 1$foo
+  # Any element of $foo is combined with the "1":
+  1x 1y 1z
 
-Examples::
+  >_ echo {good,bad}" apples"
+  # Any element of the {} is combined with the " apples":
+  good apples bad apples
 
-    # Brace expansion is the most familiar:
-    # All elements in the brace combine with
-    # the parts outside of the braces
-    >_ echo {good,bad}" apples"
-    good apples bad apples
+  # Or we can mix the two:
+  >_ echo {good,bad}" "$foo
+  good x bad x good y bad y good z bad z
 
-    # The same thing happens with variable expansion.
+Any string attached to a list will be concatenated to each element.
+
+Two lists will be expanded in all combinations  - every element of the first with every element of the second::
+
     >_ set -l a x y z; set -l b 1 2 3
     >_ echo $a$b # same as {x,y,z}{1,2,3}
     x1 y1 z1 x2 y2 z2 x3 y3 z3

@@ -1,6 +1,7 @@
 //! Implemention of history files.
 
 use std::{
+    borrow::Cow,
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
     ops::{Deref, DerefMut},
@@ -312,18 +313,29 @@ fn trim_leading_spaces(s: &[u8]) -> (usize, &[u8]) {
     (count, &s[count..])
 }
 
-fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<[u8]>, Cow<[u8]>)> {
     let mut split = line.splitn(2, |c| *c == b':');
     let key = split.next().unwrap();
     let value = split.next()?;
-    assert!(split.next().is_none());
 
-    let mut key = key.to_owned();
+    let key: Cow<[u8]> = if key.iter().copied().any(|b| b == b'\\') {
+        let mut key = key.to_owned();
+        unescape_yaml_fish_2_0(&mut key);
+        key.into()
+    } else {
+        key.into()
+    };
+
     // Skip a space after the : if necessary.
-    let mut value = trim_start(value).to_owned();
+    let value = trim_start(value);
+    let value: Cow<[u8]> = if value.iter().copied().any(|b| b == b'\\') {
+        let mut value = value.to_owned();
+        unescape_yaml_fish_2_0(&mut value);
+        value.into()
+    } else {
+        value.into()
+    };
 
-    unescape_yaml_fish_2_0(&mut key);
-    unescape_yaml_fish_2_0(&mut value);
     Some((key, value))
 }
 
@@ -361,7 +373,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
         // We are definitely going to consume this line.
         data = &data[advance..];
 
-        if key == b"when" {
+        if *key == *b"when" {
             // Parse an int from the timestamp. Should this fail, 0 is acceptable.
             when = time_from_seconds(
                 std::str::from_utf8(&value)
@@ -369,7 +381,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0),
             );
-        } else if key == b"paths" {
+        } else if *key == *b"paths" {
             // Read lines starting with " - " until we can't read any more.
             loop {
                 let (advance, line) = read_line(data);

@@ -202,7 +202,7 @@ complete $sfdx_looking -xa force:data:bulk:delete -d 'bulk delete records from a
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -s f -l csvfile -d '(required) the path to the CSV file containing the ids of the records to delete'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -s s -l sobjecttype -d '(required) the sObject type of the records you’re deleting'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -s w -l wait -d 'the number of minutes to wait for the command to complete before displaying the results'
+complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -s w -l wait -d 'number of minutes to wait for the command to complete'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -l apiversion -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -l json -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:delete' -l loglevel -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
@@ -220,7 +220,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s f -l c
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s i -l externalid -d '(required) the column name of the external ID'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s s -l sobjecttype -d '(required) the sObject type of the records you want to upsert'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s w -l wait -d 'the number of minutes to wait for the command to complete before displaying the results'
+complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -s w -l wait -d 'number of minutes to wait for the command to complete'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -l apiversion -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -l json -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:data:bulk:upsert' -l loglevel -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
@@ -381,7 +381,7 @@ complete $sfdx_looking -xa force:lightning:test:install -d 'install Lightning Te
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -s r -l releaseversion -d '[default: latest] release version of Lightning Testing Service'
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -s t -l packagetype -d '[default: full] type of unmanaged package. \'full\' option contains both jasmine and mocha, plus examples' -xa 'jasmine mocha full'
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -s w -l wait -d '[default: 2 minutes] number of minutes to wait for installation status'
+complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -s w -l wait -d 'number of minutes to wait for installation status (default 2)'
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -l apiversion -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -l json -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:lightning:test:install' -l loglevel -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
@@ -459,7 +459,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:describemetadata' -l 
 complete $sfdx_looking -xa force:mdapi:listmetadata -d 'display properties of metadata components of a specified type'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -s a -l apiversion -d 'API version to use (the default is 46.0)'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -s f -l resultfile -d 'path to the file where results are stored'
-complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -s m -l metadatatype -d '(required) metadata type to be retrieved, such as CustomObject; metadata type value is case-sensitive'
+complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -s m -l metadatatype -d '(required) metadata type to be retrieved'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -s u -l targetusername -d 'username or alias for the target org; overrides default target org'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -l folder -d 'folder associated with the component'
 complete -c sfdx -n '__fish_sfdx_using_command force:mdapi:listmetadata' -l json -d 'format output as json'
@@ -553,7 +553,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s a -l setalia
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s n -l sandboxname -d '(required) name of the sandbox org to check status for'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s s -l setdefaultusername -d 'set the created org as the default username'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s u -l targetusername -d 'username or alias for the target org'
-complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s w -l wait -d '[default: 6 minutes] number of minutes to wait while polling for status'
+complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -s w -l wait -d 'number of minutes to wait while polling for status (default 6)'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -l apiversion -d 'override the api version used for api requests made by this command'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -l json -d 'format output as json'
 complete -c sfdx -n '__fish_sfdx_using_command force:org:status' -l loglevel -d '[default: warn] logging level for this command invocation' -xa $sfdx_loglevels
@@ -620,7 +620,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s t -l pac
 
 complete $sfdx_looking -xa force:package:install -d 'install packages'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s a -l apexcompile -d '[default: all] compile all Apex in the org and package, or only Apex in the package' -xa 'all package'
-complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s b -l publishwait -d 'number of minutes to wait for subscriber package version ID to become available in the target org'
+complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s b -l publishwait -d 'number of minutes to wait for subscriber package version ID to become available'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s k -l installationkey -d 'installation key for key-protected package (default: null)'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s p -l package -d 'ID (starts with 04t) or alias of the package version to install'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:create' -s r -l noprompt -d 'do not prompt for confirmation'
@@ -684,7 +684,7 @@ complete -c sfdx -n '__fish_sfdx_using_command force:package:hammertest:run' -l 
 
 complete $sfdx_looking -xa force:package:install -d 'install packages'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s a -l apexcompile -d '[default: all] compile all Apex in the org and package, or only Apex in the package' -xa 'all package'
-complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s b -l publishwait -d 'number of minutes to wait for subscriber package version ID to become available in the target org'
+complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s b -l publishwait -d 'number of minutes to wait for subscriber package version ID to become available'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s k -l installationkey -d 'installation key for key-protected package (default: null)'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s p -l package -d 'ID (starts with 04t) or alias of the package version to install'
 complete -c sfdx -n '__fish_sfdx_using_command force:package:install' -s r -l noprompt -d 'do not prompt for confirmation'

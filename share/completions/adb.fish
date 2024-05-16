@@ -206,7 +206,7 @@ complete -n '__fish_seen_subcommand_from logcat' -c adb -s B -l binary -d 'Outpu
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s f -l file -d 'Log to file instead of stdout'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s r -l rotate-kbytes -d 'Rotate log every kbytes, requires -f'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s n -l rotate-count -d 'Sets number of rotated logs to keep, default 4'
-complete -n '__fish_seen_subcommand_from logcat' -c adb -l id -d ' If the signature <id> for logging to file changes, then clear the associated files and continue'
+complete -n '__fish_seen_subcommand_from logcat' -c adb -l id -d 'If the given signature for logging changes, clear the associated files'
 # logd control
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s g -l buffer-size -d 'Get the size of the ring buffers within logd'
 complete -n '__fish_seen_subcommand_from logcat' -c adb -s G -l buffer-size -d 'Set size of a ring buffer in logd'

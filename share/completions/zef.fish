@@ -67,7 +67,7 @@ complete -c zef -n '__fish_seen_subcommand_from install upgrade smoke' -l instal
 # Install
 complete -c zef -n '__fish_seen_subcommand_from install' -l upgrade
 complete -c zef -n '__fish_seen_subcommand_from install' -l deps-only -d 'Install only the dependency chains of the requested distributions'
-complete -c zef -n '__fish_seen_subcommand_from install' -l contained -d 'Install all transitive and direct dependencies regardless if they are already installed globally'
+complete -c zef -n '__fish_seen_subcommand_from install' -l contained -d 'Install dependencies regardless if they are already installed globally'
 
 # Uninstall
 complete -c zef -n '__fish_seen_subcommand_from uninstall' -l from

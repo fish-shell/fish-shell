@@ -19,7 +19,7 @@ complete -c mkbundle -l lists-targets -d 'Show all of the available remote cross
 complete -c mkbundle -l local-targets -d 'Show all of the available local cross compilation targets'
 complete -c mkbundle -l cil-strip -r -d 'Use a CIL stripper that mkbundle will use if able to'
 complete -c mkbundle -l in-tree -r \
-    -d 'Use mkbundle with a mono source repository from which to pull the necessary headers for compilation'
+    -d 'Use a mono source repository to pull the necessary headers for compilation'
 complete -c mkbundle -l managed-linker -r \
     -d 'Use mkbundle access to a managed linker to preprocess the assemblies'
 complete -c mkbundle -l machine-config -r \

@@ -20,6 +20,6 @@ complete -c gacutil -o package -c '__fish_seen_argument $COMMANDS' \
 complete -c gacutil -o gacdir -c "__fish_seen_argument $COMMANDS" \
     -d 'Use the GACs base directory'
 complete -c gacutil -o root -c "__fish_seen_argument $COMMANDS" \
-    -d 'Integrate with automake tools or packaging tools that require a prefix directory to be specified'
+    -d 'Integrate with packaging tools that require a prefix directory to be specified'
 complete -c gacutil -o check_refs -c '__fish_seen_argument -s i -o il' \
-    -d 'Check the assembly being installed into the GAC does not reference any non strong named assemblies'
+    -d 'Check the assembly being installed does not reference any non strong named assemblies'

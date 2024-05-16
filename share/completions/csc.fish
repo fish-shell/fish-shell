@@ -10,7 +10,7 @@ complete -c csc -s o -o "o+" -o optimize -o "optimize+" -d "Enable optimizations
 complete -c csc -o o- -o optimize- -d "Disable optimizations"
 
 # Output Files
-complete -c csc -o deterministic -d "Output an assembly whose binary content is identical across compilations if inputs are identical"
+complete -c csc -o deterministic -d "Make output identical across compilations if inputs are identical"
 complete -c csc -o "doc:" -d "Specifies an XML file where processed documentation comments are to be written"
 complete -c csc -o "out:" -d "Specifies the output file"
 complete -c csc -o "pathmap:" -d "Specify a mapping for source path names output by the compiler"

@@ -83,7 +83,7 @@ complete -c svn -n __fish_use_subcommand -x -a $help -d 'Describe the usage of t
 complete -c svn -n __fish_use_subcommand -x -a $import -d 'Commit an unversioned file or tree into the repository'
 complete -c svn -n __fish_use_subcommand -x -a $info -d 'Display information about a local or remote item'
 complete -c svn -n __fish_use_subcommand -x -a $list -d 'List directory entries in the repository'
-complete -c svn -n __fish_use_subcommand -x -a $lock -d 'Lock working copy paths or URLs in the repository, so that no other user can commit changes to them'
+complete -c svn -n __fish_use_subcommand -x -a $lock -d 'Lock working copy paths/URLs in the repo, so that no other user can commit changes to them'
 complete -c svn -n __fish_use_subcommand -x -a $log -d 'Show the log messages for a set of revision(s) and/or file(s)'
 complete -c svn -n __fish_use_subcommand -x -a $merge -d 'Apply the differences between two sources to a working copy path'
 complete -c svn -n __fish_use_subcommand -x -a $mergeinfo -d 'Display information related to merges'

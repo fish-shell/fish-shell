@@ -1,5 +1,5 @@
 # Startup
-complete -c strace -s E -l env -d 'Remove var from the inherited list of environment variables before passing it on to the command'
+complete -c strace -s E -l env -d 'Remove var from the inherited environment before passing it on to the command'
 complete -c strace -s p -l attach -xa '(__fish_complete_pids)'
 complete -c strace -s u -l user -xa '(__fish_complete_users)'
 complete -c strace -l argv0 -d 'Set argv[0] of the command being executed to name'

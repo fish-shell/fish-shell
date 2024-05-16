@@ -94,7 +94,7 @@ complete -f -c composer -n __fish_composer_needs_command -a init -d 'Creates a b
 complete -f -c composer -n __fish_composer_needs_command -a install -d 'Install dependencies from composer.lock or composer.json'
 complete -f -c composer -n __fish_composer_needs_command -a licenses -d 'Show information about licenses of dependencies'
 complete -f -c composer -n __fish_composer_needs_command -a list -d 'Lists commands'
-complete -f -c composer -n __fish_composer_needs_command -a outdated -d 'Shows a list of installed packages that have updates available, including their latest version'
+complete -f -c composer -n __fish_composer_needs_command -a outdated -d 'Shows a list of installed packages with available updates'
 complete -f -c composer -n __fish_composer_needs_command -a prohibits -d 'Shows which packages prevent the given package from being installed'
 complete -f -c composer -n __fish_composer_needs_command -a remove -d 'Removes a package from the require or require-dev'
 complete -f -c composer -n __fish_composer_needs_command -a require -d 'Adds required packages to your composer.json and installs them'
@@ -207,7 +207,7 @@ complete -f -c composer -n '__fish_composer_using_command list' -l raw -d 'To ou
 complete -f -c composer -n '__fish_composer_using_command list' -l format -d 'The output format (txt, xml, json, or md)'
 
 # outdated
-complete -f -c composer -n '__fish_composer_using_command outdated' -l outdated -d 'Show only packages that are outdated (this is the default, but present here for compat with `show`'
+complete -f -c composer -n '__fish_composer_using_command outdated' -l outdated -d 'Show only packages that are outdated'
 complete -f -c composer -n '__fish_composer_using_command outdated' -l all -d 'Show all installed packages with their latest versions'
 complete -f -c composer -n '__fish_composer_using_command outdated' -l direct -d 'Shows only packages that are directly required by the root package'
 complete -f -c composer -n '__fish_composer_using_command outdated' -l strict -d 'Return a non-zero exit code when there are outdated packages'

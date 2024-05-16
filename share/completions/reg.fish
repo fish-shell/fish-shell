@@ -175,7 +175,7 @@ complete -c reg -f \
     -d 'Copy the specified subkeys, entries, and values of the local computer into a file'
 complete -c reg -f \
     -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a import \
-    -d 'Copy the contents of a file that contains registry data into the registry of the local computer'
+    -d 'Copy contents of a file with registry data into the local registry'
 complete -c reg -f \
     -n 'not __fish_seen_subcommand_from add compare copy delete export import load query restore save unload' -a load \
     -d 'Write saved subkeys and entries into a different subkey in the registry'

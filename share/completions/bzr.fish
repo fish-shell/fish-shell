@@ -90,7 +90,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from send' -l remember -d 'Remembe
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l mail-to -d 'Mail the request to this address'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l format -d 'Use the specified output format'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l no-bundle -d 'Do not include a bundle in the merge directive'
-complete -f -c bzr -n '__fish_seen_subcommand_from send' -l strict -d 'Refuse to send if there are uncommitted changes in the working tree, --no-strict disables the check'
+complete -f -c bzr -n '__fish_seen_subcommand_from send' -l strict -d 'Refuse to send if there are uncommitted changes in the working tree'
 complete -f -c bzr -n '__fish_seen_subcommand_from send' -l no-patch -d 'Do not include a preview patch in the merge directive'
 
 # log command

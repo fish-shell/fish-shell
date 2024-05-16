@@ -4,14 +4,14 @@ use crate::key::Key;
 use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
-use std::sync::Arc;
+use std::rc::Rc;
 
 #[test]
 #[serial]
 fn test_input() {
     let _cleanup = test_init();
     use crate::env::EnvStack;
-    let parser = Parser::new(Arc::pin(EnvStack::new()), false);
+    let parser = Parser::new(Rc::new(EnvStack::new()), false);
     let mut input = Inputter::new(parser, libc::STDIN_FILENO);
     // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
     // of the second, and then emit the second key list. The second binding should be invoked, not

@@ -1,10 +1,8 @@
 use crate::common::CancelChecker;
 use crate::env::EnvDyn;
-use crate::env::{EnvStack, EnvStackRef, Environment};
+use crate::env::{EnvStack, Environment};
 use crate::parser::{Parser, ParserRef};
 use crate::proc::JobGroupRef;
-use once_cell::sync::Lazy;
-use std::sync::Arc;
 
 use crate::reader::read_generation_count;
 
@@ -47,8 +45,6 @@ pub struct OperationContext<'a> {
     pub cancel_checker: CancelChecker,
 }
 
-static nullenv: Lazy<EnvStackRef> = Lazy::new(|| Arc::pin(EnvStack::new()));
-
 impl<'a> OperationContext<'a> {
     pub fn vars(&self) -> &dyn Environment {
         match &self.vars {
@@ -60,7 +56,10 @@ impl<'a> OperationContext<'a> {
 
     // Return an "empty" context which contains no variables, no parser, and never cancels.
     pub fn empty() -> OperationContext<'static> {
-        OperationContext::background(&**nullenv, EXPANSION_LIMIT_DEFAULT)
+        use std::sync::OnceLock;
+        static NULL_ENV: OnceLock<EnvStack> = OnceLock::new();
+        let null_env = NULL_ENV.get_or_init(|| EnvStack::new());
+        OperationContext::background(null_env, EXPANSION_LIMIT_DEFAULT)
     }
 
     // Return an operation context that contains only global variables, no parser, and never

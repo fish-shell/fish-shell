@@ -7,7 +7,7 @@ use crate::common::{
     FilenameRef, ScopeGuarding, PROFILING_ACTIVE,
 };
 use crate::complete::CompletionList;
-use crate::env::{EnvMode, EnvStack, EnvStackRef, EnvStackSetResult, Environment, Statuses};
+use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
 use crate::event::{self, Event};
 use crate::expand::{
     expand_string, replace_home_directory_with_tilde, ExpandFlags, ExpandResultCode,
@@ -37,7 +37,6 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
-use std::pin::Pin;
 use std::rc::{Rc, Weak};
 use std::sync::{
     atomic::{AtomicIsize, AtomicU64, Ordering},
@@ -312,7 +311,7 @@ pub struct Parser {
     pub eval_level: AtomicIsize,
 
     /// Set of variables for the parser.
-    pub variables: EnvStackRef,
+    pub variables: Rc<EnvStack>,
 
     /// Miscellaneous library data.
     library_data: RefCell<LibraryData>,
@@ -333,7 +332,7 @@ pub struct Parser {
 
 impl Parser {
     /// Create a parser
-    pub fn new(variables: EnvStackRef, is_principal: bool) -> ParserRef {
+    pub fn new(variables: Rc<EnvStack>, is_principal: bool) -> ParserRef {
         let result = Rc::new_cyclic(|this: &Weak<Self>| Self {
             this: Weak::clone(this),
             execution_context: RefCell::default(),
@@ -405,7 +404,16 @@ impl Parser {
         static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
         &PRINCIPAL
             .get()
-            .get_or_init(|| Parser::new(EnvStack::principal().clone(), true))
+            // The parser is !Send/!Sync and strictly single-threaded, but we can have
+            // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()
+            // returns an Arc<EnvStack> instead of an Rc<EnvStack>. Since the Arc<EnvStack> is
+            // statically allocated and always valid (not even destroyed on exit), we can safely
+            // transform the Arc<T> into an Rc<T> and save Parser from needing atomic ref counting
+            // to manage its further references.
+            .get_or_init(|| {
+                let env_rc = unsafe { Rc::from_raw(&**EnvStack::principal() as *const _) };
+                Parser::new(env_rc, true)
+            })
     }
 
     /// Assert that this parser is allowed to execute on the current thread.
@@ -753,8 +761,8 @@ impl Parser {
     }
 
     /// Get the variables as an Arc.
-    pub fn vars_ref(&self) -> Arc<EnvStack> {
-        Pin::into_inner(Pin::clone(&self.variables))
+    pub fn vars_ref(&self) -> Rc<EnvStack> {
+        Rc::clone(&self.variables)
     }
 
     /// Get the library data.

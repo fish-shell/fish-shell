@@ -24,6 +24,6 @@ complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -s h -l help
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -r -s p -l path -d "Colon-separated list of paths containing .cheat files"
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -l print -d "Instead of executing a snippet, prints it to stdout"
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -s q -l query -d "Prepopulates the search field"
-complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -l tag-rules -d "[Experimental] Comma-separated list that acts as filter for tags. Parts starting with ! represent negation"
+complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -l tag-rules -d "[Experimental] Comma-separated list as filter for tags. ! represents negation"
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -l tldr -d "Searches for cheatsheets using the tldr-pages repository"
 complete navi -n "not __fish_seen_subcommand_from $sub_commands" -x -s V -l version -d "Print version information"

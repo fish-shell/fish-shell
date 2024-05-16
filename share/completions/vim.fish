@@ -1,5 +1,5 @@
 # these don't work
-#complete vim -a - -d 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
+#complete vim -a - -d 'Read file from stdin, commands from stderr, which should be a tty'
 
 function __fish_vim_find_tags_path
     set -l max_depth 10

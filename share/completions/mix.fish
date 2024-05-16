@@ -159,7 +159,7 @@ complete -f -c mix -n '__fish_mix_using_command phx.gen.schema' -l binary-id -d 
 complete -f -c mix -n '__fish_mix_using_command phx.gen.schema' -l no-binary-id -d "Use normal ids despite the default configuration"
 complete -f -c mix -n '__fish_mix_using_command phx.gen.schema' -l prefix -d "Specifies a prefix"
 complete -f -c mix -n '__fish_mix_using_command phx.gen.schema' -l migration -d "Force generation of the migration"
-complete -f -c mix -n '__fish_mix_using_command phx.new' -l umbrella -d "Generate an umbrella project, with one application for your domain, and a second application for the web interface."
+complete -f -c mix -n '__fish_mix_using_command phx.new' -l umbrella -d "Generate an umbrella project (one app for your domain, a second app for web interface)"
 complete -f -c mix -n '__fish_mix_using_command phx.new' -l app -d "The name of the OTP application"
 complete -f -c mix -n '__fish_mix_using_command phx.new' -l module -d "The name of the base module in the generated skeleton"
 complete -x -c mix -n '__fish_mix_using_command phx.new' -l database -a "postgres mysql mssql sqlite3" -d "Specify the database adapter for Ecto"

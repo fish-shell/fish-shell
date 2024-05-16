@@ -320,7 +320,7 @@ complete -f -c btrfs -n '__btrfs_command_groups scrub status' -s R -d 'Print raw
 complete -f -c btrfs -n $rescue -a chunk-recover -d 'Recover the chunk tree by scanning the devices one by one.'
 complete -f -c btrfs -n $rescue -a super-recover -d 'Recover bad superblocks from good copies'
 complete -f -c btrfs -n $rescue -a zero-log -d 'Clear the tree log. Usable if it\'s corrupted and prevents mount.'
-complete -f -c btrfs -n $rescue -a fix-device-size -d 'Re-align device and super block sizes. Usable if newer kernel refuse to mount it due to mismatch super size'
+complete -f -c btrfs -n $rescue -a fix-device-size -d 'Re-align device and super block sizes'
 # btrfs rescue chunk-recover
 complete -f -c btrfs -n '__btrfs_command_groups rescue chunk-recover' -s y -d 'Assume an answer of YES to all questions'
 complete -f -c btrfs -n '__btrfs_command_groups rescue chunk-recover' -s v -d 'Verbose mode'

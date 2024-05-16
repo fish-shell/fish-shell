@@ -13,7 +13,7 @@ complete -c systemd-analyze -l order -d 'dot: show only After and Before depende
 complete -c systemd-analyze -l require -d 'dot: show only Requires, Requisite, Wants and Conflicts dependencies' -n "not __fish_contains_opt order require"
 complete -c systemd-analyze -l from-pattern -d 'dot: show relationships matching left-hand nodes pattern'
 complete -c systemd-analyze -l to-pattern -d 'dot: show relationships matching right-hand nodes pattern'
-complete -c systemd-analyze -l fuzz -x -d 'critical-chain: also show units, which finished timespan earlier, than the latest unit in the same level'
+complete -c systemd-analyze -l fuzz -x -d 'critical-chain: also show units, which finished timespan earlier, than latest unit in the same level'
 complete -c systemd-analyze -l man -xa no -d 'Do not invoke man to verify the existence of man pages'
 complete -c systemd-analyze -l generators -d 'Invoke unit generators'
 complete -c systemd-analyze -l root -xa "(__fish_complete_directories)" -d 'With cat-files, show config files underneath the specified root path'

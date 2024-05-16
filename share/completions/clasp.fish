@@ -1,9 +1,9 @@
 # options
 complete -c clasp -s v -l version -d "output the current version"
-complete -c clasp -s A -l auth -d "path to an auth file or a folder with a '.clasprc.json' file."
-complete -c clasp -s I -l ignore -d "path to an ignore file or a folder with a '.claspignore' file."
-complete -c clasp -s P -l project -d "path to a project file or to a folder with a '.clasp.json' file."
-complete -c clasp -s W -l why -d "Display some debugging info upon exit."
+complete -c clasp -s A -l auth -d "path to an auth file or a folder with a '.clasprc.json' file"
+complete -c clasp -s I -l ignore -d "path to an ignore file or a folder with a '.claspignore' file"
+complete -c clasp -s P -l project -d "path to a project file or to a folder with a '.clasp.json' file"
+complete -c clasp -s W -l why -d "Display some debugging info upon exit"
 complete -c clasp -s h -l help -d "display help for command"
 
 # subcommands
@@ -28,23 +28,23 @@ complete -f -c clasp -n __fish_use_subcommand -xa help -d "display help for comm
 
 # login options
 complete -c clasp -n '__fish_seen_subcommand_from login' -l no-localhost -d 'Do not run a local server, manually enter code instead'
-complete -c clasp -n '__fish_seen_subcommand_from login' -l creds -d 'Relative path to credentials (from GCP).'
+complete -c clasp -n '__fish_seen_subcommand_from login' -l creds -d 'Relative path to credentials (from GCP)'
 complete -c clasp -n '__fish_seen_subcommand_from login' -l status -d 'Print who is logged in'
 
 # create option
-complete -c clasp -n '__fish_seen_subcommand_from create' -l type -d "Creates a new Apps Script project attached to a new Document, Spreadsheet, Presentation, Form, or as a standalone script, web app, or API."
-complete -c clasp -n '__fish_seen_subcommand_from create' -l parentId -d "A project parent Id."
-complete -c clasp -n '__fish_seen_subcommand_from create' -l rootDir -d "Local root directory in which clasp will store your project files."
+complete -c clasp -n '__fish_seen_subcommand_from create' -l type -d "Creates a new Apps Script project"
+complete -c clasp -n '__fish_seen_subcommand_from create' -l parentId -d "A project parent Id"
+complete -c clasp -n '__fish_seen_subcommand_from create' -l rootDir -d "Local root directory in which clasp will store your project files"
 
 # clone options
-complete -c clasp -n '__fish_seen_subcommand_from clone' -l rootDir -d "Local root directory in which clasp will store your project files."
+complete -c clasp -n '__fish_seen_subcommand_from clone' -l rootDir -d "Local root directory in which clasp will store your project files"
 
 # pull options
-complete -c clasp -n '__fish_seen_subcommand_from pull' -l versionNumber -d "The version number of the project to retrieve."
+complete -c clasp -n '__fish_seen_subcommand_from pull' -l versionNumber -d "The version number of the project to retrieve"
 
 # push options
-complete -c clasp -n '__fish_seen_subcommand_from push' -s f -l force -d "Forcibly overwrites the remote manifest."
-complete -c clasp -n '__fish_seen_subcommand_from push' -s w -l watch -d "Watches for local file changes. Pushes when a non-ignored file changes."
+complete -c clasp -n '__fish_seen_subcommand_from push' -s f -l force -d "Forcibly overwrites the remote manifest"
+complete -c clasp -n '__fish_seen_subcommand_from push' -s w -l watch -d "Watches for local file changes. Pushes when a non-ignored file changes"
 
 # status options
 complete -c clasp -n '__fish_seen_subcommand_from status' -l json -d "Show status in JSON form"
@@ -65,7 +65,7 @@ complete -c clasp -n '__fish_seen_subcommand_from undeploy' -l all -d "Undeploy 
 complete -c clasp -n '__fish_seen_subcommand_from undeploy' -l help -d "display help for command"
 
 # list options
-complete -c clasp -n '__fish_seen_subcommand_from list' -l noShorten -d "Do not shorten long names (default: false)"
+complete -c clasp -n '__fish_seen_subcommand_from list' -l noShorten -d "Do not shorten long names"
 
 # logs options
 complete -c clasp -n '__fish_seen_subcommand_from logs' -l json -d "Show logs in JSON form"

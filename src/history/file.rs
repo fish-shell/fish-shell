@@ -317,6 +317,7 @@ fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<[u8]>, Cow<[u8]>
     let mut split = line.splitn(2, |c| *c == b':');
     let key = split.next().unwrap();
     let value = split.next()?;
+    debug_assert!(split.next().is_none());
 
     let key: Cow<[u8]> = if key.iter().copied().any(|b| b == b'\\') {
         let mut key = key.to_owned();

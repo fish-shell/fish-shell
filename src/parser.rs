@@ -32,7 +32,6 @@ use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
-use once_cell::sync::Lazy;
 use printf_compat::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
@@ -402,9 +401,11 @@ impl Parser {
 
     /// Get the "principal" parser, whatever that is. Can only be called by the main thread.
     pub fn principal_parser() -> &'static Parser {
-        static PRINCIPAL: Lazy<MainThread<ParserRef>> =
-            Lazy::new(|| MainThread::new(Parser::new(EnvStack::principal().clone(), true)));
-        PRINCIPAL.get()
+        use std::cell::OnceCell;
+        static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
+        &PRINCIPAL
+            .get()
+            .get_or_init(|| Parser::new(EnvStack::principal().clone(), true))
     }
 
     /// Assert that this parser is allowed to execute on the current thread.

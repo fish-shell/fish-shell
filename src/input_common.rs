@@ -1,8 +1,7 @@
 use libc::STDOUT_FILENO;
 
 use crate::common::{
-    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes, ScopeGuard,
-    ScopeGuarding,
+    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
@@ -429,111 +428,73 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
     }
 }
 
-pub static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
+static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
     MainThread::new(RefCell::new(None));
 
-fn terminal_protocols_enable() {
-    assert!(TERMINAL_PROTOCOLS.get().borrow().is_none());
-    TERMINAL_PROTOCOLS
-        .get()
-        .replace(Some(TerminalProtocols::new()));
+pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) fn terminal_protocols_enable_ifn() {
+    let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
+    if term_protocols.is_some() {
+        return;
+    }
+    *term_protocols = Some(TerminalProtocols::new());
+    reader_current_data().map(|data| data.save_screen_state());
 }
 
-fn terminal_protocols_disable() {
-    assert!(TERMINAL_PROTOCOLS.get().borrow().is_some());
+pub(crate) fn terminal_protocols_disable_ifn() {
     TERMINAL_PROTOCOLS.get().replace(None);
 }
 
-pub fn terminal_protocols_enable_scoped() -> impl ScopeGuarding<Target = ()> {
-    terminal_protocols_enable();
-    ScopeGuard::new((), |()| terminal_protocols_disable())
+pub(crate) fn terminal_protocols_try_disable_ifn() {
+    if let Ok(mut term_protocols) = TERMINAL_PROTOCOLS.get().try_borrow_mut() {
+        *term_protocols = None;
+    }
 }
 
-pub fn terminal_protocols_disable_scoped() -> impl ScopeGuarding<Target = ()> {
-    terminal_protocols_disable();
-    ScopeGuard::new((), |()| {
-        // If a child is stopped, this will already be enabled.
-        if TERMINAL_PROTOCOLS.get().borrow().is_none() {
-            terminal_protocols_enable();
-            if let Some(data) = reader_current_data() {
-                data.save_screen_state();
-            }
-        }
-    })
-}
-
-pub struct TerminalProtocols {
-    focus_events: bool,
-}
+struct TerminalProtocols {}
 
 impl TerminalProtocols {
     fn new() -> Self {
-        terminal_protocols_enable_impl();
-        Self {
-            focus_events: false,
+        let sequences = concat!(
+            "\x1b[?2004h", // Bracketed paste
+            "\x1b[>4;1m",  // XTerm's modifyOtherKeys
+            "\x1b[>5u",    // CSI u with kitty progressive enhancement
+            "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
+        );
+        FLOG!(
+            term_protocols,
+            format!(
+                "Enabling extended keys and bracketed paste: {:?}",
+                sequences
+            )
+        );
+        let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+        if IS_TMUX.load() {
+            let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
         }
+        Self {}
     }
 }
 
 impl Drop for TerminalProtocols {
     fn drop(&mut self) {
-        terminal_protocols_disable_impl();
-        if self.focus_events {
+        let sequences = concat!(
+            "\x1b[?2004l",
+            "\x1b[>4;0m",
+            "\x1b[<1u", // Konsole breaks unless we pass an explicit number of entries to pop.
+            "\x1b>",
+        );
+        FLOG!(
+            term_protocols,
+            format!(
+                "Disabling extended keys and bracketed paste: {:?}",
+                sequences
+            )
+        );
+        let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+        if IS_TMUX.load() {
             let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
-        }
-    }
-}
-
-fn terminal_protocols_enable_impl() {
-    let sequences = concat!(
-        "\x1b[?2004h", // Bracketed paste
-        "\x1b[>4;1m",  // XTerm's modifyOtherKeys
-        "\x1b[>5u",    // CSI u with kitty progressive enhancement
-        "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
-    );
-
-    FLOG!(
-        term_protocols,
-        format!(
-            "Enabling extended keys and bracketed paste: {:?}",
-            sequences
-        )
-    );
-    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
-}
-
-fn terminal_protocols_disable_impl() {
-    let sequences = concat!(
-        "\x1b[?2004l",
-        "\x1b[>4;0m",
-        "\x1b[<1u", // Konsole breaks unless we pass an explicit number of entries to pop.
-        "\x1b>",
-    );
-    FLOG!(
-        term_protocols,
-        format!(
-            "Disabling extended keys and bracketed paste: {:?}",
-            sequences
-        )
-    );
-    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
-}
-
-pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-pub(crate) fn focus_events_enable_ifn() {
-    if !IS_TMUX.load() {
-        return;
-    }
-    let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
-    let Some(term_protocols) = term_protocols.as_mut() else {
-        panic!()
-    };
-    if !term_protocols.focus_events {
-        term_protocols.focus_events = true;
-        let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
-        if let Some(data) = reader_current_data() {
-            data.save_screen_state();
         }
     }
 }
@@ -1045,7 +1006,7 @@ pub trait InputEventQueuer {
         if let Some(evt) = self.try_pop() {
             return Some(evt);
         }
-        focus_events_enable_ifn();
+        terminal_protocols_enable_ifn();
 
         // We are not prepared to handle a signal immediately; we only want to know if we get input on
         // our fd before the timeout. Use pselect to block all signals; we will handle signals

@@ -14,7 +14,6 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{terminal_protocols_disable_scoped, TERMINAL_PROTOCOLS};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -562,11 +561,6 @@ impl Parser {
             Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
-        // If interactive or inside noninteractive builtin read.
-        let terminal_protocols_enabled = TERMINAL_PROTOCOLS.get().borrow().is_some();
-        let terminal_protocols_disabled =
-            terminal_protocols_enabled.then(terminal_protocols_disable_scoped);
-
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().pods.exec_count;
         let prev_status_count = self.libdata().pods.status_count;
@@ -578,7 +572,6 @@ impl Parser {
         let new_exec_count = self.libdata().pods.exec_count;
         let new_status_count = self.libdata().pods.status_count;
 
-        drop(terminal_protocols_disabled);
         ScopeGuarding::commit(exc);
         self.pop_block(scope_block);
 

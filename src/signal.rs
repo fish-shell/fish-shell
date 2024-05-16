@@ -2,7 +2,7 @@ use std::num::NonZeroI32;
 
 use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
 use crate::event::{enqueue_signal, is_signal_observed};
-use crate::input_common::TERMINAL_PROTOCOLS;
+use crate::input_common::terminal_protocols_try_disable_ifn;
 use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup};
 use crate::termsize::TermsizeContainer;
@@ -89,9 +89,7 @@ extern "C" fn fish_signal_handler(
             // Handle sigterm. The only thing we do is restore the front process ID, then die.
             if !observed {
                 restore_term_foreground_process_group_for_exit();
-                if let Ok(mut term_protocols) = TERMINAL_PROTOCOLS.get().try_borrow_mut() {
-                    *term_protocols = None;
-                }
+                terminal_protocols_try_disable_ifn();
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {
                     libc::signal(libc::SIGTERM, libc::SIG_DFL);

@@ -1,7 +1,7 @@
 //! Implementation of the fg builtin.
 
 use crate::fds::make_fd_blocking;
-use crate::input_common::TERMINAL_PROTOCOLS;
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::reader::reader_write_title;
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
@@ -148,15 +148,17 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
         let job_group = job.group();
         job_group.set_is_foreground(true);
         let tmodes = job_group.tmodes.borrow();
-        if job_group.wants_terminal() && tmodes.is_some() {
-            let termios = tmodes.as_ref().unwrap();
-            let res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSADRAIN, termios) };
-            if res < 0 {
-                perror("tcsetattr");
+        if job_group.wants_terminal() {
+            terminal_protocols_disable_ifn();
+            if tmodes.is_some() {
+                let termios = tmodes.as_ref().unwrap();
+                let res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSADRAIN, termios) };
+                if res < 0 {
+                    perror("tcsetattr");
+                }
             }
         }
     }
-    assert!(TERMINAL_PROTOCOLS.get().borrow().is_none());
     let mut transfer = TtyTransfer::new();
     transfer.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();

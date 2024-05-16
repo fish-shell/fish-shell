@@ -71,11 +71,9 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input::Inputter;
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::IS_TMUX;
-use crate::input_common::{
-    focus_events_enable_ifn, terminal_protocols_enable_scoped, CharEvent, CharInputStyle,
-    ReadlineCmd,
-};
+use crate::input_common::{terminal_protocols_enable_ifn, CharEvent, CharInputStyle, ReadlineCmd};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
@@ -794,16 +792,14 @@ pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    let mut terminal_protocols = None;
     if is_interactive_session() {
-        terminal_protocols = Some(terminal_protocols_enable_scoped());
         if unsafe { libc::getpgrp() == libc::tcgetpgrp(STDIN_FILENO) } {
             term_donate(/*quiet=*/ true);
         }
     }
     ScopeGuard::new((), move |()| {
-        let _terminal_protocols = terminal_protocols;
         restore_term_mode();
+        terminal_protocols_disable_ifn();
     })
 }
 
@@ -1968,7 +1964,7 @@ impl ReaderData {
         let mut accumulated_chars = WString::new();
 
         while accumulated_chars.len() < limit {
-            focus_events_enable_ifn();
+            terminal_protocols_enable_ifn();
             let evt = self.inputter.read_char();
             let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);

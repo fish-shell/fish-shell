@@ -334,6 +334,10 @@ fn trim_leading_spaces(s: &[u8]) -> (usize, &[u8]) {
     (count, &s[count..])
 }
 
+// This function is forcibly inlined because we sometimes call it but discard one of the return
+// values. Hopefully that will be sufficient for the compiler to skip the unnecessary call to
+// unescape_yaml_fish_2_0() for the discarded key.
+#[inline(always)]
 #[allow(clippy::type_complexity)]
 fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<[u8]>, Cow<[u8]>)> {
     let mut split = line.splitn(2, |c| *c == b':');

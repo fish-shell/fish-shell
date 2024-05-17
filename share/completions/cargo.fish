@@ -842,13 +842,20 @@ if command -q cargo-asm
     complete -c cargo -n "__fish_seen_subcommand_from asm" -l version -s V -d "Print cargo-asm version info"
 
     # Options (require a parameter)
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl target -d "Build for target"
+    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl target -d "Build for target" -xa "(__fish_cargo_targets)"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl asm-style -d "ASM style (default: intel)" -xa "intel att"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl build-type -d "Build type (default: release)" -xa "debug release"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl features -d "Cargo features to enable"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl manifest-path -d "Run cargo-asm in a different directory"
 
     # Dynamically generate completions for the function/impl path to translate to asm (the reason these completions exist)
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -xa "(cargo asm)"
-    # TODO: dynamically generate completions for --features and --target
+    # Warning: this will build the project and can take time! We make sure to only call it if it's not a switch so completions
+    # for --foo will always be fast.
+    if command -q timeout
+        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(timeout 1 cargo asm)"
+    else
+        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(cargo asm)"
+    end
+
+    # TODO: dynamically generate completions for --features
 end

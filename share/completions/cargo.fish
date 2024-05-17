@@ -30,6 +30,12 @@ function __fish_cargo_targets
     end
 end
 
+function __fish_cargo_features
+    if command -q jq
+        cargo read-manifest | jq -r '.features | keys | .[]' | __fish_concat_completions
+    end
+end
+
 function __fish_cargo_packages
     find . -name Cargo.toml | string replace -rf '.*/([^/]+)/?Cargo.toml' '$1'
 end
@@ -115,7 +121,7 @@ complete -c cargo -n "__fish_seen_subcommand_from bench" -l bench -d 'Benchmark 
 complete -c cargo -n "__fish_seen_subcommand_from bench" -s p -l package -d 'Package to run benchmarks for'
 complete -c cargo -n "__fish_seen_subcommand_from bench" -l exclude -d 'Exclude packages from the benchmark'
 complete -c cargo -n "__fish_seen_subcommand_from bench" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
-complete -c cargo -n "__fish_seen_subcommand_from bench" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from bench" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from bench" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from bench" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from bench" -l manifest-path -d 'Path to Cargo.toml'
@@ -152,7 +158,7 @@ complete -c cargo -n "__fish_seen_subcommand_from build" -l example -d 'Build on
 complete -c cargo -n "__fish_seen_subcommand_from build" -l test -d 'Build only the specified test target'
 complete -c cargo -n "__fish_seen_subcommand_from build" -l bench -d 'Build only the specified bench target'
 complete -c cargo -n "__fish_seen_subcommand_from build" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from build" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from build" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from build" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from build" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from build" -l out-dir -d 'Copy final artifacts to this directory (unstable)'
@@ -191,7 +197,7 @@ complete -c cargo -n "__fish_seen_subcommand_from check" -l example -d 'Check on
 complete -c cargo -n "__fish_seen_subcommand_from check" -l test -d 'Check only the specified test target'
 complete -c cargo -n "__fish_seen_subcommand_from check" -l bench -d 'Check only the specified bench target'
 complete -c cargo -n "__fish_seen_subcommand_from check" -l profile -d 'Check artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from check" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from check" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from check" -l target -d 'Check for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from check" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from check" -l manifest-path -d 'Path to Cargo.toml'
@@ -251,7 +257,7 @@ complete -c cargo -n "__fish_seen_subcommand_from doc" -l exclude -d 'Exclude pa
 complete -c cargo -n "__fish_seen_subcommand_from doc" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
 complete -c cargo -n "__fish_seen_subcommand_from doc" -l bin -d 'Document only the specified binary'
 complete -c cargo -n "__fish_seen_subcommand_from doc" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from doc" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from doc" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from doc" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from doc" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from doc" -l manifest-path -d 'Path to Cargo.toml'
@@ -298,7 +304,7 @@ complete -c cargo -n "__fish_seen_subcommand_from fix" -l example -d 'Fix only t
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l test -d 'Fix only the specified test target'
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l bench -d 'Fix only the specified bench target'
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from fix" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from fix" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l target -d 'Fix for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from fix" -l manifest-path -d 'Path to Cargo.toml'
@@ -374,7 +380,7 @@ complete -c cargo -n "__fish_seen_subcommand_from install" -l tag -d 'Tag to use
 complete -c cargo -n "__fish_seen_subcommand_from install" -l rev -d 'Specific commit to use when installing from git'
 complete -c cargo -n "__fish_seen_subcommand_from install" -l path -d 'Filesystem path to local crate to install'
 complete -c cargo -n "__fish_seen_subcommand_from install" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
-complete -c cargo -n "__fish_seen_subcommand_from install" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from install" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from install" -l profile -d 'Install artifacts with the specified profile'
 complete -c cargo -n "__fish_seen_subcommand_from install" -l bin -d 'Install only the specified binary'
 complete -c cargo -n "__fish_seen_subcommand_from install" -l example -d 'Install only the specified example'
@@ -436,7 +442,7 @@ complete -c cargo -n "__fish_seen_subcommand_from logout" -s v -l verbose -d 'Us
 complete -c cargo -n "__fish_seen_subcommand_from logout" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from logout" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from logout" -l offline -d 'Run without accessing the network'
-complete -c cargo -n "__fish_seen_subcommand_from metadata" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from metadata" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from metadata" -l filter-platform -d 'Only include resolve dependencies matching the given target-triple'
 complete -c cargo -n "__fish_seen_subcommand_from metadata" -l manifest-path -d 'Path to Cargo.toml'
 complete -c cargo -n "__fish_seen_subcommand_from metadata" -l format-version -d 'Format version' -r -f -a 1
@@ -487,7 +493,7 @@ complete -c cargo -n "__fish_seen_subcommand_from owner" -l locked -d 'Require C
 complete -c cargo -n "__fish_seen_subcommand_from owner" -l offline -d 'Run without accessing the network'
 complete -c cargo -n "__fish_seen_subcommand_from package" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from package" -l target-dir -d 'Directory for all generated artifacts'
-complete -c cargo -n "__fish_seen_subcommand_from package" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from package" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from package" -l manifest-path -d 'Path to Cargo.toml'
 complete -c cargo -n "__fish_seen_subcommand_from package" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
 complete -c cargo -n "__fish_seen_subcommand_from package" -l color -d 'Coloring: auto, always, never'
@@ -524,7 +530,7 @@ complete -c cargo -n "__fish_seen_subcommand_from publish" -l token -d 'Token to
 complete -c cargo -n "__fish_seen_subcommand_from publish" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from publish" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from publish" -l manifest-path -d 'Path to Cargo.toml'
-complete -c cargo -n "__fish_seen_subcommand_from publish" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from publish" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from publish" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
 complete -c cargo -n "__fish_seen_subcommand_from publish" -l registry -d 'Registry to publish to'
 complete -c cargo -n "__fish_seen_subcommand_from publish" -l color -d 'Coloring: auto, always, never'
@@ -558,7 +564,7 @@ complete -c cargo -n "__fish_seen_subcommand_from run" -l example -d 'Name of th
 complete -c cargo -n "__fish_seen_subcommand_from run" -s p -l package -d 'Package with the target to run'
 complete -c cargo -n "__fish_seen_subcommand_from run" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
 complete -c cargo -n "__fish_seen_subcommand_from run" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from run" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from run" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from run" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from run" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from run" -l manifest-path -d 'Path to Cargo.toml'
@@ -585,7 +591,7 @@ complete -c cargo -n "__fish_seen_subcommand_from rustc" -l example -d 'Build on
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l test -d 'Build only the specified test target'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l bench -d 'Build only the specified bench target'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from rustc" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from rustc" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l target -d 'Target triple which compiles will be for' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l print -d 'Output compiler information without compiling'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l target-dir -d 'Directory for all generated artifacts'
@@ -620,7 +626,7 @@ complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l example -d 'Build 
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l test -d 'Build only the specified test target'
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l bench -d 'Build only the specified bench target'
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from rustdoc" -l manifest-path -d 'Path to Cargo.toml'
@@ -669,7 +675,7 @@ complete -c cargo -n "__fish_seen_subcommand_from test" -s p -l package -d 'Pack
 complete -c cargo -n "__fish_seen_subcommand_from test" -l exclude -d 'Exclude packages from the test'
 complete -c cargo -n "__fish_seen_subcommand_from test" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'
 complete -c cargo -n "__fish_seen_subcommand_from test" -l profile -d 'Build artifacts with the specified profile'
-complete -c cargo -n "__fish_seen_subcommand_from test" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from test" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from test" -l target -d 'Build for the target triple' -xa "(__fish_cargo_targets)"
 complete -c cargo -n "__fish_seen_subcommand_from test" -l target-dir -d 'Directory for all generated artifacts'
 complete -c cargo -n "__fish_seen_subcommand_from test" -l manifest-path -d 'Path to Cargo.toml'
@@ -704,7 +710,7 @@ complete -c cargo -n "__fish_seen_subcommand_from test" -l offline -d 'Run witho
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l manifest-path -d 'Path to Cargo.toml'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -s p -l package -d 'Package to be used as the root of the tree'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l exclude -d 'Exclude specific workspace members'
-complete -c cargo -n "__fish_seen_subcommand_from tree" -l features -d 'Space or comma separated list of features to activate'
+complete -c cargo -n "__fish_seen_subcommand_from tree" -l features -d 'Space or comma separated list of features to activate' -xa "(__fish_cargo_features)"
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l target -d 'Filter dependencies matching the given target-triple (or `all` for all targets)' -xa "(__fish_cargo_targets; echo all)"
 complete -c cargo -n "__fish_seen_subcommand_from tree" -s e -l edges -d 'The kinds of dependencies to display' -xa "features normal build dev all no-dev no-build no-normal"
 complete -c cargo -n "__fish_seen_subcommand_from tree" -s i -l invert -d 'Invert the tree direction and focus on the given package'
@@ -845,7 +851,7 @@ if command -q cargo-asm
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl target -d "Build for target" -xa "(__fish_cargo_targets)"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl asm-style -d "ASM style (default: intel)" -xa "intel att"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl build-type -d "Build type (default: release)" -xa "debug release"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl features -d "Cargo features to enable"
+    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl features -d "Cargo features to enable" -xa "(__fish_cargo_features)"
     complete -c cargo -n "__fish_seen_subcommand_from asm" -rl manifest-path -d "Run cargo-asm in a different directory"
 
     # Dynamically generate completions for the function/impl path to translate to asm (the reason these completions exist)
@@ -856,6 +862,4 @@ if command -q cargo-asm
     else
         complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(cargo asm)"
     end
-
-    # TODO: dynamically generate completions for --features
 end

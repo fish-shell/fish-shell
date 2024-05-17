@@ -360,10 +360,10 @@ impl EnvStack {
 
     /// A variable stack that only represents globals.
     /// Do not push or pop from this.
-    pub fn globals() -> &'static Arc<EnvStack> {
+    pub fn globals() -> &'static EnvStack {
         use std::sync::OnceLock;
-        static GLOBALS: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        &GLOBALS.get_or_init(|| Arc::new(EnvStack::new()))
+        static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
+        GLOBALS.get_or_init(|| EnvStack::new())
     }
 
     /// Access the principal variable stack, associated with the principal parser.

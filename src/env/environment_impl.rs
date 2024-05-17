@@ -24,15 +24,16 @@ use std::ops::{Deref, DerefMut};
 
 use std::sync::{atomic::AtomicU64, atomic::Ordering, Arc, Mutex, MutexGuard};
 
-// Universal variables instance.
-lazy_static! {
-    static ref UVARS: Mutex<EnvUniversal> = Mutex::new(EnvUniversal::new());
-}
-
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
 pub fn uvars() -> MutexGuard<'static, EnvUniversal> {
-    UVARS.lock().unwrap()
+    use std::sync::OnceLock;
+    /// Universal variables instance.
+    static UVARS: OnceLock<Mutex<EnvUniversal>> = OnceLock::new();
+    UVARS
+        .get_or_init(|| Mutex::new(EnvUniversal::new()))
+        .lock()
+        .unwrap()
 }
 
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.

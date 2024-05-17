@@ -990,7 +990,7 @@ fn throwing_main() -> i32 {
                 }
             }
             OutputType::Ansi => {
-                colored_output = colorize(&output_wtext, &colors, &**EnvStack::globals());
+                colored_output = colorize(&output_wtext, &colors, EnvStack::globals());
             }
             OutputType::Html => {
                 colored_output = html_colorize(&output_wtext, &colors);

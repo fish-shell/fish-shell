@@ -9,13 +9,13 @@ set -la __fish_cargo_subcommands (complete -C'cargo-' | string replace -rf '^car
 complete -c cargo -f -c cargo -n __fish_use_subcommand -a "$__fish_cargo_subcommands"
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"
 
-for x in bench b build rustc t test
+for x in bench b build c check rustc t test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bench -a "(cargo bench --bench 2>&1 | string replace -rf '^\s+' '')"
     complete -c cargo -n "__fish_seen_subcommand_from $x" -l lib -d 'Only this package\'s library'
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -a "(cargo test --test 2>&1 | string replace -rf '^\s+' '')"
 end
 
-for x in bench b build r run rustc t test
+for x in bench b build c check r run rustc t test
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(cargo run --bin 2>&1 | string replace -rf '^\s+' '')"
     complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(cargo run --example 2>&1 | string replace -rf '^\s+' '')"
 end

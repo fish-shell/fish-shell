@@ -188,7 +188,7 @@ impl EnvStack {
 
     /// Return whether we are the principal stack.
     pub fn is_principal(&self) -> bool {
-        std::ptr::eq(self, &**Self::principal())
+        std::ptr::eq(self, Self::principal())
     }
 
     /// Helpers to get and set the proc statuses.
@@ -367,10 +367,10 @@ impl EnvStack {
     }
 
     /// Access the principal variable stack, associated with the principal parser.
-    pub fn principal() -> &'static Arc<EnvStack> {
+    pub fn principal() -> &'static EnvStack {
         use std::sync::OnceLock;
-        static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        &PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
+        static PRINCIPAL_STACK: OnceLock<EnvStack> = OnceLock::new();
+        &PRINCIPAL_STACK.get_or_init(|| EnvStack::new())
     }
 
     pub fn set_argv(&self, argv: Vec<WString>) {
@@ -554,7 +554,7 @@ fn setup_path() {
 pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
-    let vars = &**EnvStack::principal();
+    let vars = EnvStack::principal();
 
     let env_iter: Vec<_> = std::env::vars_os()
         .map(|(k, v)| (str2wcstring(k.as_bytes()), str2wcstring(v.as_bytes())))

@@ -3,6 +3,9 @@
 
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
+# The LTO profile sets CFLAGS/CXXFLAGS which confuse the compilation process; disable it
+# LTO is still performed by rustc based on Cargo.toml
+export DEB_BUILD_MAINT_OPTIONS=optimize=-lto
 
 %:
 	dh $@

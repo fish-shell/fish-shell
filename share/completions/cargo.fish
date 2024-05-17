@@ -33,6 +33,8 @@ end
 function __fish_cargo_features
     if command -q jq
         cargo read-manifest | jq -r '.features | keys | .[]' | __fish_concat_completions
+    else if set -l python (__fish_anypython)
+        cargo read-manifest | command $python -Sc "import sys, json"\n"print(*json.load(sys.stdin)['features'].keys(), sep='\n')" | __fish_concat_completions
     end
 end
 

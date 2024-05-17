@@ -65,7 +65,7 @@ impl<'a> OperationContext<'a> {
     // Return an operation context that contains only global variables, no parser, and never
     // cancels.
     pub fn globals() -> OperationContext<'static> {
-        OperationContext::background(EnvStack::globals(), EXPANSION_LIMIT_DEFAULT)
+        OperationContext::background(&**EnvStack::globals(), EXPANSION_LIMIT_DEFAULT)
     }
 
     /// Construct from a full set of properties.

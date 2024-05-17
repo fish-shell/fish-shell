@@ -2473,7 +2473,7 @@ pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
     let path_to_load = completion_autoloader
         .lock()
         .expect("mutex poisoned")
-        .resolve_command(cmd, EnvStack::globals());
+        .resolve_command(cmd, &**EnvStack::globals());
     if let Some(path_to_load) = path_to_load {
         Autoload::perform_autoload(&path_to_load, parser);
         completion_autoloader

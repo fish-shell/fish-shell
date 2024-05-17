@@ -402,13 +402,18 @@ impl Parser {
     pub fn principal_parser() -> &'static Parser {
         use std::cell::OnceCell;
         static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        &PRINCIPAL.get().get_or_init(|| {
-            // Safety: EnvStack::principal() returns a `static` variable guaranteed to always be
-            // alive. We just don't want to hard-code the lifetime in `Parser` so we wrap the
-            // `EnvStack` in an `Rc` before sending it along.
-            let env_rc = unsafe { Rc::from_raw(EnvStack::principal() as *const _) };
-            Parser::new(env_rc, true)
-        })
+        &PRINCIPAL
+            .get()
+            // The parser is !Send/!Sync and strictly single-threaded, but we can have
+            // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()
+            // returns an Arc<EnvStack> instead of an Rc<EnvStack>. Since the Arc<EnvStack> is
+            // statically allocated and always valid (not even destroyed on exit), we can safely
+            // transform the Arc<T> into an Rc<T> and save Parser from needing atomic ref counting
+            // to manage its further references.
+            .get_or_init(|| {
+                let env_rc = unsafe { Rc::from_raw(&**EnvStack::principal() as *const _) };
+                Parser::new(env_rc, true)
+            })
     }
 
     /// Assert that this parser is allowed to execute on the current thread.

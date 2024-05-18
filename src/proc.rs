@@ -886,6 +886,10 @@ impl Job {
         self.group().wants_job_control()
     }
 
+    pub fn entitled_to_terminal(&self) -> bool {
+        self.group().is_foreground() && self.processes().iter().any(|p| !p.is_internal())
+    }
+
     /// Return whether this job is initially going to run in the background, because & was
     /// specified.
     pub fn is_initially_background(&self) -> bool {

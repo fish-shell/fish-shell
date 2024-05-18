@@ -13,7 +13,7 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 
 
 def expect_read_prompt():
-    expect_re(r"\r\n?read> $")
+    expect_re(r"\r\n?read> .*$")
 
 
 def expect_marker(text):

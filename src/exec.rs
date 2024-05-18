@@ -72,7 +72,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         return true;
     }
 
-    if job.group().wants_terminal() {
+    if job.entitled_to_terminal() {
         terminal_protocols_disable_ifn();
     }
 

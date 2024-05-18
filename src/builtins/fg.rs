@@ -147,15 +147,15 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
     {
         let job_group = job.group();
         job_group.set_is_foreground(true);
-        let tmodes = job_group.tmodes.borrow();
-        if job_group.wants_terminal() {
+        if job.entitled_to_terminal() {
             terminal_protocols_disable_ifn();
-            if tmodes.is_some() {
-                let termios = tmodes.as_ref().unwrap();
-                let res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSADRAIN, termios) };
-                if res < 0 {
-                    perror("tcsetattr");
-                }
+        }
+        let tmodes = job_group.tmodes.borrow();
+        if job_group.wants_terminal() && tmodes.is_some() {
+            let termios = tmodes.as_ref().unwrap();
+            let res = unsafe { libc::tcsetattr(STDIN_FILENO, TCSADRAIN, termios) };
+            if res < 0 {
+                perror("tcsetattr");
             }
         }
     }

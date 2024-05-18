@@ -9,7 +9,8 @@ set -l ip_addr a ad add addr addre addres address
 set -l ip_link l li lin link
 set -l ip_neigh n ne nei neig neigh neighb neighbo neighbor neighbour
 set -l ip_route r ro rou rout route
-set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_neigh $ip_route
+set -l ip_rule ru rul rule
+set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_neigh $ip_route $ip_rule
 
 function __fish_ip_commandwords
     set -l skip 0
@@ -197,6 +198,10 @@ function __fish_ip_netns_list
     end
 end
 
+function __fish_ip_routing_tables
+    command ip -d route show table all | string replace -fr '.*\stable\s(\S+).*' '$1'
+end
+
 function __fish_ip_types
     printf '%s\t%s\n' \
         bridge "Ethernet Bridge device" \
@@ -236,7 +241,8 @@ function __fish_ip_types
 end
 
 function __fish_ip_neigh_states
-    printf '%s\t%s\n' permanent "entry is valid forever" \
+    printf '%s\t%s\n' \
+        permanent "entry is valid forever" \
         noarp "entry is valid without validation" \
         reachable "entry is valid until timeout" \
         stale "entry is valid but suspicious" \
@@ -488,7 +494,8 @@ function __fish_complete_ip
             end
         case route
             if not set -q cmd[3]
-                printf '%s\t%s\n' add "Add new route" \
+                printf '%s\t%s\n' \
+                    add "Add new route" \
                     change "Change route" \
                     append "Append route" \
                     replace "Change or add new route" \
@@ -501,10 +508,31 @@ function __fish_complete_ip
                     restore "Restore routing table from stdin"
             else
                 # TODO: switch on $cmd[2] and complete subcommand specific arguments
-                # for now just complete device names when dev was the last token
+                # for now just complete most useful arguments for the last token
                 switch $cmd[-2]
-                    case dev
+                    case dev iif oif
                         __fish_ip_device
+                    case table
+                        __fish_ip_routing_tables
+                end
+            end
+        case rule
+            if not set -q cmd[3]
+                printf '%s\t%s\n' \
+                    add "Add new rule" \
+                    delete "Delete rule" \
+                    flush "Flush rules" \
+                    show "List rules" \
+                    save "Save rules to stdout" \
+                    restore "Restore rules from stdin"
+            else
+                # TODO: switch on $cmd[2] and complete subcommand specific arguments
+                # for now just complete most useful arguments for the last token
+                switch $cmd[-2]
+                    case iif oif
+                        __fish_ip_device
+                    case table
+                        __fish_ip_routing_tables
                 end
             end
         case netns

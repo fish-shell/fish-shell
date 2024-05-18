@@ -21,6 +21,15 @@ for x in bench b build c check r run rustc t test
 end
 
 # If using rustup, get the list of installed targets from there. Otherwise print all targets.
+#
+# NB: I wasn't sure if it's possible to manually target a platform you don't have the corresponding toolchain for installed,
+# and it turns out indeed this isn't strictly correct if you choose to manually compile the standard library (-Zbuild-std,
+# nightly only) and are targeting a platform that your native linker also supports, e.g.
+# `cargo build +nightly -Zbuild-std --target=i586-unknown-linux-gnu` works even if you only have the i686-unknown-linux-gnu
+# toolchain installed.
+#
+# Ideally, we'd use rustup's "installed targets" but fall back to completions from rustc's "all targets" list, but we don't
+# have an easy way to do that in the `complete` machinery at this time.
 function __fish_cargo_targets
     if command -q rustup
         functions -q __rustup_installed_targets || source (path dirname (status current-filename))/rustup.fish

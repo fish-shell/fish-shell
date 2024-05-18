@@ -8,10 +8,6 @@ Copyright: 2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
            2009-2024 fish-shell contributors
 License: GPL-2
 
-Files: cmake/CheckIncludeFiles.cmake
-Copyright: 2000-2017 Kitware, Inc. and Contributors
-License: BSD-3-clause
-
 Files: doc_src/python_docs_theme/*
 Copyright: 2001-2017 Python Software Foundation
            2020-2024 fish-shell contributors
@@ -30,21 +26,17 @@ Copyright: 1990-2007 Free Software Foundation, Inc.
            2022 fish-shell contributors
 License: GPL-2+
 
-Files: src/env.cpp
+Files: src/env/environment.rs
 Copyright: 2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
            2007 Nicholas Marriott <nicm@users.sourceforge.net>
            2009-2024 fish-shell contributors
 License: GPL-2 and OpenBSD
 
-Files: src/fallback.cpp
+Files: src/fallback.rs
 Copyright: 2001 The NetBSD Foundation, Inc.
            2005-2009 Axel Liljencrantz <axel@liljencrantz.se>
            2009-2024 fish-shell contributors
 License: GPL-2 and NetBSD
-
-Files: src/utf8.c
-Copyright: 2007 Alexey Vatchenko <av@bsdua.org>
-License: ISC
 
 Files: debian/*
 Copyright: 2005-2009 James Vega <jamessan@jamessan.com>

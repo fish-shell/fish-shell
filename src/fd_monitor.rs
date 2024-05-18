@@ -74,7 +74,7 @@ impl FdEventSignaller {
         }
     }
 
-    /// \return the fd to read from, for notification.
+    /// Return the fd to read from, for notification.
     pub fn read_fd(&self) -> RawFd {
         self.fd.as_raw_fd()
     }
@@ -138,9 +138,9 @@ impl FdEventSignaller {
     }
 
     /// Perform a poll to see if an event is received.
-    /// If \p wait is set, wait until it is readable; this does not consume the event
+    /// If `wait` is set, wait until it is readable; this does not consume the event
     /// but guarantees that the next call to wait() will not block.
-    /// \return true if readable, false if not readable, or not interrupted by a signal.
+    /// Return true if readable, false if not readable, or not interrupted by a signal.
     pub fn poll(&self, wait: bool /* = false */) -> bool {
         let mut timeout = libc::timeval {
             tv_sec: 0,
@@ -165,7 +165,7 @@ impl FdEventSignaller {
         res > 0
     }
 
-    /// \return the fd to write to.
+    /// Return the fd to write to.
     fn write_fd(&self) -> RawFd {
         #[cfg(HAVE_EVENTFD)]
         return self.fd.as_raw_fd();

@@ -15,16 +15,16 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut opts: command_cmd_opts_t = Default::default();
 
     const shortopts: &wstr = L!(":hasqv");
-    const longopts: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("quiet"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("search"), woption_argument_t::no_argument, 's'),
+    const longopts: &[WOption] = &[
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("all"), ArgType::NoArgument, 'a'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("quiet"), ArgType::NoArgument, 'q'),
+        wopt(L!("search"), ArgType::NoArgument, 's'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(shortopts, longopts, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
             'q' => opts.quiet = true,
@@ -36,11 +36,11 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -56,7 +56,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     let mut res = false;
-    let optind = w.woptind;
+    let optind = w.wopt_index;
     for arg in argv.iter().take(argc).skip(optind) {
         let paths = if opts.all {
             path_get_paths(arg, parser.vars())

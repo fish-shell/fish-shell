@@ -30,7 +30,7 @@ bitflags! {
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Default, Eq, PartialEq)]
+    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
     pub struct ParserTestErrorBits: u8 {
         const ERROR = 1;
         const INCOMPLETE = 2;
@@ -164,7 +164,7 @@ impl SourceRange {
         }
     }
 
-    // \return true if a location is in this range, including one-past-the-end.
+    // Return true if a location is in this range, including one-past-the-end.
     pub fn contains_inclusive(&self, loc: usize) -> bool {
         self.start() <= loc && loc - self.start() <= self.length()
     }
@@ -442,9 +442,9 @@ pub const FISH_MAX_STACK_DEPTH: usize = 128;
 
 /// Maximum number of nested string substitutions (in lieu of evals)
 /// Reduced under TSAN: our CI test creates 500 jobs and this is very slow with TSAN.
-#[cfg(feature = "FISH_TSAN_WORKAROUNDS")]
+#[cfg(feature = "tsan")]
 pub const FISH_MAX_EVAL_DEPTH: usize = 250;
-#[cfg(not(feature = "FISH_TSAN_WORKAROUNDS"))]
+#[cfg(not(feature = "tsan"))]
 pub const FISH_MAX_EVAL_DEPTH: usize = 500;
 
 /// Error message on a function that calls itself immediately.

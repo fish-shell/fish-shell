@@ -12,7 +12,8 @@ use crate::parse_util::{
 };
 use crate::proc::is_interactive_session;
 use crate::reader::{
-    commandline_get_state, commandline_set_buffer, reader_handle_command, reader_queue_ch,
+    commandline_get_state, commandline_set_buffer, commandline_set_search_field,
+    reader_execute_readline_cmd,
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
@@ -59,6 +60,7 @@ fn replace_part(
     insert_mode: AppendMode,
     buff: &wstr,
     cursor_pos: usize,
+    search_field_mode: bool,
 ) {
     let mut out_pos = cursor_pos;
     let mut out = buff[..range.start].to_owned();
@@ -83,7 +85,11 @@ fn replace_part(
     }
 
     out.push_utfstr(&buff[range.end..]);
-    commandline_set_buffer(out, Some(out_pos));
+    if search_field_mode {
+        commandline_set_search_field(out, Some(out_pos));
+    } else {
+        commandline_set_buffer(out, Some(out_pos));
+    }
 }
 
 /// Output the specified selection.
@@ -175,7 +181,7 @@ fn write_part(
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
 pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    let rstate = commandline_get_state();
+    let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;
     let mut cut_at_cursor = false;
@@ -193,45 +199,43 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut search_mode = false;
     let mut paging_mode = false;
     let mut paging_full_mode = false;
+    let mut search_field_mode = false;
     let mut is_valid = false;
 
     let mut range = 0..0;
     let mut override_buffer = None;
 
     const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
-    let long_options: &[woption] = &[
-        wopt(L!("append"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("insert"), woption_argument_t::no_argument, 'i'),
-        wopt(L!("replace"), woption_argument_t::no_argument, 'r'),
-        wopt(L!("current-buffer"), woption_argument_t::no_argument, 'b'),
-        wopt(L!("current-job"), woption_argument_t::no_argument, 'j'),
-        wopt(L!("current-process"), woption_argument_t::no_argument, 'p'),
-        wopt(
-            L!("current-selection"),
-            woption_argument_t::no_argument,
-            's',
-        ),
-        wopt(L!("current-token"), woption_argument_t::no_argument, 't'),
-        wopt(L!("cut-at-cursor"), woption_argument_t::no_argument, 'c'),
-        wopt(L!("function"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("tokens-expanded"), woption_argument_t::no_argument, 'x'),
-        wopt(L!("tokens-raw"), woption_argument_t::no_argument, '\x02'),
-        wopt(L!("tokenize"), woption_argument_t::no_argument, 'o'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("input"), woption_argument_t::required_argument, 'I'),
-        wopt(L!("cursor"), woption_argument_t::no_argument, 'C'),
-        wopt(L!("selection-start"), woption_argument_t::no_argument, 'B'),
-        wopt(L!("selection-end"), woption_argument_t::no_argument, 'E'),
-        wopt(L!("line"), woption_argument_t::no_argument, 'L'),
-        wopt(L!("search-mode"), woption_argument_t::no_argument, 'S'),
-        wopt(L!("paging-mode"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("paging-full-mode"), woption_argument_t::no_argument, 'F'),
-        wopt(L!("is-valid"), woption_argument_t::no_argument, '\x01'),
+    let long_options: &[WOption] = &[
+        wopt(L!("append"), ArgType::NoArgument, 'a'),
+        wopt(L!("insert"), ArgType::NoArgument, 'i'),
+        wopt(L!("replace"), ArgType::NoArgument, 'r'),
+        wopt(L!("current-buffer"), ArgType::NoArgument, 'b'),
+        wopt(L!("current-job"), ArgType::NoArgument, 'j'),
+        wopt(L!("current-process"), ArgType::NoArgument, 'p'),
+        wopt(L!("current-selection"), ArgType::NoArgument, 's'),
+        wopt(L!("current-token"), ArgType::NoArgument, 't'),
+        wopt(L!("cut-at-cursor"), ArgType::NoArgument, 'c'),
+        wopt(L!("function"), ArgType::NoArgument, 'f'),
+        wopt(L!("tokens-expanded"), ArgType::NoArgument, 'x'),
+        wopt(L!("tokens-raw"), ArgType::NoArgument, '\x02'),
+        wopt(L!("tokenize"), ArgType::NoArgument, 'o'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("input"), ArgType::RequiredArgument, 'I'),
+        wopt(L!("cursor"), ArgType::NoArgument, 'C'),
+        wopt(L!("selection-start"), ArgType::NoArgument, 'B'),
+        wopt(L!("selection-end"), ArgType::NoArgument, 'E'),
+        wopt(L!("line"), ArgType::NoArgument, 'L'),
+        wopt(L!("search-mode"), ArgType::NoArgument, 'S'),
+        wopt(L!("paging-mode"), ArgType::NoArgument, 'P'),
+        wopt(L!("paging-full-mode"), ArgType::NoArgument, 'F'),
+        wopt(L!("search-field"), ArgType::NoArgument, '\x03'),
+        wopt(L!("is-valid"), ArgType::NoArgument, '\x01'),
     ];
 
-    let mut w = wgetopter_t::new(short_options, long_options, args);
+    let mut w = WGetopter::new(short_options, long_options, args);
     let cmd = w.argv[0];
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => append_mode = Some(AppendMode::Append),
             'b' => buffer_part = Some(TextScope::String),
@@ -271,26 +275,25 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             's' => selection_mode = true,
             'P' => paging_mode = true,
             'F' => paging_full_mode = true,
+            '\x03' => search_field_mode = true,
             '\x01' => is_valid = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => panic!(),
         }
     }
 
-    let positional_args = w.argv.len() - w.woptind;
-
-    let ld = parser.libdata();
+    let positional_args = w.argv.len() - w.wopt_index;
 
     if function_mode {
         // Check for invalid switch combinations.
@@ -316,7 +319,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         }
 
         type rl = ReadlineCmd;
-        for arg in &w.argv[w.woptind..] {
+        for arg in &w.argv[w.wopt_index..] {
             let Some(cmd) = input_function_get_code(arg) else {
                 streams
                     .err
@@ -327,23 +330,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
             if matches!(cmd, rl::RepaintMode | rl::ForceRepaint | rl::Repaint) {
-                if ld.pods.is_repaint {
+                if parser.libdata().pods.is_repaint {
                     continue;
                 }
             }
 
-            // HACK: Execute these right here and now so they can affect any insertions/changes
-            // made via bindings. The correct solution is to change all `commandline`
-            // insert/replace operations into readline functions with associated data, so that
-            // all queued `commandline` operations - including buffer modifications - are
-            // executed in order
-            match cmd {
-                rl::BeginUndoGroup | rl::EndUndoGroup => reader_handle_command(cmd),
-                _ => {
-                    // Inserts the readline function at the back of the queue.
-                    reader_queue_ch(CharEvent::from_readline(cmd));
-                }
-            }
+            // Inserts the readline function at the back of the queue.
+            reader_execute_readline_cmd(CharEvent::from_readline(cmd));
         }
 
         return STATUS_CMD_OK;
@@ -373,10 +366,10 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor)
+    if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor || search_field_mode)
         && (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode)
         // Special case - we allow to get/set cursor position relative to the process/job/token.
-        && (buffer_part.is_none() || !cursor_mode)
+        && ((buffer_part.is_none() && !search_field_mode) || !cursor_mode)
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -389,6 +382,12 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             cmd,
             "--cut-at-cursor and --tokens can not be used when setting the commandline"
         ));
+        builtin_print_error_trailer(parser, streams.err, cmd);
+        return STATUS_INVALID_ARGS;
+    }
+
+    if search_field_mode && buffer_part.is_some() {
+        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd,));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
@@ -412,7 +411,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if search_mode {
-        return if commandline_get_state().search_mode {
+        return if rstate.search_mode {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -420,7 +419,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if paging_mode {
-        return if commandline_get_state().pager_mode {
+        return if rstate.pager_mode {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -428,8 +427,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if paging_full_mode {
-        let state = commandline_get_state();
-        return if state.pager_mode && state.pager_fully_disclosed {
+        return if rstate.pager_mode && rstate.pager_fully_disclosed {
             STATUS_CMD_OK
         } else {
             STATUS_CMD_ERROR
@@ -459,11 +457,24 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let current_buffer;
     let current_cursor_pos;
     let transient;
-    if let Some(override_buffer) = &override_buffer {
+
+    if search_field_mode {
+        let Some((search_field_text, cursor_pos)) = rstate.search_field else {
+            return STATUS_CMD_ERROR;
+        };
+        transient = search_field_text;
+        current_buffer = &transient;
+        current_cursor_pos = cursor_pos;
+    } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if !ld.transient_commandlines.is_empty() && !cursor_mode {
-        transient = ld.transient_commandlines.last().unwrap().clone();
+    } else if !parser.libdata().transient_commandlines.is_empty() && !cursor_mode {
+        transient = parser
+            .libdata()
+            .transient_commandlines
+            .last()
+            .unwrap()
+            .clone();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
     } else if rstate.initialized {
@@ -499,24 +510,28 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         };
     }
 
-    match buffer_part {
-        TextScope::String => {
-            range = 0..current_buffer.len();
-        }
-        TextScope::Job => {
-            range = parse_util_job_extent(current_buffer, current_cursor_pos, None);
-        }
-        TextScope::Process => {
-            range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
-        }
-        TextScope::Token => {
-            parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+    if search_field_mode {
+        range = 0..current_buffer.len();
+    } else {
+        match buffer_part {
+            TextScope::String => {
+                range = 0..current_buffer.len();
+            }
+            TextScope::Job => {
+                range = parse_util_job_extent(current_buffer, current_cursor_pos, None);
+            }
+            TextScope::Process => {
+                range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
+            }
+            TextScope::Token => {
+                parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+            }
         }
     }
 
     if cursor_mode {
         if positional_args != 0 {
-            let arg = w.argv[w.woptind];
+            let arg = w.argv[w.wopt_index];
             let new_pos = match fish_wcstol(arg) {
                 Err(_) => {
                     streams
@@ -554,14 +569,22 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if positional_args == 1 {
         replace_part(
             range,
-            args[w.woptind],
+            args[w.wopt_index],
             append_mode,
             current_buffer,
             current_cursor_pos,
+            search_field_mode,
         );
     } else {
-        let sb = join_strings(&w.argv[w.woptind..], '\n');
-        replace_part(range, &sb, append_mode, current_buffer, current_cursor_pos);
+        let sb = join_strings(&w.argv[w.wopt_index..], '\n');
+        replace_part(
+            range,
+            &sb,
+            append_mode,
+            current_buffer,
+            current_cursor_pos,
+            search_field_mode,
+        );
     }
 
     STATUS_CMD_OK

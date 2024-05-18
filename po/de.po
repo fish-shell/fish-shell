@@ -24,7 +24,7 @@ msgstr "$%ls: Ursprünglich geerbt als |%ls|\n"
 
 #: src/builtins/set.rs:633
 msgid "$%ls: set in %ls scope, %ls,%ls with %d elements"
-msgstr "$%ls: Gesetzt als %ls,%ls mit %ls Elementen"
+msgstr "$%ls: Gesetzt in %ls Gültigkeit als %ls,%ls mit %d Elementen"
 
 #: src/parse_util.rs:1585
 msgid "$status is not valid as a command. See `help conditions`"

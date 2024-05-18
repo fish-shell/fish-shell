@@ -1,10 +1,8 @@
 use crate::common::CancelChecker;
 use crate::env::EnvDyn;
-use crate::env::{EnvStack, EnvStackRef, Environment};
+use crate::env::{EnvStack, Environment};
 use crate::parser::{Parser, ParserRef};
 use crate::proc::JobGroupRef;
-use once_cell::sync::Lazy;
-use std::sync::Arc;
 
 use crate::reader::read_generation_count;
 
@@ -47,8 +45,6 @@ pub struct OperationContext<'a> {
     pub cancel_checker: CancelChecker,
 }
 
-static nullenv: Lazy<EnvStackRef> = Lazy::new(|| Arc::pin(EnvStack::new()));
-
 impl<'a> OperationContext<'a> {
     pub fn vars(&self) -> &dyn Environment {
         match &self.vars {
@@ -58,15 +54,18 @@ impl<'a> OperationContext<'a> {
         }
     }
 
-    // \return an "empty" context which contains no variables, no parser, and never cancels.
+    // Return an "empty" context which contains no variables, no parser, and never cancels.
     pub fn empty() -> OperationContext<'static> {
-        OperationContext::background(&**nullenv, EXPANSION_LIMIT_DEFAULT)
+        use std::sync::OnceLock;
+        static NULL_ENV: OnceLock<EnvStack> = OnceLock::new();
+        let null_env = NULL_ENV.get_or_init(|| EnvStack::new());
+        OperationContext::background(null_env, EXPANSION_LIMIT_DEFAULT)
     }
 
-    // \return an operation context that contains only global variables, no parser, and never
+    // Return an operation context that contains only global variables, no parser, and never
     // cancels.
     pub fn globals() -> OperationContext<'static> {
-        OperationContext::background(&**EnvStack::globals(), EXPANSION_LIMIT_DEFAULT)
+        OperationContext::background(EnvStack::globals(), EXPANSION_LIMIT_DEFAULT)
     }
 
     /// Construct from a full set of properties.
@@ -136,13 +135,13 @@ impl<'a> OperationContext<'a> {
             Vars::TestOnly(parser, _) => parser,
         }
     }
-    // Invoke the cancel checker. \return if we should cancel.
+    // Invoke the cancel checker. Return if we should cancel.
     pub fn check_cancel(&self) -> bool {
         (self.cancel_checker)()
     }
 }
 
-/// \return an operation context for a background operation..
+/// Return an operation context for a background operation..
 /// Crucially the operation context itself does not contain a parser.
 /// It is the caller's responsibility to ensure the environment lives as long as the result.
 pub fn get_bg_context(env: &EnvDyn, generation_count: u32) -> OperationContext {

@@ -12,23 +12,30 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
-sendline("bind Undo undo; bind Redo redo")
+sendline("set -g fish_autosuggestion_enabled 0")
+sendline("bind U,n,d,o undo; bind R,e,d,o redo")
 expect_prompt()
 
 send("echo word")
 expect_str("echo word")
-expect_str("echo word")  # Not sure why we get this twice.
-
-# FIXME why does this only undo one character? It undoes the entire word when run interactively.
-send("Undo")
-expect_str("echo wor")
 
 send("Undo")
-expect_str("echo ")
+expect_str("echo")
 
-send("Redo")
-expect_str("echo wor")
-
-# FIXME see above.
-send("Redo")
+send("Redo\r")
 expect_str("echo word")
+
+sendline("bind x begin-undo-group 'commandline -i \"+ \"' 'commandline -i 3' end-undo-group")
+send("math 2 x\r")
+expect_prompt("5")
+
+send("math 4x")
+send("Undo1\r")
+expect_prompt("41")
+
+send("math 5 x")
+send("\x02") # c-b, moving before the 3
+send("Undo")
+send("Redo")
+send("9\r") # 5 + 93
+expect_prompt("98")

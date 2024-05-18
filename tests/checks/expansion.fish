@@ -82,7 +82,7 @@ expansion "$foo"
 expansion $foo
 expansion "prefix$foo"
 expansion prefix$foo
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
 #CHECK: 1 prefix
 #CHECK: 0
@@ -91,7 +91,7 @@ expansion "$$foo"
 expansion $$foo
 expansion "prefix$$foo"
 expansion prefix$$foo
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
 #CHECK: 1 prefix
 #CHECK: 0
@@ -101,8 +101,8 @@ expansion "$foo"
 expansion $foo
 expansion "prefix$foo"
 expansion prefix$foo
-#CHECK: 1 
-#CHECK: 1 
+#CHECK: 1
+#CHECK: 1
 #CHECK: 1 prefix
 #CHECK: 1 prefix
 
@@ -110,7 +110,7 @@ expansion "$$foo"
 expansion $$foo
 expansion "prefix$$foo"
 expansion prefix$$foo
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
 #CHECK: 1 prefix
 #CHECK: 0
@@ -121,7 +121,7 @@ expansion "$$foo"
 expansion $$foo
 expansion "prefix$$foo"
 expansion prefix$$foo
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
 #CHECK: 1 prefix
 #CHECK: 0
@@ -161,7 +161,7 @@ expansion prefix$$foo
 set -l fooer ''
 expansion $$foo
 expansion prefix$$foo
-#CHECK: 3 baz quux 
+#CHECK: 3 baz quux
 #CHECK: 3 prefixbaz prefixquux prefix
 
 # Slices
@@ -201,15 +201,15 @@ expansion "$foo[1 2]"
 expansion $foo[1 2]
 expansion "$foo[2 1]"
 expansion $foo[2 1]
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
-#CHECK: 1 
+#CHECK: 1
 #CHECK: 0
 set -l foo a b c
 expansion $foo[17]

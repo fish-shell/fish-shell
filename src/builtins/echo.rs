@@ -28,29 +28,29 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!("+:Eens");
-    const LONG_OPTS: &[woption] = &[];
+    const LONG_OPTS: &[WOption] = &[];
 
     let mut opts = Options::default();
 
     let mut oldopts = opts;
     let mut oldoptind = 0;
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => opts.print_newline = false,
             'e' => opts.interpret_special_chars = true,
             's' => opts.print_spaces = false,
             'E' => opts.interpret_special_chars = false,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                return Ok((oldopts, w.woptind - 1));
+                return Ok((oldopts, w.wopt_index - 1));
             }
             _ => {
-                panic!("unexpected retval from wgetopter::wgetopt_long()");
+                panic!("unexpected retval from WGetopter");
             }
         }
 
@@ -60,13 +60,13 @@ fn parse_options(
         // We need to keep it one out-of-date so we can ignore the *last* option.
         // (this might be an issue in wgetopt, but that's a whole other can of worms
         //  and really only occurs with our weird "put it back" option parsing)
-        if w.woptind == oldoptind + 2 {
+        if w.wopt_index == oldoptind + 2 {
             oldopts = opts;
-            oldoptind = w.woptind;
+            oldoptind = w.wopt_index;
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Parse a numeric escape sequence in `s`, returning the number of characters consumed and the

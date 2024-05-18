@@ -1,16 +1,15 @@
 //! Implemention of history files.
 
 use std::{
-    io::Write,
+    borrow::Cow,
+    fs::File,
+    io::{Read, Seek, SeekFrom, Write},
     ops::{Deref, DerefMut},
-    os::fd::RawFd,
+    os::fd::{AsRawFd, RawFd},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use libc::{
-    lseek, mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE, SEEK_END,
-    SEEK_SET,
-};
+use libc::{mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
@@ -117,28 +116,21 @@ pub struct HistoryFileContents {
 }
 
 impl HistoryFileContents {
-    /// Construct a history file contents from a file descriptor. The file descriptor is not closed.
-    pub fn create(fd: RawFd) -> Option<Self> {
+    /// Construct a history file contents from a File reference.
+    pub fn create(file: &mut File) -> Option<Self> {
         // Check that the file is seekable, and its size.
-        let len = unsafe { lseek(fd, 0, SEEK_END) };
-        let Ok(len) = usize::try_from(len) else {
-            return None;
-        };
+        let len: usize = file.seek(SeekFrom::End(0)).ok()?.try_into().ok()?;
         let mmap_file_directly = should_mmap();
         let mut region = if mmap_file_directly {
-            MmapRegion::map_file(fd, len)?
+            MmapRegion::map_file(file.as_raw_fd(), len)
         } else {
-            MmapRegion::map_anon(len)?
-        };
+            MmapRegion::map_anon(len)
+        }?;
 
         // If we mapped anonymous memory, we have to read from the file.
         if !mmap_file_directly {
-            if unsafe { lseek(fd, 0, SEEK_SET) } != 0 {
-                return None;
-            }
-            if read_from_fd(fd, region.as_mut()).is_err() {
-                return None;
-            }
+            file.seek(SeekFrom::Start(0)).ok()?;
+            read_zero_padded(&mut *file, region.as_mut()).ok()?;
         }
 
         region.try_into().ok()
@@ -228,14 +220,14 @@ fn should_mmap() -> bool {
 }
 
 /// Read from `fd` to fill `dest`, zeroing any unused space.
-fn read_from_fd(fd: RawFd, mut dest: &mut [u8]) -> nix::Result<()> {
+fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()> {
     while !dest.is_empty() {
-        match nix::unistd::read(fd, dest) {
+        match file.read(dest) {
             Ok(0) => break,
             Ok(amt) => {
                 dest = &mut dest[amt..];
             }
-            Err(nix::Error::EINTR) => continue,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
             Err(err) => return Err(err),
         }
     }
@@ -258,43 +250,64 @@ fn escape_yaml_fish_2_0(s: &mut Vec<u8>) {
     replace_all(s, b"\n", b"\\n"); // replace newline with backslash + literal n
 }
 
-/// This function is called frequently, so it ought to be fast.
-fn unescape_yaml_fish_2_0(s: &mut Vec<u8>) {
-    let mut cursor = 0;
-    while cursor < s.len() {
-        // Look for a backslash.
-        let Some(backslash) = s[cursor..].iter().position(|&c| c == b'\\') else {
-            // No more backslashes
-            break;
-        };
-
-        // Add back the start offset
-        let backslash = backslash + cursor;
-
-        // Backslash found. Maybe we'll do something about it.
-        let Some(escaped_char) = s.get(backslash + 1) else {
-            // Backslash was final character
-            break;
-        };
-
-        match escaped_char {
-            b'\\' => {
-                // Two backslashes in a row. Delete the second one.
-                s.remove(backslash + 1);
-            }
-            b'n' => {
-                // Backslash + n. Replace with a newline.
-                s.splice(backslash..(backslash + 2), [b'\n']);
-            }
-            _ => {
-                // Unknown backslash escape, keep as-is
-            }
-        };
-
-        // The character at index backslash has now been made whole; start at the next
-        // character.
-        cursor = backslash + 1;
+#[inline(always)]
+/// Unescapes the fish-specific yaml variant, if it requires it.
+fn maybe_unescape_yaml_fish_2_0(s: &[u8]) -> Cow<[u8]> {
+    // This is faster than s.contains(b'\\') and can be auto-vectorized to SIMD. See benchmark note
+    // on unescape_yaml_fish_2_0().
+    if !s
+        .into_iter()
+        .copied()
+        .fold(false, |acc, b| acc | (b == b'\\'))
+    {
+        return s.into();
     }
+    unescape_yaml_fish_2_0(s).into()
+}
+
+/// Unescapes the fish-specific yaml variant. Use [`maybe_unescape_yaml_fish_2_0()`] if you're not
+/// positive the input contains an escape.
+
+// This function is called on every input event and shows up heavily in all flamegraphs.
+// Various approaches were benchmarked against real-world fish-history files on lines with escapes,
+// and this implementation (chunk_loop_box) won out. Make changes with care!
+//
+// Benchmarks and code: https://github.com/mqudsi/fish-yaml-unescape-benchmark
+fn unescape_yaml_fish_2_0(s: &[u8]) -> Vec<u8> {
+    // Safety: we never read from this box; we only write to it then read what we've written.
+    // Rationale: This function is in a very hot loop and this benchmarks around 8% faster on
+    // real-world escaped yaml samples from the fish history file.
+    //
+    // This is a very long way around of writing `Box::new_uninit_slice(s.len())`, which
+    // requires the unstablized nightly-only feature new_unit (#63291). It optimizes away.
+    let mut result: Box<[u8]> = std::iter::repeat_with(std::mem::MaybeUninit::uninit)
+        .take(s.len())
+        .map(|b| unsafe { b.assume_init() })
+        .collect();
+    let mut chars = s.iter().copied();
+    let mut src_idx = 0;
+    let mut dst_idx = 0;
+    loop {
+        // While inspecting the asm reveals the compiler does not elide the bounds check from
+        // the writes to `result`, benchmarking shows that using `result.get_unchecked_mut()`
+        // everywhere does not result in a statistically significant improvement to the
+        // performance of this function.
+        let to_copy = chars.by_ref().take_while(|b| *b != b'\\').count();
+        result[dst_idx..][..to_copy].copy_from_slice(&s[src_idx..][..to_copy]);
+        dst_idx += to_copy;
+
+        match chars.next() {
+            Some(b'\\') => result[dst_idx] = b'\\',
+            Some(b'n') => result[dst_idx] = b'\n',
+            _ => break,
+        }
+        src_idx += to_copy + 2;
+        dst_idx += 1;
+    }
+
+    let mut result = Vec::from(result);
+    result.truncate(dst_idx);
+    result
 }
 
 /// Read one line, stripping off any newline, returning the number of bytes consumed.
@@ -321,18 +334,23 @@ fn trim_leading_spaces(s: &[u8]) -> (usize, &[u8]) {
     (count, &s[count..])
 }
 
-fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
+// This function is forcibly inlined because we sometimes call it but discard one of the return
+// values. Hopefully that will be sufficient for the compiler to skip the unnecessary call to
+// unescape_yaml_fish_2_0() for the discarded key.
+#[inline(always)]
+#[allow(clippy::type_complexity)]
+fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Cow<[u8]>, Cow<[u8]>)> {
     let mut split = line.splitn(2, |c| *c == b':');
     let key = split.next().unwrap();
     let value = split.next()?;
-    assert!(split.next().is_none());
+    debug_assert!(split.next().is_none());
 
-    let mut key = key.to_owned();
+    let key = maybe_unescape_yaml_fish_2_0(key);
+
     // Skip a space after the : if necessary.
-    let mut value = trim_start(value).to_owned();
+    let value = trim_start(value);
+    let value = maybe_unescape_yaml_fish_2_0(value);
 
-    unescape_yaml_fish_2_0(&mut key);
-    unescape_yaml_fish_2_0(&mut value);
     Some((key, value))
 }
 
@@ -340,11 +358,12 @@ fn extract_prefix_and_unescape_yaml(line: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
 fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (advance, line) = read_line(data);
     let line = trim_start(line);
-    let (key, value) = extract_prefix_and_unescape_yaml(line)?;
-
-    if key != b"- cmd" {
+    // Check this early *before* anything else.
+    if !line.starts_with(b"- cmd") {
         return None;
     }
+
+    let (_key, value) = extract_prefix_and_unescape_yaml(line)?;
 
     data = &data[advance..];
     let cmd = str2wcstring(&value);
@@ -369,7 +388,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
         // We are definitely going to consume this line.
         data = &data[advance..];
 
-        if key == b"when" {
+        if *key == *b"when" {
             // Parse an int from the timestamp. Should this fail, 0 is acceptable.
             when = time_from_seconds(
                 std::str::from_utf8(&value)
@@ -377,7 +396,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
                     .and_then(|s| s.parse().ok())
                     .unwrap_or(0),
             );
-        } else if key == b"paths" {
+        } else if *key == *b"paths" {
             // Read lines starting with " - " until we can't read any more.
             loop {
                 let (advance, line) = read_line(data);
@@ -393,8 +412,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
                 // We're going to consume this line.
                 data = &data[advance..];
 
-                let mut line = line.to_owned();
-                unescape_yaml_fish_2_0(&mut line);
+                let line = maybe_unescape_yaml_fish_2_0(&line);
                 paths.push(str2wcstring(&line));
             }
         }

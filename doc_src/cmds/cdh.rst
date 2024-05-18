@@ -15,7 +15,7 @@ Description
 
 ``cdh`` with no arguments presents a list of :ref:`recently visited directories <directory-history>`.
 You can then select one of the entries by letter or number.
-You can also press :kbd:`Tab` to use the completion pager to select an item from the list.
+You can also press :kbd:`tab` to use the completion pager to select an item from the list.
 If you give it a single argument it is equivalent to ``cd DIRECTORY``.
 
 Note that the ``cd`` command limits directory history to the 25 most recently visited directories.

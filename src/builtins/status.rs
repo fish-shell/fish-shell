@@ -141,32 +141,32 @@ const IS_INTERACTIVE_JOB_CTRL_SHORT: char = '\x03';
 const IS_NO_JOB_CTRL_SHORT: char = '\x04';
 
 const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("help"), no_argument, 'h'),
-    wopt(L!("current-filename"), no_argument, 'f'),
-    wopt(L!("current-line-number"), no_argument, 'n'),
-    wopt(L!("filename"), no_argument, 'f'),
-    wopt(L!("fish-path"), no_argument, FISH_PATH_SHORT),
-    wopt(L!("is-block"), no_argument, 'b'),
-    wopt(L!("is-command-substitution"), no_argument, 'c'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("help"), NoArgument, 'h'),
+    wopt(L!("current-filename"), NoArgument, 'f'),
+    wopt(L!("current-line-number"), NoArgument, 'n'),
+    wopt(L!("filename"), NoArgument, 'f'),
+    wopt(L!("fish-path"), NoArgument, FISH_PATH_SHORT),
+    wopt(L!("is-block"), NoArgument, 'b'),
+    wopt(L!("is-command-substitution"), NoArgument, 'c'),
     wopt(
         L!("is-full-job-control"),
-        no_argument,
+        NoArgument,
         IS_FULL_JOB_CTRL_SHORT,
     ),
-    wopt(L!("is-interactive"), no_argument, 'i'),
+    wopt(L!("is-interactive"), NoArgument, 'i'),
     wopt(
         L!("is-interactive-job-control"),
-        no_argument,
+        NoArgument,
         IS_INTERACTIVE_JOB_CTRL_SHORT,
     ),
-    wopt(L!("is-login"), no_argument, 'l'),
-    wopt(L!("is-no-job-control"), no_argument, IS_NO_JOB_CTRL_SHORT),
-    wopt(L!("job-control"), required_argument, 'j'),
-    wopt(L!("level"), required_argument, 'L'),
-    wopt(L!("line"), no_argument, 'n'),
-    wopt(L!("line-number"), no_argument, 'n'),
-    wopt(L!("print-stack-trace"), no_argument, 't'),
+    wopt(L!("is-login"), NoArgument, 'l'),
+    wopt(L!("is-no-job-control"), NoArgument, IS_NO_JOB_CTRL_SHORT),
+    wopt(L!("job-control"), RequiredArgument, 'j'),
+    wopt(L!("level"), RequiredArgument, 'L'),
+    wopt(L!("line"), NoArgument, 'n'),
+    wopt(L!("line-number"), NoArgument, 'n'),
+    wopt(L!("print-stack-trace"), NoArgument, 't'),
 ];
 
 /// Print the features and their values.
@@ -205,8 +205,8 @@ fn parse_cmd_opts(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             'L' => {
                 opts.level = {
@@ -281,18 +281,18 @@ fn parse_cmd_opts(
             }
             'h' => opts.print_help = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
 
     return STATUS_CMD_OK;
 }

@@ -18,6 +18,6 @@ complete -c rakudo -l repl-mode -x -d 'Specify the REPL mode' -a 'interactive\t"
 complete -c rakudo -l profile -r -d 'Write profile information to a file. Extension controls format'
 complete -c rakudo -l profile-compile -r -d 'Write compile-time profile information to a file. Extension controls format'
 complete -c rakudo -l profile-kind -x -d 'Choose the type of profile to generate' -a 'instrumented\t"Performance measurements" heap\t"Record heap snapshots at every garbage collection run"'
-complete -c rakudo -l profile-stage -f -d 'Write profile information for the given compilation stage to a file. Use --profile-compile to set name and format'
+complete -c rakudo -l profile-stage -f -d 'Write profile information for the given compilation stage to a file'
 complete -c rakudo -l debug-port -x -d 'Listen for incoming debugger connections'
 complete -c rakudo -l tracing -f -d 'Output a line to stderr on every interpreter instr, if enabled in MoarVM'

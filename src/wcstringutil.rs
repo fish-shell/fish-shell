@@ -73,7 +73,7 @@ pub fn subsequence_in_string(needle: &wstr, haystack: &wstr) -> bool {
 /// Case-insensitive string search, modeled after std::string::find().
 /// \param fuzzy indicates this is being used for fuzzy matching and case insensitivity is
 /// expanded to include symbolic characters (#3584).
-/// \return the offset of the first case-insensitive matching instance of `needle` within
+/// Return the offset of the first case-insensitive matching instance of `needle` within
 /// `haystack`, or `string::npos()` if no results were found.
 pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Option<usize> {
     if needle.is_empty() {
@@ -140,15 +140,15 @@ impl StringFuzzyMatch {
     pub fn exact_match() -> Self {
         Self::new(ContainType::exact, CaseFold::samecase)
     }
-    /// \return whether this is a samecase exact match.
+    /// Return whether this is a samecase exact match.
     pub fn is_samecase_exact(&self) -> bool {
         self.typ == ContainType::exact && self.case_fold == CaseFold::samecase
     }
-    /// \return if we are exact or prefix match.
+    /// Return if we are exact or prefix match.
     pub fn is_exact_or_prefix(&self) -> bool {
         matches!(self.typ, ContainType::exact | ContainType::prefix)
     }
-    // \return if our match requires a full replacement, i.e. is not a strict extension of our
+    // Return if our match requires a full replacement, i.e. is not a strict extension of our
     // existing string. This is false only if our case matches, and our type is prefix or exact.
     pub fn requires_full_replacement(&self) -> bool {
         if self.case_fold != CaseFold::samecase {
@@ -157,9 +157,9 @@ impl StringFuzzyMatch {
         matches!(self.typ, ContainType::substr | ContainType::subseq)
     }
 
-    /// Try creating a fuzzy match for \p string against \p match_against.
-    /// \p string is something like "foo" and \p match_against is like "FooBar".
-    /// If \p anchor_start is set, then only exact and prefix matches are permitted.
+    /// Try creating a fuzzy match for `string` against `match_against`.
+    /// `string` is something like "foo" and `match_against` is like "FooBar".
+    /// If `anchor_start` is set, then only exact and prefix matches are permitted.
     pub fn try_create(
         string: &wstr,
         match_against: &wstr,
@@ -272,9 +272,9 @@ pub fn string_fuzzy_match_string(
 }
 
 /// Implementation of wcs2string that accepts a callback.
-/// This invokes \p func with (const char*, size_t) pairs.
-/// If \p func returns false, it stops; otherwise it continues.
-/// \return false if the callback returned false, otherwise true.
+/// This invokes `func` with (const char*, size_t) pairs.
+/// If `func` returns false, it stops; otherwise it continues.
+/// Return false if the callback returned false, otherwise true.
 pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) -> bool {
     let mut state = zero_mbstate();
     let mut converted = [0_u8; AT_LEAST_MB_LEN_MAX];
@@ -330,10 +330,10 @@ pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
     val.split(sep).map(wstr::to_owned).collect()
 }
 
-/// Split a string by runs of any of the separator characters provided in \p seps.
-/// Note the delimiters are the characters in \p seps, not \p seps itself.
-/// \p seps may contain the NUL character.
-/// Do not output more than \p max_results results. If we are to output exactly that much,
+/// Split a string by runs of any of the separator characters provided in `seps`.
+/// Note the delimiters are the characters in `seps`, not `seps` itself.
+/// `seps` may contain the NUL character.
+/// Do not output more than `max_results` results. If we are to output exactly that much,
 /// the last output is the remainder of the input, including leading delimiters,
 /// except for the first. This is historical behavior.
 /// Example: split_string_tok(" a  b   c ", " ", 3) -> {"a", "b", "  c  "}
@@ -488,8 +488,8 @@ pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
     result.split_off(prefix)
 }
 
-/// \return the number of escaping backslashes before a character.
-/// \p idx may be "one past the end."
+/// Return the number of escaping backslashes before a character.
+/// `idx` may be "one past the end."
 pub fn count_preceding_backslashes(text: &wstr, idx: usize) -> usize {
     assert!(idx <= text.len(), "Out of bounds");
     text.chars()

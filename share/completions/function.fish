@@ -20,7 +20,9 @@ function __fish_complete_function_event_handlers
         fish_postexec "After executing an interactive command" \
         fish_exit "Right before fish exits" \
         fish_cancel "When commandline is cleared" \
-        fish_posterror "After executing command with syntax errors"
+        fish_posterror "After executing command with syntax errors" \
+        fish_focus_in "When fish's terminal gains focus" \
+        fish_focus_out "When fish's terminal loses focus"
 
     printf "%s\t%s\n" $handlers
 end

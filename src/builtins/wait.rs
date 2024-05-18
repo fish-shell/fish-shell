@@ -5,12 +5,12 @@ use crate::proc::{proc_wait_any, Job};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 
-/// \return true if we can wait on a job.
+/// Return true if we can wait on a job.
 fn can_wait_on_job(j: &Job) -> bool {
     j.is_constructed() && !j.is_foreground() && !j.is_stopped()
 }
 
-/// \return true if a wait handle matches a pid or a process name.
+/// Return true if a wait handle matches a pid or a process name.
 fn wait_handle_matches(query: WaitHandleQuery, wh: &WaitHandleRef) -> bool {
     match query {
         WaitHandleQuery::Pid(pid) => wh.pid == pid,
@@ -18,7 +18,7 @@ fn wait_handle_matches(query: WaitHandleQuery, wh: &WaitHandleRef) -> bool {
     }
 }
 
-/// \return true if all chars are numeric.
+/// Return true if all chars are numeric.
 fn iswnumeric(s: &wstr) -> bool {
     s.chars().all(|c| c.is_ascii_digit())
 }
@@ -30,8 +30,8 @@ enum WaitHandleQuery<'a> {
 }
 
 /// Walk the list of jobs, looking for a process with the given pid or proc name.
-/// Append all matching wait handles to \p handles.
-/// \return true if we found a matching job (even if not waitable), false if not.
+/// Append all matching wait handles to `handles`.
+/// Return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
     parser: &Parser,
@@ -92,8 +92,8 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 }
 
 /// Wait for the given wait handles to be marked as completed.
-/// If \p any_flag is set, wait for the first one; otherwise wait for all.
-/// \return a status code.
+/// If `any_flag` is set, wait for the first one; otherwise wait for all.
+/// Return a status code.
 fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> Option<c_int> {
     if whs.is_empty() {
         return Some(0);
@@ -134,13 +134,13 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let print_hints = false;
 
     const shortopts: &wstr = L!(":nh");
-    const longopts: &[woption] = &[
-        wopt(L!("any"), woption_argument_t::no_argument, 'n'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    const longopts: &[WOption] = &[
+        wopt(L!("any"), ArgType::NoArgument, 'n'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
-    let mut w = wgetopter_t::new(shortopts, longopts, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(shortopts, longopts, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => {
                 any_flag = true;
@@ -149,11 +149,11 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -167,7 +167,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         return STATUS_CMD_OK;
     }
 
-    if w.woptind == argc {
+    if w.wopt_index == argc {
         // No jobs specified.
         // Note this may succeed with an empty wait list.
         return wait_for_completion(parser, &get_all_wait_handles(parser), any_flag);
@@ -175,7 +175,7 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
 
     // Get the list of wait handles for our waiting.
     let mut wait_handles: Vec<WaitHandleRef> = Vec::new();
-    let optind = w.woptind;
+    let optind = w.wopt_index;
     for item in &argv[optind..argc] {
         if iswnumeric(item) {
             // argument is pid

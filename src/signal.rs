@@ -2,6 +2,7 @@ use std::num::NonZeroI32;
 
 use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
 use crate::event::{enqueue_signal, is_signal_observed};
+use crate::input_common::terminal_protocols_try_disable_ifn;
 use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup};
 use crate::termsize::TermsizeContainer;
@@ -17,7 +18,7 @@ static MAIN_PID: AtomicI32 = AtomicI32::new(0);
 /// It's possible that we receive a signal after we have forked, but before we have reset the signal
 /// handlers (or even run the pthread_atfork calls). In that event we will do something dumb like
 /// swallow SIGINT. Ensure that doesn't happen. Check if we are the main fish process; if not, reset
-/// and re-raise the signal. \return whether we re-raised the signal.
+/// and re-raise the signal. Return whether we re-raised the signal.
 fn reraise_if_forked_child(sig: i32) -> bool {
     // Don't use is_forked_child: it relies on atfork handlers which may have not yet run.
     if getpid() == MAIN_PID.load(Ordering::Relaxed) {
@@ -42,7 +43,7 @@ pub fn signal_clear_cancel() {
     CANCELLATION_SIGNAL.store(0, Ordering::Relaxed);
 }
 
-/// \return the most recent cancellation signal received by the fish process.
+/// Return the most recent cancellation signal received by the fish process.
 /// Currently only SIGINT is considered a cancellation signal.
 /// This is thread safe.
 pub fn signal_check_cancel() -> i32 {
@@ -88,6 +89,7 @@ extern "C" fn fish_signal_handler(
             // Handle sigterm. The only thing we do is restore the front process ID, then die.
             if !observed {
                 restore_term_foreground_process_group_for_exit();
+                terminal_protocols_try_disable_ifn();
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {
                     libc::signal(libc::SIGTERM, libc::SIG_DFL);
@@ -226,7 +228,7 @@ pub fn signal_set_handlers(interactive: bool) {
         set_interactive_handlers();
     }
 
-    if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+    if cfg!(feature = "tsan") {
         // Work around the following TSAN bug:
         // The structure containing signal information for a thread is lazily allocated by TSAN.
         // It is possible for the same thread to receive two allocations, if the signal handler

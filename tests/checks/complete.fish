@@ -10,7 +10,7 @@ complete -c complete_test_alpha3 --no-files -w 'complete_test_alpha2 extra2'
 complete -C'complete_test_alpha1 arg1 '
 # CHECK: complete_test_alpha1 arg1
 complete --escape -C'complete_test_alpha1 arg1 '
-# CHECK: complete_test_alpha1\ arg1\
+# CHECK: 'complete_test_alpha1 arg1 '
 complete -C'complete_test_alpha2 arg2 '
 # CHECK: complete_test_alpha1 extra1 arg2
 complete -C'complete_test_alpha3 arg3 '
@@ -62,7 +62,7 @@ complete
 # CHECK: complete --force-files t -l fileoption
 # CHECK: complete --no-files t -a '(t)'
 # CHECK: complete -p '/complete test/beta1' -s Z -d 'desc, desc'
-# CHECK: complete --require-parameter 'complete test beta2' -d desc\ \'\ desc2\ \[ -a 'foo bar'
+# CHECK: complete --require-parameter 'complete test beta2' -d "desc ' desc2 [" -a 'foo bar'
 # CHECK: complete --exclusive complete_test_beta2 -o test -n false
 # CHECK: complete {{.*}}
 # CHECK: complete {{.*}}

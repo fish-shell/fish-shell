@@ -13,11 +13,11 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 
 
 def expect_read_prompt():
-    expect_re("\r\n?read> $")
+    expect_re(r"\r\n?read> .*$")
 
 
 def expect_marker(text):
-    expect_prompt("\r\n@MARKER:" + str(text) + "@\\r\\n")
+    expect_prompt("\r\n.*@MARKER:" + str(text) + "@\\r\\n")
 
 
 def print_var_contents(varname, expected):
@@ -56,12 +56,12 @@ print_var_contents("foo", "bar")
 
 # read -c (see #8633)
 sendline(r"read -c init_text somevar && echo $somevar")
-expect_re("\r\n?read> init_text$")
+expect_re(r"\r\n?read> init_text$")
 sendline("someval")
 expect_prompt("someval\r\n")
 
 sendline(r"read --command='some other text' somevar && echo $somevar")
-expect_re("\r\n?read> some other text$")
+expect_re(r"\r\n?read> some other text$")
 sendline("another value")
 expect_prompt("another value\r\n")
 

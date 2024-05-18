@@ -47,7 +47,7 @@ impl<Iter: Iterator<Item = char>> CharsIterator<Iter> {
     }
 }
 
-/// Parse the given \p src as an integer.
+/// Parse the given `src` as an integer.
 /// If mradix is not None, it is used as the radix; otherwise the radix is inferred:
 ///   - Leading 0x or 0X means 16.
 ///   - Leading 0 means 8.

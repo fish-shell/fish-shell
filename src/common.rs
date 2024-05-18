@@ -8,7 +8,9 @@ use crate::fallback::fish_wcwidth;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
+use crate::key;
 use crate::libc::MB_CUR_MAX;
+use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
 use crate::wcstringutil::wcs2string_callback;
@@ -117,6 +119,10 @@ bitflags! {
         const NO_TILDE = 1 << 2;
         /// Replace non-printable control characters with Unicode symbols.
         const SYMBOLIC = 1 << 3;
+        /// Escape : and =
+        const SEPARATORS = 1 << 4;
+        /// Escape ,
+        const COMMA = 1 << 5;
     }
 }
 
@@ -177,6 +183,8 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 /// Escape a string in a fashion suitable for using in fish script.
 fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
+    let escape_separators = flags.contains(EscapeFlags::SEPARATORS);
+    let escape_comma = flags.contains(EscapeFlags::COMMA);
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
     let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
     let no_qmark = feature_test(FeatureFlag::qmark_noglob);
@@ -189,6 +197,9 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
 
     let mut need_escape = false;
     let mut need_complex_escape = false;
+    let mut double_quotes = 0;
+    let mut single_quotes = 0;
+    let mut dollars = 0;
 
     if !no_quoted && input.is_empty() {
         return L!("''").to_owned();
@@ -266,7 +277,9 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
             }
             '\\' | '\'' => {
                 need_escape = true;
-                need_complex_escape = true;
+                if c == '\'' {
+                    single_quotes += 1;
+                }
                 if escape_printables || (c == '\\' && !symbolic) {
                     out.push('\\');
                 }
@@ -282,9 +295,29 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
             ANY_STRING_RECURSIVE => {
                 out += L!("**");
             }
+            ':' | '=' => {
+                if escape_separators {
+                    need_escape = true;
+                    out.push('\\');
+                }
+                out.push(c);
+            }
+            ',' => {
+                if escape_comma {
+                    need_escape = true;
+                    out.push('\\');
+                }
+                out.push(c);
+            }
 
             '&' | '$' | ' ' | '#' | '<' | '>' | '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*'
             | '|' | ';' | '"' | '%' | '~' => {
+                if c == '"' {
+                    double_quotes += 1;
+                }
+                if c == '$' {
+                    dollars += 1;
+                }
                 let char_is_normal = (c == '~' && no_tilde) || (c == '?' && no_qmark);
                 if !char_is_normal {
                     need_escape = true;
@@ -294,44 +327,49 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
                 }
                 out.push(c);
             }
-            _ => {
+            '\x00'..='\x19' => {
                 let cval = u32::from(c);
-                if cval < 32 {
-                    need_escape = true;
-                    need_complex_escape = true;
+                need_escape = true;
+                need_complex_escape = true;
 
-                    if symbolic {
-                        out.push(char::from_u32(0x2400 + cval).unwrap());
-                        continue;
-                    }
-
-                    if cval < 27 && cval != 0 {
-                        out.push('\\');
-                        out.push('c');
-                        out.push(char::from_u32(u32::from(b'a') + cval - 1).unwrap());
-                        continue;
-                    }
-
-                    let nibble = cval % 16;
-                    out.push('\\');
-                    out.push('x');
-                    out.push(if cval > 15 { '1' } else { '0' });
-                    out.push(char::from_digit(nibble, 16).unwrap());
-                } else {
-                    out.push(c);
+                if symbolic {
+                    out.push(char::from_u32(0x2400 + cval).unwrap());
+                    continue;
                 }
+
+                if cval < 27 && cval != 0 {
+                    out.push('\\');
+                    out.push('c');
+                    out.push(char::from_u32(u32::from(b'a') + cval - 1).unwrap());
+                    continue;
+                }
+
+                let nibble = cval % 16;
+                out.push('\\');
+                out.push('x');
+                out.push(if cval > 15 { '1' } else { '0' });
+                out.push(char::from_digit(nibble, 16).unwrap());
             }
+            _ => out.push(c),
         }
     }
 
     // Use quoted escaping if possible, since most people find it easier to read.
     if !no_quoted && need_escape && !need_complex_escape && escape_printables {
-        let single_quote = '\'';
+        let quote = if single_quotes > double_quotes + dollars {
+            '"'
+        } else {
+            '\''
+        };
         out.clear();
         out.reserve(2 + input.len());
-        out.push(single_quote);
-        out.push_utfstr(input);
-        out.push(single_quote);
+        out.push(quote);
+        out.push_utfstr(&parse_util_escape_string_with_quote(
+            input,
+            Some(quote),
+            EscapeFlags::empty(),
+        ));
+        out.push(quote);
     }
 
     out
@@ -1058,7 +1096,7 @@ pub static EMPTY_STRING: WString = WString::new();
 pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
 
 /// A function type to check for cancellation.
-/// \return true if execution should cancel.
+/// Return true if execution should cancel.
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")
 pub type CancelChecker = Box<dyn Fn() -> bool>;
 
@@ -1194,24 +1232,33 @@ pub fn wcs2osstring(input: &wstr) -> OsString {
 }
 
 /// Same as [`wcs2string`]. Meant to be used when we need a zero-terminated string to feed legacy APIs.
+/// Note: if `input` contains any interior NUL bytes, the result will be truncated at the first!
 pub fn wcs2zstring(input: &wstr) -> CString {
     if input.is_empty() {
         return CString::default();
     }
 
-    let mut result = vec![];
+    let mut vec = Vec::with_capacity(input.len() + 1);
     wcs2string_callback(input, |buff| {
-        result.extend_from_slice(buff);
+        vec.extend_from_slice(buff);
         true
     });
-    let until_nul = match result.iter().position(|c| *c == b'\0') {
-        Some(pos) => &result[..pos],
-        None => &result[..],
-    };
-    CString::new(until_nul).unwrap()
+    vec.push(b'\0');
+
+    match CString::from_vec_with_nul(vec) {
+        Ok(cstr) => cstr,
+        Err(err) => {
+            // `input` contained a NUL in the middle; we can retrieve `vec`, though
+            let mut vec = err.into_bytes();
+            let pos = vec.iter().position(|c| *c == b'\0').unwrap();
+            vec.truncate(pos + 1);
+            // Safety: We truncated after the first NUL
+            unsafe { CString::from_vec_with_nul_unchecked(vec) }
+        }
+    }
 }
 
-/// Like wcs2string, but appends to \p receiver instead of returning a new string.
+/// Like wcs2string, but appends to `receiver` instead of returning a new string.
 pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
     output.reserve(input.len());
     wcs2string_callback(input, |buff| {
@@ -1220,7 +1267,7 @@ pub fn wcs2string_appending(output: &mut Vec<u8>, input: &wstr) {
     });
 }
 
-/// \return the count of initial characters in \p in which are ASCII.
+/// Return the count of initial characters in `in` which are ASCII.
 fn count_ascii_prefix(inp: &[u8]) -> usize {
     // The C++ version had manual vectorization.
     inp.iter().take_while(|c| c.is_ascii()).count()
@@ -1254,7 +1301,7 @@ pub fn format_size(mut sz: i64) -> WString {
             if sz < (1024 * 1024) || i == sz_names.len() - 1 {
                 let isz = sz / 1024;
                 if isz > 9 {
-                    result += &sprintf!("%ld%ls", isz, *sz_name)[..];
+                    result += &sprintf!("%lld%ls", isz, *sz_name)[..];
                 } else {
                     result += &sprintf!("%.1f%ls", sz as f64 / 1024.0, *sz_name)[..];
                 }
@@ -1451,7 +1498,7 @@ fn can_be_encoded(wc: char) -> bool {
 }
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
-/// \return the number of bytes read, or 0 on EOF, or an error.
+/// Return the number of bytes read, or 0 on EOF, or an error.
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
         let res = nix::unistd::read(fd, buf);
@@ -1515,7 +1562,7 @@ pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize>
     }
 }
 
-/// Write the given paragraph of output, redoing linebreaks to fit \p termsize.
+/// Write the given paragraph of output, redoing linebreaks to fit `termsize`.
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();
 
@@ -1672,10 +1719,10 @@ pub fn is_windows_subsystem_for_linux() -> bool {
 
         let release: Vec<_> = release
             .iter()
-            .skip_while(|c| **c != b'-')
+            .copied()
+            .skip_while(|c| *c != b'-')
             .skip(1) // the dash itself
             .take_while(|c| c.is_ascii_digit())
-            .copied()
             .collect();
         let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
         match build {
@@ -1719,7 +1766,7 @@ pub fn is_windows_subsystem_for_linux() -> bool {
 // TODO: Actually implement the replacement as documented above.
 pub fn fish_reserved_codepoint(c: char) -> bool {
     (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
-        || (c >= ENCODE_DIRECT_BASE && c < ENCODE_DIRECT_END)
+        || (c >= key::Backspace && c < ENCODE_DIRECT_END)
 }
 
 pub fn redirect_tty_output() {
@@ -2010,8 +2057,8 @@ pub trait Named {
     fn name(&self) -> &'static wstr;
 }
 
-/// \return a pointer to the first entry with the given name, assuming the entries are sorted by
-/// name. \return nullptr if not found.
+/// Return a pointer to the first entry with the given name, assuming the entries are sorted by
+/// name. Return nullptr if not found.
 pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&'static T> {
     match vals.binary_search_by_key(&name, |val| val.name()) {
         Ok(index) => Some(&vals[index]),

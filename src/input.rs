@@ -1,11 +1,12 @@
-use crate::common::{get_by_sorted_name, shell_modes, str2wcstring, Named};
+use crate::common::{escape, get_by_sorted_name, shell_modes, str2wcstring, Named};
 use crate::curses;
-use crate::env::{EnvMode, Environment, CURSES_INITIALIZED};
+use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
-    CharEvent, CharEventType, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
 };
+use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::parser::Parser;
 use crate::proc::job_reap;
 use crate::reader::{
@@ -15,14 +16,13 @@ use crate::signal::signal_clear_cancel;
 use crate::threads::assert_is_main_thread;
 use crate::wchar::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
-use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::os::fd::RawFd;
 use std::rc::Rc;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
-    Arc, Mutex, MutexGuard,
+    Mutex, MutexGuard,
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
@@ -33,15 +33,22 @@ pub const NUL_MAPPING_NAME: &wstr = L!("nul");
 
 #[derive(Debug, Clone)]
 pub struct InputMappingName {
-    pub seq: WString,
+    pub seq: Vec<Key>,
     pub mode: WString,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum KeyNameStyle {
+    Plain,
+    RawEscapeSequence,
+    Terminfo(WString),
 }
 
 /// Struct representing a keybinding. Returned by input_get_mappings.
 #[derive(Debug, Clone)]
 struct InputMapping {
     /// Character sequence which generates this event.
-    seq: WString,
+    seq: Vec<Key>,
     /// Commands that should be evaluated by this mapping.
     commands: Vec<WString>,
     /// We wish to preserve the user-specified order. This is just an incrementing value.
@@ -50,15 +57,18 @@ struct InputMapping {
     mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
     sets_mode: Option<WString>,
+    /// Perhaps this binding was created using a raw escape sequence or terminfo.
+    key_name_style: KeyNameStyle,
 }
 
 impl InputMapping {
     /// Create a new mapping.
     fn new(
-        seq: WString,
+        seq: Vec<Key>,
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
+        key_name_style: KeyNameStyle,
     ) -> InputMapping {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
@@ -72,10 +82,11 @@ impl InputMapping {
             specification_order,
             mode,
             sets_mode,
+            key_name_style,
         }
     }
 
-    /// \return true if this is a generic mapping, i.e. acts as a fallback.
+    /// Return true if this is a generic mapping, i.e. acts as a fallback.
     fn is_generic(&self) -> bool {
         self.seq.is_empty()
     }
@@ -115,10 +126,13 @@ const fn make_md(name: &'static wstr, code: ReadlineCmd) -> InputFunctionMetadat
 const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     // NULL makes it unusable - this is specially inserted when we detect mouse input
     make_md(L!(""), ReadlineCmd::DisableMouseTracking),
+    make_md(L!(""), ReadlineCmd::FocusIn),
+    make_md(L!(""), ReadlineCmd::FocusOut),
     make_md(L!("accept-autosuggestion"), ReadlineCmd::AcceptAutosuggestion),
     make_md(L!("and"), ReadlineCmd::FuncAnd),
     make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
     make_md(L!("backward-char"), ReadlineCmd::BackwardChar),
+    make_md(L!("backward-char-passive"), ReadlineCmd::BackwardCharPassive),
     make_md(L!("backward-delete-char"), ReadlineCmd::BackwardDeleteChar),
     make_md(L!("backward-jump"), ReadlineCmd::BackwardJump),
     make_md(L!("backward-jump-till"), ReadlineCmd::BackwardJumpTill),
@@ -153,6 +167,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("force-repaint"), ReadlineCmd::ForceRepaint),
     make_md(L!("forward-bigword"), ReadlineCmd::ForwardBigword),
     make_md(L!("forward-char"), ReadlineCmd::ForwardChar),
+    make_md(L!("forward-char-passive"), ReadlineCmd::ForwardCharPassive),
     make_md(L!("forward-jump"), ReadlineCmd::ForwardJump),
     make_md(L!("forward-jump-till"), ReadlineCmd::ForwardJumpTill),
     make_md(L!("forward-single-char"), ReadlineCmd::ForwardSingleChar),
@@ -225,7 +240,6 @@ pub fn describe_char(c: i32) -> WString {
 pub struct InputMappingSet {
     mapping_list: Vec<InputMapping>,
     preset_mapping_list: Vec<InputMapping>,
-    all_mappings_cache: RefCell<Option<Arc<Box<[InputMapping]>>>>,
 }
 
 /// Access the singleton input mapping set.
@@ -244,17 +258,6 @@ fn input_get_bind_mode(vars: &dyn Environment) -> WString {
         mode.as_string()
     } else {
         DEFAULT_BIND_MODE.to_owned()
-    }
-}
-
-/// Set the current bind mode.
-fn input_set_bind_mode(parser: &Parser, bm: &wstr) {
-    // Only set this if it differs to not execute variable handlers all the time.
-    // modes may not be empty - empty is a sentinel value meaning to not change the mode
-    assert!(!bm.is_empty());
-    if input_get_bind_mode(parser.vars()) != bm {
-        // Must send events here - see #6653.
-        parser.set_var_and_fire(FISH_BIND_MODE_VAR, EnvMode::GLOBAL, vec![bm.to_owned()]);
     }
 }
 
@@ -283,15 +286,13 @@ impl InputMappingSet {
     /// Adds an input mapping.
     pub fn add(
         &mut self,
-        sequence: WString,
+        sequence: Vec<Key>,
+        key_name_style: KeyNameStyle,
         commands: Vec<WString>,
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
     ) {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
         // Update any existing mapping with this sequence.
         // FIXME: this makes adding multiple bindings quadratic.
         let ml = if user {
@@ -308,20 +309,28 @@ impl InputMappingSet {
         }
 
         // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode);
+        let new_mapping = InputMapping::new(sequence, commands, mode, sets_mode, key_name_style);
         input_mapping_insert_sorted(ml, new_mapping);
     }
 
     // Like add(), but takes a single command.
     pub fn add1(
         &mut self,
-        sequence: WString,
+        sequence: Vec<Key>,
+        key_name_style: KeyNameStyle,
         command: WString,
         mode: WString,
         sets_mode: Option<WString>,
         user: bool,
     ) {
-        self.add(sequence, vec![command], mode, sets_mode, user);
+        self.add(
+            sequence,
+            key_name_style,
+            vec![command],
+            mode,
+            sets_mode,
+            user,
+        );
     }
 }
 
@@ -339,35 +348,48 @@ pub fn init_input() {
     // If we have no keybindings, add a few simple defaults.
     if input_mapping.preset_mapping_list.is_empty() {
         // Helper for adding.
-        let mut add = |seq: &str, cmd: &str| {
+        let mut add = |key: Vec<Key>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(seq.into(), cmd.into(), mode, sets_mode, false);
+            input_mapping.add1(key, KeyNameStyle::Plain, cmd.into(), mode, sets_mode, false);
         };
 
-        add("", "self-insert");
-        add("\n", "execute");
-        add("\r", "execute");
-        add("\t", "complete");
-        add("\x03", "cancel-commandline");
-        add("\x04", "exit");
-        add("\x05", "bind");
-        // ctrl-s
-        add("\x13", "pager-toggle-search");
-        // ctrl-u
-        add("\x15", "backward-kill-line");
-        // del/backspace
-        add("\x7f", "backward-delete-char");
+        add(vec![], "self-insert");
+        add(vec![Key::from_raw(key::Enter)], "execute");
+        add(vec![Key::from_raw(key::Tab)], "complete");
+        add(vec![ctrl('c')], "cancel-commandline");
+        add(vec![ctrl('d')], "exit");
+        add(vec![ctrl('e')], "bind");
+        add(vec![ctrl('s')], "pager-toggle-search");
+        add(vec![ctrl('u')], "backward-kill-line");
+        add(vec![Key::from_raw(key::Backspace)], "backward-delete-char");
         // Arrows - can't have functions, so *-or-search isn't available.
-        add("\x1B[A", "up-line");
-        add("\x1B[B", "down-line");
-        add("\x1B[C", "forward-char");
-        add("\x1B[D", "backward-char");
-        // emacs-style ctrl-p/n/b/f
-        add("\x10", "up-line");
-        add("\x0e", "down-line");
-        add("\x02", "backward-char");
-        add("\x06", "forward-char");
+        add(vec![Key::from_raw(key::Up)], "up-line");
+        add(vec![Key::from_raw(key::Down)], "down-line");
+        add(vec![Key::from_raw(key::Right)], "forward-char");
+        add(vec![Key::from_raw(key::Left)], "backward-char");
+        // Emacs style
+        add(vec![ctrl('p')], "up-line");
+        add(vec![ctrl('n')], "down-line");
+        add(vec![ctrl('b')], "backward-char");
+        add(vec![ctrl('f')], "forward-char");
+
+        let mut add_raw = |escape_sequence: &str, cmd: &str| {
+            let mode = DEFAULT_BIND_MODE.to_owned();
+            let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
+            input_mapping.add1(
+                canonicalize_raw_escapes(escape_sequence.chars().map(Key::from_raw).collect()),
+                KeyNameStyle::RawEscapeSequence,
+                cmd.into(),
+                mode,
+                sets_mode,
+                false,
+            );
+        };
+        add_raw("\x1B[A", "up-line");
+        add_raw("\x1B[B", "down-line");
+        add_raw("\x1B[C", "forward-char");
+        add_raw("\x1B[D", "backward-char");
     }
 }
 
@@ -379,6 +401,7 @@ pub type CommandHandler<'a> = dyn FnMut(&[WString]) + 'a;
 pub struct Inputter {
     in_fd: RawFd,
     queue: VecDeque<CharEvent>,
+    paste_buffer: Option<Vec<u8>>,
     // We need a parser to evaluate bindings.
     parser: Rc<Parser>,
     input_function_args: Vec<char>,
@@ -426,7 +449,7 @@ impl InputEventQueuer for Inputter {
         if reader_reading_interrupted() != 0 {
             let vintr = shell_modes().c_cc[libc::VINTR];
             if vintr != 0 {
-                self.push_front(CharEvent::from_char(vintr.into()));
+                self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));
             }
             return;
         }
@@ -436,6 +459,27 @@ impl InputEventQueuer for Inputter {
     fn uvar_change_notified(&mut self) {
         self.parser.sync_uvars_and_fire(true /* always */);
     }
+
+    fn paste_start_buffering(&mut self) {
+        self.paste_buffer = Some(vec![]);
+        self.push_front(CharEvent::from_readline(ReadlineCmd::BeginUndoGroup));
+    }
+    fn paste_is_buffering(&self) -> bool {
+        self.paste_buffer.is_some()
+    }
+    fn paste_commit(&mut self) {
+        self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
+        let Some(buffer) = self.paste_buffer.take() else {
+            return;
+        };
+        self.push_front(CharEvent::Command(sprintf!(
+            "__fish_paste %s",
+            escape(&str2wcstring(&buffer))
+        )));
+    }
+    fn paste_push_char(&mut self, b: u8) {
+        self.paste_buffer.as_mut().unwrap().push(b)
+    }
 }
 
 impl Inputter {
@@ -444,6 +488,7 @@ impl Inputter {
         Inputter {
             in_fd,
             queue: VecDeque::new(),
+            paste_buffer: None,
             parser,
             input_function_args: Vec::new(),
             function_status: false,
@@ -473,9 +518,12 @@ impl Inputter {
             let arg: char;
             loop {
                 let evt = self.readch();
-                if evt.is_char() {
-                    arg = evt.get_char();
-                    break;
+                if let Some(kevt) = evt.get_key() {
+                    if let Some(c) = kevt.key.codepoint_text() {
+                        // TODO forward the whole key
+                        arg = c;
+                        break;
+                    }
                 }
                 skipped.push(evt);
             }
@@ -488,79 +536,48 @@ impl Inputter {
         self.event_storage.clear();
     }
 
-    /// Perform the action of the specified binding. allow_commands controls whether fish commands
-    /// should be executed, or should be deferred until later.
-    fn mapping_execute(
-        &mut self,
-        m: &InputMapping,
-        command_handler: &mut Option<&mut CommandHandler>,
-    ) {
-        // has_functions: there are functions that need to be put on the input queue
-        // has_commands: there are shell commands that need to be evaluated
-        let mut has_commands = false;
-        let mut has_functions = false;
-        for cmd in &m.commands {
-            if input_function_get_code(cmd).is_some() {
-                has_functions = true;
-            } else {
-                has_commands = true;
-            }
-            if has_functions && has_commands {
-                break;
-            }
+    /// Perform the action of the specified binding.
+    fn mapping_execute(&mut self, m: &InputMapping) {
+        let has_command = m
+            .commands
+            .iter()
+            .any(|cmd| input_function_get_code(cmd).is_none());
+        if has_command {
+            self.push_front(CharEvent::from_check_exit());
         }
-
-        // !has_functions && !has_commands: only set bind mode
-        if !has_commands && !has_functions {
-            if let Some(sets_mode) = m.sets_mode.as_ref() {
-                input_set_bind_mode(&self.parser, sets_mode);
-            }
-            return;
-        }
-
-        if has_commands && command_handler.is_none() {
-            // We don't want to run commands yet. Put the characters back and return check_exit.
-            self.insert_front(m.seq.chars().map(CharEvent::from_char));
-            self.push_front(CharEvent::from_check_exit());
-            return; // skip the input_set_bind_mode
-        } else if has_functions && !has_commands {
-            // Functions are added at the head of the input queue.
-            for cmd in m.commands.iter().rev() {
-                let code = input_function_get_code(cmd).unwrap();
-                self.function_push_args(code);
-                self.push_front(CharEvent::from_readline_seq(code, m.seq.clone()));
-            }
-        } else if has_commands && !has_functions {
-            // Execute all commands.
-            //
-            // FIXME(snnw): if commands add stuff to input queue (e.g. commandline -f execute), we won't
-            // see that until all other commands have also been run.
-            let command_handler = command_handler.as_mut().unwrap();
-            command_handler(&m.commands);
-            self.push_front(CharEvent::from_check_exit());
-        } else {
-            // Invalid binding, mixed commands and functions.  We would need to execute these one by
-            // one.
-            self.push_front(CharEvent::from_check_exit());
+        for cmd in m.commands.iter().rev() {
+            let evt = match input_function_get_code(cmd) {
+                Some(code) => {
+                    self.function_push_args(code);
+                    // At this point, the sequence is only used for reinserting the keys into
+                    // the event queue for self-insert. Modifiers make no sense here so drop them.
+                    CharEvent::from_readline_seq(
+                        code,
+                        m.seq
+                            .iter()
+                            .filter(|key| key.modifiers.is_none())
+                            .map(|key| key.codepoint)
+                            .collect(),
+                    )
+                }
+                None => CharEvent::Command(cmd.clone()),
+            };
+            self.push_front(evt);
         }
         // Missing bind mode indicates to not reset the mode (#2871)
-        if let Some(sets_mode) = m.sets_mode.as_ref() {
-            input_set_bind_mode(&self.parser, sets_mode);
+        if let Some(mode) = m.sets_mode.as_ref() {
+            self.push_front(CharEvent::Command(sprintf!(
+                "set --global %s %s",
+                FISH_BIND_MODE_VAR,
+                escape(mode)
+            )));
         }
     }
 
     /// Enqueue a char event to the queue of unread characters that input_readch will return before
     /// actually reading from fd 0.
     pub fn queue_char(&mut self, ch: CharEvent) {
-        if ch.is_readline() {
-            self.function_push_args(ch.get_readline());
-        }
         self.queue.push_back(ch);
-    }
-
-    /// Enqueue a readline command. Convenience cover over queue_char().
-    pub fn queue_readline(&mut self, cmd: ReadlineCmd) {
-        self.queue_char(CharEvent::from_readline(cmd));
     }
 
     /// Sets the return status of the most recently executed input function.
@@ -580,6 +597,8 @@ struct EventQueuePeeker<'q> {
 
     /// The current index. This never exceeds peeked.len().
     idx: usize,
+    /// The current index within a the raw characters within a single key event.
+    subidx: usize,
 
     /// The queue from which to read more events.
     event_queue: &'q mut Inputter,
@@ -591,12 +610,14 @@ impl EventQueuePeeker<'_> {
             peeked: Vec::new(),
             had_timeout: false,
             idx: 0,
+            subidx: 0,
             event_queue,
         }
     }
 
-    /// \return the next event.
+    /// Return the next event.
     fn next(&mut self) -> CharEvent {
+        assert!(self.subidx == 0);
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -607,12 +628,13 @@ impl EventQueuePeeker<'_> {
         }
         let res = self.peeked[self.idx].clone();
         self.idx += 1;
+        self.subidx = 0;
         res
     }
 
     /// Check if the next event is the given character. This advances the index on success only.
-    /// If \p escaped is set, then return false if this (or any other) character had a timeout.
-    fn next_is_char(&mut self, c: char, escaped: bool) -> bool {
+    /// If `escaped` is set, then return false if this (or any other) character had a timeout.
+    fn next_is_char(&mut self, style: &KeyNameStyle, key: Key, escaped: bool) -> bool {
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
@@ -624,34 +646,92 @@ impl EventQueuePeeker<'_> {
         // Grab a new event if we have exhausted what we have already peeked.
         // Use either readch or readch_timed, per our param.
         if self.idx == self.peeked.len() {
-            let newevt: CharEvent;
-            if !escaped {
-                if let Some(mevt) = self.event_queue.readch_timed_sequence_key() {
-                    newevt = mevt;
-                } else {
-                    self.had_timeout = true;
-                    return false;
+            let newevt = if escaped {
+                FLOG!(reader, "reading timed escape");
+                match self.event_queue.readch_timed_esc() {
+                    Some(evt) => evt,
+                    None => {
+                        self.had_timeout = true;
+                        return false;
+                    }
                 }
-            } else if let Some(mevt) = self.event_queue.readch_timed_esc() {
-                newevt = mevt;
             } else {
-                self.had_timeout = true;
-                return false;
-            }
+                FLOG!(reader, "readch timed sequence key");
+                match self.event_queue.readch_timed_sequence_key() {
+                    Some(evt) => evt,
+                    None => {
+                        self.had_timeout = true;
+                        return false;
+                    }
+                }
+            };
+            FLOG!(reader, format!("adding peeked {:?}", newevt));
             self.peeked.push(newevt);
         }
         // Now we have peeked far enough; check the event.
         // If it matches the char, then increment the index.
-        if self.peeked[self.idx].maybe_char() == Some(c) {
+        let evt = &self.peeked[self.idx];
+        let Some(kevt) = evt.get_key() else {
+            return false;
+        };
+        if kevt.seq == L!("\x1b") && key.modifiers == Modifiers::ALT {
             self.idx += 1;
-            return true;
+            self.subidx = 0;
+            FLOG!(reader, "matched delayed escape prefix in alt sequence");
+            return self.next_is_char(style, Key::from_raw(key.codepoint), true);
+        }
+        if *style == KeyNameStyle::Plain {
+            if kevt.key == key {
+                assert!(self.subidx == 0);
+                self.idx += 1;
+                FLOG!(reader, "matched full key", key);
+                return true;
+            }
+            return false;
+        }
+        let actual_seq = kevt.seq.as_char_slice();
+        if !actual_seq.is_empty() {
+            let seq_char = actual_seq[self.subidx];
+            if Key::from_single_char(seq_char) == key {
+                self.subidx += 1;
+                if self.subidx == actual_seq.len() {
+                    self.idx += 1;
+                    self.subidx = 0;
+                }
+                FLOG!(
+                    reader,
+                    format!(
+                        "matched char {} with offset {} within raw sequence of length {}",
+                        key,
+                        self.subidx,
+                        actual_seq.len()
+                    )
+                );
+                return true;
+            }
+            if key.modifiers == Modifiers::ALT && seq_char == '\x1b' {
+                if self.subidx + 1 == actual_seq.len() {
+                    self.idx += 1;
+                    self.subidx = 0;
+                    FLOG!(reader, "matched escape prefix in raw escape sequence");
+                    return self.next_is_char(style, Key::from_raw(key.codepoint), true);
+                } else if actual_seq
+                    .get(self.subidx + 1)
+                    .cloned()
+                    .map(|c| Key::from_single_char(c).codepoint)
+                    == Some(key.codepoint)
+                {
+                    self.subidx += 2;
+                    if self.subidx == actual_seq.len() {
+                        self.idx += 1;
+                        self.subidx = 0;
+                    }
+                    FLOG!(reader, format!("matched {key} against raw escape sequence"));
+                    return true;
+                }
+            }
         }
         false
-    }
-
-    /// \return the current index.
-    fn len(&self) -> usize {
-        self.idx
     }
 
     /// Consume all events up to the current index.
@@ -661,101 +741,62 @@ impl EventQueuePeeker<'_> {
         self.event_queue.insert_front(self.peeked.drain(self.idx..));
         self.peeked.clear();
         self.idx = 0;
+        self.subidx = 0;
     }
 
     /// Test if any of our peeked events are readline or check_exit.
     fn char_sequence_interrupted(&self) -> bool {
         self.peeked
             .iter()
-            .any(|evt| evt.is_readline() || evt.is_check_exit())
+            .any(|evt| evt.is_readline_or_command() || evt.is_check_exit())
     }
 
     /// Reset our index back to 0.
     fn restart(&mut self) {
         self.idx = 0;
+        self.subidx = 0;
     }
 }
 
 impl Drop for EventQueuePeeker<'_> {
     fn drop(&mut self) {
         assert!(
-            self.idx == 0,
+            self.idx == 0 && self.subidx == 0,
             "Events left on the queue - missing restart or consume?",
         );
         self.event_queue.insert_front(self.peeked.drain(self.idx..));
     }
 }
 
-/// Try reading a mouse-tracking CSI sequence, using the given \p peeker.
-/// Events are left on the peeker and the caller must restart or consume it.
-/// \return true if matched, false if not.
-fn have_mouse_tracking_csi(peeker: &mut EventQueuePeeker) -> bool {
-    // Maximum length of any CSI is NPAR (which is nominally 16), although this does not account for
-    // user input intermixed with pseudo input generated by the tty emulator.
-    // Check for the CSI first.
-    if !peeker.next_is_char('\x1b', false) || !peeker.next_is_char('[', true /* escaped */) {
-        return false;
-    }
-
-    let mut next = peeker.next().maybe_char();
-    let length;
-    if next == Some('M') {
-        // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6 chars
-        // (although in mode 1005, the characters may be unicode and not necessarily just one byte
-        // long) reporting the button that was clicked and its location.
-        length = 6;
-    } else if next == Some('<') {
-        // Extended (SGR/1006) mouse reporting mode, with semicolon-separated parameters for button
-        // code, Px, and Py, ending with 'M' for button press or 'm' for button release.
-        loop {
-            next = peeker.next().maybe_char();
-            if next == Some('M') || next == Some('m') {
-                // However much we've read, we've consumed the CSI in its entirety.
-                length = peeker.len();
-                break;
-            }
-            if peeker.len() >= 16 {
-                // This is likely a malformed mouse-reporting CSI but we can't do anything about it.
-                return false;
-            }
-        }
-    } else if next == Some('t') {
-        // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
-        length = 5;
-    } else if next == Some('T') {
-        // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
-        length = 9;
-    } else {
-        return false;
-    }
-
-    // Consume however many characters it takes to prevent the mouse tracking sequence from reaching
-    // the prompt, dependent on the class of mouse reporting as detected above.
-    while peeker.len() < length {
-        let _ = peeker.next();
-    }
-    true
-}
-
-/// \return true if a given \p peeker matches a given sequence of char events given by \p str.
-fn try_peek_sequence(peeker: &mut EventQueuePeeker, str: &wstr) -> bool {
-    assert!(!str.is_empty(), "Empty string passed to try_peek_sequence");
-    let mut prev = '\0';
-    for c in str.chars() {
+/// Return true if a given `peeker` matches a given sequence of char events given by `str`.
+fn try_peek_sequence(peeker: &mut EventQueuePeeker, style: &KeyNameStyle, seq: &[Key]) -> bool {
+    assert!(
+        !seq.is_empty(),
+        "Empty sequence passed to try_peek_sequence"
+    );
+    let mut prev = Key::from_raw(key::Invalid);
+    for key in seq {
         // If we just read an escape, we need to add a timeout for the next char,
         // to distinguish between the actual escape key and an "alt"-modifier.
-        let escaped = prev == '\x1B';
-        if !peeker.next_is_char(c, escaped) {
+        let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::Escape);
+        if !peeker.next_is_char(style, *key, escaped) {
             return false;
         }
-        prev = c;
+        prev = *key;
+    }
+    if peeker.subidx != 0 {
+        FLOG!(
+            reader,
+            "legacy binding matched prefix of key encoding but did not consume all of it"
+        );
+        return false;
     }
     true
 }
 
-/// \return the first mapping that matches, walking first over the user's mapping list, then the
+/// Return the first mapping that matches, walking first over the user's mapping list, then the
 /// preset list.
-/// \return none if nothing matches, or if we may have matched a longer sequence but it was
+/// Return none if nothing matches, or if we may have matched a longer sequence but it was
 /// interrupted by a readline event.
 impl Inputter {
     fn find_mapping(vars: &dyn Environment, peeker: &mut EventQueuePeeker) -> Option<InputMapping> {
@@ -763,8 +804,9 @@ impl Inputter {
         let bind_mode = input_get_bind_mode(vars);
         let mut escape: Option<&InputMapping> = None;
 
-        let ml = input_mappings().all_mappings();
-        for m in ml.iter() {
+        let ip = input_mappings();
+        let ml = ip.mapping_list.iter().chain(ip.preset_mapping_list.iter());
+        for m in ml {
             if m.mode != bind_mode {
                 continue;
             }
@@ -777,10 +819,11 @@ impl Inputter {
                 continue;
             }
 
-            if try_peek_sequence(peeker, &m.seq) {
+            // FLOG!(reader, "trying mapping", format!("{:?}", m));
+            if try_peek_sequence(peeker, &m.key_name_style, &m.seq) {
                 // A binding for just escape should also be deferred
                 // so escape sequences take precedence.
-                if m.seq == "\x1B" {
+                if m.seq == vec![Key::from_raw(key::Escape)] {
                     if escape.is_none() {
                         escape = Some(m);
                     }
@@ -809,35 +852,17 @@ impl Inputter {
         }
     }
 
-    fn mapping_execute_matching_or_generic(
-        &mut self,
-        command_handler: &mut Option<&mut CommandHandler>,
-    ) {
+    fn mapping_execute_matching_or_generic(&mut self) {
         let vars = self.parser.vars_ref();
         let mut peeker = EventQueuePeeker::new(self);
-        // Check for mouse-tracking CSI before mappings to prevent the generic mapping handler from
-        // taking over.
-        if have_mouse_tracking_csi(&mut peeker) {
-            // fish recognizes but does not actually support mouse reporting. We never turn it on, and
-            // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
-            // it off before exiting. We turn it off here to avoid wasting resources.
-            //
-            // Since this is only called when we detect an incoming mouse reporting payload, we know the
-            // terminal emulator supports mouse reporting, so no terminfo checks.
-            FLOG!(reader, "Disabling mouse tracking");
-
-            // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
-            // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
-            peeker.consume();
-            self.push_front(CharEvent::from_readline(ReadlineCmd::DisableMouseTracking));
-            return;
-        }
-        peeker.restart();
-
         // Check for ordinary mappings.
         if let Some(mapping) = Self::find_mapping(&*vars, &mut peeker) {
+            FLOG!(
+                reader,
+                format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
+            );
             peeker.consume();
-            self.mapping_execute(&mapping, command_handler);
+            self.mapping_execute(&mapping);
             return;
         }
         peeker.restart();
@@ -868,7 +893,7 @@ impl Inputter {
         let evt_to_return: CharEvent;
         loop {
             let evt = self.readch();
-            if evt.is_readline() {
+            if evt.is_readline_or_command() {
                 saved_events.push(evt);
             } else {
                 evt_to_return = evt;
@@ -883,48 +908,37 @@ impl Inputter {
         evt_to_return
     }
 
-    /// Read a character from stdin. Try to convert some escape sequences into character constants,
-    /// but do not permanently block the escape character.
-    ///
-    /// This is performed in the same way vim does it, i.e. if an escape character is read, wait for
-    /// more input for a short time (a few milliseconds). If more input is available, it is assumed
-    /// to be an escape sequence for a special character (such as an arrow key), and readch attempts
-    /// to parse it. If no more input follows after the escape key, it is assumed to be an actual
-    /// escape key press, and is returned as such.
-    ///
-    /// \p command_handler is used to run commands. If empty (in the std::function sense), when a
-    /// character is encountered that would invoke a fish command, it is unread and
-    /// char_event_type_t::check_exit is returned. Note the handler is not stored.
-    pub fn read_char(&mut self, mut command_handler: Option<&mut CommandHandler>) -> CharEvent {
+    /// Read a key from stdin.
+    pub fn read_char(&mut self) -> CharEvent {
         // Clear the interrupted flag.
         reader_reset_interrupted();
 
         // Search for sequence in mapping tables.
         loop {
             let evt = self.readch();
-            match evt.evt {
-                CharEventType::Readline(cmd) => match cmd {
+            match evt {
+                CharEvent::Readline(ref readline_event) => match readline_event.cmd {
                     ReadlineCmd::SelfInsert | ReadlineCmd::SelfInsertNotFirst => {
                         // Typically self-insert is generated by the generic (empty) binding.
                         // However if it is generated by a real sequence, then insert that sequence.
-                        let seq = evt.seq.chars().map(CharEvent::from_char);
+                        let seq = readline_event.seq.chars().map(CharEvent::from_char);
                         self.insert_front(seq);
                         // Issue #1595: ensure we only insert characters, not readline functions. The
                         // common case is that this will be empty.
                         let mut res = self.read_characters_no_readline();
 
                         // Hackish: mark the input style.
-                        res.input_style = if cmd == ReadlineCmd::SelfInsertNotFirst {
-                            CharInputStyle::NotFirst
-                        } else {
-                            CharInputStyle::Normal
-                        };
+                        if readline_event.cmd == ReadlineCmd::SelfInsertNotFirst {
+                            if let CharEvent::Key(kevt) = &mut res {
+                                kevt.input_style = CharInputStyle::NotFirst;
+                            }
+                        }
                         return res;
                     }
                     ReadlineCmd::FuncAnd | ReadlineCmd::FuncOr => {
                         // If previous function has bad status, skip all functions that follow us.
-                        if (!self.function_status && cmd == ReadlineCmd::FuncAnd)
-                            || (self.function_status && cmd == ReadlineCmd::FuncOr)
+                        if (!self.function_status && readline_event.cmd == ReadlineCmd::FuncAnd)
+                            || (self.function_status && readline_event.cmd == ReadlineCmd::FuncOr)
                         {
                             self.drop_leading_readline_events();
                         }
@@ -933,21 +947,31 @@ impl Inputter {
                         return evt;
                     }
                 },
-                CharEventType::Eof => {
+                CharEvent::Command(_) => {
+                    return evt;
+                }
+                CharEvent::Eof => {
                     // If we have EOF, we need to immediately quit.
                     // There's no need to go through the input functions.
                     return evt;
                 }
-                CharEventType::CheckExit => {
+                CharEvent::CheckExit => {
                     // Allow the reader to check for exit conditions.
                     return evt;
                 }
-                CharEventType::Char(_) => {
+                CharEvent::Key(ref kevt) => {
+                    FLOG!(
+                        reader,
+                        "Read char",
+                        kevt.key,
+                        format!(
+                            "-- {:?} -- {:?}",
+                            kevt.key,
+                            kevt.seq.chars().map(u32::from).collect::<Vec<_>>()
+                        )
+                    );
                     self.push_front(evt);
-                    self.mapping_execute_matching_or_generic(&mut command_handler);
-                    // Regarding allow_commands, we're in a loop, but if a fish command is executed,
-                    // check_exit is unread, so the next pass through the loop we'll break out and return
-                    // it.
+                    self.mapping_execute_matching_or_generic();
                 }
             }
         }
@@ -976,9 +1000,6 @@ impl InputMappingSet {
 
     /// Erase all bindings.
     pub fn clear(&mut self, mode: Option<&wstr>, user: bool) {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
         let ml = if user {
             &mut self.mapping_list
         } else {
@@ -989,10 +1010,7 @@ impl InputMappingSet {
     }
 
     /// Erase binding for specified key sequence.
-    pub fn erase(&mut self, sequence: &wstr, mode: &wstr, user: bool) -> bool {
-        // Clear cached mappings.
-        self.all_mappings_cache = RefCell::new(None);
-
+    pub fn erase(&mut self, sequence: &[Key], mode: &wstr, user: bool) -> bool {
         let ml = if user {
             &mut self.mapping_list
         } else {
@@ -1013,11 +1031,12 @@ impl InputMappingSet {
     /// it exists, false if not.
     pub fn get<'a>(
         &'a self,
-        sequence: &wstr,
+        sequence: &[Key],
         mode: &wstr,
         out_cmds: &mut &'a [WString],
         user: bool,
         out_sets_mode: &mut Option<&'a wstr>,
+        out_key_name_style: &mut KeyNameStyle,
     ) -> bool {
         let ml = if user {
             &self.mapping_list
@@ -1028,24 +1047,11 @@ impl InputMappingSet {
             if m.seq == sequence && m.mode == mode {
                 *out_cmds = &m.commands;
                 *out_sets_mode = m.sets_mode.as_deref();
+                *out_key_name_style = m.key_name_style.clone();
                 return true;
             }
         }
         false
-    }
-
-    /// \return a snapshot of the list of input mappings.
-    fn all_mappings(&self) -> Arc<Box<[InputMapping]>> {
-        // Populate the cache if needed.
-        let mut cache = self.all_mappings_cache.borrow_mut();
-        if cache.is_none() {
-            let mut all_mappings =
-                Vec::with_capacity(self.mapping_list.len() + self.preset_mapping_list.len());
-            all_mappings.extend(self.mapping_list.iter().cloned());
-            all_mappings.extend(self.preset_mapping_list.iter().cloned());
-            *cache = Some(Arc::new(all_mappings.into_boxed_slice()));
-        }
-        Arc::clone(cache.as_ref().unwrap())
     }
 }
 
@@ -1084,9 +1090,6 @@ fn create_input_terminfo() -> Box<[TerminfoMapping]> {
         terminfo_add!(key_f1), terminfo_add!(key_f2), terminfo_add!(key_f3), terminfo_add!(key_f4),
         terminfo_add!(key_f5), terminfo_add!(key_f6), terminfo_add!(key_f7), terminfo_add!(key_f8),
         terminfo_add!(key_f9), terminfo_add!(key_f10), terminfo_add!(key_f11), terminfo_add!(key_f12),
-        terminfo_add!(key_f13), terminfo_add!(key_f14), terminfo_add!(key_f15), terminfo_add!(key_f16),
-        terminfo_add!(key_f17), terminfo_add!(key_f18), terminfo_add!(key_f19), terminfo_add!(key_f20),
-        // Note key_f21 through key_f63 are available but no actual keyboard supports them.
         terminfo_add!(key_find), terminfo_add!(key_help), terminfo_add!(key_home),
         terminfo_add!(key_ic), terminfo_add!(key_il), terminfo_add!(key_left), terminfo_add!(key_ll),
         terminfo_add!(key_mark), terminfo_add!(key_message), terminfo_add!(key_move),

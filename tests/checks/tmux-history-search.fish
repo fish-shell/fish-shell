@@ -4,10 +4,10 @@
 #REQUIRES: test -z "$CI"
 
 # The default history-pager-delete binding is shift-delete which
-# may not have a terminfo entry for screen-256color, so rebind to F1.
+# won't work on terminals that don't support CSI u, so rebind.
 set -g isolated_tmux_fish_extra_args -C '
     set -g fish_autosuggestion_enabled 0
-    bind -k f1 history-pager-delete or backward-delete-char
+    bind alt-d history-pager-delete or backward-delete-char
 '
 isolated-tmux-start
 
@@ -46,20 +46,30 @@ isolated-tmux send-keys Enter
 isolated-tmux capture-pane -p | grep 'prompt 2>'
 isolated-tmux send-keys C-c
 
+isolated-tmux send-keys 'echo 1' Enter 'echo 2' Enter 'echo 3' Enter
+isolated-tmux send-keys C-l echo Up
+isolated-tmux send-keys echo M-d
+tmux-sleep
+isolated-tmux capture-pane -p
+#CHECK: prompt 5> echo 2
+isolated-tmux send-keys C-c
+tmux-sleep
+
 isolated-tmux send-keys "echo sdifjsdoifjsdoifj" Enter
 tmux-sleep
-isolated-tmux capture-pane -p | grep "^sdifjsdoifjsdoifj\|prompt 3>"
+isolated-tmux capture-pane -p | grep "^sdifjsdoifjsdoifj\|prompt 6>"
 # CHECK: sdifjsdoifjsdoifj
-# CHECK: prompt 3>
+# CHECK: prompt 6>
 isolated-tmux send-keys C-e C-u C-r
 tmux-sleep
 isolated-tmux send-keys "echo sdifjsdoifjsdoifj"
 tmux-sleep
-isolated-tmux send-keys F1
+isolated-tmux send-keys M-d # alt-d
+tmux-sleep
 isolated-tmux capture-pane -p | grep "(no matches)"
 # CHECK: (no matches)
 isolated-tmux send-keys Enter C-e C-u "echo foo" Enter
 tmux-sleep
-isolated-tmux capture-pane -p | grep "^foo\|prompt 4>"
+isolated-tmux capture-pane -p | grep "^foo\|prompt 7>"
 # CHECK: foo
-# CHECK: prompt 4>
+# CHECK: prompt 7>

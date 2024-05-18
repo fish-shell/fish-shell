@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN]
+    abbr --add NAME [--position command | anywhere] [-r | --regex PATTERN] [-c | --command COMMAND]
                     [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
     abbr --erase NAME ...
     abbr --rename OLD_WORD NEW_WORD
@@ -25,8 +25,8 @@ Description
     Only typed-in commands use abbreviations. Abbreviations are not expanded in scripts.
 
 For example, a frequently-run command like ``git checkout`` can be abbreviated to ``gco``.
-After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, the full text ``git checkout`` will appear in the command line.
-To avoid expanding something that looks like an abbreviation, the default :kbd:`Control`\ +\ :kbd:`Space` binding inserts a space without expanding.
+After entering ``gco`` and pressing :kbd:`space` or :kbd:`enter`, the full text ``git checkout`` will appear in the command line.
+To avoid expanding something that looks like an abbreviation, the default :kbd:`ctrl-space` binding inserts a space without expanding.
 
 An abbreviation may match a literal word, or it may match a pattern given by a regular expression. When an abbreviation matches a word, that word is replaced by new text, called its *expansion*. This expansion may be a fixed new phrase, or it can be dynamically created via a fish function. This expansion occurs after pressing space or enter.
 
@@ -63,11 +63,13 @@ Combining these features, it is possible to create custom syntaxes, where a regu
 .. synopsis::
 
     abbr [-a | --add] NAME [--position command | anywhere] [-r | --regex PATTERN]
-         [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
+         [-c | --command COMMAND] [--set-cursor[=MARKER]] ([-f | --function FUNCTION] | EXPANSION)
 
 ``abbr --add`` creates a new abbreviation. With no other options, the string **NAME** is replaced by **EXPANSION**.
 
 With **--position command**, the abbreviation will only expand when it is positioned as a command, not as an argument to another command. With **--position anywhere** the abbreviation may expand anywhere in the command line. The default is **command**.
+
+With **--command COMMAND**, the abbreviation will only expand when it is used as an argument to the given COMMAND. Multiple **--command** can be used together, and the abbreviation will expand for each. An empty **COMMAND** means it will expand only when there is no command. **--command** implies **--position anywhere** and disallows **--position command**. Even with different **COMMANDS**, the **NAME** of the abbreviation needs to be unique. Consider using **--regex** if you want to expand the same word differently for multiple commands.
 
 With **--regex**, the abbreviation matches using the regular expression given by **PATTERN**, instead of the literal **NAME**. The pattern is interpreted using PCRE2 syntax and must match the entire token. If multiple abbreviations match the same token, the last abbreviation added is used.
 
@@ -121,6 +123,11 @@ This first creates a function ``vim_edit`` which prepends ``vim`` before its arg
     abbr 4DIRS --set-cursor=! "$(string join \n -- 'for dir in */' 'cd $dir' '!' 'cd ..' 'end')"
 
 This creates an abbreviation "4DIRS" which expands to a multi-line loop "template." The template enters each directory and then leaves it. The cursor is positioned ready to enter the command to run in each directory, at the location of the ``!``, which is itself erased.
+
+::
+   abbr --command git co checkout
+
+Turns "co" as an argument to "git" into "checkout". Multiple commands are possible, ``--command={git,hg}`` would expand "co" to "checkout" for both git and hg.
 
 Other subcommands
 --------------------

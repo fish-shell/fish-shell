@@ -22,14 +22,26 @@ set -l rustup_show \
     help
 
 # rustup does not really expose a mechanism of retrieving a list of all valid components without the archs appended
+# Just print the list of installable x86_64-unknown-linux-gnu components for everyone
 function __rustup_components
-    rustup component list | string match -r "^\S+" | string replace -f -- -x86_64-unknown-linux-gnu ""
+    rustup component list | string match -r "\S+" | string replace -rf -- "-x86_64-unknown-linux-gnu.*" "" | sort -u
 end
 
-# function __rustup_installable_components
-# 	set -l not_installed (comm -2 -3 (printf "%s\n" $__rustup_components | psub -F) (rustup component list --installed | psub -F) 2>/dev/null)
-# 	__rustup_strip_common_suffix_strict $not_installed
-# end
+function __rustup_installed_components
+    # If the user has supplied `--toolchain foo`, use it to filter the list
+    set -l toolchain (commandline -j | string replace -rf ".*\s--toolchain\s+(\S+)\s.*" '$1')
+    set -l toolchain_filter
+    if string match -qr . -- $toolchain
+        set toolchain_filter "--toolchain $toolchain"
+    end
+
+    rustup component list --installed $toolchain_filter | string replace -r -- (printf -- "-%s\n" (__rustup_targets) | string join "|") "" | sort -u
+
+end
+
+function __rustup_installable_components
+    comm -2 -3 (__rustup_components | psub -F) (__rustup_installed_components | psub -F)
+end
 
 # All *valid* target triples, retrieved from source
 function __rustup_triples
@@ -203,16 +215,19 @@ function __rustup_installable_toolchains
         2>/dev/null
 end
 
-function __rustup_installed_components
-    # If the user has supplied `--toolchain foo`, use it to filter the list
-    set -l toolchain (commandline -j | string replace -rf ".*\s--toolchain\s+(\S+)\s.*" '$1')
-    set -l toolchain_filter
-    if string match -qr . -- $toolchain
-        set toolchain_filter "--toolchain $toolchain"
-    end
+function __rustup_targets
+    rustup target list | string replace -rf "^(\S+).*" '$1'
+end
 
-    set -l installed (rustup component list --installed $toolchain_filter)
-    __rustup_strip_common_suffix_strict $installed
+function __rustup_installed_targets
+    rustup target list | string replace -rf "^(\S+) \(installed\)" '$1'
+end
+
+# All valid targets excluding installed
+function __rustup_installable_targets
+    comm -2 -3 (__rustup_targets | psub -F) (__rustup_installed_targets | psub -F) \
+        # Ignore warnings about lists not being in sorted order, as we are aware of their contents
+        2>/dev/null
 end
 
 # Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"
@@ -246,7 +261,12 @@ complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_ar
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in remove uninstall" \
     -xa "(__rustup_installed_components)"
 complete -c rustup -n "__fish_seen_subcommand_from component; and __fish_prev_arg_in add install" \
-    -xa "(__rustup_components)"
+    -xa "(__rustup_installable_components)"
+
+complete -c rustup -n "__fish_seen_subcommand_from target; and __fish_prev_arg_in add install" \
+    -xa "(__rustup_installable_targets)"
+complete -c rustup -n "__fish_seen_subcommand_from target; and __fish_prev_arg_in remove uninstall" \
+    -xa "(__rustup_installed_targets)"
 
 complete -c rustup -n "__fish_seen_subcommand_from show;" -xa "$rustup_show"
 

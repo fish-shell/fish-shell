@@ -11,13 +11,13 @@ use crate::env_universal_common::CallbackDataList;
 use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input::init_input;
+use crate::input::{init_input, FISH_BIND_MODE_VAR};
 use crate::libc::{stdout_stream, C_PATH_BSHELL, _PATH_BSHELL};
 use crate::nix::{geteuid, getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::path::{
-    path_emit_config_directory_messages, path_get_config, path_get_data, path_make_canonical,
-    paths_are_same_file,
+    path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
+    path_make_canonical, paths_are_same_file,
 };
 use crate::proc::is_interactive_session;
 use crate::termsize;
@@ -27,7 +27,6 @@ use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
-use lazy_static::lazy_static;
 use libc::{c_int, uid_t, STDOUT_FILENO, _IONBF};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
@@ -35,7 +34,6 @@ use std::ffi::CStr;
 use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
-use std::pin::Pin;
 use std::sync::Arc;
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
@@ -188,9 +186,9 @@ impl EnvStack {
         self.inner.lock()
     }
 
-    /// \return whether we are the principal stack.
+    /// Return whether we are the principal stack.
     pub fn is_principal(&self) -> bool {
-        std::ptr::eq(self, Self::principal().as_ref().get_ref())
+        std::ptr::eq(self, &**Self::principal())
     }
 
     /// Helpers to get and set the proc statuses.
@@ -275,7 +273,7 @@ impl EnvStack {
     /// this is a user request, read-only variables can not be removed. The mode may also specify
     /// the scope of the variable that should be erased.
     ///
-    /// \return the set result.
+    /// Return the set result.
     pub fn remove(&self, key: &wstr, mode: EnvMode) -> EnvStackSetResult {
         let ret = self.lock().remove(key, mode);
         #[allow(clippy::collapsible_if)]
@@ -327,9 +325,9 @@ impl EnvStack {
     }
 
     /// Synchronizes universal variable changes.
-    /// If \p always is set, perform synchronization even if there's no pending changes from this
+    /// If `always` is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
-    /// \return a list of events for changed variables.
+    /// Return a list of events for changed variables.
     #[allow(clippy::vec_box)]
     pub fn universal_sync(&self, always: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
@@ -362,13 +360,17 @@ impl EnvStack {
 
     /// A variable stack that only represents globals.
     /// Do not push or pop from this.
-    pub fn globals() -> &'static EnvStackRef {
-        &GLOBALS
+    pub fn globals() -> &'static EnvStack {
+        use std::sync::OnceLock;
+        static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
+        GLOBALS.get_or_init(|| EnvStack::new())
     }
 
     /// Access the principal variable stack, associated with the principal parser.
-    pub fn principal() -> &'static EnvStackRef {
-        &PRINCIPAL_STACK
+    pub fn principal() -> &'static Arc<EnvStack> {
+        use std::sync::OnceLock;
+        static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
+        &PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
     }
 
     pub fn set_argv(&self, argv: Vec<WString>) {
@@ -408,20 +410,6 @@ impl Environment for EnvStack {
     }
 }
 
-// TODO Remove Pin?
-pub type EnvStackRef = Pin<Arc<EnvStack>>;
-
-// A variable stack that only represents globals.
-// Do not push or pop from this.
-lazy_static! {
-    static ref GLOBALS: EnvStackRef = Arc::pin(EnvStack::new());
-}
-
-// Our singleton "principal" stack.
-lazy_static! {
-    static ref PRINCIPAL_STACK: EnvStackRef = Arc::pin(EnvStack::new());
-}
-
 /// Some configuration path environment variables.
 const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
 const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
@@ -429,6 +417,7 @@ const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
 const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
 const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
 const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
+const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
 /// Maximum length of hostname. Longer hostnames are truncated.
 const HOSTNAME_LEN: usize = 255;
@@ -538,7 +527,7 @@ fn setup_user(vars: &EnvStack) {
 fn setup_path() {
     use crate::libc::{confstr, _CS_PATH};
 
-    let vars = &GLOBALS;
+    let vars = EnvStack::globals();
     let path = vars.get_unless_empty(L!("PATH"));
     if path.is_none() {
         // _CS_PATH: colon-separated paths to find POSIX utilities
@@ -565,7 +554,7 @@ fn setup_path() {
 pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
-    let vars = &PRINCIPAL_STACK;
+    let vars = &**EnvStack::principal();
 
     let env_iter: Vec<_> = std::env::vars_os()
         .map(|(k, v)| (str2wcstring(k.as_bytes()), str2wcstring(v.as_bytes())))
@@ -648,6 +637,12 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         user_data_dir.unwrap_or_default(),
     );
 
+    let user_cache_dir = path_get_cache();
+    vars.set_one(
+        FISH_CACHE_DIR,
+        EnvMode::GLOBAL,
+        user_cache_dir.unwrap_or_default(),
+    );
     // Set up a default PATH
     setup_path();
 
@@ -718,7 +713,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
     // Initialize termsize variables.
     // PORTING: 3x deref is weird
-    let termsize = termsize::SHARED_CONTAINER.initialize(&***vars as &dyn Environment);
+    let termsize = termsize::SHARED_CONTAINER.initialize(vars as &dyn Environment);
     if vars.get_unless_empty(L!("COLUMNS")).is_none() {
         vars.set_one(L!("COLUMNS"), EnvMode::GLOBAL, termsize.width.to_wstring());
     }
@@ -727,8 +722,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     }
 
     // Set fish_bind_mode to "default".
-    // FIXME: this was a constant FISH_BIND_MODE_VAR from input.cpp
-    vars.set_one(L!("fish_bind_mode"), EnvMode::GLOBAL, "default".into());
+    vars.set_one(FISH_BIND_MODE_VAR, EnvMode::GLOBAL, "default".into());
 
     // Allow changes to variables to produce events.
     env_dispatch_init(vars);

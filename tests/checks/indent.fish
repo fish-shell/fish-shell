@@ -73,7 +73,7 @@ end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end ar
 
 #CHECK: begin
 #CHECK: {{    }}echo hi
-#CHECK: 
+#CHECK:
 #CHECK: end | cat | cat | begin
 #CHECK: {{    }}echo hi
 #CHECK: end | begin
@@ -99,7 +99,7 @@ end
 #CHECK: {{    }}{{    }}echo sup
 #CHECK: {{    }}case beta gamma
 #CHECK: {{    }}{{    }}echo hi
-#CHECK: 
+#CHECK:
 #CHECK: end
 
 echo -n '
@@ -117,15 +117,15 @@ function hello_world
 ' | $fish_indent
 
 #CHECK: function hello_world
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}begin
 #CHECK: {{    }}{{    }}echo hi
 #CHECK: {{    }}end | cat
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}echo sup
 #CHECK: {{    }}echo sup
 #CHECK: {{    }}echo hello
-#CHECK: 
+#CHECK:
 #CHECK: {{    }}echo hello
 #CHECK: end
 
@@ -149,13 +149,13 @@ qqq
 end' | $fish_indent
 #CHECK: echo alpha #comment1
 #CHECK: #comment2
-#CHECK: 
+#CHECK:
 #CHECK: #comment3
 #CHECK: for i in abc #comment1
 #CHECK: {{    }}#comment2
 #CHECK: {{    }}echo hi
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: switch foo #abc
 #CHECK: {{    }}# bar
 #CHECK: {{    }}case bar
@@ -299,26 +299,26 @@ echo bye
 #CHECK: {{    }}echo yes
 #CHECK: en\
 #CHECK: d
-#CHECK: 
+#CHECK:
 #CHECK: while true
 #CHECK: {{    }}builtin yes
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: alpha | beta
-#CHECK: 
+#CHECK:
 #CHECK: gamma | \
 #CHECK: # comment3
 #CHECK: delta
-#CHECK: 
+#CHECK:
 #CHECK: if true
 #CHECK: {{    }}echo abc
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: if false # comment4
 #CHECK: {{    }}and true && false
 #CHECK: {{    }}echo abc
 #CHECK: end
-#CHECK: 
+#CHECK:
 #CHECK: echo hi |
 #CHECK: {{    }}echo bye
 
@@ -464,3 +464,64 @@ echo "
 echo this file starts late
 " | $fish_indent
 #CHECK: echo this file starts late
+
+echo 'foo|bar; begin
+echo' | $fish_indent --only-indent
+# CHECK: foo|bar; begin
+# CHECK: {{^}}    echo
+
+echo 'begin
+    echo
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}begin
+# CHECK: {{^}}echo
+# CHECK: {{^}}end
+
+echo 'if true
+    begin
+        echo
+    end
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}if true
+# CHECK: {{^}}begin
+# CHECK: {{^}}echo
+# CHECK: {{^}}end
+# CHECK: {{^}}end
+
+echo 'begin
+    echo
+  not indented properly
+end' | $fish_indent --only-unindent
+# CHECK: {{^}}begin
+# CHECK: {{^}}    echo
+# CHECK: {{^}}  not indented properly
+# CHECK: {{^}}end
+
+
+echo 'echo (
+if true
+echo
+end
+)' | $fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo
+# CHECK: {{^}}    end
+# CHECK: {{^}})
+
+echo 'echo (
+if true
+echo "
+multi
+line
+"
+end
+)' | $fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo "
+# CHECK: {{^}}multi
+# CHECK: {{^}}line
+# CHECK: {{^}}"
+# CHECK: {{^}}    end
+# CHECK: {{^}})

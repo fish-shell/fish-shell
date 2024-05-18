@@ -910,7 +910,7 @@ impl Pager {
         rendering
     }
 
-    // \return true if the given rendering needs to be updated.
+    // Return true if the given rendering needs to be updated.
     pub fn rendering_needs_update(&self, rendering: &PageRendering) -> bool {
         if self.have_unrendered_completions {
             return true;
@@ -1190,7 +1190,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
                 EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED | EscapeFlags::SYMBOLIC,
             ),
         ));
-        if comp.replaces_commandline()
+        if comp.replaces_line()
             // HACK We want to render a full shell command, with syntax highlighting.  Above we
             // escape nonprintables, which might make the rendered command longer than the original
             // completion. In that case we get wrong colors.  However this should only happen in

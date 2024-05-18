@@ -43,6 +43,7 @@ struct Options {
     append: bool,
     prepend: bool,
     preserve_failure_exit_status: bool,
+    no_event: bool,
 }
 
 impl Default for Options {
@@ -65,6 +66,7 @@ impl Default for Options {
             append: false,
             prepend: false,
             preserve_failure_exit_status: true,
+            no_event: false,
         }
     }
 }
@@ -98,33 +100,35 @@ impl Options {
         /// Values used for long-only options.
         const PATH_ARG: char = 1 as char;
         const UNPATH_ARG: char = 2 as char;
+        const NO_EVENT_ARG: char = 3 as char;
         // Variables used for parsing the argument list. This command is atypical in using the "+"
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
         const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
-        const LONG_OPTS: &[woption] = &[
-            wopt(L!("export"), no_argument, 'x'),
-            wopt(L!("global"), no_argument, 'g'),
-            wopt(L!("function"), no_argument, 'f'),
-            wopt(L!("local"), no_argument, 'l'),
-            wopt(L!("erase"), no_argument, 'e'),
-            wopt(L!("names"), no_argument, 'n'),
-            wopt(L!("unexport"), no_argument, 'u'),
-            wopt(L!("universal"), no_argument, 'U'),
-            wopt(L!("long"), no_argument, 'L'),
-            wopt(L!("query"), no_argument, 'q'),
-            wopt(L!("show"), no_argument, 'S'),
-            wopt(L!("append"), no_argument, 'a'),
-            wopt(L!("prepend"), no_argument, 'p'),
-            wopt(L!("path"), no_argument, PATH_ARG),
-            wopt(L!("unpath"), no_argument, UNPATH_ARG),
-            wopt(L!("help"), no_argument, 'h'),
+        const LONG_OPTS: &[WOption] = &[
+            wopt(L!("export"), NoArgument, 'x'),
+            wopt(L!("global"), NoArgument, 'g'),
+            wopt(L!("function"), NoArgument, 'f'),
+            wopt(L!("local"), NoArgument, 'l'),
+            wopt(L!("erase"), NoArgument, 'e'),
+            wopt(L!("names"), NoArgument, 'n'),
+            wopt(L!("unexport"), NoArgument, 'u'),
+            wopt(L!("universal"), NoArgument, 'U'),
+            wopt(L!("long"), NoArgument, 'L'),
+            wopt(L!("query"), NoArgument, 'q'),
+            wopt(L!("show"), NoArgument, 'S'),
+            wopt(L!("append"), NoArgument, 'a'),
+            wopt(L!("prepend"), NoArgument, 'p'),
+            wopt(L!("path"), NoArgument, PATH_ARG),
+            wopt(L!("unpath"), NoArgument, UNPATH_ARG),
+            wopt(L!("no-event"), NoArgument, NO_EVENT_ARG),
+            wopt(L!("help"), NoArgument, 'h'),
         ];
 
         let mut opts = Self::default();
 
-        let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-        while let Some(c) = w.wgetopt_long() {
+        let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+        while let Some(c) = w.next_opt() {
             match c {
                 'a' => opts.append = true,
                 'e' => {
@@ -148,6 +152,7 @@ impl Options {
                 'u' => opts.unexport = true,
                 PATH_ARG => opts.pathvar = true,
                 UNPATH_ARG => opts.unpathvar = true,
+                NO_EVENT_ARG => opts.no_event = true,
                 'U' => opts.universal = true,
                 'L' => opts.shorten_ok = false,
                 'S' => {
@@ -155,12 +160,12 @@ impl Options {
                     opts.preserve_failure_exit_status = false;
                 }
                 ':' => {
-                    builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                    builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     // Specifically detect `set -o` because people might be bringing over bashisms.
-                    let optind = w.woptind;
+                    let optind = w.wopt_index;
                     // implicit drop(w); here
                     if args[optind - 1].starts_with("-o") {
                         // TODO: translate this
@@ -184,12 +189,12 @@ impl Options {
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopt_long");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }
 
-        let optind = w.woptind;
+        let optind = w.wopt_index;
 
         if opts.print_help {
             builtin_print_help(parser, streams, cmd);
@@ -341,13 +346,18 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
 /// description of the problem to stderr.
 fn env_set_reporting_errors(
     cmd: &wstr,
+    opts: &Options,
     key: &wstr,
     scope: EnvMode,
     list: Vec<WString>,
     streams: &mut IoStreams,
     parser: &Parser,
 ) -> EnvStackSetResult {
-    let retval = parser.set_var_and_fire(key, scope | EnvMode::USER, list);
+    let retval = if opts.no_event {
+        parser.set_var(key, scope | EnvMode::USER, list)
+    } else {
+        parser.set_var_and_fire(key, scope | EnvMode::USER, list)
+    };
     // If this returned OK, the parser already fired the event.
     handle_env_return(retval, cmd, key, streams);
     retval
@@ -380,14 +390,14 @@ struct SplitVar<'a> {
 }
 
 impl<'a> SplitVar<'a> {
-    /// \return the number of elements in our variable, or 0 if missing.
+    /// Return the number of elements in our variable, or 0 if missing.
     fn varsize(&self) -> usize {
         self.var.as_ref().map_or(0, |var| var.as_list().len())
     }
 }
 
 /// Extract indexes from an argument of the form `var_name[index1 index2...]`.
-/// The argument \p arg is split into a variable name and list of indexes, which is returned by
+/// The argument `arg` is split into a variable name and list of indexes, which is returned by
 /// reference. Indexes are "expanded" in the sense that range expressions .. and negative values are
 /// handled.
 ///
@@ -776,7 +786,7 @@ fn erase(
                 if retval != EnvStackSetResult::ENV_NOT_FOUND {
                     handle_env_return(retval, cmd, split.varname, streams);
                 }
-                if retval == EnvStackSetResult::ENV_OK {
+                if retval == EnvStackSetResult::ENV_OK && !opts.no_event {
                     event::fire(parser, Event::variable_erase(split.varname.to_owned()));
                 }
             } else {
@@ -785,8 +795,15 @@ fn erase(
                     return STATUS_CMD_ERROR;
                 };
                 let result = erased_at_indexes(var.as_list().to_owned(), split.indexes);
-                retval =
-                    env_set_reporting_errors(cmd, split.varname, scope, result, streams, parser);
+                retval = env_set_reporting_errors(
+                    cmd,
+                    opts,
+                    split.varname,
+                    scope,
+                    result,
+                    streams,
+                    parser,
+                );
             }
 
             // Set $status to the last error value.
@@ -809,7 +826,7 @@ fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
     })
 }
 
-/// Return a list of new values for the variable \p varname, respecting the \p opts.
+/// Return a list of new values for the variable `varname`, respecting the `opts`.
 /// This handles the simple case where there are no indexes.
 fn new_var_values(
     varname: &wstr,
@@ -859,7 +876,7 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
         result = var.as_list().to_owned();
     }
 
-    // For each (index, argument) pair, set the element in our \p result to the replacement string.
+    // For each (index, argument) pair, set the element in our `result` to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.
     for (i, arg) in argv.iter().copied().enumerate() {
         let lidx = usize::try_from(split.indexes[i]).unwrap();
@@ -951,7 +968,8 @@ fn set_internal(
     };
 
     // Set the value back in the variable stack and fire any events.
-    let retval = env_set_reporting_errors(cmd, split.varname, scope, new_values, streams, parser);
+    let retval =
+        env_set_reporting_errors(cmd, opts, split.varname, scope, new_values, streams, parser);
 
     if retval == EnvStackSetResult::ENV_OK {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);

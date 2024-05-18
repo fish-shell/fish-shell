@@ -11,11 +11,11 @@ pub struct Sub {
 }
 
 impl StringSubCommand<'_> for Sub {
-    const LONG_OPTIONS: &'static [woption<'static>] = &[
-        wopt(L!("length"), required_argument, 'l'),
-        wopt(L!("start"), required_argument, 's'),
-        wopt(L!("end"), required_argument, 'e'),
-        wopt(L!("quiet"), no_argument, 'q'),
+    const LONG_OPTIONS: &'static [WOption<'static>] = &[
+        wopt(L!("length"), RequiredArgument, 'l'),
+        wopt(L!("start"), RequiredArgument, 's'),
+        wopt(L!("end"), RequiredArgument, 'e'),
+        wopt(L!("quiet"), NoArgument, 'q'),
     ];
     const SHORT_OPTIONS: &'static wstr = L!(":l:qs:e:");
 

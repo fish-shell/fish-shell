@@ -42,7 +42,7 @@ complete -c qubes-gpg-client -l disable-pubkey-algo -x -d "Never allow the use o
 complete -c qubes-gpg-client -l emit-version -d "Include the version string in ASCII armored output"
 complete -c qubes-gpg-client -l export -x -d 'Export all or the given keys from all keyrings'
 complete -c qubes-gpg-client -l fingerprint -d "List all keys with their fingerprints"
-complete -c qubes-gpg-client -l fixed-list-mode -d "Do not merge primary user ID and primary key in --with-colons listing mode and print all timestamps as UNIX timestamps"
+complete -c qubes-gpg-client -l fixed-list-mode -d "Do not merge primary user ID/key in --with-colons listing mode and make timestamps UNIX time"
 complete -c qubes-gpg-client -l force-mdc -d "Force the use of encryption with a modification detection code"
 complete -c qubes-gpg-client -l force-v3-sigs -d "Force v3 signatures for signatures on data"
 complete -c qubes-gpg-client -l force-v4-certs -d "Always use v4 key signatures even on v3 keys"
@@ -75,7 +75,7 @@ complete -c qubes-gpg-client -l use-agent -d "Try to use the GnuPG-Agent"
 complete -c qubes-gpg-client -l verify -r -d "Assume specified file or stdin is sigfile and verify it"
 complete -c qubes-gpg-client -l version -d "Display version and supported algorithms, and exit"
 complete -c qubes-gpg-client -l with-colons -d "Print key listings delimited by colons"
-complete -c qubes-gpg-client -l with-fingerprint -d "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"
+complete -c qubes-gpg-client -l with-fingerprint -d "Like --fingerprint but only change the output format"
 complete -c qubes-gpg-client -l with-keygrip -d "Include the keygrip in the key listings"
 
 # qubes-gpg-client-wrapper wraps qubes-gpg-client and qubes-gpg-import-key, but the latter needs no

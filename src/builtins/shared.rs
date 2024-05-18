@@ -650,11 +650,11 @@ impl HelpOnlyCmdOpts {
         let print_hints = true;
 
         const shortopts: &wstr = L!("+:h");
-        const longopts: &[woption] = &[wopt(L!("help"), woption_argument_t::no_argument, 'h')];
+        const longopts: &[WOption] = &[wopt(L!("help"), ArgType::NoArgument, 'h')];
 
         let mut print_help = false;
-        let mut w = wgetopter_t::new(shortopts, longopts, args);
-        while let Some(c) = w.wgetopt_long() {
+        let mut w = WGetopter::new(shortopts, longopts, args);
+        while let Some(c) = w.next_opt() {
             match c {
                 'h' => {
                     print_help = true;
@@ -664,24 +664,30 @@ impl HelpOnlyCmdOpts {
                         parser,
                         streams,
                         cmd,
-                        args[w.woptind - 1],
+                        args[w.wopt_index - 1],
                         print_hints,
                     );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 '?' => {
-                    builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], print_hints);
+                    builtin_unknown_option(
+                        parser,
+                        streams,
+                        cmd,
+                        args[w.wopt_index - 1],
+                        print_hints,
+                    );
                     return Err(STATUS_INVALID_ARGS);
                 }
                 _ => {
-                    panic!("unexpected retval from wgetopter::wgetopt_long()");
+                    panic!("unexpected retval from WGetopter");
                 }
             }
         }
 
         Ok(HelpOnlyCmdOpts {
             print_help,
-            optind: w.woptind,
+            optind: w.wopt_index,
         })
     }
 }
@@ -780,14 +786,14 @@ impl<'args, 'iter> Arguments<'args, 'iter> {
         }
 
         // assert!(num_bytes == self.buffer.len());
-        let (end, want_newline) = match (&self.split_behavior, self.buffer.last().unwrap()) {
+        let (end, want_newline) = match (&self.split_behavior, self.buffer.last()) {
             // remove the newline — consumers do not expect it
-            (Newline, b'\n') => (num_bytes - 1, true),
+            (Newline, Some(b'\n')) => (num_bytes - 1, true),
             // we are missing a trailing newline!
             (Newline, _) => (num_bytes, false),
             // consumers do not expect to deal with the null
             // "want_newline" is not currently relevant for Null
-            (Null, b'\0') => (num_bytes - 1, false),
+            (Null, Some(b'\0')) => (num_bytes - 1, false),
             // we are missing a null!
             (Null, _) => (num_bytes, false),
             (Never, _) => (num_bytes, false),

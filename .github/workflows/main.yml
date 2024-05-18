@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.67
+    - uses: dtolnay/rust-toolchain@1.70
     - name: Install deps
       run: |
         sudo apt install gettext libpcre2-dev python3-pip tmux
@@ -43,7 +43,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.67
+    - uses: dtolnay/rust-toolchain@1.70
       with:
         targets: "i686-unknown-linux-gnu" # rust-toolchain wants this comma-separated
     - name: Install deps
@@ -93,7 +93,6 @@ jobs:
       env:
           CC: clang
           CXX: clang++
-          CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -DFISH_CI_SAN"
       run: |
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
@@ -128,7 +127,7 @@ jobs:
   #
   #   steps:
   #   - uses: actions/checkout@v4
-  #   - uses: dtolnay/rust-toolchain@1.67
+  #   - uses: dtolnay/rust-toolchain@1.70
   #   - name: Install deps
   #     run: |
   #       sudo apt install gettext libpcre2-dev python3-pip tmux
@@ -153,12 +152,18 @@ jobs:
 
     runs-on: macos-latest
 
+    env:
+      # macOS runners keep having issues loading Cargo.toml dependencies from git (GitHub) instead
+      # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
+      CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.67
+    - uses: dtolnay/rust-toolchain@1.70
     - name: Install deps
       run: |
-        sudo pip3 install pexpect
+        # --break-system-packages because homebrew has now declared itself "externally managed".
+        # this is CI so we don't actually care.
+        sudo pip3 install --break-system-packages pexpect
         brew install tmux
     - name: cmake
       run: |

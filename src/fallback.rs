@@ -8,7 +8,8 @@ use crate::{common::is_console_session, wchar::prelude::*};
 use errno::{errno, Errno};
 use once_cell::sync::Lazy;
 use std::cmp;
-use std::os::fd::{FromRawFd, OwnedFd};
+use std::fs::File;
+use std::os::fd::FromRawFd;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::{ffi::CString, mem};
 
@@ -102,7 +103,7 @@ pub fn fish_wcswidth(s: &wstr) -> isize {
 // Replacement for mkostemp(str, O_CLOEXEC)
 // This uses mkostemp if available,
 // otherwise it uses mkstemp followed by fcntl
-pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(OwnedFd, CString), Errno> {
+pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), Errno> {
     let name = name_template.into_raw();
     #[cfg(not(target_os = "macos"))]
     let fd = {
@@ -121,7 +122,7 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(OwnedFd, CString)
     if fd == -1 {
         Err(errno())
     } else {
-        unsafe { Ok((OwnedFd::from_raw_fd(fd), CString::from_raw(name))) }
+        unsafe { Ok((File::from_raw_fd(fd), CString::from_raw(name))) }
     }
 }
 

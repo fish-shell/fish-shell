@@ -184,7 +184,7 @@ __fish_snap_option install -l revision -d "Install the given revision of snap, t
 __fish_snap_option install -l devmode -d "Put snap in development mode and disable security confinement"
 __fish_snap_option install -l jailmode -d "Put snap in enforced confinement mode"
 __fish_snap_option install -l classic -d "Put snap in classic mode and disable security confinement"
-__fish_snap_option install -l dangerous -d "Install the given snap file even if there are no pre-acknowledged signatures for it, meaning it was not  verified and could be dangerous"
+__fish_snap_option install -l dangerous -d "Install the given snap even without pre-acknowledged signatures (DANGEROUS)"
 
 # Interfaces
 __fish_snap_subcommand interfaces -d "Lists interfaces in the system"

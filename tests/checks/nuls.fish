@@ -9,4 +9,4 @@ echo foo\x00bar | string escape
 # CHECK: foo
 # This one is just escaped
 echo foo\\x00bar | string escape
-# CHECK: foo\\x00bar
+# CHECK: 'foo\\x00bar'

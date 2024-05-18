@@ -27,7 +27,7 @@ complete -c mono -l aot -a '(__fish_append , \\
   nimt-trampolines\t"Precreate IMT trampolines in the AOT image" \\
   ngsharedvt-trampolines\t"Precreate value type generic sharing trampolines in the AOT image" \\
   nodebug\t"Instruct the AOT compiler to not output any debugging information" \\
-  no-direct-calls\t"Prevent the AOT compiler from generating a direct calls to a method" \\
+  no-direct-calls\t"Prevent the AOT compiler from generating direct calls to a method" \\
   nrgctx-trampolines\t"Precreate generic sharing trampolines in the AOT image" \\
   nrgctx-fetch-trampolines\t"Precreate generic sharing fetch trampolines in the AOT image" \\
   ntrampolines\t"Precreate method trampolines in the AOT image" \\
@@ -70,7 +70,7 @@ complete -c mono -l debugger-agent -a '(__fish_append , \\
 complete -c mono -l desktop \
     -d 'Configure the virtual machine to be better suited for desktop applications'
 complete -c mono -l full-aot \
-    -d 'Prevent from generation any code at runtime and depend exclusively on the code generated from using mono --aot=full previously'
+    -d 'Depend exclusively on code generated from previous mono --aot=full'
 complete -c mono -l full-aot-interp \
     -d 'Same as --full-aot with fallback to the interpreter'
 complete -c mono -l gc -a 'boehm\tBoehm sgen\tSGen' -f -d 'Use the Garbage Collector engine'
@@ -115,7 +115,7 @@ complete -c mono -l runtime -a '(mono --version)' -f -d 'Use Mono version'
 complete -c mono -l server -d 'Optimize the virtual machine to be better suited for server operations'
 complete -c mono -l use-map-jit -d 'Generate code using MAP_JIT on MacOS'
 complete -c mono -l verify-all \
-    -d 'Verify mscorlib and assemblies in the global assembly cache for valid IL, and all user code for IL verifiability'
+    -d 'Verify mscorlib and assemblies in the cache for valid IL, and user code for IL verifiability'
 
 # Development options
 complete -c mono -l debug -a '(__fish_append , \\
@@ -143,7 +143,7 @@ complete -c mono -l graph \
     optcode\t"CFG showing code after IR optimizations"' \
     -x -d 'Generate a postscript file with a graph with the details about the specified method'
 complete -c mono -l ncompile \
-    -d 'Instruct the runtime on the number of times that the method(-s) specified by --compile/--compile-all to be compiled'
+    -d 'Tell runtime to compile methods specified by --compile N times'
 complete -c mono -l stats \
     -d 'Display information about the work done by the runtime during the execution of an application'
 complete -c mono -l wapi \

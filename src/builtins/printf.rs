@@ -60,17 +60,17 @@ use crate::wutil::{
 use printf_compat::args::ToArg;
 use printf_compat::printf::sprintf_locale;
 
-/// \return true if \p c is an octal digit.
+/// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {
     ('0'..='7').contains(&c)
 }
 
-/// \return true if \p c is a decimal digit.
+/// Return true if `c` is a decimal digit.
 fn iswdigit(c: char) -> bool {
     c.is_ascii_digit()
 }
 
-/// \return true if \p c is a hexadecimal digit.
+/// Return true if `c` is a hexadecimal digit.
 fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
@@ -95,11 +95,11 @@ struct builtin_printf_state_t<'a, 'b> {
     locale: Locale,
 }
 
-/// Convert to a scalar type. \return the result of conversion, and the end of the converted string.
-/// On conversion failure, \p end is not modified.
+/// Convert to a scalar type. Return the result of conversion, and the end of the converted string.
+/// On conversion failure, `end` is not modified.
 trait RawStringToScalarType: Copy + std::convert::From<u32> {
     /// Convert from a string to our self type.
-    /// \return the result of conversion, and the remainder of the string.
+    /// Return the result of conversion, and the remainder of the string.
     fn raw_string_to_scalar_type<'a>(
         s: &'a wstr,
         locale: &Locale,

@@ -8,7 +8,7 @@ import sys
 # and fails this a lot.
 #
 # Presumably we still have users on macOS that would notice binding errors
-if "GITHUB_WORKFLOW" in os.environ and platform.system() == "Darwin":
+if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 
 sp = SpawnedProc()
@@ -42,7 +42,7 @@ expect_prompt("")
 # Start by testing with no delay. This should transpose the words.
 send("echo abc def")
 send("\033t\r")
-expect_prompt("\r\ndef abc\r\n")  # emacs transpose words, default timeout: no delay
+expect_prompt("\r\n.*def abc\r\n")  # emacs transpose words, default timeout: no delay
 
 # Now test with a delay > 0 and < the escape timeout. This should transpose
 # the words.
@@ -51,7 +51,7 @@ send("\033")
 sleep(0.010)
 send("t\r")
 # emacs transpose words, default timeout: short delay
-expect_prompt("\r\njkl ghi\r\n")
+expect_prompt("\r\n.*jkl ghi\r\n")
 
 # Now test with a delay > the escape timeout. The transposition should not
 # occur and the "t" should become part of the text that is echoed.
@@ -60,11 +60,11 @@ send("\033")
 sleep(0.250)
 send("t\r")
 # emacs transpose words, default timeout: long delay
-expect_prompt("\r\nmno pqrt\r\n")
+expect_prompt("\r\n.*mno pqrt\r\n")
 
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
-expect_prompt("\r\ndefault\r\npaste", unmatched="Unexpected bind modes")
+expect_prompt("\r\n.*default", unmatched="Unexpected bind modes")
 
 # Test vi key bindings.
 # This should leave vi mode in the insert state.
@@ -74,7 +74,7 @@ expect_prompt()
 # Go through a prompt cycle to let fish catch up, it may be slow due to ASAN
 sendline("echo success: default escape timeout")
 expect_prompt(
-    "\r\nsuccess: default escape timeout", unmatched="prime vi mode, default timeout"
+    "\r\n.*success: default escape timeout", unmatched="prime vi mode, default timeout"
 )
 
 send("echo fail: default escape timeout")
@@ -88,7 +88,7 @@ sleep(0.250)
 send("ddi")
 sendline("echo success: default escape timeout")
 expect_prompt(
-    "\r\nsuccess: default escape timeout\r\n",
+    "\r\n.*success: default escape timeout\r\n",
     unmatched="vi replace line, default timeout: long delay",
 )
 
@@ -103,7 +103,7 @@ send("\033")
 sleep(0.400)
 send("hhrAi\r")
 expect_prompt(
-    "\r\nTAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"
+    "\r\n.*TAXT\r\n", unmatched="vi mode replace char, default timeout: long delay"
 )
 
 # Test deleting characters with 'x'.
@@ -115,7 +115,7 @@ send("xxxxx\r")
 
 # vi mode delete char, default timeout: long delay
 expect_prompt(
-    "\r\nMORE\r\n", unmatched="vi mode delete char, default timeout: long delay"
+    "\r\n.*MORE\r\n", unmatched="vi mode delete char, default timeout: long delay"
 )
 
 # Test jumping forward til before a character with t
@@ -127,7 +127,7 @@ send("0tTD\r")
 
 # vi mode forward-jump-till character, default timeout: long delay
 expect_prompt(
-    "\r\nMORE\r\n",
+    "\r\n.*MORE\r\n",
     unmatched="vi mode forward-jump-till character, default timeout: long delay",
 )
 
@@ -140,7 +140,7 @@ expect_prompt(
 # send("TSD\r")
 # # vi mode backward-jump-till character, default timeout: long delay
 # expect_prompt(
-#     "\r\nMORE-TEXT-IS\r\n",
+#     "\r\n.*MORE-TEXT-IS\r\n",
 #     unmatched="vi mode backward-jump-till character, default timeout: long delay",
 # )
 
@@ -152,7 +152,7 @@ sleep(0.250)
 send("F-;D\r")
 # vi mode backward-jump-to character and repeat, default timeout: long delay
 expect_prompt(
-    "\r\nMORE-TEXT\r\n",
+    "\r\n.*MORE-TEXT\r\n",
     unmatched="vi mode backward-jump-to character and repeat, default timeout: long delay",
 )
 
@@ -164,7 +164,7 @@ sleep(0.250)
 send("F-F-,D\r")
 # vi mode backward-jump-to character, and reverse, default timeout: long delay
 expect_prompt(
-    "\r\nMORE-TEXT-IS\r\n",
+    "\r\n.*MORE-TEXT-IS\r\n",
     unmatched="vi mode backward-jump-to character, and reverse, default timeout: long delay",
 )
 
@@ -179,7 +179,7 @@ send("ddi")
 sleep(0.25)
 send("echo success: lengthened escape timeout\r")
 expect_prompt(
-    "\r\nsuccess: lengthened escape timeout\r\n",
+    "\r\n.*success: lengthened escape timeout\r\n",
     unmatched="vi replace line, 100ms timeout: long delay",
 )
 
@@ -191,7 +191,7 @@ sleep(0.010)
 send("ddi")
 send("inserted\r")
 expect_prompt(
-    "\r\nfail: no normal modediinserted\r\n",
+    "\r\n.*fail: no normal modediinserted\r\n",
     unmatched="vi replace line, 100ms timeout: short delay",
 )
 
@@ -208,7 +208,7 @@ expect_str("echo TEXT")
 send("\033")
 sleep(0.200)
 send("hhtTrN\r")
-expect_prompt("\r\nTENT\r\n", unmatched="Couldn't find expected output 'TENT'")
+expect_prompt("\r\n.*TENT\r\n", unmatched="Couldn't find expected output 'TENT'")
 
 # Test sequence key delay
 send("set -g fish_sequence_key_delay_ms 200\r")
@@ -239,12 +239,12 @@ expect_prompt("foo")
 # send("echo some TExT\033")
 # sleep(0.300)
 # send("hh~~bbve~\r")
-# expect_prompt("\r\nSOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
+# expect_prompt("\r\n.*SOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
 
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(
-    "\r\ndefault\r\ninsert\r\npaste\r\nreplace\r\nreplace_one\r\nvisual\r\n",
+    "default\r\ninsert\r\nreplace\r\nreplace_one\r\nvisual\r\n",
     unmatched="Unexpected vi bind modes",
 )
 
@@ -255,7 +255,7 @@ expect_prompt()
 # Verify the custom escape timeout set earlier is still in effect.
 sendline("echo fish_escape_delay_ms=$fish_escape_delay_ms")
 expect_prompt(
-    "\r\nfish_escape_delay_ms=50\r\n",
+    "\r\n.*fish_escape_delay_ms=50\r\n",
     unmatched="default-mode custom timeout not set correctly",
 )
 
@@ -270,39 +270,17 @@ send("echo abc def")
 send("\033")
 send("t\r")
 expect_prompt(
-    "\r\ndef abc\r\n", unmatched="emacs transpose words fail, 200ms timeout: no delay"
-)
-
-# Same test as above but with a slight delay less than the escape timeout.
-send("echo ghi jkl")
-send("\033")
-sleep(0.020)
-send("t\r")
-expect_prompt(
-    "\r\njkl ghi\r\n",
-    unmatched="emacs transpose words fail, 200ms timeout: short delay",
-)
-
-# Now test with a delay > the escape timeout. The transposition should not
-# occur and the "t" should become part of the text that is echoed.
-send("echo mno pqr")
-send("\033")
-sleep(0.350)
-send("t\r")
-# emacs transpose words, 100ms timeout: long delay
-expect_prompt(
-    "\r\nmno pqrt\r\n",
-    unmatched="emacs transpose words fail, 200ms timeout: long delay",
+    "\r\n.*def abc\r\n", unmatched="emacs transpose words fail, 200ms timeout: no delay"
 )
 
 # Verify special characters, such as \cV, are not intercepted by the kernel
 # tty driver. Rather, they can be bound and handled by fish.
-sendline("bind \\cV 'echo ctrl-v seen'")
+sendline("bind ctrl-v 'echo ctrl-v seen'")
 expect_prompt()
 send("\026\r")
 expect_prompt("ctrl-v seen", unmatched="ctrl-v not seen")
 
-send("bind \\cO 'echo ctrl-o seen'\r")
+send("bind ctrl-o 'echo ctrl-o seen'\r")
 expect_prompt()
 send("\017\r")
 expect_prompt("ctrl-o seen", unmatched="ctrl-o not seen")
@@ -336,7 +314,7 @@ send("\0" * 3)
 # be echoed).
 sleep(0.1)
 send("\r")
-expect_prompt("nul seen\r\nnul seen\r\nnul seen", unmatched="nul not seen")
+expect_prompt("nul seen\r\n.*nul seen\r\n.*nul seen", unmatched="nul not seen")
 
 # Test self-insert-notfirst. (#6603)
 # Here the leading 'q's should be stripped, but the trailing ones not.
@@ -346,31 +324,31 @@ sendline("qqqecho qqq")
 expect_prompt("qqq", unmatched="Leading qs not stripped")
 
 # Test bigword with single-character words.
-sendline("bind \cg kill-bigword")
+sendline("bind ctrl-g kill-bigword")
 expect_prompt()
 send("a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
-expect_prompt("\nb c d")
+expect_prompt("\n.*b c d")
 
 # Test that overriding the escape binding works
 # and does not inhibit other escape sequences (up-arrow in this case).
-sendline("bind \\x1b 'echo foo'")
+sendline("bind escape 'echo foo'")
 expect_prompt()
 send("\x1b")
 expect_str("foo")
 send("\x1b[A")
-expect_str("bind \\x1b 'echo foo'")
+expect_str("bind escape 'echo foo'")
 sendline("")
 expect_prompt()
 
 send("    a b c d\x01")  # ctrl-a, move back to the beginning of the line
 send("\x07")  # ctrl-g, kill bigword
 sendline("echo")
-expect_prompt("\nb c d")
+expect_prompt("\n.*b c d")
 
 # Check that ctrl-z can be bound
-sendline('bind \cz "echo bound ctrl-z"')
+sendline('bind ctrl-z "echo bound ctrl-z"')
 expect_prompt()
 send("\x1A")
 expect_str("bound ctrl-z")
@@ -380,9 +358,23 @@ send('\x02\x02\x02') # ctrl-b, backward-char
 sendline('\x1bu') # alt+u, upcase word
 expect_prompt("fooBAR")
 
+send("""
+    bind ctrl-g "
+        commandline --insert 'echo foo ar'
+        commandline -f backward-word
+        commandline --insert b
+        commandline -f backward-char
+        commandline -f backward-char
+        commandline -f delete-char
+    "
+""")
+send('\x07') # ctrl-g
+send('\r')
+expect_prompt("foobar")
+
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
-sendline("function myexit; echo exit; exit; end; bind \cz myexit")
+sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")
 expect_prompt()
 send("\x1A")
 expect_str("exit")

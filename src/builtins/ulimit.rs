@@ -176,54 +176,38 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
     const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
 
-    const LONG_OPTS: &[woption] = &[
-        wopt(L!("all"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("hard"), woption_argument_t::no_argument, 'H'),
-        wopt(L!("soft"), woption_argument_t::no_argument, 'S'),
-        wopt(L!("socket-buffers"), woption_argument_t::no_argument, 'b'),
-        wopt(L!("core-size"), woption_argument_t::no_argument, 'c'),
-        wopt(L!("data-size"), woption_argument_t::no_argument, 'd'),
-        wopt(L!("nice"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("file-size"), woption_argument_t::no_argument, 'f'),
-        wopt(L!("pending-signals"), woption_argument_t::no_argument, 'i'),
-        wopt(L!("lock-size"), woption_argument_t::no_argument, 'l'),
-        wopt(
-            L!("resident-set-size"),
-            woption_argument_t::no_argument,
-            'm',
-        ),
-        wopt(
-            L!("file-descriptor-count"),
-            woption_argument_t::no_argument,
-            'n',
-        ),
-        wopt(L!("queue-size"), woption_argument_t::no_argument, 'q'),
-        wopt(
-            L!("realtime-priority"),
-            woption_argument_t::no_argument,
-            'r',
-        ),
-        wopt(L!("stack-size"), woption_argument_t::no_argument, 's'),
-        wopt(L!("cpu-time"), woption_argument_t::no_argument, 't'),
-        wopt(L!("process-count"), woption_argument_t::no_argument, 'u'),
-        wopt(
-            L!("virtual-memory-size"),
-            woption_argument_t::no_argument,
-            'v',
-        ),
-        wopt(L!("swap-size"), woption_argument_t::no_argument, 'w'),
-        wopt(L!("realtime-maxtime"), woption_argument_t::no_argument, 'y'),
-        wopt(L!("kernel-queues"), woption_argument_t::no_argument, 'K'),
-        wopt(L!("ptys"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("threads"), woption_argument_t::no_argument, 'T'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+    const LONG_OPTS: &[WOption] = &[
+        wopt(L!("all"), ArgType::NoArgument, 'a'),
+        wopt(L!("hard"), ArgType::NoArgument, 'H'),
+        wopt(L!("soft"), ArgType::NoArgument, 'S'),
+        wopt(L!("socket-buffers"), ArgType::NoArgument, 'b'),
+        wopt(L!("core-size"), ArgType::NoArgument, 'c'),
+        wopt(L!("data-size"), ArgType::NoArgument, 'd'),
+        wopt(L!("nice"), ArgType::NoArgument, 'e'),
+        wopt(L!("file-size"), ArgType::NoArgument, 'f'),
+        wopt(L!("pending-signals"), ArgType::NoArgument, 'i'),
+        wopt(L!("lock-size"), ArgType::NoArgument, 'l'),
+        wopt(L!("resident-set-size"), ArgType::NoArgument, 'm'),
+        wopt(L!("file-descriptor-count"), ArgType::NoArgument, 'n'),
+        wopt(L!("queue-size"), ArgType::NoArgument, 'q'),
+        wopt(L!("realtime-priority"), ArgType::NoArgument, 'r'),
+        wopt(L!("stack-size"), ArgType::NoArgument, 's'),
+        wopt(L!("cpu-time"), ArgType::NoArgument, 't'),
+        wopt(L!("process-count"), ArgType::NoArgument, 'u'),
+        wopt(L!("virtual-memory-size"), ArgType::NoArgument, 'v'),
+        wopt(L!("swap-size"), ArgType::NoArgument, 'w'),
+        wopt(L!("realtime-maxtime"), ArgType::NoArgument, 'y'),
+        wopt(L!("kernel-queues"), ArgType::NoArgument, 'K'),
+        wopt(L!("ptys"), ArgType::NoArgument, 'P'),
+        wopt(L!("threads"), ArgType::NoArgument, 'T'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.report_all = true,
             'H' => opts.hard = true,
@@ -253,15 +237,15 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, w.argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
@@ -283,7 +267,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     let what: c_uint = opts.what.try_into().unwrap();
 
     let argc = w.argv.len();
-    let arg_count = argc - w.woptind;
+    let arg_count = argc - w.wopt_index;
     if arg_count == 0 {
         print(what, opts.hard, streams);
         return STATUS_CMD_OK;
@@ -304,32 +288,32 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         soft = true;
     }
 
-    let new_limit: rlim_t = if w.woptind == argc {
+    let new_limit: rlim_t = if w.wopt_index == argc {
         streams.err.append(wgettext_fmt!(
             "%ls: New limit cannot be an empty string\n",
             cmd
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
-    } else if wcscasecmp(w.argv[w.woptind], L!("unlimited")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
         RLIM_INFINITY
-    } else if wcscasecmp(w.argv[w.woptind], L!("hard")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("hard")) == Ordering::Equal {
         match get(what, true) {
             Some(limit) => limit,
             None => return STATUS_CMD_ERROR,
         }
-    } else if wcscasecmp(w.argv[w.woptind], L!("soft")) == Ordering::Equal {
+    } else if wcscasecmp(w.argv[w.wopt_index], L!("soft")) == Ordering::Equal {
         match get(what, soft) {
             Some(limit) => limit,
             None => return STATUS_CMD_ERROR,
         }
-    } else if let Ok(limit) = fish_wcstol(w.argv[w.woptind]) {
+    } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         limit as rlim_t * get_multiplier(what)
     } else {
         streams.err.append(wgettext_fmt!(
             "%ls: Invalid limit '%ls'\n",
             cmd,
-            w.argv[w.woptind]
+            w.argv[w.wopt_index]
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;

@@ -65,7 +65,7 @@ expect_prompt("echo start2.*\r\necho start1")
 # Verify searching with a request for timestamps includes the timestamps.
 sendline("history search --show-time='# %F %T%n' --prefix 'echo start'")
 expect_prompt(
-    "# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start2; .*\r\n# \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\r\necho start1;"
+    "# \\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\r\necho start2; .*\r\n# \\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\r\necho start1;"
 )
 
 # ==========
@@ -192,7 +192,7 @@ expect_prompt("nonephemeral! line")
 sendline("true")
 expect_prompt()
 sendline("echo a; history search '*ephemeral!*' | cat; echo b")
-expect_prompt("a\r\necho nonephemeral! line\r\nb\r\n")
+expect_prompt(r"a\r\n.*echo nonephemeral! line\r\nb\r\n")
 
 # If fish_should_add_to_history exists, it will completely take over,
 # so even lines with spaces are stored
@@ -201,4 +201,4 @@ expect_prompt("spaced")
 sendline("true")
 expect_prompt()
 sendline("echo a; history search '*spaced*' | cat; echo b")
-expect_prompt("a\r\n echo spaced\r\nb\r\n")
+expect_prompt("a\r\n.* echo spaced\r\nb\r\n")

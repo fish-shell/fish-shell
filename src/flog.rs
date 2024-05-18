@@ -79,6 +79,8 @@ pub mod categories {
 
         (warning_path, "warning-path", "Warnings about unusable paths for config/history (on by default)", true);
 
+        (deprecated_test, "deprecated-test", "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future.");
+
         (config, "config", "Finding and reading configuration");
 
         (event, "event", "Firing events");
@@ -126,6 +128,7 @@ pub mod categories {
         (fd_monitor, "fd-monitor", "FD monitor events");
 
         (term_support, "term-support", "Terminal feature detection");
+        (term_protocols, "term-protocols", "Terminal protocol negotiation");
 
         (reader, "reader", "The interactive reader/input system");
         (reader_render, "reader-render", "Rendering the command line");
@@ -225,7 +228,7 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
     }
 }
 
-/// Set the active flog categories according to the given wildcard \p wc.
+/// Set the active flog categories according to the given wildcard `wc`.
 pub fn activate_flog_categories_by_pattern(wc_ptr: &wstr) {
     let mut wc: WString = wc_ptr.into();
     // Normalize underscores to dashes, allowing the user to be sloppy.

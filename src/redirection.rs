@@ -11,6 +11,7 @@ pub enum RedirectionMode {
     overwrite, // normal redirection: > file.txt
     append,    // appending redirection: >> file.txt
     input,     // input redirection: < file.txt
+    try_input, // try-input redirection: <? file.txt
     fd,        // fd redirection: 2>&1
     noclob,    // noclobber redirection: >? file.txt
 }
@@ -38,7 +39,7 @@ impl RedirectionMode {
             RedirectionMode::append => Some(OFlag::O_CREAT | OFlag::O_APPEND | OFlag::O_WRONLY),
             RedirectionMode::overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
             RedirectionMode::noclob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
-            RedirectionMode::input => Some(OFlag::O_RDONLY),
+            RedirectionMode::input | RedirectionMode::try_input => Some(OFlag::O_RDONLY),
             _ => None,
         }
     }
@@ -72,7 +73,7 @@ impl RedirectionSpec {
     pub fn new(fd: RawFd, mode: RedirectionMode, target: WString) -> Self {
         Self { fd, mode, target }
     }
-    /// \return if this is a close-type redirection.
+    /// Return if this is a close-type redirection.
     pub fn is_close(&self) -> bool {
         self.mode == RedirectionMode::fd && self.target == "-"
     }
@@ -82,7 +83,7 @@ impl RedirectionSpec {
         fish_wcstoi(&self.target).ok()
     }
 
-    /// \return the open flags for this redirection.
+    /// Return the open flags for this redirection.
     pub fn oflags(&self) -> OFlag {
         match self.mode.oflags() {
             Some(flags) => flags,
@@ -112,12 +113,12 @@ impl Dup2List {
     pub fn new() -> Self {
         Default::default()
     }
-    /// \return the list of dup2 actions.
+    /// Return the list of dup2 actions.
     pub fn get_actions(&self) -> &[Dup2Action] {
         &self.actions
     }
 
-    /// \return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
+    /// Return the fd ultimately dup'd to a target fd, or -1 if the target is closed.
     /// For example, if target fd is 1, and we have a dup2 chain 5->3 and 3->1, then we will
     /// return 5. If the target is not referenced in the chain, returns target.
     pub fn fd_for_target_fd(&self, target: RawFd) -> RawFd {

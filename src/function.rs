@@ -71,7 +71,7 @@ struct FunctionSet {
 
 impl FunctionSet {
     /// Remove a function.
-    /// \return true if successful, false if it doesn't exist.
+    /// Return true if successful, false if it doesn't exist.
     fn remove(&mut self, name: &wstr) -> bool {
         if self.funcs.remove(name).is_some() {
             event::remove_function_handlers(name);
@@ -86,7 +86,7 @@ impl FunctionSet {
         self.funcs.get(name).cloned()
     }
 
-    /// \return true if we should allow autoloading a given function.
+    /// Return true if we should allow autoloading a given function.
     fn allow_autoload(&self, name: &wstr) -> bool {
         // Prohibit autoloading if we have a non-autoload (explicit) function, or if the function is
         // tombstoned.
@@ -122,7 +122,7 @@ pub fn load(name: &wstr, parser: &Parser) -> bool {
         if funcset.allow_autoload(name) {
             if let Some(path) = funcset
                 .autoloader
-                .resolve_command(name, EnvStack::globals().as_ref().get_ref())
+                .resolve_command(name, EnvStack::globals())
             {
                 path_to_autoload = Some(path);
             }
@@ -177,7 +177,7 @@ fn autoload_names(names: &mut HashSet<WString>, get_hidden: bool) {
     }
 }
 
-/// Add a function. This may mutate \p props to set is_autoload.
+/// Add a function. This may mutate `props` to set is_autoload.
 pub fn add(name: WString, props: Arc<FunctionProperties>) {
     let mut funcset = FUNCTION_SET.lock().unwrap();
 
@@ -202,7 +202,7 @@ pub fn add(name: WString, props: Arc<FunctionProperties>) {
     );
 }
 
-/// \return the properties for a function, or None. This does not trigger autoloading.
+/// Return the properties for a function, or None. This does not trigger autoloading.
 pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
     if parser_keywords_is_reserved(name) {
         None
@@ -211,7 +211,7 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
     }
 }
 
-/// \return the properties for a function, or None, perhaps triggering autoloading.
+/// Return the properties for a function, or None, perhaps triggering autoloading.
 pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionProperties>> {
     parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
@@ -221,7 +221,7 @@ pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionPr
     get_props(name)
 }
 
-/// Returns true if the function named \p cmd exists.
+/// Returns true if the function named `cmd` exists.
 /// This may autoload.
 pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
     parser.assert_can_execute();
@@ -231,7 +231,7 @@ pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
     get_props_autoload(cmd, parser).is_some()
 }
 
-/// Returns true if the function \p cmd either is loaded, or exists on disk in an autoload
+/// Returns true if the function `cmd` either is loaded, or exists on disk in an autoload
 /// directory.
 pub fn exists_no_autoload(cmd: &wstr) -> bool {
     if !valid_func_name(cmd) {
@@ -253,7 +253,7 @@ pub fn remove(name: &wstr) {
     funcset.autoload_tombstones.insert(name.to_owned());
 }
 
-// \return the body of a function (everything after the header, up to but not including the 'end').
+// Return the body of a function (everything after the header, up to but not including the 'end').
 fn get_function_body_source(props: &FunctionProperties) -> &wstr {
     // We want to preserve comments that the AST attaches to the header (#5285).
     // Take everything from the end of the header to the 'end' keyword.
@@ -458,10 +458,8 @@ impl FunctionProperties {
 
         let named = &self.named_arguments;
         if !named.is_empty() {
-            out.push_str(" --argument");
             for name in named {
-                // TODO: should these names be escaped?
-                sprintf!(=> &mut out, " %ls", name);
+                sprintf!(=> &mut out, " --argument-names %ls", name);
             }
         }
 

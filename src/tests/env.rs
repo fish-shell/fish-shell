@@ -91,7 +91,7 @@ fn test_timezone_env_vars() {
 #[test]
 #[serial]
 fn test_env_vars() {
-    test_init();
+    let _cleanup = test_init();
     test_timezone_env_vars();
     // TODO: Add tests for the locale and ncurses vars.
 
@@ -110,7 +110,7 @@ fn test_env_vars() {
 #[test]
 #[serial]
 fn test_env_snapshot() {
-    test_init();
+    let _cleanup = test_init();
     std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
     pushd("test/fish_env_snapshot_test/");
     let vars = Parser::principal_parser().vars();

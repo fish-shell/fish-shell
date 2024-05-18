@@ -3,47 +3,14 @@
 pub trait IsSomeAnd {
     type Type;
     #[allow(clippy::wrong_self_convention)]
-    fn is_some_and(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
-    #[allow(clippy::wrong_self_convention)]
     fn is_none_or(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
 }
 impl<T> IsSomeAnd for Option<T> {
     type Type = T;
-    fn is_some_and(self, f: impl FnOnce(T) -> bool) -> bool {
-        match self {
-            Some(v) => f(v),
-            None => false,
-        }
-    }
     fn is_none_or(self, f: impl FnOnce(T) -> bool) -> bool {
         match self {
             Some(v) => f(v),
             None => true,
-        }
-    }
-}
-
-pub trait IsOkAnd {
-    type Type;
-    type Error;
-    #[allow(clippy::wrong_self_convention)]
-    fn is_ok_and(self, s: impl FnOnce(Self::Type) -> bool) -> bool;
-    #[allow(clippy::wrong_self_convention)]
-    fn is_err_and(self, s: impl FnOnce(Self::Error) -> bool) -> bool;
-}
-impl<T, E> IsOkAnd for Result<T, E> {
-    type Type = T;
-    type Error = E;
-    fn is_ok_and(self, f: impl FnOnce(T) -> bool) -> bool {
-        match self {
-            Ok(v) => f(v),
-            Err(_) => false,
-        }
-    }
-    fn is_err_and(self, f: impl FnOnce(E) -> bool) -> bool {
-        match self {
-            Ok(_) => false,
-            Err(e) => f(e),
         }
     }
 }

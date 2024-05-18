@@ -202,7 +202,7 @@ impl fd_readable_set_t {
     }
 
     /// Call select() or poll(), according to FISH_READABLE_SET_USE_POLL. Note this destructively
-    /// modifies the set. \return the result of select() or poll().
+    /// modifies the set. Return the result of select() or poll().
     ///
     /// TODO: Change to [`Duration`](std::time::Duration) once FFI usage is done.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {
@@ -213,7 +213,7 @@ impl fd_readable_set_t {
     }
 
     /// Check if a single fd is readable, with a given timeout.
-    /// \return true if `fd` is our set and is readable, `false` otherwise.
+    /// Return true if `fd` is our set and is readable, `false` otherwise.
     pub fn is_fd_readable(fd: RawFd, timeout_usec: u64) -> bool {
         if fd < 0 {
             return false;
@@ -228,7 +228,7 @@ impl fd_readable_set_t {
     }
 
     /// Check if a single fd is readable, without blocking.
-    /// \return true if readable, false if not.
+    /// Return true if readable, false if not.
     pub fn poll_fd_readable(fd: RawFd) -> bool {
         return Self::is_fd_readable(fd, 0);
     }

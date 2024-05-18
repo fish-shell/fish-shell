@@ -27,23 +27,22 @@ use fish::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
-        escape, exit_without_destructors, get_executable_path,
-        restore_term_foreground_process_group_for_exit, save_term_foreground_process_group,
-        scoped_push_replacer, str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE,
-        PROGRAM_NAME,
+        escape, get_executable_path, restore_term_foreground_process_group_for_exit,
+        save_term_foreground_process_group, scoped_push_replacer, str2wcstring, wcs2string,
+        ScopeGuard, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
-    env::Statuses,
     env::{
         environment::{env_init, EnvStack, Environment},
-        ConfigPaths, EnvMode,
+        ConfigPaths, EnvMode, Statuses,
     },
     eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
-    fprintf, function, future_feature_flags as features, history,
-    history::start_private_mode,
+    fprintf, function, future_feature_flags as features,
+    history::{self, start_private_mode},
     io::IoChain,
     nix::{getpid, isatty},
+    panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
@@ -54,14 +53,13 @@ use fish::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session,
     },
-    reader::{reader_init, reader_read, restore_term_mode, term_copy_modes},
+    reader::{reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
-    threads::{self, asan_maybe_exit},
+    threads::{self},
     topic_monitor,
     wchar::prelude::*,
     wutil::waccess,
 };
-use std::env;
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::mem::MaybeUninit;
@@ -69,6 +67,7 @@ use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::{env, ops::ControlFlow};
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
@@ -103,7 +102,7 @@ struct FishCmdOpts {
     enable_private_mode: bool,
 }
 
-/// \return a timeval converted to milliseconds.
+/// Return a timeval converted to milliseconds.
 #[allow(clippy::unnecessary_cast)]
 fn tv_to_msec(tv: &libc::timeval) -> i64 {
     // milliseconds per second
@@ -313,45 +312,41 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
     retval.unwrap()
 }
 
-fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
-    use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t::*};
+fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
+    use fish::wgetopt::{wopt, ArgType::*, WGetopter, WOption};
 
     const RUSAGE_ARG: char = 1 as char;
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
     const PROFILE_STARTUP_ARG: char = 3 as char;
 
     const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
-    const LONG_OPTS: &[woption<'static>] = &[
-        wopt(L!("command"), required_argument, 'c'),
-        wopt(L!("init-command"), required_argument, 'C'),
-        wopt(L!("features"), required_argument, 'f'),
-        wopt(L!("debug"), required_argument, 'd'),
-        wopt(L!("debug-output"), required_argument, 'o'),
-        wopt(L!("debug-stack-frames"), required_argument, 'D'),
-        wopt(L!("interactive"), no_argument, 'i'),
-        wopt(L!("login"), no_argument, 'l'),
-        wopt(L!("no-config"), no_argument, 'N'),
-        wopt(L!("no-execute"), no_argument, 'n'),
-        wopt(L!("print-rusage-self"), no_argument, RUSAGE_ARG),
+    const LONG_OPTS: &[WOption<'static>] = &[
+        wopt(L!("command"), RequiredArgument, 'c'),
+        wopt(L!("init-command"), RequiredArgument, 'C'),
+        wopt(L!("features"), RequiredArgument, 'f'),
+        wopt(L!("debug"), RequiredArgument, 'd'),
+        wopt(L!("debug-output"), RequiredArgument, 'o'),
+        wopt(L!("debug-stack-frames"), RequiredArgument, 'D'),
+        wopt(L!("interactive"), NoArgument, 'i'),
+        wopt(L!("login"), NoArgument, 'l'),
+        wopt(L!("no-config"), NoArgument, 'N'),
+        wopt(L!("no-execute"), NoArgument, 'n'),
+        wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
         wopt(
             L!("print-debug-categories"),
-            no_argument,
+            NoArgument,
             PRINT_DEBUG_CATEGORIES_ARG,
         ),
-        wopt(L!("profile"), required_argument, 'p'),
-        wopt(
-            L!("profile-startup"),
-            required_argument,
-            PROFILE_STARTUP_ARG,
-        ),
-        wopt(L!("private"), no_argument, 'P'),
-        wopt(L!("help"), no_argument, 'h'),
-        wopt(L!("version"), no_argument, 'v'),
+        wopt(L!("profile"), RequiredArgument, 'p'),
+        wopt(L!("profile-startup"), RequiredArgument, PROFILE_STARTUP_ARG),
+        wopt(L!("private"), NoArgument, 'P'),
+        wopt(L!("help"), NoArgument, 'h'),
+        wopt(L!("version"), NoArgument, 'v'),
     ];
 
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, &mut shim_args);
+    while let Some(c) = w.next_opt() {
         match c {
             'c' => opts
                 .batch_cmds
@@ -394,7 +389,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
                     // this is left-justified
                     println!("{:<width$} {}", cat.name, desc, width = name_width);
                 }
-                std::process::exit(0);
+                return ControlFlow::Break(0);
             }
             // "--profile" - this does not activate profiling right away,
             // rather it's done after startup is finished.
@@ -411,7 +406,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
                     "%s",
                     wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
                 );
-                std::process::exit(0);
+                return ControlFlow::Break(0);
             }
             'D' => {
                 // TODO: Option is currently useless.
@@ -420,21 +415,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
             '?' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
-                std::process::exit(1)
+                return ControlFlow::Break(1);
             }
             ':' => {
                 eprintln!(
                     "{}",
-                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.woptind - 1])
+                    wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
-                std::process::exit(1)
+                return ControlFlow::Break(1);
             }
-            _ => panic!("unexpected retval from wgetopter_t"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
-    let optind = w.woptind;
+    let optind = w.wopt_index;
 
     // If our command name begins with a dash that implies we're a login shell.
     opts.is_login |= args[0].char_at(0) == '-';
@@ -446,7 +441,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> usize {
         set_interactive_session(true);
     }
 
-    optind
+    ControlFlow::Continue(optind)
 }
 
 fn cstr_from_osstr(s: &OsStr) -> CString {
@@ -465,16 +460,16 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
 }
 
 fn main() {
+    PROGRAM_NAME.set(L!("fish")).unwrap();
+    panic_handler(throwing_main)
+}
+
+fn throwing_main() -> i32 {
     let mut args: Vec<WString> = env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
 
-    PROGRAM_NAME
-        .set(L!("fish"))
-        .expect("multiple entrypoints setting PROGRAM_NAME");
-
     let mut res = 1;
-    let mut my_optind;
 
     signal_unblock_all();
     topic_monitor::topic_monitor_init();
@@ -499,7 +494,10 @@ fn main() {
     }
 
     let mut opts = FishCmdOpts::default();
-    my_optind = fish_parse_opt(&mut args, &mut opts);
+    let mut my_optind = match fish_parse_opt(&mut args, &mut opts) {
+        ControlFlow::Continue(optind) => optind,
+        ControlFlow::Break(status) => return status,
+    };
 
     // Direct any debug output right away.
     // --debug-output takes precedence, otherwise $FISH_DEBUG_OUTPUT is used.
@@ -518,14 +516,13 @@ fn main() {
             Ok(dbg_file) => {
                 // Rust sets O_CLOEXEC by default
                 // https://github.com/rust-lang/rust/blob/07438b0928c6691d6ee734a5a77823ec143be94d/library/std/src/sys/unix/fs.rs#L1059
-
-                set_flog_file_fd(dbg_file.as_raw_fd());
+                set_flog_file_fd(dbg_file.into_raw_fd());
             }
             Err(e) => {
                 // TODO: should not be debug-print
                 eprintln!("Could not open file {:?}", debug_path);
                 eprintln!("{}", e);
-                std::process::exit(1);
+                return 1;
             }
         };
     }
@@ -583,7 +580,9 @@ fn main() {
     features::set_from_string(opts.features.as_utfstr());
     proc_init();
     fish::env::misc_init();
-    reader_init();
+    let _restore_term_foreground_process_group =
+        ScopeGuard::new((), |()| restore_term_foreground_process_group_for_exit());
+    let _restore_term = reader_init();
 
     let parser = Parser::principal_parser();
     parser.set_syncs_uvars(!opts.no_config);
@@ -655,7 +654,7 @@ fn main() {
                 "no-execute mode enabled and no script given. Exiting"
             );
             // above line should always exit
-            std::process::exit(libc::EXIT_FAILURE);
+            return libc::EXIT_FAILURE;
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
@@ -714,10 +713,6 @@ fn main() {
         vec![exit_status.to_wstring()],
     );
 
-    restore_term_mode();
-    // this is ported, but not adopted
-    restore_term_foreground_process_group_for_exit();
-
     if let Some(profile_output) = opts.profile_output {
         let s = cstr_from_osstr(&profile_output);
         parser.emit_profiling(s.as_bytes());
@@ -728,8 +723,7 @@ fn main() {
         print_rusage_self();
     }
 
-    asan_maybe_exit(exit_status);
-    exit_without_destructors(exit_status)
+    exit_status
 }
 
 // https://github.com/fish-shell/fish-shell/issues/367
@@ -747,13 +741,13 @@ fn escape_single_quoted_hack_hack_hack_hack(s: &wstr) -> OsString {
     result
 }
 
-fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut Vec<OsString>, args: &[WString]) -> bool {
+fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -> bool {
     if cmds.len() != 1 {
         return false;
     }
 
     let mut result = false;
-    let cmd = cmds.get(0).unwrap();
+    let cmd = &cmds[0];
     if cmd == "exec \"${@}\"" || cmd == "exec \"$@\"" {
         // We're going to construct a new command that starts with exec, and then has the
         // remaining arguments escaped.

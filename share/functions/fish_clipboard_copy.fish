@@ -3,8 +3,8 @@ function fish_clipboard_copy
     if isatty stdin
         # Copy the current selection, or the entire commandline if that is empty.
         # Don't use `string collect -N` here - `commandline` adds a newline.
-        set cmdline (commandline --current-selection | string collect)
-        test -n "$cmdline"; or set cmdline (commandline | string collect)
+        set cmdline (commandline --current-selection | fish_indent --only-indent | string collect)
+        test -n "$cmdline"; or set cmdline (commandline | fish_indent --only-indent | string collect)
     else
         # Read from stdin
         while read -lz line
@@ -15,7 +15,8 @@ function fish_clipboard_copy
     if type -q pbcopy
         printf '%s' $cmdline | pbcopy
     else if set -q WAYLAND_DISPLAY; and type -q wl-copy
-        printf '%s' $cmdline | wl-copy
+        printf '%s' $cmdline | wl-copy &
+        disown
     else if set -q DISPLAY; and type -q xsel
         printf '%s' $cmdline | xsel --clipboard
     else if set -q DISPLAY; and type -q xclip

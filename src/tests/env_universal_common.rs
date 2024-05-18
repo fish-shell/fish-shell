@@ -1,5 +1,7 @@
+use crate::common::char_offset;
 use crate::common::wcs2osstring;
 use crate::common::ScopeGuard;
+use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
 use crate::parser::Parser;
@@ -14,7 +16,7 @@ const UVARS_PER_THREAD: usize = 8;
 const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");
 
 fn test_universal_helper(x: usize) {
-    test_init();
+    let _cleanup = test_init();
     let mut callbacks = CallbackDataList::new();
     let mut uvars = EnvUniversal::new();
     uvars.initialize_at_path(&mut callbacks, UVARS_TEST_PATH.to_owned());
@@ -39,7 +41,7 @@ fn test_universal_helper(x: usize) {
 #[test]
 #[serial]
 fn test_universal() {
-    test_init();
+    let _cleanup = test_init();
     let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
 
@@ -78,7 +80,7 @@ fn test_universal() {
 #[test]
 #[serial]
 fn test_universal_output() {
-    test_init();
+    let _cleanup = test_init();
     let flag_export = EnvVarFlags::EXPORT;
     let flag_pathvar = EnvVarFlags::PATHVAR;
 
@@ -109,6 +111,13 @@ fn test_universal_output() {
             flag_pathvar,
         ),
     );
+    vars.insert(
+        L!("varF").to_owned(),
+        EnvVar::new_vec(
+            vec![WString::from_chars([char_offset(ENCODE_DIRECT_BASE, 0xfc)])],
+            EnvVarFlags::empty(),
+        ),
+    );
 
     let text = EnvUniversal::serialize_with_vars(&vars);
     let expected = concat!(
@@ -119,6 +128,7 @@ fn test_universal_output() {
         "SETUVAR varC:ValC1\n",
         "SETUVAR --export --path varD:ValD1\n",
         "SETUVAR --path varE:ValE1\\x1eValE2\n",
+        "SETUVAR varF:\\xfc\n",
     )
     .as_bytes();
     assert_eq!(text, expected);
@@ -127,7 +137,7 @@ fn test_universal_output() {
 #[test]
 #[serial]
 fn test_universal_parsing() {
-    test_init();
+    let _cleanup = test_init();
     let input = concat!(
         "# This file contains fish universal variable definitions.\n",
         "# VERSION: 3.0\n",
@@ -179,7 +189,7 @@ fn test_universal_parsing() {
 #[test]
 #[serial]
 fn test_universal_parsing_legacy() {
-    test_init();
+    let _cleanup = test_init();
     let input = concat!(
         "# This file contains fish universal variable definitions.\n",
         "SET varA:ValA1\\x1eValA2\n",
@@ -208,7 +218,7 @@ fn test_universal_parsing_legacy() {
 #[test]
 #[serial]
 fn test_universal_callbacks() {
-    test_init();
+    let _cleanup = test_init();
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
     let mut callbacks = CallbackDataList::new();
     let mut uvars1 = EnvUniversal::new();
@@ -265,7 +275,7 @@ fn test_universal_callbacks() {
 #[test]
 #[serial]
 fn test_universal_formats() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! validate {
         ( $version_line:literal, $expected_format:expr ) => {
             assert_eq!(
@@ -287,7 +297,7 @@ fn test_universal_formats() {
 #[test]
 #[serial]
 fn test_universal_ok_to_save() {
-    test_init();
+    let _cleanup = test_init();
     // Ensure we don't try to save after reading from a newer fish.
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
     let contents = b"# VERSION: 99999.99\n";

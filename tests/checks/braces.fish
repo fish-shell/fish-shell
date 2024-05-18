@@ -22,7 +22,7 @@ echo foo-{""} # still expands to foo-{}
 #CHECK: foo-{}
 
 echo foo-{$undefinedvar} # still expands to nothing
-#CHECK: 
+#CHECK:
 
 echo foo-{,,,} # four empty items in the braces.
 #CHECK: foo- foo- foo- foo-
@@ -48,3 +48,6 @@ world}
 end
 #CHECK: '{hello
 #CHECK: world}'
+
+echo {a(echo ,)b}
+#CHECK: {a,b}

@@ -142,3 +142,25 @@ echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 echo foo >/bin/echo/file
 #CHECKERR: warning: An error occurred while redirecting file '/bin/echo/file'
 #CHECKERR: warning: Path '/bin/echo' is not a directory
+
+echo foo <?nonexistent
+#CHECK: foo
+echo $status
+#CHECK: 0
+
+read -l foo <?nonexistent
+echo $status
+#CHECK: 1
+set -S foo
+#CHECK: $foo: set in local scope, unexported, with 0 elements
+
+set -l fish (status fish-path)
+$fish --no-config -c 'true <&?fail'
+#CHECKERR: fish: Requested redirection to '?fail', which is not a valid file descriptor
+#CHECKERR: true <&?fail
+#CHECKERR: ^~~~~~^
+
+$fish --no-config -c 'true <?&fail'
+#CHECKERR: fish: Expected a string, but found a '&'
+#CHECKERR: true <?&fail
+#CHECKERR: ^

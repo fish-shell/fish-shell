@@ -7,7 +7,6 @@ use crate::common::scoped_push_replacer;
 use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
-use crate::common::ScopeGuard;
 use crate::common::UnescapeStringStyle;
 use crate::env::EnvMode;
 use crate::env::Environment;
@@ -26,9 +25,7 @@ use crate::wutil;
 use crate::wutil::encoding::mbrtowc;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
-use crate::wutil::write_to_fd;
 use libc::SEEK_CUR;
-use libc::STDOUT_FILENO;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
@@ -63,31 +60,27 @@ impl Options {
 }
 
 const SHORT_OPTIONS: &wstr = L!(":ac:d:fghiLln:p:sStuxzP:UR:L");
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("array"), woption_argument_t::no_argument, 'a'),
-    wopt(L!("command"), woption_argument_t::required_argument, 'c'),
-    wopt(L!("delimiter"), woption_argument_t::required_argument, 'd'),
-    wopt(L!("export"), woption_argument_t::no_argument, 'x'),
-    wopt(L!("function"), woption_argument_t::no_argument, 'f'),
-    wopt(L!("global"), woption_argument_t::no_argument, 'g'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("line"), woption_argument_t::no_argument, 'L'),
-    wopt(L!("list"), woption_argument_t::no_argument, 'a'),
-    wopt(L!("local"), woption_argument_t::no_argument, 'l'),
-    wopt(L!("nchars"), woption_argument_t::required_argument, 'n'),
-    wopt(L!("null"), woption_argument_t::no_argument, 'z'),
-    wopt(L!("prompt"), woption_argument_t::required_argument, 'p'),
-    wopt(L!("prompt-str"), woption_argument_t::required_argument, 'P'),
-    wopt(
-        L!("right-prompt"),
-        woption_argument_t::required_argument,
-        'R',
-    ),
-    wopt(L!("shell"), woption_argument_t::no_argument, 'S'),
-    wopt(L!("silent"), woption_argument_t::no_argument, 's'),
-    wopt(L!("tokenize"), woption_argument_t::no_argument, 't'),
-    wopt(L!("unexport"), woption_argument_t::no_argument, 'u'),
-    wopt(L!("universal"), woption_argument_t::no_argument, 'U'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("array"), ArgType::NoArgument, 'a'),
+    wopt(L!("command"), ArgType::RequiredArgument, 'c'),
+    wopt(L!("delimiter"), ArgType::RequiredArgument, 'd'),
+    wopt(L!("export"), ArgType::NoArgument, 'x'),
+    wopt(L!("function"), ArgType::NoArgument, 'f'),
+    wopt(L!("global"), ArgType::NoArgument, 'g'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("line"), ArgType::NoArgument, 'L'),
+    wopt(L!("list"), ArgType::NoArgument, 'a'),
+    wopt(L!("local"), ArgType::NoArgument, 'l'),
+    wopt(L!("nchars"), ArgType::RequiredArgument, 'n'),
+    wopt(L!("null"), ArgType::NoArgument, 'z'),
+    wopt(L!("prompt"), ArgType::RequiredArgument, 'p'),
+    wopt(L!("prompt-str"), ArgType::RequiredArgument, 'P'),
+    wopt(L!("right-prompt"), ArgType::RequiredArgument, 'R'),
+    wopt(L!("shell"), ArgType::NoArgument, 'S'),
+    wopt(L!("silent"), ArgType::NoArgument, 's'),
+    wopt(L!("tokenize"), ArgType::NoArgument, 't'),
+    wopt(L!("unexport"), ArgType::NoArgument, 'u'),
+    wopt(L!("universal"), ArgType::NoArgument, 'U'),
 ];
 
 fn parse_cmd_opts(
@@ -97,8 +90,8 @@ fn parse_cmd_opts(
 ) -> Result<(Options, usize), Option<c_int>> {
     let cmd = args[0];
     let mut opts = Options::new();
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
-    while let Some(opt) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    while let Some(opt) = w.next_opt() {
         match opt {
             'a' => {
                 opts.array = true;
@@ -188,20 +181,20 @@ fn parse_cmd_opts(
                 opts.split_null = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Read from the tty. This is only valid when the stream is stdin and it is attached to a tty and
@@ -591,13 +584,6 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     };
 
     let stream_stdin_is_a_tty = isatty(streams.stdin_fd);
-
-    let _maybe_disable_bracketed_paste = stream_stdin_is_a_tty.then(|| {
-        let _ = write_to_fd(b"\x1b[?2004h", STDOUT_FILENO);
-        ScopeGuard::new((), |()| {
-            let _ = write_to_fd(b"\x1b[?2004l", STDOUT_FILENO);
-        })
-    });
 
     // Normally, we either consume a line of input or all available input. But if we are reading a
     // line at a time, we need a middle ground where we only consume as many lines as we need to

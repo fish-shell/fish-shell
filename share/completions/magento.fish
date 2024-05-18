@@ -407,7 +407,7 @@ __fish_magento_register_command_option cron:run -f -l bootstrap -d "Add or overr
 # deploy:mode:set
 #
 __fish_magento_register_command_option deploy:mode:set -f -a "(__fish_print_magento_deploy_modes)" -d 'Application mode to set. Available are "developer" or "production"'
-__fish_magento_register_command_option deploy:mode:set -f -s s -l skip-compilation -d "Skip clearing and regeneration of static content (generated code, preprocessed CSS, and assets in pub/static/)"
+__fish_magento_register_command_option deploy:mode:set -f -s s -l skip-compilation -d "Skip regeneration of static content (generated code, preprocessed CSS, assets)"
 
 #
 # dev:source-theme:deploy

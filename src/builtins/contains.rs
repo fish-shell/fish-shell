@@ -15,33 +15,33 @@ fn parse_options(
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!("+:hi");
-    const LONG_OPTS: &[woption] = &[
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("index"), woption_argument_t::no_argument, 'i'),
+    const LONG_OPTS: &[WOption] = &[
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("index"), ArgType::NoArgument, 'i'),
     ];
 
     let mut opts = Options::default();
 
-    let mut w = wgetopter_t::new(SHORT_OPTS, LONG_OPTS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             'h' => opts.print_help = true,
             'i' => opts.print_index = true,
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return Err(STATUS_INVALID_ARGS);
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long");
+                panic!("unexpected retval from WGetopter");
             }
         }
     }
 
-    Ok((opts, w.woptind))
+    Ok((opts, w.wopt_index))
 }
 
 /// Implementation of the builtin contains command, used to check if a specified string is part of

@@ -16,6 +16,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``alias``.
+          To see the documentation on any non-fish versions, use ``command man alias``.
+
 ``alias`` is a simple wrapper for the ``function`` builtin, which creates a function wrapping a command. It has similar syntax to POSIX shell ``alias``. For other uses, it is recommended to define a :doc:`function <function>`.
 
 If you want to ease your interactive use, to save typing, consider using an :doc:`abbreviation <abbr>` instead.

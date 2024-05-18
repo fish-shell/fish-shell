@@ -9,7 +9,7 @@ use crate::wchar::prelude::*;
 #[test]
 #[serial]
 fn test_abbreviations() {
-    test_init();
+    let _cleanup = test_init();
     {
         let mut abbrs = abbrs_get_set();
         abbrs.add(Abbreviation::new(
@@ -45,11 +45,11 @@ fn test_abbreviations() {
     // Helper to expand an abbreviation, enforcing we have no more than one result.
     macro_rules! abbr_expand_1 {
         ($token:expr, $position:expr) => {
-            let result = abbrs_match(L!($token), $position);
+            let result = abbrs_match(L!($token), $position, L!(""));
             assert_eq!(result, vec![]);
         };
         ($token:expr, $position:expr, $expected:expr) => {
-            let result = abbrs_match(L!($token), $position);
+            let result = abbrs_match(L!($token), $position, L!(""));
             assert_eq!(
                 result
                     .into_iter()
@@ -131,8 +131,8 @@ fn test_abbreviations() {
     // Others should not be.
     validate!("of gc", None);
 
-    // Others should not be.
-    validate!("command gc", None);
+    // Other decorations generally should be.
+    validate!("command gc", None, "command git checkout");
 
     // yin/yang expands everywhere.
     validate!("command yin", None, "command yang");

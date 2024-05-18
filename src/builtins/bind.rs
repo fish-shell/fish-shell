@@ -6,9 +6,10 @@ use crate::common::{
 };
 use crate::highlight::{colorize, highlight_shell};
 use crate::input::{
-    input_function_get_names, input_mappings, input_terminfo_get_name, input_terminfo_get_names,
-    input_terminfo_get_sequence, GetSequenceError, InputMappingSet,
+    input_function_get_names, input_mappings, input_terminfo_get_names,
+    input_terminfo_get_sequence, GetSequenceError, InputMappingSet, KeyNameStyle,
 };
+use crate::key::{self, canonicalize_raw_escapes, char_to_symbol, parse_keys, Key, Modifiers};
 use crate::nix::isatty;
 use std::sync::MutexGuard;
 
@@ -75,7 +76,7 @@ impl BuiltinBind {
     /// Returns false if no binding with that sequence and mode exists.
     fn list_one(
         &self,
-        seq: &wstr,
+        seq: &[Key],
         bind_mode: &wstr,
         user: bool,
         parser: &Parser,
@@ -83,11 +84,16 @@ impl BuiltinBind {
     ) -> bool {
         let mut ecmds: &[_] = &[];
         let mut sets_mode = None;
+        let mut key_name_style = KeyNameStyle::Plain;
         let mut out = WString::new();
-        if !self
-            .input_mappings
-            .get(seq, bind_mode, &mut ecmds, user, &mut sets_mode)
-        {
+        if !self.input_mappings.get(
+            seq,
+            bind_mode,
+            &mut ecmds,
+            user,
+            &mut sets_mode,
+            &mut key_name_style,
+        ) {
             return false;
         }
 
@@ -109,16 +115,40 @@ impl BuiltinBind {
             }
         }
 
-        // Append the name.
-        if let Some(tname) = input_terminfo_get_name(seq) {
-            // Note that we show -k here because we have an input key name.
-            out.push_str(" -k ");
-            out.push_utfstr(&tname);
-        } else {
-            // No key name, so no -k; we show the escape sequence directly.
-            let eseq = escape(seq);
-            out.push(' ');
-            out.push_utfstr(&eseq);
+        out.push(' ');
+        match key_name_style {
+            KeyNameStyle::Plain => {
+                // Append the name.
+                for (i, key) in seq.iter().enumerate() {
+                    if i != 0 {
+                        out.push(key::KEY_SEPARATOR);
+                    }
+                    out.push_utfstr(&WString::from(*key));
+                }
+                if seq.is_empty() {
+                    out.push_str("''");
+                }
+            }
+            KeyNameStyle::RawEscapeSequence => {
+                for key in seq {
+                    if key.modifiers == Modifiers::ALT {
+                        out.push_utfstr(&char_to_symbol('\x1b'));
+                        out.push_utfstr(&char_to_symbol(if key.codepoint == key::Escape {
+                            '\x1b'
+                        } else {
+                            key.codepoint
+                        }));
+                    } else {
+                        assert!(key.modifiers.is_none());
+                        out.push_utfstr(&char_to_symbol(key.codepoint));
+                    }
+                }
+            }
+            KeyNameStyle::Terminfo(tname) => {
+                // Note that we show -k here because we have an input key name.
+                out.push_str("-k ");
+                out.push_utfstr(&tname);
+            }
         }
 
         // Now show the list of commands.
@@ -144,7 +174,7 @@ impl BuiltinBind {
     // Returns false only if neither exists.
     fn list_one_user_andor_preset(
         &self,
-        seq: &wstr,
+        seq: &[Key],
         bind_mode: &wstr,
         user: bool,
         preset: bool,
@@ -165,7 +195,7 @@ impl BuiltinBind {
     fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
         let lst = self.input_mappings.get_names(user);
         for binding in lst {
-            if bind_mode.is_some() && bind_mode.unwrap() != binding.mode {
+            if bind_mode.is_some_and(|m| m != binding.mode) {
                 continue;
             }
 
@@ -224,22 +254,44 @@ impl BuiltinBind {
         cmds: &[&wstr],
         mode: WString,
         sets_mode: Option<WString>,
-        terminfo: bool,
         user: bool,
         streams: &mut IoStreams,
     ) -> bool {
         let cmds = cmds.iter().map(|&s| s.to_owned()).collect();
-        if terminfo {
-            if let Some(seq2) = self.get_terminfo_sequence(seq, streams) {
-                self.input_mappings.add(seq2, cmds, mode, sets_mode, user);
-            } else {
-                return true;
-            }
+        let is_raw_escape_sequence = seq.len() > 2 && seq.char_at(0) == '\x1b';
+        let Some(key_seq) = self.compute_seq(streams, seq) else {
+            return true;
+        };
+        let key_name_style = if self.opts.use_terminfo {
+            KeyNameStyle::Terminfo(seq.to_owned())
+        } else if is_raw_escape_sequence {
+            KeyNameStyle::RawEscapeSequence
         } else {
-            self.input_mappings
-                .add(seq.to_owned(), cmds, mode, sets_mode, user)
-        }
+            KeyNameStyle::Plain
+        };
+        self.input_mappings
+            .add(key_seq, key_name_style, cmds, mode, sets_mode, user);
         false
+    }
+
+    fn compute_seq(&self, streams: &mut IoStreams, seq: &wstr) -> Option<Vec<Key>> {
+        if self.opts.use_terminfo {
+            let Some(tinfo_seq) = self.get_terminfo_sequence(seq, streams) else {
+                // get_terminfo_sequence already printed the error.
+                return None;
+            };
+            Some(canonicalize_raw_escapes(
+                tinfo_seq.chars().map(Key::from_single_char).collect(),
+            ))
+        } else {
+            match parse_keys(seq) {
+                Ok(keys) => Some(keys),
+                Err(err) => {
+                    streams.err.append(sprintf!("bind: %s\n", err));
+                    None
+                }
+            }
+        }
     }
 
     /// Erase specified key bindings
@@ -248,17 +300,8 @@ impl BuiltinBind {
     ///    an array of all key bindings to erase
     /// @param  all
     ///    if specified, _all_ key bindings will be erased
-    /// @param  use_terminfo
-    ///    Whether to look use terminfo -k name
     ///
-    fn erase(
-        &mut self,
-        seq: &[&wstr],
-        all: bool,
-        use_terminfo: bool,
-        user: bool,
-        streams: &mut IoStreams,
-    ) -> bool {
+    fn erase(&mut self, seq: &[&wstr], all: bool, user: bool, streams: &mut IoStreams) -> bool {
         let mode = if self.opts.bind_mode_given {
             Some(self.opts.bind_mode.as_utfstr())
         } else {
@@ -270,21 +313,15 @@ impl BuiltinBind {
             return false;
         }
 
-        let mut res = false;
         let mode = mode.unwrap_or(DEFAULT_BIND_MODE);
 
         for s in seq {
-            if use_terminfo {
-                if let Some(seq2) = self.get_terminfo_sequence(s, streams) {
-                    self.input_mappings.erase(&seq2, mode, user);
-                } else {
-                    res = true;
-                }
-            } else {
-                self.input_mappings.erase(s, mode, user);
-            }
+            let Some(s) = self.compute_seq(streams, s) else {
+                return true;
+            };
+            self.input_mappings.erase(&s, mode, user);
         }
-        res
+        false
     }
 
     fn insert(
@@ -331,14 +368,8 @@ impl BuiltinBind {
                 self.list(bind_mode, true, parser, streams);
             }
         } else if arg_count == 1 {
-            let seq = if self.opts.use_terminfo {
-                let Some(seq2) = self.get_terminfo_sequence(argv[optind], streams) else {
-                    // get_terminfo_sequence already printed the error.
-                    return true;
-                };
-                seq2
-            } else {
-                argv[optind].to_owned()
+            let Some(seq) = self.compute_seq(streams, argv[optind]) else {
+                return true;
             };
 
             if !self.list_one_user_andor_preset(
@@ -360,9 +391,15 @@ impl BuiltinBind {
                             cmd,
                             eseq
                         ));
+                    } else if seq.len() == 1 {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: No binding found for key '%ls'\n",
+                            cmd,
+                            seq[0]
+                        ));
                     } else {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: No binding found for sequence '%ls'\n",
+                            "%ls: No binding found for key sequence '%ls'\n",
                             cmd,
                             eseq
                         ));
@@ -372,12 +409,12 @@ impl BuiltinBind {
             }
         } else {
             // Actually insert!
+            let seq = argv[optind];
             if self.add(
-                argv[optind],
+                seq,
                 &argv[optind + 1..],
                 self.opts.bind_mode.to_owned(),
                 self.opts.sets_bind_mode.to_owned(),
-                self.opts.use_terminfo,
                 self.opts.user,
                 streams,
             ) {
@@ -414,23 +451,23 @@ fn parse_cmd_opts(
 ) -> Option<i32> {
     let cmd = argv[0];
     let short_options = L!(":aehkKfM:Lm:s");
-    const long_options: &[woption] = &[
-        wopt(L!("all"), no_argument, 'a'),
-        wopt(L!("erase"), no_argument, 'e'),
-        wopt(L!("function-names"), no_argument, 'f'),
-        wopt(L!("help"), no_argument, 'h'),
-        wopt(L!("key"), no_argument, 'k'),
-        wopt(L!("key-names"), no_argument, 'K'),
-        wopt(L!("list-modes"), no_argument, 'L'),
-        wopt(L!("mode"), required_argument, 'M'),
-        wopt(L!("preset"), no_argument, 'p'),
-        wopt(L!("sets-mode"), required_argument, 'm'),
-        wopt(L!("silent"), no_argument, 's'),
-        wopt(L!("user"), no_argument, 'u'),
+    const long_options: &[WOption] = &[
+        wopt(L!("all"), NoArgument, 'a'),
+        wopt(L!("erase"), NoArgument, 'e'),
+        wopt(L!("function-names"), NoArgument, 'f'),
+        wopt(L!("help"), NoArgument, 'h'),
+        wopt(L!("key"), NoArgument, 'k'),
+        wopt(L!("key-names"), NoArgument, 'K'),
+        wopt(L!("list-modes"), NoArgument, 'L'),
+        wopt(L!("mode"), RequiredArgument, 'M'),
+        wopt(L!("preset"), NoArgument, 'p'),
+        wopt(L!("sets-mode"), RequiredArgument, 'm'),
+        wopt(L!("silent"), NoArgument, 's'),
+        wopt(L!("user"), NoArgument, 'u'),
     ];
 
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(short_options, long_options, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'a' => opts.all = true,
             'e' => opts.mode = BIND_ERASE,
@@ -474,19 +511,19 @@ fn parse_cmd_opts(
                 opts.user = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
-                panic!("unexpected retval from wgetopt_long")
+                panic!("unexpected retval from WGetopter")
             }
         }
     }
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     return STATUS_CMD_OK;
 }
 
@@ -527,7 +564,6 @@ impl BuiltinBind {
                     if self.erase(
                         &argv[optind..],
                         self.opts.all,
-                        self.opts.use_terminfo,
                         true, /* user */
                         streams,
                     ) {
@@ -538,7 +574,6 @@ impl BuiltinBind {
                     if self.erase(
                         &argv[optind..],
                         self.opts.all,
-                        self.opts.use_terminfo,
                         false, /* user */
                         streams,
                     ) {

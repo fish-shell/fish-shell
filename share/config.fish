@@ -80,7 +80,7 @@ else if not contains -- $__fish_data_dir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs $__fish_data_dir/completions $__fish_user_data_dir/generated_completions
+    set fish_complete_path $__fish_config_dir/completions $__fish_sysconf_dir/completions $__fish_vendor_completionsdirs $__fish_data_dir/completions $__fish_cache_dir/generated_completions
 else if not contains -- $__fish_data_dir/completions $fish_complete_path
     set -a fish_complete_path $__fish_data_dir/completions
 end

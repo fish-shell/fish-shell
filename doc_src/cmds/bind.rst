@@ -7,34 +7,58 @@ Synopsis
 
 .. synopsis::
 
-    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] [-k | --key] SEQUENCE COMMAND ...
-    bind [(-M | --mode) MODE] [-k | --key] [--preset] [--user] SEQUENCE
-    bind (-K | --key-names) [-a | --all] [--preset] [--user]
+    bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE] [--preset | --user] [-s | --silent] KEYS COMMAND ...
+    bind [(-M | --mode) MODE] [--preset] [--user] [KEYS]
+    bind [-a | --all] [--preset] [--user]
     bind (-f | --function-names)
     bind (-L | --list-modes)
-    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] [-a | --all] | [-k | --key] SEQUENCE ...
+    bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] [-a | --all] | KEYS ...
 
 Description
 -----------
 
-``bind`` manages bindings.
+``bind`` manages key bindings.
 
-It can add bindings if given a SEQUENCE of characters to bind to. These should be written as :ref:`fish escape sequences <escapes>`. The most important of these are ``\c`` for the control key, and ``\e`` for escape, and because of historical reasons also the Alt key (sometimes also called "Meta").
+If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a binding in ``MODE``.
+If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be printed.
 
-For example, :kbd:`Alt`\ +\ :kbd:`W` can be written as ``\ew``, and :kbd:`Control`\ +\ :kbd:`X` (^X) can be written as ``\cx``. Note that Alt-based key bindings are case sensitive and Control-based key bindings are not. This is a constraint of text-based terminals, not ``fish``.
+``KEYS`` is a comma-separated list of key names.
+Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``/``c-``, ``alt-``/``a-`` and ``shift-``.
+For example, pressing :kbd:`w` while holding the Alt modifier is written as ``alt-w``.
+Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
+``ctrl-x,ctrl-e`` would mean pressing :kbd:`ctrl-x` followed by :kbd:`ctrl-e`.
 
-The generic key binding that matches if no other binding does can be set by specifying a ``SEQUENCE`` of the empty string (``''``). For most key bindings, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes not specifically bound to into the editor. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+Some keys have names, usually because they don't have an obvious printable character representation.
+They are:
 
-If the ``-k`` switch is used, the name of a key (such as 'down', 'up' or 'backspace') is used instead of a sequence. The names used are the same as the corresponding curses variables, but without the 'key\_' prefix. (See ``terminfo(5)`` for more information, or use ``bind --key-names`` for a list of all available named keys). Normally this will print an error if the current ``$TERM`` entry doesn't have a given key, unless the ``-s`` switch is given.
+- the arrow keys ``up``, ``down``, ``left`` and ``right``,
+- ``backspace``,
+- ``comma`` (``,``),
+- ``delete``,
+- ``end``,
+- ``enter``,
+- ``escape``,
+- ``F1`` through ``F12``.
+- ``home``,
+- ``insert``,
+- ``minus`` (``-``),
+- ``pageup``,
+- ``pagedown``,
+- ``space`` and
+- ``tab``,
 
-To find out what sequence a key combination sends, you can use :doc:`fish_key_reader <fish_key_reader>`.
+These names are case-sensitive.
+
+An empty value (``''``) for ``KEYS`` designates the generic binding that will be used if nothing else matches. For most bind modes, it makes sense to bind this to the ``self-insert`` function (i.e. ``bind '' self-insert``). This will insert any keystrokes that have no bindings otherwise. Non-printable characters are ignored by the editor, so this will not result in control sequences being inserted.
+
+To find the name of a key combination you can use :doc:`fish_key_reader <fish_key_reader>`.
 
 ``COMMAND`` can be any fish command, but it can also be one of a set of special input functions. These include functions for moving the cursor, operating on the kill-ring, performing tab completion, etc. Use ``bind --function-names`` or :ref:`see below <special-input-functions>` for a list of these input functions.
 
 .. note::
-   The commands must be entirely a sequence of special input functions (from ``bind -f``) or all shell script commands (i.e., valid fish script). To run special input functions from regular fish script, use ``commandline -f`` (see also :doc:`commandline <commandline>`). If a script produces output, it should finish by calling ``commandline -f repaint`` so that fish knows to redraw the prompt.
+    If a script changes the commandline, it should finish by calling the ``repaint`` special input function.
 
-If no ``SEQUENCE`` is provided, all bindings (or just the bindings in the given ``MODE``) are printed. If ``SEQUENCE`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
+If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed. If ``KEYS`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
 
 Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
 
@@ -43,12 +67,6 @@ To save custom key bindings, put the ``bind`` statements into :ref:`config.fish 
 Options
 -------
 The following options are available:
-
-**-k** or **--key**
-    Specify a key name, such as 'left' or 'backspace' instead of a character sequence
-
-**-K** or **--key-names**
-    Display a list of available key names. Specifying **-a** or **--all** includes keys that don't have a known mapping
 
 **-f** or **--function-names**
     Display a list of available input functions
@@ -69,7 +87,7 @@ The following options are available:
     Specifying **-a** or **--all** without **-M** or **--mode** erases all binds in all modes regardless of sequence.
 
 **-a** or **--all**
-    See **--erase** and **--key-names**
+    See **--erase**
 
 **--preset** and **--user**
     Specify if bind should operate on user or preset bindings.
@@ -99,6 +117,10 @@ The following special input functions are available:
 ``backward-char``
     move one character to the left.
     If the completion pager is active, select the previous completion instead.
+
+``backward-char-passive``
+    move one character to the left, but do not trigger any non-movement-related operations. If the cursor is at the start of
+    the commandline, does nothing. Does not change the selected item in the completion pager UI when shown.
 
 ``backward-bigword``
     move one whitespace-delimited word to the left
@@ -191,6 +213,11 @@ The following special input functions are available:
     move one character to the right; or if at the end of the commandline, accept the current autosuggestion.
     If the completion pager is active, select the next completion instead.
 
+``forward-char-passive``
+    move one character to the right, but do not trigger any non-movement-related operations. If the cursor is at the end of the
+    commandline, does not accept the current autosuggestion (if any). Does not change the selected item in the completion pager,
+    if shown.
+
 ``forward-single-char``
     move one character to the right; or if at the end of the commandline, accept a single char from the current autosuggestion.
 
@@ -202,7 +229,7 @@ The following special input functions are available:
     invoke the searchable pager on history (incremental search); or if the history pager is already active, search further backwards in time.
 
 ``history-pager-delete``
-    permanently delete the history item selected in the history pager
+    permanently delete the current history item, either from the history pager or from an active up-arrow history search
 
 ``history-search-backward``
     search the history for the previous match
@@ -338,22 +365,22 @@ The following functions are included as normal functions, but are particularly u
 Examples
 --------
 
-Exit the shell when :kbd:`Control`\ +\ :kbd:`D` is pressed::
+Exit the shell when :kbd:`ctrl-d` is pressed::
 
-    bind \cd 'exit'
+    bind ctrl-d 'exit'
 
-Perform a history search when :kbd:`Page Up` is pressed::
+Perform a history search when :kbd:`pageup` is pressed::
 
-    bind -k ppage history-search-backward
+    bind pageup history-search-backward
 
-Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`Control`\ +\ :kbd:`C` to clear the input line::
+Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`ctrl-c` to clear the input line::
 
     set -g fish_key_bindings fish_vi_key_bindings
-    bind -M insert \cc kill-whole-line repaint
+    bind -M insert ctrl-c kill-whole-line repaint
 
-Launch ``git diff`` and repaint the commandline afterwards when :kbd:`Control`\ +\ :kbd:`G` is pressed::
+Launch ``git diff`` and repaint the commandline afterwards when :kbd:`ctrl-g` is pressed::
 
-   bind \cg 'git diff; commandline -f repaint'
+   bind ctrl-g 'git diff' repaint
 
 .. _cmd-bind-termlimits:
 
@@ -362,12 +389,16 @@ Terminal Limitations
 
 Unix terminals, like the ones fish operates in, are at heart 70s technology. They have some limitations that applications running inside them can't workaround.
 
-For instance, the control key modifies a character by setting the top three bits to 0. This means:
+For instance, historically the control key modifies a character by setting the top three bits to 0. This means:
 
-- Many characters + control are indistinguishable from other keys. :kbd:`Control`\ +\ :kbd:`I` *is* tab, :kbd:`Control`\ +\ :kbd:`J` *is* newline (``\n``).
-- Control and shift don't work simultaneously
+- Many characters + control are indistinguishable from other keys: :kbd:`ctrl-i` *is* :kbd:`tab`, :kbd:`ctrl-j` *is* newline (``\n``).
+- Control and shift don't work simultaneously - :kbd:`ctrl-X` is the same as :kbd:`ctrl-x`.
 
-Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`→` (Right) often sends ``\e\[C``. These can differ from terminal to terminal, and the mapping is typically available in `terminfo(5)`. Sometimes however a terminal identifies as e.g. ``xterm-256color`` for compatibility, but then implements xterm's sequences incorrectly.
+Other keys don't have a direct encoding, and are sent as escape sequences. For example :kbd:`right` (``→``) usually sends ``\e\[C``.
+
+Some modern terminals support newer encodings for keys, that allow distinguishing more characters and modifiers, and fish enables as many of these as it can, automatically.
+
+When in doubt, run :doc:`fish_key_reader`. If that tells you that pressing :kbd:`ctrl-i` sends tab, your terminal does not support these better encodings, and so fish is limited to what it sends.
 
 .. _cmd-bind-escape:
 
@@ -378,16 +409,13 @@ When you've bound a sequence of multiple characters, there is always the possibi
 
 For example::
 
-  bind jk 'commandline -i foo'
+  bind j,k 'commandline -i foo'
+  # or `bind jk`
 
 will bind the sequence ``jk`` to insert "foo" into the commandline. When you've only pressed "j", fish doesn't know if it should insert the "j" (because of the default self-insert), or wait for the "k".
 
 You can enable a timeout for this, by setting the :envvar:`fish_sequence_key_delay_ms` variable to the timeout in milliseconds. If the timeout elapses, fish will no longer wait for the sequence to be completed, and do what it can with the characters it already has.
 
-The escape key is a special case, because it can be used standalone as a real key or as part of a longer escape sequence, like function or arrow keys.
-
-Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a".
-
-So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
+The escape key is a special case, because it can be used standalone as a real key or as part of a longer escape sequence, like function or arrow keys. Holding alt and something else also typically sends escape, for example holding alt+a will send an escape character and then an "a". So the escape character has its own timeout configured with :envvar:`fish_escape_delay_ms`.
 
 See also :ref:`Key sequences <interactive-key-sequences>`.

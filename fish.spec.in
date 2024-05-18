@@ -9,31 +9,29 @@ Group:                  System/Shells
 URL:                    https://fishshell.com/
 
 Source0:                %{name}_@VERSION@.orig.tar.xz
+Source1:                %{name}_@VERSION@.orig-cargo-vendor.tar.xz
 BuildRequires:          cargo gettext gcc-c++ xz pcre2-devel
-BuildRequires:          rust >= 1.67
+BuildRequires:          rust >= 1.70
+# Packaging guidelines say to use a BuildRequires: rust-packaging, but it adds no value for our package
 
-%if 0%{?rhel} && 0%{?rhel} < 8
-BuildRequires: cmake3
-%else
-BuildRequires: cmake
-%endif
+BuildRequires: cmake >= 3.19
 
 %if 0%{?suse_version}
 BuildRequires: update-desktop-files
+# for tests
+BuildRequires: groff
+%else
+BuildRequires: groff-base
 %endif
 
 # for tests
-%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 7 )
+%if 0%{?fedora}
 # Need the en_US.utf-8 locale at a minimum
 BuildRequires: glibc-langpack-en
 %endif
 BuildRequires: python3 procps
 
-%if 0%{?rhel} && 0%{?rhel} < 8
-Requires:      python
-%else
 Requires:      python3
-%endif
 Requires:      man
 
 # Although the build scripts mangle the version number to be RPM compatible
@@ -49,16 +47,15 @@ focused on user friendliness and discoverability. The language syntax
 is simple but incompatible with other shell languages.
 
 %prep
-%setup -q -n %{name}-@VERSION@
+# Unpack the source tarball and overlay the vendor tarball
+%setup -q -n %{name}-@VERSION@ -a 1
+# Should use cargo_prep here, it overrides our vendor config changes though
 
 %build
+export CARGO_NET_OFFLINE=true
 # CMake macros define the wrong sysconfdir arguments
-EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir}"
-%if 0%{?rhel} && 0%{?rhel} < 8
-%cmake3 $EXTRA_CMAKE_FLAGS
-%else
+EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -DCMAKE_INSTALL_DOCDIR=%{_docdir}/fish"
 %cmake $EXTRA_CMAKE_FLAGS
-%endif
 %if 0%{?cmake_build:1}
 %cmake_build
 %else
@@ -76,8 +73,6 @@ make %{?_smp_mflags}
 %if 0%{?suse_version}
 %suse_update_desktop_file fish "System;TerminalEmulator"
 %endif
-cp -a README.rst %{buildroot}%{_datadir}/doc/fish/
-cp -a CONTRIBUTING.rst %{buildroot}%{_datadir}/doc/fish/
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -110,7 +105,8 @@ fi
 %defattr(-,root,root,-)
 
 # The documentation directory
-%doc %{_datadir}/doc/fish/
+%doc %{_docdir}/fish
+%doc CONTRIBUTING.rst README.rst
 
 # man files
 %{_mandir}/man1/*

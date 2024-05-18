@@ -40,21 +40,21 @@ impl Default for FunctionCmdOpts {
 // This is needed due to the semantics of the -a/--argument-names flag.
 const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:");
 #[rustfmt::skip]
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("description"), woption_argument_t::required_argument, 'd'),
-    wopt(L!("on-signal"), woption_argument_t::required_argument, 's'),
-    wopt(L!("on-job-exit"), woption_argument_t::required_argument, 'j'),
-    wopt(L!("on-process-exit"), woption_argument_t::required_argument, 'p'),
-    wopt(L!("on-variable"), woption_argument_t::required_argument, 'v'),
-    wopt(L!("on-event"), woption_argument_t::required_argument, 'e'),
-    wopt(L!("wraps"), woption_argument_t::required_argument, 'w'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("argument-names"), woption_argument_t::required_argument, 'a'),
-    wopt(L!("no-scope-shadowing"), woption_argument_t::no_argument, 'S'),
-    wopt(L!("inherit-variable"), woption_argument_t::required_argument, 'V'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("description"), ArgType::RequiredArgument, 'd'),
+    wopt(L!("on-signal"), ArgType::RequiredArgument, 's'),
+    wopt(L!("on-job-exit"), ArgType::RequiredArgument, 'j'),
+    wopt(L!("on-process-exit"), ArgType::RequiredArgument, 'p'),
+    wopt(L!("on-variable"), ArgType::RequiredArgument, 'v'),
+    wopt(L!("on-event"), ArgType::RequiredArgument, 'e'),
+    wopt(L!("wraps"), ArgType::RequiredArgument, 'w'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("argument-names"), ArgType::RequiredArgument, 'a'),
+    wopt(L!("no-scope-shadowing"), ArgType::NoArgument, 'S'),
+    wopt(L!("inherit-variable"), ArgType::RequiredArgument, 'V'),
 ];
 
-/// \return the internal_job_id for a pid, or None if none.
+/// Return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
 fn job_id_for_pid(pid: i32, parser: &Parser) -> Option<u64> {
     if let Some(job) = parser.job_get_from_pid(pid) {
@@ -79,14 +79,14 @@ fn parse_cmd_opts(
     let cmd = L!("function");
     let print_hints = false;
     let mut handling_named_arguments = false;
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(opt) = w.wgetopt_long() {
-        // NONOPTION_CHAR_CODE is returned when we reach a non-permuted non-option.
-        if opt != 'a' && opt != NONOPTION_CHAR_CODE {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    while let Some(opt) = w.next_opt() {
+        // NON_OPTION_CHAR is returned when we reach a non-permuted non-option.
+        if opt != 'a' && opt != NON_OPTION_CHAR {
             handling_named_arguments = false;
         }
         match opt {
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 // A positional argument we got because we use RETURN_IN_ORDER.
                 let woptarg = w.woptarg.unwrap().to_owned();
                 if handling_named_arguments {
@@ -150,16 +150,14 @@ fn parse_cmd_opts(
                     let pid: i32 = getpid();
                     e = EventDescription::ProcessExit { pid };
                 } else {
-                    let pid = fish_wcstoi(woptarg);
-                    if pid.is_err() || pid.unwrap() < 0 {
+                    let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
                         streams.err.append(wgettext_fmt!(
                             "%ls: %ls: invalid process id",
                             cmd,
                             woptarg
                         ));
                         return STATUS_INVALID_ARGS;
-                    }
-                    let pid = pid.unwrap();
+                    };
                     if opt == 'p' {
                         e = EventDescription::ProcessExit { pid };
                     } else {
@@ -197,20 +195,20 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], print_hints);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
                 return STATUS_INVALID_ARGS;
             }
             other => {
-                panic!("Unexpected retval from wgetopt_long: {}", other);
+                panic!("Unexpected retval from WGetopter: {}", other);
             }
         }
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     STATUS_CMD_OK
 }
 
@@ -321,6 +319,15 @@ pub fn function(
             Some((name, vals))
         })
         .collect();
+
+    for named in &opts.named_arguments {
+        if !valid_var_name(named) {
+            streams
+                .err
+                .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, named));
+            return STATUS_INVALID_ARGS;
+        }
+    }
 
     // We have what we need to actually define the function.
     let props = function::FunctionProperties {

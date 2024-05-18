@@ -22,6 +22,7 @@ complete -c commandline -s L -l line -d "Print the line that the cursor is on"
 complete -c commandline -s S -l search-mode -d "Return true if performing a history search"
 complete -c commandline -s P -l paging-mode -d "Return true if showing pager content"
 complete -c commandline -l paging-full-mode -d "Return true if pager is showing all content"
+complete -c commandline -l search-field -d "Operate on the pager search field"
 complete -c commandline -l is-valid -d "Return true if the command line is syntactically valid and complete"
 
 complete -c commandline -n '__fish_contains_opt -s f function' -a '(bind --function-names)' -d 'Function name' -x

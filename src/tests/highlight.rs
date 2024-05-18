@@ -24,7 +24,7 @@ fn get_overlong_path() -> String {
 #[test]
 #[serial]
 fn test_is_potential_path() {
-    test_init();
+    let _cleanup = test_init();
     // Directories
     std::fs::create_dir_all("test/is_potential_path_test/alpha/").unwrap();
     std::fs::create_dir_all("test/is_potential_path_test/beta/").unwrap();
@@ -160,7 +160,7 @@ fn test_is_potential_path() {
 #[test]
 #[serial]
 fn test_highlighting() {
-    test_init();
+    let _cleanup = test_init();
     // Testing syntax highlighting
     pushd("test/fish_highlight_test/");
     let _popd = ScopeGuard::new((), |_| popd());

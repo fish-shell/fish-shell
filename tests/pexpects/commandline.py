@@ -53,7 +53,7 @@ expect_prompt("foo")
 sendline("complete -c foo -xa '(commandline)'")
 expect_prompt()
 send("foo bar \t")
-expect_str("foo bar foo\ bar\ ")
+expect_str("foo bar 'foo bar '")
 send("\b" * 64)
 
 # Commandline works when run on its own (#8807).
@@ -62,7 +62,7 @@ expect_re("prompt [0-9]+>whatever")
 
 # Test --current-process output
 send(control("u"))
-sendline(r"bind \cb 'set tmp (commandline --current-process)'")
+sendline(r"bind ctrl-b 'set tmp (commandline --current-process)'")
 expect_prompt()
 send("echo process1; echo process2")
 send(control("a"))
@@ -79,7 +79,7 @@ sendline('echo "process extent is [$tmp]"')
 expect_str("process extent is [echo process # comment]")
 
 # DISABLED because it keeps failing under ASAN
-# sendline(r"bind \cb 'set tmp (commandline --current-process | count)'")
+# sendline(r"bind ctrl-b 'set tmp (commandline --current-process | count)'")
 # sendline(r'commandline "echo line1 \\" "# comment" "line2"')
 # send(control("b"))
 # send(control("u") * 6)

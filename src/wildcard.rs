@@ -1096,7 +1096,7 @@ pub fn wildcard_expand_string<'closure>(
 /// \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden
 /// files and are not matched (default was false)
 ///
-/// \return true if the wildcard matched
+/// Return true if the wildcard matched
 #[must_use]
 pub fn wildcard_match(
     name: impl AsRef<wstr>,

@@ -108,7 +108,7 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     /// The category of this node.
     fn category(&self) -> Category;
 
-    /// \return a helpful string description of this node.
+    /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
         let mut res = ast_type_to_string(self.typ()).to_owned();
         if let Some(n) = self.as_token() {
@@ -121,21 +121,21 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
         res
     }
 
-    /// \return the source range for this node, or none if unsourced.
+    /// Return the source range for this node, or none if unsourced.
     /// This may return none if the parse was incomplete or had an error.
     fn try_source_range(&self) -> Option<SourceRange>;
 
-    /// \return the source range for this node, or an empty range {0, 0} if unsourced.
+    /// Return the source range for this node, or an empty range {0, 0} if unsourced.
     fn source_range(&self) -> SourceRange {
         self.try_source_range().unwrap_or(SourceRange::new(0, 0))
     }
 
-    /// \return the source code for this node, or none if unsourced.
+    /// Return the source code for this node, or none if unsourced.
     fn try_source<'s>(&self, orig: &'s wstr) -> Option<&'s wstr> {
         self.try_source_range().map(|r| &orig[r.start()..r.end()])
     }
 
-    /// \return the source code for this node, or an empty string if unsourced.
+    /// Return the source code for this node, or an empty string if unsourced.
     fn source<'s>(&self, orig: &'s wstr) -> &'s wstr {
         self.try_source(orig).unwrap_or_default()
     }
@@ -408,7 +408,7 @@ pub trait Token: Leaf {
     fn token_type(&self) -> ParseTokenType;
     fn token_type_mut(&mut self) -> &mut ParseTokenType;
     fn allowed_tokens(&self) -> &'static [ParseTokenType];
-    /// \return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
+    /// Return whether a token type is allowed in this token_t, i.e. is a member of our Toks list.
     fn allows_token(&self, token_type: ParseTokenType) -> bool {
         self.allowed_tokens().contains(&token_type)
     }
@@ -429,11 +429,11 @@ pub trait List: Node {
     type ContentsNode: Node + Default;
     fn contents(&self) -> &[Box<Self::ContentsNode>];
     fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>>;
-    /// \return our count.
+    /// Return our count.
     fn count(&self) -> usize {
         self.contents().len()
     }
-    /// \return whether we are empty.
+    /// Return whether we are empty.
     fn is_empty(&self) -> bool {
         self.contents().is_empty()
     }
@@ -518,7 +518,7 @@ macro_rules! implement_leaf {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {}
         }
     };
@@ -672,7 +672,7 @@ macro_rules! define_list_node {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {
                 for i in 0..self.count() {
                     self[i].parent = Some(self);
@@ -771,7 +771,7 @@ macro_rules! implement_acceptor_for_branch {
             }
         }
         impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at \p self.
+            /// Set the parent fields of all nodes in the tree rooted at `self`.
             fn set_parents(&mut self) {
                 $(
                     set_parent_of_field!(self, $field_name, $field_type);
@@ -2032,7 +2032,7 @@ impl CheckParse for KeywordTime {
 }
 
 impl DecoratedStatement {
-    /// \return the decoration for this statement.
+    /// Return the decoration for this statement.
     pub fn decoration(&self) -> StatementDecoration {
         let Some(decorator) = &self.opt_decoration else {
             return StatementDecoration::none;
@@ -2105,17 +2105,17 @@ impl ArgumentOrRedirectionVariant {
 }
 
 impl ArgumentOrRedirection {
-    /// \return whether this represents an argument.
+    /// Return whether this represents an argument.
     pub fn is_argument(&self) -> bool {
         matches!(*self.contents, ArgumentOrRedirectionVariant::Argument(_))
     }
 
-    /// \return whether this represents a redirection
+    /// Return whether this represents a redirection
     pub fn is_redirection(&self) -> bool {
         matches!(*self.contents, ArgumentOrRedirectionVariant::Redirection(_))
     }
 
-    /// \return this as an argument, assuming it wraps one.
+    /// Return this as an argument, assuming it wraps one.
     pub fn argument(&self) -> &Argument {
         match *self.contents {
             ArgumentOrRedirectionVariant::Argument(ref arg) => arg,
@@ -2123,7 +2123,7 @@ impl ArgumentOrRedirection {
         }
     }
 
-    /// \return this as an argument, assuming it wraps one.
+    /// Return this as an argument, assuming it wraps one.
     pub fn redirection(&self) -> &Redirection {
         match *self.contents {
             ArgumentOrRedirectionVariant::Redirection(ref arg) => arg,
@@ -2361,7 +2361,7 @@ impl BlockStatementHeaderVariant {
     }
 }
 
-/// \return a string literal name for an ast type.
+/// Return a string literal name for an ast type.
 pub fn ast_type_to_string(t: Type) -> &'static wstr {
     match t {
         Type::token_base => L!("token_base"),
@@ -2476,9 +2476,9 @@ impl Default for Ast {
 }
 
 impl Ast {
-    /// Construct an ast by parsing \p src as a job list.
-    /// The ast attempts to produce \p type as the result.
-    /// \p type may only be JobList or FreestandingArgumentList.
+    /// Construct an ast by parsing `src` as a job list.
+    /// The ast attempts to produce `type` as the result.
+    /// `type` may only be JobList or FreestandingArgumentList.
     pub fn parse(
         src: &wstr,
         flags: ParseTreeFlags,
@@ -2494,24 +2494,24 @@ impl Ast {
     ) -> Self {
         parse_from_top(src, flags, out_errors, Type::freestanding_argument_list)
     }
-    /// \return a traversal, allowing iteration over the nodes.
+    /// Return a traversal, allowing iteration over the nodes.
     pub fn walk(&'_ self) -> Traversal<'_> {
         Traversal::new(self.top.as_node())
     }
-    /// \return the top node. This has the type requested in the 'parse' method.
+    /// Return the top node. This has the type requested in the 'parse' method.
     pub fn top(&self) -> &dyn Node {
         self.top.as_node()
     }
     fn top_mut(&mut self) -> &mut dyn NodeMut {
         &mut *self.top
     }
-    /// \return whether any errors were encountered during parsing.
+    /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {
         self.any_error
     }
 
-    /// \return a textual representation of the tree.
-    /// Pass the original source as \p orig.
+    /// Return a textual representation of the tree.
+    /// Pass the original source as `orig`.
     pub fn dump(&self, orig: &wstr) -> WString {
         let mut result = WString::new();
 
@@ -2563,7 +2563,7 @@ impl Ast {
     }
 }
 
-// \return the depth of a node, i.e. number of parent links.
+// Return the depth of a node, i.e. number of parent links.
 fn get_depth(node: &dyn Node) -> usize {
     let mut result = 0;
     let mut cursor = node;
@@ -2626,7 +2626,7 @@ struct TokenStream<'a> {
     src: &'a wstr,
 
     // The tokenizer to generate new tokens.
-    tok: Tokenizer,
+    tok: Tokenizer<'a>,
 
     /// Any comment nodes are collected here.
     /// These are only collected if parse_flag_include_comments is set.
@@ -2648,7 +2648,7 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    /// \return the token at the given index, without popping it. If the token stream is exhausted,
+    /// Return the token at the given index, without popping it. If the token stream is exhausted,
     /// it will have parse_token_type_t::terminate. idx = 0 means the next token, idx = 1 means the
     /// next-next token, and so forth.
     /// We must have that idx < kMaxLookahead.
@@ -2677,7 +2677,7 @@ impl<'a> TokenStream<'a> {
         idx % Self::MAX_LOOKAHEAD
     }
 
-    /// \return the next parse token from the tokenizer.
+    /// Return the next parse token from the tokenizer.
     /// This consumes and stores comments.
     fn next_from_tok(&mut self) -> ParseToken {
         loop {
@@ -2690,7 +2690,7 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    /// \return a new parse token, advancing the tokenizer.
+    /// Return a new parse token, advancing the tokenizer.
     /// This returns comments.
     fn advance_1(&mut self) -> ParseToken {
         let Some(token) = self.tok.next() else {
@@ -2749,7 +2749,7 @@ macro_rules! internal_error {
     };
 }
 
-/// Report an error based on \p fmt for the tokens' range
+/// Report an error based on `fmt` for the tokens' range
 macro_rules! parse_error {
     (
         $self:ident,
@@ -2764,7 +2764,7 @@ macro_rules! parse_error {
     }
 }
 
-/// Report an error based on \p fmt for the source range \p range.
+/// Report an error based on `fmt` for the source range `range`.
 macro_rules! parse_error_range {
     (
         $self:ident,
@@ -3108,7 +3108,7 @@ impl<'s> Populator<'s> {
         self.depth * 2
     }
 
-    /// \return the parser's status.
+    /// Return the parser's status.
     fn status(&mut self) -> ParserStatus {
         if self.unwinding {
             ParserStatus::unwinding
@@ -3121,7 +3121,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// \return whether any leaf nodes we visit should be marked as unsourced.
+    /// Return whether any leaf nodes we visit should be marked as unsourced.
     fn unsource_leaves(&mut self) -> bool {
         matches!(
             self.status(),
@@ -3129,12 +3129,12 @@ impl<'s> Populator<'s> {
         )
     }
 
-    /// \return whether we permit an incomplete parse tree.
+    /// Return whether we permit an incomplete parse tree.
     fn allow_incomplete(&self) -> bool {
         self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
-    /// \return whether a list type \p type allows arbitrary newlines in it.
+    /// Return whether a list type `type` allows arbitrary newlines in it.
     fn list_type_chomps_newlines(&self, typ: Type) -> bool {
         match typ {
             Type::argument_list => {
@@ -3187,7 +3187,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// \return whether a list type \p type allows arbitrary semicolons in it.
+    /// Return whether a list type `type` allows arbitrary semicolons in it.
     fn list_type_chomps_semis(&self, typ: Type) -> bool {
         match typ {
             Type::argument_list => {
@@ -3258,25 +3258,25 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// \return whether a list type should recover from errors.s
+    /// Return whether a list type should recover from errors.s
     /// That is, whether we should stop unwinding when we encounter this type.
     fn list_type_stops_unwind(&self, typ: Type) -> bool {
         typ == Type::job_list && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
-    /// \return a reference to a non-comment token at index \p idx.
+    /// Return a reference to a non-comment token at index `idx`.
     fn peek_token(&mut self, idx: usize) -> &ParseToken {
         self.tokens.peek(idx)
     }
 
-    /// \return the type of a non-comment token.
+    /// Return the type of a non-comment token.
     fn peek_type(&mut self, idx: usize) -> ParseTokenType {
         self.peek_token(idx).typ
     }
 
     /// Consume the next token, chomping any comments.
     /// It is an error to call this unless we know there is a non-terminate token available.
-    /// \return the token.
+    /// Return the token.
     fn consume_any_token(&mut self) -> ParseToken {
         let tok = self.tokens.pop();
         assert!(
@@ -3701,7 +3701,7 @@ impl<'s> Populator<'s> {
     }
 
     /// Given a node type, allocate it and invoke its default constructor.
-    /// \return the resulting Node
+    /// Return the resulting Node
     fn allocate<T: NodeMut + Default>(&self) -> Box<T> {
         let result = Box::<T>::default();
         FLOGF!(
@@ -3717,7 +3717,7 @@ impl<'s> Populator<'s> {
 
     // Given a node type, allocate it, invoke its default constructor,
     // and then visit it as a field.
-    // \return the resulting Node pointer. It is never null.
+    // Return the resulting Node pointer. It is never null.
     fn allocate_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
         let mut result = Box::<T>::default();
         self.visit_mut(&mut *result);
@@ -3927,7 +3927,7 @@ fn parse_from_top(
     ast
 }
 
-/// \return tokenizer flags corresponding to parse tree flags.
+/// Return tokenizer flags corresponding to parse tree flags.
 impl From<ParseTreeFlags> for TokFlags {
     fn from(flags: ParseTreeFlags) -> Self {
         let mut tok_flags = TokFlags(0);
@@ -4012,7 +4012,7 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
 #[test]
 #[serial]
 fn test_ast_parse() {
-    test_init();
+    let _cleanup = test_init();
     let src = L!("echo");
     let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);

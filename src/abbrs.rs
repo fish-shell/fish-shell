@@ -50,6 +50,9 @@ pub struct Abbreviation {
     /// we accomplish this by surrounding the regex in ^ and $.
     pub regex: Option<Box<Regex>>,
 
+    /// The commands this abbr is valid for (or empty if any)
+    pub commands: Vec<WString>,
+
     /// Replacement string.
     pub replacement: WString,
 
@@ -80,6 +83,7 @@ impl Abbreviation {
             name,
             key,
             regex: None,
+            commands: vec![],
             replacement,
             replacement_is_function: false,
             position,
@@ -88,15 +92,20 @@ impl Abbreviation {
         }
     }
 
-    // \return true if this is a regex abbreviation.
+    // Return true if this is a regex abbreviation.
     pub fn is_regex(&self) -> bool {
         self.regex.is_some()
     }
 
-    // \return true if we match a token at a given position.
-    pub fn matches(&self, token: &wstr, position: Position) -> bool {
+    // Return true if we match a token at a given position.
+    pub fn matches(&self, token: &wstr, position: Position, command: &wstr) -> bool {
         if !self.matches_position(position) {
             return false;
+        }
+        if !self.commands.is_empty() {
+            if !self.commands.contains(&command.to_owned()) {
+                return false;
+            }
         }
         match &self.regex {
             Some(r) => r
@@ -106,7 +115,7 @@ impl Abbreviation {
         }
     }
 
-    // \return if we expand in a given position.
+    // Return if we expand in a given position.
     fn matches_position(&self, position: Position) -> bool {
         return self.position == Position::Anywhere || self.position == position;
     }
@@ -140,7 +149,7 @@ pub struct Replacement {
 
 impl Replacement {
     /// Construct a replacement from a replacer.
-    /// The \p range is the range of the text matched by the replacer in the command line.
+    /// The `range` is the range of the text matched by the replacer in the command line.
     /// The text is passed in separately as it may be the output of the replacer's function.
     pub fn new(range: SourceRange, mut text: WString, set_cursor_marker: Option<WString>) -> Self {
         let mut cursor = None;
@@ -174,14 +183,14 @@ pub struct AbbreviationSet {
 }
 
 impl AbbreviationSet {
-    /// \return the list of replacers for an input token, in priority order.
-    /// The \p position is given to describe where the token was found.
-    pub fn r#match(&self, token: &wstr, position: Position) -> Vec<Replacer> {
+    /// Return the list of replacers for an input token, in priority order.
+    /// The `position` is given to describe where the token was found.
+    pub fn r#match(&self, token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
         let mut result = vec![];
 
         // Later abbreviations take precedence so walk backwards.
         for abbr in self.abbrs.iter().rev() {
-            if abbr.matches(token, position) {
+            if abbr.matches(token, position, cmd) {
                 result.push(Replacer {
                     replacement: abbr.replacement.clone(),
                     is_function: abbr.replacement_is_function,
@@ -192,9 +201,11 @@ impl AbbreviationSet {
         return result;
     }
 
-    /// \return whether we would have at least one replacer for a given token.
-    pub fn has_match(&self, token: &wstr, position: Position) -> bool {
-        self.abbrs.iter().any(|abbr| abbr.matches(token, position))
+    /// Return whether we would have at least one replacer for a given token.
+    pub fn has_match(&self, token: &wstr, position: Position, cmd: &wstr) -> bool {
+        self.abbrs
+            .iter()
+            .any(|abbr| abbr.matches(token, position, cmd))
     }
 
     /// Add an abbreviation. Any abbreviation with the same name is replaced.
@@ -232,7 +243,7 @@ impl AbbreviationSet {
     }
 
     /// Erase an abbreviation by name.
-    /// \return true if erased, false if not found.
+    /// Return true if erased, false if not found.
     pub fn erase(&mut self, name: &wstr) -> bool {
         let erased = self.used_names.remove(name);
         if !erased {
@@ -247,21 +258,21 @@ impl AbbreviationSet {
         panic!("Unable to find named abbreviation");
     }
 
-    /// \return true if we have an abbreviation with the given name.
+    /// Return true if we have an abbreviation with the given name.
     pub fn has_name(&self, name: &wstr) -> bool {
         self.used_names.contains(name)
     }
 
-    /// \return a reference to the abbreviation list.
+    /// Return a reference to the abbreviation list.
     pub fn list(&self) -> &[Abbreviation] {
         &self.abbrs
     }
 }
 
-/// \return the list of replacers for an input token, in priority order, using the global set.
-/// The \p position is given to describe where the token was found.
-pub fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
-    with_abbrs(|set| set.r#match(token, position))
+/// Return the list of replacers for an input token, in priority order, using the global set.
+/// The `position` is given to describe where the token was found.
+pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
+    with_abbrs(|set| set.r#match(token, position, cmd))
         .into_iter()
         .collect()
 }
@@ -269,7 +280,7 @@ pub fn abbrs_match(token: &wstr, position: Position) -> Vec<Replacer> {
 #[test]
 #[serial]
 fn rename_abbrs() {
-    test_init();
+    let _cleanup = test_init();
     use crate::abbrs::{Abbreviation, Position};
     use crate::wchar::prelude::*;
 
@@ -279,6 +290,7 @@ fn rename_abbrs() {
                 name: name.into(),
                 key: name.into(),
                 regex: None,
+                commands: vec![],
                 replacement: repl.into(),
                 replacement_is_function: false,
                 position,

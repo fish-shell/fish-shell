@@ -24,6 +24,7 @@ use crate::fork_exec::postfork::{
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
@@ -42,7 +43,6 @@ use crate::proc::{
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
-use crate::timer::push_timer;
 use crate::trace::trace_if_enabled_with_args;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
@@ -62,7 +62,7 @@ use std::slice;
 use std::sync::atomic::Ordering;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-/// Execute the processes specified by \p j in the parser \p.
+/// Execute the processes specified by `j` in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
 /// cleaning it up. On a false return, the job could not be launched and the caller must clean it
 /// up.
@@ -70,6 +70,10 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if no_exec() {
         return true;
+    }
+
+    if job.entitled_to_terminal() {
+        terminal_protocols_disable_ifn();
     }
 
     // Handle an exec call.
@@ -103,7 +107,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         }
         return false;
     }
-    let _timer = push_timer(job.wants_timing() && !no_exec());
 
     // Get the deferred process, if any. We will have to remember its pipes.
     let mut deferred_pipes = PartialPipes::default();
@@ -249,7 +252,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 /// \param outputs if set, the list to insert output into.
 /// \param apply_exit_status if set, update $status within the parser, otherwise do not.
 ///
-/// \return a value appropriate for populating $status.
+/// Return a value appropriate for populating $status.
 pub fn exec_subshell(
     cmd: &wstr,
     parser: &Parser,
@@ -270,7 +273,7 @@ pub fn exec_subshell(
 
 /// Like exec_subshell, but only returns expansion-breaking errors. That is, a zero return means
 /// "success" (even though the command may have failed), a non-zero return means that we should
-/// halt expansion. If the \p pgid is supplied, then any spawned external commands should join that
+/// halt expansion. If the `pgid` is supplied, then any spawned external commands should join that
 /// pgroup.
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
@@ -305,7 +308,7 @@ static FORK_COUNT: AtomicUsize = AtomicUsize::new(0);
 /// etc.
 type LaunchResult = Result<(), ()>;
 
-/// Given an error \p err returned from either posix_spawn or exec, \return a process exit code.
+/// Given an error `err` returned from either posix_spawn or exec, Return a process exit code.
 fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
     assert!(err != 0, "Zero is success, not an error");
     match err {
@@ -331,7 +334,7 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
 }
 
 /// This is a 'looks like text' check.
-/// \return true if either there is no NUL byte, or there is a line containing a lowercase letter
+/// Return true if either there is no NUL byte, or there is a line containing a lowercase letter
 /// before the first NUL byte.
 fn is_thompson_shell_payload(p: &[u8]) -> bool {
     if !p.contains(&b'\0') {
@@ -367,9 +370,8 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     }
     let e = errno();
     let mut res = false;
-    let fd = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty());
-    if let Ok(fd) = fd {
-        let mut file = std::fs::File::from(fd);
+    if let Ok(mut file) = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty())
+    {
         let mut buf = [b'\0'; 256];
         if let Ok(got) = file.read(&mut buf) {
             if is_thompson_shell_payload(&buf[..got]) {
@@ -515,8 +517,8 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
     }
 }
 
-/// Construct an internal process for the process p. In the background, write the data \p outdata to
-/// stdout and \p errdata to stderr, respecting the io chain \p ios. For example if target_fd is 1
+/// Construct an internal process for the process p. In the background, write the data `outdata` to
+/// stdout and `errdata` to stderr, respecting the io chain `ios`. For example if target_fd is 1
 /// (stdout), and there is a dup2 3->1, then we need to write to fd 3. Then exit the internal
 /// process.
 fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &IoChain) {
@@ -628,7 +630,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     });
 }
 
-/// If \p outdata or \p errdata are both empty, then mark the process as completed immediately.
+/// If `outdata` or `errdata` are both empty, then mark the process as completed immediately.
 /// Otherwise, run an internal process.
 fn run_internal_process_or_short_circuit(
     parser: &Parser,
@@ -665,7 +667,7 @@ fn run_internal_process_or_short_circuit(
     }
 }
 
-/// Call fork() as part of executing a process \p p in a job \j. Execute \p child_action in the
+/// Call fork() as part of executing a process `p` in a job \j. Execute `child_action` in the
 /// context of the child.
 fn fork_child_for_process(
     job: &Job,
@@ -747,9 +749,9 @@ fn fork_child_for_process(
     Ok(())
 }
 
-/// \return an newly allocated output stream for the given fd, which is typically stdout or stderr.
+/// Return an newly allocated output stream for the given fd, which is typically stdout or stderr.
 /// This inspects the io_chain and decides what sort of output stream to return.
-/// If \p piped_output_needs_buffering is set, and if the output is going to a pipe, then the other
+/// If `piped_output_needs_buffering` is set, and if the output is going to a pipe, then the other
 /// end then synchronously writing to the pipe risks deadlock, so we must buffer it.
 fn create_output_stream_for_builtin(
     fd: RawFd,
@@ -952,7 +954,7 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
 }
 
 // The "performer" function of a block or function process.
-// This accepts a place to execute as \p parser and then executes the result, returning a status.
+// This accepts a place to execute as `parser` and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
 type ProcPerformer = dyn FnOnce(
     &Parser,
@@ -961,7 +963,7 @@ type ProcPerformer = dyn FnOnce(
     Option<&mut OutputStream>,
 ) -> ProcStatus;
 
-// \return a function which may be to run the given process \p.
+// Return a function which may be to run the given process \p.
 // May return an empty std::function in the rare case that the to-be called fish function no longer
 // exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
@@ -1033,7 +1035,7 @@ fn get_performer_for_process(
 }
 
 /// Execute a block node or function "process".
-/// \p piped_output_needs_buffering if true, buffer the output.
+/// `piped_output_needs_buffering` if true, buffer the output.
 fn exec_block_or_func_process(
     parser: &Parser,
     j: &Job,
@@ -1187,10 +1189,10 @@ struct PartialPipes {
     write: Option<OwnedFd>,
 }
 
-/// Executes a process \p \p in \p job, using the pipes \p pipes (which may have invalid fds if this
+/// Executes a process \p `in` `job`, using the pipes `pipes` (which may have invalid fds if this
 /// is the first or last process).
-/// \p deferred_pipes represents the pipes from our deferred process; if set ensure they get closed
-/// in any child. If \p is_deferred_run is true, then this is a deferred run; this affects how
+/// `deferred_pipes` represents the pipes from our deferred process; if set ensure they get closed
+/// in any child. If `is_deferred_run` is true, then this is a deferred run; this affects how
 /// certain buffering works.
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
@@ -1359,7 +1361,7 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
     None
 }
 
-/// Given that we failed to execute process \p failed_proc in job \p job, mark that process and
+/// Given that we failed to execute process `failed_proc` in job `job`, mark that process and
 /// every subsequent process in the pipeline as aborted before launch.
 fn abort_pipeline_from(job: &Job, offset: usize) {
     for p in job.processes().iter().skip(offset) {
@@ -1369,7 +1371,7 @@ fn abort_pipeline_from(job: &Job, offset: usize) {
 
 // Given that we are about to execute an exec() call, check if the parser is interactive and there
 // are extant background jobs. If so, warn the user and do not exec().
-// \return true if we should allow exec, false to disallow it.
+// Return true if we should allow exec, false to disallow it.
 fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
     // If we're not interactive, we cannot warn.
     if !parser.is_interactive() {
@@ -1395,7 +1397,7 @@ fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
     }
 }
 
-/// Populate \p lst with the output of \p buffer, perhaps splitting lines according to \p split.
+/// Populate `lst` with the output of `buffer`, perhaps splitting lines according to `split`.
 fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, split: bool) {
     // Walk over all the elements.
     for elem in buffer.elements() {
@@ -1433,13 +1435,13 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
     }
 }
 
-/// Execute \p cmd in a subshell in \p parser. If \p lst is not null, populate it with the output.
-/// Return $status in \p out_status.
-/// If \p job_group is set, any spawned commands should join that job group.
-/// If \p apply_exit_status is false, then reset $status back to its original value.
-/// \p is_subcmd controls whether we apply a read limit.
-/// \p break_expand is used to propagate whether the result should be "expansion breaking" in the
-/// sense that subshells used during string expansion should halt that expansion. \return the value
+/// Execute `cmd` in a subshell in `parser`. If `lst` is not null, populate it with the output.
+/// Return $status in `out_status`.
+/// If `job_group` is set, any spawned commands should join that job group.
+/// If `apply_exit_status` is false, then reset $status back to its original value.
+/// `is_subcmd` controls whether we apply a read limit.
+/// `break_expand` is used to propagate whether the result should be "expansion breaking" in the
+/// sense that subshells used during string expansion should halt that expansion. Return the value
 /// of $status.
 fn exec_subshell_internal(
     cmd: &wstr,

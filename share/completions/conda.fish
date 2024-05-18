@@ -138,7 +138,7 @@ __fish_conda clean -s s -l source-cache -d "Remove files from the source cache o
 
 __fish_conda config -l system -d "Write to the system .condarc file"
 __fish_conda config -l env -d "Write to the active conda environment .condarc file"
-__fish_conda config -l file -d "Write to the given file"
+__fish_conda config -l file -d "Write to the given file" -F
 __fish_conda config -l show -x -a "(__fish_conda_config_keys)" -d "Display configuration values"
 __fish_conda config -l show-sources -d "Display all identified configuration sources"
 __fish_conda config -l validate -d "Validate all configuration sources"
@@ -204,7 +204,7 @@ end
 
 # Option file
 for cmd in create install update
-    __fish_conda $cmd -l file -d 'Read package versions from the given file'
+    __fish_conda $cmd -l file -d 'Read package versions from the given file' -F
 end
 
 # Option force
@@ -350,4 +350,4 @@ __fish_conda search -l reverse-dependency -d "Perform a reverse dependency searc
 __fish_conda_top -a env -d "Conda options for environments"
 complete -c conda -n "__fish_conda_subcommand env" -a create -d "Create a new environment"
 complete -c conda -n "__fish_conda_subcommand env" -a list -d "List all conda environments"
-complete -c conda -n "__fish_conda_subcommand env create" -s f -l file -r -d "Create environment from yaml file"
+complete -c conda -n "__fish_conda_subcommand env create" -s f -l file -rF -d "Create environment from yaml file"

@@ -21,17 +21,18 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
     ffi::CString,
-    io::{BufRead, Read, Write},
+    fs::File,
+    io::{BufRead, Read, Seek, SeekFrom, Write},
     mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsFd, AsRawFd, OwnedFd, RawFd},
+    os::fd::{AsFd, AsRawFd, RawFd},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use bitflags::bitflags;
-use libc::{fchmod, fchown, flock, fstat, ftruncate, lseek, LOCK_EX, LOCK_SH, LOCK_UN, SEEK_SET};
+use libc::{fchmod, fchown, flock, fstat, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -475,7 +476,7 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(fd) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
+            let Ok(mut file) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
 
@@ -487,16 +488,16 @@ impl HistoryImpl {
             // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
             // as if it did not fail. The risk is that we may get an incomplete history item; this
             // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(&fd, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(fd.as_raw_fd());
+            let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
+            self.file_contents = HistoryFileContents::create(&mut file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(fd.as_raw_fd())
+                file_id_for_fd(file.as_fd())
             } else {
                 INVALID_FILE_ID
             };
             if locked {
                 unsafe {
-                    Self::unlock_file(fd.as_raw_fd());
+                    Self::unlock_file(&mut file);
                 }
             }
 
@@ -551,18 +552,16 @@ impl HistoryImpl {
 
     /// Given the fd of an existing history file, write a new history file to `dst_fd`.
     /// Returns false on error, true on success
-    fn rewrite_to_temporary_file(&self, existing_fd: Option<RawFd>, dst_fd: RawFd) -> bool {
+    fn rewrite_to_temporary_file(&self, existing_file: Option<&mut File>, dst: &mut File) -> bool {
         // We are reading FROM existing_fd and writing TO dst_fd
-        // dst_fd must be valid
-        assert!(dst_fd >= 0);
 
         // Make an LRU cache to save only the last N elements.
         let mut lru = LruCache::new(HISTORY_SAVE_MAX);
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        if let Some(existing_fd) = existing_fd {
-            if let Some(local_file) = HistoryFileContents::create(existing_fd) {
+        if let Some(existing_file) = existing_file {
+            if let Some(local_file) = HistoryFileContents::create(existing_file) {
                 let mut cursor = 0;
                 while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
                     // Try decoding an old item.
@@ -613,7 +612,7 @@ impl HistoryImpl {
         let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in items {
             append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_fd(&mut buffer, dst_fd, HISTORY_OUTPUT_BUFFER_SIZE) {
+            if let Err(e) = flush_to_fd(&mut buffer, dst.as_raw_fd(), HISTORY_OUTPUT_BUFFER_SIZE) {
                 err = Some(e);
                 break;
             }
@@ -627,7 +626,7 @@ impl HistoryImpl {
 
             false
         } else {
-            flush_to_fd(&mut buffer, dst_fd, 0).is_ok()
+            flush_to_fd(&mut buffer, dst.as_raw_fd(), 0).is_ok()
         }
     }
 
@@ -654,46 +653,39 @@ impl HistoryImpl {
             wrealpath(&possibly_indirect_target_name).unwrap_or(possibly_indirect_target_name);
 
         // Make our temporary file
-        // Remember that we have to close this fd!
-        let Some((tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
+        let Some((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
             return;
         };
-        let tmp_fd = tmp_file.as_raw_fd();
         let mut done = false;
         for _i in 0..MAX_SAVE_TRIES {
             if done {
                 break;
             }
 
-            let target_fd_before = wopen_cloexec(
+            let target_file_before = wopen_cloexec(
                 &target_name,
                 OFlag::O_RDONLY | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
             );
 
-            let orig_file_id = target_fd_before
+            let orig_file_id = target_file_before
                 .as_ref()
-                .map(|fd| file_id_for_fd(fd.as_raw_fd()))
+                .map(|fd| file_id_for_fd(fd.as_fd()))
                 .unwrap_or(INVALID_FILE_ID);
 
             // Open any target file, but do not lock it right away
-            if !self.rewrite_to_temporary_file(
-                target_fd_before.as_ref().map(AsRawFd::as_raw_fd).ok(),
-                tmp_fd,
-            ) {
+            if !self.rewrite_to_temporary_file(target_file_before.ok().as_mut(), &mut tmp_file) {
                 // Failed to write, no good
                 break;
             }
-            drop(target_fd_before);
 
             // The crux! We rewrote the history file; see if the history file changed while we
             // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-
-            if let Ok(target_fd_after) = target_fd_after.as_ref() {
+            let mut target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
+            if let Ok(target_fd_after) = target_fd_after.as_mut() {
                 // critical to take the lock before checking file IDs,
                 // and hold it until after we are done replacing.
                 // Also critical to check the file at the path, NOT based on our fd.
@@ -708,10 +700,8 @@ impl HistoryImpl {
             let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
             if !can_replace_file {
                 // The file has changed, so we're going to re-read it
-                // Truncate our tmp_fd so we can reuse it
-                if unsafe { ftruncate(tmp_fd, 0) } == -1
-                    || unsafe { lseek(tmp_fd, 0, SEEK_SET) } == -1
-                {
+                // Truncate our tmp_file so we can reuse it
+                if tmp_file.set_len(0).is_err() || tmp_file.seek(SeekFrom::Start(0)).is_err() {
                     FLOGF!(
                         history_file,
                         "Error %d when truncating temporary history file",
@@ -730,14 +720,14 @@ impl HistoryImpl {
                 if let Ok(target_fd_after) = target_fd_after.as_ref() {
                     let mut sbuf: libc::stat = unsafe { mem::zeroed() };
                     if unsafe { fstat(target_fd_after.as_raw_fd(), &mut sbuf) } >= 0 {
-                        if unsafe { fchown(tmp_fd, sbuf.st_uid, sbuf.st_gid) } == -1 {
+                        if unsafe { fchown(tmp_file.as_raw_fd(), sbuf.st_uid, sbuf.st_gid) } == -1 {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing ownership of history file",
                                 errno::errno().0
                             );
                         }
-                        if unsafe { fchmod(tmp_fd, sbuf.st_mode) } == -1 {
+                        if unsafe { fchmod(tmp_file.as_raw_fd(), sbuf.st_mode) } == -1 {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing mode of history file",
@@ -805,9 +795,9 @@ impl HistoryImpl {
         // After locking it, we need to stat the file at the path; if there is a new file there, it
         // means the file was replaced and we have to try again.
         // Limit our max tries so we don't do this forever.
-        let mut history_fd = None;
+        let mut history_file = None;
         for _i in 0..MAX_SAVE_TRIES {
-            let Ok(fd) = wopen_cloexec(
+            let Ok(mut file) = wopen_cloexec(
                 &history_path,
                 OFlag::O_WRONLY | OFlag::O_APPEND,
                 Mode::empty(),
@@ -822,21 +812,21 @@ impl HistoryImpl {
             // forcing everything through the slow copy-move mode. We try to minimize this possibility
             // by writing with O_APPEND.
             unsafe {
-                Self::maybe_lock_file(&fd, LOCK_EX);
+                Self::maybe_lock_file(&mut file, LOCK_EX);
             }
-            let file_id = file_id_for_fd(fd.as_raw_fd());
+            let file_id = file_id_for_fd(file.as_fd());
             if file_id_for_path(&history_path) == file_id {
                 // File IDs match, so the file we opened is still at that path
                 // We're going to use this fd
                 if file_id != self.history_file_id {
                     file_changed = true;
                 }
-                history_fd = Some(fd);
+                history_file = Some(file);
                 break;
             }
         }
 
-        if let Some(history_fd) = history_fd {
+        if let Some(history_file) = history_file {
             // We (hopefully successfully) took the exclusive lock. Append to the file.
             // Note that this is sketchy for a few reasons:
             //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -867,7 +857,7 @@ impl HistoryImpl {
                     append_history_item_to_buffer(item, &mut buffer);
                     res = flush_to_fd(
                         &mut buffer,
-                        history_fd.as_raw_fd(),
+                        history_file.as_raw_fd(),
                         HISTORY_OUTPUT_BUFFER_SIZE,
                     );
                     if res.is_err() {
@@ -879,7 +869,7 @@ impl HistoryImpl {
             }
 
             if res.is_ok() {
-                res = flush_to_fd(&mut buffer, history_fd.as_raw_fd(), 0);
+                res = flush_to_fd(&mut buffer, history_file.as_raw_fd(), 0);
             }
 
             // Since we just modified the file, update our history_file_id to match its current state
@@ -887,11 +877,11 @@ impl HistoryImpl {
             // write.
             // We don't update the mapping since we only appended to the file, and everything we
             // appended remains in our new_items
-            self.history_file_id = file_id_for_fd(history_fd.as_raw_fd());
+            self.history_file_id = file_id_for_fd(history_file.as_fd());
 
             ok = res.is_ok();
 
-            drop(history_fd);
+            drop(history_file);
         }
 
         // If someone has replaced the file, forget our file state.
@@ -1025,9 +1015,9 @@ impl HistoryImpl {
     }
 
     /// Remove a history item.
-    fn remove(&mut self, str_to_remove: WString) {
+    fn remove(&mut self, str_to_remove: &wstr) {
         // Add to our list of deleted items.
-        self.deleted_items.insert(str_to_remove.clone(), false);
+        self.deleted_items.insert(str_to_remove.to_owned(), false);
 
         for idx in (0..self.new_items.len()).rev() {
             let matched = self.new_items[idx].str() == str_to_remove;
@@ -1100,17 +1090,15 @@ impl HistoryImpl {
         old_file.push_utfstr(&self.name);
         old_file.push_str("_history");
 
-        let Ok(src_fd) = wopen_cloexec(&old_file, OFlag::O_RDONLY, Mode::empty()) else {
+        let Ok(mut src_file) = wopen_cloexec(&old_file, OFlag::O_RDONLY, Mode::empty()) else {
             return;
         };
-
-        let mut src_fd = std::fs::File::from(src_fd);
 
         // Clear must come after we've retrieved the new_file name, and before we open
         // destination file descriptor, since it destroys the name and the file.
         self.clear();
 
-        let Ok(dst_fd) = wopen_cloexec(
+        let Ok(mut dst_file) = wopen_cloexec(
             &new_file,
             OFlag::O_WRONLY | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
@@ -1119,15 +1107,13 @@ impl HistoryImpl {
             return;
         };
 
-        let mut dst_fd = std::fs::File::from(dst_fd);
-
         let mut buf = [0; libc::BUFSIZ as usize];
-        while let Ok(n) = src_fd.read(&mut buf) {
+        while let Ok(n) = src_file.read(&mut buf) {
             if n == 0 {
                 break;
             }
 
-            if dst_fd.write(&buf[..n]).is_err() {
+            if dst_file.write(&buf[..n]).is_err() {
                 // This message does not have high enough priority to be shown by default.
                 FLOG!(history_file, "Error when writing history file");
                 break;
@@ -1317,10 +1303,10 @@ impl HistoryImpl {
     /// # Safety
     ///
     /// `fd` and `lock_type` must be valid arguments to `flock(2)`.
-    unsafe fn maybe_lock_file(fd: impl AsFd, lock_type: libc::c_int) -> bool {
+    unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
 
-        let raw_fd = fd.as_fd().as_raw_fd();
+        let raw_fd = file.as_raw_fd();
 
         // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
         // is on a remote filesystem.
@@ -1356,15 +1342,15 @@ impl HistoryImpl {
     /// # Safety
     ///
     /// `fd` must be a valid argument to `flock(2)` with `LOCK_UN`.
-    unsafe fn unlock_file(fd: RawFd) {
+    unsafe fn unlock_file(file: &mut File) {
         unsafe {
-            libc::flock(fd, LOCK_UN);
+            libc::flock(file.as_raw_fd(), LOCK_UN);
         }
     }
 }
 
 // Returns the fd of an opened temporary file, or None on failure.
-fn create_temporary_file(name_template: &wstr) -> Option<(OwnedFd, WString)> {
+fn create_temporary_file(name_template: &wstr) -> Option<(File, WString)> {
     for _attempt in 0..10 {
         let narrow_str = wcs2zstring(name_template);
         if let Ok((fd, narrow_str)) = fish_mkstemp_cloexec(narrow_str) {
@@ -1507,7 +1493,6 @@ impl History {
         self.imp().add(item, pending, true)
     }
 
-    /// Exposed for testing.
     pub fn add_commandline(&self, s: WString) {
         let mut imp = self.imp();
         let when = imp.timestamp_now();
@@ -1543,7 +1528,7 @@ impl History {
     }
 
     /// Remove a history item.
-    pub fn remove(&self, s: WString) {
+    pub fn remove(&self, s: &wstr) {
         self.imp().remove(s)
     }
 
@@ -1855,6 +1840,12 @@ impl HistorySearch {
     /// Returns the original search term.
     pub fn original_term(&self) -> &wstr {
         &self.orig_term
+    }
+
+    pub fn prepare_to_search_after_deletion(&mut self) {
+        assert!(self.current_index != 0);
+        self.current_index -= 1;
+        self.current_item = None;
     }
 
     /// Finds the next search result. Returns `true` if one was found.

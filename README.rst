@@ -3,7 +3,7 @@
       :alt: Cirrus CI Build Status
 
 `fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
-=================================================================================
+=============================================================================================
 
 fish is a smart and user-friendly command line shell for macOS, Linux,
 and the rest of the family. fish includes features like syntax
@@ -136,17 +136,16 @@ Additionally, running the test suite requires Python 3.5+ and the pexpect packag
 Dependencies, git master
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Building from git master currently requires, in addition to the dependencies for a tarball:
+Building from git master currently requires:
 
--  Rust (version 1.67 or later)
+-  Rust (version 1.70 or later)
 -  CMake (version 3.19 or later)
--  libclang, even if you are compiling with GCC
--  an Internet connection
+-  a C compiler (for system feature detection)
+-  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
+-  gettext (headers and libraries) - optional, for translation support
+-  an Internet connection, as other dependencies will be downloaded automatically
+-  For tests: a C++11 compiler
 
-fish is in the process of being ported to Rust, replacing all C++ code, and as such these dependencies are a bit awkward and in flux.
-
-In general, we would currently not recommend running from git master if you just want to *use* fish.
-Given the nature of the port, what is currently there is mostly a slower and buggier version of the last C++-based release.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

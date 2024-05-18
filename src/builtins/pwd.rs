@@ -6,18 +6,18 @@ use crate::{env::Environment, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
 const short_options: &wstr = L!("LPh");
-const long_options: &[woption] = &[
-    wopt(L!("help"), no_argument, 'h'),
-    wopt(L!("logical"), no_argument, 'L'),
-    wopt(L!("physical"), no_argument, 'P'),
+const long_options: &[WOption] = &[
+    wopt(L!("help"), NoArgument, 'h'),
+    wopt(L!("logical"), NoArgument, 'L'),
+    wopt(L!("physical"), NoArgument, 'P'),
 ];
 
 pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;
-    let mut w = wgetopter_t::new(short_options, long_options, argv);
-    while let Some(opt) = w.wgetopt_long() {
+    let mut w = WGetopter::new(short_options, long_options, argv);
+    while let Some(opt) = w.next_opt() {
         match opt {
             'L' => resolve_symlinks = false,
             'P' => resolve_symlinks = true,
@@ -26,14 +26,14 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
                 return STATUS_CMD_OK;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from WGetopter"),
         }
     }
 
-    if w.woptind != argc {
+    if w.wopt_index != argc {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));

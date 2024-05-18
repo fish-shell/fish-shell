@@ -111,7 +111,7 @@ impl GenerationsList {
         }
     }
 
-    /// \return the value for a topic.
+    /// Return the value for a topic.
     pub fn get(&self, topic: topic_t) -> generation_t {
         match topic {
             topic_t::sighupint => self.sighupint.get(),
@@ -120,7 +120,7 @@ impl GenerationsList {
         }
     }
 
-    /// \return ourselves as an array.
+    /// Return ourselves as an array.
     pub fn as_array(&self) -> [generation_t; 3] {
         [
             self.sighupint.get(),
@@ -129,19 +129,19 @@ impl GenerationsList {
         ]
     }
 
-    /// Set the value of \p topic to the smaller of our value and the value in \p other.
+    /// Set the value of `topic` to the smaller of our value and the value in `other`.
     pub fn set_min_from(&mut self, topic: topic_t, other: &Self) {
         if self.get(topic) > other.get(topic) {
             self.set(topic, other.get(topic));
         }
     }
 
-    /// \return whether a topic is valid.
+    /// Return whether a topic is valid.
     pub fn is_valid(&self, topic: topic_t) -> bool {
         self.get(topic) != INVALID_GENERATION
     }
 
-    /// \return whether any topic is valid.
+    /// Return whether any topic is valid.
     pub fn any_valid(&self) -> bool {
         let mut valid = false;
         for gen in self.as_array() {
@@ -187,7 +187,7 @@ impl binary_semaphore_t {
         // a signal call, so if we're blocked in read() (like the topic monitor wants to be!),
         // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
         // non-blocking (so reads will never block) and use select() to poll it.
-        if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+        if cfg!(feature = "tsan") {
             let _ = make_fd_nonblocking(pipes.read.as_raw_fd());
         }
 
@@ -239,7 +239,7 @@ impl binary_semaphore_t {
                     // Under tsan our notifying pipe is non-blocking, so we would busy-loop on the read()
                     // call until data is available (that is, fish would use 100% cpu while waiting for
                     // processes). This call prevents that.
-                    if cfg!(feature = "FISH_TSAN_WORKAROUNDS") {
+                    if cfg!(feature = "tsan") {
                         let _ =
                             fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);
                     }
@@ -398,7 +398,7 @@ impl topic_monitor_t {
 
     /// Apply any pending updates to the data.
     /// This accepts data because it must be locked.
-    /// \return the updated generation list.
+    /// Return the updated generation list.
     fn updated_gens_in_data(&self, data: &mut MutexGuard<data_t>) -> GenerationsList {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
@@ -439,7 +439,7 @@ impl topic_monitor_t {
         return data.current.clone();
     }
 
-    /// \return the current generation list, opportunistically applying any pending updates.
+    /// Return the current generation list, opportunistically applying any pending updates.
     fn updated_gens(&self) -> GenerationsList {
         let mut data = self.data_.lock().unwrap();
         return self.updated_gens_in_data(&mut data);
@@ -456,11 +456,11 @@ impl topic_monitor_t {
     }
 
     /// Given a list of input generations, attempt to update them to something newer.
-    /// If \p gens is older, then just return those by reference, and directly return false (not
+    /// If `gens` is older, then just return those by reference, and directly return false (not
     /// becoming the reader).
-    /// If \p gens is current and there is not a reader, then do not update \p gens and return true,
+    /// If `gens` is current and there is not a reader, then do not update `gens` and return true,
     /// indicating we should become the reader. Now it is our responsibility to wait on the
-    /// semaphore and notify on a change via the condition variable. If \p gens is current, and
+    /// semaphore and notify on a change via the condition variable. If `gens` is current, and
     /// there is already a reader, then wait until the reader notifies us and try again.
     fn try_update_gens_maybe_becoming_reader(&self, gens: &mut GenerationsList) -> bool {
         let mut become_reader = false;
@@ -517,7 +517,7 @@ impl topic_monitor_t {
     }
 
     /// Wait for some entry in the list of generations to change.
-    /// \return the new gens.
+    /// Return the new gens.
     fn await_gens(&self, input_gens: &GenerationsList) -> GenerationsList {
         let mut gens = input_gens.clone();
         while &gens == input_gens {
@@ -547,11 +547,11 @@ impl topic_monitor_t {
         return gens;
     }
 
-    /// For each valid topic in \p gens, check to see if the current topic is larger than
-    /// the value in \p gens.
-    /// If \p wait is set, then wait if there are no changes; otherwise return immediately.
-    /// \return true if some topic changed, false if none did.
-    /// On a true return, this updates the generation list \p gens.
+    /// For each valid topic in `gens`, check to see if the current topic is larger than
+    /// the value in `gens`.
+    /// If `wait` is set, then wait if there are no changes; otherwise return immediately.
+    /// Return true if some topic changed, false if none did.
+    /// On a true return, this updates the generation list `gens`.
     pub fn check(&self, gens: &GenerationsList, wait: bool) -> bool {
         if !gens.any_valid() {
             return false;

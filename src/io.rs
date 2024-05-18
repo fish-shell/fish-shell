@@ -21,6 +21,7 @@ use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use std::cell::{RefCell, UnsafeCell};
+use std::fs::File;
 use std::io;
 use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -81,17 +82,17 @@ impl SeparatedBuffer {
         }
     }
 
-    /// \return the buffer limit size, or 0 for no limit.
+    /// Return the buffer limit size, or 0 for no limit.
     pub fn limit(&self) -> usize {
         self.buffer_limit
     }
 
-    /// \return the contents size.
+    /// Return the contents size.
     pub fn len(&self) -> usize {
         self.contents_size
     }
 
-    /// \return whether the output has been discarded.
+    /// Return whether the output has been discarded.
     pub fn discarded(&self) -> bool {
         self.discard
     }
@@ -109,12 +110,12 @@ impl SeparatedBuffer {
         result
     }
 
-    /// \return the list of elements.
+    /// Return the list of elements.
     pub fn elements(&self) -> &[BufferElement] {
         &self.elements
     }
 
-    /// Append the given data with separation type \p sep.
+    /// Append the given data with separation type `sep`.
     pub fn append(&mut self, data: &[u8], sep: SeparationType) -> bool {
         if !self.try_add_size(data.len()) {
             return false;
@@ -139,12 +140,12 @@ impl SeparatedBuffer {
         self.discard = false;
     }
 
-    /// \return true if our last element has an inferred separation type.
+    /// Return true if our last element has an inferred separation type.
     fn last_inferred(&self) -> bool {
         !self.elements.is_empty() && !self.elements.last().unwrap().is_explicitly_separated()
     }
 
-    /// Mark that we are about to add the given size \p delta to the buffer. \return true if we
+    /// Mark that we are about to add the given size `delta` to the buffer. Return true if we
     /// succeed, false if we exceed buffer_limit.
     fn try_add_size(&mut self, delta: usize) -> bool {
         if self.discard {
@@ -264,12 +265,12 @@ impl IoData for IoFd {
 /// Represents a redirection to or from an opened file.
 pub struct IoFile {
     fd: RawFd,
-    // The fd for the file which we are writing to or reading from.
-    file_fd: OwnedFd,
+    // The file which we are writing to or reading from.
+    file: File,
 }
 impl IoFile {
-    pub fn new(fd: RawFd, file_fd: OwnedFd) -> Self {
-        IoFile { fd, file_fd }
+    pub fn new(fd: RawFd, file: File) -> Self {
+        IoFile { fd, file }
         // Invalid file redirections are replaced with a closed fd, so the following
         // assertion isn't guaranteed to pass:
         // assert(file_fd_.valid() && "File is not valid");
@@ -283,10 +284,10 @@ impl IoData for IoFile {
         self.fd
     }
     fn source_fd(&self) -> RawFd {
-        self.file_fd.as_raw_fd()
+        self.file.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!("file %d -> %d\n", self.file_fd.as_raw_fd(), self.fd)
+        eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd)
     }
     fn as_ptr(&self) -> *const () {
         (self as *const Self).cast()
@@ -345,12 +346,12 @@ pub struct IoBufferfill {
 }
 impl IoBufferfill {
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns an error on failure, e.g. too many open fds.
+    /// Returns an error on failure, e.g. too many open fds.
     pub fn create() -> io::Result<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
     /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
-    /// \returns an error on failure, e.g. too many open fds.
+    /// Returns an error on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.
     pub fn create_opts(buffer_limit: usize, target: RawFd) -> io::Result<Arc<IoBufferfill>> {
@@ -388,7 +389,7 @@ impl IoBufferfill {
     }
 
     /// Reset the receiver (possibly closing the write end of the pipe), and complete the fillthread
-    /// of the buffer. \return the buffer.
+    /// of the buffer. Return the buffer.
     pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
         // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
@@ -461,13 +462,13 @@ impl IoBuffer {
         self.buffer.lock().unwrap().append(data, typ)
     }
 
-    /// \return true if output was discarded due to exceeding the read limit.
+    /// Return true if output was discarded due to exceeding the read limit.
     pub fn discarded(&self) -> bool {
         self.buffer.lock().unwrap().discarded()
     }
 
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
-    /// held. \return positive on success, 0 if closed, -1 on error (in which case errno will be
+    /// held. Return positive on success, 0 if closed, -1 on error (in which case errno will be
     /// set).
     pub fn read_once(fd: RawFd, buffer: &mut MutexGuard<'_, SeparatedBuffer>) -> isize {
         assert!(fd >= 0, "Invalid fd");
@@ -635,17 +636,46 @@ impl IoChain {
         true
     }
 
-    /// \return the last io redirection in the chain for the specified file descriptor, or nullptr
+    /// Return the last io redirection in the chain for the specified file descriptor, or nullptr
     /// if none.
     pub fn io_for_fd(&self, fd: RawFd) -> Option<IoDataRef> {
         self.0.iter().rev().find(|data| data.fd() == fd).cloned()
     }
 
     /// Attempt to resolve a list of redirection specs to IOs, appending to 'this'.
-    /// \return true on success, false on error, in which case an error will have been printed.
+    /// Return true on success, false on error, in which case an error will have been printed.
     #[allow(clippy::collapsible_else_if)]
     pub fn append_from_specs(&mut self, specs: &RedirectionSpecList, pwd: &wstr) -> bool {
         let mut have_error = false;
+
+        let print_error = |err, target: &wstr| {
+            // If the error is that the file doesn't exist
+            // or there's a non-directory component,
+            // find the first problematic component for a better message.
+            if [ENOENT, ENOTDIR].contains(&err) {
+                FLOGF!(warning, FILE_ERROR, target);
+                let mut dname: &wstr = target;
+                while !dname.is_empty() {
+                    let next: &wstr = wdirname(dname);
+                    if let Ok(md) = wstat(next) {
+                        if !md.is_dir() {
+                            FLOGF!(warning, "Path '%ls' is not a directory", next);
+                        } else {
+                            FLOGF!(warning, "Path '%ls' does not exist", dname);
+                        }
+                        break;
+                    }
+                    dname = next;
+                }
+            } else if err != EINTR {
+                // If we get EINTR we had a cancel signal.
+                // That's expected (ctrl-c on the commandline),
+                // so no warning.
+                FLOGF!(warning, FILE_ERROR, target);
+                perror("open");
+            }
+        };
+
         for spec in specs {
             match spec.mode {
                 RedirectionMode::fd => {
@@ -665,56 +695,41 @@ impl IoChain {
                     let oflags = spec.oflags();
 
                     match wopen_cloexec(&path, oflags, OPEN_MASK) {
-                        Ok(fd) => {
-                            self.push(Arc::new(IoFile::new(spec.fd, fd)));
+                        Ok(file) => {
+                            self.push(Arc::new(IoFile::new(spec.fd, file)));
                         }
                         Err(err) => {
-                            if oflags.intersects(OFlag::O_EXCL) && err == nix::Error::EEXIST {
+                            if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
                                 FLOGF!(warning, NOCLOB_ERROR, spec.target);
-                            } else {
+                            } else if spec.mode != RedirectionMode::try_input {
                                 if should_flog!(warning) {
-                                    let err = errno::errno().0;
-                                    // If the error is that the file doesn't exist
-                                    // or there's a non-directory component,
-                                    // find the first problematic component for a better message.
-                                    if [ENOENT, ENOTDIR].contains(&err) {
-                                        FLOGF!(warning, FILE_ERROR, spec.target);
-                                        let mut dname: &wstr = &spec.target;
-                                        while !dname.is_empty() {
-                                            let next: &wstr = wdirname(dname);
-                                            if let Ok(md) = wstat(next) {
-                                                if !md.is_dir() {
-                                                    FLOGF!(
-                                                        warning,
-                                                        "Path '%ls' is not a directory",
-                                                        next
-                                                    );
-                                                } else {
-                                                    FLOGF!(
-                                                        warning,
-                                                        "Path '%ls' does not exist",
-                                                        dname
-                                                    );
-                                                }
-                                                break;
-                                            }
-                                            dname = next;
-                                        }
-                                    } else if err != EINTR {
-                                        // If we get EINTR we had a cancel signal.
-                                        // That's expected (ctrl-c on the commandline),
-                                        // so no warning.
-                                        FLOGF!(warning, FILE_ERROR, spec.target);
-                                        perror("open");
-                                    }
+                                    print_error(errno::errno().0, &spec.target);
                                 }
                             }
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
                             // the shell a chance to gracefully regain control of the shell (see #7038).
-                            self.push(Arc::new(IoClose::new(spec.fd)));
-                            have_error = true;
-                            continue;
+                            if spec.mode != RedirectionMode::try_input {
+                                self.push(Arc::new(IoClose::new(spec.fd)));
+                                have_error = true;
+                                continue;
+                            } else {
+                                // If we're told to try via `<?`, we use /dev/null
+                                match wopen_cloexec(L!("/dev/null"), oflags, OPEN_MASK) {
+                                    Ok(fd) => {
+                                        self.push(Arc::new(IoFile::new(spec.fd, fd)));
+                                    }
+                                    _ => {
+                                        // /dev/null can't be opened???
+                                        if should_flog!(warning) {
+                                            print_error(errno::errno().0, L!("/dev/null"));
+                                        }
+                                        self.push(Arc::new(IoClose::new(spec.fd)));
+                                        have_error = true;
+                                        continue;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -756,7 +771,7 @@ pub enum OutputStream {
 }
 
 impl OutputStream {
-    /// \return any internally buffered contents.
+    /// Return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
     /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
     pub fn contents(&self) -> &wstr {
@@ -915,7 +930,7 @@ impl StringOutputStream {
         self.contents.push_utfstr(s);
         true
     }
-    /// \return the wcstring containing the output.
+    /// Return the wcstring containing the output.
     fn contents(&self) -> &wstr {
         &self.contents
     }

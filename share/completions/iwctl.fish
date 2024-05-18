@@ -26,12 +26,11 @@ function __iwctl_filter -w iwctl
             end
             printf "\n"
         end
-    else
+    else if set -q column_widths[1]
         # only take lines starting with `  `, i.e., no `No devices ...`
         # then take the first column as substring
         string match "  *" $results[5..] | string sub -s (math $leading_ws + 1) -l $column_widths[1] | string trim -r
     end
-    # string match -rg "  .{$(math $header_spaces[1] - 2)}(.{$(math $first_column_label + $header_spaces[2])})" $results[5..] | string trim
 end
 
 function __iwctl_match_subcoms

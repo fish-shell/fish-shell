@@ -16,8 +16,7 @@ Description
 .. only:: builder_man
 
           NOTE: This page documents the fish keyword ``time``.
-          To see the documentation on the ``time`` command you might have,
-          use ``command man time``.
+          To see the documentation on any non-fish versions, use ``command man time``.
 
 ``time`` causes fish to measure how long a command takes and print the results afterwards. The command can be a simple fish command or a block. The results can not currently be redirected.
 

@@ -72,14 +72,14 @@ impl ArgParseCmdOpts<'_> {
 }
 
 const SHORT_OPTIONS: &wstr = L!("+:hn:six:N:X:");
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("stop-nonopt"), woption_argument_t::no_argument, 's'),
-    wopt(L!("ignore-unknown"), woption_argument_t::no_argument, 'i'),
-    wopt(L!("name"), woption_argument_t::required_argument, 'n'),
-    wopt(L!("exclusive"), woption_argument_t::required_argument, 'x'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("min-args"), woption_argument_t::required_argument, 'N'),
-    wopt(L!("max-args"), woption_argument_t::required_argument, 'X'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("stop-nonopt"), ArgType::NoArgument, 's'),
+    wopt(L!("ignore-unknown"), ArgType::NoArgument, 'i'),
+    wopt(L!("name"), ArgType::RequiredArgument, 'n'),
+    wopt(L!("exclusive"), ArgType::RequiredArgument, 'x'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("min-args"), ArgType::RequiredArgument, 'N'),
+    wopt(L!("max-args"), ArgType::RequiredArgument, 'X'),
 ];
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
@@ -485,8 +485,8 @@ fn parse_cmd_opts<'args>(
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, args);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
+    while let Some(c) = w.next_opt() {
         match c {
             'n' => opts.name = w.woptarg.unwrap().to_owned(),
             's' => opts.stop_nonopt = true,
@@ -528,16 +528,16 @@ fn parse_cmd_opts<'args>(
                     parser,
                     streams,
                     cmd,
-                    args[w.woptind - 1],
+                    args[w.wopt_index - 1],
                     /* print_hints */ false,
                 );
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, args[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
-            _ => panic!("unexpected retval from wgetopt_long"),
+            _ => panic!("unexpected retval from next_opt"),
         }
     }
 
@@ -545,11 +545,11 @@ fn parse_cmd_opts<'args>(
         return STATUS_CMD_OK;
     }
 
-    if "--" == args_read[w.woptind - 1] {
-        w.woptind -= 1;
+    if "--" == args_read[w.wopt_index - 1] {
+        w.wopt_index -= 1;
     }
 
-    if argc == w.woptind {
+    if argc == w.wopt_index {
         // The user didn't specify any option specs.
         streams
             .err
@@ -565,14 +565,14 @@ fn parse_cmd_opts<'args>(
             .unwrap_or_else(|| L!("argparse").to_owned());
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     return collect_option_specs(opts, optind, argc, args, streams);
 }
 
 fn populate_option_strings<'args>(
     opts: &ArgParseCmdOpts<'args>,
     short_options: &mut WString,
-    long_options: &mut Vec<woption<'args>>,
+    long_options: &mut Vec<WOption<'args>>,
 ) {
     for opt_spec in opts.options.values() {
         if opt_spec.short_flag_valid {
@@ -584,15 +584,15 @@ fn populate_option_strings<'args>(
                 if opt_spec.short_flag_valid {
                     short_options.push_str("::");
                 }
-                woption_argument_t::optional_argument
+                ArgType::OptionalArgument
             }
             ArgCardinality::Once | ArgCardinality::AtLeastOnce => {
                 if opt_spec.short_flag_valid {
                     short_options.push_str(":");
                 }
-                woption_argument_t::required_argument
+                ArgType::RequiredArgument
             }
-            ArgCardinality::None => woption_argument_t::no_argument,
+            ArgCardinality::None => ArgType::NoArgument,
         };
 
         if !opt_spec.long_flag.is_empty() {
@@ -652,7 +652,7 @@ fn validate_arg<'opts>(
     Some(retval)
 }
 
-/// \return whether the option 'opt' is an implicit integer option.
+/// Return whether the option 'opt' is an implicit integer option.
 fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
     if opts.implicit_int_flag == '\0' {
         // There is no implicit integer option.
@@ -668,7 +668,7 @@ fn validate_and_store_implicit_int<'args>(
     parser: &Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     val: &'args wstr,
-    w: &mut wgetopter_t,
+    w: &mut WGetopter,
     is_long_flag: bool,
     streams: &mut IoStreams,
 ) -> Option<c_int> {
@@ -683,7 +683,7 @@ fn validate_and_store_implicit_int<'args>(
     opt_spec.vals.clear();
     opt_spec.vals.push(val.into());
     opt_spec.num_seen += 1;
-    w.nextchar = L!("");
+    w.remaining_text = L!("");
 
     return STATUS_CMD_OK;
 }
@@ -721,7 +721,7 @@ fn handle_flag<'args>(
 
     match opt_spec.num_allowed {
         ArgCardinality::Optional | ArgCardinality::Once => {
-            // We're depending on `wgetopt_long()` to report that a mandatory value is missing if
+            // We're depending on `next_opt()` to report that a mandatory value is missing if
             // `opt_spec->num_allowed == 1` and thus return ':' so that we don't take this branch if
             // the mandatory arg is missing.
             opt_spec.vals.clear();
@@ -754,23 +754,23 @@ fn argparse_parse_flags<'args>(
     let mut long_options = vec![];
     populate_option_strings(opts, &mut short_options, &mut long_options);
 
-    let mut long_idx: usize = usize::MAX;
-    let mut w = wgetopter_t::new(&short_options, &long_options, args);
-    while let Some(opt) = w.wgetopt_long_idx(&mut long_idx) {
+    let mut w = WGetopter::new(&short_options, &long_options, args);
+    while let Some((opt, longopt_idx)) = w.next_opt_indexed() {
+        let is_long_flag = longopt_idx.is_some();
         let retval = match opt {
             ':' => {
                 builtin_missing_argument(
                     parser,
                     streams,
                     &opts.name,
-                    args_read[w.woptind - 1],
+                    args_read[w.wopt_index - 1],
                     false,
                 );
                 STATUS_INVALID_ARGS
             }
             '?' => {
                 // It's not a recognized flag. See if it's an implicit int flag.
-                let arg_contents = &args_read[w.woptind - 1].slice_from(1);
+                let arg_contents = &args_read[w.wopt_index - 1].slice_from(1);
 
                 if is_implicit_int(opts, arg_contents) {
                     validate_and_store_implicit_int(
@@ -778,61 +778,53 @@ fn argparse_parse_flags<'args>(
                         opts,
                         arg_contents,
                         &mut w,
-                        long_idx != usize::MAX,
+                        is_long_flag,
                         streams,
                     )
                 } else if !opts.ignore_unknown {
                     streams.err.append(wgettext_fmt!(
                         BUILTIN_ERR_UNKNOWN,
                         opts.name,
-                        args_read[w.woptind - 1]
+                        args_read[w.wopt_index - 1]
                     ));
                     STATUS_INVALID_ARGS
                 } else {
                     // Any unrecognized option is put back if ignore_unknown is used.
                     // This allows reusing the same argv in multiple argparse calls,
                     // or just ignoring the error (e.g. in completions).
-                    opts.args.push(args_read[w.woptind - 1]);
+                    opts.args.push(args_read[w.wopt_index - 1]);
                     // Work around weirdness with wgetopt, which crashes if we `continue` here.
-                    if w.woptind == argc {
+                    if w.wopt_index == argc {
                         break;
                     }
                     // Explain to wgetopt that we want to skip to the next arg,
                     // because we can't handle this opt group.
-                    w.nextchar = L!("");
+                    w.remaining_text = L!("");
                     STATUS_CMD_OK
                 }
             }
-            NONOPTION_CHAR_CODE => {
+            NON_OPTION_CHAR => {
                 // A non-option argument.
                 // We use `-` as the first option-string-char to disable GNU getopt's reordering,
                 // otherwise we'd get ignored options first and normal arguments later.
                 // E.g. `argparse -i -- -t tango -w` needs to keep `-t tango -w` in $argv, not `-t -w
                 // tango`.
-                opts.args.push(args_read[w.woptind - 1]);
+                opts.args.push(args_read[w.wopt_index - 1]);
                 continue;
             }
             // It's a recognized flag.
-            _ => handle_flag(
-                parser,
-                opts,
-                opt,
-                long_idx != usize::MAX,
-                w.woptarg,
-                streams,
-            ),
+            _ => handle_flag(parser, opts, opt, is_long_flag, w.woptarg, streams),
         };
         if retval != STATUS_CMD_OK {
             return retval;
         }
-        long_idx = usize::MAX;
     }
 
-    *optind = w.woptind;
+    *optind = w.wopt_index;
     return STATUS_CMD_OK;
 }
 
-// This function mimics the `wgetopt_long()` usage found elsewhere in our other builtin commands.
+// This function mimics the `next_opt()` usage found elsewhere in our other builtin commands.
 // It's different in that the short and long option structures are constructed dynamically based on
 // arguments provided to the `argparse` command.
 fn argparse_parse_args<'args>(

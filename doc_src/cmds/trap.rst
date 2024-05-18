@@ -13,6 +13,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``trap``.
+          To see the documentation on any non-fish versions, use ``command man trap``.
+
 ``trap`` is a wrapper around the fish event delivery framework. It exists for backwards compatibility with POSIX shells. For other uses, it is recommended to define an :ref:`event handler <event>`.
 
 The following parameters are available:

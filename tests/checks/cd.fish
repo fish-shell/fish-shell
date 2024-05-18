@@ -271,3 +271,33 @@ end
 complete -C'cd .'
 # CHECK: ../
 # CHECK: ./
+
+# Check that cd works with minimal permissions (issue #10432).
+# This is first supported on macOS 12.
+# `sysctl kern.osproductversion` emits something like:
+#   kern.osproductversion: 14.3.1
+if test (uname) = "Darwin" && test (sysctl kern.osproductversion | string match -r \\d+) -lt 12
+    # Not supported. Satisfy the CHECKs below.
+    echo fake/a
+    echo fake/a/b
+    echo c
+else
+    set -l oldpwd (pwd)
+    set -l tmp (mktemp -d)
+    cd $tmp
+    mkdir -p a/b/c
+    chmod -r a
+
+    cd a; pwd
+    # CHECK: {{.*}}/a
+
+    cd b
+    pwd
+    ls
+    # CHECK: {{.*}}/a/b
+    # CHECK: c
+
+    cd $oldpwd
+    chmod -R +rx $tmp # we must be able to list the directory to delete its children
+    rm -rf $tmp
+end

@@ -8,7 +8,7 @@ end
 
 functions stuff
 #CHECK: # Defined in {{.*}}
-#CHECK: function stuff --argument a b c
+#CHECK: function stuff --argument-names a --argument-names b --argument-names c
 #CHECK:    # This is a comment
 #CHECK:    echo stuff
 #CHECK:    # This is another comment

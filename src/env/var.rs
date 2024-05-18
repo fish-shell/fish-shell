@@ -2,7 +2,6 @@ use crate::signal::Signal;
 use crate::wchar::{wstr, WString, L};
 use crate::wcstringutil::join_strings;
 use bitflags::bitflags;
-use lazy_static::lazy_static;
 use libc::c_int;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -97,11 +96,6 @@ bitflags! {
     }
 }
 
-// A shared, empty list.
-lazy_static! {
-    static ref EMPTY_LIST: Arc<Box<[WString]>> = Arc::new(Box::new([]));
-}
-
 /// EnvVar is an immutable value-type data structure representing the value of an environment
 /// variable.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -115,8 +109,13 @@ pub struct EnvVar {
 
 impl Default for EnvVar {
     fn default() -> Self {
+        use std::sync::OnceLock;
+        /// A shared read-only empty list.
+        static EMPTY_LIST: OnceLock<Arc<Box<[WString]>>> = OnceLock::new();
+        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new(Box::new([])));
+
         EnvVar {
-            values: EMPTY_LIST.clone(),
+            values: Arc::clone(empty_list),
             flags: EnvVarFlags::empty(),
         }
     }
@@ -272,7 +271,7 @@ pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
 assert_sorted_by_name!(ELECTRIC_VARIABLES);
 
 impl ElectricVar {
-    /// \return the ElectricVar with the given name, if any
+    /// Return the ElectricVar with the given name, if any
     pub fn for_name(name: &wstr) -> Option<&'static ElectricVar> {
         match ELECTRIC_VARIABLES.binary_search_by(|ev| ev.name.cmp(name)) {
             Ok(idx) => Some(&ELECTRIC_VARIABLES[idx]),

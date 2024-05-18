@@ -11,6 +11,7 @@ use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::Ordering;
 
+use fish::panic::panic_handler;
 use libc::{LC_ALL, STDOUT_FILENO};
 
 use fish::ast::{
@@ -29,13 +30,13 @@ use fish::expand::INTERNAL_SEPARATOR;
 use fish::fds::set_cloexec;
 use fish::fprintf;
 #[allow(unused_imports)]
-use fish::future::{IsOkAnd, IsSomeAnd, IsSorted};
+use fish::future::{IsSomeAnd, IsSorted};
 use fish::global_safety::RelaxedAtomicBool;
 use fish::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
 use fish::libc::setlinebuf;
 use fish::operation_context::OperationContext;
 use fish::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use fish::parse_util::parse_util_compute_indents;
+use fish::parse_util::{apply_indents, parse_util_compute_indents, SPACES_PER_INDENT};
 use fish::print_help::print_help;
 use fish::printf;
 use fish::threads;
@@ -43,17 +44,13 @@ use fish::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMME
 use fish::topic_monitor::topic_monitor_init;
 use fish::wchar::prelude::*;
 use fish::wcstringutil::count_preceding_backslashes;
-use fish::wgetopt::{wgetopter_t, wopt, woption, woption_argument_t};
+use fish::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use fish::wutil::perror;
 use fish::wutil::{fish_iswalnum, write_to_fd};
 use fish::{
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd},
     future_feature_flags,
 };
-
-// The number of spaces per indent isn't supposed to be configurable.
-// See discussion at https://github.com/fish-shell/fish-shell/pull/6790
-const SPACES_PER_INDENT: usize = 4;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -281,7 +278,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         usize::try_from(self.indents[index]).unwrap()
     }
 
-    // \return gap text flags for the gap text that comes *before* a given node type.
+    // Return gap text flags for the gap text that comes *before* a given node type.
     fn gap_text_flags_before_node(&self, node: &dyn Node) -> GapFlags {
         let mut result = GapFlags::default();
         match node.typ() {
@@ -327,12 +324,12 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         result
     }
 
-    // \return whether we are at the start of a new line.
+    // Return whether we are at the start of a new line.
     fn at_line_start(&self) -> bool {
         self.output.chars().next_back().is_none_or(|c| c == '\n')
     }
 
-    // \return whether we have a space before the output.
+    // Return whether we have a space before the output.
     // This ignores escaped spaces and escaped newlines.
     fn has_preceding_space(&self) -> bool {
         let mut idx = isize::try_from(self.output.len()).unwrap() - 1;
@@ -358,7 +355,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         })
     }
 
-    // \return a substring of source.
+    // Return a substring of source.
     fn substr(&self, r: SourceRange) -> &wstr {
         &self.source[r.start()..r.end()]
     }
@@ -470,7 +467,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         needs_nl
     }
 
-    /// \return the gap text ending at a given index into the string, or empty if none.
+    /// Return the gap text ending at a given index into the string, or empty if none.
     fn gap_text_to(&self, end: usize) -> SourceRange {
         match self.gaps.binary_search_by(|r| r.end().cmp(&end)) {
             Ok(pos) => self.gaps[pos],
@@ -481,7 +478,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
-    /// \return whether a range \p r overlaps an error range from our ast.
+    /// Return whether a range `r` overlaps an error range from our ast.
     fn range_contained_error(&self, r: SourceRange) -> bool {
         let errs = self.errors.as_ref().unwrap();
         let range_is_before = |x: SourceRange, y: SourceRange| x.end().cmp(&y.start());
@@ -529,7 +526,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         added_newline
     }
 
-    /// Given a string \p input, remove unnecessary quotes, etc.
+    /// Given a string `input`, remove unnecessary quotes, etc.
     fn clean_text(&self, input: &wstr) -> WString {
         // Unescape the string - this leaves special markers around if there are any
         // expansions or anything. We specifically tell it to not compute backslash-escapes
@@ -560,7 +557,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     // Emit a range of original text. This indents as needed, and also inserts preceding gap text.
-    // If \p tolerate_line_splitting is set, then permit escaped newlines; otherwise collapse such
+    // If `tolerate_line_splitting` is set, then permit escaped newlines; otherwise collapse such
     // lines.
     fn emit_text(&mut self, r: SourceRange, flags: GapFlags) {
         self.emit_gap_text_before(r, flags);
@@ -730,7 +727,7 @@ impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
     }
 }
 
-/// \return whether a character at a given index is escaped.
+/// Return whether a character at a given index is escaped.
 /// A character is escaped if it has an odd number of backslashes.
 fn char_is_escaped(text: &wstr, idx: usize) -> bool {
     count_preceding_backslashes(text, idx) % 2 == 1
@@ -738,7 +735,10 @@ fn char_is_escaped(text: &wstr, idx: usize) -> bool {
 
 fn main() {
     PROGRAM_NAME.set(L!("fish_indent")).unwrap();
+    panic_handler(throwing_main)
+}
 
+fn throwing_main() -> i32 {
     topic_monitor_init();
     threads::init();
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
@@ -773,45 +773,41 @@ fn main() {
     let mut output_type = OutputType::PlainText;
     let mut output_location = L!("");
     let mut do_indent = true;
+    let mut only_indent = false;
+    let mut only_unindent = false;
     // File path for debug output.
     let mut debug_output = None;
 
     let short_opts: &wstr = L!("+d:hvwicD:");
-    let long_opts: &[woption] = &[
-        wopt(L!("debug"), woption_argument_t::required_argument, 'd'),
-        wopt(
-            L!("debug-output"),
-            woption_argument_t::required_argument,
-            'o',
-        ),
-        wopt(
-            L!("debug-stack-frames"),
-            woption_argument_t::required_argument,
-            'D',
-        ),
-        wopt(L!("dump-parse-tree"), woption_argument_t::no_argument, 'P'),
-        wopt(L!("no-indent"), woption_argument_t::no_argument, 'i'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-        wopt(L!("version"), woption_argument_t::no_argument, 'v'),
-        wopt(L!("write"), woption_argument_t::no_argument, 'w'),
-        wopt(L!("html"), woption_argument_t::no_argument, '\x01'),
-        wopt(L!("ansi"), woption_argument_t::no_argument, '\x02'),
-        wopt(L!("pygments"), woption_argument_t::no_argument, '\x03'),
-        wopt(L!("check"), woption_argument_t::no_argument, 'c'),
+    let long_opts: &[WOption] = &[
+        wopt(L!("debug"), ArgType::RequiredArgument, 'd'),
+        wopt(L!("debug-output"), ArgType::RequiredArgument, 'o'),
+        wopt(L!("debug-stack-frames"), ArgType::RequiredArgument, 'D'),
+        wopt(L!("dump-parse-tree"), ArgType::NoArgument, 'P'),
+        wopt(L!("no-indent"), ArgType::NoArgument, 'i'),
+        wopt(L!("only-indent"), ArgType::NoArgument, '\x04'),
+        wopt(L!("only-unindent"), ArgType::NoArgument, '\x05'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("version"), ArgType::NoArgument, 'v'),
+        wopt(L!("write"), ArgType::NoArgument, 'w'),
+        wopt(L!("html"), ArgType::NoArgument, '\x01'),
+        wopt(L!("ansi"), ArgType::NoArgument, '\x02'),
+        wopt(L!("pygments"), ArgType::NoArgument, '\x03'),
+        wopt(L!("check"), ArgType::NoArgument, 'c'),
     ];
 
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
     let mut shim_args: Vec<&wstr> = args.iter().map(|s| s.as_ref()).collect();
-    let mut w = wgetopter_t::new(short_opts, long_opts, &mut shim_args);
+    let mut w = WGetopter::new(short_opts, long_opts, &mut shim_args);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
                 print_help("fish_indent");
-                std::process::exit(STATUS_CMD_OK.unwrap());
+                return STATUS_CMD_OK.unwrap();
             }
             'v' => {
                 printf!(
@@ -822,10 +818,12 @@ fn main() {
                         fish::BUILD_VERSION
                     )
                 );
-                std::process::exit(STATUS_CMD_OK.unwrap());
+                return STATUS_CMD_OK.unwrap();
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
+            '\x04' => only_indent = true,
+            '\x05' => only_unindent = true,
             '\x01' => output_type = OutputType::Html,
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
@@ -845,11 +843,11 @@ fn main() {
             'o' => {
                 debug_output = Some(w.woptarg.unwrap());
             }
-            _ => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+            _ => return STATUS_CMD_ERROR.unwrap(),
         }
     }
 
-    let args = &w.argv[w.woptind..];
+    let args = &w.argv[w.wopt_index..];
 
     // Direct any debug output right away.
     if let Some(debug_output) = debug_output {
@@ -861,7 +859,7 @@ fn main() {
         if file.is_null() {
             eprintf!("Could not open file %s\n", debug_output);
             perror("fopen");
-            std::process::exit(-1);
+            return -1;
         }
         let fd = unsafe { libc::fileno(file) };
         set_cloexec(fd, true);
@@ -883,11 +881,11 @@ fn main() {
                         PROGRAM_NAME.get().unwrap()
                     )
                 );
-                std::process::exit(STATUS_CMD_ERROR.unwrap());
+                return STATUS_CMD_ERROR.unwrap();
             }
             match read_file(stdin()) {
                 Ok(s) => src = s,
-                Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+                Err(()) => return STATUS_CMD_ERROR.unwrap(),
             }
         } else {
             let arg = args[i];
@@ -895,7 +893,7 @@ fn main() {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
-                        Err(()) => std::process::exit(STATUS_CMD_ERROR.unwrap()),
+                        Err(()) => return STATUS_CMD_ERROR.unwrap(),
                     }
                     output_location = arg;
                 }
@@ -904,7 +902,7 @@ fn main() {
                         "%s",
                         wgettext_fmt!("Opening \"%s\" failed: %s\n", arg, err.to_string())
                     );
-                    std::process::exit(STATUS_CMD_ERROR.unwrap());
+                    return STATUS_CMD_ERROR.unwrap();
                 }
             }
         }
@@ -916,7 +914,45 @@ fn main() {
             continue;
         }
 
-        let output_wtext = prettify(&src, do_indent);
+        let output_wtext = if only_indent || only_unindent {
+            let indents = parse_util_compute_indents(&src);
+            if only_indent {
+                apply_indents(&src, &indents)
+            } else {
+                // Only unindent.
+                let mut indented_everywhere = true;
+                for (i, c) in src.chars().enumerate() {
+                    if c != '\n' || i + 1 == src.len() {
+                        continue;
+                    }
+                    let num_spaces = SPACES_PER_INDENT * usize::try_from(indents[i + 1]).unwrap();
+                    if src.len() < i + 1 + num_spaces
+                        || !src[i + 1..].chars().take(num_spaces).all(|c| c == ' ')
+                    {
+                        indented_everywhere = false;
+                        break;
+                    }
+                }
+                if indented_everywhere {
+                    let mut out = WString::new();
+                    let mut i = 0;
+                    while i < src.len() {
+                        let c = src.as_char_slice()[i];
+                        out.push(c);
+                        i += 1;
+                        if c != '\n' || i == src.len() {
+                            continue;
+                        }
+                        i += SPACES_PER_INDENT * usize::try_from(indents[i]).unwrap();
+                    }
+                    out
+                } else {
+                    src.clone()
+                }
+            }
+        } else {
+            prettify(&src, do_indent)
+        };
 
         // Maybe colorize.
         let mut colors = vec![];
@@ -949,16 +985,12 @@ fn main() {
                                 err.to_string()
                             )
                         );
-                        std::process::exit(STATUS_CMD_ERROR.unwrap());
+                        return STATUS_CMD_ERROR.unwrap();
                     }
                 }
             }
             OutputType::Ansi => {
-                colored_output = colorize(
-                    &output_wtext,
-                    &colors,
-                    EnvStack::globals().as_ref().get_ref(),
-                );
+                colored_output = colorize(&output_wtext, &colors, EnvStack::globals());
             }
             OutputType::Html => {
                 colored_output = html_colorize(&output_wtext, &colors);
@@ -979,7 +1011,7 @@ fn main() {
         let _ = write_to_fd(&colored_output, STDOUT_FILENO);
         i += 1;
     }
-    std::process::exit(retval)
+    retval
 }
 
 static DUMP_PARSE_TREE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

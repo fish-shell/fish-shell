@@ -4,6 +4,7 @@
 # It is the entry point for running Docker-based tests.
 
 cd ~/fish-build
+git config --global --add safe.directory /fish-source
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug /fish-source "$@"
 
 # Spawn a shell if FISH_RUN_SHELL_BEFORE_TESTS is set.

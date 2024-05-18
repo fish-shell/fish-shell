@@ -79,7 +79,7 @@ impl ReaderHistorySearch {
         self.mode == SearchMode::Prefix
     }
 
-    /// Move the history search in the given direction \p dir.
+    /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {
         if dir == SearchDirection::Forward {
             self.move_forwards()
@@ -101,17 +101,17 @@ impl ReaderHistorySearch {
         self.match_index = 0;
     }
 
-    /// \return the current search result.
+    /// Return the current search result.
     pub fn current_result(&self) -> &wstr {
         &self.matches[self.match_index].text
     }
 
-    /// \return the string we are searching for.
+    /// Return the string we are searching for.
     pub fn search_string(&self) -> &wstr {
         self.search().original_term()
     }
 
-    /// \return the range of the original search string in the new command line.
+    /// Return the range of the original search string in the new command line.
     pub fn search_range_if_active(&self) -> Option<SourceRange> {
         if !self.active() || self.is_at_end() {
             return None;
@@ -122,15 +122,23 @@ impl ReaderHistorySearch {
         ))
     }
 
-    /// \return whether we are at the end (most recent) of our search.
+    /// Return whether we are at the end (most recent) of our search.
     pub fn is_at_end(&self) -> bool {
         self.match_index == 0
     }
 
     // Add an item to skip.
-    // \return true if it was added, false if already present.
+    // Return true if it was added, false if already present.
     pub fn add_skip(&mut self, s: WString) -> bool {
         self.skips.insert(s)
+    }
+
+    pub fn handle_deletion(&mut self) {
+        assert!(!self.is_at_end());
+        self.matches.remove(self.match_index);
+        self.match_index -= 1;
+        self.search_mut().prepare_to_search_after_deletion();
+        self.move_backwards();
     }
 
     /// Reset, beginning a new line or token mode search.
@@ -183,7 +191,7 @@ impl ReaderHistorySearch {
     }
 
     /// Attempt to append matches from the current history item.
-    /// \return true if something was appended.
+    /// Return true if something was appended.
     fn append_matches_from_search(&mut self) -> bool {
         fn find(zelf: &ReaderHistorySearch, haystack: &wstr, needle: &wstr) -> Option<usize> {
             if zelf.search().ignores_case() {

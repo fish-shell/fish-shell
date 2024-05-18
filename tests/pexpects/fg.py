@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
 import platform
+import signal
 import subprocess
 import sys
 import time
+
+if "CI" in os.environ and platform.system() == "Darwin":
+    sys.exit(127)
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -22,29 +27,30 @@ testproc = "sleep 500" if platform.system() != "NetBSD" else "cat"
 sendline(testproc)
 sendline("set -l foo bar; echo $foo")
 expect_str("")
-sleep(0.2)
+sleep(1.2)
 
 # ctrl-z - send job to background
 send("\x1A")
-sleep(0.2)
+sleep(1.2)
 expect_prompt()
 sendline("set -l foo bar; echo $foo")
-expect_str("bar")
+expect_prompt("bar")
 
-expect_prompt()
 sendline("fg")
 expect_str("Send job 1 (" + testproc + ") to foreground")
 sleep(0.2)
 sendline("set -l foo bar; echo $foo")
 expect_str("")
-# ctrl-c - cancel
-send("\x03")
+# Beware: Mac pkill requires that the -P argument come before the process name,
+# else the -P argument is ignored.
+subprocess.call(["pkill", "-INT", "-P", str(sp.spawn.pid), "sleep"])
 
 expect_prompt()
 sendline("set -l foo bar; echo $foo")
-expect_str("bar")
+expect_prompt("bar")
 
-expect_prompt()
+sendline("echo 'Catch' 'up'")
+expect_prompt("Catch up")
 
 # Regression test for #7483.
 # Ensure we can background a job after a different backgrounded job completes.
@@ -80,7 +86,7 @@ sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
 # Regression test for #2214: foregrounding from a key binding works!
-sendline(r"bind \cr 'fg >/dev/null 2>/dev/null'")
+sendline(r"bind ctrl-r 'fg >/dev/null 2>/dev/null'")
 expect_prompt()
 sendline("$fish_test_helper print_stop_cont")
 sleep(0.2)

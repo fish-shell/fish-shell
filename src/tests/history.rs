@@ -1,13 +1,11 @@
-use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring};
+use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string};
 use crate::env::{EnvMode, EnvStack};
-use crate::fds::wopen_cloexec;
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::random;
 use std::collections::VecDeque;
 use std::ffi::CString;
@@ -43,7 +41,7 @@ fn random_string() -> WString {
 #[test]
 #[serial]
 fn test_history() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! test_history_matches {
         ($search:expr, $expected:expr) => {
             let expected: Vec<&wstr> = $expected;
@@ -147,7 +145,7 @@ fn test_history() {
     // Test item removal case-sensitive.
     let mut searcher = HistorySearch::new(history.clone(), L!("Alpha").to_owned());
     test_history_matches!(searcher, vec![L!("Alpha")]);
-    history.remove(L!("Alpha").to_owned());
+    history.remove(L!("Alpha"));
     let mut searcher = HistorySearch::new(history.clone(), L!("Alpha").to_owned());
     test_history_matches!(searcher, vec![]);
 
@@ -197,6 +195,10 @@ fn test_history() {
         assert_eq!(bef.get_required_paths(), aft.get_required_paths());
     }
 
+    // Items should be explicitly added to the history.
+    history.add_commandline(L!("test-command").into());
+    assert!(history_contains(&history, L!("test-command")));
+
     // Clean up after our tests.
     history.clear();
 }
@@ -226,7 +228,7 @@ fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
 }
 
 fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
-    test_init();
+    let _cleanup = test_init();
     // Called in child thread to modify history.
     let hist = History::new(L!("race_test"));
     let hist_lines = generate_history_lines(item_count, idx);
@@ -239,7 +241,7 @@ fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
 #[test]
 #[serial]
 fn test_history_races() {
-    test_init();
+    let _cleanup = test_init();
     // This always fails under WSL
     if is_windows_subsystem_for_linux() {
         return;
@@ -340,7 +342,7 @@ fn test_history_races() {
 #[test]
 #[serial]
 fn test_history_merge() {
-    test_init();
+    let _cleanup = test_init();
     // In a single fish process, only one history is allowed to exist with the given name But it's
     // common to have multiple history instances with the same name active in different processes,
     // e.g. when you have multiple shells open. We try to get that right and merge all their history
@@ -449,7 +451,7 @@ fn test_history_merge() {
 #[test]
 #[serial]
 fn test_history_path_detection() {
-    test_init();
+    let _cleanup = test_init();
     // Regression test for #7582.
     let tmpdirbuff = CString::new("/tmp/fish_test_history.XXXXXX").unwrap();
     let tmpdir = unsafe { libc::mkdtemp(tmpdirbuff.into_raw()) };
@@ -556,7 +558,9 @@ fn test_history_path_detection() {
 fn install_sample_history(name: &wstr) {
     let path = path_get_data().expect("Failed to get data directory");
     std::fs::copy(
-        wcs2osstring(&(L!("tests/").to_owned() + &name[..])),
+        env!("CARGO_MANIFEST_DIR").to_owned()
+            + "/tests/"
+            + std::str::from_utf8(&wcs2string(&name[..])).unwrap(),
         wcs2osstring(&(path + L!("/") + &name[..] + L!("_history"))),
     )
     .unwrap();
@@ -565,7 +569,7 @@ fn install_sample_history(name: &wstr) {
 #[test]
 #[serial]
 fn test_history_formats() {
-    test_init();
+    let _cleanup = test_init();
     // Test inferring and reading legacy and bash history formats.
     let name = L!("history_sample_fish_2_0");
     install_sample_history(name);
@@ -594,14 +598,9 @@ fn test_history_formats() {
         "echo foo".into(),
     ];
     let test_history_imported_from_bash = History::with_name(L!("bash_import"));
-    let file = std::fs::File::from(
-        wopen_cloexec(
-            L!("tests/history_sample_bash"),
-            OFlag::O_RDONLY,
-            Mode::empty(),
-        )
-        .unwrap(),
-    );
+    let file =
+        std::fs::File::open(env!("CARGO_MANIFEST_DIR").to_owned() + "/tests/history_sample_bash")
+            .unwrap();
     test_history_imported_from_bash.populate_from_bash(BufReader::new(file));
     assert_eq!(test_history_imported_from_bash.get_history(), expected);
     test_history_imported_from_bash.clear();

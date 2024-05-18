@@ -150,7 +150,7 @@ And history too. Type a command once, and you can re-summon it by just typing a 
     :prompt:`>` :red:`r`:gray:`sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo`
 
 
-To accept the autosuggestion, hit :kbd:`→` (right arrow) or :kbd:`Control`\ +\ :kbd:`F`. To accept a single word of the autosuggestion, :kbd:`Alt`\ +\ :kbd:`→` (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit :kbd:`right` (``→``) or :kbd:`ctrl-f`. To accept a single word of the autosuggestion, :kbd:`alt-right` (``→``). If the autosuggestion is not what you want, just ignore it.
 
 If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
 
@@ -161,12 +161,12 @@ Tab Completions
 
 A rich set of tab completions work "out of the box".
 
-Press :kbd:`Tab` and fish will attempt to complete the command, argument, or path:
+Press :kbd:`tab` and fish will attempt to complete the command, argument, or path:
 
 .. parsed-literal::
     :class: highlight
 
-    :prompt:`>` :red:`/pri`:kbd:`Tab` => :command:`/private/`
+    :prompt:`>` :red:`/pri`:kbd:`tab` => :command:`/private/`
 
 
 If there's more than one possibility, it will list them:
@@ -174,7 +174,7 @@ If there's more than one possibility, it will list them:
 .. parsed-literal::
     :class: highlight
 
-    :prompt:`>` :red:`~/stuff/s`:kbd:`Tab`
+    :prompt:`>` :red:`~/stuff/s`:kbd:`tab`
     ~/stuff/script.sh  :gray:`(command)`  ~/stuff/sources/  :gray:`(directory)`
 
 
@@ -185,8 +185,8 @@ fish can also complete many commands, like git branches:
 .. parsed-literal::
     :class: highlight
 
-    :prompt:`>` :command:`git` :param:`merge pr`:kbd:`Tab` => :command:`git` :param:`merge prompt_designer`
-    :prompt:`>` :command:`git` :param:`checkout b`:kbd:`Tab`
+    :prompt:`>` :command:`git` :param:`merge pr`:kbd:`tab` => :command:`git` :param:`merge prompt_designer`
+    :prompt:`>` :command:`git` :param:`checkout b`:kbd:`tab`
     builtin_list_io_merge :gray:`(Branch)`  builtin_set_color :gray:`(Branch)` busted_events :gray:`(Tag)`
 
 Try hitting tab and see what fish can do!
@@ -356,7 +356,7 @@ The recursive wildcard ``**`` searches directories recursively::
     /var/run/sntp.log
 
 
-If that directory traversal is taking a long time, you can :kbd:`Control`\ +\ :kbd:`C` out of it.
+If that directory traversal is taking a long time, you can :kbd:`ctrl-c` out of it.
 
 For more, see :ref:`Wildcards <expand-wildcard>`.
 

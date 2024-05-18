@@ -17,6 +17,7 @@ struct Options {
     query: bool,
     function: Option<WString>,
     regex_pattern: Option<WString>,
+    commands: Vec<WString>,
     position: Option<Position>,
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
@@ -153,6 +154,10 @@ fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
             if abbr.replacement_is_function {
                 add_arg(L!("--function"));
                 add_arg(&escape_string(&abbr.replacement, style));
+            }
+            for cmd in &abbr.commands {
+                add_arg(L!("--command"));
+                add_arg(&escape_string(cmd, style));
             }
             add_arg(L!("--"));
             // Literal abbreviations have the name and key as the same.
@@ -372,7 +377,21 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
         replacement
     };
 
-    let position = opts.position.unwrap_or(Position::Command);
+    let position = opts.position.unwrap_or({
+        if opts.commands.is_empty() {
+            Position::Command
+        } else {
+            // If it is valid for a command, the abbr can't be in command-position.
+            Position::Anywhere
+        }
+    });
+    if !opts.commands.is_empty() && position == Position::Command {
+        streams.err.appendln(wgettext_fmt!(
+            "%ls: --command cannot be combined with --position command",
+            CMD,
+        ));
+        return STATUS_INVALID_ARGS;
+    }
 
     // Note historically we have allowed overwriting existing abbreviations.
     abbrs::with_abbrs_mut(move |abbrs| {
@@ -385,6 +404,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
             position,
             set_cursor_marker: opts.set_cursor_marker.clone(),
             from_universal: false,
+            commands: opts.commands.clone(),
         })
     });
 
@@ -433,32 +453,33 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
     // could be given literally, for example `abbr e emacs -nw`.
-    const short_options: &wstr = L!("-:af:r:seqgUh");
+    const short_options: &wstr = L!("-:ac:f:r:seqgUh");
 
-    const longopts: &[woption] = &[
-        wopt(L!("add"), woption_argument_t::no_argument, 'a'),
-        wopt(L!("position"), woption_argument_t::required_argument, 'p'),
-        wopt(L!("regex"), woption_argument_t::required_argument, 'r'),
+    const longopts: &[WOption] = &[
+        wopt(L!("add"), ArgType::NoArgument, 'a'),
+        wopt(L!("command"), ArgType::RequiredArgument, 'c'),
+        wopt(L!("position"), ArgType::RequiredArgument, 'p'),
+        wopt(L!("regex"), ArgType::RequiredArgument, 'r'),
         wopt(
             L!("set-cursor"),
-            woption_argument_t::optional_argument,
+            ArgType::OptionalArgument,
             SET_CURSOR_SHORT,
         ),
-        wopt(L!("function"), woption_argument_t::required_argument, 'f'),
-        wopt(L!("rename"), woption_argument_t::no_argument, RENAME_SHORT),
-        wopt(L!("erase"), woption_argument_t::no_argument, 'e'),
-        wopt(L!("query"), woption_argument_t::no_argument, 'q'),
-        wopt(L!("show"), woption_argument_t::no_argument, 's'),
-        wopt(L!("list"), woption_argument_t::no_argument, 'l'),
-        wopt(L!("global"), woption_argument_t::no_argument, 'g'),
-        wopt(L!("universal"), woption_argument_t::no_argument, 'U'),
-        wopt(L!("help"), woption_argument_t::no_argument, 'h'),
+        wopt(L!("function"), ArgType::RequiredArgument, 'f'),
+        wopt(L!("rename"), ArgType::NoArgument, RENAME_SHORT),
+        wopt(L!("erase"), ArgType::NoArgument, 'e'),
+        wopt(L!("query"), ArgType::NoArgument, 'q'),
+        wopt(L!("show"), ArgType::NoArgument, 's'),
+        wopt(L!("list"), ArgType::NoArgument, 'l'),
+        wopt(L!("global"), ArgType::NoArgument, 'g'),
+        wopt(L!("universal"), ArgType::NoArgument, 'U'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
     ];
 
     let mut opts = Options::default();
-    let mut w = wgetopter_t::new(short_options, longopts, argv);
+    let mut w = WGetopter::new(short_options, longopts, argv);
 
-    while let Some(c) = w.wgetopt_long() {
+    while let Some(c) = w.next_opt() {
         match c {
             NON_OPTION_ARGUMENT => {
                 // If --add is specified (or implied by specifying no other commands), all
@@ -476,6 +497,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 }
             }
             'a' => opts.add = true,
+            'c' => opts.commands.push(w.woptarg.map(|x| x.to_owned()).unwrap()),
             'p' => {
                 if opts.position.is_some() {
                     streams.err.append(wgettext_fmt!(
@@ -538,7 +560,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 streams.err.append(wgettext_fmt!(
                     "%ls: Warning: Option '%ls' was removed and is now ignored",
                     cmd,
-                    argv_read[w.woptind - 1]
+                    argv_read[w.wopt_index - 1]
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
             }
@@ -547,11 +569,11 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 return STATUS_CMD_OK;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.woptind - 1], true);
+                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
             }
             '?' => {
-                builtin_unknown_option(parser, streams, cmd, argv[w.woptind - 1], false);
+                builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
                 return STATUS_INVALID_ARGS;
             }
             _ => {
@@ -560,7 +582,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
     }
 
-    for arg in argv_read[w.woptind..].iter() {
+    for arg in argv_read[w.wopt_index..].iter() {
         opts.args.push((*arg).into());
     }
 

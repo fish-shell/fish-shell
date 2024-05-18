@@ -178,6 +178,8 @@ def get_command_description(path, name):
 # Unbreak it (#7996)
 man_make_section_directory = False
 
+man_show_urls = True
+
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [

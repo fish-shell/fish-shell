@@ -25,7 +25,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press :kbd:`→` or :kbd:`Control`\ +\ :kbd:`F`. To accept the first suggested word, press :kbd:`Alt`\ +\ :kbd:`→` or :kbd:`Alt`\ +\ :kbd:`F`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press :kbd:`right` (``→``) or :kbd:`ctrl-f`. To accept the first suggested word, press :kbd:`alt-right` (``→``) or :kbd:`alt-f`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -38,9 +38,9 @@ If you don't like autosuggestions, you can disable them by setting ``$fish_autos
 Tab Completion
 --------------
 
-Tab completion is a time saving feature of any modern shell. When you type :kbd:`Tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
+Tab completion is a time saving feature of any modern shell. When you type :kbd:`tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
 
-The pager can be navigated with the arrow keys, :kbd:`Page Up` / :kbd:`Page Down`, :kbd:`Tab` or :kbd:`Shift`\ +\ :kbd:`Tab`. Pressing :kbd:`Control`\ +\ :kbd:`S` (the ``pager-toggle-search`` binding - :kbd:`/` in vi mode) opens up a search menu that you can use to filter the list.
+The pager can be navigated with the arrow keys, :kbd:`pageup` / :kbd:`pagedown`, :kbd:`tab` or :kbd:`shift-tab`. Pressing :kbd:`ctrl-s` (the ``pager-toggle-search`` binding - :kbd:`/` in vi mode) opens up a search menu that you can use to filter the list.
 
 Fish provides some general purpose completions, like for commands, variable names, usernames or files.
 
@@ -188,7 +188,7 @@ To avoid needless typing, a frequently-run command like ``git checkout`` can be 
 
   abbr -a gco git checkout
 
-After entering ``gco`` and pressing :kbd:`Space` or :kbd:`Enter`, a ``gco`` in command position will turn into ``git checkout`` in the command line. If you want to use a literal ``gco`` sometimes, use :kbd:`Control`\ +\ :kbd:`Space` [#]_.
+After entering ``gco`` and pressing :kbd:`space` or :kbd:`enter`, a ``gco`` in command position will turn into ``git checkout`` in the command line. If you want to use a literal ``gco`` sometimes, use :kbd:`ctrl-space` [#]_.
 
 Abbreviations are a lot more powerful than just replacing literal strings. For example you can make going up a number of directories easier with this::
 
@@ -201,7 +201,7 @@ Now, ``..`` transforms to ``cd ../``, while ``...`` turns into ``cd ../../`` and
 
 The advantage over aliases is that you can see the actual command before using it, add to it or change it, and the actual command will be stored in history.
 
-.. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :doc:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`Control`\ +\ :kbd:`Space` is bound to just inserting a space.
+.. [#] Any binding that executes the ``expand-abbr`` or ``execute`` :doc:`bind function <cmds/bind>` will expand abbreviations. By default :kbd:`ctrl-space` is bound to just inserting a space.
 
 .. _prompt:
 
@@ -286,7 +286,7 @@ Like bash and other shells, fish includes two sets of keyboard shortcuts (or key
     end
     set -g fish_key_bindings fish_hybrid_key_bindings
 
-While the key bindings included with fish include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`Alt`\ +\ :kbd:`E` by default) if you need the full power of your editor.
+While the key bindings included with fish include many of the shortcuts popular from the respective text editors, they are not a complete implementation. They include a shortcut to open the current command line in your preferred editor (:kbd:`alt-e` by default) if you need the full power of your editor.
 
 .. _shared-binds:
 
@@ -295,55 +295,55 @@ Shared bindings
 
 Some bindings are common across Emacs and vi mode, because they aren't text editing bindings, or because what vi/Vim does for a particular key doesn't make sense for a shell.
 
-- :kbd:`Tab` :ref:`completes <tab-completion>` the current token. :kbd:`Shift`\ +\ :kbd:`Tab` completes the current token and starts the pager's search mode. :kbd:`Tab` is the same as :kbd:`Control`\ +\ :kbd:`I`.
+- :kbd:`tab` :ref:`completes <tab-completion>` the current token. :kbd:`shift-tab` completes the current token and starts the pager's search mode. :kbd:`tab` is the same as :kbd:`ctrl-i`.
 
-- :kbd:`←` (Left) and :kbd:`→` (Right) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`→` accepts the autosuggestion.
+- :kbd:`left` (``←``) and :kbd:`right` (``→``) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`right` (``→``) accepts the autosuggestion.
 
-- :kbd:`Enter` executes the current commandline or inserts a newline if it's not complete yet (e.g. a ``)`` or ``end`` is missing).
+- :kbd:`enter` executes the current commandline or inserts a newline if it's not complete yet (e.g. a ``)`` or ``end`` is missing).
 
-- :kbd:`Alt`\ +\ :kbd:`Enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
+- :kbd:`alt-enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
-- :kbd:`Alt`\ +\ :kbd:`←` and :kbd:`Alt`\ +\ :kbd:`→` move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`Alt`\ +\ :kbd:`→` (or :kbd:`Alt`\ +\ :kbd:`F`) accepts the first word in the suggestion.
+- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first word in the suggestion.
 
-- :kbd:`Control`\ +\ :kbd:`←` and :kbd:`Control`\ +\ :kbd:`→` move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
+- :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 
-- :kbd:`Shift`\ +\ :kbd:`←` and :kbd:`Shift`\ +\ :kbd:`→` move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
+- :kbd:`shift-left` (``←``) and :kbd:`shift-right` (``→``) move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
-- :kbd:`↑` (Up) and :kbd:`↓` (Down) (or :kbd:`Control`\ +\ :kbd:`P` and :kbd:`Control`\ +\ :kbd:`N` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the :ref:`history <history-search>` section for more information on history searching.
+- :kbd:`up` (``↑``) and :kbd:`down` (``↓``) (or :kbd:`ctrl-p` and :kbd:`ctrl-n` for emacs aficionados) search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓` search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
+- :kbd:`alt-up` (``↑``) and :kbd:`alt-down` (``↓``) search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`Control`\ +\ :kbd:`C` interrupts/kills whatever is running (SIGINT).
+- :kbd:`ctrl-c` interrupts/kills whatever is running (SIGINT).
 
-- :kbd:`Control`\ +\ :kbd:`D` deletes one character to the right of the cursor. If the command line is empty, :kbd:`Control`\ +\ :kbd:`D` will exit fish.
+- :kbd:`ctrl-d` deletes one character to the right of the cursor. If the command line is empty, :kbd:`ctrl-d` will exit fish.
 
-- :kbd:`Control`\ +\ :kbd:`U` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
+- :kbd:`ctrl-u` removes contents from the beginning of line to the cursor (moving it to the :ref:`killring <killring>`).
 
-- :kbd:`Control`\ +\ :kbd:`L` clears and repaints the screen.
+- :kbd:`ctrl-l` clears and repaints the screen.
 
-- :kbd:`Control`\ +\ :kbd:`W` removes the previous path component (everything up to the previous "/", ":" or "@") (moving it to the :ref:`killring`).
+- :kbd:`ctrl-w` removes the previous path component (everything up to the previous "/", ":" or "@") (moving it to the :ref:`killring`).
 
-- :kbd:`Control`\ +\ :kbd:`X` copies the current buffer to the system's clipboard, :kbd:`Control`\ +\ :kbd:`V` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
+- :kbd:`ctrl-x` copies the current buffer to the system's clipboard, :kbd:`ctrl-v` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
-- :kbd:`Alt`\ +\ :kbd:`D` moves the next word to the :ref:`killring`.
+- :kbd:`alt-d` moves the next word to the :ref:`killring`.
 
-- :kbd:`Alt`\ +\ :kbd:`H` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
+- :kbd:`alt-h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
 
-- :kbd:`Alt`\ +\ :kbd:`L` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
+- :kbd:`alt-l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 
-- :kbd:`Alt`\ +\ :kbd:`O` opens the file at the cursor in a pager. If the cursor is in command position and the command is a script, it will instead open that script in your editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`alt-o` opens the file at the cursor in a pager. If the cursor is in command position and the command is a script, it will instead open that script in your editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- :kbd:`Alt`\ +\ :kbd:`P` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`alt-p` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-- :kbd:`Alt`\ +\ :kbd:`W` prints a short description of the command under the cursor.
+- :kbd:`alt-w` prints a short description of the command under the cursor.
 
-- :kbd:`Alt`\ +\ :kbd:`E` edits the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
+- :kbd:`alt-e` edits the current command line in an external editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- :kbd:`Alt`\ +\ :kbd:`V` Same as :kbd:`Alt`\ +\ :kbd:`E`.
+- :kbd:`alt-v` Same as :kbd:`alt-e`.
 
-- :kbd:`Alt`\ +\ :kbd:`S` Prepends ``sudo`` to the current commandline. If the commandline is empty, prepend ``sudo`` to the last commandline.
+- :kbd:`alt-s` Prepends ``sudo`` to the current commandline. If the commandline is empty, prepend ``sudo`` to the last commandline.
 
-- :kbd:`Control`\ +\ :kbd:`Space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi mode, this only applies to insert-mode.
+- :kbd:`ctrl-space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi mode, this only applies to insert-mode.
 
 .. _emacs-mode:
 
@@ -352,37 +352,37 @@ Emacs mode commands
 
 To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key_bindings>`. This is also the default.
 
-- :kbd:`Home` or :kbd:`Control`\ +\ :kbd:`A` moves the cursor to the beginning of the line.
+- :kbd:`home` or :kbd:`ctrl-a` moves the cursor to the beginning of the line.
 
-- :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`End` or :kbd:`Control`\ +\ :kbd:`E` accepts the autosuggestion.
+- :kbd:`end` or :kbd:`ctrl-e` moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`end` or :kbd:`ctrl-e` accepts the autosuggestion.
 
-- :kbd:`Control`\ +\ :kbd:`B`, :kbd:`Control`\ +\ :kbd:`F` move the cursor one character left or right or accept the autosuggestion just like the :kbd:`←` (Left) and :kbd:`→` (Right) shared bindings (which are available as well).
+- :kbd:`ctrl-b`, :kbd:`ctrl-f` move the cursor one character left or right or accept the autosuggestion just like the :kbd:`left` (``←``) and :kbd:`right` (``→``) shared bindings (which are available as well).
 
-- :kbd:`Control`\ +\ :kbd:`N`, :kbd:`Control`\ +\ :kbd:`P` move the cursor up/down or through history, like the up and down arrow shared bindings.
+- :kbd:`ctrl-n`, :kbd:`ctrl-p` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
-- :kbd:`Delete` or :kbd:`Backspace` removes one character forwards or backwards respectively. This also goes for :kbd:`Control`\ +\ :kbd:`H`, which is indistinguishable from backspace.
+- :kbd:`delete` or :kbd:`backspace` removes one character forwards or backwards respectively. This also goes for :kbd:`ctrl-h`, which is indistinguishable from backspace.
 
-- :kbd:`Alt`\ +\ :kbd:`Backspace` removes one word backwards.
+- :kbd:`alt-backspace` removes one word backwards.
 
-- :kbd:`Alt`\ +\ :kbd:`<` moves to the beginning of the commandline, :kbd:`Alt`\ +\ :kbd:`>` moves to the end.
+- :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 
-- :kbd:`Control`\ +\ :kbd:`K` deletes from the cursor to the end of line (moving it to the :ref:`killring`).
+- :kbd:`ctrl-k` deletes from the cursor to the end of line (moving it to the :ref:`killring`).
 
-- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`G` cancel the current operation. Immediately after an unambiguous completion this undoes it.
+- :kbd:`escape` and :kbd:`ctrl-g` cancel the current operation. Immediately after an unambiguous completion this undoes it.
 
-- :kbd:`Alt`\ +\ :kbd:`C` capitalizes the current word.
+- :kbd:`alt-c` capitalizes the current word.
 
-- :kbd:`Alt`\ +\ :kbd:`U` makes the current word uppercase.
+- :kbd:`alt-u` makes the current word uppercase.
 
-- :kbd:`Control`\ +\ :kbd:`T` transposes the last two characters.
+- :kbd:`ctrl-t` transposes the last two characters.
 
-- :kbd:`Alt`\ +\ :kbd:`T` transposes the last two words.
+- :kbd:`alt-t` transposes the last two words.
 
-- :kbd:`Control`\ +\ :kbd:`Z`, :kbd:`Control`\ +\ :kbd:`_` (:kbd:`Control`\ +\ :kbd:`/` on some terminals) undo the most recent edit of the line.
+- :kbd:`ctrl-z`, :kbd:`ctrl-_` (:kbd:`ctrl-/` on some terminals) undo the most recent edit of the line.
 
-- :kbd:`Alt`\ +\ :kbd:`/` reverts the most recent undo.
+- :kbd:`alt-/` reverts the most recent undo.
 
-- :kbd:`Control`\ +\ :kbd:`R` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`Control`\ +\ :kbd:`R` again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
+- :kbd:`ctrl-r` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`ctrl-r` again will search older entries, pressing :kbd:`ctrl-s` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
 
 You can change these key bindings using the :doc:`bind <cmds/bind>` builtin.
@@ -393,7 +393,7 @@ You can change these key bindings using the :doc:`bind <cmds/bind>` builtin.
 Vi mode commands
 ^^^^^^^^^^^^^^^^
 
-Vi mode allows for the use of vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
+Vi mode allows for the use of vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
 To enable vi mode, use :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>`.
 It is also possible to add all Emacs mode bindings to vi mode by using something like::
@@ -453,13 +453,13 @@ Command mode is also known as normal mode.
 
 - :kbd:`i` enters :ref:`insert mode <vi-mode-insert>` at the current cursor position.
 
-- :kbd:`Shift`\ +\ :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
+- :kbd:`I` enters :ref:`insert mode <vi-mode-insert>` at the beginning of the line.
 
 - :kbd:`v` enters :ref:`visual mode <vi-mode-visual>` at the current cursor position.
 
 - :kbd:`a` enters :ref:`insert mode <vi-mode-insert>` after the current cursor position.
 
-- :kbd:`Shift`\ +\ :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` at the end of the line.
+- :kbd:`A` enters :ref:`insert mode <vi-mode-insert>` at the end of the line.
 
 - :kbd:`o` inserts a new line under the current one and enters :ref:`insert mode <vi-mode-insert>`
 
@@ -467,40 +467,40 @@ Command mode is also known as normal mode.
 
 - :kbd:`0` (zero) moves the cursor to beginning of line (remaining in command mode).
 
-- :kbd:`d`\ +\ :kbd:`d` deletes the current line and moves it to the :ref:`killring`.
+- :kbd:`d,d` deletes the current line and moves it to the :ref:`killring`.
 
-- :kbd:`Shift`\ +\ :kbd:`D` deletes text after the current cursor position and moves it to the :ref:`killring`.
+- :kbd:`D` deletes text after the current cursor position and moves it to the :ref:`killring`.
 
 - :kbd:`p` pastes text from the :ref:`killring`.
 
 - :kbd:`u` undoes the most recent edit of the command line.
-- :kbd:`Control`\ +\ :kbd:`R` redoes the most recent edit.
+- :kbd:`ctrl-r` redoes the most recent edit.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
 
-- :kbd:`/` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing it again will search older entries, pressing :kbd:`Control`\ +\ :kbd:`S` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
+- :kbd:`/` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing it again will search older entries, pressing :kbd:`ctrl-s` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 
-- :kbd:`Backspace` moves the cursor left.
+- :kbd:`backspace` moves the cursor left.
 
 - :kbd:`g` / :kbd:`G` moves the cursor to the beginning/end of the commandline, respectively.
 
-- :kbd:`:q` exits fish.
+- :kbd:`:,q` exits fish.
 
 .. _vi-mode-insert:
 
 Insert mode
 """""""""""
 
-- :kbd:`Escape` enters :ref:`command mode <vi-mode-command>`.
+- :kbd:`escape` enters :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`Backspace` removes one character to the left.
+- :kbd:`backspace` removes one character to the left.
 
 .. _vi-mode-visual:
 
 Visual mode
 """""""""""
 
-- :kbd:`←` (Left) and :kbd:`→` (Right) extend the selection backward/forward by one character.
+- :kbd:`left (``←``) and :kbd:`right`(``→``) extend the selection backward/forward by one character.
 
 - :kbd:`h` moves the cursor left.
 
@@ -514,7 +514,7 @@ Visual mode
 
 - :kbd:`d` and :kbd:`x` move the selection to the :ref:`killring` and enter :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`Escape` and :kbd:`Control`\ +\ :kbd:`C` enter :ref:`command mode <vi-mode-command>`.
+- :kbd:`escape` and :kbd:`ctrl-c` enter :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`c` and :kbd:`s` remove the selection and switch to insert mode.
 
@@ -524,7 +524,7 @@ Visual mode
 
 - :kbd:`~` toggles the case (upper/lower) on the selection, and enters :ref:`command mode <vi-mode-command>`.
 
-- :kbd:`"*y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
+- :kbd:`",*,y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
 
 .. _custom-binds:
 
@@ -534,52 +534,49 @@ Custom bindings
 In addition to the standard bindings listed here, you can also define your own with :doc:`bind <cmds/bind>`::
 
   # Just clear the commandline on control-c
-  bind \cc 'commandline -r ""'
+  bind ctrl-c 'commandline -r ""'
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 
 If you change your mind on a binding and want to go back to fish's default, you can simply erase it again::
 
-  bind --erase \cc
+  bind --erase ctrl-c
 
 Fish remembers its preset bindings and so it will take effect again. This saves you from having to remember what it was before and add it again yourself.
 
 If you use :ref:`vi bindings <vi-mode>`, note that ``bind`` will by default bind keys in :ref:`command mode <vi-mode-command>`. To bind something in :ref:`insert mode <vi-mode-insert>`::
 
-  bind --mode insert \cc 'commandline -r ""'
+  bind --mode insert ctrl-c 'commandline -r ""'
 
 .. _interactive-key-sequences:
 
 Key sequences
 """""""""""""
 
-The terminal tells fish which keys you pressed by sending some sequences of bytes to describe that key. For some keys, this is easy - pressing :kbd:`a` simply means the terminal sends "a". In others it's more complicated and terminals disagree on which they send.
+To find out the name of a key, you can use :doc:`fish_key_reader <cmds/fish_key_reader>`.
 
-In these cases, :doc:`fish_key_reader <cmds/fish_key_reader>` can tell you how to write the key sequence for your terminal. Just start it and press the keys you are interested in::
+::
 
-  > fish_key_reader # pressing control-c
+  > fish_key_reader # Press Alt + right-arrow
   Press a key:
-  Press [ctrl-C] again to exit
-  bind \cC 'do something'
+  bind alt-right 'do something'
+  
+Note that the historical way the terminal encodes keys and sends them to the application (fish, in this case) makes a lot of combinations indistinguishable or unbindable. In the usual encoding, :kbd:`ctrl-i` *is the same* as the tab key, and shift cannot be detected when ctrl is also pressed.
 
-  > fish_key_reader # pressing the right-arrow
-  Press a key:
-  bind \e\[C 'do something'
+There are more powerful encoding schemes, and fish tries to tell the terminal to turn them on, but there are still many terminals that do not support them. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them, and there isn't anything fish can do about it. It is our hope that these schemes will become more widespread, making input more flexible.
 
-Note that some key combinations are indistinguishable or unbindable. For instance control-i *is the same* as the tab key. This is a terminal limitation that fish can't do anything about. When ``fish_key_reader`` prints the same sequence for two different keys, then that is because your terminal sends the same sequence for them.
+In the historical scheme, :kbd:`escape` is the same thing as :kbd:`alt` in a terminal. To distinguish between pressing :kbd:`escape` and then another key, and pressing :kbd:`alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
 
-Also, :kbd:`Escape` is the same thing as :kbd:`Alt` in a terminal. To distinguish between pressing :kbd:`Escape` and then another key, and pressing :kbd:`Alt` and that key (or an escape sequence the key sends), fish waits for a certain time after seeing an escape character. This is configurable via the :envvar:`fish_escape_delay_ms` variable.
-
-If you want to be able to press :kbd:`Escape` and then a character and have it count as :kbd:`Alt`\ +\ that character, set it to a higher value, e.g.::
+If you want to be able to press :kbd:`escape` and then a character and have it count as :kbd:`alt`\ +\ that character, set it to a higher value, e.g.::
 
   set -g fish_escape_delay_ms 100
 
 Similarly, to disambiguate *other* keypresses where you've bound a subsequence and a longer sequence, fish has :envvar:`fish_sequence_key_delay_ms`::
 
-  # This binds "jk" to switch to normal mode in vi mode.
+  # This binds the sequence j,k to switch to normal mode in vi mode.
   # If you kept it like that, every time you press "j",
   # fish would wait for a "k" or other key to disambiguate
-  bind -M insert -m default jk cancel repaint-mode
+  bind -M insert -m default j,k cancel repaint-mode
 
   # After setting this, fish only waits 200ms for the "k",
   # or decides to treat the "j" as a separate sequence, inserting it.
@@ -590,9 +587,9 @@ Similarly, to disambiguate *other* keypresses where you've bound a subsequence a
 Copy and paste (Kill Ring)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`Control`\ +\ :kbd:`K` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`Control`\ +\ :kbd:`Y` (the ``yank`` input function). After pasting, use :kbd:`Alt`\ +\ :kbd:`Y` (``yank-pop``) to rotate to the previous kill.
+Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`ctrl-k` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`ctrl-y` (the ``yank`` input function). After pasting, use :kbd:`alt-y` (``yank-pop``) to rotate to the previous kill.
 
-Copy and paste from outside are also supported, both via the :kbd:`Control`\ +\ :kbd:`X` / :kbd:`Control`\ +\ :kbd:`V` bindings (the ``fish_clipboard_copy`` and ``fish_clipboard_paste`` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
+Copy and paste from outside are also supported, both via the :kbd:`ctrl-x` / :kbd:`ctrl-v` bindings (the ``fish_clipboard_copy`` and ``fish_clipboard_paste`` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
 In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
 Kill ring entries are stored in ``fish_killring`` variable.
 
@@ -608,11 +605,11 @@ Multiline editing
 
 The fish commandline editor can be used to work on commands that are several lines long. There are three ways to make a command span more than a single line:
 
-- Pressing the :kbd:`Enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :doc:`end <cmds/end>` command.
+- Pressing the :kbd:`enter` key while a block of commands is unclosed, such as when one or more block commands such as ``for``, ``begin`` or ``if`` do not have a corresponding :doc:`end <cmds/end>` command.
 
-- Pressing :kbd:`Alt`\ +\ :kbd:`Enter` instead of pressing the :kbd:`Enter` key.
+- Pressing :kbd:`alt-enter` instead of pressing the :kbd:`enter` key.
 
-- By inserting a backslash (``\``) character before pressing the :kbd:`Enter` key, escaping the newline.
+- By inserting a backslash (``\``) character before pressing the :kbd:`enter` key, escaping the newline.
 
 The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
 
@@ -623,11 +620,11 @@ Searchable command history
 
 After a command has been executed, it is remembered in the history list. Any duplicate history items are automatically removed. By pressing the up and down keys, you can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing :kbd:`Alt`\ +\ :kbd:`↑` and :kbd:`Alt`\ +\ :kbd:`↓`, a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`alt-up` (``↑``) and :kbd:`alt-down` (``↓``), a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
 
-For more complicated searches, you can press :kbd:`Ctrl`\ +\ :kbd:`R` to open a pager that allows you to search the history. It shows a limited number of entries in one page, press :kbd:`Ctrl`\ +\ :kbd:`R` [#]_ again to move to the next page and :kbd:`Ctrl`\ +\ :kbd:`S` [#]_ to move to the previous page. You can change the text to refine your search.
+For more complicated searches, you can press :kbd:`ctrl-r` to open a pager that allows you to search the history. It shows a limited number of entries in one page, press :kbd:`ctrl-r` [#]_ again to move to the next page and :kbd:`ctrl-s` [#]_ to move to the previous page. You can change the text to refine your search.
 
-History searches are case-insensitive unless the search string contains an uppercase character. You can stop a search to edit your search string by pressing :kbd:`Esc` or :kbd:`Page Down`.
+History searches are case-insensitive unless the search string contains an uppercase character. You can stop a search to edit your search string by pressing :kbd:`escape` or :kbd:`pagedown`.
 
 Prefixing the commandline with a space will prevent the entire line from being stored in the history. It will still be available for recall until the next command is executed, but will not be stored on disk. This is to allow you to fix misspellings and such.
 
@@ -642,7 +639,7 @@ Examples:
 
 To search for previous entries containing the word 'make', type ``make`` in the console and press the up key.
 
-If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`Alt`\ +\ :kbd:`↑` to search for previously typed words containing 'm'.
+If the commandline reads ``cd m``, place the cursor over the ``m`` character and press :kbd:`alt-up` (``↑``) to search for previously typed words containing 'm'.
 
 .. [#] Or another binding that triggers the ``history-pager`` input function. See :doc:`bind <cmds/bind>` for a list.
 .. [#] Or another binding that triggers the ``pager-toggle-search`` input function.
@@ -676,8 +673,8 @@ Several commands are provided to interact with this directory history:
 
 - :doc:`dirh <cmds/dirh>` prints the history
 - :doc:`cdh <cmds/cdh>` displays a prompt to quickly navigate the history
-- :doc:`prevd <cmds/prevd>` moves backward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`←`
-- :doc:`nextd <cmds/nextd>` moves forward through the history. It is bound to :kbd:`Alt`\ +\ :kbd:`→`
+- :doc:`prevd <cmds/prevd>` moves backward through the history. It is bound to :kbd:`alt-left` (``←``)
+- :doc:`nextd <cmds/nextd>` moves forward through the history. It is bound to :kbd:`alt-right` (``→``)
 
 .. _directory-stack:
 

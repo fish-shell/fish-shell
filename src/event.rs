@@ -144,7 +144,7 @@ impl EventHandler {
         }
     }
 
-    /// \return true if a handler is "one shot": it fires at most once.
+    /// Return true if a handler is "one shot": it fires at most once.
     fn is_one_shot(&self) -> bool {
         match self.desc {
             EventDescription::ProcessExit { pid } => pid != ANY_PID,

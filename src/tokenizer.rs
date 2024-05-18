@@ -52,6 +52,7 @@ pub enum TokenizerError {
     expected_bclose_found_pclose,
 }
 
+#[derive(Debug)]
 pub struct Tok {
     // Offset of the token.
     pub offset: u32,
@@ -244,11 +245,11 @@ impl Tok {
 }
 
 /// The tokenizer struct.
-pub struct Tokenizer {
+pub struct Tokenizer<'c> {
     /// A pointer into the original string, showing where the next token begins.
     token_cursor: usize,
     /// The start of the original string.
-    start: WString, // TODO Avoid copying once we drop the FFI.
+    start: &'c wstr,
     /// Whether we have additional tokens.
     has_next: bool,
     /// Whether incomplete tokens are accepted.
@@ -261,9 +262,11 @@ pub struct Tokenizer {
     continue_after_error: bool,
     /// Whether to continue the previous line after the comment.
     continue_line_after_comment: bool,
+    /// Called on every quote change.
+    on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
     /// should not be freed by the caller until after the tokenizer is destroyed.
     ///
@@ -271,21 +274,36 @@ impl Tokenizer {
     /// \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-    pub fn new(start: &wstr, flags: TokFlags) -> Self {
+    pub fn new(start: &'c wstr, flags: TokFlags) -> Self {
+        Self::new_impl(start, flags, None)
+    }
+    pub fn with_quote_events(
+        start: &'c wstr,
+        flags: TokFlags,
+        on_quote_toggle: &'c mut dyn FnMut(usize),
+    ) -> Self {
+        Self::new_impl(start, flags, Some(on_quote_toggle))
+    }
+    fn new_impl(
+        start: &'c wstr,
+        flags: TokFlags,
+        on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
+    ) -> Self {
         Tokenizer {
             token_cursor: 0,
-            start: start.to_owned(),
+            start,
             has_next: true,
             accept_unfinished: flags & TOK_ACCEPT_UNFINISHED,
             show_comments: flags & TOK_SHOW_COMMENTS,
             show_blank_lines: flags & TOK_SHOW_BLANK_LINES,
             continue_after_error: flags & TOK_CONTINUE_AFTER_ERROR,
             continue_line_after_comment: false,
+            on_quote_toggle,
         }
     }
 }
 
-impl Iterator for Tokenizer {
+impl<'c> Iterator for Tokenizer<'c> {
     type Item = Tok;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -310,7 +328,7 @@ impl Iterator for Tokenizer {
         while self.start.char_at(self.token_cursor) == '#' {
             // We have a comment, walk over the comment.
             let comment_start = self.token_cursor;
-            self.token_cursor = comment_end(&self.start, self.token_cursor);
+            self.token_cursor = comment_end(self.start, self.token_cursor);
             let comment_len = self.token_cursor - comment_start;
 
             // If we are going to continue after the comment, skip any trailing newline.
@@ -490,10 +508,10 @@ fn iswspace_not_nl(c: char) -> bool {
     }
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Returns the text of a token, as a string.
     pub fn text_of(&self, tok: &Tok) -> &wstr {
-        tok.get_source(&self.start)
+        tok.get_source(self.start)
     }
 
     /// Return an error token and mark that we no longer have a next token.
@@ -536,7 +554,7 @@ impl Tokenizer {
     }
 }
 
-impl Tokenizer {
+impl<'c> Tokenizer<'c> {
     /// Read the next token as a string.
     fn read_string(&mut self) -> Tok {
         let mut mode = TOK_MODE_REGULAR_TEXT;
@@ -554,11 +572,17 @@ impl Tokenizer {
             paran_offsets: &Vec<usize>,
             quote: char,
         ) -> Result<(), usize> {
-            if let Some(end) = quote_end(&this.start, this.token_cursor, quote) {
+            this.on_quote_toggle
+                .as_mut()
+                .map(|cb| (cb)(this.token_cursor));
+            if let Some(end) = quote_end(this.start, this.token_cursor, quote) {
+                let mut one_past_end = end + 1;
                 if this.start.char_at(end) == '$' {
+                    one_past_end = end;
                     quoted_cmdsubs.push(paran_offsets.len());
                 }
                 this.token_cursor = end;
+                this.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
                 Ok(())
             } else {
                 let error_loc = this.token_cursor;
@@ -583,7 +607,7 @@ impl Tokenizer {
             else if c == '\\' {
                 mode |= TOK_MODE_CHAR_ESCAPE;
             } else if c == '#' && is_token_begin {
-                self.token_cursor = comment_end(&self.start, self.token_cursor) - 1;
+                self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
             } else if c == '(' {
                 paran_offsets.push(self.token_cursor);
                 expecting.push(')');
@@ -602,7 +626,7 @@ impl Tokenizer {
                         1,
                     );
                 }
-                if paran_offsets.is_empty() {
+                if paran_offsets.pop().is_none() {
                     return self.call_error(
                         TokenizerError::closing_unopened_subshell,
                         self.token_cursor,
@@ -611,7 +635,6 @@ impl Tokenizer {
                         1,
                     );
                 }
-                paran_offsets.pop();
                 if paran_offsets.is_empty() {
                     mode &= !TOK_MODE_SUBSHELL;
                 }
@@ -854,7 +877,7 @@ pub fn is_token_delimiter(c: char, next: Option<char>) -> bool {
     c == '(' || !tok_is_string_character(c, next)
 }
 
-/// \return the first token from the string, skipping variable assignments like A=B.
+/// Return the first token from the string, skipping variable assignments like A=B.
 pub fn tok_command(str: &wstr) -> WString {
     let mut t = Tokenizer::new(str, TokFlags(0));
     while let Some(token) = t.next() {
@@ -990,6 +1013,9 @@ impl TryFrom<&wstr> for PipeOrRedir {
                 consume(&mut cursor, '<');
                 if try_consume(&mut cursor, '&') {
                     result.mode = RedirectionMode::fd;
+                } else if try_consume(&mut cursor, '?') {
+                    // <? foo try-input redirection (uses /dev/null if file can't be used).
+                    result.mode = RedirectionMode::try_input;
                 } else {
                     result.mode = RedirectionMode::input;
                 }
@@ -1036,18 +1062,18 @@ impl TryFrom<&wstr> for PipeOrRedir {
 }
 
 impl PipeOrRedir {
-    /// \return the oflags (as in open(2)) for this redirection.
+    /// Return the oflags (as in open(2)) for this redirection.
     pub fn oflags(&self) -> Option<OFlag> {
         self.mode.oflags()
     }
 
-    // \return if we are "valid". Here "valid" means only that the source fd did not overflow.
+    // Return if we are "valid". Here "valid" means only that the source fd did not overflow.
     // For example 99999999999> is invalid.
     pub fn is_valid(&self) -> bool {
         self.fd >= 0
     }
 
-    // \return the token type for this redirection.
+    // Return the token type for this redirection.
     pub fn token_type(&self) -> TokenType {
         if self.is_pipe {
             TokenType::pipe

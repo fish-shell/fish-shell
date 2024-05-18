@@ -1,5 +1,5 @@
 # Completions for `zig` (https://ziglang.org/)
-# Based on version 0.9.1
+# Based on version 0.13.0-dev.8+c352845e8
 
 # This function is based on the `__fish_complete_clang` function.
 function __fish_complete_zig_cc_and_cpp
@@ -13,18 +13,22 @@ function __fish_complete_zig_cc_and_cpp
         string replace -r -- '^([^ ]+)\s*(.*)' "$prefix\$1\t\$2"
 end
 
-# Commands
-complete -x -c zig -n __fish_use_subcommand -a build -d "Build the project"
-complete -x -c zig -n __fish_use_subcommand -a init-exe -d "Initialize an application project in the current directory"
-complete -x -c zig -n __fish_use_subcommand -a init-lib -d "Initialize a library project in the current directory"
+complete -x -c zig -n "not __fish_seen_subcommand_from env help targets version zen" -s h -l help -d "Print command-specific usage"
 
-complete -x -c zig -n __fish_use_subcommand -a ast-check -d "Look for simple compile errors"
-complete -x -c zig -n __fish_use_subcommand -a build-exe -d "Build an executable"
-complete -x -c zig -n __fish_use_subcommand -a build-lib -d "Build a library"
-complete -x -c zig -n __fish_use_subcommand -a build-obj -d "Build an object"
-complete -x -c zig -n __fish_use_subcommand -a fmt -d "Reformat Zig source"
-complete -x -c zig -n __fish_use_subcommand -a run -d "Run an executable"
-complete -x -c zig -n __fish_use_subcommand -a test -d "Run tests"
+# Commands (ref: <https://github.com/ziglang/zig/blob/db890dbae72bc31e50d4ec641f2afce683df772d/src/main.zig#L71>)
+complete -x -c zig -n __fish_use_subcommand -a build -d "Build project from build.zig"
+complete -x -c zig -n __fish_use_subcommand -a fetch -d "Copy a package into global cache and print its hash"
+complete -x -c zig -n __fish_use_subcommand -a init -d "Initialize a Zig package in the current directory"
+
+complete -x -c zig -n __fish_use_subcommand -a build-exe -d "Create executable from source or object files"
+complete -x -c zig -n __fish_use_subcommand -a build-lib -d "Create library from source or object files"
+complete -x -c zig -n __fish_use_subcommand -a build-obj -d "Create object from source or object files"
+complete -x -c zig -n __fish_use_subcommand -a test -d "Perform unit testing"
+complete -x -c zig -n __fish_use_subcommand -a run -d "Create executable and run immediately"
+
+complete -x -c zig -n __fish_use_subcommand -a ast-check -d "Look for simple compile errors in any set of files"
+complete -x -c zig -n __fish_use_subcommand -a fmt -d "Reformat Zig source into canonical form"
+complete -x -c zig -n __fish_use_subcommand -a reduce -d "Minimize a bug report"
 complete -x -c zig -n __fish_use_subcommand -a translate-c -d "Convert C code to Zig code"
 
 complete -x -c zig -n __fish_use_subcommand -a ar -d "Use Zig as a drop-in archiver"
@@ -33,35 +37,34 @@ complete -x -c zig -n __fish_use_subcommand -a c++ -d "Use Zig as a drop-in C++ 
 complete -x -c zig -n __fish_use_subcommand -a dlltool -d "Use Zig as a drop-in dlltool.exe"
 complete -x -c zig -n __fish_use_subcommand -a lib -d "Use Zig as a drop-in lib.exe"
 complete -x -c zig -n __fish_use_subcommand -a ranlib -d "Use Zig as a drop-in ranlib"
+complete -x -c zig -n __fish_use_subcommand -a objcopy -d "Use Zig as a drop-in objcopy"
+complete -x -c zig -n __fish_use_subcommand -a rc -d "Use Zig as a drop-in rc.exe"
 
-complete -x -c zig -n __fish_use_subcommand -a env -d "Print Zig environment information"
+complete -x -c zig -n __fish_use_subcommand -a env -d "Print lib path, std path, cache directory, and version"
 complete -x -c zig -n __fish_use_subcommand -a help -d "Print help for `zig`"
-complete -x -c zig -n __fish_use_subcommand -a libc -d "Display the installation status of native libc"
+complete -x -c zig -n __fish_use_subcommand -a std -d "View standard library documentation in a browser"
+complete -x -c zig -n __fish_use_subcommand -a libc -d "Display native libc paths file or validate one"
 complete -x -c zig -n __fish_use_subcommand -a targets -d "List available compilation targets"
 complete -x -c zig -n __fish_use_subcommand -a version -d "Print version number"
 complete -x -c zig -n __fish_use_subcommand -a zen -d "Print Zen of Zig"
-
-# General options
-complete -x -c zig -n "not __fish_seen_subcommand_from env help targets version zen" -s h -l help -d "Print command-specific usage"
 
 # Command-specific options
 
 ## Steps
 complete -x -c zig -n "__fish_seen_subcommand_from build && __fish_prev_arg_in build" -a "
-    install\t'Copy build artifacts (default)'
-    uninstall\t'Remove build artifacts'
+    install\t'Copy build artifacts to prefix path (default)'
+    uninstall\t'Remove build artifacts from prefix path'
     run\t'Run the app'
-    test\t'Run unit tests'
+    test\t'test the executable'
+    unzip\t'Build/install the unzip cmdline tool'
     "
 
-## General options
-complete -r -c zig -n "__fish_seen_subcommand_from build" -s p -l prefix -d "Override default install prefix"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-lib-dir -d "Override default library directory path"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-exe-dir -d "Override default executable directory path"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-include-dir -d "Override default include directory path"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l sysroot -d "Set the system root directory"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l search-prefix -d "Add the search path"
-complete -r -c zig -n "__fish_seen_subcommand_from build" -l libc -d "Provide a file which specifies libc paths"
+## General options (ref: <https://github.com/ziglang/zig/blob/db890dbae72bc31e50d4ec641f2afce683df772d/lib/compiler/build_runner.zig#L1088>)
+complete -r -c zig -n "__fish_seen_subcommand_from build" -s p -l prefix -d "Where to install files (default: zig-out)"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-lib-dir -d "Where to install libraries"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-exe-dir -d "Where to install executables"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l prefix-include-dir -d "Where to install C header files"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -l release -d "Request release mode" -a "fast safe small"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fdarling -d "Integrate with system-installed Darling"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-darling -d "Don't integrate with system-installed Darling (default)"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fqemu -d "Integrate with system-installed QEMU"
@@ -73,27 +76,49 @@ complete -f -c zig -n "__fish_seen_subcommand_from build" -o fwasmtime -d "Integ
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-wasmtime -d "Don't integrate with system-installed Wasmtime (default)"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fwine -d "Integrate with system-installed Wine"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-wine -d "Don't integrate with system-installed Wine (default)"
+
+complete -f -c zig -n "__fish_seen_subcommand_from build" -s l -l list-steps -d "Print available steps"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose -d "Print commands before executing them"
 complete -x -c zig -n "__fish_seen_subcommand_from build" -l color -a "auto off on" -d "Enable/Disable colored error messages"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l prominent-compile-errors -d "Output human-readable compile errors"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -l summary -d "Control the printing of the build summary" -a "
+    failures\t'(Default) Only print failed steps'
+    all\t'Print the build summary in its entirety'
+    new\t'Omit cached steps'
+    none\t'Do not print the build summary'
+    "
+complete -f -c zig -n "__fish_seen_subcommand_from build" -s j -d "Limit concurrent jobs (default is to use all CPU cores)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l maxrss -d "Limit memory usage (default is to use available memory)"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l skip-oom-steps -d "skip steps that would exceed --maxrss"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l fetch -d "Exit after fetching dependency tree"
 
 ## Project-specific options
 complete -x -c zig -n "__fish_seen_subcommand_from build" -o Dtarget -d "Specify the compilation target"
 complete -x -c zig -n "__fish_seen_subcommand_from build" -o Dcpu -d "Specify CPU features to add/subtract"
-complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-safe -a "true false" -d "Optimizations on and safety on"
-complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-fast -a "true false" -d "Optimizations on and safety off"
-complete -x -c zig -n "__fish_seen_subcommand_from build" -o Drelease-small -a "true false" -d "Size optimizations on and safety off"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -o Ddynamic-linker -d "Path to interpreter on the target system"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o Doptimize -a "Debug ReleaseSafe ReleaseFast ReleaseSmall" -d "Optimizations on and safety on"
+
+## System Integration Options
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l search-prefix -d "Add a path to look for binaries, libraries, headers"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l sysroot -d "Set the system root directory (usually /)"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l libc -d "Provide a file which specifies libc paths"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l system -d "Disable package fetching; enable all integrations"
 
 ## Advanced options
+complete -x -c zig -n "__fish_seen_subcommand_from build" -o freference-trace -d "lines of reference trace shown per compile error"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -o fno-reference-trace -d "Disable reference trace"
 complete -r -c zig -n "__fish_seen_subcommand_from build" -l build-file -d "Override path to `build.zig`"
 complete -r -c zig -n "__fish_seen_subcommand_from build" -l cache-dir -d "Override path to zig cache directory"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l global-cache-dir -d "Override path to global Zig cache directory"
 complete -r -c zig -n "__fish_seen_subcommand_from build" -l zig-lib-dir -d "Override path to Zig lib directory"
+complete -r -c zig -n "__fish_seen_subcommand_from build" -l build-runner -d "Override path to build runner"
+complete -x -c zig -n "__fish_seen_subcommand_from build" -l seed -d "For shuffling dependency traversal order (default: random)"
 complete -x -c zig -n "__fish_seen_subcommand_from build" -l debug-log -d "Enable debugging the compiler"
-complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-tokenize -d "Enable compiler debug output for tokenization"
-complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-ast -d "Enable compiler debug output for parsing into an AST"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l debug-pkg-config -d "Fail if unknown pkg-config flags encountered"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-link -d "Enable compiler debug output for linking"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-air -d "Enable compiler debug output for Zig AIR"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-llvm-ir -d "Enable compiler debug output for LLVM IR"
+complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-llvm-bc -d "Enable compiler debug output for LLVM BC"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-cimport -d "Enable compiler debug output for C imports"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-cc -d "Enable compiler debug output for C compilation"
 complete -f -c zig -n "__fish_seen_subcommand_from build" -l verbose-llvm-cpu-features -d "Enable compiler debug output for LLVM CPU features"
@@ -103,7 +128,7 @@ complete -c zig -n "__fish_seen_subcommand_from ast-check" -s t -d "Output ZIR i
 
 set -l zig_build_generic_commands build-exe build-lib build-obj run test translate-c
 
-## General options
+## General options <https://github.com/ziglang/zig/blob/db890dbae72bc31e50d4ec641f2afce683df772d/src/main.zig#L366>
 complete -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l watch -d "Enable compiler REPL"
 complete -x -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -l color -a "auto off on" -d "Enable/Disable colored error messages"
 complete -r -c zig -n "__fish_seen_subcommand_from $zig_build_generic_commands" -o femit-bin -d "Output machine code (default)"

@@ -21,7 +21,7 @@ use std::time::Duration;
 #[test]
 #[serial]
 fn test_parser() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! detect_errors {
         ($src:literal) => {
             parse_util_detect_errors(L!($src), None, true /* accept incomplete */)
@@ -303,7 +303,7 @@ fn test_parser() {
 #[test]
 #[serial]
 fn test_new_parser_correctness() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! validate {
         ($src:expr, $ok:expr) => {
             let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
@@ -333,7 +333,7 @@ fn test_new_parser_correctness() {
 #[test]
 #[serial]
 fn test_new_parser_correctness_by_fuzzing() {
-    test_init();
+    let _cleanup = test_init();
     let fuzzes = [
         L!("if"),
         L!("else"),
@@ -395,7 +395,7 @@ fn test_new_parser_correctness_by_fuzzing() {
 #[test]
 #[serial]
 fn test_new_parser_ll2() {
-    test_init();
+    let _cleanup = test_init();
     // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
     // true if successful.
     fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
@@ -516,7 +516,7 @@ fn test_new_parser_ll2() {
 #[test]
 #[serial]
 fn test_new_parser_ad_hoc() {
-    test_init();
+    let _cleanup = test_init();
     // Very ad-hoc tests for issues encountered.
 
     // Ensure that 'case' terminates a job list.
@@ -577,7 +577,7 @@ fn test_new_parser_ad_hoc() {
 #[test]
 #[serial]
 fn test_new_parser_errors() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! validate {
         ($src:expr, $expected_code:expr) => {
             let mut errors = vec![];
@@ -611,7 +611,7 @@ fn test_new_parser_errors() {
 #[test]
 #[serial]
 fn test_eval_recursion_detection() {
-    test_init();
+    let _cleanup = test_init();
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
     let parser = Parser::principal_parser().shared();
@@ -632,7 +632,7 @@ fn test_eval_recursion_detection() {
 #[test]
 #[serial]
 fn test_eval_illegal_exit_code() {
-    test_init();
+    let _cleanup = test_init();
     macro_rules! validate {
         ($cmd:expr, $result:expr) => {
             let parser = Parser::principal_parser();
@@ -664,7 +664,7 @@ fn test_eval_illegal_exit_code() {
 #[test]
 #[serial]
 fn test_eval_empty_function_name() {
-    test_init();
+    let _cleanup = test_init();
     let parser = Parser::principal_parser().shared();
     parser.eval(
         L!("function '' ; echo fail; exit 42 ; end ; ''"),
@@ -675,7 +675,7 @@ fn test_eval_empty_function_name() {
 #[test]
 #[serial]
 fn test_expand_argument_list() {
-    test_init();
+    let _cleanup = test_init();
     let parser = Parser::principal_parser().shared();
     let comps: Vec<WString> = Parser::expand_argument_list(
         L!("alpha 'beta gamma' delta"),
@@ -717,7 +717,7 @@ fn test_1_cancellation(src: &wstr) {
 #[test]
 #[serial]
 fn test_cancellation() {
-    test_init();
+    let _cleanup = test_init();
     reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 

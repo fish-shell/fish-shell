@@ -60,12 +60,12 @@ impl ParseToken {
     pub fn source_length(&self) -> usize {
         self.source_length.try_into().unwrap()
     }
-    /// \return the source range.
+    /// Return the source range.
     /// Note the start may be invalid.
     pub fn range(&self) -> SourceRange {
         SourceRange::new(self.source_start(), self.source_length())
     }
-    /// \return whether we are a string with the dash prefix set.
+    /// Return whether we are a string with the dash prefix set.
     pub fn is_dash_prefix_string(&self) -> bool {
         self.typ == ParseTokenType::string && self.has_dash_prefix
     }

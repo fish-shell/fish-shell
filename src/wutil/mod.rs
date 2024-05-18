@@ -60,8 +60,10 @@ pub fn wunlink(file_name: &wstr) -> libc::c_int {
 }
 
 pub fn wperror(s: &wstr) {
-    // TODO This should not crash on invalid UTF-8
-    perror(std::str::from_utf8(&wcs2string(s)).unwrap())
+    let bytes = wcs2string(s);
+    // We can't guarantee the string is 100% Unicode (why?), so we don't use std::str::from_utf8()
+    let s = OsStr::from_bytes(&bytes).to_string_lossy();
+    perror(&s)
 }
 
 /// Port of the wide-string wperror from `src/wutil.cpp` but for rust `&str`.
@@ -269,7 +271,7 @@ fn test_normalize_path() {
     assert_eq!(norm_path(L!("foo/././bar/.././baz")), "foo/baz");
 }
 
-/// Given an input path \p path and a working directory \p wd, do a "normalizing join" in a way
+/// Given an input path `path` and a working directory `wd`, do a "normalizing join" in a way
 /// appropriate for cd. That is, return effectively wd + path while resolving leading ../s from
 /// path. The intent here is to allow 'cd' out of a directory which may no longer exist, without
 /// allowing 'cd' into a directory that may not exist; see #5341.
@@ -407,7 +409,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 
 /// Write a wide string to a file descriptor. This avoids doing any additional allocation.
 /// This does NOT retry on EINTR or EAGAIN, it simply returns.
-/// \return -1 on error in which case errno will have been set. In this event, the number of bytes
+/// Return -1 on error in which case errno will have been set. In this event, the number of bytes
 /// actually written cannot be obtained.
 pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     // Accumulate data in a local buffer.
@@ -416,7 +418,7 @@ pub fn wwrite_to_fd(input: &wstr, fd: RawFd) -> Option<usize> {
     let maxaccum: usize = std::mem::size_of_val(&accum);
 
     // Helper to perform a write to 'fd', looping as necessary.
-    // \return true on success, false on error.
+    // Return true on success, false on error.
     let mut total_written = 0;
 
     fn do_write(fd: RawFd, total_written: &mut usize, mut buf: &[u8]) -> bool {
@@ -478,7 +480,7 @@ const PUA1_END: char = '\u{F900}';
 // const PUA3_END: char = '\u{10FFFE}';
 
 /// Return one if the code point is in a Unicode private use area.
-fn fish_is_pua(c: char) -> bool {
+pub(crate) fn fish_is_pua(c: char) -> bool {
     PUA1_START <= c && c < PUA1_END
 }
 
@@ -550,7 +552,7 @@ impl FileId {
         result
     }
 
-    /// \return true if \param rhs has higher mtime seconds than this file_id_t.
+    /// Return true if \param rhs has higher mtime seconds than this file_id_t.
     /// If identical, nanoseconds are compared.
     pub fn older_than(&self, rhs: &FileId) -> bool {
         let lhs = (self.mod_seconds, self.mod_nanoseconds);
@@ -561,17 +563,17 @@ impl FileId {
 
 pub const INVALID_FILE_ID: FileId = FileId::new();
 
-pub fn file_id_for_fd(fd: RawFd) -> FileId {
+pub fn file_id_for_fd(fd: BorrowedFd<'_>) -> FileId {
     let mut result = INVALID_FILE_ID;
     let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-    if fd >= 0 && unsafe { libc::fstat(fd, &mut buf) } == 0 {
+    if unsafe { libc::fstat(fd.as_raw_fd(), &mut buf) } == 0 {
         result = FileId::from_stat(&buf);
     }
     result
 }
 
 pub fn file_id_for_autoclose_fd(fd: &AutoCloseFd) -> FileId {
-    file_id_for_fd(fd.fd())
+    file_id_for_fd(fd.as_fd())
 }
 
 pub fn file_id_for_path(path: &wstr) -> FileId {
@@ -586,7 +588,7 @@ pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
     }
     result
 }
-/// Given that \p cursor is a pointer into \p base, return the offset in characters.
+/// Given that `cursor` is a pointer into `base`, return the offset in characters.
 /// This emulates C pointer arithmetic:
 ///    `wstr_offset_in(cursor, base)` is equivalent to C++ `cursor - base`.
 pub fn wstr_offset_in(cursor: &wstr, base: &wstr) -> usize {

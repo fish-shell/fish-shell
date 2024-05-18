@@ -1,5 +1,6 @@
 # RUN: %fish %s
 # Test redirecting builtin help with a pipe
+# REQUIRES: command -v mandoc nroff
 
 set -lx __fish_data_dir (mktemp -d)
 mkdir -p $__fish_data_dir/man/man1

@@ -10,7 +10,7 @@ complete -c csc -s o -o "o+" -o optimize -o "optimize+" -d "Enable optimizations
 complete -c csc -o o- -o optimize- -d "Disable optimizations"
 
 # Output Files
-complete -c csc -o deterministic -d "Causes the compiler to output an assembly whose binary content is identical across compilations if inputs are identical"
+complete -c csc -o deterministic -d "Output an assembly whose binary content is identical across compilations if inputs are identical"
 complete -c csc -o "doc:" -d "Specifies an XML file where processed documentation comments are to be written"
 complete -c csc -o "out:" -d "Specifies the output file"
 complete -c csc -o "pathmap:" -d "Specify a mapping for source path names output by the compiler"
@@ -42,7 +42,7 @@ complete -c csc -o "keyfile:" -d "Specifies the filename containing the cryptogr
 complete -c csc -o "lib:" -d "Specifies the location of assemblies referenced by means of -reference"
 complete -c csc -o nostdlib -o "nostdlib+" -d "Instructs the compiler not to import the standard library (mscorlib.dll)"
 complete -c csc -o nostdlib- -d "Disable -nostdlib"
-complete -c csc -o publicsign -d "Apply a public key without signing the assembly, but set the bit in the assembly indicating the assembly is signed"
+complete -c csc -o publicsign -d "Apply a public key without signing the assembly"
 complete -c csc -o "r:" -o "reference:" -d "Imports metadata from a file that contains an assembly"
 complete -c csc -o "a:" -o "analyzer:" -d "Run the analyzers from this assembly"
 complete -c csc -o "additionalfile:" -d "Names additional files that don't directly affect code generation but may be used by analyzers for producing errors or warnings"
@@ -51,8 +51,8 @@ complete -c csc -o "embed:" -d "Embed specific files in the PDB"
 
 # Debugging/Error Checking
 complete -c csc -o "bugreport:" -d "Creates a file that contains information that makes it easy to report a bug"
-complete -c csc -o checked -o "checked+" -d "Specifies whether integer arithmetic that overflows the bounds of the data type will cause an exception at run time"
-complete -c csc -o checked- -d "Disable -checked"
+complete -c csc -o checked -o "checked+" -d "Generate overflow checks"
+complete -c csc -o checked- -d "Disable overflow checks"
 
 complete -c csc -o debug -o "debug+" -d "Instruct the compiler to emit debugging information"
 for arguments in full pdbonly

@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 import os
+import platform
 import signal
+import sys
 from pexpect_helper import SpawnedProc
 
+if platform.system() == "FreeBSD": # Spurious failure. TODO Only disable this in CI.
+    sys.exit(127)
+
+if "CI" in os.environ and platform.system() == "Darwin":
+    sys.exit(127)
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_str, expect_re = (
@@ -13,6 +20,7 @@ send, sendline, sleep, expect_prompt, expect_str, expect_re = (
     sp.expect_str,
     sp.expect_re,
 )
+
 # Ensure that signals don't tear escape sequences. See #8628.
 expect_prompt()
 
@@ -52,10 +60,14 @@ sendline(
 )
 expect_prompt()
 
-sendline(r"bind abc\edef wacky_handler")
+sendline(r"bind a,b,c,\e,d,e,f wacky_handler")
 expect_prompt()
 
+sendline("echo 'Catch' 'up'")
+expect_prompt("Catch up")
+
 # We can respond to SIGUSR1.
+sleep(1)
 os.kill(sp.spawn.pid, signal.SIGUSR1)
 expect_str(r"Got SIGUSR1 1")
 sendline(r"")

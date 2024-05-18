@@ -10,6 +10,7 @@ use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBL
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
 use std::ffi::CStr;
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::os::unix::prelude::*;
 
@@ -106,6 +107,12 @@ impl AsRawFd for AutoCloseFd {
     }
 }
 
+impl AsFd for AutoCloseFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        unsafe { BorrowedFd::borrow_raw(self.fd()) }
+    }
+}
+
 impl Default for AutoCloseFd {
     fn default() -> AutoCloseFd {
         AutoCloseFd { fd_: -1 }
@@ -128,7 +135,7 @@ pub struct AutoClosePipes {
 }
 
 /// Construct a pair of connected pipes, set to close-on-exec.
-/// \return None on fd exhaustion.
+/// Return None on fd exhaustion.
 pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     #[allow(unused_mut, unused_assignments)]
     let mut already_cloexec = false;
@@ -169,9 +176,9 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 
 /// If the given fd is in the "user range", move it to a new fd in the "high range".
 /// zsh calls this movefd().
-/// \p input_has_cloexec describes whether the input has CLOEXEC already set, so we can avoid
+/// `input_has_cloexec` describes whether the input has CLOEXEC already set, so we can avoid
 /// setting it again.
-/// \return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
+/// Return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
 fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
     let raw_fd = fd.as_raw_fd();
@@ -195,7 +202,7 @@ fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> 
     Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
 
-/// Sets CLO_EXEC on a given fd according to the value of \p should_set.
+/// Sets CLO_EXEC on a given fd according to the value of `should_set`.
 pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.
@@ -222,12 +229,12 @@ pub fn wopen_cloexec(
     pathname: &wstr,
     flags: OFlag,
     mode: nix::sys::stat::Mode,
-) -> nix::Result<OwnedFd> {
+) -> nix::Result<File> {
     open_cloexec(wcs2zstring(pathname).as_c_str(), flags, mode)
 }
 
-/// Narrow versions of wopen_cloexec.
-pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<OwnedFd> {
+/// Narrow versions of wopen_cloexec().
+pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<File> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
     let saved_errno = errno();
@@ -237,12 +244,11 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(|raw_fd| unsafe { OwnedFd::from_raw_fd(raw_fd) });
-
+        let ret = ret.map(|raw_fd| unsafe { File::from_raw_fd(raw_fd) });
         match ret {
-            Ok(fd) => {
+            Ok(file) => {
                 set_errno(saved_errno);
-                return Ok(fd);
+                return Ok(file);
             }
             Err(err) => {
                 if err != nix::Error::EINTR || signal_check_cancel() != 0 {
@@ -253,7 +259,53 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     }
 }
 
-/// Close a file descriptor \p fd, retrying on EINTR.
+/// POSIX specifies an open option O_SEARCH for opening directories for later
+/// `fchdir` or `openat`, not for `readdir`. The read permission is not checked,
+/// and the x permission is checked on opening. Not all platforms have this,
+/// so we fall back to O_PATH or O_RDONLY according to the platform.
+pub use o_search::BEST_O_SEARCH;
+
+mod o_search {
+    use super::OFlag;
+    /// On macOS we have O_SEARCH, which is defined as O_EXEC | O_DIRECTORY,
+    /// where O_EXEC is 0x40000000. This is only on macOS 12.0+ or later; however
+    /// prior macOS versions ignores O_EXEC so it is treated the same as O_RDONLY.
+    #[cfg(target_os = "macos")]
+    pub const BEST_O_SEARCH: OFlag =
+        unsafe { OFlag::from_bits_unchecked(libc::O_DIRECTORY | 0x40000000) };
+
+    /// On FreeBSD, we have O_SEARCH = 0x00040000.
+    #[cfg(target_os = "freebsd")]
+    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(0x00040000) };
+
+    /// On Linux we can use O_PATH, it has nearly the same semantics. we can use the fd for openat / fchdir, with only requiring
+    /// x permission on the directory.
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_PATH) };
+
+    /// Fall back to O_RDONLY.
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "android",
+        target_os = "freebsd",
+        target_os = "macos"
+    )))]
+    pub const BEST_O_SEARCH: OFlag = OFlag::O_RDONLY;
+}
+
+/// Wide character version of open_dir() that also sets the close-on-exec flag (atomically when
+/// possible).
+pub fn wopen_dir(pathname: &wstr, flags: OFlag) -> nix::Result<OwnedFd> {
+    open_dir(wcs2zstring(pathname).as_c_str(), flags)
+}
+
+/// Narrow version of wopen_dir().
+pub fn open_dir(path: &CStr, flags: OFlag) -> nix::Result<OwnedFd> {
+    let mode = nix::sys::stat::Mode::empty();
+    open_cloexec(path, flags | OFlag::O_DIRECTORY, mode).map(OwnedFd::from)
+}
+
+/// Close a file descriptor `fd`, retrying on EINTR.
 pub fn exec_close(fd: RawFd) {
     assert!(fd >= 0, "Invalid fd");
     while unsafe { libc::close(fd) } == -1 {
@@ -293,7 +345,7 @@ pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
 #[test]
 #[serial]
 fn test_pipes() {
-    test_init();
+    let _cleanup = test_init();
     // Here we just test that each pipe has CLOEXEC set and is in the high range.
     // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
     let mut pipes = vec![];

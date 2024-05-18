@@ -1,4 +1,5 @@
 function fish_default_key_bindings -d "emacs-like key binds"
+    set -l legacy_bind bind
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help"
@@ -9,15 +10,24 @@ function fish_default_key_bindings -d "emacs-like key binds"
         bind --erase --all --preset # clear earlier bindings, if any
         if test "$fish_key_bindings" != fish_default_key_bindings
             # Allow the user to set the variable universally
+            set -l scope
             set -q fish_key_bindings
-            or set -g fish_key_bindings
-            # This triggers the handler, which calls us again and ensures the user_key_bindings
-            # are executed.
-            set fish_key_bindings fish_default_key_bindings
-            # unless the handler somehow doesn't exist, which would leave us without bindings.
-            # this happens in no-config mode.
-            functions -q __fish_reload_key_bindings
-            and return
+            or set scope -g
+            true
+            # We try to use `set --no-event`, but to avoid leaving the user without bindings
+            # if they run this with an older version we fall back on setting the variable
+            # with an event.
+            if ! set --no-event $scope fish_key_bindings fish_default_key_bindings 2>/dev/null
+                # This triggers the handler, which calls us again
+                set $scope fish_key_bindings fish_default_key_bindings
+                # unless the handler somehow doesn't exist, which would leave us without bindings.
+                # this happens in no-config mode.
+                functions -q __fish_reload_key_bindings
+                and return
+            else
+                # (we need to set the bind mode to default)
+                set --no-event fish_bind_mode default
+            end
         end
     end
 
@@ -30,65 +40,54 @@ function fish_default_key_bindings -d "emacs-like key binds"
     __fish_shared_key_bindings $argv
     or return # protect against invalid $argv
 
-    bind --preset $argv \ck kill-line
+    bind --preset $argv ctrl-k kill-line
 
-    bind --preset $argv \eOC forward-char
-    bind --preset $argv \eOD backward-char
-    bind --preset $argv \e\[C forward-char
-    bind --preset $argv \e\[D backward-char
-    bind --preset $argv -k right forward-char
-    bind --preset $argv -k left backward-char
+    bind --preset $argv right forward-char
+    bind --preset $argv left backward-char
+    $legacy_bind --preset $argv -k right forward-char
+    $legacy_bind --preset $argv -k left backward-char
 
-    bind --preset $argv -k dc delete-char
-    bind --preset $argv -k backspace backward-delete-char
-    bind --preset $argv \x7f backward-delete-char
+    bind --preset $argv delete delete-char
+    bind --preset $argv backspace backward-delete-char
+    bind --preset $argv shift-backspace backward-delete-char
 
-    # for PuTTY
-    # https://github.com/fish-shell/fish-shell/issues/180
-    bind --preset $argv \e\[1~ beginning-of-line
-    bind --preset $argv \e\[3~ delete-char
-    bind --preset $argv \e\[4~ end-of-line
+    bind --preset $argv home beginning-of-line
+    $legacy_bind --preset $argv -k home beginning-of-line
+    bind --preset $argv end end-of-line
+    $legacy_bind --preset $argv -k end end-of-line
 
-    bind --preset $argv -k home beginning-of-line
-    bind --preset $argv -k end end-of-line
+    bind --preset $argv ctrl-a beginning-of-line
+    bind --preset $argv ctrl-e end-of-line
+    bind --preset $argv ctrl-h backward-delete-char
+    bind --preset $argv ctrl-p up-or-search
+    bind --preset $argv ctrl-n down-or-search
+    bind --preset $argv ctrl-f forward-char
+    bind --preset $argv ctrl-b backward-char
+    bind --preset $argv ctrl-t transpose-chars
+    bind --preset $argv ctrl-g cancel
+    bind --preset $argv ctrl-/ undo
+    bind --preset $argv ctrl-_ undo # XTerm idiosyncracy, can get rid of this once we go full CSI u
+    bind --preset $argv ctrl-z undo
+    bind --preset $argv ctrl-Z redo
+    bind --preset $argv alt-/ redo
+    bind --preset $argv alt-t transpose-words
+    bind --preset $argv alt-u upcase-word
 
-    bind --preset $argv \ca beginning-of-line
-    bind --preset $argv \ce end-of-line
-    bind --preset $argv \ch backward-delete-char
-    bind --preset $argv \cp up-or-search
-    bind --preset $argv \cn down-or-search
-    bind --preset $argv \cf forward-char
-    bind --preset $argv \cb backward-char
-    bind --preset $argv \ct transpose-chars
-    bind --preset $argv \cg cancel
-    bind --preset $argv \c_ undo
-    bind --preset $argv \cz undo
-    bind --preset $argv \e/ redo
-    bind --preset $argv \et transpose-words
-    bind --preset $argv \eu upcase-word
-
-    # This clashes with __fish_list_current_token
-    # bind --preset $argv \el downcase-word
-    bind --preset $argv \ec capitalize-word
-    # One of these is alt+backspace.
-    bind --preset $argv \e\x7f backward-kill-word
-    bind --preset $argv \e\b backward-kill-word
-    if not test "$TERM_PROGRAM" = Apple_Terminal
-        bind --preset $argv \eb backward-word
-        bind --preset $argv \ef forward-word
-    else
+    bind --preset $argv alt-c capitalize-word
+    bind --preset $argv alt-backspace backward-kill-word
+    bind --preset $argv alt-b backward-word
+    bind --preset $argv alt-f forward-word
+    if test "$TERM_PROGRAM" = Apple_Terminal
         # Terminal.app sends \eb for alt+left, \ef for alt+right.
         # Yeah.
-        bind --preset $argv \eb prevd-or-backward-word
-        bind --preset $argv \ef nextd-or-forward-word
+        $legacy_bind --preset $argv alt-b prevd-or-backward-word
+        $legacy_bind --preset $argv alt-f nextd-or-forward-word
     end
 
-    bind --preset $argv \e\< beginning-of-buffer
-    bind --preset $argv \e\> end-of-buffer
+    bind --preset $argv alt-\< beginning-of-buffer
+    bind --preset $argv alt-\> end-of-buffer
 
-    bind --preset $argv \ed kill-word
-
-    bind --preset $argv \cr history-pager
+    bind --preset $argv ctrl-r history-pager
 
     # term-specific special bindings
     switch "$TERM"
@@ -96,16 +95,12 @@ function fish_default_key_bindings -d "emacs-like key binds"
             # suckless and bash/zsh/fish have a different approach to how the terminal should be configured;
             # the major effect is that several keys do not work as intended.
             # This is a workaround, there will be additions in he future.
-            bind --preset $argv \e\[P delete-char
-            bind --preset $argv \e\[Z up-line
-        case 'rxvt*'
-            bind --preset $argv \e\[8~ end-of-line
-            bind --preset $argv \eOc forward-word
-            bind --preset $argv \eOd backward-word
+            $legacy_bind --preset $argv \e\[P delete-char
+            $legacy_bind --preset $argv \e\[Z up-line
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:
-            bind --preset $argv \e\x20ep fish_clipboard_paste
+            $legacy_bind --preset $argv \e\x20ep fish_clipboard_paste
     end
 
     set -e -g fish_cursor_selection_mode

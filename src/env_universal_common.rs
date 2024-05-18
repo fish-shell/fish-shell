@@ -10,7 +10,7 @@ use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
-use crate::wchar::prelude::*;
+use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
 use crate::wutil::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,
@@ -22,8 +22,9 @@ use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
+use std::fs::File;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -46,7 +47,7 @@ impl CallbackData {
     pub fn new(key: WString, val: Option<EnvVar>) -> Self {
         Self { key, val }
     }
-    /// \return whether this callback represents an erased variable.
+    /// Return whether this callback represents an erased variable.
     pub fn is_erase(&self) -> bool {
         self.val.is_none()
     }
@@ -109,7 +110,7 @@ impl EnvUniversal {
     pub fn get(&self, name: &wstr) -> Option<EnvVar> {
         self.vars.get(name).cloned()
     }
-    // \return flags from the variable with the given name.
+    // Return flags from the variable with the given name.
     pub fn get_flags(&self, name: &wstr) -> Option<EnvVarFlags> {
         self.vars.get(name).map(|var| var.get_flags())
     }
@@ -234,14 +235,13 @@ impl EnvUniversal {
         FLOG!(uvar_file, "universal log performing full sync");
 
         // Open the file.
-        let vars_fd = self.open_and_acquire_lock();
-        let Some(vars_fd) = vars_fd else {
+        let Some(mut vars_file) = self.open_and_acquire_lock() else {
             FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
             return false;
         };
 
         // Read from it.
-        self.load_from_fd(vars_fd.as_raw_fd(), callbacks);
+        self.load_from_fd(&mut vars_file, callbacks);
 
         if self.ok_to_save {
             self.save(&directory)
@@ -250,9 +250,9 @@ impl EnvUniversal {
         }
     }
 
-    /// Populate a variable table \p out_vars from a \p s string.
+    /// Populate a variable table `out_vars` from a `s` string.
     /// This is exposed for testing only.
-    /// \return the format of the file that we read.
+    /// Return the format of the file that we read.
     pub fn populate_variables(s: &[u8], out_vars: &mut VarTable) -> UvarFormat {
         // Decide on the format.
         let format = Self::format_for_contents(s);
@@ -290,7 +290,7 @@ impl EnvUniversal {
     }
 
     /// Guess a file format. Exposed for testing only.
-    /// \return the format corresponding to file contents \p s.
+    /// Return the format corresponding to file contents `s`.
     pub fn format_for_contents(s: &[u8]) -> UvarFormat {
         // Walk over leading comments, looking for one like '# version'
         let iter = LineIterator::new(s);
@@ -367,7 +367,7 @@ impl EnvUniversal {
         self.export_generation
     }
 
-    /// \return whether we are initialized.
+    /// Return whether we are initialized.
     fn initialized(&self) -> bool {
         !self.vars_path.is_empty()
     }
@@ -387,24 +387,27 @@ impl EnvUniversal {
             return true;
         }
 
-        let Ok(fd) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty()) else {
+        let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
+        else {
             return false;
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_fd(fd.as_raw_fd(), callbacks);
+        self.load_from_fd(&mut file, callbacks);
         true
     }
 
-    fn load_from_fd(&mut self, fd: RawFd, callbacks: &mut CallbackDataList) {
+    // Load environment variables from the opened [`File`] `file`. It must be mutable because we
+    // will read from the underlying fd.
+    fn load_from_fd(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
         // Get the dev / inode.
-        let current_file = file_id_for_fd(fd);
+        let current_file = file_id_for_fd(file.as_fd());
         if current_file == self.last_read_file {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
-            let format = Self::read_message_internal(fd, &mut new_vars);
+            let format = Self::read_message_internal(file.as_raw_fd(), &mut new_vars);
 
             // Hacky: if the read format is in the future, avoid overwriting the file: never try to
             // save.
@@ -422,7 +425,7 @@ impl EnvUniversal {
     }
 
     // Functions concerned with saving.
-    fn open_and_acquire_lock(&mut self) -> Option<OwnedFd> {
+    fn open_and_acquire_lock(&mut self) -> Option<File> {
         // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
         // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
         // stat(); if they match, it means that the file was not replaced before we acquired the lock.
@@ -437,66 +440,61 @@ impl EnvUniversal {
             locked_by_open = true;
         }
 
-        let mut res_fd = None;
-        while res_fd.is_none() {
-            let fd = match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
-                Ok(fd) => fd,
-                Err(err) => {
-                    if err == nix::Error::EINTR {
-                        continue; // signaled; try again
-                    }
-
-                    if !O_EXLOCK.is_empty() {
-                        if flags.intersects(O_EXLOCK)
-                            && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
-                        {
-                            // Filesystem probably does not support locking. Give up on locking.
-                            // Note that on Linux the two errno symbols have the same value but on BSD they're
-                            // different.
-                            flags &= !O_EXLOCK;
-                            self.do_flock = false;
-                            locked_by_open = false;
-                            continue;
+        loop {
+            let mut file =
+                match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
+                    Ok(file) => file,
+                    Err(nix::Error::EINTR) => continue,
+                    Err(err) => {
+                        if !O_EXLOCK.is_empty() {
+                            if flags.contains(O_EXLOCK)
+                                && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
+                            {
+                                // Filesystem probably does not support locking. Give up on locking.
+                                // Note that on Linux the two errno symbols have the same value but on BSD they're
+                                // different.
+                                flags &= !O_EXLOCK;
+                                self.do_flock = false;
+                                locked_by_open = false;
+                                continue;
+                            }
                         }
+                        FLOG!(
+                            error,
+                            wgettext_fmt!(
+                                "Unable to open universal variable file '%s': %s",
+                                &self.vars_path,
+                                err.to_string()
+                            )
+                        );
+                        return None;
                     }
-                    FLOG!(
-                        error,
-                        wgettext_fmt!(
-                            "Unable to open universal variable file '%s': %s",
-                            &self.vars_path,
-                            err.to_string()
-                        )
-                    );
-                    break;
-                }
-            };
+                };
 
             // Lock if we want to lock and open() didn't do it for us.
             // If flock fails, give up on locking forever.
             if self.do_flock && !locked_by_open {
-                if !flock_uvar_file(fd.as_raw_fd()) {
+                if !flock_uvar_file(&mut file) {
                     self.do_flock = false;
                 }
             }
 
             // Hopefully we got the lock. However, it's possible the file changed out from under us
             // while we were waiting for the lock. Make sure that didn't happen.
-            if file_id_for_fd(fd.as_raw_fd()) != file_id_for_path(&self.vars_path) {
+            if file_id_for_fd(file.as_fd()) != file_id_for_path(&self.vars_path) {
                 // Oops, it changed! Try again.
-                drop(fd);
+                drop(file);
             } else {
-                res_fd = Some(fd);
+                return Some(file);
             }
         }
-
-        res_fd
     }
 
     fn open_temporary_file(
         &mut self,
         directory: &wstr,
         out_path: &mut WString,
-    ) -> Result<OwnedFd, Errno> {
+    ) -> Result<File, Errno> {
         // Create and open a temporary file for writing within the given directory. Try to create a
         // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
         // This should almost always succeed on the first try.
@@ -541,7 +539,7 @@ impl EnvUniversal {
         match res.as_ref() {
             Ok(_) => {
                 // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-                self.last_read_file = file_id_for_fd(fd.as_raw_fd());
+                self.last_read_file = file_id_for_fd(fd);
             }
             Err(err) => {
                 let error = Errno(err.raw_os_error().unwrap());
@@ -754,7 +752,7 @@ impl EnvUniversal {
     }
 
     // Write our file contents.
-    // \return true on success, false on failure.
+    // Return true on success, false on failure.
     fn save(&mut self, directory: &wstr) -> bool {
         use crate::common::ScopeGuard;
         assert!(self.ok_to_save, "It's not OK to save");
@@ -830,7 +828,7 @@ impl EnvUniversal {
     }
 }
 
-/// \return the default variable path, or an empty string on failure.
+/// Return the default variable path, or an empty string on failure.
 pub fn default_vars_path() -> WString {
     if let Some(mut path) = default_vars_path_directory() {
         path.push_str("/fish_variables");
@@ -864,7 +862,7 @@ mod fish3_uvars {
     pub const PATH: &[u8] = b"--path";
 }
 
-/// \return the default variable path, or an empty string on failure.
+/// Return the default variable path, or an empty string on failure.
 fn default_vars_path_directory() -> Option<WString> {
     path_get_config()
 }
@@ -906,6 +904,8 @@ fn full_escape(input: &wstr) -> WString {
             out.push(c);
         } else if c.is_ascii() {
             sprintf!(=> &mut out, "\\x%.2x", u32::from(c));
+        } else if let Some(encoded_byte) = decode_byte_from_char(c) {
+            sprintf!(=> &mut out, "\\x%.2x", u32::from(encoded_byte));
         } else if u32::from(c) < 65536 {
             sprintf!(=> &mut out, "\\u%.4x", u32::from(c));
         } else {
@@ -1007,10 +1007,10 @@ fn encode_serialized(vals: &[WString]) -> WString {
 }
 
 /// Try locking the file.
-/// \return true on success, false on error.
-fn flock_uvar_file(fd: RawFd) -> bool {
+/// Return true on success, false on error.
+fn flock_uvar_file(file: &mut File) -> bool {
     let start_time = timef();
-    while unsafe { libc::flock(fd, LOCK_EX) } == -1 {
+    while unsafe { libc::flock(file.as_raw_fd(), LOCK_EX) } == -1 {
         if errno().0 != EINTR {
             return false; // do nothing per issue #2149
         }

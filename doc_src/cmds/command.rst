@@ -13,6 +13,11 @@ Synopsis
 Description
 -----------
 
+.. only:: builder_man
+
+          NOTE: This page documents the fish builtin ``command``.
+          To see the documentation on any non-fish versions, use ``command man command``.
+
 **command** forces the shell to execute the program *COMMANDNAME* and ignore any functions or builtins with the same name.
 
 In ``command foo``, ``command`` is a keyword.

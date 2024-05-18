@@ -104,15 +104,15 @@ fn print_colors(
 }
 
 const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
-const LONG_OPTIONS: &[woption] = &[
-    wopt(L!("background"), woption_argument_t::required_argument, 'b'),
-    wopt(L!("help"), woption_argument_t::no_argument, 'h'),
-    wopt(L!("bold"), woption_argument_t::no_argument, 'o'),
-    wopt(L!("underline"), woption_argument_t::no_argument, 'u'),
-    wopt(L!("italics"), woption_argument_t::no_argument, 'i'),
-    wopt(L!("dim"), woption_argument_t::no_argument, 'd'),
-    wopt(L!("reverse"), woption_argument_t::no_argument, 'r'),
-    wopt(L!("print-colors"), woption_argument_t::no_argument, 'c'),
+const LONG_OPTIONS: &[WOption] = &[
+    wopt(L!("background"), ArgType::RequiredArgument, 'b'),
+    wopt(L!("help"), ArgType::NoArgument, 'h'),
+    wopt(L!("bold"), ArgType::NoArgument, 'o'),
+    wopt(L!("underline"), ArgType::NoArgument, 'u'),
+    wopt(L!("italics"), ArgType::NoArgument, 'i'),
+    wopt(L!("dim"), ArgType::NoArgument, 'd'),
+    wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+    wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
 ];
 
 /// set_color builtin.
@@ -134,8 +134,8 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut reverse = false;
     let mut print = false;
 
-    let mut w = wgetopter_t::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(c) = w.wgetopt_long() {
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
+    while let Some(c) = w.next_opt() {
         match c {
             'b' => {
                 assert!(w.woptarg.is_some(), "Arg should have been set");
@@ -161,16 +161,16 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                     parser,
                     streams,
                     L!("set_color"),
-                    argv[w.woptind - 1],
+                    argv[w.wopt_index - 1],
                     true, /* print_hints */
                 );
                 return STATUS_INVALID_ARGS;
             }
-            _ => unreachable!("unexpected retval from wgeopter_t::wgetopt_long"),
+            _ => unreachable!("unexpected retval from WGetopter"),
         }
     }
-    // We want to reclaim argv so grab woptind now.
-    let mut woptind = w.woptind;
+    // We want to reclaim argv so grab wopt_index now.
+    let mut wopt_index = w.wopt_index;
 
     let mut bg = RgbColor::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(RgbColor::NONE);
     if bgcolor.is_some() && bg.is_none() {
@@ -189,25 +189,25 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         if bgcolor.is_some() && bg.is_special() {
             bg = RgbColor::from_wstr(L!("")).unwrap_or(RgbColor::NONE);
         }
-        let args = &argv[woptind..argc];
+        let args = &argv[wopt_index..argc];
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
         return STATUS_CMD_OK;
     }
 
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
-    while woptind < argc {
-        let fg = RgbColor::from_wstr(argv[woptind]).unwrap_or(RgbColor::NONE);
+    while wopt_index < argc {
+        let fg = RgbColor::from_wstr(argv[wopt_index]).unwrap_or(RgbColor::NONE);
         if fg.is_none() {
             streams.err.append(wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
                 argv[0],
-                argv[woptind]
+                argv[wopt_index]
             ));
             return STATUS_INVALID_ARGS;
         };
         fgcolors.push(fg);
-        woptind += 1;
+        wopt_index += 1;
     }
 
     // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground

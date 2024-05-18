@@ -9,7 +9,7 @@ use crate::wcstringutil::StringFuzzyMatch;
 #[test]
 #[serial]
 fn test_pager_navigation() {
-    test_init();
+    let _cleanup = test_init();
     // Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is
     // 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7
     // columns (7 * 12 - 2 = 82).
@@ -99,7 +99,7 @@ fn test_pager_navigation() {
 #[test]
 #[serial]
 fn test_pager_layout() {
-    test_init();
+    let _cleanup = test_init();
     // These tests are woefully incomplete
     // They only test the truncation logic for a single completion
 

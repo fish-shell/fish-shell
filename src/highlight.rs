@@ -120,8 +120,8 @@ pub fn highlight_shell(
 /// one screen redraw.
 #[derive(Default)]
 pub struct HighlightColorResolver {
-    fg_cache: HashMap<HighlightSpec, RgbColor>,
-    bg_cache: HashMap<HighlightSpec, RgbColor>,
+    fg_cache: HashMap<HighlightSpec, RgbColor, ahash::RandomState>,
+    bg_cache: HashMap<HighlightSpec, RgbColor, ahash::RandomState>,
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -773,7 +773,7 @@ pub fn is_potential_path(
     let mut checked_paths = HashSet::new();
 
     // Keep a cache of which paths / filesystems are case sensitive.
-    let mut case_sensitivity_cache = CaseSensitivityCache::new();
+    let mut case_sensitivity_cache = CaseSensitivityCache::default();
 
     for wd in directories {
         if ctx.check_cancel() {
@@ -1550,7 +1550,7 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-pub type CaseSensitivityCache = HashMap<WString, bool>;
+pub type CaseSensitivityCache = HashMap<WString, bool, ahash::RandomState>;
 fn fs_is_case_insensitive(
     path: &wstr,
     fd: RawFd,

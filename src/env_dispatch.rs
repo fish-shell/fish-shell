@@ -100,7 +100,7 @@ enum EnvCallback {
 
 #[derive(Default)]
 struct VarDispatchTable {
-    table: HashMap<&'static wstr, EnvCallback>,
+    table: HashMap<&'static wstr, EnvCallback, ahash::RandomState>,
 }
 
 impl VarDispatchTable {

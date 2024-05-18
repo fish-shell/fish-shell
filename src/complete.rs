@@ -454,8 +454,8 @@ type CompletionEntryMap = BTreeMap<CompletionEntryIndex, CompletionEntry>;
 static COMPLETION_MAP: Mutex<CompletionEntryMap> = Mutex::new(BTreeMap::new());
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
-type WrapperMap = HashMap<WString, Vec<WString>>;
-static wrapper_map: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+type WrapperMap = HashMap<WString, Vec<WString>, ahash::RandomState>;
+static wrapper_map: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::default()));
 
 /// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
 /// depending on the suffix of the string.
@@ -569,7 +569,7 @@ struct CustomArgData<'a> {
     /// When completing, variable assignments are really set in a local scope.
     var_assignments: &'a mut Vec<WString>,
     /// The set of wrapped commands which we have visited, and so should not be explored again.
-    visited_wrapped_commands: HashSet<WString>,
+    visited_wrapped_commands: HashSet<WString, ahash::RandomState>,
 }
 
 impl<'a> CustomArgData<'a> {
@@ -581,7 +581,7 @@ impl<'a> CustomArgData<'a> {
             do_file: true,
             wrap_depth: 0,
             var_assignments,
-            visited_wrapped_commands: HashSet::new(),
+            visited_wrapped_commands: HashSet::default(),
         }
     }
 }
@@ -598,7 +598,7 @@ struct Completer<'ctx> {
     needs_load: Vec<WString>,
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
-    condition_cache: HashMap<WString, bool>,
+    condition_cache: HashMap<WString, bool, ahash::RandomState>,
 }
 
 static completion_autoloader: Lazy<Mutex<Autoload>> =
@@ -611,7 +611,7 @@ impl<'ctx> Completer<'ctx> {
             flags,
             completions: CompletionReceiver::new(ctx.expansion_limit),
             needs_load: vec![],
-            condition_cache: HashMap::new(),
+            condition_cache: HashMap::default(),
         }
     }
 

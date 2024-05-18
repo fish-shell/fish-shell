@@ -359,7 +359,7 @@ struct HistoryImpl {
     /// Deleted item contents.
     /// Boolean describes if it should be deleted only in this session or in all
     /// (used in deduplication).
-    deleted_items: HashMap<WString, bool>,
+    deleted_items: HashMap<WString, bool, ahash::RandomState>,
     /// The buffer containing the history file contents.
     file_contents: Option<HistoryFileContents>,
     /// The file ID of the history file.
@@ -970,7 +970,7 @@ impl HistoryImpl {
             first_unwritten_new_item_index: 0,
             has_pending_item: false,
             disable_automatic_save_counter: 0,
-            deleted_items: HashMap::new(),
+            deleted_items: HashMap::default(),
             file_contents: None,
             history_file_id: INVALID_FILE_ID,
             boundary_timestamp: SystemTime::now(),
@@ -1212,8 +1212,8 @@ impl HistoryImpl {
     fn items_at_indexes(
         &mut self,
         indexes: impl IntoIterator<Item = usize>,
-    ) -> HashMap<usize, WString> {
-        let mut result = HashMap::new();
+    ) -> HashMap<usize, WString, ahash::RandomState> {
+        let mut result = HashMap::default();
         for idx in indexes {
             // If this is the first time the index is encountered, we have to go fetch the item.
             #[allow(clippy::map_entry)] // looks worse
@@ -1753,7 +1753,7 @@ impl History {
     pub fn items_at_indexes(
         &self,
         indexes: impl IntoIterator<Item = usize>,
-    ) -> HashMap<usize, WString> {
+    ) -> HashMap<usize, WString, ahash::RandomState> {
         self.imp().items_at_indexes(indexes)
     }
 
@@ -1798,7 +1798,7 @@ pub struct HistorySearch {
     /// Index of the current history item.
     current_index: usize, // 0
     /// If deduping, the items we've seen.
-    deduper: HashSet<WString>,
+    deduper: HashSet<WString, ahash::RandomState>,
 }
 
 impl HistorySearch {
@@ -1827,7 +1827,7 @@ impl HistorySearch {
             flags,
             current_item: None,
             current_index: starting_index,
-            deduper: HashSet::new(),
+            deduper: HashSet::default(),
         };
 
         if search.ignores_case() {

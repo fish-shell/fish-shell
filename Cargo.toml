@@ -38,6 +38,7 @@ once_cell = "1.17.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 widestring = "1.0.2"
 terminfo = "0.9.0"
+ahash = "0.8.11"
 
 [dev-dependencies]
 rand_pcg = "0.3.1"

@@ -56,7 +56,7 @@ pub struct ReaderHistorySearch {
     matches: Vec<SearchMatch>,
 
     /// A set of new items to skip, corresponding to matches_ and anything added in skip().
-    skips: HashSet<WString>,
+    skips: HashSet<WString, ahash::RandomState>,
 
     /// Index into our matches list.
     match_index: usize,
@@ -153,7 +153,7 @@ impl ReaderHistorySearch {
             mode != SearchMode::Inactive,
             "mode cannot be inactive in this setter"
         );
-        self.skips = HashSet::from([text.clone()]);
+        self.skips = ahash::AHashSet::from([text.clone()]).into();
         self.matches = vec![SearchMatch::new(text.clone(), 0)];
         self.match_index = 0;
         self.mode = mode;

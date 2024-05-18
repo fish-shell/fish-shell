@@ -459,9 +459,9 @@ mod expander {
         /// The working directory to resolve paths against
         working_directory: &'e wstr,
         /// The set of items we have resolved, used to efficiently avoid duplication.
-        completion_set: HashSet<WString>,
+        completion_set: HashSet<WString, ahash::RandomState>,
         /// The set of file IDs we have visited, used to avoid symlink loops.
-        visited_files: HashSet<FileId>,
+        visited_files: HashSet<FileId, ahash::RandomState>,
         /// Flags controlling expansion.
         flags: ExpandFlags,
         /// Resolved items get inserted into here. This is transient of course.
@@ -492,7 +492,7 @@ mod expander {
                     .iter()
                     .map(|c| c.completion.to_owned())
                     .collect(),
-                visited_files: HashSet::new(),
+                visited_files: HashSet::default(),
                 flags,
                 resolved_completions,
                 did_add: false,
@@ -895,7 +895,7 @@ mod expander {
             // Ensure we don't fall into a symlink loop.
             // Ideally we would compare both devices and inodes, but devices require a stat call, so we
             // use inodes exclusively.
-            let mut visited_inodes: HashSet<libc::ino_t> = HashSet::new();
+            let mut visited_inodes: HashSet<libc::ino_t, ahash::RandomState> = HashSet::default();
 
             loop {
                 let mut unique_entry = WString::new();

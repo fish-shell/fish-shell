@@ -179,7 +179,7 @@ pub struct AbbreviationSet {
 
     /// Set of used abbrevation names.
     /// This is to avoid a linear scan when adding new abbreviations.
-    used_names: HashSet<WString>,
+    used_names: HashSet<WString, ahash::RandomState>,
 }
 
 impl AbbreviationSet {

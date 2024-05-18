@@ -1146,7 +1146,7 @@ fn mangle_1_completion_description(s: &mut WString) {
 fn join_completions(comps: &mut Vec<PagerComp>) {
     // A map from description to index in the completion list of the element with that description.
     // The indexes are stored +1.
-    let mut desc_table: HashMap<WString, usize> = HashMap::new();
+    let mut desc_table: HashMap<WString, usize, ahash::RandomState> = HashMap::default();
 
     // Note that we mutate the completion list as we go, so the size changes.
     let mut i = 0;

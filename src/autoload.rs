@@ -26,10 +26,10 @@ pub struct Autoload {
     env_var_name: &'static wstr,
 
     /// A map from command to the files we have autoloaded.
-    autoloaded_files: HashMap<WString, FileId>,
+    autoloaded_files: HashMap<WString, FileId, ahash::RandomState>,
 
     /// The list of commands that we are currently autoloading.
-    current_autoloading: HashSet<WString>,
+    current_autoloading: HashSet<WString, ahash::RandomState>,
 
     /// The autoload cache.
     /// This is a unique_ptr because want to change it if the value of our environment variable
@@ -190,7 +190,7 @@ struct AutoloadFileCache {
 
     /// The set of files that we have returned to the caller, along with the time of the check.
     /// The key is the command (not the path).
-    known_files: HashMap<WString, KnownFile>,
+    known_files: HashMap<WString, KnownFile, ahash::RandomState>,
 }
 
 impl Default for AutoloadFileCache {
@@ -205,7 +205,7 @@ impl AutoloadFileCache {
         Self {
             dirs,
             misses_cache: MissesLruCache::new(NonZeroUsize::new(1024).unwrap()),
-            known_files: HashMap::new(),
+            known_files: HashMap::default(),
         }
     }
 

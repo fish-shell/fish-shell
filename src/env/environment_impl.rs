@@ -483,11 +483,11 @@ impl EnvScopedImpl {
 
     pub fn get_names(&self, flags: EnvMode) -> Vec<WString> {
         let query = Query::new(flags);
-        let mut names: HashSet<WString> = HashSet::new();
+        let mut names: HashSet<WString, ahash::RandomState> = HashSet::default();
 
         // Helper to add the names of variables from `envs` to names, respecting show_exported and
         // show_unexported.
-        let add_keys = |envs: &VarTable, names: &mut HashSet<WString>| {
+        let add_keys = |envs: &VarTable, names: &mut HashSet<WString, ahash::RandomState>| {
             for (key, val) in envs.iter() {
                 if query.export_matches(val) {
                     names.insert(key.clone());

@@ -75,7 +75,7 @@ pub struct EnvUniversal {
 
     // Keys that have been modified, and need to be written. A value here that is not present in
     // vars indicates a deleted value.
-    modified: HashSet<WString>,
+    modified: HashSet<WString, ahash::RandomState>,
 
     // A generation count which is incremented every time an exported variable is modified.
     export_generation: u64,

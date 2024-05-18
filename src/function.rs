@@ -60,10 +60,10 @@ const _: () = assert_sync::<FunctionProperties>();
 /// There's only one of these; it's managed by a lock.
 struct FunctionSet {
     /// The map of all functions by name.
-    funcs: HashMap<WString, Arc<FunctionProperties>>,
+    funcs: HashMap<WString, Arc<FunctionProperties>, ahash::RandomState>,
 
     /// Tombstones for functions that should no longer be autoloaded.
-    autoload_tombstones: HashSet<WString>,
+    autoload_tombstones: HashSet<WString, ahash::RandomState>,
 
     /// The autoloader for our functions.
     autoloader: Autoload,
@@ -101,8 +101,8 @@ impl FunctionSet {
 /// The big set of all functions.
 static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
     Mutex::new(FunctionSet {
-        funcs: HashMap::new(),
-        autoload_tombstones: HashSet::new(),
+        funcs: HashMap::default(),
+        autoload_tombstones: HashSet::default(),
         autoloader: Autoload::new(L!("fish_function_path")),
     })
 });
@@ -143,7 +143,7 @@ pub fn load(name: &wstr, parser: &Parser) -> bool {
 }
 
 /// Insert a list of all dynamically loaded functions into the specified list.
-fn autoload_names(names: &mut HashSet<WString>, get_hidden: bool) {
+fn autoload_names(names: &mut HashSet<WString, ahash::RandomState>, get_hidden: bool) {
     // TODO: justify this.
     let vars = EnvStack::principal();
     let Some(path_var) = vars.get_unless_empty(L!("fish_function_path")) else {
@@ -320,7 +320,7 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
 ///
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
 pub fn get_names(get_hidden: bool) -> Vec<WString> {
-    let mut names = HashSet::<WString>::new();
+    let mut names = HashSet::default();
     let funcset = FUNCTION_SET.lock().unwrap();
     autoload_names(&mut names, get_hidden);
     for name in funcset.funcs.keys() {

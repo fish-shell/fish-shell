@@ -362,7 +362,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
                 // The terminal has been closed.
                 return ReadbResult::Eof;
             }
-            FLOG!(reader, "Read byte {}", arr[0]);
+            FLOG!(reader, "Read byte", arr[0]);
             // The common path is to return a u8.
             return ReadbResult::Byte(arr[0]);
         }

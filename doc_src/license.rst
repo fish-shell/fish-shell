@@ -181,6 +181,8 @@ MIT License
 
 ``fish`` includes a copy of Alpine.js, which is copyright 2019-2021 Caleb Porzio and contributors, and licensed under the MIT License. It also uses FindRust.cmake, from the Corrosion project, which is copyright 2018 Andrew Gaspar and licensed under the MIT license. It also includes the Dracula theme, which is copyright 2018 Dracula Team, and the Nord theme, which is copyright 2016-present Sven Greb. These themes are also used under the MIT license.
 
+``fish`` contains code derived from  `musl-libc <https://www.musl-libc.org>`_, which is copyright 2005-2020 Rich Felker, et al., to implement printf. This code is used under the terms of the MIT license.
+
 The MIT license follows.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

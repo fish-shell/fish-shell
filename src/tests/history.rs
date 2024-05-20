@@ -1,4 +1,4 @@
-use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string};
+use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string, WSL};
 use crate::env::{EnvMode, EnvStack};
 use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
 use crate::path::path_get_data;
@@ -243,7 +243,7 @@ fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
 fn test_history_races() {
     let _cleanup = test_init();
     // This always fails under WSL
-    if is_windows_subsystem_for_linux() {
+    if is_windows_subsystem_for_linux(WSL::V1) {
         return;
     }
 

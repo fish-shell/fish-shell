@@ -1,7 +1,7 @@
 use libc::STDOUT_FILENO;
 
 use crate::common::{
-    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
+    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
@@ -1042,7 +1042,7 @@ pub trait InputEventQueuer {
         };
 
         // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
-        if is_windows_subsystem_for_linux() {
+        if is_windows_subsystem_for_linux(WSL::V1) {
             // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
             let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
         }

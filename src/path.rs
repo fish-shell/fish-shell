@@ -2,7 +2,7 @@
 //! for testing if a command with a given name can be found in the PATH, and various other
 //! path-related issues.
 
-use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2zstring};
+use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2zstring, WSL};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
@@ -313,7 +313,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
     // any "normal" nix binaries under these paths, so we can skip them unless we are executing bins
     // with Windows-ish names. We try to keep paths manually added to $fish_user_paths by only
     // chopping off entries after the last "normal" PATH entry.
-    let pathsv = if is_wsl() && !cmd.contains('.') {
+    let pathsv = if is_wsl(WSL::Any) && !cmd.contains('.') {
         let win_path_count = pathsv
             .iter()
             .rev()

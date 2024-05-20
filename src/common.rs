@@ -1081,7 +1081,7 @@ pub fn has_working_tty_timestamps() -> bool {
     if cfg!(target_os = "windows") {
         false
     } else if cfg!(target_os = "linux") {
-        !is_windows_subsystem_for_linux()
+        !is_windows_subsystem_for_linux(WSL::V1)
     } else {
         true
     }
@@ -1462,7 +1462,7 @@ pub fn fish_setlocale() {
         ELLIPSIS_STRING.store(LL!("..."));
     }
 
-    if is_windows_subsystem_for_linux() {
+    if is_windows_subsystem_for_linux(WSL::Any) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
         OMITTED_NEWLINE_STR.store(LL!("\u{00b6}")); // "pilcrow"
@@ -1675,12 +1675,20 @@ pub fn subslice_position<T: Eq>(a: &[T], b: &[T]) -> Option<usize> {
     a.windows(b.len()).position(|aw| aw == b)
 }
 
+#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+pub enum WSL {
+    Any,
+    V1,
+    V2,
+}
+
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 ///
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+#[inline(always)]
 #[cfg(not(target_os = "linux"))]
-pub fn is_windows_subsystem_for_linux() -> bool {
+pub fn is_windows_subsystem_for_linux(_: WSL) -> bool {
     false
 }
 
@@ -1689,8 +1697,9 @@ pub fn is_windows_subsystem_for_linux() -> bool {
 ///
 /// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
 #[cfg(target_os = "linux")]
-pub fn is_windows_subsystem_for_linux() -> bool {
-    static RESULT: once_cell::race::OnceBool = once_cell::race::OnceBool::new();
+pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
+    use std::sync::OnceLock;
+    static RESULT: OnceLock<Option<WSL>> = OnceLock::new();
 
     // This is called post-fork from [`report_setpgid_error()`], so the fast path must not involve
     // any allocations or mutexes. We can't rely on all the std functions to be alloc-free in both
@@ -1705,16 +1714,21 @@ pub fn is_windows_subsystem_for_linux() -> bool {
         );
     }
 
-    RESULT.get_or_init(|| {
+    let wsl = RESULT.get_or_init(|| {
         let mut info: libc::utsname = unsafe { mem::zeroed() };
         let release: &[u8] = unsafe {
             libc::uname(&mut info);
             std::mem::transmute(&info.release[..])
         };
 
+        // Sample utsname.release under WSLv2, testing for something like `4.19.104-microsoft-standard`
+        // or `5.10.16.3-microsoft-standard-WSL2`
+        if slice_contains_slice(release, b"microsoft-standard") {
+            return Some(WSL::V2);
+        }
         // Sample utsname.release under WSL, testing for something like `4.4.0-17763-Microsoft`
         if !slice_contains_slice(release, b"Microsoft") {
-            return false;
+            return None;
         }
 
         let release: Vec<_> = release
@@ -1726,9 +1740,9 @@ pub fn is_windows_subsystem_for_linux() -> bool {
             .collect();
         let build: Result<u32, _> = std::str::from_utf8(&release).unwrap().parse();
         match build {
-            Ok(17763..) => return true,
-            Ok(_) => (),       // return true, but first warn (see below)
-            _ => return false, // if parsing fails, assume this isn't WSL
+            Ok(17763..) => return Some(WSL::V1),
+            Ok(_) => (),      // return true, but first warn (see below)
+            _ => return None, // if parsing fails, assume this isn't WSL
         };
 
         // #5298, #5661: There are acknowledged, published, and (later) fixed issues with
@@ -1752,8 +1766,10 @@ pub fn is_windows_subsystem_for_linux() -> bool {
                 )
             );
         }
-        true
-    })
+        Some(WSL::V1)
+    });
+
+    wsl.map(|wsl| v == WSL::Any || wsl == v).unwrap_or(false)
 }
 
 /// Return true if the character is in a range reserved for fish's private use.

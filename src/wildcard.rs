@@ -7,7 +7,7 @@ use std::fs;
 
 use crate::common::{
     char_offset, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
-    UnescapeStringStyle, WILDCARD_RESERVED_BASE,
+    UnescapeStringStyle, WILDCARD_RESERVED_BASE, WSL,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
@@ -373,7 +373,7 @@ fn wildcard_test_flags_then_complete(
     }
 
     if executables_only
-        && is_windows_subsystem_for_linux()
+        && is_windows_subsystem_for_linux(WSL::Any)
         && string_suffixes_string_case_insensitive(L!(".dll"), filename)
     {
         return false;

@@ -199,7 +199,7 @@ function __fish_ip_netns_list
 end
 
 function __fish_ip_routing_tables
-    command ip -d route show table all | string replace -fr '.*\stable\s(\S+).*' '$1'
+    command ip -d route show table all 2>/dev/null | string replace -fr '.*\stable\s(\S+).*' '$1'
 end
 
 function __fish_ip_types

@@ -1,6 +1,5 @@
 use super::*;
 use crate::common::get_ellipsis_str;
-use crate::wcstringutil::split_string;
 
 pub struct Shorten<'args> {
     ellipsis: &'args wstr,
@@ -92,13 +91,14 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // Visible width only makes sense line-wise.
             // So either we have no-newlines (which means we shorten on the first newline),
             // or we handle the lines separately.
-            let mut splits = split_string(&arg, '\n').into_iter();
-            if self.no_newline && splits.len() > 1 {
+            let mut splits = arg.split('\n').peekable();
+            if self.no_newline && splits.peek().is_some() {
                 let mut s = match self.shorten_from {
                     Direction::Right => splits.next(),
                     Direction::Left => splits.last(),
                 }
-                .unwrap();
+                .unwrap()
+                .to_owned();
                 s.push_utfstr(&self.ellipsis);
                 let width = width_without_escapes(&s, 0);
 
@@ -112,7 +112,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     if width > 0 && width < min_width {
                         min_width = width;
                     }
-                    inputs.push(s);
+                    inputs.push(s.into());
                 }
             }
         }

@@ -17,7 +17,7 @@ use crate::fds::AutoCloseFd;
 use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::{join_strings, split_string, wcs2string_callback};
+use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
 pub use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
 pub use printf::sprintf;
@@ -291,8 +291,8 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     }
 
     // Split our strings by the sep.
-    let mut wd_comps = split_string(wd, sep);
-    let path_comps = split_string(path, sep);
+    let mut wd_comps = wd.split(sep).collect::<Vec<_>>();
+    let path_comps = path.split(sep).collect::<Vec<_>>();
 
     // Remove empty segments from wd_comps.
     // In particular this removes the leading and trailing empties.

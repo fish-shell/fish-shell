@@ -1,7 +1,5 @@
 use super::*;
 
-use crate::wcstringutil::split_string;
-
 #[derive(Default)]
 pub struct Length {
     quiet: bool,
@@ -36,11 +34,17 @@ impl StringSubCommand<'_> for Length {
         for (arg, _) in arguments(args, optind, streams) {
             if self.visible {
                 // Visible length only makes sense line-wise.
-                for line in split_string(&arg, '\n') {
+                for line in {
+                    let val: &wstr = &arg;
+                    val.split('\n')
+                } {
                     let mut max = 0;
                     // Carriage-return returns us to the beginning. The longest substring without
                     // carriage-return determines the overall width.
-                    for reset in split_string(&line, '\r') {
+                    for reset in {
+                        let val = &line;
+                        val.split('\r')
+                    } {
                         let n = width_without_escapes(&reset, 0);
                         max = usize::max(max, n);
                     }

@@ -11,7 +11,7 @@ use crate::flog::{FLOG, FLOGF};
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wcstringutil::{join_strings, split_string, string_suffixes_string, LineIterator};
+use crate::wcstringutil::{join_strings, string_suffixes_string, LineIterator};
 use crate::wutil::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,
     wunlink, FileId, INVALID_FILE_ID,
@@ -995,7 +995,7 @@ fn decode_serialized(val: &wstr) -> Vec<WString> {
     if val == ENV_NULL {
         return vec![];
     }
-    split_string(val, UVAR_ARRAY_SEP)
+    val.split(UVAR_ARRAY_SEP).map(|v| v.to_owned()).collect()
 }
 
 /// Decode a a list into a serialized universal variable value.

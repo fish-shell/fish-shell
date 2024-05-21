@@ -325,11 +325,6 @@ fn wcs2string_bad_char(c: char) {
     );
 }
 
-/// Split a string by a separator character.
-pub fn split_string(val: &wstr, sep: char) -> Vec<WString> {
-    val.split(sep).map(wstr::to_owned).collect()
-}
-
 /// Split a string by runs of any of the separator characters provided in `seps`.
 /// Note the delimiters are the characters in `seps`, not `seps` itself.
 /// `seps` may contain the NUL character.

@@ -4,7 +4,6 @@ use super::prelude::*;
 
 use crate::env::{EnvMode, EnvStack};
 use crate::exec::exec_subshell;
-use crate::wcstringutil::split_string;
 use crate::wutil::fish_iswalnum;
 
 const VAR_NAME_PREFIX: &wstr = L!("_flag_");
@@ -158,7 +157,7 @@ fn check_for_mutually_exclusive_flags(
 // information to parse the values associated with any `--exclusive` flags.
 fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> Option<c_int> {
     for raw_xflags in &opts.raw_exclusive_flags {
-        let xflags = split_string(raw_xflags, ',');
+        let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
             streams.err.append(wgettext_fmt!(
                 "%ls: exclusive flag string '%ls' is not valid\n",
@@ -169,7 +168,7 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
         }
 
         let exclusive_set: &mut Vec<char> = &mut vec![];
-        for flag in &xflags {
+        for flag in xflags {
             if flag.char_count() == 1 && opts.options.contains_key(&flag.char_at(0)) {
                 let short = flag.char_at(0);
                 // It's a short flag.

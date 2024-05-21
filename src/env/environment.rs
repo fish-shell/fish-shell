@@ -738,8 +738,6 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     if !do_uvars {
         UVAR_SCOPE_IS_GLOBAL.store(true);
     } else {
-        // let vars = EnvStack::principal();
-
         // Set up universal variables using the default path.
         let mut callbacks = CallbackDataList::new();
         uvars().initialize(&mut callbacks);
@@ -749,18 +747,24 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
         // Do not import variables that have the same name and value as
         // an exported universal variable. See issues #5258 and #5348.
-        let uvars_locked = uvars();
-        let table = uvars_locked.get_table();
-        for (name, uvar) in table {
-            if !uvar.exports() {
-                continue;
-            }
+        let globals_to_skip = {
+            let mut to_skip = vec![];
+            let uvars_locked = uvars();
+            for (name, uvar) in uvars_locked.get_table() {
+                if !uvar.exports() {
+                    continue;
+                }
 
-            // Look for a global exported variable with the same name.
-            let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
-            if global.is_some() && global.unwrap().as_string() == uvar.as_string() {
-                EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+                // Look for a global exported variable with the same name.
+                let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
+                if global.is_some() && global.unwrap().as_string() == uvar.as_string() {
+                    to_skip.push(name.to_owned());
+                }
             }
+            to_skip
+        };
+        for name in &globals_to_skip {
+            EnvStack::globals().remove(name, EnvMode::GLOBAL | EnvMode::EXPORT);
         }
 
         // Import any abbreviations from uvars.
@@ -769,7 +773,8 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         let prefix_len = prefix.char_count();
         let from_universal = true;
         let mut abbrs = abbrs_get_set();
-        for (name, uvar) in table {
+        let uvars_locked = uvars();
+        for (name, uvar) in uvars_locked.get_table() {
             if !name.starts_with(prefix) {
                 continue;
             }

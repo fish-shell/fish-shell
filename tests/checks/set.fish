@@ -994,4 +994,11 @@ set -e nonevent
 # CHECK: ONEVENT VARIABLE SET nonevent
 # CHECK: ONEVENT VARIABLE ERASE nonevent
 
+mkdir -p empty
+env -u XDG_CONFIG_HOME HOME=$PWD/empty LC_ALL=en_US.UTF-8 $FISH -c 'set -Ux LC_ALL en_US.UTF-8'
+env -u XDG_CONFIG_HOME HOME=$PWD/empty LC_ALL=en_US.UTF-8 $FISH -c 'set -S LC_ALL'
+# CHECK: $LC_ALL: set in universal scope, exported, with 1 elements
+# CHECK: $LC_ALL[1]: |en_US.UTF-8|
+# CHECK: $LC_ALL: originally inherited as |en_US.UTF-8|
+
 exit 0

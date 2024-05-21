@@ -91,7 +91,10 @@ fn detect_cfgs(target: &mut Target) {
         }),
     ] {
         match handler(target) {
-            Err(e) => rsconf::warn!("{}: {}", name, e),
+            Err(e) => {
+                rsconf::warn!("{}: {}", name, e);
+                rsconf::declare_cfg(name, false);
+            },
             Ok(enabled) => rsconf::declare_cfg(name, enabled),
         }
     }

@@ -322,6 +322,90 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     result
 }
 
+#[cfg(test)]
+mod path_cd_tests {
+    use super::path_normalize_for_cd;
+    use crate::wchar::L;
+
+    #[test]
+    fn relative_path() {
+        let wd = L!("/home/user/");
+        let path = L!("projects");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/projects"));
+    }
+
+    #[test]
+    fn absolute_path() {
+        let wd = L!("/home/user/");
+        let path = L!("/etc");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/etc"));
+    }
+
+    #[test]
+    fn parent_directory() {
+        let wd = L!("/home/user/projects/");
+        let path = L!("../docs");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/docs"));
+    }
+
+    #[test]
+    fn current_directory() {
+        let wd = L!("/home/user/");
+        let path = L!("./");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user"));
+    }
+
+    #[test]
+    fn nested_parent_directory() {
+        let wd = L!("/home/user/projects/");
+        let path = L!("../../");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/home"));
+    }
+
+    #[test]
+    fn complex_path() {
+        let wd = L!("/home/user/projects/");
+        let path = L!("./../other/projects/./.././../docs");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(
+            path_normalize_for_cd(wd, path),
+            L!("/home/user/other/projects/./.././../docs")
+        );
+    }
+
+    #[test]
+    fn root_directory() {
+        let wd = L!("/");
+        let path = L!("..");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/.."));
+    }
+
+    #[test]
+    fn empty_path() {
+        let wd = L!("/home/user/");
+        let path = L!("");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/home/user/"));
+    }
+
+    #[test]
+    fn trailing_slash() {
+        let wd = L!("/home/user/projects/");
+        let path = L!("docs/");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(
+            path_normalize_for_cd(wd, path),
+            L!("/home/user/projects/docs/")
+        );
+    }
+}
+
 /// Wide character version of dirname().
 pub fn wdirname(mut path: &wstr) -> &wstr {
     // Do not use system-provided dirname (#7837).

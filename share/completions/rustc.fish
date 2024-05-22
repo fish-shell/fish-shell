@@ -1,5 +1,7 @@
 complete -c rustc -s h -l help
 
+# this is a fake change
+
 complete -c rustc -x -l cfg
 complete -c rustc -x -l check-cfg -d "Provide list of expected cfgs for checking"
 complete -c rustc -r -s L -a 'dependency= crate= native= framework= all='

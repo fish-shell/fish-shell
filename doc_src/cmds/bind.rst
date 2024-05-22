@@ -38,7 +38,7 @@ They are:
 - ``end``,
 - ``enter``,
 - ``escape``,
-- ``F1`` through ``F12``.
+- ``f1`` through ``f12``.
 - ``home``,
 - ``insert``,
 - ``minus`` (``-``),

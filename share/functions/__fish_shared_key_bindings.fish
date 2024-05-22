@@ -82,8 +82,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind --preset $argv alt-s 'for cmd in sudo doas please; if command -q $cmd; fish_commandline_prepend $cmd; break; end; end'
 
-    # Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh).
-    bind --preset $argv F1 __fish_man_page
+    # Allow reading manpages by pressing f1 (many GUI applications) or Alt+h (like in zsh).
+    bind --preset $argv f1 __fish_man_page
     $legacy_bind --preset $argv -k f1 __fish_man_page
     bind --preset $argv alt-h __fish_man_page
 

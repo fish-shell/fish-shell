@@ -245,7 +245,8 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
         && !value.contains('-')
         && !value.contains(KEY_SEPARATOR)
         && !KEY_NAMES.iter().any(|(_codepoint, name)| name == value)
-        && value.as_char_slice()[0] != 'F')
+        && value.as_char_slice()[0] != 'F'
+        && !(value.as_char_slice()[0] == 'f' && value.char_at(1).is_ascii_digit()))
         || first < ' '
     {
         // Hack: treat as legacy syntax (meaning: not comma separated) if
@@ -290,13 +291,13 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     modifiers,
                     codepoint,
                 })?
-            } else if codepoint.is_none() && key_name.starts_with('F') && key_name.len() <= 3 {
-                let num = key_name.strip_prefix('F').unwrap();
+            } else if codepoint.is_none() && key_name.starts_with('f') && key_name.len() <= 3 {
+                let num = key_name.strip_prefix('f').unwrap();
                 let codepoint = match fish_wcstoi(num) {
                     Ok(n) if (1..=12).contains(&n) => function_key(u32::try_from(n).unwrap()),
                     _ => {
                         return Err(wgettext_fmt!(
-                            "only F1 through F12 are supported, not 'F%s'",
+                            "only f1 through f12 are supported, not 'f%s'",
                             num,
                         ));
                     }
@@ -391,7 +392,7 @@ impl From<Key> for WString {
                     .contains(&key.codepoint)
                     .then(|| {
                         sprintf!(
-                            "F%d",
+                            "f%d",
                             u32::from(key.codepoint) - u32::from(function_key(1)) + 1
                         )
                     })

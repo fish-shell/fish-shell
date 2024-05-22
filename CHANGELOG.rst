@@ -1141,7 +1141,7 @@ New or improved bindings
 - The binding for :kbd:`",*,y` now uses ``fish_clipboard_copy``, allowing it to support more than just ``xsel``.
 - The :kbd:`ctrl-space` binding can be correctly customised (:issue:`7922`).
 - ``exit`` works correctly in bindings (:issue:`7967`).
-- The :kbd:`F1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
+- The :kbd:`f1` binding, which opens the manual page for the current command, now works around a bug in certain ``less`` versions that fail to clear the screen (:issue:`7863`).
 - The binding for :kbd:`alt-s` now toggles whether ``sudo`` is prepended, even when it took the commandline from history instead of only adding it.
 - The new functions ``fish_commandline_prepend`` and ``fish_commandline_append`` allow toggling the presence of a prefix/suffix on the current commandline. (:issue:`7905`).
 - ``backward-kill-path-component`` :kbd:`ctrl-w`) no longer erases parts of two tokens when the cursor is positioned immediately after ``/``. (:issue:`6258`).
@@ -3547,7 +3547,7 @@ Other notable fixes and improvements
 -  ``type`` has a new ``-q`` option to suppress output (:issue:`1540` and, like
    other shells, ``type -a`` now prints all matches for a command
    (:issue:`261`).
--  Pressing F1 now shows the manual page for the current command
+-  Pressing :kbd:`f1` now shows the manual page for the current command
    (:issue:`1063`).
 -  ``fish_title`` functions have access to the arguments of the
    currently running argument as ``$argv[1]`` (:issue:`1542`).

@@ -327,7 +327,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-d` moves the next word to the :ref:`killring`.
 
-- :kbd:`alt-h` (or :kbd:`F1`) shows the manual page for the current command, if one exists.
+- :kbd:`alt-h` (or :kbd:`f1`) shows the manual page for the current command, if one exists.
 
 - :kbd:`alt-l` lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 

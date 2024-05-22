@@ -70,7 +70,7 @@ function __fish_bind_complete
         printf '%sshift-\tShift modifier…\n' $prefix
         set -l key_names minus comma backspace delete escape \
             enter up down left right pageup pagedown home end insert tab \
-            space F(seq 12)
+            space f(seq 12)
         printf '%s\tNamed key\n' $prefix$key_names
     end
 end

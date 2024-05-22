@@ -1,0 +1,10 @@
+# Configuration file for .github/workflows/labeler.yaml
+
+completions:
+- all:
+  # Must include completions/, but shouldn't include anything outside of share/
+  - changed-files:
+    - any-glob-to-any-file: ['share/completions/*.fish']
+    - all-globs-to-all-files: ['share/**/*.fish']
+  - base-branch: ['master']
+

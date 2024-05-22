@@ -1,0 +1,66 @@
+name: Auto-Label PRs
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  label-and-milestone:
+    runs-on: ubuntu-latest
+    steps:
+    # - name: Checkout repository
+    #   uses: actions/checkout@v2
+
+    - name: Set label and milestone
+      id: set-label-milestone
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const completionsLabel = 'completions';
+          const completionsMilestone = 'fish next-3.x';
+
+          // Get changed files in the pull request
+          const prNumber = context.payload.pull_request.number;
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: prNumber,
+          });
+
+          // Check if any file matches /share/completions/*.fish and no change is outside of /share/
+          const completionsRegex = new RegExp('^share/completions/.*\.fish');
+          const isCompletions = files.some(file => completionsRegex.test(file.filename))
+            && files.every(file => file.filename.startsWith('share/'));
+
+          if (isCompletions) {
+            // Add label to PR
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: [completionsLabel],
+            });
+            console.log(`PR ${prNumber} assigned label "${completionsLabel}"`);
+
+            // Get the list of milestones
+            const { data: milestones } = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            // Find the milestone id
+            const milestone = milestones.find(milestone => milestone.title === completionsMilestone);
+
+            if (milestone) {
+              // Set the milestone for the PR
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                milestone: milestone.number
+              });
+              console.log(`PR ${prNumber} assigned milestone "${completionsMilestone}"`);
+            } else {
+              console.error(`Milestone "${completionsMilestone}" not found`);
+            }
+          }

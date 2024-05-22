@@ -48,10 +48,20 @@ complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a mask -d
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-remove -d 'Remove item from permission store'
 complete -f -c flatpak -n "not __fish_seen_subcommand_from $commands" -a permission-set -d 'Set permissions'
 
-complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(flatpak list --app --columns=application,name)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(flatpak list --columns=application,name)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(flatpak ps --columns=instance,application)"
-complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(flatpak remotes --columns=name,title)"
+# Ancient versions of flatpak seem to assume output is always a tty and emit pretty-formatted output, with
+# a variable number of spaces for alignment, trailing \CR, and ANSI color/formatting sequences. This function is akin
+# to `flatpak $argv[1] $argv[2..]` but sanitizes the output to make it completion-friendly.
+function __fish_flatpak
+    # We can't rely on the first line being the headers because modern flatpak will omit it when running in a "subshell".
+    # Based off our invocations, we expect the first column of actual output to never contain a capitalized letter
+    # (unlike the header row).
+    flatpak $argv | string replace -rf '^([^A-Z]+)(?: +|\t)(.*?)\s*$' '$1\t$2'
+end
+
+complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(__fish_flatpak list --app --columns=application,name)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(__fish_flatpak list --columns=application,name)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(__fish_flatpak ps --columns=instance,application)"
+complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(__fish_flatpak remotes --columns=name,title)"
 
 # Note that "remote-ls" opens an internet connection, so we don't want to complete "install"
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).

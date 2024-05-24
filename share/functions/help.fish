@@ -213,8 +213,8 @@ function help --description 'Show help for the fish shell'
             echo '<meta http-equiv="refresh" content="0;URL=\''$clean_url'\'" />' >$tmpname
             set page_url file://$tmpname
 
-            # For Windows (Cygwin, msys2 and WSL), we need to convert the base help dir to a Windows path before converting it to a file URL
-            # but only if a Windows browser is being used
+            # For Windows (Cygwin, msys2 and WSL), we need to convert the base help dir to a Windows path
+            # before converting it to a file URL, but only if a Windows browser is being used
             if type -q cygpath
                 and string match -qr '(cygstart|\.exe)(\s+|$)' $fish_browser[1]
                 set page_url file://(cygpath -m $tmpname)

@@ -667,15 +667,15 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
         return retval;
     }
 
-    let keyfunc: &dyn Fn(&wstr) -> &wstr = match &opts.key {
-        Some(k) if k == "basename" => &wbasename as _,
-        Some(k) if k == "dirname" => &wdirname as _,
+    let keyfunc: fn(&wstr) -> &wstr = match &opts.key {
+        Some(k) if k == "basename" => wbasename,
+        Some(k) if k == "dirname" => wdirname,
         Some(k) if k == "path" => {
             // Act as if --key hadn't been given.
             opts.key = None;
-            &wbasename as _
+            wbasename
         }
-        None => &wbasename as _,
+        None => wbasename,
         Some(k) => {
             path_error!(streams, "%ls: Invalid sort key '%ls'\n", args[0], k);
             return STATUS_INVALID_ARGS;

@@ -318,5 +318,10 @@ path basename -Z foo bar baz | path sort
 # CHECK: baz
 # CHECK: foo
 
+path basename -E foo.txt /usr/local/foo.bar /foo.tar.gz
+# CHECK: foo
+# CHECK: foo
+# CHECK: foo.tar
+
 path basename --null-out bar baz | string escape
 # CHECK: bar\x00baz\x00

@@ -152,6 +152,9 @@ struct Options<'args> {
     perms: Option<PermFlags>,
 
     arg1: Option<&'args wstr>,
+
+    no_ext_valid: bool,
+    no_ext: bool,
 }
 
 #[inline]
@@ -196,6 +199,9 @@ fn construct_short_opts(opts: &Options) -> WString {
     if opts.unique_valid {
         short_opts.push('u');
     }
+    if opts.no_ext_valid {
+        short_opts.push('E');
+    }
 
     short_opts
 }
@@ -203,7 +209,7 @@ fn construct_short_opts(opts: &Options) -> WString {
 /// Note that several long flags share the same short flag. That is okay. The caller is expected
 /// to indicate that a max of one of the long flags sharing a short flag is valid.
 /// Remember: adjust the completions in share/completions/ when options change
-const LONG_OPTIONS: [WOption<'static>; 10] = [
+const LONG_OPTIONS: [WOption<'static>; 11] = [
     wopt(L!("quiet"), NoArgument, 'q'),
     wopt(L!("null-in"), NoArgument, 'z'),
     wopt(L!("null-out"), NoArgument, 'Z'),
@@ -214,6 +220,7 @@ const LONG_OPTIONS: [WOption<'static>; 10] = [
     wopt(L!("reverse"), NoArgument, 'r'),
     wopt(L!("unique"), NoArgument, 'u'),
     wopt(L!("key"), RequiredArgument, NON_OPTION_CHAR),
+    wopt(L!("no-extension"), NoArgument, 'E'),
 ];
 
 fn parse_opts<'args>(
@@ -324,6 +331,10 @@ fn parse_opts<'args>(
                 opts.relative = true;
                 continue;
             }
+            'E' if opts.no_ext_valid => {
+                opts.no_ext = true;
+                continue;
+            }
             NON_OPTION_CHAR => {
                 assert!(w.woptarg.is_some());
                 opts.key = w.woptarg;
@@ -365,8 +376,10 @@ fn path_transform(
     streams: &mut IoStreams,
     args: &mut [&wstr],
     func: impl Fn(&wstr) -> WString,
+    custom_opts: impl Fn(&mut Options) -> (),
 ) -> Option<c_int> {
     let mut opts = Options::default();
+    custom_opts(&mut opts);
     let mut optind = 0;
     let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
     if retval != STATUS_CMD_OK {
@@ -383,7 +396,12 @@ fn path_transform(
         if arg.is_empty() {
             continue;
         }
-        let transformed = func(&arg);
+        let mut transformed = func(&arg);
+        if opts.no_ext {
+            if let Some(idx) = find_extension(&transformed) {
+                transformed.truncate(idx);
+            }
+        }
         if transformed != arg {
             n_transformed += 1;
             // Return okay if path wasn't already in this form
@@ -403,11 +421,19 @@ fn path_transform(
 }
 
 fn path_basename(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    path_transform(parser, streams, args, |s| wbasename(s).to_owned())
+    path_transform(
+        parser,
+        streams,
+        args,
+        |s| wbasename(s).to_owned(),
+        |opts| {
+            opts.no_ext_valid = true;
+        },
+    )
 }
 
 fn path_dirname(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    path_transform(parser, streams, args, |s| wdirname(s).to_owned())
+    path_transform(parser, streams, args, |s| wdirname(s).to_owned(), |_| {})
 }
 
 fn normalize_help(path: &wstr) -> WString {
@@ -419,7 +445,7 @@ fn normalize_help(path: &wstr) -> WString {
 }
 
 fn path_normalize(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    path_transform(parser, streams, args, normalize_help)
+    path_transform(parser, streams, args, normalize_help, |_| {})
 }
 
 fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {

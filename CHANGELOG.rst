@@ -50,21 +50,23 @@ Notable improvements and fixes
 ------------------------------
 .. _changelog-new-bindings:
 
--  Fish now decodes keyboard input into human-readable key names.
-   To make this for for a wide range of terminals, fish asks terminals to speak several keyboard protocols,
-   including CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
+-  fish asks terminals to speak keyboard protocols CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
    Depending on terminal support, this allows to bind a lot more key combinations, including arbitrary combinations of modifiers :kbd:`ctrl`, :kbd:`alt` and :kbd:`shift`,
-   and telling e.g. :kbd:`ctrl-i` from :kbd:`tab`.
+   and to distinguish e.g. :kbd:`ctrl-i` from :kbd:`tab`.
 
-   This comes with a new syntax for specifying keys to builtin ``bind``, which introduces modifier names and names for some keys that don't have an obvious and printable Unicode code point, instead of relying on byte sequences directly.
+   Additionally, builtin ``bind`` no longer requires specifying keys as byte sequences but learned a human-readable syntax.
+   This includes modifier names, and names for keys like :kbd:`enter` and :kbd:`backspace`.
    For example
-     
-   - ``bind up 'do something'`` binds the up arrow key instead of a two-key sequence ("u" and then "p")
+
+   - ``bind up 'do something'`` binds the up-arrow key instead of a two-key sequence ("u" and then "p")
    - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
 
-   Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long and not a named key and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings. This should cover the majority of bindings in use.
+   Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long, not a named key, and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings.
 - A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
+- Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
+- Special input functions run from bindings via ``commandline -f`` are now applied immediately instead of after the currently executing binding.
+  For example, ``commandline -i foo; commandline | grep foo`` succeeds now.
 - Undo history is no longer truncated after every command but kept for the lifetime of the shell process.
 - The :kbd:`ctrl-r` history search now uses glob syntax (:issue:`10131`).
 - The :kbd:`ctrl-r` history search now operates only on the line or command substitution at cursor, making it easier to combine commands from history.
@@ -77,7 +79,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
-- ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in custom completions (:issue:`10212`).
+- ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in completion scripts (:issue:`10212`).
 - Two new feature flags:
 
   - ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
@@ -91,69 +93,73 @@ Deprecations and removed features
 
   They are available as a preview now, it is our intention to enable them by default in future, and after that eventually make them read-only.
 - Specifying key names as terminfo name (``bind -k``) is deprecated and may be removed in a future version.
-- Flow control -- which if enabled by ``stty ixon ixoff`` allows to pause terminal input with :kbd:`ctrl-s` and resume it with :kbd:`ctrl-q` -- now works only while fish is executing an external command.
+- Flow control -- which, if enabled by ``stty ixon ixoff``, allows to pause terminal input with :kbd:`ctrl-s` and resume it with :kbd:`ctrl-q` -- now works only while fish is executing an external command.
 - When a terminal pastes text into fish using bracketed paste, fish used to switch to a special ``paste`` bind mode.
   This bind mode has been removed. The behavior on paste is currently not meant to be configurable.
-- When fish is stopped or terminated by a signal that cannot be caught (SIGSTOP or SIGKILL), it may leave the terminal in a state where keypresses with modifiers are sent as CSI u sequences instead of traditional control characters or escape sequecnes (that are recognized by bash/readline). If this happens, you can use the ``reset`` command from ``ncurses`` to restore the terminal state.
-- ``fish_key_reader --verbose`` is now ignored, so it no longer shows raw byte values or timing information. Since fish now decodes keys, this should no longer be necessary.
+- When an interactive fish is stopped or terminated by a signal that cannot be caught (SIGSTOP or SIGKILL), it may leave the terminal in a state where keypresses with modifiers are sent as CSI u sequences instead of traditional control characters or escape sequecnes (that are recognized by bash/readline).
+  If this happens, you can use the ``reset`` command from ``ncurses`` to restore the terminal state.
+- ``fish_key_reader --verbose`` is now ignored, so it no longer shows raw byte values or timing information.
+  Raw byte values should no longer be necessary because fish now decodes them to the new human-readable key names for builtin bind.
 
 Scripting improvements
 ----------------------
+- Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
+- A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
+  This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
+- New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
 - ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively`` (:issue:`6575`).
 - Stack trace now shows line numbers for copied functions.
 - ``foo & && bar`` is now a syntax error, like in other shells (:issue:`9911`).
 - ``if -e foo; end`` now prints a more accurate error (:issue:`10000`).
-- Variables in command position that expand to a subcommand keyword are now forbidden to fix a likely user error. For example ``set editor command emacs; $editor`` is no longer allowed (:issue:`10249`).
-- New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
+- Variables in command position that expand to a subcommand keyword are now forbidden to fix a likely user error.
+  For example ``set editor command emacs; $editor`` is no longer allowed (:issue:`10249`).
+- `cd` into a directory that is not readable but accessible (permissions `--x`) is now possible (:issue:`10432`).
 - An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
 - ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
 - ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
 - ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
-- Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
-- A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
-  This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
 - ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
 - Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
 
 Interactive improvements
 ------------------------
+- When using :kbd:`ctrl-x` on Wayland in the VSCode terminal, the clipboard is no longer cleared on :kbd:`ctrl-c`.
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
-- Option completion now uses fuzzy subsequence filtering, as non-option completion does. This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
+- Option completion now uses fuzzy subsequence filtering, just like non-option completion.
+  This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 - Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
-- File name completion usually starts at the last ``:``  or ``=`` within a token.
-  If these characters are actually part of the filename, they will be escaped as ``\:`` and ``\=``,
+- Historically, file name completions are provided after at the last ``:``  or ``=`` within a token.
+  This helps commands like ``rsync --files-from=``.
+  If the ``=`` or ``:`` is actually part of the filename, it will be escaped as ``\:`` and ``\=``,
   and no longer get this special treatment.
   This matches Bash's behavior.
 - Autosuggestions were sometimes not shown after recalling a line from history, which has been fixed (:issue:`10287`).
-- Nonprintable ASCII control characters are now rendered using symbols from Unicode's Control Pictures block (:issue:`5274`).
-- Up-arrow search matches are no longer highlighted with low contrast.
+- Up-arrow search matches -- which are highlighted in reverse video -- are no longer syntax-highlighted, to fix bad contrast with the search match highlighting.
+- Command abbreviations (those with ``--position command`` or without a ``--position``) now also expand after decorators like ``command`` (:issue:`10396`).
+- Abbreviations now expand after process separators like ``;`` and ``|``. This fixes a regression in version 3.6 (:issue:`9730`).
+- When exporting interactively defined functions (using ``type``, ``functions`` or ``funcsave``) the function body is now indented, same as in the interactive command line editor (:issue:`8603`).
+- :kbd:`ctrl-x` (``fish_clipboard_copy``) on multiline commands now includes indentation (:issue:`10437`).
+- :kbd:`ctrl-v` (``fish_clipboard_paste``) now strips ASCII control characters from the pasted text.
+  This is consistent with normal keyboard input (:issue:`5274`).
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
 - Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
 - `fish_vi_cursor` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
-- Command abbreviations (those with ``--position command`` or without a ``--position``) now also expand after decorators like ``command`` (:issue:`10396`).
-- Abbreviations now expand after process separators like ``;`` and ``|``. This fixes a regression in version 3.6 (:issue:`9730`).
-- When exporting interactively defined functions (using ``type``, ``functions`` or ``funcsave``) the function body is now indented, same as in the interactive command line editor (:issue:`8603`).
-- :kbd:`ctrl-x` (``fish_clipboard_copy``) on multiline commands now includes indentation (:issue:`10437`).
-- When using :kbd:`ctrl-x` on Wayland in the VSCode terminal, the clipboard is no longer cleared on :kbd:`ctrl-c`.
 - Measuring a command with `time` now considers the time taken for command substitution (:issue:`9100`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
-- Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
-- Special input functions run from bindings via ``commandline -f`` are now applied immediately instead of after the currently executing binding.
-  For example, ``commandline -f yank -f yank-pop`` inserts the last-but-one entry from the kill ring.
 - When the cursor is on a command that resolves to an executable script, :kbd:`alt-o` will now open that script in your editor (:issue:`10266`).
 - During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager.
   Same for autosuggestions.
-- :kbd:`ctrl-Z` (alias :kbd:`ctrl-shift-z`) is now bound to redo.
+- :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
 - Some improvements to the :kbd:`alt-e` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
-  - Multiline commands are indented before being sent to the editor, which matches the rendering in fish.
+  - Multiline commands are indented before being sent to the editor, which matches how they are displayed in fish.
 - The ``*-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
@@ -169,13 +175,9 @@ New or improved bindings
   - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
 
-Improved prompts
-^^^^^^^^^^^^^^^^
-
 Completions
 ^^^^^^^^^^^
-- Added completions for:
-- Improved some completions
+- Various new completion scripts and numerous updates to existing ones.
 - Generated completions are now stored in `$XDG_CACHE_HOME/fish` or `~/.cache/fish` by default (:issue:`10369`)
 
 Improved terminal support
@@ -192,7 +194,6 @@ Other improvements
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
-- `cd` into a directory that is not readable but accessible (permissions `--x`) is now possible (:issue:`10432`).
 
 .. _rust-packaging:
 

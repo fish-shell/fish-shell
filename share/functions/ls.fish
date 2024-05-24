@@ -46,5 +46,12 @@ function ls --description "List contents of directory"
     test "$TERM_PROGRAM" = Apple_Terminal
     and set -lx CLICOLOR 1
 
+    # If CLICOLOR_FORCE is set, don't colorize `ls` (if piped) because the results
+    # might not be what we want; i.e. `ls --color=auto | cat` might still emit color
+    # output (e.g. under BSD and macOS).
+    # We don't just unset CLICOLOR_FORCE because the user might theoretically *want*
+    # this behavior by explicitly including `--color=auto` in $argv themselves.
+    set -qx CLICOLOR_FORCE && not isatty stdout; and set __fish_ls_color_opt
+
     command $__fish_ls_command $__fish_ls_color_opt $indicators_opt $argv
 end

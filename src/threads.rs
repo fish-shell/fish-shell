@@ -5,15 +5,14 @@ use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::ReaderData;
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::thread::{self, ThreadId};
 use std::time::{Duration, Instant};
 
-impl FloggableDebug for ThreadId {}
+impl FloggableDebug for std::thread::ThreadId {}
 
 /// The thread id of the main thread, as set by [`init()`] at startup.
-static MAIN_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
+static MAIN_THREAD_ID: OnceLock<usize> = OnceLock::new();
 /// Used to bypass thread assertions when testing.
 const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
@@ -55,7 +54,7 @@ static MAIN_THREAD_QUEUE: Mutex<Vec<DebounceCallback>> = Mutex::new(Vec::new());
 /// Initialize some global static variables. Must be called at startup from the main thread.
 pub fn init() {
     MAIN_THREAD_ID
-        .set(thread::current().id())
+        .set(thread_id())
         .expect("threads::init() must only be called once (at startup)!");
 
     extern "C" fn child_post_fork() {
@@ -72,7 +71,7 @@ pub fn init() {
 }
 
 #[inline(always)]
-fn main_thread_id() -> ThreadId {
+fn main_thread_id() -> usize {
     #[cold]
     fn init_not_called() -> ! {
         panic!("threads::init() was not called at startup!");
@@ -84,9 +83,32 @@ fn main_thread_id() -> ThreadId {
     }
 }
 
+/// Get's a fish-specific thread id. Rust's own `std::thread::current().id()` is slow, allocates
+/// via `Arc`, and uses as Mutex on 32-bit platforms (or those without a 64-bit atomic CAS).
+#[inline(always)]
+fn thread_id() -> usize {
+    static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(0);
+    // It would be much nicer and faster to use #[thread_local] here, but that's nightly only.
+    // This is still faster than going through Thread::thread_id(); it's something like 15ns
+    // for each `Thread::thread_id()` call vs 1-2 ns with `#[thread_local]` and 2-4ns with
+    // `thread_local!`.
+    thread_local! {
+        static THREAD_ID: usize = THREAD_COUNTER.fetch_add(1, Ordering::Relaxed);
+    }
+    THREAD_ID.with(|id| *id)
+}
+
+#[test]
+fn test_thread_ids() {
+    let start_thread_id = thread_id();
+    assert_eq!(start_thread_id, thread_id());
+    let spawned_thread_id = std::thread::spawn(|| thread_id()).join();
+    assert_ne!(start_thread_id, spawned_thread_id.unwrap());
+}
+
 #[inline(always)]
 pub fn is_main_thread() -> bool {
-    thread::current().id() == main_thread_id()
+    thread_id() == main_thread_id()
 }
 
 #[inline(always)]
@@ -167,7 +189,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
 
     let result = match std::thread::Builder::new().spawn(callback) {
         Ok(handle) => {
-            let thread_id = handle.thread().id();
+            let thread_id = thread_id();
             FLOG!(iothread, "rust thread", thread_id, "spawned");
             // Drop the handle to detach the thread
             drop(handle);

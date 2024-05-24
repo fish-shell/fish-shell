@@ -13,6 +13,11 @@ fish 3.8.0 (released ???)
    10246 10251 10260 10267 10281 10347 10366 10368 10370 10371 10263 10270 10272 10276 10277
    10278 10279 10291 10293 10305 10306 10309 10316 10317 10327 10328 10329 10330 10336 10340
    10345 10346 10353 10354 10356 10372 10373 3299 10360 10359
+   2037 2037 3017 3018 3162 4865 5284 5991 6981 6996 7172 9751 9893 10241 10254 10268 10290 10307
+   10308 10321 10338 10348 10349 10355 10357 10379 10381 10388 10389 10390 10395 10398 10400 10403
+   10404 10407 10408 10409 10411 10412 10417 10418 10427 10429 10438 10439 10440 10441 10442 10443
+   10445 10448 10450 10451 10456 10457 10462 10463 10464 10466 10467 10474 10481 10490 10492 10494
+   10499 10503 10505 10508 10509 10510 10511 10512 10513 10518
 
 The entirety of fish's C++ code has been ported to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
@@ -109,6 +114,8 @@ Scripting improvements
 - A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
   This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
 - ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
+- Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
+- Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
 
 Interactive improvements
 ------------------------
@@ -147,12 +154,13 @@ New or improved bindings
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
   - Multiline commands are indented before being sent to the editor, which matches the rendering in fish.
-- The ``-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
+- The ``*-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - `history-prefix-search-{backward,forward}` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The :kbd:`E` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 - If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, :kbd:`shift-enter` now inserts a newline instead of executing the command line.
+- New special input functions `forward-char-passive` and `backward-char-passive` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
@@ -177,13 +185,14 @@ Improved terminal support
 - Fish now reports the working directory (via OSC 7) unconditionally instead of only for some terminals (:issue:`9955`).
 - Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
 - Focus reporting in tmux is no longer disabled on the first prompt.
+- Focus reporting is now disabled during execution of bind commands (:issue:`6942`).
 
 Other improvements
 ------------------
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
-- `cd` into a directory that is not readable but accessile (permissions `--x`) is now possible (:issue:`10432`).
+- `cd` into a directory that is not readable but accessible (permissions `--x`) is now possible (:issue:`10432`).
 
 .. _rust-packaging:
 
@@ -192,7 +201,7 @@ For distributors
 
 Fish has been ported to Rust. That means the dependencies have changed.
 
-It now requires Rust 1.67 at least.
+It now requires Rust 1.70 at least.
 
 CMake remains for now because cargo is unable to install the many asset files that fish needs. The minimum required CMake version has increased to 3.19.
 

@@ -24,10 +24,7 @@ impl FloggableDebug for ThreadId {}
 /// The thread id of the main thread, as set by [`init()`] at startup.
 static mut MAIN_THREAD_ID: Option<ThreadId> = None;
 /// Used to bypass thread assertions when testing.
-#[cfg(not(test))]
-static THREAD_ASSERTS_CFG_FOR_TESTING: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
-static THREAD_ASSERTS_CFG_FOR_TESTING: AtomicBool = AtomicBool::new(true);
+const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
 static IS_FORKED_PROC: AtomicBool = AtomicBool::new(false);
 
@@ -111,7 +108,7 @@ pub fn assert_is_main_thread() {
         panic!("Function is not running on the main thread!");
     }
 
-    if !is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING.load(Ordering::Relaxed) {
+    if !is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING {
         not_main_thread();
     }
 }
@@ -123,7 +120,7 @@ pub fn assert_is_background_thread() {
         panic!("Function is not allowed to be called on the main thread!");
     }
 
-    if is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING.load(Ordering::Relaxed) {
+    if is_main_thread() && !THREAD_ASSERTS_CFG_FOR_TESTING {
         not_background_thread();
     }
 }

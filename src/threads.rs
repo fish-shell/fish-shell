@@ -3,26 +3,17 @@
 
 use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::ReaderData;
-use once_cell::race::OnceBox;
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, ThreadId};
 use std::time::{Duration, Instant};
 
 impl FloggableDebug for ThreadId {}
 
-// We don't want to use a full-blown Lazy<T> for the cached main thread id, but we can't use
-// AtomicU64 since std::thread::ThreadId::as_u64() is a nightly-only feature (issue #67939,
-// thread_id_value). We also can't safely transmute `ThreadId` to `NonZeroU64` because there's no
-// guarantee that's what the underlying type will always be on all platforms and in all cases,
-// `ThreadId` isn't marked `#[repr(transparent)]`. We could generate our own thread-local value, but
-// `#[thread_local]` is nightly-only while the stable `thread_local!()` macro doesn't generate
-// efficient/fast/low-overhead code.
-
 /// The thread id of the main thread, as set by [`init()`] at startup.
-static mut MAIN_THREAD_ID: Option<ThreadId> = None;
+static MAIN_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
 /// Used to bypass thread assertions when testing.
 const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
@@ -37,7 +28,7 @@ const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
 
 /// The iothreads [`ThreadPool`] singleton. Used to lift I/O off of the main thread and used for
 /// completions, etc.
-static IO_THREAD_POOL: OnceBox<Mutex<ThreadPool>> = OnceBox::new();
+static IO_THREAD_POOL: OnceLock<Mutex<ThreadPool>> = OnceLock::new();
 
 /// The event signaller singleton used for completions and queued main thread requests.
 static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
@@ -63,12 +54,9 @@ static MAIN_THREAD_QUEUE: Mutex<Vec<DebounceCallback>> = Mutex::new(Vec::new());
 
 /// Initialize some global static variables. Must be called at startup from the main thread.
 pub fn init() {
-    unsafe {
-        if MAIN_THREAD_ID.is_some() {
-            panic!("threads::init() must only be called once (at startup)!");
-        }
-        MAIN_THREAD_ID = Some(thread::current().id());
-    }
+    MAIN_THREAD_ID
+        .set(thread::current().id())
+        .expect("threads::init() must only be called once (at startup)!");
 
     extern "C" fn child_post_fork() {
         IS_FORKED_PROC.store(true, Ordering::Relaxed);
@@ -79,7 +67,7 @@ pub fn init() {
     }
 
     IO_THREAD_POOL
-        .set(Box::new(Mutex::new(ThreadPool::new(1, IO_MAX_THREADS))))
+        .set(Mutex::new(ThreadPool::new(1, IO_MAX_THREADS)))
         .expect("IO_THREAD_POOL has already been initialized!");
 }
 
@@ -90,9 +78,9 @@ fn main_thread_id() -> ThreadId {
         panic!("threads::init() was not called at startup!");
     }
 
-    match unsafe { MAIN_THREAD_ID } {
+    match MAIN_THREAD_ID.get() {
         None => init_not_called(),
-        Some(id) => id,
+        Some(id) => *id,
     }
 }
 

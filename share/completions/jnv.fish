@@ -1,0 +1,7 @@
+complete -c jnv -s e -l edit-mode -ra "insert overwrite" -d "Edit mode for the interface. [default: insert]"
+complete -c jnv -s i -l indent -r -d "Number of spaces used for indentation in the visualized data. [default: 2]"
+complete -c jnv -s n -l no-hint -d "Disables the display of hints."
+complete -c jnv -s d -l expand-depth -r -d "Initial depth to which JSON nodes are expanded in the visualization. [default: 3]"
+complete -c jnv -s l -l suggestion-list-length -r -d "Number of suggestions visible in the list. [default: 3]"
+complete -c jnv -s h -l help -f -d "Print help (see a summary with '-h')"
+complete -c jnv -s V -l version -f -d "Print version"

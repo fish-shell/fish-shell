@@ -1,5 +1,5 @@
 complete -c csvlens -s d -l delimiter -r -d "Delimiter character (comma by default) or 'auto' to auto-detect the delimiter"
-complete -c csvlens -s -t -l tab-separated -d "Use tab separation. Shortcut for -d '\t'"
+complete -c csvlens -s t -l tab-separated -d "Use tab separation. Shortcut for -d '\t'"
 complete -c csvlens -l no-headers -d "Do not interpret the first row as headers"
 complete -c csvlens -l columns -r -d "Use this regex to select columns to display by default"
 complete -c csvlens -l filter -r -d "Use this regex to filter rows to display by default"

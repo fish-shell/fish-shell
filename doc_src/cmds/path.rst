@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    path basename GENERAL_OPTIONS [PATH ...]
+    path basename GENERAL_OPTIONS [(-E | --no-extension)] [PATH ...]
     path dirname GENERAL_OPTIONS  [PATH ...]
     path extension GENERAL_OPTIONS [PATH ...]
     path filter GENERAL_OPTIONS [-v | --invert]
@@ -55,9 +55,11 @@ The following subcommands are available.
 
 ::
 
-    path basename [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
+    path basename [-E | --no-extension] [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
 ``path basename`` returns the last path component of the given path, by removing the directory prefix and removing trailing slashes. In other words, it is the part that is not the dirname. For files you might call it the "filename".
+
+If the ``-E`` or ``---no-extension`` option is used and the base name contained a period, the path is returned with the extension (or the last extension) removed, i.e. the "filename" without an extension (akin to calling ``path change-extension "" (path basename $path)``).
 
 It returns 0 if there was a basename, i.e. if the path wasn't empty or just slashes.
 

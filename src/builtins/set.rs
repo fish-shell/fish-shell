@@ -940,10 +940,9 @@ fn set_internal(
         // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
         for ind in &split.indexes {
             if *ind <= 0 {
-                streams.err.append(wgettext_fmt!(
-                    "%ls: array index out of bounds\n",
-                    cmd
-                ));
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: array index out of bounds\n", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return STATUS_INVALID_ARGS;
             }

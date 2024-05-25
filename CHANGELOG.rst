@@ -103,6 +103,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- for-loops will no longer remember local variables from the previous iteration (:issue:`10525`).
 - Add ``history append`` subcommand to append a command to the history without executing it (:issue:`4506`).
 - A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
   This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)

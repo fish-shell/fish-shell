@@ -937,6 +937,17 @@ fn set_internal(
 
     // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
     if !split.indexes.is_empty() {
+        // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
+        for ind in &split.indexes {
+            if *ind <= 0 {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: array index out of bounds\n",
+                    cmd
+                ));
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
         // Append and prepend are disallowed.
         if opts.append || opts.prepend {
             streams.err.append(wgettext_fmt!(

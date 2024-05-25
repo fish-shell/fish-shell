@@ -990,7 +990,6 @@ impl<'a> ParseExecutionContext {
         assert!(retval == EnvStackSetResult::ENV_OK);
 
         trace_if_enabled_with_args(ctx.parser(), L!("for"), &arguments);
-        let fb = ctx.parser().push_block(Block::for_block());
 
         // We fire the same event over and over again, just construct it once.
         let evt = Event::variable_set(for_var_name.clone());
@@ -1014,7 +1013,11 @@ impl<'a> ParseExecutionContext {
             event::fire(ctx.parser(), evt.clone());
 
             ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
+
+            // Push and pop the block again and again to clear variables
+            let fb = ctx.parser().push_block(Block::for_block());
             self.run_job_list(ctx, block_contents, Some(fb));
+            ctx.parser().pop_block(fb);
 
             if self.check_end_execution(ctx) == Some(EndExecutionReason::control_flow) {
                 // Handle break or continue.
@@ -1026,7 +1029,6 @@ impl<'a> ParseExecutionContext {
             }
         }
 
-        ctx.parser().pop_block(fb);
         trace_if_enabled(ctx.parser(), L!("end for"));
         ret
     }

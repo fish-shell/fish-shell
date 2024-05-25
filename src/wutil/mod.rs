@@ -3,6 +3,7 @@ pub mod encoding;
 pub mod errors;
 pub mod fileid;
 pub mod gettext;
+mod hex_float;
 pub mod printf;
 #[cfg(test)]
 mod tests;

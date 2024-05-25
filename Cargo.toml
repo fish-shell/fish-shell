@@ -21,7 +21,6 @@ default-run = "fish"
 [dependencies]
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }
 fast-float = { git = "https://github.com/fish-shell/fast-float-rust", branch="fish" }
-hexponent = { git = "https://github.com/fish-shell/hexponent", branch="fish" }
 printf-compat = { git = "https://github.com/fish-shell/printf-compat.git", branch="fish" }
 
 bitflags = "2.4.0"

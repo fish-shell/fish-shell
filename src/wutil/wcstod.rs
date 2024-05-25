@@ -1,4 +1,5 @@
 use super::errors::Error;
+use super::hex_float;
 use crate::wchar::IntoCharIter;
 use fast_float::parse_partial_iter;
 
@@ -22,14 +23,14 @@ where
         }
     }
 
-    // If it's a hex float, use hexponent.
+    // If it's a hex float, parse it.
     if is_hex_float(chars.clone()) {
-        let mut n = 0;
-        let res = hexponent::parse_hex_float(chars, decimal_sep, &mut n);
-        if res.is_ok() {
-            *consumed = whitespace_skipped + n;
-        }
-        return res.map_err(hexponent_error);
+        return if let Ok((f, amt)) = hex_float::parse_hex_float(chars, decimal_sep) {
+            *consumed = whitespace_skipped + amt;
+            Ok(f)
+        } else {
+            Err(Error::InvalidChar)
+        };
     }
 
     let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
@@ -97,17 +98,6 @@ pub fn is_hex_float<Chars: Iterator<Item = char>>(mut chars: Chars) -> bool {
     match chars.next() {
         Some(c) => c.is_ascii_hexdigit(),
         None => false,
-    }
-}
-
-// Convert a a hexponent error to our error type.
-fn hexponent_error(e: hexponent::ParseError) -> Error {
-    use hexponent::ParseErrorKind;
-    match e.kind {
-        ParseErrorKind::MissingPrefix
-        | ParseErrorKind::MissingDigits
-        | ParseErrorKind::MissingExponent => Error::InvalidChar,
-        ParseErrorKind::ExponentOverflow => Error::Overflow,
     }
 }
 

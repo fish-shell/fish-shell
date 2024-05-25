@@ -45,7 +45,6 @@ pub struct SyntaxError;
 /// A `Result` containing either:
 /// - A tuple of the parsed floating-point number (`f64`) and the number of characters consumed (`usize`), or
 /// - A `SyntaxError` if the parsing fails.
-#[allow(dead_code)]
 pub fn parse_hex_float(
     chars: impl Iterator<Item = char>,
     decimal_sep: char,

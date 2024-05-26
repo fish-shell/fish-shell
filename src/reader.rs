@@ -70,10 +70,10 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input::Inputter;
-use crate::input_common::terminal_protocols_disable_ifn;
-use crate::input_common::IS_TMUX;
-use crate::input_common::{terminal_protocols_enable_ifn, CharEvent, CharInputStyle, ReadlineCmd};
+use crate::input_common::{
+    terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
+    InputData, ReadlineCmd, IS_TMUX,
+};
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
@@ -496,8 +496,9 @@ pub struct ReaderData {
     /// The representation of the current screen contents.
     screen: Screen,
 
-    /// The source of input events.
-    inputter: Inputter,
+    /// Data associated with input events.
+    /// This is made public so that InputEventQueuer can be implemented on us.
+    pub input_data: InputData,
     queued_repaint: bool,
     /// The history.
     history: Arc<History>,
@@ -880,7 +881,7 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     if data.conf.autosuggest_ok != enable {
         data.conf.autosuggest_ok = enable;
         data.force_exec_prompt_and_repaint = true;
-        data.inputter
+        data.input_data
             .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
     }
 }
@@ -894,7 +895,7 @@ pub fn reader_schedule_prompt_repaint() {
     };
     if !data.force_exec_prompt_and_repaint {
         data.force_exec_prompt_and_repaint = true;
-        data.inputter
+        data.input_data
             .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
     }
 }
@@ -914,7 +915,7 @@ pub fn reader_execute_readline_cmd(ch: CharEvent) {
             data.queued_repaint = true;
         }
         if data.queued_repaint {
-            data.inputter.queue_char(ch);
+            data.input_data.queue_char(ch);
             return;
         }
         if data.rls.is_none() {
@@ -1074,7 +1075,7 @@ fn reader_received_sighup() -> bool {
 
 impl ReaderData {
     fn new(parser: ParserRef, history: Arc<History>, conf: ReaderConfig) -> Pin<Box<Self>> {
-        let inputter = Inputter::new(parser.clone(), conf.inputfd);
+        let input_data = InputData::new(conf.inputfd);
         Pin::new(Box::new(Self {
             canary: Rc::new(()),
             parser_ref: parser,
@@ -1090,7 +1091,7 @@ impl ReaderData {
             first_prompt: true,
             last_flash: Default::default(),
             screen: Screen::new(),
-            inputter,
+            input_data,
             queued_repaint: false,
             history,
             history_search: Default::default(),
@@ -1162,7 +1163,7 @@ impl ReaderData {
     }
 
     /// Access the parser.
-    fn parser(&self) -> &Parser {
+    pub fn parser(&self) -> &Parser {
         &self.parser_ref
     }
 
@@ -1965,7 +1966,7 @@ impl ReaderData {
 
         while accumulated_chars.len() < limit {
             terminal_protocols_enable_ifn();
-            let evt = self.inputter.read_char();
+            let evt = self.read_char();
             let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);
                 break;
@@ -2607,14 +2608,14 @@ impl ReaderData {
                     } else {
                         self.autosuggestion.clear();
                     }
-                    self.inputter.function_set_status(true);
+                    self.input_data.function_set_status(true);
                     return;
                 }
                 if !self.history_pager_active {
-                    self.inputter.function_set_status(false);
+                    self.input_data.function_set_status(false);
                     return;
                 }
-                self.inputter.function_set_status(true);
+                self.input_data.function_set_status(true);
                 if let Some(completion) =
                     self.pager.selected_completion(&self.current_page_rendering)
                 {
@@ -2708,7 +2709,7 @@ impl ReaderData {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
                     self.force_exec_prompt_and_repaint = true;
-                    self.inputter
+                    self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
                     return;
                 }
@@ -2730,7 +2731,7 @@ impl ReaderData {
                 if c == rl::NextdOrForwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("nextd"));
                     self.force_exec_prompt_and_repaint = true;
-                    self.inputter
+                    self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
                     return;
                 }
@@ -2840,7 +2841,7 @@ impl ReaderData {
                 let success = !self.autosuggestion.is_empty();
                 self.autosuggestion.clear();
                 // Return true if we had a suggestion to clear.
-                self.inputter.function_set_status(success);
+                self.input_data.function_set_status(success);
             }
             rl::AcceptAutosuggestion => {
                 self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
@@ -3073,10 +3074,10 @@ impl ReaderData {
                     _ => unreachable!(),
                 };
                 let (elt, _el) = self.active_edit_line();
-                if let Some(target) = self.inputter.function_pop_arg() {
+                if let Some(target) = self.function_pop_arg() {
                     let success = self.jump(direction, precision, elt, target);
 
-                    self.inputter.function_set_status(success);
+                    self.input_data.function_set_status(success);
                 }
             }
             rl::RepeatJump => {
@@ -3092,7 +3093,7 @@ impl ReaderData {
                     );
                 }
 
-                self.inputter.function_set_status(success);
+                self.input_data.function_set_status(success);
             }
             rl::ReverseRepeatJump => {
                 let (elt, _el) = self.active_edit_line();
@@ -3111,13 +3112,13 @@ impl ReaderData {
 
                 self.last_jump_direction = original_dir;
 
-                self.inputter.function_set_status(success);
+                self.input_data.function_set_status(success);
             }
             rl::ExpandAbbr => {
                 if self.expand_abbreviation_at_cursor(1) {
-                    self.inputter.function_set_status(true);
+                    self.input_data.function_set_status(true);
                 } else {
-                    self.inputter.function_set_status(false);
+                    self.input_data.function_set_status(false);
                 }
             }
             rl::Undo | rl::Redo => {

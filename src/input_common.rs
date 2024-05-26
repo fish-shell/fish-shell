@@ -508,12 +508,58 @@ fn parse_mask(mask: u32) -> Modifiers {
     }
 }
 
+// A data type used by the input machinery.
+pub struct InputData {
+    // The file descriptor from which we read input, often stdin.
+    pub in_fd: RawFd,
+
+    // Queue of unread characters.
+    pub queue: VecDeque<CharEvent>,
+
+    // The current paste buffer, if any.
+    pub paste_buffer: Option<Vec<u8>>,
+
+    // The arguments to the most recently invoked input function.
+    pub input_function_args: Vec<char>,
+
+    // The return status of the most recently invoked input function.
+    pub function_status: bool,
+
+    // Transient storage to avoid repeated allocations.
+    pub event_storage: Vec<CharEvent>,
+}
+
+impl InputData {
+    /// Construct from the fd from which to read.
+    pub fn new(in_fd: RawFd) -> Self {
+        Self {
+            in_fd,
+            queue: VecDeque::new(),
+            paste_buffer: None,
+            input_function_args: Vec::new(),
+            function_status: false,
+            event_storage: Vec::new(),
+        }
+    }
+
+    /// Enqueue a char event to the queue of unread characters that input_readch will return before
+    /// actually reading from fd 0.
+    pub fn queue_char(&mut self, ch: CharEvent) {
+        self.queue.push_back(ch);
+    }
+
+    /// Sets the return status of the most recently executed input function.
+    pub fn function_set_status(&mut self, status: bool) {
+        self.function_status = status;
+    }
+}
+
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        self.get_queue_mut().pop_front()
+        self.get_input_data_mut().queue.pop_front()
     }
 
     /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
@@ -1053,12 +1099,14 @@ pub trait InputEventQueuer {
         None
     }
 
-    /// Return our queue. These are "abstract" methods to be implemented by concrete types.
-    fn get_queue(&self) -> &VecDeque<CharEvent>;
-    fn get_queue_mut(&mut self) -> &mut VecDeque<CharEvent>;
+    /// Return the fd from which to read.
+    fn get_in_fd(&self) -> RawFd {
+        self.get_input_data().in_fd
+    }
 
-    /// Return the fd corresponding to stdin.
-    fn get_in_fd(&self) -> RawFd;
+    /// Return the input data. This is to be implemented by the concrete type.
+    fn get_input_data(&self) -> &InputData;
+    fn get_input_data_mut(&mut self) -> &mut InputData;
 
     // Support for "bracketed paste"
     // The way it works is that we acknowledge our support by printing
@@ -1073,28 +1121,44 @@ pub trait InputEventQueuer {
     // (though it only supports it since then, it seems to be the last term to gain support).
     //
     // See http://thejh.net/misc/website-terminal-copy-paste.
-    fn paste_start_buffering(&mut self);
-    fn paste_is_buffering(&self) -> bool;
-    fn paste_push_char(&mut self, _b: u8) {}
-    fn paste_commit(&mut self);
+
+    fn paste_start_buffering(&mut self) {
+        self.get_input_data_mut().paste_buffer = Some(Vec::new());
+    }
+
+    fn paste_is_buffering(&self) -> bool {
+        self.get_input_data().paste_buffer.is_some()
+    }
+
+    fn paste_push_char(&mut self, b: u8) {
+        self.get_input_data_mut()
+            .paste_buffer
+            .as_mut()
+            .unwrap()
+            .push(b)
+    }
+
+    fn paste_commit(&mut self) {
+        self.get_input_data_mut().paste_buffer = None;
+    }
 
     /// Enqueue a character or a readline function to the queue of unread characters that
     /// readch will return before actually reading from fd 0.
     fn push_back(&mut self, ch: CharEvent) {
-        self.get_queue_mut().push_back(ch);
+        self.get_input_data_mut().queue.push_back(ch);
     }
 
     /// Add a character or a readline function to the front of the queue of unread characters.  This
     /// will be the next character returned by readch.
     fn push_front(&mut self, ch: CharEvent) {
-        self.get_queue_mut().push_front(ch);
+        self.get_input_data_mut().queue.push_front(ch);
     }
 
     /// Find the first sequence of non-char events, and promote them to the front.
     fn promote_interruptions_to_front(&mut self) {
         // Find the first sequence of non-char events.
         // EOF is considered a char: we don't want to pull EOF in front of real chars.
-        let queue = self.get_queue_mut();
+        let queue = &mut self.get_input_data_mut().queue;
         let is_char = |evt: &CharEvent| evt.is_char() || evt.is_eof();
         // Find the index of the first non-char event.
         // If there's none, we're done.
@@ -1120,7 +1184,7 @@ pub trait InputEventQueuer {
         I: IntoIterator<Item = CharEvent>,
         I::IntoIter: DoubleEndedIterator,
     {
-        let queue = self.get_queue_mut();
+        let queue = &mut self.get_input_data_mut().queue;
         let iter = evts.into_iter().rev();
         queue.reserve(iter.size_hint().0);
         for evt in iter {
@@ -1130,7 +1194,7 @@ pub trait InputEventQueuer {
 
     /// Forget all enqueued readline events in the front of the queue.
     fn drop_leading_readline_events(&mut self) {
-        let queue = self.get_queue_mut();
+        let queue = &mut self.get_input_data_mut().queue;
         while let Some(evt) = queue.front() {
             if evt.is_readline_or_command() {
                 queue.pop_front();
@@ -1145,46 +1209,43 @@ pub trait InputEventQueuer {
     fn prepare_to_select(&mut self) {}
 
     /// Called when select() is interrupted by a signal.
-    fn select_interrupted(&mut self);
+    fn select_interrupted(&mut self) {}
 
     /// Override point for when when select() is interrupted by the universal variable notifier.
     /// The default does nothing.
     fn uvar_change_notified(&mut self) {}
 
+    /// Reset the function status.
+    fn get_function_status(&self) -> bool {
+        self.get_input_data().function_status
+    }
+
     /// Return if we have any lookahead.
     fn has_lookahead(&self) -> bool {
-        !self.get_queue().is_empty()
+        !self.get_input_data().queue.is_empty()
     }
 }
 
 /// A simple, concrete implementation of InputEventQueuer.
 pub struct InputEventQueue {
-    queue: VecDeque<CharEvent>,
-    in_fd: RawFd,
-    is_in_bracketed_paste: bool,
+    data: InputData,
 }
 
 impl InputEventQueue {
     pub fn new(in_fd: RawFd) -> InputEventQueue {
         InputEventQueue {
-            queue: VecDeque::new(),
-            in_fd,
-            is_in_bracketed_paste: false,
+            data: InputData::new(in_fd),
         }
     }
 }
 
 impl InputEventQueuer for InputEventQueue {
-    fn get_queue(&self) -> &VecDeque<CharEvent> {
-        &self.queue
+    fn get_input_data(&self) -> &InputData {
+        &self.data
     }
 
-    fn get_queue_mut(&mut self) -> &mut VecDeque<CharEvent> {
-        &mut self.queue
-    }
-
-    fn get_in_fd(&self) -> RawFd {
-        self.in_fd
+    fn get_input_data_mut(&mut self) -> &mut InputData {
+        &mut self.data
     }
 
     fn select_interrupted(&mut self) {
@@ -1194,15 +1255,5 @@ impl InputEventQueuer for InputEventQueue {
                 self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));
             }
         }
-    }
-
-    fn paste_start_buffering(&mut self) {
-        self.is_in_bracketed_paste = true;
-    }
-    fn paste_is_buffering(&self) -> bool {
-        self.is_in_bracketed_paste
-    }
-    fn paste_commit(&mut self) {
-        self.is_in_bracketed_paste = false;
     }
 }

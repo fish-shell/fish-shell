@@ -43,8 +43,8 @@ fn test_complete() {
         },
     };
 
-    let parser = Parser::principal_parser().shared();
-    let ctx = OperationContext::test_only_foreground(parser.clone(), &vars, Box::new(no_cancel));
+    let parser = Parser::principal_parser();
+    let ctx = OperationContext::test_only_foreground(parser, &vars, Box::new(no_cancel));
 
     let do_complete = |cmd: &wstr, flags: CompletionRequestOptions| complete(cmd, flags, &ctx).0;
 
@@ -489,7 +489,7 @@ fn test_autosuggest_suggest_special() {
                 L!($command),
                 CompletionRequestOptions::default(),
                 &OperationContext::foreground(
-                    Parser::principal_parser().shared(),
+                    Parser::principal_parser(),
                     Box::new(no_cancel),
                     EXPANSION_LIMIT_DEFAULT,
                 ),

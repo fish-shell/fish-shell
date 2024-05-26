@@ -614,7 +614,7 @@ fn test_eval_recursion_detection() {
     let _cleanup = test_init();
     // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
     // the principal parser because we cannot yet execute jobs on other parsers.
-    let parser = Parser::principal_parser().shared();
+    let parser = Parser::principal_parser();
     parser.eval(
         L!("function recursive ; recursive ; end ; recursive; "),
         &IoChain::new(),
@@ -665,7 +665,7 @@ fn test_eval_illegal_exit_code() {
 #[serial]
 fn test_eval_empty_function_name() {
     let _cleanup = test_init();
-    let parser = Parser::principal_parser().shared();
+    let parser = Parser::principal_parser();
     parser.eval(
         L!("function '' ; echo fail; exit 42 ; end ; ''"),
         &IoChain::new(),
@@ -676,7 +676,7 @@ fn test_eval_empty_function_name() {
 #[serial]
 fn test_expand_argument_list() {
     let _cleanup = test_init();
-    let parser = Parser::principal_parser().shared();
+    let parser = Parser::principal_parser();
     let comps: Vec<WString> = Parser::expand_argument_list(
         L!("alpha 'beta gamma' delta"),
         ExpandFlags::default(),

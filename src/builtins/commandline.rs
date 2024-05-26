@@ -143,7 +143,7 @@ fn write_part(
                     &mut args,
                     ExpandFlags::SKIP_CMDSUBST,
                     &OperationContext::foreground(
-                        parser.shared(),
+                        parser,
                         Box::new(no_cancel),
                         COMMANDLINE_TOKENS_MAX_EXPANSION,
                     ),

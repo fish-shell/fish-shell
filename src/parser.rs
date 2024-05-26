@@ -1134,9 +1134,9 @@ impl Parser {
     }
 
     /// Return the operation context for this parser.
-    pub fn context(&self) -> OperationContext<'static> {
+    pub fn context(&self) -> OperationContext<'_> {
         OperationContext::foreground(
-            self.shared(),
+            self,
             Box::new(|| signal_check_cancel() != 0),
             EXPANSION_LIMIT_DEFAULT,
         )

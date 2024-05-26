@@ -27,7 +27,7 @@ fn expand_test_impl(
     let mut errors = ParseErrorList::new();
     let pwd = PwdEnvironment::default();
     let ctx = OperationContext::test_only_foreground(
-        Parser::principal_parser().shared(),
+        Parser::principal_parser(),
         &pwd,
         Box::new(no_cancel),
     );
@@ -358,14 +358,13 @@ fn test_expand_overflow() {
     let vals: Vec<WString> = (1..=64).map(|i| i.to_wstring()).collect();
     let expansion = WString::from_str(&str::repeat("$bigvar", 64));
 
-    let parser = Parser::principal_parser().shared();
+    let parser = Parser::principal_parser();
     parser.vars().push(true);
     let set = parser.vars().set(L!("bigvar"), EnvMode::LOCAL, vals);
     assert_eq!(set, EnvStackSetResult::Ok);
 
     let mut errors = ParseErrorList::new();
-    let ctx =
-        OperationContext::foreground(parser.clone(), Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
+    let ctx = OperationContext::foreground(parser, Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
 
     // We accept only 1024 completions.
     let mut output = CompletionReceiver::new(1024);

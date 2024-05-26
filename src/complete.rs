@@ -1868,7 +1868,7 @@ impl<'ctx> Completer<'ctx> {
     fn apply_var_assignments<'a>(
         &mut self,
         var_assignments: impl IntoIterator<Item = &'a wstr>,
-    ) -> Option<ScopeGuard<(), impl FnOnce(&mut ())>> {
+    ) -> Option<ScopeGuard<(), impl FnOnce(&mut ()) + 'ctx>> {
         if !self.ctx.has_parser() {
             return None;
         }
@@ -1923,8 +1923,8 @@ impl<'ctx> Completer<'ctx> {
             }
         }
 
-        let parser_ref = self.ctx.parser().shared();
-        Some(ScopeGuard::new((), move |_| parser_ref.pop_block(block)))
+        let parser = self.ctx.parser();
+        Some(ScopeGuard::new((), move |_| parser.pop_block(block)))
     }
 
     /// Complete a command by invoking user-specified completions.

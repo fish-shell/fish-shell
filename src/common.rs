@@ -1485,7 +1485,6 @@ pub fn fish_setlocale() {
             Ordering::Relaxed,
         );
     }
-    PROFILING_ACTIVE.store(true);
 }
 
 /// Test if the character can be encoded using the current locale.

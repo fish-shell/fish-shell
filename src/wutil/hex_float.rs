@@ -363,7 +363,10 @@ mod tests {
 
         // The mantissa and exponent can cancel each other out!
         assert_eq!(parse(&format!("0x1{:0<512}p-2000", "")), 2.0f64.powi(48));
-        assert_eq!(parse(&format!("-0x1{:0<512}p-2000", "")), -(2.0f64.powi(48)));
+        assert_eq!(
+            parse(&format!("-0x1{:0<512}p-2000", "")),
+            -(2.0f64.powi(48))
+        );
     }
 
     #[test]

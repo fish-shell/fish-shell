@@ -25,9 +25,7 @@
 // This version has been altered and ported to C++, then to Rust, for inclusion in fish.
 
 use std::{
-    f64::{
-        consts::{E, PI, TAU},
-    },
+    f64::consts::{E, PI, TAU},
     fmt::Debug,
     ops::{BitAnd, BitOr, BitXor},
 };

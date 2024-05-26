@@ -227,7 +227,7 @@ mod tests {
     // Helper to parse a float, expecting to succeed and consume the entire string.
     fn parse(input: &str) -> f64 {
         let res = parse_hex_float(input.chars(), '.')
-            .expect(format!("Failed to parse {}", input).as_str());
+            .unwrap_or_else(|_| panic!("Failed to parse {}", input));
         // We expect to consume the entire string.
         assert_eq!(res.1, input.len());
         res.0
@@ -320,7 +320,7 @@ mod tests {
     fn test_parse_hex_float_length() {
         let parse_len = |input: &str| {
             let res = parse_hex_float(input.chars(), '.')
-                .expect(format!("Failed to parse {}", input).as_str());
+                .unwrap_or_else(|_| panic!("Failed to parse {}", input));
             res.1
         };
         assert_eq!(parse_len("0x0ZZZ"), 3);
@@ -363,7 +363,7 @@ mod tests {
 
         // The mantissa and exponent can cancel each other out!
         assert_eq!(parse(&format!("0x1{:0<512}p-2000", "")), 2.0f64.powi(48));
-        assert_eq!(parse(&format!("-0x1{:0<512}p-2000", "")), -2.0f64.powi(48));
+        assert_eq!(parse(&format!("-0x1{:0<512}p-2000", "")), -(2.0f64.powi(48)));
     }
 
     #[test]

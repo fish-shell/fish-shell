@@ -1941,13 +1941,13 @@ impl<'ctx> Completer<'ctx> {
         let wants_transient =
             (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
         if wants_transient {
-            let parser_ref = self.ctx.parser().shared();
-            parser_ref
+            let parser = self.ctx.parser();
+            parser
                 .libdata_mut()
                 .transient_commandlines
                 .push(cmdline.to_owned());
             _remove_transient = Some(ScopeGuard::new((), move |_| {
-                parser_ref.libdata_mut().transient_commandlines.pop();
+                parser.libdata_mut().transient_commandlines.pop();
             }));
         }
 

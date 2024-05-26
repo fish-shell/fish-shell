@@ -402,7 +402,7 @@ impl Parser {
     pub fn principal_parser() -> &'static Parser {
         use std::cell::OnceCell;
         static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        &PRINCIPAL
+        PRINCIPAL
             .get()
             // The parser is !Send/!Sync and strictly single-threaded, but we can have
             // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()

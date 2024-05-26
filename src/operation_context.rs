@@ -58,7 +58,7 @@ impl<'a> OperationContext<'a> {
     pub fn empty() -> OperationContext<'static> {
         use std::sync::OnceLock;
         static NULL_ENV: OnceLock<EnvStack> = OnceLock::new();
-        let null_env = NULL_ENV.get_or_init(|| EnvStack::new());
+        let null_env = NULL_ENV.get_or_init(EnvStack::new);
         OperationContext::background(null_env, EXPANSION_LIMIT_DEFAULT)
     }
 

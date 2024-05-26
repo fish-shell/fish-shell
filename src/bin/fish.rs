@@ -84,6 +84,7 @@ fn install(noconfirm: bool) {
     struct Asset;
 
     use std::fs;
+    use std::io::ErrorKind;
     use std::io::Write;
     use std::io::{stderr, stdin};
     let dir = PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR);
@@ -113,6 +114,14 @@ fn install(noconfirm: bool) {
         }
     } else {
         eprintln!("Installing fish's data files to '{}'.", dir.display());
+    }
+
+    // Remove the install directory first, to clean out any removed files.
+    if let Err(err) = fs::remove_dir_all(dir.clone()) {
+        if err.kind() != ErrorKind::NotFound {
+            eprintln!("Removing '{}' failed: {}", dir.display(), err);
+            std::process::exit(1);
+        }
     }
 
     for file in Asset::iter() {

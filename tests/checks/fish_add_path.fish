@@ -25,6 +25,8 @@ function checkpath --on-variable PATH --on-variable fish_user_paths; echo CHECKP
 set PATH $PATH
 # CHECK: CHECKPATH: VARIABLE SET PATH
 fish_add_path -v $tmpdir/bin
+# CHECK: Skipping already included path: {{.*}}
+# CHECK: No paths to add, not setting anything.
 # Nothing happened, so the status failed.
 echo $status
 # CHECK: 1

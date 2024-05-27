@@ -1,6 +1,7 @@
 use crate::arg::ToArg;
 use crate::locale::{Locale, C_LOCALE, EN_US_LOCALE};
 use crate::{sprintf_locale, Error};
+use libc::c_char;
 use std::f64::consts::{E, PI, TAU};
 use std::fmt;
 use widestring::{utf32str, Utf32Str};
@@ -742,10 +743,10 @@ fn test_float_hex_prec() {
     // while libc may not; as a result we may differ in the last digit. So this
     // requires manual comparison.
     let mut c_storage = [0u8; 256];
-    let c_storage_ptr = c_storage.as_mut_ptr() as *mut i8;
+    let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;
     let mut rust_str = String::with_capacity(256);
 
-    let c_fmt = b"%.*a\0".as_ptr() as *const i8;
+    let c_fmt = b"%.*a\0".as_ptr() as *const c_char;
     let mut failed = false;
     for sign in [1.0, -1.0].into_iter() {
         for mut v in [0.0, 0.5, 1.0, 1.5, PI, TAU, E].into_iter() {
@@ -775,14 +776,14 @@ fn test_float_hex_prec() {
     assert!(!failed);
 }
 
-fn test_exhaustive(rust_fmt: &Utf32Str, c_fmt: *const i8) {
+fn test_exhaustive(rust_fmt: &Utf32Str, c_fmt: *const c_char) {
     // "There's only 4 billion floats so test them all."
     // This tests a format string expected to be of the form "%.*g" or "%.*e".
     // That is, it takes a precision and a double.
     println!("Testing {}", rust_fmt);
     let mut rust_str = String::with_capacity(128);
     let mut c_storage = [0u8; 128];
-    let c_storage_ptr = c_storage.as_mut_ptr() as *mut i8;
+    let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;
 
     for i in 0..=u32::MAX {
         if i % 1000000 == 0 {
@@ -820,7 +821,7 @@ fn test_float_g_exhaustive() {
     // To run: cargo test test_float_g_exhaustive --release -- --ignored --nocapture
     test_exhaustive(
         widestring::utf32str!("%.*g"),
-        b"%.*g\0".as_ptr() as *const i8,
+        b"%.*g\0".as_ptr() as *const c_char,
     );
 }
 
@@ -830,7 +831,7 @@ fn test_float_e_exhaustive() {
     // To run: cargo test test_float_e_exhaustive --release -- --ignored --nocapture
     test_exhaustive(
         widestring::utf32str!("%.*e"),
-        b"%.*e\0".as_ptr() as *const i8,
+        b"%.*e\0".as_ptr() as *const c_char,
     );
 }
 
@@ -840,6 +841,6 @@ fn test_float_f_exhaustive() {
     // To run: cargo test test_float_f_exhaustive --release -- --ignored --nocapture
     test_exhaustive(
         widestring::utf32str!("%.*f"),
-        b"%.*f\0".as_ptr() as *const i8,
+        b"%.*f\0".as_ptr() as *const c_char,
     );
 }

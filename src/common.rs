@@ -2014,9 +2014,9 @@ pub fn is_console_session() -> bool {
 ///
 /// # Examples
 ///
-/// ```ignore
+/// ```
 /// use fish::wchar::prelude::*;
-/// use fish::common::assert_sorted_by_name;
+/// use fish::assert_sorted_by_name;
 ///
 /// const COLORS: &[(&wstr, u32)] = &[
 ///     // must be in alphabetical order
@@ -2027,6 +2027,23 @@ pub fn is_console_session() -> bool {
 ///
 /// assert_sorted_by_name!(COLORS, 0);
 /// ```
+///
+/// While this example would fail to compile:
+///
+/// ```compile_fail
+/// use fish::wchar::prelude::*;
+/// use fish::assert_sorted_by_name;
+///
+/// const COLORS: &[(&wstr, u32)] = &[
+///     // not in alphabetical order
+///     (L!("green"), 0x00ff00),
+///     (L!("blue"), 0x0000ff),
+///     (L!("red"), 0xff0000),
+/// ];
+///
+/// assert_sorted_by_name!(COLORS, 0);
+/// ```
+#[macro_export]
 macro_rules! assert_sorted_by_name {
     ($slice:expr, $field:tt) => {
         const _: () = {

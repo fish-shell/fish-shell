@@ -9,10 +9,10 @@ Synopsis
 .. synopsis::
 
     set
-    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
-    set [-Uflg] NAME [VALUE ...]
-    set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
-    set (-a | --append) [-flgU] NAME VALUE ...
+    set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) (-k | --keep) [--no-event]
+    set [-Ufklg] NAME [VALUE ...]
+    set [-Ufklg] NAME[[INDEX ...]] [VALUE ...]
+    set (-a | --append) [-fklgU] NAME VALUE ...
     set (-q | --query) (-e | --erase) [-flgU] [NAME][[INDEX]] ...]
     set (-S | --show) [NAME ...]
 
@@ -91,6 +91,9 @@ Further options:
     If an *INDEX* is provided, check for items at that slot.
     Does not output anything, but the shell status is set to the number of variables specified that were not defined, up to a maximum of 255.
     If no variable was given, it also returns 255.
+
+**-k** or **--keep**
+    Only set the variable if it doesn't exist, so ``set -k name value`` is equivalent to  ``set -q name or set name value``.
 
 **-n** or **--names**
     List only the names of all defined variables, not their value.

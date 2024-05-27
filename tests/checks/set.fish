@@ -994,6 +994,21 @@ set -e nonevent
 # CHECK: ONEVENT VARIABLE SET nonevent
 # CHECK: ONEVENT VARIABLE ERASE nonevent
 
+# --keep
+
+set -g -k keep bar
+echo $keep
+#CHECK: bar
+
+set -g -k keep baz
+echo $keep
+# CHECK: bar
+
+set -e keep
+set -g -k keep baz
+echo $keep
+# CHECK: baz
+
 mkdir -p empty
 env -u XDG_CONFIG_HOME HOME=$PWD/empty LC_ALL=en_US.UTF-8 $FISH -c 'set -Ux LC_ALL en_US.UTF-8'
 env -u XDG_CONFIG_HOME HOME=$PWD/empty LC_ALL=en_US.UTF-8 $FISH -c 'set -S LC_ALL'

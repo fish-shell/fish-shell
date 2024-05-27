@@ -33,6 +33,7 @@ struct Options {
     global: bool,
     exportv: bool,
     erase: bool,
+    keep: bool,
     list: bool,
     unexport: bool,
     pathvar: bool,
@@ -56,6 +57,7 @@ impl Default for Options {
             global: false,
             exportv: false,
             erase: false,
+            keep: false,
             list: false,
             unexport: false,
             pathvar: false,
@@ -109,6 +111,7 @@ impl Options {
             wopt(L!("export"), NoArgument, 'x'),
             wopt(L!("global"), NoArgument, 'g'),
             wopt(L!("function"), NoArgument, 'f'),
+            wopt(L!("keep"), NoArgument, 'k'),
             wopt(L!("local"), NoArgument, 'l'),
             wopt(L!("erase"), NoArgument, 'e'),
             wopt(L!("names"), NoArgument, 'n'),
@@ -139,6 +142,7 @@ impl Options {
                 'g' => opts.global = true,
                 'h' => opts.print_help = true,
                 'l' => opts.local = true,
+                'k' => opts.keep = true,
                 'n' => {
                     opts.list = true;
                     opts.preserve_failure_exit_status = false;
@@ -214,6 +218,13 @@ impl Options {
         parser: &Parser,
         streams: &mut IoStreams,
     ) -> Result<(), Option<c_int>> {
+        // Can't keep and query, erase, or list.
+        if opts.keep && (opts.query || opts.erase || opts.list) {
+            streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return Err(STATUS_INVALID_ARGS);
+        }
+
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
@@ -917,6 +928,10 @@ fn set_internal(
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     };
+
+    if opts.keep && split.var.is_some() {
+        return STATUS_CMD_OK;
+    }
 
     // Is the variable valid?
     if !valid_var_name(split.varname) {

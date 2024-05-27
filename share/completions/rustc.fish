@@ -35,7 +35,7 @@ function __fish_rustc_z_completions
     end
 
     set -l rust_docs (rustc +nightly -Z help 2>/dev/null |
-        string replace -r '^\s+' '' | string replace -ar ' +' ' ' | string replace -r '=val +-- +' '\t')
+        string replace -r '^\s+' '' | string replace -ar ' +' ' ' | string replace -r '=val +-- +' '=\t')
 
     set -f flag
     set -f docs
@@ -59,9 +59,9 @@ function __fish_rustc_z_completions
                 # echo \* $line
                 if set -l parts (string match -gr '^(?:or )?`=?(.*?)`\s*(?:\((.*?)\)|: (.*))?\s*' -- $line)
                     set -l docs $parts[2] $parts[3]
-                    printf '%s=%s\t%s\n' $flag $parts[1] $docs
+                    printf '%s%s\t%s\n' $flag $parts[1] $docs
                 else if set -l parts (string match -gr '^([a-z-]+):?\s*(.*)' -- $line)
-                    printf '%s=%s\t%s\n' $flag $parts[1] $parts[2]
+                    printf '%s%s\t%s\n' $flag $parts[1] $parts[2]
                 end | string match -ev '=val'
             end
         end

@@ -93,7 +93,7 @@ Further options:
     If no variable was given, it also returns 255.
 
 **-k** or **--keep**
-    Only set the variable if it doesn't exist, so ``set -k name value`` is equivalent to  ``set -q name or set name value``.
+    Only set the variable if it doesn't exist, so ``set -k name value`` is equivalent to  ``set -q name; or set name value``.
 
 **-n** or **--names**
     List only the names of all defined variables, not their value.

@@ -36,6 +36,11 @@ function fish_add_path --description "Add paths to the PATH"
     set -l mode $_flag_prepend $_flag_append
     set -q mode[1]; or set mode -p
 
+    # Enable verbose mode if we're interactively used
+    status current-command | string match -rq '^fish_add_path$'
+    and isatty stdout
+    and set -l _flag_verbose yes
+
     # To keep the order of our arguments, go through and save the ones we want to keep.
     set -l newpaths
     set -l indexes

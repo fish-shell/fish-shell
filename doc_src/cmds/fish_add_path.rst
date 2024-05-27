@@ -52,7 +52,8 @@ Options
     Move already-included directories to the place they would be added - by default they would be left in place and not added again.
 
 **-v** or **--verbose**
-    Print the :doc:`set <set>` command used.
+    Print the :doc:`set <set>` command used, and some more warnings, like when a path is skipped because it doesn't exist or is not a directory.
+    Verbose mode is automatically enabled when fish_add_path is used interactively and the output goes to the terminal.
 
 **-n** or **--dry-run**
     Print the ``set`` command that would be used without executing it.

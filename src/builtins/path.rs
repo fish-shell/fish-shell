@@ -376,7 +376,7 @@ fn path_transform(
     streams: &mut IoStreams,
     args: &mut [&wstr],
     func: impl Fn(&wstr) -> WString,
-    custom_opts: impl Fn(&mut Options) -> (),
+    custom_opts: impl Fn(&mut Options),
 ) -> Option<c_int> {
     let mut opts = Options::default();
     custom_opts(&mut opts);

@@ -230,6 +230,7 @@ fn escape_nonprintables(key_name: &wstr) -> WString {
     )
 }
 
+#[allow(clippy::nonminimal_bool)]
 pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
     let mut res = vec![];
     if value.is_empty() {

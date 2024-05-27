@@ -121,6 +121,7 @@ Scripting improvements
 - ``string repeat`` now allows omission of ``-n`` when the first argument is an integer. (:issue:`10282`)
 - ``functions --handlers-type caller-exit`` once again lists functions defined as ``function --on-job-exit caller``, rather than them being listed by ``functions --handlers-type process-exit``.
 - ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
+- ``set`` has a new ``-keep`` flag, to keep an existing variable from being overwritten: ``set -k -g foo bar`` is equivalent to ``set -q foo or set -g foo bar``. (:issue:`10531`)
 - Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
 

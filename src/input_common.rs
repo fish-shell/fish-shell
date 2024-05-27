@@ -12,7 +12,7 @@ use crate::key::{
     Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
-use crate::threads::{iothread_port, iothread_service_main, MainThread};
+use crate::threads::{iothread_port, MainThread};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -595,7 +595,7 @@ pub trait InputEventQueuer {
                 }
 
                 ReadbResult::IOPortNotified => {
-                    iothread_service_main(reader_current_data().unwrap());
+                    self.ioport_notified();
                 }
 
                 ReadbResult::Byte(read_byte) => {
@@ -1214,6 +1214,10 @@ pub trait InputEventQueuer {
     /// Override point for when when select() is interrupted by the universal variable notifier.
     /// The default does nothing.
     fn uvar_change_notified(&mut self) {}
+
+    /// Override point for when the ioport is ready.
+    /// The default does nothing.
+    fn ioport_notified(&mut self) {}
 
     /// Reset the function status.
     fn get_function_status(&self) -> bool {

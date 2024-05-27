@@ -13,7 +13,7 @@ use crate::reader::{
     ReaderData,
 };
 use crate::signal::signal_clear_cancel;
-use crate::threads::assert_is_main_thread;
+use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use std::ffi::CString;
@@ -432,6 +432,10 @@ impl InputEventQueuer for ReaderData {
 
     fn uvar_change_notified(&mut self) {
         self.parser().sync_uvars_and_fire(true /* always */);
+    }
+
+    fn ioport_notified(&mut self) {
+        iothread_service_main(self);
     }
 
     fn paste_start_buffering(&mut self) {

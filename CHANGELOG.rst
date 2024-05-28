@@ -44,7 +44,7 @@ Notable backwards-incompatible changes
     set -Ua fish_features no-qmark-noglob
 
   The flag will eventually be made read-only, making it impossible to turn off.
-- Fish no longer searches directories from the Windows system/user `$PATH` environment variable for Linux executables. To execute Linux binaries by name (i.e. not with a relative or absolute path) from a Windows folder, make sure the `/mnt/c/...` path is explicitly added to `$fish_user_paths` and not just automatically appended to `$PATH` by `wsl.exe` (:issue:`10506`).
+- Fish no longer searches directories from the Windows system/user ``$PATH`` environment variable for Linux executables. To execute Linux binaries by name (i.e. not with a relative or absolute path) from a Windows folder, make sure the ``/mnt/c/...`` path is explicitly added to ``$fish_user_paths`` and not just automatically appended to ``$PATH`` by ``wsl.exe`` (:issue:`10506`).
 
 
 Notable improvements and fixes
@@ -115,7 +115,7 @@ Scripting improvements
 - ``if -e foo; end`` now prints a more accurate error (:issue:`10000`).
 - Variables in command position that expand to a subcommand keyword are now forbidden to fix a likely user error.
   For example ``set editor command emacs; $editor`` is no longer allowed (:issue:`10249`).
-- `cd` into a directory that is not readable but accessible (permissions `--x`) is now possible (:issue:`10432`).
+- ``cd`` into a directory that is not readable but accessible (permissions ``--x``) is now possible (:issue:`10432`).
 - An integer overflow in ``string repeat`` leading to a near-infinite loop has been fixed (:issue:`9899`).
 - ``string shorten`` behaves better in the presence of non-printable characters, including fixing an integer overflow that shortened strings more than intended. (:issue:`9854`)
 - ``string pad`` no longer allows non-printable characters as padding. (:issue:`9854`)
@@ -148,10 +148,10 @@ Interactive improvements
   This is consistent with normal keyboard input (:issue:`5274`).
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
 - Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
-- `fish_vi_cursor` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
+- ``fish_vi_cursor`` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
-- Measuring a command with `time` now considers the time taken for command substitution (:issue:`9100`).
+- Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -161,15 +161,15 @@ New or improved bindings
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
 - Some improvements to the :kbd:`alt-e` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
-  - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when `EDITOR=my-vim`.
+  - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.
   - Multiline commands are indented before being sent to the editor, which matches how they are displayed in fish.
 - The ``*-path-component`` bindings like ``backward-kill-path-component`` now treat ``#`` as part of a path component (:issue:`10271`).
 - Bindings like :kbd:`alt-l` that print output in between prompts now work correctly with multiline commandlines.
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
-- `history-prefix-search-{backward,forward}` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
+- ``history-prefix-search-{backward,forward}`` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The :kbd:`E` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
 - If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, :kbd:`shift-enter` now inserts a newline instead of executing the command line.
-- New special input functions `forward-char-passive` and `backward-char-passive` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
+- New special input functions ``forward-char-passive`` and ``backward-char-passive`` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
@@ -181,7 +181,7 @@ New or improved bindings
 Completions
 ^^^^^^^^^^^
 - Various new completion scripts and numerous updates to existing ones.
-- Generated completions are now stored in `$XDG_CACHE_HOME/fish` or `~/.cache/fish` by default (:issue:`10369`)
+- Generated completions are now stored in ``$XDG_CACHE_HOME/fish`` or ``~/.cache/fish`` by default (:issue:`10369`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,7 +197,7 @@ Other improvements
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
-- Performance and interactivity under WSLv1 and WSLv2 has been improved with a workaround for Windows-specific locations being appended to `$PATH` by default (:issue:`10506`).
+- Performance and interactivity under WSLv1 and WSLv2 has been improved with a workaround for Windows-specific locations being appended to ``$PATH`` by default (:issue:`10506`).
 
 .. _rust-packaging:
 
@@ -216,8 +216,9 @@ Some smaller changes:
   Please pass ``-DCMAKE_BUILD_TYPE=Release`` if you want to build a package.
 - Xcode support has been removed (:issue:`9924`).
 - fish no longer links against the (n)curses library, opting to read the terminfo database via the terminfo crate.
-  This means hashed terminfo databases are no longer supported. From our research, they are basically unused.
-  When packaging fish, you likely want to add a dependency on the package containing your terminfo database instead of curses.
+  This means hashed terminfo databases are no longer supported (from our research, they are basically unmaintained and unused).
+  When packaging fish, please add a dependency on the package containing your terminfo database instead of curses,
+  if such a package is required.
   If it cannot find a terminfo database, fish will now fall back on an included xterm-256color definition. See (:issue:`10269`).
 
 --------------
@@ -2595,7 +2596,7 @@ Interactive improvements
    key both on its own and as part of a control sequence, was applied to
    all control characters; this has been reduced to just the escape key.
 -  Completing a function shows the description properly (:issue:`5206`).
--  `commandline` can now be used to set the commandline for the next command, restoring a behavior in 3.4.1 (:issue:`8807`).
+-  ``commandline`` can now be used to set the commandline for the next command, restoring a behavior in 3.4.1 (:issue:`8807`).
 -  Added completions for
 
    -  ``ansible``, including ``ansible-galaxy``, ``ansible-playbook``
@@ -3416,8 +3417,8 @@ Other notable fixes and improvements
 -  Directory autosuggestions will now descend as far as possible if
    there is only one child directory (:issue:`2531`)
 -  Add support for bright colors (:issue:`1464`)
--  Allow Ctrl-J (`\cj`) to be bound separately from Ctrl-M
-   (`\cm`) (:issue:`217`)
+-  Allow Ctrl-J (``\cj``) to be bound separately from Ctrl-M
+   (``\cm``) (:issue:`217`)
 -  psub now has a “-s”/“–suffix” option to name the temporary file with
    that suffix
 -  Enable 24-bit colors on select terminals (:issue:`2495`)

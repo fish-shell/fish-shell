@@ -44,6 +44,7 @@ Notable backwards-incompatible changes
     set -Ua fish_features no-qmark-noglob
 
   The flag will eventually be made read-only, making it impossible to turn off.
+- Fish no longer searches directories from the Windows system/user `$PATH` environment variable for Linux executables. To execute Linux binaries by name (i.e. not with a relative or absolute path) from a Windows folder, make sure the `/mnt/c/...` path is explicitly added to `$fish_user_paths` and not just automatically appended to `$PATH` by `wsl.exe` (:issue:`10506`).
 
 
 Notable improvements and fixes
@@ -123,6 +124,7 @@ Scripting improvements
 - ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
 - Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
+- ``path basename`` now takes a ``-E`` option that causes it to return the basename (i.e. "filename" with the directory prefix removed) with the final extension (if any) also removed. This takes the place of ``path change-extension "" (path basename $foo)`` (:issue:`10521`).
 
 Interactive improvements
 ------------------------
@@ -131,7 +133,7 @@ Interactive improvements
 - Option completion now uses fuzzy subsequence filtering, just like non-option completion.
   This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 - Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
-- Historically, file name completions are provided after at the last ``:``  or ``=`` within a token.
+- Historically, file name completions are provided after the last ``:``  or ``=`` within a token.
   This helps commands like ``rsync --files-from=``.
   If the ``=`` or ``:`` is actually part of the filename, it will be escaped as ``\:`` and ``\=``,
   and no longer get this special treatment.
@@ -195,6 +197,7 @@ Other improvements
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
+- Performance and interactivity under WSLv1 and WSLv2 has been improved with a workaround for Windows-specific locations being appended to `$PATH` by default (:issue:`10506`).
 
 .. _rust-packaging:
 

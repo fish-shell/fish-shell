@@ -123,7 +123,7 @@ The following code stores the value 'hello' in the shell variable :envvar:`foo`.
 
 ::
 
-    echo hello|read foo
+    echo hello | read foo
 
 The :doc:`while <while>` command is a neat way to handle command output line-by-line::
 

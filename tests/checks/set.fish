@@ -1001,4 +1001,16 @@ env -u XDG_CONFIG_HOME HOME=$PWD/empty LC_ALL=en_US.UTF-8 $FISH -c 'set -S LC_AL
 # CHECK: $LC_ALL[1]: |en_US.UTF-8|
 # CHECK: $LC_ALL: originally inherited as |en_US.UTF-8|
 
+# This used to crash
+set line[0] ""
+# CHECKERR: set: array index out of bounds
+# CHECKERR: {{.*}}set.fish (line {{\d+}}):
+# CHECKERR: set line[0] ""
+# CHECKERR: ^
+# CHECKERR: (Type 'help set' for related documentation)
+
+
+echo Still here
+# CHECK: Still here
+
 exit 0

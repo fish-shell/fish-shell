@@ -363,14 +363,14 @@ impl EnvStack {
     pub fn globals() -> &'static EnvStack {
         use std::sync::OnceLock;
         static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
-        GLOBALS.get_or_init(|| EnvStack::new())
+        GLOBALS.get_or_init(EnvStack::new)
     }
 
     /// Access the principal variable stack, associated with the principal parser.
     pub fn principal() -> &'static Arc<EnvStack> {
         use std::sync::OnceLock;
         static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        &PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
+        PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
     }
 
     pub fn set_argv(&self, argv: Vec<WString>) {

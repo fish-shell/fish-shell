@@ -32,7 +32,7 @@ use crate::wchar::{wstr, WString, L};
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
-use printf_compat::sprintf;
+use printf::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
@@ -402,7 +402,7 @@ impl Parser {
     pub fn principal_parser() -> &'static Parser {
         use std::cell::OnceCell;
         static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        &PRINCIPAL
+        PRINCIPAL
             .get()
             // The parser is !Send/!Sync and strictly single-threaded, but we can have
             // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()

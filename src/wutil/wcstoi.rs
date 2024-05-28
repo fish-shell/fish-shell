@@ -375,20 +375,20 @@ mod tests {
         // This is subtle. "567" in base 8 is "375" in base 10. The final "8" is not converted.
         assert_eq!(run1_rad("5678", 8), Ok(375));
 
-        test_min_max(std::i8::MIN, std::i8::MAX);
-        test_min_max(std::i16::MIN, std::i16::MAX);
-        test_min_max(std::i32::MIN, std::i32::MAX);
-        test_min_max(std::i64::MIN, std::i64::MAX);
-        test_min_max(std::u8::MIN, std::u8::MAX);
-        test_min_max(std::u16::MIN, std::u16::MAX);
-        test_min_max(std::u32::MIN, std::u32::MAX);
-        test_min_max(std::u64::MIN, std::u64::MAX);
+        test_min_max(i8::MIN, i8::MAX);
+        test_min_max(i16::MIN, i16::MAX);
+        test_min_max(i32::MIN, i32::MAX);
+        test_min_max(i64::MIN, i64::MAX);
+        test_min_max(u8::MIN, u8::MAX);
+        test_min_max(u16::MIN, u16::MAX);
+        test_min_max(u32::MIN, u32::MAX);
+        test_min_max(u64::MIN, u64::MAX);
     }
 
     #[test]
     fn test_unsigned() {
         fn negu(x: u64) -> u64 {
-            std::u64::MAX - x + 1
+            u64::MAX - x + 1
         }
 
         let run1 = |s: &str| -> Result<u64, Error> {
@@ -447,7 +447,7 @@ mod tests {
     #[test]
     fn test_wrap_neg() {
         fn negu(x: u64) -> u64 {
-            std::u64::MAX - x + 1
+            u64::MAX - x + 1
         }
 
         let run1 = |s: &str, opts: Options| -> Result<u64, Error> { wcstoi_opts(s, opts) };

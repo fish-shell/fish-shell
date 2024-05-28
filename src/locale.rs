@@ -1,12 +1,12 @@
 /// Support for the "current locale."
-pub use printf_compat::locale::{Locale, C_LOCALE};
+pub use printf::locale::{Locale, C_LOCALE};
 use std::sync::Mutex;
 
 /// Lock guarding libc `setlocale()` or `localeconv()` calls to avoid races.
 pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 
 /// It's CHAR_MAX.
-const CHAR_MAX: libc::c_char = libc::c_char::max_value();
+const CHAR_MAX: libc::c_char = libc::c_char::MAX;
 
 /// Return the first character of a C string, or None if null, empty, has a length more than 1, or negative.
 unsafe fn first_char(s: *const libc::c_char) -> Option<char> {

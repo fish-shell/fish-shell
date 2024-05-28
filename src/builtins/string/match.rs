@@ -1,5 +1,5 @@
 use pcre2::utf32::{Captures, Regex, RegexBuilder};
-use printf_compat::sprintf;
+use printf::sprintf;
 use std::collections::HashMap;
 
 use super::*;

@@ -79,6 +79,12 @@ string match -rq "echo thisshouldneverbeintheconfig" < $tmp/full.prof
 and echo matched
 # CHECK: matched
 
+# See that profiling without startup actually gives us just the command
+$fish --no-config --profile $tmp/nostartup.prof -c 'echo foo'
+# CHECK: foo
+count < $tmp/nostartup.prof
+# CHECK: 2
+
 $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
 # CHECKERR: fish: The 'exec' command can not be used in a pipeline
 # CHECKERR: echo notprinted; echo foo | exec true; echo banana

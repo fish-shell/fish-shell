@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use libc::VERASE;
 
 use crate::{
@@ -232,6 +230,7 @@ fn escape_nonprintables(key_name: &wstr) -> WString {
     )
 }
 
+#[allow(clippy::nonminimal_bool)]
 pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
     let mut res = vec![];
     if value.is_empty() {
@@ -376,9 +375,9 @@ impl std::fmt::Display for Key {
     }
 }
 
-impl printf_compat::args::ToArg<'static> for Key {
-    fn to_arg(self) -> printf_compat::args::Arg<'static> {
-        printf_compat::args::Arg::BoxedStr(Rc::new(WString::from(self).into_boxed_utfstr()))
+impl printf::ToArg<'static> for Key {
+    fn to_arg(self) -> printf::Arg<'static> {
+        printf::Arg::WString(self.into())
     }
 }
 

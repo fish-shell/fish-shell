@@ -25,10 +25,7 @@
 // This version has been altered and ported to C++, then to Rust, for inclusion in fish.
 
 use std::{
-    f64::{
-        consts::{E, PI, TAU},
-        INFINITY, NAN, NEG_INFINITY,
-    },
+    f64::consts::{E, PI, TAU},
     fmt::Debug,
     ops::{BitAnd, BitOr, BitXor},
 };
@@ -177,21 +174,21 @@ fn bitwise_op(a: f64, b: f64, f: fn(u64, u64) -> u64) -> f64 {
 
 fn fac(n: f64) -> f64 {
     if n < 0.0 {
-        return NAN;
+        return f64::NAN;
     }
     if n > (u64::MAX as f64) {
-        return INFINITY;
+        return f64::INFINITY;
     }
 
     let n = n as u64;
 
     (1..=n)
         .try_fold(1_u64, |acc, i| acc.checked_mul(i))
-        .map_or(INFINITY, |x| x as f64)
+        .map_or(f64::INFINITY, |x| x as f64)
 }
 
 fn maximum(n: &[f64]) -> f64 {
-    n.iter().fold(NEG_INFINITY, |a, &b| {
+    n.iter().fold(f64::NEG_INFINITY, |a, &b| {
         if a.is_nan() {
             return a;
         }
@@ -215,7 +212,7 @@ fn maximum(n: &[f64]) -> f64 {
 }
 
 fn minimum(n: &[f64]) -> f64 {
-    n.iter().fold(INFINITY, |a, &b| {
+    n.iter().fold(f64::INFINITY, |a, &b| {
         if a.is_nan() {
             return a;
         }
@@ -241,13 +238,13 @@ fn minimum(n: &[f64]) -> f64 {
 fn ncr(n: f64, r: f64) -> f64 {
     // Doing this for NAN takes ages - just return the result right away.
     if n.is_nan() {
-        return INFINITY;
+        return f64::INFINITY;
     }
     if n < 0.0 || r < 0.0 || n < r {
-        return NAN;
+        return f64::NAN;
     }
     if n > (u64::MAX as f64) || r > (u64::MAX as f64) {
-        return INFINITY;
+        return f64::INFINITY;
     }
 
     let un = n as u64;
@@ -260,7 +257,7 @@ fn ncr(n: f64, r: f64) -> f64 {
     let mut result = 1_u64;
     for i in 1..=ur {
         let Some(next_result) = result.checked_mul(un - ur + i) else {
-            return INFINITY;
+            return f64::INFINITY;
         };
         result = next_result / i;
     }
@@ -594,7 +591,7 @@ impl<'s> State<'s> {
                     self.set_error(err, err_pos_len);
                 }
 
-                NAN
+                f64::NAN
             }
             Token::Open => {
                 self.next_token();
@@ -610,7 +607,7 @@ impl<'s> State<'s> {
                     self.set_error(ErrorKind::MissingClosingParen, None)
                 }
 
-                NAN
+                f64::NAN
             }
             Token::End => {
                 // The expression ended before we expected it.
@@ -620,7 +617,7 @@ impl<'s> State<'s> {
                 // "too few args".
                 self.set_error(ErrorKind::TooFewArgs, None);
 
-                NAN
+                f64::NAN
             }
 
             Token::Error | Token::Sep | Token::Close | Token::Infix(_) => {
@@ -628,7 +625,7 @@ impl<'s> State<'s> {
                     self.set_error(ErrorKind::UnexpectedToken, None);
                 }
 
-                NAN
+                f64::NAN
             }
         }
     }

@@ -1344,11 +1344,13 @@ complete -x -c git -n '__fish_git_using_command commit' -s m -l message -d 'Use 
 complete -f -c git -n '__fish_git_using_command commit' -l no-edit -d 'Use the selected commit message without launching an editor'
 complete -f -c git -n '__fish_git_using_command commit' -l no-gpg-sign -d 'Do not sign commit'
 complete -f -c git -n '__fish_git_using_command commit' -s n -l no-verify -d 'Do not run pre-commit and commit-msg hooks'
-complete -f -c git -n '__fish_git_using_command commit' -n 'string match -rq -- "^(--fixup\b|--squash\b|-C|-c)" (commandline -xpc)[-1]' -ka '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command commit' -n 'string match -rq -- "^(--fixup\b|--squash\b|-C|-c|--reuse-message\b|--reedit-message\b)" (commandline -xpc)[-1]' -ka '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty -d 'Create a commit with no changes'
 complete -f -c git -n '__fish_git_using_command commit' -l allow-empty-message -d 'Create a commit with no commit message'
 complete -f -c git -n '__fish_git_using_command commit' -s s -l signoff -d 'Append Signed-off-by trailer to commit message'
 complete -f -c git -n '__fish_git_using_command commit' -l no-signoff -d 'Do not append Signed-off-by trailer to commit message'
+complete -f -c git -n '__fish_git_using_command commit' -s C -l reuse-message -d 'Reuse log message and authorship of an existing commit'
+complete -f -c git -n '__fish_git_using_command commit' -s c -l reedit-message -d 'Like --reuse-message, but allow editing commit message'
 # TODO options
 
 ### count-objects

@@ -45,7 +45,7 @@ impl StringSubCommand<'_> for Length {
                         let val = &line;
                         val.split('\r')
                     } {
-                        let n = width_without_escapes(&reset, 0);
+                        let n = width_without_escapes(reset, 0);
                         max = usize::max(max, n);
                     }
                     if max > 0 {

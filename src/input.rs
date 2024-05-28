@@ -393,11 +393,6 @@ pub fn init_input() {
     }
 }
 
-/// CommandHandler is used to run commands. When a character is encountered that
-/// would invoke a fish command, it is unread and CharEventType::CheckExit is returned.
-/// Note the handler is not stored.
-pub type CommandHandler<'a> = dyn FnMut(&[WString]) + 'a;
-
 pub struct Inputter {
     in_fd: RawFd,
     queue: VecDeque<CharEvent>,

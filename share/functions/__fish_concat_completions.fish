@@ -15,7 +15,7 @@ function __fish_concat_completions -d "Generate completions that are specified a
     # `read` call in between () to capture the output because that breaks its connection to stdin.
     while read -l line;
         echo $line;
-    end | string match -er '.' | string match -rv -- $filter | string replace -r '^' -- (string replace -rf '^(.+),.*$' '$1,' $token; or echo "")
+    end | string match -er '.' | string match -rv -- $filter | string replace -r '^' -- (string replace -rf -- '^(.+),.*$' '$1,' $token; or echo "")
 
     return
     # Verified compatible with bsd awk and gnu awk

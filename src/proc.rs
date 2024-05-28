@@ -31,7 +31,7 @@ use libc::{
     _SC_CLK_TCK,
 };
 use once_cell::sync::Lazy;
-use printf_compat::sprintf;
+use printf::sprintf;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};

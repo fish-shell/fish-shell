@@ -97,7 +97,7 @@ impl TermsizeData {
         Self {
             last_from_tty: None,
             last_from_env: None,
-            last_tty_gen_count: u32::max_value(),
+            last_tty_gen_count: u32::MAX,
         }
     }
 

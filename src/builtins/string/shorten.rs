@@ -108,7 +108,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 inputs.push(s);
             } else {
                 for s in splits {
-                    let width = width_without_escapes(&s, 0);
+                    let width = width_without_escapes(s, 0);
                     if width > 0 && width < min_width {
                         min_width = width;
                     }

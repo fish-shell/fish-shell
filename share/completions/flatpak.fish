@@ -62,6 +62,7 @@ complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(__fi
 complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(__fish_flatpak ps --columns=instance,application)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(__fish_flatpak remotes --columns=name,title)"
 
-# Note that "remote-ls" opens an internet connection, so we don't want to complete "install"
+complete -c flatpak -n '__fish_seen_subcommand_from install' -xa "(__fish_flatpak remote-ls --columns=application,name)"
+
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).
 complete -f -c flatpak -s h -l help

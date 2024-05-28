@@ -321,15 +321,14 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
                 let p = p.as_ref();
                 p.starts_with("/mnt/")
                     && p.chars()
-                        .skip("/mnt/x".len())
-                        .next()
+                        .nth("/mnt/x".len())
                         .map(|c| c == '/')
                         .unwrap_or(false)
             })
             .count();
         &pathsv[..pathsv.len() - win_path_count]
     } else {
-        &pathsv
+        pathsv
     };
 
     let mut best = noent_res;

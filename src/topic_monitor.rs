@@ -66,7 +66,7 @@ pub type generation_t = u64;
 impl FloggableDebug for topic_t {}
 
 /// A generation value which indicates the topic is not of interest.
-pub const INVALID_GENERATION: generation_t = std::u64::MAX;
+pub const INVALID_GENERATION: generation_t = u64::MAX;
 
 pub fn all_topics() -> [topic_t; 3] {
     [topic_t::sighupint, topic_t::sigchld, topic_t::internal_exit]

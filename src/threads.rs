@@ -102,7 +102,7 @@ fn thread_id() -> usize {
 fn test_thread_ids() {
     let start_thread_id = thread_id();
     assert_eq!(start_thread_id, thread_id());
-    let spawned_thread_id = std::thread::spawn(|| thread_id()).join();
+    let spawned_thread_id = std::thread::spawn(thread_id).join();
     assert_ne!(start_thread_id, spawned_thread_id.unwrap());
 }
 

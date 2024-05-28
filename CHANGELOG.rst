@@ -219,7 +219,7 @@ Some smaller changes:
   This means hashed terminfo databases are no longer supported (from our research, they are basically unmaintained and unused).
   When packaging fish, please add a dependency on the package containing your terminfo database instead of curses,
   if such a package is required.
-  If it cannot find a terminfo database, fish will now fall back on an included xterm-256color definition. See (:issue:`10269`).
+  If it cannot find a terminfo database, fish will now fall back on an included ``xterm-256color`` definition (:issue:`10269`).
 
 --------------
 

@@ -25,6 +25,10 @@ complete -c konsole -l fullscreen -d 'Start Konsole in fullscreen mode'
 complete -c konsole -l notransparency -d 'Disable transparent backgrounds'
 complete -c konsole -l list-profiles -d 'List the available profiles'
 complete -c konsole -l list-profile-properties -d 'List all the profile properties'
-complete -c konsole -xs p -d '<P=V> Change profile property'
+complete -c konsole -s p -d '<P=V> Change profile property' -ra "(__konsole_profile_ops)"
 complete -c konsole -xs e -d '<CMD> Command to execute'
 complete -c konsole -l force-reuse -d 'Force re-using existing instance'
+
+function __konsole_profile_ops
+    konsole --list-profile-properties | string replace -fr '^(\S+) .*' '$1='
+end

@@ -47,9 +47,10 @@ function __fish_flatpak_subcommands
 end
 complete -c flatpak -n __fish_is_first_token -xa "(__fish_flatpak_subcommands)"
 
-# Ancient versions of flatpak seem to assume output is always a tty and emit pretty-formatted output, with
-# a variable number of spaces for alignment, trailing \CR, and ANSI color/formatting sequences. This function is akin
-# to `flatpak $argv[1] $argv[2..]` but sanitizes the output to make it completion-friendly.
+# A flatpak bug on some systems seems to cause it to assume output is a tty and always emit pretty-formatted output, with
+# a variable number of spaces for alignment, trailing CR, and ANSI formatting sequences (see #10514).
+#
+# This wrapper function is akin to `flatpak $argv[1] $argv[2..]` but sanitizes the output to make it completion-friendly.
 function __fish_flatpak
     # We can't rely on the first line being the headers because modern flatpak will omit it when running in a "subshell".
     # Based off our invocations, we expect the first column of actual output to never contain a capitalized letter

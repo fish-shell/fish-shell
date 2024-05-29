@@ -1,6 +1,7 @@
 use crate::threads::spawn;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
+use std::time::Duration;
 
 #[test]
 fn test_pthread() {
@@ -17,15 +18,26 @@ fn test_pthread() {
     let made = spawn(move || {
         ctx2.val.fetch_add(2, Ordering::Release);
         ctx2.condvar.notify_one();
+        println!("condvar signalled");
     });
     assert!(made);
-    let mut lock = mutex.lock().unwrap();
-    loop {
-        lock = ctx.condvar.wait(lock).unwrap();
-        let v = ctx.val.load(Ordering::Acquire);
-        if v == 5 {
-            return;
-        }
-        println!("test_pthread: value did not yet reach goal")
+
+    let lock = mutex.lock().unwrap();
+    let (_lock, timeout) = ctx
+        .condvar
+        .wait_timeout_while(lock, Duration::from_secs(5), |()| {
+            println!("looping with lock held");
+            if ctx.val.load(Ordering::Acquire) != 5 {
+                println!("test_pthread: value did not yet reach goal");
+                return true;
+            }
+            false
+        })
+        .unwrap();
+    if timeout.timed_out() {
+        panic!(concat!(
+            "Timeout waiting for condition variable to be notified! ",
+            "Does the platform support signalling a condvar without the mutex held?"
+        ));
     }
 }

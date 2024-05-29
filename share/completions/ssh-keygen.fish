@@ -48,5 +48,6 @@ complete -c ssh-keygen -s Y -x -a "\
 	verify\t'Request to verify a signature generated using -Y sign'
 "
 complete -c ssh-keygen -s y -d 'print an OpenSSH public key from a private OpenSSH format file'
-complete -c ssh-keygen -s Z -x -d 'cipher kind used for encryption an OpenSSH-format private key file' -a (ssh -Q cipher | string join ' ')
+# Note: `ssh -Q` is not available on old versions
+complete -c ssh-keygen -s Z -x -d 'cipher kind used for encryption an OpenSSH-format private key file' -a "(ssh -Q cipher 2>/dev/null)"
 complete -c ssh-keygen -s z -x -d 'serial number embedded in the certificate'

@@ -439,7 +439,6 @@ pub(crate) fn terminal_protocols_enable_ifn() {
         return;
     }
     *term_protocols = Some(TerminalProtocols::new());
-    reader_current_data().map(|data| data.save_screen_state());
 }
 
 pub(crate) fn terminal_protocols_disable_ifn() {
@@ -473,6 +472,7 @@ impl TerminalProtocols {
         if IS_TMUX.load() {
             let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
         }
+        reader_current_data().map(|data| data.save_screen_state());
         Self {}
     }
 }
@@ -496,6 +496,7 @@ impl Drop for TerminalProtocols {
         if IS_TMUX.load() {
             let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
         }
+        reader_current_data().map(|data| data.save_screen_state());
     }
 }
 

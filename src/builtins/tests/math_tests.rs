@@ -5,7 +5,6 @@ use super::super::prelude::*;
 use crate::{
     builtins::{math, prelude::Parser},
     io::{IoChain, IoStreams, OutputStream, StringOutputStream},
-    threads,
 };
 
 fn test_math(
@@ -23,7 +22,6 @@ fn test_math(
 
 #[test]
 fn test_scale_mode() {
-    threads::init();
     let parser = &Parser::principal_parser();
     let mut out = OutputStream::String(StringOutputStream::new());
     let mut err = OutputStream::String(StringOutputStream::new());

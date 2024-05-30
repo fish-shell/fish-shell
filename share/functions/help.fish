@@ -48,7 +48,9 @@ function help --description 'Show help for the fish shell'
 
             # If we are in a graphical environment, check if there is a graphical
             # browser to use instead.
+            set -f is_graphical 0
             if test -n "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o -z "$XAUTHORITY" \)
+                set is_graphical 1
                 for i in $graphical_browsers
                     if type -q -f $i
                         set fish_browser $i
@@ -57,35 +59,38 @@ function help --description 'Show help for the fish shell'
                 end
             end
 
-            # We use the macOS open, but not otherwise.
-            # On Debian, there is an open command that's a symlink to openvt.
-            if uname | string match -q Darwin && command -sq open
-                set fish_browser open
-                # The open command needs a trampoline because the macOS version can't handle #-fragments.
-                set need_trampoline 1
-            end
+            # If we're SSH'd into a desktop installation, don't use a regular browser unless X is being forwarded
+            if not set -q SSH_CLIENT || test $is_graphical -eq 1
+                # We use the macOS open, but not otherwise.
+                # On Debian, there is an open command that's a symlink to openvt.
+                if uname | string match -q Darwin && command -sq open
+                    set fish_browser open
+                    # The open command needs a trampoline because the macOS version can't handle #-fragments.
+                    set need_trampoline 1
+                end
 
-            # If the OS appears to be Windows (graphical), try to use cygstart
-            if type -q cygstart
-                set fish_browser cygstart
-                # If xdg-open is available, just use that
-            else if type -q xdg-open
-                set fish_browser xdg-open
-            end
+                # If the OS appears to be Windows (graphical), try to use cygstart
+                if type -q cygstart
+                    set fish_browser cygstart
+                else if type -q xdg-open
+                    # If xdg-open is available, just use that
+                    set fish_browser xdg-open
+                end
 
-            # Try to find cmd.exe via $PATH or one of the paths that it's often at.
-            #
-            # We use this instead of xdg-open because that's useless without a backend
-            # like wsl-open which we'll check in a minute.
-            if test -f /proc/version
-                and string match -riq 'Microsoft|WSL|MSYS|MINGW' </proc/version
-                and set -l cmd (command -s powershell.exe cmd.exe /mnt/c/Windows/System32/cmd.exe)
-                # Use the first of these.
-                set fish_browser $cmd[1]
-            end
+                # Try to find cmd.exe via $PATH or one of the paths that it's often at.
+                #
+                # We use this instead of xdg-open because that's useless without a backend
+                # like wsl-open which we'll check in a minute.
+                if test -f /proc/version
+                    and string match -riq 'Microsoft|WSL|MSYS|MINGW' </proc/version
+                    and set -l cmd (command -s powershell.exe cmd.exe /mnt/c/Windows/System32/cmd.exe)
+                    # Use the first of these.
+                    set fish_browser $cmd[1]
+                end
 
-            if type -q wsl-open
-                set fish_browser wsl-open
+                if type -q wsl-open
+                    set fish_browser wsl-open
+                end
             end
         end
     end

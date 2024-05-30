@@ -12,6 +12,7 @@ struct Options {
     print_help: bool,
     scale: usize,
     base: usize,
+    round: bool,
 }
 
 fn parse_cmd_opts(
@@ -29,20 +30,31 @@ fn parse_cmd_opts(
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("round"), ArgType::RequiredArgument, 'r'),
     ];
 
     let mut opts = Options {
         print_help: false,
         scale: DEFAULT_SCALE,
         base: 10,
+        round: false
     };
 
     let mut have_scale = false;
+    let mut have_round = false;
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
     while let Some(c) = w.next_opt() {
         match c {
             's' => {
+                if have_round == true {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: %ls: already set round options\n",
+                        cmd,
+                        c
+                    ));
+                    return Err(STATUS_INVALID_ARGS);
+                }
                 let optarg = w.woptarg.unwrap();
                 have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
@@ -59,6 +71,35 @@ fn parse_cmd_opts(
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
+                    opts.scale = scale as usize;
+                }
+            }
+            'r' => {
+                if have_round == true {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: %ls: already set scale options\n",
+                        cmd,
+                        c
+                    ));
+                    return Err(STATUS_INVALID_ARGS);
+                }
+                let optarg = w.woptarg.unwrap();
+                have_round = true;
+                opts.round = true;
+                // In my point of view, round is just a submodule of scale, which is only different at "scale = 0" situation
+                // So I just copy the implementation of "scale" part and modify the zero case
+                if optarg == "max" {
+                    opts.scale = 15;
+                } else {
+                    let scale = fish_wcstoi(optarg).unwrap_or(-1);
+                    if scale < 0 || scale > 15 {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: %ls: invalid base value\n",
+                            cmd,
+                            optarg
+                        ));
+                        return Err(STATUS_INVALID_ARGS);
+                    }
                     opts.scale = scale as usize;
                 }
             }
@@ -109,6 +150,15 @@ fn parse_cmd_opts(
         ));
         return Err(STATUS_INVALID_ARGS);
     }
+    if have_round && opts.scale != 0 && opts.base != 10 {
+        streams.err.append(wgettext_fmt!(
+            BUILTIN_ERR_COMBO2,
+            cmd,
+            "non-zero round value only valid
+            for base 10"
+        ));
+        return Err(STATUS_INVALID_ARGS);
+    }
 
     Ok((opts, w.wopt_index))
 }
@@ -132,7 +182,12 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     // As a special-case, a scale of 0 means to truncate to an integer
     // instead of rounding.
     if opts.scale == 0 {
-        v = v.trunc();
+        if opts.round {
+            v = v.round();
+        }
+        else {
+            v = v.trunc();
+        }
         return sprintf!("%.*f", opts.scale, v);
     }
 

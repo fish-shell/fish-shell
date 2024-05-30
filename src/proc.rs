@@ -1299,10 +1299,10 @@ pub fn hup_jobs(jobs: &JobList) {
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };
         if pgid != fish_pgrp && !j.is_completed() {
+            j.signal(SIGHUP);
             if j.is_stopped() {
                 j.signal(SIGCONT);
             }
-            j.signal(SIGHUP);
         }
     }
 }

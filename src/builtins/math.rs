@@ -13,7 +13,10 @@ const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::TRUNC;
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
 
 enum ZeroScaleMode {
-    TRUNC, ROUND, FLOOR, CEIL
+    TRUNC,
+    ROUND,
+    FLOOR,
+    CEIL,
 }
 
 struct Options {
@@ -77,22 +80,16 @@ fn parse_cmd_opts(
                 let optarg = w.woptarg.unwrap();
                 if optarg.eq(utf32str!("trunc")) {
                     opts.zero_scale_mode = ZeroScaleMode::TRUNC;
-                }
-                else if optarg.eq(utf32str!("round")) {
+                } else if optarg.eq(utf32str!("round")) {
                     opts.zero_scale_mode = ZeroScaleMode::ROUND;
-                }
-                else if optarg.eq(utf32str!("floor")) {
+                } else if optarg.eq(utf32str!("floor")) {
                     opts.zero_scale_mode = ZeroScaleMode::FLOOR;
-                }
-                else if optarg.eq(utf32str!("ceil")) {
+                } else if optarg.eq(utf32str!("ceil")) {
                     opts.zero_scale_mode = ZeroScaleMode::CEIL;
-                }
-                else {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: invalid mode\n",
-                        cmd,
-                        optarg
-                    ));
+                } else {
+                    streams
+                        .err
+                        .append(wgettext_fmt!("%ls: %ls: invalid mode\n", cmd, optarg));
                     return Err(STATUS_INVALID_ARGS);
                 }
             }

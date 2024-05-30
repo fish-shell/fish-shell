@@ -1,18 +1,26 @@
+use widestring::utf32str;
+
 use super::prelude::*;
 use crate::tinyexpr::te_interp;
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
+const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::TRUNC;
+
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
+
+enum ZeroScaleMode {
+    TRUNC, ROUND, FLOOR, CEIL
+}
 
 struct Options {
     print_help: bool,
     scale: usize,
     base: usize,
-    round: bool,
+    zero_scale_mode: ZeroScaleMode,
 }
 
 fn parse_cmd_opts(
@@ -25,36 +33,27 @@ fn parse_cmd_opts(
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
-    const SHORT_OPTS: &wstr = L!("+:hs:b:");
+    const SHORT_OPTS: &wstr = L!("+:hs:b:m:");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
-        wopt(L!("round"), ArgType::RequiredArgument, 'r'),
+        wopt(L!("scale-mode"), ArgType::RequiredArgument, 'm'),
     ];
 
     let mut opts = Options {
         print_help: false,
         scale: DEFAULT_SCALE,
         base: 10,
-        round: false
+        zero_scale_mode: DEFAULT_ZERO_SCALE_MODE,
     };
 
     let mut have_scale = false;
-    let mut have_round = false;
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
     while let Some(c) = w.next_opt() {
         match c {
             's' => {
-                if have_round == true {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: already set round options\n",
-                        cmd,
-                        c
-                    ));
-                    return Err(STATUS_INVALID_ARGS);
-                }
                 let optarg = w.woptarg.unwrap();
                 have_scale = true;
                 // "max" is the special value that tells us to pick the maximum scale.
@@ -74,33 +73,27 @@ fn parse_cmd_opts(
                     opts.scale = scale as usize;
                 }
             }
-            'r' => {
-                if have_scale == true {
+            'm' => {
+                let optarg = w.woptarg.unwrap();
+                if optarg.eq(utf32str!("trunc")) {
+                    opts.zero_scale_mode = ZeroScaleMode::TRUNC;
+                }
+                else if optarg.eq(utf32str!("round")) {
+                    opts.zero_scale_mode = ZeroScaleMode::ROUND;
+                }
+                else if optarg.eq(utf32str!("floor")) {
+                    opts.zero_scale_mode = ZeroScaleMode::FLOOR;
+                }
+                else if optarg.eq(utf32str!("ceil")) {
+                    opts.zero_scale_mode = ZeroScaleMode::CEIL;
+                }
+                else {
                     streams.err.append(wgettext_fmt!(
-                        "%ls: %ls: already set scale options\n",
+                        "%ls: %ls: invalid mode\n",
                         cmd,
-                        c
+                        optarg
                     ));
                     return Err(STATUS_INVALID_ARGS);
-                }
-                let optarg = w.woptarg.unwrap();
-                have_round = true;
-                opts.round = true;
-                // In my point of view, round is just a submodule of scale, which is only different at "scale = 0" situation
-                // So I just copy the implementation of "scale" part and modify the zero case
-                if optarg == "max" {
-                    opts.scale = 15;
-                } else {
-                    let scale = fish_wcstoi(optarg).unwrap_or(-1);
-                    if scale < 0 || scale > 15 {
-                        streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid base value\n",
-                            cmd,
-                            optarg
-                        ));
-                        return Err(STATUS_INVALID_ARGS);
-                    }
-                    opts.scale = scale as usize;
                 }
             }
             'b' => {
@@ -150,15 +143,6 @@ fn parse_cmd_opts(
         ));
         return Err(STATUS_INVALID_ARGS);
     }
-    if have_round && opts.scale != 0 && opts.base != 10 {
-        streams.err.append(wgettext_fmt!(
-            BUILTIN_ERR_COMBO2,
-            cmd,
-            "non-zero round value only valid
-            for base 10"
-        ));
-        return Err(STATUS_INVALID_ARGS);
-    }
 
     Ok((opts, w.wopt_index))
 }
@@ -182,12 +166,12 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     // As a special-case, a scale of 0 means to truncate to an integer
     // instead of rounding.
     if opts.scale == 0 {
-        if opts.round {
-            v = v.round();
-        }
-        else {
-            v = v.trunc();
-        }
+        v = match opts.zero_scale_mode {
+            ZeroScaleMode::TRUNC => v.trunc(),
+            ZeroScaleMode::ROUND => v.round(),
+            ZeroScaleMode::FLOOR => v.floor(),
+            ZeroScaleMode::CEIL => v.ceil(),
+        };
         return sprintf!("%.*f", opts.scale, v);
     }
 

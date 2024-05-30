@@ -75,7 +75,7 @@ fn parse_cmd_opts(
                 }
             }
             'r' => {
-                if have_round == true {
+                if have_scale == true {
                     streams.err.append(wgettext_fmt!(
                         "%ls: %ls: already set scale options\n",
                         cmd,

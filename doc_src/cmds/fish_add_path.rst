@@ -16,28 +16,28 @@ Synopsis
 Description
 -----------
 
-:program:`fish_add_path` is a simple way to add more components to fish's :envvar:`PATH`. It does this by adding the components either to $fish_user_paths or directly to :envvar:`PATH` (if the ``--path`` switch is given).
+:program:`fish_add_path` is a simple way to add more directories to fish's :envvar:`PATH`. It does this by adding the directories either to :envvar:`fish_user_paths` or directly to :envvar:`PATH` (if the ``--path`` switch is given).
 
-It is (by default) safe to use :program:`fish_add_path` in config.fish, or it can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <variables-universal>`. This is a "do what I mean" style command, if you need more control, consider modifying the variable yourself.
+It is (by default) safe to use :program:`fish_add_path` in config.fish, or it can be used once, interactively, and the paths will stay in future because of :ref:`universal variables <variables-universal>`. This is a "do what I mean" style command - it tries to do the right thing by default, and follow your lead on what you have already set up (e.g. by using a global :envvar:`fish_user_paths` if you have that already). If you need more control, consider modifying the variable yourself.
 
-Components are normalized by :doc:`realpath <realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a component already exists, it is not added again and stays in the same place unless the ``--move`` switch is given.
+Directories are normalized with :doc:`realpath <realpath>`. Trailing slashes are ignored and relative paths are made absolute (but symlinks are not resolved). If a directory is already included, it is not added again and stays in the same place unless the ``--move`` switch is given.
 
-Components are added in the order they are given, and they are prepended to the path unless ``--append`` is given. If $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths. If the ``--path`` option is used, the paths are appended/prepended to :envvar:`PATH` directly, so this doesn't happen.
+Directories are added in the order they are given, and they are prepended to the path unless ``--append`` is given. If $fish_user_paths is used, that means they are last in $fish_user_paths, which is itself prepended to :envvar:`PATH`, so they still stay ahead of the system paths. If the ``--path`` option is used, the paths are appended/prepended to :envvar:`PATH` directly, so this doesn't happen.
 
-With ``--path``, because :envvar:`PATH` must be a global variable instead of a universal one, the changes won't persist, so those calls need to be stored in :ref:`config.fish <configuration>`.
+With ``--path``, because :envvar:`PATH` must be a global variable instead of a universal one, the changes won't persist, so those calls need to be stored in :ref:`config.fish <configuration>`. This also applies to :envvar:`fish_user_paths` if you make it global (for instance by passing ``--global``).
 
-If no component is new, the variable (:envvar:`fish_user_paths` or :envvar:`PATH`) is not set again or otherwise modified, so variable handlers are not triggered.
+If no directory is new, the variable (:envvar:`fish_user_paths` or :envvar:`PATH`) is not set again or otherwise modified, so variable handlers are not triggered.
 
-If a component is not an existing directory, ``fish_add_path`` ignores it.
+If an argument is not an existing directory, ``fish_add_path`` ignores it.
 
 Options
 -------
 
 **-a** or **--append**
-    Add components to the *end* of the variable.
+    Add directories to the *end* of the variable.
 
 **-p** or **--prepend**
-    Add components to the *front* of the variable (this is the default).
+    Add directories to the *front* of the variable (this is the default).
 
 **-g** or **--global**
     Use a global :envvar:`fish_user_paths`.
@@ -49,7 +49,7 @@ Options
     Manipulate :envvar:`PATH` directly.
 
 **-m** or **--move**
-    Move already-existing components to the place they would be added - by default they would be left in place and not added again.
+    Move already-included directories to the place they would be added - by default they would be left in place and not added again.
 
 **-v** or **--verbose**
     Print the :doc:`set <set>` command used.

@@ -276,7 +276,8 @@ complete -C'cd .'
 # This is first supported on macOS 12.
 # `sysctl kern.osproductversion` emits something like:
 #   kern.osproductversion: 14.3.1
-if test (uname) = "Darwin" && test (sysctl kern.osproductversion | string match -r \\d+) -lt 12
+# Note that there is no kern.osproductversion under older OS X releases!
+if test (uname) = "Darwin" && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12
     # Not supported. Satisfy the CHECKs below.
     echo fake/a
     echo fake/a/b

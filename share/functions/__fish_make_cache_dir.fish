@@ -7,6 +7,7 @@ function __fish_make_cache_dir --description "Create and return XDG_CACHE_HOME"
     # If we get an argument, we try to create that as a subdirectory.
     # So if you call `__fish_make_cache_dir completions`,
     # this creates e.g. ~/.cache/fish/completions
-    mkdir -m 700 -p $xdg_cache_home/fish/"$argv[1]"
-    and echo $xdg_cache_home/fish/"$argv[1]"
+    if not path is -d $xdg_cache_home/fish/"$argv[1]"
+        mkdir -m 700 -p $xdg_cache_home/fish/"$argv[1]"
+    end; and echo $xdg_cache_home/fish/"$argv[1]"
 end

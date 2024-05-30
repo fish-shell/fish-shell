@@ -461,7 +461,14 @@ fn cstr_from_osstr(s: &OsStr) -> CString {
 
 fn main() {
     PROGRAM_NAME.set(L!("fish")).unwrap();
-    panic_handler(throwing_main)
+    if !cfg!(small_main_stack) {
+        panic_handler(throwing_main);
+    } else {
+        // Create a new thread with a decent stack size to be our main thread
+        std::thread::scope(|scope| {
+            scope.spawn(|| panic_handler(throwing_main));
+        })
+    }
 }
 
 fn throwing_main() -> i32 {

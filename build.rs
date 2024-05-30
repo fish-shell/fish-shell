@@ -73,6 +73,7 @@ fn detect_cfgs(target: &mut Target) {
         ),
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
+        ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
             Ok(target.has_symbol("localeconv_l"))
@@ -165,6 +166,36 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
         _ => {
             rsconf::link_libraries(&libraries, LinkType::Default);
             Ok(true)
+        }
+    }
+}
+
+/// Rust sets the stack size of newly created threads to a sane value, but is at at the mercy of the
+/// OS when it comes to the size of the main stack. Some platforms we support default to a tiny
+/// 0.5 MiB main stack, which is insufficient for fish's MAX_EVAL_DEPTH/MAX_STACK_DEPTH values.
+///
+/// 0.5 MiB is small enough that we'd have to drastically reduce MAX_STACK_DEPTH to less than 10, so
+/// we instead use a workaround to increase the main thread size.
+fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
+    #[cfg(not(target_os = "macos"))]
+    return Ok(false);
+
+    #[cfg(target_os = "macos")]
+    {
+        use core::ffi;
+
+        extern "C" {
+            fn pthread_get_stacksize_np(thread: *const ffi::c_void) -> usize;
+            fn pthread_self() -> *const ffi::c_void;
+        }
+
+        // build.rs is executed on the main thread, so we are getting the main thread's stack size.
+        // Modern macOS versions default to an 8 MiB main stack but legacy OS X have a 0.5 MiB one.
+        let stack_size = unsafe { pthread_get_stacksize_np(pthread_self()) };
+        const TWO_MIB: usize = 2 * 1024 * 1024;
+        match stack_size {
+            0..TWO_MIB => Ok(true),
+            _ => Ok(false),
         }
     }
 }

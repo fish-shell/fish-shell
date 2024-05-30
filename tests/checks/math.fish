@@ -379,3 +379,41 @@ math 0x0_2.0P-f
 # CHECKERR: math: Error: Unexpected token
 # CHECKERR: '0x0_2.0P-f'
 # CHECKERR:           ^
+math "22 / 5 - 5"
+# CHECK: -0.6
+math -s 0 --scale-mode=truncate "22 / 5 - 5"
+# CHECK: -0
+math --scale=0 -m truncate "22 / 5 - 5"
+# CHECK: -0
+math -s 0 --scale-mode=floor "22 / 5 - 5"
+# CHECK: -1
+math -s 0 --scale-mode=round "22 / 5 - 5"
+# CHECK: -1
+math -s 0 --scale-mode=ceiling "22 / 5 - 5"
+# CHECK: -0
+math "1 / 3 - 1"
+# CHECK: -0.666667
+math --scale-mode=truncate "1 / 3 - 1"
+# CHECK: -0.666666
+math --scale-mode=floor "1 / 3 - 1"
+# CHECK: {{-0.666667|-0.666668}}
+math --scale-mode=floor "2 / 3 - 1"
+# CHECK: {{-0.333334|-0.333335}}
+math --scale-mode=round "1 / 3 - 1"
+# CHECK: {{-0.666667|-0.666668}}
+math --scale-mode=ceiling "1 / 3 - 1"
+# CHECK: -0.666666
+math --scale-mode=ceiling "2 / 3 - 1"
+# CHECK: -0.333333
+math -s 6 --scale-mode=truncate "1 / 3 - 1"
+# CHECK: -0.666666
+math -s 6 --scale-mode=floor "1 / 3 - 1"
+# CHECK: {{-0.666667|-0.666668}}
+math -s 6 --scale-mode=floor "2 / 3 - 1"
+# CHECK: {{-0.333334|-0.333335}}
+math -s 6 --scale-mode=round "1 / 3 - 1"
+# CHECK: {{-0.666667|-0.666668}}
+math -s 6 --scale-mode=ceiling "1 / 3 - 1"
+# CHECK: -0.666666
+math -s 6 --scale-mode=ceiling "2 / 3 - 1"
+# CHECK: -0.333333

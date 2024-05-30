@@ -1,17 +1,31 @@
+use num_traits::pow;
+use widestring::utf32str;
+
 use super::prelude::*;
 use crate::tinyexpr::te_interp;
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
+const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::Default;
+
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
+
+enum ZeroScaleMode {
+    Truncate,
+    Round,
+    Floor,
+    Ceiling,
+    Default,
+}
 
 struct Options {
     print_help: bool,
     scale: usize,
     base: usize,
+    zero_scale_mode: ZeroScaleMode,
 }
 
 fn parse_cmd_opts(
@@ -24,17 +38,19 @@ fn parse_cmd_opts(
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
-    const SHORT_OPTS: &wstr = L!("+:hs:b:");
+    const SHORT_OPTS: &wstr = L!("+:hs:b:m:");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("scale-mode"), ArgType::RequiredArgument, 'm'),
     ];
 
     let mut opts = Options {
         print_help: false,
         scale: DEFAULT_SCALE,
         base: 10,
+        zero_scale_mode: DEFAULT_ZERO_SCALE_MODE,
     };
 
     let mut have_scale = false;
@@ -60,6 +76,23 @@ fn parse_cmd_opts(
                     }
                     // We know the value is in the range [0, 15]
                     opts.scale = scale as usize;
+                }
+            }
+            'm' => {
+                let optarg = w.woptarg.unwrap();
+                if optarg.eq(utf32str!("truncate")) {
+                    opts.zero_scale_mode = ZeroScaleMode::Truncate;
+                } else if optarg.eq(utf32str!("round")) {
+                    opts.zero_scale_mode = ZeroScaleMode::Round;
+                } else if optarg.eq(utf32str!("floor")) {
+                    opts.zero_scale_mode = ZeroScaleMode::Floor;
+                } else if optarg.eq(utf32str!("ceiling")) {
+                    opts.zero_scale_mode = ZeroScaleMode::Ceiling;
+                } else {
+                    streams
+                        .err
+                        .append(wgettext_fmt!("%ls: %ls: invalid mode\n", cmd, optarg));
+                    return Err(STATUS_INVALID_ARGS);
                 }
             }
             'b' => {
@@ -129,10 +162,26 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         return sprintf!("%s0%lo", mneg, v.abs() as u64);
     }
 
-    // As a special-case, a scale of 0 means to truncate to an integer
-    // instead of rounding.
-    if opts.scale == 0 {
-        v = v.trunc();
+    v *= pow(10f64, opts.scale);
+
+    v = match opts.zero_scale_mode {
+        ZeroScaleMode::Truncate => v.trunc(),
+        ZeroScaleMode::Round => v.round(),
+        ZeroScaleMode::Floor => v.floor(),
+        ZeroScaleMode::Ceiling => v.ceil(),
+        ZeroScaleMode::Default => {
+            if opts.scale == 0 {
+                v.trunc()
+            } else {
+                v
+            }
+        }
+    };
+
+    // if we don't add check here, the result of 'math -s 0 "22 / 5 - 5"' will be '0', not '-0'
+    if opts.scale != 0 {
+        v /= pow(10f64, opts.scale);
+    } else {
         return sprintf!("%.*f", opts.scale, v);
     }
 

@@ -372,30 +372,22 @@ impl Parser {
 
     /// Return whether we are currently evaluating a function.
     pub fn is_function(&self) -> bool {
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if b.is_function_call() {
-                return true;
-            } else if b.typ() == BlockType::source {
-                // If a function sources a file, don't descend further.
-                break;
-            }
-        }
-        false
+        self.blocks()
+            .iter()
+            .rev()
+            // If a function sources a file, don't descend further.
+            .take_while(|b| b.typ() != BlockType::source)
+            .any(|b| b.is_function_call())
     }
 
     /// Return whether we are currently evaluating a command substitution.
     pub fn is_command_substitution(&self) -> bool {
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if b.typ() == BlockType::subst {
-                return true;
-            } else if b.typ() == BlockType::source {
-                // If a function sources a file, don't descend further.
-                break;
-            }
-        }
-        false
+        self.blocks()
+            .iter()
+            .rev()
+            // If a function sources a file, don't descend further.
+            .take_while(|b| b.typ() != BlockType::source)
+            .any(|b| b.typ() == BlockType::subst)
     }
 
     /// Get the "principal" parser, whatever that is. Can only be called by the main thread.
@@ -698,24 +690,18 @@ impl Parser {
     /// This supports 'status is-block'.
     pub fn is_block(&self) -> bool {
         // Note historically this has descended into 'source', unlike 'is_function'.
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if ![BlockType::top, BlockType::subst].contains(&b.typ()) {
-                return true;
-            }
-        }
-        false
+        self.blocks()
+            .iter()
+            .rev()
+            .any(|b| ![BlockType::top, BlockType::subst].contains(&b.typ()))
     }
 
     /// Return whether we have a breakpoint block.
     pub fn is_breakpoint(&self) -> bool {
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if b.typ() == BlockType::breakpoint {
-                return true;
-            }
-        }
-        false
+        self.blocks()
+            .iter()
+            .rev()
+            .any(|b| b.typ() == BlockType::breakpoint)
     }
 
     /// Return the list of blocks. The first block is at the top.
@@ -857,34 +843,33 @@ impl Parser {
             // Return the function name for the level preceding the most recent breakpoint. If there
             // isn't one return the function name for the current level.
             // Walk until we find a breakpoint, then take the next function.
-            let mut found_breakpoint = false;
-            let blocks = self.blocks();
-            for b in blocks.iter().rev() {
-                if b.typ() == BlockType::breakpoint {
-                    found_breakpoint = true;
-                } else if found_breakpoint && b.is_function_call() {
-                    return Some(b.function_name.clone());
-                }
-            }
-            return None; // couldn't find a breakpoint frame
+            return self
+                .blocks()
+                .iter()
+                .rev()
+                .skip_while(|b| b.typ() != BlockType::breakpoint)
+                .find(|b| b.is_function_call())
+                .map(|b| b.function_name.clone());
         }
 
-        // Level 1 is the topmost function call. Level 2 is its caller. Etc.
-        let mut funcs_seen = 0;
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if b.is_function_call() {
-                funcs_seen += 1;
-                if funcs_seen == level {
-                    return Some(b.function_name.clone());
+        self.blocks()
+            .iter()
+            .rev()
+            // Historical: If we want the topmost function, but we are really in a file sourced by a
+            // function, don't consider ourselves to be in a function.
+            .take_while(|b| !(level == 1 && b.typ() == BlockType::source))
+            .map(|b| (b, 0))
+            .map(|(b, level)| {
+                if b.is_function_call() {
+                    (b, level + 1)
+                } else {
+                    (b, level)
                 }
-            } else if b.typ() == BlockType::source && level == 1 {
-                // Historical: If we want the topmost function, but we are really in a file sourced by a
-                // function, don't consider ourselves to be in a function.
-                break;
-            }
-        }
-        None
+            })
+            .skip_while(|(_, l)| *l != level)
+            .inspect(|(b, _)| debug_assert!(b.is_function_call()))
+            .map(|(b, _)| b.function_name.clone())
+            .next()
     }
 
     /// Promotes a job to the front of the list.
@@ -1011,17 +996,20 @@ impl Parser {
     /// reader_current_filename, e.g. if we are evaluating a function defined in a different file
     /// than the one currently read.
     pub fn current_filename(&self) -> Option<FilenameRef> {
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            if b.is_function_call() {
-                return function::get_props(&b.function_name)
-                    .and_then(|props| props.definition_file.clone());
-            } else if b.typ() == BlockType::source {
-                return b.sourced_file.clone();
-            }
-        }
-        // Fall back to the file being sourced.
-        self.libdata().current_filename.clone()
+        self.blocks()
+            .iter()
+            .rev()
+            .find_map(|b| {
+                if b.is_function_call() {
+                    function::get_props(&b.function_name)
+                        .and_then(|props| props.definition_file.clone())
+                } else if b.typ() == BlockType::source {
+                    b.sourced_file.clone()
+                } else {
+                    None
+                }
+            })
+            .or_else(|| self.libdata().current_filename.clone())
     }
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
@@ -1032,21 +1020,18 @@ impl Parser {
 
     /// Return a string representing the current stack trace.
     pub fn stack_trace(&self) -> WString {
-        let mut trace = WString::new();
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            append_block_description_to_stack_trace(self, b, &mut trace);
-
+        self.blocks()
+            .iter()
+            .rev()
             // Stop at event handler. No reason to believe that any other code is relevant.
-            //
             // It might make sense in the future to continue printing the stack trace of the code
             // that invoked the event, if this is a programmatic event, but we can't currently
             // detect that.
-            if b.typ() == BlockType::event {
-                break;
-            }
-        }
-        trace
+            .take_while(|b| b.typ() != BlockType::event)
+            .fold(WString::new(), |mut trace, b| {
+                append_block_description_to_stack_trace(self, b, &mut trace);
+                trace
+            })
     }
 
     /// Return whether the number of functions in the stack exceeds our stack depth limit.

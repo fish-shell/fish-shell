@@ -22,7 +22,7 @@ fn test_math(
 }
 
 #[test]
-fn test_round() {
+fn test_scale_mode() {
     threads::init();
     let parser = &Parser::principal_parser();
     let mut out = OutputStream::String(StringOutputStream::new());

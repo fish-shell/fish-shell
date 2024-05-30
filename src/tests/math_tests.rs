@@ -22,6 +22,7 @@ fn test_math(
 
 #[test]
 fn test_scale_mode() {
+    let _cleanup = test_init();
     let parser = &Parser::principal_parser();
     let mut out = OutputStream::String(StringOutputStream::new());
     let mut err = OutputStream::String(StringOutputStream::new());

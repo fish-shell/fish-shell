@@ -1059,11 +1059,12 @@ impl Parser {
             return false;
         }
         // Count the functions.
-        let mut depth = 0;
-        let blocks = self.blocks();
-        for b in blocks.iter().rev() {
-            depth += if b.is_function_call() { 1 } else { 0 };
-        }
+        let depth = self
+            .blocks()
+            .iter()
+            .rev()
+            .filter(|b| b.is_function_call())
+            .count();
         depth > FISH_MAX_STACK_DEPTH
     }
 

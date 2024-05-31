@@ -372,3 +372,21 @@ math 0x0_2.0P-f
 # CHECKERR: math: Error: Unexpected token
 # CHECKERR: '0x0_2.0P-f'
 # CHECKERR:           ^
+math -s 0 --scale-mode=truncate "22 / 5 - 5"
+# CHECK: -0
+math --scale=0 -m truncate "22 / 5 - 5"
+# CHECK: -0
+math -s 0 --scale-mode=floor "22 / 5 - 5"
+# CHECK: -1
+math -s 0 --scale-mode=round "22 / 5 - 5"
+# CHECK: -1
+math -s 0 --scale-mode=ceiling "22 / 5 - 5"
+# CHECK: -0
+math -s 1 --scale-mode=truncate "22 / 5 - 5"
+# CHECKERR: math: invalid option combination, scale mode only valid for non-zero scale
+math -s 1 --scale-mode=floor "22 / 5 - 5"
+# CHECKERR: math: invalid option combination, scale mode only valid for non-zero scale
+math -s 1 --scale-mode=round "22 / 5 - 5"
+# CHECKERR: math: invalid option combination, scale mode only valid for non-zero scale
+math -s 1 --scale-mode=ceiling "22 / 5 - 5"
+# CHECKERR: math: invalid option combination, scale mode only valid for non-zero scale

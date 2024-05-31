@@ -52,6 +52,7 @@ fn parse_cmd_opts(
     };
 
     let mut have_scale = false;
+    let mut changed_scale_mode = false;
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
     while let Some(c) = w.next_opt() {
@@ -77,14 +78,15 @@ fn parse_cmd_opts(
                 }
             }
             'm' => {
+                changed_scale_mode = true;
                 let optarg = w.woptarg.unwrap();
-                if optarg.eq(utf32str!("trunc")) {
+                if optarg.eq(utf32str!("truncate")) {
                     opts.zero_scale_mode = ZeroScaleMode::TRUNC;
                 } else if optarg.eq(utf32str!("round")) {
                     opts.zero_scale_mode = ZeroScaleMode::ROUND;
                 } else if optarg.eq(utf32str!("floor")) {
                     opts.zero_scale_mode = ZeroScaleMode::FLOOR;
-                } else if optarg.eq(utf32str!("ceil")) {
+                } else if optarg.eq(utf32str!("ceiling")) {
                     opts.zero_scale_mode = ZeroScaleMode::CEIL;
                 } else {
                     streams
@@ -137,6 +139,15 @@ fn parse_cmd_opts(
             cmd,
             "non-zero scale value only valid
             for base 10"
+        ));
+        return Err(STATUS_INVALID_ARGS);
+    }
+
+    if have_scale && opts.scale != 0 && changed_scale_mode {
+        streams.err.append(wgettext_fmt!(
+            BUILTIN_ERR_COMBO2,
+            cmd,
+            "scale mode only valid for non-zero scale"
         ));
         return Err(STATUS_INVALID_ARGS);
     }

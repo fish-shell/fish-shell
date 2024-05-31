@@ -147,7 +147,7 @@ fn parse_cmd_opts(
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
-            "scale mode only valid for non-zero scale"
+            "scale mode only valid for zero scale"
         ));
         return Err(STATUS_INVALID_ARGS);
     }

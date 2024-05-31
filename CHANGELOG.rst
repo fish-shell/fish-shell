@@ -45,6 +45,7 @@ Notable backwards-incompatible changes
 
   The flag will eventually be made read-only, making it impossible to turn off.
 - Fish no longer searches directories from the Windows system/user ``$PATH`` environment variable for Linux executables. To execute Linux binaries by name (i.e. not with a relative or absolute path) from a Windows folder, make sure the ``/mnt/c/...`` path is explicitly added to ``$fish_user_paths`` and not just automatically appended to ``$PATH`` by ``wsl.exe`` (:issue:`10506`).
+- Under WSLv1, backgrounded jobs that have not been disowned and do not terminate on their own after a ``SIGHUP`` + ``SIGCONT`` sequence will be explicitly killed by fish on exit/exec (after the usual prompt to close or disown them) to work around a WSL deficiency that sees backgrounded processes that run into ``SIGTTOU`` remain in a suspended state indefinitely (:issue:`#5263`). The workaround is to explicitly ``disown`` processes you wish to outlive the shell session.
 
 
 Notable improvements and fixes

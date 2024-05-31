@@ -133,6 +133,10 @@ fn parse_cmd_opts(
         }
     }
 
+    if !have_scale && changed_scale_mode {
+        opts.scale = 0;
+    }
+
     if have_scale && opts.scale != 0 && opts.base != 10 {
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,

@@ -382,6 +382,16 @@ math -s 0 --scale-mode=round "22 / 5 - 5"
 # CHECK: -1
 math -s 0 --scale-mode=ceiling "22 / 5 - 5"
 # CHECK: -0
+math --scale-mode=truncate "22 / 5 - 5"
+# CHECK: -0
+math -m truncate "22 / 5 - 5"
+# CHECK: -0
+math --scale-mode=floor "22 / 5 - 5"
+# CHECK: -1
+math --scale-mode=round "22 / 5 - 5"
+# CHECK: -1
+math --scale-mode=ceiling "22 / 5 - 5"
+# CHECK: -0
 math -s 1 --scale-mode=truncate "22 / 5 - 5"
 # CHECKERR: math: invalid option combination, scale mode only valid for zero scale
 math -s 1 --scale-mode=floor "22 / 5 - 5"

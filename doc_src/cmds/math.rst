@@ -8,7 +8,7 @@ Synopsis
 
 .. synopsis::
 
-    math [(-s | --scale) N] [(-b | --base) BASE] EXPRESSION ...
+    math [(-s | --scale) N] [(-b | --base) BASE] [(-m | --scale-mode) MODE] EXPRESSION ...
 
 
 Description
@@ -37,7 +37,7 @@ The following options are available:
 **-s** *N* or **--scale** *N*
     Sets the scale of the result.
     ``N`` must be an integer or the word "max" for the maximum scale.
-    A scale of zero causes results to be truncated, not rounded. Any non-integer component is thrown away.
+    A scale of zero causes results to be truncated by default. Any non-integer component is thrown away.
     So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to.
     This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0.
     Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
@@ -48,6 +48,11 @@ The following options are available:
     This might change in the future.
     Hex numbers will be printed with a ``0x`` prefix.
     Octal numbers will have a prefix of ``0`` but aren't understood by ``math`` as input.
+
+**-m** *MODE* or **--scale-mode** *MODE*
+    Sets scale behavior when the scale is set to zero.
+    The ``MODE`` can be ``truncate``, ``round``, ``floor``, ``ceiling``. 
+    The default value of scale mode is ``truncate``. This option can only be set when the scale is zero; if ``scale`` isn't given, ``scale`` will automatically be set to ``0``; otherwise, it will throw an error.
 
 **-h** or **--help**
     Displays help about using this command.

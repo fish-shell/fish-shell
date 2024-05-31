@@ -97,8 +97,7 @@ impl Block {
             BlockType::while_block => L!("while"),
             BlockType::for_block => L!("for"),
             BlockType::if_block => L!("if"),
-            BlockType::function_call => L!("function_call"),
-            BlockType::function_call_no_shadow => L!("function_call_no_shadow"),
+            BlockType::function_call { .. } => L!("function_call"),
             BlockType::switch_block => L!("switch"),
             BlockType::subst => L!("substitution"),
             BlockType::top => L!("top"),
@@ -125,7 +124,7 @@ impl Block {
 
     /// Return if we are a function call (with or without shadowing).
     pub fn is_function_call(&self) -> bool {
-        [BlockType::function_call, BlockType::function_call_no_shadow].contains(&self.typ())
+        matches!(self.typ(), BlockType::function_call { .. })
     }
 
     /// Entry points for creating blocks.
@@ -138,11 +137,7 @@ impl Block {
         b
     }
     pub fn function_block(name: WString, args: Vec<WString>, shadows: bool) -> Block {
-        let mut b = Block::new(if shadows {
-            BlockType::function_call
-        } else {
-            BlockType::function_call_no_shadow
-        });
+        let mut b = Block::new(BlockType::function_call { shadows });
         b.function_name = name;
         b.function_args = args;
         b
@@ -815,7 +810,7 @@ impl Parser {
         block.src_lineno = self.get_lineno();
         block.src_filename = self.current_filename();
         if block.typ() != BlockType::top {
-            let new_scope = block.typ() == BlockType::function_call;
+            let new_scope = block.typ() == BlockType::function_call { shadows: true };
             self.vars().push(new_scope);
             block.wants_pop_env = true;
         }
@@ -1124,7 +1119,7 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
 fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &mut WString) {
     let mut print_call_site = false;
     match b.typ() {
-        BlockType::function_call | BlockType::function_call_no_shadow => {
+        BlockType::function_call { .. } => {
             trace.push_utfstr(&wgettext_fmt!("in function '%ls'", &b.function_name));
             // Print arguments on the same line.
             let mut args_str = WString::new();
@@ -1202,9 +1197,7 @@ pub enum BlockType {
     /// If block
     if_block,
     /// Function invocation block
-    function_call,
-    /// Function invocation block with no variable shadowing
-    function_call_no_shadow,
+    function_call { shadows: bool },
     /// Switch block
     switch_block,
     /// Command substitution scope

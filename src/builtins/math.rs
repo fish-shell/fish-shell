@@ -175,8 +175,6 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         return sprintf!("%s0%lo", mneg, v.abs() as u64);
     }
 
-    // As a special-case, a scale of 0 means to truncate to an integer
-    // instead of rounding.
     if opts.scale == 0 {
         v = match opts.zero_scale_mode {
             ZeroScaleMode::TRUNC => v.trunc(),

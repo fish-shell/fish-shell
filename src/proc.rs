@@ -4,7 +4,8 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, redirect_tty_output, scoped_push_replacer, timef, Timepoint,
+    charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output,
+    scoped_push_replacer, timef, Timepoint, WSL,
 };
 use crate::curses::term;
 use crate::env::Statuses;
@@ -26,9 +27,9 @@ use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wbasename, wgettext, wperror};
 use libc::{
     EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
-    SIGINT, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO, WCONTINUED,
-    WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG, WUNTRACED,
-    _SC_CLK_TCK,
+    SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO,
+    WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG,
+    WUNTRACED, _SC_CLK_TCK,
 };
 use once_cell::sync::Lazy;
 use printf::sprintf;
@@ -1296,6 +1297,7 @@ pub fn proc_wait_any(parser: &Parser) {
 /// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
 pub fn hup_jobs(jobs: &JobList) {
     let fish_pgrp = unsafe { libc::getpgrp() };
+    let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };
         if pgid != fish_pgrp && !j.is_completed() {
@@ -1303,6 +1305,29 @@ pub fn hup_jobs(jobs: &JobList) {
             if j.is_stopped() {
                 j.signal(SIGCONT);
             }
+
+            // For most applications, the above alone is sufficient for the suspended process to
+            // exit. But for TUI applications attached to the tty, when we SIGCONT them they might
+            // immediately try to re-attach to the tty and end up immediately back in a stopped
+            // state! In this case, when the shell exits and gives up control of the tty, the kernel
+            // tty driver typically sends SIGHUP + SIGCONT on its own, and with the shell no longer
+            // in control of the tty, the child process won't receive SIGTTOU this time around and
+            // can properly handle the SIGHUP and exit.
+            // Anyway, the fun part of all this is that WSLv1 doesn't do any of this and stopped
+            // backgrounded child processes that want tty access will remain stopped with SIGTTOU
+            // indefinitely.
+            if is_windows_subsystem_for_linux(WSL::V1) {
+                kill_list.push(j);
+            }
+        }
+    }
+
+    if !kill_list.is_empty() {
+        // Sleep once for all child processes to give them a chance to handle SIGHUP if they can
+        // handle SIGHUP+SIGCONT without running into SIGTTOU.
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        for j in kill_list.drain(..) {
+            j.signal(SIGKILL);
         }
     }
 }

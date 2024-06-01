@@ -61,6 +61,9 @@ pub enum BlockData {
 /// block_t represents a block of commands.
 #[derive(Default)]
 pub struct Block {
+    /// Type of block.
+    block_type: BlockType,
+
     /// [`BlockType`]-specific data.
     ///
     /// Ideally this would be coalesced into `BlockType` but we currently require that to implement
@@ -70,8 +73,8 @@ pub struct Block {
     /// we store them in a `Box` to reduce the size of the `Block` itself.
     pub data: Option<Box<BlockData>>,
 
-    /// List of event blocks.
-    pub event_blocks: u64,
+    /// Pseudo-counter of event blocks
+    pub event_blocks: bool,
 
     /// Name of the file that created this block
     pub src_filename: Option<Arc<WString>>,
@@ -83,9 +86,6 @@ pub struct Block {
     ///
     /// This will saturate at the 65,535th line of a single fish script. I think that's ok!
     pub src_lineno: Option<NonZeroU16>,
-
-    /// Type of block.
-    block_type: BlockType,
 
     /// Whether we should pop the environment variable stack when we're popped off of the block
     /// stack.

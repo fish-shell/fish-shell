@@ -139,7 +139,7 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
     };
 
     if have_block {
-        parser.block_at_index_mut(block_idx).unwrap().event_blocks += 1;
+        parser.block_at_index_mut(block_idx).unwrap().event_blocks |= true;
     } else {
         parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
     }

@@ -35,6 +35,7 @@ use libc::c_int;
 use printf::sprintf;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
+use std::num::NonZeroU16;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
 use std::rc::{Rc, Weak};
@@ -75,8 +76,13 @@ pub struct Block {
     /// Name of the file that created this block
     pub src_filename: Option<Arc<WString>>,
 
-    /// Line number where this block was created.
-    pub src_lineno: Option<usize>,
+    /// Line number where this block was created, starting from 1.
+    ///
+    /// We count lines from 1, so we can use niche optimization to avoid increasing the size when
+    /// this is wrapped in an `Option`.
+    ///
+    /// This will saturate at the 65,535th line of a single fish script. I think that's ok!
+    pub src_lineno: Option<NonZeroU16>,
 
     /// Type of block.
     block_type: BlockType,
@@ -127,7 +133,7 @@ impl Block {
         .to_owned();
 
         if let Some(src_lineno) = self.src_lineno {
-            result.push_utfstr(&sprintf!(" (line %d)", src_lineno));
+            result.push_utfstr(&sprintf!(" (line %d)", src_lineno.get()));
         }
         if let Some(src_filename) = &self.src_filename {
             result.push_utfstr(&sprintf!(" (file %ls)", src_filename));
@@ -823,7 +829,10 @@ impl Parser {
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser.
     pub fn push_block(&self, mut block: Block) -> BlockId {
-        block.src_lineno = self.get_lineno();
+        // It's extremely unrealistic to assume a fish script will have more than 65,535 lines.
+        block.src_lineno = self
+            .get_lineno()
+            .and_then(|num| NonZeroU16::new(num.try_into().unwrap_or(u16::MAX)));
         block.src_filename = self.current_filename();
         if block.typ() != BlockType::top {
             let new_scope = block.typ() == BlockType::function_call { shadows: true };
@@ -1206,7 +1215,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
                 "\tcalled on line %d of file %ls\n",
-                b.src_lineno.unwrap_or(0),
+                b.src_lineno.map(|n| n.get()).unwrap_or(0),
                 user_presentable_path(file, parser.vars())
             ));
         } else if parser.libdata().pods.within_fish_init {

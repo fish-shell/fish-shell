@@ -446,8 +446,8 @@ impl<'a> ParseExecutionContext {
             match (parser.block_at_index(0), parser.block_at_index(1)) {
                 (Some(current), Some(p)) if current.typ() == BlockType::top => {
                     parent = p;
-                    match &parent.data {
-                        BlockData::Function { name, .. } => name,
+                    match parent.data() {
+                        Some(BlockData::Function { name, .. }) => name,
                         _ => return None,
                     }
                 }

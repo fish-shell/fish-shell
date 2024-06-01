@@ -43,10 +43,7 @@ use std::sync::{
     Arc,
 };
 
-#[derive(Default)]
 pub enum BlockData {
-    #[default]
-    None,
     Function {
         /// Name of the function
         name: WString,
@@ -67,7 +64,10 @@ pub struct Block {
     ///
     /// Ideally this would be coalesced into `BlockType` but we currently require that to implement
     /// `Copy`, so now we have to awkwardly deal with a discriminant stored separately.
-    pub data: BlockData,
+    ///
+    /// None of these data fields are accessed on a regular basis (only for shell introspection), so
+    /// we store them in a `Box` to reduce the size of the `Block` itself.
+    pub data: Option<Box<BlockData>>,
 
     /// List of event blocks.
     pub event_blocks: u64,
@@ -84,6 +84,13 @@ pub struct Block {
     /// Whether we should pop the environment variable stack when we're popped off of the block
     /// stack.
     pub wants_pop_env: bool,
+}
+
+impl Block {
+    #[inline(always)]
+    pub fn data(&self) -> Option<&BlockData> {
+        self.data.as_deref()
+    }
 }
 
 impl Default for BlockType {
@@ -143,17 +150,17 @@ impl Block {
     }
     pub fn event_block(event: Event) -> Block {
         let mut b = Block::new(BlockType::event);
-        b.data = BlockData::Event(Rc::new(event));
+        b.data = Some(Box::new(BlockData::Event(Rc::new(event))));
         b
     }
     pub fn function_block(name: WString, args: Vec<WString>, shadows: bool) -> Block {
         let mut b = Block::new(BlockType::function_call { shadows });
-        b.data = BlockData::Function { name, args };
+        b.data = Some(Box::new(BlockData::Function { name, args }));
         b
     }
     pub fn source_block(src: FilenameRef) -> Block {
         let mut b = Block::new(BlockType::source);
-        b.data = BlockData::Source { file: src };
+        b.data = Some(Box::new(BlockData::Source { file: src }));
         b
     }
     pub fn for_block() -> Block {
@@ -852,8 +859,8 @@ impl Parser {
                 .iter()
                 .rev()
                 .skip_while(|b| b.typ() != BlockType::breakpoint)
-                .find_map(|b| match &b.data {
-                    BlockData::Function { name, .. } => Some(name.clone()),
+                .find_map(|b| match b.data() {
+                    Some(BlockData::Function { name, .. }) => Some(name.clone()),
                     _ => None,
                 });
         }
@@ -875,7 +882,7 @@ impl Parser {
             .skip_while(|(_, l)| *l != level)
             .inspect(|(b, _)| debug_assert!(b.is_function_call()))
             .map(|(b, _)| {
-                let BlockData::Function { name, .. } = &b.data else {
+                let Some(BlockData::Function { name, .. }) = b.data() else {
                     unreachable!()
                 };
                 name.clone()
@@ -1010,11 +1017,11 @@ impl Parser {
         self.blocks()
             .iter()
             .rev()
-            .find_map(|b| match &b.data {
-                BlockData::Function { name, .. } => {
+            .find_map(|b| match b.data() {
+                Some(BlockData::Function { name, .. }) => {
                     function::get_props(name).and_then(|props| props.definition_file.clone())
                 }
-                BlockData::Source { file } => Some(file.clone()),
+                Some(BlockData::Source { file }) => Some(file.clone()),
                 _ => None,
             })
             .or_else(|| self.libdata().current_filename.clone())
@@ -1133,7 +1140,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
     let mut print_call_site = false;
     match b.typ() {
         BlockType::function_call { .. } => {
-            let BlockData::Function { name, args, .. } = &b.data else {
+            let Some(BlockData::Function { name, args, .. }) = b.data() else {
                 unreachable!()
             };
             trace.push_utfstr(&wgettext_fmt!("in function '%ls'", name));
@@ -1166,7 +1173,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             print_call_site = true;
         }
         BlockType::source => {
-            let BlockData::Source { file, .. } = &b.data else {
+            let Some(BlockData::Source { file, .. }) = b.data() else {
                 unreachable!()
             };
             let source_dest = file;
@@ -1177,7 +1184,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             print_call_site = true;
         }
         BlockType::event => {
-            let BlockData::Event(event) = &b.data else {
+            let Some(BlockData::Event(event)) = b.data() else {
                 unreachable!()
             };
             let description = event::get_desc(parser, event);

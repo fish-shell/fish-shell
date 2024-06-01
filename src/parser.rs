@@ -66,9 +66,6 @@ pub struct Block {
 
     /// [`BlockType`]-specific data.
     ///
-    /// Ideally this would be coalesced into `BlockType` but we currently require that to implement
-    /// `Copy`, so now we have to awkwardly deal with a discriminant stored separately.
-    ///
     /// None of these data fields are accessed on a regular basis (only for shell introspection), so
     /// we store them in a `Box` to reduce the size of the `Block` itself.
     pub data: Option<Box<BlockData>>,
@@ -86,16 +83,17 @@ pub struct Block {
     ///
     /// This will saturate at the 65,535th line of a single fish script. I think that's ok!
     pub src_lineno: Option<NonZeroU16>,
-
-    /// Whether we should pop the environment variable stack when we're popped off of the block
-    /// stack.
-    pub wants_pop_env: bool,
 }
 
 impl Block {
     #[inline(always)]
     pub fn data(&self) -> Option<&BlockData> {
         self.data.as_deref()
+    }
+
+    #[inline(always)]
+    pub fn wants_pop_env(&self) -> bool {
+        self.typ() != BlockType::top
     }
 }
 
@@ -837,7 +835,6 @@ impl Parser {
         if block.typ() != BlockType::top {
             let new_scope = block.typ() == BlockType::function_call { shadows: true };
             self.vars().push(new_scope);
-            block.wants_pop_env = true;
         }
 
         let mut block_list = self.block_list.borrow_mut();
@@ -852,7 +849,7 @@ impl Parser {
             assert!(expected == block_list.len() - 1);
             block_list.pop().unwrap()
         };
-        if block.wants_pop_env {
+        if block.wants_pop_env() {
             self.vars().pop();
         }
     }

@@ -3,14 +3,20 @@ if env --version &>/dev/null
     set is_gnu --is-gnu
 end
 
-# Returns 0 if we're after `env` and all previous tokens have an equal sign
+# Returns 0 if we're after `env` and all previous tokens have an equal sign or were switches
 function __fish_env_defining_vars
-    not string match -ev -- = (commandline -xp)[2..-2] | string match -rq .
+    set last ""
+    for token in (commandline -cxp)[2..] # 2.. excludes `env`. -cx already ignores the variable being completed.
+        # Is a switch, defined an env variable, or was a variable name to unset (after -u)
+        string match -r -- '^-|=' $token || string match -rq -- '^(-u|--unset)$' "$last" || return 1
+        set last $token
+    end
 end
 
 # Returns 0 if we're after `env` and all previous tokens have not yet contained an equal sign
+# Prevents `env` completions from completing payload completions.
 function __fish_env_not_yet_vars
-    not string match -qe = (commandline)
+    not string match -qe = (commandline -c)
 end
 
 # Generate a list of possible variable names to redefine, excluding any already redefined.
@@ -87,15 +93,20 @@ end
 # Generate a completion for the executable to execute under `env`
 function __fish_complete_env_subcommand
     if set -l argv (__fish_env_remaining_args)
-        __fish_complete_subcommand --commandline $argv
+        complete -C "$argv"
     end
 end
 
-complete -c env -a "(__fish_complete_env_subcommand)"
-# Complete the name of the variable to redefine
+# Complete the name of the variable from current definitions
 complete -c env -n '__fish_env_defining_vars; and not string match -eq = -- (commandline -ct)' -a "(__fish_env_redefine_vars)" -f -d "Redefine variable"
+# Complete the name of the variable from history
 complete -c env -n '__fish_env_defining_vars; and not string match -eq = -- (commandline -ct)' -a "(__fish_env_names_from_history)" -f -d Historical
+# Complete the value for FOO= from history
+# TODO: NO_ESCAPE when that becomes available
 complete -c env -n '__fish_env_defining_vars; and string match -eq = -- (commandline -ct)' -a "(__fish_env_values_from_history)" -f
+
+# Complete normally after we are done with `env` stuff
+complete -c env -fa "(__fish_complete_env_subcommand)"
 
 if set -q is_gnu
     complete -c env -n __fish_env_not_yet_vars -s i -l ignore-environment -d "Start with an empty environment"

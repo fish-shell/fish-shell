@@ -33,7 +33,7 @@ use crate::parse_constants::{
 };
 use crate::parse_tree::{NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
-use crate::parser::{Block, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
+use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::pointer::ConstPointer;
@@ -441,19 +441,22 @@ impl<'a> ParseExecutionContext {
         // not inside a block in that function call. If, in the future, the rules for what
         // block scopes are pushed on function invocation changes, then this check will break.
         let parser = ctx.parser();
-        let parent = {
+        let parent;
+        let parent_fn_name = {
             match (parser.block_at_index(0), parser.block_at_index(1)) {
-                (Some(current), Some(parent))
-                    if current.typ() == BlockType::top && parent.is_function_call() =>
-                {
-                    parent
+                (Some(current), Some(p)) if current.typ() == BlockType::top => {
+                    parent = p;
+                    match &parent.data {
+                        BlockData::Function { name, .. } => name,
+                        _ => return None,
+                    }
                 }
                 _ => return None, // Not within function call.
             }
         };
 
         // Get the function name of the immediate block.
-        let forbidden_function_name = &parent.function_name;
+        let forbidden_function_name = parent_fn_name;
 
         // Get the first job in the job list.
         let jc = &jobs.get(0)?;

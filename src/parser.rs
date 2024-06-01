@@ -43,27 +43,37 @@ use std::sync::{
     Arc,
 };
 
+#[derive(Default)]
+pub enum BlockData {
+    #[default]
+    None,
+    Function {
+        /// Name of the function
+        name: WString,
+        /// Arguments passed to the function
+        args: Vec<WString>,
+    },
+    Event(Rc<Event>),
+    Source {
+        /// The sourced file
+        file: Arc<WString>,
+    },
+}
+
 /// block_t represents a block of commands.
 #[derive(Default)]
 pub struct Block {
-    /// If this is a function block, the function name. Otherwise empty.
-    pub function_name: WString,
+    /// [`BlockType`]-specific data.
+    ///
+    /// Ideally this would be coalesced into `BlockType` but we currently require that to implement
+    /// `Copy`, so now we have to awkwardly deal with a discriminant stored separately.
+    pub data: BlockData,
 
     /// List of event blocks.
     pub event_blocks: u64,
 
-    /// If this is a function block, the function args. Otherwise empty.
-    pub function_args: Vec<WString>,
-
-    /// Name of file that created this block.
-    pub src_filename: Option<FilenameRef>,
-
-    // If this is an event block, the event. Otherwise ignored.
-    pub event: Option<Rc<Event>>,
-
-    // If this is a source block, the source'd file, interned.
-    // Otherwise nothing.
-    pub sourced_file: Option<FilenameRef>,
+    /// Name of the file that created this block
+    pub src_filename: Option<Arc<WString>>,
 
     /// Line number where this block was created.
     pub src_lineno: Option<usize>,
@@ -133,18 +143,17 @@ impl Block {
     }
     pub fn event_block(event: Event) -> Block {
         let mut b = Block::new(BlockType::event);
-        b.event = Some(Rc::new(event));
+        b.data = BlockData::Event(Rc::new(event));
         b
     }
     pub fn function_block(name: WString, args: Vec<WString>, shadows: bool) -> Block {
         let mut b = Block::new(BlockType::function_call { shadows });
-        b.function_name = name;
-        b.function_args = args;
+        b.data = BlockData::Function { name, args };
         b
     }
     pub fn source_block(src: FilenameRef) -> Block {
         let mut b = Block::new(BlockType::source);
-        b.sourced_file = Some(src);
+        b.data = BlockData::Source { file: src };
         b
     }
     pub fn for_block() -> Block {
@@ -843,8 +852,10 @@ impl Parser {
                 .iter()
                 .rev()
                 .skip_while(|b| b.typ() != BlockType::breakpoint)
-                .find(|b| b.is_function_call())
-                .map(|b| b.function_name.clone());
+                .find_map(|b| match &b.data {
+                    BlockData::Function { name, .. } => Some(name.clone()),
+                    _ => None,
+                });
         }
 
         self.blocks()
@@ -863,7 +874,12 @@ impl Parser {
             })
             .skip_while(|(_, l)| *l != level)
             .inspect(|(b, _)| debug_assert!(b.is_function_call()))
-            .map(|(b, _)| b.function_name.clone())
+            .map(|(b, _)| {
+                let BlockData::Function { name, .. } = &b.data else {
+                    unreachable!()
+                };
+                name.clone()
+            })
             .next()
     }
 
@@ -994,15 +1010,12 @@ impl Parser {
         self.blocks()
             .iter()
             .rev()
-            .find_map(|b| {
-                if b.is_function_call() {
-                    function::get_props(&b.function_name)
-                        .and_then(|props| props.definition_file.clone())
-                } else if b.typ() == BlockType::source {
-                    b.sourced_file.clone()
-                } else {
-                    None
+            .find_map(|b| match &b.data {
+                BlockData::Function { name, .. } => {
+                    function::get_props(name).and_then(|props| props.definition_file.clone())
                 }
+                BlockData::Source { file } => Some(file.clone()),
+                _ => None,
             })
             .or_else(|| self.libdata().current_filename.clone())
     }
@@ -1120,10 +1133,13 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
     let mut print_call_site = false;
     match b.typ() {
         BlockType::function_call { .. } => {
-            trace.push_utfstr(&wgettext_fmt!("in function '%ls'", &b.function_name));
+            let BlockData::Function { name, args, .. } = &b.data else {
+                unreachable!()
+            };
+            trace.push_utfstr(&wgettext_fmt!("in function '%ls'", name));
             // Print arguments on the same line.
             let mut args_str = WString::new();
-            for arg in &b.function_args {
+            for arg in args {
                 if !args_str.is_empty() {
                     args_str.push(' ');
                 }
@@ -1150,7 +1166,10 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             print_call_site = true;
         }
         BlockType::source => {
-            let source_dest = b.sourced_file.as_ref().unwrap();
+            let BlockData::Source { file, .. } = &b.data else {
+                unreachable!()
+            };
+            let source_dest = file;
             trace.push_utfstr(&wgettext_fmt!(
                 "from sourcing file %ls\n",
                 &user_presentable_path(source_dest, parser.vars())
@@ -1158,8 +1177,10 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
             print_call_site = true;
         }
         BlockType::event => {
-            let description =
-                event::get_desc(parser, b.event.as_ref().expect("Should have an event"));
+            let BlockData::Event(event) = &b.data else {
+                unreachable!()
+            };
+            let description = event::get_desc(parser, event);
             trace.push_utfstr(&wgettext_fmt!("in event handler: %ls\n", &description));
             print_call_site = true;
         }

@@ -9,8 +9,7 @@ use crate::input_common::{
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
 use crate::reader::{
-    reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint,
-    ReaderData,
+    reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
 };
 use crate::signal::signal_clear_cancel;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
@@ -42,7 +41,7 @@ pub enum KeyNameStyle {
 }
 
 /// Struct representing a keybinding. Returned by input_get_mappings.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InputMapping {
     /// Character sequence which generates this event.
     seq: Vec<Key>,
@@ -390,19 +389,19 @@ pub fn init_input() {
     }
 }
 
-impl InputEventQueuer for ReaderData {
+impl<'a> InputEventQueuer for Reader<'a> {
     fn get_input_data(&self) -> &InputData {
-        &self.input_data
+        &self.data.input_data
     }
 
     fn get_input_data_mut(&mut self) -> &mut InputData {
-        &mut self.input_data
+        &mut self.data.input_data
     }
 
     fn prepare_to_select(&mut self) {
         // Fire any pending events and reap stray processes, including printing exit status messages.
-        event::fire_delayed(self.parser());
-        if job_reap(self.parser(), true) {
+        event::fire_delayed(self.parser);
+        if job_reap(self.parser, true) {
             reader_schedule_prompt_repaint();
         }
     }
@@ -413,7 +412,7 @@ impl InputEventQueuer for ReaderData {
         signal_clear_cancel();
 
         // Fire any pending events and reap stray processes, including printing exit status messages.
-        let parser = self.parser();
+        let parser = self.parser;
         event::fire_delayed(parser);
         if job_reap(parser, true) {
             reader_schedule_prompt_repaint();
@@ -431,7 +430,7 @@ impl InputEventQueuer for ReaderData {
     }
 
     fn uvar_change_notified(&mut self) {
-        self.parser().sync_uvars_and_fire(true /* always */);
+        self.parser.sync_uvars_and_fire(true /* always */);
     }
 
     fn ioport_notified(&mut self) {
@@ -724,7 +723,7 @@ impl<Queue: InputEventQueuer + ?Sized> Drop for EventQueuePeeker<'_, Queue> {
 }
 
 /// Support for reading keys from the terminal for the Reader.
-impl ReaderData {
+impl<'a> Reader<'a> {
     /// Read a key from our fd.
     pub fn read_char(&mut self) -> CharEvent {
         // Clear the interrupted flag.
@@ -796,7 +795,7 @@ impl ReaderData {
     }
 
     fn mapping_execute_matching_or_generic(&mut self) {
-        let vars = self.parser().vars_ref();
+        let vars = self.parser.vars_ref();
         let mut peeker = EventQueuePeeker::new(self);
         // Check for ordinary mappings.
         let ip = input_mappings();

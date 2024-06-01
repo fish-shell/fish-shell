@@ -5,7 +5,7 @@ use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
 use crate::parser::Parser;
-use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig};
+use crate::reader::{reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
@@ -45,14 +45,14 @@ fn test_universal() {
     let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
 
-    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let mut reader = reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
     let threads = 1;
     for i in 0..threads {
         iothread_perform(move || test_universal_helper(i));
     }
-    iothread_drain_all(reader_current_data().unwrap());
+    iothread_drain_all(&mut reader);
 
     let mut uvars = EnvUniversal::new();
     let mut callbacks = CallbackDataList::new();

@@ -7,12 +7,10 @@ use crate::parse_constants::{
 };
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::Parser;
-use crate::reader::{
-    reader_current_data, reader_pop, reader_push, reader_reset_interrupted, ReaderConfig,
-};
+use crate::reader::{reader_pop, reader_push, reader_reset_interrupted, ReaderConfig};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
-use crate::threads::{iothread_drain_all, iothread_perform};
+use crate::threads::iothread_perform;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
@@ -711,7 +709,6 @@ fn test_1_cancellation(src: &wstr) {
         src
     );
     assert!(res.status.signal_exited() && res.status.signal_code() == SIGINT);
-    iothread_drain_all(reader_current_data().unwrap());
 }
 
 #[test]

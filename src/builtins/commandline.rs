@@ -336,7 +336,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             }
 
             // Inserts the readline function at the back of the queue.
-            reader_execute_readline_cmd(CharEvent::from_readline(cmd));
+            reader_execute_readline_cmd(parser, CharEvent::from_readline(cmd));
         }
 
         return STATUS_CMD_OK;

@@ -241,7 +241,7 @@ fn read_interactive(
             true,
         );
 
-        reader_readline(nchars)
+        reader_readline(parser, nchars)
     };
     if let Some(line) = mline {
         *buff = line;

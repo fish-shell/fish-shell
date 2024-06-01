@@ -38,7 +38,7 @@ The following options are available:
     Sets the scale of the result.
     ``N`` must be an integer or the word "max" for the maximum scale.
     A scale of zero causes results to be truncated by default. Any non-integer component is thrown away.
-    So ``3/2`` returns ``1`` rather than ``2`` which ``1.5`` would normally round to.
+    So ``3/2`` returns ``1`` by default, rather than ``2`` which ``1.5`` would normally round to.
     This is for compatibility with ``bc`` which was the basis for this command prior to fish 3.0.0.
     Scale values greater than zero causes the result to be rounded using the usual rules to the specified number of decimal places.
 

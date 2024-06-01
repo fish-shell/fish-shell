@@ -6,17 +6,17 @@ use crate::tinyexpr::te_interp;
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
-const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::TRUNC;
+const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::Truncate;
 
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
 
 enum ZeroScaleMode {
-    TRUNC,
-    ROUND,
-    FLOOR,
-    CEIL,
+    Truncate,
+    Round,
+    Floor,
+    Ceiling,
 }
 
 struct Options {
@@ -81,13 +81,13 @@ fn parse_cmd_opts(
                 changed_scale_mode = true;
                 let optarg = w.woptarg.unwrap();
                 if optarg.eq(utf32str!("truncate")) {
-                    opts.zero_scale_mode = ZeroScaleMode::TRUNC;
+                    opts.zero_scale_mode = ZeroScaleMode::Truncate;
                 } else if optarg.eq(utf32str!("round")) {
-                    opts.zero_scale_mode = ZeroScaleMode::ROUND;
+                    opts.zero_scale_mode = ZeroScaleMode::Round;
                 } else if optarg.eq(utf32str!("floor")) {
-                    opts.zero_scale_mode = ZeroScaleMode::FLOOR;
+                    opts.zero_scale_mode = ZeroScaleMode::Floor;
                 } else if optarg.eq(utf32str!("ceiling")) {
-                    opts.zero_scale_mode = ZeroScaleMode::CEIL;
+                    opts.zero_scale_mode = ZeroScaleMode::Ceiling;
                 } else {
                     streams
                         .err
@@ -177,10 +177,10 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
 
     if opts.scale == 0 {
         v = match opts.zero_scale_mode {
-            ZeroScaleMode::TRUNC => v.trunc(),
-            ZeroScaleMode::ROUND => v.round(),
-            ZeroScaleMode::FLOOR => v.floor(),
-            ZeroScaleMode::CEIL => v.ceil(),
+            ZeroScaleMode::Truncate => v.trunc(),
+            ZeroScaleMode::Round => v.round(),
+            ZeroScaleMode::Floor => v.floor(),
+            ZeroScaleMode::Ceiling => v.ceil(),
         };
         return sprintf!("%.*f", opts.scale, v);
     }

@@ -358,7 +358,7 @@ send('\x02\x02\x02') # ctrl-b, backward-char
 sendline('\x1bu') # alt+u, upcase word
 expect_prompt("fooBAR")
 
-send("""
+sendline("""
     bind ctrl-g "
         commandline --insert 'echo foo ar'
         commandline -f backward-word
@@ -367,7 +367,7 @@ send("""
         commandline -f backward-char
         commandline -f delete-char
     "
-""")
+""".strip())
 send('\x07') # ctrl-g
 send('\r')
 expect_prompt("foobar")

@@ -13,6 +13,7 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 expect_prompt()
 
 sendline("set -g fish_autosuggestion_enabled 0")
+expect_prompt()
 sendline("bind U,n,d,o undo; bind R,e,d,o redo")
 expect_prompt()
 
@@ -23,9 +24,10 @@ send("Undo")
 expect_str("echo")
 
 send("Redo\r")
-expect_str("echo word")
+expect_prompt("echo word")
 
 sendline("bind x begin-undo-group 'commandline -i \"+ \"' 'commandline -i 3' end-undo-group")
+expect_prompt()
 send("math 2 x\r")
 expect_prompt("5")
 

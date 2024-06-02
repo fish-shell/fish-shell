@@ -54,7 +54,6 @@ function __fish_complete_special_vars
         FISH_DEBUG_OUTPUT "debug output path" \
         umask "current file creation mask" \
         fish_handle_reflow "if fish should repaint prompt when the term resizes" \
-        fish_trace "print cmds as they execute, like set -x" \
         fish_emoji_width "cols wide fish assumes emoji render as" \
         fish_key_bindings "name of function that sets binds" \
         fish_autosuggestion_enabled "turns autosuggestions on or off" \
@@ -62,7 +61,7 @@ function __fish_complete_special_vars
         fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
         fish_greeting "The message to display at start (also a function)" \
         fish_history "The session id to store history under" \
-        fish_trace "Enables execution tracing (if set to non-empty value)" \
+        fish_trace "Enables execution tracing, usually '1', or bind/event/prompt/title/all" \
         fish_user_paths "A list of dirs to prepend to PATH"
 end
 

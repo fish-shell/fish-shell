@@ -15,6 +15,7 @@ use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
+use crate::trace::{should_suppress_trace, TraceCategory};
 use crate::wchar::prelude::*;
 
 pub enum event_type_t {
@@ -466,15 +467,17 @@ fn fire_internal(parser: &Parser, event: &Event) {
         |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_event, new_value),
         is_event + 1,
     );
-    let _suppress_trace = scoped_push_replacer(
-        |new_value| {
-            std::mem::replace(
-                &mut parser.libdata_mut().pods.suppress_fish_trace,
-                new_value,
-            )
-        },
-        true,
-    );
+    let _suppress_trace = should_suppress_trace(TraceCategory::Event).then(|| {
+        scoped_push_replacer(
+            |new_value| {
+                std::mem::replace(
+                    &mut parser.libdata_mut().pods.suppress_fish_trace,
+                    new_value,
+                )
+            },
+            true,
+        )
+    });
 
     // Capture the event handlers that match this event.
     let fire: Vec<_> = EVENT_HANDLERS

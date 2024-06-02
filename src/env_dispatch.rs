@@ -352,7 +352,7 @@ fn handle_read_limit_change(vars: &EnvStack) {
 }
 
 fn handle_fish_trace(vars: &EnvStack) {
-    let enabled = vars.get_unless_empty(L!("fish_trace")).is_some();
+    let enabled = vars.get_unless_empty(L!("fish_trace"));
     crate::trace::trace_set_enabled(enabled);
 }
 

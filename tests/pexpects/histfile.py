@@ -81,6 +81,7 @@ expect_prompt()
 # We expect this grep to fail to find the pattern and thus the expect_prompt
 # block is inverted.
 sendline("grep '^" + hist_line + "' " + my_histfile)
+expect_prompt()
 grephistfile(hist_line, my_histfile)
 expect_prompt()
 

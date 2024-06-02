@@ -25,32 +25,29 @@ expect_prompt()
 # (but also does so under /bin/sh)
 testproc = "sleep 500" if platform.system() != "NetBSD" else "cat"
 sendline(testproc)
-sendline("set -l foo bar; echo $foo")
-expect_str("")
+sendline("set -l foo 'bar'1; echo $foo") # ignored because sleep is in fg
 sleep(1.2)
 
 # ctrl-z - send job to background
 send("\x1A")
 sleep(1.2)
 expect_prompt()
-sendline("set -l foo bar; echo $foo")
-expect_prompt("bar")
+sendline("set -l foo 'bar'2; echo $foo")
+expect_prompt("bar2")
 
-sendline("fg")
+sendline("fg; set -l foo 'bar'3; echo $foo")
 expect_str("Send job 1 (" + testproc + ") to foreground")
 sleep(0.2)
-sendline("set -l foo bar; echo $foo")
-expect_str("")
 # Beware: Mac pkill requires that the -P argument come before the process name,
 # else the -P argument is ignored.
 subprocess.call(["pkill", "-INT", "-P", str(sp.spawn.pid), "sleep"])
+sleep(0.2)
+# Now fish reads the buffered input, since sleep never did!
+# Note fish doesn't report if a proc is killed via SIGINT.
+expect_prompt("bar3")
 
-expect_prompt()
-sendline("set -l foo bar; echo $foo")
-expect_prompt("bar")
-
-sendline("echo 'Catch' 'up'")
-expect_prompt("Catch up")
+sendline("set -l foo 'bar'4; echo $foo")
+expect_prompt("bar4")
 
 # Regression test for #7483.
 # Ensure we can background a job after a different backgrounded job completes.

@@ -1187,6 +1187,22 @@ complete -f -c git -n '__fish_git_using_command checkout' -l no-progress -d "Don
 complete -f -c git -n '__fish_git_using_command checkout' -s f -l force -d 'Switch even if working tree differs or unmerged files exist'
 # TODO options
 
+### sparse-checkout
+# `init` subcommand is deprecated
+set -l sparse_co_commands list set add reapply disable check-rules
+complete -f -c git -n __fish_git_needs_command -a sparse-checkout -d 'Reduce your working tree to a subset of tracked files'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a set -d 'Enable the necessary sparse-checkout config settings'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a list -d 'Describe the directories or patterns in the sparse-checkout file'
+complete -x -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a add -d 'Add directories (in cone mode) or patterns (in non-cone mode)'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a reapply -d 'Reapply the sparsity pattern rules in case of merge-conflict'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a disable -d 'Disable sparse-checkout, and restore the working directory to include all files'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "not __fish_seen_subcommand_from $sparse_co_commands" -a check-rules -d 'Check whether sparsity rules match one or more paths'
+
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "__fish_seen_subcommand_from add set" -l stdin -d 'read patterns from stdin as a newline-delimited list'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "__fish_seen_subcommand_from reapply set" -l no-cone -d 'input list is considered a list of patterns instead of directory paths'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "__fish_seen_subcommand_from reapply set" -l sparse-index -d 'use a sparse index to be more closely aligned with your sparse-checkout definition'
+complete -f -c git -n "__fish_git_using_command sparse-checkout" -n "__fish_seen_subcommand_from reapply set" -l no-sparse-index -d 'not --sparse-index'
+
 ### apply
 complete -c git -n __fish_git_needs_command -a apply -d 'Apply a patch'
 complete -f -c git -n '__fish_git_using_command apply' -l numstat -d 'Show number of additions and deletions'

@@ -330,7 +330,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
             if matches!(cmd, rl::RepaintMode | rl::ForceRepaint | rl::Repaint) {
-                if parser.libdata().pods.is_repaint {
+                if parser.libdata().is_repaint {
                     continue;
                 }
             }

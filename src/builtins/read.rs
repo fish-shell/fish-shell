@@ -237,7 +237,7 @@ fn read_interactive(
 
     let mline = {
         let _interactive = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+            |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
             true,
         );
 

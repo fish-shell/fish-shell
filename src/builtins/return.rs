@@ -64,7 +64,7 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = &mut parser.libdata_mut().pods;
+        let ld = &mut parser.libdata_mut();
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
@@ -72,7 +72,7 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     }
 
     // Mark a return in the libdata.
-    parser.libdata_mut().pods.returning = true;
+    parser.libdata_mut().returning = true;
 
     return Some(retval);
 }

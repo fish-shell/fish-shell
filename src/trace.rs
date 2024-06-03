@@ -10,7 +10,7 @@ pub fn trace_set_enabled(do_enable: bool) {
 
 /// return whether tracing is enabled.
 pub fn trace_enabled(parser: &Parser) -> bool {
-    let ld = &parser.libdata().pods;
+    let ld = &parser.libdata();
     if ld.suppress_fish_trace {
         return false;
     }

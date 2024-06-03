@@ -496,12 +496,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         });
 
         // Prevent accidental recursion (see #6171).
-        if !parser.libdata().pods.builtin_complete_current_commandline {
+        if !parser.libdata().builtin_complete_current_commandline {
             if !have_do_complete_param {
-                parser
-                    .libdata_mut()
-                    .pods
-                    .builtin_complete_current_commandline = true;
+                parser.libdata_mut().builtin_complete_current_commandline = true;
             }
 
             let (mut comp, _needs_load) = crate::complete::complete(
@@ -556,10 +553,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 streams.out.append(faux_cmdline_with_completion);
             }
 
-            parser
-                .libdata_mut()
-                .pods
-                .builtin_complete_current_commandline = false;
+            parser.libdata_mut().builtin_complete_current_commandline = false;
         }
     } else if path.is_empty()
         && gnu_opt.is_empty()

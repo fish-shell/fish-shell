@@ -984,7 +984,7 @@ impl Job {
             } else {
                 "UNCOMPLETED"
             },
-            if parser.libdata().pods.is_interactive {
+            if parser.libdata().is_interactive {
                 "INTERACTIVE"
             } else {
                 "NON-INTERACTIVE"
@@ -1003,7 +1003,7 @@ impl Job {
             if p.status.normal_exited() || p.status.signal_exited() {
                 if let Some(statuses) = self.get_statuses() {
                     parser.set_last_statuses(statuses);
-                    parser.libdata_mut().pods.status_count += 1;
+                    parser.libdata_mut().status_count += 1;
                 }
             }
         }
@@ -1290,7 +1290,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
 /// Wait for any process finishing, or receipt of a signal.
 pub fn proc_wait_any(parser: &Parser) {
     process_mark_finished_children(parser, true /*block_ok*/);
-    let is_interactive = parser.libdata().pods.is_interactive;
+    let is_interactive = parser.libdata().is_interactive;
     process_clean_after_marking(parser, is_interactive);
 }
 
@@ -1705,12 +1705,12 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    if parser.libdata().pods.is_cleaning_procs {
+    if parser.libdata().is_cleaning_procs {
         return false;
     }
 
     let _cleaning = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_cleaning_procs, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_cleaning_procs, new_value),
         true,
     );
 

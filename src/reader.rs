@@ -574,7 +574,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
     }
 
     let _interactive_push = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
         interactive,
     );
     signal_set_handlers_once(interactive);
@@ -586,7 +586,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
     };
 
     // If the exit command was called in a script, only exit the script, not the program.
-    parser.libdata_mut().pods.exit_current_script = false;
+    parser.libdata_mut().exit_current_script = false;
 
     res
 }
@@ -637,8 +637,8 @@ fn read_i(parser: &Parser) -> i32 {
         }
 
         // If the command requested an exit, then process it now and clear it.
-        data.exit_loop_requested |= parser.libdata().pods.exit_current_script;
-        parser.libdata_mut().pods.exit_current_script = false;
+        data.exit_loop_requested |= parser.libdata().exit_current_script;
+        parser.libdata_mut().exit_current_script = false;
 
         let _ = write!(
             Outputter::stdoutput().borrow_mut(),
@@ -1796,7 +1796,7 @@ impl ReaderData {
             self,
             |zelf, new_value| {
                 std::mem::replace(
-                    &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
+                    &mut zelf.parser().libdata_mut().suppress_fish_trace,
                     new_value,
                 )
             },
@@ -2057,8 +2057,8 @@ impl ReaderData {
 
         // If we ran `exit` anywhere, exit.
         self.exit_loop_requested =
-            self.exit_loop_requested || self.parser().libdata().pods.exit_current_script;
-        self.parser().libdata_mut().pods.exit_current_script = false;
+            self.exit_loop_requested || self.parser().libdata().exit_current_script;
+        self.parser().libdata_mut().exit_current_script = false;
         if self.exit_loop_requested {
             return ControlFlow::Continue(());
         }
@@ -2222,7 +2222,7 @@ impl ReaderData {
             }
             rl::RepaintMode | rl::ForceRepaint | rl::Repaint => {
                 self.queued_repaint = false;
-                self.parser().libdata_mut().pods.is_repaint = true;
+                self.parser().libdata_mut().is_repaint = true;
                 if c == rl::RepaintMode {
                     // Repaint the mode-prompt only if possible.
                     // This is an optimization basically exclusively for vi-mode, since the prompt
@@ -2242,7 +2242,7 @@ impl ReaderData {
                             self.screen.reset_line(/*repaint_prompt=*/ true);
                             self.layout_and_repaint(L!("mode"));
                         }
-                        self.parser().libdata_mut().pods.is_repaint = false;
+                        self.parser().libdata_mut().is_repaint = false;
                         return;
                     }
                     // Else we repaint as normal.
@@ -2251,7 +2251,7 @@ impl ReaderData {
                 self.screen.reset_line(/*repaint_prompt=*/ true);
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
-                self.parser().libdata_mut().pods.is_repaint = false;
+                self.parser().libdata_mut().is_repaint = false;
             }
             rl::Complete | rl::CompleteAndSearch => {
                 if !self.conf.complete_ok {
@@ -3152,7 +3152,7 @@ impl ReaderData {
                 event::fire_generic(self.parser(), L!("fish_focus_out").to_owned(), vec![]);
             }
             rl::ClearScreenAndRepaint => {
-                self.parser().libdata_mut().pods.is_repaint = true;
+                self.parser().libdata_mut().is_repaint = true;
                 let clear = screen_clear();
                 if !clear.is_empty() {
                     // Clear the screen if we can.
@@ -3168,7 +3168,7 @@ impl ReaderData {
                 self.screen.reset_line(/*repaint_prompt=*/ true);
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
-                self.parser().libdata_mut().pods.is_repaint = false;
+                self.parser().libdata_mut().is_repaint = false;
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 panic!("should have been handled by inputter_t::readch");
@@ -3732,16 +3732,11 @@ pub fn reader_write_title(
     reset_cursor_position: bool, /* = true */
 ) {
     let _noninteractive = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
         false,
     );
     let _in_title = scoped_push_replacer(
-        |new_value| {
-            std::mem::replace(
-                &mut parser.libdata_mut().pods.suppress_fish_trace,
-                new_value,
-            )
-        },
+        |new_value| std::mem::replace(&mut parser.libdata_mut().suppress_fish_trace, new_value),
         true,
     );
 
@@ -3813,7 +3808,7 @@ impl ReaderData {
             self,
             |zelf, new_value| {
                 std::mem::replace(
-                    &mut zelf.parser().libdata_mut().pods.suppress_fish_trace,
+                    &mut zelf.parser().libdata_mut().suppress_fish_trace,
                     new_value,
                 )
             },
@@ -3829,10 +3824,7 @@ impl ReaderData {
             let mut zelf = scoped_push_replacer_ctx(
                 &mut zelf,
                 |zelf, new_value| {
-                    std::mem::replace(
-                        &mut zelf.parser().libdata_mut().pods.is_interactive,
-                        new_value,
-                    )
+                    std::mem::replace(&mut zelf.parser().libdata_mut().is_interactive, new_value)
                 },
                 false,
             );
@@ -3884,9 +3876,9 @@ impl ReaderData {
         reader_write_title(L!(""), zelf.parser(), false);
 
         // Some prompt may have requested an exit (#8033).
-        let exit_current_script = zelf.parser().libdata().pods.exit_current_script;
+        let exit_current_script = zelf.parser().libdata().exit_current_script;
         zelf.exit_loop_requested |= exit_current_script;
-        zelf.parser().libdata_mut().pods.exit_current_script = false;
+        zelf.parser().libdata_mut().exit_current_script = false;
     }
 }
 
@@ -4466,7 +4458,7 @@ fn expand_replacer(
     cmd.push(' ');
     cmd.push_utfstr(&escape(token));
     let _not_interactive = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
         false,
     );
 
@@ -4907,7 +4899,7 @@ impl ReaderData {
         let mut cmd: WString = L!("fish_should_add_to_history ").into();
         cmd.push_utfstr(&escape(text));
         let _not_interactive = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, new_value),
+            |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
             false,
         );
 

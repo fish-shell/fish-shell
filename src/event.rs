@@ -456,23 +456,18 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// allocated/initialized unless needed.
 fn fire_internal(parser: &Parser, event: &Event) {
     assert!(
-        parser.libdata().pods.is_event >= 0,
+        parser.libdata().is_event >= 0,
         "is_event should not be negative"
     );
 
     // Suppress fish_trace during events.
-    let is_event = parser.libdata().pods.is_event;
+    let is_event = parser.libdata().is_event;
     let _inc_event = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_event, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_event, new_value),
         is_event + 1,
     );
     let _suppress_trace = scoped_push_replacer(
-        |new_value| {
-            std::mem::replace(
-                &mut parser.libdata_mut().pods.suppress_fish_trace,
-                new_value,
-            )
-        },
+        |new_value| std::mem::replace(&mut parser.libdata_mut().suppress_fish_trace, new_value),
         true,
     );
 
@@ -504,11 +499,11 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let saved_is_interactive =
-            std::mem::replace(&mut parser.libdata_mut().pods.is_interactive, false);
+            std::mem::replace(&mut parser.libdata_mut().is_interactive, false);
         let saved_statuses = parser.get_last_statuses();
         let _cleanup = ScopeGuard::new((), |()| {
             parser.set_last_statuses(saved_statuses);
-            parser.libdata_mut().pods.is_interactive = saved_is_interactive;
+            parser.libdata_mut().is_interactive = saved_is_interactive;
         });
 
         FLOG!(
@@ -536,7 +531,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
 /// Fire all delayed events attached to the given parser.
 pub fn fire_delayed(parser: &Parser) {
     {
-        let ld = &parser.libdata().pods;
+        let ld = &parser.libdata();
 
         // Do not invoke new event handlers from within event handlers.
         if ld.is_event != 0 {

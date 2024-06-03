@@ -216,8 +216,6 @@ impl ProfileItem {
 /// Miscellaneous data used to avoid recursion and others.
 #[derive(Default)]
 pub struct LibraryData {
-    pub pods: library_data_pod_t,
-
     /// The current filename we are evaluating, either from builtin source or on the command line.
     pub current_filename: Option<FilenameRef>,
 
@@ -231,15 +229,72 @@ pub struct LibraryData {
     pub cwd_fd: Option<Arc<OwnedFd>>,
 
     pub status_vars: StatusVars,
+
+    /// A counter incremented every time a command executes.
+    pub exec_count: u64,
+
+    /// A counter incremented every time a command produces a $status.
+    pub status_count: u64,
+
+    /// Last reader run count.
+    pub last_exec_run_counter: u64,
+
+    /// Number of recursive calls to the internal completion function.
+    pub complete_recursion_level: u32,
+
+    /// If set, we are currently within fish's initialization routines.
+    pub within_fish_init: bool,
+
+    /// If we're currently repainting the commandline.
+    /// Useful to stop infinite loops.
+    pub is_repaint: bool,
+
+    /// Whether we called builtin_complete -C without parameter.
+    pub builtin_complete_current_commandline: bool,
+
+    /// Whether we are currently cleaning processes.
+    pub is_cleaning_procs: bool,
+
+    /// The internal job id of the job being populated, or 0 if none.
+    /// This supports the '--on-job-exit caller' feature.
+    pub caller_id: u64, // TODO should be InternalJobId
+
+    /// Whether we are running a subshell command.
+    pub is_subshell: bool,
+
+    /// Whether we are running an event handler. This is not a bool because we keep count of the
+    /// event nesting level.
+    pub is_event: i32,
+
+    /// Whether we are currently interactive.
+    pub is_interactive: bool,
+
+    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
+    /// bindings.
+    pub suppress_fish_trace: bool,
+
+    /// Whether we should break or continue the current loop.
+    /// This is set by the 'break' and 'continue' commands.
+    pub loop_status: LoopStatus,
+
+    /// Whether we should return from the current function.
+    /// This is set by the 'return' command.
+    pub returning: bool,
+
+    /// Whether we should stop executing.
+    /// This is set by the 'exit' command, and unset after 'reader_read'.
+    /// Note this only exits up to the "current script boundary." That is, a call to exit within a
+    /// 'source' or 'read' command will only exit up to that command.
+    pub exit_current_script: bool,
+
+    /// The read limit to apply to captured subshell output, or 0 for none.
+    pub read_limit: usize,
 }
 
 impl LibraryData {
     pub fn new() -> Self {
         Self {
-            pods: library_data_pod_t {
-                last_exec_run_counter: u64::MAX,
-                ..Default::default()
-            },
+            last_exec_run_counter: u64::MAX,
             ..Default::default()
         }
     }
@@ -572,15 +627,15 @@ impl Parser {
         );
 
         // Check the exec count so we know if anything got executed.
-        let prev_exec_count = self.libdata().pods.exec_count;
-        let prev_status_count = self.libdata().pods.status_count;
+        let prev_exec_count = self.libdata().exec_count;
+        let prev_status_count = self.libdata().status_count;
         let reason =
             self.execution_context()
                 .as_ref()
                 .unwrap()
                 .eval_node(&op_ctx, node, Some(scope_block));
-        let new_exec_count = self.libdata().pods.exec_count;
-        let new_status_count = self.libdata().pods.status_count;
+        let new_exec_count = self.libdata().exec_count;
+        let new_status_count = self.libdata().status_count;
 
         ScopeGuarding::commit(exc);
         self.pop_block(scope_block);
@@ -661,7 +716,7 @@ impl Parser {
                     &user_presentable_path(&file, self.vars()),
                     lineno
                 ));
-            } else if self.libdata().pods.within_fish_init {
+            } else if self.libdata().within_fish_init {
                 prefix.push_utfstr(&wgettext_fmt!("Startup (line %d): ", lineno));
             } else {
                 prefix.push_utfstr(&wgettext_fmt!("Standard input (line %d): ", lineno));
@@ -699,10 +754,14 @@ impl Parser {
     /// This supports 'status is-block'.
     pub fn is_block(&self) -> bool {
         // Note historically this has descended into 'source', unlike 'is_function'.
-        self.blocks()
-            .iter()
-            .rev()
-            .any(|b| ![BlockType::top, BlockType::subst].contains(&b.typ()))
+        self.blocks().iter().rev().any(|b| {
+            ![
+                BlockType::top,
+                BlockType::subst,
+                BlockType::variable_assignment,
+            ]
+            .contains(&b.typ())
+        })
     }
 
     /// Return whether we have a breakpoint block.
@@ -1027,7 +1086,7 @@ impl Parser {
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).
     pub fn is_interactive(&self) -> bool {
-        self.libdata().pods.is_interactive
+        self.libdata().is_interactive
     }
 
     /// Return a string representing the current stack trace.
@@ -1206,7 +1265,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
                 b.src_lineno.unwrap_or(0),
                 user_presentable_path(file, parser.vars())
             ));
-        } else if parser.libdata().pods.within_fish_init {
+        } else if parser.libdata().within_fish_init {
             trace.push_str("\tcalled during startup\n");
         }
     }
@@ -1250,68 +1309,4 @@ pub enum LoopStatus {
     breaks,
     /// current loop block should be skipped
     continues,
-}
-
-/// Plain-Old-Data components of `struct library_data_t` that can be shared over FFI
-#[derive(Default)]
-pub struct library_data_pod_t {
-    /// A counter incremented every time a command executes.
-    pub exec_count: u64,
-
-    /// A counter incremented every time a command produces a $status.
-    pub status_count: u64,
-
-    /// Last reader run count.
-    pub last_exec_run_counter: u64,
-
-    /// Number of recursive calls to the internal completion function.
-    pub complete_recursion_level: u32,
-
-    /// If set, we are currently within fish's initialization routines.
-    pub within_fish_init: bool,
-
-    /// If we're currently repainting the commandline.
-    /// Useful to stop infinite loops.
-    pub is_repaint: bool,
-
-    /// Whether we called builtin_complete -C without parameter.
-    pub builtin_complete_current_commandline: bool,
-
-    /// Whether we are currently cleaning processes.
-    pub is_cleaning_procs: bool,
-
-    /// The internal job id of the job being populated, or 0 if none.
-    /// This supports the '--on-job-exit caller' feature.
-    pub caller_id: u64, // TODO should be InternalJobId
-
-    /// Whether we are running a subshell command.
-    pub is_subshell: bool,
-
-    /// Whether we are running an event handler. This is not a bool because we keep count of the
-    /// event nesting level.
-    pub is_event: i32,
-
-    /// Whether we are currently interactive.
-    pub is_interactive: bool,
-
-    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
-    /// bindings.
-    pub suppress_fish_trace: bool,
-
-    /// Whether we should break or continue the current loop.
-    /// This is set by the 'break' and 'continue' commands.
-    pub loop_status: LoopStatus,
-
-    /// Whether we should return from the current function.
-    /// This is set by the 'return' command.
-    pub returning: bool,
-
-    /// Whether we should stop executing.
-    /// This is set by the 'exit' command, and unset after 'reader_read'.
-    /// Note this only exits up to the "current script boundary." That is, a call to exit within a
-    /// 'source' or 'read' command will only exit up to that command.
-    pub exit_current_script: bool,
-
-    /// The read limit to apply to captured subshell output, or 0 for none.
-    pub read_limit: usize,
 }

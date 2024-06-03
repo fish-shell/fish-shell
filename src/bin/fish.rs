@@ -253,9 +253,9 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
-    parser.libdata_mut().pods.within_fish_init = true;
+    parser.libdata_mut().within_fish_init = true;
     let _ = parser.eval(&cmd, &IoChain::new());
-    parser.libdata_mut().pods.within_fish_init = false;
+    parser.libdata_mut().within_fish_init = false;
     return true;
 }
 
@@ -652,7 +652,7 @@ fn throwing_main() -> i32 {
             list.iter().map(|s| s.to_owned()).collect(),
         );
         res = run_command_list(parser, &opts.batch_cmds);
-        parser.libdata_mut().pods.exit_current_script = false;
+        parser.libdata_mut().exit_current_script = false;
     } else if my_optind == args.len() {
         // Implicitly interactive mode.
         if opts.no_exec && isatty(libc::STDIN_FILENO) {

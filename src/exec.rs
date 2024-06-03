@@ -652,7 +652,7 @@ fn run_internal_process_or_short_circuit(
             );
             if let Some(statuses) = j.get_statuses() {
                 parser.set_last_statuses(statuses);
-                parser.libdata_mut().pods.status_count += 1;
+                parser.libdata_mut().status_count += 1;
             } else if j.flags().negate {
                 // Special handling for `not set var (substitution)`.
                 // If there is no status, but negation was requested,
@@ -950,7 +950,7 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
     parser.pop_block(block);
 
     // If we returned due to a return statement, then stop returning now.
-    parser.libdata_mut().pods.returning = false;
+    parser.libdata_mut().returning = false;
 }
 
 // The "performer" function of a block or function process.
@@ -1272,7 +1272,7 @@ fn exec_process_in_job(
 
     if p.typ != ProcessType::block_node {
         // A simple `begin ... end` should not be considered an execution of a command.
-        parser.libdata_mut().pods.exec_count += 1;
+        parser.libdata_mut().exec_count += 1;
     }
 
     let mut block_id = None;
@@ -1386,7 +1386,7 @@ fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
 
     // Compare run counts, so we only warn once.
     let current_run_count = reader_run_count();
-    let last_exec_run_count = &mut parser.libdata_mut().pods.last_exec_run_counter;
+    let last_exec_run_count = &mut parser.libdata_mut().last_exec_run_counter;
     if isatty(STDIN_FILENO) && current_run_count - 1 != *last_exec_run_count {
         print_exit_warning_for_jobs(&bgs);
         *last_exec_run_count = current_run_count;
@@ -1454,11 +1454,11 @@ fn exec_subshell_internal(
 ) -> libc::c_int {
     parser.assert_can_execute();
     let _is_subshell = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.is_subshell, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().is_subshell, new_value),
         true,
     );
     let _read_limit = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().pods.read_limit, new_value),
+        |new_value| std::mem::replace(&mut parser.libdata_mut().read_limit, new_value),
         if is_subcmd {
             READ_BYTE_LIMIT.load(Ordering::Relaxed)
         } else {
@@ -1477,7 +1477,7 @@ fn exec_subshell_internal(
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().pods.read_limit, STDOUT_FILENO)
+    let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO)
     else {
         *break_expand = true;
         return STATUS_CMD_ERROR.unwrap();

@@ -270,7 +270,7 @@ impl<'a> ParseExecutionContext {
             return Some(EndExecutionReason::cancelled);
         }
         let parser = ctx.parser();
-        let ld = &parser.libdata().pods;
+        let ld = &parser.libdata();
         if ld.exit_current_script {
             return Some(EndExecutionReason::cancelled);
         }
@@ -1015,7 +1015,7 @@ impl<'a> ParseExecutionContext {
             );
             event::fire(ctx.parser(), evt.clone());
 
-            ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
+            ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
 
             // Push and pop the block again and again to clear variables
             let fb = ctx.parser().push_block(Block::for_block());
@@ -1024,8 +1024,8 @@ impl<'a> ParseExecutionContext {
 
             if self.check_end_execution(ctx) == Some(EndExecutionReason::control_flow) {
                 // Handle break or continue.
-                let do_break = ctx.parser().libdata().pods.loop_status == LoopStatus::breaks;
-                ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
+                let do_break = ctx.parser().libdata().loop_status == LoopStatus::breaks;
+                ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
                 if do_break {
                     break;
                 }
@@ -1295,7 +1295,7 @@ impl<'a> ParseExecutionContext {
             }
 
             // Push a while block and then check its cancellation reason.
-            ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
+            ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
 
             let wb = ctx.parser().push_block(Block::while_block());
             self.run_job_list(ctx, contents, Some(wb));
@@ -1304,8 +1304,8 @@ impl<'a> ParseExecutionContext {
 
             if cancel_reason == Some(EndExecutionReason::control_flow) {
                 // Handle break or continue.
-                let do_break = ctx.parser().libdata().pods.loop_status == LoopStatus::breaks;
-                ctx.parser().libdata_mut().pods.loop_status = LoopStatus::normals;
+                let do_break = ctx.parser().libdata().loop_status == LoopStatus::breaks;
+                ctx.parser().libdata_mut().loop_status = LoopStatus::normals;
                 if do_break {
                     break;
                 } else {
@@ -1357,7 +1357,7 @@ impl<'a> ParseExecutionContext {
             NodeRef::new(self.pstree(), statement as *const ast::BlockStatement),
         );
         let err_code = err_code.unwrap();
-        ctx.parser().libdata_mut().pods.status_count += 1;
+        ctx.parser().libdata_mut().status_count += 1;
         ctx.parser().set_last_statuses(Statuses::just(err_code));
 
         let errtext = errs.contents();
@@ -1661,7 +1661,7 @@ impl<'a> ParseExecutionContext {
         props.initial_background = job_is_background;
         {
             let parser = ctx.parser();
-            let ld = &parser.libdata().pods;
+            let ld = &parser.libdata();
             props.skip_notification =
                 ld.is_subshell || parser.is_block() || ld.is_event != 0 || !parser.is_interactive();
             props.from_event_handler = ld.is_event != 0;
@@ -1673,9 +1673,7 @@ impl<'a> ParseExecutionContext {
         // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
         // the job ID here.
         let _caller_id = scoped_push_replacer(
-            |new_value| {
-                std::mem::replace(&mut ctx.parser().libdata_mut().pods.caller_id, new_value)
-            },
+            |new_value| std::mem::replace(&mut ctx.parser().libdata_mut().caller_id, new_value),
             job.internal_job_id,
         );
 
@@ -1706,7 +1704,7 @@ impl<'a> ParseExecutionContext {
                     // Ensure statuses are set (#7540).
                     if let Some(statuses) = job.get_statuses() {
                         parser.set_last_statuses(statuses);
-                        parser.libdata_mut().pods.status_count += 1;
+                        parser.libdata_mut().status_count += 1;
                     }
                     remove_job(parser, &job);
                 }
@@ -1927,7 +1925,7 @@ impl<'a> ParseExecutionContext {
         } else {
             // This is a "real job" that gets its own pgroup.
             j.processes_mut()[0].leads_pgrp = true;
-            let wants_terminal = ctx.parser().libdata().pods.is_event == 0;
+            let wants_terminal = ctx.parser().libdata().is_event == 0;
             j.group = Some(JobGroup::create_with_job_control(
                 j.command().to_owned(),
                 wants_terminal,

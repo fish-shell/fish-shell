@@ -133,8 +133,8 @@ fn parse_cmd_opts(
                 let e: EventDescription;
                 if opt == 'j' && woptarg == "caller" {
                     let libdata = parser.libdata();
-                    let caller_id = if libdata.pods.is_subshell {
-                        libdata.pods.caller_id
+                    let caller_id = if libdata.is_subshell {
+                        libdata.caller_id
                     } else {
                         0
                     };

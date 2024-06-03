@@ -889,7 +889,7 @@ fn builtin_break_continue(
     }
 
     // Mark the status in the libdata.
-    parser.libdata_mut().pods.loop_status = if is_break {
+    parser.libdata_mut().loop_status = if is_break {
         LoopStatus::breaks
     } else {
         LoopStatus::continues

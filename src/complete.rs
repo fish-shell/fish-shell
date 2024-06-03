@@ -620,7 +620,7 @@ impl<'ctx> Completer<'ctx> {
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
         // for autosuggestions where we don't evaluate command substitutions or variable assignments.
         let _decrement = if let Some(parser) = self.ctx.maybe_parser() {
-            let level = &mut parser.libdata_mut().pods.complete_recursion_level;
+            let level = &mut parser.libdata_mut().complete_recursion_level;
             if *level >= 24 {
                 FLOG!(
                     error,
@@ -631,7 +631,7 @@ impl<'ctx> Completer<'ctx> {
             *level += 1;
 
             Some(ScopeGuard::new((), |()| {
-                let level = &mut parser.libdata_mut().pods.complete_recursion_level;
+                let level = &mut parser.libdata_mut().complete_recursion_level;
                 *level -= 1;
             }))
         } else {
@@ -1157,8 +1157,8 @@ impl<'ctx> Completer<'ctx> {
         let is_autosuggest = self.flags.autosuggestion;
 
         let saved_state = if let Some(parser) = self.ctx.maybe_parser() {
-            let saved_interactive = parser.libdata().pods.is_interactive;
-            parser.libdata_mut().pods.is_interactive = false;
+            let saved_interactive = parser.libdata().is_interactive;
+            parser.libdata_mut().is_interactive = false;
 
             Some((saved_interactive, parser.get_last_statuses()))
         } else {
@@ -1175,7 +1175,7 @@ impl<'ctx> Completer<'ctx> {
 
         if let Some(parser) = self.ctx.maybe_parser() {
             let (saved_interactive, status) = saved_state.unwrap();
-            parser.libdata_mut().pods.is_interactive = saved_interactive;
+            parser.libdata_mut().is_interactive = saved_interactive;
             parser.set_last_statuses(status);
         }
 

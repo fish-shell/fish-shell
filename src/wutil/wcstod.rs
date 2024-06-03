@@ -25,7 +25,11 @@ where
         if let Some(c) = chars.next_if(|c| c.is_ascii_alphabetic()) {
             if c == 'n' && "an".chars().eq(chars.by_ref().take(2)) {
                 consumed += 3;
-                return Ok((f64::NAN, consumed));
+                match buffer.as_bytes().get(0) {
+                    None | Some(b'+') => return Ok((f64::NAN, consumed)),
+                    // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
+                    _ => return Ok((f64::NAN.copysign(-1.0), consumed)),
+                }
             }
             if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
                 consumed += 3;

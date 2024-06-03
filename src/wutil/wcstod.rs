@@ -1,7 +1,78 @@
 use super::errors::Error;
 use super::hex_float;
 use crate::wchar::IntoCharIter;
-use fast_float::parse_partial_iter;
+use std::cell::RefCell;
+
+fn parse_partial_iter<I>(chars: I, decimal_sep: char) -> Result<(f64, usize), ()>
+where
+    I: Iterator<Item = char>,
+{
+    const F64_MAX_CHARS: usize = 45;
+    thread_local! {
+        static BUFFER: RefCell<String> = RefCell::new(String::with_capacity(F64_MAX_CHARS));
+    }
+    BUFFER.with(|cell| {
+        let mut buffer = cell.borrow_mut();
+        buffer.clear();
+        let mut consumed = 0;
+
+        let mut chars = chars.map(|c| c.to_ascii_lowercase()).peekable();
+
+        if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
+            consumed += 1;
+            buffer.push(sign);
+        }
+        if let Some(c) = chars.next_if(|c| c.is_ascii_alphabetic()) {
+            if c == 'n' && "an".chars().eq(chars.by_ref().take(2)) {
+                consumed += 3;
+                return Ok((f64::NAN, consumed));
+            }
+            if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
+                consumed += 3;
+                if "inity".chars().eq(chars.take(5)) {
+                    consumed += 5;
+                }
+                match buffer.as_bytes().get(0) {
+                    None | Some(b'+') => return Ok((f64::INFINITY, consumed)),
+                    _ => return Ok((f64::NEG_INFINITY, consumed)),
+                }
+            }
+            return Err(());
+        }
+
+        let mut have_e = false;
+        let mut have_sep = false;
+        while let Some(mut c) = chars.next() {
+            // if buffer.len() >= F64_MAX_CHARS {
+            //     break;
+            // }
+
+            match c {
+                _ if c.is_ascii_digit() => (),
+                _ if !have_sep && !have_e && decimal_sep == c => {
+                    c = '.';
+                    have_sep = true;
+                }
+                'e' if !have_e => {
+                    // Allow a sign after e
+                    if let Some(sign) = chars.next_if(|c| ['+', '-'].contains(c)) {
+                        consumed += 1;
+                        buffer.push(c);
+                        c = sign;
+                    }
+                    have_e = true;
+                }
+                _ => break,
+            };
+
+            buffer.push(c);
+            consumed += 1;
+        }
+
+        let value: f64 = (buffer).parse().map_err(|_| ())?;
+        Ok((value, consumed))
+    })
+}
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
 where
@@ -553,6 +624,9 @@ mod test {
         test_sep("1,1e1", Ok(1.1e1), ',');
 
         test_consumed("12345e37randomstuff", Ok(12345e37), 8);
+        test_consumed("infzoo", Ok(f64::INFINITY), 3);
+        test_consumed("infinit", Ok(f64::INFINITY), 3);
+        test_consumed("infinity", Ok(f64::INFINITY), 8);
     }
 
     fn test(input: &str, val: Result<f64, Error>) {

@@ -3,6 +3,40 @@ use super::hex_float;
 use crate::wchar::IntoCharIter;
 use std::cell::RefCell;
 
+#[cold]
+#[inline(never)]
+pub fn parse_inf_nan(
+    mut chars: impl Iterator<Item = char>,
+    b0: Option<u8>,
+    c1: u8,
+) -> Option<(f64, usize)> {
+    let (mut consumed, neg) = match b0 {
+        None => (3, false),
+        Some(b'-') => (4, true),
+        _ => (4, false),
+    };
+    let [c2, c3] = [chars.next()?, chars.next()?];
+    // Using non-short-circuiting comparisons lets the compiler optimize it a bit more.
+    if (c1 == b'n') & (c2 == 'a') & (c3 == 'n') {
+        if !neg {
+            return Some((f64::NAN, consumed));
+        }
+        // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
+        return Some((f64::NAN.copysign(-1.0), consumed));
+    }
+    if (c1 == b'i') & (c2 == 'n') & (c3 == 'f') {
+        // "xyz".chars().all(..) inlines nicely while "xyz".chars().eq(chars.take(3)) doesn't.
+        if "inity".chars().all(|c| Some(c) == chars.next()) {
+            consumed += 5;
+        }
+        if !neg {
+            return Some((f64::INFINITY, consumed));
+        }
+        return Some((f64::NEG_INFINITY, consumed));
+    }
+    return None;
+}
+
 fn parse_partial_iter<I>(chars: I, decimal_sep: char) -> Option<(f64, usize)>
 where
     I: Iterator<Item = char>,
@@ -22,25 +56,8 @@ where
             consumed += 1;
             buffer.push(sign);
         }
-        if let Some(c) = chars.next_if(|c| c.is_ascii_alphabetic()) {
-            consumed += 3;
-            if c == 'n' && "an".chars().eq(chars.by_ref().take(2)) {
-                match buffer.as_bytes().get(0) {
-                    // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
-                    Some(b'-') => return Some((f64::NAN.copysign(-1.0), consumed)),
-                    _ => return Some((f64::NAN, consumed)),
-                }
-            }
-            if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
-                if "inity".chars().eq(chars.take(5)) {
-                    consumed += 5;
-                }
-                match buffer.as_bytes().get(0) {
-                    Some(b'-') => return Some((f64::NEG_INFINITY, consumed)),
-                    _ => return Some((f64::INFINITY, consumed)),
-                }
-            }
-            return None;
+        if let Some(c1) = chars.next_if(|c| c.is_ascii_alphabetic()) {
+            return parse_inf_nan(chars, buffer.as_bytes().get(0).copied(), c1 as u8);
         }
 
         let mut have_e = false;

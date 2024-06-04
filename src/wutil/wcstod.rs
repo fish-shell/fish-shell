@@ -23,8 +23,8 @@ where
             buffer.push(sign);
         }
         if let Some(c) = chars.next_if(|c| c.is_ascii_alphabetic()) {
+            consumed += 3;
             if c == 'n' && "an".chars().eq(chars.by_ref().take(2)) {
-                consumed += 3;
                 match buffer.as_bytes().get(0) {
                     // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
                     Some(b'-') => return Some((f64::NAN.copysign(-1.0), consumed)),
@@ -32,7 +32,6 @@ where
                 }
             }
             if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
-                consumed += 3;
                 if "inity".chars().eq(chars.take(5)) {
                     consumed += 5;
                 }
@@ -258,6 +257,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use crate::wutil::wcstod::parse_partial_iter;
+
     use super::{wcstod, Error};
 
     #[test]
@@ -620,6 +621,13 @@ mod test {
         test("18e307", Err(Error::Overflow));
         test("1e309", Err(Error::Overflow));
         test("1e-409", Ok(0.0));
+        // IEE754 says it's OK to lose the sign bit when dealing with NaN, but fish has
+        // traditionally returned an explicitly negative NaN for this:
+        {
+            let (f, n) = parse_partial_iter("-NaN".chars(), '.').unwrap();
+            assert_eq!(f.to_bits(), 0xFFF8000000000000);
+            assert_eq!(n, 4);
+        }
 
         test_sep("1,1e1", Ok(1.1e1), ',');
 

@@ -1,12 +1,7 @@
-//! A wrapper around the system's curses/ncurses library, exposing some lower-level functionality
-//! that's not directly exposed in any of the popular ncurses crates.
-//!
-//! In addition to exposing the C library ffi calls, we also shim around some functionality that's
-//! only made available via the ncurses headers to C code via macro magic, such as polyfilling
-//! missing capability strings to shoe-in missing support for certain terminal sequences.
-//!
-//! This is intentionally very bare bones and only implements the subset of curses functionality
-//! used by fish
+//! A wrapper around the terminfo library to expose the functionality that fish needs.
+//! Note that this is, on the whole, extremely little, and in practice terminfo
+//! barely matters anymore. Even the few terminals in use that don't use "xterm-256color"
+//! do not differ much.
 
 use crate::common::ToCString;
 use crate::FLOGF;
@@ -16,8 +11,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-/// The [`Term`] singleton, providing a façade around the system curses library. Initialized via a
-/// successful call to [`setup()`] and surfaced to the outside world via [`term()`].
+/// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].
 ///
 /// It isn't guaranteed that fish will ever be able to successfully call `setup()`, so this must
 /// remain an `Option` instead of returning `Term` by default and just panicking if [`term()`] was
@@ -41,9 +35,6 @@ pub fn term() -> Option<Arc<Term>> {
 
 /// The safe wrapper around curses functionality, initialized by a successful call to [`setup()`]
 /// and obtained thereafter by calls to [`term()`].
-///
-/// An extant `Term` instance means the curses `TERMINAL *cur_term` pointer is non-null. Any
-/// functionality that is normally performed using `cur_term` should be done via `Term` instead.
 #[derive(Default)]
 pub struct Term {
     // String capabilities. Any Some value is confirmed non-empty.
@@ -339,15 +330,11 @@ impl Term {
     }
 }
 
-/// Calls the curses `setupterm()` function with the provided `$TERM` value `term` (or a null
-/// pointer in case `term` is null) for the file descriptor `fd`. Returns a reference to the newly
-/// initialized [`Term`] singleton on success or `None` if this failed.
+/// Initializes our database with the provided `$TERM` value `term` (or None).
+/// Returns a reference to the newly initialized [`Term`] singleton on success or `None` if this failed.
 ///
 /// The `configure` parameter may be set to a callback that takes an `&mut Term` reference to
 /// override any capabilities before the `Term` is permanently made immutable.
-///
-/// Note that the `errret` parameter is provided to the function, meaning curses will not write
-/// error output to stderr in case of failure.
 ///
 /// Any existing references from `curses::term()` will be invalidated by this call!
 pub fn setup<F>(term: Option<&str>, configure: F) -> Option<Arc<Term>>
@@ -513,7 +500,7 @@ pub fn tparm0(cap: &CStr) -> Option<CString> {
     terminfo::expand!(cap).ok().map(|x| x.to_cstring())
 }
 
-/// Covers over tparm().
+/// Covers over tparm() with one parameter.
 pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
     assert!(!cap.to_bytes().is_empty());
     let cap = cap.to_bytes();

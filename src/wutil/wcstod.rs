@@ -14,8 +14,8 @@ where
     BUFFER.with(|cell| {
         let mut buffer = cell.borrow_mut();
         buffer.clear();
-        let mut consumed = 0;
 
+        let mut consumed = 0;
         let mut chars = chars.map(|c| c.to_ascii_lowercase()).peekable();
 
         if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
@@ -26,9 +26,9 @@ where
             if c == 'n' && "an".chars().eq(chars.by_ref().take(2)) {
                 consumed += 3;
                 match buffer.as_bytes().get(0) {
-                    None | Some(b'+') => return Ok((f64::NAN, consumed)),
                     // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
-                    _ => return Ok((f64::NAN.copysign(-1.0), consumed)),
+                    Some(b'-') => return Ok((f64::NAN.copysign(-1.0), consumed)),
+                    _ => return Ok((f64::NAN, consumed)),
                 }
             }
             if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
@@ -37,8 +37,8 @@ where
                     consumed += 5;
                 }
                 match buffer.as_bytes().get(0) {
-                    None | Some(b'+') => return Ok((f64::INFINITY, consumed)),
-                    _ => return Ok((f64::NEG_INFINITY, consumed)),
+                    Some(b'-') => return Ok((f64::NEG_INFINITY, consumed)),
+                    _ => return Ok((f64::INFINITY, consumed)),
                 }
             }
             return Err(());
@@ -47,10 +47,6 @@ where
         let mut have_e = false;
         let mut have_sep = false;
         while let Some(mut c) = chars.next() {
-            // if buffer.len() >= F64_MAX_CHARS {
-            //     break;
-            // }
-
             match c {
                 _ if c.is_ascii_digit() => (),
                 _ if !have_sep && !have_e && decimal_sep == c => {

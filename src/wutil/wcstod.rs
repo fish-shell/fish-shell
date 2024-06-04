@@ -3,7 +3,7 @@ use super::hex_float;
 use crate::wchar::IntoCharIter;
 use std::cell::RefCell;
 
-fn parse_partial_iter<I>(chars: I, decimal_sep: char) -> Result<(f64, usize), ()>
+fn parse_partial_iter<I>(chars: I, decimal_sep: char) -> Option<(f64, usize)>
 where
     I: Iterator<Item = char>,
 {
@@ -27,8 +27,8 @@ where
                 consumed += 3;
                 match buffer.as_bytes().get(0) {
                     // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
-                    Some(b'-') => return Ok((f64::NAN.copysign(-1.0), consumed)),
-                    _ => return Ok((f64::NAN, consumed)),
+                    Some(b'-') => return Some((f64::NAN.copysign(-1.0), consumed)),
+                    _ => return Some((f64::NAN, consumed)),
                 }
             }
             if c == 'i' && "nf".chars().eq(chars.by_ref().take(2)) {
@@ -37,11 +37,11 @@ where
                     consumed += 5;
                 }
                 match buffer.as_bytes().get(0) {
-                    Some(b'-') => return Ok((f64::NEG_INFINITY, consumed)),
-                    _ => return Ok((f64::INFINITY, consumed)),
+                    Some(b'-') => return Some((f64::NEG_INFINITY, consumed)),
+                    _ => return Some((f64::INFINITY, consumed)),
                 }
             }
-            return Err(());
+            return None;
         }
 
         let mut have_e = false;
@@ -69,8 +69,8 @@ where
             consumed += 1;
         }
 
-        let value: f64 = (buffer).parse().map_err(|_| ())?;
-        Ok((value, consumed))
+        let value: f64 = (buffer).parse().ok()?;
+        Some((value, consumed))
     })
 }
 
@@ -105,7 +105,7 @@ where
     }
 
     let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
-    if ret.is_err() {
+    if ret.is_none() {
         *consumed = 0;
         return Err(Error::InvalidChar);
     }

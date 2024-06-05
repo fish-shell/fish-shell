@@ -1,3 +1,4 @@
+use num_traits::pow;
 use widestring::utf32str;
 
 use super::prelude::*;
@@ -6,7 +7,7 @@ use crate::tinyexpr::te_interp;
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
-const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::Truncate;
+const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::Default;
 
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
@@ -17,6 +18,7 @@ enum ZeroScaleMode {
     Round,
     Floor,
     Ceiling,
+    Default,
 }
 
 struct Options {
@@ -52,7 +54,6 @@ fn parse_cmd_opts(
     };
 
     let mut have_scale = false;
-    let mut changed_scale_mode = false;
 
     let mut w = WGetopter::new(SHORT_OPTS, LONG_OPTS, args);
     while let Some(c) = w.next_opt() {
@@ -78,7 +79,6 @@ fn parse_cmd_opts(
                 }
             }
             'm' => {
-                changed_scale_mode = true;
                 let optarg = w.woptarg.unwrap();
                 if optarg.eq(utf32str!("truncate")) {
                     opts.zero_scale_mode = ZeroScaleMode::Truncate;
@@ -133,25 +133,12 @@ fn parse_cmd_opts(
         }
     }
 
-    if !have_scale && changed_scale_mode {
-        opts.scale = 0;
-    }
-
     if have_scale && opts.scale != 0 && opts.base != 10 {
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
             "non-zero scale value only valid
             for base 10"
-        ));
-        return Err(STATUS_INVALID_ARGS);
-    }
-
-    if have_scale && opts.scale != 0 && changed_scale_mode {
-        streams.err.append(wgettext_fmt!(
-            BUILTIN_ERR_COMBO2,
-            cmd,
-            "scale mode only valid for zero scale"
         ));
         return Err(STATUS_INVALID_ARGS);
     }
@@ -175,13 +162,26 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         return sprintf!("%s0%lo", mneg, v.abs() as u64);
     }
 
-    if opts.scale == 0 {
-        v = match opts.zero_scale_mode {
-            ZeroScaleMode::Truncate => v.trunc(),
-            ZeroScaleMode::Round => v.round(),
-            ZeroScaleMode::Floor => v.floor(),
-            ZeroScaleMode::Ceiling => v.ceil(),
-        };
+    v = v * pow(10f64, opts.scale);
+
+    v = match opts.zero_scale_mode {
+        ZeroScaleMode::Truncate => v.trunc(),
+        ZeroScaleMode::Round => v.round(),
+        ZeroScaleMode::Floor => v.floor(),
+        ZeroScaleMode::Ceiling => v.ceil(),
+        ZeroScaleMode::Default => {
+            if opts.scale == 0 {
+                v.trunc()
+            } else {
+                v
+            }
+        }
+    };
+
+    // if we don't add check here, the result of 'math -s 0 "22 / 5 - 5"' will be '0', not '-0'
+    if opts.scale != 0 {
+        v = v / pow(10f64, opts.scale);
+    } else {
         return sprintf!("%.*f", opts.scale, v);
     }
 

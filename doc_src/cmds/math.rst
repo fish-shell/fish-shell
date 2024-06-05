@@ -19,7 +19,6 @@ It supports simple operations such as addition, subtraction, and so on, as well 
 
 By default, the output shows up to 6 decimal places.
 To change the number of decimal places, use the ``--scale`` option, including ``--scale=0`` for integer output.
-Trailing zeroes will always be trimmed.
 
 Keep in mind that parameter expansion happens before expressions are evaluated.
 This can be very useful in order to perform calculations involving shell variables or the output of command substitutions, but it also means that parenthesis (``()``) and the asterisk (``*``) glob character have to be escaped or quoted.
@@ -50,9 +49,9 @@ The following options are available:
     Octal numbers will have a prefix of ``0`` but aren't understood by ``math`` as input.
 
 **-m** *MODE* or **--scale-mode** *MODE*
-    Sets scale behavior when the scale is set to zero.
+    Sets scale behavior.
     The ``MODE`` can be ``truncate``, ``round``, ``floor``, ``ceiling``. 
-    The default value of scale mode is ``truncate``. This option can only be set when the scale is zero; if ``scale`` isn't given, ``scale`` will automatically be set to ``0``; otherwise, it will throw an error.
+    The default value of scale mode is ``round`` with non zero scale and ``truncate`` with zero scale.
 
 **-h** or **--help**
     Displays help about using this command.

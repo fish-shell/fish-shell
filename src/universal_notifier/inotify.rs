@@ -5,7 +5,7 @@ use crate::wchar::prelude::*;
 use crate::wutil::{wbasename, wdirname};
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::ffi::OsString;
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, RawFd};
 
 /// A notifier based on inotify.
 pub struct InotifyNotifier {
@@ -50,13 +50,13 @@ impl UniversalNotifier for InotifyNotifier {
 
     // Returns the fd from which to watch for events.
     fn notification_fd(&self) -> Option<RawFd> {
-        Some(self.inotify.as_raw_fd())
+        Some(self.inotify.as_fd().as_raw_fd())
     }
 
     // The notification_fd is readable; drain it. Returns true if a notification is considered to
     // have been posted.
     fn notification_fd_became_readable(&self, fd: RawFd) -> bool {
-        assert_eq!(fd, self.inotify.as_raw_fd(), "unexpected fd");
+        assert_eq!(fd, self.inotify.as_fd().as_raw_fd(), "unexpected fd");
         let Ok(evts) = self.inotify.read_events() else {
             return false;
         };

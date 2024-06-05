@@ -40,7 +40,7 @@ impl Read for AutoCloseFd {
 
 impl Write for AutoCloseFd {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        nix::unistd::write(self.as_raw_fd(), buf).map_err(std::io::Error::from)
+        nix::unistd::write(self, buf).map_err(std::io::Error::from)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
@@ -161,8 +161,8 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
         }
     };
 
-    let readp = unsafe { OwnedFd::from_raw_fd(pipes.0) };
-    let writep = unsafe { OwnedFd::from_raw_fd(pipes.1) };
+    let readp = pipes.0;
+    let writep = pipes.1;
 
     // Ensure our fds are out of the user range.
     let readp = heightenize_fd(readp, already_cloexec)?;
@@ -271,17 +271,16 @@ mod o_search {
     /// where O_EXEC is 0x40000000. This is only on macOS 12.0+ or later; however
     /// prior macOS versions ignores O_EXEC so it is treated the same as O_RDONLY.
     #[cfg(target_os = "macos")]
-    pub const BEST_O_SEARCH: OFlag =
-        unsafe { OFlag::from_bits_unchecked(libc::O_DIRECTORY | 0x40000000) };
+    pub const BEST_O_SEARCH: OFlag = OFlag::from_bits_truncate(libc::O_DIRECTORY | 0x40000000);
 
     /// On FreeBSD, we have O_SEARCH = 0x00040000.
     #[cfg(target_os = "freebsd")]
-    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(0x00040000) };
+    pub const BEST_O_SEARCH: OFlag = OFlag::from_bits_truncate(0x00040000);
 
     /// On Linux we can use O_PATH, it has nearly the same semantics. we can use the fd for openat / fchdir, with only requiring
     /// x permission on the directory.
     #[cfg(any(target_os = "linux", target_os = "android"))]
-    pub const BEST_O_SEARCH: OFlag = unsafe { OFlag::from_bits_unchecked(libc::O_PATH) };
+    pub const BEST_O_SEARCH: OFlag = OFlag::from_bits_truncate(libc::O_PATH);
 
     /// Fall back to O_RDONLY.
     #[cfg(not(any(

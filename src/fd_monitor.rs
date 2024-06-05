@@ -120,7 +120,7 @@ impl FdEventSignaller {
         let mut ret;
         loop {
             let bytes = c.to_ne_bytes();
-            ret = nix::unistd::write(self.write_fd(), &bytes);
+            ret = nix::unistd::write(unsafe { BorrowedFd::borrow_raw(self.write_fd()) }, &bytes);
 
             match ret {
                 Ok(_) => break,

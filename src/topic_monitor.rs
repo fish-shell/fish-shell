@@ -208,7 +208,7 @@ impl binary_semaphore_t {
             Self::Pipes(pipes) => {
                 // Write exactly one byte.
                 loop {
-                    match unistd::write(pipes.write.as_raw_fd(), &[0]) {
+                    match unistd::write(&pipes.write, &[0]) {
                         Err(Errno::EINTR) => continue,
                         Err(_) => self.die("write"),
                         Ok(_) => break,

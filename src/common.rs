@@ -1525,7 +1525,7 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<usize> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
-        match nix::unistd::write(fd, &buf[total..]) {
+        match nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, &buf[total..]) {
             Ok(written) => {
                 total += written;
             }

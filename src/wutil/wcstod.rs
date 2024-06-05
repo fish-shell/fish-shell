@@ -232,7 +232,8 @@ where
         }
     }
     if is_inf_nan {
-        let f = wcstod_inner(chars, '.', consumed)?;
+        let (f, f_chars) = parse_partial_iter(chars, '.').ok_or(super::Error::InvalidChar)?;
+        *consumed += f_chars;
         *consumed += leading_whitespace;
         return Ok(f);
     }

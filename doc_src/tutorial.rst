@@ -750,7 +750,7 @@ Now in another shell::
     > echo $EDITOR
     vim
 
-Best practices for using universal variables include `avoiding <https://fishshell.com/docs/current/language.html#universal-variables>`__ directly manipulating ``config.fish`` and ```.config/fish/fish_variables``, and preferring :doc:`funcsave <cmds/fish_add_path>`.
+See more on universal variables :ref:`here <universal-variables>` (especially on how to set them once).
 
 Ready for more?
 ---------------

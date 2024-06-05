@@ -162,7 +162,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         return sprintf!("%s0%lo", mneg, v.abs() as u64);
     }
 
-    v = v * pow(10f64, opts.scale);
+    v *= pow(10f64, opts.scale);
 
     v = match opts.zero_scale_mode {
         ZeroScaleMode::Truncate => v.trunc(),
@@ -180,7 +180,7 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
 
     // if we don't add check here, the result of 'math -s 0 "22 / 5 - 5"' will be '0', not '-0'
     if opts.scale != 0 {
-        v = v / pow(10f64, opts.scale);
+        v /= pow(10f64, opts.scale);
     } else {
         return sprintf!("%.*f", opts.scale, v);
     }

@@ -17,7 +17,7 @@ fish 3.8.0 (released ???)
    10308 10321 10338 10348 10349 10355 10357 10379 10381 10388 10389 10390 10395 10398 10400 10403
    10404 10407 10408 10409 10411 10412 10417 10418 10427 10429 10438 10439 10440 10441 10442 10443
    10445 10448 10450 10451 10456 10457 10462 10463 10464 10466 10467 10474 10481 10490 10492 10494
-   10499 10503 10505 10508 10509 10510 10511 10512 10513 10518
+   10499 10503 10505 10508 10509 10510 10511 10512 10513 10518 10547
 
 The entirety of fish's C++ code has been ported to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
@@ -153,6 +153,7 @@ Interactive improvements
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 - Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).
+- ``fish_add_path`` now automatically enables verbose mode when used interactively (in the commandline), in an effort to be clearer about what it does (:issue:`10532`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

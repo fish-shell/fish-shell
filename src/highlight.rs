@@ -7,7 +7,7 @@ use crate::ast::{
 use crate::builtins::shared::builtin_exists;
 use crate::color::RgbColor;
 use crate::common::{
-    unescape_string_in_place, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
+    unescape_string, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::env::Environment;
@@ -677,9 +677,8 @@ fn range_is_potential_path(
     // Get the node source, unescape it, and then pass it to is_potential_path along with the
     // working directory (as a one element list).
     let mut result = false;
-    let mut token = (src[range.start()..range.end()]).to_owned();
-    if unescape_string_in_place(
-        &mut token,
+    if let Some(mut token) = unescape_string(
+        &src[range.start()..range.end()],
         crate::common::UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
     ) {
         // Big hack: is_potential_path expects a tilde, but unescape_string gives us HOME_DIRECTORY.

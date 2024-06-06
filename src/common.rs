@@ -494,13 +494,6 @@ pub fn unescape_string(input: &wstr, style: UnescapeStringStyle) -> Option<WStri
     }
 }
 
-// TODO Delete this.
-pub fn unescape_string_in_place(s: &mut WString, style: UnescapeStringStyle) -> bool {
-    unescape_string(s, style)
-        .map(|unescaped| *s = unescaped)
-        .is_some()
-}
-
 /// Returns the unescaped version of input, or None on error.
 fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WString> {
     let mut result = WString::new();

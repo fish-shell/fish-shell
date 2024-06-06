@@ -1,7 +1,5 @@
 use super::prelude::*;
-use crate::common::{
-    unescape_string, unescape_string_in_place, ScopeGuard, UnescapeFlags, UnescapeStringStyle,
-};
+use crate::common::{unescape_string, ScopeGuard, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionRequestOptions};
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
@@ -536,10 +534,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     // The input data is meant to be something like you would have on the command
                     // line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So
                     // we need to unescape the command line. See #1127.
-                    unescape_string_in_place(
-                        &mut faux_cmdline_with_completion,
+                    faux_cmdline_with_completion = unescape_string(
+                        &faux_cmdline_with_completion,
                         UnescapeStringStyle::Script(UnescapeFlags::default()),
-                    );
+                    )
+                    .expect("Unescaping commandline to complete failed");
                 }
 
                 // Append any description.

@@ -86,7 +86,7 @@ impl TryFrom<&wstr> for TypeFlags {
 }
 
 bitflags! {
-    #[derive(Copy, Clone, Default)]
+    #[derive(Copy, Clone, Default, PartialEq)]
     pub struct PermFlags: u32 {
         const READ = 1 << 0;
         const WRITE = 1 << 1;
@@ -405,7 +405,6 @@ fn path_transform(
         if transformed != arg {
             n_transformed += 1;
             // Return okay if path wasn't already in this form
-            // TODO: Is that correct?
             if opts.quiet {
                 return STATUS_CMD_OK;
             };
@@ -798,26 +797,15 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) 
 
     if let Some(perm) = opts.perms {
         let mut amode = 0;
-        // TODO: Update bitflags so this works
-        /*
         for f in perm {
             amode |= match f {
                 PermFlags::READ => R_OK,
                 PermFlags::WRITE => W_OK,
                 PermFlags::EXEC => X_OK,
-                _ => PermFlags::empty(),
+                _ => 0,
             }
         }
-        */
-        if perm.contains(PermFlags::READ) {
-            amode |= R_OK;
-        }
-        if perm.contains(PermFlags::WRITE) {
-            amode |= W_OK;
-        }
-        if perm.contains(PermFlags::EXEC) {
-            amode |= X_OK;
-        }
+
         // access returns 0 on success,
         // -1 on failure. Yes, C can't even keep its bools straight.
         // Skip this if we don't have a mode to check - the stat can do existence too.

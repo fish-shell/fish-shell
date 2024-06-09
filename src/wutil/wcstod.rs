@@ -1,7 +1,75 @@
 use super::errors::Error;
 use super::hex_float;
 use crate::wchar::IntoCharIter;
-use fast_float::parse_partial_iter;
+use std::num::ParseFloatError;
+
+// Parse a decimal float from a sequence of characters.
+// Return the parsed float, and (on success) the number of characters consumed.
+fn parse_dec_float<I>(
+    mut chars: I,
+    decimal_sep: char,
+    consumed: &mut usize,
+) -> Result<f64, ParseFloatError>
+where
+    I: Iterator<Item = char> + Clone,
+{
+    // This uses Rust's native float parsing and a temporary string.
+    // The EBNF grammar is at https://doc.rust-lang.org/std/primitive.f64.html#method.from_str
+    // Note it is case-insensitive and we replace the decimal separator with a period.
+    let mut s = String::new();
+    if matches!(chars.clone().next(), Some('+' | '-')) {
+        s.push(chars.next().unwrap());
+    }
+    for spec in ["infinity", "inf", "nan"] {
+        if chars
+            .clone()
+            .take(spec.len())
+            .map(|c| c.to_ascii_lowercase())
+            .eq(spec.chars())
+        {
+            s.push_str(spec);
+            let res = s.parse::<f64>()?;
+            *consumed = s.len();
+            return Ok(res);
+        }
+    }
+
+    while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
+        s.push(chars.next().unwrap());
+    }
+    if chars.clone().next() == Some(decimal_sep) {
+        chars.next();
+        s.push('.'); // Replace decimal separator with a period.
+        while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
+            s.push(chars.next().unwrap());
+        }
+    }
+
+    // Note that for a string like "5e", we should just parse the "5" out
+    // and leave the "e" as remaining in the string. So we require at least
+    // one digit after the decimal separator. Keep track of how many we have,
+    // and the length before.
+    let len_before_exp = s.len();
+    if matches!(chars.clone().next(), Some('E' | 'e')) {
+        s.push(chars.next().unwrap());
+        if matches!(chars.clone().next(), Some('+' | '-')) {
+            s.push(chars.next().unwrap());
+        }
+        let mut saw_exp_digit = false;
+        while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
+            saw_exp_digit = true;
+            s.push(chars.next().unwrap());
+        }
+        if !saw_exp_digit {
+            // We didn't see any digits after the exponent.
+            // Roll back to the length before the exponent.
+            s.truncate(len_before_exp);
+        }
+    }
+    let res = s.parse::<f64>()?;
+    *consumed = s.len(); // note this is the number of chars because only ASCII is recognized.
+    Ok(res)
+}
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
 where
@@ -33,14 +101,14 @@ where
         };
     }
 
-    let ret = parse_partial_iter(chars.clone().fuse(), decimal_sep);
+    let ret = parse_dec_float(chars.clone(), decimal_sep, consumed);
     if ret.is_err() {
         *consumed = 0;
         return Err(Error::InvalidChar);
     }
-    let (val, n): (f64, usize) = ret.unwrap();
+    let val = ret.unwrap();
 
-    // Fast-float does not return overflow errors; instead it just returns +/- infinity.
+    // Rust's float parsing does not return overflow errors; instead it just returns +/- infinity.
     // Check to see if the first character is a digit or the decimal; if so that indicates overflow.
     if val.is_infinite() {
         for c in chars {
@@ -53,7 +121,7 @@ where
             }
         }
     }
-    *consumed = n + whitespace_skipped;
+    *consumed += whitespace_skipped;
     Ok(val)
 }
 
@@ -112,6 +180,7 @@ pub fn wcstod_underscores<Chars>(s: Chars, consumed: &mut usize) -> Result<f64, 
 where
     Chars: IntoCharIter,
 {
+    // TODO: integrate underscore skipping into parse_dec_float?
     let mut chars = s.chars().peekable();
 
     let mut leading_whitespace = 0;

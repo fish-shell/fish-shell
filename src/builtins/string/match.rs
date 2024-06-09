@@ -1,5 +1,5 @@
+use fish_printf::sprintf;
 use pcre2::utf32::{Captures, Regex, RegexBuilder};
-use printf::sprintf;
 use std::collections::HashMap;
 
 use super::*;

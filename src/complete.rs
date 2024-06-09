@@ -15,8 +15,8 @@ use crate::{
     util::wcsfilecmp,
 };
 use bitflags::bitflags;
+use fish_printf::sprintf;
 use once_cell::sync::Lazy;
-use printf::sprintf;
 
 use crate::{
     abbrs::with_abbrs,

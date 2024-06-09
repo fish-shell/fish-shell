@@ -191,10 +191,10 @@ impl From<TokenizerError> for &'static wstr {
     }
 }
 
-impl printf::ToArg<'static> for TokenizerError {
-    fn to_arg(self) -> printf::Arg<'static> {
+impl fish_printf::ToArg<'static> for TokenizerError {
+    fn to_arg(self) -> fish_printf::Arg<'static> {
         let msg: &'static wstr = self.into();
-        printf::Arg::WStr(msg)
+        fish_printf::Arg::WStr(msg)
     }
 }
 

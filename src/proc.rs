@@ -25,6 +25,7 @@ use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleSto
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
 use crate::wutil::{perror, wbasename, wgettext, wperror};
+use fish_printf::sprintf;
 use libc::{
     EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO,
@@ -32,7 +33,6 @@ use libc::{
     WUNTRACED, _SC_CLK_TCK,
 };
 use once_cell::sync::Lazy;
-use printf::sprintf;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};

@@ -41,8 +41,8 @@ impl ToWString for MaybeJobId {
     }
 }
 
-impl<'a> printf::ToArg<'a> for MaybeJobId {
-    fn to_arg(self) -> printf::Arg<'a> {
+impl<'a> fish_printf::ToArg<'a> for MaybeJobId {
+    fn to_arg(self) -> fish_printf::Arg<'a> {
         self.as_num().to_arg()
     }
 }

@@ -17,8 +17,8 @@ use crate::{
     wchar::{wstr, WString, L},
     wutil::{fish_wcstoi, wgettext_fmt},
 };
+use fish_printf::sprintf;
 use libc::c_int;
-use printf::sprintf;
 use std::num::NonZeroU32;
 use std::sync::atomic::Ordering;
 

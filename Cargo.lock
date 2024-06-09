@@ -91,6 +91,7 @@ dependencies = [
  "cc",
  "errno",
  "fast-float",
+ "fish-printf",
  "lazy_static",
  "libc",
  "lru",
@@ -98,12 +99,19 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pcre2",
- "printf",
  "rand",
  "rand_pcg",
  "rsconf",
  "serial_test",
  "terminfo",
+ "widestring",
+]
+
+[[package]]
+name = "fish-printf"
+version = "0.1.0"
+dependencies = [
+ "libc",
  "widestring",
 ]
 
@@ -322,14 +330,6 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
-
-[[package]]
-name = "printf"
-version = "0.1.0"
-dependencies = [
- "libc",
- "widestring",
-]
 
 [[package]]
 name = "proc-macro2"

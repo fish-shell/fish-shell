@@ -57,7 +57,7 @@ use crate::wutil::{
     wcstoi::{wcstoi_partial, Options as WcstoiOpts},
     wstr_offset_in,
 };
-use printf::{sprintf_locale, ToArg};
+use fish_printf::{sprintf_locale, ToArg};
 
 /// Return true if `c` is an octal digit.
 fn is_octal_digit(c: char) -> bool {

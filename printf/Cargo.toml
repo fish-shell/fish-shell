@@ -1,5 +1,5 @@
 [package]
-name = "printf"
+name = "fish-printf"
 edition = "2021"
 version = "0.1.0"
 description = "printf implementation, based on musl"

@@ -235,9 +235,9 @@ impl ParseKeyword {
     }
 }
 
-impl printf::ToArg<'static> for ParseKeyword {
-    fn to_arg(self) -> printf::Arg<'static> {
-        printf::Arg::WStr(self.to_wstr())
+impl fish_printf::ToArg<'static> for ParseKeyword {
+    fn to_arg(self) -> fish_printf::Arg<'static> {
+        fish_printf::Arg::WStr(self.to_wstr())
     }
 }
 

@@ -26,8 +26,8 @@ use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
 
-extern crate printf as extern_printf;
-pub use extern_printf::sprintf;
+extern crate fish_printf;
+pub use fish_printf::sprintf;
 
 pub use wcstoi::*;
 

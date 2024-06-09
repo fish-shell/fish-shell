@@ -375,9 +375,9 @@ impl std::fmt::Display for Key {
     }
 }
 
-impl printf::ToArg<'static> for Key {
-    fn to_arg(self) -> printf::Arg<'static> {
-        printf::Arg::WString(self.into())
+impl fish_printf::ToArg<'static> for Key {
+    fn to_arg(self) -> fish_printf::Arg<'static> {
+        fish_printf::Arg::WString(self.into())
     }
 }
 

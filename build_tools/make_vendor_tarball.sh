@@ -45,12 +45,6 @@ cd "$PREFIX_TMPDIR"
 mkdir .cargo
 cargo vendor --manifest-path "$wd/Cargo.toml" > .cargo/config
 
-# vendoring drags in a lot of Windows dependencies, which makes the resulting tarball enormous
-# cargo can't be told only to support a particular platform
-# see https://github.com/rust-lang/cargo/issues/7058
-# workaround below from https://github.com/rust-lang/cargo/issues/7058#issuecomment-751856262
-rm -r vendor/winapi*/lib/*.a
-
 tar cfvJ $path.xz vendor .cargo
 
 cd -

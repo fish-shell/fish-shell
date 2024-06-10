@@ -496,8 +496,7 @@ impl Inputter {
     }
 
     pub fn function_pop_arg(&mut self) -> Option<char> {
-        self.input_function_args
-            .pop()
+        self.input_function_args.pop()
     }
 
     fn function_push_args(&mut self, code: ReadlineCmd) {

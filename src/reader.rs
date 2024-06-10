@@ -3172,7 +3172,8 @@ impl ReaderData {
                 self.parser().libdata_mut().is_repaint = false;
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
-                panic!("should have been handled by inputter_t::readch");
+                // This can be reached via `commandline -f and` etc
+                // panic!("should have been handled by inputter_t::readch");
             }
         }
     }

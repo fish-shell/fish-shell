@@ -268,9 +268,22 @@ fn get_version(src_dir: &Path) -> String {
     if let Ok(output) = Command::new("git").args(args).output() {
         let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
         if !rev.is_empty() {
-            return rev;
+            // If it contains a ".", we have a proper version like "3.7",
+            // or "23.2.1-1234-gfab1234"
+            if rev.contains(".") {
+                return rev;
+            }
+            // If it doesn't, we probably got *just* the commit SHA,
+            // like "f1242abcdef".
+            // So we prepend the crate version so it at least looks like
+            // "3.8-gf1242abcdef"
+            // This lacks the commit *distance*, but that can't be helped without
+            // tags.
+            let version = env!("CARGO_PKG_VERSION").to_owned();
+            return version + "-g" + &rev;
         }
     }
+    // TODO: Do we just use the cargo version here?
 
     "unknown".to_string()
 }

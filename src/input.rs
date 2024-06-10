@@ -419,7 +419,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         }
 
         // Tell the reader an event occurred.
-        if reader_reading_interrupted() != 0 {
+        if reader_reading_interrupted(self) != 0 {
             let vintr = shell_modes().c_cc[libc::VINTR];
             if vintr != 0 {
                 self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));

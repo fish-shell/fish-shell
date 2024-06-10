@@ -943,18 +943,16 @@ pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
 }
 
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
-/// was set. If the current reader is interruptible, call \c reader_exit().
-pub fn reader_reading_interrupted() -> i32 {
+/// was set. If the current reader is interruptible, mark the reader as exit_loop_requested.
+pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
     let res = reader_test_and_clear_interrupted();
     if res == 0 {
         return 0;
     }
-    if let Some(data) = current_data() {
-        if data.conf.exit_on_interrupt {
-            data.exit_loop_requested = true;
-            // We handled the interrupt ourselves, our caller doesn't need to handle it.
-            return 0;
-        }
+    if data.conf.exit_on_interrupt {
+        data.exit_loop_requested = true;
+        // We handled the interrupt ourselves, our caller doesn't need to handle it.
+        return 0;
     }
     res
 }

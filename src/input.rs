@@ -495,10 +495,9 @@ impl Inputter {
         self.input_function_args.push(arg);
     }
 
-    pub fn function_pop_arg(&mut self) -> char {
+    pub fn function_pop_arg(&mut self) -> Option<char> {
         self.input_function_args
             .pop()
-            .expect("function_pop_arg underflow")
     }
 
     fn function_push_args(&mut self, code: ReadlineCmd) {

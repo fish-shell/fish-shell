@@ -3072,10 +3072,11 @@ impl ReaderData {
                     _ => unreachable!(),
                 };
                 let (elt, _el) = self.active_edit_line();
-                let target = self.inputter.function_pop_arg();
-                let success = self.jump(direction, precision, elt, target);
+                if let Some(target) = self.inputter.function_pop_arg() {
+                    let success = self.jump(direction, precision, elt, target);
 
-                self.inputter.function_set_status(success);
+                    self.inputter.function_set_status(success);
+                }
             }
             rl::RepeatJump => {
                 let (elt, _el) = self.active_edit_line();

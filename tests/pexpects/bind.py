@@ -372,6 +372,10 @@ send('\x07') # ctrl-g
 send('\r')
 expect_prompt("foobar")
 
+# This should do nothing instead of crash
+sendline("commandline -f backward-jump")
+expect_prompt()
+
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)
 sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")

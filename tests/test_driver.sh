@@ -68,14 +68,5 @@ fish_init_cmd="${fish_init_cmd} && source ${TESTS_ROOT}/test_util.fish";
     --init-command "${fish_init_cmd}" "$fish_script" "$script_args")
 test_status="$?"
 
-# CMake less than 3.9.0 "fully supports" setting an exit code to denote a skipped test, but then
-# it just goes ahead and reports them as failed anyway. Really?
-if test -n $CMAKE_SKIPPED_HACK; then
-    if test $test_status -eq 125; then
-        echo "Overriding SKIPPED return code from test" 1>&2
-        test_status=0
-    fi
-fi
-
 rm -rf "$homedir"
 exit "$test_status"

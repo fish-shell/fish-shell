@@ -5,11 +5,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 include(cmake/Mac.cmake)
 
-project(fish)
+project(fish LANGUAGES C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# We are C++11.
-set(CMAKE_CXX_STANDARD 11)
 set(DEFAULT_BUILD_TYPE "Debug")
 
 # Generate Xcode schemas (but not for tests).
@@ -87,8 +85,7 @@ fish_link_deps_and_sign(fish_key_reader)
 include(cmake/Docs.cmake)
 
 # A helper for running tests.
-add_executable(fish_test_helper src/fish_test_helper.cpp)
-
+add_executable(fish_test_helper src/fish_test_helper.c)
 # Set up tests.
 include(cmake/Tests.cmake)
 

@@ -65,8 +65,10 @@ complete -x -c apt -s t -d 'Install from specific repository' -x -a '(__fish_apt
 # List
 __fish_apt_subcommand list -d 'List packages'
 __fish_apt_option list -l installed -d 'Installed packages'
+__fish_apt_option list -l manual-installed -d 'Manually installed packages'
 __fish_apt_option list -l upgradable -d 'Upgradable packages'
-__fish_apt_option list -l all-versions -d 'Show all versions of any package'
+__fish_apt_option list -s a -l all-versions -d 'Show all versions of any package'
+__fish_apt_option list -s v -l verbose -d 'Verbose output'
 
 # Search
 __fish_apt_subcommand search -r -d 'Search for packages'

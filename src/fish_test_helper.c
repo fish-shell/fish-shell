@@ -6,12 +6,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <algorithm>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iterator>  // for std::begin/end
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static void abandon_tty() {
     // The parent may get SIGSTOPed when it tries to call tcsetpgrp if the child has already done
@@ -34,7 +33,7 @@ static void abandon_tty() {
     (void)tcsetpgrp(STDIN_FILENO, child);
     // Parent waits for child to exit.
     if (pid > 0) {
-        waitpid(child, nullptr, 0);
+        waitpid(child, NULL, 0);
     }
 }
 
@@ -69,7 +68,7 @@ static void nohup_wait() {
 
 static void report_foreground_loop() {
     int was_fg = -1;
-    const auto grp = getpgrp();
+    const pid_t grp = getpgrp();
     for (;;) {
         int is_fg = (tcgetpgrp(STDIN_FILENO) == grp);
         if (is_fg != was_fg) {
@@ -98,17 +97,17 @@ static void sigint_parent() {
 static void print_stdout_stderr() {
     fprintf(stdout, "stdout\n");
     fprintf(stderr, "stderr\n");
-    fflush(nullptr);
+    fflush(NULL);
 }
 
 static void print_pid_then_sleep() {
     // On some systems getpid is a long, on others it's an int, let's just cast it.
-    fprintf(stdout, "%ld\n", static_cast<long>(getpid()));
-    fflush(nullptr);
+    fprintf(stdout, "%ld\n", (long)getpid());
+    fflush(NULL);
     usleep(1000000 / 2);  //.5 secs
 }
 
-static void print_pgrp() { fprintf(stdout, "%ld\n", static_cast<long>(getpgrp())); }
+static void print_pgrp() { fprintf(stdout, "%ld\n", (long)getpgrp()); }
 
 static void print_fds() {
     bool needs_space = false;
@@ -123,9 +122,10 @@ static void print_fds() {
 
 static void print_signal(int sig) {
     // Print a signal description to stderr.
-    if (const char *s = strsignal(sig)) {
+    const char *s = strsignal(sig);
+    if (s) {
         fprintf(stderr, "%s", s);
-        if (strchr(s, ':') == nullptr) {
+        if (strchr(s, ':') == NULL) {
             fprintf(stderr, ": %d", sig);
         }
         fprintf(stderr, "\n");
@@ -135,7 +135,7 @@ static void print_signal(int sig) {
 static void print_blocked_signals() {
     sigset_t sigs;
     sigemptyset(&sigs);
-    if (sigprocmask(SIG_SETMASK, nullptr, &sigs)) {
+    if (sigprocmask(SIG_SETMASK, NULL, &sigs)) {
         perror("sigprocmask");
         exit(EXIT_FAILURE);
     }
@@ -154,23 +154,23 @@ static void print_blocked_signals() {
 static void print_ignored_signals() {
     for (int sig = 1; sig < 33; sig++) {
         struct sigaction act = {};
-        sigaction(sig, nullptr, &act);
+        sigaction(sig, NULL, &act);
         if (act.sa_handler == SIG_IGN) {
             print_signal(sig);
         }
     }
 }
 
+static void sigtstp_handler(int x) {
+    write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+    kill(getpid(), SIGSTOP);
+}
+static void sigcont_handler(int x) {
+    write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
+}
 static void print_stop_cont() {
-    signal(SIGTSTP, [](int) {
-        // C++ compilers are awful and this is the dance we need to do to silence the "Unused
-        // result" warning. No, casting to (void) does *not* work. Please leave this.
-        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
-        kill(getpid(), SIGSTOP);
-    });
-    signal(SIGCONT, [](int) {
-        auto __attribute__((unused)) _ = write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
-    });
+    signal(SIGTSTP, &sigtstp_handler);
+    signal(SIGCONT, &sigcont_handler);
     char buff[1];
     for (;;) {
         if (read(STDIN_FILENO, buff, sizeof buff) >= 0) {
@@ -191,10 +191,12 @@ static void sigint_self() {
     abort();
 }
 
+static void do_nothing(int x) {
+}
 static void stdin_make_nonblocking() {
     const int fd = STDIN_FILENO;
     // Catch SIGCONT so pause() wakes us up.
-    signal(SIGCONT, [](int) {});
+    signal(SIGCONT, &do_nothing);
 
     for (;;) {
         int flags = fcntl(fd, F_GETFL, 0);
@@ -210,7 +212,7 @@ static void stdin_make_nonblocking() {
 static void show_help();
 
 /// A thing that fish_test_helper can do.
-struct fth_command_t {
+typedef struct {
     /// The argument to match against.
     const char *arg;
 
@@ -219,7 +221,7 @@ struct fth_command_t {
 
     /// Description of what this does.
     const char *desc;
-};
+} fth_command_t;
 
 static fth_command_t s_commands[] = {
     {"abandon_tty", abandon_tty, "Create a new pgroup and transfer tty ownership to it"},
@@ -244,23 +246,19 @@ static fth_command_t s_commands[] = {
     {"stdin_make_nonblocking", stdin_make_nonblocking,
      "Print if stdin is blocking and then make it nonblocking"},
     {"help", show_help, "Print list of fish_test_helper commands"},
+    {NULL, NULL, NULL},
 };
 
 static void show_help() {
     printf("fish_test_helper: helper utility for fish\n\n");
     printf("Commands\n");
     printf("--------\n");
-    for (const auto &cmd : s_commands) {
-        printf("  %s:\n    %s\n\n", cmd.arg, cmd.desc);
+    for (int i = 0; s_commands[i].arg; i++) {
+        printf("  %s:\n    %s\n\n", s_commands[i].arg, s_commands[i].desc);
     }
 }
 
 int main(int argc, char *argv[]) {
-    std::sort(std::begin(s_commands), std::end(s_commands),
-              [](const fth_command_t &lhs, const fth_command_t &rhs) {
-                  return strcmp(lhs.arg, rhs.arg) < 0;
-              });
-
     if (argc <= 1) {
         fprintf(stderr, "No commands given.\n");
         return 0;
@@ -271,10 +269,10 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        const fth_command_t *found = nullptr;
-        for (const auto &cmd : s_commands) {
-            if (!strcmp(argv[i], cmd.arg)) {
-                found = &cmd;
+        const fth_command_t *found = NULL;
+        for (int j = 0; s_commands[j].arg; j++) {
+            if (!strcmp(argv[i], s_commands[j].arg)) {
+                found = &s_commands[j];
                 break;
             }
         }

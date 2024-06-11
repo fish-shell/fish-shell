@@ -163,7 +163,6 @@ endif()
 
 # Group install targets into a InstallTargets folder
 set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
-                    tests_buildroot_target
              PROPERTY FOLDER cmake/InstallTargets)
 
 # Make a target build_root that installs into the buildroot directory, for testing.

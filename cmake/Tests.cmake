@@ -1,3 +1,19 @@
+# Running the integration tests requires a C++ compiler to build the helper
+include(CheckLanguage)
+check_language(CXX)
+
+add_feature_info(Tests CMAKE_CXX_COMPILER "unit and integration tests (require a C++ compiler)")
+if(CMAKE_CXX_COMPILER)
+    enable_language(CXX)
+    # Use C++11
+    set(CMAKE_CXX_STANDARD 11)
+else()
+    return()
+endif()
+
+# A helper for running tests.
+add_executable(fish_test_helper src/fish_test_helper.cpp)
+
 # This adds ctest support to the project
 enable_testing()
 
@@ -101,6 +117,10 @@ add_custom_target(tests_buildroot_target
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
                   DEPENDS fish fish_test_helper)
+
+# Group install targets into a InstallTargets folder
+set_property(TARGET tests_buildroot_target
+             PROPERTY FOLDER cmake/InstallTargets)
 
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})

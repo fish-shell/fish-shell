@@ -140,11 +140,10 @@ Building from git master currently requires:
 
 -  Rust (version 1.70 or later)
 -  CMake (version 3.19 or later)
--  a C compiler (for system feature detection)
+-  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 -  an Internet connection, as other dependencies will be downloaded automatically
--  For tests: a C++11 compiler
 
 
 Building from source (all platforms) - Makefile generator

@@ -12,7 +12,7 @@ lto = true
 
 [package]
 name = "fish"
-version = "3.7.95"
+version = "3.8.0-alpha1"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"

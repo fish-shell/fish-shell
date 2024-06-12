@@ -1,5 +1,5 @@
 env:
-    CIRRUS_CLONE_DEPTH: 1
+    CIRRUS_CLONE_DEPTH: 100
     CI: 1
 
 linux_task:

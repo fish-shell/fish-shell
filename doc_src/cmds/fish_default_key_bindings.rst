@@ -24,4 +24,4 @@ Examples
 
 To start using vi key bindings::
 
-  fish_default_key_bindings
+  fish_vi_key_bindings

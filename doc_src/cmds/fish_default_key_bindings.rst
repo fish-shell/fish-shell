@@ -22,6 +22,6 @@ There are no parameters for ``fish_default_key_bindings``.
 Examples
 --------
 
-To start using vi key bindings::
+To start using emacs key bindings::
 
   fish_default_key_bindings

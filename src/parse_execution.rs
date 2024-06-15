@@ -990,7 +990,7 @@ impl<'a> ParseExecutionContext {
             EnvMode::LOCAL | EnvMode::USER,
             var.map_or(vec![], |var| var.as_list().to_owned()),
         );
-        assert!(retval == EnvStackSetResult::ENV_OK);
+        assert!(retval == EnvStackSetResult::Ok);
 
         trace_if_enabled_with_args(ctx.parser(), L!("for"), &arguments);
 
@@ -1010,7 +1010,7 @@ impl<'a> ParseExecutionContext {
                 .vars()
                 .set(&for_var_name, EnvMode::USER, vec![val]);
             assert!(
-                retval == EnvStackSetResult::ENV_OK,
+                retval == EnvStackSetResult::Ok,
                 "for loop variable should have been successfully set"
             );
             event::fire(ctx.parser(), evt.clone());

@@ -418,12 +418,12 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
         return STATUS_CMD_ERROR;
     }
 
-    // Erase each. If any is not found, return ENV_NOT_FOUND which is historical.
+    // Erase each. If any is not found, return NotFound which is historical.
     abbrs::with_abbrs_mut(|abbrs| -> Option<c_int> {
         let mut result = STATUS_CMD_OK;
         for arg in &opts.args {
             if !abbrs.erase(arg) {
-                result = Some(EnvStackSetResult::ENV_NOT_FOUND.into());
+                result = Some(EnvStackSetResult::NotFound.into());
             }
             // Erase the old uvar - this makes `abbr -e` work.
             let esc_src = escape(arg);
@@ -431,7 +431,7 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> Option<c_int> {
                 let var_name = WString::from_str("_fish_abbr_") + esc_src.as_utfstr();
                 let ret = parser.vars().remove(&var_name, EnvMode::UNIVERSAL);
 
-                if ret == EnvStackSetResult::ENV_OK {
+                if ret == EnvStackSetResult::Ok {
                     result = STATUS_CMD_OK
                 };
             }

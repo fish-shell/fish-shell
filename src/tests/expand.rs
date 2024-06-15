@@ -361,7 +361,7 @@ fn test_expand_overflow() {
     let parser = Parser::principal_parser().shared();
     parser.vars().push(true);
     let set = parser.vars().set(L!("bigvar"), EnvMode::LOCAL, vals);
-    assert_eq!(set, EnvStackSetResult::ENV_OK);
+    assert_eq!(set, EnvStackSetResult::Ok);
 
     let mut errors = ParseErrorList::new();
     let ctx =

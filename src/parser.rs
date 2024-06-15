@@ -847,7 +847,6 @@ impl Parser {
     }
 
     /// Cover of vars().set(), which also fires any returned event handlers.
-    /// Return a value like ENV_OK.
     pub fn set_var_and_fire(
         &self,
         key: &wstr,
@@ -855,7 +854,7 @@ impl Parser {
         vals: Vec<WString>,
     ) -> EnvStackSetResult {
         let res = self.vars().set(key, mode, vals);
-        if res == EnvStackSetResult::ENV_OK {
+        if res == EnvStackSetResult::Ok {
             event::fire(self, Event::variable_set(key.to_owned()));
         }
         res

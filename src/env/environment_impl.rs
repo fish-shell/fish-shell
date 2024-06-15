@@ -65,10 +65,10 @@ fn next_export_generation() -> ExportGeneration {
 
 fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
     if list_val.len() != 1 || list_val[0].is_empty() {
-        return EnvStackSetResult::ENV_INVALID;
+        return EnvStackSetResult::Invalid;
     }
     let Ok(mask) = fish_wcstol_radix(&list_val[0], 8) else {
-        return EnvStackSetResult::ENV_INVALID;
+        return EnvStackSetResult::Invalid;
     };
 
     #[allow(
@@ -77,12 +77,12 @@ fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
         clippy::absurd_extreme_comparisons
     )]
     if mask > 0o777 || mask < 0 {
-        return EnvStackSetResult::ENV_INVALID;
+        return EnvStackSetResult::Invalid;
     }
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
     // SAFETY: umask cannot fail.
     unsafe { libc::umask(mask as libc::mode_t) };
-    EnvStackSetResult::ENV_OK
+    EnvStackSetResult::Ok
 }
 
 /// A query for environment variables.
@@ -738,7 +738,7 @@ impl EnvStackImpl {
             flags.pathvar = Some(query.pathvar);
         }
 
-        let mut result = ModResult::new(EnvStackSetResult::ENV_OK);
+        let mut result = ModResult::new(EnvStackSetResult::Ok);
         if query.has_scope {
             // The user requested a particular scope.
             // If we don't have uvars, fall back to using globals.
@@ -799,26 +799,26 @@ impl EnvStackImpl {
         let query = Query::new(mode);
         // Users can't remove read-only keys.
         if query.user && is_read_only(key) {
-            return ModResult::new(EnvStackSetResult::ENV_SCOPE);
+            return ModResult::new(EnvStackSetResult::Scope);
         }
 
         // Helper to invoke remove_from_chain and map a false return to not found.
         fn remove_from_chain(node: &mut EnvNodeRef, key: &wstr) -> EnvStackSetResult {
             if EnvStackImpl::remove_from_chain(node, key) {
-                EnvStackSetResult::ENV_OK
+                EnvStackSetResult::Ok
             } else {
-                EnvStackSetResult::ENV_NOT_FOUND
+                EnvStackSetResult::NotFound
             }
         }
 
-        let mut result = ModResult::new(EnvStackSetResult::ENV_OK);
+        let mut result = ModResult::new(EnvStackSetResult::Ok);
         if query.has_scope {
             // The user requested erasing from a particular scope.
             if query.universal {
                 if uvars().remove(key) {
-                    result.status = EnvStackSetResult::ENV_OK;
+                    result.status = EnvStackSetResult::Ok;
                 } else {
-                    result.status = EnvStackSetResult::ENV_NOT_FOUND;
+                    result.status = EnvStackSetResult::NotFound;
                 }
                 // Note we have historically set this even if the uvar is not found.
                 result.uvar_modified = true;
@@ -846,7 +846,7 @@ impl EnvStackImpl {
         } else if uvars().remove(key) {
             result.uvar_modified = true;
         } else {
-            result.status = EnvStackSetResult::ENV_NOT_FOUND;
+            result.status = EnvStackSetResult::NotFound;
         }
         result
     }
@@ -937,12 +937,12 @@ impl EnvStackImpl {
 
         // If a variable is electric, it may only be set in the global scope.
         if query.has_scope && !query.global {
-            return Some(EnvStackSetResult::ENV_SCOPE);
+            return Some(EnvStackSetResult::Scope);
         }
 
         // If the variable is read-only, the user may not set it.
         if query.user && ev.readonly() {
-            return Some(EnvStackSetResult::ENV_PERM);
+            return Some(EnvStackSetResult::Perm);
         }
 
         // Be picky about exporting.
@@ -953,7 +953,7 @@ impl EnvStackImpl {
                 query.unexports
             };
             if !matches {
-                return Some(EnvStackSetResult::ENV_SCOPE);
+                return Some(EnvStackSetResult::Scope);
             }
         }
 
@@ -967,7 +967,7 @@ impl EnvStackImpl {
                 self.base.perproc_data.pwd = pwd;
                 self.base.globals.borrow_mut().changed_exported();
             }
-            return Some(EnvStackSetResult::ENV_OK);
+            return Some(EnvStackSetResult::Ok);
         }
         // Claim the value.
         let val = std::mem::take(val);
@@ -979,7 +979,7 @@ impl EnvStackImpl {
             pathvar: Some(false),
         };
         Self::set_in_node(&mut self.base.globals, key, val, flags);
-        return Some(EnvStackSetResult::ENV_OK);
+        return Some(EnvStackSetResult::Ok);
     }
 
     /// Set a universal variable, inheriting as applicable from the given old variable.

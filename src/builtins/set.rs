@@ -310,29 +310,29 @@ fn warn_if_uvar_shadows_global(
 
 fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams: &mut IoStreams) {
     match retval {
-        EnvStackSetResult::ENV_OK => (),
-        EnvStackSetResult::ENV_PERM => {
+        EnvStackSetResult::Ok => (),
+        EnvStackSetResult::Perm => {
             streams.err.append(wgettext_fmt!(
                 "%ls: Tried to change the read-only variable '%ls'\n",
                 cmd,
                 key
             ));
         }
-        EnvStackSetResult::ENV_SCOPE => {
+        EnvStackSetResult::Scope => {
             streams.err.append(wgettext_fmt!(
                 "%ls: Tried to modify the special variable '%ls' with the wrong scope\n",
                 cmd,
                 key
             ));
         }
-        EnvStackSetResult::ENV_INVALID => {
+        EnvStackSetResult::Invalid => {
             streams.err.append(wgettext_fmt!(
                 "%ls: Tried to modify the special variable '%ls' to an invalid value\n",
                 cmd,
                 key
             ));
         }
-        EnvStackSetResult::ENV_NOT_FOUND => {
+        EnvStackSetResult::NotFound => {
             streams.err.append(wgettext_fmt!(
                 "%ls: The variable '%ls' does not exist\n",
                 cmd,
@@ -780,13 +780,13 @@ fn erase(
             if split.indexes.is_empty() {
                 // unset the var
                 retval = parser.vars().remove(split.varname, scope);
-                // When a non-existent-variable is unset, return ENV_NOT_FOUND as $status
+                // When a non-existent-variable is unset, return NotFound as $status
                 // but do not emit any errors at the console as a compromise between user
                 // friendliness and correctness.
-                if retval != EnvStackSetResult::ENV_NOT_FOUND {
+                if retval != EnvStackSetResult::NotFound {
                     handle_env_return(retval, cmd, split.varname, streams);
                 }
-                if retval == EnvStackSetResult::ENV_OK && !opts.no_event {
+                if retval == EnvStackSetResult::Ok && !opts.no_event {
                     event::fire(parser, Event::variable_erase(split.varname.to_owned()));
                 }
             } else {
@@ -808,7 +808,7 @@ fn erase(
 
             // Set $status to the last error value.
             // This is cheesy, but I don't expect this to be checked often.
-            if retval != EnvStackSetResult::ENV_OK {
+            if retval != EnvStackSetResult::Ok {
                 ret = env_result_to_status(retval);
             }
         }
@@ -818,11 +818,11 @@ fn erase(
 
 fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
     Some(match retval {
-        EnvStackSetResult::ENV_OK => 0,
-        EnvStackSetResult::ENV_PERM => 1,
-        EnvStackSetResult::ENV_SCOPE => 2,
-        EnvStackSetResult::ENV_INVALID => 3,
-        EnvStackSetResult::ENV_NOT_FOUND => 4,
+        EnvStackSetResult::Ok => 0,
+        EnvStackSetResult::Perm => 1,
+        EnvStackSetResult::Scope => 2,
+        EnvStackSetResult::Invalid => 3,
+        EnvStackSetResult::NotFound => 4,
     })
 }
 
@@ -981,7 +981,7 @@ fn set_internal(
     let retval =
         env_set_reporting_errors(cmd, opts, split.varname, scope, new_values, streams, parser);
 
-    if retval == EnvStackSetResult::ENV_OK {
+    if retval == EnvStackSetResult::Ok {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);
     }
     env_result_to_status(retval)

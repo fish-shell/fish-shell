@@ -42,27 +42,27 @@ static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false)
 /// Return values for `EnvStack::set()`.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EnvStackSetResult {
-    ENV_OK,
-    ENV_PERM,
-    ENV_SCOPE,
-    ENV_INVALID,
-    ENV_NOT_FOUND,
+    Ok,       // The variable was set successfully.
+    Perm,     // The variable is read-only.
+    Scope,    // Variable cannot be set in the given scope.
+    Invalid,  // The variable's value is invalid (e.g. umask).
+    NotFound, // The variable was not found (only possible when removing a variable).
 }
 
 impl Default for EnvStackSetResult {
     fn default() -> Self {
-        EnvStackSetResult::ENV_OK
+        EnvStackSetResult::Ok
     }
 }
 
 impl From<EnvStackSetResult> for c_int {
     fn from(r: EnvStackSetResult) -> Self {
         match r {
-            EnvStackSetResult::ENV_OK => 0,
-            EnvStackSetResult::ENV_PERM => 1,
-            EnvStackSetResult::ENV_SCOPE => 2,
-            EnvStackSetResult::ENV_INVALID => 3,
-            EnvStackSetResult::ENV_NOT_FOUND => 4,
+            EnvStackSetResult::Ok => 0,
+            EnvStackSetResult::Perm => 1,
+            EnvStackSetResult::Scope => 2,
+            EnvStackSetResult::Invalid => 3,
+            EnvStackSetResult::NotFound => 4,
         }
     }
 }
@@ -228,7 +228,7 @@ impl EnvStack {
         }
 
         let ret: ModResult = self.lock().set(key, mode, vals);
-        if ret.status == EnvStackSetResult::ENV_OK {
+        if ret.status == EnvStackSetResult::Ok {
             // If we modified the global state, or we are principal, then dispatch changes.
             // Important to not hold the lock here.
             if ret.global_modified || self.is_principal() {
@@ -277,7 +277,7 @@ impl EnvStack {
     pub fn remove(&self, key: &wstr, mode: EnvMode) -> EnvStackSetResult {
         let ret = self.lock().remove(key, mode);
         #[allow(clippy::collapsible_if)]
-        if ret.status == EnvStackSetResult::ENV_OK {
+        if ret.status == EnvStackSetResult::Ok {
             if ret.global_modified || self.is_principal() {
                 // Important to not hold the lock here.
                 env_dispatch_var_change(key, self);

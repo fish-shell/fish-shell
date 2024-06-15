@@ -150,7 +150,6 @@ Interactive improvements
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
 - Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
 - ``fish_vi_cursor`` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
-- When using vi key bindings, deleting in visual mode now moves the cursor back, matching vi (:issue:`10565`).
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 - Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).
@@ -176,10 +175,11 @@ New or improved bindings
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
-  - When the cursor is at the end of the commandline, a single :kbd:`l` will accept an autosuggestion (:issue:`10286`)
+  - When the cursor is at the end of the commandline, a single :kbd:`l` will accept an autosuggestion (:issue:`10286`).
   - The cursor position after pasting (:kbd:`p`) has been corrected.
   - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
+  - Deleting in visual mode now moves the cursor back, matching vi (:issue:`10394`).
 
 Completions
 ^^^^^^^^^^^

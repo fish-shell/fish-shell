@@ -1093,7 +1093,7 @@ impl EnvStackImpl {
 }
 
 // This is a big dorky lock we take around everything. Everything exported from this module should be
-// wrapped in an EnvMutexGurad using this lock.
+// wrapped in an EnvMutexGuard using this lock.
 // Fine grained locking is annoying here because nodes may be shared between stacks, so each
 // node would need its own lock, and each stack would need to take all the locks before any operation.
 static ENV_LOCK: Mutex<()> = Mutex::new(());

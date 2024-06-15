@@ -150,6 +150,7 @@ Interactive improvements
 - When a command like ``fg %2`` fails to find the given job, it no longer behaves as if no job spec was given (:issue:`9835`).
 - Redirection in command position like ``>echo`` is now highlighted as error (:issue:`8877`).
 - ``fish_vi_cursor`` now works properly inside the prompt created by builtin ``read`` (:issue:`10088`).
+- When using vi key bindings, deleting in visual mode now moves the cursor back, matching vi (:issue:`10565`).
 - fish no longer fails to open a fifo if interrupted by a terminal resize signal (:issue:`10250`).
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 - Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).

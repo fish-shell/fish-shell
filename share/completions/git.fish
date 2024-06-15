@@ -1992,7 +1992,7 @@ complete -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (comm
 # or remove files from the staging area.
 # Deleted files seem to need a "--" separator.
 complete -f -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (commandline -xpc)' -a '(__fish_git_files all-staged modified)'
-complete -f -c git -n '__fish_git_using_command reset' -n 'contains -- -- (commandline -xpc)' -a '(__fish_git_files all-staged deleted modified)'
+complete -F -c git -n '__fish_git_using_command reset' -n 'contains -- -- (commandline -xpc)'
 complete -f -c git -n '__fish_git_using_command reset' -n 'not contains -- -- (commandline -xpc)' -a '(__fish_git_reflog)' -d Reflog
 # TODO options
 

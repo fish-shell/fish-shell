@@ -131,7 +131,7 @@ Interactive improvements
 ------------------------
 - When using :kbd:`ctrl-x` on Wayland in the VSCode terminal, the clipboard is no longer cleared on :kbd:`ctrl-c`.
 - Command-specific tab completions may now offer results whose first character is a period. For example, it is now possible to tab-complete ``git add`` for files with leading periods. The default file completions hide these files, unless the token itself has a leading period (:issue:`3707`).
-- Option completion now uses fuzzy subsequence filtering, just like non-option completion.
+- Option completion now uses fuzzy subsequence filtering, just like non-option completion (:issue:`830`).
   This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 - Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
 - Historically, file name completions are provided after the last ``:``  or ``=`` within a token.

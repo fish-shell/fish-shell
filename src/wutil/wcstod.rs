@@ -56,7 +56,9 @@ where
         }
     }
     let res = s.parse::<f64>().ok()?;
-    *consumed = s.len(); // note this is the number of chars because only ASCII is recognized.
+    // Note: this is the number of chars because only ASCII is recognized.
+    // XXX: This assumption only holds if decimal_sep is also ASCII!
+    *consumed = s.len();
     Some(res)
 }
 

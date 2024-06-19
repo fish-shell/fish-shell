@@ -1,4 +1,4 @@
-use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
+use crate::env::{EnvMode, EnvStack, EnvVar, EnvVarFlags, Environment};
 use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -176,4 +176,17 @@ fn test_env_snapshot() {
 
     vars.pop();
     popd();
+}
+
+// Can't push/pop from globals.
+#[test]
+#[should_panic]
+fn test_no_global_push() {
+    EnvStack::globals().push(true);
+}
+
+#[test]
+#[should_panic]
+fn test_no_global_pop() {
+    EnvStack::globals().pop();
 }

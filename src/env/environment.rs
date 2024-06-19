@@ -173,12 +173,14 @@ impl EnvScoped {
 /// This backs the parser's "vars".
 pub struct EnvStack {
     inner: EnvMutex<EnvStackImpl>,
+    can_push_pop: bool, // If false, panic on push/pop. Used for the global stack.
 }
 
 impl EnvStack {
     pub fn new() -> EnvStack {
         EnvStack {
             inner: EnvStackImpl::new(),
+            can_push_pop: true,
         }
     }
 
@@ -291,6 +293,7 @@ impl EnvStack {
 
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn push(&self, new_scope: bool) {
+        assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let mut imp = self.lock();
         if new_scope {
             imp.push_shadowing();
@@ -301,6 +304,7 @@ impl EnvStack {
 
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn pop(&self) {
+        assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let popped = self.lock().pop();
         // Only dispatch variable changes if we are the principal environment.
         if self.is_principal() {
@@ -363,7 +367,10 @@ impl EnvStack {
     pub fn globals() -> &'static EnvStack {
         use std::sync::OnceLock;
         static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
-        GLOBALS.get_or_init(EnvStack::new)
+        GLOBALS.get_or_init(|| EnvStack {
+            inner: EnvStackImpl::new(),
+            can_push_pop: false,
+        })
     }
 
     /// Access the principal variable stack, associated with the principal parser.

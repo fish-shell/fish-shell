@@ -1,47 +1,36 @@
 use super::errors::Error;
 use super::hex_float;
 use crate::wchar::IntoCharIter;
-use std::num::ParseFloatError;
 
 // Parse a decimal float from a sequence of characters.
 // Return the parsed float, and (on success) the number of characters consumed.
-fn parse_dec_float<I>(
-    mut chars: I,
-    decimal_sep: char,
-    consumed: &mut usize,
-) -> Result<f64, ParseFloatError>
+fn parse_dec_float<I>(chars: I, decimal_sep: char, consumed: &mut usize) -> Option<f64>
 where
-    I: Iterator<Item = char> + Clone,
+    I: Iterator<Item = char>,
 {
     // This uses Rust's native float parsing and a temporary string.
     // The EBNF grammar is at https://doc.rust-lang.org/std/primitive.f64.html#method.from_str
     // Note it is case-insensitive and we replace the decimal separator with a period.
     let mut s = String::new();
-    if matches!(chars.clone().next(), Some('+' | '-')) {
-        s.push(chars.next().unwrap());
+    let mut chars = chars.peekable();
+    if let Some(sign) = chars.next_if(|c| ['-', '+'].contains(c)) {
+        s.push(sign);
     }
-    for spec in ["infinity", "inf", "nan"] {
-        if chars
-            .clone()
-            .take(spec.len())
-            .map(|c| c.to_ascii_lowercase())
-            .eq(spec.chars())
-        {
-            s.push_str(spec);
-            let res = s.parse::<f64>()?;
-            *consumed = s.len();
-            return Ok(res);
-        }
+    if chars
+        .peek()
+        .map(|c| c.is_ascii_alphabetic())
+        .unwrap_or(false)
+    {
+        return parse_inf_nan(chars, s.as_bytes().get(0).copied(), consumed);
     }
 
-    while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
-        s.push(chars.next().unwrap());
+    while let Some(c) = chars.next_if(|c| c.is_ascii_digit()) {
+        s.push(c);
     }
-    if chars.clone().next() == Some(decimal_sep) {
-        chars.next();
+    if chars.next_if(|c| *c == decimal_sep).is_some() {
         s.push('.'); // Replace decimal separator with a period.
-        while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
-            s.push(chars.next().unwrap());
+        while let Some(c) = chars.next_if(|c| c.is_ascii_digit()) {
+            s.push(c);
         }
     }
 
@@ -50,15 +39,15 @@ where
     // one digit after the decimal separator. Keep track of how many we have,
     // and the length before.
     let len_before_exp = s.len();
-    if matches!(chars.clone().next(), Some('E' | 'e')) {
-        s.push(chars.next().unwrap());
-        if matches!(chars.clone().next(), Some('+' | '-')) {
-            s.push(chars.next().unwrap());
+    if let Some(e) = chars.next_if(|c| ['E', 'e'].contains(c)) {
+        s.push(e);
+        if let Some(sign) = chars.next_if(|c| matches!(c, '+' | '-')) {
+            s.push(sign);
         }
         let mut saw_exp_digit = false;
-        while chars.clone().next().map_or(false, |c| c.is_ascii_digit()) {
+        while let Some(c) = chars.next_if(|c| c.is_ascii_digit()) {
             saw_exp_digit = true;
-            s.push(chars.next().unwrap());
+            s.push(c);
         }
         if !saw_exp_digit {
             // We didn't see any digits after the exponent.
@@ -66,9 +55,48 @@ where
             s.truncate(len_before_exp);
         }
     }
-    let res = s.parse::<f64>()?;
+    let res = s.parse::<f64>().ok()?;
     *consumed = s.len(); // note this is the number of chars because only ASCII is recognized.
-    Ok(res)
+    Some(res)
+}
+
+#[cold]
+#[inline(never)]
+pub fn parse_inf_nan(
+    chars: impl Iterator<Item = char>,
+    sign: Option<u8>,
+    consumed: &mut usize,
+) -> Option<f64> {
+    let mut chars = chars
+        .take_while(|c| c.is_ascii())
+        .map(|c| c.to_ascii_lowercase() as u8);
+    let (count, neg) = match sign {
+        None => (3, false),
+        Some(b'-') => (4, true),
+        _ => (4, false),
+    };
+    let [c1, c2, c3] = [chars.next()?, chars.next()?, chars.next()?];
+    // Using non-short-circuiting comparisons lets the compiler optimize it a bit more.
+    if (c1 == b'n') & (c2 == b'a') & (c3 == b'n') {
+        *consumed += count;
+        if !neg {
+            return Some(f64::NAN);
+        }
+        // LLVM understands this and returns f64::from_bits(0xFFF8000000000000) directly
+        return Some(f64::NAN.copysign(-1.0));
+    }
+    if (c1 == b'i') & (c2 == b'n') & (c3 == b'f') {
+        *consumed += count;
+        // "xyz".chars().all(..) inlines nicely while "xyz".chars().eq(chars.take(3)) doesn't.
+        if b"inity".iter().all(|c| Some(*c) == chars.next()) {
+            *consumed += 5;
+        }
+        if !neg {
+            return Some(f64::INFINITY);
+        }
+        return Some(f64::NEG_INFINITY);
+    }
+    return None;
 }
 
 fn wcstod_inner<I>(mut chars: I, decimal_sep: char, consumed: &mut usize) -> Result<f64, Error>
@@ -102,7 +130,7 @@ where
     }
 
     let ret = parse_dec_float(chars.clone(), decimal_sep, consumed);
-    if ret.is_err() {
+    if ret.is_none() {
         *consumed = 0;
         return Err(Error::InvalidChar);
     }

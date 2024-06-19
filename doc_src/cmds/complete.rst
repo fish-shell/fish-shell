@@ -149,7 +149,7 @@ Now hub inherits all of the completions from git. Note this can also be specifie
 
 ::
 
-   complete -c git
+   complete -C git
 
 Shows all completions for ``git``.
 

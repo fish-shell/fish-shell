@@ -66,6 +66,7 @@ fn expand_test_impl(
 #[serial]
 fn test_expand() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
     ///
     /// \param in the string to expand
@@ -331,7 +332,7 @@ fn test_expand() {
         ""
     );
 
-    pushd("test/fish_expand_test");
+    parser.pushd("test/fish_expand_test");
 
     expand_test!(
         "b/xx",
@@ -343,7 +344,7 @@ fn test_expand() {
     // multiple slashes with fuzzy matching - #3185
     expand_test!("l///n", fuzzy_comp, "lol///nub/", "Wrong fuzzy matching 6");
 
-    popd();
+    parser.popd();
 }
 
 #[test]

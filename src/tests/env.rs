@@ -112,8 +112,9 @@ fn test_env_vars() {
 fn test_env_snapshot() {
     let _cleanup = test_init();
     std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
-    pushd("test/fish_env_snapshot_test/");
-    let vars = Parser::principal_parser().vars();
+    let parser = TestParser::new();
+    let vars = parser.vars();
+    parser.pushd("test/fish_env_snapshot_test/");
     vars.push(true);
     let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
     vars.set_one(
@@ -175,7 +176,7 @@ fn test_env_snapshot() {
     );
 
     vars.pop();
-    popd();
+    parser.popd();
 }
 
 // Can't push/pop from globals.

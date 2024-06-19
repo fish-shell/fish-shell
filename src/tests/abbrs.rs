@@ -1,7 +1,6 @@
 use crate::abbrs::{self, abbrs_get_set, abbrs_match, Abbreviation};
 use crate::editable_line::{apply_edit, Edit};
 use crate::highlight::HighlightSpec;
-use crate::parser::Parser;
 use crate::reader::reader_expand_abbreviation_at_cursor;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -10,6 +9,7 @@ use crate::wchar::prelude::*;
 #[serial]
 fn test_abbreviations() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     {
         let mut abbrs = abbrs_get_set();
         abbrs.add(Abbreviation::new(
@@ -67,24 +67,22 @@ fn test_abbreviations() {
     abbr_expand_1!("gc", cmd, "git checkout");
     abbr_expand_1!("foo", cmd, "bar");
 
-    fn expand_abbreviation_in_command(
-        cmdline: &wstr,
-        cursor_pos: Option<usize>,
-    ) -> Option<WString> {
-        let replacement = reader_expand_abbreviation_at_cursor(
-            cmdline,
-            cursor_pos.unwrap_or(cmdline.len()),
-            Parser::principal_parser(),
-        )?;
-        let mut cmdline_expanded = cmdline.to_owned();
-        let mut colors = vec![HighlightSpec::new(); cmdline.len()];
-        apply_edit(
-            &mut cmdline_expanded,
-            &mut colors,
-            &Edit::new(replacement.range.into(), replacement.text),
-        );
-        Some(cmdline_expanded)
-    }
+    let expand_abbreviation_in_command =
+        |cmdline: &wstr, cursor_pos: Option<usize>| -> Option<WString> {
+            let replacement = reader_expand_abbreviation_at_cursor(
+                cmdline,
+                cursor_pos.unwrap_or(cmdline.len()),
+                &parser,
+            )?;
+            let mut cmdline_expanded = cmdline.to_owned();
+            let mut colors = vec![HighlightSpec::new(); cmdline.len()];
+            apply_edit(
+                &mut cmdline_expanded,
+                &mut colors,
+                &Edit::new(replacement.range.into(), replacement.text),
+            );
+            Some(cmdline_expanded)
+        };
 
     macro_rules! validate {
         ($cmdline:expr, $cursor:expr) => {{

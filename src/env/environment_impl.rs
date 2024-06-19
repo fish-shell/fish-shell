@@ -273,10 +273,7 @@ impl Iterator for EnvNodeIter {
 }
 
 lazy_static! {
-    ///  XXX: Possible safety issue here as EnvNodeRef is not Send/Sync and shouldn't
-    ///  be placed in a static context without some sort of Send/Sync wrapper.
-    ///  lazy_static papers over this but it triggers rust lints if you use
-    ///  once_cell::sync::Lazy or std::sync::OnceLock instead.
+    // All accesses to the EnvNode are protected by a global lock.
     static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
 }
 
@@ -703,7 +700,6 @@ pub struct EnvStackImpl {
 impl EnvStackImpl {
     /// Return a new impl representing global variables, with a single local scope.
     pub fn new() -> EnvMutex<EnvStackImpl> {
-        // XXX: Safety issue: We are accessing GLOBAL_NODE without having the global mutex locked!
         let globals = GLOBAL_NODE.clone();
         let locals = EnvNodeRef::new(false, None);
         let base = EnvScopedImpl::new(locals, globals);

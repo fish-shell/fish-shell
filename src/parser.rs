@@ -37,7 +37,7 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 use std::sync::{
     atomic::{AtomicIsize, AtomicU64, Ordering},
     Arc,
@@ -354,8 +354,6 @@ pub type BlockId = usize;
 pub type ParserRef = Rc<Parser>;
 
 pub struct Parser {
-    this: Weak<Self>,
-
     /// The current execution context.
     execution_context: RefCell<Option<ParseExecutionContext>>,
 
@@ -397,8 +395,7 @@ pub struct Parser {
 impl Parser {
     /// Create a parser
     pub fn new(variables: Rc<EnvStack>, is_principal: bool) -> ParserRef {
-        let result = Rc::new_cyclic(|this: &Weak<Self>| Self {
-            this: Weak::clone(this),
+        let result = Rc::new(Self {
             execution_context: RefCell::default(),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
@@ -1126,11 +1123,6 @@ impl Parser {
     /// Mark whether we should sync universal variables.
     pub fn set_syncs_uvars(&self, flag: bool) {
         self.syncs_uvars.store(flag);
-    }
-
-    /// Return a shared pointer reference to this parser.
-    pub fn shared(&self) -> ParserRef {
-        self.this.upgrade().unwrap()
     }
 
     /// Return the operation context for this parser.

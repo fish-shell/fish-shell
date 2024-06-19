@@ -15,20 +15,17 @@ fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
     let resource: i32 = resource.try_into().unwrap();
 
     // Resource is #[repr(i32)] so this is ok
-    nix::sys::resource::getrlimit(unsafe { std::mem::transmute(resource) })
-        .map_err(|_| {
-            perror("getrlimit");
-        })
+    let resource = unsafe { std::mem::transmute::<i32, nix::sys::resource::Resource>(resource) };
+    nix::sys::resource::getrlimit(resource)
+        .map_err(|_| perror("getrlimit"))
         .ok()
 }
 
 fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
     let resource: i32 = resource.try_into().unwrap();
-    nix::sys::resource::setrlimit(
-        unsafe { std::mem::transmute(resource) }, // Resource is #[repr(i32)] so this is ok
-        rlim_cur,
-        rlim_max,
-    )
+    // Resource is #[repr(i32)] so this is ok
+    let resource = unsafe { std::mem::transmute::<i32, nix::sys::resource::Resource>(resource) };
+    nix::sys::resource::setrlimit(resource, rlim_cur, rlim_max)
 }
 
 /// Print the value of the specified resource limit.

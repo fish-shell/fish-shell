@@ -174,13 +174,26 @@ impl EnvScoped {
 pub struct EnvStack {
     inner: EnvMutex<EnvStackImpl>,
     can_push_pop: bool, // If false, panic on push/pop. Used for the global stack.
+    dispatches_var_changes: bool, // controls whether we react to non-global variable changes, like to TZ
 }
 
 impl EnvStack {
+    // Creates a new EnvStack which does not dispatch variable changes.
     pub fn new() -> EnvStack {
         EnvStack {
             inner: EnvStackImpl::new(),
             can_push_pop: true,
+            dispatches_var_changes: false,
+        }
+    }
+
+    // Creates a new EnvStack which dispatches variable changes.
+    // This should be associated with the principal larser.
+    pub fn new_dispatching() -> EnvStack {
+        EnvStack {
+            inner: EnvStackImpl::new(),
+            can_push_pop: true,
+            dispatches_var_changes: true,
         }
     }
 
@@ -231,9 +244,9 @@ impl EnvStack {
 
         let ret: ModResult = self.lock().set(key, mode, vals);
         if ret.status == EnvStackSetResult::Ok {
-            // If we modified the global state, or we are principal, then dispatch changes.
+            // Dispatch changes if we modified the global state or have 'dispatches_var_changes' set.
             // Important to not hold the lock here.
-            if ret.global_modified || self.is_principal() {
+            if ret.global_modified || self.dispatches_var_changes {
                 env_dispatch_var_change(key, self);
             }
         }
@@ -280,7 +293,7 @@ impl EnvStack {
         let ret = self.lock().remove(key, mode);
         #[allow(clippy::collapsible_if)]
         if ret.status == EnvStackSetResult::Ok {
-            if ret.global_modified || self.is_principal() {
+            if ret.global_modified || self.dispatches_var_changes {
                 // Important to not hold the lock here.
                 env_dispatch_var_change(key, self);
             }
@@ -306,8 +319,7 @@ impl EnvStack {
     pub fn pop(&self) {
         assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let popped = self.lock().pop();
-        // Only dispatch variable changes if we are the principal environment.
-        if self.is_principal() {
+        if self.dispatches_var_changes {
             // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
             // once.
             for key in popped {
@@ -370,6 +382,8 @@ impl EnvStack {
         GLOBALS.get_or_init(|| EnvStack {
             inner: EnvStackImpl::new(),
             can_push_pop: false,
+            // Do not dispatch variable changes - this is used at startup when we are importing env vars.
+            dispatches_var_changes: false,
         })
     }
 
@@ -377,7 +391,7 @@ impl EnvStack {
     pub fn principal() -> &'static Arc<EnvStack> {
         use std::sync::OnceLock;
         static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
+        PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new_dispatching()))
     }
 
     pub fn set_argv(&self, argv: Vec<WString>) {

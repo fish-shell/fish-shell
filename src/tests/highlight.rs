@@ -36,8 +36,8 @@ fn test_is_potential_path() {
     let wd = L!("test/is_potential_path_test/").to_owned();
     let wds = [L!(".").to_owned(), wd];
 
-    let vars = EnvStack::principal().clone();
-    let ctx = OperationContext::background(&*vars, EXPANSION_LIMIT_DEFAULT);
+    let vars = EnvStack::new();
+    let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);
 
     assert!(is_potential_path(
         L!("al"),

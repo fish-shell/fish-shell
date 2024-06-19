@@ -143,9 +143,7 @@ pub fn load(name: &wstr, parser: &Parser) -> bool {
 }
 
 /// Insert a list of all dynamically loaded functions into the specified list.
-fn autoload_names(names: &mut HashSet<WString>, get_hidden: bool) {
-    // TODO: justify this.
-    let vars = EnvStack::principal();
+fn autoload_names(names: &mut HashSet<WString>, vars: &dyn Environment, get_hidden: bool) {
     let Some(path_var) = vars.get_unless_empty(L!("fish_function_path")) else {
         return;
     };
@@ -319,10 +317,10 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
 /// Returns all function names.
 ///
 /// \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore.
-pub fn get_names(get_hidden: bool) -> Vec<WString> {
+pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
     let mut names = HashSet::<WString>::new();
     let funcset = FUNCTION_SET.lock().unwrap();
-    autoload_names(&mut names, get_hidden);
+    autoload_names(&mut names, vars, get_hidden);
     for name in funcset.funcs.keys() {
         // Maybe skip hidden.
         if !get_hidden && (name.is_empty() || name.char_at(0) == '_') {

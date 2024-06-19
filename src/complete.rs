@@ -1086,7 +1086,7 @@ impl<'ctx> Completer<'ctx> {
         if str_cmd.is_empty() || (!str_cmd.contains('/') && str_cmd.as_char_slice()[0] != '~') {
             let include_hidden = str_cmd.as_char_slice().first() == Some(&'_');
             // Append all known matching functions
-            let possible_comp: Vec<_> = function::get_names(include_hidden)
+            let possible_comp: Vec<_> = function::get_names(include_hidden, self.ctx.vars())
                 .into_iter()
                 .map(Completion::from_completion)
                 .collect();

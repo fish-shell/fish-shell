@@ -275,7 +275,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     }
 
     if opts.list || args.is_empty() {
-        let mut names = function::get_names(opts.show_hidden);
+        let mut names = function::get_names(opts.show_hidden, parser.vars());
         names.sort();
         if streams.out_is_terminal() {
             let mut buff = WString::new();

@@ -45,7 +45,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@1.70
       with:
-        targets: "i686-unknown-linux-gnu" # rust-toolchain wants this comma-separated
+        targets: "i586-unknown-linux-gnu" # rust-toolchain wants this comma-separated
     - name: Install deps
       run: |
         sudo apt update
@@ -57,7 +57,7 @@ jobs:
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
-        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu ..
+        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i586-unknown-linux-gnu ..
     - name: make
       run: |
         make VERBOSE=1

@@ -6,7 +6,6 @@ use crate::env::{EnvMode, EnvStackSetResult};
 use crate::expand::{expand_to_receiver, ExpandResultCode};
 use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
 use crate::parse_constants::ParseErrorList;
-use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wildcard::ANY_STRING;
 use crate::{
@@ -23,14 +22,11 @@ fn expand_test_impl(
     expected: Vec<WString>,
     error_message: Option<&str>,
 ) {
+    let parser = TestParser::new();
     let mut output = CompletionList::new();
     let mut errors = ParseErrorList::new();
     let pwd = PwdEnvironment::default();
-    let ctx = OperationContext::test_only_foreground(
-        Parser::principal_parser(),
-        &pwd,
-        Box::new(no_cancel),
-    );
+    let ctx = OperationContext::test_only_foreground(&parser, &pwd, Box::new(no_cancel));
 
     if expand_string(
         input.to_owned(),

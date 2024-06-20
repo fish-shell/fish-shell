@@ -6,7 +6,6 @@ use std::time::Duration;
 
 use crate::common::ScopeGuard;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::parser::Parser;
 use crate::reader::{reader_pop, reader_push, Reader, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
@@ -16,6 +15,7 @@ use crate::wchar::prelude::*;
 #[serial]
 fn test_debounce() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
     let db = Debounce::new(Duration::from_secs(0));
@@ -61,7 +61,7 @@ fn test_debounce() {
     ctx.cv.notify_all();
 
     // Wait until the last completion is done.
-    let mut reader = reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
     while !ctx.completion_ran.last().unwrap().load() {
         iothread_service_main(&mut reader);

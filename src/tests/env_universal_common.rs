@@ -4,7 +4,6 @@ use crate::common::ScopeGuard;
 use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
-use crate::parser::Parser;
 use crate::reader::{reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
@@ -44,8 +43,9 @@ fn test_universal() {
     let _cleanup = test_init();
     let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
+    let parser = TestParser::new();
 
-    let mut reader = reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
     let threads = 1;

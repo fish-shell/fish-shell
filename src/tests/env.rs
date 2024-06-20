@@ -1,5 +1,4 @@
 use crate::env::{EnvMode, EnvStack, EnvVar, EnvVarFlags, Environment};
-use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
@@ -58,7 +57,7 @@ impl Environment for PwdEnvironment {
 
 /// Helper for test_timezone_env_vars().
 fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
-    let vars = Parser::principal_parser().vars();
+    let vars = EnvStack::new_dispatching();
 
     vars.set_one(L!("TZ"), EnvMode::EXPORT, timezone.to_owned());
 

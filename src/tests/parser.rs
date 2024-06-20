@@ -1,5 +1,6 @@
 use crate::ast::{self, Ast, List, Node, Traversal};
 use crate::common::ScopeGuard;
+use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
@@ -14,6 +15,7 @@ use crate::threads::iothread_perform;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
+use std::rc::Rc;
 use std::time::Duration;
 
 #[test]
@@ -685,7 +687,7 @@ fn test_expand_argument_list() {
     assert_eq!(comps, &[L!("alpha"), L!("beta gamma"), L!("delta"),]);
 }
 
-fn test_1_cancellation(src: &wstr) {
+fn test_1_cancellation(parser: &Parser, src: &wstr) {
     let filler = IoBufferfill::create().unwrap();
     let delay = Duration::from_millis(100);
     let thread = unsafe { libc::pthread_self() } as usize;
@@ -698,7 +700,7 @@ fn test_1_cancellation(src: &wstr) {
     });
     let mut io = IoChain::new();
     io.push(filler.clone());
-    let res = Parser::principal_parser().eval(src, &io);
+    let res = parser.eval(src, &io);
     let buffer = IoBufferfill::finish(filler);
     assert_eq!(
         buffer.len(),
@@ -714,7 +716,8 @@ fn test_1_cancellation(src: &wstr) {
 #[serial]
 fn test_cancellation() {
     let _cleanup = test_init();
-    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let parser = Parser::new(Rc::new(EnvStack::new()), true);
+    reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
     println!("Testing Ctrl-C cancellation. If this hangs, that's a bug!");
@@ -727,15 +730,16 @@ fn test_cancellation() {
 
     // Here the command substitution is an infinite loop. echo never even gets its argument, so when
     // we cancel we expect no output.
-    test_1_cancellation(L!("echo (while true ; echo blah ; end)"));
+    test_1_cancellation(&parser, L!("echo (while true ; echo blah ; end)"));
 
     // Nasty infinite loop that doesn't actually execute anything.
-    test_1_cancellation(L!(
-        "echo (while true ; end) (while true ; end) (while true ; end)"
-    ));
-    test_1_cancellation(L!("while true ; end"));
-    test_1_cancellation(L!("while true ; echo nothing > /dev/null; end"));
-    test_1_cancellation(L!("for i in (while true ; end) ; end"));
+    test_1_cancellation(
+        &parser,
+        L!("echo (while true ; end) (while true ; end) (while true ; end)"),
+    );
+    test_1_cancellation(&parser, L!("while true ; end"));
+    test_1_cancellation(&parser, L!("while true ; echo nothing > /dev/null; end"));
+    test_1_cancellation(&parser, L!("for i in (while true ; end) ; end"));
 
     signal_reset_handlers();
 

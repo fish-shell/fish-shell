@@ -21,7 +21,7 @@ A function is a list of commands that will be executed when the name of the func
 The following options are available:
 
 **-a** *NAMES* or **--argument-names** *NAMES*
-    Assigns the value of successive command-line arguments to the names given in *NAMES*. These are the same arguments given in :envvar:`argv`, and are still available there. See also :ref:`Argument Handling <variables-argv>`.
+    Has to be the last option. Assigns the value of successive command-line arguments to the names given in *NAMES* (separated by space). These are the same arguments given in :envvar:`argv`, and are still available there. See also :ref:`Argument Handling <variables-argv>`.
 
 **-d** *DESCRIPTION* or **--description** *DESCRIPTION*
     A description of what the function does, suitable as a completion description.
@@ -69,6 +69,31 @@ Example
 
 
 will run the ``ls`` command, using the ``-l`` option, while passing on any additional files and switches to ``ls``.
+
+
+
+::
+
+    function debug -a name val
+        echo [DEBUG] $name: $val >&2
+    end
+
+    set foo bar
+    debug foo bar
+    # prints: [DEBUG] foo: bar
+
+    # OR
+    
+    function debug2 -a var
+        echo [DEBUG] $var: $$var >&2
+    end
+
+    set foo bar
+    debug2 foo
+    # prints: [DEBUG] foo: bar
+
+
+will create a ``debug`` command to print chosen variables to `stderr`.
 
 
 

@@ -72,9 +72,16 @@ math '-10^15'
 # CHECK: 100000000000000
 # CHECK: -1000000000000000
 
-math 3^0.5^2
+# Floating point operations under x86 without SSE2 have reduced accuracy!
+# This includes both i586 targets and i686 under Debian, where it's patched to remove SSE2.
+# As a result, some floating point tests use regular expressions to loosely match against
+# the shape of the expected result.
+
+# NB: The i586 case should also pass under other platforms, but not the other way around.
+math "3^0.5^2"
+# CHECK: {{1\.316074|1\.316\d+}}
+
 math -2^2
-# CHECK: 1.316074
 # CHECK: 4
 
 math -s0 '1.0 / 2.0'
@@ -280,7 +287,7 @@ math pow sin 3, 5 + 2
 # CHECKERR:             ^~~~^
 
 math sin pow 3, 5
-# CHECK: -0.890009
+# CHECK: {{-0\.890009|-0.890\d*}}
 
 math pow 2, cos -pi
 # CHECK: 0.5

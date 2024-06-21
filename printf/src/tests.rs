@@ -342,6 +342,10 @@ fn test_ptr() {
 }
 
 #[test]
+#[cfg_attr(
+    all(target_arch = "x86", not(target_feature = "sse2")),
+    ignore = "i586 has inherent accuracy issues, see rust-lang/rust#114479"
+)]
 fn test_float() {
     // Basic form, handling of exponent/precision for 0
     assert_fmt1!("%a", 0.0, "0x0p+0");
@@ -448,6 +452,10 @@ fn test_float() {
 }
 
 #[test]
+#[cfg_attr(
+    all(target_arch = "x86", not(target_feature = "sse2")),
+    ignore = "i586 has inherent accuracy issues, see rust-lang/rust#114479"
+)]
 fn test_float_g() {
     // correctness in DBL_DIG places
     assert_fmt1!("%.15g", 1.23456789012345, "1.23456789012345");
@@ -583,8 +591,12 @@ fn test_prefixes() {
     assert_eq!(sprintf_check!("%ls", "cs"), "cs");
 }
 
-#[allow(clippy::approx_constant)]
 #[test]
+#[cfg_attr(
+    all(target_arch = "x86", not(target_feature = "sse2")),
+    ignore = "i586 has inherent accuracy issues, see rust-lang/rust#114479"
+)]
+#[allow(clippy::approx_constant)]
 fn negative_precision_width() {
     assert_fmt!("%*s", -10, "hello" => "hello     ");
     assert_fmt!("%*s", -5, "world" => "world");
@@ -692,6 +704,10 @@ fn test_errors() {
 }
 
 #[test]
+#[cfg_attr(
+    all(target_arch = "x86", not(target_feature = "sse2")),
+    ignore = "i586 has inherent accuracy issues, see rust-lang/rust#114479"
+)]
 fn test_locale() {
     fn test_printf_loc<'a>(expected: &str, locale: &Locale, format: &str, arg: impl ToArg<'a>) {
         let mut target = String::new();

@@ -750,7 +750,7 @@ Now in another shell::
     > echo $EDITOR
     vim
 
-You only need to set universal variables once interactively. There is no need to add them to your :ref:`config files <initialization>`. For more details, see :ref:`Universal Variables <universal-variables>`.
+You only need to set universal variables once interactively. There is no need to add them to your :ref:`config files <configuration>`. For more details, see :ref:`Universal Variables <variables-universal>`.
 
 Ready for more?
 ---------------

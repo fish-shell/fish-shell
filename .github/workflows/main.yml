@@ -24,9 +24,6 @@ jobs:
         # Generate a locale that uses a comma as decimal separator.
         sudo locale-gen fr_FR.UTF-8
     - name: cmake
-      env:
-          # Some warnings upgraded to errors to match Open Build Service platforms
-          CXXFLAGS: "-Werror=address -Werror=return-type"
       run: |
         mkdir build && cd build
         cmake ..
@@ -53,7 +50,6 @@ jobs:
         sudo pip3 install pexpect
     - name: cmake
       env:
-          CXXFLAGS: "-m32 -Werror=address -Werror=return-type"
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
@@ -92,7 +88,6 @@ jobs:
     - name: cmake
       env:
           CC: clang
-          CXX: clang++
       run: |
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
@@ -136,8 +131,6 @@ jobs:
   #     env:
   #         FISH_CI_SAN: 1
   #         CC: clang
-  #         CXX: clang++
-  #         CXXFLAGS: "-fsanitize=thread"
   #     run: |
   #       mkdir build && cd build
   #       cmake ..

@@ -455,18 +455,11 @@ impl Parser {
     pub fn principal_parser() -> &'static Parser {
         use std::cell::OnceCell;
         static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        PRINCIPAL
-            .get()
-            // The parser is !Send/!Sync and strictly single-threaded, but we can have
-            // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()
-            // returns an Arc<EnvStack> instead of an Rc<EnvStack>. Since the Arc<EnvStack> is
-            // statically allocated and always valid (not even destroyed on exit), we can safely
-            // transform the Arc<T> into an Rc<T> and save Parser from needing atomic ref counting
-            // to manage its further references.
-            .get_or_init(|| {
-                let env_rc = unsafe { Rc::from_raw(&**EnvStack::principal() as *const _) };
-                Parser::new(env_rc, true)
-            })
+        PRINCIPAL.get().get_or_init(|| {
+            let dispatches_var_changes = true;
+            let env = Rc::new(EnvStack::globals().create_child(dispatches_var_changes));
+            Parser::new(env, true)
+        })
     }
 
     /// Assert that this parser is allowed to execute on the current thread.

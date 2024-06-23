@@ -187,23 +187,20 @@ impl EnvStack {
         }
     }
 
-    // Creates a new EnvStack which dispatches variable changes.
-    // This should be associated with the principal larser.
-    pub fn new_dispatching() -> EnvStack {
+    // Create a "sub-stack" of the given stack.
+    // This shares all nodes (variable scopes) with the parent stack.
+    // can_push_pop is always set.
+    pub fn create_child(&self, dispatches_var_changes: bool) -> EnvStack {
+        let inner = EnvMutex::new(self.inner.lock().clone());
         EnvStack {
-            inner: EnvStackImpl::new(),
+            inner,
             can_push_pop: true,
-            dispatches_var_changes: true,
+            dispatches_var_changes,
         }
     }
 
     fn lock(&self) -> EnvMutexGuard<EnvStackImpl> {
         self.inner.lock()
-    }
-
-    /// Return whether we are the principal stack.
-    pub fn is_principal(&self) -> bool {
-        std::ptr::eq(self, &**Self::principal())
     }
 
     /// Helpers to get and set the proc statuses.
@@ -387,13 +384,6 @@ impl EnvStack {
         })
     }
 
-    /// Access the principal variable stack, associated with the principal parser.
-    pub fn principal() -> &'static Arc<EnvStack> {
-        use std::sync::OnceLock;
-        static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new_dispatching()))
-    }
-
     pub fn set_argv(&self, argv: Vec<WString>) {
         self.set(L!("argv"), EnvMode::LOCAL, argv);
     }
@@ -575,7 +565,7 @@ fn setup_path() {
 pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
-    let vars = &**EnvStack::principal();
+    let vars = EnvStack::globals();
 
     let env_iter: Vec<_> = std::env::vars_os()
         .map(|(k, v)| (str2wcstring(k.as_bytes()), str2wcstring(v.as_bytes())))

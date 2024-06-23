@@ -300,6 +300,7 @@ struct PerprocData {
     statuses: Statuses,
 }
 
+#[derive(Clone)]
 pub struct EnvScopedImpl {
     // A linked list of scopes.
     locals: EnvNodeRef,
@@ -690,6 +691,7 @@ impl ModResult {
 }
 
 /// A mutable "subclass" of EnvScopedImpl.
+#[derive(Clone)]
 pub struct EnvStackImpl {
     pub base: EnvScopedImpl,
 
@@ -1122,7 +1124,7 @@ pub struct EnvMutex<T> {
 }
 
 impl<T> EnvMutex<T> {
-    fn new(inner: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self {
             inner: UnsafeCell::new(inner),
         }

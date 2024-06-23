@@ -107,7 +107,7 @@ pub mod prelude {
             signal_reset_handlers();
 
             // Set PWD from getcwd - fixes #5599
-            EnvStack::principal().set_pwd_from_getcwd();
+            EnvStack::globals().set_pwd_from_getcwd();
         });
         reader_init()
     }

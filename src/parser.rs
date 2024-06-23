@@ -351,8 +351,6 @@ pub enum ParserStatusVar {
 
 pub type BlockId = usize;
 
-pub type ParserRef = Rc<Parser>;
-
 // Controls the behavior when fish itself receives a signal and there are
 // no blocks on the stack.
 // The "outermost" parser is responsible for clearing the signal.
@@ -404,8 +402,8 @@ pub struct Parser {
 
 impl Parser {
     /// Create a parser.
-    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> ParserRef {
-        let result = Rc::new(Self {
+    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
+        let result = Self {
             execution_context: RefCell::default(),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
@@ -417,7 +415,7 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
-        });
+        };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {
             Ok(fd) => {

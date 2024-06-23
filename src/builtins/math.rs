@@ -67,11 +67,9 @@ fn parse_cmd_opts(
                 } else {
                     let scale = fish_wcstoi(optarg).unwrap_or(-1);
                     if scale < 0 || scale > 15 {
-                        streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid scale\n",
-                            cmd,
-                            optarg
-                        ));
+                        streams
+                            .err
+                            .append(wgettext_fmt!("%ls: %ls: invalid scale\n", cmd, optarg));
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]

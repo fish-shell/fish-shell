@@ -237,8 +237,8 @@
             </template>
 
             <template x-if="currentTab === 'functions'" x-data="functions">
-                <div class="master_detail_table">
-                    <div class="master">
+                <div class="function_tab">
+                    <div class="function-list">
                         <template x-for="func in functions">
                             <!-- TODO use ul/li -->
                             <div>
@@ -250,7 +250,7 @@
                             </div>
                         </template>
                     </div>
-                    <div class="detail">
+                    <div class="function-body">
                         <div class="detail_function" x-html="functionDefinition"></div>
                     </div>
                 </div>

@@ -30,7 +30,7 @@ mod wgetopt;
 pub mod prelude {
     use crate::common::ScopeGuarding;
     use crate::env::{env_init, misc_init};
-    use crate::parser::{Parser, ParserRef};
+    use crate::parser::{CancelBehavior, Parser, ParserRef};
     use crate::reader::reader_init;
     use crate::signal::signal_reset_handlers;
     pub use crate::tests::env::{PwdEnvironment, TestEnvironment};
@@ -52,7 +52,7 @@ pub mod prelude {
     impl TestParser {
         pub fn new() -> TestParser {
             TestParser {
-                parser: Parser::new(Rc::new(EnvStack::new()), false),
+                parser: Parser::new(Rc::new(EnvStack::new()), CancelBehavior::default()),
                 pushed_dirs: RefCell::new(Vec::new()),
             }
         }

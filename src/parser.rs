@@ -25,7 +25,7 @@ use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
-use crate::threads::{assert_is_main_thread, MainThread};
+use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
@@ -353,6 +353,16 @@ pub type BlockId = usize;
 
 pub type ParserRef = Rc<Parser>;
 
+// Controls the behavior when fish itself receives a signal and there are
+// no blocks on the stack.
+// The "outermost" parser is responsible for clearing the signal.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum CancelBehavior {
+    #[default]
+    Return, // Return the signal to the caller.
+    Clear, // Clear the signal.
+}
+
 pub struct Parser {
     /// The current execution context.
     execution_context: RefCell<Option<ParseExecutionContext>>,
@@ -382,8 +392,8 @@ pub struct Parser {
     /// including sending on-variable change events.
     syncs_uvars: RelaxedAtomicBool,
 
-    /// If set, we are the principal parser.
-    is_principal: RelaxedAtomicBool,
+    /// The behavior when fish itself receives a signal and there are no blocks on the stack.
+    cancel_behavior: CancelBehavior,
 
     /// List of profile items.
     profile_items: RefCell<Vec<ProfileItem>>,
@@ -393,8 +403,8 @@ pub struct Parser {
 }
 
 impl Parser {
-    /// Create a parser
-    pub fn new(variables: Rc<EnvStack>, is_principal: bool) -> ParserRef {
+    /// Create a parser.
+    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> ParserRef {
         let result = Rc::new(Self {
             execution_context: RefCell::default(),
             job_list: RefCell::default(),
@@ -404,7 +414,7 @@ impl Parser {
             variables,
             library_data: RefCell::new(LibraryData::new()),
             syncs_uvars: RelaxedAtomicBool::new(false),
-            is_principal: RelaxedAtomicBool::new(is_principal),
+            cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
         });
@@ -449,17 +459,6 @@ impl Parser {
             // If a function sources a file, don't descend further.
             .take_while(|b| b.typ() != BlockType::source)
             .any(|b| b.typ() == BlockType::subst)
-    }
-
-    /// Get the "principal" parser, whatever that is. Can only be called by the main thread.
-    pub fn principal_parser() -> &'static Parser {
-        use std::cell::OnceCell;
-        static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        PRINCIPAL.get().get_or_init(|| {
-            let dispatches_var_changes = true;
-            let env = Rc::new(EnvStack::globals().create_child(dispatches_var_changes));
-            Parser::new(env, true)
-        })
     }
 
     /// Assert that this parser is allowed to execute on the current thread.
@@ -553,14 +552,14 @@ impl Parser {
             "Invalid block type"
         );
 
-        // If fish itself got a cancel signal, then we want to unwind back to the principal parser.
-        // If we are the principal parser and our block stack is empty, then we want to clear the
-        // signal.
+        // If fish itself got a cancel signal, then we want to unwind back to the parser which
+        // has a Clear cancellation behavior.
         // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
         // cause fish to exit.
         let sig = signal_check_cancel();
         if sig != 0 {
-            if self.is_principal.load() && self.block_list.borrow().is_empty() {
+            if self.cancel_behavior == CancelBehavior::Clear && self.block_list.borrow().is_empty()
+            {
                 signal_clear_cancel();
             } else {
                 return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));

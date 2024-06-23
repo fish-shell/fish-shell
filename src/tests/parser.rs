@@ -7,7 +7,7 @@ use crate::parse_constants::{
     ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
-use crate::parser::Parser;
+use crate::parser::{CancelBehavior, Parser};
 use crate::reader::{reader_pop, reader_push, reader_reset_interrupted, ReaderConfig};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
@@ -716,7 +716,7 @@ fn test_1_cancellation(parser: &Parser, src: &wstr) {
 #[serial]
 fn test_cancellation() {
     let _cleanup = test_init();
-    let parser = Parser::new(Rc::new(EnvStack::new()), true);
+    let parser = Parser::new(Rc::new(EnvStack::new()), CancelBehavior::Clear);
     reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 

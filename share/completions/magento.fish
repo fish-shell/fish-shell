@@ -15,13 +15,10 @@ end
 ###
 
 function __fish_print_magento_modules -d "Lists all Magento modules"
-    set -l modules (magento module:status)
+    test -f app/etc/config.php; or return
+    command -q sed; or return
 
-    for i in $test
-        if test -n "$i" -a "$i" != None
-            echo $i
-        end
-    end
+    command sed -n '/modules.*\[/,/\]/p' app/etc/config.php | sed -E '1d;$d;s/^\s*|\s*=>.*$|"|\'//g'
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"
@@ -496,6 +493,13 @@ __fish_magento_register_command_option module:enable -f -a "(__fish_print_magent
 __fish_magento_register_command_option module:enable -f -s f -l force -d "Bypass dependencies check"
 __fish_magento_register_command_option module:enable -f -l all -d "Enable all modules"
 __fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files"
+
+#
+# module:status
+#
+__fish_magento_register_command_option module:status -f -a "(__fish_print_magento_modules)" -d "Module name"
+__fish_magento_register_command_option module:status -f -l enabled -d "Print only enabled modules"
+__fish_magento_register_command_option module:status -f -l disabled -d "Print only disabled modules"
 
 #
 # module:uninstall

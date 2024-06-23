@@ -7,13 +7,13 @@ use crate::tinyexpr::te_interp;
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
-const DEFAULT_ZERO_SCALE_MODE: ZeroScaleMode = ZeroScaleMode::Default;
+const DEFAULT_SCALE_MODE: ScaleMode = ScaleMode::Default;
 
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
 
-enum ZeroScaleMode {
+enum ScaleMode {
     Truncate,
     Round,
     Floor,
@@ -25,7 +25,7 @@ struct Options {
     print_help: bool,
     scale: usize,
     base: usize,
-    zero_scale_mode: ZeroScaleMode,
+    scale_mode: ScaleMode,
 }
 
 fn parse_cmd_opts(
@@ -50,7 +50,7 @@ fn parse_cmd_opts(
         print_help: false,
         scale: DEFAULT_SCALE,
         base: 10,
-        zero_scale_mode: DEFAULT_ZERO_SCALE_MODE,
+        scale_mode: DEFAULT_SCALE_MODE,
     };
 
     let mut have_scale = false;
@@ -81,13 +81,13 @@ fn parse_cmd_opts(
             'm' => {
                 let optarg = w.woptarg.unwrap();
                 if optarg.eq(utf32str!("truncate")) {
-                    opts.zero_scale_mode = ZeroScaleMode::Truncate;
+                    opts.scale_mode = ScaleMode::Truncate;
                 } else if optarg.eq(utf32str!("round")) {
-                    opts.zero_scale_mode = ZeroScaleMode::Round;
+                    opts.scale_mode = ScaleMode::Round;
                 } else if optarg.eq(utf32str!("floor")) {
-                    opts.zero_scale_mode = ZeroScaleMode::Floor;
+                    opts.scale_mode = ScaleMode::Floor;
                 } else if optarg.eq(utf32str!("ceiling")) {
-                    opts.zero_scale_mode = ZeroScaleMode::Ceiling;
+                    opts.scale_mode = ScaleMode::Ceiling;
                 } else {
                     streams
                         .err
@@ -164,12 +164,12 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
 
     v *= pow(10f64, opts.scale);
 
-    v = match opts.zero_scale_mode {
-        ZeroScaleMode::Truncate => v.trunc(),
-        ZeroScaleMode::Round => v.round(),
-        ZeroScaleMode::Floor => v.floor(),
-        ZeroScaleMode::Ceiling => v.ceil(),
-        ZeroScaleMode::Default => {
+    v = match opts.scale_mode {
+        ScaleMode::Truncate => v.trunc(),
+        ScaleMode::Round => v.round(),
+        ScaleMode::Floor => v.floor(),
+        ScaleMode::Ceiling => v.ceil(),
+        ScaleMode::Default => {
             if opts.scale == 0 {
                 v.trunc()
             } else {

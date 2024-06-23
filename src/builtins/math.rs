@@ -191,7 +191,8 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     if ret.chars().any(|c| !c.is_ascii_digit()) {
         let trailing_zeroes = ret.chars().rev().take_while(|&c| c == '0').count();
         let mut to_keep = ret.len() - trailing_zeroes;
-        if ret.as_char_slice()[to_keep - 1] == '.' {
+        // Check for the decimal separator (we don't know what character it is)
+        if !ret.as_char_slice()[to_keep - 1].is_ascii_digit() {
             to_keep -= 1;
         }
         ret.truncate(to_keep);

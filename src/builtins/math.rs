@@ -68,7 +68,7 @@ fn parse_cmd_opts(
                     let scale = fish_wcstoi(optarg).unwrap_or(-1);
                     if scale < 0 || scale > 15 {
                         streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid base value\n",
+                            "%ls: %ls: invalid scale\n",
                             cmd,
                             optarg
                         ));

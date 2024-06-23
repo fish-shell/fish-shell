@@ -80,13 +80,13 @@ fn parse_cmd_opts(
             }
             'm' => {
                 let optarg = w.woptarg.unwrap();
-                if optarg.eq(utf32str!("truncate")) {
+                if optarg.eq(utf32str!("truncate")) || optarg.eq(utf32str!("trunc")) {
                     opts.scale_mode = ScaleMode::Truncate;
                 } else if optarg.eq(utf32str!("round")) {
                     opts.scale_mode = ScaleMode::Round;
                 } else if optarg.eq(utf32str!("floor")) {
                     opts.scale_mode = ScaleMode::Floor;
-                } else if optarg.eq(utf32str!("ceiling")) {
+                } else if optarg.eq(utf32str!("ceiling")) || optarg.eq(utf32str!("ceil")) {
                     opts.scale_mode = ScaleMode::Ceiling;
                 } else {
                     streams

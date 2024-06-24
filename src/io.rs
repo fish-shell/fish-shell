@@ -13,7 +13,7 @@ use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
-use crate::topic_monitor::topic_t;
+use crate::topic_monitor::Topic;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
 use errno::Errno;
@@ -878,7 +878,7 @@ impl FdOutputStream {
         assert!(fd >= 0, "Invalid fd");
         FdOutputStream {
             fd,
-            sigcheck: SigChecker::new(topic_t::sighupint),
+            sigcheck: SigChecker::new(Topic::sighupint),
             errored: false,
         }
     }

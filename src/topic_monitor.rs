@@ -15,7 +15,7 @@ Topic postings may be coalesced. That is there may be two posts to a given topic
 generation only increases by 1. The only guarantee is that after a topic post, the current
 generation value is larger than any value previously queried.
 
-Tying this all together is the topic_monitor_t. This provides the current topic generations, and
+Tying this all together is the TopicMonitor. This provides the current topic generations, and
 also provides the ability to perform a blocking wait for any topic to change in a particular topic
 set. This is the real power of topics: you can wait for a sigchld signal OR a thread exit.
 */
@@ -36,7 +36,7 @@ use std::sync::{Condvar, Mutex, MutexGuard};
 /// The list of topics which may be observed.
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum topic_t {
+pub enum Topic {
     sighupint = 0,     // Corresponds to both SIGHUP and SIGINT signals.
     sigchld = 1,       // Corresponds to SIGCHLD signal.
     internal_exit = 2, // Corresponds to an internal process exit.
@@ -51,7 +51,7 @@ pub struct GenerationsList {
 }
 
 /// Simple value type containing the values for a topic.
-/// This should be kept in sync with topic_t.
+/// This should be kept in sync with Topic.
 impl GenerationsList {
     /// Update `self` gen counts to match those of `other`.
     pub fn update(&self, other: &Self) {
@@ -61,15 +61,15 @@ impl GenerationsList {
     }
 }
 
-pub type generation_t = u64;
+pub type Generation = u64;
 
-impl FloggableDebug for topic_t {}
+impl FloggableDebug for Topic {}
 
 /// A generation value which indicates the topic is not of interest.
-pub const INVALID_GENERATION: generation_t = u64::MAX;
+pub const INVALID_GENERATION: Generation = u64::MAX;
 
-pub fn all_topics() -> [topic_t; 3] {
-    [topic_t::sighupint, topic_t::sigchld, topic_t::internal_exit]
+pub fn all_topics() -> [Topic; 3] {
+    [Topic::sighupint, Topic::sigchld, Topic::internal_exit]
 }
 
 impl GenerationsList {
@@ -103,25 +103,25 @@ impl GenerationsList {
     }
 
     /// Sets the generation for `topic` to `value`.
-    pub fn set(&self, topic: topic_t, value: generation_t) {
+    pub fn set(&self, topic: Topic, value: Generation) {
         match topic {
-            topic_t::sighupint => self.sighupint.set(value),
-            topic_t::sigchld => self.sigchld.set(value),
-            topic_t::internal_exit => self.internal_exit.set(value),
+            Topic::sighupint => self.sighupint.set(value),
+            Topic::sigchld => self.sigchld.set(value),
+            Topic::internal_exit => self.internal_exit.set(value),
         }
     }
 
     /// Return the value for a topic.
-    pub fn get(&self, topic: topic_t) -> generation_t {
+    pub fn get(&self, topic: Topic) -> Generation {
         match topic {
-            topic_t::sighupint => self.sighupint.get(),
-            topic_t::sigchld => self.sigchld.get(),
-            topic_t::internal_exit => self.internal_exit.get(),
+            Topic::sighupint => self.sighupint.get(),
+            Topic::sigchld => self.sigchld.get(),
+            Topic::internal_exit => self.internal_exit.get(),
         }
     }
 
     /// Return ourselves as an array.
-    pub fn as_array(&self) -> [generation_t; 3] {
+    pub fn as_array(&self) -> [Generation; 3] {
         [
             self.sighupint.get(),
             self.sigchld.get(),
@@ -130,14 +130,14 @@ impl GenerationsList {
     }
 
     /// Set the value of `topic` to the smaller of our value and the value in `other`.
-    pub fn set_min_from(&mut self, topic: topic_t, other: &Self) {
+    pub fn set_min_from(&mut self, topic: Topic, other: &Self) {
         if self.get(topic) > other.get(topic) {
             self.set(topic, other.get(topic));
         }
     }
 
     /// Return whether a topic is valid.
-    pub fn is_valid(&self, topic: topic_t) -> bool {
+    pub fn is_valid(&self, topic: Topic) -> bool {
         self.get(topic) != INVALID_GENERATION
     }
 
@@ -292,9 +292,9 @@ impl Default for binary_semaphore_t {
 ///   up. If if failed, then either a post() call updated the status values (so perhaps there is a
 ///   new topic post) or some other thread won the race and called wait() on the semaphore. Here our
 ///   thread will wait on the data_notifier_ queue.
-type topic_bitmask_t = u8;
+type TopicBitmask = u8;
 
-fn topic_to_bit(t: topic_t) -> topic_bitmask_t {
+fn topic_to_bit(t: Topic) -> TopicBitmask {
     1 << (t as u8)
 }
 
@@ -312,10 +312,10 @@ struct data_t {
 /// Sentinel status value indicating that a thread is waiting and needs a wakeup.
 /// Note it is an error for this bit to be set and also any topic bit.
 const STATUS_NEEDS_WAKEUP: u8 = 128;
-type status_bits_t = u8;
+type StatusBits = u8;
 
 #[derive(Default)]
-pub struct topic_monitor_t {
+pub struct TopicMonitor {
     data_: Mutex<data_t>,
 
     /// Condition variable for broadcasting notifications.
@@ -337,13 +337,13 @@ pub struct topic_monitor_t {
 }
 
 // safety: this is only needed for tests
-unsafe impl Sync for topic_monitor_t {}
+unsafe impl Sync for TopicMonitor {}
 
 /// The principal topic monitor.
 /// Do not attempt to move this into a lazy_static, it must be accessed from a signal handler.
-static mut s_principal: *const topic_monitor_t = std::ptr::null();
+static mut s_principal: *const TopicMonitor = std::ptr::null();
 
-impl topic_monitor_t {
+impl TopicMonitor {
     /// Initialize the principal monitor, and return it.
     /// This should be called only on the main thread.
     pub fn initialize() -> &'static Self {
@@ -356,14 +356,14 @@ impl topic_monitor_t {
         }
     }
 
-    pub fn post(&self, topic: topic_t) {
+    pub fn post(&self, topic: Topic) {
         // Beware, we may be in a signal handler!
         // Atomically update the pending topics.
         let topicbit = topic_to_bit(topic);
         const relaxed: Ordering = Ordering::Relaxed;
 
         // CAS in our bit, capturing the old status value.
-        let mut oldstatus: status_bits_t = 0;
+        let mut oldstatus: StatusBits = 0;
         let mut cas_success = false;
         while !cas_success {
             oldstatus = self.status_.load(relaxed);
@@ -404,7 +404,7 @@ impl topic_monitor_t {
         // If there are no pending updates (likely) or a thread is waiting, just return.
         // Otherwise CAS in 0 and update our topics.
         const relaxed: Ordering = Ordering::Relaxed;
-        let mut changed_topic_bits: topic_bitmask_t = 0;
+        let mut changed_topic_bits: TopicBitmask = 0;
         let mut cas_success = false;
         while !cas_success {
             changed_topic_bits = self.status_.load(relaxed);
@@ -446,12 +446,12 @@ impl topic_monitor_t {
     }
 
     /// Access the current generations.
-    pub fn current_generations(self: &topic_monitor_t) -> GenerationsList {
+    pub fn current_generations(self: &TopicMonitor) -> GenerationsList {
         self.updated_gens()
     }
 
     /// Access the generation for a topic.
-    pub fn generation_for_topic(self: &topic_monitor_t, topic: topic_t) -> generation_t {
+    pub fn generation_for_topic(self: &TopicMonitor, topic: Topic) -> Generation {
         self.current_generations().get(topic)
     }
 
@@ -490,7 +490,7 @@ impl topic_monitor_t {
                     "No thread should be waiting"
                 );
                 // Try becoming the reader by marking the reader bit.
-                let expected_old: status_bits_t = 0;
+                let expected_old: StatusBits = 0;
                 if self
                     .status_
                     .compare_exchange(
@@ -587,10 +587,10 @@ impl topic_monitor_t {
 }
 
 pub fn topic_monitor_init() {
-    topic_monitor_t::initialize();
+    TopicMonitor::initialize();
 }
 
-pub fn topic_monitor_principal() -> &'static topic_monitor_t {
+pub fn topic_monitor_principal() -> &'static TopicMonitor {
     unsafe {
         assert!(
             !s_principal.is_null(),

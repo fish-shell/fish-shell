@@ -1,5 +1,5 @@
 use crate::tests::prelude::*;
-use crate::topic_monitor::{topic_monitor_t, topic_t, GenerationsList};
+use crate::topic_monitor::{GenerationsList, Topic, TopicMonitor};
 use std::sync::{
     atomic::{AtomicU32, AtomicU64, Ordering},
     Arc,
@@ -9,9 +9,9 @@ use std::sync::{
 #[serial]
 fn test_topic_monitor() {
     let _cleanup = test_init();
-    let monitor = topic_monitor_t::default();
+    let monitor = TopicMonitor::default();
     let gens = GenerationsList::new();
-    let t = topic_t::sigchld;
+    let t = Topic::sigchld;
     gens.sigchld.set(0);
     assert_eq!(monitor.generation_for_topic(t), 0);
     let changed = monitor.check(&gens, false /* wait */);
@@ -35,10 +35,10 @@ fn test_topic_monitor() {
 #[serial]
 fn test_topic_monitor_torture() {
     let _cleanup = test_init();
-    let monitor = Arc::new(topic_monitor_t::default());
+    let monitor = Arc::new(TopicMonitor::default());
     const THREAD_COUNT: usize = 64;
-    let t1 = topic_t::sigchld;
-    let t2 = topic_t::sighupint;
+    let t1 = Topic::sigchld;
+    let t2 = Topic::sighupint;
     let mut gens_list = vec![GenerationsList::invalid(); THREAD_COUNT];
     let post_count = Arc::new(AtomicU64::new(0));
     for gen in &mut gens_list {

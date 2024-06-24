@@ -60,7 +60,6 @@ unsafe fn lconv_to_locale(lconv: &libc::lconv) -> Locale {
 
 /// Read the numeric locale, or None on any failure.
 #[cfg(localeconv_l)]
-#[allow(non_snake_case)]
 unsafe fn read_locale() -> Option<Locale> {
     extern "C" {
         fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;

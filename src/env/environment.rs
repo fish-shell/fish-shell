@@ -341,7 +341,6 @@ impl EnvStack {
     /// If `always` is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// Return a list of events for changed variables.
-    #[allow(clippy::vec_box)]
     pub fn universal_sync(&self, always: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();

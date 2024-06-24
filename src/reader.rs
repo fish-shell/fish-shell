@@ -942,6 +942,18 @@ pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
     }
 }
 
+pub fn reader_showing_suggestion(parser: &Parser) -> bool {
+    if !is_interactive_session() {
+        return false;
+    }
+    if let Some(data) = current_data() {
+        let reader = Reader { parser, data };
+        !reader.autosuggestion.is_empty()
+    } else {
+        false
+    }
+}
+
 /// Return the value of the interrupted flag, which is set by the sigint handler, and clear it if it
 /// was set. If the current reader is interruptible, mark the reader as exit_loop_requested.
 pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {

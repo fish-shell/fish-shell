@@ -13,7 +13,7 @@ use crate::parse_util::{
 use crate::proc::is_interactive_session;
 use crate::reader::{
     commandline_get_state, commandline_set_buffer, commandline_set_search_field,
-    reader_execute_readline_cmd,
+    reader_execute_readline_cmd, reader_showing_suggestion,
 };
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::{TokenType, Tokenizer};
@@ -201,6 +201,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut paging_full_mode = false;
     let mut search_field_mode = false;
     let mut is_valid = false;
+    let mut showing_suggestion = false;
 
     let mut range = 0..0;
     let mut override_buffer = None;
@@ -231,6 +232,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("paging-full-mode"), ArgType::NoArgument, 'F'),
         wopt(L!("search-field"), ArgType::NoArgument, '\x03'),
         wopt(L!("is-valid"), ArgType::NoArgument, '\x01'),
+        wopt(L!("showing-suggestion"), ArgType::NoArgument, '\x04'),
     ];
 
     let mut w = WGetopter::new(short_options, long_options, args);
@@ -277,6 +279,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'F' => paging_full_mode = true,
             '\x03' => search_field_mode = true,
             '\x01' => is_valid = true,
+            '\x04' => showing_suggestion = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
                 return STATUS_CMD_OK;
@@ -508,6 +511,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 }
             }
         };
+    }
+
+    if showing_suggestion {
+        if reader_showing_suggestion(parser) {
+            return Some(0);
+        }
+        return Some(1);
     }
 
     if search_field_mode {

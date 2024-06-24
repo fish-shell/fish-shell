@@ -8,7 +8,7 @@ function __fish_whatis
     end
 
     set -l description (whatis $cmd 2>/dev/null | string replace -r '.*? - ' '')[1]
-    if not string match -qr -- "." "$description"
+    if string match -qr -- "." "$description"
         printf '%s\n' $description
         return 0
     else if not string match -q -- "$fallback" ""

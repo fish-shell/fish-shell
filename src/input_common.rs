@@ -433,7 +433,7 @@ static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
 
 pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-pub(crate) fn terminal_protocols_enable_ifn() {
+pub fn terminal_protocols_enable_ifn() {
     let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
     if term_protocols.is_some() {
         return;

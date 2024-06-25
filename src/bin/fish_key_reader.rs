@@ -19,7 +19,7 @@ use fish::{
     env::env_init,
     eprintf, fprintf,
     input::input_terminfo_get_name,
-    input_common::{CharEvent, InputEventQueue, InputEventQueuer},
+    input_common::{terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer},
     key::{self, Key},
     panic::panic_handler,
     print_help::print_help,
@@ -90,6 +90,7 @@ fn process_input(continuous_mode: bool) -> i32 {
     let mut recent_chars2 = vec![];
     eprintf!("Press a key:\n");
 
+    terminal_protocols_enable_ifn();
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         let evt = queue.readch();
 

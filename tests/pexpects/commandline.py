@@ -12,6 +12,28 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
+# Test --showing-suggestion before we dirty the history
+sendline("echo hello")
+expect_prompt()
+sendline("function debug; commandline --showing-suggestion; set -g cmd_status $status; end")
+expect_prompt()
+sendline("bind ctrl-p debug");
+expect_prompt()
+send("echo hell")
+sleep(0.1) # wait for suggestion to appear under CI
+send(control("p"))
+sendline("")
+expect_prompt("hell")
+sendline("echo cmd_status: $cmd_status")
+expect_prompt("cmd_status: 0")
+send("echo goodb")
+sleep(0.1) # wait for suggestion to appear under CI
+send(control("p"))
+sendline("")
+expect_prompt("goodb")
+sendline("echo cmd_status: $cmd_status")
+expect_prompt("cmd_status: 1")
+
 sendline("bind '~' 'handle_tilde'")
 expect_prompt()
 

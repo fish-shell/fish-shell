@@ -9,7 +9,8 @@ Synopsis
 .. synopsis::
 
     string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
-                   [-r | --regex] [-q | --quiet] PATTERN REPLACEMENT [STRING ...]
+                   [-r | --regex] [[-m | --max-matches] MAX] [-q | --quiet] 
+                   PATTERN REPLACEMENT [STRING ...]
 
 .. END SYNOPSIS
 
@@ -23,6 +24,8 @@ Description
 If **-r** or **--regex** is given, *PATTERN* is interpreted as a Perl-compatible regular expression, and *REPLACEMENT* can contain C-style escape sequences like **\t** as well as references to capturing groups by number or name as *$n* or *${n}*.
 
 If you specify the **-f** or **--filter** flag then each input string is printed only if a replacement was done. This is useful where you would otherwise use this idiom: ``a_cmd | string match pattern | string replace pattern new_pattern``. You can instead just write ``a_cmd | string replace --filter pattern new_pattern``.
+
+If **--max-matches MAX** or **-m MAX** is used, ``string replace`` will stop all processing after MAX lines of input have matched the specified pattern. In the event of ``--filter`` or ``-f``, this means the output will be MAX lines in length. This can be used as an "early exit" optimization when processing long inputs but expecting a limited and fixed number of outputs that might be found considerably before the input stream has been exhausted.
 
 Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 

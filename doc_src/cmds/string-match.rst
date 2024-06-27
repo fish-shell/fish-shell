@@ -10,7 +10,7 @@ Synopsis
 
     string match [-a | --all] [-e | --entire] [-i | --ignore-case]
                  [-g | --groups-only] [-r | --regex] [-n | --index]
-                 [-q | --quiet] [-v | --invert]
+                 [-q | --quiet] [-v | --invert] [[-m | --max-matches] MAX]
                  PATTERN [STRING ...]
 
 .. END SYNOPSIS
@@ -35,6 +35,8 @@ If **--regex** or **-r** is given, *PATTERN* is interpreted as a Perl-compatible
 When matching via regular expressions, ``string match`` automatically sets variables for all named capturing groups (``(?<name>expression)``). It will create a variable with the name of the group, in the default scope, for each named capturing group, and set it to the value of the capturing group in the first matched argument. If a named capture group matched an empty string, the variable will be set to the empty string (like ``set var ""``). If it did not match, the variable will be set to nothing (like ``set var``).  When **--regex** is used with **--all**, this behavior changes. Each named variable will contain a list of matches, with the first match contained in the first element, the second match in the second, and so on. If the group was empty or did not match, the corresponding element will be an empty string.
 
 If **--invert** or **-v** is used the selected lines will be only those which do not match the given glob pattern or regular expression.
+
+If **--max-matches MAX** or **-m MAX** is used, ``string`` will stop checking for matches after MAX lines of input have matched. This can be used as an "early exit" optimization when processing long inputs but expecting a limited and fixed number of outputs that might be found considerably before the input stream has been exhausted. If combined with **--invert** or **-v**, considers only inverted matches.
 
 Exit status: 0 if at least one match was found, or 1 otherwise.
 

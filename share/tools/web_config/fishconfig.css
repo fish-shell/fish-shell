@@ -54,7 +54,7 @@ body {
 }
 
 #tab_parent{
-		border: red 1px;
+    border: red 1px;
 }
 #tab_parent :first-child {
     border-top-left-radius: 8px;
@@ -99,13 +99,13 @@ body {
     margin-right: 12px;
     display: flex;
     flex-direction: row;
-    height: calc(100vh - 129px);
+    height: 90vh;
     overflow: hidden;
 }
 
 .function-list {
     text-align: right;
-    min-width: 200px;
+    min-width: 250px;
     font-size: 16pt;
     vertical-align: top;
     overflow-y: auto;

@@ -168,7 +168,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
-                bin: exec_path.clone(),
+                bin: exec_path.parent().unwrap().to_owned(),
             }
         }
 

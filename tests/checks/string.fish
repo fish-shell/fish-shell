@@ -1148,3 +1148,17 @@ string shorten abc \aabc ab abcdef | string escape
 # CHECK: \cga…
 # CHECK: ab
 # CHECK: a…
+
+printf "dog\ncat\nbat\ngnat\n" | string match -m2 "*at"
+# CHECK: cat
+# CHECK: bat
+
+printf "dog\ncat\nbat\nhog\n" | string match -rvm1 'at$'
+# CHECK: dog
+
+printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' 'aught'
+# CHECK: caught
+
+printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' 'h'
+# CHECK: dog
+# CHECK: hat

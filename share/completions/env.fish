@@ -25,7 +25,7 @@ function __fish_env_redefine_vars
 
     set cmdline "$(commandline -xp)"
     for var in $vars
-        if not string match -e -- $var= $cmdline
+        if not string match -eq -- $var= $cmdline
             echo $var=
         end
     end

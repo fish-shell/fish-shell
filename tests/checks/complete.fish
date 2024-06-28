@@ -603,3 +603,9 @@ complete -C'complete_long_option -ao'
 # CHECK: -an-old-option
 # But only if the user typed a dash
 complete -C'complete_long_option lo'
+
+# Check that descriptions are correctly generated for commands.
+# We expect to find at least one `wh...` command with a manpage/apropos description, such as
+# `whoami`, `whereis`, or `which`. Filter out keywords & default/generic completions to test.
+test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo "found" || echo "fail"
+# CHECK: found

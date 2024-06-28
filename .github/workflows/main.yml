@@ -26,7 +26,7 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake ..
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: make
       run: |
         make VERBOSE=1

@@ -1739,7 +1739,7 @@ impl ReaderData {
         }
     }
 
-    fn jump(
+    fn jump_and_remember_last_jump(
         &mut self,
         direction: JumpDirection,
         precision: JumpPrecision,
@@ -1749,7 +1749,16 @@ impl ReaderData {
         self.last_jump_target = Some(target);
         self.last_jump_direction = direction;
         self.last_jump_precision = precision;
+        self.jump(direction, precision, elt, vec![target])
+    }
 
+    fn jump(
+        &mut self,
+        direction: JumpDirection,
+        precision: JumpPrecision,
+        elt: EditableLineTag,
+        targets: Vec<char>,
+    ) -> bool {
         let el = self.edit_line(elt);
 
         match direction {
@@ -1761,7 +1770,7 @@ impl ReaderData {
                         return false;
                     }
                     tmp_pos -= 1;
-                    if el.at(tmp_pos) == target {
+                    if targets.iter().any(|&target| el.at(tmp_pos) == target) {
                         if precision == JumpPrecision::Till {
                             tmp_pos = std::cmp::min(el.len() - 1, tmp_pos + 1);
                         }
@@ -1773,7 +1782,7 @@ impl ReaderData {
             JumpDirection::Forward => {
                 let mut tmp_pos = el.position() + 1;
                 while tmp_pos < el.len() {
-                    if el.at(tmp_pos) == target {
+                    if targets.iter().any(|&target| el.at(tmp_pos) == target) {
                         if precision == JumpPrecision::Till {
                             tmp_pos -= 1;
                         }
@@ -3098,7 +3107,8 @@ impl<'a> Reader<'a> {
                 };
                 let (elt, _el) = self.active_edit_line();
                 if let Some(target) = self.function_pop_arg() {
-                    let success = self.jump(direction, precision, elt, target);
+                    let success =
+                        self.jump_and_remember_last_jump(direction, precision, elt, target);
 
                     self.input_data.function_set_status(success);
                 }
@@ -3108,7 +3118,7 @@ impl<'a> Reader<'a> {
                 let mut success = false;
 
                 if let Some(target) = self.last_jump_target {
-                    success = self.data.jump(
+                    success = self.data.jump_and_remember_last_jump(
                         self.data.last_jump_direction,
                         self.data.last_jump_precision,
                         elt,
@@ -3130,9 +3140,12 @@ impl<'a> Reader<'a> {
                 };
 
                 if let Some(last_target) = self.last_jump_target {
-                    success = self
-                        .data
-                        .jump(dir, self.data.last_jump_precision, elt, last_target);
+                    success = self.data.jump_and_remember_last_jump(
+                        dir,
+                        self.data.last_jump_precision,
+                        elt,
+                        last_target,
+                    );
                 }
 
                 self.last_jump_direction = original_dir;

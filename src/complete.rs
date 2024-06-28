@@ -1006,26 +1006,24 @@ impl<'ctx> Completer<'ctx> {
                 continue;
             }
 
-            // Make the key. This is the stuff after the command.
+            // Make the set components. This is the stuff after the command.
             // For example:
-            //  elstr = lsmod
+            //  elstr = lsmod\ta description
             //  cmd = ls
             //  key = mod
+            //  val = A description
             // Note an empty key is common and natural, if 'cmd' were already valid.
-            let (key, val) = elstr.split_at_mut(cmd.len());
-            let val = &mut val[1..];
-            assert!(
-                !val.is_empty(),
-                "tab index should not have been at the end."
-            );
+            let parts = elstr.as_mut_utfstr().split_at_mut(tab_idx);
+            let key = &parts.0[cmd.len()..tab_idx];
+            let (_, val) = parts.1.split_at_mut(1);
 
             // And once again I make sure the first character is uppercased because I like it that
             // way, and I get to decide these things.
-            let mut upper_chars = val.as_char_slice()[0].to_uppercase();
+            let mut upper_chars = val.chars().next().unwrap().to_uppercase();
             if let (Some(c), None) = (upper_chars.next(), upper_chars.next()) {
                 val.as_char_slice_mut()[0] = c;
             }
-            lookup.insert(&*key, &*val);
+            lookup.insert(key, &*val);
         }
 
         // Then do a lookup on every completion and if a match is found, change to the new

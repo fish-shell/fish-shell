@@ -258,6 +258,11 @@ The following special input functions are available:
 ``repeat-jump`` and ``repeat-jump-reverse``
     redo the last jump in the same/opposite direction
 
+``jump-to-matching-bracket``
+    jump to matching bracket if the character under the cursor is bracket;
+    otherwise, jump to the next occurence of *any right* bracket after the cursor.
+    The following brackets are considered: ``([{}])``
+
 ``kill-bigword``
     move the next whitespace-delimited word to the killring
 

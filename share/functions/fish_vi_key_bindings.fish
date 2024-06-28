@@ -238,6 +238,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
     bind -s --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
 
+    bind -s --preset % jump-to-matching-bracket
     bind -s --preset f forward-jump
     bind -s --preset F backward-jump
     bind -s --preset t forward-jump-till
@@ -305,6 +306,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
+    bind -s --preset -M visual % jump-to-matching-bracket
     bind -s --preset -M visual f forward-jump
     bind -s --preset -M visual t forward-jump-till
     bind -s --preset -M visual F backward-jump

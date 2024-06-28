@@ -181,6 +181,7 @@ New or improved bindings
   - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
   - Deleting in visual mode now moves the cursor back, matching vi (:issue:`10394`).
+  - Support :kbd:`%` motion.
 
 Completions
 ^^^^^^^^^^^

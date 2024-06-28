@@ -1739,6 +1739,42 @@ impl ReaderData {
         }
     }
 
+    fn jump_to_matching_bracket(
+        &mut self,
+        precision: JumpPrecision,
+        elt: EditableLineTag,
+        jump_from: usize,
+        l_bracket: char,
+        r_bracket: char,
+    ) -> bool {
+        let el = self.edit_line(elt);
+        let mut tmp_r_pos: usize = 0;
+        let mut brackets_stack = Vec::new();
+        while tmp_r_pos < el.len() {
+            if el.at(tmp_r_pos) == l_bracket {
+                brackets_stack.push(tmp_r_pos);
+            } else if el.at(tmp_r_pos) == r_bracket {
+                match brackets_stack.pop() {
+                    Some(tmp_l_pos) if jump_from == tmp_l_pos => {
+                        return match precision {
+                            JumpPrecision::Till => self.update_buff_pos(elt, Some(tmp_r_pos - 1)),
+                            JumpPrecision::To => self.update_buff_pos(elt, Some(tmp_r_pos)),
+                        };
+                    }
+                    Some(tmp_l_pos) if jump_from == tmp_r_pos => {
+                        return match precision {
+                            JumpPrecision::Till => self.update_buff_pos(elt, Some(tmp_l_pos + 1)),
+                            JumpPrecision::To => self.update_buff_pos(elt, Some(tmp_l_pos)),
+                        };
+                    }
+                    _ => {}
+                }
+            }
+            tmp_r_pos += 1;
+        }
+        return false;
+    }
+
     fn jump_and_remember_last_jump(
         &mut self,
         direction: JumpDirection,
@@ -3112,6 +3148,41 @@ impl<'a> Reader<'a> {
 
                     self.input_data.function_set_status(success);
                 }
+            }
+            rl::JumpToMatchingBracket => {
+                let (elt, _el) = self.active_edit_line();
+                let el = self.edit_line(elt);
+                let l_brackets = ['(', '[', '{'];
+                let r_brackets = [')', ']', '}'];
+                let jump_from_pos = el.position();
+                let precision = JumpPrecision::To;
+                let success = if l_brackets.contains(&el.at(jump_from_pos))
+                    || r_brackets.contains(&el.at(jump_from_pos))
+                {
+                    let l_bracket = match el.at(jump_from_pos) {
+                        '(' | ')' => '(',
+                        '[' | ']' => '[',
+                        '{' | '}' => '{',
+                        _ => unreachable!(),
+                    };
+                    let r_bracket = match l_bracket {
+                        '(' => ')',
+                        '[' => ']',
+                        '{' => '}',
+                        _ => unreachable!(),
+                    };
+                    self.jump_to_matching_bracket(
+                        precision,
+                        elt,
+                        jump_from_pos,
+                        l_bracket,
+                        r_bracket,
+                    )
+                } else {
+                    // If we stand on non-bracket character, we prefer to jump forward
+                    self.jump(JumpDirection::Forward, precision, elt, r_brackets.to_vec())
+                };
+                self.input_data.function_set_status(success);
             }
             rl::RepeatJump => {
                 let (elt, _el) = self.active_edit_line();

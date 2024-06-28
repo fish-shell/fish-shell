@@ -182,6 +182,7 @@ New or improved bindings
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
   - Deleting in visual mode now moves the cursor back, matching vi (:issue:`10394`).
   - Support :kbd:`%` motion.
+  - Support `ab` and `ib` vi text objects. New input functions are introduced ``jump-{to,till}-matching-bracket`` (:issue:`1842`).
 
 Completions
 ^^^^^^^^^^^

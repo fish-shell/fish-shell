@@ -76,9 +76,9 @@ pub enum EndExecutionReason {
     error,
 }
 
-#[derive(Default)]
 pub struct ExecutionContext {
-    pstree: RefCell<Option<ParsedSourceRef>>,
+    // The parsed source and its AST.
+    pstree: RefCell<ParsedSourceRef>,
 
     // If set, one of our processes received a cancellation signal (INT or QUIT) so we are
     // unwinding.
@@ -138,7 +138,7 @@ impl<'a> ExecutionContext {
     /// The execution context may access the parser and parent job group (if any) through ctx.
     pub fn new(pstree: ParsedSourceRef, block_io: IoChain) -> Self {
         Self {
-            pstree: RefCell::new(Some(pstree)),
+            pstree: RefCell::new(pstree),
             cancel_signal: RefCell::default(),
             executing_job_node: RefCell::default(),
             cached_lineno: RefCell::default(),
@@ -148,7 +148,7 @@ impl<'a> ExecutionContext {
 
     pub fn pstree(&self) -> ParsedSourceRef {
         // todo!("don't clone but expose a Ref<'_, ParsedSourceRef> or similar")
-        self.pstree.borrow().as_ref().unwrap().clone()
+        ParsedSourceRef::clone(&self.pstree.borrow())
     }
 
     /// Returns the current line number, indexed from 1. Updates cached line ranges.

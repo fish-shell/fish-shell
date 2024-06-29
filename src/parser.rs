@@ -21,7 +21,7 @@ use crate::parse_constants::{
     ParseError, ParseErrorList, ParseTreeFlags, FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH,
     SOURCE_LOCATION_UNKNOWN,
 };
-use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
+use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::{parse_source, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
@@ -363,7 +363,7 @@ pub enum CancelBehavior {
 
 pub struct Parser {
     /// The current execution context.
-    execution_context: RefCell<Option<ParseExecutionContext>>,
+    execution_context: RefCell<Option<ExecutionContext>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -429,7 +429,7 @@ impl Parser {
         result
     }
 
-    fn execution_context(&self) -> Ref<'_, Option<ParseExecutionContext>> {
+    fn execution_context(&self) -> Ref<'_, Option<ExecutionContext>> {
         self.execution_context.borrow()
     }
 
@@ -604,13 +604,13 @@ impl Parser {
                     std::mem::replace(&mut self.execution_context.borrow_mut(), new_value)
                 } else {
                     #[allow(clippy::unnecessary_unwrap)]
-                    Some(ParseExecutionContext::swap(
+                    Some(ExecutionContext::swap(
                         self.execution_context.borrow().as_ref().unwrap(),
                         new_value.unwrap(),
                     ))
                 }
             },
-            Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
+            Some(ExecutionContext::new(ps.clone(), block_io.clone())),
         );
 
         // Check the exec count so we know if anything got executed.

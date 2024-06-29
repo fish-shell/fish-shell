@@ -77,7 +77,7 @@ pub enum EndExecutionReason {
 }
 
 #[derive(Default)]
-pub struct ParseExecutionContext {
+pub struct ExecutionContext {
     pstree: RefCell<Option<ParsedSourceRef>>,
 
     // If set, one of our processes received a cancellation signal (INT or QUIT) so we are
@@ -102,7 +102,7 @@ struct CachedLineno {
     count: usize,
 }
 
-impl ParseExecutionContext {
+impl ExecutionContext {
     pub fn swap(left: &Self, right: Self) -> Self {
         left.pstree.swap(&right.pstree);
         left.cancel_signal.swap(&right.cancel_signal);
@@ -133,7 +133,7 @@ macro_rules! report_error_formatted {
     }};
 }
 
-impl<'a> ParseExecutionContext {
+impl<'a> ExecutionContext {
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
     pub fn new(pstree: ParsedSourceRef, block_io: IoChain) -> Self {

@@ -77,7 +77,7 @@ function __npm_installed_local_packages
 
     if set -l python (__fish_anypython)
         $python -S -c 'import json, sys; data = json.load(sys.stdin);
-print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"]))' <$package_json 2>/dev/null
+print("\n".join(data.get("dependencies", []))); print("\n".join(data.get("devDependencies", [])))' <$package_json 2>/dev/null
     else if type -q jq
         jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json
     else

@@ -267,4 +267,9 @@ impl<NodeType: Node> LineCounter<NodeType> {
         let prev = std::mem::replace(&mut self.node, node_ptr);
         unsafe { prev.as_ref() }
     }
+
+    // Return the source.
+    pub fn get_source(&self) -> &wstr {
+        &self.parsed_source.src
+    }
 }

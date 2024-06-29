@@ -1,6 +1,6 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{Ast, List, Node};
+use crate::ast::{self, Ast, List, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     escape_string, scoped_push_replacer, CancelChecker, EscapeFlags, EscapeStringStyle,
@@ -22,7 +22,7 @@ use crate::parse_constants::{
     SOURCE_LOCATION_UNKNOWN,
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
-use crate::parse_tree::{parse_source, ParsedSourceRef};
+use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::assert_is_main_thread;
@@ -362,8 +362,9 @@ pub enum CancelBehavior {
 }
 
 pub struct Parser {
-    /// The current execution context.
-    execution_context: RefCell<Option<ExecutionContext>>,
+    /// A shared line counter. This is handed out to each execution context
+    /// so they can communicate the line number back to this Parser.
+    line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -404,7 +405,7 @@ impl Parser {
     /// Create a parser.
     pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
-            execution_context: RefCell::default(),
+            line_counter: Rc::new(RefCell::new(LineCounter::empty())),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
             block_list: RefCell::default(),
@@ -427,10 +428,6 @@ impl Parser {
         }
 
         result
-    }
-
-    fn execution_context(&self) -> Ref<'_, Option<ExecutionContext>> {
-        self.execution_context.borrow()
     }
 
     /// Adds a job to the beginning of the job list.
@@ -596,35 +593,23 @@ impl Parser {
         let cancel_checker: CancelChecker = Box::new(move || check_cancel_signal().is_some());
         op_ctx.cancel_checker = cancel_checker;
 
-        // Create and set a new execution context.
-        let exc = scoped_push_replacer(
-            |new_value| {
-                if self.execution_context.borrow().is_none() || new_value.is_none() {
-                    // Outermost node.
-                    std::mem::replace(&mut self.execution_context.borrow_mut(), new_value)
-                } else {
-                    #[allow(clippy::unnecessary_unwrap)]
-                    Some(ExecutionContext::swap(
-                        self.execution_context.borrow().as_ref().unwrap(),
-                        new_value.unwrap(),
-                    ))
-                }
-            },
-            Some(ExecutionContext::new(ps.clone(), block_io.clone())),
-        );
+        // Restore the line counter.
+        let line_counter = Rc::clone(&self.line_counter);
+        let scoped_line_counter =
+            scoped_push_replacer(|v| line_counter.replace(v), ps.line_counter());
+
+        // Create a new execution context.
+        let execution_context =
+            ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;
         let prev_status_count = self.libdata().status_count;
-        let reason =
-            self.execution_context()
-                .as_ref()
-                .unwrap()
-                .eval_node(&op_ctx, node, Some(scope_block));
+        let reason = execution_context.eval_node(&op_ctx, node, Some(scope_block));
         let new_exec_count = self.libdata().exec_count;
         let new_status_count = self.libdata().status_count;
 
-        ScopeGuarding::commit(exc);
+        ScopeGuarding::commit(scoped_line_counter);
         self.pop_block(scope_block);
 
         job_reap(self, false); // reap again
@@ -678,15 +663,7 @@ impl Parser {
     ///
     /// init.fish (line 127): ls|grep pancake
     pub fn current_line(&self) -> WString {
-        if self.execution_context().is_none() {
-            return WString::new();
-        };
-        let Some(source_offset) = self
-            .execution_context()
-            .as_ref()
-            .unwrap()
-            .get_current_source_offset()
-        else {
+        let Some(source_offset) = self.line_counter.borrow_mut().source_offset_of_node() else {
             return WString::new();
         };
 
@@ -717,7 +694,7 @@ impl Parser {
         empty_error.source_start = source_offset;
 
         let mut line_info = empty_error.describe_with_prefix(
-            &self.execution_context().as_ref().unwrap().get_source(),
+            self.line_counter.borrow().get_source(),
             &prefix,
             self.is_interactive(),
             skip_caret,
@@ -730,11 +707,13 @@ impl Parser {
         line_info
     }
 
-    /// Returns the current line number.
+    /// Returns the current line number, indexed from 1.
     pub fn get_lineno(&self) -> Option<usize> {
-        self.execution_context()
-            .as_ref()
-            .and_then(|ctx| ctx.get_current_line_number())
+        // The offset is 0 based; the number is 1 based.
+        self.line_counter
+            .borrow_mut()
+            .line_offset_of_node()
+            .map(|offset| offset + 1)
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.

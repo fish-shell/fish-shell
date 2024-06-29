@@ -83,21 +83,12 @@ pub struct ExecutionContext {
     cancel_signal: RefCell<Option<Signal>>,
 
     // Helper to count lines.
-    line_counter: RefCell<LineCounter<ast::JobPipeline>>,
+    // This is shared with the Parser so that the Parser can access the current line.
+    line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     block_io: RefCell<IoChain>,
-}
-
-impl ExecutionContext {
-    pub fn swap(left: &Self, right: Self) -> Self {
-        left.pstree.swap(&right.pstree);
-        left.cancel_signal.swap(&right.cancel_signal);
-        left.line_counter.swap(&right.line_counter);
-        left.block_io.swap(&right.block_io);
-        right
-    }
 }
 
 // Report an error, setting $status to `status`. Always returns
@@ -123,12 +114,15 @@ macro_rules! report_error_formatted {
 impl<'a> ExecutionContext {
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
-    pub fn new(pstree: ParsedSourceRef, block_io: IoChain) -> Self {
-        let line_counter = pstree.line_counter();
+    pub fn new(
+        pstree: ParsedSourceRef,
+        block_io: IoChain,
+        line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
+    ) -> Self {
         Self {
             pstree: RefCell::new(pstree),
             cancel_signal: RefCell::default(),
-            line_counter: RefCell::new(line_counter),
+            line_counter,
             block_io: RefCell::new(block_io),
         }
     }

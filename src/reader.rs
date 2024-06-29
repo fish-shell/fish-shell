@@ -3149,38 +3149,59 @@ impl<'a> Reader<'a> {
                     self.input_data.function_set_status(success);
                 }
             }
-            rl::JumpToMatchingBracket => {
+            rl::JumpToMatchingBracket | rl::JumpTillMatchingBracket => {
                 let (elt, _el) = self.active_edit_line();
                 let el = self.edit_line(elt);
                 let l_brackets = ['(', '[', '{'];
                 let r_brackets = [')', ']', '}'];
-                let jump_from_pos = el.position();
-                let precision = JumpPrecision::To;
-                let success = if l_brackets.contains(&el.at(jump_from_pos))
-                    || r_brackets.contains(&el.at(jump_from_pos))
-                {
-                    let l_bracket = match el.at(jump_from_pos) {
-                        '(' | ')' => '(',
-                        '[' | ']' => '[',
-                        '{' | '}' => '{',
-                        _ => unreachable!(),
-                    };
-                    let r_bracket = match l_bracket {
-                        '(' => ')',
-                        '[' => ']',
-                        '{' => '}',
-                        _ => unreachable!(),
-                    };
-                    self.jump_to_matching_bracket(
-                        precision,
-                        elt,
-                        jump_from_pos,
-                        l_bracket,
-                        r_bracket,
-                    )
-                } else {
+                let cursor = el.position();
+                let precision = match c {
+                    rl::JumpToMatchingBracket => JumpPrecision::To,
+                    rl::JumpTillMatchingBracket => JumpPrecision::Till,
+                    _ => unreachable!(),
+                };
+                let jump_from_pos = match c {
+                    _ if l_brackets.contains(&el.at(cursor))
+                        || r_brackets.contains(&el.at(cursor)) =>
+                    {
+                        Some(cursor)
+                    }
+                    rl::JumpTillMatchingBracket
+                        if cursor > 0 && l_brackets.contains(&el.at(cursor - 1)) =>
+                    {
+                        Some(cursor - 1)
+                    }
+                    rl::JumpTillMatchingBracket
+                        if cursor < el.len() && r_brackets.contains(&el.at(cursor + 1)) =>
+                    {
+                        Some(cursor + 1)
+                    }
+                    _ => None,
+                };
+                let success = match jump_from_pos {
+                    Some(jump_from_pos) => {
+                        let l_bracket = match el.at(jump_from_pos) {
+                            '(' | ')' => '(',
+                            '[' | ']' => '[',
+                            '{' | '}' => '{',
+                            _ => unreachable!(),
+                        };
+                        let r_bracket = match l_bracket {
+                            '(' => ')',
+                            '[' => ']',
+                            '{' => '}',
+                            _ => unreachable!(),
+                        };
+                        self.jump_to_matching_bracket(
+                            precision,
+                            elt,
+                            jump_from_pos,
+                            l_bracket,
+                            r_bracket,
+                        )
+                    }
                     // If we stand on non-bracket character, we prefer to jump forward
-                    self.jump(JumpDirection::Forward, precision, elt, r_brackets.to_vec())
+                    None => self.jump(JumpDirection::Forward, precision, elt, r_brackets.to_vec()),
                 };
                 self.input_data.function_set_status(success);
             }

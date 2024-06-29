@@ -22,26 +22,6 @@ impl NulTerminatedString for CStr {
 pub trait AsNullTerminatedArray {
     type CharType;
     fn get(&self) -> *mut *const Self::CharType;
-    fn iter(&self) -> NullTerminatedArrayIterator<Self::CharType> {
-        NullTerminatedArrayIterator { ptr: self.get() }
-    }
-}
-
-// TODO This should expose strings as CStr.
-pub struct NullTerminatedArrayIterator<CharType> {
-    ptr: *mut *const CharType,
-}
-impl<CharType> Iterator for NullTerminatedArrayIterator<CharType> {
-    type Item = *const CharType;
-    fn next(&mut self) -> Option<*const CharType> {
-        let result = unsafe { *self.ptr };
-        if result.is_null() {
-            None
-        } else {
-            self.ptr = unsafe { self.ptr.add(1) };
-            Some(result)
-        }
-    }
 }
 
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
@@ -158,15 +138,6 @@ fn test_null_terminated_array() {
         assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
         assert_eq!(*ptr.offset(2), ptr::null());
     }
-}
-#[test]
-fn test_null_terminated_array_iter() {
-    let owned_strs = &[CString::new("foo").unwrap(), CString::new("bar").unwrap()];
-    let strs: Vec<_> = owned_strs.iter().map(|s| s.as_c_str()).collect();
-    let arr = NullTerminatedArray::new(&strs);
-    let v1: Vec<_> = arr.iter().collect();
-    let v2: Vec<_> = owned_strs.iter().map(|s| s.as_ptr()).collect();
-    assert_eq!(v1, v2);
 }
 
 #[test]

@@ -1222,15 +1222,3 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
     }
     result
 }
-
-pub enum selection_motion_t {
-    north,
-    east,
-    south,
-    west,
-    page_north,
-    page_south,
-    next,
-    prev,
-    deselect,
-}

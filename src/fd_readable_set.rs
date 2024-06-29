@@ -3,11 +3,6 @@ use std::os::unix::prelude::*;
 
 pub use fd_readable_set_t as FdReadableSet;
 
-/// Create a new fd_readable_set_t.
-pub fn new_fd_readable_set() -> Box<fd_readable_set_t> {
-    Box::new(fd_readable_set_t::new())
-}
-
 /// Returns `true` if the fd is or becomes readable within the given timeout.
 /// This returns `false` if the waiting is interrupted by a signal.
 pub fn is_fd_readable(fd: i32, timeout_usec: u64) -> bool {

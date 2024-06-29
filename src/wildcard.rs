@@ -37,6 +37,7 @@ pub const ANY_STRING: char = char_offset(WILDCARD_RESERVED_BASE, 1);
 pub const ANY_STRING_RECURSIVE: char = char_offset(WILDCARD_RESERVED_BASE, 2);
 /// This is a special pseudo-char that is not used other than to mark the
 /// end of the special characters so we can sanity check the enum range.
+#[allow(dead_code)]
 pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
 
 #[derive(PartialEq)]

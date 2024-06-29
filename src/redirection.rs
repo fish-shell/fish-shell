@@ -45,12 +45,6 @@ impl RedirectionMode {
     }
 }
 
-impl Dup2Action {
-    pub fn new(src: RawFd, target: RawFd) -> Self {
-        Self { src, target }
-    }
-}
-
 /// A struct which represents a redirection specification from the user.
 /// Here the file descriptors don't represent open files - it's purely textual.
 #[derive(Clone)]

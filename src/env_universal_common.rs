@@ -42,16 +42,6 @@ pub struct CallbackData {
     // The value of the variable, or none if it is erased.
     pub val: Option<EnvVar>,
 }
-impl CallbackData {
-    /// Construct from a key and maybe a value.
-    pub fn new(key: WString, val: Option<EnvVar>) -> Self {
-        Self { key, val }
-    }
-    /// Return whether this callback represents an erased variable.
-    pub fn is_erase(&self) -> bool {
-        self.val.is_none()
-    }
-}
 
 pub type CallbackDataList = Vec<CallbackData>;
 
@@ -358,6 +348,7 @@ impl EnvUniversal {
     }
 
     /// Exposed for testing only.
+    #[cfg(test)]
     pub fn is_ok_to_save(&self) -> bool {
         self.ok_to_save
     }
@@ -591,7 +582,10 @@ impl EnvUniversal {
 
             // If the value is not present in new_vars, it has been erased.
             if !new_vars.contains_key(key) {
-                callbacks.push(CallbackData::new(key.clone(), None));
+                callbacks.push(CallbackData {
+                    key: key.clone(),
+                    val: None,
+                });
                 if value.exports() {
                     self.export_generation += 1;
                 }
@@ -616,7 +610,10 @@ impl EnvUniversal {
             }
             if existing.is_none() || export_changed || value_changed {
                 // Value is set for the first time, or has changed.
-                callbacks.push(CallbackData::new(key.clone(), Some(new_entry.clone())));
+                callbacks.push(CallbackData {
+                    key: key.clone(),
+                    val: Some(new_entry.clone()),
+                });
             }
         }
     }

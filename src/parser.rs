@@ -599,7 +599,7 @@ impl Parser {
             scoped_push_replacer(|v| line_counter.replace(v), ps.line_counter());
 
         // Create a new execution context.
-        let execution_context =
+        let mut execution_context =
             ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
 
         // Check the exec count so we know if anything got executed.

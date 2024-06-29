@@ -54,7 +54,7 @@ use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
 use std::cell::RefCell;
 use std::io::ErrorKind;
 use std::rc::Rc;
-use std::sync::atomic::Ordering;
+use std::sync::{atomic::Ordering, Arc};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
@@ -76,11 +76,11 @@ pub enum EndExecutionReason {
 
 pub struct ExecutionContext {
     // The parsed source and its AST.
-    pstree: RefCell<ParsedSourceRef>,
+    pstree: ParsedSourceRef,
 
     // If set, one of our processes received a cancellation signal (INT or QUIT) so we are
     // unwinding.
-    cancel_signal: RefCell<Option<Signal>>,
+    cancel_signal: Option<Signal>,
 
     // Helper to count lines.
     // This is shared with the Parser so that the Parser can access the current line.
@@ -88,7 +88,7 @@ pub struct ExecutionContext {
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
-    block_io: RefCell<IoChain>,
+    block_io: IoChain,
 }
 
 // Report an error, setting $status to `status`. Always returns
@@ -120,20 +120,19 @@ impl<'a> ExecutionContext {
         line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
     ) -> Self {
         Self {
-            pstree: RefCell::new(pstree),
-            cancel_signal: RefCell::default(),
+            pstree,
+            cancel_signal: None,
             line_counter,
-            block_io: RefCell::new(block_io),
+            block_io,
         }
     }
 
-    pub fn pstree(&self) -> ParsedSourceRef {
-        // todo!("don't clone but expose a Ref<'_, ParsedSourceRef> or similar")
-        ParsedSourceRef::clone(&self.pstree.borrow())
+    pub fn pstree(&self) -> &ParsedSourceRef {
+        &self.pstree
     }
 
     pub fn eval_node(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         node: &dyn Node,
         associated_block: Option<BlockId>,
@@ -152,7 +151,7 @@ impl<'a> ExecutionContext {
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
     fn eval_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &'a ast::Statement,
         associated_block: Option<BlockId>,
@@ -176,7 +175,7 @@ impl<'a> ExecutionContext {
     }
 
     fn eval_job_list(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job_list: &'a ast::JobList,
         associated_block: BlockId,
@@ -223,10 +222,7 @@ impl<'a> ExecutionContext {
     fn check_end_execution(&self, ctx: &OperationContext<'_>) -> Option<EndExecutionReason> {
         // If one of our jobs ended with SIGINT, we stop execution.
         // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
-        if self.cancel_signal.borrow().is_some()
-            || ctx.check_cancel()
-            || fish_is_unwinding_for_exit()
-        {
+        if self.cancel_signal.is_some() || ctx.check_cancel() || fish_is_unwinding_for_exit() {
             return Some(EndExecutionReason::cancelled);
         }
         let parser = ctx.parser();
@@ -270,7 +266,7 @@ impl<'a> ExecutionContext {
 
     /// Command not found support.
     fn handle_command_not_found(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         cmd: &wstr,
         statement: &ast::DecoratedStatement,
@@ -476,7 +472,7 @@ impl<'a> ExecutionContext {
     // Expand a command which may contain variables, producing an expand command and possibly
     // arguments. Prints an error message on error.
     fn expand_command(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &ast::DecoratedStatement,
         out_cmd: &mut WString,
@@ -604,7 +600,7 @@ impl<'a> ExecutionContext {
     }
 
     fn apply_variable_assignments(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         mut proc: Option<&mut Process>,
         variable_assignment_list: &ast::VariableAssignmentList,
@@ -661,7 +657,7 @@ impl<'a> ExecutionContext {
 
     // These create process_t structures from statements.
     fn populate_job_process(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job: &mut Job,
         proc: &mut Process,
@@ -700,7 +696,7 @@ impl<'a> ExecutionContext {
     }
 
     fn populate_not_process(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job: &mut Job,
         proc: &mut Process,
@@ -721,7 +717,7 @@ impl<'a> ExecutionContext {
 
     /// Creates a 'normal' (non-block) process.
     fn populate_plain_process(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         proc: &mut Process,
         statement: &ast::DecoratedStatement,
@@ -840,7 +836,7 @@ impl<'a> ExecutionContext {
     }
 
     fn populate_block_process(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         proc: &mut Process,
         statement: &ast::Statement,
@@ -861,7 +857,7 @@ impl<'a> ExecutionContext {
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
             proc.typ = ProcessType::block_node;
-            proc.block_node_source = Some(self.pstree());
+            proc.block_node_source = Some(Arc::clone(self.pstree()));
             proc.internal_block_node = Some(statement.into());
             proc.set_redirection_specs(redirections);
         }
@@ -870,7 +866,7 @@ impl<'a> ExecutionContext {
 
     // These encapsulate the actual logic of various (block) statements.
     fn run_block_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &'a ast::BlockStatement,
         associated_block: Option<BlockId>,
@@ -893,7 +889,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_for_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         header: &'a ast::ForHeader,
         block_contents: &'a ast::JobList,
@@ -997,7 +993,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_if_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &'a ast::IfStatement,
         associated_block: Option<BlockId>,
@@ -1087,7 +1083,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_switch_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &'a ast::SwitchStatement,
     ) -> EndExecutionReason {
@@ -1200,7 +1196,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_while_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         header: &'a ast::WhileHeader,
         contents: &'a ast::JobList,
@@ -1285,7 +1281,7 @@ impl<'a> ExecutionContext {
 
     // Define a function.
     fn run_function_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         statement: &ast::BlockStatement,
         header: &ast::FunctionHeader,
@@ -1314,7 +1310,10 @@ impl<'a> ExecutionContext {
             ctx.parser(),
             &mut streams,
             &mut shim_arguments,
-            NodeRef::new(self.pstree(), statement as *const ast::BlockStatement),
+            NodeRef::new(
+                Arc::clone(self.pstree()),
+                statement as *const ast::BlockStatement,
+            ),
         );
         let err_code = err_code.unwrap();
         ctx.parser().libdata_mut().status_count += 1;
@@ -1328,7 +1327,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_begin_statement(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         contents: &'a ast::JobList,
     ) -> EndExecutionReason {
@@ -1362,7 +1361,7 @@ impl<'a> ExecutionContext {
     }
 
     fn expand_arguments_from_nodes(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         argument_nodes: &AstArgsList<'_>,
         out_arguments: &mut Vec<WString>,
@@ -1516,7 +1515,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_1_job(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job_node: &'a ast::JobPipeline,
         associated_block: Option<BlockId>,
@@ -1537,8 +1536,9 @@ impl<'a> ExecutionContext {
         );
 
         // Save the executing node.
+        let line_counter = Rc::clone(&self.line_counter);
         let _saved_node = scoped_push_replacer(
-            |node| self.line_counter.borrow_mut().set_node(node),
+            |node| line_counter.borrow_mut().set_node(node),
             Some(job_node),
         );
 
@@ -1610,7 +1610,7 @@ impl<'a> ExecutionContext {
                 profile_item.duration = ProfileItem::now() - start_time;
                 profile_item.level = ctx.parser().eval_level.load(Ordering::Relaxed);
                 profile_item.cmd =
-                    profiling_cmd_name_for_redirectable_block(specific_statement, &self.pstree());
+                    profiling_cmd_name_for_redirectable_block(specific_statement, self.pstree());
                 profile_item.skipped = false;
             }
 
@@ -1658,8 +1658,7 @@ impl<'a> ExecutionContext {
                 parser.job_add(job.clone());
 
                 // Actually execute the job.
-                let block_io = self.block_io.borrow().clone();
-                if !exec_job(parser, &job, block_io) {
+                if !exec_job(parser, &job, self.block_io.clone()) {
                     // No process in the job successfully launched.
                     // Ensure statuses are set (#7540).
                     if let Some(statuses) = job.get_statuses() {
@@ -1675,9 +1674,8 @@ impl<'a> ExecutionContext {
             }
 
             // If the job got a SIGINT or SIGQUIT, then we're going to start unwinding.
-            let mut cancel_signal = self.cancel_signal.borrow_mut();
-            if cancel_signal.is_none() {
-                *cancel_signal = job.group().get_cancel_signal();
+            if self.cancel_signal.is_none() {
+                self.cancel_signal = job.group().get_cancel_signal();
             }
         }
 
@@ -1696,7 +1694,7 @@ impl<'a> ExecutionContext {
     }
 
     fn test_and_run_1_job_conjunction(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         jc: &'a ast::JobConjunction,
         associated_block: Option<BlockId>,
@@ -1731,7 +1729,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_job_conjunction(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job_expr: &'a ast::JobConjunction,
         associated_block: Option<BlockId>,
@@ -1768,7 +1766,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_job_list(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job_list_node: &'a ast::JobList,
         associated_block: Option<BlockId>,
@@ -1782,7 +1780,7 @@ impl<'a> ExecutionContext {
     }
 
     fn run_andor_job_list(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         job_list_node: &'a ast::AndorJobList,
         associated_block: Option<BlockId>,
@@ -1796,7 +1794,7 @@ impl<'a> ExecutionContext {
     }
 
     fn populate_job_from_job_node(
-        &self,
+        &mut self,
         ctx: &OperationContext<'_>,
         j: &mut Job,
         job_node: &ast::JobPipeline,

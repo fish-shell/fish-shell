@@ -263,6 +263,13 @@ The following special input functions are available:
     otherwise, jump to the next occurence of *any right* bracket after the cursor.
     The following brackets are considered: ``([{}])``
 
+``jump-till-matching-bracket``
+    the same as ``jump-to-matching-bracket`` but offset cursor to the right for left bracket, and offset cursor to the left for right bracket.
+    The offset is applied for both the position we jump from and position we jump to.
+    In other words, the cursor will continuously jump inside the brackets but won't reach them by 1 character.
+    The input function is useful to emulate ``ib`` vi text object.
+    The following brackets are considered: ``([{}])``
+
 ``kill-bigword``
     move the next whitespace-delimited word to the killring
 

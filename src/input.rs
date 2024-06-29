@@ -178,6 +178,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("history-token-search-forward"), ReadlineCmd::HistoryTokenSearchForward),
     make_md(L!("insert-line-over"), ReadlineCmd::InsertLineOver),
     make_md(L!("insert-line-under"), ReadlineCmd::InsertLineUnder),
+    make_md(L!("jump-till-matching-bracket"), ReadlineCmd::JumpTillMatchingBracket),
     make_md(L!("jump-to-matching-bracket"), ReadlineCmd::JumpToMatchingBracket),
     make_md(L!("kill-bigword"), ReadlineCmd::KillBigword),
     make_md(L!("kill-inner-line"), ReadlineCmd::KillInnerLine),

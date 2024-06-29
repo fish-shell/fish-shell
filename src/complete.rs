@@ -2261,23 +2261,6 @@ fn expand_command_token(ctx: &OperationContext<'_>, cmd_tok: &mut WString) -> bo
     )
 }
 
-/// Create a new completion entry.
-///
-/// \param completions The array of completions to append to
-/// \param comp The completion string
-/// \param desc The description of the completion
-/// \param flags completion flags
-#[deprecated = "Use Vec::push()"]
-pub fn append_completion(
-    completions: &mut Vec<Completion>,
-    comp: WString,
-    desc: WString,
-    flags: CompleteFlags,
-    r#match: StringFuzzyMatch,
-) {
-    completions.push(Completion::new(comp, desc, r#match, flags))
-}
-
 /// Add an unexpanded completion "rule" to generate completions from for a command.
 ///
 /// # Examples

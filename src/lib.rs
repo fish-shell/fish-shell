@@ -77,7 +77,6 @@ pub mod parse_util;
 pub mod parser;
 pub mod parser_keywords;
 pub mod path;
-pub mod pointer;
 pub mod print_help;
 pub mod proc;
 pub mod re;

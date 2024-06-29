@@ -132,24 +132,6 @@ impl<'a> ExecutionContext {
         ParsedSourceRef::clone(&self.pstree.borrow())
     }
 
-    /// Returns the current line number, indexed from 1. Updates cached line ranges.
-    pub fn get_current_line_number(&self) -> Option<usize> {
-        let line_offset = self.line_offset_of_executing_node()?;
-        // The offset is 0 based; the number is 1 based.
-        Some(line_offset + 1)
-    }
-
-    /// Returns the 0-based source offset, or None.
-    pub fn get_current_source_offset(&self) -> Option<usize> {
-        self.line_counter.borrow_mut().source_offset_of_node()
-    }
-
-    /// Returns the source string.
-    pub fn get_source(&self) -> WString {
-        // todo!("don't clone");
-        self.pstree().src.clone()
-    }
-
     pub fn eval_node(
         &self,
         ctx: &OperationContext<'_>,
@@ -1923,11 +1905,6 @@ impl<'a> ExecutionContext {
             JobControl::interactive => ctx.parser().is_interactive(),
             JobControl::none => false,
         }
-    }
-
-    // Returns the 0-based line number of the current node.
-    fn line_offset_of_executing_node(&self) -> Option<usize> {
-        self.line_counter.borrow_mut().line_offset_of_node()
     }
 }
 

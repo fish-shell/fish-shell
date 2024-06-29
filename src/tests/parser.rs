@@ -1,4 +1,4 @@
-use crate::ast::{self, Ast, List, Node, Traversal};
+use crate::ast::{self, Ast, JobPipeline, List, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
@@ -6,6 +6,7 @@ use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
     ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
+use crate::parse_tree::{parse_source, LineCounter};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
 use crate::parser::{CancelBehavior, Parser};
 use crate::reader::{reader_pop, reader_push, reader_reset_interrupted, ReaderConfig};
@@ -746,4 +747,75 @@ fn test_cancellation() {
     // Ensure that we don't think we should cancel.
     reader_reset_interrupted();
     signal_clear_cancel();
+}
+
+#[test]
+fn test_line_counter() {
+    let src = L!("echo line1; echo still_line_1;\n\necho line3");
+    let ps = parse_source(src.to_owned(), ParseTreeFlags::default(), None)
+        .expect("Failed to parse source");
+    assert!(!ps.ast.errored());
+    let mut line_counter = ps.line_counter();
+
+    // Test line_offset_of_character_at_offset, both forwards and backwards to exercise the cache.
+    let mut expected = 0;
+    for (idx, c) in src.chars().enumerate() {
+        let line_offset = line_counter.line_offset_of_character_at_offset(idx);
+        assert_eq!(line_offset, expected);
+        if c == '\n' {
+            expected += 1;
+        }
+    }
+    for (idx, c) in src.chars().enumerate().rev() {
+        if c == '\n' {
+            expected -= 1;
+        }
+        let line_offset = line_counter.line_offset_of_character_at_offset(idx);
+        assert_eq!(line_offset, expected);
+    }
+
+    fn ref_eq<T>(a: Option<&T>, b: Option<&T>) -> bool {
+        match (a, b) {
+            (Some(a), Some(b)) => std::ptr::eq(a, b),
+            (None, None) => true,
+            _ => false,
+        }
+    }
+
+    let pipelines: Vec<_> = ps.ast.walk().filter_map(|n| n.as_job_pipeline()).collect();
+    assert_eq!(pipelines.len(), 3);
+    let src_offsets = [0, 0, 2];
+    assert_eq!(line_counter.source_offset_of_node(), None);
+    assert_eq!(line_counter.line_offset_of_node(), None);
+
+    let mut last_set = None;
+    for (idx, &node) in pipelines.iter().enumerate() {
+        let orig = line_counter.set_node(Some(node));
+        assert!(ref_eq(orig, last_set));
+        last_set = Some(node);
+        assert_eq!(
+            line_counter.source_offset_of_node(),
+            Some(node.source_range().start())
+        );
+        assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
+    }
+
+    for (idx, &node) in pipelines.iter().enumerate().rev() {
+        let orig = line_counter.set_node(Some(node));
+        assert!(ref_eq(orig, last_set));
+        last_set = Some(node);
+        assert_eq!(
+            line_counter.source_offset_of_node(),
+            Some(node.source_range().start())
+        );
+        assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
+    }
+}
+
+#[test]
+fn test_line_counter_empty() {
+    let mut line_counter = LineCounter::<JobPipeline>::empty();
+    assert_eq!(line_counter.line_offset_of_character_at_offset(0), 0);
+    assert_eq!(line_counter.line_offset_of_node(), None);
+    assert_eq!(line_counter.source_offset_of_node(), None);
 }

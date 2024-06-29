@@ -31,12 +31,11 @@ use crate::parse_constants::{
     ERROR_NO_BRACE_GROUPING, ERROR_TIME_BACKGROUND, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG,
     ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG, WILDCARD_ERR_MSG,
 };
-use crate::parse_tree::{NodeRef, ParsedSourceRef};
+use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
 use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
-use crate::pointer::ConstPointer;
 use crate::proc::{
     get_job_control_mode, job_reap, no_exec, ConcreteAssignment, Job, JobControl, JobProperties,
     JobRef, Process, ProcessList, ProcessType,
@@ -49,7 +48,6 @@ use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::count_newlines;
 use crate::wildcard::wildcard_match;
 use crate::wutil::{wgettext, wgettext_maybe_fmt};
 use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
@@ -84,30 +82,19 @@ pub struct ExecutionContext {
     // unwinding.
     cancel_signal: RefCell<Option<Signal>>,
 
-    // The currently executing job node, used to indicate the line number.
-    // todo!("use NonNull instead of ConstPointer?");
-    executing_job_node: RefCell<Option<ConstPointer<ast::JobPipeline>>>,
-
-    // Cached line number information.
-    cached_lineno: RefCell<CachedLineno>,
+    // Helper to count lines.
+    line_counter: RefCell<LineCounter<ast::JobPipeline>>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     block_io: RefCell<IoChain>,
 }
 
-#[derive(Default)]
-struct CachedLineno {
-    offset: usize,
-    count: usize,
-}
-
 impl ExecutionContext {
     pub fn swap(left: &Self, right: Self) -> Self {
         left.pstree.swap(&right.pstree);
         left.cancel_signal.swap(&right.cancel_signal);
-        left.executing_job_node.swap(&right.executing_job_node);
-        left.cached_lineno.swap(&right.cached_lineno);
+        left.line_counter.swap(&right.line_counter);
         left.block_io.swap(&right.block_io);
         right
     }
@@ -137,11 +124,11 @@ impl<'a> ExecutionContext {
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
     pub fn new(pstree: ParsedSourceRef, block_io: IoChain) -> Self {
+        let line_counter = pstree.line_counter();
         Self {
             pstree: RefCell::new(pstree),
             cancel_signal: RefCell::default(),
-            executing_job_node: RefCell::default(),
-            cached_lineno: RefCell::default(),
+            line_counter: RefCell::new(line_counter),
             block_io: RefCell::new(block_io),
         }
     }
@@ -158,12 +145,9 @@ impl<'a> ExecutionContext {
         Some(line_offset + 1)
     }
 
-    /// Returns the source offset, or -1.
+    /// Returns the 0-based source offset, or None.
     pub fn get_current_source_offset(&self) -> Option<usize> {
-        self.executing_job_node
-            .borrow()
-            .and_then(|job| job.try_source_range())
-            .map(|range| range.start())
+        self.line_counter.borrow_mut().source_offset_of_node()
     }
 
     /// Returns the source string.
@@ -1576,10 +1560,10 @@ impl<'a> ExecutionContext {
             ctx.parser().eval_level.load(Ordering::Relaxed) + 1,
         );
 
-        // Save the node index.
+        // Save the executing node.
         let _saved_node = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut self.executing_job_node.borrow_mut(), new_value),
-            Some(ConstPointer::from(job_node)),
+            |node| self.line_counter.borrow_mut().set_node(node),
+            Some(job_node),
         );
 
         // Profiling support.
@@ -1947,42 +1931,9 @@ impl<'a> ExecutionContext {
         }
     }
 
-    // Returns the line number of the current node.
+    // Returns the 0-based line number of the current node.
     fn line_offset_of_executing_node(&self) -> Option<usize> {
-        // If we're not executing anything, return nothing.
-        let node = self.executing_job_node.borrow();
-        let node = node.as_ref()?;
-
-        // If for some reason we're executing a node without source, return nothing.
-        let range = node.try_source_range()?;
-
-        Some(self.line_offset_of_character_at_offset(range.start()))
-    }
-
-    fn line_offset_of_character_at_offset(&self, offset: usize) -> usize {
-        // Count the number of newlines, leveraging our cache.
-        assert!(offset <= self.pstree().src.len());
-
-        // Easy hack to handle 0.
-        if offset == 0 {
-            return 0;
-        }
-
-        // We want to return (one plus) the number of newlines at offsets less than the given offset.
-        let src = &self.pstree().src;
-        let mut cached_lineno = self.cached_lineno.borrow_mut();
-        if offset > cached_lineno.offset {
-            // Add one for every newline we find in the range [cached_lineno.offset, offset).
-            // The codegen is substantially better when using a char slice than the char iterator.
-            let offset = std::cmp::min(offset, src.len());
-            cached_lineno.count += count_newlines(&src[cached_lineno.offset..offset]);
-            cached_lineno.offset = offset;
-        } else if offset < cached_lineno.offset {
-            // Subtract one for every newline we find in the range [offset, cached_range.start).
-            cached_lineno.count -= count_newlines(&src[offset..cached_lineno.offset]);
-            cached_lineno.offset = offset;
-        }
-        cached_lineno.count
+        self.line_counter.borrow_mut().line_offset_of_node()
     }
 }
 

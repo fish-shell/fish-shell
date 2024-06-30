@@ -824,8 +824,7 @@ impl<'ctx> Completer<'ctx> {
         }
 
         // Maybe apply variable assignments.
-        let _restore_vars =
-            self.apply_var_assignments(var_assignments.iter().map(|s| s.as_utfstr()));
+        let _restore_vars = self.apply_var_assignments(&var_assignments);
         if self.ctx.check_cancel() {
             return;
         }
@@ -1862,17 +1861,14 @@ impl<'ctx> Completer<'ctx> {
 
     /// If we have variable assignments, attempt to apply them in our parser. As soon as the return
     /// value goes out of scope, the variables will be removed from the parser.
-    fn apply_var_assignments<'a>(
+    fn apply_var_assignments<T: AsRef<wstr>>(
         &mut self,
-        var_assignments: impl IntoIterator<Item = &'a wstr>,
+        var_assignments: &[T],
     ) -> Option<ScopeGuard<(), impl FnOnce(&mut ()) + 'ctx>> {
-        if !self.ctx.has_parser() {
+        if !self.ctx.has_parser() || var_assignments.is_empty() {
             return None;
         }
         let parser = self.ctx.parser();
-
-        let mut var_assignments = var_assignments.into_iter().peekable();
-        var_assignments.peek()?;
 
         let vars = parser.vars();
         assert_eq!(
@@ -1889,6 +1885,7 @@ impl<'ctx> Completer<'ctx> {
         let expand_flags = ExpandFlags::FAIL_ON_CMDSUBST;
         let block = parser.push_block(Block::variable_assignment_block());
         for var_assign in var_assignments {
+            let var_assign: &wstr = var_assign.as_ref();
             let equals_pos = variable_assignment_equals_pos(var_assign)
                 .expect("All variable assignments should have equals position");
             let variable_name = var_assign.as_char_slice()[..equals_pos].into();
@@ -1949,8 +1946,7 @@ impl<'ctx> Completer<'ctx> {
         }
 
         // Maybe apply variable assignments.
-        let _restore_vars =
-            self.apply_var_assignments(ad.var_assignments.iter().map(WString::as_utfstr));
+        let _restore_vars = self.apply_var_assignments(ad.var_assignments);
         if self.ctx.check_cancel() {
             return;
         }

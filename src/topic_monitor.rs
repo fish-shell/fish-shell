@@ -156,7 +156,7 @@ impl GenerationsList {
 /// A simple binary semaphore.
 /// On systems that do not support unnamed semaphores (macOS in particular) this is built on top of
 /// a self-pipe. Note that post() must be async-signal safe.
-pub enum binary_semaphore_t {
+pub enum BinarySemaphore {
     /// Initialized semaphore.
     /// This is Box'd so it has a stable address.
     Semaphore(Pin<Box<UnsafeCell<libc::sem_t>>>),
@@ -164,8 +164,8 @@ pub enum binary_semaphore_t {
     Pipes(AutoClosePipes),
 }
 
-impl binary_semaphore_t {
-    pub fn new() -> binary_semaphore_t {
+impl BinarySemaphore {
+    pub fn new() -> BinarySemaphore {
         // sem_init always fails with ENOSYS on Mac and has an annoying deprecation warning.
         // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
         // So use fast semaphores on Linux only.
@@ -264,7 +264,7 @@ impl binary_semaphore_t {
 // sem_destroy has been deprecated since macOS 10.10 but we only use it under Linux so silence the
 // warning.
 #[cfg_attr(target_os = "macos", allow(deprecated))]
-impl Drop for binary_semaphore_t {
+impl Drop for BinarySemaphore {
     fn drop(&mut self) {
         if let Self::Semaphore(sem) = self {
             _ = unsafe { libc::sem_destroy(sem.get()) };
@@ -272,7 +272,7 @@ impl Drop for binary_semaphore_t {
     }
 }
 
-impl Default for binary_semaphore_t {
+impl Default for BinarySemaphore {
     fn default() -> Self {
         Self::new()
     }
@@ -332,7 +332,7 @@ pub struct TopicMonitor {
     /// Binary semaphore used to communicate changes.
     /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has commited to call wait() on our sema and
     /// this must be balanced by the next call to post(). Note only one thread may wait at a time.
-    sema_: binary_semaphore_t,
+    sema_: BinarySemaphore,
 }
 
 // safety: this is only needed for tests

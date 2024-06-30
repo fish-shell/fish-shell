@@ -615,11 +615,11 @@ impl<'ctx> Completer<'ctx> {
         }
     }
 
-    pub fn perform_for_commandline(&mut self, cmdline: WString) {
+    fn perform_for_commandline(&mut self, cmdline: WString) {
         // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
         // for autosuggestions where we don't evaluate command substitutions or variable assignments.
-        let _decrement = if let Some(parser) = self.ctx.maybe_parser() {
+        if let Some(parser) = self.ctx.maybe_parser() {
             let level = &mut parser.libdata_mut().complete_recursion_level;
             if *level >= 24 {
                 FLOG!(
@@ -629,15 +629,14 @@ impl<'ctx> Completer<'ctx> {
                 return;
             }
             *level += 1;
+        }
+        self.perform_for_commandline_impl(cmdline);
+        if let Some(parser) = self.ctx.maybe_parser() {
+            parser.libdata_mut().complete_recursion_level -= 1;
+        }
+    }
 
-            Some(ScopeGuard::new((), |()| {
-                let level = &mut parser.libdata_mut().complete_recursion_level;
-                *level -= 1;
-            }))
-        } else {
-            None
-        };
-
+    fn perform_for_commandline_impl(&mut self, cmdline: WString) {
         let cursor_pos = cmdline.len();
         let is_autosuggest = self.flags.autosuggestion;
 

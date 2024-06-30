@@ -52,7 +52,7 @@ complete -c less -o z -l window -d "Max scroll window" -r -a "1 2 3 4 5 6 7 8 9 
 complete -c less -s \" -l quotes -d "Set quote char" -r
 complete -c less -s \~ -l tilde -d "Lines after EOF are blank"
 complete -c less -s \# -l shift -d "Characters to scroll on left/right arrows" -a "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
-complete -c less -l file-sĩze -d "Determine the size of the file immediately after opening"
+complete -c less -l file-size -d "Determine the size of the file immediately after opening"
 complete -c less -l follow-name -d "Periodically reopen file by name"
 complete -c less -l incsearch -d 'Incremental search commands'
 complete -c less -l line-num-width -d 'Set minimum width of line number field'

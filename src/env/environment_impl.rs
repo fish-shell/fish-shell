@@ -63,7 +63,7 @@ fn next_export_generation() -> ExportGeneration {
     1 + GEN.fetch_add(1, Ordering::Relaxed)
 }
 
-fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
+fn set_umask(list_val: &[WString]) -> EnvStackSetResult {
     if list_val.len() != 1 || list_val[0].is_empty() {
         return EnvStackSetResult::Invalid;
     }

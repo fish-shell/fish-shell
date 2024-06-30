@@ -19,7 +19,6 @@
 #![allow(clippy::needless_return)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::option_map_unit_fn)]
-#![allow(clippy::ptr_arg)]
 #![allow(clippy::redundant_slicing)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]

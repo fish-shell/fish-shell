@@ -20,7 +20,7 @@ also provides the ability to perform a blocking wait for any topic to change in 
 set. This is the real power of topics: you can wait for a sigchld signal OR a thread exit.
 */
 
-use crate::fd_readable_set::fd_readable_set_t;
+use crate::fd_readable_set::FdReadableSet;
 use crate::fds::{self, make_fd_nonblocking, AutoClosePipes};
 use crate::flog::{FloggableDebug, FLOG};
 use crate::wchar::WString;
@@ -240,8 +240,7 @@ impl binary_semaphore_t {
                     // call until data is available (that is, fish would use 100% cpu while waiting for
                     // processes). This call prevents that.
                     if cfg!(feature = "tsan") {
-                        let _ =
-                            fd_readable_set_t::is_fd_readable(fd, fd_readable_set_t::kNoTimeout);
+                        let _ = FdReadableSet::is_fd_readable(fd, FdReadableSet::kNoTimeout);
                     }
                     let mut ignored: u8 = 0;
                     match unistd::read(fd, std::slice::from_mut(&mut ignored)) {

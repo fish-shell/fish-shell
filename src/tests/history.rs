@@ -463,7 +463,7 @@ fn test_history_path_detection() {
 
     // Place one valid file in the directory.
     let filename = L!("testfile");
-    std::fs::write(wcs2osstring(&(tmpdir.clone() + &filename[..])), []).unwrap();
+    std::fs::write(wcs2osstring(&(tmpdir.clone() + filename)), []).unwrap();
 
     let test_vars = EnvStack::new();
     test_vars.set_one(L!("PWD"), EnvMode::GLOBAL, tmpdir.clone());
@@ -560,8 +560,8 @@ fn install_sample_history(name: &wstr) {
     std::fs::copy(
         env!("CARGO_MANIFEST_DIR").to_owned()
             + "/tests/"
-            + std::str::from_utf8(&wcs2string(&name[..])).unwrap(),
-        wcs2osstring(&(path + L!("/") + &name[..] + L!("_history"))),
+            + std::str::from_utf8(&wcs2string(name)).unwrap(),
+        wcs2osstring(&(path + L!("/") + name + L!("_history"))),
     )
     .unwrap();
 }

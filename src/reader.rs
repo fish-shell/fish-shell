@@ -3647,6 +3647,10 @@ pub fn term_copy_modes() {
     unsafe { libc::tcgetattr(STDIN_FILENO, &mut modes) };
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
     *tty_modes_for_external_cmds = modes;
+    // We still want to fix most egregious breakage.
+    // E.g. OPOST is *not* something that should be set globally,
+    // and 99% triggered by a crashed program.
+    term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
     // Copy flow control settings to shell modes.
     if (tty_modes_for_external_cmds.c_iflag & IXON) != 0 {

@@ -3666,8 +3666,10 @@ pub fn term_copy_modes() {
 }
 
 /// Grab control of terminal.
-fn term_steal() {
-    term_copy_modes();
+fn term_steal(copy_modes: bool) {
+    if copy_modes {
+        term_copy_modes();
+    }
     while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
         if errno().0 == EIO {
             redirect_tty_output();
@@ -4971,7 +4973,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
         );
     }
 
-    term_steal();
+    term_steal(eval_res.status.is_success());
 
     // Provide value for `status current-command`
     parser.libdata_mut().status_vars.command = (*PROGRAM_NAME.get().unwrap()).to_owned();

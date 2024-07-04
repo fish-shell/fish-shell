@@ -484,7 +484,7 @@ impl Drop for TerminalProtocols {
         let sequences = concat!(
             "\x1b[?2004l",
             "\x1b[>4;0m",
-            "\x1b[<1u", // Konsole breaks unless we pass an explicit number of entries to pop.
+            "\x1b[<9u", // Pop a few number of entries as a best effort to disable kitty progressive enhancement.
             "\x1b>",
         );
         FLOG!(

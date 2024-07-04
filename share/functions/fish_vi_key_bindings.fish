@@ -317,6 +317,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual t forward-jump-till
     bind -s --preset -M visual F backward-jump
     bind -s --preset -M visual T backward-jump-till
+    bind -s --preset -M visual ';' repeat-jump
+    bind -s --preset -M visual , repeat-jump-reverse
 
     for key in $eol_keys
         bind -s --preset -M visual $key end-of-line

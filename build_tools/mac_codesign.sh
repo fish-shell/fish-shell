@@ -7,8 +7,7 @@ set -e
 die() { echo "$*" 1>&2; exit 1; }
 
 usage() {
-  echo "Usage: $0 -f <p12 file> -p <p12 password> [-e <entitlements file>] <executable1> [<executable2> ...]"
-  exit 1
+  die "Usage: $0 -f <p12 file> -p <p12 password> [-e <entitlements file>] <executable1> [<executable2> ...]"
 }
 
 while getopts "i:f:p:e:" opt; do

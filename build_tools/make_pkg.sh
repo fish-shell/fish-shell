@@ -3,7 +3,7 @@
 # Script to produce an OS X installer .pkg and .app(.zip)
 
 usage() {
-  echo "Usage: $0 [-s] -f <p12 file> -p <p12 password> [-e <entitlements file>]"
+  echo "Usage: $0 [-s] -f <application p12 file> -i <installer p12 file> -p <p12 password> [-e <entitlements file>]"
   exit 1
 }
 
@@ -12,17 +12,18 @@ set -e
 
 SIGN=
 
-while getopts "sf:p:e:" opt; do
+while getopts "sf:i:p:e:" opt; do
   case $opt in
     s) SIGN=1;;
-    f) P12_FILE=$(realpath "$OPTARG");;
+    f) P12_APP_FILE=$(realpath "$OPTARG");;
+    i) P12_INSTALL_FILE=$(realpath "$OPTARG");;
     p) P12_PASSWORD="$OPTARG";;
     e) ENTITLEMENTS_FILE=$(realpath "$OPTARG");;
     \?) usage;;
   esac
 done
 
-if [ -n "$SIGN" ] && ([ -z "$P12_FILE" ] || [ -z "$P12_PASSWORD" ]); then
+if [ -n "$SIGN" ] && ([ -z "$P12_APP_FILE" ] || [-z "$P12_INSTALL_FILE"] || [ -z "$P12_PASSWORD" ]); then
   usage
 fi
 
@@ -37,7 +38,6 @@ fi
 
 echo "Version is $VERSION"
 
-
 PKGDIR=$(mktemp -d)
 echo "$PKGDIR"
 
@@ -51,9 +51,9 @@ mkdir -p "$PKGDIR/build" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
 { cd "$PKGDIR/build" && cmake -DMAC_INJECT_GET_TASK_ALLOW=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" -DWITH_GETTEXT=OFF -DFISH_USE_SYSTEM_PCRE2=OFF -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' "$SRC_DIR" && make VERBOSE=1 -j 12 && env DESTDIR="$PKGDIR/root/" make install; }
 
 if test -n "$SIGN"; then
-    echo "Signing"
+    echo "Signing executables"
     ARGS=(
-        --p12-file "$P12_FILE"
+        --p12-file "$P12_APP_FILE"
         --p12-password "$P12_PASSWORD"
         --code-signature-flags runtime
     )
@@ -61,17 +61,40 @@ if test -n "$SIGN"; then
         ARGS+=(--entitlements-xml-file "$ENTITLEMENTS_FILE")
     fi
     for FILE in "$PKGDIR"/root/usr/local/bin/*; do
-        rcodesign sign "${ARGS[@]}" "$FILE"
+        (set +x; rcodesign sign "${ARGS[@]}" "$FILE")
     done
 fi
 
 pkgbuild --scripts "$SRC_DIR/build_tools/osx_package_scripts" --root "$PKGDIR/root/" --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION" "$PKGDIR/intermediates/fish.pkg"
 productbuild  --package-path "$PKGDIR/intermediates" --distribution "$SRC_DIR/build_tools/osx_distribution.xml" --resources "$SRC_DIR/build_tools/osx_package_resources/" "$OUTPUT_PATH/fish-$VERSION.pkg"
 
-# MAC_PRODUCTSIGN_ID=${MAC_PRODUCTSIGN_ID:--}
-# productsign --sign "${MAC_PRODUCTSIGN_ID}" "$OUTPUT_PATH/fish-$VERSION.pkg" "$OUTPUT_PATH/fish-$VERSION-signed.pkg" && mv "$OUTPUT_PATH/fish-$VERSION-signed.pkg" "$OUTPUT_PATH/fish-$VERSION.pkg"
+if test -n "$SIGN"; then
+    echo "Signing installer"
+    ARGS=(
+        --p12-file "$P12_INSTALL_FILE"
+        --p12-password "$P12_PASSWORD"
+        --code-signature-flags runtime
+    )
+    (set +x; rcodesign sign "${ARGS[@]}" "$OUTPUT_PATH/fish-$VERSION.pkg")
+fi
 
-# # Make the app
-# { cd "$PKGDIR/build" && make -j 12 signed_fish_macapp && zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" fish.app; }
+# Make the app
+cd "$PKGDIR/build"
+make -j 12 fish_macapp
+if test -n "$SIGN"; then
+    echo "Signing app"
+    ARGS=(
+        --p12-file "$P12_APP_FILE"
+        --p12-password "$P12_PASSWORD"
+        --code-signature-flags runtime
+    )
+    if [ -n "$ENTITLEMENTS_FILE" ]; then
+        ARGS+=(--entitlements-xml-file "$ENTITLEMENTS_FILE")
+    fi
+    (set +x; rcodesign sign "${ARGS[@]}" "fish.app")
 
-# rm -rf "$PKGDIR"
+fi
+mv "fish.app" "$OUTPUT_PATH/fish-$VERSION.app"
+zip -r "$OUTPUT_PATH/fish-$VERSION.app.zip" "$OUTPUT_PATH/fish-$VERSION.app";
+
+rm -rf "$PKGDIR"

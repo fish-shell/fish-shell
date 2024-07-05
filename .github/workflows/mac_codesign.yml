@@ -9,11 +9,10 @@ jobs:
     environment: macos-codesign
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.70
-        with:
-          components: apple-codesign
+      - uses: dtolnay/rust-toolchain@1.79
       - name: build
         run: |
+          cargo install apple-codesign
           echo "$MAC_CODESIGN_APP_P12_BASE64" | base64 --decode > /tmp/app.p12
           echo "$MAC_CODESIGN_INSTALLER_P12_BASE64" | base64 --decode > /tmp/installer.p12
           ./build_tools/make_pkg.sh -s -f /tmp/app.p12 -i /tmp/installer.p12 -p "$MAC_CODESIGN_PASSWORD"

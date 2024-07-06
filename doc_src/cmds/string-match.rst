@@ -10,7 +10,7 @@ Synopsis
 
     string match [-a | --all] [-e | --entire] [-i | --ignore-case]
                  [-g | --groups-only] [-r | --regex] [-n | --index]
-                 [-q | --quiet] [-v | --invert] [[-m | --max-matches] MAX]
+                 [-q | --quiet] [-v | --invert] [(-m | --max-matches) MAX]
                  PATTERN [STRING ...]
 
 .. END SYNOPSIS

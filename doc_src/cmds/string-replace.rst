@@ -9,7 +9,7 @@ Synopsis
 .. synopsis::
 
     string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
-                   [-r | --regex] [[-m | --max-matches] MAX] [-q | --quiet] 
+                   [-r | --regex] [(-m | --max-matches) MAX] [-q | --quiet] 
                    PATTERN REPLACEMENT [STRING ...]
 
 .. END SYNOPSIS

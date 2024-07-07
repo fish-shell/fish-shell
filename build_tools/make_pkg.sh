@@ -60,11 +60,42 @@ echo "$PKGDIR"
 SRC_DIR=$PWD
 OUTPUT_PATH=${FISH_ARTEFACT_PATH:-~/fish_built}
 
-mkdir -p "$PKGDIR/build" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
+mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/intermediates" "$PKGDIR/dst"
 
+# Build and install for arm64.
 # Pass FISH_USE_SYSTEM_PCRE2=OFF because a system PCRE2 on macOS will not be signed by fish,
 # and will probably not be built universal, so the package will fail to validate/run on other systems.
-{ cd "$PKGDIR/build" && cmake -DMAC_INJECT_GET_TASK_ALLOW=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" -DWITH_GETTEXT=OFF -DFISH_USE_SYSTEM_PCRE2=OFF -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' "$SRC_DIR" && make VERBOSE=1 -j 12 && env DESTDIR="$PKGDIR/root/" make install; }
+# Note CMAKE_OSX_ARCHITECTURES is still relevant for the Mac app.
+{ cd "$PKGDIR/build_arm64" \
+  && cmake -DMAC_INJECT_GET_TASK_ALLOW=OFF \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
+        -DWITH_GETTEXT=OFF \
+        -DRust_CARGO_TARGET=aarch64-apple-darwin \
+        -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+        -DFISH_USE_SYSTEM_PCRE2=OFF \
+        "$SRC_DIR" \
+    && make VERBOSE=1 -j 12 \
+    && env DESTDIR="$PKGDIR/root/" make install;
+}
+
+# Build for x86-64 but do not install; instead we will make some fat binaries inside the root.
+{ cd "$PKGDIR/build_x86_64" \
+  && cmake -DMAC_INJECT_GET_TASK_ALLOW=OFF \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
+        -DWITH_GETTEXT=OFF \
+        -DRust_CARGO_TARGET=x86_64-apple-darwin \
+        -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+        -DFISH_USE_SYSTEM_PCRE2=OFF "$SRC_DIR" \
+  && make VERBOSE=1 -j 12; }
+
+# Fatten them up.
+for FILE in "$PKGDIR"/root/usr/local/bin/*; do
+    X86_FILE="$PKGDIR/build_x86_64/$(basename $FILE)"
+    rcodesign macho-universal-create --output "$FILE" "$FILE" "$X86_FILE"
+    chmod 755 "$FILE"
+done
 
 if test -n "$SIGN"; then
     echo "Signing executables"
@@ -97,8 +128,19 @@ if test -n "$SIGN"; then
 fi
 
 # Make the app
-cd "$PKGDIR/build"
-make -j 12 fish_macapp
+(cd "$PKGDIR/build_arm64" && make -j 12 fish_macapp)
+(cd "$PKGDIR/build_x86_64" && make -j 12 fish_macapp)
+
+# Make the app's /usr/local/bin binaries universal. Note fish.app/Contents/MacOS/fish already is, courtsey of CMake.
+cd "$PKGDIR/build_arm64"
+for FILE in fish.app/Contents/Resources/base/usr/local/bin/*; do
+    X86_FILE="$PKGDIR/build_x86_64/fish.app/Contents/Resources/base/usr/local/bin/$(basename $FILE)"
+    rcodesign macho-universal-create --output "$FILE" "$FILE" "$X86_FILE"
+
+    # macho-universal-create screws up the permissions.
+    chmod 755 "$FILE"
+done
+
 if test -n "$SIGN"; then
     echo "Signing app"
     ARGS=(
@@ -113,7 +155,8 @@ if test -n "$SIGN"; then
     (set +x; rcodesign sign "${ARGS[@]}" "fish.app")
 
 fi
-mv "fish.app" "$OUTPUT_PATH/fish-$VERSION.app"
+
+cp -R "fish.app" "$OUTPUT_PATH/fish-$VERSION.app"
 cd "$OUTPUT_PATH"
 
 # Maybe notarize.

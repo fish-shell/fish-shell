@@ -247,9 +247,10 @@ impl<NodeType: Node> LineCounter<NodeType> {
     }
 
     // Returns the 0-based line number of the node.
-    pub fn line_offset_of_node(&mut self) -> Option<usize> {
+    pub fn line_offset_of_node(&mut self) -> Option<u32> {
         let src_offset = self.source_offset_of_node()?;
-        Some(self.line_offset_of_character_at_offset(src_offset))
+        // Safe to cast/truncate to u32 since SourceRange stores it as a u32 internally
+        Some(self.line_offset_of_character_at_offset(src_offset) as u32)
     }
 
     // Return the 0 based character offset of the node.

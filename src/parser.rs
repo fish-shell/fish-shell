@@ -668,7 +668,7 @@ impl Parser {
             return WString::new();
         };
 
-        let lineno = self.get_lineno().unwrap_or(0);
+        let lineno = self.get_lineno_for_display();
         let file = self.current_filename();
 
         let mut prefix = WString::new();
@@ -709,12 +709,17 @@ impl Parser {
     }
 
     /// Returns the current line number, indexed from 1.
-    pub fn get_lineno(&self) -> Option<usize> {
+    pub fn get_lineno(&self) -> Option<NonZeroU32> {
         // The offset is 0 based; the number is 1 based.
         self.line_counter
             .borrow_mut()
             .line_offset_of_node()
-            .map(|offset| offset + 1)
+            .map(|offset| NonZeroU32::new(offset.saturating_add(1)).unwrap())
+    }
+
+    /// Returns the current line number, indexed from 1, or zero if not sourced.
+    pub fn get_lineno_for_display(&self) -> u32 {
+        self.get_lineno().map(|val| val.get()).unwrap_or(0)
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -846,9 +851,7 @@ impl Parser {
 
     /// Pushes a new block. Returns a pointer to the block, stored in the parser.
     pub fn push_block(&self, mut block: Block) -> BlockId {
-        block.src_lineno = self
-            .get_lineno()
-            .and_then(|num| NonZeroU32::new(num.try_into().unwrap_or(u32::MAX)));
+        block.src_lineno = self.get_lineno();
         block.src_filename = self.current_filename();
         if block.typ() != BlockType::top {
             let new_scope = block.typ() == BlockType::function_call { shadows: true };

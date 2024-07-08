@@ -340,7 +340,7 @@ pub fn function(
         definition_file,
         is_copy: false,
         copy_definition_file: None,
-        copy_definition_lineno: 0,
+        copy_definition_lineno: None,
     };
 
     // Add the function itself.

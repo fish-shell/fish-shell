@@ -16,6 +16,7 @@ use crate::wchar::prelude::*;
 use crate::wutil::{dir_iter::DirIter, sprintf};
 use once_cell::sync::Lazy;
 use std::collections::{HashMap, HashSet};
+use std::num::NonZeroU32;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -49,8 +50,8 @@ pub struct FunctionProperties {
     /// The file from which the function was copied, or None if not from a file.
     pub copy_definition_file: Option<FilenameRef>,
 
-    /// The line number where the specified function was copied.
-    pub copy_definition_lineno: i32,
+    /// The 1-based line number where the specified function was copied.
+    pub copy_definition_lineno: Option<NonZeroU32>,
 }
 
 /// FunctionProperties are safe to share between threads.
@@ -306,7 +307,7 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     new_props.is_autoload.store(false);
     new_props.is_copy = true;
     new_props.copy_definition_file = filename;
-    new_props.copy_definition_lineno = lineno.unwrap_or(0) as i32;
+    new_props.copy_definition_lineno = lineno;
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
@@ -390,9 +391,11 @@ impl FunctionProperties {
             .count() as i32
     }
 
-    /// If this function is a copy, return the original line number, else 0.
-    pub fn copy_definition_lineno(&self) -> i32 {
+    /// If this function is a copy, return the original 1-based line number. Otherwise, return 0.
+    pub fn copy_definition_lineno(&self) -> u32 {
         self.copy_definition_lineno
+            .map(|val| val.get())
+            .unwrap_or(0)
     }
 
     /// Return a definition of the function, annotated with properties like event handlers and wrap

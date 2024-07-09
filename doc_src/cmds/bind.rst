@@ -112,7 +112,7 @@ The following special input functions are available:
     only execute the next function if the previous succeeded (note: only some functions report success)
 
 ``accept-autosuggestion``
-    accept the current autosuggestion
+    accept the current autosuggestion. Returns true if there was a suggestion to accept.
 
 ``backward-char``
     move one character to the left.

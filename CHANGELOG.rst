@@ -180,6 +180,7 @@ New or improved bindings
 - New special input functions:
   - ``forward-char-passive`` and ``backward-char-passive`` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
   - ``forward-token``, ``backward-token``, ``kill-token``, and ``backward-kill-token`` are similar to the ``*-bigword`` variants but for the whole argument token which includes escaped spaces (:issue:`2014`).
+- The ``accept-autosuggestion`` special input function now returns false when there was nothing to accept.
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.

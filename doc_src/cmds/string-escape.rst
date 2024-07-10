@@ -26,7 +26,9 @@ Description
 
 **--style=regex** escapes an input string for literal matching within a regex expression. The string is first converted to UTF-8 before being encoded.
 
-``string unescape`` performs the inverse of the ``string escape`` command. If the string to be unescaped is not properly formatted it is ignored. For example, doing ``string unescape --style=var (string escape --style=var $str)`` will return the original string. There is no support for unescaping **--style=regex**.
+``string unescape`` performs the inverse of the ``string escape`` command. For example, doing ``string unescape --style=var (string escape --style=var $str)`` will return the original string. It assumes its input is valid and typically coming unmodified from the output of the matching ``string escape`` operation. If the string to be unescaped is not properly formatted, it is ignored.
+
+With regards to unescaping regex, in addition to reversing the effects of ``string escape --style=regex``, its counterpart ``string unescape --style=regex`` also unescapes *most* escape sequences that, in the most commonly used regex specs, *may* be escaped but are not in the current fish ``string escape`` implementation. For example, ``string escape --style=regex`` does not escape new lines or control characters and instead passes them through as-is (which is fine since they do not clash with any special regex syntax and *are* supported inputs to regex libraries), but to handle regex expressions formed from literal strings that were escaped outside of fish, ``string unescape --style=regex`` will also correctly detect and un-escape sequences like ``\n`` (literal backslash + n), mapping it to a new line. Note that ``string unescape --style=regex`` expects its input to be a string literal that has been previously escaped. Specifically, this means that it assumes all input is syntactically valid and well-formed regex and does not contain anything other than a literal regex pattern to match against (i.e. does not use special operators like ``|`` or ``(``/``)``, does not contain back references, does not make use of character classes, etc).
 
 .. END DESCRIPTION
 

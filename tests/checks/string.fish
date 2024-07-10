@@ -307,11 +307,18 @@ string escape --style=var 中 | string unescape --style=var
 
 # test regex escaping
 string escape --style=regex ".ext"
-string escape --style=regex "bonjour, amigo"
-string escape --style=regex "^this is a literal string"
 # CHECK: \.ext
+string escape --style=regex "bonjour, amigo"
 # CHECK: bonjour, amigo
+string escape --style=regex "^this is a literal string"
 # CHECK: \^this is a literal string
+string escape --style=regex "not\n a line break"
+# CHECK: not\\n a line break
+
+# Escaping new lines in the input is /allowed/ but it would be a change that should be made carefully:
+string escape --style=regex "hello"\n"world"
+# CHECK: hello
+# CHECK: world
 
 ### Verify that we can correctly unescape the same strings
 #   we tested escaping above.
@@ -346,6 +353,18 @@ string unescape --style=var (string escape --style=var '_a_b_c_')
 
 string unescape --style=var -- (string escape --style=var -- -)
 # CHECK: -
+
+string unescape --style=regex -- (string escape --style=regex 'not\n a line break')
+# CHECK: not\n a line break
+
+# Test something that would be a character class (\w) if misinterpreted
+string unescape --style=regex -- (string escape --style=regex 'hello\world')
+# CHECK: hello\world
+
+# Test handling of optional escapes (not done by `string escape --style=regex`)
+string unescape --style=regex 'a\nb'
+# CHECK: a
+# CHECK: b
 
 ### Verify that we can correctly match strings.
 string match "*" a

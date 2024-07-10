@@ -38,7 +38,7 @@ function __npm_filtered_list_packages
             test -f $path || continue
             # Using `string replace` directly is slow because it doesn't know to stop looking after a match cannot be
             # found in the alphabetically sorted list. Use `look` for its binary search support.
-            look '  "'(commandline -ct) $path | string replace -rf '^  "(.*?)".*' '$1'
+            look '  "'(commandline -ct) $path | string replace -rf '^  "(.*?)".*' '$1' | string unescape --style=regex
             break
         end
     end

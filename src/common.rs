@@ -131,6 +131,13 @@ pub enum UnescapeStringStyle {
     Script(UnescapeFlags),
     Url,
     Var,
+    /// Unescaping a regex is confined to input that was formed strictly by escaping literal strings
+    /// to begin with.
+    ///
+    /// i.e. the assumption is that the input will never contain "functional" regex operators like
+    /// `[..]`, `(..)`, `|`, etc. and we will be just round-tripping escaped literals like `\.` or
+    /// `\\` back to `.` and `\`, respectively.
+    Regex,
 }
 
 impl Default for UnescapeStringStyle {
@@ -147,6 +154,7 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
             s if s == "script" => Ok(Self::default()),
             s if s == "var" => Ok(Var),
             s if s == "url" => Ok(Url),
+            s if s == "regex" => Ok(Regex),
             _ => Err(L!("Invalid escape style")),
         }
     }
@@ -446,9 +454,15 @@ fn escape_string_var(input: &wstr) -> WString {
     out
 }
 
-/// Escapes a string for use in a regex string. Not safe for use with `eval` as only
-/// characters reserved by PCRE2 are escaped.
-/// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
+/// Escapes a string for use in a regex string.
+///
+/// Not safe for use with `eval` as only characters reserved by PCRE2 are escaped. Does not escape
+/// `\n`, `\t`, or other special characters, as the escaping of whitespace, control, or other
+/// non-printable characters is permitted but NOT required, per the PCRE2 spec:
+///
+// > There is no restriction on the appearance of non-printing characters in a pattern,
+// > but when a pattern is being prepared by text editing, it is often easier to use one
+// > of the following escape sequences instead of the binary character it represents [..]
 fn escape_string_pcre2(input: &wstr) -> WString {
     let mut out = WString::new();
     out.reserve(input.len());
@@ -491,6 +505,7 @@ pub fn unescape_string(input: &wstr, style: UnescapeStringStyle) -> Option<WStri
         UnescapeStringStyle::Script(flags) => unescape_string_internal(input, flags),
         UnescapeStringStyle::Url => unescape_string_url(input),
         UnescapeStringStyle::Var => unescape_string_var(input),
+        UnescapeStringStyle::Regex => unescape_string_pcre2(input),
     }
 }
 
@@ -756,8 +771,9 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     Some(result)
 }
 
-/// Reverse the effects of `escape_string_url()`. By definition the input should consist of just
-/// ASCII chars.
+/// Reverse the effects of `escape_string_url()`.
+///
+/// By definition the input should consist of just ASCII chars.
 fn unescape_string_url(input: &wstr) -> Option<WString> {
     let mut result: Vec<u8> = Vec::with_capacity(input.len());
     let mut i = 0;
@@ -787,6 +803,54 @@ fn unescape_string_url(input: &wstr) -> Option<WString> {
     }
 
     Some(str2wcstring(&result))
+}
+
+/// Un-escapes a PCRE2-escaped string literal.
+///
+/// This reverses the mapping of [`escape_string_pcre2()`] but also unescapes additional classes of
+/// characters that `escape_string_pcre2()` does not escape but the spec _permits_ the escaping of,
+/// such as a literal \n (the literal backslash charecter followed by the letter `n`).
+///
+/// Note that not all possible PCRE2 escapes are currently supported!
+///
+/// Does not assume ASCII input. Assumes all input is valid PCRE2 and was formed strictly by
+/// escaping literal strings in the first place (i.e. assume no functional regex operators like
+/// `(..)`, `|`, or `[..]`, and only change escapes like `\.` or `\\` into `.` or `|`, respectively.
+/// Similarly, assume that we do not have backslash-denoted character classes (i.e. `\s` or `\w`)
+/// or a backreference (in the case of something like `\1`), i.e. that `\` is *always* an escape.
+///
+/// PCRE2 supports \Q..\E to mean "insert everything between \Q and \E exactly as it appears", but
+/// we explictly don't support that here.
+fn unescape_string_pcre2(input: &wstr) -> Option<WString> {
+    // Output will be strictly less than or equal to input in length
+    let mut result = WString::with_capacity(input.len());
+    let mut chars = input.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            // It is invalid for the input to contain a trailing, unpaired `\\`
+            '\\' => result.push(match chars.next()? {
+                'a' => '\x07',                               // alarm
+                'c' => (chars.next()? as u8 & 0x1F) as char, // control codes
+                'e' => '\x1b',                               // escape
+                'f' => '\x0c',                               // form feed
+                'n' => '\n',
+                'r' => '\r',
+                't' => '\t',
+                // TODO: Consider implementing support for the following, noting that the likelihood
+                // of encountering them when unescaping previously escaped content is very low:
+                // * \odd as octal dd
+                // * \ddd as octal ddd
+                // * \o{ddd..} as octal ddd..
+                // * \xhh as hex value xx
+                // * \x{hhh..} as hex value xxx..
+                // * \N{U+hhh..} as Unicode with hex codepoint hhh..
+                c => c,
+            }),
+            _ => result.push(c),
+        }
+    }
+
+    Some(result)
 }
 
 /// Reverse the effects of `escape_string_var()`. By definition the string should consist of just

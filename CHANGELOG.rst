@@ -155,7 +155,7 @@ Interactive improvements
 - ``read --help`` and friends no longer ignore redirections. This fixes a regression in version 3.1 (:issue:`10274`).
 - Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).
 - ``fish_add_path`` now automatically enables verbose mode when used interactively (in the commandline), in an effort to be clearer about what it does (:issue:`10532`).
-- The `accept-autosuggestion` input function now returns true when there was something to accept.
+- The `accept-autosuggestion` input function now returns false when there was nothing to accept.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

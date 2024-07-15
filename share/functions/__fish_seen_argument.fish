@@ -18,7 +18,8 @@ function __fish_seen_argument --description 'Check whether argument is used'
         end
 
         for l in $_flag_l
-            if string match --quiet -- "--$l" $t
+            # Make sure to only prefix-match --foo=bar style tokens
+            if string match --quiet -- "--$l" (string replace -r -- '^(--.*?)=.*' '$1' $t)
                 return 0
             end
         end

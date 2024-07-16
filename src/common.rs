@@ -451,9 +451,13 @@ fn escape_string_var(input: &wstr) -> WString {
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 fn escape_string_pcre2(input: &wstr) -> WString {
     let mut out = WString::new();
-    out.reserve(input.len());
+    out.reserve(input.len() + input.len() / 2);
 
     for c in input.chars() {
+        if c == '\n' {
+            out.push_str("\\n");
+            continue;
+        }
         if [
             '.', '^', '$', '*', '+', '(', ')', '?', '[', '{', '}', '\\', '|',
             // these two only *need* to be escaped within a character class, and technically it

@@ -309,9 +309,12 @@ string escape --style=var 中 | string unescape --style=var
 string escape --style=regex ".ext"
 string escape --style=regex "bonjour, amigo"
 string escape --style=regex "^this is a literal string"
+string escape --style=regex "hello
+world"
 # CHECK: \.ext
 # CHECK: bonjour, amigo
 # CHECK: \^this is a literal string
+# CHECK: hello\nworld
 
 ### Verify that we can correctly unescape the same strings
 #   we tested escaping above.

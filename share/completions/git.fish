@@ -1548,7 +1548,7 @@ complete -c git -n '__fish_git_using_command log' -l source -d 'Print ref name b
 complete -c git -n '__fish_git_using_command log' -l use-mailmap
 complete -c git -n '__fish_git_using_command log' -l full-diff
 complete -c git -n '__fish_git_using_command log' -l log-size
-complete -x -c git -n '__fish_git_using_command log' -s L
+complete -r -F -c git -n '__fish_git_using_command log' -s L -d 'Trace the evolution of the line range given by <start>,<end>, or regex <funcname>, within the <file>'
 complete -x -c git -n '__fish_git_using_command log' -s n -l max-count -d 'Limit the number of commits before starting to show the commit output'
 complete -x -c git -n '__fish_git_using_command log' -l skip -d 'Skip given number of commits'
 complete -x -c git -n '__fish_git_using_command log' -l since -d 'Show commits more recent than specified date'

@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-    "printf"
-]
+members = ["printf"]
 
 [workspace.package]
 rust-version = "1.70"
@@ -18,12 +16,16 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"
+license = "GPL-2.0-only AND BSD-3-Clause AND ISC AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
+repository = "https://github.com/fish-shell/fish-shell"
+homepage = "https://fishshell.com"
+readme = "README.rst"
 
 [dependencies]
 pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", branch = "master", default-features = false, features = ["utf32"] }
 
 bitflags = "2.5.0"
-errno = "0.3.9"
+errno = "0.3.0"
 lazy_static = "1.4.0"
 libc = "0.2.155"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
@@ -36,7 +38,7 @@ once_cell = "1.19.0"
 fish-printf = { path = "./printf" }
 rand = { version = "0.8.5", features = ["small_rng"] }
 widestring = "1.1.0"
-terminfo = "0.9.0"
+terminfo = "0.7.3"
 
 [dev-dependencies]
 rand_pcg = "0.3.1"

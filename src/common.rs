@@ -514,6 +514,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     // We only read braces as expanders if there's a variable expansion or "," in them.
     let mut vars_or_seps = vec![];
     let mut brace_count = 0;
+    let mut potential_word_start = None;
 
     let mut errored = false;
     #[derive(PartialEq, Eq)]
@@ -554,7 +555,9 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     }
                 }
                 '~' => {
-                    if unescape_special && input_position == 0 {
+                    if unescape_special
+                        && (input_position == 0 || Some(input_position) == potential_word_start)
+                    {
                         to_append_or_none = Some(HOME_DIRECTORY);
                     }
                 }
@@ -605,6 +608,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         to_append_or_none = Some(BRACE_BEGIN);
                         // We need to store where the brace *ends up* in the output.
                         braces.push(result.len());
+                        potential_word_start = Some(input_position + 1);
                     }
                 }
                 '}' => {
@@ -645,6 +649,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     if unescape_special && brace_count > 0 {
                         to_append_or_none = Some(BRACE_SEP);
                         vars_or_seps.push(input_position);
+                        potential_word_start = Some(input_position + 1);
                     }
                 }
                 ' ' => {

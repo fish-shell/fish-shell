@@ -30,7 +30,7 @@ function __npm_filtered_list_packages
     end
 
     # Do not provide any completions if nothing has been entered yet to avoid long hang.
-    if string match -rq . (commandline -ct)
+    if string match -rq -- . (commandline -ct)
         # Filter the results here rather than in the C++ code due to #5267
         # `all-the-package-names` reads a billion line JSON file using node (slow) then prints
         # it all (slow) using node (slow). Directly parse the `names.json` file that ships with it instead.

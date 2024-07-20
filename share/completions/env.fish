@@ -16,7 +16,7 @@ end
 # Returns 0 if we're after `env` and all previous tokens have not yet contained an equal sign
 # Prevents `env` completions from completing payload completions.
 function __fish_env_not_yet_vars
-    not string match -qe = (commandline -c)
+    not string match -qe -- = (commandline -c)
 end
 
 # Generate a list of possible variable names to redefine, excluding any already redefined.
@@ -43,7 +43,7 @@ end
 
 # Generate a list of possible completions for the current variable name from history
 function __fish_env_values_from_history
-    string match -rq "(?<name>.+)=(?<value>.*)" (commandline -ct); or return 1
+    string match -rq -- "(?<name>.+)=(?<value>.*)" (commandline -ct); or return 1
 
     # Caveat lector: very crude multi-word tokenization handling below!
     set -l rname (string escape --style=regex -- $name)

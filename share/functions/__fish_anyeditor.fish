@@ -10,6 +10,6 @@ function __fish_anyeditor --description "Print a editor to use, or an error mess
             (_ 'Please set VISUAL or EDITOR to your preferred editor.')
         return 1
     end
-    string join \n $editor
+    string join \n -- $editor
     return 0
 end

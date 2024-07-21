@@ -16,7 +16,21 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"
-license = "GPL-2.0-only AND BSD-3-Clause AND ISC AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
+# see also doc_src/license.rst
+# GPLv2
+#   - src/**/*.{rs,c}
+#   primary license
+# GPLv2+
+#   - src/builtins/printf.rs
+# BSD
+#   - share/tools/create_manpage_completions.py
+#   - doc_src/python_docs_theme/
+# LGPLv2+
+#   - src/wgetopt.rs
+# MIT
+#   - share/completions/grunt.fish
+license = "GPL-2.0-only AND GPL-2.0-or-later AND BSD-3-Clause AND LGPL-2.0-or-later AND MIT"
+license-file = "doc_src/license.rst"
 repository = "https://github.com/fish-shell/fish-shell"
 homepage = "https://fishshell.com"
 readme = "README.rst"

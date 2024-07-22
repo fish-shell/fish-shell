@@ -10,7 +10,6 @@ use std::ffi::{CStr, CString};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use terminfo::expand;
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].
 ///

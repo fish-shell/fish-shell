@@ -188,6 +188,9 @@ Completions
 ^^^^^^^^^^^
 - Various new completion scripts and numerous updates to existing ones.
 - Generated completions are now stored in ``$XDG_CACHE_HOME/fish`` or ``~/.cache/fish`` by default (:issue:`10369`)
+- Added completions for
+
+  - ``yo`` (:issue:`10628`)
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

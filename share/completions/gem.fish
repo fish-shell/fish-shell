@@ -99,6 +99,7 @@ complete $install_opt -s l -l local -d "Restrict operations to the LOCAL domain 
 complete $install_opt -s r -l remote -d "Restrict operations to the REMOTE domain"
 complete $install_opt -s b -l both -d "Allow LOCAL and REMOTE operations"
 complete $install_opt -s i -l install-dir -d "Gem repository directory to get installed gems" -x
+complete $install_opt -s i -l user-install -d "Install in user's home directory instead of GEM_HOME."
 complete $install_opt -s N -l no-document -d "Disable documentation generation on install"
 complete $install_opt -l document -a '(__fish_append , rdoc ri)' -d "Specify the documentation types you wish to generate"
 complete $install_opt -s f -l force -d "Force gem to install, bypassing dependency checks"

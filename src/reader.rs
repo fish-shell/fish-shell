@@ -15,7 +15,7 @@
 use libc::{
     c_char, c_int, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
     IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
-    S_IFDIR, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
+    TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
@@ -120,7 +120,7 @@ use crate::wcstringutil::{
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::{perror, write_to_fd};
+use crate::wutil::{fstat, perror, write_to_fd};
 use crate::{abbrs, event, function, history};
 
 /// A description of where fish is in the process of exiting.
@@ -699,20 +699,21 @@ fn read_i(parser: &Parser) -> i32 {
 /// highlighting. This is used for reading scripts and init files.
 /// The file is not closed.
 fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
-    let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-    if unsafe { libc::fstat(fd, &mut buf) } == -1 {
-        let err = errno();
-        FLOG!(
-            error,
-            wgettext_fmt!("Unable to read input file: %s", err.to_string())
-        );
-        return 1;
-    }
+    let md = match fstat(fd) {
+        Ok(md) => md,
+        Err(err) => {
+            FLOG!(
+                error,
+                wgettext_fmt!("Unable to read input file: %s", err.to_string())
+            );
+            return 1;
+        }
+    };
 
     /* FreeBSD allows read() on directories. Error explicitly in that case. */
     // XXX: This can be triggered spuriously, so we'll not do that for stdin.
     // This can be seen e.g. with node's "spawn" api.
-    if fd != STDIN_FILENO && (buf.st_mode & S_IFDIR) != 0 {
+    if fd != STDIN_FILENO && md.is_dir() {
         FLOG!(
             error,
             wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
@@ -721,7 +722,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
     }
 
     // Read all data into a vec.
-    let mut fd_contents = Vec::with_capacity(usize::try_from(buf.st_size).unwrap());
+    let mut fd_contents = Vec::with_capacity(usize::try_from(md.len()).unwrap());
     loop {
         let mut buff = [0_u8; 4096];
 

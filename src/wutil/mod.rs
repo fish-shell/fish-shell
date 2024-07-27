@@ -52,6 +52,16 @@ pub fn lwstat(file_name: &wstr) -> io::Result<fs::Metadata> {
     fs::symlink_metadata(tmp)
 }
 
+/// Cover over fstat().
+pub fn fstat(fd: impl AsRawFd) -> io::Result<fs::Metadata> {
+    let fd = fd.as_raw_fd();
+    let file = unsafe { fs::File::from_raw_fd(fd) };
+    let res = file.metadata();
+    let fd2 = file.into_raw_fd();
+    assert_eq!(fd, fd2);
+    res
+}
+
 /// Wide character version of access().
 pub fn waccess(file_name: &wstr, mode: libc::c_int) -> libc::c_int {
     let tmp = wcs2zstring(file_name);

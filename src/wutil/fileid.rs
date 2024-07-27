@@ -1,7 +1,7 @@
 use crate::common::wcs2zstring;
-use crate::wutil::wstr;
+use crate::wutil::{fstat, wstr};
 use std::ffi::{CStr, OsStr};
-use std::fs::{self, File, Metadata};
+use std::fs::{self, Metadata};
 use std::os::fd::AsRawFd;
 use std::os::unix::prelude::*;
 
@@ -89,16 +89,10 @@ pub const INVALID_FILE_ID: FileId = FileId {
 
 /// Get a FileID corresponding to a raw file descriptor, or INVALID_FILE_ID if it fails.
 pub fn file_id_for_fd(fd: impl AsRawFd) -> FileId {
-    let fd = fd.as_raw_fd();
-    let file = unsafe { File::from_raw_fd(fd) };
-    let res = file
-        .metadata()
+    fstat(fd)
         .as_ref()
         .map(FileId::from_md)
-        .unwrap_or(INVALID_FILE_ID);
-    let fd2 = file.into_raw_fd();
-    assert_eq!(fd, fd2);
-    res
+        .unwrap_or(INVALID_FILE_ID)
 }
 
 /// Get a FileID corresponding to a path, or INVALID_FILE_ID if it fails.

@@ -1,3 +1,4 @@
+use crate::fds::AutoCloseFd;
 use crate::tests::prelude::*;
 use libc::{c_void, O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
 use rand::random;

@@ -741,7 +741,7 @@ mod expander {
                 };
 
                 let file_id = FileId::from_stat(&statbuf);
-                if !self.visited_files.insert(file_id.clone()) {
+                if !self.visited_files.insert(file_id) {
                     // Symlink loop! This directory was already visited, so skip it.
                     continue;
                 }

@@ -331,8 +331,12 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     paths.extend(path_comps);
     let mut result =
         WString::with_capacity(paths.iter().fold(0, |sum, s| sum + s.len()) + paths.len() + 1);
-    for p in &paths {
-        result.push(SEP);
+    result.push(SEP);
+    // TODO: intersperse() https://github.com/rust-lang/rust/issues/79524
+    for (i, p) in paths.iter().enumerate() {
+        if i != 0 {
+            result.push(SEP);
+        }
         result.push_utfstr(*p);
     }
     result
@@ -400,6 +404,14 @@ mod path_cd_tests {
         let path = L!("..");
         eprintln!("({}, {})", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/.."));
+    }
+
+    #[test]
+    fn up_to_root_directory() {
+        let wd = L!("/foo/");
+        let path = L!("..");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/"));
     }
 
     #[test]

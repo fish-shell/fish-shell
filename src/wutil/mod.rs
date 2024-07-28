@@ -29,7 +29,7 @@ extern crate fish_printf;
 pub use fish_printf::sprintf;
 
 pub use fileid::{
-    file_id_for_fd, file_id_for_path, file_id_for_path_narrow, FileId, INVALID_FILE_ID,
+    file_id_for_fd, file_id_for_path, file_id_for_path_narrow, DevInode, FileId, INVALID_FILE_ID,
 };
 pub use wcstoi::*;
 

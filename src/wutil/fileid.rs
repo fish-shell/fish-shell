@@ -6,13 +6,19 @@ use std::os::fd::AsRawFd;
 use std::os::unix::prelude::*;
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
-/// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux  
-/// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA  
-/// problem). Therefore we include richer information.
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FileId {
+/// other things.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DevInode {
     pub device: u64,
     pub inode: u64,
+}
+
+/// While an inode / dev pair is sufficient to distinguish co-existing files, Linux
+/// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted
+/// (ABA problem). Therefore we include richer information to detect file changes.
+#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct FileId {
+    pub dev_inode: DevInode,
     pub size: u64,
     pub change_seconds: i64,
     pub change_nanoseconds: i64,
@@ -26,8 +32,10 @@ impl FileId {
         // on different platforms.
         #[allow(clippy::useless_conversion)]
         FileId {
-            device: buf.dev(),
-            inode: buf.ino(),
+            dev_inode: DevInode {
+                device: buf.dev(),
+                inode: buf.ino(),
+            },
             size: buf.size(),
             change_seconds: buf.ctime().into(),
             change_nanoseconds: buf.ctime_nsec().into(),
@@ -58,8 +66,7 @@ impl FileId {
             mod_nanoseconds = buf.st_mtimensec as _;
         }
         FileId {
-            device,
-            inode,
+            dev_inode: DevInode { device, inode },
             size,
             change_seconds,
             change_nanoseconds,
@@ -78,8 +85,10 @@ impl FileId {
 }
 
 pub const INVALID_FILE_ID: FileId = FileId {
-    device: u64::MAX,
-    inode: u64::MAX,
+    dev_inode: DevInode {
+        device: u64::MAX,
+        inode: u64::MAX,
+    },
     size: u64::MAX,
     change_seconds: i64::MIN,
     change_nanoseconds: i64::MIN,

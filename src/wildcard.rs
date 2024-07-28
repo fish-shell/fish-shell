@@ -449,7 +449,7 @@ mod expander {
     use crate::{
         common::scoped_push,
         path::append_path_component,
-        wutil::{dir_iter::DirIter, normalize_path, FileId},
+        wutil::{dir_iter::DirIter, normalize_path, DevInode},
     };
 
     use super::*;
@@ -461,8 +461,8 @@ mod expander {
         working_directory: &'e wstr,
         /// The set of items we have resolved, used to efficiently avoid duplication.
         completion_set: HashSet<WString>,
-        /// The set of file IDs we have visited, used to avoid symlink loops.
-        visited_files: HashSet<FileId>,
+        /// The set of (device, inode) pairs we have visited, used to avoid symlink loops.
+        visited_files: HashSet<DevInode>,
         /// Flags controlling expansion.
         flags: ExpandFlags,
         /// Resolved items get inserted into here. This is transient of course.
@@ -736,12 +736,11 @@ mod expander {
                     continue;
                 }
 
-                let Some(statbuf) = entry.stat() else {
+                let Some(dev_inode) = entry.dev_inode() else {
                     continue;
                 };
 
-                let file_id = FileId::from_stat(&statbuf);
-                if !self.visited_files.insert(file_id) {
+                if !self.visited_files.insert(dev_inode) {
                     // Symlink loop! This directory was already visited, so skip it.
                     continue;
                 }
@@ -753,7 +752,7 @@ mod expander {
 
                 // Now remove the visited file. This is for #2414: only directories "beneath" us should be
                 // considered visited.
-                self.visited_files.remove(&file_id);
+                self.visited_files.remove(&dev_inode);
             }
         }
 

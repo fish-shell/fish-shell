@@ -1,6 +1,7 @@
 use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
 use crate::wchar::{wstr, WString};
+use crate::wutil::DevInode;
 use libc::{
     DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, EACCES, EIO, ELOOP, ENAMETOOLONG,
     ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG,
@@ -35,8 +36,8 @@ pub struct DirEntry {
     /// inode of this entry.
     pub inode: libc::ino_t,
 
-    // Stat buff for this entry, or none if not yet computed.
-    stat: Cell<Option<libc::stat>>,
+    // Device, inode pair for this entry, or none if not yet computed.
+    dev_inode: Cell<Option<DevInode>>,
 
     // The type of the entry. This is initially none; it may be populated eagerly via readdir()
     // on some filesystems, or later via stat(). If stat() fails, the error is silently ignored
@@ -76,12 +77,12 @@ impl DirEntry {
     pub fn is_possible_link(&self) -> Option<bool> {
         self.possible_link
     }
-    /// Return the stat buff for this entry, invoking stat() if necessary.
-    pub fn stat(&self) -> Option<libc::stat> {
-        if self.stat.get().is_none() {
+    /// Return the device, inode pair for this entry, invoking stat() if necessary.
+    pub fn dev_inode(&self) -> Option<DevInode> {
+        if self.dev_inode.get().is_none() {
             self.do_stat();
         }
-        self.stat.get()
+        self.dev_inode.get()
     }
 
     // Reset our fields.
@@ -89,7 +90,7 @@ impl DirEntry {
         self.name.clear();
         self.inode = unsafe { std::mem::zeroed() };
         self.typ.set(None);
-        self.stat.set(None);
+        self.dev_inode.set(None);
     }
 
     // Populate our stat buffer, and type. Errors are silently ignored.
@@ -104,7 +105,11 @@ impl DirEntry {
         let narrow = wcs2zstring(&self.name);
         let mut s: libc::stat = unsafe { std::mem::zeroed() };
         if unsafe { libc::fstatat(fd, narrow.as_ptr(), &mut s, 0) } == 0 {
-            self.stat.set(Some(s));
+            let dev_inode = DevInode {
+                device: s.st_dev as u64,
+                inode: s.st_ino as u64,
+            };
+            self.dev_inode.set(Some(dev_inode));
             self.typ.set(stat_mode_to_entry_type(s.st_mode));
         } else {
             match errno::errno().0 {
@@ -219,7 +224,7 @@ impl DirIter {
         let entry = DirEntry {
             name: WString::new(),
             inode: 0,
-            stat: Cell::new(None),
+            dev_inode: Cell::new(None),
             typ: Cell::new(None),
             dirfd: dir.clone(),
             possible_link: None,

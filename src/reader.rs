@@ -70,6 +70,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::{
     terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
     InputData, ReadlineCmd, IS_TMUX,
@@ -3847,6 +3848,7 @@ fn reader_interactive_init(parser: &Parser) {
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
     IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
+    IN_MIDNIGHT_COMMANDER.store(parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some());
 }
 
 /// Destroy data for interactive use.

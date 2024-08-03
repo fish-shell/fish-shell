@@ -213,15 +213,16 @@ fn setup_paths() {
 
     let (prefix_from_home, prefix) = if let Ok(pre) = env::var("PREFIX") {
         (false, PathBuf::from(pre))
-    } else if let Ok(home) = env::var("HOME") {
-        (true, PathBuf::from(home).join(".local/"))
     } else {
-        panic!("Need either $PREFIX or $HOME");
+        (true, PathBuf::from(".local/"))
     };
 
-    if prefix.is_relative() {
+    // If someone gives us a $PREFIX, we need it to be absolute.
+    // Otherwise we would try to get it from $HOME and that won't really work.
+    if !prefix_from_home && prefix.is_relative() {
         panic!("Can't have relative prefix");
     }
+
     rsconf::rebuild_if_env_changed("PREFIX");
     rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 

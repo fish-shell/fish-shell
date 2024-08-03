@@ -330,14 +330,13 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     let mut paths = wd_comps;
     paths.extend(path_comps);
     let mut result =
-        WString::with_capacity(paths.iter().fold(0, |sum, s| sum + s.len()) + paths.len() + 1);
-    result.push(SEP);
-    // TODO: intersperse() https://github.com/rust-lang/rust/issues/79524
-    for (i, p) in paths.iter().enumerate() {
-        if i != 0 {
-            result.push(SEP);
-        }
+        WString::with_capacity(paths.iter().fold(paths.len() + 1, |sum, s| sum + s.len()));
+    for p in paths.iter() {
+        result.push(SEP);
         result.push_utfstr(*p);
+    }
+    if result.is_empty() {
+        result.push(SEP);
     }
     result
 }

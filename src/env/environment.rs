@@ -4,6 +4,7 @@ use super::environment_impl::{
 };
 use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
+use crate::common::wcs2string;
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
@@ -34,6 +35,7 @@ use std::ffi::CStr;
 use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
@@ -452,6 +454,41 @@ fn get_hostname_identifier() -> Option<WString> {
     }
 }
 
+/// Get values for $USER and $HOME via getpwuid,
+/// without trusting $USER or $HOME.
+pub fn get_user_home() -> (Option<String>, Option<String>) {
+    let uid: uid_t = geteuid();
+
+    let mut userinfo: MaybeUninit<libc::passwd> = MaybeUninit::uninit();
+    let mut result: *mut libc::passwd = std::ptr::null_mut();
+    let mut buf = [0 as libc::c_char; 8192];
+
+    // We need to get the data via the uid and don't trust $USER.
+    let retval = unsafe {
+        libc::getpwuid_r(
+            uid,
+            userinfo.as_mut_ptr(),
+            buf.as_mut_ptr(),
+            buf.len(),
+            &mut result,
+        )
+    };
+    if retval != 0 || result.is_null() {
+        return (None, None);
+    }
+
+    let userinfo = unsafe { userinfo.assume_init() };
+    let name = unsafe { CStr::from_ptr(userinfo.pw_name) };
+    let name = name.to_str().ok().map(|x| x.to_owned());
+    if !userinfo.pw_dir.is_null() {
+        let home = unsafe { CStr::from_ptr(userinfo.pw_dir) };
+        let home = home.to_str().ok().map(|x| x.to_owned());
+        (name, home)
+    } else {
+        (name, None)
+    }
+}
+
 /// Set up the USER and HOME variable.
 fn setup_user(vars: &EnvStack) {
     let uid: uid_t = geteuid();
@@ -595,12 +632,33 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         .set(inherited_vars)
         .expect("env_init is being called multiple times");
 
+    // Set $USER, $HOME and $EUID
+    // This involves going to passwd and stuff.
+    vars.set_one(L!("EUID"), EnvMode::GLOBAL, geteuid().to_wstring());
+    setup_user(vars);
+
     if let Some(paths) = paths {
-        vars.set_one(
-            FISH_DATADIR_VAR,
-            EnvMode::GLOBAL,
-            str2wcstring(paths.data.as_os_str().as_bytes()),
-        );
+        let datadir = if cfg!(feature = "installable") {
+            if let Some(home) = vars.get(L!("HOME")) {
+                if let Ok(strhome) = std::str::from_utf8(&wcs2string(&home.as_string())) {
+                    let dir = PathBuf::from(strhome)
+                        .join(env!("DATADIR"))
+                        .join(env!("DATADIR_SUBDIR"));
+                    str2wcstring(dir.as_os_str().as_bytes())
+                } else {
+                    // This should be impossible given we already read_init.
+                    FLOG!(error, "Cannot decode $HOME");
+                    "".into()
+                }
+            } else {
+                FLOG!(error, "Cannot find $HOME");
+                "".into()
+            }
+        } else {
+            str2wcstring(paths.data.as_os_str().as_bytes())
+        };
+
+        vars.set_one(FISH_DATADIR_VAR, EnvMode::GLOBAL, datadir.clone());
         vars.set_one(
             FISH_SYSCONFDIR_VAR,
             EnvMode::GLOBAL,
@@ -618,20 +676,12 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         );
 
         if default_paths {
-            let mut scstr = paths.data.clone();
-            scstr.push("functions");
-            vars.set_one(
-                L!("fish_function_path"),
-                EnvMode::GLOBAL,
-                str2wcstring(scstr.as_os_str().as_bytes()),
-            );
+            // TODO: Trailing slash?
+            let mut scstr = datadir;
+            scstr.push_str("/functions");
+            vars.set_one(L!("fish_function_path"), EnvMode::GLOBAL, scstr);
         }
     }
-
-    // Set $USER, $HOME and $EUID
-    // This involves going to passwd and stuff.
-    vars.set_one(L!("EUID"), EnvMode::GLOBAL, geteuid().to_wstring());
-    setup_user(vars);
 
     let user_config_dir = path_get_config();
     vars.set_one(

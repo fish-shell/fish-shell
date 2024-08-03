@@ -89,7 +89,7 @@
 .highlight .n { color: var(--contrast) } /* Name */
 .highlight .x { color: var(--contrast) } /* Other */
 .highlight .ge { color: var(--contrast); font-style: italic } /* Generic.Emph */
-.highlight .go { color: var(--contrast); font-style: italic } /* Generic.Output */
+.highlight .go { color: var(--contrast); font-style: italic; user-select: none; } /* Generic.Output */
 .highlight .gs { color: var(--contrast); font-weight: bold } /* Generic.Strong */
 .highlight .ld { color: var(--contrast) } /* Literal.Date */
 .highlight .nc { color: var(--contrast) } /* Name.Class */

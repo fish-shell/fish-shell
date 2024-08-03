@@ -1,21 +1,22 @@
-use crate::ast::{self, Ast, List, Node, Traversal};
+use crate::ast::{self, Ast, JobPipeline, List, Node, Traversal};
 use crate::common::ScopeGuard;
+use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
     ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
+use crate::parse_tree::{parse_source, LineCounter};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
-use crate::parser::Parser;
-use crate::reader::{
-    reader_current_data, reader_pop, reader_push, reader_reset_interrupted, ReaderConfig,
-};
+use crate::parser::{CancelBehavior, Parser};
+use crate::reader::{reader_pop, reader_push, reader_reset_interrupted, ReaderConfig};
 use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
 use crate::tests::prelude::*;
-use crate::threads::{iothread_drain_all, iothread_perform};
+use crate::threads::iothread_perform;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
+use std::rc::Rc;
 use std::time::Duration;
 
 #[test]
@@ -612,9 +613,8 @@ fn test_new_parser_errors() {
 #[serial]
 fn test_eval_recursion_detection() {
     let _cleanup = test_init();
-    // Ensure that we don't crash on infinite self recursion and mutual recursion. These must use
-    // the principal parser because we cannot yet execute jobs on other parsers.
-    let parser = Parser::principal_parser().shared();
+    // Ensure that we don't crash on infinite self recursion and mutual recursion.
+    let parser = TestParser::new();
     parser.eval(
         L!("function recursive ; recursive ; end ; recursive; "),
         &IoChain::new(),
@@ -633,9 +633,9 @@ fn test_eval_recursion_detection() {
 #[serial]
 fn test_eval_illegal_exit_code() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     macro_rules! validate {
         ($cmd:expr, $result:expr) => {
-            let parser = Parser::principal_parser();
             parser.eval($cmd, &IoChain::new());
             let exit_status = parser.get_last_status();
             assert_eq!(exit_status, parser.get_last_status());
@@ -645,7 +645,7 @@ fn test_eval_illegal_exit_code() {
     // We need to be in an empty directory so that none of the wildcards match a file that might be
     // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
     // named by a single character. See issue #3852.
-    pushd("test/temp");
+    parser.pushd("test/temp");
     validate!(L!("echo -n"), STATUS_CMD_OK.unwrap());
     validate!(L!("pwd"), STATUS_CMD_OK.unwrap());
     validate!(
@@ -658,14 +658,14 @@ fn test_eval_illegal_exit_code() {
     );
     validate!(L!("?"), STATUS_UNMATCHED_WILDCARD.unwrap());
     validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD.unwrap());
-    popd();
+    parser.popd();
 }
 
 #[test]
 #[serial]
 fn test_eval_empty_function_name() {
     let _cleanup = test_init();
-    let parser = Parser::principal_parser().shared();
+    let parser = TestParser::new();
     parser.eval(
         L!("function '' ; echo fail; exit 42 ; end ; ''"),
         &IoChain::new(),
@@ -676,7 +676,7 @@ fn test_eval_empty_function_name() {
 #[serial]
 fn test_expand_argument_list() {
     let _cleanup = test_init();
-    let parser = Parser::principal_parser().shared();
+    let parser = TestParser::new();
     let comps: Vec<WString> = Parser::expand_argument_list(
         L!("alpha 'beta gamma' delta"),
         ExpandFlags::default(),
@@ -688,7 +688,7 @@ fn test_expand_argument_list() {
     assert_eq!(comps, &[L!("alpha"), L!("beta gamma"), L!("delta"),]);
 }
 
-fn test_1_cancellation(src: &wstr) {
+fn test_1_cancellation(parser: &Parser, src: &wstr) {
     let filler = IoBufferfill::create().unwrap();
     let delay = Duration::from_millis(100);
     let thread = unsafe { libc::pthread_self() } as usize;
@@ -701,7 +701,7 @@ fn test_1_cancellation(src: &wstr) {
     });
     let mut io = IoChain::new();
     io.push(filler.clone());
-    let res = Parser::principal_parser().eval(src, &io);
+    let res = parser.eval(src, &io);
     let buffer = IoBufferfill::finish(filler);
     assert_eq!(
         buffer.len(),
@@ -711,14 +711,14 @@ fn test_1_cancellation(src: &wstr) {
         src
     );
     assert!(res.status.signal_exited() && res.status.signal_code() == SIGINT);
-    iothread_drain_all(reader_current_data().unwrap());
 }
 
 #[test]
 #[serial]
 fn test_cancellation() {
     let _cleanup = test_init();
-    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let parser = Parser::new(Rc::new(EnvStack::new()), CancelBehavior::Clear);
+    reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
     println!("Testing Ctrl-C cancellation. If this hangs, that's a bug!");
@@ -731,19 +731,91 @@ fn test_cancellation() {
 
     // Here the command substitution is an infinite loop. echo never even gets its argument, so when
     // we cancel we expect no output.
-    test_1_cancellation(L!("echo (while true ; echo blah ; end)"));
+    test_1_cancellation(&parser, L!("echo (while true ; echo blah ; end)"));
 
     // Nasty infinite loop that doesn't actually execute anything.
-    test_1_cancellation(L!(
-        "echo (while true ; end) (while true ; end) (while true ; end)"
-    ));
-    test_1_cancellation(L!("while true ; end"));
-    test_1_cancellation(L!("while true ; echo nothing > /dev/null; end"));
-    test_1_cancellation(L!("for i in (while true ; end) ; end"));
+    test_1_cancellation(
+        &parser,
+        L!("echo (while true ; end) (while true ; end) (while true ; end)"),
+    );
+    test_1_cancellation(&parser, L!("while true ; end"));
+    test_1_cancellation(&parser, L!("while true ; echo nothing > /dev/null; end"));
+    test_1_cancellation(&parser, L!("for i in (while true ; end) ; end"));
 
     signal_reset_handlers();
 
     // Ensure that we don't think we should cancel.
     reader_reset_interrupted();
     signal_clear_cancel();
+}
+
+#[test]
+fn test_line_counter() {
+    let src = L!("echo line1; echo still_line_1;\n\necho line3");
+    let ps = parse_source(src.to_owned(), ParseTreeFlags::default(), None)
+        .expect("Failed to parse source");
+    assert!(!ps.ast.errored());
+    let mut line_counter = ps.line_counter();
+
+    // Test line_offset_of_character_at_offset, both forwards and backwards to exercise the cache.
+    let mut expected = 0;
+    for (idx, c) in src.chars().enumerate() {
+        let line_offset = line_counter.line_offset_of_character_at_offset(idx);
+        assert_eq!(line_offset, expected);
+        if c == '\n' {
+            expected += 1;
+        }
+    }
+    for (idx, c) in src.chars().enumerate().rev() {
+        if c == '\n' {
+            expected -= 1;
+        }
+        let line_offset = line_counter.line_offset_of_character_at_offset(idx);
+        assert_eq!(line_offset, expected);
+    }
+
+    fn ref_eq<T>(a: Option<&T>, b: Option<&T>) -> bool {
+        match (a, b) {
+            (Some(a), Some(b)) => std::ptr::eq(a, b),
+            (None, None) => true,
+            _ => false,
+        }
+    }
+
+    let pipelines: Vec<_> = ps.ast.walk().filter_map(|n| n.as_job_pipeline()).collect();
+    assert_eq!(pipelines.len(), 3);
+    let src_offsets = [0, 0, 2];
+    assert_eq!(line_counter.source_offset_of_node(), None);
+    assert_eq!(line_counter.line_offset_of_node(), None);
+
+    let mut last_set = None;
+    for (idx, &node) in pipelines.iter().enumerate() {
+        let orig = line_counter.set_node(Some(node));
+        assert!(ref_eq(orig, last_set));
+        last_set = Some(node);
+        assert_eq!(
+            line_counter.source_offset_of_node(),
+            Some(node.source_range().start())
+        );
+        assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
+    }
+
+    for (idx, &node) in pipelines.iter().enumerate().rev() {
+        let orig = line_counter.set_node(Some(node));
+        assert!(ref_eq(orig, last_set));
+        last_set = Some(node);
+        assert_eq!(
+            line_counter.source_offset_of_node(),
+            Some(node.source_range().start())
+        );
+        assert_eq!(line_counter.line_offset_of_node(), Some(src_offsets[idx]));
+    }
+}
+
+#[test]
+fn test_line_counter_empty() {
+    let mut line_counter = LineCounter::<JobPipeline>::empty();
+    assert_eq!(line_counter.line_offset_of_character_at_offset(0), 0);
+    assert_eq!(line_counter.line_offset_of_node(), None);
+    assert_eq!(line_counter.source_offset_of_node(), None);
 }

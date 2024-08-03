@@ -63,7 +63,7 @@ fn next_export_generation() -> ExportGeneration {
     1 + GEN.fetch_add(1, Ordering::Relaxed)
 }
 
-fn set_umask(list_val: &Vec<WString>) -> EnvStackSetResult {
+fn set_umask(list_val: &[WString]) -> EnvStackSetResult {
     if list_val.len() != 1 || list_val[0].is_empty() {
         return EnvStackSetResult::Invalid;
     }
@@ -273,10 +273,7 @@ impl Iterator for EnvNodeIter {
 }
 
 lazy_static! {
-    ///  XXX: Possible safety issue here as EnvNodeRef is not Send/Sync and shouldn't
-    ///  be placed in a static context without some sort of Send/Sync wrapper.
-    ///  lazy_static papers over this but it triggers rust lints if you use
-    ///  once_cell::sync::Lazy or std::sync::OnceLock instead.
+    // All accesses to the EnvNode are protected by a global lock.
     static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
 }
 
@@ -303,6 +300,7 @@ struct PerprocData {
     statuses: Statuses,
 }
 
+#[derive(Clone)]
 pub struct EnvScopedImpl {
     // A linked list of scopes.
     locals: EnvNodeRef,
@@ -693,6 +691,7 @@ impl ModResult {
 }
 
 /// A mutable "subclass" of EnvScopedImpl.
+#[derive(Clone)]
 pub struct EnvStackImpl {
     pub base: EnvScopedImpl,
 
@@ -703,7 +702,6 @@ pub struct EnvStackImpl {
 impl EnvStackImpl {
     /// Return a new impl representing global variables, with a single local scope.
     pub fn new() -> EnvMutex<EnvStackImpl> {
-        // XXX: Safety issue: We are accessing GLOBAL_NODE without having the global mutex locked!
         let globals = GLOBAL_NODE.clone();
         let locals = EnvNodeRef::new(false, None);
         let base = EnvScopedImpl::new(locals, globals);
@@ -1126,7 +1124,7 @@ pub struct EnvMutex<T> {
 }
 
 impl<T> EnvMutex<T> {
-    fn new(inner: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self {
             inner: UnsafeCell::new(inner),
         }

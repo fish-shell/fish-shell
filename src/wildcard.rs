@@ -37,6 +37,7 @@ pub const ANY_STRING: char = char_offset(WILDCARD_RESERVED_BASE, 1);
 pub const ANY_STRING_RECURSIVE: char = char_offset(WILDCARD_RESERVED_BASE, 2);
 /// This is a special pseudo-char that is not used other than to mark the
 /// end of the special characters so we can sanity check the enum range.
+#[allow(dead_code)]
 pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
 
 #[derive(PartialEq)]
@@ -447,8 +448,10 @@ mod expander {
 
     use crate::{
         common::scoped_push,
+        input_common::terminal_protocols_disable_ifn,
         path::append_path_component,
-        wutil::{dir_iter::DirIter, normalize_path, FileId},
+        threads::is_main_thread,
+        wutil::{dir_iter::DirIter, normalize_path, DevInode},
     };
 
     use super::*;
@@ -460,8 +463,8 @@ mod expander {
         working_directory: &'e wstr,
         /// The set of items we have resolved, used to efficiently avoid duplication.
         completion_set: HashSet<WString>,
-        /// The set of file IDs we have visited, used to avoid symlink loops.
-        visited_files: HashSet<FileId>,
+        /// The set of (device, inode) pairs we have visited, used to avoid symlink loops.
+        visited_files: HashSet<DevInode>,
         /// Flags controlling expansion.
         flags: ExpandFlags,
         /// Resolved items get inserted into here. This is transient of course.
@@ -589,6 +592,10 @@ mod expander {
                     if self.interrupted_or_overflowed() {
                         return;
                     }
+                }
+
+                if is_main_thread() {
+                    terminal_protocols_disable_ifn();
                 }
 
                 // return "." and ".." entries if we're doing completions
@@ -735,12 +742,11 @@ mod expander {
                     continue;
                 }
 
-                let Some(statbuf) = entry.stat() else {
+                let Some(dev_inode) = entry.dev_inode() else {
                     continue;
                 };
 
-                let file_id = FileId::from_stat(&statbuf);
-                if !self.visited_files.insert(file_id.clone()) {
+                if !self.visited_files.insert(dev_inode) {
                     // Symlink loop! This directory was already visited, so skip it.
                     continue;
                 }
@@ -752,7 +758,7 @@ mod expander {
 
                 // Now remove the visited file. This is for #2414: only directories "beneath" us should be
                 // considered visited.
-                self.visited_files.remove(&file_id);
+                self.visited_files.remove(&dev_inode);
             }
         }
 

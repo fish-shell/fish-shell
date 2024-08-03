@@ -194,6 +194,12 @@ cd $old_path
 cd file
 cd $old_path
 
+# Test that going up to the root directory using .. works
+cd /(string split --no-empty -f 1 / (pwd))
+cd ..
+pwd
+#CHECK: /
+
 # cd back before removing the test directory again.
 cd $oldpwd
 rm -Rf $base

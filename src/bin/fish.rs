@@ -46,7 +46,7 @@ use fish::{
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
     parse_util::parse_util_detect_errors_in_ast,
-    parser::{BlockType, Parser},
+    parser::{BlockType, CancelBehavior, Parser},
     path::path_get_config,
     printf,
     proc::{
@@ -65,6 +65,7 @@ use std::fs::File;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::{env, ops::ControlFlow};
@@ -167,7 +168,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
-                bin: exec_path.clone(),
+                bin: exec_path.parent().unwrap().to_owned(),
             }
         }
 
@@ -591,7 +592,9 @@ fn throwing_main() -> i32 {
         ScopeGuard::new((), |()| restore_term_foreground_process_group_for_exit());
     let _restore_term = reader_init();
 
-    let parser = Parser::principal_parser();
+    // Construct the root parser!
+    let env = Rc::new(EnvStack::globals().create_child(true /* dispatches_var_changes */));
+    let parser: &Parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {

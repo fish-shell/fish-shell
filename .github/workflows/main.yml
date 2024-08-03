@@ -24,12 +24,9 @@ jobs:
         # Generate a locale that uses a comma as decimal separator.
         sudo locale-gen fr_FR.UTF-8
     - name: cmake
-      env:
-          # Some warnings upgraded to errors to match Open Build Service platforms
-          CXXFLAGS: "-Werror=address -Werror=return-type"
       run: |
         mkdir build && cd build
-        cmake ..
+        cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: make
       run: |
         make VERBOSE=1
@@ -45,7 +42,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@1.70
       with:
-        targets: "i686-unknown-linux-gnu" # rust-toolchain wants this comma-separated
+        targets: "i586-unknown-linux-gnu" # rust-toolchain wants this comma-separated
     - name: Install deps
       run: |
         sudo apt update
@@ -53,11 +50,10 @@ jobs:
         sudo pip3 install pexpect
     - name: cmake
       env:
-          CXXFLAGS: "-m32 -Werror=address -Werror=return-type"
           CFLAGS: "-m32"
       run: |
         mkdir build && cd build
-        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu ..
+        cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i586-unknown-linux-gnu ..
     - name: make
       run: |
         make VERBOSE=1
@@ -92,7 +88,6 @@ jobs:
     - name: cmake
       env:
           CC: clang
-          CXX: clang++
       run: |
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
@@ -136,8 +131,6 @@ jobs:
   #     env:
   #         FISH_CI_SAN: 1
   #         CC: clang
-  #         CXX: clang++
-  #         CXXFLAGS: "-fsanitize=thread"
   #     run: |
   #       mkdir build && cd build
   #       cmake ..

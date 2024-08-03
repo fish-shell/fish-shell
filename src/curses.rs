@@ -35,6 +35,7 @@ pub fn term() -> Option<Arc<Term>> {
 
 /// The safe wrapper around curses functionality, initialized by a successful call to [`setup()`]
 /// and obtained thereafter by calls to [`term()`].
+#[allow(dead_code)]
 #[derive(Default)]
 pub struct Term {
     // String capabilities. Any Some value is confirmed non-empty.

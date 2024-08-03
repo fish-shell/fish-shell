@@ -14,11 +14,12 @@ use std::ffi::{CStr, CString};
 use std::io::Write;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
+use std::time::SystemTime;
 
 use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
-    fish_reserved_codepoint, get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
+    get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
     has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop, ScopeGuard,
     ScopeGuarding,
 };
@@ -26,7 +27,6 @@ use crate::curses::{term, tparm0, tparm1};
 use crate::env::{Environment, TERM_HAS_XN};
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
-#[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::HighlightColorResolver;
@@ -35,6 +35,7 @@ use crate::output::Outputter;
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string;
+use crate::wutil::fstat;
 
 #[derive(Clone, Default)]
 pub struct HighlightedChar {
@@ -200,10 +201,10 @@ pub struct Screen {
     /// is used when resizing the window larger: if the cursor jumps to the line above, we need to
     /// remember to clear the subsequent lines.
     actual_lines_before_reset: usize,
-    /// These status buffers are used to check if any output has occurred other than from fish's
+    /// Modification times to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
-    prev_buff_1: libc::stat,
-    prev_buff_2: libc::stat,
+    mtime_stdout: Option<SystemTime>,
+    mtime_stderr: Option<SystemTime>,
 }
 
 impl Screen {
@@ -219,8 +220,8 @@ impl Screen {
             need_clear_lines: Default::default(),
             need_clear_screen: Default::default(),
             actual_lines_before_reset: Default::default(),
-            prev_buff_1: unsafe { std::mem::zeroed() },
-            prev_buff_2: unsafe { std::mem::zeroed() },
+            mtime_stdout: Default::default(),
+            mtime_stderr: Default::default(),
         }
     }
 
@@ -500,10 +501,7 @@ impl Screen {
     /// Stat stdout and stderr and save result as the current timestamp.
     /// This is used to avoid reacting to changes that we ourselves made to the screen.
     pub fn save_status(&mut self) {
-        unsafe {
-            libc::fstat(STDOUT_FILENO, &mut self.prev_buff_1);
-            libc::fstat(STDERR_FILENO, &mut self.prev_buff_2);
-        }
+        (self.mtime_stdout, self.mtime_stderr) = mtime_stdout_stderr();
     }
 
     /// Return whether we believe the cursor is wrapped onto the last line, and that line is
@@ -588,22 +586,9 @@ impl Screen {
             return;
         }
 
-        let mut post_buff_1: libc::stat = unsafe { std::mem::zeroed() };
-        let mut post_buff_2: libc::stat = unsafe { std::mem::zeroed() };
-        unsafe { libc::fstat(STDOUT_FILENO, &mut post_buff_1) };
-        unsafe { libc::fstat(STDERR_FILENO, &mut post_buff_2) };
-
-        // Yes these differ in one `_`. I hate it.
-        #[cfg(not(target_os = "netbsd"))]
-        let changed = self.prev_buff_1.st_mtime != post_buff_1.st_mtime
-            || self.prev_buff_1.st_mtime_nsec != post_buff_1.st_mtime_nsec
-            || self.prev_buff_2.st_mtime != post_buff_2.st_mtime
-            || self.prev_buff_2.st_mtime_nsec != post_buff_2.st_mtime_nsec;
-        #[cfg(target_os = "netbsd")]
-        let changed = self.prev_buff_1.st_mtime != post_buff_1.st_mtime
-            || self.prev_buff_1.st_mtimensec != post_buff_1.st_mtimensec
-            || self.prev_buff_2.st_mtime != post_buff_2.st_mtime
-            || self.prev_buff_2.st_mtimensec != post_buff_2.st_mtimensec;
+        let mtime_out = fstat(STDOUT_FILENO).and_then(|md| md.modified()).ok();
+        let mtime_err = fstat(STDERR_FILENO).and_then(|md| md.modified()).ok();
+        let changed = self.mtime_stdout != mtime_out || self.mtime_stderr != mtime_err;
 
         if changed {
             // Ok, someone has been messing with our screen. We will want to repaint. However, we do not
@@ -1072,6 +1057,13 @@ impl Screen {
     }
 }
 
+/// Helper to get the mtime of stdout and stderr.
+pub fn mtime_stdout_stderr() -> (Option<SystemTime>, Option<SystemTime>) {
+    let mtime_out = fstat(STDOUT_FILENO).and_then(|md| md.modified()).ok();
+    let mtime_err = fstat(STDERR_FILENO).and_then(|md| md.modified()).ok();
+    (mtime_out, mtime_err)
+}
+
 /// Issues an immediate clr_eos.
 pub fn screen_force_clear_to_end() {
     Outputter::stdoutput()
@@ -1129,6 +1121,7 @@ impl LayoutCache {
     pub const PROMPT_CACHE_MAX_SIZE: usize = 12;
 
     /// Return the size of the escape code cache.
+    #[cfg(test)]
     pub fn esc_cache_size(&self) -> usize {
         self.esc_cache.len()
     }
@@ -1832,9 +1825,6 @@ fn compute_layout(
 // \n.
 // See https://unicode-table.com/en/blocks/control-pictures/
 fn rendered_character(c: char) -> char {
-    if fish_reserved_codepoint(c) {
-        return '�'; // replacement character
-    }
     if c <= '\x1F' {
         char::from_u32(u32::from(c) + 0x2400).unwrap()
     } else {

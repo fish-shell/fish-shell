@@ -126,6 +126,7 @@ Scripting improvements
 - Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
 - ``path basename`` now takes a ``-E`` option that causes it to return the basename (i.e. "filename" with the directory prefix removed) with the final extension (if any) also removed. This takes the place of ``path change-extension "" (path basename $foo)`` (:issue:`10521`).
+- ``math`` now adds ``--scale-mode`` parameter. You can choose between ``truncate``, ``round``, ``floor``, ``ceiling`` as you wish (default value is ``truncate``). (:issue:`9117`).
 
 Interactive improvements
 ------------------------
@@ -180,6 +181,8 @@ New or improved bindings
   - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
   - Deleting in visual mode now moves the cursor back, matching vi (:issue:`10394`).
+  - Support :kbd:`%` motion.
+  - Support `ab` and `ib` vi text objects. New input functions are introduced ``jump-{to,till}-matching-bracket`` (:issue:`1842`).
 
 Completions
 ^^^^^^^^^^^
@@ -198,6 +201,7 @@ Improved terminal support
 Other improvements
 ------------------
 - ``fish_indent`` will now collapse multiple successive empty lines into one (:issue:`10325`).
+- ``fish_indent`` now preserves the modification time of files if there were no changes (:issue:`10624`).
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
 - Performance and interactivity under WSLv1 and WSLv2 has been improved with a workaround for Windows-specific locations being appended to ``$PATH`` by default (:issue:`10506`).

@@ -1,7 +1,6 @@
 use crate::common::ScopeGuard;
 use crate::env::EnvMode;
 use crate::future_feature_flags::{self, FeatureFlag};
-use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::{
@@ -36,8 +35,8 @@ fn test_is_potential_path() {
     let wd = L!("test/is_potential_path_test/").to_owned();
     let wds = [L!(".").to_owned(), wd];
 
-    let vars = EnvStack::principal().clone();
-    let ctx = OperationContext::background(&*vars, EXPANSION_LIMIT_DEFAULT);
+    let vars = EnvStack::new();
+    let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);
 
     assert!(is_potential_path(
         L!("al"),
@@ -161,9 +160,10 @@ fn test_is_potential_path() {
 #[serial]
 fn test_highlighting() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     // Testing syntax highlighting
-    pushd("test/fish_highlight_test/");
-    let _popd = ScopeGuard::new((), |_| popd());
+    parser.pushd("test/fish_highlight_test/");
+    let _popd = ScopeGuard::new((), |_| parser.popd());
     std::fs::create_dir_all("dir").unwrap();
     std::fs::create_dir_all("cdpath-entry/dir-in-cdpath").unwrap();
     std::fs::write("foo", []).unwrap();
@@ -201,7 +201,7 @@ fn test_highlighting() {
                     component!($comp),
                 )*
             ];
-            let vars = Parser::principal_parser().vars();
+            let vars = parser.vars();
             // Generate the text.
             let mut text = WString::new();
             let mut expected_colors = vec![];
@@ -248,7 +248,7 @@ fn test_highlighting() {
     let fg = HighlightSpec::with_fg;
 
     // Verify variables and wildcards in commands using /bin/cat.
-    let vars = Parser::principal_parser().vars();
+    let vars = parser.vars();
     vars.set_one(
         L!("CDPATH"),
         EnvMode::LOCAL,

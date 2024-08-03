@@ -1,6 +1,7 @@
 use fish_printf::sprintf;
 use pcre2::utf32::{Captures, Regex, RegexBuilder};
 use std::collections::HashMap;
+use std::num::NonZeroUsize;
 
 use super::*;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags};
@@ -19,6 +20,7 @@ pub struct Match<'args> {
     regex: bool,
     index: bool,
     pattern: &'args wstr,
+    max_matches: Option<NonZeroUsize>,
 }
 
 impl<'args> StringSubCommand<'args> for Match<'args> {
@@ -31,10 +33,11 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("regex"), NoArgument, 'r'),
         wopt(L!("index"), NoArgument, 'n'),
+        wopt(L!("max-matches"), RequiredArgument, 'm'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":aegivqrn");
+    const SHORT_OPTIONS: &'static wstr = L!(":aegivqrnm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'a' => self.all = true,
             'e' => self.entire = true,
@@ -44,6 +47,22 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             'q' => self.quiet = true,
             'r' => self.regex = true,
             'n' => self.index = true,
+            'm' => {
+                self.max_matches = {
+                    let arg = arg.expect("Option -m requires a non-zero argument");
+                    let max = fish_wcstoul(arg)
+                        .ok()
+                        .and_then(|v| NonZeroUsize::new(v as usize))
+                        .ok_or_else(|| {
+                            StringError::InvalidArgs(wgettext_fmt!(
+                                "%ls: Invalid max matches value '%ls'\n",
+                                _n,
+                                arg
+                            ))
+                        })?;
+                    Some(max)
+                }
+            }
             _ => return Err(StringError::UnknownOption),
         }
         return Ok(());
@@ -113,13 +132,15 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
             if let Err(e) = matcher.report_matches(arg.as_ref(), streams) {
                 FLOG!(error, "pcre2_match unexpected error:", e.error_message())
             }
-            if self.quiet && matcher.match_count() > 0 {
+            let match_count = matcher.match_count();
+            if self.quiet && match_count > 0
+                || self.max_matches.is_some_and(|m| m.get() == match_count)
+            {
                 break;
             }
         }
 
         let match_count = matcher.match_count();
-
         if let StringMatcher::Regex(RegexMatcher {
             first_match_captures,
             ..

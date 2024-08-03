@@ -2,7 +2,7 @@
 //! ported directly from the cpp code so we can use rust threads instead of using pthreads.
 
 use crate::flog::{FloggableDebug, FLOG};
-use crate::reader::ReaderData;
+use crate::reader::Reader;
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -43,7 +43,7 @@ struct ForceSend<T>(T);
 unsafe impl<T> Send for ForceSend<T> {}
 
 #[allow(clippy::type_complexity)]
-type DebounceCallback = ForceSend<Box<dyn FnOnce(&mut ReaderData) + 'static>>;
+type DebounceCallback = ForceSend<Box<dyn FnOnce(&mut Reader) + 'static>>;
 
 /// The queue of [`WorkItem`]s to be executed on the main thread. This is read from in
 /// `iothread_service_main()`.
@@ -485,13 +485,13 @@ pub fn iothread_port() -> i32 {
     NOTIFY_SIGNALLER.read_fd()
 }
 
-pub fn iothread_service_main_with_timeout(ctx: &mut ReaderData, timeout: Duration) {
+pub fn iothread_service_main_with_timeout(ctx: &mut Reader, timeout: Duration) {
     if crate::fd_readable_set::is_fd_readable(iothread_port(), timeout.as_millis() as u64) {
         iothread_service_main(ctx);
     }
 }
 
-pub fn iothread_service_main(ctx: &mut ReaderData) {
+pub fn iothread_service_main(ctx: &mut Reader) {
     self::assert_is_main_thread();
 
     // Note: the order here is important. We must consume events before handling requests, as
@@ -508,7 +508,7 @@ pub fn iothread_service_main(ctx: &mut ReaderData) {
 
 /// Does nasty polling via select(), only used for testing.
 #[cfg(test)]
-pub(crate) fn iothread_drain_all(ctx: &mut ReaderData) {
+pub(crate) fn iothread_drain_all(ctx: &mut Reader) {
     while borrow_io_thread_pool()
         .shared
         .mutex
@@ -608,7 +608,7 @@ impl Debounce {
     pub fn perform_with_completion<H, R, C>(&self, handler: H, completion: C) -> NonZeroU64
     where
         H: FnOnce() -> R + 'static + Send,
-        C: FnOnce(&mut ReaderData, R) + 'static,
+        C: FnOnce(&mut Reader, R) + 'static,
         R: 'static + Send,
     {
         assert_is_main_thread();

@@ -1,6 +1,6 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{Ast, List, Node};
+use crate::ast::{self, Ast, List, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     escape_string, scoped_push_replacer, CancelChecker, EscapeFlags, EscapeStringStyle,
@@ -21,11 +21,11 @@ use crate::parse_constants::{
     ParseError, ParseErrorList, ParseTreeFlags, FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH,
     SOURCE_LOCATION_UNKNOWN,
 };
-use crate::parse_execution::{EndExecutionReason, ParseExecutionContext};
-use crate::parse_tree::{parse_source, ParsedSourceRef};
+use crate::parse_execution::{EndExecutionReason, ExecutionContext};
+use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
-use crate::threads::{assert_is_main_thread, MainThread};
+use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
@@ -35,9 +35,10 @@ use fish_printf::sprintf;
 use libc::c_int;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
+use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 use std::sync::{
     atomic::{AtomicIsize, AtomicU64, Ordering},
     Arc,
@@ -75,8 +76,8 @@ pub struct Block {
     /// Name of the file that created this block
     pub src_filename: Option<Arc<WString>>,
 
-    /// Line number where this block was created.
-    pub src_lineno: Option<usize>,
+    /// Line number where this block was created, starting from 1.
+    pub src_lineno: Option<NonZeroU32>,
 }
 
 impl Block {
@@ -125,7 +126,7 @@ impl Block {
         .to_owned();
 
         if let Some(src_lineno) = self.src_lineno {
-            result.push_utfstr(&sprintf!(" (line %d)", src_lineno));
+            result.push_utfstr(&sprintf!(" (line %d)", src_lineno.get()));
         }
         if let Some(src_filename) = &self.src_filename {
             result.push_utfstr(&sprintf!(" (file %ls)", src_filename));
@@ -351,13 +352,20 @@ pub enum ParserStatusVar {
 
 pub type BlockId = usize;
 
-pub type ParserRef = Rc<Parser>;
+// Controls the behavior when fish itself receives a signal and there are
+// no blocks on the stack.
+// The "outermost" parser is responsible for clearing the signal.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum CancelBehavior {
+    #[default]
+    Return, // Return the signal to the caller.
+    Clear, // Clear the signal.
+}
 
 pub struct Parser {
-    this: Weak<Self>,
-
-    /// The current execution context.
-    execution_context: RefCell<Option<ParseExecutionContext>>,
+    /// A shared line counter. This is handed out to each execution context
+    /// so they can communicate the line number back to this Parser.
+    line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -384,8 +392,8 @@ pub struct Parser {
     /// including sending on-variable change events.
     syncs_uvars: RelaxedAtomicBool,
 
-    /// If set, we are the principal parser.
-    is_principal: RelaxedAtomicBool,
+    /// The behavior when fish itself receives a signal and there are no blocks on the stack.
+    cancel_behavior: CancelBehavior,
 
     /// List of profile items.
     profile_items: RefCell<Vec<ProfileItem>>,
@@ -395,11 +403,10 @@ pub struct Parser {
 }
 
 impl Parser {
-    /// Create a parser
-    pub fn new(variables: Rc<EnvStack>, is_principal: bool) -> ParserRef {
-        let result = Rc::new_cyclic(|this: &Weak<Self>| Self {
-            this: Weak::clone(this),
-            execution_context: RefCell::default(),
+    /// Create a parser.
+    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
+        let result = Self {
+            line_counter: Rc::new(RefCell::new(LineCounter::empty())),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
             block_list: RefCell::default(),
@@ -407,10 +414,10 @@ impl Parser {
             variables,
             library_data: RefCell::new(LibraryData::new()),
             syncs_uvars: RelaxedAtomicBool::new(false),
-            is_principal: RelaxedAtomicBool::new(is_principal),
+            cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
-        });
+        };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {
             Ok(fd) => {
@@ -422,10 +429,6 @@ impl Parser {
         }
 
         result
-    }
-
-    fn execution_context(&self) -> Ref<'_, Option<ParseExecutionContext>> {
-        self.execution_context.borrow()
     }
 
     /// Adds a job to the beginning of the job list.
@@ -452,24 +455,6 @@ impl Parser {
             // If a function sources a file, don't descend further.
             .take_while(|b| b.typ() != BlockType::source)
             .any(|b| b.typ() == BlockType::subst)
-    }
-
-    /// Get the "principal" parser, whatever that is. Can only be called by the main thread.
-    pub fn principal_parser() -> &'static Parser {
-        use std::cell::OnceCell;
-        static PRINCIPAL: MainThread<OnceCell<ParserRef>> = MainThread::new(OnceCell::new());
-        PRINCIPAL
-            .get()
-            // The parser is !Send/!Sync and strictly single-threaded, but we can have
-            // multi-threaded access to its variables stack (why, though?) so EnvStack::principal()
-            // returns an Arc<EnvStack> instead of an Rc<EnvStack>. Since the Arc<EnvStack> is
-            // statically allocated and always valid (not even destroyed on exit), we can safely
-            // transform the Arc<T> into an Rc<T> and save Parser from needing atomic ref counting
-            // to manage its further references.
-            .get_or_init(|| {
-                let env_rc = unsafe { Rc::from_raw(&**EnvStack::principal() as *const _) };
-                Parser::new(env_rc, true)
-            })
     }
 
     /// Assert that this parser is allowed to execute on the current thread.
@@ -563,14 +548,14 @@ impl Parser {
             "Invalid block type"
         );
 
-        // If fish itself got a cancel signal, then we want to unwind back to the principal parser.
-        // If we are the principal parser and our block stack is empty, then we want to clear the
-        // signal.
+        // If fish itself got a cancel signal, then we want to unwind back to the parser which
+        // has a Clear cancellation behavior.
         // Note this only happens in interactive sessions. In non-interactive sessions, SIGINT will
         // cause fish to exit.
         let sig = signal_check_cancel();
         if sig != 0 {
-            if self.is_principal.load() && self.block_list.borrow().is_empty() {
+            if self.cancel_behavior == CancelBehavior::Clear && self.block_list.borrow().is_empty()
+            {
                 signal_clear_cancel();
             } else {
                 return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));
@@ -609,35 +594,23 @@ impl Parser {
         let cancel_checker: CancelChecker = Box::new(move || check_cancel_signal().is_some());
         op_ctx.cancel_checker = cancel_checker;
 
-        // Create and set a new execution context.
-        let exc = scoped_push_replacer(
-            |new_value| {
-                if self.execution_context.borrow().is_none() || new_value.is_none() {
-                    // Outermost node.
-                    std::mem::replace(&mut self.execution_context.borrow_mut(), new_value)
-                } else {
-                    #[allow(clippy::unnecessary_unwrap)]
-                    Some(ParseExecutionContext::swap(
-                        self.execution_context.borrow().as_ref().unwrap(),
-                        new_value.unwrap(),
-                    ))
-                }
-            },
-            Some(ParseExecutionContext::new(ps.clone(), block_io.clone())),
-        );
+        // Restore the line counter.
+        let line_counter = Rc::clone(&self.line_counter);
+        let scoped_line_counter =
+            scoped_push_replacer(|v| line_counter.replace(v), ps.line_counter());
+
+        // Create a new execution context.
+        let mut execution_context =
+            ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;
         let prev_status_count = self.libdata().status_count;
-        let reason =
-            self.execution_context()
-                .as_ref()
-                .unwrap()
-                .eval_node(&op_ctx, node, Some(scope_block));
+        let reason = execution_context.eval_node(&op_ctx, node, Some(scope_block));
         let new_exec_count = self.libdata().exec_count;
         let new_status_count = self.libdata().status_count;
 
-        ScopeGuarding::commit(exc);
+        ScopeGuarding::commit(scoped_line_counter);
         self.pop_block(scope_block);
 
         job_reap(self, false); // reap again
@@ -691,19 +664,11 @@ impl Parser {
     ///
     /// init.fish (line 127): ls|grep pancake
     pub fn current_line(&self) -> WString {
-        if self.execution_context().is_none() {
-            return WString::new();
-        };
-        let Some(source_offset) = self
-            .execution_context()
-            .as_ref()
-            .unwrap()
-            .get_current_source_offset()
-        else {
+        let Some(source_offset) = self.line_counter.borrow_mut().source_offset_of_node() else {
             return WString::new();
         };
 
-        let lineno = self.get_lineno().unwrap_or(0);
+        let lineno = self.get_lineno_for_display();
         let file = self.current_filename();
 
         let mut prefix = WString::new();
@@ -730,7 +695,7 @@ impl Parser {
         empty_error.source_start = source_offset;
 
         let mut line_info = empty_error.describe_with_prefix(
-            &self.execution_context().as_ref().unwrap().get_source(),
+            self.line_counter.borrow().get_source(),
             &prefix,
             self.is_interactive(),
             skip_caret,
@@ -743,11 +708,18 @@ impl Parser {
         line_info
     }
 
-    /// Returns the current line number.
-    pub fn get_lineno(&self) -> Option<usize> {
-        self.execution_context()
-            .as_ref()
-            .and_then(|ctx| ctx.get_current_line_number())
+    /// Returns the current line number, indexed from 1.
+    pub fn get_lineno(&self) -> Option<NonZeroU32> {
+        // The offset is 0 based; the number is 1 based.
+        self.line_counter
+            .borrow_mut()
+            .line_offset_of_node()
+            .map(|offset| NonZeroU32::new(offset.saturating_add(1)).unwrap())
+    }
+
+    /// Returns the current line number, indexed from 1, or zero if not sourced.
+    pub fn get_lineno_for_display(&self) -> u32 {
+        self.get_lineno().map(|val| val.get()).unwrap_or(0)
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -1128,15 +1100,10 @@ impl Parser {
         self.syncs_uvars.store(flag);
     }
 
-    /// Return a shared pointer reference to this parser.
-    pub fn shared(&self) -> ParserRef {
-        self.this.upgrade().unwrap()
-    }
-
     /// Return the operation context for this parser.
-    pub fn context(&self) -> OperationContext<'static> {
+    pub fn context(&self) -> OperationContext<'_> {
         OperationContext::foreground(
-            self.shared(),
+            self,
             Box::new(|| signal_check_cancel() != 0),
             EXPANSION_LIMIT_DEFAULT,
         )
@@ -1261,7 +1228,7 @@ fn append_block_description_to_stack_trace(parser: &Parser, b: &Block, trace: &m
         if let Some(file) = b.src_filename.as_ref() {
             trace.push_utfstr(&sprintf!(
                 "\tcalled on line %d of file %ls\n",
-                b.src_lineno.unwrap_or(0),
+                b.src_lineno.map(|n| n.get()).unwrap_or(0),
                 user_presentable_path(file, parser.vars())
             ));
         } else if parser.libdata().within_fish_init {

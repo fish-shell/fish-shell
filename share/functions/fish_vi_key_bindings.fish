@@ -169,6 +169,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset d,T begin-selection backward-jump forward-single-char kill-selection end-selection
     bind -s --preset d,h backward-char delete-char
     bind -s --preset d,l delete-char
+    bind -s --preset d,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
+    bind -s --preset d,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
     bind -s --preset d,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
     bind -s --preset d,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection
     bind -s --preset 'd,;' begin-selection repeat-jump kill-selection end-selection
@@ -199,6 +201,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -m insert c,T begin-selection backward-jump forward-single-char kill-selection end-selection repaint-mode
     bind -s --preset -m insert c,h backward-char begin-selection kill-selection end-selection repaint-mode
     bind -s --preset -m insert c,l begin-selection kill-selection end-selection repaint-mode
+    bind -s --preset -m insert c,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection end-selection
+    bind -s --preset -m insert c,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection end-selection
     bind -s --preset -m insert c,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
     bind -s --preset -m insert c,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection end-selection repaint-mode
 
@@ -235,9 +239,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset y,T begin-selection backward-jump-till kill-selection yank end-selection
     bind -s --preset y,h backward-char begin-selection kill-selection yank end-selection
     bind -s --preset y,l begin-selection kill-selection yank end-selection
+    bind -s --preset y,i,b jump-till-matching-bracket and jump-till-matching-bracket and begin-selection jump-till-matching-bracket kill-selection yank end-selection
+    bind -s --preset y,a,b jump-to-matching-bracket and jump-to-matching-bracket and begin-selection jump-to-matching-bracket kill-selection yank end-selection
     bind -s --preset y,i backward-jump-till and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
     bind -s --preset y,a backward-jump and repeat-jump-reverse and begin-selection repeat-jump kill-selection yank end-selection
 
+    bind -s --preset % jump-to-matching-bracket
     bind -s --preset f forward-jump
     bind -s --preset F backward-jump
     bind -s --preset t forward-jump-till
@@ -305,6 +312,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual E 'set fish_cursor_end_mode exclusive' forward-single-char forward-bigword backward-char 'set fish_cursor_end_mode inclusive'
     bind -s --preset -M visual o swap-selection-start-stop repaint-mode
 
+    bind -s --preset -M visual % jump-to-matching-bracket
     bind -s --preset -M visual f forward-jump
     bind -s --preset -M visual t forward-jump-till
     bind -s --preset -M visual F backward-jump

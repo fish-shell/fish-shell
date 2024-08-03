@@ -1,22 +1,15 @@
 use libc::c_int;
 use std::os::unix::prelude::*;
 
-pub use fd_readable_set_t as FdReadableSet;
-
-/// Create a new fd_readable_set_t.
-pub fn new_fd_readable_set() -> Box<fd_readable_set_t> {
-    Box::new(fd_readable_set_t::new())
-}
-
 /// Returns `true` if the fd is or becomes readable within the given timeout.
 /// This returns `false` if the waiting is interrupted by a signal.
 pub fn is_fd_readable(fd: i32, timeout_usec: u64) -> bool {
-    fd_readable_set_t::is_fd_readable(fd, timeout_usec)
+    FdReadableSet::is_fd_readable(fd, timeout_usec)
 }
 
 /// Returns whether an fd is readable.
 pub fn poll_fd_readable(fd: i32) -> bool {
-    fd_readable_set_t::poll_fd_readable(fd)
+    FdReadableSet::poll_fd_readable(fd)
 }
 
 /// A modest wrapper around select() or poll().
@@ -24,7 +17,7 @@ pub fn poll_fd_readable(fd: i32) -> bool {
 /// This only handles readability.
 /// Apple's `man poll`: "The poll() system call currently does not support devices."
 #[cfg(target_os = "macos")]
-pub struct fd_readable_set_t {
+pub struct FdReadableSet {
     // The underlying fdset and nfds value to pass to select().
     fdset_: libc::fd_set,
     nfds_: c_int,
@@ -36,10 +29,10 @@ const kUsecPerMsec: u64 = 1000;
 const kUsecPerSec: u64 = 1000 * kUsecPerMsec;
 
 #[cfg(target_os = "macos")]
-impl fd_readable_set_t {
+impl FdReadableSet {
     /// Construct an empty set.
-    pub fn new() -> fd_readable_set_t {
-        fd_readable_set_t {
+    pub fn new() -> FdReadableSet {
+        FdReadableSet {
             fdset_: unsafe { std::mem::zeroed() },
             nfds_: 0,
         }
@@ -119,15 +112,15 @@ impl fd_readable_set_t {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub struct fd_readable_set_t {
+pub struct FdReadableSet {
     pollfds_: Vec<libc::pollfd>,
 }
 
 #[cfg(not(target_os = "macos"))]
-impl fd_readable_set_t {
+impl FdReadableSet {
     /// Construct an empty set.
-    pub fn new() -> fd_readable_set_t {
-        fd_readable_set_t {
+    pub fn new() -> FdReadableSet {
+        FdReadableSet {
             pollfds_: Vec::new(),
         }
     }
@@ -182,7 +175,7 @@ impl fd_readable_set_t {
         if (timeout_usec % kUsecPerMsec) > kUsecPerMsec / 2 {
             timeout_msec += 1;
         }
-        if timeout_usec == fd_readable_set_t::kNoTimeout || timeout_msec > c_int::MAX as u64 {
+        if timeout_usec == FdReadableSet::kNoTimeout || timeout_msec > c_int::MAX as u64 {
             // Negative values mean wait forever in poll-speak.
             return -1;
         }

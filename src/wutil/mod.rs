@@ -14,14 +14,13 @@ use crate::common::{
     cstr2wcstring, fish_reserved_codepoint, str2wcstring, wcs2osstring, wcs2string, wcs2zstring,
 };
 use crate::fallback;
-use crate::fds::AutoCloseFd;
 use crate::flog::FLOGF;
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
 pub use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
-use std::ffi::{CStr, OsStr};
+use std::ffi::OsStr;
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
@@ -29,6 +28,9 @@ use std::os::unix::prelude::*;
 extern crate fish_printf;
 pub use fish_printf::sprintf;
 
+pub use fileid::{
+    file_id_for_fd, file_id_for_path, file_id_for_path_narrow, DevInode, FileId, INVALID_FILE_ID,
+};
 pub use wcstoi::*;
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
@@ -48,6 +50,16 @@ pub fn wstat(file_name: &wstr) -> io::Result<fs::Metadata> {
 pub fn lwstat(file_name: &wstr) -> io::Result<fs::Metadata> {
     let tmp = wcs2osstring(file_name);
     fs::symlink_metadata(tmp)
+}
+
+/// Cover over fstat().
+pub fn fstat(fd: impl AsRawFd) -> io::Result<fs::Metadata> {
+    let fd = fd.as_raw_fd();
+    let file = unsafe { fs::File::from_raw_fd(fd) };
+    let res = file.metadata();
+    let fd2 = file.into_raw_fd();
+    assert_eq!(fd, fd2);
+    res
 }
 
 /// Wide character version of access().
@@ -319,8 +331,12 @@ pub fn path_normalize_for_cd(wd: &wstr, path: &wstr) -> WString {
     paths.extend(path_comps);
     let mut result =
         WString::with_capacity(paths.iter().fold(0, |sum, s| sum + s.len()) + paths.len() + 1);
-    for p in &paths {
-        result.push(SEP);
+    result.push(SEP);
+    // TODO: intersperse() https://github.com/rust-lang/rust/issues/79524
+    for (i, p) in paths.iter().enumerate() {
+        if i != 0 {
+            result.push(SEP);
+        }
         result.push_utfstr(*p);
     }
     result
@@ -388,6 +404,14 @@ mod path_cd_tests {
         let path = L!("..");
         eprintln!("({}, {})", wd, path);
         assert_eq!(path_normalize_for_cd(wd, path), L!("/.."));
+    }
+
+    #[test]
+    fn up_to_root_directory() {
+        let wd = L!("/foo/");
+        let path = L!("..");
+        eprintln!("({}, {})", wd, path);
+        assert_eq!(path_normalize_for_cd(wd, path), L!("/"));
     }
 
     #[test]
@@ -592,90 +616,6 @@ pub fn fish_wcswidth(s: &wstr) -> isize {
     fallback::fish_wcswidth(s)
 }
 
-/// Class for representing a file's inode. We use this to detect and avoid symlink loops, among
-/// other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux
-/// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA
-/// problem). Therefore we include richer information.
-#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct FileId {
-    pub device: libc::dev_t,
-    pub inode: libc::ino_t,
-    pub size: u64,
-    pub change_seconds: libc::time_t,
-    pub change_nanoseconds: i64,
-    pub mod_seconds: libc::time_t,
-    pub mod_nanoseconds: i64,
-}
-
-impl FileId {
-    pub const fn new() -> Self {
-        FileId {
-            device: -1 as _,
-            inode: -1 as _,
-            size: -1 as _,
-            change_seconds: libc::time_t::MIN,
-            change_nanoseconds: i64::MIN,
-            mod_seconds: libc::time_t::MIN,
-            mod_nanoseconds: -1 as _,
-        }
-    }
-    pub fn from_stat(buf: &libc::stat) -> FileId {
-        let mut result = FileId::new();
-        result.device = buf.st_dev;
-        result.inode = buf.st_ino;
-        result.size = buf.st_size as u64;
-        result.change_seconds = buf.st_ctime;
-        result.mod_seconds = buf.st_mtime;
-        #[allow(clippy::unnecessary_cast)] // platform-dependent
-        #[cfg(not(target_os = "netbsd"))]
-        {
-            result.change_nanoseconds = buf.st_ctime_nsec as _;
-            result.mod_nanoseconds = buf.st_mtime_nsec as _;
-        }
-        #[cfg(target_os = "netbsd")]
-        {
-            result.change_nanoseconds = buf.st_ctimensec as _;
-            result.mod_nanoseconds = buf.st_mtimensec as _;
-        }
-        result
-    }
-
-    /// Return true if \param rhs has higher mtime seconds than this file_id_t.
-    /// If identical, nanoseconds are compared.
-    pub fn older_than(&self, rhs: &FileId) -> bool {
-        let lhs = (self.mod_seconds, self.mod_nanoseconds);
-        let rhs = (rhs.mod_seconds, rhs.mod_nanoseconds);
-        lhs.cmp(&rhs).is_lt()
-    }
-}
-
-pub const INVALID_FILE_ID: FileId = FileId::new();
-
-pub fn file_id_for_fd(fd: BorrowedFd<'_>) -> FileId {
-    let mut result = INVALID_FILE_ID;
-    let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-    if unsafe { libc::fstat(fd.as_raw_fd(), &mut buf) } == 0 {
-        result = FileId::from_stat(&buf);
-    }
-    result
-}
-
-pub fn file_id_for_autoclose_fd(fd: &AutoCloseFd) -> FileId {
-    file_id_for_fd(fd.as_fd())
-}
-
-pub fn file_id_for_path(path: &wstr) -> FileId {
-    file_id_for_path_narrow(&wcs2zstring(path))
-}
-
-pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
-    let mut result = INVALID_FILE_ID;
-    let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-    if unsafe { libc::stat(path.as_ptr(), &mut buf) } == 0 {
-        result = FileId::from_stat(&buf);
-    }
-    result
-}
 /// Given that `cursor` is a pointer into `base`, return the offset in characters.
 /// This emulates C pointer arithmetic:
 ///    `wstr_offset_in(cursor, base)` is equivalent to C++ `cursor - base`.

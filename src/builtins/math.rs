@@ -1,17 +1,31 @@
+use num_traits::pow;
+use widestring::utf32str;
+
 use super::prelude::*;
 use crate::tinyexpr::te_interp;
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;
 
+const DEFAULT_SCALE_MODE: ScaleMode = ScaleMode::Default;
+
 /// The end of the range such that every integer is representable as a double.
 /// i.e. this is the first value such that x + 1 == x (or == x + 2, depending on rounding mode).
 const MAX_CONTIGUOUS_INTEGER: f64 = (1_u64 << f64::MANTISSA_DIGITS) as f64;
+
+enum ScaleMode {
+    Truncate,
+    Round,
+    Floor,
+    Ceiling,
+    Default,
+}
 
 struct Options {
     print_help: bool,
     scale: usize,
     base: usize,
+    scale_mode: ScaleMode,
 }
 
 fn parse_cmd_opts(
@@ -24,17 +38,19 @@ fn parse_cmd_opts(
 
     // This command is atypical in using the "+" (REQUIRE_ORDER) option for flag parsing.
     // This is needed because of the minus, `-`, operator in math expressions.
-    const SHORT_OPTS: &wstr = L!("+:hs:b:");
+    const SHORT_OPTS: &wstr = L!("+:hs:b:m:");
     const LONG_OPTS: &[WOption] = &[
         wopt(L!("scale"), ArgType::RequiredArgument, 's'),
         wopt(L!("base"), ArgType::RequiredArgument, 'b'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("scale-mode"), ArgType::RequiredArgument, 'm'),
     ];
 
     let mut opts = Options {
         print_help: false,
         scale: DEFAULT_SCALE,
         base: 10,
+        scale_mode: DEFAULT_SCALE_MODE,
     };
 
     let mut have_scale = false;
@@ -51,15 +67,30 @@ fn parse_cmd_opts(
                 } else {
                     let scale = fish_wcstoi(optarg).unwrap_or(-1);
                     if scale < 0 || scale > 15 {
-                        streams.err.append(wgettext_fmt!(
-                            "%ls: %ls: invalid base value\n",
-                            cmd,
-                            optarg
-                        ));
+                        streams
+                            .err
+                            .append(wgettext_fmt!("%ls: %ls: invalid scale\n", cmd, optarg));
                         return Err(STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
                     opts.scale = scale as usize;
+                }
+            }
+            'm' => {
+                let optarg = w.woptarg.unwrap();
+                if optarg.eq(utf32str!("truncate")) || optarg.eq(utf32str!("trunc")) {
+                    opts.scale_mode = ScaleMode::Truncate;
+                } else if optarg.eq(utf32str!("round")) {
+                    opts.scale_mode = ScaleMode::Round;
+                } else if optarg.eq(utf32str!("floor")) {
+                    opts.scale_mode = ScaleMode::Floor;
+                } else if optarg.eq(utf32str!("ceiling")) || optarg.eq(utf32str!("ceil")) {
+                    opts.scale_mode = ScaleMode::Ceiling;
+                } else {
+                    streams
+                        .err
+                        .append(wgettext_fmt!("%ls: %ls: invalid mode\n", cmd, optarg));
+                    return Err(STATUS_INVALID_ARGS);
                 }
             }
             'b' => {
@@ -129,10 +160,26 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
         return sprintf!("%s0%lo", mneg, v.abs() as u64);
     }
 
-    // As a special-case, a scale of 0 means to truncate to an integer
-    // instead of rounding.
-    if opts.scale == 0 {
-        v = v.trunc();
+    v *= pow(10f64, opts.scale);
+
+    v = match opts.scale_mode {
+        ScaleMode::Truncate => v.trunc(),
+        ScaleMode::Round => v.round(),
+        ScaleMode::Floor => v.floor(),
+        ScaleMode::Ceiling => v.ceil(),
+        ScaleMode::Default => {
+            if opts.scale == 0 {
+                v.trunc()
+            } else {
+                v
+            }
+        }
+    };
+
+    // if we don't add check here, the result of 'math -s 0 "22 / 5 - 5"' will be '0', not '-0'
+    if opts.scale != 0 {
+        v /= pow(10f64, opts.scale);
+    } else {
         return sprintf!("%.*f", opts.scale, v);
     }
 
@@ -142,7 +189,8 @@ fn format_double(mut v: f64, opts: &Options) -> WString {
     if ret.chars().any(|c| !c.is_ascii_digit()) {
         let trailing_zeroes = ret.chars().rev().take_while(|&c| c == '0').count();
         let mut to_keep = ret.len() - trailing_zeroes;
-        if ret.as_char_slice()[to_keep - 1] == '.' {
+        // Check for the decimal separator (we don't know what character it is)
+        if !ret.as_char_slice()[to_keep - 1].is_ascii_digit() {
             to_keep -= 1;
         }
         ret.truncate(to_keep);

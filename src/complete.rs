@@ -615,11 +615,11 @@ impl<'ctx> Completer<'ctx> {
         }
     }
 
-    pub fn perform_for_commandline(&mut self, cmdline: WString) {
+    fn perform_for_commandline(&mut self, cmdline: WString) {
         // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
         // for autosuggestions where we don't evaluate command substitutions or variable assignments.
-        let _decrement = if let Some(parser) = self.ctx.maybe_parser() {
+        if let Some(parser) = self.ctx.maybe_parser() {
             let level = &mut parser.libdata_mut().complete_recursion_level;
             if *level >= 24 {
                 FLOG!(
@@ -629,15 +629,14 @@ impl<'ctx> Completer<'ctx> {
                 return;
             }
             *level += 1;
+        }
+        self.perform_for_commandline_impl(cmdline);
+        if let Some(parser) = self.ctx.maybe_parser() {
+            parser.libdata_mut().complete_recursion_level -= 1;
+        }
+    }
 
-            Some(ScopeGuard::new((), |()| {
-                let level = &mut parser.libdata_mut().complete_recursion_level;
-                *level -= 1;
-            }))
-        } else {
-            None
-        };
-
+    fn perform_for_commandline_impl(&mut self, cmdline: WString) {
         let cursor_pos = cmdline.len();
         let is_autosuggest = self.flags.autosuggestion;
 
@@ -825,8 +824,7 @@ impl<'ctx> Completer<'ctx> {
         }
 
         // Maybe apply variable assignments.
-        let _restore_vars =
-            self.apply_var_assignments(var_assignments.iter().map(|s| s.as_utfstr()));
+        let _restore_vars = self.apply_var_assignments(&var_assignments);
         if self.ctx.check_cancel() {
             return;
         }
@@ -1006,26 +1004,24 @@ impl<'ctx> Completer<'ctx> {
                 continue;
             }
 
-            // Make the key. This is the stuff after the command.
+            // Make the set components. This is the stuff after the command.
             // For example:
-            //  elstr = lsmod
+            //  elstr = lsmod\ta description
             //  cmd = ls
             //  key = mod
+            //  val = A description
             // Note an empty key is common and natural, if 'cmd' were already valid.
-            let (key, val) = elstr.split_at_mut(cmd.len());
-            let val = &mut val[1..];
-            assert!(
-                !val.is_empty(),
-                "tab index should not have been at the end."
-            );
+            let parts = elstr.as_mut_utfstr().split_at_mut(tab_idx);
+            let key = &parts.0[cmd.len()..tab_idx];
+            let (_, val) = parts.1.split_at_mut(1);
 
             // And once again I make sure the first character is uppercased because I like it that
             // way, and I get to decide these things.
-            let mut upper_chars = val.as_char_slice()[0].to_uppercase();
+            let mut upper_chars = val.chars().next().unwrap().to_uppercase();
             if let (Some(c), None) = (upper_chars.next(), upper_chars.next()) {
                 val.as_char_slice_mut()[0] = c;
             }
-            lookup.insert(&*key, &*val);
+            lookup.insert(key, &*val);
         }
 
         // Then do a lookup on every completion and if a match is found, change to the new
@@ -1086,7 +1082,7 @@ impl<'ctx> Completer<'ctx> {
         if str_cmd.is_empty() || (!str_cmd.contains('/') && str_cmd.as_char_slice()[0] != '~') {
             let include_hidden = str_cmd.as_char_slice().first() == Some(&'_');
             // Append all known matching functions
-            let possible_comp: Vec<_> = function::get_names(include_hidden)
+            let possible_comp: Vec<_> = function::get_names(include_hidden, self.ctx.vars())
                 .into_iter()
                 .map(Completion::from_completion)
                 .collect();
@@ -1865,17 +1861,14 @@ impl<'ctx> Completer<'ctx> {
 
     /// If we have variable assignments, attempt to apply them in our parser. As soon as the return
     /// value goes out of scope, the variables will be removed from the parser.
-    fn apply_var_assignments<'a>(
+    fn apply_var_assignments<T: AsRef<wstr>>(
         &mut self,
-        var_assignments: impl IntoIterator<Item = &'a wstr>,
-    ) -> Option<ScopeGuard<(), impl FnOnce(&mut ())>> {
-        if !self.ctx.has_parser() {
+        var_assignments: &[T],
+    ) -> Option<ScopeGuard<(), impl FnOnce(&mut ()) + 'ctx>> {
+        if !self.ctx.has_parser() || var_assignments.is_empty() {
             return None;
         }
         let parser = self.ctx.parser();
-
-        let mut var_assignments = var_assignments.into_iter().peekable();
-        var_assignments.peek()?;
 
         let vars = parser.vars();
         assert_eq!(
@@ -1892,6 +1885,7 @@ impl<'ctx> Completer<'ctx> {
         let expand_flags = ExpandFlags::FAIL_ON_CMDSUBST;
         let block = parser.push_block(Block::variable_assignment_block());
         for var_assign in var_assignments {
+            let var_assign: &wstr = var_assign.as_ref();
             let equals_pos = variable_assignment_equals_pos(var_assign)
                 .expect("All variable assignments should have equals position");
             let variable_name = var_assign.as_char_slice()[..equals_pos].into();
@@ -1923,8 +1917,8 @@ impl<'ctx> Completer<'ctx> {
             }
         }
 
-        let parser_ref = self.ctx.parser().shared();
-        Some(ScopeGuard::new((), move |_| parser_ref.pop_block(block)))
+        let parser = self.ctx.parser();
+        Some(ScopeGuard::new((), move |_| parser.pop_block(block)))
     }
 
     /// Complete a command by invoking user-specified completions.
@@ -1941,19 +1935,18 @@ impl<'ctx> Completer<'ctx> {
         let wants_transient =
             (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
         if wants_transient {
-            let parser_ref = self.ctx.parser().shared();
-            parser_ref
+            let parser = self.ctx.parser();
+            parser
                 .libdata_mut()
                 .transient_commandlines
                 .push(cmdline.to_owned());
             _remove_transient = Some(ScopeGuard::new((), move |_| {
-                parser_ref.libdata_mut().transient_commandlines.pop();
+                parser.libdata_mut().transient_commandlines.pop();
             }));
         }
 
         // Maybe apply variable assignments.
-        let _restore_vars =
-            self.apply_var_assignments(ad.var_assignments.iter().map(WString::as_utfstr));
+        let _restore_vars = self.apply_var_assignments(ad.var_assignments);
         if self.ctx.check_cancel() {
             return;
         }
@@ -2261,23 +2254,6 @@ fn expand_command_token(ctx: &OperationContext<'_>, cmd_tok: &mut WString) -> bo
         ctx,
         None,
     )
-}
-
-/// Create a new completion entry.
-///
-/// \param completions The array of completions to append to
-/// \param comp The completion string
-/// \param desc The description of the completion
-/// \param flags completion flags
-#[deprecated = "Use Vec::push()"]
-pub fn append_completion(
-    completions: &mut Vec<Completion>,
-    comp: WString,
-    desc: WString,
-    flags: CompleteFlags,
-    r#match: StringFuzzyMatch,
-) {
-    completions.push(Completion::new(comp, desc, r#match, flags))
 }
 
 /// Add an unexpanded completion "rule" to generate completions from for a command.

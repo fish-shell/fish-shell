@@ -1,5 +1,4 @@
-use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
-use crate::parser::Parser;
+use crate::env::{EnvMode, EnvStack, EnvVar, EnvVarFlags, Environment};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
@@ -58,7 +57,7 @@ impl Environment for PwdEnvironment {
 
 /// Helper for test_timezone_env_vars().
 fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
-    let vars = Parser::principal_parser().vars();
+    let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
 
     vars.set_one(L!("TZ"), EnvMode::EXPORT, timezone.to_owned());
 
@@ -112,8 +111,9 @@ fn test_env_vars() {
 fn test_env_snapshot() {
     let _cleanup = test_init();
     std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
-    pushd("test/fish_env_snapshot_test/");
-    let vars = Parser::principal_parser().vars();
+    let parser = TestParser::new();
+    let vars = parser.vars();
+    parser.pushd("test/fish_env_snapshot_test/");
     vars.push(true);
     let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
     vars.set_one(
@@ -175,5 +175,18 @@ fn test_env_snapshot() {
     );
 
     vars.pop();
-    popd();
+    parser.popd();
+}
+
+// Can't push/pop from globals.
+#[test]
+#[should_panic]
+fn test_no_global_push() {
+    EnvStack::globals().push(true);
+}
+
+#[test]
+#[should_panic]
+fn test_no_global_pop() {
+    EnvStack::globals().pop();
 }

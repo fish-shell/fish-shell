@@ -251,11 +251,6 @@ pub static SHARED_CONTAINER: TermsizeContainer = TermsizeContainer {
 
 const _: () = assert_sync::<TermsizeContainer>();
 
-/// Helper to return the default termsize.
-pub fn termsize_default() -> Termsize {
-    Termsize::defaults()
-}
-
 /// Convenience helper to return the last known termsize.
 pub fn termsize_last() -> Termsize {
     return SHARED_CONTAINER.last();

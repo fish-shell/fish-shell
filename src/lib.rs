@@ -5,22 +5,18 @@
 #![allow(unstable_name_collisions)]
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::bool_assert_comparison)]
-#![allow(clippy::box_default)]
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::comparison_chain)]
 #![allow(clippy::derivable_impls)]
+#![allow(clippy::doc_lazy_continuation)]
 #![allow(clippy::field_reassign_with_default)]
 #![allow(clippy::get_first)]
 #![allow(clippy::if_same_then_else)]
 #![allow(clippy::incompatible_msrv)]
 #![allow(clippy::len_without_is_empty)]
 #![allow(clippy::manual_is_ascii_check)]
-#![allow(clippy::mut_from_ref)]
-#![allow(clippy::needless_return)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::option_map_unit_fn)]
-#![allow(clippy::ptr_arg)]
-#![allow(clippy::redundant_slicing)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
 
@@ -77,7 +73,6 @@ pub mod parse_util;
 pub mod parser;
 pub mod parser_keywords;
 pub mod path;
-pub mod pointer;
 pub mod print_help;
 pub mod proc;
 pub mod re;

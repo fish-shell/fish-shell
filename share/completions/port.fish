@@ -1,5 +1,12 @@
 #completion for port
-complete port -n "__fish_seen_subcommand_from $subcommands" -a '(__fish_print_port_packages)' -d Package
+set -l subcommands activate archive build cat cd checksum clean configure \
+    contents deactivate dependents deps destroot dir distcheck dmg echo \
+    edit extract fetch file gohome info install installed lint list \
+    livecheck location load log logfile mirror mdmg mpkg notes outdated \
+    patch pkg provides rdependents rdeps reload rev search select \
+    selfupdate setrequested setunrequested sync test unarchive uninstall \
+    unload unsetrequested upgrade url usage variants version work
+complete port -f -n "__fish_seen_subcommand_from $subcommands" -a '(__fish_print_port_packages)' -d Package
 
 complete port -f -n __fish_use_subcommand -a activate -d 'Set  version of a port to active'
 complete port -f -n __fish_use_subcommand -a archive -d "Create image for port without installing"

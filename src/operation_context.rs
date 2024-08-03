@@ -1,7 +1,7 @@
 use crate::common::CancelChecker;
 use crate::env::EnvDyn;
 use crate::env::{EnvStack, Environment};
-use crate::parser::{Parser, ParserRef};
+use crate::parser::Parser;
 use crate::proc::JobGroupRef;
 
 use crate::reader::read_generation_count;
@@ -21,11 +21,11 @@ pub const EXPANSION_LIMIT_BACKGROUND: usize = 512;
 enum Vars<'a> {
     // The parser, if this is a foreground operation. If this is a background operation, this may be
     // nullptr.
-    Parser(ParserRef),
+    Parser(&'a Parser),
     // A set of variables.
     Vars(&'a dyn Environment),
 
-    TestOnly(ParserRef, &'a dyn Environment),
+    TestOnly(&'a Parser, &'a dyn Environment),
 }
 
 /// A operation_context_t is a simple property bag which wraps up data needed for highlighting,
@@ -70,7 +70,7 @@ impl<'a> OperationContext<'a> {
 
     /// Construct from a full set of properties.
     pub fn foreground(
-        parser: ParserRef,
+        parser: &'a Parser,
         cancel_checker: CancelChecker,
         expansion_limit: usize,
     ) -> OperationContext<'a> {
@@ -83,7 +83,7 @@ impl<'a> OperationContext<'a> {
     }
 
     pub fn test_only_foreground(
-        parser: ParserRef,
+        parser: &'a Parser,
         vars: &'a dyn Environment,
         cancel_checker: CancelChecker,
     ) -> OperationContext<'a> {

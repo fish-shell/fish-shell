@@ -61,18 +61,5 @@ add_custom_command(TARGET fish_macapp POST_BUILD
 # The entitlements file.
 set(MACAPP_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/osx/MacApp.entitlements")
 
-# Target to sign the macapp.
-# Note that a POST_BUILD step happens before resources are copied,
-# and therefore would be too early.
-add_custom_target(signed_fish_macapp
-    DEPENDS fish_macapp "${MACAPP_ENTITLEMENTS}"
-    COMMAND codesign --force --deep
-            --options runtime
-            --entitlements "${MACAPP_ENTITLEMENTS}"
-            --sign "${MAC_CODESIGN_ID}"
-            $<TARGET_BUNDLE_DIR:fish_macapp>
-    VERBATIM
-)
-
 # Group our targets in a folder.
-set_property(TARGET fish_macapp signed_fish_macapp PROPERTY FOLDER macapp)
+set_property(TARGET fish_macapp PROPERTY FOLDER macapp)

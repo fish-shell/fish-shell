@@ -81,7 +81,6 @@ impl Function {
 pub enum ErrorKind {
     UnknownFunction,
     MissingClosingParen,
-    MissingOpenParen,
     TooFewArgs,
     TooManyArgs,
     MissingOperator,
@@ -97,7 +96,6 @@ impl ErrorKind {
         match self {
             ErrorKind::UnknownFunction => wgettext!("Unknown function"),
             ErrorKind::MissingClosingParen => wgettext!("Missing closing parenthesis"),
-            ErrorKind::MissingOpenParen => wgettext!("Missing opening parenthesis"),
             ErrorKind::TooFewArgs => wgettext!("Too few arguments"),
             ErrorKind::TooManyArgs => wgettext!("Too many arguments"),
             ErrorKind::MissingOperator => wgettext!("Missing operator"),

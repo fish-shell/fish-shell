@@ -173,22 +173,34 @@ impl EnvScoped {
 /// This backs the parser's "vars".
 pub struct EnvStack {
     inner: EnvMutex<EnvStackImpl>,
+    can_push_pop: bool, // If false, panic on push/pop. Used for the global stack.
+    dispatches_var_changes: bool, // controls whether we react to non-global variable changes, like to TZ
 }
 
 impl EnvStack {
+    // Creates a new EnvStack which does not dispatch variable changes.
     pub fn new() -> EnvStack {
         EnvStack {
             inner: EnvStackImpl::new(),
+            can_push_pop: true,
+            dispatches_var_changes: false,
+        }
+    }
+
+    // Create a "sub-stack" of the given stack.
+    // This shares all nodes (variable scopes) with the parent stack.
+    // can_push_pop is always set.
+    pub fn create_child(&self, dispatches_var_changes: bool) -> EnvStack {
+        let inner = EnvMutex::new(self.inner.lock().clone());
+        EnvStack {
+            inner,
+            can_push_pop: true,
+            dispatches_var_changes,
         }
     }
 
     fn lock(&self) -> EnvMutexGuard<EnvStackImpl> {
         self.inner.lock()
-    }
-
-    /// Return whether we are the principal stack.
-    pub fn is_principal(&self) -> bool {
-        std::ptr::eq(self, &**Self::principal())
     }
 
     /// Helpers to get and set the proc statuses.
@@ -229,9 +241,9 @@ impl EnvStack {
 
         let ret: ModResult = self.lock().set(key, mode, vals);
         if ret.status == EnvStackSetResult::Ok {
-            // If we modified the global state, or we are principal, then dispatch changes.
+            // Dispatch changes if we modified the global state or have 'dispatches_var_changes' set.
             // Important to not hold the lock here.
-            if ret.global_modified || self.is_principal() {
+            if ret.global_modified || self.dispatches_var_changes {
                 env_dispatch_var_change(key, self);
             }
         }
@@ -278,7 +290,7 @@ impl EnvStack {
         let ret = self.lock().remove(key, mode);
         #[allow(clippy::collapsible_if)]
         if ret.status == EnvStackSetResult::Ok {
-            if ret.global_modified || self.is_principal() {
+            if ret.global_modified || self.dispatches_var_changes {
                 // Important to not hold the lock here.
                 env_dispatch_var_change(key, self);
             }
@@ -291,6 +303,7 @@ impl EnvStack {
 
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn push(&self, new_scope: bool) {
+        assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let mut imp = self.lock();
         if new_scope {
             imp.push_shadowing();
@@ -301,9 +314,9 @@ impl EnvStack {
 
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn pop(&self) {
+        assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let popped = self.lock().pop();
-        // Only dispatch variable changes if we are the principal environment.
-        if self.is_principal() {
+        if self.dispatches_var_changes {
             // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
             // once.
             for key in popped {
@@ -328,7 +341,6 @@ impl EnvStack {
     /// If `always` is set, perform synchronization even if there's no pending changes from this
     /// instance (that is, look for changes from other fish instances).
     /// Return a list of events for changed variables.
-    #[allow(clippy::vec_box)]
     pub fn universal_sync(&self, always: bool) -> Vec<Event> {
         if UVAR_SCOPE_IS_GLOBAL.load() {
             return Vec::new();
@@ -363,14 +375,12 @@ impl EnvStack {
     pub fn globals() -> &'static EnvStack {
         use std::sync::OnceLock;
         static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
-        GLOBALS.get_or_init(EnvStack::new)
-    }
-
-    /// Access the principal variable stack, associated with the principal parser.
-    pub fn principal() -> &'static Arc<EnvStack> {
-        use std::sync::OnceLock;
-        static PRINCIPAL_STACK: OnceLock<Arc<EnvStack>> = OnceLock::new();
-        PRINCIPAL_STACK.get_or_init(|| Arc::new(EnvStack::new()))
+        GLOBALS.get_or_init(|| EnvStack {
+            inner: EnvStackImpl::new(),
+            can_push_pop: false,
+            // Do not dispatch variable changes - this is used at startup when we are importing env vars.
+            dispatches_var_changes: false,
+        })
     }
 
     pub fn set_argv(&self, argv: Vec<WString>) {
@@ -554,7 +564,7 @@ fn setup_path() {
 pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
-    let vars = &**EnvStack::principal();
+    let vars = EnvStack::globals();
 
     let env_iter: Vec<_> = std::env::vars_os()
         .map(|(k, v)| (str2wcstring(k.as_bytes()), str2wcstring(v.as_bytes())))

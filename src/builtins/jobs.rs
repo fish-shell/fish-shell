@@ -96,7 +96,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
         JobsPrintMode::PrintGroup => {
             if header {
                 // Print table header before first job.
-                out += &wgettext!("Group\n")[..];
+                out += wgettext!("Group\n");
             }
             out += &sprintf!("%d\n", pgid)[..];
             streams.out.append(out);
@@ -104,7 +104,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
         JobsPrintMode::PrintPid => {
             if header {
                 // Print table header before first job.
-                out += &wgettext!("Process\n")[..];
+                out += wgettext!("Process\n");
             }
 
             for p in j.processes() {
@@ -115,7 +115,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
         JobsPrintMode::PrintCommand => {
             if header {
                 // Print table header before first job.
-                out += &wgettext!("Command\n")[..];
+                out += wgettext!("Command\n");
             }
 
             for p in j.processes() {

@@ -15,13 +15,23 @@ end
 ###
 
 function __fish_print_magento_modules -d "Lists all Magento modules"
-    set -l modules (magento module:status)
+    set -l config_path app/etc/config.php
+    test -f $config_path; or return
 
-    for i in $test
-        if test -n "$i" -a "$i" != None
-            echo $i
+    set -l in_modules 0
+    cat $config_path | \
+        while read -l line
+             if test "$in_modules" -eq 0
+                 if string match -rq '[\'"]modules[\'"]\s*=>.*\[' -- $line
+                     set in_modules 1;
+                 end
+             else
+                 if string match -rq '^\s*]\s*,\s*$' -- $line
+                     break
+                 end
+                 string replace -rf '\s*[\'"](.*?)[\'"]\s*=>.*' '$1' -- $line
+             end
         end
-    end
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"
@@ -451,7 +461,7 @@ __fish_magento_register_command_option i18n:pack -s d -l allow-duplicates -d 'Us
 __fish_magento_register_command_option i18n:uninstall -f -s b -l backup-code -d 'Take code and configuration files backup (excluding temporary files)'
 __fish_magento_register_command_option i18n:uninstall -f -a "(__fish_print_magento_languages)" -d 'Language package name'
 
-# 
+#
 # info:dependencies:show-framework
 #
 __fish_magento_register_command_option info:dependencies:show-framework -f -s o -l output -d 'Report filename (default: "framework-dependencies.csv")'
@@ -477,8 +487,8 @@ __fish_magento_register_command_option maintenance:allow-ips -l none -d 'Clear a
 __fish_magento_register_command_option maintenance:disable -l ip -d "Allowed IP addresses (use 'none' to clear list)"
 
 #
-# maintenance:enable  
-# 
+# maintenance:enable
+#
 __fish_magento_register_command_option maintenance:enable -l ip -d "Allowed IP addresses (use 'none' to clear list)"
 
 #
@@ -491,11 +501,18 @@ __fish_magento_register_command_option module:disable -s c -l clear-static-conte
 
 #
 # module:enable
-# 
+#
 __fish_magento_register_command_option module:enable -f -a "(__fish_print_magento_modules)" -d "Module name"
 __fish_magento_register_command_option module:enable -f -s f -l force -d "Bypass dependencies check"
 __fish_magento_register_command_option module:enable -f -l all -d "Enable all modules"
 __fish_magento_register_command_option module:enable -f -s c -l clear-static-content -d "Clear generated static view files. Necessary if module(s) have static view files"
+
+#
+# module:status
+#
+__fish_magento_register_command_option module:status -f -a "(__fish_print_magento_modules)" -d "Module name"
+__fish_magento_register_command_option module:status -f -l enabled -d "Print only enabled modules"
+__fish_magento_register_command_option module:status -f -l disabled -d "Print only disabled modules"
 
 #
 # module:uninstall

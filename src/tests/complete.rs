@@ -9,7 +9,6 @@ use crate::io::IoChain;
 use crate::operation_context::{
     no_cancel, OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT,
 };
-use crate::parser::Parser;
 use crate::reader::completion_apply_to_command_line;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -43,8 +42,8 @@ fn test_complete() {
         },
     };
 
-    let parser = Parser::principal_parser().shared();
-    let ctx = OperationContext::test_only_foreground(parser.clone(), &vars, Box::new(no_cancel));
+    let parser = TestParser::new();
+    let ctx = OperationContext::test_only_foreground(&parser, &vars, Box::new(no_cancel));
 
     let do_complete = |cmd: &wstr, flags: CompletionRequestOptions| complete(cmd, flags, &ctx).0;
 
@@ -288,7 +287,7 @@ fn test_complete() {
     assert_eq!(completions.len(), 1);
     assert_eq!(completions[0].completion, L!("stfile"));
 
-    pushd("test/complete_test");
+    parser.pushd("test/complete_test");
     let completions = do_complete(L!("cat te"), CompletionRequestOptions::default());
     assert_eq!(completions.len(), 1);
     assert_eq!(completions[0].completion, L!("stfile"));
@@ -342,7 +341,7 @@ fn test_complete() {
     let mut completions = do_complete(L!("cat te\\0"), CompletionRequestOptions::default());
     assert_eq!(&completions, &[]);
 
-    popd();
+    parser.popd();
     completions.clear();
 
     // Test abbreviations.
@@ -417,7 +416,7 @@ fn test_complete() {
     );
 
     // Test cd wrapping chain
-    pushd("test/complete_test");
+    parser.pushd("test/complete_test");
 
     complete_add_wrapper(L!("cdwrap1").into(), L!("cd").into());
     complete_add_wrapper(L!("cdwrap2").into(), L!("cdwrap1").into());
@@ -445,7 +444,7 @@ fn test_complete() {
 
     complete_remove_wrapper(L!("cdwrap1").into(), L!("cd"));
     complete_remove_wrapper(L!("cdwrap2").into(), L!("cdwrap1"));
-    popd();
+    parser.popd();
 }
 
 // Testing test_autosuggest_suggest_special, in particular for properly handling quotes and
@@ -454,6 +453,7 @@ fn test_complete() {
 #[serial]
 fn test_autosuggest_suggest_special() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     macro_rules! perform_one_autosuggestion_cd_test {
         ($command:literal, $expected:literal, $vars:expr) => {
             let command = L!($command);
@@ -489,7 +489,7 @@ fn test_autosuggest_suggest_special() {
                 L!($command),
                 CompletionRequestOptions::default(),
                 &OperationContext::foreground(
-                    Parser::principal_parser().shared(),
+                    &parser,
                     Box::new(no_cancel),
                     EXPANSION_LIMIT_DEFAULT,
                 ),
@@ -520,7 +520,7 @@ fn test_autosuggest_suggest_special() {
     // This is to ensure tilde expansion is handled. See the `cd ~/test_autosuggest_suggest_specia`
     // test below.
     // Fake out the home directory
-    Parser::principal_parser().vars().set_one(
+    parser.vars().set_one(
         L!("HOME"),
         EnvMode::LOCAL | EnvMode::EXPORT,
         L!("test/test-home").to_owned(),
@@ -540,11 +540,7 @@ fn test_autosuggest_suggest_special() {
     let mut vars = PwdEnvironment::default();
     vars.parent.vars.insert(
         L!("HOME").into(),
-        Parser::principal_parser()
-            .vars()
-            .get(L!("HOME"))
-            .unwrap()
-            .as_string(),
+        parser.vars().get(L!("HOME")).unwrap().as_string(),
     );
 
     perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/0", "foobar/", &vars);
@@ -583,7 +579,7 @@ fn test_autosuggest_suggest_special() {
 
     perform_one_autosuggestion_cd_test!("cd test/autosuggest_test/has_loop/", "loopy/loop/", &vars);
 
-    pushd(wd);
+    parser.pushd(wd);
     perform_one_autosuggestion_cd_test!("cd 0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd \"0", "foobar/", &vars);
     perform_one_autosuggestion_cd_test!("cd '0", "foobar/", &vars);
@@ -616,10 +612,10 @@ fn test_autosuggest_suggest_special() {
     perform_one_completion_cd_test!("cd ~absolutelynosuchus", "er/");
     perform_one_completion_cd_test!("cd ~absolutelynosuchuser/", "path1/");
 
-    Parser::principal_parser()
+    parser
         .vars()
         .remove(L!("HOME"), EnvMode::LOCAL | EnvMode::EXPORT);
-    popd();
+    parser.popd();
 }
 
 #[test]

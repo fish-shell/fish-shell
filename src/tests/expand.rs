@@ -6,7 +6,6 @@ use crate::env::{EnvMode, EnvStackSetResult};
 use crate::expand::{expand_to_receiver, ExpandResultCode};
 use crate::operation_context::{no_cancel, EXPANSION_LIMIT_DEFAULT};
 use crate::parse_constants::ParseErrorList;
-use crate::parser::Parser;
 use crate::tests::prelude::*;
 use crate::wildcard::ANY_STRING;
 use crate::{
@@ -23,14 +22,11 @@ fn expand_test_impl(
     expected: Vec<WString>,
     error_message: Option<&str>,
 ) {
+    let parser = TestParser::new();
     let mut output = CompletionList::new();
     let mut errors = ParseErrorList::new();
     let pwd = PwdEnvironment::default();
-    let ctx = OperationContext::test_only_foreground(
-        Parser::principal_parser().shared(),
-        &pwd,
-        Box::new(no_cancel),
-    );
+    let ctx = OperationContext::test_only_foreground(&parser, &pwd, Box::new(no_cancel));
 
     if expand_string(
         input.to_owned(),
@@ -66,6 +62,7 @@ fn expand_test_impl(
 #[serial]
 fn test_expand() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
     ///
     /// \param in the string to expand
@@ -331,7 +328,7 @@ fn test_expand() {
         ""
     );
 
-    pushd("test/fish_expand_test");
+    parser.pushd("test/fish_expand_test");
 
     expand_test!(
         "b/xx",
@@ -343,7 +340,7 @@ fn test_expand() {
     // multiple slashes with fuzzy matching - #3185
     expand_test!("l///n", fuzzy_comp, "lol///nub/", "Wrong fuzzy matching 6");
 
-    popd();
+    parser.popd();
 }
 
 #[test]
@@ -358,14 +355,13 @@ fn test_expand_overflow() {
     let vals: Vec<WString> = (1..=64).map(|i| i.to_wstring()).collect();
     let expansion = WString::from_str(&str::repeat("$bigvar", 64));
 
-    let parser = Parser::principal_parser().shared();
+    let parser = TestParser::new();
     parser.vars().push(true);
     let set = parser.vars().set(L!("bigvar"), EnvMode::LOCAL, vals);
     assert_eq!(set, EnvStackSetResult::Ok);
 
     let mut errors = ParseErrorList::new();
-    let ctx =
-        OperationContext::foreground(parser.clone(), Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
+    let ctx = OperationContext::foreground(&parser, Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
 
     // We accept only 1024 completions.
     let mut output = CompletionReceiver::new(1024);

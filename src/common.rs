@@ -451,9 +451,13 @@ fn escape_string_var(input: &wstr) -> WString {
 /// \param in is the raw string to be searched for literally when substituted in a PCRE2 expression.
 fn escape_string_pcre2(input: &wstr) -> WString {
     let mut out = WString::new();
-    out.reserve(input.len());
+    out.reserve(input.len() + input.len() / 2);
 
     for c in input.chars() {
+        if c == '\n' {
+            out.push_str("\\n");
+            continue;
+        }
         if [
             '.', '^', '$', '*', '+', '(', ')', '?', '[', '{', '}', '\\', '|',
             // these two only *need* to be escaped within a character class, and technically it
@@ -510,6 +514,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     // We only read braces as expanders if there's a variable expansion or "," in them.
     let mut vars_or_seps = vec![];
     let mut brace_count = 0;
+    let mut potential_word_start = None;
 
     let mut errored = false;
     #[derive(PartialEq, Eq)]
@@ -550,7 +555,9 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     }
                 }
                 '~' => {
-                    if unescape_special && input_position == 0 {
+                    if unescape_special
+                        && (input_position == 0 || Some(input_position) == potential_word_start)
+                    {
                         to_append_or_none = Some(HOME_DIRECTORY);
                     }
                 }
@@ -601,6 +608,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         to_append_or_none = Some(BRACE_BEGIN);
                         // We need to store where the brace *ends up* in the output.
                         braces.push(result.len());
+                        potential_word_start = Some(input_position + 1);
                     }
                 }
                 '}' => {
@@ -641,6 +649,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     if unescape_special && brace_count > 0 {
                         to_append_or_none = Some(BRACE_SEP);
                         vars_or_seps.push(input_position);
+                        potential_word_start = Some(input_position + 1);
                     }
                 }
                 ' ' => {
@@ -1084,10 +1093,6 @@ pub fn has_working_tty_timestamps() -> bool {
 /// empty string.
 pub static EMPTY_STRING: WString = WString::new();
 
-/// A global, empty string list. This is useful for functions which wish to return a reference
-/// to an empty string.
-pub static EMPTY_STRING_LIST: Vec<WString> = vec![];
-
 /// A function type to check for cancellation.
 /// Return true if execution should cancel.
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")
@@ -1277,154 +1282,6 @@ pub fn should_suppress_stderr_for_tests() -> bool {
         .get()
         .map(|p| p == TESTS_PROGRAM_NAME)
         .unwrap_or_default()
-}
-
-/// Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
-pub fn format_size(mut sz: i64) -> WString {
-    let mut result = WString::new();
-    const sz_names: [&str; 8] = ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    if sz < 0 {
-        result += "unknown";
-    } else if sz == 0 {
-        result += wgettext!("empty");
-    } else if sz < 1024 {
-        result += &sprintf!("%lldB", sz)[..];
-    } else {
-        for (i, sz_name) in sz_names.iter().enumerate() {
-            if sz < (1024 * 1024) || i == sz_names.len() - 1 {
-                let isz = sz / 1024;
-                if isz > 9 {
-                    result += &sprintf!("%lld%ls", isz, *sz_name)[..];
-                } else {
-                    result += &sprintf!("%.1f%ls", sz as f64 / 1024.0, *sz_name)[..];
-                }
-                break;
-            }
-            sz /= 1024;
-        }
-    }
-
-    result
-}
-
-/// Version of format_size that does not allocate memory.
-pub fn format_size_safe(buff: &mut [u8; 128], mut sz: u64) {
-    let buff_size = 128;
-    let max_len = buff_size - 1; // need to leave room for a null terminator
-    buff.fill(0);
-    let mut idx = 0;
-    const sz_names: [&str; 8] = ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    if sz == 0 {
-        let empty = "empty".as_bytes();
-        buff[..empty.len()].copy_from_slice(empty);
-    } else if sz < 1024 {
-        append_ull(buff, &mut sz, &mut idx, max_len);
-        append_str(buff, "B", &mut idx, max_len);
-    } else {
-        for (i, sz_name) in sz_names.iter().enumerate() {
-            if sz < (1024 * 1024) || i == sz_names.len() - 1 {
-                let mut isz = sz / 1024;
-                append_ull(buff, &mut isz, &mut idx, max_len);
-                if isz <= 9 {
-                    // Maybe append a single fraction digit.
-                    let mut remainder = sz % 1024;
-                    if remainder > 0 {
-                        let tmp = [b'.', extract_most_significant_digit(&mut remainder)];
-                        let tmp = std::str::from_utf8(&tmp).unwrap();
-                        append_str(buff, tmp, &mut idx, max_len);
-                    }
-                }
-                append_str(buff, sz_name, &mut idx, max_len);
-                break;
-            }
-            sz /= 1024;
-        }
-    }
-}
-
-/// Writes out a long safely.
-pub fn format_llong_safe<CharT: From<u8>, I64>(buff: &mut [CharT; 64], val: I64)
-where
-    i64: From<I64>,
-{
-    let val = i64::from(val);
-    let uval = val.unsigned_abs();
-    if val >= 0 {
-        format_safe_impl(buff, 64, uval);
-    } else {
-        buff[0] = CharT::from(b'-');
-        format_safe_impl(&mut buff[1..], 63, uval);
-    }
-}
-
-pub fn format_ullong_safe<CharT: From<u8>>(buff: &mut [CharT; 64], val: u64) {
-    format_safe_impl(buff, 64, val);
-}
-
-fn format_safe_impl<CharT: From<u8>>(buff: &mut [CharT], size: usize, mut val: u64) {
-    let mut idx = 0;
-    if val == 0 {
-        buff[idx] = CharT::from(b'0');
-        idx += 1;
-    } else {
-        // Generate the string backwards, then reverse it.
-        while val != 0 {
-            buff[idx] = CharT::from((val % 10) as u8 + b'0');
-            idx += 1;
-            val /= 10;
-        }
-        buff[..idx].reverse();
-    }
-    buff[idx] = CharT::from(b'\0');
-    idx += 1;
-    assert!(idx <= size, "Buffer overflowed");
-}
-
-fn append_ull(buff: &mut [u8], val: &mut u64, inout_idx: &mut usize, max_len: usize) {
-    let mut idx = *inout_idx;
-    while *val > 0 && idx < max_len {
-        buff[idx] = extract_most_significant_digit(val);
-        idx += 1;
-    }
-    *inout_idx = idx;
-}
-
-fn append_str(buff: &mut [u8], s: &str, inout_idx: &mut usize, max_len: usize) {
-    let mut idx = *inout_idx;
-    let mut bytes = s.as_bytes();
-    while !bytes.is_empty() && idx < max_len {
-        buff[idx] = bytes[0];
-        idx += 1;
-        bytes = &bytes[1..];
-    }
-    *inout_idx = idx;
-}
-
-/// Crappy function to extract the most significant digit of an unsigned long long value.
-fn extract_most_significant_digit(xp: &mut u64) -> u8 {
-    let mut place_value = 1;
-    let mut x = *xp;
-    while x >= 10 {
-        x /= 10;
-        place_value *= 10;
-    }
-    *xp -= place_value * x;
-    x as u8 + b'0'
-}
-
-/// "Narrows" a wide character string. This just grabs any ASCII characters and truncates.
-pub fn narrow_string_safe(buff: &mut [u8; 64], s: &wstr) {
-    let mut idx = 0;
-    for c in s.chars() {
-        if c as u32 <= 127 {
-            buff[idx] = c as u8;
-            idx += 1;
-            if idx + 1 == 64 {
-                break;
-            }
-        }
-    }
-    buff[idx] = b'\0';
 }
 
 /// Stored in blocks to reference the file which created the block.
@@ -2156,12 +2013,6 @@ macro_rules! fwprintf {
     ($args:tt) => {
         panic!()
     };
-}
-
-#[allow(unused_macros)]
-#[deprecated = "use printf!"]
-pub fn fputws(_s: &wstr, _fd: RawFd) {
-    panic!()
 }
 
 // test-only

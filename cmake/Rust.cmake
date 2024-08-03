@@ -42,7 +42,7 @@ get_property(
     TARGET Rust::Rustc PROPERTY IMPORTED_LOCATION
 )
 
-# Tell Cargo where our build directory is so it can find config.h.
+# Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
     "FISH_BUILD_DIR=${fish_binary_dir}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"

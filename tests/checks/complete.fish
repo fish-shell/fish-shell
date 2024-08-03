@@ -603,3 +603,14 @@ complete -C'complete_long_option -ao'
 # CHECK: -an-old-option
 # But only if the user typed a dash
 complete -C'complete_long_option lo'
+
+# Check that descriptions are correctly generated for commands.
+# Override __fish_describe_command to prevent missing man pages or broken __fish_apropos on macOS
+# from failing this test. (TODO: Test the latter separately.)
+function __fish_describe_command
+    echo -e "whereis\twhere is it"
+    echo -e "whoami\twho am i"
+    echo -e "which\which is it"
+end
+test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo "found" || echo "fail"
+# CHECK: found

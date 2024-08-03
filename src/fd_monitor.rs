@@ -222,11 +222,6 @@ pub enum ItemAction {
 }
 
 impl FdMonitorItem {
-    /// Returns the id for this `FdMonitorItem` that is registered with the [`FdMonitor`].
-    pub fn id(&self) -> FdMonitorItemId {
-        self.item_id
-    }
-
     /// Return the duration until the timeout should trigger or `None`. A return of `0` means we are
     /// at or past the timeout.
     fn remaining_time(&self, now: &Instant) -> Option<Duration> {

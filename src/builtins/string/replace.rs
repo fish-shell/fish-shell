@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 use pcre2::utf32::{Regex, RegexBuilder};
 
 use super::*;
@@ -12,6 +14,7 @@ pub struct Replace<'args> {
     regex: bool,
     pattern: &'args wstr,
     replacement: &'args wstr,
+    max_matches: Option<NonZeroUsize>,
 }
 
 impl<'args> StringSubCommand<'args> for Replace<'args> {
@@ -21,16 +24,33 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         wopt(L!("ignore-case"), NoArgument, 'i'),
         wopt(L!("quiet"), NoArgument, 'q'),
         wopt(L!("regex"), NoArgument, 'r'),
+        wopt(L!("max-matches"), RequiredArgument, 'm'),
     ];
-    const SHORT_OPTIONS: &'static wstr = L!(":afiqr");
+    const SHORT_OPTIONS: &'static wstr = L!(":afiqrm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
         match c {
             'a' => self.all = true,
             'f' => self.filter = true,
             'i' => self.ignore_case = true,
             'q' => self.quiet = true,
             'r' => self.regex = true,
+            'm' => {
+                self.max_matches = {
+                    let arg = arg.expect("Option -m requires a non-zero argument");
+                    let max = fish_wcstoul(arg)
+                        .ok()
+                        .and_then(|v| NonZeroUsize::new(v as usize))
+                        .ok_or_else(|| {
+                            StringError::InvalidArgs(wgettext_fmt!(
+                                "%ls: Invalid max matches value '%ls'\n",
+                                _n,
+                                arg
+                            ))
+                        })?;
+                    Some(max)
+                }
+            }
             _ => return Err(StringError::UnknownOption),
         }
         return Ok(());
@@ -101,6 +121,12 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             }
 
             if self.quiet && replace_count > 0 {
+                return STATUS_CMD_OK;
+            }
+            if self
+                .max_matches
+                .is_some_and(|max| max.get() == replace_count)
+            {
                 return STATUS_CMD_OK;
             }
         }
@@ -189,6 +215,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                 opts,
             },
         };
+
         Ok(r)
     }
 

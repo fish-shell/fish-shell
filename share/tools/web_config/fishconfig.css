@@ -53,6 +53,9 @@ body {
     background-color: #DDE;
 }
 
+#tab_parent{
+    border: red 1px;
+}
 #tab_parent :first-child {
     border-top-left-radius: 8px;
     border-left: none;
@@ -91,25 +94,25 @@ body {
     height: 30px;
 }
 
-.master_detail_table {
-    display: table;
-    margin-top: 10px;
+.function_tab {
     margin-left: 12px;
     margin-right: 12px;
+    display: flex;
+    flex-direction: row;
+    height: 90vh;
+    overflow: hidden;
 }
 
-.master {
-    display: table-cell;
+.function-list {
     text-align: right;
-    min-width: 200px;
+    min-width: 250px;
     font-size: 16pt;
-    padding-bottom: 20px;
-    padding-top: 35px;
     vertical-align: top;
+    overflow-y: auto;
+    height: 100%;
 }
 
-.detail {
-    display: table-cell;
+.function-body {
     border: 1px solid #555;
     background-color: #ffffff;
     padding-top: 30px;
@@ -118,6 +121,8 @@ body {
     padding-right: 30px;
     border-radius: 5;
     width: 100%;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .detail_function pre {

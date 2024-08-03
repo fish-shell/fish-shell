@@ -124,7 +124,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             // truncating instead.
             (L!(""), 0)
         } else {
-            (&self.ellipsis[..], self.ellipsis_width)
+            (self.ellipsis, self.ellipsis_width)
         };
 
         let mut nsub = 0usize;

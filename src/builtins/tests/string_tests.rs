@@ -11,7 +11,6 @@ fn test_string() {
     use crate::common::escape;
     use crate::future_feature_flags::{scoped_test, FeatureFlag};
     use crate::io::{IoStreams, OutputStream, StringOutputStream};
-    use crate::parser::Parser;
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
 
@@ -25,14 +24,14 @@ fn test_string() {
 
     // TODO: these should be individual tests, not all in one, port when we can run these with `cargo test`
     fn string_test(mut args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
-        let parser: &Parser = Parser::principal_parser();
+        let parser = TestParser::new();
         let mut outs = OutputStream::String(StringOutputStream::new());
         let mut errs = OutputStream::Null;
         let io_chain = IoChain::new();
         let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
         streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
-        let rc = string(parser, &mut streams, args.as_mut_slice()).expect("string failed");
+        let rc = string(&parser, &mut streams, args.as_mut_slice()).expect("string failed");
 
         let actual = escape(outs.contents());
         let expected = escape(expected_out);

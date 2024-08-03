@@ -6,8 +6,7 @@ use std::time::Duration;
 
 use crate::common::ScopeGuard;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::parser::Parser;
-use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig, ReaderData};
+use crate::reader::{reader_pop, reader_push, Reader, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_service_main, Debounce};
 use crate::wchar::prelude::*;
@@ -16,6 +15,7 @@ use crate::wchar::prelude::*;
 #[serial]
 fn test_debounce() {
     let _cleanup = test_init();
+    let parser = TestParser::new();
     // Run 8 functions using a condition variable.
     // Only the first and last should run.
     let db = Debounce::new(Duration::from_secs(0));
@@ -49,7 +49,7 @@ fn test_debounce() {
         };
         let completer = {
             let ctx = ctx.clone();
-            move |_ctx: &mut ReaderData, idx: usize| {
+            move |_ctx: &mut Reader, idx: usize| {
                 ctx.completion_ran[idx].store(true);
             }
         };
@@ -61,13 +61,12 @@ fn test_debounce() {
     ctx.cv.notify_all();
 
     // Wait until the last completion is done.
-    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
-    let reader_data = reader_current_data().unwrap();
     while !ctx.completion_ran.last().unwrap().load() {
-        iothread_service_main(reader_data);
+        iothread_service_main(&mut reader);
     }
-    iothread_drain_all(reader_data);
+    iothread_drain_all(&mut reader);
 
     // Each perform() call may displace an existing queued operation.
     // Each operation waits until all are queued.

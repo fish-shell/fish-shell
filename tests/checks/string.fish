@@ -309,9 +309,12 @@ string escape --style=var 中 | string unescape --style=var
 string escape --style=regex ".ext"
 string escape --style=regex "bonjour, amigo"
 string escape --style=regex "^this is a literal string"
+string escape --style=regex "hello
+world"
 # CHECK: \.ext
 # CHECK: bonjour, amigo
 # CHECK: \^this is a literal string
+# CHECK: hello\nworld
 
 ### Verify that we can correctly unescape the same strings
 #   we tested escaping above.
@@ -1148,3 +1151,17 @@ string shorten abc \aabc ab abcdef | string escape
 # CHECK: \cga…
 # CHECK: ab
 # CHECK: a…
+
+printf "dog\ncat\nbat\ngnat\n" | string match -m2 "*at"
+# CHECK: cat
+# CHECK: bat
+
+printf "dog\ncat\nbat\nhog\n" | string match -rvm1 'at$'
+# CHECK: dog
+
+printf "dog\ncat\nbat\n" | string replace -rf --max-matches 1 'at$' 'aught'
+# CHECK: caught
+
+printf "dog\ncat\nbat\n" | string replace -r --max-matches 1 '^c' 'h'
+# CHECK: dog
+# CHECK: hat

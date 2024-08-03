@@ -340,3 +340,10 @@ echo foo | $pager
 #CHECKERR: checks/expansion.fish (line 339): The expanded command is a keyword.
 #CHECKERR: echo foo | $pager
 #CHECKERR:            ^~~~~^
+
+echo {~,asdf}
+# CHECK: /{{.*}} asdf
+echo {asdf,~}
+# CHECK: asdf /{{.*}}
+echo {~}
+# CHECK: {~}

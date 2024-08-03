@@ -4,13 +4,11 @@ use crate::common::ScopeGuard;
 use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
-use crate::parser::Parser;
-use crate::reader::{reader_current_data, reader_pop, reader_push, ReaderConfig};
+use crate::reader::{reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
-use crate::wutil::file_id_for_path;
-use crate::wutil::INVALID_FILE_ID;
+use crate::wutil::{file_id_for_path, INVALID_FILE_ID};
 
 const UVARS_PER_THREAD: usize = 8;
 const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");
@@ -44,15 +42,16 @@ fn test_universal() {
     let _cleanup = test_init();
     let _ = std::fs::remove_dir_all("test/fish_uvars_test/");
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
+    let parser = TestParser::new();
 
-    reader_push(Parser::principal_parser(), L!(""), ReaderConfig::default());
+    let mut reader = reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
     let threads = 1;
     for i in 0..threads {
         iothread_perform(move || test_universal_helper(i));
     }
-    iothread_drain_all(reader_current_data().unwrap());
+    iothread_drain_all(&mut reader);
 
     let mut uvars = EnvUniversal::new();
     let mut callbacks = CallbackDataList::new();

@@ -30,10 +30,17 @@ function __npm_filtered_list_packages
     end
 
     # Do not provide any completions if nothing has been entered yet to avoid long hang.
-    if string match -r . (commandline -ct)
+    if string match -rq -- . (commandline -ct)
         # Filter the results here rather than in the C++ code due to #5267
-        all-the-package-names | string match -er -- '(?:\b|_|^)'(commandline -ct |
-            string escape --style=regex) | head -n1000
+        # `all-the-package-names` reads a billion line JSON file using node (slow) then prints
+        # it all (slow) using node (slow). Directly parse the `names.json` file that ships with it instead.
+        for path in {$HOME/.config/yarn/global,$HOME/.npm-global/lib,/usr/local/lib}/node_modules/all-the-package-names/names.json
+            test -f $path || continue
+            # Using `string replace` directly is slow because it doesn't know to stop looking after a match cannot be
+            # found in the alphabetically sorted list. Use `look` for its binary search support.
+            look '  "'(commandline -ct) $path | string replace -rf '^  "(.*?)".*' '$1'
+            break
+        end
     end
 end
 
@@ -77,7 +84,7 @@ function __npm_installed_local_packages
 
     if set -l python (__fish_anypython)
         $python -S -c 'import json, sys; data = json.load(sys.stdin);
-print("\n".join(data["dependencies"])); print("\n".join(data["devDependencies"]))' <$package_json 2>/dev/null
+print("\n".join(data.get("dependencies", []))); print("\n".join(data.get("devDependencies", [])))' <$package_json 2>/dev/null
     else if type -q jq
         jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json
     else

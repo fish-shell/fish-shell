@@ -1,5 +1,4 @@
 use crate::env::{EnvMode, Environment};
-use crate::parser::Parser;
 use crate::termsize::*;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -11,7 +10,7 @@ use std::sync::Mutex;
 fn test_termsize() {
     let _cleanup = test_init();
     let env_global = EnvMode::GLOBAL;
-    let parser = Parser::principal_parser();
+    let parser = TestParser::new();
     let vars = parser.vars();
 
     // Use a static variable so we can pretend we're the kernel exposing a terminal size.
@@ -40,7 +39,7 @@ fn test_termsize() {
     assert_eq!(ts.last(), Termsize::defaults());
 
     // Ok now we tell it to update.
-    ts.updating(parser);
+    ts.updating(&parser);
     assert_eq!(ts.last(), Termsize::new(42, 84));
     assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
     assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
@@ -61,7 +60,7 @@ fn test_termsize() {
     // Oh it got SIGWINCH, now the tty matters again.
     TermsizeContainer::handle_winch();
     assert_eq!(ts.last(), Termsize::new(33, 150));
-    assert_eq!(ts.updating(parser), stubby_termsize().unwrap());
+    assert_eq!(ts.updating(&parser), stubby_termsize().unwrap());
     assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
     assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
 
@@ -78,8 +77,8 @@ fn test_termsize() {
         tty_size_reader: stubby_termsize,
     };
     ts.initialize(parser.vars());
-    ts2.updating(parser);
+    ts2.updating(&parser);
     assert_eq!(ts.last(), Termsize::new(83, 38));
     TermsizeContainer::handle_winch();
-    assert_eq!(ts2.updating(parser), stubby_termsize().unwrap());
+    assert_eq!(ts2.updating(&parser), stubby_termsize().unwrap());
 }

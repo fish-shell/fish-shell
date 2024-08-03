@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.19)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-include(cmake/Mac.cmake)
-
 project(fish LANGUAGES C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -49,9 +47,8 @@ get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
-
-# Define a function to link dependencies.
-function(FISH_LINK_DEPS_AND_SIGN target)
+# Define a function to build and link dependencies.
+function(CREATE_TARGET target)
   add_custom_target(
     ${target} ALL
     COMMAND
@@ -69,17 +66,16 @@ function(FISH_LINK_DEPS_AND_SIGN target)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL
   )
-  codesign_on_mac(${target})
-endfunction(FISH_LINK_DEPS_AND_SIGN)
+endfunction(CREATE_TARGET)
 
 # Define fish.
-fish_link_deps_and_sign(fish)
+create_target(fish)
 
 # Define fish_indent.
-fish_link_deps_and_sign(fish_indent)
+create_target(fish_indent)
 
 # Define fish_key_reader.
-fish_link_deps_and_sign(fish_key_reader)
+create_target(fish_key_reader)
 
 # Set up the docs.
 include(cmake/Docs.cmake)

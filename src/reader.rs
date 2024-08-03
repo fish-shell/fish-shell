@@ -2925,7 +2925,10 @@ impl<'a> Reader<'a> {
                 self.input_data.function_set_status(success);
             }
             rl::AcceptAutosuggestion => {
+                let success = !self.autosuggestion.is_empty();
                 self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
+                // Return true if we had a suggestion to accept.
+                self.input_data.function_set_status(success);
             }
             rl::TransposeChars => {
                 let (elt, el) = self.active_edit_line();

@@ -4,6 +4,7 @@ packages:
   - ninja
   - python
   - python-pexpect
+  - tmux
 sources:
   - https://git.sr.ht/~faho/fish
 tasks:

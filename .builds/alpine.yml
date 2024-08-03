@@ -8,6 +8,7 @@ packages:
   - py3-pexpect
   - python3
   - rust
+  - tmux
 sources:
   - https://github.com/fish-shell/fish-shell
 tasks:

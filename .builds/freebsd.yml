@@ -8,9 +8,10 @@ packages:
   - terminfo-db
   - ninja
   - pcre2
-  - py39-pexpect
+  - py311-pexpect
   - python
   - rust
+  - tmux
 sources:
   - https://github.com/fish-shell/fish-shell
 tasks:

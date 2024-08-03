@@ -69,6 +69,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv ctrl-l clear-screen
     bind --preset $argv ctrl-c cancel-commandline
     bind --preset $argv ctrl-u backward-kill-line
+    bind --preset $argv ctrl-k kill-line
     bind --preset $argv ctrl-w backward-kill-path-component
     bind --preset $argv end end-of-line
     bind --preset $argv home beginning-of-line

@@ -1,5 +1,6 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
+#REQUIRES: uname | grep -v BSD
 
 set -g isolated_tmux_fish_extra_args -C '
     function fish_prompt

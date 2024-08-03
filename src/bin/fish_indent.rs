@@ -7,6 +7,7 @@
 #![allow(clippy::uninlined_format_args)]
 
 use std::ffi::{CString, OsStr};
+use std::fs::OpenOptions;
 use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::Ordering;
@@ -971,9 +972,15 @@ fn throwing_main() -> i32 {
                 colored_output = no_colorize(&output_wtext);
             }
             OutputType::File => {
-                match std::fs::File::create(OsStr::from_bytes(&wcs2string(output_location))) {
+                match OpenOptions::new()
+                    .write(true)
+                    .open(OsStr::from_bytes(&wcs2string(output_location)))
+                {
                     Ok(mut file) => {
-                        let _ = file.write_all(&wcs2string(&output_wtext));
+                        // If the output is the same as the input, don't write it.
+                        if output_wtext != src {
+                            let _ = file.write_all(&wcs2string(&output_wtext));
+                        }
                     }
                     Err(err) => {
                         eprintf!(

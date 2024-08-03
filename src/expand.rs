@@ -1130,7 +1130,9 @@ fn get_home_directory_name<'a>(input: &'a wstr, out_tail_idx: &mut usize) -> &'a
 
 /// Attempts tilde expansion of the string specified, modifying it in place.
 fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
-    if input.as_char_slice().first() != Some(&HOME_DIRECTORY) {
+    let starts_with_tilde = input.as_char_slice().first() == Some(&HOME_DIRECTORY);
+    *input = input.replace([HOME_DIRECTORY], L!("~"));
+    if !starts_with_tilde {
         return;
     }
 
@@ -1171,8 +1173,6 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
 
     if let Some(home) = home {
         input.replace_range(..tail_idx, &normalize_path(&home, true));
-    } else {
-        input.replace_range(0..1, L!("~"));
     }
 }
 

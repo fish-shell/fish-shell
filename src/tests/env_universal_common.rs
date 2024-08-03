@@ -8,8 +8,7 @@ use crate::reader::{reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
 use crate::wchar::prelude::*;
-use crate::wutil::file_id_for_path;
-use crate::wutil::INVALID_FILE_ID;
+use crate::wutil::{file_id_for_path, INVALID_FILE_ID};
 
 const UVARS_PER_THREAD: usize = 8;
 const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");

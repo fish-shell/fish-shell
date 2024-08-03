@@ -15,7 +15,7 @@ function __fish_clasp_list_deployments
         sed -n '2,$p'
 end
 
-function __fish_list_advanced_services
+function __fish_clasp_list_advanced_services
     printf '%s\\t%s service\n' admin-sdk-directory 'Admin SDK Directory' \
         admin-sdk-license-manager 'Admin SDK Enterprise License Manager' \
         admin-sdk-groups-migration 'Admin SDK Groups Migration' \
@@ -164,7 +164,7 @@ complete -c clasp -n "$apis_condition" -xa list -d 'List APIs'
 complete -c clasp -n "$apis_condition" -xa enable -d 'Enable APIs'
 complete -c clasp -n "$apis_condition" -xa disable -d 'Disable APIs'
 complete -c clasp -n "$apis_condition" -l open -d "Open API Console in a browser"
-complete -c clasp -n "$apis_subcommand_condition" -a '(__fish_list_advanced_services)'
+complete -c clasp -n "$apis_subcommand_condition" -a '(__fish_clasp_list_advanced_services)'
 
 # help subcommands
 complete -c clasp -n '__fish_seen_subcommand_from help' -xa '(__fish_clasp_list_subcommands)'

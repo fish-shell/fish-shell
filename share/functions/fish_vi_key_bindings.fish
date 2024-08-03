@@ -325,6 +325,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         bind -s --preset -M visual $key beginning-of-line
     end
 
+    bind -s --preset -M visual -m default v end-selection repaint-mode
+    bind -s --preset -M visual -m insert i end-selection repaint-mode
+    bind -s --preset -M visual -m insert I end-selection beginning-of-line repaint-mode
     bind -s --preset -M visual -m insert c kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m insert s kill-selection end-selection repaint-mode
     bind -s --preset -M visual -m default d kill-selection end-selection backward-char repaint-mode
@@ -334,6 +337,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual -m default '",*,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '",+,y' "fish_clipboard_copy; commandline -f end-selection repaint-mode"
     bind -s --preset -M visual -m default '~' togglecase-selection end-selection repaint-mode
+    bind -s --preset -M visual -m default g,U togglecase-selection end-selection repaint-mode
 
     bind -s --preset -M visual -m default ctrl-c end-selection repaint-mode
     bind -s --preset -M visual -m default escape end-selection repaint-mode

@@ -1,6 +1,8 @@
 License
 ========
 
+.. Updates to this file should also be reflected in Cargo.toml, COPYING and debian/copyright
+
 License for fish
 ----------------
 

@@ -17,6 +17,7 @@ edition.workspace = true
 rust-version.workspace = true
 default-run = "fish"
 # see doc_src/license.rst for details
+# don't forget to update COPYING and debian/copyright too
 license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 repository = "https://github.com/fish-shell/fish-shell"
 homepage = "https://fishshell.com"

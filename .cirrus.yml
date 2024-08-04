@@ -39,7 +39,6 @@ linux_arm_task:
         - name: focal-arm64
           arm_container:
               image: ghcr.io/fish-shell/fish-ci/focal-arm64
-              only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
         - name: jammy-armv7-32bit
           arm_container:
               image: ghcr.io/fish-shell/fish-ci/jammy-armv7-32bit

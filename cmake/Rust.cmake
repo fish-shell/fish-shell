@@ -29,9 +29,6 @@ if(DEFINED WITH_GETTEXT AND NOT "${WITH_GETTEXT}")
     set(CMAKE_WITH_GETTEXT "0")
 endif()
 
-# CMAKE_BINARY_DIR can include symlinks, since we want to compare this to the dir fish is executed in we need to canonicalize it.
-file(REAL_PATH "${CMAKE_BINARY_DIR}" fish_binary_dir)
-
 if(FISH_CRATE_FEATURES)
     set(FEATURES_ARG ${FISH_CRATE_FEATURES})
     list(PREPEND FEATURES_ARG "--features")
@@ -44,7 +41,7 @@ get_property(
 
 # Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
-    "FISH_BUILD_DIR=${fish_binary_dir}"
+    "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
     # Temporary hack to propogate CMake flags/options to build.rs.
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"

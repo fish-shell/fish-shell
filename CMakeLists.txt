@@ -1,5 +1,4 @@
-# CMake 3.19 is needed for file(REAL_PATH)
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.5)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 

@@ -15,6 +15,8 @@ fn main() {
     // OUT_DIR is set by Cargo when the build script is running (not compiling)
     let default_build_dir = env::var("OUT_DIR").unwrap();
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
+    let build_dir = std::fs::canonicalize(build_dir).unwrap();
+    let build_dir = build_dir.to_str().unwrap();
     rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.

@@ -19,7 +19,7 @@ else()
 endif()
 
 set(rust_profile $<IF:$<CONFIG:Debug>,debug,release>)
-set(rust_debugflags "$<$<CONFIG:Debug,RelWithDebInfo>:-g>")
+set(rust_debugflags "$<$<CONFIG:Debug>:-g>$<$<CONFIG:RelWithDebInfo>:-g>")
 
 
 # Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the

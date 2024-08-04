@@ -56,7 +56,8 @@ function(CREATE_TARGET target)
         env ${VARS_FOR_CARGO}
           ${Rust_CARGO}
             build --bin ${target}
-            $<$<CONFIG:Release,RelWithDebInfo>:--release>
+            $<$<CONFIG:Release>:--release>
+            $<$<CONFIG:RelWithDebInfo>:--release>
             --target ${Rust_CARGO_TARGET}
             ${CARGO_FLAGS}
             ${FEATURES_ARG}

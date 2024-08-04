@@ -107,7 +107,7 @@ isolated-tmux send-keys C-u 'bind \cs forward-char-passive' Enter C-l
 isolated-tmux send-keys C-u 'bind \cb backward-char-passive' Enter C-l
 isolated-tmux send-keys C-u 'echo do not accept this' Enter C-l
 tmux-sleep
-isolated-tmux send-keys 'echo do not accept thi' C-b C-b Delete C-b C-s 'h'
+isolated-tmux send-keys 'echo do not accept thi' C-b C-b DC C-b C-s 'h'
 tmux-sleep
 isolated-tmux send-keys C-s C-s C-s 'x'
 isolated-tmux capture-pane -p

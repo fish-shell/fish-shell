@@ -1,4 +1,4 @@
-FROM centos:8
+FROM tgagor/centos-stream:latest
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 # See https://stackoverflow.com/questions/70963985/error-failed-to-download-metadata-for-repo-appstream-cannot-prepare-internal
@@ -13,18 +13,20 @@ RUN dnf -y install dnf-plugins-core \
   && dnf config-manager --set-enabled powertools \
   && yum install --assumeyes epel-release \
   && yum install --assumeyes \
+    cargo \
     cmake \
     diffutils \
     gcc-c++ \
     git \
     ninja-build \
     python3 \
+    python3-pexpect \
     openssl \
     pcre2-devel \
+    rustc \
     sudo \
+    tmux \
   && yum clean all
-
-RUN pip3 install pexpect
 
 RUN groupadd -g 1000 fishuser \
   && useradd  -p $(openssl passwd -1 fish) -d /home/fishuser -m -u 1000 -g 1000 fishuser -G wheel \

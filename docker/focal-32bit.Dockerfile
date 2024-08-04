@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-ENV CXXFLAGS="-m32 -Werror=address -Werror=return-type" CFLAGS="-m32"
+ENV CFLAGS="-m32"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -19,6 +19,7 @@ RUN apt-get update \
     python3 \
     python3-pexpect \
     sudo \
+    tmux \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 
@@ -32,6 +33,11 @@ RUN groupadd -g 1000 fishuser \
 USER fishuser
 WORKDIR /home/fishuser
 
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
+  && sh /tmp/rustup.sh -y --default-toolchain nightly --component rust-src
+
 COPY fish_run_tests.sh /
 
-CMD /fish_run_tests.sh
+CMD . ~/.cargo/env \
+    && rustup target add i686-unknown-linux-gnu \
+    && /fish_run_tests.sh -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu

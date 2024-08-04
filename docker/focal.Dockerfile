@@ -1,22 +1,25 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
+    cargo \
     cmake \
-    clang-9 \
     gettext \
     git \
-    libpcre2-dev \
     locales \
     ninja-build \
+    pkg-config \
     python3 \
     python3-pexpect \
+    rustc \
     sudo \
+    tmux \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 
@@ -31,6 +34,5 @@ USER fishuser
 WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
-
 
 CMD /fish_run_tests.sh

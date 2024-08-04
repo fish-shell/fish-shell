@@ -16,9 +16,8 @@ RUN apt-get update \
     ninja-build \
     python3 \
     python3-pexpect \
-    tmux \
-    rustc \
     sudo \
+    tmux \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 
@@ -42,9 +41,9 @@ COPY fish_run_tests.sh /
 
 ENV \
     RUSTFLAGS=-Zsanitizer=address \
+    RUSTDOCFLAGS=-Zsanitizer=address \
     CC=clang \
     CXX=clang++ \
-    CXXFLAGS=-DFISH_CI_SAN \
     ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1 \
     LSAN_OPTIONS=verbosity=0:log_threads=0:use_tls=1:print_suppressions=0:suppressions=/fish-source/build_tools/lsan_suppressions.txt \
     FISH_CI_SAN=1

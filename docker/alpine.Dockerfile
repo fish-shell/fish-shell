@@ -5,18 +5,21 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
 RUN apk add --no-cache \
-  bash \
-  cmake \
-  g++ \
-  gettext-dev \
-  git \
-  libintl \
-  musl-dev \
-  ninja \
-  pcre2-dev \
-  python3 \
-  py3-pexpect \
-  cargo
+    bash \
+    cargo \
+    cmake \
+    g++ \
+    gettext-dev \
+    git \
+    libintl \
+    musl-dev \
+    ninja \
+    pcre2-dev \
+    py3-pexpect \
+    python3 \
+    rust \
+    sudo \
+    tmux
 
 RUN addgroup -g 1000 fishuser
 

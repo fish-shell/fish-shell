@@ -3,12 +3,12 @@ LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-ENV CXXFLAGS="-Werror=address -Werror=return-type -Wno-psabi"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
+    cargo \
     cmake \
     file \
     g++ \
@@ -20,7 +20,9 @@ RUN apt-get update \
     pkg-config \
     python3 \
     python3-pexpect \
+    rust \
     sudo \
+    tmux \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 

@@ -8,8 +8,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
+    cargo \
     cmake \
-    clang-9 \
+    clang \
     gettext \
     git \
     libpcre2-dev \
@@ -17,7 +18,9 @@ RUN apt-get update \
     ninja-build \
     python3 \
     python3-pexpect \
+    rustc \
     sudo \
+    tmux \
   && locale-gen en_US.UTF-8 \
   && apt-get clean
 

@@ -23,16 +23,18 @@ use std::{
     ffi::CString,
     fs::File,
     io::{BufRead, Read, Seek, SeekFrom, Write},
-    mem,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::fd::{AsFd, AsRawFd, RawFd},
+    os::{
+        fd::{AsFd, AsRawFd, RawFd},
+        unix::fs::MetadataExt,
+    },
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use bitflags::bitflags;
-use libc::{fchmod, fchown, flock, fstat, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::{fchmod, fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -62,6 +64,7 @@ use crate::{
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
+    wutil::fstat,
     wutil::{
         file_id_for_fd, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId,
         INVALID_FILE_ID,
@@ -718,16 +721,18 @@ impl HistoryImpl {
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
                 if let Ok(target_fd_after) = target_fd_after.as_ref() {
-                    let mut sbuf: libc::stat = unsafe { mem::zeroed() };
-                    if unsafe { fstat(target_fd_after.as_raw_fd(), &mut sbuf) } >= 0 {
-                        if unsafe { fchown(tmp_file.as_raw_fd(), sbuf.st_uid, sbuf.st_gid) } == -1 {
+                    if let Ok(md) = fstat(target_fd_after.as_raw_fd()) {
+                        if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing ownership of history file",
                                 errno::errno().0
                             );
                         }
-                        if unsafe { fchmod(tmp_file.as_raw_fd(), sbuf.st_mode) } == -1 {
+                        #[allow(clippy::useless_conversion)]
+                        if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
+                            == -1
+                        {
                             FLOGF!(
                                 history_file,
                                 "Error %d when changing mode of history file",

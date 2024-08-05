@@ -1,4 +1,4 @@
-use std::sync::atomic::AtomicPtr;
+use std::{ffi::CStr, sync::atomic::AtomicPtr};
 
 use libc::{c_char, c_int};
 use once_cell::sync::Lazy;
@@ -77,5 +77,38 @@ extern "C" {
         d_name_len: *mut usize,
         d_ino: *mut u64,
         d_type: *mut u8,
+    ) -> bool;
+}
+
+pub(crate) fn portable_fstatat(
+    dirfd: c_int,
+    file: &CStr,
+    flag: c_int,
+) -> Option<(u64, u64, libc::mode_t)> {
+    let mut st_dev = unsafe { std::mem::zeroed() };
+    let mut st_ino = unsafe { std::mem::zeroed() };
+    let mut st_mode = unsafe { std::mem::zeroed() };
+    if !unsafe {
+        C_portable_fstatat(
+            dirfd,
+            file.as_ptr(),
+            flag,
+            &mut st_dev,
+            &mut st_ino,
+            &mut st_mode,
+        )
+    } {
+        return None;
+    }
+    Some((st_dev, st_ino, st_mode))
+}
+extern "C" {
+    fn C_portable_fstatat(
+        dirfd: c_int,
+        file: *const c_char,
+        flag: c_int,
+        st_dev: *mut u64,
+        st_ino: *mut u64,
+        st_mode: *mut libc::mode_t,
     ) -> bool;
 }

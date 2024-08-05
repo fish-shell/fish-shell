@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <fcntl.h>
 #include <locale.h>
 #include <paths.h>
 #include <stdbool.h>
@@ -6,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -196,5 +198,16 @@ bool C_portable_readdir(DIR* dirp, const char** d_name, size_t* d_name_len, uint
     *d_ino = dent->d_ino;
 #endif
     *d_type = dent->d_type;
+    return true;
+}
+
+bool C_portable_fstatat(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64_t* st_ino, mode_t* st_mode) {
+    struct stat buf;
+    if (fstatat(dirfd, file, &buf, flag) == -1) {
+        return false;
+    }
+    *st_dev = buf.st_dev;
+    *st_ino = buf.st_ino;
+    *st_mode = buf.st_mode;
     return true;
 }

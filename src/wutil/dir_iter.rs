@@ -1,6 +1,6 @@
 use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
-use crate::libc::portable_readdir;
+use crate::libc::{portable_fstatat, portable_readdir};
 use crate::wchar::{wstr, WString};
 use crate::wutil::DevInode;
 use libc::{
@@ -104,14 +104,13 @@ impl DirEntry {
             return;
         }
         let narrow = wcs2zstring(&self.name);
-        let mut s: libc::stat = unsafe { std::mem::zeroed() };
-        if unsafe { libc::fstatat(fd, narrow.as_ptr(), &mut s, 0) } == 0 {
+        if let Some((st_dev, st_ino, st_mode)) = portable_fstatat(fd, &narrow, 0) {
             let dev_inode = DevInode {
-                device: s.st_dev as u64,
-                inode: s.st_ino as u64,
+                device: st_dev,
+                inode: st_ino,
             };
             self.dev_inode.set(Some(dev_inode));
-            self.typ.set(stat_mode_to_entry_type(s.st_mode));
+            self.typ.set(stat_mode_to_entry_type(st_mode));
         } else {
             match errno::errno().0 {
                 ELOOP => {

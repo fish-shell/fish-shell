@@ -44,37 +44,6 @@ impl FileId {
         }
     }
 
-    #[allow(clippy::unnecessary_cast)] // platform-dependent
-    pub fn from_stat(buf: &libc::stat) -> FileId {
-        let device = buf.st_dev as _;
-        let inode = buf.st_ino as _;
-        let size = buf.st_size as _;
-        let change_seconds = buf.st_ctime as _;
-        let mod_seconds = buf.st_mtime as _;
-
-        let change_nanoseconds;
-        let mod_nanoseconds;
-
-        #[cfg(not(target_os = "netbsd"))]
-        {
-            change_nanoseconds = buf.st_ctime_nsec as _;
-            mod_nanoseconds = buf.st_mtime_nsec as _;
-        }
-        #[cfg(target_os = "netbsd")]
-        {
-            change_nanoseconds = buf.st_ctimensec as _;
-            mod_nanoseconds = buf.st_mtimensec as _;
-        }
-        FileId {
-            dev_inode: DevInode { device, inode },
-            size,
-            change_seconds,
-            change_nanoseconds,
-            mod_seconds,
-            mod_nanoseconds,
-        }
-    }
-
     /// Return true if \param rhs has higher mtime seconds than this file_id_t.
     /// If identical, nanoseconds are compared.
     pub fn older_than(&self, rhs: &FileId) -> bool {

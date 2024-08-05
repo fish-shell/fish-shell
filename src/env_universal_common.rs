@@ -774,7 +774,6 @@ impl EnvUniversal {
         let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
 
         // Ensure we maintain ownership and permissions (#2176).
-        // let mut sbuf : libc::stat = MaybeUninit::uninit();
         if let Ok(md) = wstat(&real_path) {
             if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                 FLOG!(uvar_file, "universal log fchown() failed");

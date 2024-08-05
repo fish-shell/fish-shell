@@ -2,12 +2,13 @@
 // Everything in this module must be async-signal safe.
 // That means no locking, no allocating, no freeing memory, etc!
 use super::flog_safe::FLOG_SAFE;
-use crate::common::exit_without_destructors;
 use crate::nix::getpid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
-use libc::{c_char, pid_t};
+use crate::{common::exit_without_destructors, wutil::fstat};
+use libc::{c_char, pid_t, O_RDONLY};
 use std::ffi::CStr;
+use std::os::unix::fs::MetadataExt;
 
 /// The number of times to try to call fork() before giving up.
 const FORK_LAPS: usize = 5;
@@ -339,9 +340,14 @@ pub(crate) fn safe_report_exec_error(
             // find must be errors from exec().
             let mut interpreter_buf = [b'\0'; 128];
             if let Some(interpreter) = get_interpreter(actual_cmd, &mut interpreter_buf) {
-                let mut buf: libc::stat = unsafe { std::mem::zeroed() };
-                let statret = unsafe { libc::stat(interpreter.as_ptr(), &mut buf) };
-                if statret != 0 || unsafe { libc::access(interpreter.as_ptr(), libc::X_OK) } != 0 {
+                let fd = unsafe { libc::open(interpreter.as_ptr(), O_RDONLY) };
+                let md = if fd == -1 {
+                    Err(())
+                } else {
+                    fstat(fd).map_err(|_| ())
+                };
+                #[allow(clippy::useless_conversion)] // for mode
+                if md.is_err() || unsafe { libc::access(interpreter.as_ptr(), libc::X_OK) } != 0 {
                     // Detect Windows line endings and complain specifically about them.
                     let interpreter = interpreter.to_bytes();
                     if interpreter.last() == Some(&b'\r') {
@@ -361,7 +367,7 @@ pub(crate) fn safe_report_exec_error(
                             "', which is not an executable command."
                         );
                     }
-                } else if buf.st_mode & libc::S_IFMT == libc::S_IFDIR {
+                } else if md.unwrap().mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR) {
                     FLOG_SAFE!(
                         exec,
                         "Failed to execute process '",

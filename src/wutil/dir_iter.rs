@@ -1,5 +1,6 @@
 use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
+use crate::libc::portable_readdir;
 use crate::wchar::{wstr, WString};
 use crate::wutil::DevInode;
 use libc::{
@@ -34,7 +35,7 @@ pub struct DirEntry {
     pub name: WString,
 
     /// inode of this entry.
-    pub inode: libc::ino_t,
+    pub inode: u64,
 
     // Device, inode pair for this entry, or none if not yet computed.
     dev_inode: Cell<Option<DevInode>>,
@@ -252,8 +253,7 @@ impl DirIter {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
         errno::set_errno(errno::Errno(0));
-        let dent = unsafe { libc::readdir(self.dir.dir()).as_ref() };
-        let Some(dent) = dent else {
+        let Some((d_name, d_name_len, d_ino, d_type)) = portable_readdir(self.dir.dir()) else {
             // readdir distinguishes between EOF and error via errno.
             let err = errno::errno().0;
             if err == 0 {
@@ -263,9 +263,10 @@ impl DirIter {
             }
         };
 
+        let d_name = unsafe { slice::from_raw_parts(d_name, d_name_len) };
         // dent.d_name is c_char; pretend it's u8.
         assert!(std::mem::size_of::<libc::c_char>() == std::mem::size_of::<u8>());
-        let d_name_cchar = &dent.d_name;
+        let d_name_cchar = &d_name;
         let d_name = unsafe {
             slice::from_raw_parts(d_name_cchar.as_ptr() as *const u8, d_name_cchar.len())
         };
@@ -276,22 +277,12 @@ impl DirIter {
             return self.next();
         }
 
-        let nul_pos = dent.d_name.iter().position(|b| *b == 0).unwrap();
-        let d_name: Vec<u8> = dent.d_name[..nul_pos + 1]
-            .iter()
-            .map(|b| *b as u8)
-            .collect();
+        let nul_pos = d_name.iter().position(|b| *b == 0).unwrap();
+        let d_name = &d_name[..nul_pos + 1];
         self.entry.reset();
-        self.entry.name = cstr2wcstring(&d_name);
-        #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
-        {
-            self.entry.inode = dent.d_fileno;
-        }
-        #[cfg(not(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd")))]
-        {
-            self.entry.inode = dent.d_ino;
-        }
-        let typ = dirent_type_to_entry_type(dent.d_type);
+        self.entry.name = cstr2wcstring(d_name);
+        self.entry.inode = d_ino;
+        let typ = dirent_type_to_entry_type(d_type);
         // Do not store symlinks as we will need to resolve them.
         if typ != Some(DirEntryType::lnk) {
             self.entry.typ.set(typ);

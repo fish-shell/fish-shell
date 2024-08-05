@@ -901,7 +901,7 @@ mod expander {
             // Ensure we don't fall into a symlink loop.
             // Ideally we would compare both devices and inodes, but devices require a stat call, so we
             // use inodes exclusively.
-            let mut visited_inodes: HashSet<libc::ino_t> = HashSet::new();
+            let mut visited_inodes: HashSet<u64> = HashSet::new();
 
             loop {
                 let mut unique_entry = WString::new();

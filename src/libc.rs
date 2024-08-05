@@ -59,3 +59,23 @@ CVAR!(C_RLIMIT_RTTIME, RLIMIT_RTTIME, i32);
 CVAR!(C_RLIMIT_KQUEUES, RLIMIT_KQUEUES, i32);
 CVAR!(C_RLIMIT_NPTS, RLIMIT_NPTS, i32);
 CVAR!(C_RLIMIT_NTHR, RLIMIT_NTHR, i32);
+
+pub(crate) fn portable_readdir(dirp: *mut libc::DIR) -> Option<(*const c_char, usize, u64, u8)> {
+    let mut d_name = unsafe { std::mem::zeroed() };
+    let mut d_name_len = unsafe { std::mem::zeroed() };
+    let mut d_ino = unsafe { std::mem::zeroed() };
+    let mut d_type = unsafe { std::mem::zeroed() };
+    if !unsafe { C_portable_readdir(dirp, &mut d_name, &mut d_name_len, &mut d_ino, &mut d_type) } {
+        return None;
+    }
+    Some((d_name, d_name_len, d_ino, d_type))
+}
+extern "C" {
+    fn C_portable_readdir(
+        dirp: *mut libc::DIR,
+        d_name: *mut *const c_char,
+        d_name_len: *mut usize,
+        d_ino: *mut u64,
+        d_type: *mut u8,
+    ) -> bool;
+}

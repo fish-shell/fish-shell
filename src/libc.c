@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <locale.h>
 #include <paths.h>
 #include <stdbool.h>
@@ -5,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define UNUSED(x) (void)(x)
@@ -179,4 +181,20 @@ int C_RLIMIT_NTHR() {
 #else
     return -1;
 #endif
+}
+
+bool C_portable_readdir(DIR* dirp, const char** d_name, size_t* d_name_len, uint64_t* d_ino, unsigned char* d_type) {
+    struct dirent *dent = readdir(dirp);
+    if (!dent) {
+        return false;
+    }
+    *d_name = dent->d_name;
+    *d_name_len = sizeof dent->d_name / sizeof **d_name;
+#if defined(__BSD__)
+    *d_ino = dent->d_fileno;
+#else
+    *d_ino = dent->d_ino;
+#endif
+    *d_type = dent->d_type;
+    return true;
 }

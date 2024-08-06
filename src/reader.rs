@@ -3856,7 +3856,7 @@ fn reader_interactive_init(parser: &Parser) {
         parser
             .vars()
             .get(L!("LC_TERMINAL"))
-            .is_some_and(|term| term.as_list() == &[L!("iTerm2")]),
+            .is_some_and(|term| term.as_list() == [L!("iTerm2")]),
     );
 }
 

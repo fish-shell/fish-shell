@@ -435,6 +435,7 @@ static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
 
 pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static IN_ITERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocols_enable_ifn() {
     if IN_MIDNIGHT_COMMANDER.load() {
@@ -461,12 +462,16 @@ struct TerminalProtocols {}
 
 impl TerminalProtocols {
     fn new() -> Self {
-        let sequences = concat!(
-            "\x1b[?2004h", // Bracketed paste
-            "\x1b[>4;1m",  // XTerm's modifyOtherKeys
-            "\x1b[=5u",    // CSI u with kitty progressive enhancement
-            "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
-        );
+        let sequences = if IN_ITERM.load() {
+            concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
+        } else {
+            concat!(
+                "\x1b[?2004h", // Bracketed paste
+                "\x1b[>4;1m",  // XTerm's modifyOtherKeys
+                "\x1b[=5u",    // CSI u with kitty progressive enhancement
+                "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
+            )
+        };
         FLOG!(
             term_protocols,
             format!(
@@ -485,12 +490,16 @@ impl TerminalProtocols {
 
 impl Drop for TerminalProtocols {
     fn drop(&mut self) {
-        let sequences = concat!(
-            "\x1b[?2004l", // Bracketed paste
-            "\x1b[>4;0m",  // XTerm's modifyOtherKeys
-            "\x1b[=0u",    // CSI u with kitty progressive enhancement
-            "\x1b>",       // application keypad mode
-        );
+        let sequences = if IN_ITERM.load() {
+            concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
+        } else {
+            concat!(
+                "\x1b[?2004l", // Bracketed paste
+                "\x1b[>4;0m",  // XTerm's modifyOtherKeys
+                "\x1b[=0u",    // CSI u with kitty progressive enhancement
+                "\x1b>",       // application keypad mode
+            )
+        };
         FLOG!(
             term_protocols,
             format!(

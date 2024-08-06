@@ -70,6 +70,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::IN_ITERM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::{
     terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
@@ -3851,6 +3852,12 @@ fn reader_interactive_init(parser: &Parser) {
 
     IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
     IN_MIDNIGHT_COMMANDER.store(parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some());
+    IN_ITERM.store(
+        parser
+            .vars()
+            .get(L!("LC_TERMINAL"))
+            .is_some_and(|term| term.as_list() == &[L!("iTerm2")]),
+    );
 }
 
 /// Destroy data for interactive use.

@@ -9,12 +9,13 @@ use crate::{common::exit_without_destructors, wutil::fstat};
 use libc::{c_char, pid_t, O_RDONLY};
 use std::ffi::CStr;
 use std::os::unix::fs::MetadataExt;
+use std::time::Duration;
 
 /// The number of times to try to call fork() before giving up.
 const FORK_LAPS: usize = 5;
 
 /// The number of nanoseconds to sleep between attempts to call fork().
-const FORK_SLEEP_TIME: libc::c_long = 1000000;
+const FORK_SLEEP_TIME: Duration = Duration::from_nanos(1000000);
 
 /// Clear FD_CLOEXEC on a file descriptor.
 fn clear_cloexec(fd: i32) -> i32 {
@@ -211,13 +212,9 @@ pub fn execute_fork() -> pid_t {
         if err != libc::EAGAIN {
             break;
         }
-        let pollint = libc::timespec {
-            tv_sec: 0,
-            tv_nsec: FORK_SLEEP_TIME,
-        };
         // Don't sleep on the final lap
         if i != FORK_LAPS - 1 {
-            unsafe { libc::nanosleep(&pollint, std::ptr::null_mut()) };
+            std::thread::sleep(FORK_SLEEP_TIME);
         }
     }
 

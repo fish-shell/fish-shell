@@ -185,8 +185,9 @@ int C_RLIMIT_NTHR() {
 #endif
 }
 
-bool C_readdir64(DIR* dirp, const char** d_name, size_t* d_name_len, uint64_t* d_ino, unsigned char* d_type) {
-    struct dirent *dent = readdir(dirp);
+bool C_readdir64(DIR* dirp, const char** d_name, size_t* d_name_len, uint64_t* d_ino,
+                 unsigned char* d_type) {
+    struct dirent* dent = readdir(dirp);
     if (!dent) {
         return false;
     }
@@ -201,7 +202,8 @@ bool C_readdir64(DIR* dirp, const char** d_name, size_t* d_name_len, uint64_t* d
     return true;
 }
 
-bool C_fstatat64(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64_t* st_ino, mode_t* st_mode) {
+bool C_fstatat64(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64_t* st_ino,
+                 mode_t* st_mode) {
     struct stat buf;
     if (fstatat(dirfd, file, &buf, flag) == -1) {
         return false;

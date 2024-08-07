@@ -9,6 +9,7 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #define UNUSED(x) (void)(x)
@@ -212,4 +213,9 @@ bool C_fstatat64(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64
     *st_ino = buf.st_ino;
     *st_mode = buf.st_mode;
     return true;
+}
+
+bool C_localtime64_r(int64_t timep, struct tm* result) {
+    time_t timep_ = timep;
+    return localtime_r(&timep_, result);
 }

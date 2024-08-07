@@ -16,7 +16,7 @@
 //! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 //! trigger race conditions. This is useful for testing.
 
-use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
+use crate::{common::cstr2wcstring, env::EnvVar, libc::localtime64_r, wcstringutil::trim};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet, VecDeque},
@@ -1409,10 +1409,8 @@ fn format_history_record(
 ) -> WString {
     let mut result = WString::new();
     let seconds = time_to_seconds(item.timestamp());
-    let seconds = seconds as libc::time_t;
-    let mut timestamp: libc::tm = unsafe { std::mem::zeroed() };
     if let Some(show_time_format) = show_time_format.and_then(|s| CString::new(s).ok()) {
-        if !unsafe { libc::localtime_r(&seconds, &mut timestamp).is_null() } {
+        if let Some(timestamp) = localtime64_r(seconds) {
             const max_tstamp_length: usize = 100;
             let mut timestamp_str = [0_u8; max_tstamp_length];
             // The libc crate fails to declare strftime on BSD.

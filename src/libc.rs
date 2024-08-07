@@ -112,3 +112,14 @@ extern "C" {
         st_mode: *mut libc::mode_t,
     ) -> bool;
 }
+
+pub(crate) fn localtime64_r(timep: i64) -> Option<libc::tm> {
+    let mut timestamp = unsafe { std::mem::zeroed() };
+    if !unsafe { C_localtime64_r(timep, &mut timestamp) } {
+        return None;
+    }
+    Some(timestamp)
+}
+extern "C" {
+    fn C_localtime64_r(timep: i64, result: *mut libc::tm) -> bool;
+}

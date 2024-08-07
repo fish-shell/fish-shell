@@ -250,6 +250,23 @@ int C_select64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
     return result;
 }
 
+struct timespec64 {
+    int64_t tv_sec;
+    int64_t tv_nsec;
+};
+
+int C_pselect64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
+                struct timespec64* timeout64, const sigset_t* sigmask) {
+    struct timespec timeout;
+    if (timeout64) {
+        timeout.tv_sec = timeout64->tv_sec;
+        timeout.tv_nsec = timeout64->tv_nsec;
+        assert_or_die(timeout.tv_sec == timeout64->tv_sec);
+        assert_or_die(timeout.tv_nsec == timeout64->tv_nsec);
+    }
+    return pselect(nfds, readfds, writefds, errorfds, timeout64 ? &timeout : NULL, sigmask);
+}
+
 struct rusage64 {
     struct timeval64 ru_utime;
     struct timeval64 ru_stime;

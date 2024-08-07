@@ -151,6 +151,34 @@ extern "C" {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy)]
+pub struct timespec64 {
+    pub tv_sec: i64,
+    pub tv_nsec: i64,
+}
+
+pub(crate) fn pselect64(
+    nfds: c_int,
+    readfds: *mut fd_set,
+    writefds: *mut fd_set,
+    errorfds: *mut fd_set,
+    timeout: *const timespec64,
+    sigmask: *const libc::sigset_t,
+) -> c_int {
+    unsafe { C_pselect64(nfds, readfds, writefds, errorfds, timeout, sigmask) }
+}
+extern "C" {
+    fn C_pselect64(
+        nfds: c_int,
+        readfds: *mut fd_set,
+        writefds: *mut fd_set,
+        errorfds: *mut fd_set,
+        timeout: *const timespec64,
+        sigmask: *const libc::sigset_t,
+    ) -> c_int;
+}
+
+#[repr(C)]
 pub struct rusage64 {
     pub ru_utime: timeval64,
     pub ru_stime: timeval64,

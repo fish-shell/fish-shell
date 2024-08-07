@@ -11,6 +11,7 @@ use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
     Key, Modifiers,
 };
+use crate::libc::{pselect64, timespec64};
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, MainThread};
 use crate::universal_notifier::default_notifier;
@@ -1080,7 +1081,7 @@ pub trait InputEventQueuer {
         const NSEC_PER_MSEC: u64 = 1000 * 1000;
         const NSEC_PER_SEC: u64 = NSEC_PER_MSEC * 1000;
         let wait_nsec: u64 = (wait_time_ms as u64) * NSEC_PER_MSEC;
-        let timeout = libc::timespec {
+        let timeout = timespec64 {
             tv_sec: (wait_nsec / NSEC_PER_SEC).try_into().unwrap(),
             tv_nsec: (wait_nsec % NSEC_PER_SEC).try_into().unwrap(),
         };
@@ -1092,16 +1093,14 @@ pub trait InputEventQueuer {
             libc::FD_ZERO(&mut fdset);
             libc::FD_SET(in_fd, &mut fdset);
         };
-        let res = unsafe {
-            libc::pselect(
-                in_fd + 1,
-                &mut fdset,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                &timeout,
-                &sigs,
-            )
-        };
+        let res = pselect64(
+            in_fd + 1,
+            &mut fdset,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &timeout,
+            &sigs,
+        );
 
         // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
         if is_windows_subsystem_for_linux(WSL::V1) {

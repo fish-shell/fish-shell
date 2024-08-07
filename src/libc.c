@@ -285,3 +285,22 @@ int C_getrusage64(int resource, struct rusage64* usage) {
     usage->ru_nsignals = tmp.ru_nsignals;
     return result;
 }
+
+bool C_clock_gettime64(clockid_t clock_id, struct timespec64* tp) {
+    struct timespec tp_;
+    if (clock_gettime(clock_id, &tp_) == -1) {
+        return false;
+    }
+    tp->tv_sec = tp_.tv_sec;
+    tp->tv_nsec = tp_.tv_nsec;
+    return true;
+}
+
+bool C_futimens64(int fd, struct timespec64 times0, struct timespec64 times1) {
+    struct timespec times[2];
+    times[0].tv_sec = times0.tv_sec;
+    times[0].tv_nsec = times0.tv_nsec;
+    times[1].tv_sec = times1.tv_sec;
+    times[1].tv_nsec = times1.tv_nsec;
+    return futimens(fd, &times[0]) == 0;
+}

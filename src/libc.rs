@@ -1,6 +1,6 @@
 use std::{ffi::CStr, sync::atomic::AtomicPtr};
 
-use libc::{c_char, c_int};
+use libc::{c_char, c_int, fd_set};
 use once_cell::sync::Lazy;
 
 pub static _PATH_BSHELL: AtomicPtr<c_char> = AtomicPtr::new(std::ptr::null_mut());
@@ -122,4 +122,30 @@ pub(crate) fn localtime64_r(timep: i64) -> Option<libc::tm> {
 }
 extern "C" {
     fn C_localtime64_r(timep: i64, result: *mut libc::tm) -> bool;
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct timeval64 {
+    pub tv_sec: i64,
+    pub tv_usec: i64,
+}
+
+pub(crate) fn select64(
+    nfds: c_int,
+    readfds: *mut fd_set,
+    writefds: *mut fd_set,
+    errorfds: *mut fd_set,
+    timeout: *mut timeval64,
+) -> c_int {
+    unsafe { C_select64(nfds, readfds, writefds, errorfds, timeout) }
+}
+extern "C" {
+    fn C_select64(
+        nfds: c_int,
+        readfds: *mut fd_set,
+        writefds: *mut fd_set,
+        errorfds: *mut fd_set,
+        timeout: *mut timeval64,
+    ) -> c_int;
 }

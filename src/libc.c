@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <locale.h>
@@ -7,12 +8,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
+#include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
 #define UNUSED(x) (void)(x)
+
+#define assert_or_die(x)   \
+    do {                   \
+        assert((x));       \
+        if (!(x)) abort(); \
+    } while (false)
 
 size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
 
@@ -218,4 +226,26 @@ bool C_fstatat64(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64
 bool C_localtime64_r(int64_t timep, struct tm* result) {
     time_t timep_ = timep;
     return localtime_r(&timep_, result);
+}
+
+struct timeval64 {
+    int64_t tv_sec;
+    int64_t tv_usec;
+};
+
+int C_select64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
+               struct timeval64* timeout64) {
+    struct timeval timeout;
+    if (timeout64) {
+        timeout.tv_sec = timeout64->tv_sec;
+        timeout.tv_usec = timeout64->tv_usec;
+        assert_or_die(timeout.tv_sec == timeout64->tv_sec);
+        assert_or_die(timeout.tv_usec == timeout64->tv_usec);
+    }
+    int result = select(nfds, readfds, writefds, errorfds, timeout64 ? &timeout : NULL);
+    if (timeout64) {
+        timeout64->tv_sec = timeout.tv_sec;
+        timeout64->tv_usec = timeout.tv_usec;
+    }
+    return result;
 }

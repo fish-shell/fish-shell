@@ -7,6 +7,7 @@ use crate::common::exit_without_destructors;
 use crate::fd_readable_set::FdReadableSet;
 use crate::fds::AutoCloseFd;
 use crate::flog::FLOG;
+use crate::libc::{select64, timeval64};
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror;
 use errno::errno;
@@ -142,26 +143,24 @@ impl FdEventSignaller {
     /// but guarantees that the next call to wait() will not block.
     /// Return true if readable, false if not readable, or not interrupted by a signal.
     pub fn poll(&self, wait: bool /* = false */) -> bool {
-        let mut timeout = libc::timeval {
+        let mut timeout = timeval64 {
             tv_sec: 0,
             tv_usec: 0,
         };
         let mut fds: libc::fd_set = unsafe { std::mem::zeroed() };
         unsafe { libc::FD_ZERO(&mut fds) };
         unsafe { libc::FD_SET(self.read_fd(), &mut fds) };
-        let res = unsafe {
-            libc::select(
-                self.read_fd() + 1,
-                &mut fds,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                if wait {
-                    std::ptr::null_mut()
-                } else {
-                    &mut timeout
-                },
-            )
-        };
+        let res = select64(
+            self.read_fd() + 1,
+            &mut fds,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            if wait {
+                std::ptr::null_mut()
+            } else {
+                &mut timeout
+            },
+        );
         res > 0
     }
 

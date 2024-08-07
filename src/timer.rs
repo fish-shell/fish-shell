@@ -17,6 +17,8 @@
 use std::io::Write;
 use std::time::{Duration, Instant};
 
+use crate::libc::{getrusage64, rusage64};
+
 enum Unit {
     Minutes,
     Seconds,
@@ -26,8 +28,8 @@ enum Unit {
 
 struct TimerSnapshot {
     wall_time: Instant,
-    cpu_fish: libc::rusage,
-    cpu_children: libc::rusage,
+    cpu_fish: rusage64,
+    cpu_children: rusage64,
 }
 
 /// Create a `TimerSnapshot` and return a `PrintElapsedOnDrop` object that will print upon
@@ -45,24 +47,12 @@ enum RUsage {
     RChildren,
 }
 
-/// A safe wrapper around `libc::getrusage()`
-fn getrusage(resource: RUsage) -> libc::rusage {
-    let mut rusage = std::mem::MaybeUninit::uninit();
-    let result = unsafe {
-        match resource {
-            RUsage::RSelf => libc::getrusage(libc::RUSAGE_SELF, rusage.as_mut_ptr()),
-            RUsage::RChildren => libc::getrusage(libc::RUSAGE_CHILDREN, rusage.as_mut_ptr()),
-        }
-    };
-
-    // getrusage(2) says the syscall can only fail if the dest address is invalid (EFAULT) or if the
-    // requested resource type is invalid. Since we're in control of both, we can assume it won't
-    // fail. In case it does anyway (e.g. OS where the syscall isn't implemented), we can just
-    // return an empty value.
-    match result {
-        0 => unsafe { rusage.assume_init() },
-        _ => unsafe { std::mem::zeroed() },
-    }
+fn getrusage(resource: RUsage) -> rusage64 {
+    getrusage64(match resource {
+        RUsage::RSelf => libc::RUSAGE_SELF,
+        RUsage::RChildren => libc::RUSAGE_CHILDREN,
+    })
+    .unwrap_or(unsafe { std::mem::zeroed() })
 }
 
 impl TimerSnapshot {

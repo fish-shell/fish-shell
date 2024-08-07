@@ -2,9 +2,10 @@
 
 use std::time::Duration;
 
-#[allow(clippy::unnecessary_cast)]
-pub const fn timeval_to_duration(val: &libc::timeval) -> Duration {
-    let micros = val.tv_sec as i64 * (1E6 as i64) + val.tv_usec as i64;
+use crate::libc::timeval64;
+
+pub(crate) const fn timeval_to_duration(val: &timeval64) -> Duration {
+    let micros = val.tv_sec * (1E6 as i64) + val.tv_usec;
     Duration::from_micros(micros as u64)
 }
 
@@ -13,7 +14,7 @@ pub trait TimevalExt {
     fn as_duration(&self) -> Duration;
 }
 
-impl TimevalExt for libc::timeval {
+impl TimevalExt for timeval64 {
     fn as_micros(&self) -> i64 {
         timeval_to_duration(self).as_micros() as i64
     }

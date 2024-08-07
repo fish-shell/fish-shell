@@ -126,7 +126,7 @@ extern "C" {
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub(crate) struct timeval64 {
+pub struct timeval64 {
     pub tv_sec: i64,
     pub tv_usec: i64,
 }
@@ -148,4 +148,28 @@ extern "C" {
         errorfds: *mut fd_set,
         timeout: *mut timeval64,
     ) -> c_int;
+}
+
+#[repr(C)]
+pub struct rusage64 {
+    pub ru_utime: timeval64,
+    pub ru_stime: timeval64,
+    pub ru_maxrss: u64,
+    pub ru_nsignals: u64,
+}
+
+pub fn getrusage64(resource: c_int) -> Option<rusage64> {
+    let mut rusage = std::mem::MaybeUninit::uninit();
+    let result = unsafe { C_getrusage64(resource, rusage.as_mut_ptr()) };
+    // getrusage(2) says the syscall can only fail if the dest address is invalid (EFAULT) or if the
+    // requested resource type is invalid. Since we're in control of both, we can assume it won't
+    // fail. In case it does anyway (e.g. OS where the syscall isn't implemented), we can just
+    // return an empty value.
+    match result {
+        0 => unsafe { Some(rusage.assume_init()) },
+        _ => None,
+    }
+}
+extern "C" {
+    fn C_getrusage64(resource: c_int, usage: *mut rusage64) -> c_int;
 }

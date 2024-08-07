@@ -249,3 +249,22 @@ int C_select64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
     }
     return result;
 }
+
+struct rusage64 {
+    struct timeval64 ru_utime;
+    struct timeval64 ru_stime;
+    int64_t ru_maxrss;
+    int64_t ru_nsignals;
+};
+
+int C_getrusage64(int resource, struct rusage64* usage) {
+    struct rusage tmp;
+    int result = getrusage(resource, &tmp);
+    usage->ru_utime.tv_sec = tmp.ru_utime.tv_sec;
+    usage->ru_utime.tv_usec = tmp.ru_utime.tv_usec;
+    usage->ru_stime.tv_sec = tmp.ru_stime.tv_sec;
+    usage->ru_stime.tv_usec = tmp.ru_stime.tv_usec;
+    usage->ru_maxrss = tmp.ru_maxrss;
+    usage->ru_nsignals = tmp.ru_nsignals;
+    return result;
+}

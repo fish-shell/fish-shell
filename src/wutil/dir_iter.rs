@@ -1,6 +1,6 @@
 use super::wopendir;
 use crate::common::{cstr2wcstring, wcs2zstring};
-use crate::libc::{portable_fstatat, portable_readdir};
+use crate::libc::{fstatat64, readdir64};
 use crate::wchar::{wstr, WString};
 use crate::wutil::DevInode;
 use libc::{
@@ -104,7 +104,7 @@ impl DirEntry {
             return;
         }
         let narrow = wcs2zstring(&self.name);
-        if let Some((st_dev, st_ino, st_mode)) = portable_fstatat(fd, &narrow, 0) {
+        if let Some((st_dev, st_ino, st_mode)) = fstatat64(fd, &narrow, 0) {
             let dev_inode = DevInode {
                 device: st_dev,
                 inode: st_ino,
@@ -252,7 +252,7 @@ impl DirIter {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
         errno::set_errno(errno::Errno(0));
-        let Some((d_name, d_name_len, d_ino, d_type)) = portable_readdir(self.dir.dir()) else {
+        let Some((d_name, d_name_len, d_ino, d_type)) = readdir64(self.dir.dir()) else {
             // readdir distinguishes between EOF and error via errno.
             let err = errno::errno().0;
             if err == 0 {

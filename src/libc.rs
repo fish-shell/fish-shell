@@ -60,18 +60,18 @@ CVAR!(C_RLIMIT_KQUEUES, RLIMIT_KQUEUES, i32);
 CVAR!(C_RLIMIT_NPTS, RLIMIT_NPTS, i32);
 CVAR!(C_RLIMIT_NTHR, RLIMIT_NTHR, i32);
 
-pub(crate) fn portable_readdir(dirp: *mut libc::DIR) -> Option<(*const c_char, usize, u64, u8)> {
+pub(crate) fn readdir64(dirp: *mut libc::DIR) -> Option<(*const c_char, usize, u64, u8)> {
     let mut d_name = unsafe { std::mem::zeroed() };
     let mut d_name_len = unsafe { std::mem::zeroed() };
     let mut d_ino = unsafe { std::mem::zeroed() };
     let mut d_type = unsafe { std::mem::zeroed() };
-    if !unsafe { C_portable_readdir(dirp, &mut d_name, &mut d_name_len, &mut d_ino, &mut d_type) } {
+    if !unsafe { C_readdir64(dirp, &mut d_name, &mut d_name_len, &mut d_ino, &mut d_type) } {
         return None;
     }
     Some((d_name, d_name_len, d_ino, d_type))
 }
 extern "C" {
-    fn C_portable_readdir(
+    fn C_readdir64(
         dirp: *mut libc::DIR,
         d_name: *mut *const c_char,
         d_name_len: *mut usize,
@@ -80,7 +80,7 @@ extern "C" {
     ) -> bool;
 }
 
-pub(crate) fn portable_fstatat(
+pub(crate) fn fstatat64(
     dirfd: c_int,
     file: &CStr,
     flag: c_int,
@@ -89,7 +89,7 @@ pub(crate) fn portable_fstatat(
     let mut st_ino = unsafe { std::mem::zeroed() };
     let mut st_mode = unsafe { std::mem::zeroed() };
     if !unsafe {
-        C_portable_fstatat(
+        C_fstatat64(
             dirfd,
             file.as_ptr(),
             flag,
@@ -103,7 +103,7 @@ pub(crate) fn portable_fstatat(
     Some((st_dev, st_ino, st_mode))
 }
 extern "C" {
-    fn C_portable_fstatat(
+    fn C_fstatat64(
         dirfd: c_int,
         file: *const c_char,
         flag: c_int,

@@ -614,3 +614,10 @@ function __fish_describe_command
 end
 test (count (complete -C"wh" | string match -rv "\tcommand|^while")) -gt 0 && echo "found" || echo "fail"
 # CHECK: found
+
+set -l commands check search show
+complete -c testcommand -n "not __fish_seen_subcommand_from $commands" -a 'check\t"Check the frobnicator" search\t"Search for frobs" show\t"Show all frobs"'
+complete -C'testcommand '
+# CHECK: check{{\t}}Check the frobnicator
+# CHECK: search{{\t}}Search for frobs
+# CHECK: show{{\t}}Show all frobs

@@ -12,7 +12,8 @@ Synopsis
     set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
     set [-Uflg] NAME [VALUE ...]
     set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
-    set (-a | --append) [-flgU] NAME VALUE ...
+    set (-a | --append) (-p | --prepend) [-flgU] NAME VALUE ...
+    set (-d | --default) [-ap] [-flgU] NAME VALUE ...
     set (-q | --query) (-e | --erase) [-flgU] [NAME][[INDEX]] ...]
     set (-S | --show) [NAME ...]
 
@@ -80,6 +81,13 @@ Further options:
     Prepends *VALUES* to the current set of values for variable **NAME**.
     This can be used with **--append** to both append and prepend at the same time.
     This cannot be used when assigning to a variable slice.
+
+**-d** or **--default** *NAME* *VALUE* ...
+    Sets the variable to VALUE if it isn't set yet, or uses the existing value if it is.
+    When used without a scope, nothing will happen if the variable already exists.
+    When it is used with a specified scope and another variable of the same name but different scope exists,
+    the variable will be created with the value of that other variable.
+    When used with **--append** or **--prepend**, the new VALUE will be appended or prepended to the existing value.
 
 **-e** or **--erase** *NAME*[*INDEX*]
     Causes the specified shell variables to be erased.

@@ -42,6 +42,7 @@ struct Options {
     shorten_ok: bool,
     append: bool,
     prepend: bool,
+    default: bool,
     preserve_failure_exit_status: bool,
     no_event: bool,
 }
@@ -65,6 +66,7 @@ impl Default for Options {
             shorten_ok: true,
             append: false,
             prepend: false,
+            default: false,
             preserve_failure_exit_status: true,
             no_event: false,
         }
@@ -104,12 +106,13 @@ impl Options {
         // Variables used for parsing the argument list. This command is atypical in using the "+"
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
-        const SHORT_OPTS: &wstr = L!("+:LSUaefghlnpqux");
+        const SHORT_OPTS: &wstr = L!("+:LSUadefghlnpqux");
         const LONG_OPTS: &[WOption] = &[
             wopt(L!("export"), NoArgument, 'x'),
             wopt(L!("global"), NoArgument, 'g'),
             wopt(L!("function"), NoArgument, 'f'),
             wopt(L!("local"), NoArgument, 'l'),
+            wopt(L!("default"), NoArgument, 'd'),
             wopt(L!("erase"), NoArgument, 'e'),
             wopt(L!("names"), NoArgument, 'n'),
             wopt(L!("unexport"), NoArgument, 'u'),
@@ -131,6 +134,7 @@ impl Options {
         while let Some(c) = w.next_opt() {
             match c {
                 'a' => opts.append = true,
+                'd' => opts.default = true,
                 'e' => {
                     opts.erase = true;
                     opts.preserve_failure_exit_status = false;
@@ -835,7 +839,7 @@ fn new_var_values(
     vars: &dyn Environment,
 ) -> Vec<WString> {
     let mut result = vec![];
-    if !opts.prepend && !opts.append {
+    if !opts.prepend && !opts.append && !opts.default {
         // Not prepending or appending.
         result.extend(argv.iter().copied().map(|s| s.to_owned()));
     } else {
@@ -848,6 +852,9 @@ fn new_var_values(
         // TODO: this races under concurrent execution.
         if let Some(existing) = vars.get(varname) {
             result = existing.as_list().to_owned();
+        } else if opts.default {
+            result.extend(argv.iter().copied().map(|s| s.to_owned()));
+            return result;
         }
 
         if opts.prepend {
@@ -947,10 +954,11 @@ fn set_internal(
                 return STATUS_INVALID_ARGS;
             }
         }
-        // Append and prepend are disallowed.
-        if opts.append || opts.prepend {
+        // Append, prepend and default are disallowed for now,
+        // because it's unclear what they would mean.
+        if opts.append || opts.prepend || opts.default {
             streams.err.append(wgettext_fmt!(
-                "%ls: Cannot use --append or --prepend when assigning to a slice",
+                "%ls: Cannot use --append, --prepend or --default when assigning to a slice",
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
@@ -969,9 +977,18 @@ fn set_internal(
         }
     }
 
+    let vars = parser.vars();
+
+    if opts.default && vars.getf(split.varname, opts.scope()).is_some() {
+        // if we append/prepend, we're gonna do that now.
+        if !opts.append && !opts.prepend {
+            return STATUS_CMD_OK;
+        }
+    }
+
     let new_values = if split.indexes.is_empty() {
         // Handle the simple, common, case. Set the var to the specified values.
-        new_var_values(split.varname, opts, argv, parser.vars())
+        new_var_values(split.varname, opts, argv, vars)
     } else {
         // Handle the uncommon case of setting specific slices of a var.
         new_var_values_by_index(&split, argv)

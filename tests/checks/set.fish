@@ -1013,4 +1013,36 @@ set line[0] ""
 echo Still here
 # CHECK: Still here
 
+# --default
+set -e banana
+set -g banana global
+function on_banana --on-variable banana
+    echo POTASSIUM YUM YUM
+end
+
+# No variable event here:
+set --default banana not happening
+# One here:
+set -d --local banana local
+#CHECK: POTASSIUM YUM YUM
+set --show banana
+#CHECK: $banana: set in local scope, unexported, with 1 elements
+# It is still the value "global"!
+#CHECK: $banana[1]: |global|
+#CHECK: $banana: set in global scope, unexported, with 1 elements
+#CHECK: $banana[1]: |global|
+
+set --default pineapple pineappolis
+echo $pineapple
+#CHECK: pineappolis
+
+set --default --append pineapple appended
+echo $pineapple
+#CHECK: pineappolis appended
+
+set --default --append mango this is new
+echo $mango
+#CHECK: this is new
+
+
 exit 0

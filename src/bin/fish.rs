@@ -71,8 +71,90 @@ use std::{env, ops::ControlFlow};
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
+const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
+
+#[cfg(feature = "installable")]
+fn install(noconfirm: bool) {
+    use rust_embed::RustEmbed;
+
+    #[derive(RustEmbed)]
+    #[folder = "share/"]
+    struct Asset;
+
+    use std::fs;
+    use std::io::ErrorKind;
+    use std::io::Write;
+    use std::io::{stderr, stdin};
+    let (_, home) = fish::env::get_user_home();
+    let Some(home) = home else {
+        eprintln!("Can't find $HOME",);
+        std::process::exit(1);
+    };
+    let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);
+
+    // TODO: Translation,
+    // FLOG?
+    // - Install: Translations
+    // - Install: Manpages (build via build.rs)
+    // - Don't install: __fish_build_paths.fish.in
+    if !noconfirm {
+        eprintln!(
+            "This will write fish's data files to '{}'.\n\
+             Please enter 'yes' to continue.",
+            dir.display()
+        );
+        eprint!("> ");
+        let _ = stderr().flush();
+
+        let mut input = String::new();
+        stdin()
+            .read_line(&mut input)
+            .expect("Failed to read from stdin");
+
+        if input != "yes\n" {
+            eprintln!("Exiting without writing any files");
+            std::process::exit(1);
+        }
+    } else {
+        eprintln!("Installing fish's data files to '{}'.", dir.display());
+    }
+
+    // Remove the install directory first, to clean out any removed files.
+    if let Err(err) = fs::remove_dir_all(dir.clone()) {
+        if err.kind() != ErrorKind::NotFound {
+            eprintln!("Removing '{}' failed: {}", dir.display(), err);
+            std::process::exit(1);
+        }
+    }
+
+    for file in Asset::iter() {
+        let path = dir.join(file.as_ref());
+        let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
+            eprintln!(
+                "Creating directory '{}' failed",
+                path.parent().unwrap().display()
+            );
+            std::process::exit(1);
+        };
+        let res = File::create(&path);
+        let Ok(mut f) = res else {
+            eprintln!("Creating file '{}' failed", path.display());
+            continue;
+        };
+        // This should be impossible.
+        let d = Asset::get(&file).expect("File was somehow not included???");
+        f.write_all(&d.data).expect("FAILED TO WRITE");
+    }
+    std::process::exit(0);
+}
+
+#[cfg(not(feature = "installable"))]
+fn install(_noconfirm: bool) {
+    eprintln!("Fish was built without support for self-installation");
+    std::process::exit(1);
+}
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -206,7 +288,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         // Fall back to what got compiled in.
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
-            data: PathBuf::from(DATA_DIR).join("fish"),
+            data: PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin: BIN_DIR.into(),
@@ -258,7 +340,28 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
+    let datapath = if cfg!(feature = "installable") {
+        let (_, Some(home)) = fish::env::get_user_home() else {
+            FLOG!(
+                error,
+                "Cannot find home directory and will refuse to read configuration"
+            );
+            return;
+        };
+
+        let p = PathBuf::from(home).join(paths.data.clone());
+        let Some(homestr) = p.to_str() else {
+            FLOG!(
+                error,
+                "Cannot decode home directory and will refuse to read configuration"
+            );
+            return;
+        };
+        str2wcstring(homestr.as_bytes())
+    } else {
+        str2wcstring(paths.data.as_os_str().as_bytes())
+    };
+
     if !source_config_in_directory(parser, &datapath) {
         // If we cannot read share/config.fish, our internal configuration,
         // something is wrong.
@@ -267,8 +370,14 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let escaped_pathname = escape(&datapath);
         FLOGF!(
             error,
-            "Fish cannot find its asset files in '%ls'. Refusing to read configuration.",
-            escaped_pathname
+            "Fish cannot find its asset files in '%ls'.\n\
+             Refusing to read configuration because of this.",
+            escaped_pathname,
+        );
+        #[cfg(feature = "installable")]
+        FLOG!(
+            error,
+            "If you installed via `cargo install`, please run `fish --install` and restart fish."
         );
         return;
     }
@@ -329,6 +438,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
+        wopt(L!("install"), OptionalArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -363,6 +473,21 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'f' => opts.features = w.woptarg.unwrap().to_owned(),
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
+            'I' => {
+                let noconfirm = match w.woptarg {
+                    None => false,
+                    Some(n) if n == L!("noconfirm") => true,
+                    _ => {
+                        FLOGF!(
+                            error,
+                            "Unknown argument to --install: '%ls'",
+                            w.woptarg.unwrap()
+                        );
+                        std::process::exit(1);
+                    }
+                };
+                install(noconfirm);
+            }
             'l' => opts.is_login = true,
             'N' => {
                 opts.no_config = true;

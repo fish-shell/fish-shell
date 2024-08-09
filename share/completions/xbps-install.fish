@@ -19,8 +19,8 @@ complete -c $progname -s I -d 'Ignore detected file conflicts in a transaction'
 complete -c $progname -s i -d 'Ignore repositories defined in configuration files'
 complete -c $progname -s M -d 'For remote repositories, the data is fetched and stored in memory'
 complete -c $progname -s n -d 'Dry-run mode.  Show what actions would be done but don\'t do anything'
-complete -c $progname -s R -d 'Enable repository mode'
-complete -c $progname -l repository -d 'Append the specified repository to the top of the list'
+complete -c $progname -s R -d 'Enable repository mode' -xa "(__fish_complete_directories)"
+complete -c $progname -l repository -d 'Append the specified repository to the top of the list' -xa "(__fish_complete_directories)"
 complete -c $progname -s r -d 'Use this target root directory' -xa "(__fish_complete_directories)"
 complete -c $progname -s S -d 'Synchronize remote repository index files'
 complete -c $progname -s U -d 'Don\'t configure packages'

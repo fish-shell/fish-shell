@@ -33,14 +33,18 @@ use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use fish_printf::sprintf;
 use libc::c_int;
+#[cfg(not(target_has_atomic = "64"))]
+use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::os::unix::prelude::OsStrExt;
 use std::rc::Rc;
+#[cfg(target_has_atomic = "64")]
+use std::sync::atomic::AtomicU64;
 use std::sync::{
-    atomic::{AtomicIsize, AtomicU64, Ordering},
+    atomic::{AtomicIsize, Ordering},
     Arc,
 };
 

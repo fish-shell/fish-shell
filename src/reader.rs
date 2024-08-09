@@ -20,6 +20,8 @@ use libc::{
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
+#[cfg(not(target_has_atomic = "64"))]
+use portable_atomic::AtomicU64;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
@@ -30,8 +32,10 @@ use std::ops::Range;
 use std::os::fd::RawFd;
 use std::pin::Pin;
 use std::rc::Rc;
+#[cfg(target_has_atomic = "64")]
+use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU64, AtomicU8};
+use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 

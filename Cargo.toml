@@ -48,6 +48,9 @@ rand = { version = "0.8.5", features = ["small_rng"] }
 widestring = "1.1.0"
 terminfo = "0.9.0"
 
+[target.'cfg(not(target_has_atomic = "64"))'.dependencies]
+portable-atomic = { version = "1", default-features = false, features = ["fallback"] }
+
 [dev-dependencies]
 rand_pcg = "0.3.1"
 serial_test = { version = "1.0.0", default-features = false }

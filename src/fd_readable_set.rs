@@ -70,23 +70,19 @@ impl FdReadableSet {
         let null = std::ptr::null_mut();
         use crate::libc::{select64, timeval64};
         if timeout_usec == Self::kNoTimeout {
-            unsafe {
-                return select64(
-                    self.nfds_,
-                    &mut self.fdset_,
-                    null,
-                    null,
-                    std::ptr::null_mut(),
-                );
-            }
+            return select64(
+                self.nfds_,
+                &mut self.fdset_,
+                null,
+                null,
+                std::ptr::null_mut(),
+            );
         } else {
             let mut tvs = timeval64 {
                 tv_sec: (timeout_usec / kUsecPerSec).try_into().unwrap(),
                 tv_usec: (timeout_usec % kUsecPerSec).try_into().unwrap(),
             };
-            unsafe {
-                return select64(self.nfds_, &mut self.fdset_, null, null, &mut tvs);
-            }
+            return select64(self.nfds_, &mut self.fdset_, null, null, &mut tvs);
         }
     }
 

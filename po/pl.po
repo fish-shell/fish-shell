@@ -102075,6 +102075,10 @@ msgstr ""
 msgid "Footnotes by Docutils"
 msgstr ""
 
+#: share/functions/__fish_complete_freedesktop_icons.fish:1
+msgid "List installed icon names according to `https://specifications.freedesktop.org/icon-theme-spec/0.13/`"
+msgstr ""
+
 #: share/functions/__fish_complete_ftp.fish:1
 msgid "Complete ftp, pftp"
 msgstr ""

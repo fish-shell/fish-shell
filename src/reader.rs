@@ -70,7 +70,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::IN_ITERM;
+use crate::input_common::IN_ITERM_PRE_CSI_U;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::{
     terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
@@ -122,6 +122,7 @@ use crate::wcstringutil::{
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
+use crate::wutil::fish_wcstol;
 use crate::wutil::{fstat, perror, write_to_fd};
 use crate::{abbrs, event, function, history};
 
@@ -3850,14 +3851,49 @@ fn reader_interactive_init(parser: &Parser) {
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
+    interactive_hacks(parser);
+}
+
+fn interactive_hacks(parser: &Parser) {
     IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
     IN_MIDNIGHT_COMMANDER.store(parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some());
-    IN_ITERM.store(
+    IN_ITERM_PRE_CSI_U.store(
         parser
             .vars()
             .get(L!("LC_TERMINAL"))
-            .is_some_and(|term| term.as_list() == [L!("iTerm2")]),
+            .is_some_and(|term| term.as_list() == [L!("iTerm2")])
+            && parser
+                .vars()
+                .get(L!("LC_TERMINAL_VERSION"))
+                .is_some_and(|version| {
+                    if version.as_list().is_empty() {
+                        return false;
+                    }
+                    let Some(version) = parse_version(&version.as_list()[0]) else {
+                        return false;
+                    };
+                    version < (3, 5, 4)
+                }),
     );
+}
+
+fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
+    let mut numbers = version.split('.');
+    let major = fish_wcstol(numbers.next()?).ok()?;
+    let minor = fish_wcstol(numbers.next()?).ok()?;
+    let patch = numbers.next()?;
+    let patch = &patch[..patch
+        .chars()
+        .position(|c| !c.is_ascii_digit())
+        .unwrap_or(patch.len())];
+    let patch = fish_wcstol(patch).ok()?;
+    Some((major, minor, patch))
+}
+
+#[test]
+fn test_parse_version() {
+    assert_eq!(parse_version(L!("3.5.2")), Some((3, 5, 2)));
+    assert_eq!(parse_version(L!("3.5.3beta")), Some((3, 5, 3)));
 }
 
 /// Destroy data for interactive use.

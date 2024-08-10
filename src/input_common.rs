@@ -436,7 +436,7 @@ static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
 
 pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static IN_ITERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocols_enable_ifn() {
     if IN_MIDNIGHT_COMMANDER.load() {
@@ -463,7 +463,7 @@ struct TerminalProtocols {}
 
 impl TerminalProtocols {
     fn new() -> Self {
-        let sequences = if IN_ITERM.load() {
+        let sequences = if IN_ITERM_PRE_CSI_U.load() {
             concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
         } else {
             concat!(
@@ -491,7 +491,7 @@ impl TerminalProtocols {
 
 impl Drop for TerminalProtocols {
     fn drop(&mut self) {
-        let sequences = if IN_ITERM.load() {
+        let sequences = if IN_ITERM_PRE_CSI_U.load() {
             concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
         } else {
             concat!(

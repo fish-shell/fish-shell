@@ -202,6 +202,7 @@ extern "C" {
     fn C_getrusage64(resource: c_int, usage: *mut rusage64) -> c_int;
 }
 
+#[allow(unused)]
 pub(crate) fn clock_gettime64(clk_id: libc::clockid_t) -> Option<timespec64> {
     let mut tp = unsafe { std::mem::zeroed() };
     if !unsafe { C_clock_gettime64(clk_id, &mut tp) } {
@@ -213,6 +214,7 @@ extern "C" {
     fn C_clock_gettime64(clk_id: libc::clockid_t, tp: *mut timespec64) -> bool;
 }
 
+#[allow(unused)]
 pub(crate) fn futimens64(fd: c_int, time0: timespec64, time1: timespec64) -> bool {
     unsafe { C_futimens64(fd, time0, time1) }
 }

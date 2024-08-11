@@ -23,6 +23,9 @@ The following options are available:
 **-h** or **--help**
     Displays help about using this command.
 
+**-V** or **--verbose**
+    Explain what sequence was received in addition to the decoded key.
+
 **-v** or **--version**
     Displays the current :program:`fish` version and then exits.
 

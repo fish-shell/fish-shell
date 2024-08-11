@@ -418,7 +418,7 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
     // 2. key names that are given as raw escape sequence (\e123); those we want to display
     // similar to how they are given.
 
-    let ctrl_symbolic_names: [&wstr; 28] = {
+    let ctrl_symbolic_names: [&wstr; 29] = {
         std::array::from_fn(|i| match i {
             8 => L!("\\b"),
             9 => L!("\\t"),

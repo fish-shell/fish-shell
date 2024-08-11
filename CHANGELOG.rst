@@ -100,7 +100,7 @@ Deprecations and removed features
   This bind mode has been removed. The behavior on paste is currently not meant to be configurable.
 - When an interactive fish is stopped or terminated by a signal that cannot be caught (SIGSTOP or SIGKILL), it may leave the terminal in a state where keypresses with modifiers are sent as CSI u sequences instead of traditional control characters or escape sequecnes (that are recognized by bash/readline).
   If this happens, you can use the ``reset`` command from ``ncurses`` to restore the terminal state.
-- ``fish_key_reader --verbose`` is now ignored, so it no longer shows raw byte values or timing information.
+- ``fish_key_reader --verbose`` no longer shows timing information.
   Raw byte values should no longer be necessary because fish now decodes them to the new human-readable key names for builtin bind.
 - Instant propagation of universal variables now only works on Linux and macOS. On other platforms, changes to universal variables may only become visible on the next prompt.
 

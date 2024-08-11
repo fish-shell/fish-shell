@@ -459,6 +459,9 @@ pub fn char_to_symbol(c: char) -> WString {
     let buf = &mut buff;
     if c <= ' ' {
         ctrl_to_symbol(buf, c);
+    } else if c == '\u{7f}' {
+        // DEL is at the end of the ASCII range
+        sprintf!(=> buf, "\\x%02x", 0x7f);
     } else if c < '\u{80}' {
         // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, c);

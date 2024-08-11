@@ -916,6 +916,11 @@ pub trait InputEventQueuer {
                 25 | 26 => {
                     shift(char::from_u32(u32::from(function_key(3)) + params[0][0] - 25).unwrap())
                 } // rxvt style
+                27 => {
+                    let key =
+                        canonicalize_keyed_control_char(char::from_u32(params[2][0]).unwrap());
+                    masked_key(key, None)
+                }
                 28 | 29 => {
                     shift(char::from_u32(u32::from(function_key(5)) + params[0][0] - 28).unwrap())
                 } // rxvt style

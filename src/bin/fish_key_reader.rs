@@ -20,7 +20,7 @@ use fish::{
     eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer},
-    key::{self, Key},
+    key::{self, char_to_symbol, Key},
     panic::panic_handler,
     print_help::print_help,
     printf,
@@ -83,7 +83,7 @@ fn sequence_name(recent_chars: &mut Vec<u8>, c: char) -> Option<WString> {
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(continuous_mode: bool) -> i32 {
+fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
     let mut first_char_seen = false;
     let mut queue = InputEventQueue::new(STDIN_FILENO);
     let mut recent_chars1 = vec![];
@@ -101,6 +101,13 @@ fn process_input(continuous_mode: bool) -> i32 {
         if c == key::Invalid {
             continue;
         }
+        if verbose {
+            printf!("# decoded from: ");
+            for byte in kevt.seq.chars() {
+                printf!("%s", &char_to_symbol(byte));
+            }
+            printf!("\n");
+        }
         printf!("bind %s 'do something'\n", kevt.key);
         if let Some(name) = sequence_name(&mut recent_chars1, c) {
             printf!("bind -k %ls 'do something'\n", name);
@@ -117,7 +124,7 @@ fn process_input(continuous_mode: bool) -> i32 {
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-fn setup_and_process_keys(continuous_mode: bool) -> i32 {
+fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     set_interactive_session(true);
     topic_monitor_init();
     threads::init();
@@ -141,16 +148,16 @@ fn setup_and_process_keys(continuous_mode: bool) -> i32 {
         eprintf!("\n");
     }
 
-    process_input(continuous_mode)
+    process_input(continuous_mode, verbose)
 }
 
-fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
+fn parse_flags(continuous_mode: &mut bool, verbose: &mut bool) -> ControlFlow<i32> {
     let short_opts: &wstr = L!("+chvV");
     let long_opts: &[WOption] = &[
         wopt(L!("continuous"), ArgType::NoArgument, 'c'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("version"), ArgType::NoArgument, 'v'),
-        wopt(L!("verbose"), ArgType::NoArgument, 'V'), // Removed
+        wopt(L!("verbose"), ArgType::NoArgument, 'V'),
     ];
 
     let args: Vec<WString> = std::env::args_os()
@@ -178,7 +185,9 @@ fn parse_flags(continuous_mode: &mut bool) -> ControlFlow<i32> {
                 );
                 return ControlFlow::Break(0);
             }
-            'V' => {}
+            'V' => {
+                *verbose = true;
+            }
             '?' => {
                 printf!(
                     "%s",
@@ -210,8 +219,9 @@ fn main() {
 
 fn throwing_main() -> i32 {
     let mut continuous_mode = false;
+    let mut verbose = false;
 
-    if let ControlFlow::Break(i) = parse_flags(&mut continuous_mode) {
+    if let ControlFlow::Break(i) = parse_flags(&mut continuous_mode, &mut verbose) {
         return i;
     }
 
@@ -220,5 +230,5 @@ fn throwing_main() -> i32 {
         return 1;
     }
 
-    setup_and_process_keys(continuous_mode)
+    setup_and_process_keys(continuous_mode, verbose)
 }

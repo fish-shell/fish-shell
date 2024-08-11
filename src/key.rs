@@ -454,7 +454,7 @@ fn ascii_printable_to_symbol(buf: &mut WString, c: char) {
 }
 
 /// Convert a wide-char to a symbol that can be used in our output.
-pub(crate) fn char_to_symbol(c: char) -> WString {
+pub fn char_to_symbol(c: char) -> WString {
     let mut buff = WString::new();
     let buf = &mut buff;
     if c <= ' ' {

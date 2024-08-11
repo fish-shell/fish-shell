@@ -116,7 +116,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv ">" self-insert expand-abbr
         bind --preset $argv "<" self-insert expand-abbr
         bind --preset $argv shift-enter "commandline -i \n" expand-abbr
-        $legacy_bind --preset $argv \e\[27\;2\;13~ "commandline -i \n" expand-abbr # Sent with XTerm.vt100.formatOtherKeys: 0
         bind --preset $argv alt-enter "commandline -i \n" expand-abbr
         bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
         bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " "'
@@ -129,6 +128,5 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv ctrl-m execute
         # Make Control+Return behave like Return because it's easy to mistype after accepting an autosuggestion.
         bind --preset $argv ctrl-enter execute
-        $legacy_bind --preset $argv \e\[27\;5\;13~ execute # Sent with XTerm.vt100.formatOtherKeys: 0
     end
 end

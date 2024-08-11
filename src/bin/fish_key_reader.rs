@@ -20,7 +20,7 @@ use fish::{
     eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer},
-    key::{self, char_to_symbol, Key},
+    key::{self, byte_to_symbol, Key},
     panic::panic_handler,
     print_help::print_help,
     printf,
@@ -104,7 +104,7 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
         if verbose {
             printf!("# decoded from: ");
             for byte in kevt.seq.chars() {
-                printf!("%s", &char_to_symbol(byte));
+                printf!("%s", &byte_to_symbol(byte));
             }
             printf!("\n");
         }

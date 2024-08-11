@@ -72,6 +72,7 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input_common::IN_ITERM_PRE_CSI_U;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
+use crate::input_common::IN_WEZTERM;
 use crate::input_common::{
     terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
     InputData, ReadlineCmd, IS_TMUX,
@@ -3857,6 +3858,12 @@ fn reader_interactive_init(parser: &Parser) {
 fn interactive_hacks(parser: &Parser) {
     IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
     IN_MIDNIGHT_COMMANDER.store(parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some());
+    IN_WEZTERM.store(
+        parser
+            .vars()
+            .get_unless_empty(L!("TERM_PROGRAM"))
+            .is_some_and(|term_program| term_program.as_list() == [L!("WezTerm")]),
+    );
     IN_ITERM_PRE_CSI_U.store(
         parser
             .vars()

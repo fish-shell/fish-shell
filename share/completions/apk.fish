@@ -1,10 +1,10 @@
 # Completions for apk (Alpine Package Keeper)
 
 # Package name
-complete -c apk -n "__fish_seen_subcommand_from add" -a "(apk search -q)" -d Package
-complete -c apk -n "__fish_seen_subcommand_from manifest" -a "(apk info -q)" -d Package
-complete -f -c apk -n "__fish_seen_subcommand_from info fetch dot" -a "(apk search -q)" -d Package
-complete -f -c apk -n "__fish_seen_subcommand_from del fix version" -a "(apk info -q)" -d Package
+complete -c apk -n "__fish_seen_subcommand_from add" -a "(apk search -q 2>/dev/null)" -d Package
+complete -c apk -n "__fish_seen_subcommand_from manifest" -a "(apk info 2>/dev/null)" -d Package
+complete -f -c apk -n "__fish_seen_subcommand_from info fetch dot" -a "(apk search -q 2>/dev/null)" -d Package
+complete -f -c apk -n "__fish_seen_subcommand_from del fix version" -a "(apk info 2>/dev/null)" -d Package
 
 # Global options
 complete -f -c apk -s h -l help -d "Show help"

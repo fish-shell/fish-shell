@@ -324,3 +324,19 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str;
+
+    #[test]
+    fn test_trim_leading_spaces() {
+        let input = "    abc   ";
+
+        let (spaces, actual) = trim_leading_spaces(input.as_bytes());
+
+        assert_eq!(spaces, 4);
+        assert_eq!(str::from_utf8(actual).unwrap(), "abc   ");
+    }
+}

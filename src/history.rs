@@ -69,6 +69,7 @@ use crate::{
         file_id_for_fd, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId,
         INVALID_FILE_ID,
     },
+    yaml::time_to_seconds,
 };
 
 mod file;
@@ -107,8 +108,6 @@ pub enum SearchDirection {
     Forward,
     Backward,
 }
-
-use self::file::time_to_seconds;
 
 // Our history format is intended to be valid YAML. Here it is:
 //

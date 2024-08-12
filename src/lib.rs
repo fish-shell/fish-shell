@@ -98,6 +98,7 @@ pub mod wgetopt;
 pub mod widecharwidth;
 pub mod wildcard;
 pub mod wutil;
+pub mod yaml;
 
 #[cfg(test)]
 mod tests;

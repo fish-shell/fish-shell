@@ -1,0 +1,11 @@
+complete -c jv -s h -l help -d "Show help"
+complete -c jv -s v -l version -d "Show version"
+
+complete -c jv -s q -l quiet -d "Hide errors"
+complete -c jv -s d -l draft -x -a "4 5 7 2019 2020\tdefault" -d "Specify the draft version used when '\$schema' is missing"
+complete -c jv -s o -l output -x -a "simple alt flag basic detailed\tdefault" -d "Specify the output format"
+complete -c jv -s f -l assert-format -d "Enable format assertions with draft >= 2019"
+complete -c jv -s c -l assert-content -d "Enable content assertions with draft >= 7"
+complete -c jv -s k -l insecure -d "Use insecure TLS connection"
+complete -c jv -l cacert -d "Specify a pem-file to verify the peers"
+complete -c jv -s m -l map -d "Load url with a prefix from the directory"

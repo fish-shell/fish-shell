@@ -258,14 +258,6 @@ impl CharEvent {
         })
     }
 
-    pub fn from_char_seq(c: char, seq: WString) -> CharEvent {
-        CharEvent::Key(KeyEvent {
-            key: Key::from_raw(c),
-            input_style: CharInputStyle::Normal,
-            seq,
-        })
-    }
-
     pub fn from_readline(cmd: ReadlineCmd) -> CharEvent {
         Self::from_readline_seq(cmd, WString::new())
     }

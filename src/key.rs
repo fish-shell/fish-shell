@@ -4,7 +4,7 @@ use crate::{
     common::{escape_string, EscapeFlags, EscapeStringStyle},
     fallback::fish_wcwidth,
     reader::TERMINAL_MODE_ON_STARTUP,
-    wchar::prelude::*,
+    wchar::{decode_byte_from_char, prelude::*},
     wutil::{fish_is_pua, fish_wcstoi},
 };
 
@@ -453,6 +453,8 @@ pub fn char_to_symbol(c: char) -> WString {
     } else if c < '\u{80}' {
         // ASCII characters that are not control characters
         ascii_printable_to_symbol(buf, c);
+    } else if let Some(byte) = decode_byte_from_char(c) {
+        sprintf!(=> buf, "\\x%02x", byte);
     } else if ('\u{e000}'..='\u{f8ff}').contains(&c) {
         // Unmapped key from https://sw.kovidgoyal.net/kitty/keyboard-protocol/#functional-key-definitions
         sprintf!(=> buf, "\\u%04X", u32::from(c));

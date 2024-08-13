@@ -113,7 +113,7 @@ def is_chromeos_garcon():
     # https://source.chromium.org/search?q=garcon-url-handler
     try:
         return "garcon-url-handler" in webbrowser.get().name
-    except AttributeError:
+    except:
         return False
 
 

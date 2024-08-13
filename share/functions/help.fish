@@ -182,6 +182,9 @@ function help --description 'Show help for the fish shell'
     string match -q '*garcon-url-handler*' $fish_browser[1]
     and set -l chromeos_linux_garcon
 
+    # Generate the online URL, with one dot in the version string (major.minor)
+    set -l version_string (string split . -f 1,2 -- $version | string join .)
+    set -l ext_url https://fishshell.com/docs/$version_string/$fish_help_page
     set -l page_url
     if test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon
         # Help is installed, use it
@@ -198,9 +201,7 @@ function help --description 'Show help for the fish shell'
             set page_url file://(wslpath -w $__fish_help_dir)/$fish_help_page
         end
     else
-        # Go to the web. Only include one dot in the version string
-        set -l version_string (string split . -f 1,2 -- $version | string join .)
-        set page_url https://fishshell.com/docs/$version_string/$fish_help_page
+        set page_url $ext_url
         # We don't need a trampoline for a remote URL.
         set need_trampoline
     end
@@ -241,4 +242,8 @@ function help --description 'Show help for the fish shell'
     else
         $fish_browser $page_url
     end
+
+    # Show the online URL anyway in case we did not manage to open something successfully.
+    # (we can't check because we need to background it)
+    printf (_ 'help: If no help could be displayed, go to %s to view the documentaiton online.\n') $ext_url
 end

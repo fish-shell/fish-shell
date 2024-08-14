@@ -48,4 +48,4 @@ When you're done, use::
 
   >_ funcsave fish_prompt
 
-For more, see :doc:`funcsave <funcsave>`.
+For more, see :doc:`funcsave <funcsave>`. To view a function's current definition, use :doc:`functions <functions>` or :doc:`type <type>`.

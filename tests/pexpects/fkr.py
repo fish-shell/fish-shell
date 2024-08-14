@@ -29,12 +29,17 @@ expect_str("Press a key:")
 
 # Is a single control char echoed correctly?
 send("\x07")
+expect_str("# decoded from: \\x07\r\n")
 expect_str("bind ctrl-g 'do something'\r\n")
 
 # Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
 sleep(0.020)
 send("\x1B")
+expect_str("# decoded from: \\e\r\n")
 expect_str("bind escape 'do something'\r\n")
+send("ö")
+expect_str("# decoded from: ö\r\n")
+expect_str("bind ö 'do something'\r\n")
 send("\u1234")
 expect_str("bind ሴ 'do something'\r\n")
 
@@ -44,6 +49,7 @@ send("\x00")
 expect_str("bind ctrl-space 'do something'\r\n")
 
 send("\x1b\x7f")
+expect_str("# decoded from: \\e\\x7f\r\n")
 expect_str("bind alt-backspace 'do something'\r\n")
 
 send("\x1c")

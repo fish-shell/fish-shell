@@ -1,7 +1,11 @@
 use crate::tests::prelude::*;
 use crate::topic_monitor::{GenerationsList, Topic, TopicMonitor};
+#[cfg(not(target_has_atomic = "64"))]
+use portable_atomic::AtomicU64;
+#[cfg(target_has_atomic = "64")]
+use std::sync::atomic::AtomicU64;
 use std::sync::{
-    atomic::{AtomicU32, AtomicU64, Ordering},
+    atomic::{AtomicU32, Ordering},
     Arc,
 };
 

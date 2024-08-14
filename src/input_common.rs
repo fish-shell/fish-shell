@@ -854,10 +854,10 @@ pub trait InputEventQueuer {
                     _ => return None,
                 }
             }
-            b'A' | b'a' => masked_key(key::Up, None),
-            b'B' | b'b' => masked_key(key::Down, None),
-            b'C' | b'c' => masked_key(key::Right, None),
-            b'D' | b'd' => masked_key(key::Left, None),
+            b'A' => masked_key(key::Up, None),
+            b'B' => masked_key(key::Down, None),
+            b'C' => masked_key(key::Right, None),
+            b'D' => masked_key(key::Left, None),
             b'E' => masked_key('5', None),       // Numeric keypad
             b'F' => masked_key(key::End, None),  // PC/xterm style
             b'H' => masked_key(key::Home, None), // PC/xterm style
@@ -1029,10 +1029,10 @@ pub trait InputEventQueuer {
         #[rustfmt::skip]
         let key = match code {
             b' ' => Key{modifiers, codepoint: key::Space},
-            b'A' | b'a' => Key{modifiers, codepoint: key::Up},
-            b'B' | b'b' => Key{modifiers, codepoint: key::Down},
-            b'C' | b'c' => Key{modifiers, codepoint: key::Right},
-            b'D' | b'd' => Key{modifiers, codepoint: key::Left},
+            b'A' => Key{modifiers, codepoint: key::Up},
+            b'B' => Key{modifiers, codepoint: key::Down},
+            b'C' => Key{modifiers, codepoint: key::Right},
+            b'D' => Key{modifiers, codepoint: key::Left},
             b'F' => Key{modifiers, codepoint: key::End},
             b'H' => Key{modifiers, codepoint: key::Home},
             b'I' => Key{modifiers, codepoint: key::Tab},

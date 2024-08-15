@@ -283,7 +283,9 @@ complete -C'cd .'
 # `sysctl kern.osproductversion` emits something like:
 #   kern.osproductversion: 14.3.1
 # Note that there is no kern.osproductversion under older OS X releases!
-if test (uname) = "Darwin" && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12
+#
+# NetBSD 10 does not support it.
+if test (uname) = NetBSD || begin; test (uname) = "Darwin" && test (sysctl kern.osproductversion 2>/dev/null | string match -r \\d+; or echo 10) -lt 12; end
     # Not supported. Satisfy the CHECKs below.
     echo fake/a
     echo fake/a/b

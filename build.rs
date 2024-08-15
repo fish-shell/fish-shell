@@ -87,7 +87,12 @@ fn detect_cfgs(target: &mut Target) {
             Ok(target.has_symbol("pipe2"))
         }),
         ("HAVE_EVENTFD", &|target| {
-            Ok(target.has_header("sys/eventfd.h"))
+            // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
+            if cfg!(target_os = "netbsd") {
+                 Ok(false)
+             } else {
+                 Ok(target.has_header("sys/eventfd.h"))
+            }
         }),
         ("HAVE_WAITSTATUS_SIGNAL_RET", &|target| {
             Ok(target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"]))

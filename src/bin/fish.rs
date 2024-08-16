@@ -441,21 +441,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     ControlFlow::Continue(optind)
 }
 
-fn cstr_from_osstr(s: &OsStr) -> CString {
-    // is there no better way to do this?
-    // this is
-    // CStr::from_bytes_until_nul(s.as_bytes()).unwrap()
-    // except we need to add the nul if it is not present
-    CString::new(
-        s.as_bytes()
-            .iter()
-            .cloned()
-            .take_while(|&c| c != b'\0')
-            .collect::<Vec<_>>(),
-    )
-    .unwrap()
-}
-
 fn main() {
     PROGRAM_NAME.set(L!("fish")).unwrap();
     if !cfg!(small_main_stack) {
@@ -617,8 +602,7 @@ fn throwing_main() -> i32 {
 
     // TODO: if-let-chains
     if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
-        let s = cstr_from_osstr(&opts.profile_startup_output.unwrap());
-        parser.emit_profiling(s.as_bytes());
+        parser.emit_profiling(&opts.profile_startup_output.unwrap());
 
         // If we are profiling both, ensure the startup data only
         // ends up in the startup file.
@@ -720,8 +704,7 @@ fn throwing_main() -> i32 {
     );
 
     if let Some(profile_output) = opts.profile_output {
-        let s = cstr_from_osstr(&profile_output);
-        parser.emit_profiling(s.as_bytes());
+        parser.emit_profiling(&profile_output);
     }
 
     history::save_all();

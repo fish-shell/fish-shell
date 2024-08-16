@@ -39,7 +39,6 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
-use std::os::unix::prelude::OsStrExt;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
@@ -976,17 +975,17 @@ impl Parser {
     }
 
     /// Output profiling data to the given filename.
-    pub fn emit_profiling(&self, path: &[u8]) {
+    pub fn emit_profiling(&self, path: &OsStr) {
         // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
         // exiting (and hence will not fork).
-        let f = match std::fs::File::create(OsStr::from_bytes(path)) {
+        let f = match std::fs::File::create(path) {
             Ok(f) => f,
             Err(err) => {
                 FLOG!(
                     warning,
                     wgettext_fmt!(
                         "Could not write profiling information to file '%s': %s",
-                        &String::from_utf8_lossy(path),
+                        path.to_string_lossy(),
                         err.to_string()
                     )
                 );

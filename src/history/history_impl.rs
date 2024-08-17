@@ -61,7 +61,7 @@ use crate::{
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
-    history::file::{append_history_item_to_buffer, HistoryFileContents},
+    history::file::{append_history_item_to_buffer, time_to_seconds, HistoryFileContents},
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
     parse_constants::{ParseTreeFlags, StatementDecoration},
@@ -80,8 +80,6 @@ use crate::{
         INVALID_FILE_ID,
     },
 };
-
-mod file;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {
@@ -117,8 +115,6 @@ pub enum SearchDirection {
     Forward,
     Backward,
 }
-
-use self::file::time_to_seconds;
 
 // Our history format is intended to be valid YAML. Here it is:
 //
@@ -2060,7 +2056,7 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 }
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
-static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Whether we're in maximum chaos mode, useful for testing.
 /// This causes things like locks to fail.

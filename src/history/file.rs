@@ -15,6 +15,7 @@ use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
+    history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
 };
 
@@ -223,7 +224,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
 /// Check if we should mmap the fd.
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
-    if super::NEVER_MMAP.load() {
+    if history_impl::NEVER_MMAP.load() {
         return false;
     }
 

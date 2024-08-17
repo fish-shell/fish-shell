@@ -3883,7 +3883,7 @@ fn interactive_hacks(parser: &Parser) {
                     let Some(version) = parse_version(&version.as_list()[0]) else {
                         return false;
                     };
-                    version < (3, 5, 4)
+                    version < (3, 5, 5)
                 }),
     );
 }

@@ -37,6 +37,7 @@ libc = "0.2.155"
 # files as of 22 April 2024.
 lru = "0.12.3"
 nix = { version = "0.29.0", default-features = false, features = [
+    "event",
     "inotify",
     "resource",
     "fs",

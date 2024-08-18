@@ -7,6 +7,9 @@ mod notifyd;
 #[cfg(any(target_os = "android", target_os = "linux"))]
 mod inotify;
 
+#[cfg(any(bsd, target_os = "macos"))]
+mod kqueue;
+
 #[cfg(test)]
 mod test_helpers;
 
@@ -51,16 +54,16 @@ impl UniversalNotifier for NullNotifier {
 /// Create a notifier.
 pub fn create_notifier() -> Box<dyn UniversalNotifier> {
     #[cfg(target_os = "macos")]
-    {
-        if let Some(notifier) = notifyd::NotifydNotifier::new() {
-            return Box::new(notifier);
-        }
+    if let Some(notifier) = notifyd::NotifydNotifier::new() {
+        return Box::new(notifier);
     }
     #[cfg(any(target_os = "android", target_os = "linux"))]
-    {
-        if let Some(notifier) = inotify::InotifyNotifier::new() {
-            return Box::new(notifier);
-        }
+    if let Some(notifier) = inotify::InotifyNotifier::new() {
+        return Box::new(notifier);
+    }
+    #[cfg(bsd)]
+    if let Some(notifier) = kqueue::KqueueNotifier::new() {
+        return Box::new(notifier);
     }
     Box::new(NullNotifier)
 }

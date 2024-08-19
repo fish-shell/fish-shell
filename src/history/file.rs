@@ -1,9 +1,10 @@
 //! Implemention of history files.
 
+use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs::File,
-    io::{Read, Seek, SeekFrom, Write},
+    io::{Read, Seek, SeekFrom},
     ops::{Deref, DerefMut},
     os::fd::{AsRawFd, RawFd},
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -13,7 +14,7 @@ use libc::{mmap, munmap, ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_RE
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{str2wcstring, subslice_position, wcs2string},
+    common::{str2wcstring, subslice_position},
     flog::FLOG,
     history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
@@ -22,9 +23,13 @@ use crate::{
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HistoryFileType {
+    FishJson,
     Fish2_0,
     Fish1_x,
 }
+
+/// Default history file type for new files or re-written ones.
+pub const DEFAULT_HISTORY_FILE_TYPE: HistoryFileType = HistoryFileType::FishJson;
 
 /// A type wrapping up the logic around mmap and munmap.
 struct MmapRegion {
@@ -111,6 +116,7 @@ impl Drop for MmapRegion {
 /// HistoryFileContents holds the read-only contents of a file.
 pub struct HistoryFileContents {
     region: MmapRegion,
+    type_: HistoryFileType,
 }
 
 impl HistoryFileContents {
@@ -171,16 +177,23 @@ impl HistoryFileContents {
     pub fn contents(&self) -> &[u8] {
         &self.region
     }
+
+    /// Returns the file type of these contents. If empty, [`DEFAULT_HISTORY_FILE_TYPE`] is used.
+    pub fn get_type(&self) -> HistoryFileType {
+        if self.contents().is_empty() {
+            return DEFAULT_HISTORY_FILE_TYPE;
+        }
+        infer_file_type(&self.contents())
+    }
 }
 
 /// Try to infer the history file type based on inspecting the data.
 fn infer_file_type(contents: &[u8]) -> HistoryFileType {
     assert!(!contents.is_empty(), "File should never be empty");
-    if contents[0] == b'#' {
-        HistoryFileType::Fish1_x
-    } else {
-        // assume new fish
-        HistoryFileType::Fish2_0
+    match contents[0] {
+        b'#' => HistoryFileType::Fish1_x,
+        b'{' => HistoryFileType::FishJson,
+        _ => HistoryFileType::Fish2_0,
     }
 }
 
@@ -193,32 +206,34 @@ impl TryFrom<MmapRegion> for HistoryFileContents {
             FLOG!(error, "unsupported history file format 1.x");
             return Err(());
         }
-        Ok(Self { region })
+        Ok(Self { region, type_ })
     }
 }
 
+#[derive(Serialize, Deserialize)]
+struct JsonHistoryItem {
+    cmd: String,
+    ts: i64,
+    paths: Vec<String>,
+}
+
 /// Append a history item to a buffer, in preparation for outputting it to the history file.
+/// Always outputs in JSON format.
 pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
     assert!(item.should_write_to_disk(), "Item should not be persisted");
 
-    let mut cmd = wcs2string(item.str());
-    escape_yaml_fish_2_0(&mut cmd);
-    buffer.extend(b"- cmd: ");
-    buffer.extend(&cmd);
-    buffer.push(b'\n');
-    writeln!(buffer, "  when: {}", time_to_seconds(item.timestamp())).unwrap();
+    let json_item = JsonHistoryItem {
+        cmd: item.str().to_string(),
+        ts: time_to_seconds(item.timestamp()),
+        paths: item
+            .get_required_paths()
+            .iter()
+            .map(|p| p.to_string())
+            .collect(),
+    };
 
-    let paths = item.get_required_paths();
-    if !paths.is_empty() {
-        writeln!(buffer, "  paths:").unwrap();
-        for path in paths {
-            let mut path = wcs2string(path);
-            escape_yaml_fish_2_0(&mut path);
-            buffer.extend(b"    - ");
-            buffer.extend(&path);
-            buffer.push(b'\n');
-        }
-    }
+    buffer.extend(serde_json::to_vec(&json_item).unwrap().iter());
+    buffer.push(b'\n');
 }
 
 /// Check if we should mmap the fd.

@@ -61,7 +61,10 @@ use crate::{
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
-    history::file::{append_history_item_to_buffer, time_to_seconds, HistoryFileContents},
+    history::file::{
+        append_history_item_to_buffer, time_to_seconds, HistoryFileContents,
+        DEFAULT_HISTORY_FILE_TYPE,
+    },
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
     parse_constants::{ParseTreeFlags, StatementDecoration},
@@ -80,6 +83,8 @@ use crate::{
         INVALID_FILE_ID,
     },
 };
+
+use super::HistoryFileType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {
@@ -212,7 +217,16 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
 
 /// Returns the path for the history file for the given `session_id`, or `None` if it could not be
 /// loaded. If `suffix` is provided, append that suffix to the path; this is used for temporary files.
-fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
+/// `file_type` is used to distinguish between fish 2.0 and fish json formats.
+fn history_filename(
+    session_id: &wstr,
+    file_type: HistoryFileType,
+    suffix: &wstr,
+) -> Option<WString> {
+    // Fish1_x is no longer supported.
+    if file_type == HistoryFileType::Fish1_x {
+        return None;
+    }
     if session_id.is_empty() {
         return None;
     }
@@ -223,6 +237,9 @@ fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
     result.push_utfstr(session_id);
     result.push_utfstr(L!("_history"));
     result.push_utfstr(suffix);
+    if file_type == HistoryFileType::FishJson {
+        result.push_utfstr(L!(".jsonl"))
+    }
     Some(result)
 }
 
@@ -486,7 +503,7 @@ impl HistoryImpl {
         self.loaded_old = true;
 
         let _profiler = TimeProfiler::new("load_old");
-        if let Some(filename) = history_filename(&self.name, L!("")) {
+        if let Some(filename) = history_filename(&self.name, self.get_file_type(), L!("")) {
             let Ok(mut file) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
                 return;
             };
@@ -642,6 +659,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by rewriting the file.
+    /// This will always rewrite to a FishJson file, regardless of the type of original file.
     fn save_internal_via_rewrite(&mut self) {
         FLOGF!(
             history,
@@ -652,10 +670,14 @@ impl HistoryImpl {
         // We want to rewrite the file, while holding the lock for as briefly as possible
         // To do this, we speculatively write a file, and then lock and see if our original file changed
         // Repeat until we succeed or give up
-        let Some(possibly_indirect_target_name) = history_filename(&self.name, L!("")) else {
+        let Some(possibly_indirect_target_name) =
+            history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!(""))
+        else {
             return;
         };
-        let Some(tmp_name_template) = history_filename(&self.name, L!(".XXXXXX")) else {
+        let Some(tmp_name_template) =
+            history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!(".XXXXXX"))
+        else {
             return;
         };
 
@@ -816,7 +838,7 @@ impl HistoryImpl {
         let mut file_changed = false;
 
         // Get the path to the real history file.
-        let Some(history_path) = history_filename(&self.name, L!("")) else {
+        let Some(history_path) = history_filename(&self.name, self.get_file_type(), L!("")) else {
             return true;
         };
 
@@ -930,7 +952,7 @@ impl HistoryImpl {
             return;
         }
 
-        if history_filename(&self.name, L!("")).is_none() {
+        if history_filename(&self.name, self.get_file_type(), L!("")).is_none() {
             // We're in the "incognito" mode. Pretend we've saved the history.
             self.first_unwritten_new_item_index = self.new_items.len();
             self.deleted_items.clear();
@@ -1028,7 +1050,7 @@ impl HistoryImpl {
         } else {
             // If we have not loaded old items, don't actually load them (which may be expensive); just
             // stat the file and see if it exists and is nonempty.
-            let Some(where_) = history_filename(&self.name, L!("")) else {
+            let Some(where_) = history_filename(&self.name, self.get_file_type(), L!("")) else {
                 return true;
             };
 
@@ -1039,6 +1061,14 @@ impl HistoryImpl {
                 // Access failed, assume missing.
                 true
             }
+        }
+    }
+
+    /// Returns the `HistoryFileType` of this history. Can change when the file is re-written.
+    fn get_file_type(&self) -> HistoryFileType {
+        match &self.file_contents {
+            Some(contents) => contents.get_type(),
+            None => DEFAULT_HISTORY_FILE_TYPE,
         }
     }
 
@@ -1085,7 +1115,7 @@ impl HistoryImpl {
         self.deleted_items.clear();
         self.first_unwritten_new_item_index = 0;
         self.old_item_offsets.clear();
-        if let Some(filename) = history_filename(&self.name, L!("")) {
+        if let Some(filename) = history_filename(&self.name, self.get_file_type(), L!("")) {
             wunlink(&filename);
         }
         self.clear_file_state();
@@ -1106,7 +1136,7 @@ impl HistoryImpl {
     /// file to the new history file.
     /// The new contents will automatically be re-mapped later.
     fn populate_from_config_path(&mut self) {
-        let Some(new_file) = history_filename(&self.name, L!("")) else {
+        let Some(new_file) = history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!("")) else {
             return;
         };
 

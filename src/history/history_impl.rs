@@ -235,7 +235,7 @@ fn history_filename(
 
     result.push('/');
     result.push_utfstr(session_id);
-    result.push_utfstr(L!("_history"));
+    result.push_utfstr(L!("_history_testing"));
     result.push_utfstr(suffix);
     if file_type == HistoryFileType::FishJson {
         result.push_utfstr(L!(".jsonl"))
@@ -502,35 +502,51 @@ impl HistoryImpl {
         }
         self.loaded_old = true;
 
+        let try_open = |type_: HistoryFileType| -> Option<File> {
+            let filename = history_filename(&self.name, type_, L!(""))?;
+            wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()).ok()
+        };
+
+        // Check if the new format is available, if so, then load it.
+        let mut file = if let Some(f) = try_open(HistoryFileType::FishJson) {
+            f
+        } else if let Some(f) = try_open(HistoryFileType::Fish2_0) {
+            f
+        } else {
+            return;
+        };
+
         let _profiler = TimeProfiler::new("load_old");
-        if let Some(filename) = history_filename(&self.name, self.get_file_type(), L!("")) {
-            let Ok(mut file) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
-                return;
-            };
 
-            // Take a read lock to guard against someone else appending. This is released after
-            // getting the file's length. We will read the file after releasing the lock, but that's
-            // not a problem, because we never modify already written data. In short, the purpose of
-            // this lock is to ensure we don't see the file size change mid-update.
-            //
-            // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
-            // as if it did not fail. The risk is that we may get an incomplete history item; this
-            // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(&mut file);
-            self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(file.as_fd())
-            } else {
-                INVALID_FILE_ID
-            };
-            if locked {
-                unsafe {
-                    Self::unlock_file(&mut file);
-                }
+        // Take a read lock to guard against someone else appending. This is released after
+        // getting the file's length. We will read the file after releasing the lock, but that's
+        // not a problem, because we never modify already written data. In short, the purpose of
+        // this lock is to ensure we don't see the file size change mid-update.
+        //
+        // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
+        // as if it did not fail. The risk is that we may get an incomplete history item; this
+        // is unlikely because we only treat an item as valid if it has a terminating newline.
+        let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
+        self.file_contents = HistoryFileContents::create(&mut file);
+        self.history_file_id = if self.file_contents.is_some() {
+            file_id_for_fd(file.as_fd())
+        } else {
+            INVALID_FILE_ID
+        };
+        if locked {
+            unsafe {
+                Self::unlock_file(&mut file);
             }
+        }
 
-            let _profiler = TimeProfiler::new("populate_from_file_contents");
-            self.populate_from_file_contents();
+        let _profiler = TimeProfiler::new("populate_from_file_contents");
+        self.populate_from_file_contents();
+
+        // Rewrite if the original is HistoryFileType::Fish2_0
+        if self.get_file_type() == HistoryFileType::Fish2_0 {
+            println!("file type is fish 2");
+            let _profiler = TimeProfiler::new("rewrite_into_json");
+            self.save_internal_via_rewrite();
         }
     }
 
@@ -592,6 +608,7 @@ impl HistoryImpl {
             if let Some(local_file) = HistoryFileContents::create(existing_file) {
                 let mut cursor = 0;
                 while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
+                    println!("cursor: {:?}, offset: {:?}", cursor, offset);
                     // Try decoding an old item.
                     let Some(old_item) = local_file.decode_item(offset) else {
                         continue;

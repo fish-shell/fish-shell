@@ -14,15 +14,18 @@ use libc::{mmap, munmap, ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_RE
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{str2wcstring, subslice_position},
+    common::str2wcstring,
     flog::FLOG,
     history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
+    wchar::WString,
 };
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HistoryFileType {
+    /// JSON format, where each "line" is an individual history item.
+    /// See [RFC 7464](https://datatracker.ietf.org/doc/rfc7464/) for details of the format used.
     FishJson,
     Fish2_0,
     Fish1_x,
@@ -30,6 +33,10 @@ pub enum HistoryFileType {
 
 /// Default history file type for new files or re-written ones.
 pub const DEFAULT_HISTORY_FILE_TYPE: HistoryFileType = HistoryFileType::FishJson;
+
+/// The record separator that marks the beginning of a history entry.
+/// See [RFC 7464](https://datatracker.ietf.org/doc/rfc7464/).
+const RECORD_SEPARATOR: u8 = 0x1E;
 
 /// A type wrapping up the logic around mmap and munmap.
 struct MmapRegion {
@@ -158,7 +165,11 @@ impl HistoryFileContents {
     /// Decode an item at a given offset.
     pub fn decode_item(&self, offset: usize) -> Option<HistoryItem> {
         let contents = &self.region[offset..];
-        decode_item_fish_2_0(contents)
+        match self.get_type() {
+            HistoryFileType::FishJson => decode_json_item(contents),
+            HistoryFileType::Fish2_0 => decode_item_fish_2_0(contents),
+            HistoryFileType::Fish1_x => None,
+        }
     }
 
     /// Support for iterating item offsets.
@@ -170,7 +181,17 @@ impl HistoryFileContents {
         cursor: &mut usize,
         cutoff: Option<SystemTime>,
     ) -> Option<usize> {
-        offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
+        match self.get_type() {
+            HistoryFileType::FishJson => {
+                let offset = offset_of_next_item_fish_json(self.contents(), &cursor, cutoff);
+                *cursor = offset?;
+                offset
+            }
+            HistoryFileType::Fish2_0 => {
+                offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
+            }
+            HistoryFileType::Fish1_x => None,
+        }
     }
 
     /// Returns a view of the file contents.
@@ -180,10 +201,7 @@ impl HistoryFileContents {
 
     /// Returns the file type of these contents. If empty, [`DEFAULT_HISTORY_FILE_TYPE`] is used.
     pub fn get_type(&self) -> HistoryFileType {
-        if self.contents().is_empty() {
-            return DEFAULT_HISTORY_FILE_TYPE;
-        }
-        infer_file_type(&self.contents())
+        self.type_
     }
 }
 
@@ -192,7 +210,7 @@ fn infer_file_type(contents: &[u8]) -> HistoryFileType {
     assert!(!contents.is_empty(), "File should never be empty");
     match contents[0] {
         b'#' => HistoryFileType::Fish1_x,
-        b'{' => HistoryFileType::FishJson,
+        RECORD_SEPARATOR => HistoryFileType::FishJson,
         _ => HistoryFileType::Fish2_0,
     }
 }
@@ -232,8 +250,36 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
             .collect(),
     };
 
+    buffer.push(RECORD_SEPARATOR); // Record separator, as required by rfc7464.
     buffer.extend(serde_json::to_vec(&json_item).unwrap().iter());
     buffer.push(b'\n');
+}
+
+fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
+    let json_item: JsonHistoryItem = serde_json::from_slice(trim_leading_separators(data)).ok()?;
+    let paths: Vec<WString> = json_item
+        .paths
+        .iter()
+        .map(|s| str2wcstring(s.trim().as_bytes()))
+        .collect();
+    let mut item = HistoryItem::new(
+        str2wcstring(&json_item.cmd.as_bytes()),
+        time_from_seconds(json_item.ts),
+        0,
+        PersistenceMode::Disk,
+    );
+    item.set_required_paths(paths);
+
+    Some(item)
+}
+
+/// Returns a view of the `data` slice that has all `RECORD_SEPARATOR` characters removed.
+fn trim_leading_separators(data: &[u8]) -> &[u8] {
+    if data.len() > 0 && data[0] == RECORD_SEPARATOR {
+        trim_leading_separators(&data[1..])
+    } else {
+        data
+    }
 }
 
 /// Check if we should mmap the fd.
@@ -261,21 +307,6 @@ fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()>
     }
     dest.fill(0u8);
     Ok(())
-}
-
-fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {
-    let mut offset = 0;
-    while let Some(relpos) = subslice_position(&s[offset..], needle) {
-        offset += relpos;
-        s.splice(offset..(offset + needle.len()), replacement.iter().copied());
-        offset += replacement.len();
-    }
-}
-
-/// Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
-fn escape_yaml_fish_2_0(s: &mut Vec<u8>) {
-    replace_all(s, b"\\", b"\\\\"); // replace one backslash with two
-    replace_all(s, b"\n", b"\\n"); // replace newline with backslash + literal n
 }
 
 #[inline(always)]
@@ -465,6 +496,25 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
             // before epoch
             -i64::try_from(e.duration().as_secs()).unwrap()
         }
+    }
+}
+
+/// Returns the number of bytes until the next record in the given `contents` given the `current_offset`.
+/// If no new suitable record could be found, then returns [`None`].
+fn offset_of_next_item_fish_json(
+    contents: &[u8],
+    current_offset: &usize,
+    cutoff_timestamp: Option<SystemTime>,
+) -> Option<usize> {
+    let start_of_next_record = contents[*current_offset..]
+        .iter()
+        .skip_while(|c| **c == RECORD_SEPARATOR)
+        .position(|c| *c == RECORD_SEPARATOR)?;
+    println!("start_of_next_record: {:?}", start_of_next_record);
+    if start_of_next_record == contents.len() {
+        None
+    } else {
+        Some(start_of_next_record)
     }
 }
 

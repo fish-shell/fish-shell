@@ -118,12 +118,18 @@ function fish_config --description "Launch fish's web based configuration"
                         # or we'd throw an error on a stock fish.
                         path is $__fish_config_dir/functions/fish_prompt.fish
                         and cp $__fish_config_dir/functions/fish_prompt.fish{,.bak}
+                        path is $__fish_config_dir/functions/fish_right_prompt.fish
+                        and cp $__fish_config_dir/functions/fish_right_prompt.fish{,.bak}
 
                         set -l have
                         if set -q argv[1]
                             for f in $prompt_dir/$argv[1].fish
                                 if test -f $f
                                     set have $f
+                                    # Set the functions to empty so we empty the file
+                                    # if necessary.
+                                    function fish_prompt; end
+                                    function fish_right_prompt; end
                                     source $f
                                     or return 2
                                 end

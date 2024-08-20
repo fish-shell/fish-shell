@@ -288,11 +288,11 @@ fn unescape_yaml_fish_2_0(s: &[u8]) -> Vec<u8> {
         // performance of this function.
         let to_copy = chars.by_ref().take_while(|b| *b != b'\\').count();
         unsafe {
-            let src = &s[src_idx..].as_ptr();
+            let src = s[src_idx..].as_ptr();
             // Can use the following when feature(maybe_uninit_slice) is stabilized:
             // let dst = std::mem::MaybeUninit::slice_as_mut_ptr(&mut result[dst_idx..]);
             let dst = result[dst_idx..].as_mut_ptr().cast();
-            std::ptr::copy_nonoverlapping(*src, dst, to_copy);
+            std::ptr::copy_nonoverlapping(src, dst, to_copy);
         }
         dst_idx += to_copy;
 

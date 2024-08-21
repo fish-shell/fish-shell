@@ -544,10 +544,19 @@ impl HistoryImpl {
 
         // Rewrite if the original is HistoryFileType::Fish2_0
         if self.get_file_type() == HistoryFileType::Fish2_0 {
-            println!("file type is fish 2");
-            let _profiler = TimeProfiler::new("rewrite_into_json");
-            self.save_internal_via_rewrite();
+            self.rewrite_into_json();
         }
+    }
+
+    fn rewrite_into_json(&mut self) {
+        println!("file type is fish 2");
+        self.first_unwritten_new_item_index = 0;
+        let _profiler = TimeProfiler::new("rewrite_into_json");
+
+        // Treat all old items as new items.
+
+        //
+        self.save_internal_via_rewrite();
     }
 
     /// Deletes duplicates in new_items.

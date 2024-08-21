@@ -1,5 +1,6 @@
 //! Implemention of history files.
 
+use nix::NixPath;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
@@ -183,9 +184,7 @@ impl HistoryFileContents {
     ) -> Option<usize> {
         match self.get_type() {
             HistoryFileType::FishJson => {
-                let offset = offset_of_next_item_fish_json(self.contents(), &cursor, cutoff);
-                *cursor = offset?;
-                offset
+                offset_of_next_item_fish_json(self.contents(), cursor, cutoff)
             }
             HistoryFileType::Fish2_0 => {
                 offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
@@ -503,19 +502,39 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
 /// If no new suitable record could be found, then returns [`None`].
 fn offset_of_next_item_fish_json(
     contents: &[u8],
-    current_offset: &usize,
+    cursor: &mut usize,
     cutoff_timestamp: Option<SystemTime>,
 ) -> Option<usize> {
-    let start_of_next_record = contents[*current_offset..]
+    println!("cursor here: {:?}", *cursor);
+    let start_of_next_record = contents
         .iter()
+        .skip(*cursor)
         .skip_while(|c| **c == RECORD_SEPARATOR)
-        .position(|c| *c == RECORD_SEPARATOR)?;
+        .position(|c| *c == RECORD_SEPARATOR)?
+        + *cursor;
     println!("start_of_next_record: {:?}", start_of_next_record);
-    if start_of_next_record == contents.len() {
+    if start_of_next_record >= contents.len() - 1 {
         None
     } else {
+        *cursor = start_of_next_record + 1;
         Some(start_of_next_record)
     }
+}
+
+// Finds the index of the nth separator.
+fn index_of_separator(contents: &[u8], nth: usize) -> usize {
+    let mut i = 0;
+    let mut num_found = 0;
+    while i < contents.len() {
+        if contents[i] == RECORD_SEPARATOR {
+            num_found += 1;
+            if num_found == nth {
+                break;
+            }
+        }
+        i += 1;
+    }
+    i
 }
 
 /// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline

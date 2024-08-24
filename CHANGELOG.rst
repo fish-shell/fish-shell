@@ -157,6 +157,7 @@ Interactive improvements
 - Measuring a command with ``time`` now considers the time taken for command substitution (:issue:`9100`).
 - ``fish_add_path`` now automatically enables verbose mode when used interactively (in the commandline), in an effort to be clearer about what it does (:issue:`10532`).
 - fish no longer adopts TTY modes of failed commands (:issue:`10603`).
+- `complete -e cmd` now prevents autoloading completions for `cmd` (:issue:`6716`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

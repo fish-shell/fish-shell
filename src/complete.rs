@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     mem,
     sync::{
         atomic::{self, AtomicUsize},
@@ -452,6 +452,7 @@ struct CompletionEntryIndex {
 }
 type CompletionEntryMap = BTreeMap<CompletionEntryIndex, CompletionEntry>;
 static COMPLETION_MAP: Mutex<CompletionEntryMap> = Mutex::new(BTreeMap::new());
+static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::new());
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;
@@ -2340,10 +2341,14 @@ pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: Comp
 /// Removes all completions for a given command.
 pub fn complete_remove_all(cmd: WString, cmd_is_path: bool) {
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
-    completion_map.remove(&CompletionEntryIndex {
+    let idx = CompletionEntryIndex {
         name: cmd,
         is_path: cmd_is_path,
-    });
+    };
+    let removed = completion_map.remove(&idx).is_some();
+    if !removed && !idx.is_path {
+        COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
+    }
 }
 
 /// Returns all completions of the command cmd.
@@ -2433,6 +2438,10 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
 /// Load command-specific completions for the specified command.
 /// Returns `true` if something new was loaded, `false` if not.
 pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
+    if COMPLETION_TOMBSTONES.lock().unwrap().contains(cmd) {
+        return false;
+    }
+
     let mut loaded_new = false;
 
     // We have to load this as a function, since it may define a --wraps or signature.

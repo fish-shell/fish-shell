@@ -122,6 +122,11 @@ impl VarDispatchTable {
             Some(EnvCallback::Anon(anon)) => (anon)(vars),
             None => (),
         }
+        // Hack to redraw the prompt and command line when fish_color_* or fish_pager_color_* changes.
+        // This allows the command line to react immediately to color changes in other shells.
+        if key.starts_with("fish_color_") || key.starts_with("fish_pager_color_") {
+            reader_schedule_prompt_repaint();
+        }
     }
 }
 

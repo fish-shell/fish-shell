@@ -666,6 +666,7 @@ fn test_history_json() {
     install_sample_history(name, /*is_json=*/ true);
 
     let expected: Vec<WString> = vec![
+        "echo 🐟".into(),
         "echo this has\\\nbackslashes".into(),
         "function foo\necho bar\nend".into(),
         "echo alpha".into(),

@@ -508,12 +508,6 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct JsonTimestampRecord {
-    #[serde(default)]
-    ts: i64,
-}
-
 /// Returns the number of bytes until the next record in the given `contents` given the `cursor`.
 /// If no new suitable record could be found, then returns [`None`].
 fn offset_of_next_item_fish_json(
@@ -521,6 +515,11 @@ fn offset_of_next_item_fish_json(
     cursor: &mut usize,
     cutoff_timestamp: Option<SystemTime>,
 ) -> Option<usize> {
+    fn next_timestamp(data: &[u8]) -> Option<SystemTime> {
+        let v: serde_json::Value = serde_json::from_slice(data).ok()?;
+        Some(time_from_seconds(v.get("ts")?.as_i64()?))
+    }
+
     let mut offset: usize;
     loop {
         // Find the index of the next record.
@@ -532,16 +531,14 @@ fn offset_of_next_item_fish_json(
         *cursor += next_record;
 
         if let Some(cutoff) = cutoff_timestamp {
-            // Check the timestamp of this record, and iterate until the right one is found.
-            let timestamp_record: serde_json::Result<JsonTimestampRecord> =
-                serde_json::from_slice(isolate_next_record(&contents[offset..]));
-            match timestamp_record {
-                Ok(record) => {
-                    if time_from_seconds(record.ts) > cutoff {
-                        break;
-                    }
+            // Check the timestamp of this record. If it is greater than the cutoff, then skip this
+            // record.
+            let next_ts = next_timestamp(isolate_next_record(&contents[offset..]));
+            match next_ts {
+                Some(timestamp) if timestamp > cutoff => {
+                    continue;
                 }
-                Err(_) => {
+                _ => {
                     break;
                 }
             }

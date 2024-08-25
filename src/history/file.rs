@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs::File,
-    io::{Read, Seek, SeekFrom},
+    io::{BufRead, Read, Seek, SeekFrom},
     ops::{Deref, DerefMut},
     os::fd::{AsRawFd, RawFd},
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -201,6 +201,17 @@ impl HistoryFileContents {
     /// Returns the file type of these contents. If empty, [`DEFAULT_HISTORY_FILE_TYPE`] is used.
     pub fn get_type(&self) -> HistoryFileType {
         self.type_
+    }
+
+    /// Get all items as an iterator, only works for HistoryFileType::FishJson.
+    pub fn get_items_iter(&self) -> &dyn Iterator<Item = HistoryItem> {
+        assert!(
+            self.get_type() == HistoryFileType::FishJson,
+            "File type should be JSON"
+        );
+        self.contents()
+            .split(|c| *c == RECORD_SEPARATOR)
+            .map(|r| decode_json_item(r))
     }
 }
 
@@ -505,14 +516,12 @@ fn offset_of_next_item_fish_json(
     cursor: &mut usize,
     cutoff_timestamp: Option<SystemTime>,
 ) -> Option<usize> {
-    println!("cursor here: {:?}", *cursor);
     let start_of_next_record = contents
         .iter()
         .skip(*cursor)
         .skip_while(|c| **c == RECORD_SEPARATOR)
         .position(|c| *c == RECORD_SEPARATOR)?
         + *cursor;
-    println!("start_of_next_record: {:?}", start_of_next_record);
     if start_of_next_record >= contents.len() - 1 {
         None
     } else {

@@ -39,6 +39,7 @@ use std::{
         fd::{AsFd, AsRawFd, RawFd},
         unix::fs::MetadataExt,
     },
+    path::Path,
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -544,19 +545,56 @@ impl HistoryImpl {
 
         // Rewrite if the original is HistoryFileType::Fish2_0
         if self.get_file_type() == HistoryFileType::Fish2_0 {
-            self.rewrite_into_json();
+            match self.rewrite_into_json() {
+                // If all went well, then reload the old history.
+                Ok(_) => self.load_old_if_needed(),
+                Err(err) => FLOGF!(
+                    history_file,
+                    "Error %d when rewriting history file into JSON",
+                    err.raw_os_error().unwrap_or_default()
+                ),
+            }
         }
     }
 
-    fn rewrite_into_json(&mut self) {
-        println!("file type is fish 2");
-        self.first_unwritten_new_item_index = 0;
+    /// Takes the current file (represented by self.file_contents) and writes it into a json file.
+    fn rewrite_into_json(&mut self) -> std::io::Result<()> {
+        let old_file = self
+            .file_contents
+            .as_ref()
+            .ok_or(std::io::Error::other("expected some file contents"))?;
+
+        if old_file.get_type() == HistoryFileType::FishJson {
+            return Err(std::io::Error::other("File is already JSON, not rewriting"));
+        }
+
         let _profiler = TimeProfiler::new("rewrite_into_json");
 
-        // Treat all old items as new items.
+        // Get all of the old items.
+        let mut cursor = 0;
+        let mut old_items: Vec<HistoryItem> = vec![];
+        while let Some(offset) = old_file.offset_of_next_item(&mut cursor, None) {
+            // Try decoding an old item.
+            if let Some(old_item) = old_file.decode_item(offset) {
+                old_items.push(old_item);
+            };
+        }
+        let filename = history_filename(&self.name, HistoryFileType::FishJson, L!(""))
+            .ok_or(std::io::Error::other("could not find filename"))?
+            .to_string();
 
-        //
-        self.save_internal_via_rewrite();
+        let path = Path::new(&filename);
+        // Create the new file.
+        let mut new_file = std::fs::File::create_new(path)?;
+
+        let mut buf: Vec<u8> = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
+        for item in old_items {
+            append_history_item_to_buffer(&item, &mut buf);
+        }
+        new_file.write(&buf)?;
+        new_file.sync_data()?;
+
+        Ok(())
     }
 
     /// Deletes duplicates in new_items.
@@ -617,7 +655,6 @@ impl HistoryImpl {
             if let Some(local_file) = HistoryFileContents::create(existing_file) {
                 let mut cursor = 0;
                 while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
-                    println!("cursor: {:?}, offset: {:?}", cursor, offset);
                     // Try decoding an old item.
                     let Some(old_item) = local_file.decode_item(offset) else {
                         continue;

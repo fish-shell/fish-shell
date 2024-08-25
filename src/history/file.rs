@@ -275,7 +275,7 @@ fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
 }
 
 /// Returns a view of the `data` slice that has all `RECORD_SEPARATOR` and
-/// whitespace characters removed from the start of the slice, until the next RECORD_SEPARATOR.
+/// whitespace characters removed from the start of the slice, until the next `RECORD_SEPARATOR`.
 fn isolate_next_record(data: &[u8]) -> &[u8] {
     // Find the beginning and end record separators.
     let begin_index = match index_of_separator(data, 1) {
@@ -287,7 +287,7 @@ fn isolate_next_record(data: &[u8]) -> &[u8] {
         None => data.len() - 1,
     };
 
-    data[begin_index..end_index].trim_ascii()
+    trim_start(&data[begin_index..end_index])
 }
 
 /// Check if we should mmap the fd.
@@ -541,9 +541,8 @@ fn offset_of_next_item_fish_json(
                     break;
                 }
             }
-        } else {
-            break;
         }
+        break;
     }
 
     Some(offset)
@@ -777,8 +776,7 @@ mod tests {
             + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n");
 
         let mut cursor: usize = 0;
-        let mut offset =
-            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
+        let mut offset = offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
 
         let mut item = decode_json_item(&data.as_bytes()[offset..]);
         assert_eq!(item.unwrap().str(), L!("echo hello"));

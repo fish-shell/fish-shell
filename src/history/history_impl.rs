@@ -238,7 +238,7 @@ fn history_filename(
     result.push_utfstr(session_id);
     result.push_utfstr(L!("_history"));
     if file_type == HistoryFileType::FishJson {
-        result.push_utfstr(L!(".jsonseq"))
+        result.push_utfstr(L!(".jsonseq"));
     }
     result.push_utfstr(suffix);
     Some(result)
@@ -547,25 +547,25 @@ impl HistoryImpl {
         if self.get_file_type() == HistoryFileType::Fish2_0 {
             match self.rewrite_into_json() {
                 // If all went well, then reload the old history.
-                Ok(_) => self.load_old_if_needed(),
+                Ok(()) => self.load_old_if_needed(),
                 Err(err) => FLOGF!(
                     history_file,
-                    "Error %d when rewriting history file into JSON",
-                    err.raw_os_error().unwrap_or_default()
+                    "Error %s when rewriting history file into JSON",
+                    (*err).to_string()
                 ),
             }
         }
     }
 
-    /// Takes the current file (represented by self.file_contents) and writes it into a json file.
-    fn rewrite_into_json(&mut self) -> std::io::Result<()> {
+    /// Takes the current file (represented by `self.file_contents`) and writes it into a json file.
+    fn rewrite_into_json(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
         let old_file = self
             .file_contents
             .as_ref()
-            .ok_or(std::io::Error::other("expected some file contents"))?;
+            .ok_or("expected some file contents")?;
 
         if old_file.get_type() == HistoryFileType::FishJson {
-            return Err(std::io::Error::other("File is already JSON, not rewriting"));
+            return Err("File is already JSON, not rewriting".into());
         }
 
         let _profiler = TimeProfiler::new("rewrite_into_json");
@@ -580,12 +580,12 @@ impl HistoryImpl {
             };
         }
         let filename = history_filename(&self.name, HistoryFileType::FishJson, L!(""))
-            .ok_or(std::io::Error::other("could not find filename"))?
+            .ok_or("could not find filename")?
             .to_string();
 
         let path = Path::new(&filename);
         // Create the new file.
-        let mut new_file = std::fs::File::create_new(path)?;
+        let mut new_file = std::fs::File::create(path)?;
 
         let mut buf: Vec<u8> = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in old_items {
@@ -722,7 +722,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by rewriting the file.
-    /// This will always rewrite to a FishJson file, regardless of the type of original file.
+    /// This will always rewrite to a `FishJson` file, regardless of the type of original file.
     fn save_internal_via_rewrite(&mut self) {
         FLOGF!(
             history,

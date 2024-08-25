@@ -591,7 +591,7 @@ fn test_history_path_detection() {
 fn install_sample_history(name: &wstr, is_json: bool) {
     let path = path_get_data().expect("Failed to get data directory");
     let suffix = if is_json {
-        L!("_history.jsonl")
+        L!("_history.jsonseq")
     } else {
         L!("_history")
     };

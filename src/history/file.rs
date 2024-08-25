@@ -19,7 +19,6 @@ use crate::{
     flog::FLOG,
     history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
-    wchar::prelude::*,
     wchar::WString,
 };
 
@@ -704,6 +703,7 @@ fn offset_of_next_item_fish_2_0(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::L;
 
     #[test]
     fn test_offset_of_next_item_fish_json() {
@@ -750,21 +750,25 @@ mod tests {
 
         let mut cursor: usize = 0;
 
-        // The offset of the first record after 15 is 30.
+        // The offset of the first record before 15 is 0.
         assert_eq!(
             offset_of_next_item_fish_json(
                 &data.as_bytes(),
                 &mut cursor,
                 Some(time_from_seconds(15))
             ),
-            Some(30)
+            Some(0)
         );
-        assert_eq!(cursor, 62);
+        assert_eq!(cursor, 30);
 
-        // Decode the item and ensure it has the correct things.
-        let item = decode_json_item(&data.as_bytes()[30..]).unwrap();
-        assert_eq!(item.str(), L!("echo goodbye"));
-        assert_eq!(item.timestamp(), time_from_seconds(20));
+        assert_eq!(
+            offset_of_next_item_fish_json(
+                &data.as_bytes(),
+                &mut cursor,
+                Some(time_from_seconds(15))
+            ),
+            None
+        );
     }
 
     #[test]

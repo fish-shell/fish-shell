@@ -238,7 +238,7 @@ fn history_filename(
     result.push_utfstr(session_id);
     result.push_utfstr(L!("_history"));
     if file_type == HistoryFileType::FishJson {
-        result.push_utfstr(L!(".jsonl"))
+        result.push_utfstr(L!(".jsonseq"))
     }
     result.push_utfstr(suffix);
     Some(result)

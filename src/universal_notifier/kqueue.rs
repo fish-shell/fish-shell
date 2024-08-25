@@ -108,42 +108,48 @@ impl UniversalNotifier for KqueueNotifier {
     /// The notification_fd is readable; drain it.
     /// Returns true if a notification is considered to have been posted.
     fn notification_fd_became_readable(&self, fd: RawFd) -> bool {
-        let mut events = [std::mem::MaybeUninit::<KEvent>::uninit(); 1];
-        // Use a zero timeout just in case poll/select returned incorrectly/spuriously, but really
-        // that should never happen.
+        let mut have_event = false;
+        let mut events = [KEvent::new(
+            0,
+            EventFilter::EVFILT_READ,
+            EventFlag::empty(),
+            FilterFlag::empty(),
+            0,
+            0,
+        )];
+        // Use a zero timeout because we check for more events than we have notifications for, to
+        // drain all events up front.
         let timeout = libc::timespec {
             tv_nsec: 0,
             tv_sec: 0,
         };
-        let event_count = self
-            .kq
-            .kevent(
-                &[],
-                // Safety: nix::sys::event::Kqueue::kevent() isn't designed in a way that makes it
-                // possible to use MaybeUninit directly, so we need to transmute. Transmuting
-                // between *a pointer to* MaybeUninit<T> and T is safe so long as we don't read from
-                // it.
-                unsafe { std::mem::transmute(&mut events[..]) },
-                Some(timeout),
-            )
-            // Safe to unwrap because kevent(2) returns an error via the EV_ERROR flag if there's
-            // room for at least one event in the event list.
-            .unwrap();
-        if event_count > 0 {
-            // Safety: kevent(2) return value guarantees this index is now init and valid
-            let event = unsafe { events[0].assume_init() };
-            if event.flags().contains(EventFlag::EV_ERROR) {
-                // Error encountered processing this changelist item
-                FLOGF!(
-                    warning,
-                    "EV_ERROR in kqueue uvar monitor! Errno: {}",
-                    event.data()
-                );
+        loop {
+            let event_count = self
+                .kq
+                .kevent(&[], &mut events[..], Some(timeout))
+                // Safe to unwrap because kevent(2) returns an error via the EV_ERROR flag if there's
+                // room for at least one event in the event list.
+                .unwrap();
+            if event_count > 0 {
+                have_event = true;
+                for event in &events[..event_count] {
+                    if event.flags().contains(EventFlag::EV_ERROR) {
+                        // Error encountered processing this changelist item
+                        FLOGF!(
+                            warning,
+                            "EV_ERROR in kqueue uvar monitor! Errno: {}",
+                            event.data()
+                        );
+                        return false;
+                    }
+                }
+            } else if !have_event {
+                // Spurious wake, no event available.
                 return false;
+            } else {
+                // All pending events drained
+                break;
             }
-        } else {
-            // Spurious wake, no event available.
-            return false;
         }
 
         let mut inner = self.inner.lock().expect("Mutex poisoned!");
@@ -175,17 +181,18 @@ impl UniversalNotifier for KqueueNotifier {
 #[test]
 fn test_kqueue_notifiers() {
     use crate::common::cstr2wcstring;
-    use std::ffi::CString;
+    use std::ffi::CStr;
     use std::fs::remove_dir_all;
     use std::path::PathBuf;
 
-    let template = CString::new("/tmp/fish_kqueue_XXXXXX").unwrap();
-    let temp_dir_ptr = unsafe { libc::mkdtemp(template.as_ptr() as *mut libc::c_char) };
+    let mut template: Box<[u8]> = Box::from(&b"/tmp/fish_kqueue_XXXXXX\0"[..]);
+
+    let temp_dir_ptr = unsafe { libc::mkdtemp(template.as_mut_ptr().cast()) };
     if temp_dir_ptr.is_null() {
         panic!("failed to create temp dir");
     }
-    let tmp_dir = unsafe { CString::from_raw(temp_dir_ptr) };
-    let fake_uvars_dir = cstr2wcstring(tmp_dir.as_bytes_with_nul());
+    let tmp_dir = unsafe { CStr::from_ptr(temp_dir_ptr) };
+    let fake_uvars_dir = cstr2wcstring(tmp_dir.to_bytes_with_nul());
     let fake_uvars_path = fake_uvars_dir.clone() + "/fish_variables";
 
     let mut notifiers = Vec::new();

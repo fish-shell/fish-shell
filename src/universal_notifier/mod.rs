@@ -7,7 +7,7 @@ mod notifyd;
 #[cfg(any(target_os = "android", target_os = "linux"))]
 mod inotify;
 
-#[cfg(any(bsd, target_os = "macos"))]
+#[cfg(bsd)]
 mod kqueue;
 
 #[cfg(test)]

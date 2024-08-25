@@ -264,7 +264,7 @@ fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
         .map(|s| str2wcstring(s.trim().as_bytes()))
         .collect();
     let mut item = HistoryItem::new(
-        str2wcstring(&json_item.cmd.as_bytes()),
+        str2wcstring(json_item.cmd.as_bytes()),
         time_from_seconds(json_item.ts),
         0,
         PersistenceMode::Disk,
@@ -287,7 +287,7 @@ fn isolate_next_record(data: &[u8]) -> &[u8] {
         None => data.len() - 1,
     };
 
-    &data[begin_index..end_index].trim_ascii()
+    data[begin_index..end_index].trim_ascii()
 }
 
 /// Check if we should mmap the fd.
@@ -715,28 +715,28 @@ mod tests {
 
         // The offset of the first record is at position 0.
         assert_eq!(
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
             Some(0)
         );
         assert_eq!(cursor, 22);
 
         // Offset of the second record is at position 22.
         assert_eq!(
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
             Some(22)
         );
         assert_eq!(cursor, 46);
 
         // Offset of the third record is at position 44.
         assert_eq!(
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
             Some(46)
         );
         assert_eq!(cursor, 70);
 
         // There is no fourth record.
         assert_eq!(
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
             None
         );
         assert_eq!(cursor, 70);
@@ -753,7 +753,7 @@ mod tests {
         // The offset of the first record before 15 is 0.
         assert_eq!(
             offset_of_next_item_fish_json(
-                &data.as_bytes(),
+                data.as_bytes(),
                 &mut cursor,
                 Some(time_from_seconds(15))
             ),
@@ -763,7 +763,7 @@ mod tests {
 
         assert_eq!(
             offset_of_next_item_fish_json(
-                &data.as_bytes(),
+                data.as_bytes(),
                 &mut cursor,
                 Some(time_from_seconds(15))
             ),
@@ -778,17 +778,17 @@ mod tests {
 
         let mut cursor: usize = 0;
         let mut offset =
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None).unwrap();
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
 
         let mut item = decode_json_item(&data.as_bytes()[offset..]);
         assert_eq!(item.unwrap().str(), L!("echo hello"));
 
-        offset = offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None).unwrap();
+        offset = offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
         item = decode_json_item(&data.as_bytes()[offset..]);
         assert_eq!(item.unwrap().str(), L!("echo goodbye"));
 
         assert_eq!(
-            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
             None
         );
     }

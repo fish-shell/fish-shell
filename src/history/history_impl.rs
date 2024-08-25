@@ -591,7 +591,7 @@ impl HistoryImpl {
         for item in old_items {
             append_history_item_to_buffer(&item, &mut buf);
         }
-        new_file.write(&buf)?;
+        new_file.write_all(&buf)?;
         new_file.sync_data()?;
 
         Ok(())
@@ -896,7 +896,7 @@ impl HistoryImpl {
         assert!(self.deleted_items.is_empty());
 
         if self.get_file_type() != HistoryFileType::FishJson {
-            if !self.rewrite_into_json().is_ok() {
+            if self.rewrite_into_json().is_err() {
                 return false;
             }
         }

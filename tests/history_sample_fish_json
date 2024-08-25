@@ -1,0 +1,4 @@
+{"cmd":"echo alpha","ts":1339717374}
+{"cmd":"function foo\necho bar\nend","ts":1339717377}
+{"cmd":"echo this has\\nbackslashes","ts":1339717385}
+{"cmd":"echo 🐟","ts":1339717400}

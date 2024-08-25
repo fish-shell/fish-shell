@@ -236,11 +236,11 @@ fn history_filename(
 
     result.push('/');
     result.push_utfstr(session_id);
-    result.push_utfstr(L!("_history_testing"));
-    result.push_utfstr(suffix);
+    result.push_utfstr(L!("_history"));
     if file_type == HistoryFileType::FishJson {
         result.push_utfstr(L!(".jsonl"))
     }
+    result.push_utfstr(suffix);
     Some(result)
 }
 
@@ -894,6 +894,12 @@ impl HistoryImpl {
         );
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
+
+        if self.get_file_type() != HistoryFileType::FishJson {
+            if !self.rewrite_into_json().is_ok() {
+                return false;
+            }
+        }
 
         let mut ok = false;
 

@@ -1,13 +1,13 @@
 //! Implemention of history files.
 
-use nix::NixPath;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs::File,
-    io::{BufRead, Read, Seek, SeekFrom},
+    io::{Read, Seek, SeekFrom},
     ops::{Deref, DerefMut},
     os::fd::{AsRawFd, RawFd},
+    result::Result,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -19,6 +19,7 @@ use crate::{
     flog::FLOG,
     history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
+    wchar::prelude::*,
     wchar::WString,
 };
 
@@ -202,17 +203,6 @@ impl HistoryFileContents {
     pub fn get_type(&self) -> HistoryFileType {
         self.type_
     }
-
-    /// Get all items as an iterator, only works for HistoryFileType::FishJson.
-    pub fn get_items_iter(&self) -> &dyn Iterator<Item = HistoryItem> {
-        assert!(
-            self.get_type() == HistoryFileType::FishJson,
-            "File type should be JSON"
-        );
-        self.contents()
-            .split(|c| *c == RECORD_SEPARATOR)
-            .map(|r| decode_json_item(r))
-    }
 }
 
 /// Try to infer the history file type based on inspecting the data.
@@ -241,7 +231,9 @@ impl TryFrom<MmapRegion> for HistoryFileContents {
 #[derive(Serialize, Deserialize)]
 struct JsonHistoryItem {
     cmd: String,
+    #[serde(default)]
     ts: i64,
+    #[serde(default)]
     paths: Vec<String>,
 }
 
@@ -266,7 +258,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
 }
 
 fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
-    let json_item: JsonHistoryItem = serde_json::from_slice(trim_leading_separators(data)).ok()?;
+    let json_item: JsonHistoryItem = serde_json::from_slice(isolate_next_record(data)).ok()?;
     let paths: Vec<WString> = json_item
         .paths
         .iter()
@@ -283,13 +275,20 @@ fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
     Some(item)
 }
 
-/// Returns a view of the `data` slice that has all `RECORD_SEPARATOR` characters removed.
-fn trim_leading_separators(data: &[u8]) -> &[u8] {
-    if data.len() > 0 && data[0] == RECORD_SEPARATOR {
-        trim_leading_separators(&data[1..])
-    } else {
-        data
-    }
+/// Returns a view of the `data` slice that has all `RECORD_SEPARATOR` and
+/// whitespace characters removed from the start of the slice, until the next RECORD_SEPARATOR.
+fn isolate_next_record(data: &[u8]) -> &[u8] {
+    // Find the beginning and end record separators.
+    let begin_index = match index_of_separator(data, 1) {
+        Some(index) => index + 1,
+        None => 0,
+    };
+    let end_index = match index_of_separator(data, 2) {
+        Some(index) => index,
+        None => data.len() - 1,
+    };
+
+    &data[begin_index..end_index].trim_ascii()
 }
 
 /// Check if we should mmap the fd.
@@ -509,29 +508,53 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
     }
 }
 
-/// Returns the number of bytes until the next record in the given `contents` given the `current_offset`.
+#[derive(Serialize, Deserialize)]
+struct JsonTimestampRecord {
+    #[serde(default)]
+    ts: i64,
+}
+
+/// Returns the number of bytes until the next record in the given `contents` given the `cursor`.
 /// If no new suitable record could be found, then returns [`None`].
 fn offset_of_next_item_fish_json(
     contents: &[u8],
     cursor: &mut usize,
     cutoff_timestamp: Option<SystemTime>,
 ) -> Option<usize> {
-    let start_of_next_record = contents
-        .iter()
-        .skip(*cursor)
-        .skip_while(|c| **c == RECORD_SEPARATOR)
-        .position(|c| *c == RECORD_SEPARATOR)?
-        + *cursor;
-    if start_of_next_record >= contents.len() - 1 {
-        None
-    } else {
-        *cursor = start_of_next_record + 1;
-        Some(start_of_next_record)
+    let mut offset: usize;
+    loop {
+        // Find the index of the next record.
+        let next_record = index_of_separator(&contents[*cursor..], /*nth=*/ 2)?;
+
+        // The current cursor will always point to the beginning of a valid record, so store it and
+        // return it as the offset.
+        offset = *cursor;
+        *cursor += next_record;
+
+        if let Some(cutoff) = cutoff_timestamp {
+            // Check the timestamp of this record, and iterate until the right one is found.
+            let timestamp_record: serde_json::Result<JsonTimestampRecord> =
+                serde_json::from_slice(isolate_next_record(&contents[offset..]));
+            match timestamp_record {
+                Ok(record) => {
+                    if time_from_seconds(record.ts) > cutoff {
+                        break;
+                    }
+                }
+                Err(_) => {
+                    break;
+                }
+            }
+        } else {
+            break;
+        }
     }
+
+    Some(offset)
 }
 
-// Finds the index of the nth separator.
-fn index_of_separator(contents: &[u8], nth: usize) -> usize {
+// Finds the index of the nth separator, or [`None`] if no separator exists.
+fn index_of_separator(contents: &[u8], nth: usize) -> Option<usize> {
     let mut i = 0;
     let mut num_found = 0;
     while i < contents.len() {
@@ -543,7 +566,12 @@ fn index_of_separator(contents: &[u8], nth: usize) -> usize {
         }
         i += 1;
     }
-    i
+
+    if num_found > 0 {
+        Some(i)
+    } else {
+        None
+    }
 }
 
 /// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
@@ -674,4 +702,93 @@ fn offset_of_next_item_fish_2_0(
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_offset_of_next_item_fish_json() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n");
+
+        let mut cursor: usize = 0;
+
+        // The offset of the first record is at position 0.
+        assert_eq!(
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            Some(0)
+        );
+        assert_eq!(cursor, 22);
+
+        // Offset of the second record is at position 22.
+        assert_eq!(
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            Some(22)
+        );
+        assert_eq!(cursor, 46);
+
+        // Offset of the third record is at position 44.
+        assert_eq!(
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            Some(46)
+        );
+        assert_eq!(cursor, 70);
+
+        // There is no fourth record.
+        assert_eq!(
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            None
+        );
+        assert_eq!(cursor, 70);
+    }
+
+    #[test]
+    fn test_offset_of_next_item_fish_json_with_timestamps() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\",\"ts\":10}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\",\"ts\":20}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye again\",\"ts\":30}\n");
+
+        let mut cursor: usize = 0;
+
+        // The offset of the first record after 15 is 30.
+        assert_eq!(
+            offset_of_next_item_fish_json(
+                &data.as_bytes(),
+                &mut cursor,
+                Some(time_from_seconds(15))
+            ),
+            Some(30)
+        );
+        assert_eq!(cursor, 62);
+
+        // Decode the item and ensure it has the correct things.
+        let item = decode_json_item(&data.as_bytes()[30..]).unwrap();
+        assert_eq!(item.str(), L!("echo goodbye"));
+        assert_eq!(item.timestamp(), time_from_seconds(20));
+    }
+
+    #[test]
+    fn test_decode_json_item() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n");
+
+        let mut cursor: usize = 0;
+        let mut offset =
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None).unwrap();
+
+        let mut item = decode_json_item(&data.as_bytes()[offset..]);
+        assert_eq!(item.unwrap().str(), L!("echo hello"));
+
+        offset = offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None).unwrap();
+        item = decode_json_item(&data.as_bytes()[offset..]);
+        assert_eq!(item.unwrap().str(), L!("echo goodbye"));
+
+        assert_eq!(
+            offset_of_next_item_fish_json(&data.as_bytes(), &mut cursor, None),
+            None
+        );
+    }
 }

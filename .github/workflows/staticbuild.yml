@@ -27,14 +27,20 @@ jobs:
     - name: Prepare
       run: |
            rustup target add x86_64-unknown-linux-musl
-           sudo apt install musl-tools -y
-
+           rustup target add aarch64-unknown-linux-musl
+           sudo apt install musl-tools crossbuild-essential-arm64 -y
     - name: Build
-      run: cargo build -r --target x86_64-unknown-linux-musl
+      run: |
+           CMAKE_WITH_GETTEXT=0 CC=aarch64-linux-gnu-gcc RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc" cargo build -r --target aarch64-unknown-linux-musl
+           cargo build -r --target x86_64-unknown-linux-musl
     - name: Compress
-      run: tar -cazf fish.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
+      run: |
+           tar -cazf fish-amd64.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
+           tar -cazf fish-aarch64.tar.xz -C target/aarch64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
     - uses: actions/upload-artifact@v4
       with:
         name: fish
-        path: 'fish.tar.xz'
+        path: |
+              fish-amd64.tar.xz
+              fish-aarch64.tar.xz
         retention-days: 14

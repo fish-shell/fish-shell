@@ -1,6 +1,3 @@
-#include <assert.h>
-#include <dirent.h>
-#include <fcntl.h>
 #include <locale.h>
 #include <paths.h>
 #include <stdbool.h>
@@ -8,19 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/resource.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #define UNUSED(x) (void)(x)
-
-#define assert_or_die(x)   \
-    do {                   \
-        assert((x));       \
-        if (!(x)) abort(); \
-    } while (false)
 
 size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
 
@@ -192,115 +179,4 @@ int C_RLIMIT_NTHR() {
 #else
     return -1;
 #endif
-}
-
-bool C_readdir64(DIR* dirp, const char** d_name, size_t* d_name_len, uint64_t* d_ino,
-                 unsigned char* d_type) {
-    struct dirent* dent = readdir(dirp);
-    if (!dent) {
-        return false;
-    }
-    *d_name = dent->d_name;
-    *d_name_len = sizeof dent->d_name / sizeof **d_name;
-#if defined(__BSD__)
-    *d_ino = dent->d_fileno;
-#else
-    *d_ino = dent->d_ino;
-#endif
-    *d_type = dent->d_type;
-    return true;
-}
-
-bool C_fstatat64(int dirfd, const char* file, int flag, uint64_t* st_dev, uint64_t* st_ino,
-                 mode_t* st_mode) {
-    struct stat buf;
-    if (fstatat(dirfd, file, &buf, flag) == -1) {
-        return false;
-    }
-    *st_dev = buf.st_dev;
-    *st_ino = buf.st_ino;
-    *st_mode = buf.st_mode;
-    return true;
-}
-
-bool C_localtime64_r(int64_t timep, struct tm* result) {
-    time_t timep_ = timep;
-    return localtime_r(&timep_, result);
-}
-
-struct timeval64 {
-    int64_t tv_sec;
-    int64_t tv_usec;
-};
-
-int C_select64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
-               struct timeval64* timeout64) {
-    struct timeval timeout;
-    if (timeout64) {
-        timeout.tv_sec = timeout64->tv_sec;
-        timeout.tv_usec = timeout64->tv_usec;
-        assert_or_die(timeout.tv_sec == timeout64->tv_sec);
-        assert_or_die(timeout.tv_usec == timeout64->tv_usec);
-    }
-    int result = select(nfds, readfds, writefds, errorfds, timeout64 ? &timeout : NULL);
-    if (timeout64) {
-        timeout64->tv_sec = timeout.tv_sec;
-        timeout64->tv_usec = timeout.tv_usec;
-    }
-    return result;
-}
-
-struct timespec64 {
-    int64_t tv_sec;
-    int64_t tv_nsec;
-};
-
-int C_pselect64(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds,
-                struct timespec64* timeout64, const sigset_t* sigmask) {
-    struct timespec timeout;
-    if (timeout64) {
-        timeout.tv_sec = timeout64->tv_sec;
-        timeout.tv_nsec = timeout64->tv_nsec;
-        assert_or_die(timeout.tv_sec == timeout64->tv_sec);
-        assert_or_die(timeout.tv_nsec == timeout64->tv_nsec);
-    }
-    return pselect(nfds, readfds, writefds, errorfds, timeout64 ? &timeout : NULL, sigmask);
-}
-
-struct rusage64 {
-    struct timeval64 ru_utime;
-    struct timeval64 ru_stime;
-    int64_t ru_maxrss;
-    int64_t ru_nsignals;
-};
-
-int C_getrusage64(int resource, struct rusage64* usage) {
-    struct rusage tmp;
-    int result = getrusage(resource, &tmp);
-    usage->ru_utime.tv_sec = tmp.ru_utime.tv_sec;
-    usage->ru_utime.tv_usec = tmp.ru_utime.tv_usec;
-    usage->ru_stime.tv_sec = tmp.ru_stime.tv_sec;
-    usage->ru_stime.tv_usec = tmp.ru_stime.tv_usec;
-    usage->ru_maxrss = tmp.ru_maxrss;
-    usage->ru_nsignals = tmp.ru_nsignals;
-    return result;
-}
-
-bool C_clock_gettime64(clockid_t clock_id, struct timespec64* tp) {
-    struct timespec tp_;
-    if (clock_gettime(clock_id, &tp_) == -1) {
-        return false;
-    }
-    tp->tv_sec = tp_.tv_sec;
-    tp->tv_nsec = tp_.tv_nsec;
-    return true;
-}
-
-bool C_futimens64(int fd, struct timespec64 times0, struct timespec64 times1) {
-    struct timespec times[2];
-    times[0].tv_sec = times0.tv_sec;
-    times[0].tv_nsec = times0.tv_nsec;
-    times[1].tv_sec = times1.tv_sec;
-    times[1].tv_nsec = times1.tv_nsec;
-    return futimens(fd, &times[0]) == 0;
 }

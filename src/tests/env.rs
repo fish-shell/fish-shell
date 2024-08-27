@@ -1,5 +1,4 @@
 use crate::env::{EnvMode, EnvStack, EnvVar, EnvVarFlags, Environment};
-use crate::libc::localtime64_r;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
@@ -64,8 +63,16 @@ fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
 
     let _var = vars.get(L!("TZ"));
 
-    let tstamp = tstamp.duration_since(UNIX_EPOCH).unwrap().as_secs();
-    localtime64_r(tstamp.try_into().unwrap()).unwrap().tm_hour
+    let tstamp: libc::time_t = tstamp
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        .try_into()
+        .unwrap();
+    let mut local_time: libc::tm = unsafe { std::mem::zeroed() };
+    unsafe { libc::localtime_r(&tstamp, &mut local_time) };
+
+    local_time.tm_hour
 }
 
 /// Verify that setting TZ calls tzset() in the current shell process.

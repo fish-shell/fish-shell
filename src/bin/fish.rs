@@ -41,7 +41,6 @@ use fish::{
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
-    libc::{getrusage64, timeval64},
     nix::{getpid, isatty},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
@@ -56,12 +55,14 @@ use fish::{
     },
     reader::{reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
-    threads, topic_monitor,
+    threads::{self},
+    topic_monitor,
     wchar::prelude::*,
     wutil::waccess,
 };
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
+use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -103,20 +104,23 @@ struct FishCmdOpts {
 }
 
 /// Return a timeval converted to milliseconds.
-fn tv_to_msec(tv: &timeval64) -> i64 {
+#[allow(clippy::unnecessary_cast)]
+fn tv_to_msec(tv: &libc::timeval) -> i64 {
     // milliseconds per second
-    let mut msec = tv.tv_sec * 1000;
+    let mut msec = tv.tv_sec as i64 * 1000;
     // microseconds per millisecond
-    msec += tv.tv_usec / 1000;
+    msec += tv.tv_usec as i64 / 1000;
     msec
 }
 
 fn print_rusage_self() {
-    let Some(rs) = getrusage64(libc::RUSAGE_SELF) else {
+    let mut rs = MaybeUninit::uninit();
+    if unsafe { libc::getrusage(libc::RUSAGE_SELF, rs.as_mut_ptr()) } != 0 {
         let s = CString::new("getrusage").unwrap();
         unsafe { libc::perror(s.as_ptr()) }
         return;
-    };
+    }
+    let rs: libc::rusage = unsafe { rs.assume_init() };
     let rss_kb = if cfg!(target_os = "macos") {
         // mac use bytes.
         rs.ru_maxrss / 1024

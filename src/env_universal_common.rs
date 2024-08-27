@@ -799,14 +799,12 @@ impl EnvUniversal {
         // unlikely to affect users.
         #[cfg(any(target_os = "linux", target_os = "android"))]
         {
-            use crate::libc::{clock_gettime64, futimens64, timespec64};
-            #[allow(clippy::useless_conversion)]
-            let t0 = timespec64 {
-                tv_sec: 0,
-                tv_nsec: libc::UTIME_OMIT.try_into().unwrap(), // don't change ctime
-            };
-            if let Some(t1) = clock_gettime64(libc::CLOCK_REALTIME) {
-                futimens64(private_fd.as_raw_fd(), t0, t1);
+            let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
+            times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
+            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
+                unsafe {
+                    libc::futimens(private_fd.as_raw_fd(), &times[0]);
+                }
             }
         }
 

@@ -29,6 +29,8 @@ function fish_job_summary -a job_id is_foreground cmd_line signal_or_end_name si
 
     set -l message
     switch $signal_or_end_name
+        case STATUS
+            set message (printf ( _ "fish: Job %s, '%s' has Non Zero status code:%s\n" ) $job_id $cmd_line $signal_desc)
         case STOPPED
             set message (printf ( _ "fish: Job %s, '%s' has stopped\n" ) $job_id $cmd_line)
         case ENDED

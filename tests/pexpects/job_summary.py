@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import sys
+sys.path.append("/home/cedric/projects/fish-shell/build_tools/")
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
@@ -51,6 +53,9 @@ os.kill(int(m.group()), signal.SIGTERM)
 expect_re("[0-9]+:0:sleep 20 &:SIGTERM:Polite quit request", timeout=20)
 sendline("")
 expect_prompt()
+
+sendline("python -c 'import time;import sys;time.sleep(1);sys.exit(1)'")
+expect_re("Job.* has Non Zero status code 1", timeout=1)
 
 # fish_job_summary is called when foreground job is signalled.
 # cmd_line contains the entire pipeline. proc_id and proc_name are set in a pipeline.

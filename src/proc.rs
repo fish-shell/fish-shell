@@ -1588,6 +1588,13 @@ fn proc_wants_summary_in_job(j: &Job, p: &Process) -> bool {
     true
 }
 
+/// check if any of the processes in the job normally exited with non zero status code
+fn job_any_process_exited_normally_and_non_with_zero_status(j: &Job) -> bool {
+    j.processes()
+        .iter()
+        .any(|p| p.status.normal_exited() && p.status.status_value() != 0)
+}
+
 /// Return whether to emit a fish_job_summary call for a job as a whole. We may also emit this for
 /// its individual processes.
 fn job_wants_summary(j: &Job) -> bool {
@@ -1655,17 +1662,16 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
             // We are summarizing a process which exited with a signal.
             // Arguments are the signal name and description.
             buffer.push(' ');
-            if p.status.normal_exited(){
+            if p.status.normal_exited() {
                 buffer += L!("STATUS");
                 buffer.push(' ');
                 buffer.push_str(&format!("{}", p.status.status_value()));
-            } else{
+            } else {
                 let sig = Signal::new(p.status.signal_code());
                 buffer += &escape(sig.name())[..];
                 buffer.push(' ');
                 buffer += &escape(sig.desc())[..];
             }
-
 
             // If we have multiple processes, we also append the pid and argv.
             if j.processes().len() > 1 {
@@ -1699,7 +1705,8 @@ fn summarize_jobs(parser: &Parser, jobs: &[JobRef]) -> bool {
             }
 
             // Overall status for the job.
-            if job_wants_summary(j) {
+            if job_wants_summary(j) && !job_any_process_exited_normally_and_non_with_zero_status(j)
+            {
                 call_job_summary(parser, &summary_command(j, None));
             }
         }

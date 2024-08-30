@@ -200,6 +200,7 @@ Improved terminal support
 - Fish now sets the terminal window title (via OSC 0) unconditionally instead of only for some terminals (:issue:`10037`).
 - Focus reporting in tmux is no longer disabled on the first prompt.
 - Focus reporting is now disabled during execution of bind commands (:issue:`6942`).
+- ``fish_vi_cursor`` no longer attempts to detect if the terminal is capable, as we can no longer find terminals that aren't and the allowlist was hard to keep up-to-date. (:issue:`10693`)
 
 Other improvements
 ------------------

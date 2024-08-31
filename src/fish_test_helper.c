@@ -162,11 +162,11 @@ static void print_ignored_signals() {
 }
 
 static void sigtstp_handler(int x) {
-    write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
+    (void)!write(STDOUT_FILENO, "SIGTSTP\n", strlen("SIGTSTP\n"));
     kill(getpid(), SIGSTOP);
 }
 static void sigcont_handler(int x) {
-    write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
+    (void)!write(STDOUT_FILENO, "SIGCONT\n", strlen("SIGCONT\n"));
 }
 static void print_stop_cont() {
     signal(SIGTSTP, &sigtstp_handler);

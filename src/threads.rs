@@ -87,7 +87,7 @@ fn main_thread_id() -> usize {
 /// via `Arc`, and uses as Mutex on 32-bit platforms (or those without a 64-bit atomic CAS).
 #[inline(always)]
 fn thread_id() -> usize {
-    static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(0);
+    static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(1);
     // It would be much nicer and faster to use #[thread_local] here, but that's nightly only.
     // This is still faster than going through Thread::thread_id(); it's something like 15ns
     // for each `Thread::thread_id()` call vs 1-2 ns with `#[thread_local]` and 2-4ns with
@@ -95,7 +95,11 @@ fn thread_id() -> usize {
     thread_local! {
         static THREAD_ID: usize = THREAD_COUNTER.fetch_add(1, Ordering::Relaxed);
     }
-    THREAD_ID.with(|id| *id)
+    let id = THREAD_ID.with(|id| *id);
+    // This assertion is only here to reduce hair loss in case someone runs into a known linker bug;
+    // as it's not here to catch logic errors in our own code, it can be elided in release mode.
+    debug_assert_ne!(id, 0, "TLS storage not initialized!");
+    id
 }
 
 #[test]

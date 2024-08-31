@@ -83,12 +83,18 @@ fn main_thread_id() -> usize {
     }
 }
 
-/// Get's a fish-specific thread id. Rust's own `std::thread::current().id()` is slow, allocates
-/// via `Arc`, and uses as Mutex on 32-bit platforms (or those without a 64-bit atomic CAS).
+/// Get the calling thread's fish-specific thread id.
+///
+/// This thread id is internal to the `threads` module for low-level purposes and should not be
+/// leaked to other modules; general purpose code that needs a thread id should use rust's native
+/// thread id functionality.
+///
+/// We use our own implementation because Rust's own `Thread::id()` allocates via `Arc`, is fairly
+/// slow, and uses a `Mutex` on 32-bit platforms (or anywhere without an atomic 64-bit CAS).
 #[inline(always)]
 fn thread_id() -> usize {
     static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(1);
-    // It would be much nicer and faster to use #[thread_local] here, but that's nightly only.
+    // It would be faster and much nicer to use #[thread_local] here, but that's nightly only.
     // This is still faster than going through Thread::thread_id(); it's something like 15ns
     // for each `Thread::thread_id()` call vs 1-2 ns with `#[thread_local]` and 2-4ns with
     // `thread_local!`.

@@ -2777,6 +2777,53 @@ impl<'a> Reader<'a> {
                     newv,
                 )
             }
+            rl::DeleteWord | rl::DeleteBigword
+            | rl::BackwardDeleteWord | rl::BackwardDeleteBigword | rl::BackwordDeletePathComponent => {
+                let move_right = match c {
+                    rl::DeleteWord | rl::DeleteBigword => true,
+                    rl::BackwardDeleteWord | rl::BackwardDeleteBigword | rl::BackwordDeletePathComponent => false,
+                    _ => unreachable!(),
+                };
+                let style = match c {
+                    rl::DeleteBigword | rl::BackwardDeleteBigword => MoveWordStyle::Whitespace,
+                    rl::BackwordDeletePathComponent => MoveWordStyle::PathComponents,
+                    rl::DeleteWord | rl::BackwardDeleteWord => MoveWordStyle::Punctuation,
+                    _ => unreachable!(),
+                };
+
+                let elt = self.active_edit_line_tag();
+                let el = self.edit_line(elt);
+                let boundary = if move_right { el.len() } else { 0 };
+                if el.position() != boundary {
+                    let mut state = MoveWordStateMachine::new(style);
+                    let start_buff_pos = el.position();
+
+                    let mut buff_pos = el.position();
+                    while buff_pos != boundary {
+                        let idx = if move_right { buff_pos } else { buff_pos - 1 };
+                        let c = el.at(idx);
+                        if !state.consume_char(c) {
+                            break;
+                        }
+                        buff_pos = if move_right {
+                            buff_pos + 1
+                        } else {
+                            buff_pos - 1
+                        };
+                    }
+
+                   if buff_pos == start_buff_pos {
+                        buff_pos = if move_right {
+                            buff_pos + 1
+                        } else {
+                            buff_pos - 1
+                        };
+                    }
+
+                    let range = if move_right { start_buff_pos..buff_pos } else { buff_pos..start_buff_pos };
+                    self.erase_substring(elt, range);
+                }
+            }
             rl::KillWord | rl::KillBigword => {
                 // The "bigword" functions differ only in that they move to the next whitespace, not
                 // punctuation.

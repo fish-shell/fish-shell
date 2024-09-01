@@ -2777,11 +2777,16 @@ impl<'a> Reader<'a> {
                     newv,
                 )
             }
-            rl::DeleteWord | rl::DeleteBigword
-            | rl::BackwardDeleteWord | rl::BackwardDeleteBigword | rl::BackwordDeletePathComponent => {
+            rl::DeleteWord
+            | rl::DeleteBigword
+            | rl::BackwardDeleteWord
+            | rl::BackwardDeleteBigword
+            | rl::BackwordDeletePathComponent => {
                 let move_right = match c {
                     rl::DeleteWord | rl::DeleteBigword => true,
-                    rl::BackwardDeleteWord | rl::BackwardDeleteBigword | rl::BackwordDeletePathComponent => false,
+                    rl::BackwardDeleteWord
+                    | rl::BackwardDeleteBigword
+                    | rl::BackwordDeletePathComponent => false,
                     _ => unreachable!(),
                 };
                 let style = match c {
@@ -2812,7 +2817,7 @@ impl<'a> Reader<'a> {
                         };
                     }
 
-                   if buff_pos == start_buff_pos {
+                    if buff_pos == start_buff_pos {
                         buff_pos = if move_right {
                             buff_pos + 1
                         } else {
@@ -2820,7 +2825,11 @@ impl<'a> Reader<'a> {
                         };
                     }
 
-                    let range = if move_right { start_buff_pos..buff_pos } else { buff_pos..start_buff_pos };
+                    let range = if move_right {
+                        start_buff_pos..buff_pos
+                    } else {
+                        buff_pos..start_buff_pos
+                    };
                     self.erase_substring(elt, range);
                 }
             }

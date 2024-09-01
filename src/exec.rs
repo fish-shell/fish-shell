@@ -24,7 +24,6 @@ use crate::fork_exec::postfork::{
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
-use crate::input_common::terminal_protocols_disable_ifn;
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
@@ -73,7 +72,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     if job.entitled_to_terminal() {
-        terminal_protocols_disable_ifn();
+        crate::input_common::terminal_protocols_disable_ifn();
     }
 
     // Handle an exec call.

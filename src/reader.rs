@@ -78,8 +78,7 @@ use crate::input_common::IN_ITERM_PRE_CSI_U;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::IN_WEZTERM;
 use crate::input_common::{
-    terminal_protocols_disable_ifn, terminal_protocols_enable_ifn, CharEvent, CharInputStyle,
-    InputData, ReadlineCmd, IS_TMUX,
+    terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData, ReadlineCmd, IS_TMUX,
 };
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -824,7 +823,7 @@ pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
     }
     ScopeGuard::new((), move |()| {
         restore_term_mode();
-        terminal_protocols_disable_ifn();
+        crate::input_common::terminal_protocols_disable_ifn();
     })
 }
 

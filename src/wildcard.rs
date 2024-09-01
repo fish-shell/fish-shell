@@ -448,7 +448,6 @@ mod expander {
 
     use crate::{
         common::scoped_push,
-        input_common::terminal_protocols_disable_ifn,
         path::append_path_component,
         threads::is_main_thread,
         wutil::{dir_iter::DirIter, normalize_path, DevInode},
@@ -595,7 +594,7 @@ mod expander {
                 }
 
                 if is_main_thread() {
-                    terminal_protocols_disable_ifn();
+                    crate::input_common::terminal_protocols_disable_ifn();
                 }
 
                 // return "." and ".." entries if we're doing completions

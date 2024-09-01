@@ -167,6 +167,8 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         return STATUS_CMD_OK;
     }
 
+    crate::input_common::terminal_protocols_disable_ifn();
+
     if w.wopt_index == argc {
         // No jobs specified.
         // Note this may succeed with an empty wait list.

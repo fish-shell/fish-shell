@@ -124,7 +124,6 @@ impl Drop for MmapRegion {
 /// HistoryFileContents holds the read-only contents of a file.
 pub struct HistoryFileContents {
     region: MmapRegion,
-    type_: HistoryFileType,
 }
 
 impl HistoryFileContents {
@@ -200,7 +199,7 @@ impl HistoryFileContents {
 
     /// Returns the file type of these contents. If empty, [`DEFAULT_HISTORY_FILE_TYPE`] is used.
     pub fn get_type(&self) -> HistoryFileType {
-        self.type_
+        infer_file_type(self.contents())
     }
 }
 
@@ -223,7 +222,7 @@ impl TryFrom<MmapRegion> for HistoryFileContents {
             FLOG!(error, "unsupported history file format 1.x");
             return Err(());
         }
-        Ok(Self { region, type_ })
+        Ok(Self { region })
     }
 }
 

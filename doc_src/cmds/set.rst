@@ -81,12 +81,12 @@ Further options:
     This can be used with **--append** to both append and prepend at the same time.
     This cannot be used when assigning to a variable slice.
 
-**-e** or **--erase** *NAME*[*INDEX*]
+**-e** or **--erase** *NAME*\[*INDEX*\]
     Causes the specified shell variables to be erased.
     Supports erasing from multiple scopes at once.
     Individual items in a variable at *INDEX* in brackets can be specified.
 
-**-q** or **--query** *NAME*[*INDEX*]
+**-q** or **--query** *NAME*\[*INDEX*\]
     Test if the specified variable names are defined.
     If an *INDEX* is provided, check for items at that slot.
     Does not output anything, but the shell status is set to the number of variables specified that were not defined, up to a maximum of 255.

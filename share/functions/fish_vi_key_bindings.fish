@@ -123,6 +123,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     bind -s --preset -M insert ctrl-n accept-autosuggestion
 
+    # increment or decrement numbers with ctrl+x ctrl+ain vi mode
+    bind -s --preset -M default \ca 'increment_decrement add1'
+    bind -s --preset -M default \cx 'increment_decrement subtract1'
+
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
     bind -s --preset -M insert -k home beginning-of-line
     bind -s --preset -M default -k home beginning-of-line

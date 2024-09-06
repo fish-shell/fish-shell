@@ -267,6 +267,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset '",+,P' fish_clipboard_paste
 
     #
+    # increment or decrement numbers with ctrl+x ctrl+a
+    #
+    bind -s --preset -M default \ca 'increment_decrement increase'
+    bind -s --preset -M default \cx 'increment_decrement decrease'
+
+    #
     # Lowercase r, enters replace_one mode
     #
     bind -s --preset -m replace_one r repaint-mode

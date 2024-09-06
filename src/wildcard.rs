@@ -612,7 +612,7 @@ mod expander {
                         &mut dir,
                         wc_segment,
                         wc_remainder,
-                        &(effective_prefix.to_owned() + wc_segment + L!("/")),
+                        effective_prefix,
                     );
                 } else {
                     // Last wildcard segment, nonempty wildcard.

@@ -32,7 +32,15 @@ set(extra_confdir
 # These are the man pages that go in system manpath; all manpages go in the fish-specific manpath.
 set(MANUALS ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish.1
             ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_indent.1
-            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_key_reader.1)
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish_key_reader.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-doc.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-tutorial.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-language.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-interactive.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-completions.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-prompt-tutorial.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-for-bash-users.1
+            ${CMAKE_CURRENT_BINARY_DIR}/user_doc/man/man1/fish-faq.1)
 
 # Determine which man page we don't want to install.
 # On OS X, don't install a man page for open, since we defeat fish's open

@@ -101,7 +101,7 @@ end
 # Database options
 set -l has_db_opt '__fish_contains_opt asdeps asexplicit check -s k'
 complete -c $progname -n "$database; and not $has_db_opt" -s k -l check -d 'Check database validity'
-complete -c $progname -n "$database" -s q -l quite -d 'Suppress output of success messages' -f
+complete -c $progname -n "$database" -s q -l quiet -d 'Suppress output of success messages' -f
 complete -c $progname -n "$database; and not $has_db_opt" -l asdeps -d 'Mark PACKAGE as dependency' -x
 complete -c $progname -n "$database; and not $has_db_opt" -l asexplicit -d 'Mark PACKAGE as explicitly installed' -x
 complete -c $progname -n "$has_db_opt; and $database" -xa "$listinstalled"

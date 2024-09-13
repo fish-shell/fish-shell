@@ -78,7 +78,7 @@ Fish also provides pre-made color themes you can pick with :doc:`fish_config <cm
 
 For example, to disable nearly all coloring::
 
-  fish_config theme choose none
+  fish_config theme choose None
 
 Or, to see all themes, right in your terminal::
 

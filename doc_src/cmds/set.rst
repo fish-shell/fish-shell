@@ -12,9 +12,10 @@ Synopsis
     set (-f | --function) (-l | --local) (-g | --global) (-U | --universal) [--no-event]
     set [-Uflg] NAME [VALUE ...]
     set [-Uflg] NAME[[INDEX ...]] [VALUE ...]
-    set (-a | --append) [-flgU] NAME VALUE ...
-    set (-q | --query) (-e | --erase) [-flgU] [NAME][[INDEX]] ...]
-    set (-S | --show) [NAME ...]
+    set (-x | --export) (-u | --unexport) [-Uflg] NAME [VALUE ...]
+    set (-a | --append) (-p | --prepend) [-Uflg] NAME VALUE ...
+    set (-q | --query) (-e | --erase) [-Uflg] [NAME][[INDEX]] ...]
+    set (-S | --show) (-L | --long) [NAME ...]
 
 Description
 -----------

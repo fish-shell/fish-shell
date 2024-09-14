@@ -1348,9 +1348,7 @@ impl HistoryImpl {
     ///
     /// `fd` must be a valid argument to `flock(2)` with `LOCK_UN`.
     unsafe fn unlock_file(file: &mut File) {
-        unsafe {
-            libc::flock(file.as_raw_fd(), LOCK_UN);
-        }
+        libc::flock(file.as_raw_fd(), LOCK_UN);
     }
 }
 

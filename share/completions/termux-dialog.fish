@@ -1,3 +1,7 @@
+function __fish_termux_api__complete_date_formats
+    printf 'dd-MM-yyyy k:m:s\tdefault'
+end
+
 set command termux-dialog
 
 complete -c $command -f
@@ -32,7 +36,6 @@ set subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descrip
 complete -c $command \
     -a "$subcommands_with_descriptions" \
     -n "not __fish_seen_subcommand_from $subcommands" \
-    -f
 
 complete -c $command \
     -s i \
@@ -53,7 +56,7 @@ complete -c $command \
     -x
 
 complete -c $command \
-    -a '"dd-MM-yyyy k:m:s"\tdefault' \
+    -a '(__fish_termux_api__complete_date_formats)' \
     -s d \
     -d "Specify a [d]ate format" \
     -n "__fish_seen_subcommand_from date" \

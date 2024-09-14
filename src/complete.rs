@@ -4,7 +4,7 @@ use std::{
     mem,
     sync::{
         atomic::{self, AtomicUsize},
-        Mutex,
+        Mutex, MutexGuard,
     },
     time::{Duration, Instant},
 };
@@ -2448,7 +2448,7 @@ pub fn complete_load(cmd: &wstr, parser: &Parser) -> bool {
     // See issue #2466.
     if function::load(cmd, parser) {
         // We autoloaded something; check if we have a --wraps.
-        loaded_new |= !complete_get_wrap_targets(cmd).is_empty();
+        loaded_new |= complete_wrap_map().get(cmd).is_some();
     }
 
     // It's important to NOT hold the lock around completion loading.
@@ -2562,6 +2562,11 @@ pub fn complete_remove_wrapper(command: WString, target_to_remove: &wstr) -> boo
     }
 
     result
+}
+
+/// Returns a list of wrap targets for a given command.
+pub fn complete_wrap_map() -> MutexGuard<'static, HashMap<WString, Vec<WString>>> {
+    wrapper_map.lock().unwrap()
 }
 
 /// Returns a list of wrap targets for a given command.

@@ -5,7 +5,7 @@
 use crate::ast::{self, Node};
 use crate::autoload::Autoload;
 use crate::common::{assert_sync, escape, valid_func_name, FilenameRef};
-use crate::complete::complete_get_wrap_targets;
+use crate::complete::complete_wrap_map;
 use crate::env::{EnvStack, Environment};
 use crate::event::{self, EventDescription};
 use crate::global_safety::RelaxedAtomicBool;
@@ -416,9 +416,11 @@ impl FunctionProperties {
         }
 
         // Output wrap targets.
-        for wrap in complete_get_wrap_targets(name) {
-            out.push_str(" --wraps=");
-            out.push_utfstr(&escape(&wrap));
+        if let Some(wrapped_cmds) = complete_wrap_map().get(name) {
+            for wrapped_cmd in wrapped_cmds {
+                out.push_str(" --wraps=");
+                out.push_utfstr(&escape(wrapped_cmd));
+            }
         }
 
         if !desc.is_empty() {

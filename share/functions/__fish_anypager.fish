@@ -17,7 +17,7 @@ function __fish_anypager --description "Print a pager to use"
     end
 
     # Cheesy hardcoded list of pagers.
-    for cmd in less bat lv most more
+    for cmd in less lv most more
         if command -q $cmd
             echo -- $cmd
             return 0

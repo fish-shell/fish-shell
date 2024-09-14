@@ -696,7 +696,7 @@ pub trait InputEventQueuer {
             }
             return None;
         };
-        if buffer.len() == 1 && next == b'\x1b' {
+        if buffer.len() == 2 && next == b'\x1b' {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {

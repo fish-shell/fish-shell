@@ -1,5 +1,7 @@
 set command termux-call-log
 
+complete -c $command -f
+
 complete -c $command \
     -s h \
     -d 'Show [h]elp'

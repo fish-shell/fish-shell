@@ -12,6 +12,8 @@ end
 
 set command termux-camera-photo
 
+complete -c $command -f
+
 complete -c $command \
     -s h \
     -d 'Show [h]elp'

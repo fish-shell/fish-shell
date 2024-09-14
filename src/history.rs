@@ -19,7 +19,7 @@
 use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
 use std::{
     borrow::Cow,
-    collections::{BTreeMap, HashMap, HashSet, VecDeque},
+    collections::{BTreeMap, HashMap, HashSet},
     ffi::CString,
     fs::File,
     io::{BufRead, Read, Seek, SeekFrom, Write},
@@ -379,7 +379,7 @@ struct HistoryImpl {
     /// Whether we've loaded old items.
     loaded_old: bool, // false
     /// List of old items, as offsets into out mmap data.
-    old_item_offsets: VecDeque<usize>,
+    old_item_offsets: Vec<usize>,
 }
 
 /// If set, we gave up on file locking because it took too long.
@@ -463,7 +463,7 @@ impl HistoryImpl {
                 file_contents.offset_of_next_item(&mut cursor, Some(self.boundary_timestamp))
             {
                 // Remember this item.
-                self.old_item_offsets.push_back(offset);
+                self.old_item_offsets.push(offset);
             }
         }
 
@@ -982,7 +982,7 @@ impl HistoryImpl {
             last_identifier: 0,
             countdown_to_vacuum: None,
             loaded_old: false,
-            old_item_offsets: VecDeque::new(),
+            old_item_offsets: Vec::new(),
         }
     }
 

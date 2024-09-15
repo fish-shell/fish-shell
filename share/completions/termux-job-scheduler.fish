@@ -59,7 +59,7 @@ complete -c $command \
 complete -c $command \
     -a 'false\tdefault true' \
     -l persisted \
-    -d 'Whether run un-schedule script on reboots' \
+    -d 'Whether unschedule script on reboots' \
     -x
 
 complete -c $command \

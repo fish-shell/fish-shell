@@ -19,4 +19,4 @@ complete -c $command \
 
 complete -c $command \
     -n "__fish_seen_subcommand_from play" \
-    -F
+    -F -r

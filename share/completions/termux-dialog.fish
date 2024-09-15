@@ -14,7 +14,8 @@ complete -c $command \
 complete -c $command \
     -s t \
     -l title \
-    -d 'Specify a dialog [t]itle'
+    -d 'Specify a dialog [t]itle' \
+    -x
 
 set subcommands_with_descriptions 'confirm\t"Show a confirmation"' \
     'checkbox\t"Select multiple values using checkboxes"' \
@@ -63,17 +64,14 @@ set text_condition "__fish_seen_subcommand_from text"
 complete -c $command \
     -s m \
     -d "Enable [m]ultiline input mode" \
-    -n "$text_condition; and not __fish_seen_argument -s n" \
-    -x
+    -n "$text_condition; and not __fish_seen_argument -s n"
 
 complete -c $command \
     -s n \
     -d "Enable [n]umber input mode" \
-    -n "$text_condition; and not __fish_seen_argument -s m" \
-    -x
+    -n "$text_condition; and not __fish_seen_argument -s m"
 
 complete -c $command \
     -s p \
     -d "Enable [p]assword input mode" \
-    -n $text_condition \
-    -x
+    -n $text_condition

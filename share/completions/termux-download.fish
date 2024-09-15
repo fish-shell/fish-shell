@@ -8,11 +8,13 @@ complete -c $command \
 
 complete -c $command \
     -s d \
-    -d 'Specify a [d]escription for a download notification'
+    -d 'Specify a [d]escription for a download notification' \
+    -x
 
 complete -c $command \
     -s t \
-    -d 'Specify a [t]itle for a download notification'
+    -d 'Specify a [t]itle for a download notification' \
+    -x
 
 complete -c $command \
     -s p \

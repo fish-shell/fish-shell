@@ -152,6 +152,13 @@ And it looks like:
 
 after we run ``false`` (which returns 1).
 
+Save the prompt
+---------------
+
+Once you are happy with your prompt, you can save it with ``funcsave fish_prompt`` (see :doc:`cmds/funcsave`) or write it to ~/.config/fish/functions/fish_prompt.fish yourself.
+
+If you want to edit it again, open that file or use ``funced fish_prompt`` (see :doc:`cmds/funced`).
+
 Where to go from here?
 ----------------------
 

@@ -15,5 +15,5 @@ complete -c $command \
 complete -c $command \
     -a '0\tdefault' \
     -s o \
-    -d 'Start listing calls with a specific one' \
+    -d 'Start listing calls with the specified one' \
     -x

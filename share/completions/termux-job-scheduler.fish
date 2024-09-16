@@ -23,19 +23,19 @@ complete -c $command \
 
 complete -c $command \
     -l job-id \
-    -d 'Specify a job id' \
+    -d 'Specify the ID of a job' \
     -x
 
 complete -c $command \
     -a '0\tdefault' \
     -l period-ms \
-    -d 'Specify an interval between script runs' \
+    -d 'Specify the interval between script runs' \
     -x
 
 complete -c $command \
     -a 'any\tdefault unmetered cellular not_roaming none' \
     -l network \
-    -d 'Require a network of a specific type to be available' \
+    -d 'Require the network of a specific type to be available' \
     -x
 
 complete -c $command \

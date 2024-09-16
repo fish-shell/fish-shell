@@ -28,7 +28,7 @@ complete -c $command \
 complete -c $command \
     -s a \
     -l all \
-    -d 'Listen to all sensors'
+    -d 'Listen to [a]ll sensors'
 
 complete -c $command \
     -s c \
@@ -50,12 +50,12 @@ complete -c $command \
 complete -c $command \
     -s d \
     -l delay \
-    -d 'Specify an interval between sensor updates' \
+    -d 'Specify the [d]elay between sensor updates' \
     -x
 
 complete -c $command \
     -a 'continuous\tdefault' \
     -s n \
     -l limit \
-    -d 'Specify a number of times to read senors' \
+    -d 'Specify a [n]umber of times to read senors' \
     -x

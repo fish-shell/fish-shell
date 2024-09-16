@@ -22,12 +22,12 @@ set index 1
 while test $index -le (count $button_names)
     complete -c $command \
         -l button$index \
-        -d "Specify the text of the $button_names[$index] notification button" \
+        -d "Specify the text of a $button_names[$index] notification button" \
         -x
 
     complete -c $command \
         -l button$index-action \
-        -d "Specify the action of the $button_names[$index] notification button" \
+        -d "Specify the action of a $button_names[$index] notification button" \
         -F -r
 
     set index (math $index + 1)
@@ -72,7 +72,7 @@ for state in $led_states
     complete -c $command \
         -a '800\tdefault' \
         -l led-$state \
-        -d 'Specify the time for the LED to be $state while flashing of a notification' \
+        -d "Specify the time for the LED to be $state while flashing of a notification" \
         -x
 end
 

@@ -8,5 +8,5 @@ complete -c $command \
 
 complete -c $command \
     -s f \
-    -d 'Specify IR carrier [f]requency' \
+    -d 'Specify the IR carrier [f]requency' \
     -x

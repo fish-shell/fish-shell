@@ -9,5 +9,5 @@ complete -c $command \
 complete -c $command \
     -a '(__fish_termux_api__complete_camera_ids)' \
     -s c \
-    -d 'Specify a [c]amera ID' \
+    -d 'Specify the ID of a [c]amera' \
     -x

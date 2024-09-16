@@ -9,11 +9,11 @@ complete -c $command \
 complete -c $command \
     -a 'gps\tdefault network passive' \
     -s p \
-    -d 'Specify a location provider' \
+    -d 'Specify the provider of a location' \
     -x
 
 complete -c $command \
     -a 'once\tdefault last updates' \
     -s r \
-    -d 'Specify a request type' \
+    -d 'Specify the request type for a location' \
     -x

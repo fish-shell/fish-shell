@@ -14,7 +14,7 @@ complete -c $command \
 complete -c $command \
     -s t \
     -l title \
-    -d 'Specify a dialog [t]itle' \
+    -d 'Specify the [t]itle of a dialog' \
     -x
 
 set subcommands_with_descriptions 'confirm\t"Show a confirmation"' \
@@ -36,26 +36,26 @@ complete -c $command \
 
 complete -c $command \
     -s i \
-    -d "Specify a text h[i]nt" \
+    -d "Specify the text h[i]nt of a dialog" \
     -n "__fish_seen_subcommand_from confirm speech text" \
     -x
 
 complete -c $command \
     -s v \
-    -d "Specify comma delimited choices" \
+    -d "Specify the comma delimited choices of a dialog" \
     -n "__fish_seen_subcommand_from checkbox radio sheet spinner" \
     -x
 
 complete -c $command \
     -s r \
-    -d "Specify a number [r]ange" \
+    -d "Specify the number [r]ange of a dialog" \
     -n "__fish_seen_subcommand_from counter" \
     -x
 
 complete -c $command \
     -a '"dd-MM-yyyy k:m:s"\tdefault' \
     -s d \
-    -d "Specify a [d]ate format" \
+    -d "Specify the [d]ate format of a dialog" \
     -n "__fish_seen_subcommand_from date" \
     -x
 
@@ -63,15 +63,15 @@ set text_condition "__fish_seen_subcommand_from text"
 
 complete -c $command \
     -s m \
-    -d "Enable [m]ultiline input mode" \
+    -d "Enable the [m]ultiline input mode in a dialog" \
     -n "$text_condition; and not __fish_seen_argument -s n"
 
 complete -c $command \
     -s n \
-    -d "Enable [n]umber input mode" \
+    -d "Enable the [n]umber input mode in a dialog" \
     -n "$text_condition; and not __fish_seen_argument -s m"
 
 complete -c $command \
     -s p \
-    -d "Enable [p]assword input mode" \
+    -d "Enable the [p]assword input mode in a dialog" \
     -n $text_condition

@@ -18,28 +18,28 @@ complete -c $command \
 complete -c $command \
     -a '0\tdefault' \
     -s l \
-    -d 'Specify a recording length [l]imit' \
+    -d 'Specify the length [l]imit of a recording' \
     -x
 
 complete -c $command \
     -a 'aac amr_wb amr_nb' \
     -s e \
-    -d 'Specify a recording [e]ncoder' \
+    -d 'Specify the [e]ncoder of a recording' \
     -x
 
 complete -c $command \
     -s b \
-    -d 'Specify a recording [b]itrate' \
+    -d 'Specify the [b]itrate of a recording' \
     -x
 
 complete -c $command \
     -s r \
-    -d 'Specify a recording sampling [r]ate' \
+    -d 'Specify the sampling [r]ate of a recording' \
     -x
 
 complete -c $command \
     -s c \
-    -d 'Specify a recording [c]hannel count' \
+    -d 'Specify the [c]hannel count of a recording' \
     -x
 
 complete -c $command \

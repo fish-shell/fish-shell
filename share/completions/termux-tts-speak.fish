@@ -38,7 +38,7 @@ complete -c $command \
     -x
 
 complete -c $command \
-    -a 'notification\tdefault alarm music ring system voice_call' \
+    -a '(__fish_termux_api__complete_stream_ids | string replace --regex "(notification)" "\$1\tdefault")' \
     -s s \
     -d 'Specify the [s]tream for a speech' \
     -x

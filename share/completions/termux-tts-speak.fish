@@ -38,7 +38,7 @@ complete -c $command \
     -x
 
 complete -c $command \
-    -a 'NOTIFICATION\tdefault ALARM MUSIC RING SYSTEM VOICE_CALL' \
+    -a 'notification\tdefault alarm music ring system voice_call' \
     -s s \
     -d 'Specify the [s]tream for a speech' \
     -x

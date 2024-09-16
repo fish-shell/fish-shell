@@ -979,7 +979,10 @@ fn throwing_main() -> i32 {
                     Ok(mut file) => {
                         // If the output is the same as the input, don't write it.
                         if output_wtext != src {
-                            let _ = file.write_all(&wcs2string(&output_wtext));
+                            let text = wcs2string(&output_wtext);
+                            let _ = file.write_all(&text);
+                            // Truncate the file in case it shrunk.
+                            let _ = file.set_len(text.len().try_into().unwrap());
                         }
                     }
                     Err(err) => {

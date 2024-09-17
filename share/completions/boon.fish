@@ -2,15 +2,8 @@ set command boon
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -l help \
-    -d 'Show [h]elp'
-
-complete -c $command \
-    -s q \
-    -l quiet \
-    -d 'Do not show errors for validated files'
+complete -c $command -s h -l help -d 'Show [h]elp'
+complete -c $command -s q -l quiet -d 'Do not show errors for validated files'
 
 complete -c $command \
     -a '2020\tdefault 4 6 7 2019' \

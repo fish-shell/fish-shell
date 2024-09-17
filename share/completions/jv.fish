@@ -2,15 +2,8 @@ set command jv
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -l help \
-    -d 'Show [h]elp'
-
-complete -c $command \
-    -s v \
-    -l version \
-    -d 'Show [v]ersion'
+complete -c $command -s h -l help -d 'Show [h]elp'
+complete -c $command -s v -l version -d 'Show [v]ersion'
 
 complete -c $command \
     -s f \

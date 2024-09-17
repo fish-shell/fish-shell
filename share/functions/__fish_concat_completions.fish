@@ -5,7 +5,7 @@
 # TODO: Make this work with completions that have their description appended after a \t
 
 function __fish_concat_completions -d "Generate completions that are specified as comma-separated values from stdin source"
-    type -q awk || return;
+    type -q awk || return
 
     set -l token (commandline -ct)
     # We want to filter out suggestions the user has already entered.
@@ -13,8 +13,8 @@ function __fish_concat_completions -d "Generate completions that are specified a
     set -l filter (printf '^%s$\n' (printf '%s\n' $extant | string escape --style=regex) | string join '|')
     # Work around the insanity of trying to read from stdin within a function. Note that we can't place the
     # `read` call in between () to capture the output because that breaks its connection to stdin.
-    while read -l line;
-        echo $line;
+    while read -l line
+        echo $line
     end | string match -er '.' | string match -rv -- $filter | string replace -r '^' -- (string replace -rf -- '^(.+),.*$' '$1,' $token; or echo "")
 
     return

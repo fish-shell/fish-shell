@@ -71,11 +71,11 @@ end
 complete -c rustc -x -s Z -ka "(__fish_rustc_z_completions)"
 
 function __fish_rustc_lint_completions
-    rustc -W help 2>/dev/null  \
+    rustc -W help 2>/dev/null \
         | string match -r \
-            '(?:\s+)(?:.+)(?:\s+)(?:allow|warn|deny|forbid)(?:\s+){2}(?:[^\n]+)' \
+        '(?:\s+)(?:.+)(?:\s+)(?:allow|warn|deny|forbid)(?:\s+){2}(?:[^\n]+)' \
         | string replace -r -i \
-            '(\s+)(.+)(\s+)(allow|warn|deny|forbid)(\s+){2}([^\n]+)' '$2 $6' \
+        '(\s+)(.+)(\s+)(allow|warn|deny|forbid)(\s+){2}([^\n]+)' '$2 $6' \
         | string match -r '^.*[^:]$' \
         | string match -r -v '^(allow|warn|deny|forbid)$' \
         | string match -r -v '^([a-z\-]+)(\s+)(allow|warn|deny|forbid)' \

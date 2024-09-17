@@ -1,9 +1,9 @@
 function __fish_dmidecode_complete_keywords
-	dmidecode -s 2>&1 1>/dev/null | string match -rg '^\s+(.*)'
+    dmidecode -s 2>&1 1>/dev/null | string match -rg '^\s+(.*)'
 end
 
 function __fish_dmidecode_complete_types
-	dmidecode -t 2>&1 1>/dev/null | string match -rg '^\s+(.*)'
+    dmidecode -t 2>&1 1>/dev/null | string match -rg '^\s+(.*)'
 end
 
 complete -c dmidecode -f

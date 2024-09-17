@@ -128,8 +128,10 @@ function fish_config --description "Launch fish's web based configuration"
                                     set have $f
                                     # Set the functions to empty so we empty the file
                                     # if necessary.
-                                    function fish_prompt; end
-                                    function fish_right_prompt; end
+                                    function fish_prompt
+                                    end
+                                    function fish_right_prompt
+                                    end
                                     source $f
                                     or return 2
                                 end

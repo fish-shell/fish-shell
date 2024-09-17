@@ -1,8 +1,8 @@
 complete -f brightnessctl
-complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a "info" -d "Get device info"
-complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a "get"  -d "Get current brightness of device"
-complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a "set"  -d "Get maximum brightness of device"
-complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a "max"  -d "Set brightness of device"
+complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a info -d "Get device info"
+complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a get -d "Get current brightness of device"
+complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a set -d "Get maximum brightness of device"
+complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a max -d "Set brightness of device"
 
 complete -c brightnessctl -s h -l help -d "Print help and exit"
 complete -c brightnessctl -s l -l list -d "List devices with available brightness controls"

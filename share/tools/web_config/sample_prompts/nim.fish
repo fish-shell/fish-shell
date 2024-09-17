@@ -116,7 +116,7 @@ function fish_prompt
 
     # Battery status
     type -q acpi
-    and acpi -a 2> /dev/null | string match -rq off
+    and acpi -a 2>/dev/null | string match -rq off
     and _nim_prompt_wrapper $retc B (acpi -b | cut -d' ' -f 4-)
 
     # New line

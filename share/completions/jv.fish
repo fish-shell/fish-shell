@@ -1,11 +1,52 @@
-complete -c jv -s h -l help -d "Show help"
-complete -c jv -s v -l version -d "Show version"
+set command jv
 
-complete -c jv -s q -l quiet -d "Hide errors"
-complete -c jv -s d -l draft -x -a "4 5 7 2019 2020\tdefault" -d "Specify the draft version used when '\$schema' is missing"
-complete -c jv -s o -l output -x -a "simple alt flag basic detailed\tdefault" -d "Specify the output format"
-complete -c jv -s f -l assert-format -d "Enable format assertions with draft >= 2019"
-complete -c jv -s c -l assert-content -d "Enable content assertions with draft >= 7"
-complete -c jv -s k -l insecure -d "Use insecure TLS connection"
-complete -c jv -l cacert -d "Specify a pem-file to verify the peers"
-complete -c jv -s m -l map -d "Load url with a prefix from the directory"
+complete -c $command -f
+
+complete -c $command \
+    -s h \
+    -l help \
+    -d 'Show [h]elp'
+
+complete -c $command \
+    -s v \
+    -l version \
+    -d 'Show [v]ersion'
+
+complete -c $command \
+    -s f \
+    -l assert-format \
+    -d 'Enable the [f]ormat assertions for validated files'
+
+complete -c $command \
+    -s c \
+    -l assert-content \
+    -d 'Enable the [c]ontent assertions for validated files'
+
+complete -c $command \
+    -l cacert \
+    -d 'Specify the PEM certificate file for a peer' \
+    -F -r
+
+complete -c $command \
+    -a '2020\tdefault 4 6 7 2019' \
+    -s d \
+    -l draft \
+    -d 'Specify the [d]raft used for a schema' \
+    -x
+
+complete -c $command \
+    -s k \
+    -l insecure \
+    -d 'Use insecure TLS connection for a schema validation'
+
+complete -c $command \
+    -a 'simple\tdefault alt flag basic detailed' \
+    -s o \
+    -l output \
+    -d 'Specify the [o]utput format for messages' \
+    -x
+
+complete -c $command \
+    -s q \
+    -l quiet \
+    -d 'Do not show errors for validated files'

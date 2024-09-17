@@ -1,4 +1,4 @@
-set command boon
+set -l command boon
 
 complete -c $command -f
 

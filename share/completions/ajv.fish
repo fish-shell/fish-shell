@@ -1,20 +1,20 @@
-set command ajv
+set -l command ajv
 
 complete -c $command -f
 
-set subcommands_with_descriptions 'validate\t"Validate the files against a schema"' \
+set -l subcommands_with_descriptions 'validate\t"Validate the files against a schema"' \
     'compile\t"Compile the schema"' \
     'migrate\t"Migrate the schemas"' \
     'test\t"Check whether the files are valid against a schema"' \
     'help\t"Show help"'
 
-set subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
+set -l subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
 
 complete -c $command \
     -a "$subcommands_with_descriptions" \
     -n "not __fish_seen_subcommand_from $subcommands"
 
-set subcommands_without_help $subcommands[1..-2]
+set -l subcommands_without_help $subcommands[1..-2]
 
 complete -c $command -s s -F -r \
     -d 'The [s]chema used for a validation' \

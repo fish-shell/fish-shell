@@ -1,4 +1,4 @@
-set command json_schemer
+set -l command json_schemer
 
 complete -c $command -s h -l help -d 'Show [h]elp'
 complete -c $command -s v -l version -d 'Show [v]ersion'

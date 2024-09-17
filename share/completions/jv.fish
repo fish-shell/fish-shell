@@ -1,4 +1,4 @@
-set command jv
+set -l command jv
 
 complete -c $command -f
 

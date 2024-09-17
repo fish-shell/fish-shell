@@ -16,34 +16,26 @@ complete -c $command \
 
 set subcommands_without_help $subcommands[1..-2]
 
-complete -c $command \
-    -s s \
+complete -c $command -s s -F -r \
     -d 'The [s]chema used for a validation' \
-    -n "__fish_seen_subcommand_from $subcommands_without_help" \
-    -F -r
+    -n "__fish_seen_subcommand_from $subcommands_without_help"
 
-complete -c $command \
-    -s d \
+complete -c $command -s d -F -r \
     -d 'The files validated against a schema' \
-    -n "__fish_seen_subcommand_from validate test" \
-    -F -r
+    -n "__fish_seen_subcommand_from validate test"
 
-complete -c $command \
-    -s o \
+complete -c $command -s o -F -r \
     -d 'The output file of a migrated schema' \
-    -n "__fish_seen_subcommand_from validate migrate" \
-    -F -r
+    -n "__fish_seen_subcommand_from validate migrate"
 
 for flag in valid invalid
-    complete -c $command \
-        -l $flag \
+    complete -c $command -l $flag \
         -d "Check whether the files are $flag against a schema" \
         -n "__fish_seen_subcommand_from test"
 end
 
 complete -c $command \
     -a 'draft7\tdefault draft2019 draft2020 jtd' \
-    -l spec \
+    -l spec -x \
     -d 'Specify the draft used for a schema' \
-    -n "__fish_seen_subcommand_from $subcommands_without_help" \
-    -x
+    -n "__fish_seen_subcommand_from $subcommands_without_help"

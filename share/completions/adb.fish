@@ -64,6 +64,16 @@ function __fish_adb_list_uninstallable_packages
     __fish_adb_run_command pm list packages -3 | string replace 'package:' ''
 end
 
+function __fish_adb_list_local_files
+    set -l token (commandline -ct)*
+
+    # Unquoted $token to expand the array
+    # Return list of directories suffixed with '/'
+    find $token -maxdepth 0 -type d 2>/dev/null | string replace -r '$' /
+    # Return list of files
+    find $token -maxdepth 0 -type f -o -type l 2>/dev/null
+end
+
 function __fish_adb_list_files
     set -l token (commandline -ct)
 
@@ -187,7 +197,8 @@ complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick
 # commands that accept listing device files
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from pull' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
-complete -n '__fish_seen_subcommand_from push' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from push' -c adb -ka "(__fish_adb_list_files)" -d 'File on device'
+complete -n '__fish_seen_subcommand_from push' -c adb -ka "(__fish_adb_list_local_files)"
 
 # logcat
 complete -n '__fish_seen_subcommand_from logcat' -c adb -f

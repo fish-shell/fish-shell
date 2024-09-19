@@ -13,9 +13,9 @@ use crate::{
     common::{charptr2wcstring, escape_string, EscapeFlags, EscapeStringStyle},
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
+    wutil::sprintf,
 };
 use bitflags::bitflags;
-use fish_printf::sprintf;
 use once_cell::sync::Lazy;
 
 use crate::{

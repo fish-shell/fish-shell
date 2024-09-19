@@ -4,6 +4,7 @@ pub mod errors;
 pub mod fileid;
 pub mod gettext;
 mod hex_float;
+#[macro_use]
 pub mod printf;
 #[cfg(test)]
 mod tests;
@@ -25,8 +26,7 @@ use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
 
-extern crate fish_printf;
-pub use fish_printf::sprintf;
+pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
 
 pub use fileid::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, DevInode, FileId, INVALID_FILE_ID,

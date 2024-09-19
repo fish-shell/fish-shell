@@ -44,14 +44,16 @@ nix = { version = "0.29.0", default-features = false, features = [
 ] }
 num-traits = "0.2.19"
 once_cell = "1.19.0"
-fish-printf = { path = "./printf" }
+fish-printf = { path = "./printf", features = ["widestring"] }
 rand = { version = "0.8.5", features = ["small_rng"] }
 widestring = "1.1.0"
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
-portable-atomic = { version = "1", default-features = false, features = ["fallback"] }
+portable-atomic = { version = "1", default-features = false, features = [
+    "fallback",
+] }
 
 [dev-dependencies]
 rand_pcg = "0.3.1"

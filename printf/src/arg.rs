@@ -1,15 +1,18 @@
 use super::printf_impl::Error;
 use std::result::Result;
+#[cfg(feature = "widestring")]
 use widestring::{Utf32Str as wstr, Utf32String as WString};
 
 /// Printf argument types.
-/// Note no implementation of ToArg constructs the owned variants (String and WString);
+/// Note no implementation of `ToArg` constructs the owned variants (String and WString);
 /// callers can do so explicitly.
 #[derive(Debug, PartialEq)]
 pub enum Arg<'a> {
     Str(&'a str),
+    #[cfg(feature = "widestring")]
     WStr(&'a wstr),
     String(String),
+    #[cfg(feature = "widestring")]
     WString(WString),
     UInt(u64),
     SInt(i64, u8), // signed integers track their width as the number of bits
@@ -27,6 +30,8 @@ impl<'a> Arg<'a> {
     }
 
     // Convert this to a narrow string, using the provided storage if necessary.
+    // In practice 'storage' is only used if the widestring feature is enabled.
+    #[allow(unused_variables, clippy::ptr_arg)]
     pub fn as_str<'s>(&'s self, storage: &'s mut String) -> Result<&'s str, Error>
     where
         'a: 's,
@@ -34,11 +39,13 @@ impl<'a> Arg<'a> {
         match self {
             Arg::Str(s) => Ok(s),
             Arg::String(s) => Ok(s),
+            #[cfg(feature = "widestring")]
             Arg::WStr(s) => {
                 storage.clear();
                 storage.extend(s.chars());
                 Ok(storage)
             }
+            #[cfg(feature = "widestring")]
             Arg::WString(s) => {
                 storage.clear();
                 storage.extend(s.chars());
@@ -118,12 +125,14 @@ impl<'a> ToArg<'a> for &'a String {
     }
 }
 
+#[cfg(feature = "widestring")]
 impl<'a> ToArg<'a> for &'a wstr {
     fn to_arg(self) -> Arg<'a> {
         Arg::WStr(self)
     }
 }
 
+#[cfg(feature = "widestring")]
 impl<'a> ToArg<'a> for &'a WString {
     fn to_arg(self) -> Arg<'a> {
         Arg::WStr(self)
@@ -191,6 +200,7 @@ impl_to_arg_u!(u8, u16, u32, u64, usize);
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "widestring")]
     use widestring::utf32str;
 
     #[test]
@@ -199,7 +209,9 @@ mod tests {
 
         assert!(matches!("test".to_arg(), Arg::Str("test")));
         assert!(matches!(String::from("test").to_arg(), Arg::Str(_)));
+        #[cfg(feature = "widestring")]
         assert!(matches!(utf32str!("test").to_arg(), Arg::WStr(_)));
+        #[cfg(feature = "widestring")]
         assert!(matches!(WString::from("test").to_arg(), Arg::WStr(_)));
         assert!(matches!(42f32.to_arg(), Arg::Float(_)));
         assert!(matches!(42f64.to_arg(), Arg::Float(_)));

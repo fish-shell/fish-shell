@@ -265,7 +265,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                 if !self.early_exit {
                     sprintf_locale(
                         &mut self.buff,
-                        $fmt.as_char_slice(),
+                        $fmt,
                         &self.locale,
                         &mut [$($arg.to_arg()),*]
                     ).expect("sprintf failed");

@@ -4,8 +4,10 @@ use super::fmt_fp::format_float;
 use super::locale::Locale;
 use std::fmt::{self, Write};
 use std::mem;
-use std::ops::{AddAssign, Index};
 use std::result::Result;
+
+#[cfg(feature = "widestring")]
+use widestring::Utf32Str as wstr;
 
 /// Possible errors from printf.
 #[derive(Debug, PartialEq, Eq)]
@@ -151,107 +153,143 @@ impl ConversionSpec {
     }
 }
 
-// A helper type that holds a format string slice and points into it.
-// As a convenience, this returns '\0' for one-past-the-end.
-#[derive(Debug)]
-struct FormatString<'a>(&'a [char]);
-
-impl<'a> FormatString<'a> {
-    // Return the underlying slice.
-    fn as_slice(&self) -> &'a [char] {
-        self.0
-    }
-
+// A helper type with convenience functions for format strings.
+pub trait FormatString {
     // Return true if we are empty.
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
+    fn is_empty(&self) -> bool;
 
-    // Read an int from our cursor, stopping at the first non-digit.
-    // Negative values are not supported.
-    // If there are no digits, return 0.
-    // Adjust the cursor to point to the char after the int.
-    fn get_int(&mut self) -> Result<usize, Error> {
-        use Error::Overflow;
-        let mut i: usize = 0;
-        while let Some(digit) = self[0].to_digit(10) {
-            i = i.checked_mul(10).ok_or(Overflow)?;
-            i = i.checked_add(digit as usize).ok_or(Overflow)?;
-            *self += 1;
-        }
-        Ok(i)
-    }
+    // Return the character at a given index, or None if out of bounds.
+    // Note the index is a count of characters, not bytes.
+    fn at(&self, index: usize) -> Option<char>;
 
-    // Read a conversion prefix from our cursor, advancing it.
-    fn get_prefix(&mut self) -> ConversionPrefix {
-        use ConversionPrefix as CP;
-        let prefix = match self[0] {
-            'h' if self[1] == 'h' => CP::hh,
-            'h' => CP::h,
-            'l' if self[1] == 'l' => CP::ll,
-            'l' => CP::l,
-            'j' => CP::j,
-            't' => CP::t,
-            'z' => CP::z,
-            'L' => CP::L,
-            _ => CP::Empty,
-        };
-        *self += match prefix {
-            CP::Empty => 0,
-            CP::hh | CP::ll => 2,
-            _ => 1,
-        };
-        prefix
-    }
-
-    // Read an (optionally prefixed) format specifier, such as d, Lf, etc.
-    // Adjust the cursor to point to the char after the specifier.
-    fn get_specifier(&mut self) -> Result<ConversionSpec, Error> {
-        let prefix = self.get_prefix();
-        // Awkwardly placed hack to disallow %lC and %lS, since we otherwise treat
-        // them as the same.
-        if prefix != ConversionPrefix::Empty && matches!(self[0], 'C' | 'S') {
-            return Err(Error::BadFormatString);
-        }
-        let spec = ConversionSpec::from_char(self[0]).ok_or(Error::BadFormatString)?;
-        if !spec.supports_prefix(prefix) {
-            return Err(Error::BadFormatString);
-        }
-        *self += 1;
-        Ok(spec)
-    }
+    // Advance by the given number of characters.
+    fn advance_by(&mut self, n: usize);
 
     // Read a sequence of characters to be output literally, advancing the cursor.
+    // The characters may optionally be stored in the given buffer.
     // This handles a tail of %%.
-    fn get_lit(&mut self) -> &'a [char] {
-        let s = self.0;
+    fn take_literal<'a: 'b, 'b>(&'a mut self, buffer: &'b mut String) -> &'b str;
+}
+
+impl FormatString for &str {
+    fn is_empty(&self) -> bool {
+        (*self).is_empty()
+    }
+
+    fn at(&self, index: usize) -> Option<char> {
+        self.chars().nth(index)
+    }
+
+    fn advance_by(&mut self, n: usize) {
+        let mut chars = self.chars();
+        for _ in 0..n {
+            let c = chars.next();
+            assert!(c.is_some(), "FormatString::advance(): index out of bounds");
+        }
+        *self = chars.as_str();
+    }
+
+    fn take_literal<'a: 'b, 'b>(&'a mut self, _buffer: &'b mut String) -> &'b str {
+        // Count length of non-percent characters.
+        let non_percents: usize = self
+            .chars()
+            .take_while(|&c| c != '%')
+            .map(|c| c.len_utf8())
+            .sum();
+        // Take only an even number of percents. Note we know these have byte length 1.
+        let percent_pairs = self[non_percents..]
+            .chars()
+            .take_while(|&c| c == '%')
+            .count()
+            / 2;
+        let (prefix, rest) = self.split_at(non_percents + percent_pairs * 2);
+        *self = rest;
+        // Trim half of the trailing percent characters from the prefix.
+        &prefix[..prefix.len() - percent_pairs]
+    }
+}
+
+#[cfg(feature = "widestring")]
+impl FormatString for &wstr {
+    fn is_empty(&self) -> bool {
+        (*self).is_empty()
+    }
+
+    fn at(&self, index: usize) -> Option<char> {
+        self.as_char_slice().get(index).copied()
+    }
+
+    fn advance_by(&mut self, n: usize) {
+        *self = &self[n..];
+    }
+
+    fn take_literal<'a: 'b, 'b>(&'a mut self, buffer: &'b mut String) -> &'b str {
+        let s = self.as_char_slice();
         let non_percents = s.iter().take_while(|&&c| c != '%').count();
         // Take only an even number of percents.
         let percent_pairs: usize = s[non_percents..].iter().take_while(|&&c| c == '%').count() / 2;
-        *self += non_percents + percent_pairs * 2;
-        &s[..non_percents + percent_pairs]
+        *self = &self[non_percents + percent_pairs * 2..];
+        buffer.clear();
+        buffer.extend(s[..non_percents + percent_pairs].iter());
+        buffer.as_str()
     }
 }
 
-// Advance this format string by a number of chars.
-impl AddAssign<usize> for FormatString<'_> {
-    fn add_assign(&mut self, rhs: usize) {
-        self.0 = &self.0[rhs..];
+// Read an int from a format string, stopping at the first non-digit.
+// Negative values are not supported.
+// If there are no digits, return 0.
+// Adjust the format string to point to the char after the int.
+fn get_int(fmt: &mut impl FormatString) -> Result<usize, Error> {
+    use Error::Overflow;
+    let mut i: usize = 0;
+    while let Some(digit) = fmt.at(0).and_then(|c| c.to_digit(10)) {
+        i = i.checked_mul(10).ok_or(Overflow)?;
+        i = i.checked_add(digit as usize).ok_or(Overflow)?;
+        fmt.advance_by(1);
     }
+    Ok(i)
 }
 
-// Index into FormatString, returning \0 for one-past-the-end.
-impl Index<usize> for FormatString<'_> {
-    type Output = char;
+// Read a conversion prefix from a format string, advancing it.
+fn get_prefix(fmt: &mut impl FormatString) -> ConversionPrefix {
+    use ConversionPrefix as CP;
+    let prefix = match fmt.at(0).unwrap_or('\0') {
+        'h' if fmt.at(1) == Some('h') => CP::hh,
+        'h' => CP::h,
+        'l' if fmt.at(1) == Some('l') => CP::ll,
+        'l' => CP::l,
+        'j' => CP::j,
+        't' => CP::t,
+        'z' => CP::z,
+        'L' => CP::L,
+        _ => CP::Empty,
+    };
+    fmt.advance_by(match prefix {
+        CP::Empty => 0,
+        CP::hh | CP::ll => 2,
+        _ => 1,
+    });
+    prefix
+}
 
-    fn index(&self, idx: usize) -> &char {
-        let s = self.as_slice();
-        if idx == s.len() {
-            &'\0'
-        } else {
-            &s[idx]
-        }
+// Read an (optionally prefixed) format specifier, such as d, Lf, etc.
+// Adjust the cursor to point to the char after the specifier.
+fn get_specifier(fmt: &mut impl FormatString) -> Result<ConversionSpec, Error> {
+    let prefix = get_prefix(fmt);
+    // Awkwardly placed hack to disallow %lC and %lS, since we otherwise treat
+    // them as the same.
+    if prefix != ConversionPrefix::Empty && matches!(fmt.at(0), Some('C' | 'S')) {
+        return Err(Error::BadFormatString);
     }
+    let spec = fmt
+        .at(0)
+        .and_then(ConversionSpec::from_char)
+        .ok_or(Error::BadFormatString)?;
+    if !spec.supports_prefix(prefix) {
+        return Err(Error::BadFormatString);
+    }
+    fmt.advance_by(1);
+    Ok(spec)
 }
 
 // Pad output by emitting `c` until `min_width` is reached.
@@ -288,14 +326,30 @@ pub(super) fn pad(
 ///
 /// # Returns
 /// A `Result` which is `Ok` containing the number of bytes written on success, or an `Error`.
+///
+/// # Example
+///
+/// ```
+/// use fish_printf::{sprintf_locale, ToArg, FormatString, locale};
+/// use std::fmt::Write;
+///
+/// let mut output = String::new();
+/// let fmt: &str = "%'0.2f";
+/// let mut args = [1234567.89.to_arg()];
+///
+/// let result = sprintf_locale(&mut output, fmt, &locale::EN_US_LOCALE, &mut args);
+///
+/// assert!(result == Ok(12));
+/// assert_eq!(output, "1,234,567.89");
+/// ```
 pub fn sprintf_locale(
     f: &mut impl Write,
-    fmt: &[char],
+    fmt: impl FormatString,
     locale: &Locale,
     args: &mut [Arg],
 ) -> Result<usize, Error> {
     use ConversionSpec as CS;
-    let mut s = FormatString(fmt);
+    let mut s = fmt;
     let mut args = args.iter_mut();
     let mut out_len: usize = 0;
 
@@ -305,31 +359,32 @@ pub fn sprintf_locale(
         buf.clear();
 
         // Handle literal text and %% format specifiers.
-        let lit = s.get_lit();
+        let lit = s.take_literal(buf);
         if !lit.is_empty() {
-            buf.extend(lit.iter());
-            f.write_str(buf)?;
-            out_len = out_len.checked_add(lit.len()).ok_or(Error::Overflow)?;
+            f.write_str(lit)?;
+            out_len = out_len
+                .checked_add(lit.chars().count())
+                .ok_or(Error::Overflow)?;
             continue 'main;
         }
 
         // Consume the % at the start of the format specifier.
-        debug_assert!(s[0] == '%');
-        s += 1;
+        debug_assert!(s.at(0) == Some('%'));
+        s.advance_by(1);
 
         // Read modifier flags. '-' and '0' flags are mutually exclusive.
         let mut flags = ModifierFlags::default();
-        while flags.try_set(s[0]) {
-            s += 1;
+        while flags.try_set(s.at(0).unwrap_or('\0')) {
+            s.advance_by(1);
         }
         if flags.left_adj {
             flags.zero_pad = false;
         }
 
         // Read field width. We do not support $.
-        let width = if s[0] == '*' {
+        let width = if s.at(0) == Some('*') {
             let arg_width = args.next().ok_or(Error::MissingArg)?.as_sint()?;
-            s += 1;
+            s.advance_by(1);
             if arg_width < 0 {
                 flags.left_adj = true;
             }
@@ -338,19 +393,19 @@ pub fn sprintf_locale(
                 .try_into()
                 .map_err(|_| Error::Overflow)?
         } else {
-            s.get_int()?
+            get_int(&mut s)?
         };
 
         // Optionally read precision. We do not support $.
-        let mut prec: Option<usize> = if s[0] == '.' && s[1] == '*' {
+        let mut prec: Option<usize> = if s.at(0) == Some('.') && s.at(1) == Some('*') {
             // "A negative precision is treated as though it were missing."
             // Here we assume the precision is always signed.
-            s += 2;
+            s.advance_by(2);
             let p = args.next().ok_or(Error::MissingArg)?.as_sint()?;
             p.try_into().ok()
-        } else if s[0] == '.' {
-            s += 1;
-            Some(s.get_int()?)
+        } else if s.at(0) == Some('.') {
+            s.advance_by(1);
+            Some(get_int(&mut s)?)
         } else {
             None
         };
@@ -360,7 +415,7 @@ pub fn sprintf_locale(
         }
 
         // Read out the format specifier and arg.
-        let conv_spec = s.get_specifier()?;
+        let conv_spec = get_specifier(&mut s)?;
         let arg = args.next().ok_or(Error::MissingArg)?;
         let mut prefix = "";
 

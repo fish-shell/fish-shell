@@ -1,10 +1,10 @@
 [package]
 name = "fish-printf"
 edition = "2021"
-version = "0.1.0"
+version = "0.2.0"
 description = "printf implementation, based on musl"
 license = "MIT"
 
 [dependencies]
 libc = "0.2.155"
-widestring = "1.0.2"
+widestring = { version = "1.0.2", optional = true }

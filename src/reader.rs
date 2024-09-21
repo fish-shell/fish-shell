@@ -2795,6 +2795,56 @@ impl<'a> Reader<'a> {
                     self.rls().last_cmd != Some(c),
                 );
             }
+            rl::BackwardKillToken => {
+                let Some(new_position) = self.backward_token() else {
+                    return;
+                };
+
+                let (elt, _el) = self.active_edit_line();
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                let (elt, el) = self.active_edit_line();
+                self.data.kill(
+                    elt,
+                    new_position..el.position(),
+                    Kill::Prepend,
+                    self.rls().last_cmd != Some(rl::BackwardKillToken),
+                );
+            }
+            rl::BackwardToken => {
+                let Some(new_position) = self.backward_token() else {
+                    return;
+                };
+                let (elt, _el) = self.active_edit_line();
+                self.update_buff_pos(elt, Some(new_position));
+            }
+            rl::KillToken => {
+                let Some(new_position) = self.forward_token() else {
+                    return;
+                };
+
+                let (elt, _el) = self.active_edit_line();
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                let (elt, el) = self.active_edit_line();
+                self.data.kill(
+                    elt,
+                    el.position()..new_position,
+                    Kill::Append,
+                    self.rls().last_cmd != Some(rl::KillToken),
+                );
+            }
+            rl::ForwardToken => {
+                let Some(new_position) = self.forward_token() else {
+                    return;
+                };
+                let (elt, _el) = self.active_edit_line();
+                self.update_buff_pos(elt, Some(new_position));
+            }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
@@ -3331,6 +3381,54 @@ impl<'a> Reader<'a> {
                 // panic!("should have been handled by inputter_t::readch");
             }
         }
+    }
+
+    fn backward_token(&mut self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == 0 {
+            return None;
+        }
+
+        let mut tok = 0..0;
+        let mut prev_tok = 0..0;
+        parse_util_token_extent(el.text(), el.position(), &mut tok, Some(&mut prev_tok));
+
+        // if we are at the start of a token, go back one
+        let new_position = if tok.start == pos {
+            if prev_tok.start == pos {
+                let cmdsub = parse_util_cmdsubst_extent(el.text(), prev_tok.start);
+                cmdsub.start.saturating_sub(1)
+            } else {
+                prev_tok.start
+            }
+        } else {
+            tok.start
+        };
+
+        Some(new_position)
+    }
+
+    fn forward_token(&self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == el.len() {
+            return None;
+        }
+
+        // If we are not in a token, look for one ahead
+        let buff_pos = pos
+            + el.text()[pos..]
+                .chars()
+                .take_while(|c| c.is_ascii_whitespace())
+                .count();
+
+        let mut tok = 0..0;
+        parse_util_token_extent(el.text(), buff_pos, &mut tok, None);
+
+        let new_position = if tok.end == pos { pos + 1 } else { tok.end };
+
+        Some(new_position)
     }
 }
 
@@ -4909,6 +5007,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardWord
         | rl::ForwardBigword
         | rl::BackwardBigword
+        | rl::ForwardToken
+        | rl::BackwardToken
         | rl::NextdOrForwardWord
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar
@@ -4921,9 +5021,11 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::KillInnerLine
         | rl::KillWord
         | rl::KillBigword
+        | rl::KillToken
         | rl::BackwardKillWord
         | rl::BackwardKillPathComponent
         | rl::BackwardKillBigword
+        | rl::BackwardKillToken
         | rl::SelfInsert
         | rl::SelfInsertNotFirst
         | rl::TransposeChars

@@ -2792,6 +2792,54 @@ impl<'a> Reader<'a> {
                     self.rls().last_cmd != Some(c),
                 );
             }
+            rl::BackwardKillToken => {
+                let (start_buff_pos, elt, new_position) = match self._backward_token() {
+                    Some(value) => value,
+                    None => return,
+                };
+
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                self.data.kill(
+                    elt,
+                    new_position..start_buff_pos,
+                    Kill::Prepend,
+                    self.rls().last_cmd != Some(rl::BackwardKillToken),
+                );
+            }
+            rl::BackwardToken => {
+                let (_start_buff_pos, elt, new_position) = match self._backward_token() {
+                    Some(value) => value,
+                    None => return,
+                };
+                self.update_buff_pos(elt, Some(new_position));
+            }
+            rl::KillToken => {
+                let (start_buff_pos, elt, new_position) = match self._forward_token() {
+                    Some(value) => value,
+                    None => return,
+                };
+
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                self.data.kill(
+                    elt,
+                    start_buff_pos..new_position,
+                    Kill::Append,
+                    self.rls().last_cmd != Some(rl::KillToken),
+                );
+            }
+            rl::ForwardToken => {
+                let (_start_buff_pos, elt, new_position) = match self._forward_token() {
+                    Some(value) => value,
+                    None => return,
+                };
+                self.update_buff_pos(elt, Some(new_position));
+            }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
@@ -3328,6 +3376,69 @@ impl<'a> Reader<'a> {
                 // panic!("should have been handled by inputter_t::readch");
             }
         }
+    }
+
+    fn _backward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
+        let (elt, el) = self.active_edit_line();
+        let start_buff_pos = el.position();
+        let boundary = 0;
+        if start_buff_pos == boundary {
+            return None;
+        }
+
+        let buff_pos = el.position()
+            - el.text()[..el.position()]
+                .chars()
+                .take_while(|c| !c.is_alphanumeric())
+                .count()
+            - 1;
+
+        self.update_buff_pos(elt, Some(buff_pos));
+        let (elt, el) = self.active_edit_line();
+        let text = el.text();
+
+        let mut tok = 0..0;
+        let mut prev_tok = 0..0;
+        parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
+
+        let new_position = if tok.start == start_buff_pos {
+            tok.start - 1 // this will never equal/exceed boundary
+        } else {
+            tok.start
+        };
+
+        Some((start_buff_pos, elt, new_position))
+    }
+
+    fn _forward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
+        let (elt, el) = self.active_edit_line();
+        let start_buff_pos = el.position();
+        let boundary = el.len();
+        if start_buff_pos == boundary {
+            return None;
+        }
+
+        let buff_pos = el.position()
+            + el.text()[el.position()..]
+                .chars()
+                .take_while(|c| !c.is_alphanumeric())
+                .count();
+
+        self.update_buff_pos(elt, Some(buff_pos));
+        let (elt, el) = self.active_edit_line();
+        let text = el.text();
+
+        let mut tok = 0..0;
+        let mut prev_tok = 0..0;
+        parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
+
+        let new_position = if tok.end == start_buff_pos {
+            tok.end + 1 // this will never equal/exceed boundary
+        } else {
+            tok.end
+        };
+
+        Some((start_buff_pos, elt, new_position))
     }
 }
 
@@ -4896,6 +5007,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardWord
         | rl::ForwardBigword
         | rl::BackwardBigword
+        | rl::ForwardToken
+        | rl::BackwardToken
         | rl::NextdOrForwardWord
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar
@@ -4908,9 +5021,11 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::KillInnerLine
         | rl::KillWord
         | rl::KillBigword
+        | rl::KillToken
         | rl::BackwardKillWord
         | rl::BackwardKillPathComponent
         | rl::BackwardKillBigword
+        | rl::BackwardKillToken
         | rl::SelfInsert
         | rl::SelfInsertNotFirst
         | rl::TransposeChars

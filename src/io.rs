@@ -338,11 +338,11 @@ impl IoData for IoPipe {
     }
 }
 
-/// Represents filling an io_buffer_t. Very similar to io_pipe_t.
+/// Represents filling an IoBuffer. Very similar to IoPipe.
 pub struct IoBufferfill {
     target: RawFd,
 
-    /// Write end. The other end is connected to an io_buffer_t.
+    /// Write end. The other end is connected to an IoBuffer.
     write_fd: OwnedFd,
 
     /// The receiving buffer.
@@ -429,8 +429,8 @@ impl IoData for IoBufferfill {
     }
 }
 
-/// An io_buffer_t is a buffer which can populate itself by reading from an fd.
-/// It is not an io_data_t.
+/// An IoBuffer is a buffer which can populate itself by reading from an fd.
+/// It is not an IoData.
 pub struct IoBuffer {
     /// Buffer storing what we have read.
     buffer: Mutex<SeparatedBuffer>,

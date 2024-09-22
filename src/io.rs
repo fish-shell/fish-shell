@@ -20,9 +20,10 @@ use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
+use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
-use std::cell::{RefCell, UnsafeCell};
+use std::cell::RefCell;
 use std::fs::File;
 use std::io;
 use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
@@ -1033,14 +1034,8 @@ const NOCLOB_ERROR: &wstr = L!("The file '%ls' already exists");
 const OPEN_MASK: Mode = Mode::from_bits_truncate(0o666);
 
 /// Provide the fd monitor used for background fillthread operations.
-fn fd_monitor() -> &'static mut FdMonitor {
-    // Deliberately leaked to avoid shutdown dtors.
-    static mut FDM: *const UnsafeCell<FdMonitor> = std::ptr::null();
-    unsafe {
-        if FDM.is_null() {
-            FDM = Box::into_raw(Box::new(UnsafeCell::new(FdMonitor::new())))
-        }
-    }
-    let ptr: *mut FdMonitor = unsafe { (*FDM).get() };
-    unsafe { &mut *ptr }
+static FD_MONITOR: Lazy<FdMonitor> = Lazy::new(FdMonitor::new);
+
+pub fn fd_monitor() -> &'static FdMonitor {
+    &FD_MONITOR
 }

@@ -2,6 +2,7 @@
 name = "fish-printf"
 edition = "2021"
 version = "0.2.0"
+repository = "https://github.com/fish-shell/fish-shell"
 description = "printf implementation, based on musl"
 license = "MIT"
 

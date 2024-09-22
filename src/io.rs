@@ -349,12 +349,12 @@ pub struct IoBufferfill {
     buffer: Arc<IoBuffer>,
 }
 impl IoBufferfill {
-    /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
+    /// Create an IoBufferfill which, when written from, fills a buffer with the contents.
     /// Returns an error on failure, e.g. too many open fds.
     pub fn create() -> io::Result<Arc<IoBufferfill>> {
         Self::create_opts(0, STDOUT_FILENO)
     }
-    /// Create an io_bufferfill_t which, when written from, fills a buffer with the contents.
+    /// Create an IoBufferfill which, when written from, fills a buffer with the contents.
     /// Returns an error on failure, e.g. too many open fds.
     ///
     /// \param target the fd which this will be dup2'd to - typically stdout.

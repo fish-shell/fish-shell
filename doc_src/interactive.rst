@@ -325,7 +325,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`ctrl-x` copies the current buffer to the system's clipboard, :kbd:`ctrl-v` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
-- :kbd:`alt-d` moves the next word to the :ref:`killring`.
+- :kbd:`alt-d` or :kbd:`ctrl-delete` moves the next word to the :ref:`killring`.
 
 - :kbd:`alt-h` (or :kbd:`f1`) shows the manual page for the current command, if one exists.
 
@@ -362,7 +362,7 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`delete` or :kbd:`backspace` removes one character forwards or backwards respectively. This also goes for :kbd:`ctrl-h`, which is indistinguishable from backspace.
 
-- :kbd:`alt-backspace` removes one word backwards.
+- :kbd:`alt-backspace` removes one word backwards. If supported by the terminal, :kbd:`ctrl-backspace` does the same.
 
 - :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 

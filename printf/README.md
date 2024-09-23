@@ -10,8 +10,6 @@ Licensed under the MIT license.
 
 Run `cargo add fish-printf` to add this crate to your `Cargo.toml` file.
 
-Also run `cargo add widestring` to add the widestring crate.
-
 ### Notes
 
 fish-printf attempts to match the C standard for printf. It supports the following features:
@@ -27,7 +25,7 @@ The size of integer values is taken from the argument type.
 
 fish-printf can output to an `std::fmt::Write` object, or return a string.
 
-For reasons related to fish-shell, fish-printf has a feature "widestring" which uses the [widestring](https://crates.io/crates/widestring) crate. This is off by default.
+For reasons related to fish-shell, fish-printf has a feature "widestring" which uses the [widestring](https://crates.io/crates/widestring) crate. This is off by default. If enabled, run `cargo add widestring` to add the widestring crate.
 
 ### Examples
 
@@ -38,6 +36,8 @@ use fish_printf::sprintf;
 let s = sprintf!("%0.5g", 123456.0) // 1.2346e+05
 
 // Append to an existing string.
-let s = String::new();
+let mut s = String::new();
 sprintf!(=> &mut s, "%0.5g", 123456.0) // 1.2346e+05
 ```
+
+See the crate documentation for additional examples.

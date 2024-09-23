@@ -175,7 +175,9 @@ New or improved bindings
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - ``history-prefix-search-{backward,forward}`` now maintain the cursor position instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The :kbd:`E` binding in vi mode now correctly handles the last character of the word, by jumping to the next word (:issue:`9700`).
-- If the terminal supports shifted key codes from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_, :kbd:`shift-enter` now inserts a newline instead of executing the command line.
+- The following keys have refined behavior if the terminal supports `disambiguating them <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_:
+  - :kbd:`shift-enter` now inserts a newline instead of executing the command line.
+  - :kbd:`ctrl-backspace` now deletes the last word instead of only one character.
 - New special input functions ``forward-char-passive`` and ``backward-char-passive`` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).

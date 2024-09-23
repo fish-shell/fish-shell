@@ -420,7 +420,6 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 
     let c = u8::try_from(c).unwrap();
     let symbolic_name = match c {
-        8 => L!("\\b"),
         9 => L!("\\t"),
         10 => L!("\\n"),
         13 => L!("\\r"),

@@ -2793,7 +2793,7 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::BackwardKillToken => {
-                let (start_buff_pos, elt, new_position) = match self._backward_token() {
+                let (start_buff_pos, elt, new_position) = match self.backward_token() {
                     Some(value) => value,
                     None => return,
                 };
@@ -2810,14 +2810,14 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::BackwardToken => {
-                let (_start_buff_pos, elt, new_position) = match self._backward_token() {
+                let (_start_buff_pos, elt, new_position) = match self.backward_token() {
                     Some(value) => value,
                     None => return,
                 };
                 self.update_buff_pos(elt, Some(new_position));
             }
             rl::KillToken => {
-                let (start_buff_pos, elt, new_position) = match self._forward_token() {
+                let (start_buff_pos, elt, new_position) = match self.forward_token() {
                     Some(value) => value,
                     None => return,
                 };
@@ -2834,7 +2834,7 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::ForwardToken => {
-                let (_start_buff_pos, elt, new_position) = match self._forward_token() {
+                let (_start_buff_pos, elt, new_position) = match self.forward_token() {
                     Some(value) => value,
                     None => return,
                 };
@@ -3378,7 +3378,7 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn _backward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
+    fn backward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
         let (elt, el) = self.active_edit_line();
         let start_buff_pos = el.position();
         let boundary = 0;
@@ -3389,7 +3389,7 @@ impl<'a> Reader<'a> {
         let buff_pos = el.position()
             - el.text()[..el.position()]
                 .chars()
-                .take_while(|c| !c.is_alphanumeric())
+                .take_while(|c| c.is_ascii_whitespace())
                 .count()
             - 1;
 
@@ -3410,7 +3410,7 @@ impl<'a> Reader<'a> {
         Some((start_buff_pos, elt, new_position))
     }
 
-    fn _forward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
+    fn forward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
         let (elt, el) = self.active_edit_line();
         let start_buff_pos = el.position();
         let boundary = el.len();
@@ -3421,7 +3421,7 @@ impl<'a> Reader<'a> {
         let buff_pos = el.position()
             + el.text()[el.position()..]
                 .chars()
-                .take_while(|c| !c.is_alphanumeric())
+                .take_while(|c| c.is_ascii_whitespace())
                 .count();
 
         self.update_buff_pos(elt, Some(buff_pos));

@@ -3386,14 +3386,14 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        let buff_pos = el.position()
-            - el.text()[..el.position()]
+        // If we are not in a token, look for one behind
+        let buff_pos = start_buff_pos
+            - el.text()[..start_buff_pos]
                 .chars()
-                .take_while(|c| c.is_ascii_whitespace())
-                .count()
-            - 1;
-
+                .take_while(|c| matches!(*c, '\t' | '\x0C' | ' '))
+                .count();
         self.update_buff_pos(elt, Some(buff_pos));
+
         let (elt, el) = self.active_edit_line();
         let text = el.text();
 
@@ -3401,8 +3401,9 @@ impl<'a> Reader<'a> {
         let mut prev_tok = 0..0;
         parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
 
+        // if we are at the start of a token, go back one
         let new_position = if tok.start == start_buff_pos {
-            tok.start - 1 // this will never equal/exceed boundary
+            prev_tok.start
         } else {
             tok.start
         };
@@ -3418,13 +3419,14 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        let buff_pos = el.position()
-            + el.text()[el.position()..]
+        // If we are not in a token, look for one ahead
+        let buff_pos = start_buff_pos
+            + el.text()[start_buff_pos..]
                 .chars()
-                .take_while(|c| c.is_ascii_whitespace())
+                .take_while(|c| matches!(*c, '\t' | '\x0C' | ' '))
                 .count();
-
         self.update_buff_pos(elt, Some(buff_pos));
+
         let (elt, el) = self.active_edit_line();
         let text = el.text();
 

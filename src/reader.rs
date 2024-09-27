@@ -3403,7 +3403,11 @@ impl<'a> Reader<'a> {
 
         // if we are at the start of a token, go back one
         let new_position = if tok.start == start_buff_pos {
-            prev_tok.start
+            if prev_tok.start == start_buff_pos {
+                start_buff_pos - 1
+            } else {
+                prev_tok.start
+            }
         } else {
             tok.start
         };

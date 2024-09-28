@@ -2362,7 +2362,11 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::PagerToggleSearch => {
-                if self.history_pager.is_some() {
+                if let Some(history_pager) = &self.history_pager {
+                    if history_pager.history_index_start == 0 {
+                        self.flash();
+                        return;
+                    }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Forward,
@@ -2624,7 +2628,11 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::HistoryPager => {
-                if self.history_pager.is_some() {
+                if let Some(history_pager) = &self.history_pager {
+                    if !history_pager.can_go_backwards {
+                        self.flash();
+                        return;
+                    }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Backward,
@@ -2640,6 +2648,7 @@ impl<'a> Reader<'a> {
                     direction: SearchDirection::Backward,
                     history_index_start: 0,
                     history_index_end: 0,
+                    can_go_backwards: false,
                 });
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
@@ -4509,6 +4518,7 @@ struct HistoryPager {
     /// The range in history covered by the history pager's current page.
     history_index_start: usize,
     history_index_end: usize,
+    can_go_backwards: bool,
 }
 
 fn history_pager_search(
@@ -4610,21 +4620,19 @@ impl ReaderData {
             if search_term != zelf.pager.search_field_line.text() {
                 return; // Stale request.
             }
-            if result.matched_commands.is_empty() && why == HistoryPagerInvocation::Advance {
-                // No more matches, keep the existing ones and flash.
-                zelf.flash();
-                return;
-            }
             let history_pager = zelf.history_pager.as_mut().unwrap();
             history_pager.direction = direction;
             match direction {
                 SearchDirection::Forward => {
+                    assert!(index > result.final_index);
                     history_pager.history_index_start = result.final_index;
                     history_pager.history_index_end = index;
+                    history_pager.can_go_backwards = true;
                 }
                 SearchDirection::Backward => {
                     history_pager.history_index_start = index;
                     history_pager.history_index_end = result.final_index;
+                    history_pager.can_go_backwards = result.have_more_results;
                 }
             };
             zelf.pager.extra_progress_text = if result.have_more_results {

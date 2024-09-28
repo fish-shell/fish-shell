@@ -824,11 +824,11 @@ impl Screen {
             zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
             let mut start = 0;
             for line_break in left_prompt_layout.line_breaks {
-                zelf.write_str(&left_prompt[start..line_break]);
                 zelf.outp
                     .borrow_mut()
                     .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
-                start = line_break;
+                zelf.write_str(&left_prompt[start..=line_break]);
+                start = line_break + 1;
             }
             zelf.write_str(&left_prompt[start..]);
             zelf.actual_left_prompt = left_prompt.to_owned();

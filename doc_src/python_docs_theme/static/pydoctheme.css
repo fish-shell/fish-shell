@@ -439,7 +439,7 @@ code {
     margin-right: 3px;
 }
 
-tt, code, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command, button {
+tt, code, kbd, pre, dl > dt span ~ em, #synopsis p, #synopsis code, .command, button {
     /* Pick a monospace font.
        ui-monospace is the monospace version of system-ui - the system's monospace font.
        Unfortunately it's barely supported anywhere (at time of writing only Safari does!),
@@ -693,8 +693,12 @@ div.documentwrapper {
 /* Color based on the Generic.Prompt (.gp) class from pygments.css. */
 .prompt { color: #8f7902; }
 
-kbd {
+kbd.compound, :not(kbd.compound) > kbd {
   background-color: var(--td-background);
+  border: 1px solid;
+  border-color: var(--sidebar-border-color);
+  border-radius: .2em;
+  padding: 0.1em 0.3em;
 }
 
 div.body a {
@@ -728,7 +732,7 @@ div.body a {
         box-shadow: 0 0 5px 1px #000;
     }
 
-    kbd {
+    kbd.compound, :not(kbd.compound) > kbd {
         box-shadow: 0.1em 0.1em 0.2em rgba(100,100,100,0.1);
         color: #FFF;
     }

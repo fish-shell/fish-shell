@@ -568,26 +568,26 @@ impl<'c> Tokenizer<'c> {
         let mut is_token_begin = true;
 
         fn process_opening_quote(
-            this: &mut Tokenizer,
+            zelf: &mut Tokenizer,
             quoted_cmdsubs: &mut Vec<usize>,
             paran_offsets: &[usize],
             quote: char,
         ) -> Result<(), usize> {
-            this.on_quote_toggle
+            zelf.on_quote_toggle
                 .as_mut()
-                .map(|cb| (cb)(this.token_cursor));
-            if let Some(end) = quote_end(this.start, this.token_cursor, quote) {
+                .map(|cb| (cb)(zelf.token_cursor));
+            if let Some(end) = quote_end(zelf.start, zelf.token_cursor, quote) {
                 let mut one_past_end = end + 1;
-                if this.start.char_at(end) == '$' {
+                if zelf.start.char_at(end) == '$' {
                     one_past_end = end;
                     quoted_cmdsubs.push(paran_offsets.len());
                 }
-                this.token_cursor = end;
-                this.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
+                zelf.token_cursor = end;
+                zelf.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
                 Ok(())
             } else {
-                let error_loc = this.token_cursor;
-                this.token_cursor = this.start.len();
+                let error_loc = zelf.token_cursor;
+                zelf.token_cursor = zelf.start.len();
                 Err(error_loc)
             }
         }

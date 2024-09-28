@@ -435,5 +435,9 @@ fn test_indents() {
             0, "\n) line4",
             0, "\nline5\"",
         );
+        validate!(
+            0, r#"echo "$()"'"#,
+            0, "\n"
+        );
     })();
 }

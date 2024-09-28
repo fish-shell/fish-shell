@@ -941,42 +941,38 @@ impl<'a> IndentVisitor<'a> {
     }
 
     fn indent_string_part(&mut self, range: Range<usize>, is_double_quoted: bool) {
-        let mut done = range.start;
+        let mut start = range.start;
         let mut quoted = false;
-        {
-            if is_double_quoted {
-                match quote_end(self.src, range.start, '"') {
-                    Some(q_end) => {
-                        // We may be (in) a multi-line string, so don't indent.
-                        done = q_end + 1;
-                    }
-                    None => quoted = true,
+        if is_double_quoted {
+            match quote_end(self.src, range.start, '"') {
+                Some(q_end) => {
+                    // We may be (in) a multi-line string, so don't indent.
+                    start = q_end + 1;
                 }
+                None => quoted = true,
             }
+        }
+        let mut done = start;
+        if !quoted {
             let part = &self.src[done..range.end];
-            if !quoted {
-                let mut callback = |offset| {
-                    if !quoted {
-                        // Quote open event. Indent unquoted part, including the opening quote.
-                        self.indents[done..range.start + offset + 1].fill(self.indent);
-                        done = range.start + offset + 1;
-                    } else {
-                        // Quote close. Don't indent, in case it's a multiline string.
-                        // Mark the first line as indented but only to make tests look prettier.
-                        let first_line_length = self.src[range.start..range.start + offset]
-                            .chars()
-                            .take_while(|&c| c != '\n')
-                            .count();
-                        self.indents[range.start..range.start + first_line_length]
-                            .fill(self.indent);
-                        done = range.start + offset;
-                    }
-                    quoted = !quoted;
-                };
-                for _token in
-                    Tokenizer::with_quote_events(part, TOK_ACCEPT_UNFINISHED, &mut callback)
-                {
+            let mut callback = |offset| {
+                if !quoted {
+                    // Quote open event. Indent unquoted part, including the opening quote.
+                    self.indents[done..start + offset + 1].fill(self.indent);
+                    done = start + offset + 1;
+                } else {
+                    // Quote close. Don't indent, in case it's a multiline string.
+                    // Mark the first line as indented but only to make tests look prettier.
+                    let first_line_length = self.src[start..start + offset]
+                        .chars()
+                        .take_while(|&c| c != '\n')
+                        .count();
+                    self.indents[start..start + first_line_length].fill(self.indent);
+                    done = start + offset;
                 }
+                quoted = !quoted;
+            };
+            for _token in Tokenizer::with_quote_events(part, TOK_ACCEPT_UNFINISHED, &mut callback) {
             }
         }
         if !quoted {

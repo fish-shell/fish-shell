@@ -499,13 +499,8 @@ pub struct ReaderData {
     history: Arc<History>,
     /// The history search.
     history_search: ReaderHistorySearch,
-    /// Whether the in-pager history search is active.
-    history_pager_active: bool,
-    /// The direction of the last successful history pager search.
-    history_pager_direction: SearchDirection,
-    /// The range in history covered by the history pager's current page.
-    history_pager_history_index_start: usize,
-    history_pager_history_index_end: usize,
+    /// In-pager history search.
+    history_pager: Option<HistoryPager>,
 
     /// The cursor selection mode.
     cursor_selection_mode: CursorSelectionMode,
@@ -1129,10 +1124,7 @@ impl ReaderData {
             queued_repaint: false,
             history,
             history_search: Default::default(),
-            history_pager_active: Default::default(),
-            history_pager_direction: SearchDirection::Forward,
-            history_pager_history_index_start: usize::MAX,
-            history_pager_history_index_end: usize::MAX,
+            history_pager: None,
             cursor_selection_mode: CursorSelectionMode::Exclusive,
             cursor_end_mode: CursorEndMode::Exclusive,
             selection: Default::default(),
@@ -1162,7 +1154,7 @@ impl ReaderData {
     }
 
     fn is_navigating_pager_contents(&self) -> bool {
-        self.pager.is_navigating_contents() || self.history_pager_active
+        self.pager.is_navigating_contents() || self.history_pager.is_some()
     }
 
     fn edit_line(&self, elt: EditableLineTag) -> &EditableLine {
@@ -1214,7 +1206,7 @@ impl ReaderData {
                 GENERATION.fetch_add(1, Ordering::Relaxed);
             }
             EditableLineTag::SearchField => {
-                if self.history_pager_active {
+                if self.history_pager.is_some() {
                     self.fill_history_pager(
                         HistoryPagerInvocation::Anew,
                         SearchDirection::Backward,
@@ -2370,7 +2362,7 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::PagerToggleSearch => {
-                if self.history_pager_active {
+                if self.history_pager.is_some() {
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Forward,
@@ -2632,7 +2624,7 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::HistoryPager => {
-                if self.history_pager_active {
+                if self.history_pager.is_some() {
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Backward,
@@ -2644,9 +2636,11 @@ impl<'a> Reader<'a> {
                 self.cycle_command_line = self.command_line.text().to_owned();
                 self.cycle_cursor_pos = self.command_line.position();
 
-                self.history_pager_active = true;
-                self.history_pager_history_index_start = 0;
-                self.history_pager_history_index_end = 0;
+                self.history_pager = Some(HistoryPager {
+                    direction: SearchDirection::Backward,
+                    history_index_start: 0,
+                    history_index_end: 0,
+                });
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
                 self.pager.set_prefix(
@@ -2698,7 +2692,7 @@ impl<'a> Reader<'a> {
                     self.input_data.function_set_status(true);
                     return;
                 }
-                if !self.history_pager_active {
+                if self.history_pager.is_none() {
                     self.input_data.function_set_status(false);
                     return;
                 }
@@ -3348,7 +3342,7 @@ impl<'a> Reader<'a> {
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
-            if self.history_pager_active && self.pager.selected_completion_idx.is_none() {
+            if self.history_pager.is_some() && self.pager.selected_completion_idx.is_none() {
                 self.data.command_line.push_edit(
                     Edit::new(
                         0..self.data.command_line.len(),
@@ -3456,7 +3450,7 @@ impl ReaderData {
     // Ensure we have no pager contents.
     fn clear_pager(&mut self) {
         self.pager.clear();
-        self.history_pager_active = false;
+        self.history_pager = None;
         self.command_line_has_transient_edit = false;
     }
 
@@ -4503,10 +4497,18 @@ struct HistoryPagerResult {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum HistoryPagerInvocation {
+enum HistoryPagerInvocation {
     Anew,
     Advance,
     Refresh,
+}
+
+struct HistoryPager {
+    /// The direction of the last successful history pager search.
+    direction: SearchDirection,
+    /// The range in history covered by the history pager's current page.
+    history_index_start: usize,
+    history_index_end: usize,
 }
 
 fn history_pager_search(
@@ -4580,15 +4582,17 @@ impl ReaderData {
                 index = 0;
             }
             HistoryPagerInvocation::Advance => {
+                let history_pager = self.history_pager.as_ref().unwrap();
                 index = match direction {
-                    SearchDirection::Forward => self.history_pager_history_index_start,
-                    SearchDirection::Backward => self.history_pager_history_index_end,
+                    SearchDirection::Forward => history_pager.history_index_start,
+                    SearchDirection::Backward => history_pager.history_index_end,
                 }
             }
             HistoryPagerInvocation::Refresh => {
                 // Redo the previous search previous direction.
-                direction = self.history_pager_direction;
-                index = self.history_pager_history_index_start;
+                let history_pager = self.history_pager.as_ref().unwrap();
+                direction = history_pager.direction;
+                index = history_pager.history_index_start;
                 old_pager_index = Some(self.pager.selected_completion_index());
             }
         }
@@ -4611,15 +4615,16 @@ impl ReaderData {
                 zelf.flash();
                 return;
             }
-            zelf.history_pager_direction = direction;
+            let history_pager = zelf.history_pager.as_mut().unwrap();
+            history_pager.direction = direction;
             match direction {
                 SearchDirection::Forward => {
-                    zelf.history_pager_history_index_start = result.final_index;
-                    zelf.history_pager_history_index_end = index;
+                    history_pager.history_index_start = result.final_index;
+                    history_pager.history_index_end = index;
                 }
                 SearchDirection::Backward => {
-                    zelf.history_pager_history_index_start = index;
-                    zelf.history_pager_history_index_end = result.final_index;
+                    history_pager.history_index_start = index;
+                    history_pager.history_index_end = result.final_index;
                 }
             };
             zelf.pager.extra_progress_text = if result.have_more_results {

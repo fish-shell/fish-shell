@@ -33,7 +33,7 @@ complete -c $command -s v -x \
 
 complete -c $command -s r -x \
     -d "Specify the number range of a dialog" \
-    -n "__fish_seen_subcommand_from counter"    
+    -n "__fish_seen_subcommand_from counter"
 
 complete -c $command -s d -x \
     -a '"dd-MM-yyyy k:m:s"\tdefault' \

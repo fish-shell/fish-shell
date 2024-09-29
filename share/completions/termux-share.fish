@@ -14,4 +14,3 @@ complete -c $command -s c \
 
 complete -c $command -s d -d 'Specify the receiver of a content'
 complete -c $command -s t -x -d 'Specify the title of a content'
-    

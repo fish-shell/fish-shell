@@ -62,7 +62,7 @@ complete -c $command -l priority -x \
 
 complete -c $command -l sound -d 'Play the sound with a notification'
 complete -c $command -s t -l title -x -d 'Specify the title of a notification'
-    
+
 
 complete -c $command -l vibrate -x \
     -d 'Specify the vibrate pattern of a notification'

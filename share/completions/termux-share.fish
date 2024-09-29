@@ -1,28 +1,17 @@
-set command termux-share
+set -l command termux-share
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -l help \
-    -d 'Show help'
+complete -c $command -s h -l help -d 'Show help'
 
-complete -c $command \
+complete -c $command -s a -x \
     -a 'view\tdefault edit send' \
-    -s a \
-    -d 'Specify the action to perform on a content' \
-    -x
+    -d 'Specify the action to perform on a content'
 
-complete -c $command \
+complete -c $command -s c \
     -a 'text/plain\tdefault' \
-    -s c \
     -d 'Specify the type of a content'
 
-complete -c $command \
-    -s d \
-    -d 'Specify the receiver of a content'
-
-complete -c $command \
-    -s t \
-    -d 'Specify the title of a content' \
-    -x
+complete -c $command -s d -d 'Specify the receiver of a content'
+complete -c $command -s t -x -d 'Specify the title of a content'
+    

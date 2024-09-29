@@ -1,19 +1,13 @@
-set command termux-location
+set -l command termux-location
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -d 'Show help'
+complete -c $command -s h -d 'Show help'
 
-complete -c $command \
+complete -c $command -s p -x \
     -a 'gps\tdefault network passive' \
-    -s p \
-    -d 'Specify the provider of a location' \
-    -x
+    -d 'Specify the provider of a location'
 
-complete -c $command \
+complete -c $command -s r -x \
     -a 'once\tdefault last updates' \
-    -s r \
-    -d 'Specify the request type for a location' \
-    -x
+    -d 'Specify the request type for a location'

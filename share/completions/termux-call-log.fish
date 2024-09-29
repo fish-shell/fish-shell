@@ -1,19 +1,13 @@
-set command termux-call-log
+set -l command termux-call-log
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -d 'Show help'
+complete -c $command -s h -d 'Show help'
 
-complete -c $command \
+complete -c $command -s l -x \
     -a '10\tdefault' \
-    -s l \
-    -d 'Limit the amount of listed calls' \
-    -x
+    -d 'Limit the amount of listed calls'
 
-complete -c $command \
+complete -c $command -s o -x \
     -a '0\tdefault' \
-    -s o \
-    -d 'Start listing calls with the specified one' \
-    -x
+    -d 'Start listing calls with the specified one'

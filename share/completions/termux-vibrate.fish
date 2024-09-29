@@ -1,17 +1,11 @@
-set command termux-vibrate
+set -l command termux-vibrate
 
 complete -c $command -f
 
-complete -c $command \
-    -s h \
-    -d 'Show help'
+complete -c $command -s h -d 'Show help'
 
-complete -c $command \
+complete -c $command -s d -x \
     -a '1000\tdefault' \
-    -s d \
-    -d 'Specify the duration of a vibration' \
-    -x
+    -d 'Specify the duration of a vibration'
 
-complete -c $command \
-    -s f \
-    -d 'Vibrate in a silent mode too'
+complete -c $command -s f -d 'Vibrate in a silent mode too'

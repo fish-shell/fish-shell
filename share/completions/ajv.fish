@@ -17,7 +17,7 @@ complete -c $command \
 set -l subcommands_without_help $subcommands[1..-2]
 
 complete -c $command -s s -F -r \
-    -d 'The [s]chema used for a validation' \
+    -d 'The schema used for a validation' \
     -n "__fish_seen_subcommand_from $subcommands_without_help"
 
 complete -c $command -s d -F -r \

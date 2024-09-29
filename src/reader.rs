@@ -3423,9 +3423,13 @@ impl<'a> Reader<'a> {
         let mut tok = 0..0;
         parse_util_token_extent(el.text(), buff_pos, &mut tok, None);
 
-        let new_position = if tok.is_empty() {
+        let new_position = if tok.end == pos {
             let cmdsub = parse_util_cmdsubst_extent(el.text(), tok.end);
-            cmdsub.end + 1
+            if cmdsub.end == pos {
+                pos + 1
+            } else {
+                cmdsub.end
+            }
         } else {
             tok.end
         };

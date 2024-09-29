@@ -23,12 +23,12 @@ complete -c $command -f
 complete -c $command \
     -s h \
     -l help \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s a \
     -l all \
-    -d 'Listen to [a]ll sensors'
+    -d 'Listen to all sensors'
 
 complete -c $command \
     -s c \
@@ -38,24 +38,24 @@ complete -c $command \
 complete -c $command \
     -s l \
     -l list \
-    -d '[l]ist sensors'
+    -d 'List sensors'
 
 complete -c $command \
     -a '(__fish_termux_api__complete_sensor_ids_as_list)' \
     -s s \
     -l sensors \
-    -d 'Specify comma-separated [s]ensors to listen to' \
+    -d 'Specify comma-separated sensors to listen to' \
     -x
 
 complete -c $command \
     -s d \
     -l delay \
-    -d 'Specify the [d]elay between sensor updates' \
+    -d 'Specify the delay between sensor updates' \
     -x
 
 complete -c $command \
     -a 'continuous\tdefault' \
     -s n \
     -l limit \
-    -d 'Specify a [n]umber of times to read senors' \
+    -d 'Specify a number of times to read senors' \
     -x

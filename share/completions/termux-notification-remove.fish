@@ -5,7 +5,7 @@ complete -c $command -f
 complete -c $command \
     -s h \
     -l help \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -a '(__fish_termux_api__complete_group_ids)' \

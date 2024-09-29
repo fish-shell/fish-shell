@@ -2,12 +2,12 @@ set command termux-media-scan
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s r \
-    -d 'Scan directories [r]ecursively'
+    -d 'Scan directories recursively'
 
 complete -c $command \
     -s v \
-    -d 'Show [v]erbose messages'
+    -d 'Show verbose messages'

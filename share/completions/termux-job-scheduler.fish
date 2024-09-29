@@ -4,12 +4,12 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s p \
     -l pending \
-    -d 'List [p]ending jobs'
+    -d 'List pending jobs'
 
 complete -c $command \
     -l cancel-all \
@@ -18,7 +18,7 @@ complete -c $command \
 complete -c $command \
     -s s \
     -l script \
-    -d 'Specify a [s]cript path to schedule' \
+    -d 'Specify a script path to schedule' \
     -r
 
 complete -c $command \

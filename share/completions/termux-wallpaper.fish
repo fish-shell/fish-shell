@@ -4,18 +4,18 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s f \
-    -d 'Specify the [f]ile of a wallpaper' \
+    -d 'Specify the file of a wallpaper' \
     -F -r
 
 complete -c $command \
     -s u \
-    -d 'Specify the [u]RL of a wallpaper' \
+    -d 'Specify the uRL of a wallpaper' \
     -F -r
 
 complete -c $command \
     -s l \
-    -d 'Set a wallpaper for the [l]ockscreen'
+    -d 'Set a wallpaper for the lockscreen'

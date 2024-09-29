@@ -4,7 +4,7 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 set subcommands_with_descriptions 'info\t"Show a current playback information"' \
     'play\t"Resume a playback if paused | Play a specific media file"' \

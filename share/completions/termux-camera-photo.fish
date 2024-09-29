@@ -4,10 +4,10 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -a '(__fish_termux_api__complete_camera_ids)' \
     -s c \
-    -d 'Specify the ID of a [c]amera' \
+    -d 'Specify the ID of a camera' \
     -x

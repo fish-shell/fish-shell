@@ -4,7 +4,7 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s d \
@@ -12,40 +12,40 @@ complete -c $command \
 
 complete -c $command \
     -s f \
-    -d 'Specify a [f]ile to save recording to' \
+    -d 'Specify a file to save recording to' \
     -F -r
 
 complete -c $command \
     -a '0\tdefault' \
     -s l \
-    -d 'Specify the length [l]imit of a recording' \
+    -d 'Specify the length limit of a recording' \
     -x
 
 complete -c $command \
     -a 'aac amr_wb amr_nb' \
     -s e \
-    -d 'Specify the [e]ncoder of a recording' \
+    -d 'Specify the encoder of a recording' \
     -x
 
 complete -c $command \
     -s b \
-    -d 'Specify the [b]itrate of a recording' \
+    -d 'Specify the bitrate of a recording' \
     -x
 
 complete -c $command \
     -s r \
-    -d 'Specify the sampling [r]ate of a recording' \
+    -d 'Specify the sampling rate of a recording' \
     -x
 
 complete -c $command \
     -s c \
-    -d 'Specify the [c]hannel count of a recording' \
+    -d 'Specify the channel count of a recording' \
     -x
 
 complete -c $command \
     -s i \
-    -d 'Show [i]nformation about the current recording'
+    -d 'Show information about the current recording'
 
 complete -c $command \
     -s q \
-    -d '[q]uit the current recording'
+    -d 'Quit the current recording'

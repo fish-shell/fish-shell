@@ -4,12 +4,12 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -a '10\tdefault' \
     -s l \
-    -d '[l]imit the amount of listed calls' \
+    -d 'Limit the amount of listed calls' \
     -x
 
 complete -c $command \

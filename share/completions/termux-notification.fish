@@ -5,7 +5,7 @@ complete -c $command -f
 complete -c $command \
     -s h \
     -l help \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -l action \
@@ -36,7 +36,7 @@ end
 complete -c $command \
     -s c \
     -l content \
-    -d 'Specify the [c]ontent of a notification' \
+    -d 'Specify the content of a notification' \
     -x
 
 complete -c $command \
@@ -47,12 +47,12 @@ complete -c $command \
 
 complete -c $command \
     -l help-actions \
-    -d 'Show [h]elp for the actions of a notification'
+    -d 'Show help for the actions of a notification'
 
 complete -c $command \
     -s i \
     -l id \
-    -d 'Specify the [i]dentifier of a notification' \
+    -d 'Specify the identifier of a notification' \
     -x
 
 complete -c $command \
@@ -98,7 +98,7 @@ complete -c $command \
 complete -c $command \
     -s t \
     -l title \
-    -d 'Specify the [t]itle of a notification' \
+    -d 'Specify the title of a notification' \
     -x
 
 complete -c $command \

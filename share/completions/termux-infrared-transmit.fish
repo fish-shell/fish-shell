@@ -4,9 +4,9 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s f \
-    -d 'Specify the IR carrier [f]requency' \
+    -d 'Specify the IR carrier frequency' \
     -x

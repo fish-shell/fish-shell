@@ -4,21 +4,21 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -s d \
-    -d 'Show the creation [d]ates of listed messages'
+    -d 'Show the creation dates of listed messages'
 
 complete -c $command \
     -a '10\tdefault' \
     -s l \
-    -d '[l]imit the amount of listed messages' \
+    -d 'Limit the amount of listed messages' \
     -x
 
 complete -c $command \
     -s n \
-    -d 'Show the phone [n]umbers of listed messages'
+    -d 'Show the phone numbers of listed messages'
 
 complete -c $command \
     -a '0\tdefault' \
@@ -29,5 +29,5 @@ complete -c $command \
 complete -c $command \
     -a 'inbox\tdefault all sent draft outbox' \
     -s t \
-    -d 'Filter listed messages by the [t]ype' \
+    -d 'Filter listed messages by the type' \
     -x

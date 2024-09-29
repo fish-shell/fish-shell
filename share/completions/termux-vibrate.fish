@@ -4,12 +4,12 @@ complete -c $command -f
 
 complete -c $command \
     -s h \
-    -d 'Show [h]elp'
+    -d 'Show help'
 
 complete -c $command \
     -a '1000\tdefault' \
     -s d \
-    -d 'Specify the [d]uration of a vibration' \
+    -d 'Specify the duration of a vibration' \
     -x
 
 complete -c $command \

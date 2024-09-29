@@ -1,6 +1,6 @@
 # Filter Completion
 function __fish_btrbk_complete_filter
-	btrbk list config --format col:h:snapshot_name,source_subvolume,target_url|string replace -r '([^ ]+)\s+([^ ]+)\s+([^ ]*)' '$1\t$2 -> $3'
+    btrbk list config --format col:h:snapshot_name,source_subvolume,target_url | string replace -r '([^ ]+)\s+([^ ]+)\s+([^ ]*)' '$1\t$2 -> $3'
 end
 
 # options with arguments
@@ -34,29 +34,29 @@ complete -c btrbk -l pretty             -d 'Print pretty table output with lower
 complete -c btrbk -l raw                -d 'Create raw targets for archive command'
 
 # subcommands
-complete -c btrbk -f -n '__fish_use_subcommand' -a run      -d 'Run snapshot and backup operations'
-complete -c btrbk -f -n '__fish_use_subcommand' -a dryrun   -d 'Show what would be executed without running btrfs commands'
-complete -c btrbk -f -n '__fish_use_subcommand' -a snapshot -d 'Run snapshot operations only'
-complete -c btrbk -f -n '__fish_use_subcommand' -a resume   -d 'Run backup operations and delete snapshots'
-complete -c btrbk -f -n '__fish_use_subcommand' -a prune    -d 'Only delete snapshots and backups'
-complete -c btrbk -f -n '__fish_use_subcommand' -a archive  -d 'Recursively copy all subvolumes (src -> dst)'
-complete -c btrbk -f -n '__fish_use_subcommand' -a clean    -d 'Delete incomplete (garbled) backups'
-complete -c btrbk -f -n '__fish_use_subcommand' -a stats    -d 'Print snapshot/backup statistics'
-complete -c btrbk -f -n '__fish_use_subcommand' -a usage    -d 'Print filesystem usage'
-complete -c btrbk -f -n '__fish_use_subcommand' -a ls       -d 'List all btrfs subvolumes below a given path'
-complete -c btrbk -f -n '__fish_use_subcommand' -a origin   -d 'Print origin information for a subvolume'
-complete -c btrbk -f -n '__fish_use_subcommand' -a diff     -d 'List file changes between related subvolumes'
-complete -c btrbk -f -n '__fish_use_subcommand' -a extents  -d 'Calculate accurate disk space usage for a path'
-complete -c btrbk -f -n '__fish_use_subcommand' -a list     -d 'List snapshots and backups'
+complete -c btrbk -f -n __fish_use_subcommand -a run      -d 'Run snapshot and backup operations'
+complete -c btrbk -f -n __fish_use_subcommand -a dryrun   -d 'Show what would be executed without running btrfs commands'
+complete -c btrbk -f -n __fish_use_subcommand -a snapshot -d 'Run snapshot operations only'
+complete -c btrbk -f -n __fish_use_subcommand -a resume   -d 'Run backup operations and delete snapshots'
+complete -c btrbk -f -n __fish_use_subcommand -a prune    -d 'Only delete snapshots and backups'
+complete -c btrbk -f -n __fish_use_subcommand -a archive  -d 'Recursively copy all subvolumes (src -> dst)'
+complete -c btrbk -f -n __fish_use_subcommand -a clean    -d 'Delete incomplete (garbled) backups'
+complete -c btrbk -f -n __fish_use_subcommand -a stats    -d 'Print snapshot/backup statistics'
+complete -c btrbk -f -n __fish_use_subcommand -a usage    -d 'Print filesystem usage'
+complete -c btrbk -f -n __fish_use_subcommand -a ls       -d 'List all btrfs subvolumes below a given path'
+complete -c btrbk -f -n __fish_use_subcommand -a origin   -d 'Print origin information for a subvolume'
+complete -c btrbk -f -n __fish_use_subcommand -a diff     -d 'List file changes between related subvolumes'
+complete -c btrbk -f -n __fish_use_subcommand -a extents  -d 'Calculate accurate disk space usage for a path'
+complete -c btrbk -f -n __fish_use_subcommand -a list     -d 'List snapshots and backups'
 
 # subsubcommands for "list"
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a all          -d 'List all snapshots and backups'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a snapshots    -d 'List snapshots only'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a backups      -d 'List backups and correlated snapshots'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a latest       -d 'List most recent snapshots and backups'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a config       -d 'List configured source/snapshot/target relations'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a source       -d 'List configured source/snapshot relations'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a volume       -d 'List configured volume sections'
-complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a target       -d 'List configured targets'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a all       -d 'List all snapshots and backups'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a snapshots -d 'List snapshots only'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a backups   -d 'List backups and correlated snapshots'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a latest    -d 'List most recent snapshots and backups'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a config    -d 'List configured source/snapshot/target relations'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a source    -d 'List configured source/snapshot relations'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a volume    -d 'List configured volume sections'
+complete -c btrbk -n '__fish_seen_subcommand_from list' -f -a target    -d 'List configured targets'
 
 complete -c btrbk -n '__fish_seen_subcommand_from run dryrun snapshot resume prune clean' -x -a '(__fish_btrbk_complete_filter)'

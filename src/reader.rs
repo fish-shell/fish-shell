@@ -2793,51 +2793,53 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::BackwardKillToken => {
-                let (start_buff_pos, elt, new_position) = match self.backward_token() {
-                    Some(value) => value,
-                    None => return,
+                let Some(new_position) = self.backward_token() else {
+                    return;
                 };
 
+                let (elt, _el) = self.active_edit_line();
                 if elt == EditableLineTag::Commandline {
                     self.suppress_autosuggestion = true;
                 }
 
+                let (elt, el) = self.active_edit_line();
                 self.data.kill(
                     elt,
-                    new_position..start_buff_pos,
+                    new_position..el.position(),
                     Kill::Prepend,
                     self.rls().last_cmd != Some(rl::BackwardKillToken),
                 );
             }
             rl::BackwardToken => {
-                let (_start_buff_pos, elt, new_position) = match self.backward_token() {
-                    Some(value) => value,
-                    None => return,
+                let Some(new_position) = self.backward_token() else {
+                    return;
                 };
+                let (elt, _el) = self.active_edit_line();
                 self.update_buff_pos(elt, Some(new_position));
             }
             rl::KillToken => {
-                let (start_buff_pos, elt, new_position) = match self.forward_token() {
-                    Some(value) => value,
-                    None => return,
+                let Some(new_position) = self.forward_token() else {
+                    return;
                 };
 
+                let (elt, _el) = self.active_edit_line();
                 if elt == EditableLineTag::Commandline {
                     self.suppress_autosuggestion = true;
                 }
 
+                let (elt, el) = self.active_edit_line();
                 self.data.kill(
                     elt,
-                    start_buff_pos..new_position,
+                    el.position()..new_position,
                     Kill::Append,
                     self.rls().last_cmd != Some(rl::KillToken),
                 );
             }
             rl::ForwardToken => {
-                let (_start_buff_pos, elt, new_position) = match self.forward_token() {
-                    Some(value) => value,
-                    None => return,
+                let Some(new_position) = self.forward_token() else {
+                    return;
                 };
+                let (elt, _el) = self.active_edit_line();
                 self.update_buff_pos(elt, Some(new_position));
             }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
@@ -3378,33 +3380,22 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn backward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
-        let (elt, el) = self.active_edit_line();
-        let start_buff_pos = el.position();
-        let boundary = 0;
-        if start_buff_pos == boundary {
+    fn backward_token(&mut self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == 0 {
             return None;
         }
 
-        // If we are not in a token, look for one behind
-        let buff_pos = start_buff_pos
-            - el.text()[..start_buff_pos]
-                .chars()
-                .take_while(|c| matches!(*c, '\t' | '\x0C' | ' '))
-                .count();
-        self.update_buff_pos(elt, Some(buff_pos));
-
-        let (elt, el) = self.active_edit_line();
-        let text = el.text();
-
         let mut tok = 0..0;
         let mut prev_tok = 0..0;
-        parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
+        parse_util_token_extent(el.text(), el.position(), &mut tok, Some(&mut prev_tok));
 
         // if we are at the start of a token, go back one
-        let new_position = if tok.start == start_buff_pos {
-            if prev_tok.start == start_buff_pos {
-                start_buff_pos - 1
+        let new_position = if tok.start == pos {
+            if prev_tok.start == pos {
+                let cmdsub = parse_util_cmdsubst_extent(el.text(), prev_tok.start);
+                cmdsub.start.saturating_sub(1)
             } else {
                 prev_tok.start
             }
@@ -3412,39 +3403,34 @@ impl<'a> Reader<'a> {
             tok.start
         };
 
-        Some((start_buff_pos, elt, new_position))
+        Some(new_position)
     }
 
-    fn forward_token(&mut self) -> Option<(usize, EditableLineTag, usize)> {
-        let (elt, el) = self.active_edit_line();
-        let start_buff_pos = el.position();
-        let boundary = el.len();
-        if start_buff_pos == boundary {
+    fn forward_token(&self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == el.len() {
             return None;
         }
 
         // If we are not in a token, look for one ahead
-        let buff_pos = start_buff_pos
-            + el.text()[start_buff_pos..]
+        let buff_pos = pos
+            + el.text()[pos..]
                 .chars()
-                .take_while(|c| matches!(*c, '\t' | '\x0C' | ' '))
+                .take_while(|c| c.is_ascii_whitespace())
                 .count();
-        self.update_buff_pos(elt, Some(buff_pos));
-
-        let (elt, el) = self.active_edit_line();
-        let text = el.text();
 
         let mut tok = 0..0;
-        let mut prev_tok = 0..0;
-        parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
+        parse_util_token_extent(el.text(), buff_pos, &mut tok, None);
 
-        let new_position = if tok.end == start_buff_pos {
-            tok.end + 1 // this will never equal/exceed boundary
+        let new_position = if tok.is_empty() {
+            let cmdsub = parse_util_cmdsubst_extent(el.text(), tok.end);
+            cmdsub.end + 1
         } else {
             tok.end
         };
 
-        Some((start_buff_pos, elt, new_position))
+        Some(new_position)
     }
 }
 

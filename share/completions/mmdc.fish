@@ -19,7 +19,7 @@ complete -c $command -s h -l height -x \
 
 complete -c $command -s i -l input -r -d 'Specify the input file of a chart'
 complete -c $command -s o -l output -r \
-    -a '(__fish_print_extensions svg md png pdf)' \
+    -a '(__fish_complete_extensions svg\tdefault md png pdf)' \
     -d 'Specify the output file of a chart'
 
 complete -c $command -s e -l outputFormat -x \

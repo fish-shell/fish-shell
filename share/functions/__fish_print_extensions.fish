@@ -1,4 +1,4 @@
-function __fish_complete_extension \
+function __fish_print_extensions \
     --description 'Suggest provided extensions as $argv if the current token ends with a dot'
 
     set token (commandline -c -t)

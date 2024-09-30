@@ -1,3 +1,5 @@
+# Usage: __fish_complete_extensions extension1 extension2 ...
+# Example: __fish_complete_extensions png jpg
 function __fish_complete_extensions \
     --description 'Suggest provided extensions as $argv if the current token ends with a dot'
 

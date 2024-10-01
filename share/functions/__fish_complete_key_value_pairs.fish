@@ -8,11 +8,9 @@ function __fish_complete_key_value_pairs \
     set keys $argv[2..]
     set values $keys
 
-    set token (string replace --regex "^--?\w+$delimiter" '' -- $token)
-
     for index in (seq (count $keys))
         set definition $keys[$index]
-        set keys[$index] (string match --regex '^\w+' -- $definition)
+        set keys[$index] "$(string match --regex '^\w+' -- $definition)"
 
         if string match --quiet --regex '^\w+\s+' -- $definition
             set values[$index] (string replace --regex '^\w+\s+' '' -- $definition)
@@ -21,15 +19,9 @@ function __fish_complete_key_value_pairs \
         end
     end
 
-    set token (string replace --regex "$delimiter.*\$" '' -- $token)
-
-    if set index (contains --index -- "$token" $keys)
-        for value in (string split " " $values[$index])
-            printf '%s%s%s\n' $token $delimiter $value
-        end
-    else
-        for key in (string split " " $keys)
-            printf '%s%s\n' $key $delimiter
-        end
+    for key in $keys
+        set index (contains --index -- "$key" $keys)
+        set value_list (string split " " -- $values[$index])
+        echo $key=$value_list | string split " "
     end
 end

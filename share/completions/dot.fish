@@ -8,10 +8,10 @@ for version_option in v V
     complete -c $command -s $version_option -d 'Show version'
 end
 
-set -l graph_attributes = _background \
+set -l graph_attributes _background \
     bb \
     'beautify true false' \
-    bgcolor \
+    "bgcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
     'center true false' \
     'charset utf-8 utf8 iso-8859-1 ISO_8859-1 ISO8859-1 ISO-IR-100 Latin1 l1 latin-1 big-5 big5' \
     class \
@@ -29,7 +29,7 @@ set -l graph_attributes = _background \
     epsilon \
     'esep +3' \
     "fontcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
-    fontname \
+    'fontname Times-Roman' \
     'fontnames svg' \
     fontpath \
     'fontsize 14.0' \
@@ -39,69 +39,69 @@ set -l graph_attributes = _background \
     id \
     imagepath \
     inputscale \
-    K \
+    'K 0.3' \
     label \
-    label_scheme \
-    labeljust \
-    labelloc \
-    landscape \
-    layerlistsep \
+    'label_scheme 0 1 2 3' \
+    'labeljust r c l' \
+    'labelloc t b' \
+    'landscape true false' \
+    'layerlistsep ,' \
     layers \
     layerselect \
-    layersep \
+    'layersep :\t' \
     layout \
-    levels \
-    levelsgap \
+    'levels INT_MAX' \
+    'levelsgap 0.0' \
     lheight \
-    linelength \
+    'linelength 128' \
     lp \
     lwidth \
     margin \
     maxiter \
-    mclimit \
-    mindist \
-    mode \
-    model \
-    newrank \
-    nodesep \
-    nojustify \
-    normalize \
-    notranslate \
+    'mclimit 1.0' \
+    'mindist 1.0' \
+    'mode major KK sgd hier ipsep' \
+    'model shortpath circuit subset' \
+    'newrank true false' \
+    'nodesep 0.25' \
+    'nojustify true false' \
+    'normalize false' \
+    'notranslate true false' \
     nslimit \
     nslimit1 \
-    oneblock \
-    ordering \
-    orientation \
-    outputorder \
-    overlap \
-    overlap_scaling \
-    overlap_shrink \
-    pack \
-    packmode \
-    pad \
+    'oneblock true false' \
+    'ordering in out' \
+    'orientation 0.0' \
+    'outputorder breadthfirst' \
+    'overlap true false' \
+    'overlap_scaling -4' \
+    'overlap_shrink true false' \
+    'pack true false' \
+    'packmode node' \
+    'pad 0.0555' \
     page \
-    pagedir \
-    quadtree \
+    'pagedir BL' \
+    'quadtree normal none fase true false 2' \
     quantum \
-    rankdir \
-    ranksep \
-    ratio \
-    remincross \
-    repulsiveforce \
-    resolution \
+    'rankdir 0.0' \
+    'ranksep 0.5' \
+    'ratio fill compress expand auto' \
+    'remincross true false' \
+    'repulsiveforce 1.0' \
+    'resolution 96.0' \
     root \
-    rotate \
-    rotation \
+    'rotate 0' \
+    'rotation 0' \
     scale \
-    searchsize \
-    sep \
-    showboxes \
+    'searchsize 30' \
+    'sep +4' \
+    'showboxes 0 1 2' \
     size \
-    smoothing \
-    sortv \
+    'smoothing none' \
+    'sortv 0' \
     splines \
     start \
-    style \
+    'style filled invis' \
     stylesheet \
     target \
     TBbalance \
@@ -109,125 +109,98 @@ set -l graph_attributes = _background \
     truecolor \
     URL \
     viewport \
-    voro_margin \
-    xdotversion
+    'voro_margin 0.05' \
+    xdotversion \
+    'sides 0'
 
-set -l edge_attributes area \
-    class \
-    color \
+set -l edge_attributes class \
+    "color $(string join ' ' -- (__fish_graphviz__print_colors))" \
     colorscheme \
     comment \
-    distortion \
-    fillcolor \
-    fixedsize \
-    fontcolor \
-    fontname \
-    fontsize \
-    gradientangle \
-    group \
-    height \
+    "fillcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
+    "fontcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
+    'fontname Times-Roman' \
+    'fontsize 14.0' \
     href \
     id \
-    image \
-    imagepos \
-    imagescale \
     label \
-    labelloc \
     layer \
-    margin \
-    nojustify \
-    ordering \
-    orientation \
-    penwidth \
-    peripheries \
-    pin \
+    'nojustify true false' \
+    'penwidth 1.0' \
     pos \
-    rects \
-    regular \
-    root \
-    samplepoints \
-    shape \
     shapefile \
-    showboxes \
-    sides \
-    skew \
-    sortv \
-    style \
+    'showboxes 0 1 2' \
+    'sides 0' \
+    'style filled invis' \
     target \
     tooltip \
     URL \
-    vertices \
-    width \
     xlabel \
     xlp \
-    z
+    lp
 
 set -l node_attributes area \
     class \
-    color \
+    "color $(string join ' ' -- (__fish_graphviz__print_colors))" \
     colorscheme \
     comment \
-    distortion \
-    fillcolor \
-    fixedsize \
-    fontcolor \
-    fontname \
+    'distortion 0.0' \
+    "fillcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
+    'fixedsize false true shape' \
+    "fontcolor $(string join ' ' -- (__fish_graphviz__print_colors))" \
+    'fontname Times-Roman' \
     fontsize \
-    gradientangle \
+    'gradientangle 0' \
     group \
-    height \
+    'height 0.5' \
     href \
     id \
     image \
-    imagepos \
-    imagescale \
-    label \
-    labelloc \
+    'imagepos tl tc tr ml mc mr bl bc br' \
+    'imagescale false true width height both' \
+    'label \N' \
+    'labelloc t c b' \
     layer \
     margin \
-    nojustify \
-    ordering \
-    orientation \
-    penwidth \
+    'nojustify true false' \
+    'ordering in out' \
+    'orientation 0.0' \
+    'penwidth 1.0' \
     peripheries \
-    pin \
+    'pin false' \
     pos \
     rects \
-    regular \
-    root \
-    samplepoints \
-    shape \
+    'regular true false' \
+    'root false' \
+    'samplepoints 8' \
+    "shape $(string join ' ' -- (__fish_graphviz__print_shapes))" \
     shapefile \
-    showboxes \
-    sides \
-    skew \
-    sortv \
-    style \
+    'showboxes 0 1 2' \
+    'sides 0' \
+    'skew 0' \
+    'sortv 0' \
+    'style filled invis' \
     target \
     tooltip \
     URL \
     vertices \
-    width \
+    'width 0.75' \
     xlabel \
     xlp \
-    z
+    'z 0.0'
 
-complete -c $command \
-    -a '(__fish_complete_key_value_pairs $graph_attributes)' \
-    -d 'Specify a graph option'
+complete -c $command -s G \
+    -a '(__fish_complete_key_value_pairs = $graph_attributes)' \
+    -d 'Specify a graph option for a diagram'
 
-complete -c $command \
-    -a '(__fish_complete_key_value_pairs $edge_attributes)' \
-    -d 'Specify an edge option'
+complete -c $command -s E \
+    -a '(__fish_complete_key_value_pairs = $edge_attributes)' \
+    -d 'Specify an edge option for a diagram'
 
-complete -c $command \
-    -a '(__fish_complete_key_value_pairs $node_attributes)' \
-    -d 'Specify a node option'
+complete -c $command -s N \
+    -a '(__fish_complete_key_value_pairs = $node_attributes)' \
+    -d 'Specify a node option for a diagram'
 
-## 
-__fish_complete_key_value_pairs = "type executable library" "id first second"
-
-complete --erase true
-complete -c true -s o -l option -r \
-    -a '(__fish_complete_key_value_pairs = "type executable library" "id first second")' \
-    -d 'Some description'
+complete -c $command -s k \
+    -a 'dot neato fdp sfdp circo twopi nop Pretty-nop2 Pretty-osage patchwork' \
+    -d 'Specify a render engine for a diagram'

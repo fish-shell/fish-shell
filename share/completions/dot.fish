@@ -204,3 +204,24 @@ complete -c $command -s N \
 complete -c $command -s k \
     -a 'dot neato fdp sfdp circo twopi nop Pretty-nop2 Pretty-osage patchwork' \
     -d 'Specify a render engine for a diagram'
+
+complete -c $command -s T \
+    -a '(__fish_graphviz__print_formats)' \
+    -d 'Specify a render engine for a diagram'
+
+complete -c $command -s l -d 'Specify a library for a diagram'
+complete -c $command -s n -f -d 'Specify a no-op flag for neato'
+complete -c $command -s o -d 'Specify the output file for a diagram'
+complete -c $command -s O -d 'Whether to infer the output file for a diagram'
+
+complete -c $command -s P \
+    -d 'Whether to generate a graph to show plugin configuration of the tool'
+
+complete -c $command -s q -d 'Whether to suppress warnings for a diagram'
+complete -c $command -s s -f -d 'Specify the input scale for a diagram'
+
+complete -c $command -s x \
+    -d 'Whether to isolated nodes and peninsulas of a diagram'
+
+complete -c $command -s y \
+    -d 'Whether to invert the corrdinate system of a diagram'

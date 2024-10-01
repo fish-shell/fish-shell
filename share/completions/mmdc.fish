@@ -17,8 +17,9 @@ complete -c $command -s h -l height -x \
     -a '600\tdefault' \
     -d 'Specify the height of a chart'
 
-complete -c $command -s i -l input -r -d 'Specify the input file of a chart'
-complete -c $command -s o -l output -r \
+complete -c $command -s i -l input -r -F -d 'Specify the input file of a chart'
+
+complete -c $command -s o -l output -r -F \
     -a '(__fish_complete_extensions svg\tdefault md png pdf)' \
     -d 'Specify the output file of a chart'
 
@@ -30,10 +31,10 @@ complete -c $command -s b -l backgroundColor -x \
     -a 'white\tdefault transparent' \
     -d 'Specify the background color of a chart'
 
-complete -c $command -s c -l configFile -r \
+complete -c $command -s c -l configFile -r -F \
     -d 'Specify the configuration file of Mermaid'
 
-complete -c $command -s C -l cssFile -r \
+complete -c $command -s C -l cssFile -r -F \
     -d 'Specify the CSS file of a Mermaid'
 
 complete -c $command -s I -l svgId -x \
@@ -46,5 +47,5 @@ complete -c $command -s s -l scale -x \
 complete -c $command -s f -l pdfFit -d 'Whether to scale the PDF to fit a chart'
 complete -c $command -s q -l quiet -d 'Whether to suppress output of a chart'
 
-complete -c $command -s p -l puppeteerConfigFile -r \
+complete -c $command -s p -l puppeteerConfigFile -r -F \
     -d 'Specify the configuration file of Puppeteer'

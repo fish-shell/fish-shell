@@ -206,8 +206,8 @@ complete -c $command -s k \
     -d 'Specify a render engine for a diagram'
 
 complete -c $command -s T \
-    -a '(__fish_graphviz__print_formats)' \
-    -d 'Specify a render engine for a diagram'
+    -a "(string split ' ' -- (__fish_graphviz__print_formats))" \
+    -d 'Specify an output format for a diagram'
 
 complete -c $command -s l -d 'Specify a library for a diagram'
 complete -c $command -s n -f -d 'Specify a no-op flag for neato'

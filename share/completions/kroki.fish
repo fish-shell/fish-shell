@@ -5,9 +5,9 @@ complete -c $command -f
 complete -c $command -s h -l help -d 'Show help'
 complete -c $command -s v -l version -d 'Show version'
 
-set -l subcommands_with_descriptions 'help\t"Select multiple values using checkboxes"' \
-    'version\t"Pick a number in specific range"' \
-    'convert\t"Show a confirmation"'
+set -l subcommands_with_descriptions 'help\t"Show help"' \
+    'version\t"Show version"' \
+    'convert\t"Convert files"'
 
 set -l subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
 

@@ -36,7 +36,7 @@ end" >$__fish_config_dir/config.fish
         # visible in whatever terminal setup.
         #
         __init_uvar fish_color_normal normal
-        __init_uvar fish_color_command blue
+        __init_uvar fish_color_command normal
         __init_uvar fish_color_param cyan
         __init_uvar fish_color_redirection cyan --bold
         __init_uvar fish_color_comment red

@@ -125,8 +125,17 @@ The following special input functions are available:
 ``backward-bigword``
     move one whitespace-delimited word to the left
 
+``backward-delete-bigword``
+    deletes one whitespace-delimited word of input to the left of the cursor
+
 ``backward-delete-char``
     deletes one character of input to the left of the cursor
+
+``backward-delete-path-component``
+    deletes one path component of input to the left of the cursor. A path component is everything likely to belong to a path component, i.e. not any of the following: `/={,}'\":@ |;<>&`, plus newlines and tabs.
+
+``backward-delete-word``
+    deletes the word of input to the left of the cursor
 
 ``backward-kill-bigword``
     move the whitespace-delimited word to the left of the cursor to the killring
@@ -173,8 +182,14 @@ The following special input functions are available:
 ``complete-and-search``
     invoke the searchable pager on completion options (for convenience, this also moves backwards in the completion pager)
 
+``delete-bigword``
+    deletes one whitespace-delimited word to the right of the cursor
+
 ``delete-char``
     delete one character to the right of the cursor
+
+``delete-word``
+    deletes the word to the right of the cursor
 
 ``delete-or-exit``
     delete one character to the right of the cursor, or exit the shell if the commandline is empty

@@ -3,7 +3,7 @@ function __fish_print_portage_repository_paths --description 'Print the paths of
     set -l b
     set -l c /usr/share/portage/config/repos.conf
     test -d $a
-    and set b (find $a -type f 2>/dev/null)
+    and set b (path filter -f -- $a/**)
     test -f $a
     and set b $a
     test -n "$b"

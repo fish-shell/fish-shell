@@ -92,9 +92,7 @@ function __fish_print_help --description "Print help message for the specified f
                     # Remove man's bolding
                     set -l name (string replace -ra '(.)'\b'.' '$1' -- $line)
                     # We start after we have the name
-                    contains -- $name NAME; and set have_name 1; and continue
-                    # We ignore the SYNOPSIS header
-                    contains -- $name SYNOPSIS; and continue
+                    contains -- $name NAME; and set have_name 1
                     # Everything after COPYRIGHT is useless
                     contains -- $name COPYRIGHT; and break
 
@@ -123,28 +121,27 @@ function __fish_print_help --description "Print help message for the specified f
                     end
             end
         end
-    end | string replace -ra '^       ' '' |
-        begin
-            set -l pager (__fish_anypager --with-manpager)
-            and isatty stdout
-            or set pager cat # cannot use a builtin here
+    end | begin
+        set -l pager (__fish_anypager --with-manpager)
+        and isatty stdout
+        or set pager cat # cannot use a builtin here
 
-            # similar to man, but add -F to quit paging when the help output is brief (#6227)
-            # Also set -X for less < v530, see #8157.
-            set -l lessopts isRF
-            if type -q less; and test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
-                set lessopts "$lessopts"X
-            end
-
-            not set -qx LESS
-            and set -xl LESS $lessopts
-
-            # less options:
-            # -i (--ignore-case) search case-insensitively, like man
-            # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
-            # -R (--RAW-CONTROL-CHARS) to display colors and such
-            # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
-            # -X (--no-init) do not clear the screen, necessary for less < v530 or else short output is dropped
-            $pager
+        # similar to man, but add -F to quit paging when the help output is brief (#6227)
+        # Also set -X for less < v530, see #8157.
+        set -l lessopts isRF
+        if type -q less; and test (less --version | string match -r 'less (\d+)')[2] -lt 530 2>/dev/null
+            set lessopts "$lessopts"X
         end
+
+        not set -qx LESS
+        and set -xl LESS $lessopts
+
+        # less options:
+        # -i (--ignore-case) search case-insensitively, like man
+        # -s (--squeeze-blank-lines) not strictly necessary since we already do that above
+        # -R (--RAW-CONTROL-CHARS) to display colors and such
+        # -F (--quit-if-one-screen) to maintain the non-paging behavior for small outputs
+        # -X (--no-init) do not clear the screen, necessary for less < v530 or else short output is dropped
+        $pager
+    end
 end

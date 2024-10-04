@@ -1,5 +1,4 @@
 use crate::env::environment::Environment;
-use std::cmp::Ordering;
 use std::fs::Metadata;
 use std::os::unix::prelude::{FileTypeExt, MetadataExt};
 use std::time::SystemTime;
@@ -716,14 +715,10 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
     let mut list: Vec<_> = arguments.map(|(f, _)| f).collect();
 
     if opts.key.is_some() {
-        // We use a stable sort here
-        list.sort_by(|a, b| {
-            match wcsfilecmp_glob(keyfunc(a), keyfunc(b)) {
-                // to avoid changing the order so we can chain calls
-                Ordering::Equal => Ordering::Greater,
-                order if opts.reverse => order.reverse(),
-                order => order,
-            }
+        // sort_by is stable
+        list.sort_by(|a, b| match wcsfilecmp_glob(keyfunc(a), keyfunc(b)) {
+            order if opts.reverse => order.reverse(),
+            order => order,
         });
 
         if opts.unique {
@@ -733,13 +728,9 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
     } else {
         // Without --key, we just sort by the entire path,
         // so we have no need to transform and such.
-        list.sort_by(|a, b| {
-            match wcsfilecmp_glob(a, b) {
-                // to avoid changing the order so we can chain calls
-                Ordering::Equal => Ordering::Greater,
-                order if opts.reverse => order.reverse(),
-                order => order,
-            }
+        list.sort_by(|a, b| match wcsfilecmp_glob(a, b) {
+            order if opts.reverse => order.reverse(),
+            order => order,
         });
 
         if opts.unique {

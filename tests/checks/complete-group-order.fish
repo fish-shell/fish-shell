@@ -18,15 +18,15 @@ complete -c fooc -fa "kilo juliett lima"
 
 # Generate completions
 complete -C"fooc "
-# CHECK: alpha
-# CHECK: bravo
 # CHECK: india
 # CHECK: foxtrot
 # CHECK: hotel
 # CHECK: golf
 # CHECK: charlie
-# CHECK: delta
 # CHECK: echo
+# CHECK: alpha
+# CHECK: bravo
+# CHECK: delta
 # CHECK: juliett
 # CHECK: kilo
 # CHECK: lima

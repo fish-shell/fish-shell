@@ -480,6 +480,12 @@ fn natural_compare_completions(a: &Completion, b: &Completion) -> Ordering {
         // Both completions are from a source with the --keep-order flag.
         return Ordering::Equal;
     }
+    if (a.flags).contains(CompleteFlags::DONT_SORT) {
+        return Ordering::Less;
+    }
+    if (b.flags).contains(CompleteFlags::DONT_SORT) {
+        return Ordering::Greater;
+    }
     wcsfilecmp(&a.completion, &b.completion)
 }
 

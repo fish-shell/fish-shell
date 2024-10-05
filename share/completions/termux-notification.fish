@@ -10,8 +10,8 @@ complete -c $command -l action -F -r \
 complete -c $command -l alert-once \
     -d 'Do not alert when a notification is edited'
 
-set button_names first second third
-set index 1
+set -l button_names first second third
+set -l index 1
 
 while test $index -le (count $button_names)
     complete -c $command -l button$index -x \
@@ -43,7 +43,7 @@ complete -c $command -l led-color -x \
     -a 'none\tdefault' \
     -d 'Specify the LED color of a notification'
 
-set led_states on off
+set -l led_states on off
 
 for state in $led_states
     complete -c $command -l led-$state -x \
@@ -63,7 +63,6 @@ complete -c $command -l priority -x \
 complete -c $command -l sound -d 'Play the sound with a notification'
 complete -c $command -s t -l title -x -d 'Specify the title of a notification'
 
-
 complete -c $command -l vibrate -x \
     -d 'Specify the vibrate pattern of a notification'
 
@@ -71,7 +70,7 @@ complete -c $command -l type -x \
     -a 'default\tdefault media' \
     -d 'Specify the style of a notification'
 
-set media_options next pause play previous
+set -l media_options next pause play previous
 
 for option in $media_options
     complete -c $command -l media-$option -F -r \

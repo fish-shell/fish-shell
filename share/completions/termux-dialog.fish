@@ -7,7 +7,7 @@ complete -c $command -s h -d 'Show help'
 complete -c $command -s l -l list -d 'List all widgets and their options'
 complete -c $command -s t -l title -x -d 'Specify the title of a dialog'
 
-set subcommands_with_descriptions 'confirm\t"Show a confirmation"' \
+set -l subcommands_with_descriptions 'confirm\t"Show a confirmation"' \
     'checkbox\t"Select multiple values using checkboxes"' \
     'counter\t"Pick a number in specific range"' \
     'date\t"Pick a date"' \
@@ -18,7 +18,7 @@ set subcommands_with_descriptions 'confirm\t"Show a confirmation"' \
     'text\t"Input text"' \
     'time\t"Pick a time value"'
 
-set subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
+set -l subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
 
 complete -c $command -a "$subcommands_with_descriptions" \
     -n "not __fish_seen_subcommand_from $subcommands"

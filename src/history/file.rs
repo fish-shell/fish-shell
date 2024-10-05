@@ -358,9 +358,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (advance, line) = read_line(data);
     let line = trim_start(line);
     // Check this early *before* anything else.
-    if !line.starts_with(b"- cmd") {
-        return None;
-    }
+    assert!(line.starts_with(b"- cmd"));
 
     let (_key, value) = extract_prefix_and_unescape_yaml(line)?;
 
@@ -493,6 +491,15 @@ fn offset_of_next_item_fish_2_0(
         // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
         // 123456". Ignore those.
         if line.starts_with(b"- cmd:    when:") {
+            continue;
+        }
+
+        if !line.starts_with(b"- cmd") {
+            FLOG!(
+                history,
+                "ignoring corrupted history entry around offset",
+                *cursor
+            );
             continue;
         }
 

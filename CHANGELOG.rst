@@ -31,6 +31,8 @@ Notable backwards-incompatible changes
   See :ref:`below <changelog-new-bindings>` for details.
 - Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize.
   The typical problem is that terminals echo the raw sequences sent by fish instead of silently ignoring them.
+- :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word.
+- :kbd:`alt-backspace` will delete an entire argument, not just one word.
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
   The seed was never guaranteed to give the same result across systems,
@@ -162,6 +164,7 @@ New or improved bindings
 - During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager.
   Same for autosuggestions.
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
+- :kbd:`alt-delete` now deletes the argument (which may contain quoted spaces) right of the cursor.
 - Some improvements to the :kbd:`alt-e` binding which edits the commandline in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors. This has been extended by also resolving aliases. For example use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.

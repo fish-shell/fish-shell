@@ -1,4 +1,5 @@
-use libc::STDOUT_FILENO;
+use libc::{STDIN_FILENO, STDOUT_FILENO};
+use once_cell::sync::OnceCell;
 
 use crate::common::{
     fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes, WSL,
@@ -306,7 +307,7 @@ enum ReadbResult {
     NothingToRead,
 }
 
-fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
+fn readb(in_fd: RawFd, blocking: bool, notifiers: bool) -> ReadbResult {
     assert!(in_fd >= 0, "Invalid in fd");
     let mut fdset = FdReadableSet::new();
     loop {
@@ -315,13 +316,17 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
 
         // Add the completion ioport.
         let ioport_fd = iothread_port();
-        fdset.add(ioport_fd);
+        if notifiers {
+            fdset.add(ioport_fd);
+        }
 
         // Get the uvar notifier fd (possibly none).
         let notifier = default_notifier();
         let notifier_fd = notifier.notification_fd();
-        if let Some(notifier_fd) = notifier.notification_fd() {
-            fdset.add(notifier_fd);
+        if notifiers {
+            if let Some(notifier_fd) = notifier.notification_fd() {
+                fdset.add(notifier_fd);
+            }
         }
 
         // Here's where we call select().
@@ -341,7 +346,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
             }
         }
 
-        if blocking {
+        if notifiers && blocking {
             // select() did not return an error, so we may have a readable fd.
             // The priority order is: uvars, stdin, ioport.
             // Check to see if we want a universal variable barrier.
@@ -433,6 +438,7 @@ pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_WEZTERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static KITTY_PROGRESSIVE_ENHANCEMENT: OnceCell<RelaxedAtomicBool> = OnceCell::new();
 
 pub fn terminal_protocols_enable_ifn() {
     if IN_MIDNIGHT_COMMANDER.load() {
@@ -459,6 +465,12 @@ struct TerminalProtocols {}
 
 impl TerminalProtocols {
     fn new() -> Self {
+        KITTY_PROGRESSIVE_ENHANCEMENT.get_or_init(|| {
+            RelaxedAtomicBool::new(
+                std::env::var_os("FISH_UNIT_TESTS_RUNNING").is_none()
+                    && query_kitty_progressive_enhancement(),
+            )
+        });
         let sequences = if IN_WEZTERM.load() {
             "\x1b[?2004h"
         } else if IN_ITERM_PRE_CSI_U.load() {
@@ -514,6 +526,62 @@ impl Drop for TerminalProtocols {
         }
         reader_current_data().map(|data| data.save_screen_state());
     }
+}
+
+pub(crate) fn query_kitty_progressive_enhancement() -> bool {
+    if write_to_fd(b"\x1b[?u\x1b[5n", STDOUT_FILENO).is_err() {
+        return false;
+    }
+    let mut seen = false;
+    let mut state = 1;
+    loop {
+        let res = readb(
+            STDIN_FILENO,
+            /*blocking=*/ true,
+            /*notifiers=*/ false,
+        );
+        let byte = match res {
+            ReadbResult::Byte(byte) => byte,
+            ReadbResult::Eof => return false,
+            ReadbResult::Interrupted => continue,
+            ReadbResult::UvarNotified
+            | ReadbResult::IOPortNotified
+            | ReadbResult::NothingToRead => {
+                unreachable!();
+            }
+        };
+        if byte == b'n' {
+            break;
+        }
+        match state {
+            0 => continue,
+            1 => {
+                if byte != b'\x1b' {
+                    state = 0;
+                }
+            }
+            2 => {
+                if byte != b'[' {
+                    state = 0;
+                }
+            }
+            3 => {
+                if byte != b'?' {
+                    state = 0;
+                }
+            }
+            4 => {
+                if byte.is_ascii_digit() {
+                    continue;
+                }
+                seen = byte == b'u';
+                state = 0;
+            }
+            _ => unreachable!(),
+        }
+        state += 1;
+    }
+    seen
 }
 
 fn parse_mask(mask: u32) -> Modifiers {
@@ -596,7 +664,11 @@ pub trait InputEventQueuer {
                 return mevt;
             }
 
-            let rr = readb(self.get_in_fd(), /*blocking=*/ true);
+            let rr = readb(
+                self.get_in_fd(),
+                /*blocking=*/ true,
+                /*notifiers=*/ true,
+            );
             match rr {
                 ReadbResult::Eof => {
                     return CharEvent::Eof;
@@ -638,7 +710,12 @@ pub trait InputEventQueuer {
                     let mut i = 0;
                     let ok = loop {
                         if i == buffer.len() {
-                            buffer.push(match readb(self.get_in_fd(), /*blocking=*/ true) {
+                            let readb_result = readb(
+                                self.get_in_fd(),
+                                /*blocking=*/ true,
+                                /*notifiers=*/ true,
+                            );
+                            buffer.push(match readb_result {
                                 ReadbResult::Byte(b) => b,
                                 _ => 0,
                             });
@@ -682,7 +759,11 @@ pub trait InputEventQueuer {
     }
 
     fn try_readb(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
-        let ReadbResult::Byte(next) = readb(self.get_in_fd(), /*blocking=*/ false) else {
+        let ReadbResult::Byte(next) = readb(
+            self.get_in_fd(),
+            /*blocking=*/ false,
+            /*notifiers=*/ true,
+        ) else {
             return None;
         };
         buffer.push(next);

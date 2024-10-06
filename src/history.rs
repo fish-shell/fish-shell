@@ -375,7 +375,7 @@ struct HistoryImpl {
     /// The most recent "unique" identifier for a history item.
     last_identifier: HistoryIdentifier, // 0
     /// How many items we add until the next vacuum. Initially a random value.
-    countdown_to_vacuum: Option<usize>, // -1
+    countdown_to_vacuum: Option<usize>,
     /// Whether we've loaded old items.
     loaded_old: bool, // false
     /// List of old items, as offsets into out mmap data.
@@ -1581,6 +1581,7 @@ impl History {
         let when = imp.timestamp_now();
         let identifier = imp.next_identifier();
         let item = HistoryItem::new(s.to_owned(), when, identifier, persist_mode);
+        let do_save = persist_mode != PersistenceMode::Ephemeral;
 
         if wants_file_detection {
             imp.disable_automatic_saving();
@@ -1596,14 +1597,16 @@ impl History {
                 let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();
                 imp.set_valid_file_paths(validated_paths, identifier);
-                imp.enable_automatic_saving();
+                if do_save {
+                    imp.enable_automatic_saving();
+                }
             });
         } else {
             // Add the item.
             // If we think we're about to exit, save immediately, regardless of any disabling. This may
             // cause us to lose file hinting for some commands, but it beats losing history items.
-            imp.add(item, /*pending=*/ true, /*do_save=*/ true);
-            if needs_sync_write {
+            imp.add(item, /*pending=*/ true, do_save);
+            if do_save && needs_sync_write {
                 imp.save(false);
             }
         }

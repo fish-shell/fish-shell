@@ -6,6 +6,9 @@ endif (NOT APPLE)
 # The source tree containing certain macOS resources.
 set(OSX_DIR ${CMAKE_CURRENT_SOURCE_DIR}/osx)
 
+# 10.9 is the minimum supported version.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
+
 set(RESOURCE_FILES
     ${OSX_DIR}/launch_fish.scpt
     ${OSX_DIR}/fish_term_icon.icns

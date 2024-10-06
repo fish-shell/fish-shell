@@ -704,11 +704,18 @@ impl HistoryImpl {
             if !can_replace_file {
                 // The file has changed, so we're going to re-read it
                 // Truncate our tmp_file so we can reuse it
-                if tmp_file.set_len(0).is_err() || tmp_file.seek(SeekFrom::Start(0)).is_err() {
-                    FLOGF!(
+                if let Err(err) = tmp_file.set_len(0) {
+                    FLOG!(
                         history_file,
-                        "Error %d when truncating temporary history file",
-                        errno::errno().0
+                        "Error when truncating temporary history file:",
+                        err
+                    );
+                }
+                if let Err(err) = tmp_file.seek(SeekFrom::Start(0)) {
+                    FLOG!(
+                        history_file,
+                        "Error resetting cursor in temporary history file:",
+                        err
                     );
                 }
             } else {
@@ -723,20 +730,20 @@ impl HistoryImpl {
                 if let Ok(target_fd_after) = target_fd_after.as_ref() {
                     if let Ok(md) = fstat(target_fd_after.as_raw_fd()) {
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                            FLOGF!(
+                            FLOG!(
                                 history_file,
-                                "Error %d when changing ownership of history file",
-                                errno::errno().0
+                                "Error when changing ownership of history file:",
+                                errno::errno()
                             );
                         }
                         #[allow(clippy::useless_conversion)]
                         if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
                             == -1
                         {
-                            FLOGF!(
+                            FLOG!(
                                 history_file,
-                                "Error %d when changing mode of history file",
-                                errno::errno().0,
+                                "Error when changing mode of history file:",
+                                errno::errno(),
                             );
                         }
                     }

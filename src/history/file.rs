@@ -494,6 +494,15 @@ fn offset_of_next_item_fish_2_0(
             continue;
         }
 
+        if line.starts_with(b"\0") {
+            FLOG!(
+                error,
+                "ignoring corrupted history entry around offset",
+                *cursor
+            );
+            continue;
+        }
+
         if !line.starts_with(b"- cmd") {
             FLOG!(
                 history,

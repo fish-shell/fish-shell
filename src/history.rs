@@ -756,8 +756,6 @@ impl HistoryImpl {
                 // We did it
                 done = true;
             }
-
-            drop(target_fd_after);
         }
 
         // Ensure we never leave the old file around

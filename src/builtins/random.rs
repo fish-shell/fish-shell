@@ -1,12 +1,13 @@
 use super::prelude::*;
 
+use crate::util::get_rng;
 use crate::wutil;
 use once_cell::sync::Lazy;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use std::sync::Mutex;
 
-static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(SmallRng::from_entropy()));
+static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
 
 pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];

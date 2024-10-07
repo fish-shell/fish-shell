@@ -4,9 +4,11 @@ use crate::history::{self, History, HistoryItem, HistorySearch, PathList, Search
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
+use crate::util::get_rng;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-use rand::random;
+use rand::rngs::SmallRng;
+use rand::Rng;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::io::BufReader;
@@ -27,12 +29,12 @@ fn history_contains(history: &History, txt: &wstr) -> bool {
     false
 }
 
-fn random_string() -> WString {
+fn random_string(rng: &mut SmallRng) -> WString {
     let mut result = WString::new();
-    let max = 1 + random::<usize>() % 32;
+    let max = rng.gen_range(1..=32);
     for _ in 0..max {
-        let c = char::from_u32(u32::try_from(1 + random::<usize>() % ESCAPE_TEST_CHAR).unwrap())
-            .unwrap();
+        let c =
+            char::from_u32(u32::try_from(1 + rng.gen_range(0..ESCAPE_TEST_CHAR)).unwrap()).unwrap();
         result.push(c);
     }
     result
@@ -154,6 +156,7 @@ fn test_history() {
     let mut after: VecDeque<HistoryItem> = VecDeque::new();
     history.clear();
     let max = 100;
+    let mut rng = get_rng();
     for i in 1..=max {
         // Generate a value.
         let mut value = WString::from_str("test item ") + &i.to_wstring()[..];
@@ -164,10 +167,9 @@ fn test_history() {
         }
 
         // Generate some paths.
-        let mut paths = PathList::new();
-        for _ in 0..random::<usize>() % 6 {
-            paths.push(random_string());
-        }
+        let paths: PathList = (0..rng.gen_range(0..6))
+            .map(|_| random_string(&mut rng))
+            .collect();
 
         // Record this item.
         let mut item =

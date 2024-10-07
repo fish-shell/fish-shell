@@ -63,7 +63,7 @@ use crate::{
         path_get_config, path_get_data, path_get_data_remoteness, path_is_valid, DirRemoteness,
     },
     threads::{assert_is_background_thread, iothread_perform},
-    util::find_subslice,
+    util::{find_subslice, get_rng},
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
@@ -956,7 +956,7 @@ impl HistoryImpl {
         let vacuum_frequency = 25;
         let countdown_to_vacuum = self
             .countdown_to_vacuum
-            .get_or_insert_with(|| rand::thread_rng().gen_range(0..vacuum_frequency));
+            .get_or_insert_with(|| get_rng().gen_range(0..vacuum_frequency));
 
         // Determine if we're going to vacuum.
         let mut vacuum = false;

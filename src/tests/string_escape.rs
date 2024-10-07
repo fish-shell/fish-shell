@@ -3,10 +3,10 @@ use crate::common::{
     UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
 };
 use crate::locale::LOCALE_LOCK;
+use crate::util::{get_rng_seed, get_seeded_rng};
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::encoding::{wcrtomb, zero_mbstate, AT_LEAST_MB_LEN_MAX};
 use rand::{Rng, RngCore};
-use rand_pcg::Pcg64Mcg;
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
@@ -102,7 +102,7 @@ fn test_escape_var() {
 fn escape_test(escape_style: EscapeStringStyle, unescape_style: UnescapeStringStyle) {
     setlocale();
     let seed: u128 = 92348567983274852905629743984572;
-    let mut rng = Pcg64Mcg::new(seed);
+    let mut rng = get_seeded_rng(seed);
 
     let mut random_string = WString::new();
     let mut escaped_string;
@@ -175,10 +175,8 @@ fn str2hex(input: &[u8]) -> String {
 #[test]
 fn test_convert() {
     setlocale();
-    use rand::random;
-
-    let seed: u128 = random::<u128>();
-    let mut rng = Pcg64Mcg::new(seed);
+    let seed = get_rng_seed();
+    let mut rng = get_seeded_rng(seed);
     let mut origin = Vec::new();
 
     for _ in 0..ESCAPE_TEST_COUNT {

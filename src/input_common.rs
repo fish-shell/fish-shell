@@ -12,17 +12,16 @@ use crate::key::{
     Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
-use crate::threads::{iothread_port, MainThread};
+use crate::threads::iothread_port;
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
 use crate::wutil::{fish_wcstol, write_to_fd};
-use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::ptr;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -426,8 +425,7 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
     }
 }
 
-static TERMINAL_PROTOCOLS: MainThread<RefCell<Option<TerminalProtocols>>> =
-    MainThread::new(RefCell::new(None));
+static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 
 pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -438,82 +436,65 @@ pub fn terminal_protocols_enable_ifn() {
     if IN_MIDNIGHT_COMMANDER.load() {
         return;
     }
-    let mut term_protocols = TERMINAL_PROTOCOLS.get().borrow_mut();
-    if term_protocols.is_some() {
+    if TERMINAL_PROTOCOLS.load(Ordering::Relaxed) {
         return;
     }
-    *term_protocols = Some(TerminalProtocols::new());
+    TERMINAL_PROTOCOLS.store(true, Ordering::Release);
+    let sequences = if IN_WEZTERM.load() {
+        "\x1b[?2004h"
+    } else if IN_ITERM_PRE_CSI_U.load() {
+        concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
+    } else {
+        concat!(
+            "\x1b[?2004h", // Bracketed paste
+            "\x1b[>4;1m",  // XTerm's modifyOtherKeys
+            "\x1b[=5u",    // CSI u with kitty progressive enhancement
+            "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
+        )
+    };
+    FLOG!(
+        term_protocols,
+        format!(
+            "Enabling extended keys and bracketed paste: {:?}",
+            sequences
+        )
+    );
+    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+    if IS_TMUX.load() {
+        let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
+    }
+    reader_current_data().map(|data| data.save_screen_state());
 }
 
 pub(crate) fn terminal_protocols_disable_ifn() {
-    TERMINAL_PROTOCOLS.get().replace(None);
-}
-
-pub(crate) fn terminal_protocols_try_disable_ifn() {
-    if let Ok(mut term_protocols) = TERMINAL_PROTOCOLS.get().try_borrow_mut() {
-        *term_protocols = None;
+    if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
+        return;
     }
-}
-
-struct TerminalProtocols {}
-
-impl TerminalProtocols {
-    fn new() -> Self {
-        let sequences = if IN_WEZTERM.load() {
-            "\x1b[?2004h"
-        } else if IN_ITERM_PRE_CSI_U.load() {
-            concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
-        } else {
-            concat!(
-                "\x1b[?2004h", // Bracketed paste
-                "\x1b[>4;1m",  // XTerm's modifyOtherKeys
-                "\x1b[=5u",    // CSI u with kitty progressive enhancement
-                "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
-            )
-        };
-        FLOG!(
-            term_protocols,
-            format!(
-                "Enabling extended keys and bracketed paste: {:?}",
-                sequences
-            )
-        );
-        let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
-        if IS_TMUX.load() {
-            let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
-        }
-        reader_current_data().map(|data| data.save_screen_state());
-        Self {}
+    let sequences = if IN_WEZTERM.load() {
+        "\x1b[?2004l"
+    } else if IN_ITERM_PRE_CSI_U.load() {
+        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
+    } else {
+        concat!(
+            "\x1b[?2004l", // Bracketed paste
+            "\x1b[>4;0m",  // XTerm's modifyOtherKeys
+            "\x1b[=0u",    // CSI u with kitty progressive enhancement
+            "\x1b>",       // application keypad mode
+        )
+    };
+    FLOG!(
+        term_protocols,
+        format!(
+            "Disabling extended keys and bracketed paste: {:?}",
+            sequences
+        )
+    );
+    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+    if IS_TMUX.load() {
+        let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
     }
-}
-
-impl Drop for TerminalProtocols {
-    fn drop(&mut self) {
-        let sequences = if IN_WEZTERM.load() {
-            "\x1b[?2004l"
-        } else if IN_ITERM_PRE_CSI_U.load() {
-            concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
-        } else {
-            concat!(
-                "\x1b[?2004l", // Bracketed paste
-                "\x1b[>4;0m",  // XTerm's modifyOtherKeys
-                "\x1b[=0u",    // CSI u with kitty progressive enhancement
-                "\x1b>",       // application keypad mode
-            )
-        };
-        FLOG!(
-            term_protocols,
-            format!(
-                "Disabling extended keys and bracketed paste: {:?}",
-                sequences
-            )
-        );
-        let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
-        if IS_TMUX.load() {
-            let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
-        }
-        reader_current_data().map(|data| data.save_screen_state());
-    }
+    reader_current_data().map(|data| data.save_screen_state());
+    TERMINAL_PROTOCOLS.store(false, Ordering::Release);
 }
 
 fn parse_mask(mask: u32) -> Modifiers {

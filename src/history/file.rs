@@ -9,7 +9,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use libc::{mmap, munmap, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
+use libc::{mmap, munmap, ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
@@ -45,18 +45,15 @@ impl MmapRegion {
 
     /// Map a region `[0, len)` from an `fd`.
     /// Returns [`None`] on failure.
-    pub fn map_file(fd: RawFd, len: usize) -> Option<Self> {
-        if len == 0 {
-            return None;
-        }
-
+    pub fn map_file(fd: RawFd, len: usize) -> std::io::Result<Self> {
+        assert!(len != 0);
         let ptr = unsafe { mmap(std::ptr::null_mut(), len, PROT_READ, MAP_PRIVATE, fd, 0) };
         if ptr == MAP_FAILED {
-            return None;
+            return Err(std::io::Error::last_os_error());
         }
 
         // SAFETY: mmap of `len` was successful and returned `ptr`
-        Some(unsafe { Self::new(ptr.cast(), len) })
+        Ok(unsafe { Self::new(ptr.cast(), len) })
     }
 
     /// Map anonymous memory of a given length.
@@ -120,18 +117,25 @@ impl HistoryFileContents {
     pub fn create(file: &mut File) -> Option<Self> {
         // Check that the file is seekable, and its size.
         let len: usize = file.seek(SeekFrom::End(0)).ok()?.try_into().ok()?;
-        let mmap_file_directly = should_mmap();
-        let mut region = if mmap_file_directly {
-            MmapRegion::map_file(file.as_raw_fd(), len)
-        } else {
-            MmapRegion::map_anon(len)
-        }?;
-
-        // If we mapped anonymous memory, we have to read from the file.
-        if !mmap_file_directly {
+        if len == 0 {
+            return None;
+        }
+        let map_anon = |file: &mut File, len: usize| {
+            let mut region = MmapRegion::map_anon(len)?;
+            // If we mapped anonymous memory, we have to read from the file.
             file.seek(SeekFrom::Start(0)).ok()?;
             read_zero_padded(&mut *file, region.as_mut()).ok()?;
-        }
+            Some(region)
+        };
+        let region = if should_mmap() {
+            match MmapRegion::map_file(file.as_raw_fd(), len) {
+                Ok(region) => region,
+                Err(err) if err.raw_os_error() == Some(ENODEV) => map_anon(file, len)?,
+                Err(_err) => return None,
+            }
+        } else {
+            map_anon(file, len)?
+        };
 
         region.try_into().ok()
     }
@@ -216,7 +220,7 @@ fn should_mmap() -> bool {
     }
 
     // mmap only if we are known not-remote.
-    return path_get_config_remoteness() == DirRemoteness::local;
+    path_get_config_remoteness() != DirRemoteness::remote
 }
 
 /// Read from `fd` to fill `dest`, zeroing any unused space.

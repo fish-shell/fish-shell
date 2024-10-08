@@ -54,8 +54,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv -k sright forward-bigword
     $legacy_bind --preset $argv -k sleft backward-bigword
 
-    bind --preset $argv alt-right nextd-or-forward-word
-    bind --preset $argv alt-left prevd-or-backward-word
+    bind --preset $argv alt-right nextd-or-forward-token
+    bind --preset $argv alt-left prevd-or-backward-token
 
     bind --preset $argv alt-up history-token-search-backward
     bind --preset $argv alt-down history-token-search-forward

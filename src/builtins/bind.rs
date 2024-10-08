@@ -1,5 +1,7 @@
 //! Implementation of the bind builtin.
 
+use libc::STDOUT_FILENO;
+
 use super::prelude::*;
 use crate::common::{
     escape, escape_string, str2wcstring, valid_var_name, EscapeFlags, EscapeStringStyle,
@@ -9,6 +11,7 @@ use crate::input::{
     input_function_get_names, input_mappings, input_terminfo_get_names,
     input_terminfo_get_sequence, GetSequenceError, InputMappingSet, KeyNameStyle,
 };
+use crate::input_common::{query_kitty_progressive_enhancement, KITTY_PROGRESSIVE_ENHANCEMENT};
 use crate::key::{self, canonicalize_raw_escapes, char_to_symbol, parse_keys, Key, Modifiers};
 use crate::nix::isatty;
 use std::sync::MutexGuard;
@@ -34,6 +37,7 @@ struct Options {
     mode: c_int,
     bind_mode: WString,
     sets_bind_mode: Option<WString>,
+    has_kitty_progressive_enhancement: bool,
 }
 
 impl Options {
@@ -52,6 +56,7 @@ impl Options {
             mode: BIND_INSERT,
             bind_mode: DEFAULT_BIND_MODE.to_owned(),
             sets_bind_mode: None,
+            has_kitty_progressive_enhancement: false,
         }
     }
 }
@@ -464,6 +469,7 @@ fn parse_cmd_opts(
         wopt(L!("sets-mode"), RequiredArgument, 'm'),
         wopt(L!("silent"), NoArgument, 's'),
         wopt(L!("user"), NoArgument, 'u'),
+        wopt(L!("has-kitty-progressive-enhancement"), NoArgument, '\x01'),
     ];
 
     let mut w = WGetopter::new(short_options, long_options, argv);
@@ -510,6 +516,9 @@ fn parse_cmd_opts(
                 opts.have_user = true;
                 opts.user = true;
             }
+            '\x01' => {
+                opts.has_kitty_progressive_enhancement = true;
+            }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
                 return STATUS_INVALID_ARGS;
@@ -540,6 +549,19 @@ impl BuiltinBind {
         let retval = parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams);
         if retval != STATUS_CMD_OK {
             return retval;
+        }
+
+        if self.opts.has_kitty_progressive_enhancement {
+            return if isatty(STDOUT_FILENO)
+                && KITTY_PROGRESSIVE_ENHANCEMENT
+                    .get()
+                    .map(|f| f.load())
+                    .unwrap_or_else(query_kitty_progressive_enhancement)
+            {
+                STATUS_CMD_OK
+            } else {
+                STATUS_CMD_ERROR
+            };
         }
 
         if self.opts.list_modes {

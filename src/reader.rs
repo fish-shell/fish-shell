@@ -75,6 +75,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
@@ -3976,6 +3977,8 @@ fn reader_interactive_init(parser: &Parser) {
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
     terminal_protocol_hacks();
+    IN_MIDNIGHT_COMMANDER_PRE_CSI_U
+        .store(parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none());
 }
 
 /// Destroy data for interactive use.

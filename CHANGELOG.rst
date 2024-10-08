@@ -95,7 +95,6 @@ Deprecations and removed features
 
   They are available as a preview now, it is our intention to enable them by default in future, and after that eventually make them read-only.
 - Specifying key names as terminfo name (``bind -k``) is deprecated and may be removed in a future version.
-- Flow control -- which, if enabled by ``stty ixon ixoff``, allows to pause terminal input with :kbd:`ctrl-s` and resume it with :kbd:`ctrl-q` -- now works only while fish is executing an external command.
 - When a terminal pastes text into fish using bracketed paste, fish used to switch to a special ``paste`` bind mode.
   This bind mode has been removed. The behavior on paste is currently not meant to be configurable.
 - When an interactive fish is stopped or terminated by a signal that cannot be caught (SIGSTOP or SIGKILL), it may leave the terminal in a state where keypresses with modifiers are sent as CSI u sequences instead of traditional control characters or escape sequences (that are recognized by bash/readline).
@@ -124,7 +123,7 @@ Scripting improvements
 - ``set`` has a new ``--no-event`` flag, to set or erase variables without triggering a variable event. This is useful e.g. to change a variable in an event handler. (:issue:`10480`)
 - Commas in command substitution output are no longer used as separators in brace expansion, preventing a surprising expansion in rare cases (:issue:`5048`).
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
-- ``path basename`` now takes a ``-E`` option that causes it to return the basename (i.e. "filename" with the directory prefix removed) with the final extension (if any) also removed. This takes the place of ``path change-extension "" (path basename $foo)`` (:issue:`10521`).
+- ``path basename`` now takes a ``-E`` option that causes it to return the basename (i.e. "filename" with the directory prefix removed) with the final extension (if any) also removed. This is a shorter version of ``path change-extension "" (path basename $foo)`` (:issue:`10521`).
 - ``math`` now adds ``--scale-mode`` parameter. You can choose between ``truncate``, ``round``, ``floor``, ``ceiling`` as you wish (default value is ``truncate``). (:issue:`9117`).
 
 Interactive improvements

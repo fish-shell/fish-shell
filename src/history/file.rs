@@ -363,7 +363,7 @@ fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let line = trim_start(line);
     // Check this early *before* anything else.
     if !line.starts_with(b"- cmd") {
-        return;
+        return None;
     }
 
     let (_key, value) = extract_prefix_and_unescape_yaml(line)?;

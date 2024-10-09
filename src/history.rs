@@ -1123,9 +1123,8 @@ impl HistoryImpl {
                 break;
             }
 
-            if dst_file.write(&buf[..n]).is_err() {
-                // This message does not have high enough priority to be shown by default.
-                FLOG!(history_file, "Error when writing history file");
+            if let Err(err) = dst_file.write_all(&buf[..n]) {
+                FLOG!(history_file, "Error when writing history file:", err);
                 break;
             }
         }

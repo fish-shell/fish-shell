@@ -120,7 +120,7 @@ pub mod categories {
         (char_encoding, "char-encoding", "Character encoding issues");
 
         (history, "history", "Command history events");
-        (history_file, "history-file", "Reading/Writing the history file");
+        (history_file, "history-file", "Reading/Writing the history file", true);
 
         (profile_history, "profile-history", "History performance measurements");
 

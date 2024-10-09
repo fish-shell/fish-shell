@@ -16,7 +16,10 @@
 //! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 //! trigger race conditions. This is useful for testing.
 
-use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
+use crate::{
+    common::cstr2wcstring, env::EnvVar, wcstringutil::trim,
+    wutil::fileid::file_id_for_path_or_error,
+};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -621,10 +624,10 @@ impl HistoryImpl {
             }
         }
         if let Some(err) = err {
-            FLOGF!(
+            FLOG!(
                 history_file,
-                "Error %d when writing to temporary history file",
-                err.raw_os_error().unwrap_or_default()
+                "Error writing to temporary history file:",
+                err
             );
 
             false
@@ -670,6 +673,9 @@ impl HistoryImpl {
                 OFlag::O_RDONLY | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
             );
+            if let Err(err) = target_file_before {
+                FLOG!(history_file, "Error opening history file:", err);
+            }
 
             let orig_file_id = target_file_before
                 .as_ref()
@@ -697,7 +703,15 @@ impl HistoryImpl {
                 unsafe {
                     Self::maybe_lock_file(target_fd_after, LOCK_EX);
                 }
-                new_file_id = file_id_for_path(&target_name);
+                new_file_id = match file_id_for_path_or_error(&target_name) {
+                    Ok(file_id) => file_id,
+                    Err(err) => {
+                        if err.kind() != std::io::ErrorKind::NotFound {
+                            FLOG!(history_file, "Error re-opening history file:", err);
+                        }
+                        INVALID_FILE_ID
+                    }
+                }
             }
 
             let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
@@ -1108,13 +1122,16 @@ impl HistoryImpl {
         // destination file descriptor, since it destroys the name and the file.
         self.clear();
 
-        let Ok(mut dst_file) = wopen_cloexec(
+        let mut dst_file = match wopen_cloexec(
             &new_file,
             OFlag::O_WRONLY | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
-        ) else {
-            FLOG!(history_file, "Error when writing history file");
-            return;
+        ) {
+            Ok(file) => file,
+            Err(err) => {
+                FLOG!(history_file, "Error when writing history file:", err);
+                return;
+            }
         };
 
         let mut buf = [0; libc::BUFSIZ as usize];

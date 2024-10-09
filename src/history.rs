@@ -693,15 +693,15 @@ impl HistoryImpl {
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let mut target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-            if let Ok(target_fd_after) = target_fd_after.as_mut() {
+            let mut target_file_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
+            if let Ok(target_file_after) = target_file_after.as_mut() {
                 // critical to take the lock before checking file IDs,
                 // and hold it until after we are done replacing.
                 // Also critical to check the file at the path, NOT based on our fd.
                 // It's only OK to replace the file while holding the lock.
-                // Note any lock is released when target_fd_after is closed.
+                // Note any lock is released when target_file_after is closed.
                 unsafe {
-                    Self::maybe_lock_file(target_fd_after, LOCK_EX);
+                    Self::maybe_lock_file(target_file_after, LOCK_EX);
                 }
                 new_file_id = match file_id_for_path_or_error(&target_name) {
                     Ok(file_id) => file_id,
@@ -741,8 +741,8 @@ impl HistoryImpl {
                 // corresponds to e.g. someone running sudo -E as the very first command. If they
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
-                if let Ok(target_fd_after) = target_fd_after.as_ref() {
-                    if let Ok(md) = fstat(target_fd_after.as_raw_fd()) {
+                if let Ok(target_file_after) = target_file_after.as_ref() {
+                    if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOG!(
                                 history_file,

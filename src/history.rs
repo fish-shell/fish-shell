@@ -556,46 +556,48 @@ impl HistoryImpl {
             usize::min(self.first_unwritten_new_item_index, self.new_items.len());
     }
 
-    /// Given the fd of an existing history file, write a new history file to `dst_fd`.
-    /// Returns false on error, true on success
-    fn rewrite_to_temporary_file(&self, existing_file: Option<&mut File>, dst: &mut File) -> bool {
-        // We are reading FROM existing_fd and writing TO dst_fd
-
+    fn read_items(&self, existing_file: &mut File) -> LruCache<WString, HistoryItem> {
         // Make an LRU cache to save only the last N elements.
         let mut lru = LruCache::new(HISTORY_SAVE_MAX);
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        if let Some(existing_file) = existing_file {
-            if let Some(local_file) = HistoryFileContents::create(existing_file) {
-                let mut cursor = 0;
-                while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
-                    // Try decoding an old item.
-                    let Some(old_item) = local_file.decode_item(offset) else {
-                        continue;
-                    };
+        let Some(local_file) = HistoryFileContents::create(existing_file) else {
+            return lru;
+        };
+        let mut cursor = 0;
+        while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
+            // Try decoding an old item.
+            let Some(old_item) = local_file.decode_item(offset) else {
+                continue;
+            };
 
-                    // If old item is newer than session always erase if in deleted.
-                    if old_item.timestamp() > self.boundary_timestamp {
-                        if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
-                            continue;
-                        }
-                        lru.add_item(old_item);
-                    } else {
-                        // If old item is older and in deleted items don't erase if added by
-                        // clear_session.
-                        if old_item.is_empty()
-                            || self.deleted_items.get(old_item.str()) == Some(&false)
-                        {
-                            continue;
-                        }
-                        // Add this old item.
-                        lru.add_item(old_item);
-                    }
+            // If old item is newer than session always erase if in deleted.
+            if old_item.timestamp() > self.boundary_timestamp {
+                if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
+                    continue;
                 }
+                lru.add_item(old_item);
+            } else {
+                // If old item is older and in deleted items don't erase if added by
+                // clear_session.
+                if old_item.is_empty() || self.deleted_items.get(old_item.str()) == Some(&false) {
+                    continue;
+                }
+                // Add this old item.
+                lru.add_item(old_item);
             }
         }
+        lru
+    }
 
+    /// Write existing and new history history to the given file.
+    fn write_to_file(
+        &self,
+        existing_entries: LruCache<WString, HistoryItem>,
+        dst: &mut File,
+    ) -> bool {
+        let mut lru = existing_entries;
         // Insert any unwritten new items
         for item in self
             .new_items
@@ -668,115 +670,104 @@ impl HistoryImpl {
                 break;
             }
 
-            let target_file_before = wopen_cloexec(
+            let mut target_file = match wopen_cloexec(
                 &target_name,
-                OFlag::O_RDONLY | OFlag::O_CREAT,
+                OFlag::O_RDWR | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
-            );
-            if let Err(err) = target_file_before {
-                FLOG!(history_file, "Error opening history file:", err);
+            ) {
+                Ok(file) => file,
+                Err(err) => {
+                    FLOG!(history_file, "Error opening history file:", err);
+                    break;
+                }
+            };
+            // Note any lock is released when the fd is closed.
+            let locked = unsafe { Self::maybe_lock_file(&mut target_file, LOCK_EX) };
+
+            let mut orig_file_id = INVALID_FILE_ID;
+            if !locked {
+                orig_file_id = file_id_for_fd(target_file.as_fd());
             }
 
-            let orig_file_id = target_file_before
-                .as_ref()
-                .map(|fd| file_id_for_fd(fd.as_fd()))
-                .unwrap_or(INVALID_FILE_ID);
-
-            // Open any target file, but do not lock it right away
-            if !self.rewrite_to_temporary_file(target_file_before.ok().as_mut(), &mut tmp_file) {
+            if !self.write_to_file(
+                self.read_items(&mut target_file),
+                if locked {
+                    rewind_file(&mut target_file);
+                    &mut target_file
+                } else {
+                    &mut tmp_file
+                },
+            ) {
                 // Failed to write, no good
                 break;
             }
 
-            // The crux! We rewrote the history file; see if the history file changed while we
-            // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
-            // If the open fails, then proceed; this may be because there is no current history
-            let mut new_file_id = INVALID_FILE_ID;
-
-            let mut target_file_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-            if let Ok(target_file_after) = target_file_after.as_mut() {
-                // critical to take the lock before checking file IDs,
-                // and hold it until after we are done replacing.
-                // Also critical to check the file at the path, NOT based on our fd.
-                // It's only OK to replace the file while holding the lock.
-                // Note any lock is released when target_file_after is closed.
-                unsafe {
-                    Self::maybe_lock_file(target_file_after, LOCK_EX);
-                }
-                new_file_id = match file_id_for_path_or_error(&target_name) {
-                    Ok(file_id) => file_id,
-                    Err(err) => {
-                        if err.kind() != std::io::ErrorKind::NotFound {
-                            FLOG!(history_file, "Error re-opening history file:", err);
-                        }
-                        INVALID_FILE_ID
-                    }
-                }
-            }
-
-            let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
-            if !can_replace_file {
-                // The file has changed, so we're going to re-read it
-                // Truncate our tmp_file so we can reuse it
-                if let Err(err) = tmp_file.set_len(0) {
-                    FLOG!(
-                        history_file,
-                        "Error when truncating temporary history file:",
-                        err
-                    );
-                }
-                if let Err(err) = tmp_file.seek(SeekFrom::Start(0)) {
-                    FLOG!(
-                        history_file,
-                        "Error resetting cursor in temporary history file:",
-                        err
-                    );
-                }
-            } else {
-                // The file is unchanged, or the new file doesn't exist or we can't read it
-                // We also attempted to take the lock, so we feel confident in replacing it
-
-                // Ensure we maintain the ownership and permissions of the original (#2355). If the
-                // stat fails, we assume (hope) our default permissions are correct. This
-                // corresponds to e.g. someone running sudo -E as the very first command. If they
-                // did, it would be tricky to set the permissions correctly. (bash doesn't get this
-                // case right either).
-                if let Ok(target_file_after) = target_file_after.as_ref() {
-                    if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
-                        if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                            FLOG!(
-                                history_file,
-                                "Error when changing ownership of history file:",
-                                errno::errno()
-                            );
-                        }
-                        #[allow(clippy::useless_conversion)]
-                        if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
-                            == -1
-                        {
-                            FLOG!(
-                                history_file,
-                                "Error when changing mode of history file:",
-                                errno::errno(),
-                            );
-                        }
-                    }
-                }
-
-                // Slide it into place
-                if wrename(&tmp_name, &target_name) == -1 {
-                    FLOG!(
-                        error,
-                        wgettext_fmt!(
-                            "Error when renaming history file: %s",
-                            errno::errno().to_string()
-                        )
-                    );
-                }
-
-                // We did it
+            if locked {
                 done = true;
+                break;
             }
+
+            drop(target_file);
+
+            // The crux! We rewrote the history file; see if the history file changed while we were
+            // rewriting it.  It's critical to check the file at the path, NOT based on our fd.
+            let can_replace_file = match file_id_for_path_or_error(&target_name) {
+                Ok(new_file_id) => new_file_id == orig_file_id,
+                Err(err) => {
+                    // If the open fails, this may be because there is no current history.
+                    if err.kind() != std::io::ErrorKind::NotFound {
+                        FLOG!(history_file, "Error re-opening history file:", err);
+                    }
+                    true
+                }
+            };
+            if !can_replace_file {
+                rewind_file(&mut tmp_file);
+                continue;
+            }
+
+            // The file is unchanged, or the new file doesn't exist or we can't read it
+            // Ensure we maintain the ownership and permissions of the original (#2355). If the
+            // stat fails, we assume (hope) our default permissions are correct. This
+            // corresponds to e.g. someone running sudo -E as the very first command. If they
+            // did, it would be tricky to set the permissions correctly. (bash doesn't get this
+            // case right either).
+            if let Ok(target_file_after) =
+                wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty())
+            {
+                if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
+                    if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+                        FLOG!(
+                            history_file,
+                            "Error when changing ownership of history file:",
+                            errno::errno()
+                        );
+                    }
+                    #[allow(clippy::useless_conversion)]
+                    if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) } == -1
+                    {
+                        FLOG!(
+                            history_file,
+                            "Error when changing mode of history file:",
+                            errno::errno(),
+                        );
+                    }
+                }
+            }
+
+            // Slide it into place
+            if wrename(&tmp_name, &target_name) == -1 {
+                FLOG!(
+                    error,
+                    wgettext_fmt!(
+                        "Error when renaming history file: %s",
+                        errno::errno().to_string()
+                    )
+                );
+            }
+
+            // We did it
+            done = true;
         }
 
         // Ensure we never leave the old file around
@@ -1382,6 +1373,17 @@ fn create_temporary_file(name_template: &wstr) -> Option<(File, WString)> {
         }
     }
     None
+}
+
+fn rewind_file(file: &mut File) {
+    // The file has changed, so we're going to re-read it
+    // Truncate our tmp_file so we can reuse it
+    if let Err(err) = file.set_len(0) {
+        FLOG!(history_file, "Error when truncating history file:", err);
+    }
+    if let Err(err) = file.seek(SeekFrom::Start(0)) {
+        FLOG!(history_file, "Error resetting cursor in history file:", err);
+    }
 }
 
 fn string_could_be_path(potential_path: &wstr) -> bool {

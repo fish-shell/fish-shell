@@ -14,8 +14,6 @@ fn test_string() {
     use crate::tests::prelude::*;
     use crate::wchar::prelude::*;
 
-    let _cleanup = test_init();
-
     // avoid 1.3k L!()'s
     macro_rules! test_cases {
         ([$($x:expr),*], $rc:expr, $out:expr) => { (vec![$(L!($x)),*], $rc, L!($out)) };

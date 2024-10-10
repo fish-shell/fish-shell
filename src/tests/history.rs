@@ -227,8 +227,7 @@ fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
     result
 }
 
-fn test_history_races_pound_on_history(item_count: usize, idx: usize) {
-    let _cleanup = test_init();
+fn pound_on_history(item_count: usize, idx: usize) {
     // Called in child thread to modify history.
     let hist = History::new(L!("race_test"));
     let hist_lines = generate_history_lines(item_count, idx);
@@ -272,7 +271,7 @@ fn test_history_races() {
     let mut children = Vec::with_capacity(RACE_COUNT);
     for i in 0..RACE_COUNT {
         children.push(std::thread::spawn(move || {
-            test_history_races_pound_on_history(ITEM_COUNT, i);
+            pound_on_history(ITEM_COUNT, i);
         }));
     }
 

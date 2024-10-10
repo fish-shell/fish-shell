@@ -17,6 +17,8 @@ function fish_config --description "Launch fish's web based configuration"
     # Also opened with just `fish_config` or `fish_config browse`.
     if contains -- $cmd browse
         set -lx __fish_bin_dir $__fish_bin_dir
+        set -l fish_path (status fish-path)
+        and set __fish_bin_dir (path dirname -- $fish_path)
         if set -l python (__fish_anypython)
             $python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
 

@@ -223,10 +223,18 @@ fn setup_paths() {
         var
     }
 
-    let prefix = PathBuf::from(env::var("PREFIX").unwrap_or("/usr/local".to_string()));
-    if prefix.is_relative() {
+    let (prefix_from_home, prefix) = if let Ok(pre) = env::var("PREFIX") {
+        (false, PathBuf::from(pre))
+    } else {
+        (true, PathBuf::from(".local/"))
+    };
+
+    // If someone gives us a $PREFIX, we need it to be absolute.
+    // Otherwise we would try to get it from $HOME and that won't really work.
+    if !prefix_from_home && prefix.is_relative() {
         panic!("Can't have relative prefix");
     }
+
     rsconf::rebuild_if_env_changed("PREFIX");
     rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 
@@ -234,11 +242,24 @@ fn setup_paths() {
     rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DATADIR");
 
+    let datadir_subdir = if prefix_from_home {
+        "fish/install"
+    } else {
+        "fish"
+    };
+    rsconf::set_env_value("DATADIR_SUBDIR", datadir_subdir);
+
     let bindir = get_path("BINDIR", "bin/", prefix.clone());
     rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("BINDIR");
 
-    let sysconfdir = get_path("SYSCONFDIR", "etc/", datadir.clone());
+    let sysconfdir = get_path(
+        "SYSCONFDIR",
+        // If we get our prefix from $HOME, we should use the system's /etc/
+        // ~/.local/share/etc/ makes no sense
+        if prefix_from_home { "/etc/" } else { "etc/" },
+        datadir.clone(),
+    );
     rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
 
@@ -268,9 +289,22 @@ fn get_version(src_dir: &Path) -> String {
     if let Ok(output) = Command::new("git").args(args).output() {
         let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
         if !rev.is_empty() {
-            return rev;
+            // If it contains a ".", we have a proper version like "3.7",
+            // or "23.2.1-1234-gfab1234"
+            if rev.contains(".") {
+                return rev;
+            }
+            // If it doesn't, we probably got *just* the commit SHA,
+            // like "f1242abcdef".
+            // So we prepend the crate version so it at least looks like
+            // "3.8-gf1242abcdef"
+            // This lacks the commit *distance*, but that can't be helped without
+            // tags.
+            let version = env!("CARGO_PKG_VERSION").to_owned();
+            return version + "-g" + &rev;
         }
     }
+    // TODO: Do we just use the cargo version here?
 
     "unknown".to_string()
 }

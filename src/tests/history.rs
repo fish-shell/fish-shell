@@ -1,6 +1,8 @@
 use crate::common::{is_windows_subsystem_for_linux, str2wcstring, wcs2osstring, wcs2string, WSL};
 use crate::env::{EnvMode, EnvStack};
-use crate::history::{self, History, HistoryItem, HistorySearch, PathList, SearchDirection};
+use crate::history::{
+    self, History, HistoryItem, HistorySearch, PathList, SearchDirection, VACUUM_FREQUENCY,
+};
 use crate::path::path_get_data;
 use crate::tests::prelude::*;
 use crate::tests::string_escape::ESCAPE_TEST_CHAR;
@@ -12,8 +14,9 @@ use rand::Rng;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::io::BufReader;
-use std::time::SystemTime;
+use std::sync::Arc;
 use std::time::UNIX_EPOCH;
+use std::time::{Duration, SystemTime};
 
 fn history_contains(history: &History, txt: &wstr) -> bool {
     for i in 1.. {
@@ -229,7 +232,7 @@ fn generate_history_lines(item_count: usize, idx: usize) -> Vec<WString> {
     result
 }
 
-fn pound_on_history(item_count: usize, idx: usize) {
+fn pound_on_history(item_count: usize, idx: usize) -> Arc<History> {
     // Called in child thread to modify history.
     let hist = History::new(L!("race_test"));
     let hist_lines = generate_history_lines(item_count, idx);
@@ -237,6 +240,7 @@ fn pound_on_history(item_count: usize, idx: usize) {
         hist.add_commandline(line);
         hist.save();
     }
+    hist
 }
 
 #[test]
@@ -338,6 +342,34 @@ fn test_history_races() {
         assert_eq!(list, Vec::<WString>::new(), "Lines still left in the array");
     }
     hist.clear();
+}
+
+#[test]
+#[serial]
+fn test_history_invalidation_on_external_rewrite() {
+    let _cleanup = test_init();
+
+    // Write some history to disk.
+    {
+        let hist = pound_on_history(VACUUM_FREQUENCY / 2, 0);
+        hist.add_commandline("needle".into());
+        hist.save();
+    }
+    std::thread::sleep(Duration::from_secs(1));
+
+    // Read history from disk.
+    let hist = History::new(L!("race_test"));
+    assert_eq!(hist.item_at_index(1).unwrap().str(), "needle");
+
+    // Add items until we rewrite the file, which changes the offset of the "needle" item.
+    // In practice this would be done by another shell.
+    pound_on_history(VACUUM_FREQUENCY, 0);
+
+    for i in 1.. {
+        if hist.item_at_index(i).unwrap().str() == "needle" {
+            break;
+        }
+    }
 }
 
 #[test]

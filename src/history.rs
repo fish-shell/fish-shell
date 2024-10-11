@@ -141,6 +141,8 @@ const HISTORY_FILE_MODE: Mode = Mode::from_bits_truncate(0o600);
 /// the file and taking the lock
 const MAX_SAVE_TRIES: usize = 1024;
 
+pub const VACUUM_FREQUENCY: usize = 25;
+
 /// If the size of `buffer` is at least `min_size`, output the contents `buffer` to `fd`,
 /// and clear the string.
 fn flush_to_fd(buffer: &mut Vec<u8>, fd: RawFd, min_size: usize) -> std::io::Result<()> {
@@ -675,52 +677,45 @@ impl HistoryImpl {
                 OFlag::O_RDWR | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
             ) {
-                Ok(file) => file,
+                Ok(file) => Some(file),
                 Err(err) => {
                     FLOG!(history_file, "Error opening history file:", err);
                     break;
                 }
             };
             // Note any lock is released when the fd is closed.
-            let locked = unsafe { Self::maybe_lock_file(&mut target_file, LOCK_EX) };
+            let locked = unsafe { Self::maybe_lock_file(target_file.as_mut().unwrap(), LOCK_EX) };
 
             let mut orig_file_id = INVALID_FILE_ID;
             if !locked {
-                orig_file_id = file_id_for_fd(target_file.as_fd());
+                orig_file_id = file_id_for_fd(target_file.as_ref().unwrap().as_fd());
             }
 
             if !self.write_to_file(
-                self.read_items(&mut target_file),
-                if locked {
-                    rewind_file(&mut target_file);
-                    &mut target_file
-                } else {
-                    &mut tmp_file
-                },
+                self.read_items(target_file.as_mut().unwrap()),
+                &mut tmp_file,
             ) {
                 // Failed to write, no good
                 break;
             }
 
-            if locked {
-                done = true;
-                break;
+            if !locked {
+                target_file = None;
             }
-
-            drop(target_file);
 
             // The crux! We rewrote the history file; see if the history file changed while we were
             // rewriting it.  It's critical to check the file at the path, NOT based on our fd.
-            let can_replace_file = match file_id_for_path_or_error(&target_name) {
-                Ok(new_file_id) => new_file_id == orig_file_id,
-                Err(err) => {
-                    // If the open fails, this may be because there is no current history.
-                    if err.kind() != std::io::ErrorKind::NotFound {
-                        FLOG!(history_file, "Error re-opening history file:", err);
+            let can_replace_file = locked
+                || match file_id_for_path_or_error(&target_name) {
+                    Ok(new_file_id) => new_file_id == orig_file_id,
+                    Err(err) => {
+                        // If the open fails, this may be because there is no current history.
+                        if err.kind() != std::io::ErrorKind::NotFound {
+                            FLOG!(history_file, "Error re-opening history file:", err);
+                        }
+                        true
                     }
-                    true
-                }
-            };
+                };
             if !can_replace_file {
                 rewind_file(&mut tmp_file);
                 continue;
@@ -732,9 +727,11 @@ impl HistoryImpl {
             // corresponds to e.g. someone running sudo -E as the very first command. If they
             // did, it would be tricky to set the permissions correctly. (bash doesn't get this
             // case right either).
-            if let Ok(target_file_after) =
-                wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty())
-            {
+            if let Some(target_file_after) = if locked {
+                target_file
+            } else {
+                wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty()).ok()
+            } {
                 if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
                     if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                         FLOG!(
@@ -953,15 +950,14 @@ impl HistoryImpl {
         // countdown at a random number so that even if the user never runs more than 25 commands, we'll
         // eventually vacuum.  If countdown_to_vacuum is None, it means we haven't yet picked a value for
         // the counter.
-        let vacuum_frequency = 25;
         let countdown_to_vacuum = self
             .countdown_to_vacuum
-            .get_or_insert_with(|| get_rng().gen_range(0..vacuum_frequency));
+            .get_or_insert_with(|| get_rng().gen_range(0..VACUUM_FREQUENCY));
 
         // Determine if we're going to vacuum.
         let mut vacuum = false;
         if *countdown_to_vacuum == 0 {
-            *countdown_to_vacuum = vacuum_frequency;
+            *countdown_to_vacuum = VACUUM_FREQUENCY;
             vacuum = true;
         }
 

@@ -12,7 +12,7 @@ use crate::key::{
     Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
-use crate::threads::iothread_port;
+use crate::threads::{iothread_port, is_main_thread};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -493,7 +493,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if IS_TMUX.load() {
         let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
     }
-    reader_current_data().map(|data| data.save_screen_state());
+    if is_main_thread() {
+        reader_current_data().map(|data| data.save_screen_state());
+    }
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);
 }
 

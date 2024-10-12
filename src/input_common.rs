@@ -474,14 +474,11 @@ fn test_parse_version() {
 }
 
 pub fn terminal_protocols_enable_ifn() {
-    if IN_MIDNIGHT_COMMANDER.load() {
-        return;
-    }
     if TERMINAL_PROTOCOLS.load(Ordering::Relaxed) {
         return;
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
-    let sequences = if IN_WEZTERM.load() {
+    let sequences = if IN_WEZTERM.load() || IN_MIDNIGHT_COMMANDER.load() {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)

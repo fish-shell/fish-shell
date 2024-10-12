@@ -14,12 +14,10 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
         set_hook(Box::new(move |panic_info| {
             standard_hook(panic_info);
             eprintf!(
-                "%s crashed, please report a bug. Debug PID %d or press Enter to exit",
+                "%s crashed, please report a bug. Debug PID %d or press Enter to exit\n",
                 PROGRAM_NAME.get().unwrap(),
                 unsafe { libc::getpid() }
             );
-            // Move the cursor down so it isn't blocking the text
-            eprintf!("\n");
             let mut buf = [0_u8; 1];
             loop {
                 let n = read_blocked(STDIN_FILENO, &mut buf).unwrap_or(0);

@@ -19,7 +19,10 @@ use fish::{
     env::env_init,
     eprintf, fprintf,
     input::input_terminfo_get_name,
-    input_common::{terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer},
+    input_common::{
+        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
+        InputEventQueuer,
+    },
     key::{self, char_to_symbol, Key},
     panic::panic_handler,
     print_help::print_help,
@@ -135,6 +138,8 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
     unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
+
+    terminal_protocol_hacks();
 
     if continuous_mode {
         eprintf!("\n");

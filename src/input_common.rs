@@ -1,7 +1,8 @@
 use libc::STDOUT_FILENO;
 
 use crate::common::{
-    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes, WSL,
+    fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
+    str2wcstring, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
@@ -20,6 +21,7 @@ use crate::wutil::{fish_wcstol, write_to_fd};
 use std::collections::VecDeque;
 use std::ops::ControlFlow;
 use std::os::fd::RawFd;
+use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
@@ -427,10 +429,49 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 
-pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static IN_WEZTERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_WEZTERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub fn terminal_protocol_hacks() {
+    use std::env::var_os;
+    IS_TMUX.store(var_os("TMUX").is_some());
+    IN_MIDNIGHT_COMMANDER.store(var_os("MC_TMPDIR").is_some());
+    IN_WEZTERM.store(
+        var_os("TERM_PROGRAM")
+            .is_some_and(|term_program| term_program.as_os_str().as_bytes() == b"WezTerm"),
+    );
+    IN_ITERM_PRE_CSI_U.store(
+        var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
+            && var_os("LC_TERMINAL_VERSION").is_some_and(|version| {
+                let Some(version) = parse_version(&str2wcstring(version.as_os_str().as_bytes()))
+                else {
+                    return false;
+                };
+                version < (3, 5, 6)
+            }),
+    );
+}
+
+fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
+    let mut numbers = version.split('.');
+    let major = fish_wcstol(numbers.next()?).ok()?;
+    let minor = fish_wcstol(numbers.next()?).ok()?;
+    let patch = numbers.next()?;
+    let patch = &patch[..patch
+        .chars()
+        .position(|c| !c.is_ascii_digit())
+        .unwrap_or(patch.len())];
+    let patch = fish_wcstol(patch).ok()?;
+    Some((major, minor, patch))
+}
+
+#[test]
+fn test_parse_version() {
+    assert_eq!(parse_version(L!("3.5.2")), Some((3, 5, 2)));
+    assert_eq!(parse_version(L!("3.5.3beta")), Some((3, 5, 3)));
+}
 
 pub fn terminal_protocols_enable_ifn() {
     if IN_MIDNIGHT_COMMANDER.load() {

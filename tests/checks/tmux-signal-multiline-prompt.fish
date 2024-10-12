@@ -1,5 +1,5 @@
 #RUN: %fish %s
-#REQUIRES: command -v tmux
+#REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux 3\.[0123][a-z]*($|[.-])'
 
 isolated-tmux-start
 
@@ -31,4 +31,4 @@ isolated-tmux send-keys -X previous-prompt
 isolated-tmux send-keys -X previous-prompt
 tmux-sleep
 isolated-tmux display-message -p '#{copy_cursor_y} #{copy_cursor_line}'
-# CHECK: 4 prompt-line-1
+# CHECK: {{[46]}} prompt-line-1

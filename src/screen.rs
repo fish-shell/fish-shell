@@ -821,12 +821,19 @@ impl Screen {
         // Output the left prompt if it has changed.
         if left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
-            zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
             let mut start = 0;
-            for line_break in left_prompt_layout.line_breaks {
+            let osc_133_prompt_start =
+                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
+            if left_prompt_layout.line_breaks.is_empty() {
+                osc_133_prompt_start(&mut zelf);
+            }
+            for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
                 zelf.outp
                     .borrow_mut()
                     .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                if i == 0 {
+                    osc_133_prompt_start(&mut zelf);
+                }
                 zelf.write_str(&left_prompt[start..=line_break]);
                 start = line_break + 1;
             }

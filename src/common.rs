@@ -1669,8 +1669,7 @@ pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
         // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
         // then linux adds a " (deleted)" suffix.
         // If that's not a valid path, let's remove that awkward suffix.
-        let pathstr = path.to_str().unwrap_or("");
-        if !pathstr.ends_with(" (deleted)") {
+        if !path.ends_with(" (deleted)") {
             return path;
         }
 

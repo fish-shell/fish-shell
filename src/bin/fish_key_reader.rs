@@ -132,7 +132,7 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     topic_monitor_init();
     threads::init();
     env_init(None, true, false);
-    let _restore_term = reader_init();
+    reader_init(false);
 
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,

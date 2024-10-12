@@ -45,11 +45,12 @@ use crate::abbrs::abbrs_match;
 use crate::ast::{self, Ast, Category, Traversal};
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
+use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
     redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx, shell_modes, str2wcstring,
-    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding,
-    PROGRAM_NAME, UTF8_BOM_WCHAR,
+    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
+    UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -85,6 +86,7 @@ use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
+use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_tree::ParsedSource;
@@ -784,10 +786,14 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
 }
 
 /// Initialize the reader.
-pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
+pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
     let mut terminal_mode_on_startup = TERMINAL_MODE_ON_STARTUP.lock().unwrap();
     unsafe { libc::tcgetattr(STDIN_FILENO, &mut *terminal_mode_on_startup) };
+
+    #[cfg(not(test))]
+    assert!(AT_EXIT.get().is_none());
+    AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
@@ -813,10 +819,14 @@ pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
             term_donate(/*quiet=*/ true);
         }
     }
-    ScopeGuard::new((), move |()| {
-        restore_term_mode();
-        crate::input_common::terminal_protocols_disable_ifn();
-    })
+}
+
+pub fn reader_deinit(restore_foreground_pgroup: bool) {
+    restore_term_mode();
+    crate::input_common::terminal_protocols_disable_ifn();
+    if restore_foreground_pgroup {
+        restore_term_foreground_process_group_for_exit();
+    }
 }
 
 /// Restore the term mode if we own the terminal and are interactive (#8705).

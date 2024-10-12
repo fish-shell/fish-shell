@@ -27,9 +27,8 @@ use fish::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
-        escape, get_executable_path, restore_term_foreground_process_group_for_exit,
-        save_term_foreground_process_group, scoped_push_replacer, str2wcstring, wcs2string,
-        ScopeGuard, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
+        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -573,9 +572,7 @@ fn throwing_main() -> i32 {
     features::set_from_string(opts.features.as_utfstr());
     proc_init();
     fish::env::misc_init();
-    let _restore_term_foreground_process_group =
-        ScopeGuard::new((), |()| restore_term_foreground_process_group_for_exit());
-    let _restore_term = reader_init();
+    reader_init(true);
 
     // Construct the root parser!
     let env = Rc::new(EnvStack::globals().create_child(true /* dispatches_var_changes */));

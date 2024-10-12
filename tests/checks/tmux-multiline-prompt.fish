@@ -1,5 +1,5 @@
 #RUN: %fish %s
-#REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux 3\.[0123][a-z]*($|[.-])'
+#REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux (next-3.4|3\.[0123][a-z]*($|[.-]))'
 
 isolated-tmux-start
 

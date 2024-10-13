@@ -9,10 +9,11 @@ isolated-tmux send-keys '
         commandline -f repaint
     end
 ' Enter
-isolated-tmux send-keys C-l \
-    ': 1' Enter \
-    ': 3' Enter \
-    ': 5' Enter
+isolated-tmux send-keys C-l ': 1' Enter
+tmux-sleep
+isolated-tmux send-keys ': 3' Enter
+tmux-sleep
+isolated-tmux send-keys ': 5' Enter
 tmux-sleep
 
 # Screen looks like

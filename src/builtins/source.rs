@@ -45,6 +45,10 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if argc == optind && isatty(streams.stdin_fd) {
             // Don't implicitly read from the terminal.
+            streams.err.append(wgettext_fmt!(
+                "%ls: missing filename argument or input redirection\n",
+                cmd
+            ));
             return STATUS_CMD_ERROR;
         }
         func_filename = FilenameRef::new(L!("-").to_owned());

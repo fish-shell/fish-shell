@@ -33,3 +33,15 @@ isolated-tmux send-keys -X previous-prompt
 tmux-sleep
 isolated-tmux display-message -p '#{copy_cursor_y} #{copy_cursor_line}'
 # CHECK: {{[46]}} prompt-line-1
+
+# Test that the prevd binding does not break the prompt.
+isolated-tmux send-keys Escape
+tmux-sleep
+isolated-tmux send-keys M-left
+tmux-sleep
+isolated-tmux capture-pane -p | tail -n 5
+# CHECK: prompt-line-2> : 5
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2>
+# CHECK:
+# CHECK:

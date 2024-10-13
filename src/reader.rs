@@ -2858,6 +2858,7 @@ impl<'a> Reader<'a> {
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.save_screen_state();
                     return;
                 }
 
@@ -2880,6 +2881,7 @@ impl<'a> Reader<'a> {
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.save_screen_state();
                     return;
                 }
 

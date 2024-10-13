@@ -26,6 +26,12 @@ NOTARIZE=
 ARM64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=11.0'
 X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.9'
 
+# As of this writing, the most recent Rust release supports macOS back to 10.12.
+# The first supported version of macOS on arm64 is 10.15, so any Rust is fine for arm64.
+# We wish to support back to 10.9 on x86-64; the last version of Rust to support that is
+# version 1.73.0.
+RUST_VERSION_X86_64=1.73.0
+
 while getopts "sf:i:p:e:nj:" opt; do
   case $opt in
     s) SIGN=1;;
@@ -83,11 +89,13 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
 }
 
 # Build for x86-64 but do not install; instead we will make some fat binaries inside the root.
+# Set RUST_VERSION_X86_64 to the last version of Rust that supports macOS 10.9.
 { cd "$PKGDIR/build_x86_64" \
   && cmake \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
         -DWITH_GETTEXT=OFF \
+        -DRust_TOOLCHAIN="$RUST_VERSION_X86_64" \
         -DRust_CARGO_TARGET=x86_64-apple-darwin \
         -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
         -DFISH_USE_SYSTEM_PCRE2=OFF "$SRC_DIR" \

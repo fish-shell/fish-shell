@@ -9,9 +9,14 @@ jobs:
     environment: macos-codesign
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.79
+      - name: Install Rust 1.73.0
+        uses: dtolnay/rust-toolchain@1.73.0
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: x86_64-apple-darwin
+      - name: Install Rust 1.79
+        uses: dtolnay/rust-toolchain@1.79
+        with:
+          targets: aarch64-apple-darwin
       - name: build-and-codesign
         run: |
           cargo install apple-codesign

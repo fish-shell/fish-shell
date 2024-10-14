@@ -1,5 +1,7 @@
 # RUN: %fish --interactive %s
 
+fish_vi_key_bindings
+
 commandline '123'; commandline --cursor 0; __fish_inc_dec_number_under_cursor increase
 commandline --current-buffer
 # CHECK: 124
@@ -91,8 +93,6 @@ commandline --current-buffer
 commandline 'to 2022-04-09'; commandline --cursor 11; __fish_inc_dec_number_under_cursor decrease
 commandline --current-buffer
 # CHECK: to 2022-04-10
-
-
 
 # Test when the cursor is at the beginning of a number
 commandline '007'; commandline --cursor 0; __fish_inc_dec_number_under_cursor increase
@@ -218,7 +218,6 @@ commandline '(123)'; commandline --cursor 2; __fish_inc_dec_number_under_cursor 
 commandline --current-buffer
 # CHECK: (122)
 
-
 # Test with two separate strings on the same line
 commandline 'abc123 def456'; commandline --cursor 4; __fish_inc_dec_number_under_cursor increase
 commandline --current-buffer
@@ -335,8 +334,6 @@ commandline --current-buffer
 commandline 'num1! num2? num3.'; commandline --cursor 15; __fish_inc_dec_number_under_cursor decrease
 commandline --current-buffer
 # CHECK: num1! num2? num2.
-
-
 
 # Test with identical numbers in different parts of the string
 commandline '123 abc 123 xyz 123'; commandline --cursor 1; __fish_inc_dec_number_under_cursor increase
@@ -487,7 +484,6 @@ commandline --current-buffer
 commandline 'abc123 abc456 abc123'; commandline --cursor 18; __fish_inc_dec_number_under_cursor decrease
 commandline --current-buffer
 # CHECK: abc123 abc456 abc122
-
 
 # Test with a single '0' on the command line
 commandline '0'; commandline --cursor 0; __fish_inc_dec_number_under_cursor increase

@@ -1,4 +1,4 @@
-function increment_decrement
+function __fish_inc_dec_number_under_cursor
     set current_buffer (commandline -b)
     set cursor_position (commandline -C)
     set original_cursor_position (commandline -C)
@@ -76,5 +76,5 @@ function increment_decrement
     commandline -f repaint
 end
 
-# bind -M insert \ca 'increment_decrement increase'
-# bind -M insert \cx 'increment_decrement decrease'
+# bind -M insert \ca '__fish_inc_dec_number_under_cursor increase'
+# bind -M insert \cx '__fish_inc_dec_number_under_cursor decrease'

@@ -405,12 +405,14 @@ impl<'s> State<'s> {
             // Look for a function call.
             // But not when it's an "x" followed by whitespace
             // - that's the alternative multiplication operator.
-            if next.first()?.is_ascii_lowercase()
+            // We look for alphabetic here even tho all our function names are ASCII,
+            // in order to give a nicer error.
+            if next.first()?.is_alphabetic()
                 && !(*next.first()? == 'x' && next.len() > 1 && next[1].is_whitespace())
             {
                 let ident_len = next
                     .iter()
-                    .position(|&c| !(c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'))
+                    .position(|&c| !(c.is_alphabetic() || c.is_ascii_digit() || c == '_'))
                     .unwrap_or(next.len());
 
                 let ident = &next[..ident_len];

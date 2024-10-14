@@ -54,9 +54,11 @@ The following code will create ``rmi``, which runs ``rm`` with additional argume
         rm -i $argv
     end
     
+``alias`` sometimes requires escaping, as you can see here::
+
     # This needs to have the spaces escaped or "Chrome.app..."
     # will be seen as an argument to "/Applications/Google":
-    alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
+    alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
 
 
 See more

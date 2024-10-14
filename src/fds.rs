@@ -240,7 +240,7 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     let saved_errno = errno();
     errno::set_errno(errno::Errno(0));
     // We retry this in case of signals,
-    // if we get EINTR and it's not a SIGINIT, we continue.
+    // if we get EINTR and it's not a SIGINT, we continue.
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);

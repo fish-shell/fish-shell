@@ -1,5 +1,4 @@
 use std::os::fd::AsRawFd;
-use std::os::unix::fs::MetadataExt;
 
 use crate::{
     common::{escape, scoped_push_replacer, FilenameRef},
@@ -7,9 +6,7 @@ use crate::{
     nix::isatty,
     parser::Block,
     reader::reader_read,
-    wutil::fstat,
 };
-use libc::{S_IFMT, S_IFREG};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 
 use super::prelude::*;
@@ -48,6 +45,10 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if argc == optind && isatty(streams.stdin_fd) {
             // Don't implicitly read from the terminal.
+            streams.err.append(wgettext_fmt!(
+                "%ls: missing filename argument or input redirection\n",
+                cmd
+            ));
             return STATUS_CMD_ERROR;
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
@@ -70,27 +71,6 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         };
 
         fd = opened_file.as_raw_fd();
-        let md = match fstat(fd) {
-            Ok(md) => md,
-            Err(_) => {
-                let esc = escape(args[optind]);
-                streams.err.append(wgettext_fmt!(
-                    "%ls: Error encountered while sourcing file '%ls':\n",
-                    cmd,
-                    &esc
-                ));
-                return STATUS_CMD_ERROR;
-            }
-        };
-
-        #[allow(clippy::useless_conversion)]
-        if md.mode() & u32::from(S_IFMT) != u32::from(S_IFREG) {
-            let esc = escape(args[optind]);
-            streams
-                .err
-                .append(wgettext_fmt!("%ls: '%ls' is not a file\n", cmd, esc));
-            return STATUS_CMD_ERROR;
-        }
 
         func_filename = FilenameRef::new(args[optind].to_owned());
     }

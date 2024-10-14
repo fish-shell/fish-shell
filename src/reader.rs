@@ -45,11 +45,12 @@ use crate::abbrs::abbrs_match;
 use crate::ast::{self, Ast, Category, Traversal};
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
+use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
     redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx, shell_modes, str2wcstring,
-    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding,
-    PROGRAM_NAME, UTF8_BOM_WCHAR,
+    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
+    UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -74,11 +75,9 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::IN_ITERM_PRE_CSI_U;
-use crate::input_common::IN_MIDNIGHT_COMMANDER;
-use crate::input_common::IN_WEZTERM;
 use crate::input_common::{
-    terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData, ReadlineCmd, IS_TMUX,
+    terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
+    ReadlineCmd,
 };
 use crate::io::IoChain;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -87,6 +86,7 @@ use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
+use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_tree::ParsedSource;
@@ -126,7 +126,6 @@ use crate::wcstringutil::{
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::fish_wcstol;
 use crate::wutil::{fstat, perror, write_to_fd};
 use crate::{abbrs, event, function, history};
 
@@ -499,13 +498,8 @@ pub struct ReaderData {
     history: Arc<History>,
     /// The history search.
     history_search: ReaderHistorySearch,
-    /// Whether the in-pager history search is active.
-    history_pager_active: bool,
-    /// The direction of the last successful history pager search.
-    history_pager_direction: SearchDirection,
-    /// The range in history covered by the history pager's current page.
-    history_pager_history_index_start: usize,
-    history_pager_history_index_end: usize,
+    /// In-pager history search.
+    history_pager: Option<HistoryPager>,
 
     /// The cursor selection mode.
     cursor_selection_mode: CursorSelectionMode,
@@ -792,10 +786,14 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
 }
 
 /// Initialize the reader.
-pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
+pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
     let mut terminal_mode_on_startup = TERMINAL_MODE_ON_STARTUP.lock().unwrap();
     unsafe { libc::tcgetattr(STDIN_FILENO, &mut *terminal_mode_on_startup) };
+
+    #[cfg(not(test))]
+    assert!(AT_EXIT.get().is_none());
+    AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
@@ -821,10 +819,14 @@ pub fn reader_init() -> impl ScopeGuarding<Target = ()> {
             term_donate(/*quiet=*/ true);
         }
     }
-    ScopeGuard::new((), move |()| {
-        restore_term_mode();
-        crate::input_common::terminal_protocols_disable_ifn();
-    })
+}
+
+pub fn reader_deinit(restore_foreground_pgroup: bool) {
+    restore_term_mode();
+    crate::input_common::terminal_protocols_disable_ifn();
+    if restore_foreground_pgroup {
+        restore_term_foreground_process_group_for_exit();
+    }
 }
 
 /// Restore the term mode if we own the terminal and are interactive (#8705).
@@ -1129,10 +1131,7 @@ impl ReaderData {
             queued_repaint: false,
             history,
             history_search: Default::default(),
-            history_pager_active: Default::default(),
-            history_pager_direction: SearchDirection::Forward,
-            history_pager_history_index_start: usize::MAX,
-            history_pager_history_index_end: usize::MAX,
+            history_pager: None,
             cursor_selection_mode: CursorSelectionMode::Exclusive,
             cursor_end_mode: CursorEndMode::Exclusive,
             selection: Default::default(),
@@ -1162,7 +1161,7 @@ impl ReaderData {
     }
 
     fn is_navigating_pager_contents(&self) -> bool {
-        self.pager.is_navigating_contents() || self.history_pager_active
+        self.pager.is_navigating_contents() || self.history_pager.is_some()
     }
 
     fn edit_line(&self, elt: EditableLineTag) -> &EditableLine {
@@ -1214,7 +1213,7 @@ impl ReaderData {
                 GENERATION.fetch_add(1, Ordering::Relaxed);
             }
             EditableLineTag::SearchField => {
-                if self.history_pager_active {
+                if self.history_pager.is_some() {
                     self.fill_history_pager(
                         HistoryPagerInvocation::Anew,
                         SearchDirection::Backward,
@@ -2370,7 +2369,11 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::PagerToggleSearch => {
-                if self.history_pager_active {
+                if let Some(history_pager) = &self.history_pager {
+                    if history_pager.history_index_start == 0 {
+                        self.flash();
+                        return;
+                    }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Forward,
@@ -2632,7 +2635,11 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::HistoryPager => {
-                if self.history_pager_active {
+                if let Some(history_pager) = &self.history_pager {
+                    if !history_pager.can_go_backwards {
+                        self.flash();
+                        return;
+                    }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
                         SearchDirection::Backward,
@@ -2644,9 +2651,12 @@ impl<'a> Reader<'a> {
                 self.cycle_command_line = self.command_line.text().to_owned();
                 self.cycle_cursor_pos = self.command_line.position();
 
-                self.history_pager_active = true;
-                self.history_pager_history_index_start = 0;
-                self.history_pager_history_index_end = 0;
+                self.history_pager = Some(HistoryPager {
+                    direction: SearchDirection::Backward,
+                    history_index_start: 0,
+                    history_index_end: 0,
+                    can_go_backwards: false,
+                });
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
                 self.pager.set_prefix(
@@ -2698,7 +2708,7 @@ impl<'a> Reader<'a> {
                     self.input_data.function_set_status(true);
                     return;
                 }
-                if !self.history_pager_active {
+                if self.history_pager.is_none() {
                     self.input_data.function_set_status(false);
                     return;
                 }
@@ -2792,12 +2802,63 @@ impl<'a> Reader<'a> {
                     self.rls().last_cmd != Some(c),
                 );
             }
+            rl::BackwardKillToken => {
+                let Some(new_position) = self.backward_token() else {
+                    return;
+                };
+
+                let (elt, _el) = self.active_edit_line();
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                let (elt, el) = self.active_edit_line();
+                self.data.kill(
+                    elt,
+                    new_position..el.position(),
+                    Kill::Prepend,
+                    self.rls().last_cmd != Some(rl::BackwardKillToken),
+                );
+            }
+            rl::BackwardToken => {
+                let Some(new_position) = self.backward_token() else {
+                    return;
+                };
+                let (elt, _el) = self.active_edit_line();
+                self.update_buff_pos(elt, Some(new_position));
+            }
+            rl::KillToken => {
+                let Some(new_position) = self.forward_token() else {
+                    return;
+                };
+
+                let (elt, _el) = self.active_edit_line();
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
+
+                let (elt, el) = self.active_edit_line();
+                self.data.kill(
+                    elt,
+                    el.position()..new_position,
+                    Kill::Append,
+                    self.rls().last_cmd != Some(rl::KillToken),
+                );
+            }
+            rl::ForwardToken => {
+                let Some(new_position) = self.forward_token() else {
+                    return;
+                };
+                let (elt, _el) = self.active_edit_line();
+                self.update_buff_pos(elt, Some(new_position));
+            }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
                     self.eval_bind_cmd(L!("prevd"));
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.save_screen_state();
                     return;
                 }
 
@@ -2820,6 +2881,7 @@ impl<'a> Reader<'a> {
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+                    self.save_screen_state();
                     return;
                 }
 
@@ -2931,7 +2993,9 @@ impl<'a> Reader<'a> {
                 self.input_data.function_set_status(success);
             }
             rl::AcceptAutosuggestion => {
+                let success = !self.autosuggestion.is_empty();
                 self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
+                self.input_data.function_set_status(success);
             }
             rl::TransposeChars => {
                 let (elt, el) = self.active_edit_line();
@@ -3329,6 +3393,54 @@ impl<'a> Reader<'a> {
             }
         }
     }
+
+    fn backward_token(&mut self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == 0 {
+            return None;
+        }
+
+        let mut tok = 0..0;
+        let mut prev_tok = 0..0;
+        parse_util_token_extent(el.text(), el.position(), &mut tok, Some(&mut prev_tok));
+
+        // if we are at the start of a token, go back one
+        let new_position = if tok.start == pos {
+            if prev_tok.start == pos {
+                let cmdsub = parse_util_cmdsubst_extent(el.text(), prev_tok.start);
+                cmdsub.start.saturating_sub(1)
+            } else {
+                prev_tok.start
+            }
+        } else {
+            tok.start
+        };
+
+        Some(new_position)
+    }
+
+    fn forward_token(&self) -> Option<usize> {
+        let (_elt, el) = self.active_edit_line();
+        let pos = el.position();
+        if pos == el.len() {
+            return None;
+        }
+
+        // If we are not in a token, look for one ahead
+        let buff_pos = pos
+            + el.text()[pos..]
+                .chars()
+                .take_while(|c| c.is_ascii_whitespace())
+                .count();
+
+        let mut tok = 0..0;
+        parse_util_token_extent(el.text(), buff_pos, &mut tok, None);
+
+        let new_position = if tok.end == pos { pos + 1 } else { tok.end };
+
+        Some(new_position)
+    }
 }
 
 /// Returns true if the last token is a comment.
@@ -3348,7 +3460,7 @@ impl<'a> Reader<'a> {
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
-            if self.history_pager_active && self.pager.selected_completion_idx.is_none() {
+            if self.history_pager.is_some() && self.pager.selected_completion_idx.is_none() {
                 self.data.command_line.push_edit(
                     Edit::new(
                         0..self.data.command_line.len(),
@@ -3456,7 +3568,7 @@ impl ReaderData {
     // Ensure we have no pager contents.
     fn clear_pager(&mut self) {
         self.pager.clear();
-        self.history_pager_active = false;
+        self.history_pager = None;
         self.command_line_has_transient_edit = false;
     }
 
@@ -3855,55 +3967,7 @@ fn reader_interactive_init(parser: &Parser) {
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
-    interactive_hacks(parser);
-}
-
-fn interactive_hacks(parser: &Parser) {
-    IS_TMUX.store(parser.vars().get_unless_empty(L!("TMUX")).is_some());
-    IN_MIDNIGHT_COMMANDER.store(parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some());
-    IN_WEZTERM.store(
-        parser
-            .vars()
-            .get_unless_empty(L!("TERM_PROGRAM"))
-            .is_some_and(|term_program| term_program.as_list() == [L!("WezTerm")]),
-    );
-    IN_ITERM_PRE_CSI_U.store(
-        parser
-            .vars()
-            .get(L!("LC_TERMINAL"))
-            .is_some_and(|term| term.as_list() == [L!("iTerm2")])
-            && parser
-                .vars()
-                .get(L!("LC_TERMINAL_VERSION"))
-                .is_some_and(|version| {
-                    if version.as_list().is_empty() {
-                        return false;
-                    }
-                    let Some(version) = parse_version(&version.as_list()[0]) else {
-                        return false;
-                    };
-                    version < (3, 5, 5)
-                }),
-    );
-}
-
-fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
-    let mut numbers = version.split('.');
-    let major = fish_wcstol(numbers.next()?).ok()?;
-    let minor = fish_wcstol(numbers.next()?).ok()?;
-    let patch = numbers.next()?;
-    let patch = &patch[..patch
-        .chars()
-        .position(|c| !c.is_ascii_digit())
-        .unwrap_or(patch.len())];
-    let patch = fish_wcstol(patch).ok()?;
-    Some((major, minor, patch))
-}
-
-#[test]
-fn test_parse_version() {
-    assert_eq!(parse_version(L!("3.5.2")), Some((3, 5, 2)));
-    assert_eq!(parse_version(L!("3.5.3beta")), Some((3, 5, 3)));
+    terminal_protocol_hacks();
 }
 
 /// Destroy data for interactive use.
@@ -4503,10 +4567,19 @@ struct HistoryPagerResult {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum HistoryPagerInvocation {
+enum HistoryPagerInvocation {
     Anew,
     Advance,
     Refresh,
+}
+
+struct HistoryPager {
+    /// The direction of the last successful history pager search.
+    direction: SearchDirection,
+    /// The range in history covered by the history pager's current page.
+    history_index_start: usize,
+    history_index_end: usize,
+    can_go_backwards: bool,
 }
 
 fn history_pager_search(
@@ -4580,15 +4653,17 @@ impl ReaderData {
                 index = 0;
             }
             HistoryPagerInvocation::Advance => {
+                let history_pager = self.history_pager.as_ref().unwrap();
                 index = match direction {
-                    SearchDirection::Forward => self.history_pager_history_index_start,
-                    SearchDirection::Backward => self.history_pager_history_index_end,
+                    SearchDirection::Forward => history_pager.history_index_start,
+                    SearchDirection::Backward => history_pager.history_index_end,
                 }
             }
             HistoryPagerInvocation::Refresh => {
                 // Redo the previous search previous direction.
-                direction = self.history_pager_direction;
-                index = self.history_pager_history_index_start;
+                let history_pager = self.history_pager.as_ref().unwrap();
+                direction = history_pager.direction;
+                index = history_pager.history_index_start;
                 old_pager_index = Some(self.pager.selected_completion_index());
             }
         }
@@ -4606,20 +4681,19 @@ impl ReaderData {
             if search_term != zelf.pager.search_field_line.text() {
                 return; // Stale request.
             }
-            if result.matched_commands.is_empty() && why == HistoryPagerInvocation::Advance {
-                // No more matches, keep the existing ones and flash.
-                zelf.flash();
-                return;
-            }
-            zelf.history_pager_direction = direction;
+            let history_pager = zelf.history_pager.as_mut().unwrap();
+            history_pager.direction = direction;
             match direction {
                 SearchDirection::Forward => {
-                    zelf.history_pager_history_index_start = result.final_index;
-                    zelf.history_pager_history_index_end = index;
+                    assert!(index > result.final_index);
+                    history_pager.history_index_start = result.final_index;
+                    history_pager.history_index_end = index;
+                    history_pager.can_go_backwards = true;
                 }
                 SearchDirection::Backward => {
-                    zelf.history_pager_history_index_start = index;
-                    zelf.history_pager_history_index_end = result.final_index;
+                    history_pager.history_index_start = index;
+                    history_pager.history_index_end = result.final_index;
+                    history_pager.can_go_backwards = result.have_more_results;
                 }
             };
             zelf.pager.extra_progress_text = if result.have_more_results {
@@ -4896,6 +4970,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::BackwardWord
         | rl::ForwardBigword
         | rl::BackwardBigword
+        | rl::ForwardToken
+        | rl::BackwardToken
         | rl::NextdOrForwardWord
         | rl::PrevdOrBackwardWord
         | rl::DeleteChar
@@ -4908,9 +4984,11 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::KillInnerLine
         | rl::KillWord
         | rl::KillBigword
+        | rl::KillToken
         | rl::BackwardKillWord
         | rl::BackwardKillPathComponent
         | rl::BackwardKillBigword
+        | rl::BackwardKillToken
         | rl::SelfInsert
         | rl::SelfInsertNotFirst
         | rl::TransposeChars

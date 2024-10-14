@@ -16,10 +16,13 @@
 //! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 //! trigger race conditions. This is useful for testing.
 
-use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
+use crate::{
+    common::cstr2wcstring, env::EnvVar, wcstringutil::trim,
+    wutil::fileid::file_id_for_path_or_error,
+};
 use std::{
     borrow::Cow,
-    collections::{BTreeMap, HashMap, HashSet, VecDeque},
+    collections::{BTreeMap, HashMap, HashSet},
     ffi::CString,
     fs::File,
     io::{BufRead, Read, Seek, SeekFrom, Write},
@@ -60,7 +63,7 @@ use crate::{
         path_get_config, path_get_data, path_get_data_remoteness, path_is_valid, DirRemoteness,
     },
     threads::{assert_is_background_thread, iothread_perform},
-    util::find_subslice,
+    util::{find_subslice, get_rng},
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
@@ -137,6 +140,8 @@ const HISTORY_FILE_MODE: Mode = Mode::from_bits_truncate(0o600);
 /// Saving may fail if the file is modified in between our opening
 /// the file and taking the lock
 const MAX_SAVE_TRIES: usize = 1024;
+
+pub const VACUUM_FREQUENCY: usize = 25;
 
 /// If the size of `buffer` is at least `min_size`, output the contents `buffer` to `fd`,
 /// and clear the string.
@@ -375,11 +380,11 @@ struct HistoryImpl {
     /// The most recent "unique" identifier for a history item.
     last_identifier: HistoryIdentifier, // 0
     /// How many items we add until the next vacuum. Initially a random value.
-    countdown_to_vacuum: Option<usize>, // -1
+    countdown_to_vacuum: Option<usize>,
     /// Whether we've loaded old items.
     loaded_old: bool, // false
     /// List of old items, as offsets into out mmap data.
-    old_item_offsets: VecDeque<usize>,
+    old_item_offsets: Vec<usize>,
 }
 
 /// If set, we gave up on file locking because it took too long.
@@ -463,7 +468,7 @@ impl HistoryImpl {
                 file_contents.offset_of_next_item(&mut cursor, Some(self.boundary_timestamp))
             {
                 // Remember this item.
-                self.old_item_offsets.push_back(offset);
+                self.old_item_offsets.push(offset);
             }
         }
 
@@ -621,10 +626,10 @@ impl HistoryImpl {
             }
         }
         if let Some(err) = err {
-            FLOGF!(
+            FLOG!(
                 history_file,
-                "Error %d when writing to temporary history file",
-                err.raw_os_error().unwrap_or_default()
+                "Error writing to temporary history file:",
+                err
             );
 
             false
@@ -670,6 +675,9 @@ impl HistoryImpl {
                 OFlag::O_RDONLY | OFlag::O_CREAT,
                 HISTORY_FILE_MODE,
             );
+            if let Err(err) = target_file_before {
+                FLOG!(history_file, "Error opening history file:", err);
+            }
 
             let orig_file_id = target_file_before
                 .as_ref()
@@ -687,28 +695,43 @@ impl HistoryImpl {
             // If the open fails, then proceed; this may be because there is no current history
             let mut new_file_id = INVALID_FILE_ID;
 
-            let mut target_fd_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-            if let Ok(target_fd_after) = target_fd_after.as_mut() {
+            let mut target_file_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
+            if let Ok(target_file_after) = target_file_after.as_mut() {
                 // critical to take the lock before checking file IDs,
                 // and hold it until after we are done replacing.
                 // Also critical to check the file at the path, NOT based on our fd.
                 // It's only OK to replace the file while holding the lock.
-                // Note any lock is released when target_fd_after is closed.
+                // Note any lock is released when target_file_after is closed.
                 unsafe {
-                    Self::maybe_lock_file(target_fd_after, LOCK_EX);
+                    Self::maybe_lock_file(target_file_after, LOCK_EX);
                 }
-                new_file_id = file_id_for_path(&target_name);
+                new_file_id = match file_id_for_path_or_error(&target_name) {
+                    Ok(file_id) => file_id,
+                    Err(err) => {
+                        if err.kind() != std::io::ErrorKind::NotFound {
+                            FLOG!(history_file, "Error re-opening history file:", err);
+                        }
+                        INVALID_FILE_ID
+                    }
+                }
             }
 
             let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
             if !can_replace_file {
                 // The file has changed, so we're going to re-read it
                 // Truncate our tmp_file so we can reuse it
-                if tmp_file.set_len(0).is_err() || tmp_file.seek(SeekFrom::Start(0)).is_err() {
-                    FLOGF!(
+                if let Err(err) = tmp_file.set_len(0) {
+                    FLOG!(
                         history_file,
-                        "Error %d when truncating temporary history file",
-                        errno::errno().0
+                        "Error when truncating temporary history file:",
+                        err
+                    );
+                }
+                if let Err(err) = tmp_file.seek(SeekFrom::Start(0)) {
+                    FLOG!(
+                        history_file,
+                        "Error resetting cursor in temporary history file:",
+                        err
                     );
                 }
             } else {
@@ -720,23 +743,23 @@ impl HistoryImpl {
                 // corresponds to e.g. someone running sudo -E as the very first command. If they
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
-                if let Ok(target_fd_after) = target_fd_after.as_ref() {
-                    if let Ok(md) = fstat(target_fd_after.as_raw_fd()) {
+                if let Ok(target_file_after) = target_file_after.as_ref() {
+                    if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                            FLOGF!(
+                            FLOG!(
                                 history_file,
-                                "Error %d when changing ownership of history file",
-                                errno::errno().0
+                                "Error when changing ownership of history file:",
+                                errno::errno()
                             );
                         }
                         #[allow(clippy::useless_conversion)]
                         if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
                             == -1
                         {
-                            FLOGF!(
+                            FLOG!(
                                 history_file,
-                                "Error %d when changing mode of history file",
-                                errno::errno().0,
+                                "Error when changing mode of history file:",
+                                errno::errno(),
                             );
                         }
                     }
@@ -756,8 +779,6 @@ impl HistoryImpl {
                 // We did it
                 done = true;
             }
-
-            drop(target_fd_after);
         }
 
         // Ensure we never leave the old file around
@@ -943,15 +964,14 @@ impl HistoryImpl {
         // countdown at a random number so that even if the user never runs more than 25 commands, we'll
         // eventually vacuum.  If countdown_to_vacuum is None, it means we haven't yet picked a value for
         // the counter.
-        let vacuum_frequency = 25;
         let countdown_to_vacuum = self
             .countdown_to_vacuum
-            .get_or_insert_with(|| rand::thread_rng().gen_range(0..vacuum_frequency));
+            .get_or_insert_with(|| get_rng().gen_range(0..VACUUM_FREQUENCY));
 
         // Determine if we're going to vacuum.
         let mut vacuum = false;
         if *countdown_to_vacuum == 0 {
-            *countdown_to_vacuum = vacuum_frequency;
+            *countdown_to_vacuum = VACUUM_FREQUENCY;
             vacuum = true;
         }
 
@@ -982,7 +1002,7 @@ impl HistoryImpl {
             last_identifier: 0,
             countdown_to_vacuum: None,
             loaded_old: false,
-            old_item_offsets: VecDeque::new(),
+            old_item_offsets: Vec::new(),
         }
     }
 
@@ -1103,13 +1123,16 @@ impl HistoryImpl {
         // destination file descriptor, since it destroys the name and the file.
         self.clear();
 
-        let Ok(mut dst_file) = wopen_cloexec(
+        let mut dst_file = match wopen_cloexec(
             &new_file,
             OFlag::O_WRONLY | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
-        ) else {
-            FLOG!(history_file, "Error when writing history file");
-            return;
+        ) {
+            Ok(file) => file,
+            Err(err) => {
+                FLOG!(history_file, "Error when writing history file:", err);
+                return;
+            }
         };
 
         let mut buf = [0; libc::BUFSIZ as usize];
@@ -1118,9 +1141,8 @@ impl HistoryImpl {
                 break;
             }
 
-            if dst_file.write(&buf[..n]).is_err() {
-                // This message does not have high enough priority to be shown by default.
-                FLOG!(history_file, "Error when writing history file");
+            if let Err(err) = dst_file.write_all(&buf[..n]) {
+                FLOG!(history_file, "Error when writing history file:", err);
                 break;
             }
         }
@@ -1348,9 +1370,7 @@ impl HistoryImpl {
     ///
     /// `fd` must be a valid argument to `flock(2)` with `LOCK_UN`.
     unsafe fn unlock_file(file: &mut File) {
-        unsafe {
-            libc::flock(file.as_raw_fd(), LOCK_UN);
-        }
+        libc::flock(file.as_raw_fd(), LOCK_UN);
     }
 }
 
@@ -1415,17 +1435,6 @@ fn format_history_record(
         if !unsafe { libc::localtime_r(&seconds, &mut timestamp).is_null() } {
             const max_tstamp_length: usize = 100;
             let mut timestamp_str = [0_u8; max_tstamp_length];
-            // The libc crate fails to declare strftime on BSD.
-            #[cfg(bsd)]
-            extern "C" {
-                fn strftime(
-                    buf: *mut libc::c_char,
-                    maxsize: usize,
-                    format: *const libc::c_char,
-                    timeptr: *const libc::tm,
-                ) -> usize;
-            }
-            #[cfg(not(bsd))]
             use libc::strftime;
             if unsafe {
                 strftime(
@@ -1596,6 +1605,7 @@ impl History {
         let when = imp.timestamp_now();
         let identifier = imp.next_identifier();
         let item = HistoryItem::new(s.to_owned(), when, identifier, persist_mode);
+        let do_save = persist_mode != PersistenceMode::Ephemeral;
 
         if wants_file_detection {
             imp.disable_automatic_saving();
@@ -1611,14 +1621,16 @@ impl History {
                 let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();
                 imp.set_valid_file_paths(validated_paths, identifier);
-                imp.enable_automatic_saving();
+                if do_save {
+                    imp.enable_automatic_saving();
+                }
             });
         } else {
             // Add the item.
             // If we think we're about to exit, save immediately, regardless of any disabling. This may
             // cause us to lose file hinting for some commands, but it beats losing history items.
-            imp.add(item, /*pending=*/ true, /*do_save=*/ true);
-            if needs_sync_write {
+            imp.add(item, /*pending=*/ true, do_save);
+            if do_save && needs_sync_write {
                 imp.save(false);
             }
         }

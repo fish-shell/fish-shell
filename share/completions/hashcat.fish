@@ -8,19 +8,19 @@ end
 
 function __fish_hashcat_outfile_formats --description "Get hashcat outfile formats"
     echo -e "
-1\t'hash[:salt]'
-2\t'plain'
-3\t'hex_plain'
-4\t'crack_pos'
-5\t'timestamp absolute'
-6\t'timestamp relative'"
+1\thash[:salt]
+2\tplain
+3\thex_plain
+4\tcrack_pos
+5\ttimestamp absolute
+6\ttimestamp relative"
 end
 
 function __fish_hashcat_device_types --description "Get hashcat device types"
     echo -e "
-1\t'CPU'
-2\t'GPU'
-3\t'FPGA, DSP, Co-Processor'"
+1\tCPU
+2\tGPU
+3\tFPGA, DSP, Co-Processor"
 end
 
 complete -c hashcat -s m -l hash-type -xa "(__fish_hashcat_types)" -d Hash-type
@@ -38,6 +38,7 @@ complete -c hashcat -l hex-charset -d "Assume charset is given in hex"
 complete -c hashcat -l hex-salt -d "Assume salt is given in hex"
 complete -c hashcat -l hex-wordlist -d "Assume words in wordlist are given in hex"
 complete -c hashcat -l force -d "Ignore warnings"
+complete -c hashcat -l deprecated-check-disable -d "Enable deprecated plugins"
 complete -c hashcat -l status -d "Enable automatic update of the status screen"
 complete -c hashcat -l status-json -d "Enable JSON format for status ouput"
 complete -c hashcat -l status-timer -x -d "Sets seconds between status screen updates"
@@ -49,6 +50,7 @@ complete -c hashcat -l loopback -d "Add new plains to induct directory"
 complete -c hashcat -l markov-hcstat2 -rF -d "Specify hcstat2 file to use"
 complete -c hashcat -l markov-disable -d "Disables markov-chains, emulates classic brute-force"
 complete -c hashcat -l markov-classic -d "Enables classic markov-chains, no per-position"
+complete -c hashcat -l markov-inverse -d "Enables inverse markov-chains, no per-position"
 complete -c hashcat -s t -l markov-threshold -x -d "Threshold when to stop accepting new markov-chains"
 complete -c hashcat -l runtime -x -d "Abort session after X seconds of runtime"
 complete -c hashcat -l session -x -d "Define specific session name"
@@ -99,11 +101,14 @@ complete -c hashcat -l hook-threads -x -d "Sets number of threads for a hook (pe
 complete -c hashcat -l hash-info -d "Show information for each hash-mode"
 complete -c hashcat -l example-hashes -d "Alias of --hash-info"
 complete -c hashcat -l backend-ignore-cuda -d "Do not try to open CUDA interface on startup"
+complete -c hashcat -l backend-ignore-hip -d "Do not try to open HIP interface on startup"
+complete -c hashcat -l backend-ignore-metal -d "Do not try to open Metal interface on startup"
 complete -c hashcat -l backend-ignore-opencl -d "Do not try to open OpenCL interface on startup"
 complete -c hashcat -s I -l backend-info -d "Show info about detected backend API devices"
 complete -c hashcat -s d -l backend-devices -x -d "Backend devices to use"
 complete -c hashcat -s D -l opencl-device-types -xa "(__fish_complete_list , __fish_hashcat_device_types)" -d "OpenCL device-types to use"
 complete -c hashcat -s O -l optimized-kernel-enable -d "Enable optimized kernels (limits password length)"
+complete -c hashcat -s M -l multiply-accel-disable -d "Disable multiply kernel-accel with processor count"
 complete -c hashcat -s w -l workload-profile -d "Enable a specific workload profile" -xa "
                                                         1\tLow
                                                         2\tDefault
@@ -126,11 +131,13 @@ complete -c hashcat -s r -l rules-file -rF -d "Multiple rules applied to each wo
 complete -c hashcat -s g -l generate-rules -x -d "Generate X random rules"
 complete -c hashcat -l generate-rules-func-min -x -d "Force min X functions per rule"
 complete -c hashcat -l generate-rules-func-max -x -d "Force max X functions per rule"
+complete -c hashcat -l generate-rules-func-sel -x -d "Pool of rule operators valid for random rule engine"
 complete -c hashcat -l generate-rules-seed -x -d "Force RNG seed set to X"
 complete -c hashcat -s 1 -l custom-charset1 -x -d "User-defined charset ?1"
 complete -c hashcat -s 2 -l custom-charset2 -x -d "User-defined charset ?2"
 complete -c hashcat -s 3 -l custom-charset3 -x -d "User-defined charset ?3"
 complete -c hashcat -s 4 -l custom-charset4 -x -d "User-defined charset ?4"
+complete -c hashcat -s i -l identify -d "Shows all supported algorithms for input hashes"
 complete -c hashcat -s i -l increment -d "Enable mask increment mode"
 complete -c hashcat -l increment-min -x -d "Start mask incrementing at X"
 complete -c hashcat -l increment-max -x -d "Stop mask incrementing at X"

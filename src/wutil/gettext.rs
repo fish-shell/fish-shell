@@ -146,7 +146,7 @@ macro_rules! wgettext_fmt {
     $($args:expr),+ // list of expressions
     $(,)?   // optional trailing comma
     ) => {
-        $crate::wutil::sprintf!(&$crate::wutil::wgettext!($string), $($args),+)
+        $crate::wutil::sprintf!($crate::wutil::wgettext!($string), $($args),+)
     };
 }
 pub use wgettext_fmt;
@@ -160,7 +160,7 @@ macro_rules! wgettext_maybe_fmt {
     $(, $args:expr)* // list of expressions
     $(,)?   // optional trailing comma
     ) => {
-        $crate::wutil::sprintf!(&$crate::wutil::wgettext!($string), $($args),*)
+        $crate::wutil::sprintf!($crate::wutil::wgettext!($string), $($args),*)
     };
 }
 pub use wgettext_maybe_fmt;

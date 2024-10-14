@@ -4,41 +4,50 @@ pub use arg::{Arg, ToArg};
 
 mod fmt_fp;
 mod printf_impl;
-pub use printf_impl::{sprintf_locale, Error};
+pub use printf_impl::{sprintf_locale, Error, FormatString};
 pub mod locale;
 pub use locale::{Locale, C_LOCALE, EN_US_LOCALE};
 
 #[cfg(test)]
 mod tests;
 
+/// A macro to format a string using `fish_printf` with C-locale formatting rules.
+///
+/// # Examples
+///
+/// ```
+/// use fish_printf::sprintf;
+///
+/// // Create a `String` from a format string.
+/// let s = sprintf!("%0.5g", 123456.0);
+/// assert_eq!(s, "1.2346e+05");
+///
+/// // Append to an existing string.
+/// let mut s = String::new();
+/// sprintf!(=> &mut s, "%0.5g", 123456.0);
+/// assert_eq!(s, "1.2346e+05");
+/// ```
 #[macro_export]
 macro_rules! sprintf {
-    // Variant which allows a string literal and returns a `Utf32String`.
-    ($fmt:literal, $($arg:expr),* $(,)?) => {
-        {
-            let mut target = widestring::Utf32String::new();
-            $crate::sprintf!(=> &mut target, widestring::utf32str!($fmt), $($arg),*);
-            target
-        }
-    };
-
-    // Variant which allows a string literal and writes to a target.
-    // The target should implement std::fmt::Write.
+    // Write to a newly allocated String, and return it.
+    // This panics if the format string or arguments are invalid.
     (
-        => $target:expr, // target string
-        $fmt:literal, // format string
+        $fmt:expr, // Format string, which should implement FormatString.
         $($arg:expr),* // arguments
         $(,)? // optional trailing comma
     ) => {
         {
-            $crate::sprintf!(=> $target, widestring::utf32str!($fmt), $($arg),*);
+            let mut target = String::new();
+            $crate::sprintf!(=> &mut target, $fmt, $($arg),*);
+            target
         }
     };
 
-    // Variant which allows a `Utf32String` as a format, and writes to a target.
+    // Variant which writes to a target.
+    // The target should implement std::fmt::Write.
     (
         => $target:expr, // target string
-        $fmt:expr, // format string as UTF32String
+        $fmt:expr, // format string
         $($arg:expr),* // arguments
         $(,)? // optional trailing comma
     ) => {
@@ -46,20 +55,11 @@ macro_rules! sprintf {
             // May be no args!
             #[allow(unused_imports)]
             use $crate::ToArg;
-            $crate::sprintf_c_locale(
+            $crate::printf_c_locale(
                 $target,
-                $fmt.as_char_slice(),
+                $fmt,
                 &mut [$($arg.to_arg()),*],
             ).unwrap()
-        }
-    };
-
-    // Variant which allows a `Utf32String` as a format, and returns a `Utf32String`.
-    ($fmt:expr, $($arg:expr),* $(,)?) => {
-        {
-            let mut target = widestring::Utf32String::new();
-            $crate::sprintf!(=> &mut target, $fmt, $($arg),*);
-            target
         }
     };
 }
@@ -70,14 +70,29 @@ macro_rules! sprintf {
 /// # Parameters
 /// - `f`: The receiver of formatted output.
 /// - `fmt`: The format string being parsed.
-/// - `locale`: The locale to use for number formatting.
 /// - `args`: Iterator over the arguments to format.
 ///
 /// # Returns
-/// A `Result` which is `Ok` containing the number of bytes written on success, or an `Error`.
-pub fn sprintf_c_locale(
+/// A `Result` which is `Ok` containing the number of characters written on success, or an `Error`.
+///
+/// # Example
+///
+/// ```
+/// use fish_printf::{printf_c_locale, ToArg, FormatString};
+/// use std::fmt::Write;
+///
+/// let mut output = String::new();
+/// let fmt: &str = "%0.5g";  // Example format string
+/// let mut args = [123456.0.to_arg()];
+///
+/// let result = printf_c_locale(&mut output, fmt, &mut args);
+///
+/// assert!(result == Ok(10));
+/// assert_eq!(output, "1.2346e+05");
+/// ```
+pub fn printf_c_locale(
     f: &mut impl std::fmt::Write,
-    fmt: &[char],
+    fmt: impl FormatString,
     args: &mut [Arg],
 ) -> Result<usize, Error> {
     sprintf_locale(f, fmt, &locale::C_LOCALE, args)

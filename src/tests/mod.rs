@@ -28,10 +28,10 @@ mod topic_monitor;
 mod wgetopt;
 
 pub mod prelude {
-    use crate::common::ScopeGuarding;
+    use crate::common::{ScopeGuard, ScopeGuarding};
     use crate::env::{env_init, misc_init};
     use crate::parser::{CancelBehavior, Parser};
-    use crate::reader::reader_init;
+    use crate::reader::{reader_deinit, reader_init};
     use crate::signal::signal_reset_handlers;
     pub use crate::tests::env::{PwdEnvironment, TestEnvironment};
     use crate::topic_monitor::topic_monitor_init;
@@ -109,7 +109,10 @@ pub mod prelude {
             // Set PWD from getcwd - fixes #5599
             EnvStack::globals().set_pwd_from_getcwd();
         });
-        reader_init()
+        reader_init(false);
+        ScopeGuard::new((), |()| {
+            reader_deinit(false);
+        })
     }
 
     pub use serial_test::serial;

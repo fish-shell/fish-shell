@@ -127,6 +127,12 @@ not math 'blah()'
 # CHECKERR: 'blah()'
 # CHECKERR:  ^~~^
 
+# There is also no "Blah" function.
+not math 'Blah()'
+# CHECKERR: math: Error: Unknown function
+# CHECKERR: 'Blah()'
+# CHECKERR:  ^~~^
+
 math n + 4
 # CHECKERR: math: Error: Unknown function
 # CHECKERR: 'n + 4'

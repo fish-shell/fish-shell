@@ -186,7 +186,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
                     .caseless(opts.ignore_case)
                     // set to behave similarly to match, could probably be either enabled by default or
                     // allowed to be user-controlled here
-                    .never_utf(true)
+                    .block_utf_pattern_directive(true)
                     .build(pattern.as_char_slice())
                     .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
 

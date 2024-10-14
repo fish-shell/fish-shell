@@ -10,6 +10,7 @@ use crate::common::{
     unescape_string, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
     EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
+use crate::complete::complete_wrap_map;
 use crate::env::Environment;
 use crate::expand::{
     expand_one, expand_tilde, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
@@ -316,6 +317,10 @@ fn autosuggest_parse_command(
     None
 }
 
+pub fn is_veritable_cd(expanded_command: &wstr) -> bool {
+    expanded_command == L!("cd") && complete_wrap_map().get(L!("cd")).is_none()
+}
+
 /// Given an item `item` from the history which is a proposed autosuggestion, return whether the
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
@@ -333,7 +338,7 @@ pub fn autosuggest_validate_from_history(
     };
 
     // We handle cd specially.
-    if parsed_command == "cd" && !cd_dir.is_empty() {
+    if is_veritable_cd(&parsed_command) && !cd_dir.is_empty() {
         if expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None) {
             if string_prefixes_string(&cd_dir, L!("--help"))
                 || string_prefixes_string(&cd_dir, L!("-h"))
@@ -1354,7 +1359,7 @@ impl<'s> Highlighter<'s> {
 
         // Color arguments and redirections.
         // Except if our command is 'cd' we have special logic for how arguments are colored.
-        let is_cd = expanded_cmd == "cd";
+        let is_cd = is_veritable_cd(&expanded_cmd);
         let mut is_set = expanded_cmd == "set";
         // If we have seen a "--" argument, color all options from then on as normal arguments.
         let mut have_dashdash = false;

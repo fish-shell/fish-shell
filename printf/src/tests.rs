@@ -1,10 +1,9 @@
 use crate::arg::ToArg;
 use crate::locale::{Locale, C_LOCALE, EN_US_LOCALE};
-use crate::{sprintf_locale, Error};
+use crate::{sprintf_locale, Error, FormatString};
 use libc::c_char;
 use std::f64::consts::{E, PI, TAU};
 use std::fmt;
-use widestring::{utf32str, Utf32Str};
 
 // sprintf, checking length
 macro_rules! sprintf_check {
@@ -15,11 +14,11 @@ macro_rules! sprintf_check {
     ) => {
         {
             let mut target = String::new();
-            let chars: Vec<char> = $fmt.chars().collect();
-            let len = $crate::sprintf_c_locale(
+            let mut args = [$($arg.to_arg()),*];
+            let len = $crate::printf_c_locale(
                 &mut target,
-                &chars,
-                &mut [$($arg.to_arg()),*]
+                $fmt.as_ref() as &str,
+                &mut args,
             ).expect("printf failed");
             assert!(len == target.len(), "Wrong length returned: {} vs {}", len, target.len());
             target
@@ -43,10 +42,9 @@ macro_rules! assert_fmt1 {
 macro_rules! sprintf_err {
     ($fmt:expr, $($arg:expr),* => $expected:expr) => {
         {
-            let chars: Vec<char> = $fmt.chars().collect();
-            let err = $crate::sprintf_c_locale(
+            let err = $crate::printf_c_locale(
                 &mut NullOutput,
-                &chars,
+                $fmt.as_ref() as &str,
                 &mut [$($arg.to_arg()),*],
             ).unwrap_err();
             assert_eq!(err, $expected, "Wrong error returned: {:?}", err);
@@ -58,10 +56,9 @@ macro_rules! sprintf_err {
 macro_rules! sprintf_count {
     ($fmt:expr $(, $arg:expr)*) => {
         {
-            let chars: Vec<char> = $fmt.chars().collect();
-            $crate::sprintf_c_locale(
+            $crate::printf_c_locale(
                 &mut NullOutput,
-                &chars,
+                $fmt,
                 &mut [$($arg.to_arg()),*],
             ).expect("printf failed")
         }
@@ -82,6 +79,69 @@ fn smoke() {
     assert_fmt!("Hello, %ls!", "world" => "Hello, world!");
     assert_fmt!("Hello, world! %d %%%%", 3 => "Hello, world! 3 %%");
     assert_fmt!("" => "");
+}
+
+#[test]
+fn test_format_string_str() {
+    let mut s: &str = "hello%world%%%%%";
+    assert_eq!(s.is_empty(), false);
+    for (idx, c) in s.char_indices() {
+        assert_eq!(s.at(idx), Some(c));
+    }
+    assert_eq!(s.at(s.chars().count()), None);
+
+    let mut buffer = String::new();
+    assert_eq!(s.take_literal(&mut buffer), "hello");
+
+    s.advance_by(1); // skip '%'
+    assert_eq!(s.at(0), Some('w'));
+    assert_eq!(s.take_literal(&mut buffer), "world%%");
+
+    s.advance_by(1); // advancing over one more %
+    assert_eq!(s.is_empty(), true); // remaining content is empty
+}
+
+#[cfg(feature = "widestring")]
+#[test]
+fn test_format_string_wstr() {
+    use widestring::Utf32String;
+
+    let utf32: Utf32String = Utf32String::from_str("hello%world%%%%%");
+    let mut s = utf32.as_utfstr();
+
+    for (idx, c) in s.char_indices() {
+        assert_eq!(s.at(idx), Some(c));
+    }
+    assert_eq!(s.at(s.chars().count()), None);
+
+    let mut buffer = String::new();
+    assert_eq!(s.take_literal(&mut buffer), "hello");
+
+    s.advance_by(1); // skip '%'
+    assert_eq!(s.at(0), Some('w'));
+    assert_eq!(s.take_literal(&mut buffer), "world%%");
+
+    s.advance_by(1); // advancing over one more %
+    assert_eq!(s.is_empty(), true); // remaining content is empty
+}
+
+#[test]
+fn test_char_counts() {
+    // printf returns the number of characters, not the number of bytes.
+    assert_eq!(sprintf_count!("%d", 123), 3);
+    assert_eq!(sprintf_count!("%d", -123), 4);
+    assert_eq!(sprintf_count!("\u{1F680}"), 1);
+}
+
+#[cfg(feature = "widestring")]
+#[test]
+fn test_wide_char_counts() {
+    use widestring::utf32str;
+
+    // printf returns the number of characters, not the number of bytes.
+    assert_eq!(sprintf_count!(utf32str!("%d"), 123), 3);
+    assert_eq!(sprintf_count!(utf32str!("%d"), -123), 4);
+    assert_eq!(sprintf_count!(utf32str!("\u{1F680}")), 1);
 }
 
 #[test]
@@ -592,6 +652,16 @@ fn test_prefixes() {
 }
 
 #[test]
+fn test_crate_macros() {
+    let mut target = String::new();
+    crate::sprintf!(=> &mut target, "%d ok %d", 1, 2);
+    assert_eq!(target, "1 ok 2");
+
+    target = crate::sprintf!("%d ok %d", 3, 4);
+    assert_eq!(target, "3 ok 4");
+}
+
+#[test]
 #[cfg_attr(
     all(target_arch = "x86", not(target_feature = "sse2")),
     ignore = "i586 has inherent accuracy issues, see rust-lang/rust#114479"
@@ -711,8 +781,7 @@ fn test_errors() {
 fn test_locale() {
     fn test_printf_loc<'a>(expected: &str, locale: &Locale, format: &str, arg: impl ToArg<'a>) {
         let mut target = String::new();
-        let format_chars: Vec<char> = format.chars().collect();
-        let len = sprintf_locale(&mut target, &format_chars, locale, &mut [arg.to_arg()])
+        let len = sprintf_locale(&mut target, format, locale, &mut [arg.to_arg()])
             .expect("printf failed");
         assert_eq!(len, target.len());
         assert_eq!(target, expected);
@@ -769,7 +838,7 @@ fn test_float_hex_prec() {
             v *= sign;
             for preci in 1..=200_i32 {
                 rust_str.clear();
-                crate::sprintf!(=> &mut rust_str, utf32str!("%.*a"), preci, v);
+                crate::sprintf!(=> &mut rust_str, "%.*a", preci, v);
 
                 let printf_str = unsafe {
                     let len = libc::snprintf(c_storage_ptr, c_storage.len(), c_fmt, preci, v);
@@ -792,7 +861,7 @@ fn test_float_hex_prec() {
     assert!(!failed);
 }
 
-fn test_exhaustive(rust_fmt: &Utf32Str, c_fmt: *const c_char) {
+fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
     // "There's only 4 billion floats so test them all."
     // This tests a format string expected to be of the form "%.*g" or "%.*e".
     // That is, it takes a precision and a double.
@@ -835,28 +904,19 @@ fn test_exhaustive(rust_fmt: &Utf32Str, c_fmt: *const c_char) {
 #[ignore]
 fn test_float_g_exhaustive() {
     // To run: cargo test test_float_g_exhaustive --release -- --ignored --nocapture
-    test_exhaustive(
-        widestring::utf32str!("%.*g"),
-        b"%.*g\0".as_ptr() as *const c_char,
-    );
+    test_exhaustive("%.*g", b"%.*g\0".as_ptr() as *const c_char);
 }
 
 #[test]
 #[ignore]
 fn test_float_e_exhaustive() {
     // To run: cargo test test_float_e_exhaustive --release -- --ignored --nocapture
-    test_exhaustive(
-        widestring::utf32str!("%.*e"),
-        b"%.*e\0".as_ptr() as *const c_char,
-    );
+    test_exhaustive("%.*e", b"%.*e\0".as_ptr() as *const c_char);
 }
 
 #[test]
 #[ignore]
 fn test_float_f_exhaustive() {
     // To run: cargo test test_float_f_exhaustive --release -- --ignored --nocapture
-    test_exhaustive(
-        widestring::utf32str!("%.*f"),
-        b"%.*f\0".as_ptr() as *const c_char,
-    );
+    test_exhaustive("%.*f", b"%.*f\0".as_ptr() as *const c_char);
 }

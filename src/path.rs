@@ -725,8 +725,7 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
             0xFF534D42   // CIFS_MAGIC_NUMBER
                 => DirRemoteness::remote,
             _ => {
-                // Other FSes are assumed local.
-                DirRemoteness::local
+                DirRemoteness::unknown
             }
         }
     }

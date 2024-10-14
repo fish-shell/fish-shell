@@ -1,4 +1,3 @@
-use fish_printf::sprintf;
 use pcre2::utf32::{Captures, Regex, RegexBuilder};
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -227,7 +226,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             // https://www.pcre.org/current/doc/html/pcre2syntax.html#SEC13
             // we can probably relax this limitation as long as we ensure
             // the capture group names are valid variable names
-            .never_utf(true)
+            .block_utf_pattern_directive(true)
             .build(pattern.as_char_slice())
             .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
 

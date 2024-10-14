@@ -18,11 +18,11 @@ where:
     switch $pat
         case "*$div*"
             for i in (echo $pat | sed "s/^\(.\+$div\)$iprefix.*\$/\1/")$iprefix(eval $cmd)
-                echo $i
+                string unescape -- $i
             end
         case '*'
             for i in $prefix$iprefix(eval $cmd)
-                echo $i
+                string unescape -- $i
             end
     end
 

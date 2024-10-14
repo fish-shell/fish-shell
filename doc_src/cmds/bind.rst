@@ -103,7 +103,7 @@ The following options are available:
     Displays help about using this command.
 
 .. _special-input-functions:
-   
+
 Special input functions
 -----------------------
 The following special input functions are available:
@@ -112,7 +112,7 @@ The following special input functions are available:
     only execute the next function if the previous succeeded (note: only some functions report success)
 
 ``accept-autosuggestion``
-    accept the current autosuggestion
+    accept the current autosuggestion. Returns false when there was nothing to accept.
 
 ``backward-char``
     move one character to the left.
@@ -125,11 +125,17 @@ The following special input functions are available:
 ``backward-bigword``
     move one whitespace-delimited word to the left
 
+``backward-token``
+    move one argument to the left
+
 ``backward-delete-char``
     deletes one character of input to the left of the cursor
 
 ``backward-kill-bigword``
     move the whitespace-delimited word to the left of the cursor to the killring
+
+``backward-kill-token``
+    move the argument to the left of the cursor to the killring
 
 ``backward-kill-line``
     move everything from the beginning of the line to the cursor to the killring
@@ -209,6 +215,9 @@ The following special input functions are available:
 ``forward-bigword``
     move one whitespace-delimited word to the right
 
+``forward-token``
+    move one argument to the right
+
 ``forward-char``
     move one character to the right; or if at the end of the commandline, accept the current autosuggestion.
     If the completion pager is active, select the next completion instead.
@@ -253,7 +262,7 @@ The following special input functions are available:
     read another character and jump to its next occurence after/before the cursor
 
 ``forward-jump-till`` and ``backward-jump-till``
-    jump to right *before* the next occurence
+    jump to right *before* the next occurrence
 
 ``repeat-jump`` and ``repeat-jump-reverse``
     redo the last jump in the same/opposite direction
@@ -272,6 +281,9 @@ The following special input functions are available:
 
 ``kill-bigword``
     move the next whitespace-delimited word to the killring
+
+``kill-token``
+    move the next argument to the killring
 
 ``kill-line``
     move everything from the cursor to the end of the line to the killring

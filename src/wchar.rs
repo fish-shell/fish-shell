@@ -14,7 +14,7 @@ pub mod prelude {
     pub use crate::{
         wchar::{wstr, IntoCharIter, WString, L},
         wchar_ext::{ToWString, WExt},
-        wutil::{sprintf, wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str},
+        wutil::{eprintf, sprintf, wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str},
     };
 }
 

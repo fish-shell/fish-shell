@@ -525,3 +525,9 @@ end
 # CHECK: {{^}}"
 # CHECK: {{^}}    end
 # CHECK: {{^}})
+
+set -l tmpdir (mktemp -d)
+echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
+$fish_indent --write $tmpdir/indent_test.fish
+cat $tmpdir/indent_test.fish
+# CHECK: echo foo bar

@@ -24,8 +24,7 @@ use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::ToWString;
-use crate::wutil::{perror, wbasename, wgettext, wperror};
-use fish_printf::sprintf;
+use crate::wutil::{perror, sprintf, wbasename, wgettext, wperror};
 use libc::{
     EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO,

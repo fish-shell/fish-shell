@@ -313,7 +313,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> Option<c_int> {
         // entire token.
         // We have historically disabled the "(*UTF)" sequence.
         let mut builder = RegexBuilder::new();
-        builder.caseless(false).never_utf(true);
+        builder.caseless(false).block_utf_pattern_directive(true);
 
         let result = builder.build(to_boxed_chars(regex_pattern));
 

@@ -1,9 +1,9 @@
 use std::num::NonZeroI32;
 
-use crate::common::{exit_without_destructors, restore_term_foreground_process_group_for_exit};
+use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
-use crate::input_common::terminal_protocols_try_disable_ifn;
 use crate::nix::getpid;
+use crate::panic::AT_EXIT;
 use crate::reader::{reader_handle_sigint, reader_sighup};
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{topic_monitor_principal, Generation, GenerationsList, Topic};
@@ -88,8 +88,9 @@ extern "C" fn fish_signal_handler(
         libc::SIGTERM => {
             // Handle sigterm. The only thing we do is restore the front process ID, then die.
             if !observed {
-                restore_term_foreground_process_group_for_exit();
-                terminal_protocols_try_disable_ifn();
+                if let Some(at_exit) = AT_EXIT.get() {
+                    (at_exit)();
+                }
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {
                     libc::signal(libc::SIGTERM, libc::SIG_DFL);

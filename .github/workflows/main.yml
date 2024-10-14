@@ -19,8 +19,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@1.70
     - name: Install deps
       run: |
-        sudo apt install gettext libpcre2-dev python3-pip tmux
-        sudo pip3 install pexpect
+        sudo apt install gettext libpcre2-dev python3-pexpect tmux
         # Generate a locale that uses a comma as decimal separator.
         sudo locale-gen fr_FR.UTF-8
     - name: cmake
@@ -46,8 +45,7 @@ jobs:
     - name: Install deps
       run: |
         sudo apt update
-        sudo apt install gettext python3-pip g++-multilib tmux
-        sudo pip3 install pexpect
+        sudo apt install gettext python3-pexpect g++-multilib tmux
     - name: cmake
       env:
           CFLAGS: "-m32"
@@ -83,8 +81,7 @@ jobs:
         components: rust-src
     - name: Install deps
       run: |
-        sudo apt install gettext libpcre2-dev python3-pip tmux
-        sudo pip3 install pexpect
+        sudo apt install gettext libpcre2-dev python3-pexpect tmux
     - name: cmake
       env:
           CC: clang
@@ -125,8 +122,7 @@ jobs:
   #   - uses: dtolnay/rust-toolchain@1.70
   #   - name: Install deps
   #     run: |
-  #       sudo apt install gettext libpcre2-dev python3-pip tmux
-  #       sudo pip3 install pexpect
+  #       sudo apt install gettext libpcre2-dev python3-pexpect tmux
   #   - name: cmake
   #     env:
   #         FISH_CI_SAN: 1

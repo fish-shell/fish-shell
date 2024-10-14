@@ -25,6 +25,9 @@ pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
 #[macro_use]
 pub mod common;
 
+#[macro_use]
+pub mod wutil;
+
 pub mod abbrs;
 pub mod ast;
 pub mod autoload;
@@ -97,7 +100,6 @@ pub mod wcstringutil;
 pub mod wgetopt;
 pub mod widecharwidth;
 pub mod wildcard;
-pub mod wutil;
 
 #[cfg(test)]
 mod tests;

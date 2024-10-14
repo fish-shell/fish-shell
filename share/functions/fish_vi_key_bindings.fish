@@ -45,7 +45,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # These are only the special vi-style keys
     # not end/home, we share those.
     set -l eol_keys \$ g,\$
-    set -l bol_keys \^ 0 g\^
+    set -l bol_keys \^ 0 g\^ _
 
     if contains -- $argv[1] insert default visual
         set init_mode $argv[1]
@@ -323,6 +323,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M visual t forward-jump-till
     bind -s --preset -M visual F backward-jump
     bind -s --preset -M visual T backward-jump-till
+    bind -s --preset -M visual ';' repeat-jump
+    bind -s --preset -M visual , repeat-jump-reverse
 
     for key in $eol_keys
         bind -s --preset -M visual $key end-of-line

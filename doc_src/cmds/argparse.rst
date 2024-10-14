@@ -78,6 +78,8 @@ To use the flags argparse has extracted::
     set -ql _flag_name[1]
     and set myname $_flag_name[-1] # here we use the *last* --name=
 
+Any characters in the flag name that are not valid in a variable name (like ``-`` dashes) will be replaced with underscores.
+
 The ``--`` argument is required. You do not have to include any option specifications or arguments after the ``--`` but you must include the ``--``. For example, this is acceptable::
 
     set -l argv foo
@@ -248,6 +250,13 @@ After this it figures out which variable it should operate on according to the `
     set -q _flag_path
     and set var PATH
 
+    # ...
+
+    # Check for --dry-run.
+    # The "-" has been replaced with a "_" because
+    # it is not valid in a variable name
+    not set -ql _flag_dry_run
+    and set $var $result
 
 
 Limitations

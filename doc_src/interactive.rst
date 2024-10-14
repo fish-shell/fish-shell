@@ -78,7 +78,7 @@ Fish also provides pre-made color themes you can pick with :doc:`fish_config <cm
 
 For example, to disable nearly all coloring::
 
-  fish_config theme choose none
+  fish_config theme choose None
 
 Or, to see all themes, right in your terminal::
 
@@ -303,7 +303,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
-- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first word in the suggestion.
+- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one argument left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first argument in the suggestion.
 
 - :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 
@@ -325,7 +325,9 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`ctrl-x` copies the current buffer to the system's clipboard, :kbd:`ctrl-v` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
-- :kbd:`alt-d` moves the next word to the :ref:`killring`.
+- :kbd:`alt-d` or :kbd:`ctrl-delete` moves the next word to the :ref:`killring`.
+
+- :kbd:`alt-delete` moves the next argument to the :ref:`killring`.
 
 - :kbd:`alt-h` (or :kbd:`f1`) shows the manual page for the current command, if one exists.
 
@@ -360,9 +362,9 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`ctrl-n`, :kbd:`ctrl-p` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
-- :kbd:`delete` or :kbd:`backspace` removes one character forwards or backwards respectively. This also goes for :kbd:`ctrl-h`, which is indistinguishable from backspace.
+- :kbd:`delete` or :kbd:`backspace` or :kbd:`ctrl-h` removes one character forwards or backwards respectively.
 
-- :kbd:`alt-backspace` removes one word backwards.
+- :kbd:`ctrl-backspace` removes one word backwards and :kbd:`alt-backspace` removes one argument backwards.
 
 - :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 

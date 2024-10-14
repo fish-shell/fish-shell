@@ -126,6 +126,7 @@ fn test_expand() {
     // lol
     //    nub
     //       q
+    //       zzz
     // .foo
     // aaa
     // aaa2
@@ -144,6 +145,7 @@ fn test_expand() {
     std::fs::write("test/fish_expand_test/baz/xxx", []).unwrap();
     std::fs::write("test/fish_expand_test/baz/yyy", []).unwrap();
     std::fs::write("test/fish_expand_test/lol/nub/q", []).unwrap();
+    std::fs::write("test/fish_expand_test/lol/nub/zzz", []).unwrap();
     std::fs::write("test/fish_expand_test/aaa2/x", []).unwrap();
 
     // This is checking that .* does NOT match . and ..
@@ -289,6 +291,13 @@ fn test_expand() {
             (String::from("test/fish_expand_test/baz/xx") + &any_str_str)
         ),
         "Wrong fuzzy matching 3"
+    );
+
+    expand_test!(
+        "test/fish_expand_test/*/nu/zz",
+        fuzzy_comp,
+        (format!("test/fish_expand_test/{any_str_str}/nub/zzz")),
+        "Glob did not expand correctly with more than one path item after the *"
     );
 
     expand_test!(

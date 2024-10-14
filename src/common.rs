@@ -1669,8 +1669,7 @@ pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
         // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
         // then linux adds a " (deleted)" suffix.
         // If that's not a valid path, let's remove that awkward suffix.
-        let pathstr = path.to_str().unwrap_or("");
-        if !pathstr.ends_with(" (deleted)") {
+        if !path.ends_with(" (deleted)") {
             return path;
         }
 
@@ -2004,46 +2003,5 @@ impl ToCString for Vec<u8> {
 impl ToCString for &[u8] {
     fn to_cstring(self) -> CString {
         CString::new(self).unwrap()
-    }
-}
-
-#[allow(unused_macros)]
-#[deprecated = "use printf!, eprintf! or fprintf"]
-macro_rules! fwprintf {
-    ($args:tt) => {
-        panic!()
-    };
-}
-
-// test-only
-#[allow(unused_macros)]
-#[deprecated = "use printf!"]
-macro_rules! err {
-    ($format:expr $(, $args:expr)* $(,)? ) => {
-        printf!($format $(, $args )*);
-    }
-}
-
-#[macro_export]
-macro_rules! fprintf {
-    ($fd:expr, $format:expr $(, $arg:expr)* $(,)?) => {
-        {
-            let wide = $crate::wutil::sprintf!($format, $( $arg ),*);
-            $crate::wutil::wwrite_to_fd(&wide, $fd);
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! printf {
-    ($format:expr $(, $arg:expr)* $(,)?) => {
-        fprintf!(libc::STDOUT_FILENO, $format $(, $arg)*)
-    }
-}
-
-#[macro_export]
-macro_rules! eprintf {
-    ($format:expr $(, $arg:expr)* $(,)?) => {
-        fprintf!(libc::STDERR_FILENO, $format $(, $arg)*)
     }
 }

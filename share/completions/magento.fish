@@ -19,19 +19,18 @@ function __fish_print_magento_modules -d "Lists all Magento modules"
     test -f $config_path; or return
 
     set -l in_modules 0
-    cat $config_path | \
-        while read -l line
-             if test "$in_modules" -eq 0
-                 if string match -rq '[\'"]modules[\'"]\s*=>.*\[' -- $line
-                     set in_modules 1;
-                 end
-             else
-                 if string match -rq '^\s*]\s*,\s*$' -- $line
-                     break
-                 end
-                 string replace -rf '\s*[\'"](.*?)[\'"]\s*=>.*' '$1' -- $line
-             end
+    cat $config_path | while read -l line
+        if test "$in_modules" -eq 0
+            if string match -rq '[\'"]modules[\'"]\s*=>.*\[' -- $line
+                set in_modules 1
+            end
+        else
+            if string match -rq '^\s*]\s*,\s*$' -- $line
+                break
+            end
+            string replace -rf '\s*[\'"](.*?)[\'"]\s*=>.*' '$1' -- $line
         end
+    end
 end
 
 function __fish_print_magento_i18n_packing_modes -d "Shows all available packing modes"

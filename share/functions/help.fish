@@ -245,5 +245,5 @@ function help --description 'Show help for the fish shell'
 
     # Show the online URL anyway in case we did not manage to open something successfully.
     # (we can't check because we need to background it)
-    printf (_ 'help: If no help could be displayed, go to %s to view the documentaiton online.\n') $ext_url
+    printf (_ 'help: If no help could be displayed, go to %s to view the documentation online.\n') $ext_url
 end

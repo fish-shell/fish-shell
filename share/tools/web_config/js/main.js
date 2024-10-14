@@ -104,6 +104,7 @@ document.addEventListener("alpine:init", () => {
             var settingNames = [
                 "normal",
                 "command",
+                "keyword",
                 "quote",
                 "redirection",
                 "end",
@@ -118,10 +119,14 @@ document.addEventListener("alpine:init", () => {
                 "escape",
                 "cwd",
                 "cwd_root",
+                "option",
                 "valid_path",
                 "autosuggestion",
                 "user",
                 "host",
+                "host_remote",
+                "history_current",
+                "status",
                 "cancel",
                 // Cheesy hardcoded variable names ahoy!
                 // These are all the pager vars,

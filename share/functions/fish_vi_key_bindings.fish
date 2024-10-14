@@ -269,8 +269,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     #
     # increment or decrement numbers with ctrl+x ctrl+a
     #
-    bind -s --preset -M default \ca 'increment_decrement increase'
-    bind -s --preset -M default \cx 'increment_decrement decrease'
+    bind -s --preset -M default \ca '__fish_inc_dec_number_under_cursor increase'
+    bind -s --preset -M default \cx '__fish_inc_dec_number_under_cursor decrease'
 
     #
     # Lowercase r, enters replace_one mode

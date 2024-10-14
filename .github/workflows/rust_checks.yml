@@ -23,8 +23,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
     - name: Install deps
       run: |
-        sudo apt install gettext libpcre2-dev python3-pip tmux
-        sudo pip3 install pexpect
+        sudo apt install gettext libpcre2-dev
     - name: cmake
       run: |
         cmake -B build

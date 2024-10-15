@@ -117,3 +117,13 @@ set -l eject_condition '__fish_seen_subcommand_from eject'
 complete -c $command -s h -d 'Show help' -n $eject_condition
 complete -c $command -s a -d 'Eject all the CD drives' -n $eject_condition
 complete -c $command -s u -d 'Unmount the CD drives' -n $eject_condition
+
+set -l explorer_condition '__fish_seen_subcommand_from explorer'
+complete -c $command -a /n -d 'Use the single pain view' -n $explorer_condition
+complete -c $command -a /e, -d 'Use the default view' -n $explorer_condition
+
+complete -c $command -a /root, -d 'Specify the root level of a view' \
+    -n $explorer_condition
+
+complete -c $command -a /select, -d 'Specify the selection in a view' \
+    -n $explorer_condition

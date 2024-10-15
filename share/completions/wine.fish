@@ -212,6 +212,26 @@ complete -c $command -a /unix \
     -d 'Use the Unix filename for a program' \
     -n $start_condition
 
-complete -c $command -a '/w' \
+complete -c $command -a /w \
     -d 'Wait till the shortcut can be created' \
     -n '__fish_seen_subcommand_from winemenubuilder'
+
+set -l winepath_condition '__fish_seen_subcommand_from winepath'
+complete -c $command -s h -d 'Show help' -n $winepath_condition
+complete -c $command -s v -d 'Show version' -n $winepath_condition
+
+complete -c $command -s u -l unix \
+    -d 'Convert a Windows path to the Unix one' \
+    -n $winepath_condition
+
+complete -c $command -s w -l windows \
+    -d 'Convert a Unix path to the Windows one' \
+    -n $winepath_condition
+
+complete -c $command -s l -l long \
+    -d 'Convert a Windows path to the long format' \
+    -n $winepath_condition
+
+complete -c $command -s s -l short \
+    -d 'Convert a Windows path to the short format' \
+    -n $winepath_condition

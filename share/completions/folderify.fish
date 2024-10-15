@@ -1,0 +1,1 @@
+folderify --completions fish | source

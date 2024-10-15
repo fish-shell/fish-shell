@@ -1,3 +1,14 @@
+function __fish_wine_explorer__complete_desktop_arg
+    set -l current_token (commandline -tc)
+
+    switch "$current_token"
+        case '/desktop=*x*'
+            return
+        case '/desktop=*'
+            printf '%sx' "$current_token"
+    end
+end
+
 set -l command wine
 complete -c $command -f
 
@@ -119,6 +130,10 @@ complete -c $command -s a -d 'Eject all the CD drives' -n $eject_condition
 complete -c $command -s u -d 'Unmount the CD drives' -n $eject_condition
 
 set -l explorer_condition '__fish_seen_subcommand_from explorer'
+
+complete -c $command -a '(__fish_wine_explorer__complete_desktop_arg)' \
+    -n $explorer_condition
+
 complete -c $command -a /n -d 'Use the single pain view' -n $explorer_condition
 complete -c $command -a /e, -d 'Use the default view' -n $explorer_condition
 
@@ -126,4 +141,7 @@ complete -c $command -a /root, -d 'Specify the root level of a view' \
     -n $explorer_condition
 
 complete -c $command -a /select, -d 'Specify the selection in a view' \
+    -n $explorer_condition
+
+complete -c $command -a /desktop= -d 'Specify the desktop name' \
     -n $explorer_condition

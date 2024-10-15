@@ -211,3 +211,7 @@ complete -c $command -a /wait \
 complete -c $command -a /unix \
     -d 'Use the Unix filename for a program' \
     -n $start_condition
+
+complete -c $command -a '/w' \
+    -d 'Wait till the shortcut can be created' \
+    -n '__fish_seen_subcommand_from winemenubuilder'

@@ -145,3 +145,69 @@ complete -c $command -a /select, -d 'Specify the selection in a view' \
 
 complete -c $command -a /desktop= -d 'Specify the desktop name' \
     -n $explorer_condition
+
+# put msiexec completion here
+# put regedit completion here
+
+set -l start_condition '__fish_seen_subcommand_from start'
+complete -c $command -a '/?' -d 'Show help' -n $start_condition
+
+complete -c $command -a /d \
+    -d 'Specify the directory for a program' \
+    -n $start_condition
+
+complete -c $command -a /b \
+    -d "Don't create the new console for a progra" \
+    -n $start_condition
+
+complete -c $command -a /i \
+    -d 'Clear the environment for a program' \
+    -n $start_condition
+
+complete -c $command -a /min \
+    -d 'Start a program in the minimized window' \
+    -n $start_condition
+
+complete -c $command -a /max \
+    -d 'Start a program in the minimized window' \
+    -n $start_condition
+
+complete -c $command -a /low \
+    -d 'Start a program in the idle priority class' \
+    -n $start_condition
+
+complete -c $command -a /normal \
+    -d 'Start a program in the normal priority class' \
+    -n $start_condition
+
+complete -c $command -a /high \
+    -d 'Start a program in the high priority class' \
+    -n $start_condition
+
+complete -c $command -a /realtime \
+    -d 'Start a program in the realtime priority class' \
+    -n $start_condition
+
+complete -c $command -a /abovenormal \
+    -d 'Start a program in the abovenormal priority class' \
+    -n $start_condition
+
+complete -c $command -a /belownormal \
+    -d 'Start a program in the belownormal priority class' \
+    -n $start_condition
+
+complete -c $command -a /node \
+    -d 'Specify the NUMA node for a program' \
+    -n $start_condition
+
+complete -c $command -a /affinity \
+    -d 'Specify the affinity mask for a program' \
+    -n $start_condition
+
+complete -c $command -a /wait \
+    -d 'Wait for a program to exit' \
+    -n $start_condition
+
+complete -c $command -a /unix \
+    -d 'Use the Unix filename for a program' \
+    -n $start_condition

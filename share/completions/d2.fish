@@ -24,7 +24,7 @@ function __fish_d2__complete_layouts
     end
 end
 
-set -l command kroki
+set -l command d2
 
 complete -c $command -f
 

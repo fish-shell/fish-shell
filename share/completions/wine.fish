@@ -112,3 +112,8 @@ set -l control_condition '__fish_seen_subcommand_from control'
 complete -c $command \
     -a 'COLOR DATE/TIME DESKTOP INTERNATIONAL KEYBOARD MOUSE PORTS PRINTERS' \
     -n $control_condition
+
+set -l eject_condition '__fish_seen_subcommand_from eject'
+complete -c $command -s h -d 'Show help' -n $eject_condition
+complete -c $command -s a -d 'Eject all the CD drives' -n $eject_condition
+complete -c $command -s u -d 'Unmount the CD drives' -n $eject_condition

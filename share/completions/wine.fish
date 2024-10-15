@@ -70,7 +70,7 @@ set -l root_condition "not __fish_seen_subcommand_from $subcommands"
 complete -c $command -a "$subcommands_with_descriptions" -n $root_condition
 
 set -l cmd_condition '__fish_seen_subcommand_from cmd'
-complete -c $command -a '(__cmd_complete_args)' -n $cmd_condition
+complete -c $command -a '(__fish_cmd__complete_args)' -n $cmd_condition
 
 set -l c_and_k_condition 'not __fish_seen_argument -w c -w k'
 

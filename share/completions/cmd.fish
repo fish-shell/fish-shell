@@ -1,4 +1,4 @@
-complete -c cmd -f -a '(__cmd_complete_args)'
+complete -c cmd -f -a '(__fish_cmd__complete_args)'
 
 complete -c cmd -f -n 'not __fish_seen_argument -w c -w k' -a /c \
     -d 'Carry out the command specified by string and then stop'

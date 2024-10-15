@@ -106,3 +106,9 @@ complete -c $command -a /v \
     -n $cmd_condition
 
 complete -c $command -a '/?' -d 'Show help' -n $cmd_condition
+
+set -l control_condition '__fish_seen_subcommand_from control'
+
+complete -c $command \
+    -a 'COLOR DATE/TIME DESKTOP INTERNATIONAL KEYBOARD MOUSE PORTS PRINTERS' \
+    -n $control_condition

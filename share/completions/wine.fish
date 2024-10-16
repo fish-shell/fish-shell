@@ -149,6 +149,40 @@ complete -c $command -a /desktop= -d 'Specify the desktop name' \
 # put msiexec completion here
 # put regedit completion here
 
+set -l regedit_condition '__fish_seen_subcommand_from regedit'
+complete -c $command -a '/?' -d 'Show help' -n $regedit_condition
+
+complete -c $command -a /L \
+    -d 'Specify the location of system.dat file' \
+    -n $regedit_condition
+
+complete -c $command -a /R \
+    -d 'Specify the location of user.dat file' \
+    -n $regedit_condition
+
+complete -c $command -a /C \
+    -d 'Import contents of a registry file' \
+    -n $regedit_condition
+
+complete -c $command -a /D \
+    -d 'Delete a registry key' \
+    -n $regedit_condition
+
+complete -c $command -a /E \
+    -d 'Export contents to a registry file' \
+    -n $regedit_condition
+
+complete -c $command -a /S \
+    -d 'Do not display messages' \
+    -n $regedit_condition
+
+complete -c $command -a /V \
+    -d 'Launch the GUI in an advanced mode' \
+    -n $regedit_condition
+
+complete -c $command -a '(__fish_reg__complete_keys)' \
+    -n $regedit_condition
+
 set -l start_condition '__fish_seen_subcommand_from start'
 complete -c $command -a '/?' -d 'Show help' -n $start_condition
 

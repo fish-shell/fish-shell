@@ -31,8 +31,8 @@ Notable backwards-incompatible changes
   See :ref:`below <changelog-new-bindings>` for details.
 - Fish no longer supports terminals that fail to ignore OSC or CSI sequences they don't recognize.
   The typical problem is that terminals echo the raw sequences sent by fish instead of silently ignoring them.
-- :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word.
-- :kbd:`alt-backspace` will delete an entire argument, not just one word.
+- :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word like :kbd:`ctrl-left` and :kbd:`ctrl-right` do.
+- :kbd:`alt-backspace` will delete an entire argument, not just one word (which is :kbd:`ctrl-backspace` now).
 - ``random`` now uses a different random number generator and so the values you get even with the same seed have changed.
   Notably, it will now work much more sensibly with very small seeds.
   The seed was never guaranteed to give the same result across systems,

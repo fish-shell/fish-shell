@@ -1,16 +1,14 @@
 function __fish_reg__complete_keys
     set -l current_token (commandline -tc | string unescape)
 
-    set -l default_keys HKEY_CLASSES_ROOT \
-        HKEY_CURRENT_USER \
-        HKEY_LOCAL_MACHINE \
-        HKEY_USERS \
-        HKEY_CURRENT_CONFIG \
+    set -l default_keys 'HKEY_CLASSES_ROOT\tThe information about file extension associations' \
+        'HKEY_CURRENT_USER\tThe information about a current user' \
+        'HKEY_LOCAL_MACHINE\tThe information about a current machine' \
+        'HKEY_USERS\tThe information about loaded users' \
+        'HKEY_CURRENT_CONFIG\tThe information about hardware used while startup' \
         HKEY_DYN_DATA
 
-    if test -z "$current_token"
-        printf '%s\n' $default_keys
-    else if string match --quiet --entire --regex '\\\\' -- "$current_token"
+    if string match --quiet --entire --regex '\\\\' -- "$current_token"
         set current_token (string replace --regex '\\\\[^\\\\]*$' '' -- "$current_token")
 
         set -l keys (WINEDEBUG=-all wine reg query "$current_token" |
@@ -23,7 +21,9 @@ function __fish_reg__complete_keys
             string match --invert "$current_token" |
             string replace --all --regex '[\\\\]+' '\\\\'
     else
-        printf '%s\n' $default_keys
+        for key in $default_keys
+            echo -e $key
+        end
     end
 end
 

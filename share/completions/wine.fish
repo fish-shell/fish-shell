@@ -9,6 +9,57 @@ function __fish_wine_explorer__complete_desktop_arg
     end
 end
 
+function __fish_msiexec__option_completion_condition
+    set -l token (commandline -oc)[3]
+
+    not string match --quiet --regex '^/(uninstall|[ipyz])$|^/[fjql]' -- "$token"
+end
+
+function __fish_msiexec_complete_option_arg
+    set -l current_token (commandline -tc)
+
+    switch "$current_token"
+        case '/f*'
+            set values 'p\tReinstall the file if it is missing' \
+                'o\tReinstall the file if it is missing or if any older version is installed' \
+                'e\tReinstall the file if it is missing, or if the installed version is equal or older' \
+                'd\tReinstall the file if it is missing or a different version is installed' \
+                'c\tReinstall the file if it is missing or the checksum does not match' \
+                'a\tReinstall all files' \
+                'u\tRewrite all required user registry entries' \
+                'm\tRewrite all required machine registry entries' \
+                's\tOverwrite any conflicting shortcuts' \
+                'v\tRecache the local installation package from the source installation package'
+
+        case '/q*'
+            set values 'n\tDisable UI' \
+                'b\tShow the basic UI' \
+                'r\tShow the reduced UI' \
+                'f\tShow the full UI'
+
+        case '/l*'
+            set values '*\tEnable all options except v and x' \
+                'i\tEnable status messages' \
+                'w\tEnable warning messages' \
+                'e\tEnable error messages' \
+                'a\tEnable messages for action startups' \
+                'r\tEnable messages for action records' \
+                'u\tEnable messages for user requests' \
+                'c\tEnable messages for initial UI parameters' \
+                'm\tEnable messages for out of memory errors' \
+                'o\tEnable messages for out of disk space errors' \
+                'p\tEnable messages for terminal properties' \
+                'v\tEnable verbose messages' \
+                'x\tEnable messages for debugging' \
+                '+\tAppend messages to a file' \
+                '!\tFlush each line of messages'
+    end
+
+    for value in $values
+        echo -e "$current_token$value"
+    end
+end
+
 set -l command wine
 complete -c $command -f
 
@@ -146,7 +197,53 @@ complete -c $command -a /select, -d 'Specify the selection in a view' \
 complete -c $command -a /desktop= -d 'Specify the desktop name' \
     -n $explorer_condition
 
-# put msiexec completion here
+set -l msiexec_condition '__fish_seen_subcommand_from msiexec'
+complete -c $command -a '/? /h' -d 'Show help' -n $msiexec_condition
+
+complete -c $command -a '(__fish_msiexec_complete_option_arg)' \
+    -n $msiexec_condition
+
+complete -c $command -a /i \
+    -d 'Install the software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+set -l a_condition '__fish_seen_argument -w i -w p'
+
+complete -c $command -a /a \
+    -d 'Use the administrator network' \
+    -n "$msiexec_condition && $a_condition"
+
+complete -c $command -a /f \
+    -d 'Repair the installation of software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /uninstall \
+    -d 'Uninstall the software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /j \
+    -d 'Advertise the software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /p \
+    -d 'Apply the patch to software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /q \
+    -d 'Change the UI while installing software' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /l \
+    -d 'Change the logging' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /y \
+    -d 'Register the MSI service' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
+
+complete -c $command -a /z \
+    -d 'Register the MSI service' \
+    -n "$msiexec_condition && __fish_msiexec__option_completion_condition"
 
 set -l regedit_condition '__fish_seen_subcommand_from regedit'
 complete -c $command -a '/?' -d 'Show help' -n $regedit_condition

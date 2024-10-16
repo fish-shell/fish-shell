@@ -147,7 +147,6 @@ complete -c $command -a /desktop= -d 'Specify the desktop name' \
     -n $explorer_condition
 
 # put msiexec completion here
-# put regedit completion here
 
 set -l regedit_condition '__fish_seen_subcommand_from regedit'
 complete -c $command -a '/?' -d 'Show help' -n $regedit_condition

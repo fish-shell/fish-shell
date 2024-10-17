@@ -432,16 +432,11 @@ static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-static IN_WEZTERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
     IS_TMUX.store(var_os("TMUX").is_some());
     IN_MIDNIGHT_COMMANDER.store(var_os("MC_TMPDIR").is_some());
-    IN_WEZTERM.store(
-        var_os("TERM_PROGRAM")
-            .is_some_and(|term_program| term_program.as_os_str().as_bytes() == b"WezTerm"),
-    );
     IN_ITERM_PRE_CSI_U.store(
         var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
             && var_os("LC_TERMINAL_VERSION").is_some_and(|version| {
@@ -478,7 +473,7 @@ pub fn terminal_protocols_enable_ifn() {
         return;
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
-    let sequences = if IN_WEZTERM.load() || IN_MIDNIGHT_COMMANDER.load() {
+    let sequences = if IN_MIDNIGHT_COMMANDER.load() {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
@@ -508,9 +503,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
-    let sequences = if IN_WEZTERM.load() {
-        "\x1b[?2004l"
-    } else if IN_ITERM_PRE_CSI_U.load() {
+    let sequences = if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
     } else {
         concat!(

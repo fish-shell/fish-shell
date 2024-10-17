@@ -157,6 +157,8 @@ Interactive improvements
 - ``fish_add_path`` now automatically enables verbose mode when used interactively (in the commandline), in an effort to be clearer about what it does (:issue:`10532`).
 - fish no longer adopts TTY modes of failed commands (:issue:`10603`).
 - `complete -e cmd` now prevents autoloading completions for `cmd` (:issue:`6716`).
+- fish's default colorscheme no longer uses the color "blue" as it has bad contrast against the background in a few terminal's default palettes (:issue:`10758`, :issue:`10786`)
+  The colorscheme will not be upgraded for existing installs. If you want, you should select it again via ``fish_config``.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,8 @@
+complete -c lsb_release -s a -l all -d 'Show all information'
+complete -c lsb_release -s i -l short -d 'Show distributor ID'
+complete -c lsb_release -s d -l description -d 'Show description of distribution'
+complete -c lsb_release -s r -l release -d 'Show release number'
+complete -c lsb_release -s c -l codename -d 'Show code name'
+complete -c lsb_release -s h -l help -d 'Show help message'
+complete -c lsb_release -s v -l version -d 'Show LSB modules supported'
+complete -c lsb_release -s s -l short -d 'Show in short format'

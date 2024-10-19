@@ -356,10 +356,8 @@ impl Pager {
 
                 // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
                 let comp_width = fish_wcswidth(comp_string);
-                if let (Ok(prefix_len), Ok(comp_width)) = (prefix_len, usize::try_from(comp_width))
-                {
-                    comp.comp_width += prefix_len + comp_width;
-                }
+                comp.comp_width += prefix_len.unwrap_or_default();
+                comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
             }
 
             // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.

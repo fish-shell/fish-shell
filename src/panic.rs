@@ -34,7 +34,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                 "%s crashed, please report a bug.",
                 PROGRAM_NAME.get().unwrap(),
             );
-            if is_main_thread() {
+            if !is_main_thread() {
                 eprintf!("\n");
                 std::thread::sleep(Duration::from_secs(1));
             } else {

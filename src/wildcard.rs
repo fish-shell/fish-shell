@@ -341,6 +341,10 @@ fn wildcard_test_flags_then_complete(
 ) -> bool {
     let executables_only = expand_flags.contains(ExpandFlags::EXECUTABLES_ONLY);
     let need_directory = expand_flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+    let mut flags = CompleteFlags::default();
+    if expand_flags.contains(ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE) {
+        flags |= CompleteFlags::NO_SPACE;
+    }
     // Fast path: If we need directories, and we already know it is one,
     // and we don't need to do anything else, just return it.
     // This is a common case for cd completions, and removes the `stat` entirely in case the system
@@ -357,15 +361,7 @@ fn wildcard_test_flags_then_complete(
         ) == WildcardResult::Match;
     }
     // Check if it will match before stat().
-    if wildcard_complete(
-        filename,
-        wc,
-        None,
-        None,
-        expand_flags,
-        CompleteFlags::default(),
-    ) != WildcardResult::Match
-    {
+    if wildcard_complete(filename, wc, None, None, expand_flags, flags) != WildcardResult::Match {
         return false;
     }
 
@@ -432,14 +428,8 @@ fn wildcard_test_flags_then_complete(
         ) == WildcardResult::Match;
     }
 
-    wildcard_complete(
-        filename,
-        wc,
-        desc_func,
-        Some(out),
-        expand_flags,
-        CompleteFlags::empty(),
-    ) == WildcardResult::Match
+    wildcard_complete(filename, wc, desc_func, Some(out), expand_flags, flags)
+        == WildcardResult::Match
 }
 
 use expander::WildCardExpander;

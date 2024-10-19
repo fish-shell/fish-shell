@@ -67,6 +67,8 @@ pub struct Tok {
     // If an error, this is the error code.
     pub error: TokenizerError,
 
+    pub is_unterminated_brace: bool,
+
     // The type of the token.
     pub type_: TokenType,
 }
@@ -206,6 +208,7 @@ impl Tok {
             error_offset_within_token: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             error_length: 0,
             error: TokenizerError::none,
+            is_unterminated_brace: false,
             type_: r#type,
         }
     }
@@ -550,6 +553,7 @@ impl<'c> Tokenizer<'c> {
             error_offset_within_token: (error_loc - token_start) as u32,
             error_length: error_len as u32,
             error: error_type,
+            is_unterminated_brace: false,
             type_: TokenType::error,
         }
     }
@@ -785,6 +789,7 @@ impl<'c> Tokenizer<'c> {
         let mut result = Tok::new(TokenType::string);
         result.set_offset(buff_start);
         result.set_length(self.token_cursor - buff_start);
+        result.is_unterminated_brace = mode & TOK_MODE_CURLY_BRACES;
         result
     }
 }

@@ -739,6 +739,7 @@ impl<'ctx> Completer<'ctx> {
                     &current_token[pos + 1..],
                     /*do_file=*/ true,
                     /*handle_as_special_cd=*/ false,
+                    cur_tok.is_unterminated_brace,
                 );
                 return;
             }
@@ -837,7 +838,13 @@ impl<'ctx> Completer<'ctx> {
         }
 
         // This function wants the unescaped string.
-        self.complete_param_expand(L!(""), current_argument, do_file, handle_as_special_cd);
+        self.complete_param_expand(
+            L!(""),
+            current_argument,
+            do_file,
+            handle_as_special_cd,
+            cur_tok.is_unterminated_brace,
+        );
 
         // Lastly mark any completions that appear to already be present in arguments.
         self.mark_completions_duplicating_arguments(&cmdline, current_token, tokens);
@@ -1511,6 +1518,7 @@ impl<'ctx> Completer<'ctx> {
         s: &wstr,
         do_file: bool,
         handle_as_special_cd: bool,
+        is_unterminated_brace: bool,
     ) {
         if self.ctx.check_cancel() {
             return;
@@ -1521,6 +1529,9 @@ impl<'ctx> Completer<'ctx> {
             | ExpandFlags::PRESERVE_HOME_TILDES;
         if !do_file {
             flags |= ExpandFlags::SKIP_WILDCARDS;
+        }
+        if is_unterminated_brace {
+            flags |= ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE;
         }
 
         if handle_as_special_cd && do_file {

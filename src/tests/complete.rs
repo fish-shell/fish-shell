@@ -159,6 +159,12 @@ fn test_complete() {
         };
     }
 
+    unique_completion_applies_as!(
+        "touch test/complete_test/{testfi",
+        r"le",
+        "touch test/complete_test/{testfile",
+    );
+
     // Brackets - see #5831
     unique_completion_applies_as!(
         "touch test/complete_test/bracket[",

@@ -72,6 +72,8 @@ bitflags! {
         /// Do expansions specifically to support external command completions. This means using PATH as
         /// a list of potential working directories.
         const SPECIAL_FOR_COMMAND = 1 << 13;
+        /// The token has an unclosed brace, so don't add a space.
+        const NO_SPACE_FOR_UNCLOSED_BRACE = 1 << 14;
     }
 }
 

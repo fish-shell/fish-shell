@@ -8,13 +8,12 @@ use crate::common::{
 };
 use crate::complete::Completion;
 use crate::editable_line::EditableLine;
-use crate::fallback::{fish_wcswidth, fish_wcwidth};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::{highlight_shell, HighlightRole, HighlightSpec};
 use crate::libc::MB_CUR_MAX;
 use crate::operation_context::OperationContext;
-use crate::screen::{Line, ScreenData};
+use crate::screen::{wcswidth_rendered, wcwidth_rendered, Line, ScreenData};
 use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_fuzzy_match_string;
@@ -344,7 +343,7 @@ impl Pager {
     }
 
     fn measure_completion_infos(&mut self) {
-        let prefix_len = usize::try_from(fish_wcswidth(&self.prefix));
+        let prefix_len = wcswidth_rendered(&self.prefix);
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
 
@@ -354,14 +353,14 @@ impl Pager {
                     comp.comp_width += 2;
                 }
 
-                // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
-                let comp_width = fish_wcswidth(comp_string);
-                comp.comp_width += prefix_len.unwrap_or_default();
+                // This can return -1 if it can't calculate the width. So be cautious.
+                let comp_width = wcswidth_rendered(comp_string);
+                comp.comp_width += usize::try_from(prefix_len).unwrap_or_default();
                 comp.comp_width += usize::try_from(comp_width).unwrap_or_default();
             }
 
-            // fish_wcswidth() can return -1 if it can't calculate the width. So be cautious.
-            let desc_width = fish_wcswidth(&comp.desc);
+            // This can return -1 if it can't calculate the width. So be cautious.
+            let desc_width = wcswidth_rendered(&comp.desc);
             comp.desc_width = usize::try_from(desc_width).unwrap_or_default();
         }
     }
@@ -1071,7 +1070,7 @@ fn print_max_impl(
 ) -> usize {
     let mut remaining = max;
     for (i, c) in s.chars().enumerate() {
-        let iwidth_c = fish_wcwidth(c);
+        let iwidth_c = wcwidth_rendered(c);
         let Ok(width_c) = usize::try_from(iwidth_c) else {
             // skip non-printable characters
             continue;
@@ -1084,7 +1083,7 @@ fn print_max_impl(
         let ellipsis = get_ellipsis_char();
         if (width_c == remaining) && (has_more || i + 1 < s.len()) {
             line.append(ellipsis, color(i));
-            let ellipsis_width = fish_wcwidth(ellipsis);
+            let ellipsis_width = wcwidth_rendered(ellipsis);
             remaining = remaining.saturating_sub(usize::try_from(ellipsis_width).unwrap());
             break;
         }

@@ -103,7 +103,7 @@ impl Line {
     pub fn wcswidth_min_0(&self, max: usize /* = usize::MAX */) -> usize {
         let mut result: usize = 0;
         for c in &self.text[..max.min(self.text.len())] {
-            result += wcwidth_rendered(c.character);
+            result += wcwidth_rendered_min_0(c.character);
         }
         result
     }
@@ -327,7 +327,7 @@ impl Screen {
                 colors[i],
                 usize::try_from(indent[i]).unwrap(),
                 first_line_prompt_space,
-                wcwidth_rendered(effective_commandline.as_char_slice()[i]),
+                wcwidth_rendered_min_0(effective_commandline.as_char_slice()[i]),
             );
             i += 1;
         }
@@ -925,7 +925,7 @@ impl Screen {
             // Skip over skip_remaining width worth of characters.
             let mut j = 0;
             while j < o_line(&zelf, i).len() {
-                let width = wcwidth_rendered(o_line(&zelf, i).char_at(j));
+                let width = wcwidth_rendered_min_0(o_line(&zelf, i).char_at(j));
                 if skip_remaining < width {
                     break;
                 }
@@ -936,7 +936,7 @@ impl Screen {
 
             // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
             while j < o_line(&zelf, i).len() {
-                let width = wcwidth_rendered(o_line(&zelf, i).char_at(j));
+                let width = wcwidth_rendered_min_0(o_line(&zelf, i).char_at(j));
                 if width > 0 {
                     break;
                 }
@@ -969,7 +969,7 @@ impl Screen {
                 let color = o_line(&zelf, i).color_at(j);
                 set_color(&mut zelf, color);
                 let ch = o_line(&zelf, i).char_at(j);
-                let width = wcwidth_rendered(ch);
+                let width = wcwidth_rendered_min_0(ch);
                 zelf.write_char(ch, isize::try_from(width).unwrap());
                 current_width += width;
                 j += 1;
@@ -1524,7 +1524,7 @@ fn measure_run_from(
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            width += wcwidth_rendered(input.char_at(idx));
+            width += wcwidth_rendered_min_0(input.char_at(idx));
         }
         idx += 1;
     }
@@ -1570,7 +1570,7 @@ fn truncate_run(
             curr_width = measure_run_from(run, 0, None, cache);
             idx = 0;
         } else {
-            let char_width = wcwidth_rendered(c);
+            let char_width = wcwidth_rendered_min_0(c);
             curr_width -= std::cmp::min(curr_width, char_width);
             run.remove(idx);
         }
@@ -1719,7 +1719,7 @@ fn compute_layout(
             multiline = true;
             break;
         } else {
-            first_line_width += wcwidth_rendered(c);
+            first_line_width += wcwidth_rendered_min_0(c);
         }
     }
     let first_command_line_width = first_line_width;
@@ -1734,7 +1734,7 @@ fn compute_layout(
         autosuggest_truncated_widths.reserve(1 + autosuggestion_str.len());
         for c in autosuggestion.chars() {
             autosuggest_truncated_widths.push(autosuggest_total_width);
-            autosuggest_total_width += wcwidth_rendered(c);
+            autosuggest_total_width += wcwidth_rendered_min_0(c);
         }
     }
 
@@ -1839,6 +1839,12 @@ fn rendered_character(c: char) -> char {
     }
 }
 
-fn wcwidth_rendered(c: char) -> usize {
-    usize::try_from(fish_wcwidth(rendered_character(c))).unwrap_or_default()
+fn wcwidth_rendered_min_0(c: char) -> usize {
+    usize::try_from(wcwidth_rendered(c)).unwrap()
+}
+pub fn wcwidth_rendered(c: char) -> isize {
+    fish_wcwidth(rendered_character(c))
+}
+pub fn wcswidth_rendered(s: &wstr) -> isize {
+    s.chars().map(|c| fish_wcwidth(rendered_character(c))).sum()
 }

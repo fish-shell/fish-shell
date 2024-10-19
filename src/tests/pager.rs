@@ -194,4 +194,15 @@ fn test_pager_layout() {
     validate!(&mut pager, 18, L!("abcdefghijklmnopq…"));
     validate!(&mut pager, 17, L!("abcdefghijklmnop…"));
     validate!(&mut pager, 16, L!("abcdefghijklmno…"));
+
+    // Newlines in prefix
+    let c4s = vec![Completion::new(
+        L!("Hello").to_owned(),
+        L!("").to_owned(),
+        StringFuzzyMatch::exact_match(),
+        CompleteFlags::default(),
+    )];
+    pager.set_prefix(L!("{\\\n"), false); // }
+    pager.set_completions(&c4s, true);
+    validate!(&mut pager, 30, L!("{\\␊Hello")); // }
 }

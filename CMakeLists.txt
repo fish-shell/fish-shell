@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 project(fish LANGUAGES C)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(DEFAULT_BUILD_TYPE "Debug")
+set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 
 # Generate Xcode schemas (but not for tests).
 set(CMAKE_XCODE_GENERATE_SCHEME 1)

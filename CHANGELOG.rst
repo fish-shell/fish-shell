@@ -236,7 +236,7 @@ CMake remains for now because cargo is unable to install the many asset files th
 Some smaller changes:
 
 - The default build configuration has changed to "Debug".
-  Please pass ``-DCMAKE_BUILD_TYPE=Release`` if you want to build a package.
+  Please pass ``-DCMAKE_BUILD_TYPE=RelWithDebInfo`` if you want to build a package.
 - Xcode support has been removed (:issue:`9924`).
 - fish no longer links against the (n)curses library, opting to read the terminfo database via the terminfo crate.
   This means hashed terminfo databases are no longer supported (from our research, they are basically unmaintained and unused).

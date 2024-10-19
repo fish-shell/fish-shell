@@ -112,3 +112,7 @@ tmux-sleep
 isolated-tmux send-keys C-s C-s C-s 'x'
 isolated-tmux capture-pane -p
 # CHECK: prompt 10> echo do not accept thix
+isolated-tmux send-keys C-u C-l ': {*,' Tab Tab Space ,
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 10> : {*,cmake/ ,{{.*}}

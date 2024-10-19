@@ -1275,14 +1275,20 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 }
                 let this_result = (stage)(&mut expand, comp.completion, &mut output_storage);
                 total_result = this_result;
-                if total_result == ExpandResultCode::error {
+                if matches!(
+                    total_result.result,
+                    ExpandResultCode::error | ExpandResultCode::overflow
+                ) {
                     break;
                 }
             }
 
             // Output becomes our next stage's input.
             completions = output_storage.take();
-            if total_result == ExpandResultCode::error {
+            if matches!(
+                total_result.result,
+                ExpandResultCode::error | ExpandResultCode::overflow
+            ) {
                 break;
             }
         }
@@ -1487,7 +1493,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             let mut expanded = expanded_recv.take();
             expanded.sort_by(|a, b| wcsfilecmp_glob(&a.completion, &b.completion));
             if !out.extend(expanded) {
-                result = ExpandResult::new(ExpandResultCode::error);
+                result = ExpandResult::new(ExpandResultCode::overflow);
             }
         } else {
             // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing
@@ -1558,6 +1564,8 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 pub enum ExpandResultCode {
     /// There was an error, for example, unmatched braces.
     error,
+    /// Expansion would exceed the maximum number of elements.
+    overflow,
     /// Expansion succeeded.
     ok,
     /// Expansion was cancelled (e.g. control-C).

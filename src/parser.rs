@@ -652,9 +652,10 @@ impl Parser {
         let list = ast.top().as_freestanding_argument_list().unwrap();
         for arg in &list.arguments {
             let arg_src = arg.source(arg_list_src);
-            if expand_string(arg_src.to_owned(), &mut result, flags, ctx, None)
-                == ExpandResultCode::error
-            {
+            if matches!(
+                expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).result,
+                ExpandResultCode::error | ExpandResultCode::overflow
+            ) {
                 break; // failed to expand a string
             }
         }

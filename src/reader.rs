@@ -5648,7 +5648,8 @@ impl<'a> Reader<'a> {
             position_in_token,
             &mut wc_expanded,
         ) {
-            ExpandResultCode::error => {
+            ExpandResultCode::error => {}
+            ExpandResultCode::overflow => {
                 // This may come about if we exceeded the max number of matches.
                 // Return "success" to suppress normal completions.
                 self.flash();

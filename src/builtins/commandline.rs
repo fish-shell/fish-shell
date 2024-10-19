@@ -151,8 +151,10 @@ fn write_part(
                 )
                 .result
                 {
-                    ExpandResultCode::error | ExpandResultCode::wildcard_no_match => {
-                        // Hit expansion limit, forward the unexpanded string.
+                    ExpandResultCode::error
+                    | ExpandResultCode::overflow
+                    | ExpandResultCode::wildcard_no_match => {
+                        // Maybe hit expansion limit, forward the unexpanded string.
                         args.push(Completion::from_completion(token_text.to_owned()));
                     }
                     ExpandResultCode::cancel => {

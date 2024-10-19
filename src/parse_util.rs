@@ -1669,15 +1669,18 @@ fn detect_errors_in_decorated_statement(
         // Make a new error list so we can fix the offset for just those, then append later.
         let mut new_errors = ParseErrorList::new();
         let mut command = WString::new();
-        if expand_to_command_and_args(
-            unexp_command,
-            &OperationContext::empty(),
-            &mut command,
-            None,
-            Some(&mut new_errors),
-            true, /* skip wildcards */
-        ) == ExpandResultCode::error
-        {
+        if matches!(
+            expand_to_command_and_args(
+                unexp_command,
+                &OperationContext::empty(),
+                &mut command,
+                None,
+                Some(&mut new_errors),
+                true, /* skip wildcards */
+            )
+            .result,
+            ExpandResultCode::error | ExpandResultCode::overflow
+        ) {
             errored = true;
         }
 

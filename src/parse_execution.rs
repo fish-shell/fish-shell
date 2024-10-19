@@ -498,7 +498,7 @@ impl<'a> ExecutionContext {
             false,
         );
         match expand_err.result {
-            ExpandResultCode::error => {
+            ExpandResultCode::error | ExpandResultCode::overflow => {
                 // Issue #5812 - the expansions were done on the command token,
                 // excluding prefixes such as " " or "if ".
                 // This means that the error positions are relative to the beginning
@@ -630,7 +630,7 @@ impl<'a> ExecutionContext {
                 variable_assignment.range().unwrap().start() + equals_pos + 1,
             );
             match expand_ret.result {
-                ExpandResultCode::error => {
+                ExpandResultCode::error|ExpandResultCode::overflow => {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
                 ExpandResultCode::cancel => {
@@ -1103,7 +1103,7 @@ impl<'a> ExecutionContext {
         parse_error_offset_source_start(&mut errors, statement.argument.range().unwrap().start());
 
         match expand_ret.result {
-            ExpandResultCode::error => {
+            ExpandResultCode::error | ExpandResultCode::overflow => {
                 return self.report_errors(ctx, expand_ret.status, &errors);
             }
             ExpandResultCode::cancel => {
@@ -1386,7 +1386,7 @@ impl<'a> ExecutionContext {
             );
             parse_error_offset_source_start(&mut errors, arg_node.range().unwrap().start());
             match expand_ret.result {
-                ExpandResultCode::error => {
+                ExpandResultCode::error | ExpandResultCode::overflow => {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
                 ExpandResultCode::cancel => {

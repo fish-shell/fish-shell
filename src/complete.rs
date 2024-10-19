@@ -1566,16 +1566,17 @@ impl<'ctx> Completer<'ctx> {
         if let Some(sep_index) = sep_index {
             let sep_string = s.slice_from(sep_index + 1);
             let mut local_completions = Vec::new();
-            if expand_string(
-                sep_string.to_owned(),
-                &mut local_completions,
-                flags,
-                self.ctx,
-                None,
-            )
-            .result
-                == ExpandResultCode::error
-            {
+            if matches!(
+                expand_string(
+                    sep_string.to_owned(),
+                    &mut local_completions,
+                    flags,
+                    self.ctx,
+                    None,
+                )
+                .result,
+                ExpandResultCode::error | ExpandResultCode::overflow
+            ) {
                 FLOGF!(complete, "Error while expanding string '%ls'", sep_string);
             }
 
@@ -1606,9 +1607,11 @@ impl<'ctx> Completer<'ctx> {
             }
 
             let first = self.completions.len();
-            if expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None).result
-                == ExpandResultCode::error
-            {
+            if matches!(
+                expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None)
+                    .result,
+                ExpandResultCode::error | ExpandResultCode::overflow,
+            ) {
                 FLOGF!(complete, "Error while expanding string '%ls'", s);
             }
             Self::escape_opening_brackets(&mut self.completions[first..], s);

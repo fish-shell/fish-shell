@@ -124,3 +124,21 @@ complete -c $command -s t -x \
 
 complete -c $command -s T -x \
     -d 'Change the name and the icon of a window'
+
+complete -c $command -s F \
+    -d 'Treat window names as case sensitive ones and exact matches'
+
+complete -c $command -s G \
+    -d 'Include the geometry information in a window list'
+
+complete -c $command -s i -d 'Expect the window IDs instead of their names'
+complete -c $command -s p -d 'Include the PIDs in a window list'
+complete -c $command -s u -d 'Enable UTF-8 mode'
+complete -c $command -s v -d 'Show the verbose output'
+
+complete -c $command -s w -x \
+    -a DESKTOP_TITLES_INVALID_UTF8 \
+    -d 'Enable the workarounds'
+
+complete -c $command -s x \
+    -d 'Include WM_CLASS in a window list'

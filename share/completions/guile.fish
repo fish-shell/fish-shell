@@ -58,7 +58,6 @@ function __fish_guile__complete_function_names
 end
 
 set -l command guile
-
 complete -c $command -f
 
 complete -c $command -s h -l help -d 'Show help'

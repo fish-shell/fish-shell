@@ -15,7 +15,6 @@ function __fish_guild__complete_optimizations
 end
 
 set -l command guild
-
 complete -c $command -f
 
 set -l compile_condition '__fish_seen_subcommand_from compile'

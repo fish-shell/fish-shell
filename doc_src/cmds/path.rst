@@ -279,7 +279,7 @@ Examples
 
     path normalize [-z | --null-in] [-Z | --null-out] [-q | --quiet] [PATH ...]
 
-``path normalize`` returns the normalized versions of all paths. That means it squashes duplicate "/" (except for two leading "//"), collapses "../" with earlier components and removes "." components.
+``path normalize`` returns the normalized versions of all paths. That means it squashes duplicate "/", collapses "../" with earlier components and removes "." components.
 
 Unlike ``realpath`` or ``path resolve``, it does not make the paths absolute. It also does not resolve any symlinks. As such it can operate on non-existent paths.
 

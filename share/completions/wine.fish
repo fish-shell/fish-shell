@@ -332,13 +332,13 @@ complete -c $command -l version -d 'Show version'
 
 set -l subcommands_with_descriptions 'cacls\t"Edit ACLs"' \
     'clock\t"Open the clock"' \
-    'cmd\t"Command the command prompt"' \
+    'cmd\t"Open the command prompt"' \
     'cmdlgtst\t"commdlg.dll test jig"' \
     'control\t"Open control panel"' \
     'eject\t"Eject optical discs"' \
     'expand\t"Expand cabinet files"' \
     'explorer\t"Open Explorer"' \
-    'hh\t"View HTML help"' \
+    'hh\t"Open HTML help"' \
     'icinfo\t"List installed video compressors"' \
     'iexplore\t"Open Internet Explorer"' \
     'lodctr\t"Load performance monitor counters"' \
@@ -347,8 +347,8 @@ set -l subcommands_with_descriptions 'cacls\t"Edit ACLs"' \
     'notepad\t"Notepad, a simple text editor"' \
     'oleview\t"Browse and explore COM objects as well as configure DCOM"' \
     'progman\t"Open Program manager"' \
-    'reg\t"Edit registry"' \
-    'regedit\t"Registry Editor"' \
+    'reg\t"Edit registry though command line"' \
+    'regedit\t"Edit registry"' \
     'regsvr32\t"Register OLE components in the registry"' \
     'rpcss\t"Open rpcss.exe"' \
     'rundll32\t"Load a DLL and run an entry point"' \
@@ -360,7 +360,7 @@ set -l subcommands_with_descriptions 'cacls\t"Edit ACLs"' \
     'taskmgr\t"Open Task Manager"' \
     'uninstaller\t"Uninstall a program"' \
     'unlodctr\t"Unload performance monitor counters"' \
-    'view\t"Metafile viewer"' \
+    'view\t"View metafiles"' \
     'wineboot\t"Reboot Wine"' \
     'winebrowser\t"Launch native OS browser or mail client"' \
     'winecfg\t"Configure wine through a GUI"' \
@@ -373,8 +373,8 @@ set -l subcommands_with_descriptions 'cacls\t"Edit ACLs"' \
     'winepath\t"Translate between Windows and Unix paths formats"' \
     'winetest\t"Run DLL conformance test programs"' \
     'winevdm\t"Open DOS"' \
-    'winhelp\t"Help viewer"' \
-    'winhlp32\t"Help viewer"' \
+    'winhelp\t"Open help"' \
+    'winhlp32\t"HOpen help"' \
     'winver\t"Show about information"' \
     'wordpad\t"Open WordPad"' \
     'write\t"Open WordPad"' \

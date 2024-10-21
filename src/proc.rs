@@ -425,7 +425,7 @@ impl TtyTransfer {
                     }
                     EBADF => {
                         // stdin has been closed. Workaround a glibc bug - see #3644.
-                        redirect_tty_output();
+                        redirect_tty_output(false);
                         return false;
                     }
                     _ => {

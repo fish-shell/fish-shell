@@ -89,7 +89,7 @@ extern "C" fn fish_signal_handler(
             // Handle sigterm. The only thing we do is restore the front process ID, then die.
             if !observed {
                 if let Some(at_exit) = AT_EXIT.get() {
-                    (at_exit)();
+                    (at_exit)(true);
                 }
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {

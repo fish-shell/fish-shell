@@ -2,7 +2,7 @@
 // This concerns posix_spawn support, and async-signal
 // safe code which happens in between fork and exec.
 
-mod flog_safe;
+pub mod flog_safe;
 pub mod postfork;
 pub mod spawn;
 use crate::proc::Job;

@@ -21,7 +21,6 @@ use bitflags::bitflags;
 use core::slice;
 use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use once_cell::sync::OnceCell;
-use std::env;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
@@ -30,6 +29,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
 use std::sync::{Arc, MutexGuard};
 use std::time;
+use std::{env, process};
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
@@ -1634,12 +1634,16 @@ pub fn fish_reserved_codepoint(c: char) -> bool {
         || (c >= key::Backspace && c < ENCODE_DIRECT_END)
 }
 
-pub fn redirect_tty_output() {
+pub fn redirect_tty_output(in_signal_handler: bool) {
     unsafe {
         let mut t: libc::termios = mem::zeroed();
-        let s = CString::new("/dev/null").unwrap();
+        let s = CStr::from_bytes_with_nul(b"/dev/null\0").unwrap();
         let fd = libc::open(s.as_ptr(), O_WRONLY);
-        assert!(fd != -1, "Could not open /dev/null!");
+        if in_signal_handler && fd == -1 {
+            process::abort();
+        } else {
+            assert!(fd != -1, "Could not open /dev/null!");
+        }
         for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
             if libc::tcgetattr(stdfd, &mut t) == -1 && errno::errno().0 == EIO {
                 libc::dup2(fd, stdfd);

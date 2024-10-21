@@ -7,6 +7,7 @@ use crate::common::{
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
+use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
@@ -485,13 +486,7 @@ pub fn terminal_protocols_enable_ifn() {
             "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
         )
     };
-    FLOG!(
-        term_protocols,
-        format!(
-            "Enabling extended keys and bracketed paste: {:?}",
-            sequences
-        )
-    );
+    FLOG!(term_protocols, "Enabling extended keys and bracketed paste");
     let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
     if IS_TMUX.load() {
         let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
@@ -513,12 +508,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
             "\x1b>",       // application keypad mode
         )
     };
-    FLOG!(
+    FLOG_SAFE!(
         term_protocols,
-        format!(
-            "Disabling extended keys and bracketed paste: {:?}",
-            sequences
-        )
+        "Disabling extended keys and bracketed paste"
     );
     let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
     if IS_TMUX.load() {

@@ -200,7 +200,7 @@ fn redirect_tty_after_sighup() {
     assert!(reader_received_sighup(), "SIGHUP not received");
     static TTY_REDIRECTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
     if !TTY_REDIRECTED.swap(true) {
-        redirect_tty_output();
+        redirect_tty_output(false);
     }
 }
 
@@ -585,7 +585,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
         if isatty(STDIN_FILENO) {
             interactive = true;
         } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1 && errno().0 == EIO {
-            redirect_tty_output();
+            redirect_tty_output(false);
             interactive = true;
         }
     }
@@ -793,7 +793,11 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     #[cfg(not(test))]
     assert!(AT_EXIT.get().is_none());
-    AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
+    AT_EXIT.get_or_init(|| {
+        Box::new(move |in_signal_handler| {
+            reader_deinit(in_signal_handler, will_restore_foreground_pgroup)
+        })
+    });
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
@@ -821,8 +825,8 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     }
 }
 
-pub fn reader_deinit(restore_foreground_pgroup: bool) {
-    restore_term_mode();
+pub fn reader_deinit(in_signal_handler: bool, restore_foreground_pgroup: bool) {
+    restore_term_mode(in_signal_handler);
     crate::input_common::terminal_protocols_disable_ifn();
     if restore_foreground_pgroup {
         restore_term_foreground_process_group_for_exit();
@@ -832,7 +836,7 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// Restore the term mode if we own the terminal and are interactive (#8705).
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
-pub fn restore_term_mode() {
+pub fn restore_term_mode(in_signal_handler: bool) {
     if !is_interactive_session() || unsafe { libc::getpgrp() != libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
@@ -845,7 +849,7 @@ pub fn restore_term_mode() {
         ) == -1
     } && errno().0 == EIO
     {
-        redirect_tty_output();
+        redirect_tty_output(in_signal_handler);
     }
 }
 
@@ -1889,14 +1893,14 @@ impl<'a> Reader<'a> {
         // Get the current terminal modes. These will be restored when the function returns.
         let mut old_modes: libc::termios = unsafe { std::mem::zeroed() };
         if unsafe { libc::tcgetattr(zelf.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
-            redirect_tty_output();
+            redirect_tty_output(false);
         }
 
         // Set the new modes.
         if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
             let err = errno().0;
             if err == EIO {
-                redirect_tty_output();
+                redirect_tty_output(false);
             }
 
             // This check is required to work around certain issues with fish's approach to
@@ -1974,7 +1978,7 @@ impl<'a> Reader<'a> {
                 && is_interactive_session()
             {
                 if errno().0 == EIO {
-                    redirect_tty_output();
+                    redirect_tty_output(false);
                 }
                 perror("tcsetattr"); // return to previous mode
             }
@@ -3758,7 +3762,7 @@ fn term_donate(quiet: bool /* = false */) {
     } == -1
     {
         if errno().0 == EIO {
-            redirect_tty_output();
+            redirect_tty_output(false);
         }
         if errno().0 != EINTR {
             if !quiet {
@@ -3804,7 +3808,7 @@ fn term_steal(copy_modes: bool) {
     }
     while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
         if errno().0 == EIO {
-            redirect_tty_output();
+            redirect_tty_output(false);
         }
         if errno().0 != EINTR {
             FLOG!(warning, wgettext!("Could not set terminal mode for shell"));
@@ -3875,7 +3879,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
                 break;
             }
             // No TTY, cannot be interactive?
-            redirect_tty_output();
+            redirect_tty_output(false);
             FLOG!(
                 warning,
                 wgettext!("No TTY for interactive shell (tcgetpgrp failed)")
@@ -3941,7 +3945,7 @@ fn reader_interactive_init(parser: &Parser) {
         // Take control of the terminal
         if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
             if errno().0 == ENOTTY {
-                redirect_tty_output();
+                redirect_tty_output(false);
             }
             FLOG!(error, wgettext!("Failed to take control of the terminal"));
             perror("tcsetpgrp");
@@ -3951,7 +3955,7 @@ fn reader_interactive_init(parser: &Parser) {
         // Configure terminal attributes
         if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
             if errno().0 == EIO {
-                redirect_tty_output();
+                redirect_tty_output(false);
             }
             FLOG!(warning, wgettext!("Failed to set startup terminal mode!"));
             perror("tcsetattr");

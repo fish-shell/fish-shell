@@ -1,5 +1,6 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux (next-3.4|3\.[0123][a-z]*($|[.-]))'
+#REQUIRES: command -v less
 
 isolated-tmux-start
 
@@ -45,3 +46,16 @@ isolated-tmux capture-pane -p | tail -n 5
 # CHECK: prompt-line-2>
 # CHECK:
 # CHECK:
+
+# Test repainint after running an external program that uses the alternate screen.
+isolated-tmux send-keys 'bind ctrl-r "echo | less +q; commandline \'echo Hello World\'"' Enter C-l \
+isolated-tmux send-keys C-r
+tmux-sleep
+isolated-tmux send-keys Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2> echo Hello World
+# CHECK: Hello World
+# CHECK: prompt-line-1
+# CHECK: prompt-line-2>

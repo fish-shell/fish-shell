@@ -1996,8 +1996,14 @@ impl<'a> Reader<'a> {
 
     fn eval_bind_cmd(&mut self, cmd: &wstr) {
         let last_statuses = self.parser.vars().get_last_statuses();
+        let prev_exec_external_count = self.parser.libdata().exec_external_count;
         self.parser.eval(cmd, &IoChain::new());
         self.parser.set_last_statuses(last_statuses);
+        if self.parser.libdata().exec_external_count != prev_exec_external_count
+            && self.data.left_prompt_buff.contains('\n')
+        {
+            self.save_screen_state();
+        }
     }
 
     /// Run a sequence of commands from an input binding.
@@ -2862,7 +2868,6 @@ impl<'a> Reader<'a> {
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-                    self.save_screen_state();
                     return;
                 }
 
@@ -2885,7 +2890,6 @@ impl<'a> Reader<'a> {
                     self.force_exec_prompt_and_repaint = true;
                     self.input_data
                         .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-                    self.save_screen_state();
                     return;
                 }
 

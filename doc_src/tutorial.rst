@@ -386,7 +386,7 @@ Command Substitutions
 
 Command substitutions use the output of one command as an argument to another. Unlike other shells, fish does not use backticks `` for command substitutions. Instead, it uses parentheses with or without a dollar::
 
-    > echo In (pwd), running $(uname)
+    > echo In (pwd), running (uname)
     In /home/tutorial, running FreeBSD
 
 A common idiom is to capture the output of a command in a variable::

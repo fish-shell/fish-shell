@@ -54,7 +54,7 @@ Notable improvements and fixes
 ------------------------------
 .. _changelog-new-bindings:
 
--  fish asks terminals to speak keyboard protocols CSI u, XTerm's ``modifyOtherKeys`` and some progressive enhancements from the `kitty keyboard protocol <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_.
+-  fish now requests XTerm's ``modifyOtherKeys`` keyboard encoding and `kitty keyboard protocol's <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>`_ progressive enhancements for a CSI u encoding.
    Depending on terminal support, this allows to bind a lot more key combinations, including arbitrary combinations of modifiers :kbd:`ctrl`, :kbd:`alt` and :kbd:`shift`,
    and to distinguish e.g. :kbd:`ctrl-i` from :kbd:`tab`.
 
@@ -83,7 +83,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 
-- ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell expressions, removing the need to use "eval" in completion scripts (:issue:`10212`).
+- ``commandline --tokenize`` (short option ``-o``) has been deprecated in favor of ``commandline --tokens-expanded`` (short option ``-x``) which expands variables and other shell syntax, removing the need to use "eval" in completion scripts (:issue:`10212`).
 - Two new feature flags:
 
   - ``remove-percent-self`` (see ``status features``) disables PID expansion of ``%self`` which has been supplanted by ``$fish_pid`` (:issue:`10262`).
@@ -110,6 +110,7 @@ Scripting improvements
 - A new redirection: ``<? /path/to/file`` will try opening the file as input, and if it doesn't succeed silently use /dev/null instead.
   This can help with checks like ``test -f /path/to/file; and string replace foo bar < /path/to/file``. (:issue:`10387`)
 - New option ``commandline --tokens-raw`` prints a list of tokens without any unescaping (:issue:`10212`).
+- New option ``commandline --showing-suggestion`` to check whether an autosuggestion is currently displayed (:issue:`10586`).
 - ``functions`` and ``type`` now show where a function was copied and where it originally was instead of saying ``Defined interactively`` (:issue:`6575`).
 - Stack trace now shows line numbers for copied functions.
 - ``foo & && bar`` is now a syntax error, like in other shells (:issue:`9911`).
@@ -193,7 +194,7 @@ New or improved bindings
   - When the cursor is at the start of a line, escaping from insert mode no longer moves the cursor to the previous line.
   - Added bindings for clipboard interaction, like :kbd:`",+,p` and :kbd:`",+,y,y`.
   - Deleting in visual mode now moves the cursor back, matching vi (:issue:`10394`).
-  - Support :kbd:`%` motion.
+  - Support :kbd:`%` motion (:issue:`10593`).
   - Support `ab` and `ib` vi text objects. New input functions are introduced ``jump-{to,till}-matching-bracket`` (:issue:`1842`).
 
 Completions

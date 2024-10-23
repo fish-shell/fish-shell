@@ -7,7 +7,6 @@ rust-version = "1.70"
 edition = "2021"
 
 [profile.release]
-overflow-checks = true
 lto = true
 
 [package]

@@ -901,7 +901,7 @@ pub trait InputEventQueuer {
             b'T' => {
                 self.disable_mouse_tracking();
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
-                for _ in 0..7 {
+                for _ in 0..6 {
                     let _ = next_char(self);
                 }
                 return None;

@@ -806,7 +806,7 @@ pub trait InputEventQueuer {
 
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
         let mut next_char = |zelf: &mut Self| zelf.try_readb(buffer).unwrap_or(0xff);
-        let mut params = [[0_u32; 16]; 4];
+        let mut params = [[0_u32; 4]; 16];
         let mut c = next_char(self);
         let private_mode;
         if matches!(c, b'?' | b'<' | b'=' | b'>') {

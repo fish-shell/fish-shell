@@ -142,7 +142,7 @@ fi
 (cd "$PKGDIR/build_arm64" && env $ARM64_DEPLOY_TARGET make -j 12 fish_macapp)
 (cd "$PKGDIR/build_x86_64" && env $X86_64_DEPLOY_TARGET make -j 12 fish_macapp)
 
-# Make the app's /usr/local/bin binaries universal. Note fish.app/Contents/MacOS/fish already is, courtsey of CMake.
+# Make the app's /usr/local/bin binaries universal. Note fish.app/Contents/MacOS/fish already is, courtesy of CMake.
 cd "$PKGDIR/build_arm64"
 for FILE in fish.app/Contents/Resources/base/usr/local/bin/*; do
     X86_FILE="$PKGDIR/build_x86_64/fish.app/Contents/Resources/base/usr/local/bin/$(basename $FILE)"

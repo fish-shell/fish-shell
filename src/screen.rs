@@ -317,10 +317,13 @@ impl Screen {
 
         // Output the command line.
         let mut i = 0;
-        while i < effective_commandline.len() {
+        loop {
             // Grab the current cursor's x,y position if this character matches the cursor's offset.
             if !cursor_is_within_pager && i == cursor_pos {
                 cursor_arr = self.desired.cursor;
+            }
+            if i == effective_commandline.len() {
+                break;
             }
             self.desired_append_char(
                 effective_commandline.as_char_slice()[i],
@@ -330,11 +333,6 @@ impl Screen {
                 wcwidth_rendered_min_0(effective_commandline.as_char_slice()[i]),
             );
             i += 1;
-        }
-
-        // Cursor may have been at the end too.
-        if !cursor_is_within_pager && i == cursor_pos {
-            cursor_arr = self.desired.cursor;
         }
 
         let full_line_count = self.desired.cursor.y + 1;

@@ -354,7 +354,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     set -g fish_cursor_selection_mode inclusive
     function __fish_vi_key_bindings_on_mode_change --on-variable fish_bind_mode
         switch $fish_bind_mode
-            case insert
+            case insert replace
                 set -g fish_cursor_end_mode exclusive
             case '*'
                 set -g fish_cursor_end_mode inclusive

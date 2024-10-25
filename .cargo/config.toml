@@ -1,8 +1,0 @@
-# For macOS, support 10.9 on x86-64, and 11.0 on aarch64, which
-# is the minimum supported version for Apple Silicon.
-[target.x86_64-apple-darwin]
-rustflags = ["-C", "link-arg=-mmacosx-version-min=10.9"]
-
-[target.aarch64-apple-darwin]
-rustflags = ["-C", "link-arg=-mmacosx-version-min=11.0"]
-

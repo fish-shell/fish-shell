@@ -253,13 +253,19 @@ impl Screen {
     ) {
         let curr_termsize = termsize_last();
         let screen_width = curr_termsize.width;
+        let screen_height = curr_termsize.height;
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
         FLOGF!(
             screen,
             "Repaint %u",
             1 + REPAINTS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         );
-        let mut cursor_arr = Cursor::default();
+        #[derive(Clone, Copy)]
+        struct ScrolledCursor {
+            cursor: Cursor,
+            scroll_amount: usize,
+        }
+        let mut cursor_arr: Option<ScrolledCursor> = None;
 
         // Turn the command line into the explicit portion and the autosuggestion.
         let (explicit_command_line, autosuggestion) = commandline.split_at(explicit_len);
@@ -284,6 +290,10 @@ impl Screen {
             return;
         }
         let screen_width = usize::try_from(screen_width).unwrap();
+        if screen_height == 0 {
+            return;
+        }
+        let screen_height = usize::try_from(curr_termsize.height).unwrap();
 
         // Compute a layout.
         let layout = compute_layout(
@@ -306,7 +316,14 @@ impl Screen {
 
         // Append spaces for the left prompt.
         for _ in 0..layout.left_prompt_space {
-            self.desired_append_char(' ', HighlightSpec::new(), 0, layout.left_prompt_space, 1);
+            let _ = self.desired_append_char(
+                usize::MAX,
+                ' ',
+                HighlightSpec::new(),
+                0,
+                layout.left_prompt_space,
+                1,
+            );
         }
 
         // If overflowing, give the prompt its own line to improve the situation.
@@ -320,26 +337,64 @@ impl Screen {
         loop {
             // Grab the current cursor's x,y position if this character matches the cursor's offset.
             if !cursor_is_within_pager && i == cursor_pos {
-                cursor_arr = self.desired.cursor;
+                cursor_arr = Some(ScrolledCursor {
+                    cursor: self.desired.cursor,
+                    scroll_amount: (self.desired.line_count()
+                        + if self
+                            .desired
+                            .line_datas
+                            .last()
+                            .as_ref()
+                            .map(|ld| ld.is_soft_wrapped)
+                            .unwrap_or_default()
+                        {
+                            1
+                        } else {
+                            0
+                        })
+                    .saturating_sub(screen_height),
+                });
             }
             if i == effective_commandline.len() {
                 break;
             }
-            self.desired_append_char(
+            if !self.desired_append_char(
+                cursor_arr
+                    .map(|sc| {
+                        if sc.scroll_amount != 0 {
+                            sc.cursor.y
+                        } else {
+                            screen_height - 1
+                        }
+                    })
+                    .unwrap_or(usize::MAX),
                 effective_commandline.as_char_slice()[i],
                 colors[i],
                 usize::try_from(indent[i]).unwrap(),
                 first_line_prompt_space,
                 wcwidth_rendered_min_0(effective_commandline.as_char_slice()[i]),
-            );
+            ) {
+                break;
+            }
             i += 1;
         }
+        cursor_arr.as_mut().map(
+            |ScrolledCursor {
+                 ref mut cursor,
+                 scroll_amount,
+             }| {
+                if *scroll_amount != 0 {
+                    self.desired.line_datas = self.desired.line_datas.split_off(*scroll_amount);
+                    cursor.y -= *scroll_amount;
+                }
+            },
+        );
 
         let full_line_count = self.desired.cursor.y + 1;
 
         // Now that we've output everything, set the cursor to the position that we saved in the loop
         // above.
-        self.desired.cursor = cursor_arr;
+        self.desired.cursor = cursor_arr.as_ref().map(|sc| sc.cursor).unwrap_or_default();
 
         if cursor_is_within_pager {
             self.desired.cursor.x = cursor_pos;
@@ -362,7 +417,12 @@ impl Screen {
         // Append pager_data (none if empty).
         self.desired.append_lines(&page_rendering.screen_data);
 
-        self.update(&layout.left_prompt, &layout.right_prompt, vars);
+        self.update(
+            vars,
+            &layout.left_prompt,
+            &layout.right_prompt,
+            cursor_arr.is_some_and(|sc| sc.scroll_amount != 0),
+        );
         self.save_status();
     }
 
@@ -516,17 +576,21 @@ impl Screen {
     /// automatically handles linebreaks and lines longer than the screen width.
     fn desired_append_char(
         &mut self,
+        max_y: usize,
         b: char,
         c: HighlightSpec,
         indent: usize,
         prompt_width: usize,
         bwidth: usize,
-    ) {
+    ) -> bool {
         let mut line_no = self.desired.cursor.y;
 
         if b == '\n' {
             // Current line is definitely hard wrapped.
             // Create the next line.
+            if self.desired.cursor.y + 1 > max_y {
+                return false;
+            }
             self.desired.create_line(self.desired.cursor.y + 1);
             self.desired.line_mut(self.desired.cursor.y).is_soft_wrapped = false;
             self.desired.cursor.y += 1;
@@ -536,7 +600,16 @@ impl Screen {
             let line = self.desired.line_mut(line_no);
             line.indentation = indentation;
             for _ in 0..indentation {
-                self.desired_append_char(' ', HighlightSpec::default(), indent, prompt_width, 1);
+                if !self.desired_append_char(
+                    max_y,
+                    ' ',
+                    HighlightSpec::default(),
+                    indent,
+                    prompt_width,
+                    1,
+                ) {
+                    return false;
+                }
             }
         } else if b == '\r' {
             let current = self.desired.line_mut(line_no);
@@ -546,10 +619,16 @@ impl Screen {
             let screen_width = self.desired.screen_width;
             let cw = bwidth;
 
+            if line_no > max_y {
+                return false;
+            }
             self.desired.create_line(line_no);
 
             // Check if we are at the end of the line. If so, continue on the next line.
             if screen_width.is_none_or(|sw| (self.desired.cursor.x + cw) > sw) {
+                if self.desired.cursor.y + 1 > max_y {
+                    return false;
+                }
                 // Current line is soft wrapped (assuming we support it).
                 self.desired.line_mut(self.desired.cursor.y).is_soft_wrapped = true;
 
@@ -570,6 +649,7 @@ impl Screen {
                 self.desired.cursor.y += 1;
             }
         }
+        true
     }
 
     /// Stat stdout and stderr and compare result to previous result in reader_save_status. Repaint
@@ -761,7 +841,13 @@ impl Screen {
     }
 
     /// Update the screen to match the desired output.
-    fn update(&mut self, left_prompt: &wstr, right_prompt: &wstr, vars: &dyn Environment) {
+    fn update(
+        &mut self,
+        vars: &dyn Environment,
+        left_prompt: &wstr,
+        right_prompt: &wstr,
+        scrolled: bool,
+    ) {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
         let mut set_color = |zelf: &mut Self, c| {
@@ -817,7 +903,8 @@ impl Screen {
         let term = term.as_ref();
 
         // Output the left prompt if it has changed.
-        if left_prompt != zelf.actual_left_prompt {
+        let visible_left_prompt = if scrolled { L!("") } else { left_prompt };
+        if visible_left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
             let mut start = 0;
             let osc_133_prompt_start =
@@ -832,11 +919,11 @@ impl Screen {
                 if i == 0 {
                     osc_133_prompt_start(&mut zelf);
                 }
-                zelf.write_str(&left_prompt[start..=line_break]);
+                zelf.write_str(&visible_left_prompt[start..=line_break]);
                 start = line_break + 1;
             }
-            zelf.write_str(&left_prompt[start..]);
-            zelf.actual_left_prompt = left_prompt.to_owned();
+            zelf.write_str(&visible_left_prompt[start..]);
+            zelf.actual_left_prompt = visible_left_prompt.to_owned();
             zelf.actual.cursor.x = left_prompt_width;
         }
 
@@ -867,7 +954,11 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = line_shared_prefix(o_line(&zelf, i), s_line(&zelf, i));
+            let shared_prefix = if scrolled {
+                0
+            } else {
+                line_shared_prefix(o_line(&zelf, i), s_line(&zelf, i))
+            };
             let mut skip_prefix = shared_prefix;
             if shared_prefix < o_line(&zelf, i).indentation {
                 if o_line(&zelf, i).indentation > s_line(&zelf, i).indentation

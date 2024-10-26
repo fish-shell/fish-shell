@@ -3977,8 +3977,10 @@ fn reader_interactive_init(parser: &Parser) {
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
     terminal_protocol_hacks();
-    IN_MIDNIGHT_COMMANDER_PRE_CSI_U
-        .store(parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none());
+    IN_MIDNIGHT_COMMANDER_PRE_CSI_U.store(
+        parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some()
+            && parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none(),
+    );
 }
 
 /// Destroy data for interactive use.

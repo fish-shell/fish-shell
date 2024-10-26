@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::HighlightSpec;
 use crate::wchar::prelude::*;

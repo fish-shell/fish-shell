@@ -9,7 +9,15 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
 
     function __fish_vi_cursor --argument-names varname
         if not set -q $varname
-            set varname fish_cursor_unknown
+            switch $varname
+                case fish_cursor_insert
+                    __fish_cursor_xterm line
+                case fish_cursor_replace_one fish_cursor_replace
+                    __fish_cursor_xterm underscore
+                case '*'
+                    __fish_cursor_xterm $fish_cursor_unknown
+            end
+            return
         end
         __fish_cursor_xterm $$varname
     end

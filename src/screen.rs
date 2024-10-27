@@ -904,8 +904,14 @@ impl Screen {
         let term = term.as_ref();
 
         // Output the left prompt if it has changed.
-        let visible_left_prompt = if scrolled { L!("") } else { left_prompt };
-        if visible_left_prompt != zelf.actual_left_prompt {
+        if scrolled {
+            zelf.r#move(0, 0);
+            zelf.outp
+                .borrow_mut()
+                .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+            zelf.actual_left_prompt.clear();
+            zelf.actual.cursor.x = 0;
+        } else if left_prompt != zelf.actual_left_prompt {
             zelf.r#move(0, 0);
             let mut start = 0;
             let osc_133_prompt_start =
@@ -920,11 +926,11 @@ impl Screen {
                 if i == 0 {
                     osc_133_prompt_start(&mut zelf);
                 }
-                zelf.write_str(&visible_left_prompt[start..=line_break]);
+                zelf.write_str(&left_prompt[start..=line_break]);
                 start = line_break + 1;
             }
-            zelf.write_str(&visible_left_prompt[start..]);
-            zelf.actual_left_prompt = visible_left_prompt.to_owned();
+            zelf.write_str(&left_prompt[start..]);
+            zelf.actual_left_prompt = left_prompt.to_owned();
             zelf.actual.cursor.x = left_prompt_width;
         }
 

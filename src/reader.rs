@@ -427,8 +427,8 @@ struct LayoutData {
     /// Position of the cursor in the command line.
     position: usize,
 
-    /// Whether the cursor is focused on the pager or not.
-    focused_on_pager: bool,
+    /// The cursor position in the pager search field.
+    pager_search_field_position: Option<usize>,
 
     /// Visual selection of the command line, or none if none.
     selection: Option<SelectionData>,
@@ -1386,6 +1386,7 @@ impl<'a> Reader<'a> {
         };
 
         let focused_on_pager = self.active_edit_line_tag() == EditableLineTag::SearchField;
+        let pager_search_field_position = focused_on_pager.then_some(self.pager.cursor_position());
         let last = &self.rendered_layout;
         check(self.force_exec_prompt_and_repaint, "forced")
             || check(self.command_line.text() != last.text, "text")
@@ -1394,8 +1395,11 @@ impl<'a> Reader<'a> {
                 "highlight",
             )
             || check(self.selection != last.selection, "selection")
-            || check(focused_on_pager != last.focused_on_pager, "focus")
             || check(self.command_line.position() != last.position, "position")
+            || check(
+                pager_search_field_position != last.pager_search_field_position,
+                "pager_search_field_position",
+            )
             || check(
                 self.history_search.search_range_if_active() != last.history_search_range,
                 "history search",
@@ -1431,13 +1435,10 @@ impl<'a> Reader<'a> {
         result.text = self.command_line.text().to_owned();
         result.colors = self.command_line.colors().to_vec();
         assert!(result.text.len() == result.colors.len());
-        result.position = if focused_on_pager {
-            self.pager.cursor_position()
-        } else {
-            self.command_line.position()
-        };
+        result.position = self.command_line.position();
+        result.pager_search_field_position =
+            focused_on_pager.then_some(self.pager.cursor_position());
         result.selection = self.selection;
-        result.focused_on_pager = focused_on_pager;
         result.history_search_range = self.history_search.search_range_if_active();
         result.autosuggestion = self.autosuggestion.text.clone();
         result.left_prompt_buff = self.left_prompt_buff.clone();
@@ -1516,10 +1517,10 @@ impl<'a> Reader<'a> {
             &colors,
             &indents,
             data.position,
+            data.pager_search_field_position,
             self.parser.vars(),
             pager,
             current_page_rendering,
-            data.focused_on_pager,
         );
     }
 }

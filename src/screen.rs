@@ -7,7 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::pager::{PageRendering, Pager};
+use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
@@ -237,7 +237,6 @@ impl Screen {
     /// of the command line \param colors the colors to use for the commanad line \param indent the
     /// indent to use for the command line \param cursor_pos where the cursor is \param pager the
     /// pager to render below the command line \param page_rendering to cache the current pager view
-    /// \param cursor_is_within_pager whether the position is within the pager line (first line)
     pub fn write(
         &mut self,
         left_prompt: &wstr,
@@ -247,10 +246,10 @@ impl Screen {
         colors: &[HighlightSpec],
         indent: &[i32],
         cursor_pos: usize,
+        pager_search_field_position: Option<usize>,
         vars: &dyn Environment,
         pager: &mut Pager,
         page_rendering: &mut PageRendering,
-        cursor_is_within_pager: bool,
     ) {
         let curr_termsize = termsize_last();
         let screen_width = curr_termsize.width;
@@ -337,7 +336,7 @@ impl Screen {
         let mut i = 0;
         loop {
             // Grab the current cursor's x,y position if this character matches the cursor's offset.
-            if !cursor_is_within_pager && i == cursor_pos {
+            if i == cursor_pos {
                 cursor_arr = Some(ScrolledCursor {
                     cursor: self.desired.cursor,
                     scroll_amount: (self.desired.line_count()
@@ -379,39 +378,44 @@ impl Screen {
             }
             i += 1;
         }
-        cursor_arr.as_mut().map(
-            |ScrolledCursor {
-                 ref mut cursor,
-                 scroll_amount,
-             }| {
-                if *scroll_amount != 0 {
-                    self.desired.line_datas = self.desired.line_datas.split_off(*scroll_amount);
-                    cursor.y -= *scroll_amount;
-                }
-            },
-        );
 
         let full_line_count = self.desired.cursor.y + 1;
+        let pager_available_height = std::cmp::max(
+            1,
+            curr_termsize
+                .height
+                .saturating_sub_unsigned(full_line_count),
+        );
 
         // Now that we've output everything, set the cursor to the position that we saved in the loop
         // above.
-        self.desired.cursor = cursor_arr.as_ref().map(|sc| sc.cursor).unwrap_or_default();
-
-        if cursor_is_within_pager {
-            self.desired.cursor.x = cursor_pos;
-            self.desired.cursor.y = self.desired.line_count();
-        }
+        self.desired.cursor = match pager_search_field_position {
+            Some(pager_cursor_pos)
+                if pager_available_height >= isize::try_from(PAGER_MIN_HEIGHT).unwrap() =>
+            {
+                Cursor {
+                    x: pager_cursor_pos,
+                    y: self.desired.line_count(),
+                }
+            }
+            _ => {
+                let ScrolledCursor {
+                    mut cursor,
+                    scroll_amount,
+                } = cursor_arr.unwrap();
+                if scroll_amount != 0 {
+                    self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
+                    cursor.y -= scroll_amount;
+                }
+                cursor
+            }
+        };
 
         // Re-render our completions page if necessary. Limit the term size of the pager to the true
         // term size, minus the number of lines consumed by our string.
         pager.set_term_size(&Termsize::new(
             std::cmp::max(1, curr_termsize.width),
-            std::cmp::max(
-                1,
-                curr_termsize
-                    .height
-                    .saturating_sub_unsigned(full_line_count),
-            ),
+            pager_available_height,
         ));
 
         pager.update_rendering(page_rendering);

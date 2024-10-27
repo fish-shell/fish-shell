@@ -71,7 +71,7 @@ const PAGER_UNDISCLOSED_MAX_ROWS: usize = 4;
 const PAGER_MIN_WIDTH: usize = 16;
 
 /// Minimum height to show completions
-const PAGER_MIN_HEIGHT: usize = 4;
+pub const PAGER_MIN_HEIGHT: usize = 4;
 
 /// The maximum number of columns of completion to attempt to fit onto the screen.
 const PAGER_MAX_COLS: usize = 6;

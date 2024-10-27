@@ -1,0 +1,1 @@
+tailscale completion fish | source

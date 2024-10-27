@@ -2,9 +2,12 @@ function isolated-tmux-start
     set -l tmpdir (mktemp -d)
     cd $tmpdir
 
-    # macOS lacks the tmux-256color terminfo, use screen-256color instead.
-    if test (uname) = Darwin
-        echo 'set -g default-terminal "screen-256color"'
+    begin
+        echo 'set -g mode-keys emacs'
+        # macOS lacks the tmux-256color terminfo, use screen-256color instead.
+        if test (uname) = Darwin
+            echo 'set -g default-terminal "screen-256color"'
+        end
     end >./.tmux.conf
 
     function isolated-tmux --inherit-variable tmpdir

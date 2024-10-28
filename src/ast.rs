@@ -43,9 +43,8 @@ pub trait Acceptor {
 
 impl<T: Acceptor> Acceptor for Option<T> {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-        match self {
-            Some(node) => node.accept(visitor, reversed),
-            None => (),
+        if let Some(node) = self {
+            node.accept(visitor, reversed)
         }
     }
 }
@@ -90,9 +89,8 @@ trait AcceptorMut {
 
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
     fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            Some(node) => node.accept_mut(visitor, reversed),
-            None => (),
+        if let Some(node) = self {
+            node.accept_mut(visitor, reversed)
         }
     }
 }

@@ -220,6 +220,7 @@ Other improvements
 - The HTML-based configuration UI (``fish_config``) now uses Alpine.js instead of AngularJS (:issue:`9554`).
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
 - Performance and interactivity under WSLv1 and WSLv2 has been improved with a workaround for Windows-specific locations being appended to ``$PATH`` by default (:issue:`10506`).
+- Additional filesystems such as AFS are properly detected as remote, which avoids certain hangs due to expensive filesystem locks (:issue:`10818`).
 
 .. _rust-packaging:
 

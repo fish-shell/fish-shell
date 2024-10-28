@@ -717,12 +717,19 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
         }
         // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
         // these are in varying headers. Simply hard code them.
+        // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
         // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
         match usize::try_from(buf.f_type).unwrap() {
+            0x5346414F | // AFS_SUPER_MAGIC - Andrew Fule System
+            0x73757245 | // CODA_SUPER_MAGIC - Coda File System
+            0x564c |     // NCP_SUPER_MAGIC - Novell NetWare
             0x6969 |     // NFS_SUPER_MAGIC
+            0x7461636f | // OCFS2_SUPER_MAGIC - Oracle Cluster File System
             0x517B |     // SMB_SUPER_MAGIC
-            0xFE534D42 | // SMB2_MAGIC_NUMBER - not in the manpage
-            0xFF534D42   // CIFS_MAGIC_NUMBER
+            0xFE534D42 | // SMB2_MAGIC_NUMBER
+            0xFF534D42 |  // CIFS_MAGIC_NUMBER
+            0x01021997 | // V9FS_MAGIC
+            0x65735546 // FUSE_SUPER_MAGIC
                 => DirRemoteness::remote,
             _ => {
                 DirRemoteness::unknown

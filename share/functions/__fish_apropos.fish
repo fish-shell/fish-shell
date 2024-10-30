@@ -36,7 +36,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
             set age (path mtime -R -- $whatis)
         end
 
-        MANPATH="$dir" apropos "$argv"
+        MANPATH="$dir" MANPAGER=cat WHATISPAGER=cat apropos "$argv"
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir
@@ -48,6 +48,6 @@ else
     function __fish_apropos
         # we only ever prefix match for completions. This also ensures results for bare apropos <TAB>
         # (apropos '' gives no results, but apropos '^' lists all manpages)
-        apropos "$argv"
+        MANPAGER=cat WHATISPAGER=cat apropos "$argv"
     end
 end

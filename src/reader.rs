@@ -963,7 +963,10 @@ pub fn reader_showing_suggestion(parser: &Parser) -> bool {
     }
     if let Some(data) = current_data() {
         let reader = Reader { parser, data };
-        !reader.autosuggestion.is_empty()
+        let suggestion = &reader.autosuggestion.text;
+        let is_single_space = suggestion.ends_with(L!(" "))
+            && reader.command_line.text() == suggestion[..suggestion.len() - 1];
+        !suggestion.is_empty() && !is_single_space
     } else {
         false
     }

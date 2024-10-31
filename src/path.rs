@@ -2,14 +2,14 @@
 //! for testing if a command with a given name can be found in the PATH, and various other
 //! path-related issues.
 
-use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2zstring, WSL};
+use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2osstring, wcs2zstring, WSL};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
 #[cfg(not(target_os = "linux"))]
 use crate::libc::{MNT_LOCAL, ST_LOCAL};
 use crate::wchar::prelude::*;
-use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wmkdir, wstat};
+use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{errno, set_errno, Errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
@@ -667,8 +667,8 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     let mut remoteness = DirRemoteness::unknown;
     if path.is_empty() {
         err = ENOENT;
-    } else if !create_directory(&path) {
-        err = errno().0;
+    } else if let Err(io_error) = std::fs::create_dir_all(wcs2osstring(&path)) {
+        err = io_error.raw_os_error().unwrap_or_default();
     } else {
         err = 0;
         // Need to append a trailing slash to check the contents of the directory, not its parent.
@@ -682,27 +682,6 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         remoteness,
         err,
         used_xdg,
-    }
-}
-
-/// Make sure the specified directory exists. If needed, try to create it and any currently not
-/// existing parent directories, like mkdir -p,.
-///
-/// Return 0 if, at the time of function return the directory exists, -1 otherwise.
-fn create_directory(d: &wstr) -> bool {
-    let md = loop {
-        match wstat(d) {
-            Err(md) if md.kind() == ErrorKind::Interrupted => continue,
-            md => break md,
-        }
-    };
-    match md {
-        Ok(md) if md.is_dir() => true,
-        Err(e) if e.kind() == ErrorKind::NotFound => {
-            let dir: &wstr = wdirname(d);
-            return create_directory(dir) && wmkdir(d, 0o700) == 0;
-        }
-        _ => false,
     }
 }
 

@@ -501,12 +501,6 @@ pub fn wbasename(mut path: &wstr) -> &wstr {
     path
 }
 
-/// Wide character version of mkdir.
-pub fn wmkdir(name: &wstr, mode: libc::mode_t) -> libc::c_int {
-    let name_narrow = wcs2zstring(name);
-    unsafe { libc::mkdir(name_narrow.as_ptr(), mode) }
-}
-
 /// Wide character version of rename.
 pub fn wrename(old_name: &wstr, new_name: &wstr) -> libc::c_int {
     let old_narrow = wcs2zstring(old_name);

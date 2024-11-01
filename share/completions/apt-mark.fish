@@ -32,6 +32,6 @@ complete -f -n __fish_apt_no_subcommand -c apt-mark -a showhold -d 'Show held pa
 complete -c apt-mark -s v -l version -d 'Display version and exit'
 complete -r -c apt-mark -s c -l config-file -d 'Specify a config file'
 complete -r -c apt-mark -s o -l option -d 'Set a config option'
-complete -r -c apt-mark -l color -d 'Turn colors on'
-complete -r -c apt-mark -l no-color -d 'Turn colors off'
+complete -c apt-mark -l color -d 'Turn colors on'
+complete -c apt-mark -l no-color -d 'Turn colors off'
 complete -r -c apt-mark -s f -l file -d 'Write package statistics to a file'

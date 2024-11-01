@@ -1009,11 +1009,13 @@ pub fn commandline_get_state(sync: bool) -> CommandlineState {
 
 /// Set the command line text and position. This may be called on a background thread; the reader
 /// will pick it up when it is done executing.
-pub fn commandline_set_buffer(text: WString, cursor_pos: Option<usize>) {
+pub fn commandline_set_buffer(text: Option<WString>, cursor_pos: Option<usize>) {
     {
         let mut state = commandline_state_snapshot();
-        state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
-        state.text = text;
+        if let Some(text) = text {
+            state.text = text;
+        }
+        state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), state.text.len());
     }
     current_data().map(|data| data.apply_commandline_state_changes());
 }

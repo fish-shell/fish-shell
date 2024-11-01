@@ -97,7 +97,12 @@ If ``commandline`` is called during a call to complete a given string using ``co
 The following options output metadata about the commandline state:
 
 **-L** or **--line**
-    Print the line that the cursor is on, with the topmost line starting at 1.
+    If no argument is given, print the line that the cursor is on, with the topmost line starting at 1.
+    Otherwise, set the cursor to the given line.
+
+**--column**
+    If no argument is given, print the 1-based offset from the start of the line to the cursor position in Unicode code points.
+    Otherwise, set the cursor to the given code point offset.
 
 **-S** or **--search-mode**
     Evaluates to true if the commandline is performing a history search.

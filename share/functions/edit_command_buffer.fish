@@ -110,13 +110,10 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
             set -l line $pos[2]
             set -l indent (math (string length -- "$raw_lines[$line]") - (string length -- "$unindented_lines[$line]"))
             set -l column (math $pos[3] - $indent)
-            commandline -C 0
-            for _line in (seq $line)[2..]
-                commandline -f down-line
-            end
-            commandline -f beginning-of-line
-            for _column in (seq $column)[2..]
-                commandline -f forward-single-char
+            if not commandline --line $line 2>/dev/null
+                commandline -f end-of-buffer
+            else
+                commandline --column $column 2>/dev/null || commandline -f end-of-line
             end
         end
         command rm $cursor_from_editor

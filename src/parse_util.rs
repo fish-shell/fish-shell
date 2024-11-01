@@ -532,7 +532,6 @@ pub fn parse_util_get_offset_from_line(s: &wstr, line: i32) -> Option<usize> {
         return Some(0);
     }
 
-    // let mut pos = -1 as usize;
     let mut count = 0;
     for (pos, _) in s.chars().enumerate().filter(|(_, c)| *c == '\n') {
         count += 1;

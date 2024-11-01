@@ -7,8 +7,8 @@ use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::operation_context::{no_cancel, OperationContext};
 use crate::parse_constants::ParserTestErrorBits;
 use crate::parse_util::{
-    parse_util_detect_errors, parse_util_job_extent, parse_util_lineno, parse_util_process_extent,
-    parse_util_token_extent,
+    parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
+    parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
 };
 use crate::proc::is_interactive_session;
 use crate::reader::{
@@ -88,7 +88,7 @@ fn replace_part(
     if search_field_mode {
         commandline_set_search_field(out, Some(out_pos));
     } else {
-        commandline_set_buffer(out, Some(out_pos));
+        commandline_set_buffer(Some(out), Some(out_pos));
     }
 }
 
@@ -198,6 +198,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut selection_start_mode = false;
     let mut selection_end_mode = false;
     let mut line_mode = false;
+    let mut column_mode = false;
     let mut search_mode = false;
     let mut paging_mode = false;
     let mut paging_full_mode = false;
@@ -229,6 +230,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         wopt(L!("selection-start"), ArgType::NoArgument, 'B'),
         wopt(L!("selection-end"), ArgType::NoArgument, 'E'),
         wopt(L!("line"), ArgType::NoArgument, 'L'),
+        wopt(L!("column"), ArgType::NoArgument, '\x05'),
         wopt(L!("search-mode"), ArgType::NoArgument, 'S'),
         wopt(L!("paging-mode"), ArgType::NoArgument, 'P'),
         wopt(L!("paging-full-mode"), ArgType::NoArgument, 'F'),
@@ -275,6 +277,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'B' => selection_start_mode = true,
             'E' => selection_end_mode = true,
             'L' => line_mode = true,
+            '\x05' => column_mode = true,
             'S' => search_mode = true,
             's' => selection_mode = true,
             'P' => paging_mode = true,
@@ -308,6 +311,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             || token_mode.is_some()
             || cursor_mode
             || line_mode
+            || column_mode
             || search_mode
             || paging_mode
             || selection_start_mode
@@ -363,7 +367,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if (search_mode || line_mode || cursor_mode || paging_mode) && positional_args > 1 {
+    if (search_mode || line_mode || column_mode || cursor_mode || paging_mode)
+        && positional_args > 1
+    {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
@@ -372,7 +378,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     }
 
     if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor || search_field_mode)
-        && (cursor_mode || line_mode || search_mode || paging_mode || paging_full_mode)
+        && (cursor_mode || line_mode||column_mode || search_mode || paging_mode || paging_full_mode)
         // Special case - we allow to get/set cursor position relative to the process/job/token.
         && ((buffer_part.is_none() && !search_field_mode) || !cursor_mode)
     {
@@ -407,11 +413,75 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     let buffer_part = buffer_part.unwrap_or(TextScope::String);
 
-    if line_mode {
-        streams.out.append(sprintf!(
-            "%d\n",
-            parse_util_lineno(&rstate.text, rstate.cursor_pos)
-        ));
+    if line_mode || column_mode {
+        if positional_args != 0 {
+            let arg = w.argv[w.wopt_index];
+            let new_coord = match fish_wcstol(arg) {
+                Err(_) => {
+                    streams
+                        .err
+                        .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, arg));
+                    builtin_print_error_trailer(parser, streams.err, cmd);
+                    0
+                }
+                Ok(num) => num - 1,
+            };
+            let Ok(new_coord) = usize::try_from(new_coord) else {
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: line/column index starts at 1", cmd));
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
+            };
+
+            let new_pos = if line_mode {
+                let Some(offset) = parse_util_get_offset_from_line(
+                    &rstate.text,
+                    i32::try_from(new_coord).unwrap(),
+                ) else {
+                    streams
+                        .err
+                        .append(wgettext_fmt!("%ls: there is no line %ls\n", cmd, arg));
+                    builtin_print_error_trailer(parser, streams.err, cmd);
+                    return STATUS_INVALID_ARGS;
+                };
+                offset
+            } else {
+                let line_index =
+                    i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos)).unwrap() - 1;
+                let line_offset =
+                    parse_util_get_offset_from_line(&rstate.text, line_index).unwrap_or_default();
+                let next_line_offset =
+                    parse_util_get_offset_from_line(&rstate.text, line_index + 1)
+                        .unwrap_or(rstate.text.len());
+                if line_offset + new_coord > next_line_offset {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: column %ls exceeds line length\n",
+                        cmd,
+                        arg
+                    ));
+                    builtin_print_error_trailer(parser, streams.err, cmd);
+                    return STATUS_INVALID_ARGS;
+                }
+                line_offset + new_coord
+            };
+            commandline_set_buffer(None, Some(new_pos));
+        } else {
+            streams.out.append(sprintf!(
+                "%d\n",
+                if line_mode {
+                    parse_util_lineno(&rstate.text, rstate.cursor_pos)
+                } else {
+                    rstate.cursor_pos + 1
+                        - parse_util_get_offset_from_line(
+                            &rstate.text,
+                            i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos))
+                                .unwrap(),
+                        )
+                        .unwrap_or_default()
+                }
+            ));
+        }
         return STATUS_CMD_OK;
     }
 
@@ -561,7 +631,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     .saturating_add_signed(isize::try_from(new_pos).unwrap()),
                 current_buffer.len(),
             );
-            commandline_set_buffer(current_buffer.to_owned(), Some(new_pos));
+            commandline_set_buffer(None, Some(new_pos));
         } else {
             streams.out.append(sprintf!("%lu\n", current_cursor_pos));
         }

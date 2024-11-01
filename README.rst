@@ -181,7 +181,7 @@ On Debian or Ubuntu you want these packages:
 
 ::
 
-   sudo apt install build-essential cmake libpcre2-dev gettext
+   sudo apt install build-essential cmake libpcre2-dev gettext libncurses-dev
 
 On RedHat, CentOS, or Amazon EC2 everything should be preinstalled.
 

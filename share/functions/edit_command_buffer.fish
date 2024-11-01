@@ -108,7 +108,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         eval set -l pos "$(cat $cursor_from_editor)"
         if set -q pos[1] && test $pos[1] = $f
             set -l line $pos[2]
-            set -l indent (math (string length -- $raw_lines[$line]) - (string length -- $unindented_lines[$line]))
+            set -l indent (math (string length -- "$raw_lines[$line]") - (string length -- "$unindented_lines[$line]"))
             set -l column (math $pos[3] - $indent)
             commandline -C 0
             for _line in (seq $line)[2..]

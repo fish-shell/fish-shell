@@ -265,7 +265,7 @@ impl Screen {
             cursor: Cursor,
             scroll_amount: usize,
         }
-        let mut cursor_arr: Option<ScrolledCursor> = None;
+        let mut scrolled_cursor: Option<ScrolledCursor> = None;
 
         // Turn the command line into the explicit portion and the autosuggestion.
         let (explicit_command_line, autosuggestion) = commandline.split_at(explicit_len);
@@ -334,10 +334,11 @@ impl Screen {
 
         // Output the command line.
         let mut i = 0;
-        loop {
+        assert!((0..=effective_commandline.len()).contains(&cursor_pos));
+        let scrolled_cursor = loop {
             // Grab the current cursor's x,y position if this character matches the cursor's offset.
             if i == cursor_pos {
-                cursor_arr = Some(ScrolledCursor {
+                scrolled_cursor = Some(ScrolledCursor {
                     cursor: self.desired.cursor,
                     scroll_amount: (self.desired.line_count()
                         + if self
@@ -356,10 +357,10 @@ impl Screen {
                 });
             }
             if i == effective_commandline.len() {
-                break;
+                break scrolled_cursor.unwrap();
             }
             if !self.desired_append_char(
-                cursor_arr
+                scrolled_cursor
                     .map(|sc| {
                         if sc.scroll_amount != 0 {
                             sc.cursor.y
@@ -374,10 +375,10 @@ impl Screen {
                 first_line_prompt_space,
                 wcwidth_rendered_min_0(effective_commandline.as_char_slice()[i]),
             ) {
-                break;
+                break scrolled_cursor.unwrap();
             }
             i += 1;
-        }
+        };
 
         let full_line_count = self.desired.cursor.y + 1;
         let pager_available_height = std::cmp::max(
@@ -402,7 +403,7 @@ impl Screen {
                 let ScrolledCursor {
                     mut cursor,
                     scroll_amount,
-                } = cursor_arr.unwrap();
+                } = scrolled_cursor;
                 if scroll_amount != 0 {
                     self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
                     cursor.y -= scroll_amount;
@@ -426,7 +427,7 @@ impl Screen {
             vars,
             &layout.left_prompt,
             &layout.right_prompt,
-            cursor_arr.is_some_and(|sc| sc.scroll_amount != 0),
+            scrolled_cursor.scroll_amount != 0,
         );
         self.save_status();
     }

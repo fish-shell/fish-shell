@@ -130,7 +130,15 @@ impl HistoryFileContents {
         let region = if should_mmap() {
             match MmapRegion::map_file(file.as_raw_fd(), len) {
                 Ok(region) => region,
-                Err(err) if err.raw_os_error() == Some(ENODEV) => map_anon(file, len)?,
+                Err(err) if err.raw_os_error() == Some(ENODEV) => {
+                    // Our mmap failed with ENODEV, which means the underlying
+                    // filesystem does not support mapping. Treat this as a hint
+                    // that the filesystem is remote, and so disable locks for
+                    // the history file.
+                    super::ABANDONED_LOCKING.store(true);
+                    // Create an anonymous mapping and read() the file into it.
+                    map_anon(file, len)?
+                }
                 Err(_err) => return None,
             }
         } else {

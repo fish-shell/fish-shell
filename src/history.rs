@@ -15,6 +15,13 @@
 //!
 //! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
 //! trigger race conditions. This is useful for testing.
+//!
+//! Locking on remote filesystems may hang for an unacceptably long time. For that reason, fish
+//! does not take locks on the file if it believes the history file is on a remote filesystem,
+//! or if the mmap fails with ENODEV, or if the first lock attempt takes excessively long.
+//! Eliding locks means that two concurrent shell sessions with a remote history file may, in
+//! rare cases with multiple simultaneous shell sessions, lose a history item; this is
+//! considered preferable to hanging the the shell waiting for a lock.
 
 use crate::{
     common::cstr2wcstring, env::EnvVar, wcstringutil::trim,

@@ -699,16 +699,22 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
         // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
         // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
         match usize::try_from(buf.f_type).unwrap() {
-            0x5346414F | // AFS_SUPER_MAGIC - Andrew Fule System
+            0x5346414F | // AFS_SUPER_MAGIC - Andrew File System
+            0x6B414653 | // AFS_FS_MAGIC - Kernel AFS and AuriStorFS
             0x73757245 | // CODA_SUPER_MAGIC - Coda File System
+            0x47504653 | // GPFS - General Parallel File System
             0x564c |     // NCP_SUPER_MAGIC - Novell NetWare
             0x6969 |     // NFS_SUPER_MAGIC
             0x7461636f | // OCFS2_SUPER_MAGIC - Oracle Cluster File System
+            0x61636673 | // ACFS - Oracle ACFS. Undocumented magic number.
             0x517B |     // SMB_SUPER_MAGIC
             0xFE534D42 | // SMB2_MAGIC_NUMBER
             0xFF534D42 |  // CIFS_MAGIC_NUMBER
             0x01021997 | // V9FS_MAGIC
-            0x65735546 // FUSE_SUPER_MAGIC
+            0x19830326 | // fhgfs / BeeGFS. Undocumented magic number.
+            0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
+            0x65735546 | // FUSE_SUPER_MAGIC
+            0xa501FCF5 // VXFS_SUPER_MAGIC
                 => DirRemoteness::remote,
             _ => {
                 DirRemoteness::unknown

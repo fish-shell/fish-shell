@@ -95,16 +95,11 @@ function help --description 'Show help for the fish shell'
         end
     end
 
-    if not set -q fish_browser[1]
-        printf (_ '%s: Could not find a web browser.\n') help >&2
-        printf (_ 'Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\n\n') >&2
-        return 1
-    end
-
     # In Cygwin, start the user-specified browser using cygstart,
     # only if a Windows browser is to be used.
     if type -q cygstart
-        if test $fish_browser != cygstart
+        if test "$fish_browser" != cygstart
+            and set -q fish_browser[1]
             and not command -sq $fish_browser[1]
             # Escaped quotes are necessary to work with spaces in the path
             # when the command is finally eval'd.
@@ -204,6 +199,13 @@ function help --description 'Show help for the fish shell'
         set page_url $ext_url
         # We don't need a trampoline for a remote URL.
         set need_trampoline
+    end
+
+    if not set -q fish_browser[1]
+        printf (_ '%s: Could not find a web browser.\n') help >&2
+        printf (_ 'Please try `BROWSER=some_browser help`, `man fish-doc`, or `man fish-tutorial`.\n\n') >&2
+        printf (_ 'Or open %s in your browser of choice.\n') $ext_url >&2
+        return 1
     end
 
     if set -q need_trampoline[1]

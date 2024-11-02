@@ -1456,12 +1456,17 @@ impl<'a> Reader<'a> {
     /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
         self.rendered_layout = self.make_layout_data();
-        self.paint_layout(reason);
+        self.paint_layout(reason, false);
+    }
+
+    fn layout_and_repaint_before_execution(&mut self) {
+        self.rendered_layout = self.make_layout_data();
+        self.paint_layout(L!("prepare to execute"), true);
     }
 
     /// Paint the last rendered layout.
     /// `reason` is used in FLOG to explain why.
-    fn paint_layout(&mut self, reason: &wstr) {
+    fn paint_layout(&mut self, reason: &wstr, is_final_rendering: bool) {
         FLOGF!(reader_render, "Repainting from %ls", reason);
         let data = &self.data.rendered_layout;
         let cmd_line = &self.data.command_line;
@@ -1526,6 +1531,7 @@ impl<'a> Reader<'a> {
             self.parser.vars(),
             pager,
             current_page_rendering,
+            is_final_rendering,
         );
     }
 }
@@ -1949,8 +1955,9 @@ impl<'a> Reader<'a> {
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
         // user presses enter.
-        if zelf.is_repaint_needed(None) || zelf.conf.inputfd != STDIN_FILENO {
-            zelf.layout_and_repaint(L!("prepare to execute"));
+        if zelf.is_repaint_needed(None) || zelf.screen.scrolled || zelf.conf.inputfd != STDIN_FILENO
+        {
+            zelf.layout_and_repaint_before_execution();
         }
 
         // Finish syntax highlighting (but do not wait forever).
@@ -3635,7 +3642,7 @@ impl<'a> Reader<'a> {
             data.colors[i].background = HighlightRole::search_match;
         }
         self.rendered_layout = data.clone(); // need to copy the data since we will use it again.
-        self.paint_layout(L!("flash"));
+        self.paint_layout(L!("flash"), false);
 
         let _old_data = std::mem::take(&mut self.rendered_layout);
 
@@ -3644,7 +3651,7 @@ impl<'a> Reader<'a> {
         // Re-render with our saved data.
         data.colors = saved_colors;
         self.rendered_layout = data;
-        self.paint_layout(L!("unflash"));
+        self.paint_layout(L!("unflash"), false);
 
         // Save the time we stopped flashing as the time of the most recent flash. We can't just
         // increment the old `now` value because the sleep is non-deterministic.

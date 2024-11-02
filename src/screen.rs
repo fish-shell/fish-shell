@@ -177,6 +177,8 @@ impl ScreenData {
 pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
     pub autosuggestion_is_truncated: bool,
+    /// True if the last rendering was so large we could only display part of the command line.
+    pub scrolled: bool,
 
     /// Receiver for our output.
     outp: &'static RefCell<Outputter>,
@@ -213,6 +215,7 @@ impl Screen {
         Self {
             outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
+            scrolled: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
@@ -250,6 +253,7 @@ impl Screen {
         vars: &dyn Environment,
         pager: &mut Pager,
         page_rendering: &mut PageRendering,
+        is_final_rendering: bool,
     ) {
         let curr_termsize = termsize_last();
         let screen_width = curr_termsize.width;
@@ -360,15 +364,19 @@ impl Screen {
                 break scrolled_cursor.unwrap();
             }
             if !self.desired_append_char(
-                scrolled_cursor
-                    .map(|sc| {
-                        if sc.scroll_amount != 0 {
-                            sc.cursor.y
-                        } else {
-                            screen_height - 1
-                        }
-                    })
-                    .unwrap_or(usize::MAX),
+                if is_final_rendering {
+                    usize::MAX
+                } else {
+                    scrolled_cursor
+                        .map(|sc| {
+                            if sc.scroll_amount != 0 {
+                                sc.cursor.y
+                            } else {
+                                screen_height - 1
+                            }
+                        })
+                        .unwrap_or(usize::MAX)
+                },
                 effective_commandline.as_char_slice()[i],
                 colors[i],
                 usize::try_from(indent[i]).unwrap(),
@@ -405,7 +413,9 @@ impl Screen {
                     scroll_amount,
                 } = scrolled_cursor;
                 if scroll_amount != 0 {
-                    self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
+                    if !is_final_rendering {
+                        self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
+                    }
                     cursor.y -= scroll_amount;
                 }
                 cursor
@@ -423,11 +433,13 @@ impl Screen {
         // Append pager_data (none if empty).
         self.desired.append_lines(&page_rendering.screen_data);
 
+        self.scrolled = scrolled_cursor.scroll_amount != 0;
+
         self.update(
             vars,
             &layout.left_prompt,
             &layout.right_prompt,
-            scrolled_cursor.scroll_amount != 0,
+            is_final_rendering,
         );
         self.save_status();
     }
@@ -852,7 +864,7 @@ impl Screen {
         vars: &dyn Environment,
         left_prompt: &wstr,
         right_prompt: &wstr,
-        scrolled: bool,
+        is_final_rendering: bool,
     ) {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
@@ -909,14 +921,14 @@ impl Screen {
         let term = term.as_ref();
 
         // Output the left prompt if it has changed.
-        if scrolled {
+        if zelf.scrolled && !is_final_rendering {
             zelf.r#move(0, 0);
             zelf.outp
                 .borrow_mut()
                 .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
             zelf.actual_left_prompt.clear();
             zelf.actual.cursor.x = 0;
-        } else if left_prompt != zelf.actual_left_prompt {
+        } else if left_prompt != zelf.actual_left_prompt || (zelf.scrolled && is_final_rendering) {
             zelf.r#move(0, 0);
             let mut start = 0;
             let osc_133_prompt_start =
@@ -966,7 +978,7 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if scrolled {
+            let shared_prefix = if zelf.scrolled {
                 0
             } else {
                 line_shared_prefix(o_line(&zelf, i), s_line(&zelf, i))

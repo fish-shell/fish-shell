@@ -17,7 +17,7 @@ Notable backwards-incompatible changes
 - :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word like :kbd:`ctrl-left` and :kbd:`ctrl-right` do.
 - :kbd:`alt-backspace` will delete an entire argument, not just one word (which is :kbd:`ctrl-backspace` now).
 - ``random`` will produce different values from previous versions of fish when used with the same seed, and will work more sensibly with small seed numbers.
- The seed was never guaranteed to give the same result across systems,
+  The seed was never guaranteed to give the same result across systems,
   so we do not expect this to have a large impact (:issue:`9593`).
 - Variables in command position that expand to a subcommand keyword are now forbidden to fix a likely user error.
   For example, ``set editor command emacs; $editor`` is no longer allowed (:issue:`10249`).

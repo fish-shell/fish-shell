@@ -28,7 +28,7 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
 
     function fish_vi_cursor_handle_preexec --on-event fish_preexec --on-event fish_exit
         set -l varname fish_cursor_external
-        if not set -q \$varname
+        if not set -q $varname
             set varname fish_cursor_default
         end
         __fish_vi_cursor $varname

@@ -8,6 +8,7 @@ use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
 use libc::{c_char, pid_t, O_RDONLY};
 use std::ffi::CStr;
+use std::num::NonZeroU32;
 use std::os::unix::fs::MetadataExt;
 use std::time::Duration;
 
@@ -143,7 +144,7 @@ pub fn execute_setpgid(pid: pid_t, pgroup: pid_t, is_parent: bool) -> i32 {
 
 /// Set up redirections and signal handling in the child process.
 pub fn child_setup_process(
-    claim_tty_from: pid_t,
+    claim_tty_from: Option<NonZeroU32>,
     sigmask: Option<&libc::sigset_t>,
     is_forked: bool,
     dup2s: &Dup2List,
@@ -173,7 +174,10 @@ pub fn child_setup_process(
             return err;
         }
     }
-    if claim_tty_from >= 0 && unsafe { libc::tcgetpgrp(libc::STDIN_FILENO) } == claim_tty_from {
+    if claim_tty_from
+        // tcgetpgrp() can return -1 but pid.get() cannot, so cast the latter to the former
+        .is_some_and(|pid| unsafe { libc::tcgetpgrp(libc::STDIN_FILENO) } == pid.get() as i32)
+    {
         // Assign the terminal within the child to avoid the well-known race between tcsetgrp() in
         // the parent and the child executing. We are not interested in error handling here, except
         // we try to avoid this for non-terminals; in particular pipelines often make non-terminal

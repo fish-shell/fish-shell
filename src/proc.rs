@@ -308,12 +308,6 @@ impl InternalProc {
     }
 }
 
-/// 0 should not be used; although it is not a valid PGID in userspace,
-///   the Linux kernel will use it for kernel processes.
-/// -1 should not be used; it is a possible return value of the getpgid()
-///   function
-pub const INVALID_PID: i32 = -2;
-
 // Allows transferring the tty to a job group, while it runs.
 #[derive(Default)]
 pub struct TtyTransfer {
@@ -855,6 +849,7 @@ impl Job {
 
     /// Return our pgid, or none if we don't have one, or are internal to fish
     /// This never returns fish's own pgroup.
+    // TODO: Return a type-safe result.
     pub fn get_pgid(&self) -> Option<libc::pid_t> {
         self.group().get_pgid()
     }
@@ -862,6 +857,7 @@ impl Job {
     /// Return the pid of the last external process in the job.
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This will never be fish's own pid.
+    // TODO: Return a type-safe result.
     pub fn get_last_pid(&self) -> Option<libc::pid_t> {
         self.processes()
             .iter()

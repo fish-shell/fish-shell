@@ -37,7 +37,7 @@ use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 use crate::proc::{
     hup_jobs, is_interactive_session, jobs_requiring_warning_on_exit, no_exec,
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
-    TtyTransfer, INVALID_PID,
+    TtyTransfer,
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
@@ -56,6 +56,7 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
+use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
 use std::sync::atomic::Ordering;
@@ -491,7 +492,7 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
     // child_setup_process makes sure signals are properly set up.
     let redirs = dup2_list_resolve_chain(&all_ios);
     if child_setup_process(
-        0, /* not claim_tty */
+        None, /* not claim_tty */
         blocked_signals,
         false, /* not is_forked */
         &redirs,
@@ -677,9 +678,10 @@ fn fork_child_for_process(
 ) -> LaunchResult {
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
     let claim_tty_from = if p.leads_pgrp && job.group().wants_terminal() {
-        unsafe { libc::getpgrp() }
+        // getpgrp(2) cannot fail and always returns the (positive) caller's pgid
+        Some(NonZeroU32::new(unsafe { libc::getpgrp() } as u32).unwrap())
     } else {
-        INVALID_PID
+        None
     };
 
     // Decide if the job wants to set a custom sigmask.

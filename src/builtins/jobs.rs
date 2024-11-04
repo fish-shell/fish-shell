@@ -8,7 +8,7 @@ use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
-use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, INVALID_PID};
+use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job};
 use crate::wchar_ext::WExt;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
@@ -50,12 +50,8 @@ fn cpu_use(j: &Job) -> f64 {
 
 /// Print information about the specified job.
 fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut IoStreams) {
-    let mut pgid = INVALID_PID;
-    {
-        if let Some(job_pgid) = j.get_pgid() {
-            pgid = job_pgid;
-        }
-    }
+    // TODO: Breaking change, but don't print meaningless -2 for jobs without a pgid
+    let pgid = j.get_pgid().unwrap_or(-2); // the old INVALID_PGID value
 
     let mut out = WString::new();
     match mode {

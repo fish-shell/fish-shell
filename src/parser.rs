@@ -357,14 +357,16 @@ pub enum ParserStatusVar {
 
 pub type BlockId = usize;
 
-// Controls the behavior when fish itself receives a signal and there are
-// no blocks on the stack.
-// The "outermost" parser is responsible for clearing the signal.
+/// Controls the behavior when fish itself receives a signal and there are
+/// no blocks on the stack.
+/// The "outermost" parser is responsible for clearing the signal.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum CancelBehavior {
     #[default]
-    Return, // Return the signal to the caller.
-    Clear, // Clear the signal.
+    /// Return the signal to the caller
+    Return,
+    /// Clear the signal
+    Clear,
 }
 
 pub struct Parser {

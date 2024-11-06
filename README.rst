@@ -66,8 +66,7 @@ Windows
    for Linux with the instructions for the appropriate distribution
    listed above under “Packages for Linux”, or from source with the
    instructions below.
--  Fish can also be installed on all versions of Windows using
-   `Cygwin <https://cygwin.com/>`__ (from the **Shells** category).
+-  fish (4.0 on and onwards) cannot be installed in Cygwin, due to a lack of Rust support.
 
 Building from source
 ~~~~~~~~~~~~~~~~~~~~
@@ -123,28 +122,17 @@ Dependencies
 
 Compiling fish from a tarball requires:
 
--  a C++11 compiler (g++ 4.8 or later, or clang 3.3 or later)
--  CMake (version 3.5 or later)
--  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
--  gettext (headers and libraries) - optional, for translation support
-
-Sphinx is also optionally required to build the documentation from a
-cloned git repository.
-
-Additionally, running the test suite requires Python 3.5+ and the pexpect package.
-
-Dependencies, git master
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Building from git master currently requires:
-
 -  Rust (version 1.70 or later)
--  CMake (version 3.19 or later)
+-  CMake (version 3.5 or later)
 -  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support
 -  an Internet connection, as other dependencies will be downloaded automatically
 
+Sphinx is also optionally required to build the documentation from a
+cloned git repository.
+
+Additionally, running the full test suite requires Python 3, tmux, and the pexpect package.
 
 Building from source (all platforms) - Makefile generator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,19 +159,7 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
 - MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
 - WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
-
-Note that fish does *not* support static linking and will attempt to error out if it detects it.
-
-Help, it didn’t build!
-~~~~~~~~~~~~~~~~~~~~~~
-
-On Debian or Ubuntu you want these packages:
-
-::
-
-   sudo apt install build-essential cmake libpcre2-dev gettext
-
-On RedHat, CentOS, or Amazon EC2 everything should be preinstalled.
+- extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
 Contributing Changes to the Code
 --------------------------------

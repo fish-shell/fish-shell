@@ -646,6 +646,7 @@ fn read_i(parser: &Parser) -> i32 {
         data.command_line.clear();
         data.update_buff_pos(EditableLineTag::Commandline, None);
         data.command_line_changed(EditableLineTag::Commandline);
+        // OSC 133 End of command
         data.screen.write_bytes(b"\x1b]133;C\x07");
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
@@ -658,6 +659,7 @@ fn read_i(parser: &Parser) -> i32 {
         data.exit_loop_requested |= parser.libdata().exit_current_script;
         parser.libdata_mut().exit_current_script = false;
 
+        // OSC 133 "Command finished"
         let _ = write!(
             Outputter::stdoutput().borrow_mut(),
             "\x1b]133;D;{}\x07",

@@ -79,6 +79,7 @@ Some helper functions, often to give you information for use in your prompt:
 - :doc:`fish_add_path <cmds/fish_add_path>` to easily add a path to $PATH.
 - :doc:`alias <cmds/alias>` to quickly define wrapper functions ("aliases").
 - :doc:`fish_delta <cmds/fish_delta>` to show what you have changed from the default configuration.
+- :doc:`export <cmds/export>` as a compatibility function for other shells.
 
 Helper commands
 ^^^^^^^^^^^^^^^

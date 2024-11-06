@@ -667,6 +667,9 @@ fn read_i(parser: &Parser) -> i32 {
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();
 
+        // Make cursor visible. Every even vaguely used terminal agrees on this sequence.
+        data.screen.write_bytes(b"\x1b[?12l");
+
         let already_warned = data.did_warn_for_bg_jobs;
         if check_exit_loop_maybe_warning(Some(&mut data)) {
             break;

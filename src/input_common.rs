@@ -433,6 +433,7 @@ static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_JETBRAINS: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -446,6 +447,10 @@ pub fn terminal_protocol_hacks() {
                 };
                 version < (3, 5, 6)
             }),
+    );
+    IN_JETBRAINS.store(
+        var_os("TERMINAL_EMULATOR")
+            .is_some_and(|term| term.as_os_str().as_bytes() == b"JetBrains-JediTerm"),
     );
 }
 
@@ -477,6 +482,9 @@ pub fn terminal_protocols_enable_ifn() {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
+    } else if IN_JETBRAINS.load() {
+        // Jetbrains IDE terminals vomit CSI u
+        concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
     } else {
         concat!(
             "\x1b[?2004h", // Bracketed paste
@@ -499,6 +507,8 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     }
     let sequences = if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
+    } else if IN_JETBRAINS.load() {
+        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else {
         concat!(
             "\x1b[?2004l", // Bracketed paste

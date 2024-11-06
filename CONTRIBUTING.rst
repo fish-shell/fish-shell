@@ -42,8 +42,8 @@ Guidelines
 
 In short:
 
-- Be conservative in what you need (``C++11``, few dependencies)
-- Use automated tools to help you (including ``make test``, ``build_tools/style.fish`` and ``make lint``)
+- Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
+- Use automated tools to help you (including ``make test`` and ``build_tools/style.fish``)
 
 Contributing completions
 ========================
@@ -101,7 +101,7 @@ To ensure your changes conform to the style rules run
 
 before committing your change. That will run our autoformatters:
 
-- ``git-clang-format`` for c++
+- ``rustfmt`` for Rust
 - ``fish_indent`` (shipped with fish) for fish script
 - ``black`` for python
 
@@ -322,12 +322,12 @@ Setting Code Up For Translations
 --------------------------------
 
 All non-debug messages output for user consumption should be marked for
-translation. In C++, this requires the use of the ``_`` (underscore)
-macro:
+translation. In Rust, this requires the use of the ``wgettext!`` or ``wgettext_fmt!``
+macros:
 
 ::
 
-   streams.out.append_format(_(L"%ls: There are no jobs\n"), argv[0]);
+   streams.out.append(wgettext_fmt!("%ls: There are no jobs\n", argv[0]));
 
 All messages in fish script must be enclosed in single or double quote
 characters for our message extraction script to find them.

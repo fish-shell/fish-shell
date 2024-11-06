@@ -36,6 +36,13 @@ The following commands have an identical effect.
     set -gx PAGER bat
     export PAGER=bat
 
+Note: If you want to add to e.g. ``$PATH``, you need to be careful to :ref:`combine the list <cartesian-product>`. Quote it, like so::
+
+    export PATH="$PATH:/opt/bin"
+
+Or just use ``set``, which avoids this::
+
+    set -gx PATH $PATH /opt/bin
 
 See more
 --------

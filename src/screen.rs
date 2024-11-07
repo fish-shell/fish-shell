@@ -1953,11 +1953,11 @@ fn rendered_character(c: char) -> char {
 }
 
 fn wcwidth_rendered_min_0(c: char) -> usize {
-    usize::try_from(wcwidth_rendered(c)).unwrap()
+    usize::try_from(wcwidth_rendered(c)).unwrap_or_default()
 }
 pub fn wcwidth_rendered(c: char) -> isize {
     fish_wcwidth(rendered_character(c))
 }
 pub fn wcswidth_rendered(s: &wstr) -> isize {
-    s.chars().map(|c| fish_wcwidth(rendered_character(c))).sum()
+    s.chars().map(wcwidth_rendered).sum()
 }

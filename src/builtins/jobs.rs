@@ -50,8 +50,10 @@ fn cpu_use(j: &Job) -> f64 {
 
 /// Print information about the specified job.
 fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut IoStreams) {
-    // TODO: Breaking change, but don't print meaningless -2 for jobs without a pgid
-    let pgid = j.get_pgid().unwrap_or(-2); // the old INVALID_PGID value
+    let pgid = match j.get_pgid() {
+        Some(pgid) => pgid.to_string(),
+        None => "-".to_string(),
+    };
 
     let mut out = WString::new();
     match mode {
@@ -66,7 +68,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
                 out += wgettext!("State\tCommand\n");
             }
 
-            sprintf!(=> &mut out, "%d\t%d\t", j.job_id(), pgid);
+            sprintf!(=> &mut out, "%d\t%s\t", j.job_id(), pgid);
 
             if have_proc_stat() {
                 sprintf!(=> &mut out, "%.0f%%\t", 100.0 * cpu_use(j));
@@ -93,7 +95,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
                 // Print table header before first job.
                 out += wgettext!("Group\n");
             }
-            out += &sprintf!("%d\n", pgid)[..];
+            out += &sprintf!("%s\n", pgid)[..];
             streams.out.append(out);
         }
         JobsPrintMode::PrintPid => {

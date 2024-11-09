@@ -239,6 +239,13 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         }
     }
 
+    fn handle_sprintf_error(&mut self, err: fish_printf::Error) {
+        match err {
+            fish_printf::Error::Overflow => self.fatal_error(wgettext!("Number out of range")),
+            _ => panic!("unhandled error: {err:?}"),
+        }
+    }
+
     /// Evaluate a printf conversion specification.  SPEC is the start of the directive, and CONVERSION
     /// specifies the type of conversion.  SPEC does not include any length modifier or the
     /// conversion specifier itself.  FIELD_WIDTH and PRECISION are the field width and
@@ -268,7 +275,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
                         $fmt,
                         &self.locale,
                         &mut [$($arg.to_arg()),*]
-                    ).expect("sprintf failed");
+                    ).err().map(|err| self.handle_sprintf_error(err));
                 }
             }
         }

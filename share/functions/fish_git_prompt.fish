@@ -180,10 +180,10 @@ if string match -q Darwin -- (uname) && string match -q /usr/bin/git -- (command
     else
         # git is installed, but on the first run it may be very slow as xcrun needs to populate the cache.
         # Kick it off in the background to populate the cache.
-        command git --version &>/dev/null &
+        /bin/sh -c '/usr/bin/git --version; touch /tmp/__fish_git_ready' &>/dev/null &
         disown $last_pid &>/dev/null
         function __fish_git_prompt_ready
-            path is (xcrun --show-cache-path 2>/dev/null) || return 1
+            path is /tmp/__fish_git_ready || return 1
             # git is ready, erase the function.
             functions -e __fish_git_prompt_ready
             return 0

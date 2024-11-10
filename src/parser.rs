@@ -949,8 +949,8 @@ impl Parser {
     /// Returns the job and job index with the given pid.
     pub fn job_get_with_index_from_pid(&self, pid: libc::pid_t) -> Option<(usize, JobRef)> {
         for (i, job) in self.jobs().iter().enumerate() {
-            for p in job.processes().iter() {
-                if p.pid.load(Ordering::Relaxed) == pid {
+            for p in job.external_procs() {
+                if p.pid.load().unwrap().get() == pid {
                     return Some((i, job.clone()));
                 }
             }

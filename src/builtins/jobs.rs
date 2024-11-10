@@ -19,7 +19,6 @@ use crate::{
 };
 use libc::c_int;
 use std::num::NonZeroU32;
-use std::sync::atomic::Ordering;
 
 /// Print modes for the jobs builtin.
 
@@ -36,9 +35,9 @@ enum JobsPrintMode {
 /// This may exceed 1 if there are multiple CPUs!
 fn cpu_use(j: &Job) -> f64 {
     let mut u = 0.0;
-    for p in j.processes() {
+    for p in j.external_procs() {
         let now = timef();
-        let jiffies = proc_get_jiffies(p.pid.load(Ordering::Relaxed));
+        let jiffies = proc_get_jiffies(p.pid.load().unwrap().as_pid_t());
         let last_jiffies = p.last_times.get().jiffies;
         let since = now - last_jiffies as f64;
         if since > 0.0 && jiffies > last_jiffies {
@@ -104,8 +103,8 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
                 out += wgettext!("Process\n");
             }
 
-            for p in j.processes() {
-                out += &sprintf!("%d\n", p.pid.load(Ordering::Relaxed))[..];
+            for p in j.external_procs() {
+                out += &sprintf!("%d\n", p.pid.load().unwrap().get())[..];
             }
             streams.out.append(out);
         }

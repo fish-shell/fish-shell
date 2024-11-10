@@ -36,8 +36,8 @@ use crate::null_terminated_array::{
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 use crate::proc::{
     hup_jobs, is_interactive_session, jobs_requiring_warning_on_exit, no_exec,
-    print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
-    TtyTransfer,
+    print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, Pid, ProcStatus, Process,
+    ProcessType, TtyTransfer,
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
@@ -715,13 +715,14 @@ fn fork_child_for_process(
         job.group().set_pgid(pid);
     }
     {
+        let pid = p.pid().unwrap();
         if let Some(pgid) = job.group().get_pgid() {
-            let err = execute_setpgid(p.pid(), pgid, is_parent);
+            let err = execute_setpgid(pid, pgid, is_parent);
             if err != 0 {
                 report_setpgid_error(
                     err,
                     is_parent,
-                    p.pid(),
+                    pid,
                     pgid,
                     job.job_id().as_num(),
                     &narrow_cmd,
@@ -869,7 +870,7 @@ fn exec_external_command(
                 return Err(());
             }
         };
-        assert!(pid > 0, "Should have either a valid pid, or an error");
+        let pid = Pid::new(pid).expect("Should have either a valid pid, or an error");
 
         // This usleep can be used to test for various race conditions
         // (https://github.com/fish-shell/fish-shell/issues/360).
@@ -879,7 +880,7 @@ fn exec_external_command(
             exec_fork,
             "Fork #%d, pid %d: spawn external command '%s' from '%ls'",
             count,
-            pid,
+            pid.get(),
             p.actual_cmd,
             file.as_ref()
                 .map(|s| s.as_utfstr())
@@ -887,14 +888,14 @@ fn exec_external_command(
         );
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p.pid.store(pid, Ordering::Relaxed);
+        p.pid.store(pid);
         if p.leads_pgrp {
-            j.group().set_pgid(pid);
+            j.group().set_pgid(pid.as_pid_t());
             // posix_spawn should in principle set the pgid before returning.
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
             // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-            execute_setpgid(pid, pid, true /* is parent */);
+            execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
         }
         return Ok(());
     }
@@ -1326,7 +1327,7 @@ fn exec_process_in_job(
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser.mut_wait_handles().remove_by_pid(p.pid());
+            parser.mut_wait_handles().remove_by_pid(p.pid().unwrap());
             Ok(())
         }
         ProcessType::exec => {

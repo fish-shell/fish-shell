@@ -9,7 +9,6 @@ use crate::common::unescape_string;
 use crate::common::valid_var_name;
 use crate::common::UnescapeStringStyle;
 use crate::env::EnvMode;
-use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::libc::MB_CUR_MAX;
@@ -28,6 +27,9 @@ use crate::wutil::perror;
 use libc::SEEK_CUR;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
+
+/// Fish's hard-coded set of default output delimiters
+const IFS: &wstr = L!(" \n\t");
 
 #[derive(Default)]
 struct Options {
@@ -687,12 +689,9 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         // todo!("don't clone")
         let delimiter = opts
             .delimiter
-            .clone()
-            .or_else(|| {
-                let ifs = parser.vars().get_unless_empty(L!("IFS"));
-                ifs.map(|ifs| ifs.as_string())
-            })
-            .unwrap_or_default();
+            .as_ref()
+            .map(|delim| delim.as_utfstr())
+            .unwrap_or(IFS);
 
         if delimiter.is_empty() {
             // Every character is a separate token with one wrinkle involving non-array mode where

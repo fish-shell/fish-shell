@@ -1440,7 +1440,7 @@ complete -c git -n '__fish_git_using_command diff' -s 1 -l base -d 'Compare the 
 complete -c git -n '__fish_git_using_command diff' -s 2 -l ours -d 'Compare the working tree with the "our branch"'
 complete -c git -n '__fish_git_using_command diff' -s 3 -l theirs -d 'Compare the working tree with the "their branch"'
 complete -c git -n '__fish_git_using_command diff' -s 0 -d 'Omit diff output for unmerged entries and just show "Unmerged"'
-complete -c git -n '__fish_git_using_command diff' -n 'not __fish_git_contains_opt cached staged' -a '(
+complete -c git -n '__fish_git_using_command diff' -k -n 'not __fish_git_contains_opt cached staged' -a '(
     set -l kinds modified
     contains -- -- (commandline -xpc) && set -a kinds deleted modified-staged-deleted
     __fish_git_files $kinds

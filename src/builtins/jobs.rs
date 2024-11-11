@@ -104,7 +104,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             }
 
             for p in j.external_procs() {
-                out += &sprintf!("%d\n", p.pid.load().unwrap().get())[..];
+                out += &sprintf!("%d\n", p.pid.load().unwrap())[..];
             }
             streams.out.append(out);
         }

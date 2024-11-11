@@ -1110,7 +1110,7 @@ impl Job {
                 } else {
                     charptr2wcstring(strsignal)
                 };
-                wperror(&sprintf!("killpg(%d, %s)", pgid.get(), strsignal));
+                wperror(&sprintf!("killpg(%d, %s)", pgid, strsignal));
                 return false;
             }
         } else {
@@ -1502,13 +1502,10 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     WNOHANG | WUNTRACED | WCONTINUED,
                 )
             };
-            if pid <= 0 {
+            let Some(pid) = Pid::new(pid) else {
                 continue;
-            }
-            assert!(
-                pid == proc.pid().unwrap().get(),
-                "Unexpected waitpid() return"
-            );
+            };
+            assert!(pid == proc.pid().unwrap(), "Unexpected waitpid() return");
 
             // The process has stopped or exited! Update its status.
             let status = ProcStatus::from_waitpid(statusv);

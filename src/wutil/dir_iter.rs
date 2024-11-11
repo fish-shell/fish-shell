@@ -276,11 +276,6 @@ impl DirIter {
             return self.next();
         }
 
-        let nul_pos = dent.d_name.iter().position(|b| *b == 0).unwrap();
-        let d_name: Vec<u8> = dent.d_name[..nul_pos + 1]
-            .iter()
-            .map(|b| *b as u8)
-            .collect();
         self.entry.reset();
         self.entry.name = cstr2wcstring(&d_name);
         #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]

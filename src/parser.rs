@@ -23,7 +23,7 @@ use crate::parse_constants::{
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
-use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, ProcStatus};
+use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, Pid, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
@@ -942,15 +942,15 @@ impl Parser {
     }
 
     /// Returns the job with the given pid.
-    pub fn job_get_from_pid(&self, pid: libc::pid_t) -> Option<JobRef> {
+    pub fn job_get_from_pid(&self, pid: Pid) -> Option<JobRef> {
         self.job_get_with_index_from_pid(pid).map(|t| t.1)
     }
 
     /// Returns the job and job index with the given pid.
-    pub fn job_get_with_index_from_pid(&self, pid: libc::pid_t) -> Option<(usize, JobRef)> {
+    pub fn job_get_with_index_from_pid(&self, pid: Pid) -> Option<(usize, JobRef)> {
         for (i, job) in self.jobs().iter().enumerate() {
             for p in job.external_procs() {
-                if p.pid.load().unwrap().get() == pid {
+                if p.pid.load().unwrap() == pid {
                     return Some((i, job.clone()));
                 }
             }

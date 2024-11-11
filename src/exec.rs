@@ -698,7 +698,7 @@ fn fork_child_for_process(
     let narrow_cmd = wcs2zstring(job.command());
     let narrow_argv0 = wcs2zstring(p.argv0().unwrap_or_default());
 
-    let mut pid = execute_fork();
+    let pid = execute_fork();
     if pid < 0 {
         return Err(());
     }
@@ -706,12 +706,12 @@ fn fork_child_for_process(
 
     // Record the pgroup if this is the leader.
     // Both parent and child attempt to send the process to its new group, to resolve the race.
-    p.set_pid(if is_parent {
+    let pid = if is_parent {
         pid
     } else {
-        pid = unsafe { libc::getpid() };
-        pid
-    });
+        unsafe { libc::getpid() }
+    };
+    p.set_pid(pid);
     if p.leads_pgrp {
         job.group().set_pgid(pid);
     }
@@ -1328,9 +1328,7 @@ fn exec_process_in_job(
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser
-                .mut_wait_handles()
-                .remove_by_pid(p.pid().unwrap().as_pid_t());
+            parser.mut_wait_handles().remove_by_pid(p.pid().unwrap());
             Ok(())
         }
         ProcessType::exec => {

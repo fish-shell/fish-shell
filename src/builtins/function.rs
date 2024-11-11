@@ -58,7 +58,7 @@ const LONG_OPTIONS: &[WOption] = &[
 
 /// Return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
-fn job_id_for_pid(pid: i32, parser: &Parser) -> Option<u64> {
+fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<u64> {
     if let Some(job) = parser.job_get_from_pid(pid) {
         Some(job.internal_job_id)
     } else {
@@ -164,7 +164,10 @@ fn parse_cmd_opts(
                         e = EventDescription::ProcessExit { pid: Pid::new(pid) };
                     } else {
                         // TODO: rationalize why a default of 0 is sensible.
-                        let internal_job_id = job_id_for_pid(pid, parser).unwrap_or(0);
+                        let internal_job_id = match Pid::new(pid) {
+                            Some(pid) => job_id_for_pid(pid, parser).unwrap_or(0),
+                            None => 0,
+                        };
                         e = EventDescription::JobExit {
                             pid: Pid::new(pid),
                             internal_job_id,
@@ -372,13 +375,13 @@ pub fn function(
     for ed in &opts.events {
         match *ed {
             EventDescription::ProcessExit { pid: Some(pid) } => {
-                let wh = parser.get_wait_handles().get_by_pid(pid.as_pid_t());
+                let wh = parser.get_wait_handles().get_by_pid(pid);
                 if let Some(status) = wh.and_then(|wh| wh.status()) {
                     event::fire(parser, event::Event::process_exit(pid, status));
                 }
             }
             EventDescription::JobExit { pid: Some(pid), .. } => {
-                let wh = parser.get_wait_handles().get_by_pid(pid.as_pid_t());
+                let wh = parser.get_wait_handles().get_by_pid(pid);
                 if let Some(wh) = wh {
                     if wh.is_completed() {
                         event::fire(parser, event::Event::job_exit(pid, wh.internal_job_id));

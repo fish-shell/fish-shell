@@ -3,7 +3,7 @@
 use super::shared::{builtin_print_help, STATUS_CMD_ERROR, STATUS_INVALID_ARGS};
 use crate::io::IoStreams;
 use crate::parser::Parser;
-use crate::proc::{add_disowned_job, Job};
+use crate::proc::{add_disowned_job, Job, Pid};
 use crate::{
     builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
     wchar::wstr,
@@ -80,6 +80,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             retval = STATUS_CMD_ERROR;
         }
     } else {
+        // TODO: This is supposed to be deduplicated or a hash set per comments below!
         let mut jobs = vec![];
 
         retval = STATUS_CMD_OK;
@@ -89,10 +90,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         // Non-existent jobs aren't an error, but information about them is useful.
         // Multiple PIDs may refer to the same job; include the job only once by using a set.
         for arg in &args[1..] {
-            match fish_wcstoi(arg)
-                .ok()
-                .and_then(|pid| if pid < 0 { None } else { Some(pid) })
-            {
+            match fish_wcstoi(arg).ok().and_then(Pid::new) {
                 None => {
                     streams.err.append(wgettext_fmt!(
                         "%ls: '%ls' is not a valid job specifier\n",

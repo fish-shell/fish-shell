@@ -1,6 +1,6 @@
 // Implementation of the bg builtin.
 
-use libc::pid_t;
+use crate::proc::Pid;
 
 use super::prelude::*;
 
@@ -81,18 +81,19 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Optio
     // If one argument is not a valid pid (i.e. integer >= 0), fail without backgrounding anything,
     // but still print errors for all of them.
     let mut retval: Option<i32> = STATUS_CMD_OK;
-    let pids: Vec<pid_t> = args[opts.optind..]
+    let pids: Vec<Pid> = args[opts.optind..]
         .iter()
-        .map(|arg| {
-            fish_wcstoi(arg).unwrap_or_else(|_| {
+        .filter_map(|arg| match fish_wcstoi(arg).map(Pid::new) {
+            Ok(Some(pid)) => Some(pid),
+            _ => {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid job specifier\n",
                     cmd,
                     arg
                 ));
                 retval = STATUS_INVALID_ARGS;
-                0
-            })
+                None
+            }
         })
         .collect();
 

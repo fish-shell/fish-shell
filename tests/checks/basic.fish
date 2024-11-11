@@ -503,7 +503,7 @@ type --query cp
 echo $status
 #CHECK: 0
 
-jobs --query 0
+jobs --query 1
 echo $status
 #CHECK: 1
 

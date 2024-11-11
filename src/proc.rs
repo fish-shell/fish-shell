@@ -512,7 +512,7 @@ impl Drop for TtyTransfer {
 
 /// A type-safe equivalent to [`libc::pid_t`].
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Pid(NonZeroU32);
 
 impl Pid {
@@ -780,7 +780,7 @@ impl Process {
         } else {
             if self.wait_handle.borrow().is_none() {
                 self.wait_handle.replace(Some(WaitHandle::new(
-                    self.pid().unwrap().get(),
+                    self.pid().unwrap(),
                     jid,
                     wbasename(&self.actual_cmd.clone()).to_owned(),
                 )));

@@ -50,7 +50,7 @@ use fish::{
     printf,
     proc::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
-        set_interactive_session,
+        set_interactive_session, Pid,
     },
     reader::{reader_init, reader_read, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
@@ -695,7 +695,10 @@ fn throwing_main() -> i32 {
         parser.get_last_status()
     };
 
-    event::fire(parser, Event::process_exit(getpid(), exit_status));
+    event::fire(
+        parser,
+        Event::process_exit(Pid::new(getpid()).unwrap(), exit_status),
+    );
 
     // Trigger any exit handlers.
     event::fire_generic(

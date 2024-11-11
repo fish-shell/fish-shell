@@ -442,9 +442,11 @@ impl FunctionProperties {
                     sprintf!(=> &mut out, " --on-variable %ls", name);
                 }
                 EventDescription::ProcessExit { pid } => {
-                    sprintf!(=> &mut out, " --on-process-exit %d", pid);
+                    let pid = pid.map(|p| p.get()).unwrap_or(0);
+                    sprintf!(=> &mut out, " --on-process-exit %d", pid)
                 }
                 EventDescription::JobExit { pid, .. } => {
+                    let pid = pid.map(|p| p.get()).unwrap_or(0);
                     sprintf!(=> &mut out, " --on-job-exit %d", pid);
                 }
                 EventDescription::CallerExit { .. } => {

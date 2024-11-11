@@ -10,6 +10,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::nix::getpid;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
+use crate::proc::Pid;
 use crate::signal::Signal;
 use std::sync::Arc;
 
@@ -148,7 +149,7 @@ fn parse_cmd_opts(
                     }
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
-                    let pid: i32 = getpid();
+                    let pid = Pid::new(getpid());
                     e = EventDescription::ProcessExit { pid };
                 } else {
                     let Ok(pid @ 0..) = fish_wcstoi(woptarg) else {
@@ -160,12 +161,12 @@ fn parse_cmd_opts(
                         return STATUS_INVALID_ARGS;
                     };
                     if opt == 'p' {
-                        e = EventDescription::ProcessExit { pid };
+                        e = EventDescription::ProcessExit { pid: Pid::new(pid) };
                     } else {
                         // TODO: rationalize why a default of 0 is sensible.
                         let internal_job_id = job_id_for_pid(pid, parser).unwrap_or(0);
                         e = EventDescription::JobExit {
-                            pid,
+                            pid: Pid::new(pid),
                             internal_job_id,
                         };
                     }
@@ -370,14 +371,14 @@ pub fn function(
     // process has already exited, run it immediately (#7210).
     for ed in &opts.events {
         match *ed {
-            EventDescription::ProcessExit { pid } if pid != event::ANY_PID => {
-                let wh = parser.get_wait_handles().get_by_pid(pid);
+            EventDescription::ProcessExit { pid: Some(pid) } => {
+                let wh = parser.get_wait_handles().get_by_pid(pid.as_pid_t());
                 if let Some(status) = wh.and_then(|wh| wh.status()) {
                     event::fire(parser, event::Event::process_exit(pid, status));
                 }
             }
-            EventDescription::JobExit { pid, .. } if pid != event::ANY_PID => {
-                let wh = parser.get_wait_handles().get_by_pid(pid);
+            EventDescription::JobExit { pid: Some(pid), .. } => {
+                let wh = parser.get_wait_handles().get_by_pid(pid.as_pid_t());
                 if let Some(wh) = wh {
                     if wh.is_completed() {
                         event::fire(parser, event::Event::job_exit(pid, wh.internal_job_id));

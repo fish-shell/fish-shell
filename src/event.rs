@@ -386,7 +386,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
         }
         EventDescription::JobExit { pid, .. } => {
             if let Some(pid) = pid {
-                if let Some(job) = parser.job_get_from_pid(pid.as_pid_t()) {
+                if let Some(job) = parser.job_get_from_pid(*pid) {
                     format!("exit handler for job {}, '{}'", job.job_id(), job.command())
                 } else {
                     format!("exit handler for job with pid {pid}")

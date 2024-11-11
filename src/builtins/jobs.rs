@@ -8,7 +8,7 @@ use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
 use crate::parser::Parser;
-use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job};
+use crate::proc::{clock_ticks_to_seconds, have_proc_stat, proc_get_jiffies, Job, Pid};
 use crate::wchar_ext::WExt;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
@@ -211,7 +211,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                     }
                 }
             } else {
-                match fish_wcstoi(arg).ok().filter(|&pid| pid >= 0) {
+                match fish_wcstoi(arg).ok().and_then(Pid::new) {
                     None => {
                         streams.err.append(wgettext_fmt!(
                             "%ls: '%ls' is not a valid process id\n",

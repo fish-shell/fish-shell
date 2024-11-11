@@ -1,5 +1,5 @@
+use crate::proc::Pid;
 use crate::wchar::prelude::*;
-use libc::pid_t;
 use std::cell::Cell;
 use std::rc::Rc;
 
@@ -11,7 +11,7 @@ pub type InternalJobId = u64;
 /// This may outlive the job.
 pub struct WaitHandle {
     /// The pid of this process.
-    pub pid: pid_t,
+    pub pid: Pid,
 
     /// The internal job id of the job which contained this process.
     pub internal_job_id: InternalJobId,
@@ -42,7 +42,7 @@ impl WaitHandle {
 
 impl WaitHandle {
     /// Construct from a pid, job id, and base name.
-    pub fn new(pid: pid_t, internal_job_id: InternalJobId, base_name: WString) -> WaitHandleRef {
+    pub fn new(pid: Pid, internal_job_id: InternalJobId, base_name: WString) -> WaitHandleRef {
         Rc::new(WaitHandle {
             pid,
             internal_job_id,
@@ -60,7 +60,7 @@ const WAIT_HANDLE_STORE_DEFAULT_LIMIT: usize = 1024;
 /// Note this class is not safe for concurrent access.
 pub struct WaitHandleStore {
     // Map from pid to wait handles.
-    cache: lru::LruCache<pid_t, WaitHandleRef>,
+    cache: lru::LruCache<Pid, WaitHandleRef>,
 }
 
 impl WaitHandleStore {
@@ -84,7 +84,7 @@ impl WaitHandleStore {
 
     /// Return the wait handle for a pid, or None if there is none.
     /// This is a fast lookup.
-    pub fn get_by_pid(&self, pid: pid_t) -> Option<WaitHandleRef> {
+    pub fn get_by_pid(&self, pid: Pid) -> Option<WaitHandleRef> {
         self.cache.peek(&pid).cloned()
     }
 
@@ -99,7 +99,7 @@ impl WaitHandleStore {
     }
 
     /// Remove the wait handle for a pid, if present in this store.
-    pub fn remove_by_pid(&mut self, pid: pid_t) {
+    pub fn remove_by_pid(&mut self, pid: Pid) {
         self.cache.pop(&pid);
     }
 
@@ -125,25 +125,29 @@ fn test_wait_handles() {
     let mut whs = WaitHandleStore::new_with_capacity(limit);
     assert_eq!(whs.size(), 0);
 
-    assert!(whs.get_by_pid(5).is_none());
+    fn p(pid: i32) -> Pid {
+        Pid::new(pid).unwrap()
+    }
+
+    assert!(whs.get_by_pid(p(5)).is_none());
 
     // Duplicate pids drop oldest.
-    whs.add(WaitHandle::new(5, 0, L!("first").to_owned()));
-    whs.add(WaitHandle::new(5, 0, L!("second").to_owned()));
+    whs.add(WaitHandle::new(p(5), 0, L!("first").to_owned()));
+    whs.add(WaitHandle::new(p(5), 0, L!("second").to_owned()));
     assert_eq!(whs.size(), 1);
-    assert_eq!(whs.get_by_pid(5).unwrap().base_name, "second");
+    assert_eq!(whs.get_by_pid(p(5)).unwrap().base_name, "second");
 
-    whs.remove_by_pid(123);
+    whs.remove_by_pid(p(123));
     assert_eq!(whs.size(), 1);
-    whs.remove_by_pid(5);
+    whs.remove_by_pid(p(5));
     assert_eq!(whs.size(), 0);
 
     // Test evicting oldest.
-    whs.add(WaitHandle::new(1, 0, L!("1").to_owned()));
-    whs.add(WaitHandle::new(2, 0, L!("2").to_owned()));
-    whs.add(WaitHandle::new(3, 0, L!("3").to_owned()));
-    whs.add(WaitHandle::new(4, 0, L!("4").to_owned()));
-    whs.add(WaitHandle::new(5, 0, L!("5").to_owned()));
+    whs.add(WaitHandle::new(p(1), 0, L!("1").to_owned()));
+    whs.add(WaitHandle::new(p(2), 0, L!("2").to_owned()));
+    whs.add(WaitHandle::new(p(3), 0, L!("3").to_owned()));
+    whs.add(WaitHandle::new(p(4), 0, L!("4").to_owned()));
+    whs.add(WaitHandle::new(p(5), 0, L!("5").to_owned()));
     assert_eq!(whs.size(), 4);
 
     let entries = whs.get_list();

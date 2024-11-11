@@ -1,7 +1,5 @@
-use libc::pid_t;
-
 use super::prelude::*;
-use crate::proc::{proc_wait_any, Job};
+use crate::proc::{proc_wait_any, Job, Pid};
 use crate::signal::SigChecker;
 use crate::wait_handle::{WaitHandleRef, WaitHandleStore};
 
@@ -25,7 +23,7 @@ fn iswnumeric(s: &wstr) -> bool {
 
 #[derive(Copy, Clone)]
 enum WaitHandleQuery<'a> {
-    Pid(pid_t),
+    Pid(Pid),
     ProcName(&'a wstr),
 }
 
@@ -181,15 +179,15 @@ pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     for item in &argv[optind..argc] {
         if iswnumeric(item) {
             // argument is pid
-            let mpid: pid_t = fish_wcstoi(item).unwrap_or(-1);
-            if mpid <= 0 {
+            let mpid: i32 = fish_wcstoi(item).unwrap_or(-1);
+            let Some(mpid) = Pid::new(mpid) else {
                 streams.err.append(wgettext_fmt!(
                     "%ls: '%ls' is not a valid process id\n",
                     cmd,
                     item,
                 ));
                 continue;
-            }
+            };
             if !find_wait_handles(WaitHandleQuery::Pid(mpid), parser, &mut wait_handles) {
                 streams.err.append(wgettext_fmt!(
                     "%ls: Could not find a job with process id '%d'\n",

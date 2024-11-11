@@ -3,6 +3,7 @@ use crate::ast::BlockStatement;
 use crate::common::{valid_func_name, valid_var_name};
 use crate::complete::complete_add_wrapper;
 use crate::env::environment::Environment;
+use crate::env::is_read_only;
 use crate::event::{self, EventDescription, EventHandler};
 use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
@@ -172,8 +173,17 @@ fn parse_cmd_opts(
                 opts.events.push(e);
             }
             'a' => {
+                let name = w.woptarg.unwrap().to_owned();
+                if is_read_only(&name) {
+                    streams.err.append(wgettext_fmt!(
+                        "%ls: variable '%ls' is read-only\n",
+                        cmd,
+                        name
+                    ));
+                    return STATUS_INVALID_ARGS;
+                }
                 handling_named_arguments = true;
-                opts.named_arguments.push(w.woptarg.unwrap().to_owned());
+                opts.named_arguments.push(name);
             }
             'S' => {
                 opts.shadow_scope = false;

@@ -162,6 +162,8 @@ end
 
 rm -r $tmpdir
 
+functions -e foo
+
 function foo -p bar; end
 # CHECKERR: {{.*}}function.fish (line {{\d+}}): function: bar: invalid process id
 # CHECKERR: function foo -p bar; end
@@ -172,5 +174,17 @@ function foo --argument-names "banana pajama"; end
 # CHECKERR: function foo --argument-names "banana pajama"; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 
+
+function foo --argument-names status; end
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: variable 'status' is read-only
+# CHECKERR: function foo --argument-names status; end
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
+echo status $status
+# CHECK: status 2
+
+functions -q foo
+echo exists $status
+# CHECK: exists 1
 
 exit 0

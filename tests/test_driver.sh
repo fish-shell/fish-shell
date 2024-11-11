@@ -61,6 +61,10 @@ export suppress_color
 # Source test util functions at startup
 fish_init_cmd="${fish_init_cmd} && source ${TESTS_ROOT}/test_util.fish";
 
+# Indicate that the fish panic handler shouldn't wait for input to prevent tests from hanging
+FISH_FAST_FAIL=1
+export FISH_FAST_FAIL
+
 # Run the test script, but don't exec so we can clean up after it succeeds/fails. Each test is
 # launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
 # TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).

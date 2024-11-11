@@ -16,7 +16,11 @@ use crate::{
 pub static AT_EXIT: OnceCell<Box<dyn Fn(bool) + Send + Sync>> = OnceCell::new();
 
 pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
-    if isatty(STDIN_FILENO) {
+    // The isatty() check will stop us from hanging in most fish tests, but not those
+    // running in a simulated terminal emulator environment (such as the tmux or pexpect
+    // tests). The FISH_FAST_FAIL environment variable is set in the test driver to
+    // prevent the test suite from hanging on panic.
+    if isatty(STDIN_FILENO) && std::env::var_os("FISH_FAST_FAIL").is_none() {
         let standard_hook = take_hook();
         set_hook(Box::new(move |panic_info| {
             standard_hook(panic_info);

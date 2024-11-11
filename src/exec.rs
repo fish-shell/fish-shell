@@ -881,7 +881,7 @@ fn exec_external_command(
             exec_fork,
             "Fork #%d, pid %d: spawn external command '%s' from '%ls'",
             count,
-            pid.get(),
+            pid,
             p.actual_cmd,
             file.as_ref()
                 .map(|s| s.as_utfstr())

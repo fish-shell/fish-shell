@@ -1,5 +1,5 @@
 use crate::global_safety::RelaxedAtomicBool;
-use crate::proc::JobGroupRef;
+use crate::proc::{AtomicPid, JobGroupRef, Pid};
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
 use std::cell::RefCell;
@@ -72,8 +72,8 @@ pub struct JobGroup {
     /// Whether we are in the foreground, meaning the user is waiting for this job to complete.
     pub is_foreground: RelaxedAtomicBool,
     /// The pgid leading our group. This is only ever set if [`job_control`](Self::JobControl) is
-    /// true. We ensure the value (when set) is always non-negative.
-    pgid: RefCell<Option<libc::pid_t>>,
+    /// true. We ensure the value (when set) is always non-negative and non-zero.
+    pgid: AtomicPid,
     /// The original command which produced this job tree.
     pub command: WString,
     /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
@@ -149,14 +149,14 @@ impl JobGroup {
             "Should not set a pgid for a group that doesn't want job control!"
         );
         assert!(pgid >= 0, "Invalid pgid!");
-        assert!(self.pgid.borrow().is_none(), "JobGroup::pgid already set!");
 
-        self.pgid.replace(Some(pgid));
+        let old_pgid = self.pgid.swap(Pid::new(pgid).unwrap());
+        assert!(old_pgid.is_none(), "JobGroup::pgid already set!");
     }
 
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
-    pub fn get_pgid(&self) -> Option<libc::pid_t> {
-        *self.pgid.borrow()
+    pub fn get_pgid(&self) -> Option<Pid> {
+        self.pgid.load()
     }
 }
 
@@ -223,7 +223,7 @@ impl JobGroup {
             tmodes: RefCell::default(),
             signal: 0.into(),
             is_foreground: RelaxedAtomicBool::new(false),
-            pgid: RefCell::default(),
+            pgid: AtomicPid::default(),
         }
     }
 

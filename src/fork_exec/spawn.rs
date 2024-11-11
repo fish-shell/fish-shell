@@ -105,7 +105,7 @@ impl PosixSpawner {
         // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
         // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
         let desired_pgid = if let Some(pgid) = j.get_pgid() {
-            Some(pgid)
+            Some(pgid.get())
         } else if j.processes()[0].leads_pgrp {
             Some(0)
         } else {

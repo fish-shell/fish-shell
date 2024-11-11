@@ -698,7 +698,7 @@ fn fork_child_for_process(
     let narrow_cmd = wcs2zstring(job.command());
     let narrow_argv0 = wcs2zstring(p.argv0().unwrap_or_default());
 
-    let pid = execute_fork();
+    let mut pid = execute_fork();
     if pid < 0 {
         return Err(());
     }
@@ -709,7 +709,8 @@ fn fork_child_for_process(
     p.set_pid(if is_parent {
         pid
     } else {
-        unsafe { libc::getpid() }
+        pid = unsafe { libc::getpid() };
+        pid
     });
     if p.leads_pgrp {
         job.group().set_pgid(pid);
@@ -895,7 +896,7 @@ fn exec_external_command(
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
             // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-            execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
+            execute_setpgid(pid, pid, true /* is parent */);
         }
         return Ok(());
     }
@@ -1327,7 +1328,9 @@ fn exec_process_in_job(
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
             // pid from another, previous background process. Forget any such old process.
-            parser.mut_wait_handles().remove_by_pid(p.pid().unwrap());
+            parser
+                .mut_wait_handles()
+                .remove_by_pid(p.pid().unwrap().as_pid_t());
             Ok(())
         }
         ProcessType::exec => {

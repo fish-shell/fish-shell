@@ -24,7 +24,7 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
     if j.is_stopped() {
         if let Some(pgid) = pgid {
             unsafe {
-                libc::killpg(pgid, SIGCONT);
+                libc::killpg(pgid.as_pid_t(), SIGCONT);
             }
         }
         streams.err.append(wgettext_fmt!(

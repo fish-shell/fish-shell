@@ -4,7 +4,6 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
-use libc::pid_t;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -13,6 +12,7 @@ use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
+use crate::proc::Pid;
 use crate::signal::{signal_check_cancel, signal_handle, Signal};
 use crate::termsize;
 use crate::wchar::prelude::*;
@@ -27,8 +27,6 @@ pub enum event_type_t {
     generic,
 }
 
-pub const ANY_PID: pid_t = 0;
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EventDescription {
     /// Matches any event type (not always any event, as the function name may limit the choice as
@@ -40,13 +38,13 @@ pub enum EventDescription {
     Variable { name: WString },
     /// An event triggered by a process exit.
     ProcessExit {
-        /// Process ID. Use [`ANY_PID`] to match any pid.
-        pid: pid_t,
+        /// Process ID. Use [`None`] to match any pid.
+        pid: Option<Pid>,
     },
     /// An event triggered by a job exit.
     JobExit {
-        /// pid requested by the event, or [`ANY_PID`] for all.
-        pid: pid_t,
+        /// pid requested by the event, or [`None`] for all.
+        pid: Option<Pid>,
         /// `internal_job_id` of the job to match.
         /// If this is 0, we match either all jobs (`pid == ANY_PID`) or no jobs (otherwise).
         internal_job_id: u64,
@@ -147,8 +145,8 @@ impl EventHandler {
     /// Return true if a handler is "one shot": it fires at most once.
     fn is_one_shot(&self) -> bool {
         match self.desc {
-            EventDescription::ProcessExit { pid } => pid != ANY_PID,
-            EventDescription::JobExit { pid, .. } => pid != ANY_PID,
+            EventDescription::ProcessExit { pid } => pid.is_some(),
+            EventDescription::JobExit { pid, .. } => pid.is_some(),
             EventDescription::CallerExit { .. } => true,
             EventDescription::Signal { .. }
             | EventDescription::Variable { .. }
@@ -171,7 +169,7 @@ impl EventHandler {
             (
                 EventDescription::ProcessExit { pid },
                 EventDescription::ProcessExit { pid: ev_pid },
-            ) => *pid == ANY_PID || pid == ev_pid,
+            ) => pid.is_none() || pid == ev_pid,
             (
                 EventDescription::JobExit {
                     pid,
@@ -181,7 +179,7 @@ impl EventHandler {
                     internal_job_id: ev_internal_job_id,
                     ..
                 },
-            ) => *pid == ANY_PID || internal_job_id == ev_internal_job_id,
+            ) => pid.is_none() || internal_job_id == ev_internal_job_id,
             (
                 EventDescription::CallerExit { caller_id },
                 EventDescription::CallerExit {
@@ -226,9 +224,9 @@ impl Event {
         }
     }
 
-    pub fn process_exit(pid: pid_t, status: i32) -> Self {
+    pub fn process_exit(pid: Pid, status: i32) -> Self {
         Self {
-            desc: EventDescription::ProcessExit { pid },
+            desc: EventDescription::ProcessExit { pid: Some(pid) },
             arguments: vec![
                 "PROCESS_EXIT".into(),
                 pid.to_string().into(),
@@ -237,10 +235,10 @@ impl Event {
         }
     }
 
-    pub fn job_exit(pgid: pid_t, jid: u64) -> Self {
+    pub fn job_exit(pgid: Pid, jid: u64) -> Self {
         Self {
             desc: EventDescription::JobExit {
-                pid: pgid,
+                pid: Some(pgid),
                 internal_job_id: jid,
             },
             arguments: vec![
@@ -382,12 +380,19 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
         }
         EventDescription::Variable { name } => format!("handler for variable '{name}'"),
-        EventDescription::ProcessExit { pid } => format!("exit handler for process {pid}"),
+        EventDescription::ProcessExit { pid: None } => format!("exit handler for any process"),
+        EventDescription::ProcessExit { pid: Some(pid) } => {
+            format!("exit handler for process {pid}")
+        }
         EventDescription::JobExit { pid, .. } => {
-            if let Some(job) = parser.job_get_from_pid(*pid) {
-                format!("exit handler for job {}, '{}'", job.job_id(), job.command())
+            if let Some(pid) = pid {
+                if let Some(job) = parser.job_get_from_pid(pid.as_pid_t()) {
+                    format!("exit handler for job {}, '{}'", job.job_id(), job.command())
+                } else {
+                    format!("exit handler for job with pid {pid}")
+                }
             } else {
-                format!("exit handler for job with pid {pid}")
+                format!("exit handler for any job")
             }
         }
         EventDescription::CallerExit { .. } => {

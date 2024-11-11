@@ -512,7 +512,7 @@ impl Drop for TtyTransfer {
 
 /// A type-safe equivalent to [`libc::pid_t`].
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Pid(NonZeroU32);
 
 impl Pid {
@@ -1276,8 +1276,8 @@ pub fn print_exit_warning_for_jobs(jobs: &JobList) {
 
 /// Use the procfs filesystem to look up how many jiffies of cpu time was used by a given pid. This
 /// function is only available on systems with the procfs file entry 'stat', i.e. Linux.
-pub fn proc_get_jiffies(inpid: libc::pid_t) -> ClockTicks {
-    if inpid <= 0 || !have_proc_stat() {
+pub fn proc_get_jiffies(inpid: Pid) -> ClockTicks {
+    if !have_proc_stat() {
         return 0;
     }
 
@@ -1315,7 +1315,7 @@ pub fn proc_update_jiffies(parser: &Parser) {
         for p in job.external_procs() {
             p.last_times.replace(ProcTimes {
                 time: timef(),
-                jiffies: proc_get_jiffies(p.pid.load().map(|p| p.as_pid_t()).unwrap()),
+                jiffies: proc_get_jiffies(p.pid.load().unwrap()),
             });
         }
     }
@@ -1414,7 +1414,7 @@ pub fn hup_jobs(jobs: &JobList) {
 pub fn add_disowned_job(j: &Job) {
     let mut disowned_pids = DISOWNED_PIDS.get().borrow_mut();
     for process in j.external_procs() {
-        disowned_pids.push(process.pid().unwrap().as_pid_t());
+        disowned_pids.push(process.pid().unwrap());
     }
 }
 
@@ -1425,7 +1425,7 @@ fn reap_disowned_pids() {
     // if it has changed or an error occurs (presumably ECHILD because the child does not exist)
     disowned_pids.retain(|pid| {
         let mut status: libc::c_int = 0;
-        let ret = unsafe { libc::waitpid(*pid, &mut status, WNOHANG) };
+        let ret = unsafe { libc::waitpid(pid.as_pid_t(), &mut status, WNOHANG) };
         if ret > 0 {
             FLOGF!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);
         }
@@ -1435,8 +1435,7 @@ fn reap_disowned_pids() {
 
 /// A list of pids that have been disowned. They are kept around until either they exit or
 /// we exit. Poll these from time-to-time to prevent zombie processes from happening (#5342).
-static DISOWNED_PIDS: MainThread<RefCell<Vec<libc::pid_t>>> =
-    MainThread::new(RefCell::new(Vec::new()));
+static DISOWNED_PIDS: MainThread<RefCell<Vec<Pid>>> = MainThread::new(RefCell::new(Vec::new()));
 
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
@@ -1598,7 +1597,7 @@ fn generate_process_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
             if p.is_completed() && !p.posted_proc_exit.load() {
                 p.posted_proc_exit.store(true);
                 out_evts.push(Event::process_exit(
-                    p.pid().unwrap().as_pid_t(),
+                    p.pid().unwrap(),
                     p.status.status_value(),
                 ));
             }
@@ -1613,7 +1612,7 @@ fn generate_job_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
         // job_exit events.
         if j.posts_job_exit_events() {
             if let Some(last_pid) = j.get_last_pid() {
-                out_evts.push(Event::job_exit(last_pid.as_pid_t(), j.internal_job_id));
+                out_evts.push(Event::job_exit(last_pid, j.internal_job_id));
             }
         }
     }

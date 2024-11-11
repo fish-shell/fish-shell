@@ -37,7 +37,7 @@ fn cpu_use(j: &Job) -> f64 {
     let mut u = 0.0;
     for p in j.external_procs() {
         let now = timef();
-        let jiffies = proc_get_jiffies(p.pid.load().unwrap().as_pid_t());
+        let jiffies = proc_get_jiffies(p.pid.load().unwrap());
         let last_jiffies = p.last_times.get().jiffies;
         let since = now - last_jiffies as f64;
         if since > 0.0 && jiffies > last_jiffies {

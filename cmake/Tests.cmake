@@ -54,6 +54,7 @@ set(TEST_ROOT_DIR ${TEST_DIR}/root)
 if(NOT FISH_IN_TREE_BUILD)
   add_custom_target(funcs_dir)
   add_custom_command(TARGET funcs_dir
+    POST_BUILD
     COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share
     # Don't run ln twice or it will create a new link in the link.
     COMMAND test -e ${CMAKE_BINARY_DIR}/share/functions || ln -sf
@@ -63,6 +64,7 @@ if(NOT FISH_IN_TREE_BUILD)
 
   add_custom_target(tests_dir DEPENDS tests)
   add_custom_command(TARGET tests_dir
+                       POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_directory
                        ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
                        COMMENT "Copying test files to binary dir"

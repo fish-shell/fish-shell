@@ -2859,7 +2859,7 @@ impl<'a> Reader<'a> {
                 self.update_buff_pos(elt, Some(new_position));
             }
             rl::KillToken => {
-                let Some(new_position) = self.forward_token() else {
+                let Some(new_position) = self.forward_token(false) else {
                     return;
                 };
 
@@ -2877,11 +2877,21 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::ForwardToken => {
-                let Some(new_position) = self.forward_token() else {
-                    return;
-                };
-                let (elt, _el) = self.active_edit_line();
-                self.update_buff_pos(elt, Some(new_position));
+                let (_elt, el) = self.active_edit_line();
+                if self.is_at_end(el) {
+                    let Some(new_position) = self.forward_token(true) else {
+                        return;
+                    };
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(
+                        new_position - el.len(),
+                    ));
+                } else {
+                    let Some(new_position) = self.forward_token(false) else {
+                        return;
+                    };
+                    let (elt, _el) = self.active_edit_line();
+                    self.update_buff_pos(elt, Some(new_position));
+                }
             }
             rl::BackwardWord | rl::BackwardBigword | rl::PrevdOrBackwardWord => {
                 if c == rl::PrevdOrBackwardWord && self.command_line.is_empty() {
@@ -3449,22 +3459,30 @@ impl<'a> Reader<'a> {
         Some(new_position)
     }
 
-    fn forward_token(&self) -> Option<usize> {
+    fn forward_token(&self, autosuggest: bool) -> Option<usize> {
         let (_elt, el) = self.active_edit_line();
         let pos = el.position();
-        if pos == el.len() {
+        let buffer = if autosuggest {
+            if pos > self.autosuggestion.text.len() {
+                return None;
+            }
+            &self.autosuggestion.text
+        } else {
+            el.text()
+        };
+        if pos == buffer.len() {
             return None;
         }
 
         // If we are not in a token, look for one ahead
         let buff_pos = pos
-            + el.text()[pos..]
+            + buffer[pos..]
                 .chars()
                 .take_while(|c| c.is_ascii_whitespace())
                 .count();
 
         let mut tok = 0..0;
-        parse_util_token_extent(el.text(), buff_pos, &mut tok, None);
+        parse_util_token_extent(buffer, buff_pos, &mut tok, None);
 
         let new_position = if tok.end == pos { pos + 1 } else { tok.end };
 

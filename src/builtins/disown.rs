@@ -80,37 +80,39 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             retval = STATUS_CMD_ERROR;
         }
     } else {
-        let mut jobs = vec![];
-
         retval = STATUS_CMD_OK;
 
         // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
         // but still print errors for all of them.
         // Non-existent jobs aren't an error, but information about them is useful.
-        // Multiple PIDs may refer to the same job; include the job only once by using a set.
-        for arg in &args[1..] {
-            match fish_wcstoi(arg).ok().and_then(Pid::new) {
-                None => {
-                    streams.err.append(wgettext_fmt!(
-                        "%ls: '%ls' is not a valid job specifier\n",
-                        cmd,
-                        arg
-                    ));
-                    retval = STATUS_INVALID_ARGS;
-                }
-                Some(pid) => {
-                    if let Some(j) = parser.job_get_from_pid(pid) {
-                        jobs.push(j);
-                    } else {
+        let mut jobs: Vec<_> = args[1..]
+            .iter()
+            .filter_map(|arg| {
+                // Attempt to convert the argument to a PID.
+                match fish_wcstoi(arg).ok().and_then(Pid::new) {
+                    None => {
+                        // Invalid identifier
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: '%ls' is not a valid job specifier\n",
+                            cmd,
+                            arg
+                        ));
+                        retval = STATUS_INVALID_ARGS;
+                        None
+                    }
+                    Some(pid) => parser.job_get_from_pid(pid).or_else(|| {
+                        // Valid identifier but no such job
                         streams.err.append(wgettext_fmt!(
                             "%ls: Could not find job '%d'\n",
                             cmd,
                             pid
                         ));
-                    }
+                        None
+                    }),
                 }
-            }
-        }
+            })
+            .collect();
+
         if retval != STATUS_CMD_OK {
             return retval;
         }

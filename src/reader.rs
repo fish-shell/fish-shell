@@ -2275,7 +2275,7 @@ impl<'a> Reader<'a> {
             rl::EndOfLine => {
                 let (_elt, el) = self.active_edit_line();
                 if self.is_at_end(el) {
-                    self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
                 } else {
                     loop {
                         let position = {
@@ -2774,11 +2774,13 @@ impl<'a> Reader<'a> {
                 if self.is_navigating_pager_contents() {
                     self.select_completion_in_direction(SelectionMotion::East, false);
                 } else if self.is_at_end(el) {
-                    self.accept_autosuggestion(
-                        /*full=*/ c != rl::ForwardSingleChar,
-                        /*single=*/ c == rl::ForwardSingleChar,
-                        MoveWordStyle::Punctuation,
-                    );
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(
+                        if c == rl::ForwardSingleChar {
+                            1
+                        } else {
+                            usize::MAX
+                        },
+                    ));
                 } else {
                     self.update_buff_pos(elt, Some(el.position() + 1));
                 }
@@ -2919,7 +2921,7 @@ impl<'a> Reader<'a> {
                 };
                 let (elt, el) = self.active_edit_line();
                 if self.is_at_end(el) {
-                    self.accept_autosuggestion(false, false, style);
+                    self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle(style));
                 } else {
                     self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
                 }
@@ -3021,7 +3023,7 @@ impl<'a> Reader<'a> {
             }
             rl::AcceptAutosuggestion => {
                 let success = !self.autosuggestion.is_empty();
-                self.accept_autosuggestion(true, false, MoveWordStyle::Punctuation);
+                self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
                 self.input_data.function_set_status(success);
             }
             rl::TransposeChars => {
@@ -4317,6 +4319,11 @@ fn get_autosuggestion_performer(
     }
 }
 
+enum AutosuggestionPortion {
+    Count(usize),
+    PerMoveWordStyle(MoveWordStyle),
+}
+
 impl<'a> Reader<'a> {
     fn can_autosuggest(&self) -> bool {
         // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
@@ -4428,12 +4435,7 @@ impl<'a> Reader<'a> {
 
     // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
     // thing; if it's false, then respect the passed in style.
-    fn accept_autosuggestion(
-        &mut self,
-        full: bool,
-        single: bool,         /* = false */
-        style: MoveWordStyle, /* = Punctuation */
-    ) {
+    fn accept_autosuggestion(&mut self, amount: AutosuggestionPortion) {
         if self.autosuggestion.is_empty() {
             return;
         }
@@ -4441,39 +4443,36 @@ impl<'a> Reader<'a> {
         self.clear_pager();
 
         // Accept the autosuggestion.
-        if full {
-            // Just take the whole thing.
-            self.data.replace_substring(
-                EditableLineTag::Commandline,
-                0..self.command_line.len(),
-                self.autosuggestion.text.clone(),
-            );
-        } else if single {
-            let pos = self.command_line.len();
-            if pos + 1 < self.autosuggestion.text.len() {
+        match amount {
+            AutosuggestionPortion::Count(count) => {
+                let pos = self.command_line.len();
+                let count = count.min(self.autosuggestion.text.len() - pos);
+                if count != 0 {
+                    self.data.replace_substring(
+                        EditableLineTag::Commandline,
+                        pos..pos,
+                        self.autosuggestion.text[pos..pos + count].to_owned(),
+                    );
+                }
+            }
+            AutosuggestionPortion::PerMoveWordStyle(style) => {
+                // Accept characters according to the specified style.
+                let mut state = MoveWordStateMachine::new(style);
+                let mut want = self.command_line.len();
+                while want < self.autosuggestion.text.len() {
+                    let wc = self.autosuggestion.text.as_char_slice()[want];
+                    if !state.consume_char(wc) {
+                        break;
+                    }
+                    want += 1;
+                }
+                let have = self.command_line.len();
                 self.data.replace_substring(
                     EditableLineTag::Commandline,
-                    pos..pos,
-                    self.autosuggestion.text[pos..pos + 1].to_owned(),
+                    have..have,
+                    self.autosuggestion.text[have..want].to_owned(),
                 );
             }
-        } else {
-            // Accept characters according to the specified style.
-            let mut state = MoveWordStateMachine::new(style);
-            let mut want = self.command_line.len();
-            while want < self.autosuggestion.text.len() {
-                let wc = self.autosuggestion.text.as_char_slice()[want];
-                if !state.consume_char(wc) {
-                    break;
-                }
-                want += 1;
-            }
-            let have = self.command_line.len();
-            self.data.replace_substring(
-                EditableLineTag::Commandline,
-                have..have,
-                self.autosuggestion.text[have..want].to_owned(),
-            );
         }
     }
 }

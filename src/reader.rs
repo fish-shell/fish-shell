@@ -4716,10 +4716,12 @@ impl ReaderData {
             history_pager.direction = direction;
             match direction {
                 SearchDirection::Forward => {
-                    assert!(index > result.final_index);
+                    history_pager.can_go_backwards = true;
+                    if index == 0 {
+                        return;
+                    }
                     history_pager.history_index_start = result.final_index;
                     history_pager.history_index_end = index;
-                    history_pager.can_go_backwards = true;
                 }
                 SearchDirection::Backward => {
                     history_pager.history_index_start = index;

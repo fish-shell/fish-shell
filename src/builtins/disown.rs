@@ -80,7 +80,6 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             retval = STATUS_CMD_ERROR;
         }
     } else {
-        // TODO: This is supposed to be deduplicated or a hash set per comments below!
         let mut jobs = vec![];
 
         retval = STATUS_CMD_OK;
@@ -115,6 +114,11 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         if retval != STATUS_CMD_OK {
             return retval;
         }
+
+        // One PID/JID may be repeated or multiple PIDs may refer to the same job;
+        // include the job only once.
+        jobs.sort_unstable_by_key(|job| job.job_id());
+        jobs.dedup_by_key(|job| job.job_id());
 
         // Disown all target jobs.
         for j in jobs {

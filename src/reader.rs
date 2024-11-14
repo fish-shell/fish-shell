@@ -4717,7 +4717,7 @@ impl ReaderData {
             match direction {
                 SearchDirection::Forward => {
                     history_pager.can_go_backwards = true;
-                    if index == 0 {
+                    if index == 0 || index <= result.final_index {
                         return;
                     }
                     history_pager.history_index_start = result.final_index;

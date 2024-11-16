@@ -281,8 +281,8 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
             for _i in 0..num_keys.checked_sub(1).unwrap() {
                 let modifier = components.next().unwrap();
                 match modifier {
-                    _ if modifier == "ctrl" => modifiers.ctrl = true,
-                    _ if modifier == "alt" => modifiers.alt = true,
+                    _ if modifier == "ctrl" || modifier == "c" => modifiers.ctrl = true,
+                    _ if modifier == "alt" || modifier == "a" => modifiers.alt = true,
                     _ if modifier == "shift" => modifiers.shift = true,
                     _ => {
                         return Err(wgettext_fmt!(

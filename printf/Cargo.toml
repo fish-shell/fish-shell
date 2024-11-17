@@ -2,7 +2,7 @@
 name = "fish-printf"
 edition = "2021"
 version = "0.2.1"
-repository = "https://github.com/fish-shell/fish-shell"
+repository = "https://github.com/krobelus/neofish"
 description = "printf implementation, based on musl"
 license = "MIT"
 

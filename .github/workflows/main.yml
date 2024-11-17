@@ -1,6 +1,6 @@
 name: make test
 
-on: [push, pull_request]
+on: [pull_request]
 
 env:
   CTEST_PARALLEL_LEVEL: "4"

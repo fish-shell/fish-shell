@@ -15,8 +15,8 @@ Build-Depends: debhelper (>= 12),
  python3
 Standards-Version: 4.1.5
 Homepage: https://fishshell.com/
-Vcs-Git: https://github.com/fish-shell/fish-shell.git
-Vcs-Browser: https://github.com/fish-shell/fish-shell
+Vcs-Git: https://github.com/krobelus/neofish.git
+Vcs-Browser: https://github.com/krobelus/neofish
 
 Package: fish
 Architecture: any

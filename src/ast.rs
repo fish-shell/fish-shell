@@ -1477,14 +1477,14 @@ pub struct ElseClause {
     parent: Option<*const dyn Node>,
     /// else ; body
     pub kw_else: KeywordElse,
-    pub semi_nl: SemiNl,
+    pub semi_nl: Option<SemiNl>,
     pub body: JobList,
 }
 implement_node!(ElseClause, branch, else_clause);
 implement_acceptor_for_branch!(
     ElseClause,
     (kw_else: (KeywordElse)),
-    (semi_nl: (SemiNl)),
+    (semi_nl: (Option<SemiNl>)),
     (body: (JobList)),
 );
 impl ConcreteNode for ElseClause {

@@ -316,6 +316,16 @@ fn test_highlighting() {
         ("end", fg(HighlightRole::keyword)),
     );
 
+    validate!(
+        ("if", fg(HighlightRole::keyword)),
+        ("true", fg(HighlightRole::command)),
+        (";", fg(HighlightRole::statement_terminator)),
+        ("else", fg(HighlightRole::keyword)),
+        ("true", fg(HighlightRole::command)),
+        (";", fg(HighlightRole::statement_terminator)),
+        ("end", fg(HighlightRole::keyword)),
+    );
+
     // Verify that cd shows errors for non-directories.
     validate!(
         ("cd", fg(HighlightRole::command)),

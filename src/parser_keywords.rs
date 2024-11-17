@@ -39,7 +39,7 @@ const RESERVED_WORDS: &[ReservedWord] = reserved_words!(
     ("case"),
     ("command", [subcommand]),
     ("continue"),
-    ("else"),
+    ("else", [subcommand]),
     ("end"),
     ("eval"),
     ("exec", [subcommand]),

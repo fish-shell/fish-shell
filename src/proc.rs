@@ -517,13 +517,10 @@ pub struct Pid(NonZeroU32);
 
 impl Pid {
     #[inline(always)]
-    pub fn new<P: Into<i32>>(pid: P) -> Option<Pid> {
-        let pid = pid.into();
-        assert!(pid >= 0, "Invalid negative PID value!");
-        match NonZeroU32::new(pid as u32) {
-            Some(x) => Some(Pid(x)),
-            None => None,
-        }
+    pub fn new(pid: i32) -> Option<Pid> {
+        // Construct a pid from an i32, which must be at least zero.
+        assert!(pid >= 0, "Pid must be at least zero");
+        NonZeroU32::new(pid as u32).map(Pid)
     }
     #[inline(always)]
     pub fn get(&self) -> i32 {
@@ -533,13 +530,6 @@ impl Pid {
     pub fn as_pid_t(&self) -> libc::pid_t {
         #[allow(clippy::useless_conversion)]
         self.get().into()
-    }
-}
-
-impl Into<Pid> for u32 {
-    #[inline(always)]
-    fn into(self) -> Pid {
-        Pid::new(self as i32).unwrap()
     }
 }
 
@@ -557,7 +547,7 @@ impl ToWString for Pid {
 
 impl fish_printf::ToArg<'static> for Pid {
     fn to_arg(self) -> fish_printf::Arg<'static> {
-        fish_printf::Arg::UInt(self.get() as u64)
+        self.get().to_arg()
     }
 }
 

@@ -52,9 +52,8 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
         // try to locate the job $argv[1], since we need to determine which error message to
         // emit (ambigous job specification vs malformed job id).
         let mut found_job = false;
-        match fish_wcstoi(argv[optind]).map(Pid::new) {
-            Ok(Some(pid)) => found_job = parser.job_get_from_pid(pid).is_some(),
-            _ => (),
+        if let Ok(Some(pid)) = fish_wcstoi(argv[optind]).map(Pid::new) {
+            found_job = parser.job_get_from_pid(pid).is_some();
         };
 
         if found_job {

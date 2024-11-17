@@ -277,7 +277,7 @@ impl DirIter {
         }
 
         self.entry.reset();
-        self.entry.name = cstr2wcstring(&d_name);
+        self.entry.name = cstr2wcstring(d_name);
         #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
         {
             self.entry.inode = dent.d_fileno;

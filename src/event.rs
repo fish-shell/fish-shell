@@ -380,7 +380,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
             format!("signal handler for {} ({})", signal.name(), signal.desc(),)
         }
         EventDescription::Variable { name } => format!("handler for variable '{name}'"),
-        EventDescription::ProcessExit { pid: None } => format!("exit handler for any process"),
+        EventDescription::ProcessExit { pid: None } => "exit handler for any process".to_string(),
         EventDescription::ProcessExit { pid: Some(pid) } => {
             format!("exit handler for process {pid}")
         }
@@ -392,7 +392,7 @@ pub fn get_desc(parser: &Parser, evt: &Event) -> WString {
                     format!("exit handler for job with pid {pid}")
                 }
             } else {
-                format!("exit handler for any job")
+                "exit handler for any job".to_string()
             }
         }
         EventDescription::CallerExit { .. } => {

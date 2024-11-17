@@ -210,6 +210,14 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: disown::disown,
     },
     BuiltinData {
+        name: L!("do"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("done"),
+        func: builtin_generic,
+    },
+    BuiltinData {
         name: L!("echo"),
         func: echo::echo,
     },
@@ -244,6 +252,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
         name: L!("fg"),
         func: fg::fg,
+    },
+    BuiltinData {
+        name: L!("fi"),
+        func: builtin_generic,
     },
     BuiltinData {
         name: L!("fish_indent"),
@@ -344,6 +356,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
         name: L!("test"),
         func: test::test,
+    },
+    BuiltinData {
+        name: L!("then"),
+        func: builtin_generic,
     },
     BuiltinData {
         name: L!("time"),
@@ -504,6 +520,8 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "continue" => wgettext!("Skip over remaining innermost loop"),
         _ if name == "count" => wgettext!("Count the number of arguments"),
         _ if name == "disown" => wgettext!("Remove job from job list"),
+        _ if name == "do" => wgettext!("Optional after a loop header"),
+        _ if name == "done" => wgettext!("Alternative to 'end', to end a block of commands"),
         _ if name == "echo" => wgettext!("Print arguments"),
         _ if name == "else" => wgettext!("Evaluate block if condition is false"),
         _ if name == "emit" => wgettext!("Emit an event"),
@@ -513,6 +531,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "exit" => wgettext!("Exit the shell"),
         _ if name == "false" => wgettext!("Return an unsuccessful result"),
         _ if name == "fg" => wgettext!("Send job to foreground"),
+        _ if name == "fi" => wgettext!("Alternative to 'end', to end a block of commands"),
         _ if name == "fish_key_reader" => wgettext!("explore what characters keyboard keys send"),
         _ if name == "for" => wgettext!("Perform a set of commands multiple times"),
         _ if name == "function" => wgettext!("Define a new function"),
@@ -531,6 +550,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "realpath" => wgettext!("Show absolute path sans symlinks"),
         _ if name == "return" => wgettext!("Stop the currently evaluated function"),
         _ if name == "set" => wgettext!("Handle environment variables"),
+        _ if name == "then" => wgettext!("Optional after the condition of an if-statement"),
         _ if name == "set_color" => wgettext!("Set the terminal color"),
         _ if name == "source" => wgettext!("Evaluate contents of file"),
         _ if name == "status" => wgettext!("Return status information about fish"),

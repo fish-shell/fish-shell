@@ -846,14 +846,18 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::kw_builtin
             | ParseKeyword::kw_case
             | ParseKeyword::kw_command
+            | ParseKeyword::kw_do
+            | ParseKeyword::kw_done
             | ParseKeyword::kw_else
             | ParseKeyword::kw_end
             | ParseKeyword::kw_exec
+            | ParseKeyword::kw_fi
             | ParseKeyword::kw_for
             | ParseKeyword::kw_function
             | ParseKeyword::kw_if
             | ParseKeyword::kw_in
             | ParseKeyword::kw_switch
+            | ParseKeyword::kw_then
             | ParseKeyword::kw_while => role = HighlightRole::keyword,
             ParseKeyword::kw_and
             | ParseKeyword::kw_or

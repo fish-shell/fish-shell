@@ -79,8 +79,10 @@ trait NodeVisitorMut {
         _node: &mut Option<DecoratedStatementDecorator>,
     );
     fn visit_job_conjunction_decorator(&mut self, _node: &mut Option<JobConjunctionDecorator>);
+    fn visit_do(&mut self, _node: &mut Option<KeywordDo>);
     fn visit_else_clause(&mut self, _node: &mut Option<ElseClause>);
     fn visit_semi_nl(&mut self, _node: &mut Option<SemiNl>);
+    fn visit_then(&mut self, _node: &mut Option<KeywordThen>);
     fn visit_time(&mut self, _node: &mut Option<KeywordTime>);
     fn visit_token_background(&mut self, _node: &mut Option<TokenBackground>);
 }
@@ -977,6 +979,12 @@ macro_rules! visit_optional_field_mut {
     (KeywordTime, $field:expr, $visitor:ident) => {
         $visitor.visit_time(&mut $field);
     };
+    (KeywordDo, $field:expr, $visitor:ident) => {
+        $visitor.visit_do(&mut $field);
+    };
+    (KeywordThen, $field:expr, $visitor:ident) => {
+        $visitor.visit_then(&mut $field);
+    };
     (TokenBackground, $field:expr, $visitor:ident) => {
         $visitor.visit_token_background(&mut $field);
     };
@@ -1315,7 +1323,11 @@ impl CheckParse for JobConjunction {
             || (token.typ == ParseTokenType::string
                 && !matches!(
                     token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
+                    ParseKeyword::kw_case
+                        | ParseKeyword::kw_done
+                        | ParseKeyword::kw_else
+                        | ParseKeyword::kw_end
+                        | ParseKeyword::kw_fi
                 ))
     }
 }
@@ -1333,6 +1345,8 @@ pub struct ForHeader {
     pub args: ArgumentList,
     /// newline or semicolon
     pub semi_nl: SemiNl,
+    // Optional "do" for compatibility with POSIX.
+    pub kw_do: Option<KeywordDo>,
 }
 implement_node!(ForHeader, branch, for_header);
 implement_acceptor_for_branch!(
@@ -1342,6 +1356,7 @@ implement_acceptor_for_branch!(
     (kw_in: (KeywordIn)),
     (args: (ArgumentList)),
     (semi_nl: (SemiNl)),
+    (kw_do: (Option<KeywordDo>)),
 );
 impl ConcreteNode for ForHeader {
     fn as_for_header(&self) -> Option<&ForHeader> {
@@ -1361,6 +1376,8 @@ pub struct WhileHeader {
     pub kw_while: KeywordWhile,
     pub condition: JobConjunction,
     pub andor_tail: AndorJobList,
+    // Optional "do" for compatibility with POSIX.
+    pub kw_do: Option<KeywordDo>,
 }
 implement_node!(WhileHeader, branch, while_header);
 implement_acceptor_for_branch!(
@@ -1368,6 +1385,7 @@ implement_acceptor_for_branch!(
     (kw_while: (KeywordWhile)),
     (condition: (JobConjunction)),
     (andor_tail: (AndorJobList)),
+    (kw_do: (Option<KeywordDo>)),
 );
 impl ConcreteNode for WhileHeader {
     fn as_while_header(&self) -> Option<&WhileHeader> {
@@ -1441,7 +1459,7 @@ pub struct BlockStatement {
     /// List of jobs in this block.
     pub jobs: JobList,
     /// The 'end' node.
-    pub end: KeywordEnd,
+    pub end: KeywordEndOrDone,
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
@@ -1450,7 +1468,7 @@ implement_acceptor_for_branch!(
     BlockStatement,
     (header: (variant<BlockStatementHeaderVariant>)),
     (jobs: (JobList)),
-    (end: (KeywordEnd)),
+    (end: (KeywordEndOrDone)),
     (args_or_redirs: (ArgumentOrRedirectionList)),
 );
 impl ConcreteNode for BlockStatement {
@@ -1504,6 +1522,10 @@ pub struct IfClause {
     pub condition: JobConjunction,
     /// 'and/or' tail.
     pub andor_tail: AndorJobList,
+    // Semi
+    pub semi_nl: SemiNl,
+    // Optional "then" for compatibility with POSIX.
+    pub kw_then: Option<KeywordThen>,
     /// The body to execute if the condition is true.
     pub body: JobList,
 }
@@ -1513,6 +1535,7 @@ implement_acceptor_for_branch!(
     (kw_if: (KeywordIf)),
     (condition: (JobConjunction)),
     (andor_tail: (AndorJobList)),
+    (kw_then: (Option<KeywordThen>)),
     (body: (JobList)),
 );
 impl ConcreteNode for IfClause {
@@ -1610,7 +1633,7 @@ pub struct IfStatement {
     /// else part
     pub else_clause: Option<ElseClause>,
     /// literal end
-    pub end: KeywordEnd,
+    pub end: KeywordEndOrFi,
     /// block args / redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
@@ -1620,7 +1643,7 @@ implement_acceptor_for_branch!(
     (if_clause: (IfClause)),
     (elseif_clauses: (ElseifClauseList)),
     (else_clause: (Option<ElseClause>)),
-    (end: (KeywordEnd)),
+    (end: (KeywordEndOrFi)),
     (args_or_redirs: (ArgumentOrRedirectionList)),
 );
 impl ConcreteNode for IfStatement {
@@ -2073,14 +2096,18 @@ define_keyword_node!(DecoratedStatementDecorator, kw_command, kw_builtin, kw_exe
 define_keyword_node!(JobConjunctionDecorator, kw_and, kw_or);
 define_keyword_node!(KeywordBegin, kw_begin);
 define_keyword_node!(KeywordCase, kw_case);
+define_keyword_node!(KeywordDo, kw_do);
 define_keyword_node!(KeywordElse, kw_else);
 define_keyword_node!(KeywordEnd, kw_end);
+define_keyword_node!(KeywordEndOrDone, kw_end, kw_done);
+define_keyword_node!(KeywordEndOrFi, kw_end, kw_fi);
 define_keyword_node!(KeywordFor, kw_for);
 define_keyword_node!(KeywordFunction, kw_function);
 define_keyword_node!(KeywordIf, kw_if);
 define_keyword_node!(KeywordIn, kw_in);
 define_keyword_node!(KeywordNot, kw_not, kw_exclam);
 define_keyword_node!(KeywordSwitch, kw_switch);
+define_keyword_node!(KeywordThen, kw_then);
 define_keyword_node!(KeywordTime, kw_time);
 define_keyword_node!(KeywordWhile, kw_while);
 
@@ -2119,6 +2146,26 @@ impl CheckParse for KeywordTime {
         // Time keyword is only the time builtin if the next argument doesn't have a dash.
         let keyword = pop.peek_token(0).keyword;
         if !matches!(keyword, ParseKeyword::kw_time) {
+            return false;
+        }
+        !pop.peek_token(1).is_dash_prefix_string()
+    }
+}
+
+impl CheckParse for KeywordDo {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(keyword, ParseKeyword::kw_do) {
+            return false;
+        }
+        !pop.peek_token(1).is_dash_prefix_string()
+    }
+}
+
+impl CheckParse for KeywordThen {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let keyword = pop.peek_token(0).keyword;
+        if !matches!(keyword, ParseKeyword::kw_then) {
             return false;
         }
         !pop.peek_token(1).is_dash_prefix_string()
@@ -3161,7 +3208,10 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             if next_token.typ == ParseTokenType::string
                 && matches!(
                     next_token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_else | ParseKeyword::kw_end
+                    ParseKeyword::kw_case
+                        | ParseKeyword::kw_else
+                        | ParseKeyword::kw_end
+                        | ParseKeyword::kw_fi
                 )
             {
                 self.consume_excess_token_generating_error();
@@ -3244,6 +3294,12 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     }
     fn visit_time(&mut self, node: &mut Option<KeywordTime>) {
         *node = self.try_parse::<KeywordTime>().map(|b| *b);
+    }
+    fn visit_do(&mut self, node: &mut Option<KeywordDo>) {
+        *node = self.try_parse::<KeywordDo>().map(|b| *b);
+    }
+    fn visit_then(&mut self, node: &mut Option<KeywordThen>) {
+        *node = self.try_parse::<KeywordThen>().map(|b| *b);
     }
     fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
         *node = self.try_parse::<TokenBackground>().map(|b| *b);
@@ -3546,6 +3602,14 @@ impl<'s> Populator<'s> {
                             "'case' builtin not inside of switch block"
                         );
                     }
+                    ParseKeyword::kw_done => {
+                        parse_error!(
+                            self,
+                            tok,
+                            ParseErrorCode::unbalancing_case,
+                            "'done' outside of a block"
+                        );
+                    }
                     ParseKeyword::kw_end => {
                         parse_error!(
                             self,
@@ -3560,6 +3624,14 @@ impl<'s> Populator<'s> {
                             tok,
                             ParseErrorCode::unbalancing_else,
                             "'else' builtin not inside of if block"
+                        );
+                    }
+                    ParseKeyword::kw_fi => {
+                        parse_error!(
+                            self,
+                            tok,
+                            ParseErrorCode::unbalancing_end,
+                            "'fi' outside of a block"
                         );
                     }
                     _ => {
@@ -3819,9 +3891,11 @@ impl<'s> Populator<'s> {
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
                 ParseKeyword::kw_begin,
+                ParseKeyword::kw_do,
                 ParseKeyword::kw_function,
                 ParseKeyword::kw_if,
                 ParseKeyword::kw_switch,
+                ParseKeyword::kw_then,
                 ParseKeyword::kw_while,
             ];
             if if help_only_kws.contains(&self.peek_token(0).keyword) {
@@ -3834,8 +3908,13 @@ impl<'s> Populator<'s> {
 
             // Likewise if the next token doesn't look like an argument at all. This corresponds to
             // e.g. a "naked if".
-            let naked_invocation_invokes_help = ![ParseKeyword::kw_begin, ParseKeyword::kw_end]
-                .contains(&self.peek_token(0).keyword);
+            let naked_invocation_invokes_help = ![
+                ParseKeyword::kw_begin,
+                ParseKeyword::kw_done,
+                ParseKeyword::kw_end,
+                ParseKeyword::kw_fi,
+            ]
+            .contains(&self.peek_token(0).keyword);
             if naked_invocation_invokes_help
                 && [ParseTokenType::end, ParseTokenType::terminate]
                     .contains(&self.peek_token(1).typ)
@@ -3864,7 +3943,7 @@ impl<'s> Populator<'s> {
                 let embedded = self.allocate_visit::<SwitchStatement>();
                 StatementVariant::SwitchStatement(embedded)
             }
-            ParseKeyword::kw_end => {
+            ParseKeyword::kw_done | ParseKeyword::kw_end | ParseKeyword::kw_fi => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
@@ -4036,7 +4115,7 @@ impl<'s> Populator<'s> {
 
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::kw_end] {
+            if allowed_keywords.contains(&ParseKeyword::kw_end) {
                 return VisitResult::Break(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),

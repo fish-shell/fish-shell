@@ -1255,7 +1255,7 @@ impl CheckParse for JobConjunction {
         token.typ == ParseTokenType::string
             && !matches!(
                 token.keyword,
-                ParseKeyword::kw_end | ParseKeyword::kw_else | ParseKeyword::kw_case
+                ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
             )
     }
 }
@@ -3337,6 +3337,14 @@ impl<'s> Populator<'s> {
             ParseTokenType::string => {
                 // There are three keywords which end a job list.
                 match tok.keyword {
+                    ParseKeyword::kw_case => {
+                        parse_error!(
+                            self,
+                            tok,
+                            ParseErrorCode::unbalancing_case,
+                            "'case' builtin not inside of switch block"
+                        );
+                    }
                     ParseKeyword::kw_end => {
                         parse_error!(
                             self,
@@ -3351,14 +3359,6 @@ impl<'s> Populator<'s> {
                             tok,
                             ParseErrorCode::unbalancing_else,
                             "'else' builtin not inside of if block"
-                        );
-                    }
-                    ParseKeyword::kw_case => {
-                        parse_error!(
-                            self,
-                            tok,
-                            ParseErrorCode::unbalancing_case,
-                            "'case' builtin not inside of switch block"
                         );
                     }
                     _ => {

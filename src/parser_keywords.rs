@@ -4,43 +4,43 @@ use crate::wchar::prelude::*;
 
 const SKIP_KEYWORDS: &[&wstr] = &[L!("else"), L!("begin")];
 const SUBCOMMAND_KEYWORDS: &[&wstr] = &[
-    L!("command"),
+    L!("and"),
+    L!("begin"),
     L!("builtin"),
-    L!("while"),
+    L!("command"),
     L!("exec"),
     L!("if"),
-    L!("and"),
-    L!("or"),
     L!("not"),
+    L!("or"),
     L!("time"),
-    L!("begin"),
+    L!("while"),
 ];
 const BLOCK_KEYWORDS: &[&wstr] = &[
-    L!("for"),
-    L!("while"),
-    L!("if"),
-    L!("function"),
-    L!("switch"),
     L!("begin"),
+    L!("for"),
+    L!("function"),
+    L!("if"),
+    L!("switch"),
+    L!("while"),
 ];
 
 // Don't forget to add any new reserved keywords to the documentation
 const RESERVED_KEYWORDS: &[&wstr] = &[
-    L!("end"),
-    L!("case"),
-    L!("else"),
-    L!("return"),
-    L!("continue"),
-    L!("break"),
-    L!("argparse"),
-    L!("read"),
-    L!("string"),
-    L!("set"),
-    L!("status"),
-    L!("test"),
     L!("["),
     L!("_"),
+    L!("argparse"),
+    L!("break"),
+    L!("case"),
+    L!("continue"),
+    L!("else"),
+    L!("end"),
     L!("eval"),
+    L!("read"),
+    L!("return"),
+    L!("set"),
+    L!("status"),
+    L!("string"),
+    L!("test"),
 ];
 
 // The lists above are purposely implemented separately from the logic below, so that future

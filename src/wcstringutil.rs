@@ -2,7 +2,7 @@
 
 use crate::common::{get_ellipsis_char, get_ellipsis_str};
 use crate::expand::INTERNAL_SEPARATOR;
-use crate::fallback::{fish_wcwidth, wcscasecmp};
+use crate::fallback::{fish_wcwidth, wcscasecmp, wcscasecmp_fuzzy};
 use crate::flog::FLOGF;
 use crate::libc::MB_CUR_MAX;
 use crate::wchar::{decode_byte_from_char, prelude::*};
@@ -95,21 +95,25 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
         .as_char_slice()
         .windows(needle.len())
         .position(|window| {
-            for (l, r) in window.iter().zip(needle.chars()) {
-                // In fuzzy matching treat treat `-` and `_` as equal (#3584).
-                if fuzzy && ['-', '_'].contains(l) && ['-', '_'].contains(&r) {
-                    continue;
-                }
-                // TODO Decide what to do for different lengths.
-                let l = l.to_lowercase();
-                let r = r.to_lowercase();
-                for (l, r) in l.zip(r) {
-                    if l != r {
-                        return false;
-                    }
+            // In fuzzy matching treat treat `-` and `_` as equal (#3584).
+            fn fuzzy_canonicalize(c: char) -> char {
+                if c == '_' {
+                    '-'
+                } else {
+                    c
                 }
             }
-            true
+
+            wcscasecmp_fuzzy(
+                wstr::from_char_slice(window),
+                needle,
+                if fuzzy {
+                    fuzzy_canonicalize
+                } else {
+                    std::convert::identity
+                },
+            )
+            .is_eq()
         })
 }
 

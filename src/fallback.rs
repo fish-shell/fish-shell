@@ -141,8 +141,12 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), E
     }
 }
 
-/// Compare two wide strings in a case-insensitive fashion
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
+    wcscasecmp_fuzzy(lhs, rhs, std::convert::identity)
+}
+
+/// Compare two wide strings in a case-insensitive fashion
+pub fn wcscasecmp_fuzzy(lhs: &wstr, rhs: &wstr, canonicalize: fn(char) -> char) -> cmp::Ordering {
     use std::char::ToLowercase;
     use widestring::utfstr::CharsUtf32;
 
@@ -151,12 +155,12 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
     /// `char::to_lowercase()` returns an iterator of chars and we sometimes need to cmp the last
     /// char of one char's `to_lowercase()` with the first char of the other char's
     /// `to_lowercase()`. This makes that possible.
-    struct ToLowerBuffer<'a> {
+    struct ToLowerBuffer<'a, Canonicalize: Fn(char) -> char> {
         current: ToLowercase,
-        chars: CharsUtf32<'a>,
+        chars: std::iter::Map<CharsUtf32<'a>, Canonicalize>,
     }
 
-    impl<'a> Iterator for ToLowerBuffer<'a> {
+    impl<'a, Canonicalize: Fn(char) -> char> Iterator for ToLowerBuffer<'a, Canonicalize> {
         type Item = char;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -169,9 +173,8 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
         }
     }
 
-    impl<'a> ToLowerBuffer<'a> {
-        pub fn from(w: &'a wstr) -> Self {
-            let mut chars = w.chars();
+    impl<'a, Canonicalize: Fn(char) -> char> ToLowerBuffer<'a, Canonicalize> {
+        pub fn new(mut chars: std::iter::Map<CharsUtf32<'a>, Canonicalize>) -> Self {
             Self {
                 current: chars.next().map(|c| c.to_lowercase()).unwrap_or_else(|| {
                     let mut empty = 'a'.to_lowercase();
@@ -184,8 +187,8 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
         }
     }
 
-    let lhs = ToLowerBuffer::from(lhs);
-    let rhs = ToLowerBuffer::from(rhs);
+    let lhs = ToLowerBuffer::new(lhs.chars().map(canonicalize));
+    let rhs = ToLowerBuffer::new(rhs.chars().map(canonicalize));
     lhs.cmp(rhs)
 }
 

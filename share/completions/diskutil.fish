@@ -14,11 +14,6 @@ function __fish_diskutil_mounted_volumes
     printf '%s\n' $mountpoints
 end
 
-function __fish_diskutil_writeable_volumes
-    set -l mountpoints (path filter -w /Volumes/*)
-    printf '%s\n' $mountpoints
-end
-
 function __fish_diskutil_using_not_subcommand
     not __fish_seen_subcommand_from apfs
     and not __fish_seen_subcommand_from appleRAID
@@ -58,7 +53,7 @@ complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand umountDisk' -a 
 
 # eject
 complete -f -c diskutil -n __fish_use_subcommand -a eject -d 'Eject a volume or disk'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand eject' -a '(__fish_diskutil_writeable_volumes ; __fish_diskutil_devices)'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand eject' -a '(__fish_diskutil_volumes ; __fish_diskutil_devices)'
 
 # mount
 complete -f -c diskutil -n __fish_use_subcommand -a mount -d 'Mount a single volume'

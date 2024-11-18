@@ -189,7 +189,11 @@ complete -c tmux -n __fish_use_subcommand -a $respawnp -d 'reactivate a pane whe
 # TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $respawnw -d 'reactivate a window where a command exited'
 complete -c tmux -n __fish_use_subcommand -a $rotatew -d 'rotate panes within a window'
+
 complete -c tmux -n __fish_use_subcommand -a $selectl -d 'rearrange panes according to a given layout'
+set -l layouts 'even-horizontal even-vertical main-horizontal main-horizontal-mirrored main-vertical main-vertical-mirrored tiled'
+complete -c tmux -n "__fish_seen_subcommand_from $selectl" -x -a "$layouts" -d 'predefined layout'
+
 complete -c tmux -n __fish_use_subcommand -a $selectp -d 'activate specific pane'
 complete -c tmux -n __fish_use_subcommand -a $selectw -d 'activate specific window'
 # TODO: Should accept shell command

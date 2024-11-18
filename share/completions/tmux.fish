@@ -94,6 +94,8 @@ complete -c tmux -n __fish_use_subcommand -a $rename -d 'rename session'
 complete -c tmux -n __fish_use_subcommand -a $showmsgs -d 'save msgs in status bar in per-client msg log'
 
 complete -c tmux -n __fish_use_subcommand -a $source -d 'execute commands from path'
+complete -c tmux -n "__fish_seen_subcommand_from $source" -F
+
 complete -c tmux -n __fish_use_subcommand -a $start -d 'start tmux server if not running; do not create a session'
 
 complete -c tmux -n __fish_use_subcommand -a $suspendc -d 'send SIGTSTP signal to client (tty stop)'
@@ -113,7 +115,7 @@ complete -c tmux -xs t -n "__fish_seen_subcommand_from $detach $lockc $refresh $
 complete -c tmux -xs c -n "__fish_seen_subcommand_from $switchc" -a '(__fish_tmux_clients)' -d target-client
 
 #commands with the -F format flag
-complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -rs F -d 'format string'
+complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -xs F -d 'format string'
 
 ###############  End: Clients and Sessions ###############
 

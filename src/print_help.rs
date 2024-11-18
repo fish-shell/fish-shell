@@ -11,8 +11,13 @@ pub fn print_help(command: &str) {
     cmdline.push("__fish_print_help ");
     cmdline.push(command);
 
-    Command::new("fish")
+    match Command::new("fish")
         .args([OsStr::new("-c"), &cmdline])
         .spawn()
-        .expect(HELP_ERR);
+        .and_then(|mut c| c.wait())
+    {
+        Ok(status) if !status.success() => eprintln!("{}", HELP_ERR),
+        Err(e) => eprintln!("{}: {}", HELP_ERR, e),
+        _ => (),
+    }
 }

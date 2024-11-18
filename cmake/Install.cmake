@@ -106,7 +106,7 @@ configure_file(fish.pc.in fish.pc.noversion @ONLY)
 add_custom_command(OUTPUT fish.pc
     COMMAND sed '/Version/d' fish.pc.noversion > fish.pc
     COMMAND printf "Version: " >> fish.pc
-    COMMAND sed 's/FISH_BUILD_VERSION=//\;s/\"//g' ${FBVF} >> fish.pc
+    COMMAND cat ${FBVF} >> fish.pc
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS CHECK-FISH-BUILD-VERSION-FILE ${CMAKE_CURRENT_BINARY_DIR}/fish.pc.noversion)
 

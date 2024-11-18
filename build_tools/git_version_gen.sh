@@ -53,16 +53,16 @@ fi
 
 if test -r "$FBVF"
 then
-	VC=$(grep -v '^#' "$FBVF" | tr -d '"' | sed -e 's/^FISH_BUILD_VERSION=//')
+	VC=$(cat "$FBVF")
 else
 	VC="unset"
 fi
 
 # Maybe output the FBVF
-# It looks like FISH_BUILD_VERSION="2.7.1-621-ga2f065e6"
+# It looks like "2.7.1-621-ga2f065e6"
 test "$VN" = "$VC" || {
-	echo >&2 "FISH_BUILD_VERSION=$VN"
-	echo "FISH_BUILD_VERSION=\"$VN\"" >"$FBVF"
+	echo >&2 "$VN"
+	echo "$VN" >"$FBVF"
 }
 
 # Output the fish-build-version-witness.txt

@@ -20,9 +20,51 @@ end
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
-# Complete even commands not explicitly listed below, as long as `tmux list-commands` works
-set -l all_commands (tmux list-commands -F "#{command_list_name} #{command_list_alias}" 2>/dev/null)
-and complete -c tmux -n __fish_use_subcommand -a "$all_commands"
+###############  Begin: Dynamic Completions Using `tmux list-commands` ###############
+
+# The dynamic completions are exhaustive. The manual completions below override
+# them with better-documented completions and custom completions for some
+# arguments, e.g. for target panes, but only have partial coverage.
+function __fish_tmux_parse_lscm_usage
+    set -l lscm (tmux list-commands -F "#{command_list_name} #{command_list_alias}"\t"#{command_list_usage}" 2>/dev/null)
+    or return
+
+    for cmd_tab_usage in $lscm
+        set -l split_command (string split --max 2 \t -- $cmd_tab_usage)
+        set -l cmdnames $split_command[1]
+        set -l usage $split_command[2]
+
+        complete -c tmux -n __fish_use_subcommand -a "$cmdnames"
+
+        # $usage has the form '[-ABCD] [-L|-S|-U] [-e arg-name] [positional-arg-name]'
+        for item in (string match -ag --regex '\[([^\]]+)\]' $usage)
+            if not set -l item (string trim -l -c - -- $item)
+                continue
+            end
+            if set -l split_item (string split -n --max 2 " " -- "$item")
+                # The option should always have length 1 by tmux convention,
+                # but we double-check to avoid syntax errors.
+                if [ "$(string length $split_item[1])" = 1 ]
+                    complete -c tmux -xs $split_item[1] -n "__fish_seen_subcommand_from $cmdnames" -d "$split_item[2]"
+                end
+            else
+                for char in (string split '' -- "$item")
+                    if string match -q -r '\||-' -- $char
+                        # TODO: Actually treat exclusive args, [-L|-S|-U], as exclusive
+                        # For now, we just ignore the `-`s and `|`s
+                        continue
+                    end
+                    complete -c tmux -n "__fish_seen_subcommand_from $cmdnames" -s $char
+                end
+            end
+        end
+    end
+end
+
+__fish_tmux_parse_lscm_usage
+functions -e __fish_tmux_parse_lscm_usage
+
+###############  End:   Dynamic Completions Using `tmux list-commands` ###############
 
 ###############  Begin: Front  Flags ###############
 #these do not require parameters

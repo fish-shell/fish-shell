@@ -85,6 +85,11 @@ fn install(confirm: bool) {
     #[folder = "share/"]
     struct Asset;
 
+    #[derive(RustEmbed)]
+    #[folder = "target/man/man1"]
+    #[prefix = "man/man1/"]
+    struct Docs;
+
     use std::fs;
     use std::io::ErrorKind;
     use std::io::Write;
@@ -132,6 +137,8 @@ fn install(confirm: bool) {
         }
     }
 
+    // TODO: These are duplicated, no idea how to extract
+    //       them into a function
     for file in Asset::iter() {
         let path = dir.join(file.as_ref());
         let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
@@ -153,6 +160,29 @@ fn install(confirm: bool) {
             std::process::exit(1);
         }
     }
+
+    for file in Docs::iter() {
+        let path = dir.join(file.as_ref());
+        let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
+            eprintln!(
+                "Creating directory '{}' failed",
+                path.parent().unwrap().display()
+            );
+            std::process::exit(1);
+        };
+        let res = File::create(&path);
+        let Ok(mut f) = res else {
+            eprintln!("Creating file '{}' failed", path.display());
+            continue;
+        };
+        // This should be impossible.
+        let d = Docs::get(&file).expect("File was somehow not included???");
+        if let Err(error) = f.write_all(&d.data) {
+            eprintln!("error: {error}");
+            std::process::exit(1);
+        }
+    }
+
     let verfile = dir.join("fish-install-version");
     let res = File::create(&verfile);
     if let Ok(mut f) = res {

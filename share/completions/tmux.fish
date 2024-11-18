@@ -20,6 +20,10 @@ end
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
+# Complete even commands not explicitly listed below, as long as `tmux list-commands` works
+set -l all_commands (tmux list-commands -F "#{command_list_name} #{command_list_alias}" 2>/dev/null)
+and complete -c tmux -n __fish_use_subcommand -a "$all_commands"
+
 ###############  Begin: Front  Flags ###############
 #these do not require parameters
 complete -c tmux -n __fish_use_subcommand -s 2 -d 'Force tmux to assume the terminal supports 256 colours'

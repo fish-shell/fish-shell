@@ -29,12 +29,12 @@ fn main() {
             .unwrap(),
     );
 
+    let version = &get_version(&env::current_dir().unwrap());
     // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
     // the source directory is the current working directory of the build script
-    rsconf::set_env_value(
-        "FISH_BUILD_VERSION",
-        &get_version(&env::current_dir().unwrap()),
-    );
+    rsconf::set_env_value("FISH_BUILD_VERSION", version);
+
+    std::env::set_var("FISH_BUILD_VERSION", version);
 
     rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new()

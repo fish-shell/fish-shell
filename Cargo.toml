@@ -9,7 +9,6 @@ edition = "2021"
 
 [profile.release]
 overflow-checks = true
-lto = true
 
 [profile.release-with-debug]
 inherits = "release"

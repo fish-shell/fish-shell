@@ -1052,8 +1052,9 @@ impl Job {
         );
 
         // Wait for the status of our own job to change.
+        let mut external_proc_exited = false;
         while !fish_is_unwinding_for_exit() && !self.is_stopped() && !self.is_completed() {
-            process_mark_finished_children(parser, true);
+            external_proc_exited |= process_mark_finished_children(parser, true);
         }
         if self.is_completed() {
             // Set $status only if we are in the foreground and the last process in the job has
@@ -1064,6 +1065,16 @@ impl Job {
                 if let Some(statuses) = self.get_statuses() {
                     parser.set_last_statuses(statuses);
                     parser.libdata_mut().status_count += 1;
+                }
+            }
+
+            // Prevent kernel-buffered output from being written to the terminal after the prompt.
+            // We don't need to this if non-interactive because no prompt is shown. See #10861.
+            if external_proc_exited && parser.is_interactive() {
+                // Normally we'd only need to check if the last proc exited abnormally, but it could
+                // be an earlier proc in the pipeline connected to stdout if redirections are used.
+                if procs.iter().rev().any(|p| p.status.signal_exited()) {
+                    let _ = std::io::stdout().flush();
                 }
             }
         }
@@ -1354,7 +1365,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
     }
 }
 
-/// Wait for any process finishing, or receipt of a signal.
+/// Wait for any process finishing, or receipt of a signal. Used only by the `wait` builtin.
 pub fn proc_wait_any(parser: &Parser) {
     process_mark_finished_children(parser, true /*block_ok*/);
     let is_interactive = parser.libdata().is_interactive;
@@ -1430,7 +1441,7 @@ static DISOWNED_PIDS: MainThread<RefCell<Vec<Pid>>> = MainThread::new(RefCell::n
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
+fn process_mark_finished_children(parser: &Parser, block_ok: bool) -> bool {
     parser.assert_can_execute();
 
     // Get the exit and signal generations of all reapable processes.
@@ -1460,9 +1471,10 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
     // Now check for changes, optionally waiting.
     if !topic_monitor_principal().check(&reapgens, block_ok) {
         // Nothing changed.
-        return;
+        return false;
     }
 
+    let mut proc_exited = false;
     // We got some changes. Since we last checked we received SIGCHLD, and or HUP/INT.
     // Update the hup/int generations and reap any reapable processes.
     // We structure this as two loops for some simplicity.
@@ -1498,6 +1510,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
             assert!(pid == proc.pid().unwrap(), "Unexpected waitpid() return");
 
             // The process has stopped or exited! Update its status.
+            proc_exited = true;
             let status = ProcStatus::from_waitpid(statusv);
             handle_child_status(j, proc, &status);
             if status.stopped() {
@@ -1573,6 +1586,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
     // Remove any zombies.
     reap_disowned_pids();
+    return proc_exited;
 }
 
 /// Generate process_exit events for any completed processes in `j`.

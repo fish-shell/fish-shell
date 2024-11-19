@@ -611,11 +611,15 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
             EnvMode::GLOBAL,
             str2wcstring(paths.doc.as_os_str().as_bytes()),
         );
-        vars.set_one(
-            FISH_BIN_DIR,
-            EnvMode::GLOBAL,
-            str2wcstring(paths.bin.as_os_str().as_bytes()),
-        );
+        if let Some(bp) = &paths.bin {
+            vars.set_one(
+                FISH_BIN_DIR,
+                EnvMode::GLOBAL,
+                str2wcstring(bp.as_os_str().as_bytes()),
+            );
+        } else {
+            vars.set_empty(FISH_BIN_DIR, EnvMode::GLOBAL);
+        };
 
         if default_paths {
             let mut scstr = paths.data.clone();

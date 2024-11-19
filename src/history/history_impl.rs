@@ -410,7 +410,7 @@ struct HistoryImpl {
 
 /// If set, we gave up on file locking because it took too long.
 /// Note this is shared among all history instances.
-static ABANDONED_LOCKING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub static ABANDONED_LOCKING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 impl HistoryImpl {
     /// Add a new history item to the end. If `pending` is set, the item will not be returned by

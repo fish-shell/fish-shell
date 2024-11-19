@@ -167,7 +167,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 data: manifest_dir.join("share"),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
-                bin: exec_path.parent().unwrap().to_owned(),
+                bin: Some(exec_path.parent().unwrap().to_owned()),
             }
         }
 
@@ -179,7 +179,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     data: base_path.join("share/fish"),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
-                    bin: base_path.join("bin"),
+                    bin: Some(base_path.join("bin")),
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -191,7 +191,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     data: base_path.join("share"),
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
-                    bin: base_path.to_path_buf(),
+                    bin: Some(base_path.to_path_buf()),
                 }
             }
 
@@ -212,7 +212,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             data: PathBuf::from(DATA_DIR).join("fish"),
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
-            bin: BIN_DIR.into(),
+            bin: Some(BIN_DIR.into()),
         }
     }
 
@@ -223,7 +223,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         paths.data.display().to_string(),
         paths.sysconf.display().to_string(),
         paths.doc.display().to_string(),
-        paths.bin.display().to_string()
+        paths
+            .bin
+            .clone()
+            .map(|x| x.display().to_string())
+            .unwrap_or("|not found|".to_string()),
     );
 
     paths

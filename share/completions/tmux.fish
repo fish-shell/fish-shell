@@ -64,6 +64,10 @@ end
 __fish_tmux_parse_lscm_usage
 functions -e __fish_tmux_parse_lscm_usage
 
+# Completions for `tmux list-commands` itself
+set -l all_commands (tmux list-commands -F "#{command_list_name} #{command_list_alias}" 2>/dev/null)
+and complete -c tmux -n "__fish_seen_subcommand_from list-commands lscm" -x -a "$all_commands"
+
 ###############  End:   Dynamic Completions Using `tmux list-commands` ###############
 
 ###############  Begin: Front  Flags ###############

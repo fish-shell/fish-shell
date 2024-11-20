@@ -593,28 +593,44 @@ pub trait InputEventQueuer {
         self.get_input_data_mut().queue.pop_front()
     }
 
-    /// Function used by input_readch to read bytes from stdin until enough bytes have been read to
-    /// convert them to a wchar_t. Conversion is done using mbrtowc. If a character has previously
-    /// been read and then 'unread' using \c input_common_unreadch, that character is returned.
+    /// An "infallible" version of [`try_readch`](Self::try_readch) to be used when the input pipe
+    /// fd is expected to outlive the input reader. Will panic upon EOF.
+    #[inline(always)]
     fn readch(&mut self) -> CharEvent {
+        match self.try_readch(/*blocking*/ true) {
+            Some(c) => c,
+            None => unreachable!(),
+        }
+    }
+
+    /// Function used by [`input_readch`] to read bytes from stdin until enough bytes have been read to
+    /// convert them to a wchar_t. Conversion is done using `mbrtowc`. If a character has previously
+    /// been read and then 'unread', that character is returned.
+    ///
+    /// This is guaranteed to keep returning `Some(CharEvent)` so long as the input stream remains
+    /// open; `None` is only returned upon EOF as the main loop within blocks until input becomes
+    /// available.
+    ///
+    /// This method is used directly by the fuzzing harness to avoid a panic on bounded inputs.
+    fn try_readch(&mut self, blocking: bool) -> Option<CharEvent> {
         loop {
             // Do we have something enqueued already?
             // Note this may be initially true, or it may become true through calls to
             // iothread_service_main() or env_universal_barrier() below.
             if let Some(mevt) = self.try_pop() {
-                return mevt;
+                return Some(mevt);
             }
 
             // We are going to block; but first allow any override to inject events.
             self.prepare_to_select();
             if let Some(mevt) = self.try_pop() {
-                return mevt;
+                return Some(mevt);
             }
 
-            let rr = readb(self.get_in_fd(), /*blocking=*/ true);
+            let rr = readb(self.get_in_fd(), blocking);
             match rr {
                 ReadbResult::Eof => {
-                    return CharEvent::Eof;
+                    return Some(CharEvent::Eof);
                 }
 
                 ReadbResult::Interrupted => {
@@ -682,16 +698,16 @@ pub trait InputEventQueuer {
                         continue;
                     }
                     return if let Some(key) = key {
-                        CharEvent::from_key_seq(key, seq)
+                        Some(CharEvent::from_key_seq(key, seq))
                     } else {
                         self.insert_front(seq.chars().skip(1).map(CharEvent::from_char));
                         let Some(c) = seq.chars().next() else {
                             continue;
                         };
-                        CharEvent::from_key_seq(Key::from_raw(c), seq)
+                        Some(CharEvent::from_key_seq(Key::from_raw(c), seq))
                     };
                 }
-                ReadbResult::NothingToRead => unreachable!(),
+                ReadbResult::NothingToRead => return None,
             }
         }
     }

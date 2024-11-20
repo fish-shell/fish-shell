@@ -846,13 +846,17 @@ pub trait InputEventQueuer {
         let mut subcount = 0;
         while count < 16 && c >= 0x30 && c <= 0x3f {
             if c.is_ascii_digit() {
-                params[count][subcount] = params[count][subcount] * 10 + u32::from(c - b'0');
+                // Return None on invalid ascii numeric CSI parameter exceeding u32 bounds
+                params[count][subcount] = params[count][subcount]
+                    .checked_mul(10)
+                    .and_then(|result| result.checked_add(u32::from(c - b'0')))?;
             } else if c == b':' && subcount < 3 {
                 subcount += 1;
             } else if c == b';' {
                 count += 1;
                 subcount = 0;
             } else {
+                // Unexpected character or unrecognized CSI
                 return None;
             }
             c = next_char(self);

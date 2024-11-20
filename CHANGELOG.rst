@@ -202,6 +202,7 @@ Other improvements
 - ``fish_config`` now also works in a Windows MSYS environment (:issue:`10111`).
 - Performance and interactivity under WSL has been improved with a workaround for Windows-specific locations being appended to ``$PATH`` by default (:issue:`10506`).
 - Additional filesystems such as AFS are properly detected as remote, which avoids certain hangs due to expensive filesystem locks (:issue:`10818`).
+- Standard output is flushed if external commands exit w/ a signal, in an attempt to reduce interleaving process output with the prompt (:issue:`10861`).
 
 .. _rust-packaging:
 

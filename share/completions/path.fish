@@ -14,6 +14,7 @@ complete -f -c path -n "test (count (commandline -xpc)) -lt 2" -a sort -d 'Sort 
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2" -s q -l quiet -d "Only return status, no output"
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2" -s z -l null-in -d "Handle NULL-delimited input"
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2" -s Z -l null-out -d "Print NULL-delimited output"
+complete -f -c path -n "test (count (commandline -xpc)) -ge 2; and contains -- (commandline -xpc)[2] basename" -s E -l no-extension -d "Remove the extension"
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2; and contains -- (commandline -xpc)[2] filter is" -s v -l invert -d "Invert meaning of filters"
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2; and contains -- (commandline -xpc)[2] filter is" -s t -l type -d "Filter by type" -x -a '(__fish_append , file link dir block char fifo socket)'
 complete -f -c path -n "test (count (commandline -xpc)) -ge 2; and contains -- (commandline -xpc)[2] filter is" -s f -d "Filter files"

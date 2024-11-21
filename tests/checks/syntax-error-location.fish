@@ -17,18 +17,6 @@ echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
 # CHECK: <       ^~~~~~~~~^>
 
 
-echo '
-
-FOO=BAR (true one)
-(true two)
-
-# more things
-' | $fish 2>| string replace -r '(.*)' '<$1>'
-
-# CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
-# CHECK: <FOO=BAR (true one)>
-# CHECK: <        ^~~~~~~~~^>
-
 $fish -c 'echo "unfinished "(subshell' 2>| string replace -r '.*' '<$0>'
 # CHECK: <fish: Unexpected end of string, expecting ')'>
 # CHECK: <echo "unfinished "(subshell>

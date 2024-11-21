@@ -324,11 +324,8 @@ $fish -c 'echo {}}'
 #CHECKERR: fish: Unexpected '}' for unopened brace
 #CHECKERR: echo {}}
 #CHECKERR: ^
-printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
-#CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
-#CHECK: <command (asd)>
-#CHECK: <        ^~~~^>
-true
+printf '<%s>\n' ($fish -c 'command (echo asd)' 2>&1)
+# CHECK: <asd>
 
 printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
 #CHECK: <fish: Invalid index value>
@@ -337,7 +334,7 @@ printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
 
 set -l pager command less
 echo foo | $pager
-#CHECKERR: {{.*}}checks/expansion.fish (line 339): The expanded command is a keyword.
+#CHECKERR: {{.*}}checks/expansion.fish (line {{\d+}}): The expanded command is a keyword.
 #CHECKERR: echo foo | $pager
 #CHECKERR:            ^~~~~^
 

@@ -154,7 +154,7 @@ in :ref:`config.fish <configuration>`.
 
 How do I run a command from history?
 ------------------------------------
-Type some part of the command, and then hit the :kbd:`up` (``↑``) or :kbd:`ctrl-down` (``↓``) arrow keys to navigate through history matches, or press :kbd:`ctrl-r` to open the history in a searchable pager. In this pager you can press :kbd:`ctrl-r` or :kbd:`ctrl-s` to move to older or younger history respectively.
+Type some part of the command, and then hit the :kbd:`up` (``↑``) or :kbd:`down` (``↓``) arrow keys to navigate through history matches, or press :kbd:`ctrl-r` to open the history in a searchable pager. In this pager you can press :kbd:`ctrl-r` or :kbd:`ctrl-s` to move to older or younger history respectively.
 
 Additional default key bindings include :kbd:`ctrl-p` (up) and :kbd:`ctrl-n` (down). See :ref:`Searchable command history <history-search>` for more information.
 
@@ -168,7 +168,7 @@ In general, fish's history recall works like this:
 
 - Like other shells, the Up arrow, ``up`` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would just hit the up-arrow.
 
-- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press ``ctlr-b`` to open the history in the pager.
+- If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press ``ctrl-r`` to open the history in the pager.
 
 - ``alt-up`` recalls individual arguments, starting from the last argument in the last executed line. This can be used instead of "!$".
 

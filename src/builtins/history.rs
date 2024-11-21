@@ -8,28 +8,28 @@ use super::prelude::*;
 
 #[derive(Default, Eq, PartialEq)]
 enum HistCmd {
-    HIST_SEARCH = 1,
-    HIST_DELETE,
-    HIST_CLEAR,
-    HIST_MERGE,
-    HIST_SAVE,
+    Search,
+    Delete,
+    Clear,
+    Merge,
+    Save,
     #[default]
-    HIST_UNDEF,
-    HIST_CLEAR_SESSION,
-    HIST_APPEND,
+    None,
+    ClearSession,
+    Append,
 }
 
 impl HistCmd {
     fn to_wstr(&self) -> &'static wstr {
         match self {
-            HistCmd::HIST_SEARCH => L!("search"),
-            HistCmd::HIST_DELETE => L!("delete"),
-            HistCmd::HIST_CLEAR => L!("clear"),
-            HistCmd::HIST_MERGE => L!("merge"),
-            HistCmd::HIST_SAVE => L!("save"),
-            HistCmd::HIST_UNDEF => panic!(),
-            HistCmd::HIST_CLEAR_SESSION => L!("clear-session"),
-            HistCmd::HIST_APPEND => L!("append"),
+            HistCmd::Search => L!("search"),
+            HistCmd::Delete => L!("delete"),
+            HistCmd::Clear => L!("clear"),
+            HistCmd::Merge => L!("merge"),
+            HistCmd::Save => L!("save"),
+            HistCmd::None => panic!(),
+            HistCmd::ClearSession => L!("clear-session"),
+            HistCmd::Append => L!("append"),
         }
     }
 }
@@ -38,13 +38,13 @@ impl TryFrom<&wstr> for HistCmd {
     type Error = ();
     fn try_from(val: &wstr) -> Result<Self, ()> {
         match val {
-            _ if val == "search" => Ok(HistCmd::HIST_SEARCH),
-            _ if val == "delete" => Ok(HistCmd::HIST_DELETE),
-            _ if val == "clear" => Ok(HistCmd::HIST_CLEAR),
-            _ if val == "merge" => Ok(HistCmd::HIST_MERGE),
-            _ if val == "save" => Ok(HistCmd::HIST_SAVE),
-            _ if val == "clear-session" => Ok(HistCmd::HIST_CLEAR_SESSION),
-            _ if val == "append" => Ok(HistCmd::HIST_APPEND),
+            _ if val == "search" => Ok(HistCmd::Search),
+            _ if val == "delete" => Ok(HistCmd::Delete),
+            _ if val == "clear" => Ok(HistCmd::Clear),
+            _ if val == "merge" => Ok(HistCmd::Merge),
+            _ if val == "save" => Ok(HistCmd::Save),
+            _ if val == "clear-session" => Ok(HistCmd::ClearSession),
+            _ if val == "append" => Ok(HistCmd::Append),
             _ => Err(()),
         }
     }
@@ -91,7 +91,7 @@ fn set_hist_cmd(
     sub_cmd: HistCmd,
     streams: &mut IoStreams,
 ) -> bool {
-    if *hist_cmd != HistCmd::HIST_UNDEF {
+    if *hist_cmd != HistCmd::None {
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2_EXCLUSIVE,
             cmd,
@@ -145,27 +145,27 @@ fn parse_cmd_opts(
     while let Some(opt) = w.next_opt() {
         match opt {
             '\x01' => {
-                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_DELETE, streams) {
+                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Delete, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
             '\x02' => {
-                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_SEARCH, streams) {
+                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Search, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
             '\x03' => {
-                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_SAVE, streams) {
+                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Save, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
             '\x04' => {
-                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_CLEAR, streams) {
+                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Clear, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
             '\x05' => {
-                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::HIST_MERGE, streams) {
+                if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Merge, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
@@ -266,14 +266,9 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     // search term).
     let args = &args[optind..];
 
-    // Establish appropriate defaults.
-    if opts.hist_cmd == HistCmd::HIST_UNDEF {
-        opts.hist_cmd = HistCmd::HIST_SEARCH;
-    }
-
     let mut status = STATUS_CMD_OK;
     match opts.hist_cmd {
-        HistCmd::HIST_SEARCH => {
+        HistCmd::None | HistCmd::Search => {
             if !history.search(
                 opts.search_type
                     .unwrap_or(history::SearchType::ContainsGlob),
@@ -289,7 +284,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 status = STATUS_CMD_ERROR;
             }
         }
-        HistCmd::HIST_DELETE => {
+        HistCmd::Delete => {
             // TODO: Move this code to the history module and support the other search types
             // including case-insensitive matches. At this time we expect the non-exact deletions to
             // be handled only by the history function's interactive delete feature.
@@ -311,21 +306,21 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 history.remove(delete_string);
             }
         }
-        HistCmd::HIST_CLEAR => {
+        HistCmd::Clear => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
                 return STATUS_INVALID_ARGS;
             }
             history.clear();
             history.save();
         }
-        HistCmd::HIST_CLEAR_SESSION => {
+        HistCmd::ClearSession => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
                 return STATUS_INVALID_ARGS;
             }
             history.clear_session();
             history.save();
         }
-        HistCmd::HIST_MERGE => {
+        HistCmd::Merge => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
                 return STATUS_INVALID_ARGS;
             }
@@ -339,14 +334,13 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
             }
             history.incorporate_external_changes();
         }
-        HistCmd::HIST_SAVE => {
+        HistCmd::Save => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
                 return STATUS_INVALID_ARGS;
             }
             history.save();
         }
-        HistCmd::HIST_UNDEF => panic!("Unexpected HIST_UNDEF seen"),
-        HistCmd::HIST_APPEND => {
+        HistCmd::Append => {
             for &arg in args {
                 history.add_commandline(arg.to_owned());
             }

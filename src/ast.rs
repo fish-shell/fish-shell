@@ -1644,16 +1644,16 @@ pub struct NotStatement {
     parent: Option<*const dyn Node>,
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
-    pub variables: VariableAssignmentList,
     pub time: Option<KeywordTime>,
+    pub variables: VariableAssignmentList,
     pub contents: Statement,
 }
 implement_node!(NotStatement, branch, not_statement);
 implement_acceptor_for_branch!(
     NotStatement,
     (kw: (KeywordNot)),
-    (variables: (VariableAssignmentList)),
     (time: (Option<KeywordTime>)),
+    (variables: (VariableAssignmentList)),
     (contents: (Statement)),
 );
 impl ConcreteNode for NotStatement {

@@ -227,7 +227,6 @@ impl ParseKeyword {
     /// Return the keyword as a string.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_and => L!("and"),
             ParseKeyword::kw_begin => L!("begin"),
             ParseKeyword::kw_builtin => L!("builtin"),
@@ -235,6 +234,7 @@ impl ParseKeyword {
             ParseKeyword::kw_command => L!("command"),
             ParseKeyword::kw_else => L!("else"),
             ParseKeyword::kw_end => L!("end"),
+            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_exec => L!("exec"),
             ParseKeyword::kw_for => L!("for"),
             ParseKeyword::kw_function => L!("function"),

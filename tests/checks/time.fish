@@ -38,6 +38,22 @@ not time true
 #CHECKERR: {{.*}}
 #CHECKERR: {{.*}}
 
+not time a=b true
+#CHECKERR: ___{{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+#CHECKERR: {{.*}}
+
+# Currently illegal syntax. Same in zsh. POSIX shells call the external command "time" here.
+a=b time true
+#CHECKERR: fish: time: missing man page
+#CHECKERR: Documentation may not be installed.
+#CHECKERR: `help time` will show an online version
+not a=b time true
+#CHECKERR: fish: time: missing man page
+#CHECKERR: Documentation may not be installed.
+#CHECKERR: `help time` will show an online version
+
 $fish -c 'time true&'
 #CHECKERR: fish: {{.*}}
 #CHECKERR: time true&

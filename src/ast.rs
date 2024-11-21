@@ -14,7 +14,7 @@ use crate::flog::{FLOG, FLOGF};
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseError, ParseErrorCode, ParseErrorList,
     ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
-    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, SOURCE_OFFSET_INVALID,
+    INVALID_PIPELINE_CMD_ERR_MSG, SOURCE_OFFSET_INVALID,
 };
 use crate::parse_tree::ParseToken;
 #[cfg(test)]
@@ -55,7 +55,12 @@ pub struct MissingEndError {
     token: ParseToken,
 }
 
-pub type VisitResult = ControlFlow<MissingEndError>;
+pub enum NonLocalError {
+    MissingEndError(MissingEndError),
+    MissingStatementError,
+}
+
+pub type VisitResult = ControlFlow<NonLocalError>;
 
 trait NodeVisitorMut {
     /// will_visit (did_visit) is called before (after) a node's fields are visited.
@@ -85,6 +90,7 @@ trait NodeVisitorMut {
     fn visit_then(&mut self, _node: &mut Option<KeywordThen>);
     fn visit_time(&mut self, _node: &mut Option<KeywordTime>);
     fn visit_token_background(&mut self, _node: &mut Option<TokenBackground>);
+    fn visit_optional_statement(&mut self, _node: &mut Option<Statement>);
 }
 
 trait AcceptorMut {
@@ -183,6 +189,9 @@ pub trait ConcreteNode {
         None
     }
     fn as_command_token(&self) -> Option<&CommandToken> {
+        None
+    }
+    fn as_variable_statement(&self) -> Option<&VariableStatement> {
         None
     }
     fn as_statement(&self) -> Option<&Statement> {
@@ -307,6 +316,9 @@ trait ConcreteNodeMut {
         None
     }
     fn as_mut_command_token(&mut self) -> Option<&mut CommandToken> {
+        None
+    }
+    fn as_mut_variable_statement(&mut self) -> Option<&mut VariableStatement> {
         None
     }
     fn as_mut_statement(&mut self) -> Option<&mut Statement> {
@@ -988,6 +1000,9 @@ macro_rules! visit_optional_field_mut {
     (TokenBackground, $field:expr, $visitor:ident) => {
         $visitor.visit_token_background(&mut $field);
     };
+    (Statement, $field:expr, $visitor:ident) => {
+        $visitor.visit_optional_statement(&mut $field);
+    };
 }
 
 macro_rules! visit_result {
@@ -1227,6 +1242,31 @@ impl CommandToken {
     }
 }
 
+#[derive(Default, Debug)]
+pub struct VariableStatement {
+    parent: Option<*const dyn Node>,
+    /// A (possibly empty) list of variable assignments.
+    pub variables: VariableAssignmentList,
+    /// The statement.
+    pub statement: Option<Statement>,
+}
+implement_node!(VariableStatement, branch, variable_statement);
+implement_acceptor_for_branch!(
+    VariableStatement,
+    (variables: (VariableAssignmentList)),
+    (statement: (Option<Statement>)),
+);
+impl ConcreteNode for VariableStatement {
+    fn as_variable_statement(&self) -> Option<&VariableStatement> {
+        Some(self)
+    }
+}
+impl ConcreteNodeMut for VariableStatement {
+    fn as_mut_variable_statement(&mut self) -> Option<&mut VariableStatement> {
+        Some(self)
+    }
+}
+
 /// A statement is a normal command, or an if / while / etc
 #[derive(Default, Debug)]
 pub struct Statement {
@@ -1246,6 +1286,16 @@ impl ConcreteNodeMut for Statement {
     }
 }
 
+impl CheckParse for Statement {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let next = pop.peek_token(0);
+        matches!(
+            next.typ,
+            ParseTokenType::terminate | ParseTokenType::left_brace
+        ) || (next.typ == ParseTokenType::string && !next.is_variable_assignment)
+    }
+}
+
 /// A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 /// like if statements, where we require a command).
 #[derive(Default, Debug)]
@@ -1253,10 +1303,7 @@ pub struct JobPipeline {
     parent: Option<*const dyn Node>,
     /// Maybe the time keyword.
     pub time: Option<KeywordTime>,
-    /// A (possibly empty) list of variable assignments.
-    pub variables: VariableAssignmentList,
-    /// The statement.
-    pub statement: Statement,
+    pub statement2: VariableStatement,
     /// Piped remainder.
     pub continuation: JobContinuationList,
     /// Maybe backgrounded.
@@ -1266,8 +1313,7 @@ implement_node!(JobPipeline, branch, job_pipeline);
 implement_acceptor_for_branch!(
     JobPipeline,
     (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
+    (statement2: (VariableStatement)),
     (continuation: (JobContinuationList)),
     (bg: (Option<TokenBackground>)),
 );
@@ -1279,6 +1325,11 @@ impl ConcreteNode for JobPipeline {
 impl ConcreteNodeMut for JobPipeline {
     fn as_mut_job_pipeline(&mut self) -> Option<&mut JobPipeline> {
         Some(self)
+    }
+}
+impl JobPipeline {
+    pub fn statement3(&self) -> Option<&Statement> {
+        self.statement2.statement.as_ref()
     }
 }
 
@@ -1759,16 +1810,14 @@ pub struct NotStatement {
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
     pub time: Option<KeywordTime>,
-    pub variables: VariableAssignmentList,
-    pub contents: Statement,
+    pub negated_statement: VariableStatement,
 }
 implement_node!(NotStatement, branch, not_statement);
 implement_acceptor_for_branch!(
     NotStatement,
     (kw: (KeywordNot)),
     (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (contents: (Statement)),
+    (negated_statement: (VariableStatement)),
 );
 impl ConcreteNode for NotStatement {
     fn as_not_statement(&self) -> Option<&NotStatement> {
@@ -1786,16 +1835,14 @@ pub struct JobContinuation {
     parent: Option<*const dyn Node>,
     pub pipe: TokenPipe,
     pub newlines: MaybeNewlines,
-    pub variables: VariableAssignmentList,
-    pub statement: Statement,
+    pub statement2: VariableStatement,
 }
 implement_node!(JobContinuation, branch, job_continuation);
 implement_acceptor_for_branch!(
     JobContinuation,
     (pipe: (TokenPipe)),
     (newlines: (MaybeNewlines)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
+    (statement2: (VariableStatement)),
 );
 impl ConcreteNode for JobContinuation {
     fn as_job_continuation(&self) -> Option<&JobContinuation> {
@@ -1810,6 +1857,11 @@ impl ConcreteNodeMut for JobContinuation {
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::pipe
+    }
+}
+impl JobContinuation {
+    pub fn statement(&self) -> Option<&Statement> {
+        self.statement2.statement.as_ref()
     }
 }
 
@@ -2010,20 +2062,18 @@ impl ConcreteNodeMut for VariableAssignment {
 impl CheckParse for VariableAssignment {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Do we have a variable assignment at all?
-        if !pop.peek_token(0).may_be_variable_assignment {
-            return false;
-        }
-        // What is the token after it?
-        match pop.peek_type(1) {
-            // We have `a= cmd` and should treat it as a variable assignment.
-            ParseTokenType::string | ParseTokenType::left_brace => true,
-            // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
-            ParseTokenType::terminate => pop.allow_incomplete(),
-            // We have e.g. `a= >` which is an error.
-            // Note that we do not produce an error here. Instead we return false
-            // so this the token will be seen by allocate_populate_statement_contents.
-            _ => false,
-        }
+        pop.peek_token(0).is_variable_assignment
+        // // What is the token after it?
+        // match pop.peek_type(1) {
+        //     // We have `a= cmd` and should treat it as a variable assignment.
+        //     ParseTokenType::string | ParseTokenType::left_brace => true,
+        //     // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
+        //     ParseTokenType::terminate => pop.allow_incomplete(),
+        //     // We have e.g. `a= >` which is an error.
+        //     // Note that we do not produce an error here. Instead we return false
+        //     // so this the token will be seen by allocate_populate_statement_contents.
+        //     _ => false,
+        // }
     }
 }
 
@@ -2578,6 +2628,7 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
         Type::argument_or_redirection => L!("argument_or_redirection"),
         Type::argument_or_redirection_list => L!("argument_or_redirection_list"),
         Type::command_token => L!("command_token"),
+        Type::variable_statement => L!("variable_statement"),
         Type::statement => L!("statement"),
         Type::job_pipeline => L!("job_pipeline"),
         Type::job_conjunction => L!("job_conjunction"),
@@ -2919,7 +2970,7 @@ impl<'a> TokenStream<'a> {
         result.has_dash_prefix = text.starts_with('-');
         result.is_help_argument = [L!("-h"), L!("--help")].contains(&text);
         result.is_newline = result.typ == ParseTokenType::end && text == "\n";
-        result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
+        result.is_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
 
         assert!(token.offset() < SOURCE_OFFSET_INVALID);
@@ -3029,6 +3080,9 @@ struct Populator<'a> {
     /// Stream of tokens which we consume.
     tokens: TokenStream<'a>,
 
+    /// Whether this statement has a prefixed variable override.
+    parsing_variable_statement: Option<bool>,
+
     /** The type which we are attempting to parse, typically job_list but may be
     freestanding_argument_list. */
     top_type: Type,
@@ -3080,9 +3134,42 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             Category::leaf => {}
             // Visit branch nodes by just calling accept() to visit their fields.
             Category::branch => {
+                self.parsing_variable_statement = Some(
+                    node.as_variable_statement().is_some()
+                        && self.peek_token(0).is_variable_assignment,
+                );
                 // This field is a direct embedding of an AST value.
                 node.accept_mut(self, false);
-                return VisitResult::Continue(());
+                let Some(variable_statement) = node.as_mut_variable_statement() else {
+                    return VisitResult::Continue(());
+                };
+                if self.peek_token(0).typ == ParseTokenType::terminate {
+                    return VisitResult::Continue(());
+                }
+                if variable_statement.statement.as_ref().is_some_and(|stmt|
+                    // TODO(posix_mode) # Un-clone
+                    // This may happen if we just have a 'time' prefix.
+                    // Construct a decorated statement, which will be unsourced.
+                    stmt
+                        .contents
+                        .as_decorated_statement()
+                        .is_some_and(|ds| ds.try_source_range().is_none()))
+                {
+                    variable_statement.statement = None;
+                }
+                if variable_statement.statement.is_some()
+                    || !variable_statement.variables.is_empty()
+                {
+                    return VisitResult::Continue(());
+                }
+                parse_error!(
+                    self,
+                    self.peek_token(0),
+                    ParseErrorCode::generic,
+                    "asdf Expected a command but found %ls",
+                    self.peek_token(0).user_presentable_description()
+                );
+                return VisitResult::Break(NonLocalError::MissingStatementError);
             }
             Category::list => {
                 // This field is an embedding of an array of (pointers to) ContentsNode.
@@ -3148,6 +3235,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             return;
         }
         let VisitResult::Break(error) = flow else {
+            return;
+        };
+        let NonLocalError::MissingEndError(error) = error else {
             return;
         };
 
@@ -3304,6 +3394,14 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
         *node = self.try_parse::<TokenBackground>().map(|b| *b);
     }
+    fn visit_optional_statement(&mut self, node: &mut Option<Statement>) {
+        if self.parsing_variable_statement.take().unwrap()
+            && self.peek_token(0).typ == ParseTokenType::terminate
+        {
+            return;
+        }
+        *node = self.try_parse::<Statement>().map(|b| *b);
+    }
 }
 
 /// Helper to describe a list of keywords.
@@ -3350,6 +3448,7 @@ impl<'s> Populator<'s> {
             semis: vec![],
             errors: vec![],
             tokens: TokenStream::new(src, flags, top_type == Type::freestanding_argument_list),
+            parsing_variable_statement: None,
             top_type,
             unwinding: false,
             any_error: false,
@@ -3858,25 +3957,26 @@ impl<'s> Populator<'s> {
                 self.peek_token(0).user_presentable_description()
             );
             return got_error(self);
-        } else if self.peek_token(0).may_be_variable_assignment {
+        } else if self.peek_token(0).is_variable_assignment {
             // Here we have a variable assignment which we chose to not parse as a variable
             // assignment because there was no string after it.
             // Ensure we consume the token, so we don't get back here again at the same place.
-            let token = &self.consume_any_token();
-            let text = &self.tokens.src
-                [token.source_start()..token.source_start() + token.source_length()];
-            let equals_pos = variable_assignment_equals_pos(text).unwrap();
-            let variable = &text[..equals_pos];
-            let value = &text[equals_pos + 1..];
-            parse_error!(
-                self,
-                token,
-                ParseErrorCode::bare_variable_assignment,
-                ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
-                variable,
-                value
-            );
-            return got_error(self);
+            // let token = &self.consume_any_token();
+            // let text = &self.tokens.src
+            //     [token.source_start()..token.source_start() + token.source_length()];
+            // let equals_pos = variable_assignment_equals_pos(text).unwrap();
+            // let variable = &text[..equals_pos];
+            // let value = &text[equals_pos + 1..];
+            // parse_error!(
+            //     self,
+            //     token,
+            //     ParseErrorCode::bare_variable_assignment,
+            //     ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
+            //     variable,
+            //     value
+            // );
+            // return got_error(self);
+            return new_decorated_statement(self);
         }
 
         // In some cases a block starter is a decorated statement instead, mostly if invoked with "--help".
@@ -4035,7 +4135,7 @@ impl<'s> Populator<'s> {
             varas.range = None;
             return;
         }
-        if !self.peek_token(0).may_be_variable_assignment {
+        if !self.peek_token(0).is_variable_assignment {
             internal_error!(
                 self,
                 visit_variable_assignment,
@@ -4116,10 +4216,10 @@ impl<'s> Populator<'s> {
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
             if allowed_keywords.contains(&ParseKeyword::kw_end) {
-                return VisitResult::Break(MissingEndError {
+                return VisitResult::Break(NonLocalError::MissingEndError(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
-                });
+                }));
             } else {
                 parse_error!(
                     self,
@@ -4334,6 +4434,7 @@ pub enum Type {
     argument_or_redirection,
     argument_or_redirection_list,
     command_token,
+    variable_statement,
     statement,
     job_pipeline,
     job_conjunction,

@@ -349,18 +349,20 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                         let p = p.parent().unwrap();
                         assert_eq!(p.typ(), Type::statement);
                         let p = p.parent().unwrap();
-                        if let Some(job) = p.as_job_pipeline() {
-                            if !job.variables.is_empty() {
-                                result.allow_escaped_newlines = true;
-                            }
+                        #[allow(clippy::manual_map)]
+                        if (if let Some(job) = p.as_job_pipeline() {
+                            Some(&job.statement2)
                         } else if let Some(job_cnt) = p.as_job_continuation() {
-                            if !job_cnt.variables.is_empty() {
-                                result.allow_escaped_newlines = true;
-                            }
+                            Some(&job_cnt.statement2)
                         } else if let Some(not_stmt) = p.as_not_statement() {
-                            if !not_stmt.variables.is_empty() {
-                                result.allow_escaped_newlines = true;
-                            }
+                            Some(&not_stmt.negated_statement)
+                        } else {
+                            None
+                        })
+                        .is_some_and(|stmt| !stmt.variables.is_empty())
+                        {
+                            result.allow_escaped_newlines = true;
+                            result.allow_escaped_newlines = true;
                         }
                     }
                     _ => (),

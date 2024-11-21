@@ -41,6 +41,11 @@ fn test_parser() {
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
     }
 
+    assert!(
+        detect_errors!("true && ") == Err(ParserTestErrorBits::INCOMPLETE),
+        "unterminated conjunction not reported properly"
+    );
+
     // Testing block nesting
     assert!(
         detect_errors!("if; end").is_err(),
@@ -547,13 +552,9 @@ fn test_new_parser_ad_hoc() {
     // The bug was that "a=" would produce an error but not be consumed,
     // leading to an infinite loop.
 
-    // By itself it should produce an error.
     let ast = Ast::parse(L!("a="), ParseTreeFlags::default(), None);
-    assert!(ast.errored());
+    assert!(!ast.errored());
 
-    // If we are leaving things unterminated, this should not produce an error.
-    // i.e. when typing "a=" at the command line, it should be treated as valid
-    // because we don't want to color it as an error.
     let ast = Ast::parse(L!("a="), ParseTreeFlags::LEAVE_UNTERMINATED, None);
     assert!(!ast.errored());
 
@@ -617,8 +618,6 @@ fn test_new_parser_errors() {
     validate!("begin ; }", ParseErrorCode::unbalancing_brace);
 
     validate!("true | and", ParseErrorCode::andor_in_pipeline);
-
-    validate!("a=", ParseErrorCode::bare_variable_assignment);
 }
 
 #[test]

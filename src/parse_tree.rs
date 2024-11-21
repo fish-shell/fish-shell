@@ -28,7 +28,7 @@ pub struct ParseToken {
     /// Hackish: if TOK_END, whether the source is a newline.
     pub is_newline: bool,
     // Hackish: whether this token is a string like FOO=bar
-    pub may_be_variable_assignment: bool,
+    pub is_variable_assignment: bool,
     /// If this is a tokenizer error, that error.
     pub tok_error: TokenizerError,
     source_start: SourceOffset,
@@ -43,7 +43,7 @@ impl ParseToken {
             has_dash_prefix: false,
             is_help_argument: false,
             is_newline: false,
-            may_be_variable_assignment: false,
+            is_variable_assignment: false,
             tok_error: TokenizerError::none,
             source_start: SOURCE_OFFSET_INVALID.try_into().unwrap(),
             source_length: 0,

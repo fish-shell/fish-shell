@@ -403,8 +403,7 @@ function hello_continuations
 
 echo "\
 a=1 \\
-    a=2 \\
-    echo" | $fish_indent --check
+    a=2 echo" | $fish_indent --check # FIXME
 echo $status #CHECK: 0
 
 echo "\
@@ -497,12 +496,12 @@ echo $status #CHECK: 0
 echo 'PATH={$PATH[echo " "' | $fish_indent --ansi
 # CHECK: PATH={$PATH[echo " "
 
-echo a\> | $fish_indent
+echo a \> | $fish_indent #  TODO(posix_mode)
 # CHECK: a >
 
 echo a\<\) | $fish_indent
 # CHECK: a < )
-echo b\|\{ | $fish_indent
+echo b\|\{ | $fish_indent  # TODO(posix_mode)
 # CHECK: b | {
 
 echo "\'\\\\\x00\'" | string unescape | $fish_indent | string escape

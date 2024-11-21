@@ -450,11 +450,14 @@ impl<'a> ExecutionContext {
         };
 
         // Check main statement.
-        let infinite_recursive_statement = statement_recurses(&jc.job.statement)
+        let infinite_recursive_statement = statement_recurses(jc.job.statement3()?)
             // Check piped remainder.
             .or_else(|| {
                 for c in &job.continuation {
-                    let s = statement_recurses(&c.statement);
+                    let Some(stmt) = c.statement() else {
+                        continue;
+                    };
+                    let s = statement_recurses(stmt);
                     if s.is_some() {
                         return s;
                     }
@@ -564,9 +567,12 @@ impl<'a> ExecutionContext {
         let no_redirs =
             |list: &ast::ArgumentOrRedirectionList| !list.iter().any(|val| val.is_redirection());
 
+        let Some(statement) = job.statement3() else {
+            return true;
+        };
         // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
         // type safety (in case we add more specific statement types).
-        match &job.statement.contents {
+        match &statement.contents {
             StatementVariant::BlockStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::BraceStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::SwitchStatement(stmt) => no_redirs(&stmt.args_or_redirs),
@@ -608,12 +614,17 @@ impl<'a> ExecutionContext {
         ctx: &OperationContext<'_>,
         mut proc: Option<&mut Process>,
         variable_assignment_list: &ast::VariableAssignmentList,
-        block: &mut Option<BlockId>,
+        block: Option<&mut Option<BlockId>>,
     ) -> EndExecutionReason {
         if variable_assignment_list.is_empty() {
             return EndExecutionReason::ok;
         }
-        *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
+        // FIXME EnvMode::USER
+        let mut flags = EnvMode::default();
+        if let Some(block) = block {
+            *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
+            flags = EnvMode::LOCAL | EnvMode::EXPORT;
+        }
         for variable_assignment in variable_assignment_list {
             let source = self.node_source(&**variable_assignment);
             let equals_pos = variable_assignment_equals_pos(source).unwrap();
@@ -653,8 +664,7 @@ impl<'a> ExecutionContext {
                     vals.clone(),
                 ));
             }
-            ctx.parser()
-                .set_var_and_fire(variable_name, EnvMode::LOCAL | EnvMode::EXPORT, vals);
+            ctx.parser().set_var_and_fire(variable_name, flags, vals);
         }
         EndExecutionReason::ok
     }
@@ -665,17 +675,20 @@ impl<'a> ExecutionContext {
         ctx: &OperationContext<'_>,
         job: &mut Job,
         proc: &mut Process,
-        statement: &ast::Statement,
-        variable_assignments: &ast::VariableAssignmentList,
+        variable_statement: &ast::VariableStatement,
     ) -> EndExecutionReason {
-        // Get the "specific statement" which is boolean / block / if / switch / decorated.
-        let specific_statement = &statement.contents;
-
-        let mut block = None;
-        let result =
-            self.apply_variable_assignments(ctx, Some(proc), variable_assignments, &mut block);
+        let mut block = variable_statement.statement.is_some().then_some(None);
+        let result = self.apply_variable_assignments(
+            ctx,
+            Some(proc),
+            &variable_statement.variables,
+            block.as_mut(),
+        );
+        let Some(statement) = variable_statement.statement.as_ref() else {
+            return result;
+        };
         let _scope = ScopeGuard::new((), |()| {
-            if let Some(block) = block {
+            if let Some(Some(block)) = block {
                 ctx.parser().pop_block(block);
             }
         });
@@ -683,6 +696,8 @@ impl<'a> ExecutionContext {
             return result;
         }
 
+        // Get the "specific statement" which is boolean / block / if / switch / decorated.
+        let specific_statement = &statement.contents;
         match &specific_statement {
             StatementVariant::NotStatement(not_statement) => {
                 self.populate_not_process(ctx, job, proc, not_statement)
@@ -711,13 +726,7 @@ impl<'a> ExecutionContext {
             let mut flags = job.mut_flags();
             flags.negate = !flags.negate;
         }
-        self.populate_job_process(
-            ctx,
-            job,
-            proc,
-            &not_statement.contents,
-            &not_statement.variables,
-        )
+        self.populate_job_process(ctx, job, proc, &not_statement.negated_statement)
     }
 
     /// Creates a 'normal' (non-block) process.
@@ -1583,16 +1592,24 @@ impl<'a> ExecutionContext {
         // However, if there are no redirections, then we can just jump into the block directly, which
         // is significantly faster.
         if self.job_is_simple_block(job_node) {
-            let mut block = None;
-            let mut result =
-                self.apply_variable_assignments(ctx, None, &job_node.variables, &mut block);
+            let variable_statement = &job_node.statement2;
+            let mut block = variable_statement.statement.is_some().then_some(None);
+            let mut result = self.apply_variable_assignments(
+                ctx,
+                None,
+                &variable_statement.variables,
+                block.as_mut(),
+            );
+            let Some(statement) = variable_statement.statement.as_ref() else {
+                return result;
+            };
             let _scope = ScopeGuard::new((), |()| {
-                if let Some(block) = block {
+                if let Some(Some(block)) = block {
                     ctx.parser().pop_block(block);
                 }
             });
 
-            let specific_statement = &job_node.statement.contents;
+            let specific_statement = &statement.contents;
             assert!(specific_statement_type_is_redirectable_block(
                 specific_statement
             ));
@@ -1819,13 +1836,7 @@ impl<'a> ExecutionContext {
         // Create processes. Each one may fail.
         let mut processes = ProcessList::new();
         processes.push(Box::new(Process::new()));
-        let mut result = self.populate_job_process(
-            ctx,
-            j,
-            &mut processes[0],
-            &job_node.statement,
-            &job_node.variables,
-        );
+        let mut result = self.populate_job_process(ctx, j, &mut processes[0], &job_node.statement2);
 
         // Construct process_ts for job continuations (pipelines).
         for jc in &job_node.continuation {
@@ -1859,13 +1870,8 @@ impl<'a> ExecutionContext {
 
             // Store the new process (and maybe with an error).
             processes.push(Box::new(Process::new()));
-            result = self.populate_job_process(
-                ctx,
-                j,
-                processes.last_mut().unwrap(),
-                &jc.statement,
-                &jc.variables,
-            );
+            result =
+                self.populate_job_process(ctx, j, processes.last_mut().unwrap(), &jc.statement2);
         }
 
         // Inform our processes of who is first and last
@@ -2016,18 +2022,29 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
                 if ns.time.is_some() {
                     return true;
                 }
-                stat = &ns.contents;
+                stat = match ns.negated_statement.statement.as_ref() {
+                    Some(s) => s,
+                    None => return false,
+                };
             }
             _ => return false,
         }
     };
 
     // Do we have a 'not time ...' anywhere in our pipeline?
-    if is_timed_not_statement(&job_node.statement) {
+    if job_node
+        .statement3()
+        .map(is_timed_not_statement)
+        .unwrap_or_default()
+    {
         return true;
     }
     for jc in &job_node.continuation {
-        if is_timed_not_statement(&jc.statement) {
+        if jc
+            .statement()
+            .map(is_timed_not_statement)
+            .unwrap_or_default()
+        {
             return true;
         }
     }

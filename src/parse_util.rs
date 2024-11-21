@@ -1201,7 +1201,12 @@ pub fn parse_util_detect_errors_in_ast(
         if let Some(jc) = node.as_job_continuation() {
             // Somewhat clumsy way of checking for a statement without source in a pipeline.
             // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+            if jc.pipe.has_source()
+                && jc
+                    .statement()
+                    .and_then(|stmt| stmt.try_source_range())
+                    .is_none()
+            {
                 has_unclosed_pipe = true;
             }
         } else if let Some(job_conjunction) = node.as_job_conjunction() {
@@ -1627,7 +1632,8 @@ fn detect_errors_in_decorated_statement(
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
         PipelinePosition::none
-    } else if job.statement.pointer_eq(st) {
+    } else if job.statement3().unwrap().pointer_eq(st) {
+        // TODO(posix_mode) unwrap
         PipelinePosition::first
     } else {
         PipelinePosition::subsequent

@@ -225,7 +225,11 @@ pub fn expand_to_command_and_args(
         return ExpandResult::ok();
     }
 
-    let mut eflags = ExpandFlags::FAIL_ON_CMDSUBST;
+    let mut eflags = if ctx.has_parser() {
+        ExpandFlags::empty()
+    } else {
+        ExpandFlags::FAIL_ON_CMDSUBST
+    };
     if skip_wildcards {
         eflags |= ExpandFlags::SKIP_WILDCARDS;
     }
@@ -1327,7 +1331,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         }
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
             let mut cursor = 0;
-            match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
+            let mut has_dollar = false;
+            match parse_util_locate_cmdsubst_range(
+                &input,
+                &mut cursor,
+                true,
+                None,
+                Some(&mut has_dollar),
+            ) {
                 MaybeParentheses::Error => {
                     return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
                 }
@@ -1338,6 +1349,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     return ExpandResult::ok();
                 }
                 MaybeParentheses::CommandSubstitution(parens) => {
+                    if has_dollar {
+                        return ExpandResult::ok();
+                    }
                     append_cmdsub_error!(
                                 self.errors,
                                 parens.start(),

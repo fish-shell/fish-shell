@@ -134,8 +134,9 @@ function __fish_complete_mount_opts
         data_err={ignore,abort} \
         barrier={0,1} \
         user_xattr \
-        acl \
-        set -l token (commandline -tc | string replace -r '^-o' -- '')
+        acl
+
+    set -l token (commandline -tc | string replace -r '^-o' -- '')
     set -l args (string split , -- $token)
 
     if test (count $args) -ne 0

@@ -4,6 +4,8 @@ use crate::wchar::prelude::*;
 
 const SKIP_KEYWORDS: &[&wstr] = &[L!("else"), L!("begin")];
 const SUBCOMMAND_KEYWORDS: &[&wstr] = &[
+    L!("{"),
+    L!("}"),
     L!("and"),
     L!("begin"),
     L!("builtin"),

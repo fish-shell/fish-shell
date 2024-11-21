@@ -1049,10 +1049,12 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 dec = if switchs.end.has_source() { 1 } else { 0 };
             }
             Type::token_base => {
-                if node.parent().unwrap().typ() == Type::begin_header
-                    && node.as_token().unwrap().token_type() == ParseTokenType::end
+                if matches!(
+                    node.parent().unwrap().typ(),
+                    Type::begin_header | Type::brace_header
+                ) && node.as_token().unwrap().token_type() == ParseTokenType::end
                 {
-                    // The newline after "begin" is optional, so it is part of the header.
+                    // The newline after "begin" or "{" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
                     if node.source(self.src) == "\n" {
                         inc = 1;
@@ -1229,6 +1231,15 @@ pub fn parse_util_detect_errors_in_ast(
             }
             errored |=
                 detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
+        } else if let Some(brace_statement) = node.as_brace_statement() {
+            // If our rbrace had no source, we are unsourced.
+            if !brace_statement.end.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |= detect_errors_in_block_redirection_list(
+                &brace_statement.args_or_redirs,
+                &mut out_errors,
+            );
         } else if let Some(ifs) = node.as_if_statement() {
             // If our 'end' had no source, we are unsourced.
             if !ifs.end.has_source() {

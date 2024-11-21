@@ -9,6 +9,7 @@ Synopsis
 .. synopsis::
 
     begin; [COMMANDS ...]; end
+    { [COMMANDS ...]; }
 
 Description
 -----------

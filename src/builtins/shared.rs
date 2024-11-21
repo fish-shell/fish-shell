@@ -357,6 +357,14 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         name: L!("while"),
         func: builtin_generic,
     },
+    BuiltinData {
+        name: L!("{"), // }{
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("}"),
+        func: builtin_generic,
+    },
 ];
 assert_sorted_by_name!(BUILTIN_DATAS);
 
@@ -466,6 +474,8 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "." => wgettext!("Evaluate contents of file"),
         _ if name == ":" => wgettext!("Return a successful result"),
         _ if name == "[" => wgettext!("Test a condition"), // ]
+        _ if name == "{" => wgettext!("Create a block of code"), // } {
+        _ if name == "}" => wgettext!("Create a block of code"),
         _ if name == "_" => wgettext!("Translate a string"),
         _ if name == "abbr" => wgettext!("Manage abbreviations"),
         _ if name == "and" => wgettext!("Run command if last command succeeded"),

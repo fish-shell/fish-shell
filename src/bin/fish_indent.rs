@@ -711,8 +711,8 @@ impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
             Type::maybe_newlines => {
                 self.visit_maybe_newlines(node.as_maybe_newlines().unwrap());
             }
-            Type::begin_header => {
-                // 'begin' does not require a newline after it, but we insert one.
+            Type::begin_header | Type::brace_header => {
+                // 'begin' and '{' do not require a trailing newline, but we insert one.
                 node.accept(self, false);
                 self.visit_begin_header();
             }

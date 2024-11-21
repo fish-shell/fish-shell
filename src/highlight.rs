@@ -1,8 +1,9 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, DecoratedStatement, Keyword,
-    Leaf, List, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
+    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
+    DecoratedStatement, Keyword, Leaf, List, Node, NodeVisitor, Redirection, Token, Type,
+    VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::RgbColor;
@@ -1093,6 +1094,8 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::kw_function
             | ParseKeyword::kw_if
             | ParseKeyword::kw_in
+            | ParseKeyword::kw_lbrace
+            | ParseKeyword::kw_rbrace
             | ParseKeyword::kw_switch
             | ParseKeyword::kw_while => role = HighlightRole::keyword,
             ParseKeyword::kw_and
@@ -1399,6 +1402,11 @@ impl<'s> Highlighter<'s> {
         self.visit(&block.end);
         self.pending_variables.truncate(pending_variables_count);
     }
+    fn visit_brace_statement(&mut self, brace_statement: &BraceStatement) {
+        self.visit(&brace_statement.args_or_redirs);
+        self.visit(&brace_statement.jobs);
+        self.visit(&brace_statement.end);
+    }
 }
 
 /// Return whether a string contains a command substitution.
@@ -1457,6 +1465,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
                 self.visit_decorated_statement(node.as_decorated_statement().unwrap())
             }
             Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
+            Type::brace_statement => self.visit_brace_statement(node.as_brace_statement().unwrap()),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }

@@ -603,7 +603,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     }
                 }
                 '{' => {
-                    if unescape_special {
+                    if unescape_special && input != "{" {
                         brace_count += 1;
                         to_append_or_none = Some(BRACE_BEGIN);
                         // We need to store where the brace *ends up* in the output.
@@ -612,7 +612,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     }
                 }
                 '}' => {
-                    if unescape_special {
+                    if unescape_special && input != "}" {
                         // HACK: The completion machinery sometimes hands us partial tokens.
                         // We can't parse them properly, but it shouldn't hurt,
                         // so we don't assert here.

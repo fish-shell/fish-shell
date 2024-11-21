@@ -49,12 +49,12 @@ impl<T: Acceptor> Acceptor for Option<T> {
     }
 }
 
-pub struct MissingEndError {
+pub struct MissingEndKeywordError {
     allowed_keywords: &'static [ParseKeyword],
     token: ParseToken,
 }
 
-pub type VisitResult = ControlFlow<MissingEndError>;
+pub type VisitResult = ControlFlow<MissingEndKeywordError>;
 
 trait NodeVisitorMut {
     /// will_visit (did_visit) is called before (after) a node's fields are visited.
@@ -202,6 +202,12 @@ pub trait ConcreteNode {
     fn as_block_statement(&self) -> Option<&BlockStatement> {
         None
     }
+    fn as_brace_header(&self) -> Option<&BraceHeader> {
+        None
+    }
+    fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        None
+    }
     fn as_if_clause(&self) -> Option<&IfClause> {
         None
     }
@@ -318,6 +324,12 @@ trait ConcreteNodeMut {
         None
     }
     fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
+        None
+    }
+    fn as_mut_brace_header(&mut self) -> Option<&mut BraceHeader> {
+        None
+    }
+    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
         None
     }
     fn as_mut_if_clause(&mut self) -> Option<&mut IfClause> {
@@ -1030,6 +1042,9 @@ macro_rules! set_parent_of_union_field {
         } else if matches!(*$self.$field_name, StatementVariant::BlockStatement(_)) {
             $self.$field_name.as_mut_block_statement().parent = Some($self);
             $self.$field_name.as_mut_block_statement().set_parents();
+        } else if matches!(*$self.$field_name, StatementVariant::BraceStatement(_)) {
+            $self.$field_name.as_mut_brace_statement().parent = Some($self);
+            $self.$field_name.as_mut_brace_statement().set_parents();
         } else if matches!(*$self.$field_name, StatementVariant::IfStatement(_)) {
             $self.$field_name.as_mut_if_statement().parent = Some($self);
             $self.$field_name.as_mut_if_statement().set_parents();
@@ -1255,7 +1270,10 @@ impl CheckParse for JobConjunction {
         token.typ == ParseTokenType::string
             && !matches!(
                 token.keyword,
-                ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
+                ParseKeyword::kw_case
+                    | ParseKeyword::kw_end
+                    | ParseKeyword::kw_rbrace
+                    | ParseKeyword::kw_else
             )
     }
 }
@@ -1400,6 +1418,62 @@ impl ConcreteNode for BlockStatement {
 }
 impl ConcreteNodeMut for BlockStatement {
     fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
+        Some(self)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct BraceHeader {
+    parent: Option<*const dyn Node>,
+    pub kw_lbrace: KeywordLBrace,
+    /// Note that '{' does NOT require a semi or nl afterwards.
+    /// This is valid: { echo hi; }
+    pub semi_nl: Option<SemiNl>,
+}
+implement_node!(BraceHeader, branch, brace_header);
+implement_acceptor_for_branch!(
+    BraceHeader,
+    (kw_lbrace: (KeywordLBrace)),
+    (semi_nl: (Option<SemiNl>))
+);
+impl ConcreteNode for BraceHeader {
+    fn as_brace_header(&self) -> Option<&BraceHeader> {
+        Some(self)
+    }
+}
+impl ConcreteNodeMut for BraceHeader {
+    fn as_mut_brace_header(&mut self) -> Option<&mut BraceHeader> {
+        Some(self)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct BraceStatement {
+    parent: Option<*const dyn Node>,
+    /// The opening { in command position.
+    pub header: BraceHeader,
+    /// List of jobs in this block.
+    pub jobs: JobList,
+    /// The '}' node.
+    pub end: KeywordRBrace,
+    /// Arguments and redirections associated with the block.
+    pub args_or_redirs: ArgumentOrRedirectionList,
+}
+implement_node!(BraceStatement, branch, brace_statement);
+implement_acceptor_for_branch!(
+    BraceStatement,
+    (header: (BraceHeader)),
+    (jobs: (JobList)),
+    (end: (KeywordRBrace)),
+    (args_or_redirs: (ArgumentOrRedirectionList)),
+);
+impl ConcreteNode for BraceStatement {
+    fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        Some(self)
+    }
+}
+impl ConcreteNodeMut for BraceStatement {
+    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
         Some(self)
     }
 }
@@ -1983,7 +2057,9 @@ define_keyword_node!(KeywordFor, kw_for);
 define_keyword_node!(KeywordFunction, kw_function);
 define_keyword_node!(KeywordIf, kw_if);
 define_keyword_node!(KeywordIn, kw_in);
+define_keyword_node!(KeywordLBrace, kw_lbrace);
 define_keyword_node!(KeywordNot, kw_not, kw_builtin, kw_exclam);
+define_keyword_node!(KeywordRBrace, kw_rbrace);
 define_keyword_node!(KeywordSwitch, kw_switch);
 define_keyword_node!(KeywordTime, kw_time);
 define_keyword_node!(KeywordWhile, kw_while);
@@ -2135,6 +2211,7 @@ pub enum StatementVariant {
     None,
     NotStatement(NotStatement),
     BlockStatement(BlockStatement),
+    BraceStatement(BraceStatement),
     // IfStatement is much larger than the rest, so we box it.
     IfStatement(Box<IfStatement>),
     SwitchStatement(SwitchStatement),
@@ -2153,6 +2230,7 @@ impl Acceptor for StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept(visitor, reversed),
             StatementVariant::BlockStatement(node) => node.accept(visitor, reversed),
+            StatementVariant::BraceStatement(node) => node.accept(visitor, reversed),
             StatementVariant::IfStatement(node) => node.accept(visitor, reversed),
             StatementVariant::SwitchStatement(node) => node.accept(visitor, reversed),
             StatementVariant::DecoratedStatement(node) => node.accept(visitor, reversed),
@@ -2165,6 +2243,7 @@ impl AcceptorMut for StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::BlockStatement(node) => node.accept_mut(visitor, reversed),
+            StatementVariant::BraceStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::IfStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::SwitchStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor, reversed),
@@ -2192,6 +2271,12 @@ impl StatementVariant {
             _ => None,
         }
     }
+    pub fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        match self {
+            StatementVariant::BraceStatement(node) => Some(node),
+            _ => None,
+        }
+    }
     pub fn as_if_statement(&self) -> Option<&IfStatement> {
         match self {
             StatementVariant::IfStatement(node) => Some(node),
@@ -2216,6 +2301,7 @@ impl StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node,
             StatementVariant::BlockStatement(node) => node,
+            StatementVariant::BraceStatement(node) => node,
             StatementVariant::IfStatement(node) => &**node,
             StatementVariant::SwitchStatement(node) => node,
             StatementVariant::DecoratedStatement(node) => node,
@@ -2230,6 +2316,12 @@ impl StatementVariant {
     fn as_mut_block_statement(&mut self) -> &mut BlockStatement {
         match self {
             StatementVariant::BlockStatement(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_brace_statement(&mut self) -> &mut BraceStatement {
+        match self {
+            StatementVariant::BraceStatement(node) => node,
             _ => panic!(),
         }
     }
@@ -2377,6 +2469,8 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
         Type::function_header => L!("function_header"),
         Type::begin_header => L!("begin_header"),
         Type::block_statement => L!("block_statement"),
+        Type::brace_header => L!("brace_header"),
+        Type::brace_statement => L!("brace_statement"),
         Type::if_clause => L!("if_clause"),
         Type::elseif_clause => L!("elseif_clause"),
         Type::elseif_clause_list => L!("elseif_clause_list"),
@@ -2947,40 +3041,60 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 Type::block_statement => {
                     cursor = cursor.as_block_statement().unwrap().header.embedded_node();
                 }
+                Type::brace_statement => {
+                    cursor = &cursor.as_brace_statement().unwrap().header;
+                }
                 Type::for_header => {
                     let n = cursor.as_for_header().unwrap();
-                    break Some((n.kw_for.range.unwrap(), L!("for loop")));
+                    break Some((n.kw_for.range.unwrap(), L!("end"), L!("for loop")));
                 }
                 Type::while_header => {
                     let n = cursor.as_while_header().unwrap();
-                    break Some((n.kw_while.range.unwrap(), L!("while loop")));
+                    break Some((n.kw_while.range.unwrap(), L!("end"), L!("while loop")));
                 }
                 Type::function_header => {
                     let n = cursor.as_function_header().unwrap();
-                    break Some((n.kw_function.range.unwrap(), L!("function definition")));
+                    break Some((
+                        n.kw_function.range.unwrap(),
+                        L!("end"),
+                        L!("function definition"),
+                    ));
                 }
                 Type::begin_header => {
                     let n = cursor.as_begin_header().unwrap();
-                    break Some((n.kw_begin.range.unwrap(), L!("begin")));
+                    break Some((n.kw_begin.range.unwrap(), L!("end"), L!("begin")));
+                }
+                Type::brace_header => {
+                    let n = cursor.as_brace_header().unwrap();
+                    break Some((n.kw_lbrace.range.unwrap(), L!("}"), L!("{")));
                 }
                 Type::if_statement => {
                     let n = cursor.as_if_statement().unwrap();
-                    break Some((n.if_clause.kw_if.range.unwrap(), L!("if statement")));
+                    break Some((
+                        n.if_clause.kw_if.range.unwrap(),
+                        L!("end"),
+                        L!("if statement"),
+                    ));
                 }
                 Type::switch_statement => {
                     let n = cursor.as_switch_statement().unwrap();
-                    break Some((n.kw_switch.range.unwrap(), L!("switch statement")));
+                    break Some((
+                        n.kw_switch.range.unwrap(),
+                        L!("end"),
+                        L!("switch statement"),
+                    ));
                 }
                 _ => break None,
             }
         };
 
-        if let Some((header_kw_range, enclosing_stmt)) = header {
+        if let Some((header_kw_range, missing_end, enclosing_stmt)) = header {
             parse_error_range!(
                 self,
                 header_kw_range,
                 ParseErrorCode::generic,
-                "Missing end to balance this %ls",
+                "Missing %s to balance this %s",
+                missing_end,
                 enclosing_stmt
             );
         } else {
@@ -3335,7 +3449,7 @@ impl<'s> Populator<'s> {
         assert!(self.top_type == Type::job_list);
         match tok.typ {
             ParseTokenType::string => {
-                // There are three keywords which end a job list.
+                // There are four keywords which end a job list.
                 match tok.keyword {
                     ParseKeyword::kw_case => {
                         parse_error!(
@@ -3359,6 +3473,14 @@ impl<'s> Populator<'s> {
                             tok,
                             ParseErrorCode::unbalancing_else,
                             "'else' builtin not inside of if block"
+                        );
+                    }
+                    ParseKeyword::kw_rbrace => {
+                        parse_error!(
+                            self,
+                            tok,
+                            ParseErrorCode::unbalancing_end,
+                            "'}' outside of a block"
                         );
                     }
                     _ => {
@@ -3600,6 +3722,8 @@ impl<'s> Populator<'s> {
                 ParseKeyword::kw_begin,
                 ParseKeyword::kw_function,
                 ParseKeyword::kw_if,
+                ParseKeyword::kw_lbrace,
+                ParseKeyword::kw_rbrace,
                 ParseKeyword::kw_switch,
                 ParseKeyword::kw_while,
             ];
@@ -3613,8 +3737,13 @@ impl<'s> Populator<'s> {
 
             // Likewise if the next token doesn't look like an argument at all. This corresponds to
             // e.g. a "naked if".
-            let naked_invocation_invokes_help = ![ParseKeyword::kw_begin, ParseKeyword::kw_end]
-                .contains(&self.peek_token(0).keyword);
+            let naked_invocation_invokes_help = ![
+                ParseKeyword::kw_begin,
+                ParseKeyword::kw_end,
+                ParseKeyword::kw_lbrace,
+                ParseKeyword::kw_rbrace,
+            ]
+            .contains(&self.peek_token(0).keyword);
             if naked_invocation_invokes_help
                 && [ParseTokenType::end, ParseTokenType::terminate]
                     .contains(&self.peek_token(1).typ)
@@ -3635,6 +3764,10 @@ impl<'s> Populator<'s> {
                 let embedded = self.allocate_visit::<BlockStatement>();
                 Box::new(StatementVariant::BlockStatement(*embedded))
             }
+            ParseKeyword::kw_lbrace => {
+                let embedded = self.allocate_visit::<BraceStatement>();
+                Box::new(StatementVariant::BraceStatement(*embedded))
+            }
             ParseKeyword::kw_if => {
                 let embedded = self.allocate_visit::<IfStatement>();
                 Box::new(StatementVariant::IfStatement(embedded))
@@ -3643,7 +3776,7 @@ impl<'s> Populator<'s> {
                 let embedded = self.allocate_visit::<SwitchStatement>();
                 Box::new(StatementVariant::SwitchStatement(*embedded))
             }
-            ParseKeyword::kw_end => {
+            ParseKeyword::kw_end | ParseKeyword::kw_rbrace => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
@@ -3815,8 +3948,11 @@ impl<'s> Populator<'s> {
 
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::kw_end] {
-                return VisitResult::Break(MissingEndError {
+            if matches!(
+                allowed_keywords,
+                [ParseKeyword::kw_end] | [ParseKeyword::kw_rbrace]
+            ) {
+                return VisitResult::Break(MissingEndKeywordError {
                     allowed_keywords,
                     token: *self.peek_token(0),
                 });
@@ -3987,13 +4123,15 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     let mut result = ParseKeyword::none;
     let mut needs_expand = false;
     let mut all_chars_valid = true;
-    for c in token.chars() {
-        if !is_keyword_char(c) {
-            all_chars_valid = false;
-            break;
+    if ![L!("{"), L!("}")].contains(&token) {
+        for c in token.chars() {
+            if !is_keyword_char(c) {
+                all_chars_valid = false;
+                break;
+            }
+            // If we encounter a quote, we need expansion.
+            needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\'
         }
-        // If we encounter a quote, we need expansion.
-        needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\'
     }
 
     if all_chars_valid {
@@ -4040,6 +4178,8 @@ pub enum Type {
     function_header,
     begin_header,
     block_statement,
+    brace_header,
+    brace_statement,
     if_clause,
     elseif_clause,
     elseif_clause_list,

@@ -26,11 +26,14 @@ echo $status
 #CHECK: 127
 
 
-{ echo; echo }
-# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }'
-# CHECKERR: {{.*}}: '{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
-# CHECKERR: { echo; echo }
-# CHECKERR: ^~~~~~~~~~~~~^
+{ echo 1; echo 2; }
+# CHECK: 1
+# CHECK: 2
+
+$fish -c '{ echo 1; echo 2 }'
+# CHECKERR: fish: Missing } to balance this {
+# CHECKERR: { echo 1; echo 2 }
+# CHECKERR: ^
 
 set -g PATH .
 echo banana > foobar

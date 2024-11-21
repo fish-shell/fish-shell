@@ -379,7 +379,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 let mut result = Tok::new(TokenType::end);
                 result.offset = start_pos as u32;
                 result.length = 1;
-                self.token_cursor+=1;
+                self.token_cursor += 1;
                 // Hack: when we get a newline, swallow as many as we can. This compresses multiple
                 // subsequent newlines into a single one.
                 if !self.show_blank_lines {
@@ -388,7 +388,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                         if c != '\n' && c != '\r' && c != ' ' && c != '\t' {
                             break
                         }
-                        self.token_cursor+=1;
+                        self.token_cursor += 1;
                     }
                 }
                 Some(result)
@@ -414,7 +414,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     let mut result = Tok::new(TokenType::background);
                     result.offset = start_pos as u32;
                     result.length = 1;
-                    self.token_cursor+=1;
+                    self.token_cursor += 1;
                     Some(result)
                 }
             }

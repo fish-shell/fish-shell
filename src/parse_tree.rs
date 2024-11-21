@@ -93,6 +93,7 @@ impl From<TokenizerError> for ParseErrorCode {
             }
             TokenizerError::unterminated_slice => ParseErrorCode::tokenizer_unterminated_slice,
             TokenizerError::unterminated_escape => ParseErrorCode::tokenizer_unterminated_escape,
+            // To-do: maybe also unbalancing brace?
             _ => ParseErrorCode::tokenizer_other,
         }
     }

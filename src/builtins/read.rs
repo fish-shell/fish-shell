@@ -20,6 +20,7 @@ use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
+use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
@@ -644,7 +645,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
 
         if opts.tokenize {
-            let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED);
+            let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED | TOK_ARGUMENT_LIST);
             if opts.array {
                 // Array mode: assign each token as a separate element of the sole var.
                 let mut tokens = vec![];

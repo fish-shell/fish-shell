@@ -299,6 +299,22 @@ fn test_parser() {
         detect_errors!("true || \n") == Err(ParserTestErrorBits::INCOMPLETE),
         "unterminated conjunction not reported properly"
     );
+
+    assert!(
+        detect_errors!("begin ; echo hi; }") == Err(ParserTestErrorBits::ERROR),
+        "closing of unopened brace statement not reported properly"
+    );
+
+    assert_eq!(
+        detect_errors!("begin {"), // }
+        Err(ParserTestErrorBits::INCOMPLETE),
+        "brace after begin not reported properly"
+    );
+    assert_eq!(
+        detect_errors!("a=b {"), // }
+        Err(ParserTestErrorBits::INCOMPLETE),
+        "brace after variable override not reported properly"
+    );
 }
 
 #[test]
@@ -603,6 +619,8 @@ fn test_new_parser_errors() {
 
     validate!("case", ParseErrorCode::unbalancing_case);
     validate!("if true ; case ; end", ParseErrorCode::unbalancing_case);
+
+    validate!("begin ; }", ParseErrorCode::unbalancing_brace);
 
     validate!("true | and", ParseErrorCode::andor_in_pipeline);
 

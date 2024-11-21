@@ -25,13 +25,6 @@ command -v nonexistent-command-1234
 echo $status
 #CHECK: 127
 
-
-{ echo; echo }
-# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }'
-# CHECKERR: {{.*}}: '{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
-# CHECKERR: { echo; echo }
-# CHECKERR: ^~~~~~~~~~~~~^
-
 set -g PATH .
 echo banana > foobar
 foobar --banana

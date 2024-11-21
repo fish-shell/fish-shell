@@ -21,7 +21,7 @@ use crate::parse_tree::ParseToken;
 use crate::tests::prelude::*;
 use crate::tokenizer::{
     variable_assignment_equals_pos, TokFlags, TokenType, Tokenizer, TokenizerError,
-    TOK_ACCEPT_UNFINISHED, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
+    TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
 use std::borrow::Cow;
@@ -203,6 +203,9 @@ pub trait ConcreteNode {
     fn as_block_statement(&self) -> Option<&BlockStatement> {
         None
     }
+    fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        None
+    }
     fn as_if_clause(&self) -> Option<&IfClause> {
         None
     }
@@ -319,6 +322,9 @@ trait ConcreteNodeMut {
         None
     }
     fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
+        None
+    }
+    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
         None
     }
     fn as_mut_if_clause(&mut self) -> Option<&mut IfClause> {
@@ -1028,6 +1034,9 @@ macro_rules! set_parent_of_union_field {
         } else if matches!($self.$field_name, StatementVariant::BlockStatement(_)) {
             $self.$field_name.as_mut_block_statement().parent = Some($self);
             $self.$field_name.as_mut_block_statement().set_parents();
+        } else if matches!($self.$field_name, StatementVariant::BraceStatement(_)) {
+            $self.$field_name.as_mut_brace_statement().parent = Some($self);
+            $self.$field_name.as_mut_brace_statement().set_parents();
         } else if matches!($self.$field_name, StatementVariant::IfStatement(_)) {
             $self.$field_name.as_mut_if_statement().parent = Some($self);
             $self.$field_name.as_mut_if_statement().set_parents();
@@ -1247,11 +1256,12 @@ impl CheckParse for JobConjunction {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let token = pop.peek_token(0);
         // These keywords end a job list.
-        token.typ == ParseTokenType::string
-            && !matches!(
-                token.keyword,
-                ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
-            )
+        token.typ == ParseTokenType::left_brace
+            || (token.typ == ParseTokenType::string
+                && !matches!(
+                    token.keyword,
+                    ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
+                ))
     }
 }
 
@@ -1395,6 +1405,37 @@ impl ConcreteNode for BlockStatement {
 }
 impl ConcreteNodeMut for BlockStatement {
     fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
+        Some(self)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct BraceStatement {
+    parent: Option<*const dyn Node>,
+    /// The opening brace, in command position.
+    pub left_brace: TokenLeftBrace,
+    /// List of jobs in this block.
+    pub jobs: JobList,
+    /// The closing brace.
+    pub right_brace: TokenRightBrace,
+    /// Arguments and redirections associated with the block.
+    pub args_or_redirs: ArgumentOrRedirectionList,
+}
+implement_node!(BraceStatement, branch, brace_statement);
+implement_acceptor_for_branch!(
+    BraceStatement,
+    (left_brace: (TokenLeftBrace)),
+    (jobs: (JobList)),
+    (right_brace: (TokenRightBrace)),
+    (args_or_redirs: (ArgumentOrRedirectionList)),
+);
+impl ConcreteNode for BraceStatement {
+    fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        Some(self)
+    }
+}
+impl ConcreteNodeMut for BraceStatement {
+    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
         Some(self)
     }
 }
@@ -1772,7 +1813,10 @@ impl CheckParse for AndorJob {
         // Check that the argument to and/or is a string that's not help. Otherwise
         // it's either 'and --help' or a naked 'and', and not part of this list.
         let next_token = pop.peek_token(1);
-        next_token.typ == ParseTokenType::string && !next_token.is_help_argument
+        matches!(
+            next_token.typ,
+            ParseTokenType::string | ParseTokenType::left_brace
+        ) && !next_token.is_help_argument
     }
 }
 
@@ -1894,7 +1938,7 @@ impl CheckParse for VariableAssignment {
         // What is the token after it?
         match pop.peek_type(1) {
             // We have `a= cmd` and should treat it as a variable assignment.
-            ParseTokenType::string => true,
+            ParseTokenType::string | ParseTokenType::left_brace => true,
             // We have `a=` which is OK if we are allowing incomplete, an error otherwise.
             ParseTokenType::terminate => pop.allow_incomplete(),
             // We have e.g. `a= >` which is an error.
@@ -1966,6 +2010,8 @@ define_token_node!(String_, string);
 define_token_node!(TokenBackground, background);
 define_token_node!(TokenConjunction, andand, oror);
 define_token_node!(TokenPipe, pipe);
+define_token_node!(TokenLeftBrace, left_brace);
+define_token_node!(TokenRightBrace, right_brace);
 define_token_node!(TokenRedirection, redirection);
 
 define_keyword_node!(DecoratedStatementDecorator, kw_command, kw_builtin, kw_exec);
@@ -2236,6 +2282,7 @@ pub enum StatementVariant {
     None,
     NotStatement(Box<NotStatement>),
     BlockStatement(Box<BlockStatement>),
+    BraceStatement(Box<BraceStatement>),
     IfStatement(Box<IfStatement>),
     SwitchStatement(Box<SwitchStatement>),
     DecoratedStatement(DecoratedStatement),
@@ -2253,6 +2300,7 @@ impl Acceptor for StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept(visitor, reversed),
             StatementVariant::BlockStatement(node) => node.accept(visitor, reversed),
+            StatementVariant::BraceStatement(node) => node.accept(visitor, reversed),
             StatementVariant::IfStatement(node) => node.accept(visitor, reversed),
             StatementVariant::SwitchStatement(node) => node.accept(visitor, reversed),
             StatementVariant::DecoratedStatement(node) => node.accept(visitor, reversed),
@@ -2265,6 +2313,7 @@ impl AcceptorMut for StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::BlockStatement(node) => node.accept_mut(visitor, reversed),
+            StatementVariant::BraceStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::IfStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::SwitchStatement(node) => node.accept_mut(visitor, reversed),
             StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor, reversed),
@@ -2292,6 +2341,12 @@ impl StatementVariant {
             _ => None,
         }
     }
+    pub fn as_brace_statement(&self) -> Option<&BraceStatement> {
+        match self {
+            StatementVariant::BraceStatement(node) => Some(node),
+            _ => None,
+        }
+    }
     pub fn as_if_statement(&self) -> Option<&IfStatement> {
         match self {
             StatementVariant::IfStatement(node) => Some(node),
@@ -2316,6 +2371,7 @@ impl StatementVariant {
             StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => &**node,
             StatementVariant::BlockStatement(node) => &**node,
+            StatementVariant::BraceStatement(node) => &**node,
             StatementVariant::IfStatement(node) => &**node,
             StatementVariant::SwitchStatement(node) => &**node,
             StatementVariant::DecoratedStatement(node) => node,
@@ -2330,6 +2386,12 @@ impl StatementVariant {
     fn as_mut_block_statement(&mut self) -> &mut BlockStatement {
         match self {
             StatementVariant::BlockStatement(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_brace_statement(&mut self) -> &mut BraceStatement {
+        match self {
+            StatementVariant::BraceStatement(node) => node,
             _ => panic!(),
         }
     }
@@ -2371,6 +2433,7 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
         Type::function_header => L!("function_header"),
         Type::begin_header => L!("begin_header"),
         Type::block_statement => L!("block_statement"),
+        Type::brace_statement => L!("brace_statement"),
         Type::if_clause => L!("if_clause"),
         Type::elseif_clause => L!("elseif_clause"),
         Type::elseif_clause_list => L!("elseif_clause_list"),
@@ -2629,13 +2692,17 @@ impl<'a> TokenStream<'a> {
     // The maximum number of lookahead supported.
     const MAX_LOOKAHEAD: usize = 2;
 
-    fn new(src: &'a wstr, flags: ParseTreeFlags) -> Self {
+    fn new(src: &'a wstr, flags: ParseTreeFlags, freestanding_arguments: bool) -> Self {
+        let mut flags = TokFlags::from(flags);
+        if freestanding_arguments {
+            flags |= TOK_ARGUMENT_LIST;
+        }
         Self {
             lookahead: [ParseToken::new(ParseTokenType::invalid); Self::MAX_LOOKAHEAD],
             start: 0,
             count: 0,
             src,
-            tok: Tokenizer::new(src, TokFlags::from(flags)),
+            tok: Tokenizer::new(src, flags),
             comment_ranges: vec![],
         }
     }
@@ -2931,6 +2998,20 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             return;
         };
 
+        let token = &error.token;
+        // To-do: maybe extend this to other tokenizer errors?
+        if token.typ == ParseTokenType::tokenizer_error
+            && token.tok_error == TokenizerError::closing_unopened_brace
+        {
+            parse_error_range!(
+                self,
+                token.range(),
+                ParseErrorCode::unbalancing_brace,
+                "%s",
+                <TokenizerError as Into<&wstr>>::into(token.tok_error)
+            );
+        }
+
         // We believe the node is some sort of block statement. Attempt to find a source range
         // for the block's keyword (for, if, etc) and a user-presentable description. This
         // is used to provide better error messages. Note at this point the parse tree is
@@ -2989,7 +3070,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         } else {
             parse_error!(
                 self,
-                error.token,
+                token,
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
                 keywords_user_presentable_description(error.allowed_keywords),
@@ -3095,7 +3176,7 @@ impl<'s> Populator<'s> {
             flags,
             semis: vec![],
             errors: vec![],
-            tokens: TokenStream::new(src, flags),
+            tokens: TokenStream::new(src, flags, top_type == Type::freestanding_argument_list),
             top_type,
             unwinding: false,
             any_error: false,
@@ -3550,6 +3631,19 @@ impl<'s> Populator<'s> {
 
         fn new_decorated_statement(slf: &mut Populator<'_>) -> StatementVariant {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
+            if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
+                parse_error!(
+                    slf,
+                    slf.peek_token(0),
+                    ParseErrorCode::generic,
+                    "Expected %s, but found %ls",
+                    token_type_user_presentable_description(
+                        ParseTokenType::end,
+                        ParseKeyword::none
+                    ),
+                    slf.peek_token(0).user_presentable_description()
+                );
+            }
             StatementVariant::DecoratedStatement(*embedded)
         }
 
@@ -3557,6 +3651,9 @@ impl<'s> Populator<'s> {
             // This may happen if we just have a 'time' prefix.
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
+        } else if self.peek_token(0).typ == ParseTokenType::left_brace {
+            let embedded = self.allocate_visit::<BraceStatement>();
+            return StatementVariant::BraceStatement(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -3957,6 +4054,8 @@ impl From<TokenType> for ParseTokenType {
             TokenType::oror => ParseTokenType::oror,
             TokenType::end => ParseTokenType::end,
             TokenType::background => ParseTokenType::background,
+            TokenType::left_brace => ParseTokenType::left_brace,
+            TokenType::right_brace => ParseTokenType::right_brace,
             TokenType::redirect => ParseTokenType::redirection,
             TokenType::error => ParseTokenType::tokenizer_error,
             TokenType::comment => ParseTokenType::comment,
@@ -4042,6 +4141,7 @@ pub enum Type {
     function_header,
     begin_header,
     block_statement,
+    brace_statement,
     if_clause,
     elseif_clause,
     elseif_clause_list,

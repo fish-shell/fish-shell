@@ -415,6 +415,8 @@ fn job_or_process_extent(
             | TokenType::background
             | TokenType::andand
             | TokenType::oror
+            | TokenType::left_brace
+            | TokenType::right_brace
                 if (token.type_ != TokenType::pipe || process) =>
             {
                 if tok_begin >= pos {
@@ -1049,9 +1051,9 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 dec = if switchs.end.has_source() { 1 } else { 0 };
             }
             Type::token_base => {
-                if node.parent().unwrap().typ() == Type::begin_header
-                    && node.as_token().unwrap().token_type() == ParseTokenType::end
-                {
+                let token_type = node.as_token().unwrap().token_type();
+                let parent_type = node.parent().unwrap().typ();
+                if parent_type == Type::begin_header && token_type == ParseTokenType::end {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
                     if node.source(self.src) == "\n" {
@@ -1059,6 +1061,11 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                         dec = 1;
                     }
                 }
+                // if token_type == ParseTokenType::right_brace && parent_type == Type::brace_statement
+                // {
+                //     inc = 1;
+                //     dec = 1;
+                // }
             }
             _ => (),
         }
@@ -1229,6 +1236,15 @@ pub fn parse_util_detect_errors_in_ast(
             }
             errored |=
                 detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
+        } else if let Some(brace_statement) = node.as_brace_statement() {
+            // If our closing brace had no source, we are unsourced.
+            if !brace_statement.right_brace.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |= detect_errors_in_block_redirection_list(
+                &brace_statement.args_or_redirs,
+                &mut out_errors,
+            );
         } else if let Some(ifs) = node.as_if_statement() {
             // If our 'end' had no source, we are unsourced.
             if !ifs.end.has_source() {
@@ -1780,15 +1796,28 @@ fn detect_errors_in_block_redirection_list(
     args_or_redirs: &ast::ArgumentOrRedirectionList,
     out_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
-    if let Some(first_arg) = get_first_arg(args_or_redirs) {
+    let Some(first_arg) = get_first_arg(args_or_redirs) else {
+        return false;
+    };
+    if args_or_redirs
+        .parent()
+        .unwrap()
+        .as_brace_statement()
+        .is_some()
+    {
         return append_syntax_error!(
             out_errors,
             first_arg.source_range().start(),
             first_arg.source_range().length(),
-            END_ARG_ERR_MSG
+            RIGHT_BRACE_ARG_ERR_MSG
         );
     }
-    false
+    append_syntax_error!(
+        out_errors,
+        first_arg.source_range().start(),
+        first_arg.source_range().length(),
+        END_ARG_ERR_MSG
+    )
 }
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
@@ -1898,6 +1927,7 @@ const BACKGROUND_IN_CONDITIONAL_ERROR_MSG: &str =
 
 /// Error message for arguments to 'end'
 const END_ARG_ERR_MSG: &str = "'end' does not take arguments. Did you forget a ';'?";
+const RIGHT_BRACE_ARG_ERR_MSG: &str = "'}' does not take arguments. Did you forget a ';'?";
 
 /// Error message when 'time' is in a pipeline.
 const TIME_IN_PIPELINE_ERR_MSG: &str =

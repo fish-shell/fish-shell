@@ -1,14 +1,16 @@
 //! A specialized tokenizer for tokenizing the fish language. In the future, the tokenizer should be
 //! extended to support marks, tokenizing multiple strings and disposing of unused string segments.
 
+use crate::ast::unescape_keyword;
 use crate::common::valid_var_name_char;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::parse_constants::SOURCE_OFFSET_INVALID;
+use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::redirection::RedirectionMode;
 use crate::wchar::prelude::*;
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Range};
 use std::os::fd::RawFd;
 
 /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
@@ -26,6 +28,10 @@ pub enum TokenType {
     oror,
     /// End token (semicolon or newline, not literal end)
     end,
+    /// opening brace of a compound statement
+    left_brace,
+    /// closing brace of a compound statement
+    right_brace,
     /// redirection token
     redirect,
     /// send job to bg token
@@ -146,6 +152,10 @@ pub const TOK_SHOW_BLANK_LINES: TokFlags = TokFlags(4);
 /// Make an effort to continue after an error.
 pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
 
+/// Consumers want to treat all tokens as arguments, so disable special handling at
+/// command-position.
+pub const TOK_ARGUMENT_LIST: TokFlags = TokFlags(16);
+
 impl From<TokenizerError> for &'static wstr {
     fn from(err: TokenizerError) -> Self {
         match err {
@@ -178,7 +188,7 @@ impl From<TokenizerError> for &'static wstr {
                 wgettext!("Unexpected '[' at this location")
             }
             TokenizerError::closing_unopened_brace => {
-                wgettext!("Unexpected '}' for unopened brace expansion")
+                wgettext!("Unexpected '}' for unopened brace")
             }
             TokenizerError::unterminated_brace => {
                 wgettext!("Unexpected end of string, incomplete parameter expansion")
@@ -234,6 +244,9 @@ impl Tok {
     pub fn end(&self) -> usize {
         self.offset() + self.length()
     }
+    pub fn range(&self) -> Range<usize> {
+        self.offset()..self.end()
+    }
     pub fn set_error_offset_within_token(&mut self, value: usize) {
         self.error_offset_within_token = value.try_into().unwrap();
     }
@@ -248,6 +261,11 @@ impl Tok {
     }
 }
 
+struct BraceStatementParser {
+    at_command_position: bool,
+    unclosed_brace_statements: usize,
+}
+
 /// The tokenizer struct.
 pub struct Tokenizer<'c> {
     /// A pointer into the original string, showing where the next token begins.
@@ -256,6 +274,8 @@ pub struct Tokenizer<'c> {
     start: &'c wstr,
     /// Whether we have additional tokens.
     has_next: bool,
+    /// Parser state regarding brace statements. None if reading an argument list.
+    brace_statement_parser: Option<BraceStatementParser>,
     /// Whether incomplete tokens are accepted.
     accept_unfinished: bool,
     /// Whether comments should be returned.
@@ -268,6 +288,10 @@ pub struct Tokenizer<'c> {
     continue_line_after_comment: bool,
     /// Called on every quote change.
     on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
+}
+
+pub(crate) fn is_brace_statement(next_char: Option<char>) -> bool {
+    next_char.map_or(true, |next| next.is_ascii_whitespace() || next == ';')
 }
 
 impl<'c> Tokenizer<'c> {
@@ -297,6 +321,12 @@ impl<'c> Tokenizer<'c> {
             token_cursor: 0,
             start,
             has_next: true,
+            brace_statement_parser: (!(flags & TOK_ARGUMENT_LIST)).then_some(
+                BraceStatementParser {
+                    at_command_position: true,
+                    unclosed_brace_statements: 0,
+                },
+            ),
             accept_unfinished: flags & TOK_ACCEPT_UNFINISHED,
             show_comments: flags & TOK_SHOW_COMMENTS,
             show_blank_lines: flags & TOK_SHOW_BLANK_LINES,
@@ -368,7 +398,8 @@ impl<'c> Iterator for Tokenizer<'c> {
             .get(self.token_cursor + 1)
             .copied();
         let buff = &self.start[self.token_cursor..];
-        match this_char {
+        let mut at_cmd_pos = false;
+        let token = match this_char {
             '\0'=> {
                 self.has_next = false;
                 None
@@ -380,6 +411,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 result.offset = start_pos as u32;
                 result.length = 1;
                 self.token_cursor += 1;
+                at_cmd_pos = true;
                 // Hack: when we get a newline, swallow as many as we can. This compresses multiple
                 // subsequent newlines into a single one.
                 if !self.show_blank_lines {
@@ -393,6 +425,38 @@ impl<'c> Iterator for Tokenizer<'c> {
                 }
                 Some(result)
             }
+            '{' if self.brace_statement_parser.as_ref()
+    				.is_some_and(|parser| parser.at_command_position)
+				&& is_brace_statement(self.start.as_char_slice().get(self.token_cursor + 1).copied())
+				=>
+			{
+                self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
+                let mut result = Tok::new(TokenType::left_brace);
+                result.offset = start_pos as u32;
+                result.length = 1;
+                self.token_cursor += 1;
+                at_cmd_pos = true;
+                Some(result)
+            }
+            '}' => {
+                let brace_count = self.brace_statement_parser.as_mut()
+                    .map(|parser| &mut parser.unclosed_brace_statements);
+                if brace_count.as_ref().map_or(true, |count| **count == 0) {
+                    return Some(self.call_error(
+                        TokenizerError::closing_unopened_brace,
+                        self.token_cursor,
+                        self.token_cursor,
+                        Some(1),
+                        1,
+                    ));
+                }
+                brace_count.map(|count| *count -= 1);
+                let mut result = Tok::new(TokenType::right_brace);
+                result.offset = start_pos as u32;
+                result.length = 1;
+                self.token_cursor += 1;
+                Some(result)
+            }
             '&'=> {
                 if next_char == Some('&') {
                     // && is and.
@@ -400,6 +464,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     result.offset = start_pos as u32;
                     result.length = 2;
                     self.token_cursor += 2;
+                    at_cmd_pos = true;
                     Some(result)
                 } else if next_char == Some('>') || next_char == Some('|') {
                     // &> and &| redirect both stdout and stderr.
@@ -409,12 +474,14 @@ impl<'c> Iterator for Tokenizer<'c> {
                     result.offset = start_pos as u32;
                     result.length = redir.consumed as u32;
                     self.token_cursor += redir.consumed;
+                    at_cmd_pos = next_char == Some('|');
                     Some(result)
                 } else {
                     let mut result = Tok::new(TokenType::background);
                     result.offset = start_pos as u32;
                     result.length = 1;
                     self.token_cursor += 1;
+                    at_cmd_pos = true;
                     Some(result)
                 }
             }
@@ -425,6 +492,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     result.offset = start_pos as u32;
                     result.length = 2;
                     self.token_cursor += 2;
+                    at_cmd_pos = true;
                     Some(result)
                 } else if next_char == Some('&') {
                     // |& is a bashism; in fish it's &|.
@@ -437,6 +505,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                     result.offset = start_pos as u32;
                     result.length = pipe.consumed as u32;
                     self.token_cursor += pipe.consumed;
+                    at_cmd_pos = true;
                     Some(result)
                 }
             }
@@ -489,16 +558,31 @@ impl<'c> Iterator for Tokenizer<'c> {
                                 result.offset = start_pos as u32;
                                 result.length = redir_or_pipe.consumed as u32;
                                 self.token_cursor += redir_or_pipe.consumed;
+                                at_cmd_pos = redir_or_pipe.is_pipe;
                                 Some(result)
                             }
                         }
                         None => {
                             // Not a redirection or pipe, so just a string.
-                            Some(self.read_string())
+                            let s = self.read_string();
+                            at_cmd_pos = self.brace_statement_parser.as_ref()
+                                .is_some_and(|parser| parser.at_command_position) && {
+                                let text = self.text_of(&s);
+                                parser_keywords_is_subcommand(&unescape_keyword(
+                                    TokenType::string,
+                                    text)
+                                ) ||
+                                variable_assignment_equals_pos(text).is_some()
+                            };
+                            Some(s)
                     }
                 }
             }
+        };
+        if let Some(parser) = self.brace_statement_parser.as_mut() {
+            parser.at_command_position = at_cmd_pos;
         }
+        token
     }
 }
 
@@ -675,13 +759,8 @@ impl<'c> Tokenizer<'c> {
                     );
                 }
                 if brace_offsets.pop().is_none() {
-                    return self.call_error(
-                        TokenizerError::closing_unopened_brace,
-                        self.token_cursor,
-                        self.token_cursor,
-                        Some(1),
-                        1,
-                    );
+                    // Let the caller throw an error.
+                    break;
                 }
                 if brace_offsets.is_empty() {
                     mode &= !TOK_MODE_CURLY_BRACES;

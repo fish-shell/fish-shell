@@ -76,6 +76,9 @@ struct PrettyPrinterState<'source, 'ast> {
     // present in the ast.
     gaps: Vec<SourceRange>,
 
+    // Sorted set of source offsets of brace statements that span multiple lines.
+    multi_line_brace_statement_locations: Vec<usize>,
+
     // The sorted set of source offsets of nl_semi_t which should be set as semis, not newlines.
     // This is computed ahead of time for convenience.
     preferred_semi_locations: Vec<usize>,
@@ -120,11 +123,14 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 // Start with true to ignore leading empty lines.
                 gap_text_mask_newline: true,
                 gaps: vec![],
+                multi_line_brace_statement_locations: vec![],
                 preferred_semi_locations: vec![],
                 errors: None,
             },
         };
         zelf.state.gaps = zelf.compute_gaps();
+        zelf.state.multi_line_brace_statement_locations =
+            zelf.compute_multi_line_brace_statement_locations();
         zelf.state.preferred_semi_locations = zelf.compute_preferred_semi_locations();
         zelf
     }
@@ -224,6 +230,23 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             }
         }
 
+        // `{ x; y; }` gets semis if the input uses semis and it spans only one line.
+        for node in Traversal::new(self.ast.top()) {
+            let Some(brace_statement) = node.as_brace_statement() else {
+                continue;
+            };
+            if self
+                .state
+                .multi_line_brace_statement_locations
+                .binary_search(&brace_statement.source_range().start())
+                .is_err()
+            {
+                for job in &brace_statement.jobs {
+                    job.semi_nl.as_ref().map(&mut mark_semi_from_input);
+                }
+            }
+        }
+
         // `x ; and y` gets semis if it has them already, and they are on the same line.
         for node in Traversal::new(self.ast.top()) {
             let Some(job_list) = node.as_job_list() else {
@@ -259,7 +282,39 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
                 }
             }
         }
+
         result.sort_unstable();
+        result
+    }
+
+    fn compute_multi_line_brace_statement_locations(&self) -> Vec<usize> {
+        let mut result = vec![];
+        let newline_offsets: Vec<usize> = self
+            .state
+            .source
+            .char_indices()
+            .filter_map(|(i, c)| (c == '\n').then_some(i))
+            .collect();
+        let mut next_newline = 0;
+        for node in Traversal::new(self.ast.top()) {
+            let Some(brace_statement) = node.as_brace_statement() else {
+                continue;
+            };
+            while next_newline != newline_offsets.len()
+                && newline_offsets[next_newline] < brace_statement.source_range().start()
+            {
+                next_newline += 1;
+            }
+            let contains_newline = next_newline != newline_offsets.len() && {
+                let newline_offset = newline_offsets[next_newline];
+                assert!(newline_offset >= brace_statement.source_range().start());
+                newline_offset < brace_statement.source_range().end()
+            };
+            if contains_newline {
+                result.push(brace_statement.source_range().start());
+            }
+        }
+        assert!(result.is_sorted_by(|l, r| Some(l.cmp(r))));
         result
     }
 }
@@ -617,6 +672,42 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
     }
 
+    fn is_multi_line_brace(&self, node: &dyn ast::Token) -> bool {
+        node.parent()
+            .unwrap()
+            .as_brace_statement()
+            .is_some_and(|brace_statement| {
+                self.multi_line_brace_statement_locations
+                    .binary_search(&brace_statement.source_range().start())
+                    .is_ok()
+            })
+    }
+    fn visit_left_brace(&mut self, node: &dyn ast::Token) {
+        let range = node.source_range();
+        let flags = self.gap_text_flags_before_node(node.as_node());
+        if self.is_multi_line_brace(node) && !self.at_line_start() {
+            self.emit_newline();
+        }
+        self.current_indent = self.indent(range.start());
+        self.emit_space_or_indent(flags);
+        self.output.push('{');
+    }
+    fn visit_right_brace(&mut self, node: &dyn ast::Token) {
+        let range = node.source_range();
+        let flags = self.gap_text_flags_before_node(node.as_node());
+        self.emit_gap_text_before(range, flags);
+        if self.is_multi_line_brace(node) {
+            self.current_indent = self.indent(range.start());
+            if !self.at_line_start() {
+                self.emit_newline();
+            }
+            self.emit_space_or_indent(flags);
+            self.output.push('}');
+        } else {
+            self.emit_node_text(node.as_node());
+        }
+    }
+
     fn visit_redirection(&mut self, node: &ast::Redirection) {
         // No space between a redirection operator and its target (#2899).
         let Some(orange) = node.oper.range() else {
@@ -684,11 +775,12 @@ impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
             return;
         }
         if let Some(token) = node.as_token() {
-            if token.token_type() == ParseTokenType::end {
-                self.visit_semi_nl(token);
-                return;
+            match token.token_type() {
+                ParseTokenType::end => self.visit_semi_nl(token),
+                ParseTokenType::left_brace => self.visit_left_brace(token),
+                ParseTokenType::right_brace => self.visit_right_brace(token),
+                _ => self.emit_node_text(node),
             }
-            self.emit_node_text(node);
             return;
         }
         match node.typ() {

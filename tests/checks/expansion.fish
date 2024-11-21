@@ -321,7 +321,7 @@ $fish -c 'echo {'
 #CHECKERR: echo {
 #CHECKERR: ^
 $fish -c 'echo {}}'
-#CHECKERR: fish: Unexpected '}' for unopened brace expansion
+#CHECKERR: fish: Unexpected '}' for unopened brace
 #CHECKERR: echo {}}
 #CHECKERR: ^
 printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)

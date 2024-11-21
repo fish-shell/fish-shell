@@ -28,9 +28,9 @@ use crate::job_group::JobGroup;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, StatementDecoration, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG,
-    ERROR_NO_BRACE_GROUPING, ERROR_TIME_BACKGROUND, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG,
-    ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG, WILDCARD_ERR_MSG,
+    ParseTokenType, StatementDecoration, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
+    FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG,
+    WILDCARD_ERR_MSG,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
@@ -161,6 +161,9 @@ impl<'a> ExecutionContext {
         match &statement.contents {
             StatementVariant::BlockStatement(block) => {
                 self.run_block_statement(ctx, block, associated_block)
+            }
+            StatementVariant::BraceStatement(brace_statement) => {
+                self.run_begin_statement(ctx, &brace_statement.jobs)
             }
             StatementVariant::IfStatement(ifstat) => {
                 self.run_if_statement(ctx, ifstat, associated_block)
@@ -361,10 +364,6 @@ impl<'a> ExecutionContext {
                 error.push(' ');
                 error.push_utfstr(&escape(&event_args[0]));
             }
-        }
-
-        if cmd.as_char_slice().first() == Some(&'{' /*}*/) {
-            error.push_utfstr(&wgettext!(ERROR_NO_BRACE_GROUPING));
         }
 
         // Here we want to report an error (so it shows a backtrace).
@@ -569,6 +568,7 @@ impl<'a> ExecutionContext {
         // type safety (in case we add more specific statement types).
         match &job.statement.contents {
             StatementVariant::BlockStatement(stmt) => no_redirs(&stmt.args_or_redirs),
+            StatementVariant::BraceStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::SwitchStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::IfStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::NotStatement(_) | StatementVariant::DecoratedStatement(_) => {
@@ -688,6 +688,7 @@ impl<'a> ExecutionContext {
                 self.populate_not_process(ctx, job, proc, not_statement)
             }
             StatementVariant::BlockStatement(_)
+            | StatementVariant::BraceStatement(_)
             | StatementVariant::IfStatement(_)
             | StatementVariant::SwitchStatement(_) => {
                 self.populate_block_process(ctx, proc, statement, specific_statement)
@@ -852,6 +853,7 @@ impl<'a> ExecutionContext {
         // TODO: args_or_redirs should be available without resolving the statement type.
         let args_or_redirs = match specific_statement {
             StatementVariant::BlockStatement(block_statement) => &block_statement.args_or_redirs,
+            StatementVariant::BraceStatement(brace_statement) => &brace_statement.args_or_redirs,
             StatementVariant::IfStatement(if_statement) => &if_statement.args_or_redirs,
             StatementVariant::SwitchStatement(switch_statement) => &switch_statement.args_or_redirs,
             _ => panic!("Unexpected block node type"),
@@ -1593,6 +1595,9 @@ impl<'a> ExecutionContext {
                     StatementVariant::BlockStatement(block_statement) => {
                         self.run_block_statement(ctx, block_statement, associated_block)
                     }
+                    StatementVariant::BraceStatement(brace_statement) => {
+                        self.run_begin_statement(ctx, &brace_statement.jobs)
+                    }
                     StatementVariant::IfStatement(ifstmt) => {
                         self.run_if_statement(ctx, ifstmt, associated_block)
                     }
@@ -1923,6 +1928,7 @@ type AstArgsList<'a> = Vec<&'a ast::Argument>;
 fn type_is_redirectable_block(typ: ast::Type) -> bool {
     [
         ast::Type::block_statement,
+        ast::Type::brace_statement,
         ast::Type::if_statement,
         ast::Type::switch_statement,
     ]
@@ -1960,6 +1966,9 @@ fn profiling_cmd_name_for_redirectable_block(
                 }
                 BlockStatementHeaderVariant::None => panic!("Unexpected block header type"),
             }
+        }
+        StatementVariant::BraceStatement(brace_statement) => {
+            brace_statement.left_brace.source_range().start()
         }
         StatementVariant::IfStatement(ifstmt) => {
             ifstmt.if_clause.condition.job.source_range().end()

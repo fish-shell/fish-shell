@@ -51,3 +51,158 @@ end
 
 echo {a(echo ,)b}
 #CHECK: {a,b}
+
+e{cho,cho,cho}
+# CHECK: echo echo
+
+## Compound commands
+
+{ echo compound; echo command; }
+# CHECK: compound
+# CHECK: command
+
+{;echo -n start with\ ; echo semi; }
+# CHECK: start with semi
+
+{ echo no semi }
+# CHECK: no semi
+
+# Ambiguous cases
+
+{ echo ,comma;}
+# CHECK: ,comma
+
+PATH= {echo no space}
+# CHECKERR: fish: Unknown command: '{echo no space}'
+# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
+# CHECKERR: PATH= {echo no space}
+# CHECKERR:       ^~~~~~~~~~~~~~^
+
+PATH= {echo comma, no space;}
+# CHECKERR: fish: Unknown command: 'echo comma'
+# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
+# CHECKERR: PATH= {echo comma, no space;}
+# CHECKERR:       ^~~~~~~~~~~~~~~~~~~~~~^
+
+# Ambiguous case with no space
+{echo,hello}
+# CHECK: hello
+
+# Trailing tokens
+set -l fish (status fish-path)
+$fish -c '{ :; } true'
+# CHECKERR: fish: '}' does not take arguments. Did you forget a ';'?
+# CHECKERR: { :; } true
+# CHECKERR:        ^~~^
+
+; { echo semi; }
+# CHECK: semi
+
+a=b { echo $a; }
+# CHECK: b
+
+time { :; }
+# CHECKERR:
+# CHECKERR: {{_+}}
+# CHECKERR: Executed in {{.*}}
+# CHECKERR:  usr time {{.*}}
+# CHECKERR:  sys time {{.*}}
+
+true & { echo background; }
+# CHECK: background
+
+true && { echo conjunction; }
+# CHECK: conjunction
+
+true; and { echo and; }
+# CHECK: and
+
+true | { echo pipe; }
+# CHECK: pipe
+
+true 2>| { echo stderrpipe; }
+# CHECK: stderrpipe
+
+false || { echo disjunction; }
+# CHECK: disjunction
+
+false; or { echo or; }
+# CHECK: or
+
+begin { echo begin }
+end
+# CHECK: begin
+
+not { false; true }
+echo $status
+# CHECK: 1
+
+! { false }
+echo $status
+# CHECK: 0
+
+if { set -l a true; $a && true }
+    echo if-true
+end
+# CHECK: if-true
+
+{
+    set -l condition true
+    while $condition
+        {
+            echo while
+            set condition false
+        }
+    end
+}
+# CHECK: while
+
+{ { echo inner}
+    echo outer}
+# CHECK: inner
+# CHECK: outer
+
+{
+
+    echo leading blank lines
+}
+# CHECK: leading blank lines
+
+complete foo -a '123 456'
+complete -C 'foo {' | sed 1q
+# CHECK: {{\{.*}}
+
+complete -C '{'
+echo nothing
+# CHECK: nothing
+complete -C '{ ' | grep ^if\t
+# CHECK: if{{\t}}Evaluate block if condition is true
+
+$fish -c '{'
+# CHECKERR: fish: Expected a '}', but found end of the input
+
+PATH= "{"
+# CHECKERR: fish: Unknown command: '{'
+# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
+# CHECKERR: PATH= "{"
+# CHECKERR:       ^~^
+
+$fish -c 'builtin {'
+# CHECKERR: fish: Expected end of the statement, but found a '{'
+# CHECKERR: builtin {
+# CHECKERR:      ^
+
+$fish -c 'command {'
+# CHECKERR: fish: Expected end of the statement, but found a '{'
+# CHECKERR: command {
+# CHECKERR:         ^
+
+$fish -c 'exec {'
+# CHECKERR: fish: Expected end of the statement, but found a '{'
+# CHECKERR: exec {
+# CHECKERR:      ^
+
+$fish -c 'begin; }'
+# CHECKERR: fish: Unexpected '}' for unopened brace
+# CHECKERR: begin; }
+# CHECKERR:        ^

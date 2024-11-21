@@ -66,6 +66,8 @@ pub enum ParseTokenType {
     // Terminal types.
     string,
     pipe,
+    left_brace,
+    right_brace,
     redirection,
     background,
     andand,
@@ -135,6 +137,7 @@ pub enum ParseErrorCode {
     unbalancing_end,          // end outside of block
     unbalancing_else,         // else outside of if
     unbalancing_case,         // case outside of switch
+    unbalancing_brace,        // } outside of {
     bare_variable_assignment, // a=b without command
     andor_in_pipeline,        // "and" or "or" after a pipe
 }
@@ -207,6 +210,8 @@ impl ParseTokenType {
             ParseTokenType::background => L!("ParseTokenType::background"),
             ParseTokenType::end => L!("ParseTokenType::end"),
             ParseTokenType::pipe => L!("ParseTokenType::pipe"),
+            ParseTokenType::left_brace => L!("ParseTokenType::lbrace"),
+            ParseTokenType::right_brace => L!("ParseTokenType::rbrace"),
             ParseTokenType::redirection => L!("ParseTokenType::redirection"),
             ParseTokenType::string => L!("ParseTokenType::string"),
             ParseTokenType::andand => L!("ParseTokenType::andand"),
@@ -426,6 +431,8 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::pipe => L!("a pipe").to_owned(),
         ParseTokenType::redirection => L!("a redirection").to_owned(),
         ParseTokenType::background => L!("a '&'").to_owned(),
+        ParseTokenType::left_brace => L!("a '{'").to_owned(),
+        ParseTokenType::right_brace => L!("a '}'").to_owned(),
         ParseTokenType::andand => L!("'&&'").to_owned(),
         ParseTokenType::oror => L!("'||'").to_owned(),
         ParseTokenType::end => L!("end of the statement").to_owned(),
@@ -529,7 +536,3 @@ pub const ERROR_BAD_COMMAND_ASSIGN_ERR_MSG: &str =
 /// Error message for a command like `time foo &`.
 pub const ERROR_TIME_BACKGROUND: &str =
     "'time' is not supported for background jobs. Consider using 'command time'.";
-
-/// Error issued on { echo; echo }.
-pub const ERROR_NO_BRACE_GROUPING: &str =
-    "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'";

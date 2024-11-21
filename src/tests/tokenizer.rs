@@ -31,6 +31,43 @@ fn test_tokenizer() {
         assert!(t.next().is_none());
     }
 
+    {
+        let s = L!("{ echo");
+        let mut t = Tokenizer::new(s, TokFlags(0));
+
+        let token = t.next(); // {
+        assert!(token.is_some());
+        let token = token.unwrap();
+        assert_eq!(token.type_, TokenType::left_brace);
+        assert_eq!(token.length, 1);
+        assert_eq!(t.text_of(&token), "{");
+
+        let token = t.next(); // echo
+        assert!(token.is_some());
+        let token = token.unwrap();
+        assert_eq!(token.type_, TokenType::string);
+        assert_eq!(token.offset, 2);
+        assert_eq!(token.length, 4);
+        assert_eq!(t.text_of(&token), "echo");
+
+        assert!(t.next().is_none());
+    }
+
+    {
+        let s = L!("{echo, foo}");
+        let mut t = Tokenizer::new(s, TokFlags(0));
+        let token = t.next().unwrap();
+        assert_eq!(token.type_, TokenType::string);
+        assert_eq!(token.length, 11);
+        assert!(t.next().is_none());
+    }
+    {
+        let s = L!("{ echo; foo}");
+        let mut t = Tokenizer::new(s, TokFlags(0));
+        let token = t.next().unwrap();
+        assert_eq!(token.type_, TokenType::left_brace);
+    }
+
     let s = L!(concat!(
         "string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ",
         "){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect ",

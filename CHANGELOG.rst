@@ -3,9 +3,11 @@ fish 4.1.0 (released ???)
 
 Notable improvements and fixes
 ------------------------------
+- Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
 
 Deprecations and removed features
 ---------------------------------
+- Tokens like `{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 
 Scripting improvements
 ----------------------

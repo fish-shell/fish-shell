@@ -13,7 +13,7 @@ use crate::common::{
     UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvVar, Environment};
+use crate::env::{EnvVar, EnvVarFlags, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::history::{history_session_id, History};
@@ -622,7 +622,33 @@ fn expand_variables(
     );
 
     // Get the variable name as a string, then try to get the variable from env.
-    let var_name = &instr[var_name_start..var_name_stop];
+    let mut var_name = None;
+    let mut may_slice = true;
+    if var_name_stop == var_name_start {
+        match instr.char_at(var_name_stop) {
+            '?' => {
+                var_name_stop += 1;
+                may_slice = false;
+                var_name = Some(L!("status"));
+            }
+            '$' | VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE => {
+                var_name_stop += 1;
+                may_slice = false;
+                var_name = Some(L!("fish_pid"));
+            }
+            '#' => {
+                var_name_stop += 1;
+                may_slice = false;
+            }
+            '@' => {
+                var_name_stop += 1;
+                may_slice = false;
+                var_name = Some(L!("argv"));
+            }
+            _ => (),
+        }
+    }
+    let var_name = var_name.unwrap_or(&instr[var_name_start..var_name_stop]);
 
     // It's an error if the name is empty.
     if var_name.is_empty() {
@@ -644,6 +670,16 @@ fn expand_variables(
     let mut var = None;
     if var_name == "history" {
         history = Some(History::with_name(&history_session_id(vars)));
+    } else if var_name == "#" {
+        var = Some(EnvVar::new(
+            sprintf!(
+                "%lu",
+                vars.get(L!("argv"))
+                    .map(|v| v.as_list().len())
+                    .unwrap_or_default()
+            ),
+            EnvVarFlags::default(),
+        ));
     } else if var_name.as_char_slice() != [VARIABLE_EXPAND_EMPTY] {
         var = vars.get(var_name);
     }
@@ -655,7 +691,7 @@ fn expand_variables(
     let slice_start = var_name_stop;
     let mut var_idx_list = vec![];
 
-    if instr.as_char_slice().get(slice_start) == Some(&'[') {
+    if may_slice && instr.as_char_slice().get(slice_start) == Some(&'[') {
         all_values = false;
         // If a variable is missing, behave as though we have one value, so that $var[1] always
         // works.

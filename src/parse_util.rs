@@ -664,6 +664,7 @@ fn get_first_arg(list: &ast::ArgumentOrRedirectionList) -> Option<&ast::Argument
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
 /// For example, if wc is @, then the variable name was $@ and we suggest $argv.
 fn error_for_character(c: char) -> WString {
+    // TODO
     match c {
         '?' => wgettext!(ERROR_NOT_STATUS).to_owned(),
         '#' => wgettext!(ERROR_NOT_ARGV_COUNT).to_owned(),
@@ -1401,7 +1402,21 @@ pub fn parse_util_detect_errors_in_argument(
                     continue;
                 }
                 let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
-                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
+                let prev_char = idx
+                    .checked_sub(1)
+                    .and_then(|i| unesc.get(i).copied())
+                    .unwrap_or('\0');
+                if (![
+                    VARIABLE_EXPAND,
+                    VARIABLE_EXPAND_SINGLE,
+                    '$',
+                    '(',
+                    '?',
+                    '#',
+                    '@',
+                ]
+                .contains(&next_char)
+                    && ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '$'].contains(&prev_char))
                     && !valid_var_name_char(next_char)
                 {
                     err = ParserTestErrorBits::ERROR;
@@ -1893,6 +1908,8 @@ pub fn parse_util_expand_variable_error(
         '\0' => {
             append_syntax_error!(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
         }
+        // TODO
+        '?' | VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE | '$' | '#' | '@' => return,
         _ => {
             let mut token_stop_char = char_after_dollar;
             // Unescape (see issue #50).

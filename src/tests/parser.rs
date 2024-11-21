@@ -193,14 +193,7 @@ fn test_parser() {
     );
 
     assert!(
-        detect_argument_errors("foo$$")
-            .unwrap_err()
-            .contains(ParserTestErrorBits::ERROR),
-        "Bad variable expansion not reported as error"
-    );
-
-    assert!(
-        detect_argument_errors("foo$@")
+        detect_argument_errors("foo$%")
             .unwrap_err()
             .contains(ParserTestErrorBits::ERROR),
         "Bad variable expansion not reported as error"

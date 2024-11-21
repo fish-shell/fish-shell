@@ -16,7 +16,6 @@ or echo Invalid $status
 
 commandline --input 'echo $$' --is-valid
 or echo Invalid $status
-# CHECK: Invalid 1
 
 commandline --help &>/dev/null
 echo Help $status

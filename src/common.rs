@@ -584,9 +584,17 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                 }
                 '$' => {
                     if unescape_special {
-                        let is_cmdsub = input_position + 1 < input.len()
-                            && input.char_at(input_position + 1) == '(';
-                        if !is_cmdsub {
+                        let next = input.char_at(input_position + 1);
+                        let is_cmdsub = input_position + 1 < input.len() && next == '(';
+                        let is_pid = !valid_var_name_char(next)
+                            && result
+                                .as_char_slice()
+                                .last()
+                                .map(|prev| {
+                                    [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(prev)
+                                })
+                                .unwrap_or_default();
+                        if !is_cmdsub && !is_pid {
                             to_append_or_none = Some(VARIABLE_EXPAND);
                             vars_or_seps.push(input_position);
                         }

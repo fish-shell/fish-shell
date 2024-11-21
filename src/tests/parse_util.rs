@@ -3,8 +3,7 @@ use pcre2::utf32::Regex;
 use crate::common::EscapeFlags;
 use crate::parse_constants::{
     ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE1, ERROR_BRACKETED_VARIABLE_QUOTED1,
-    ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID, ERROR_NOT_STATUS,
-    ERROR_NO_VAR_NAME,
+    ERROR_NOT_ARGV_STAR, ERROR_NO_VAR_NAME,
 };
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_detect_errors,
@@ -75,10 +74,6 @@ fn test_error_messages() {
     validate!("echo foo${a}bar", ERROR_BRACKETED_VARIABLE1);
     validate!("echo foo\"${a}\"bar", ERROR_BRACKETED_VARIABLE_QUOTED1);
     validate!("echo foo\"${\"bar", ERROR_BAD_VAR_CHAR1);
-    validate!("echo $?", ERROR_NOT_STATUS);
-    validate!("echo $$", ERROR_NOT_PID);
-    validate!("echo $#", ERROR_NOT_ARGV_COUNT);
-    validate!("echo $@", ERROR_NOT_ARGV_AT);
     validate!("echo $*", ERROR_NOT_ARGV_STAR);
     validate!("echo $", ERROR_NO_VAR_NAME);
     validate!("echo foo\"$\"bar", ERROR_NO_VAR_NAME);

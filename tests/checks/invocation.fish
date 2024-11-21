@@ -91,10 +91,10 @@ $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
 # CHECKERR:                             ^~~~~~~~^
 
 # Running multiple command lists continues even if one has a syntax error.
-$fish --no-config -c 'echo $$ oh no syntax error' -c 'echo this works'
+$fish --no-config -c 'echo $% oh no syntax error' -c 'echo this works'
 # CHECK: this works
-# CHECKERR: fish: $$ is not the pid. In fish, please use $fish_pid.
-# CHECKERR: echo $$ oh no syntax error
+# CHECKERR: fish: $% is not a valid variable in fish.
+# CHECKERR: echo $% oh no syntax error
 # CHECKERR: ^
 
 $fish --no-config .

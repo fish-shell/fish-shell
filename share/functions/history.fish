@@ -1,19 +1,6 @@
 #
 # Wrap the builtin history command to provide additional functionality.
 #
-function __fish_unexpected_hist_args --no-scope-shadowing
-    if test -n "$search_mode"
-        or set -q show_time[1]
-        printf (_ "%ls: %ls: subcommand takes no options\n") $cmd $hist_cmd >&2
-        return 0
-    end
-    if set -q argv[1]
-        printf (_ "%ls: %ls: expected %d arguments; got %d\n") $cmd $hist_cmd 0 (count $argv) >&2
-        return 0
-    end
-    return 1
-end
-
 function history --description "display or manipulate interactive command history"
     set -l cmd history
     set -l options --exclusive 'c,e,p' --exclusive 'S,D,M,V,X'
@@ -82,9 +69,6 @@ function history --description "display or manipulate interactive command histor
 
     switch $hist_cmd
         case search # search the interactive command history
-            test -z "$search_mode"
-            and set search_mode --contains
-
             if isatty stdout
                 set -l pager (__fish_anypager)
                 and isatty stdout
@@ -108,17 +92,12 @@ function history --description "display or manipulate interactive command histor
             end
 
         case delete # interactively delete history
-            # TODO: Fix this to deal with history entries that have multiple lines.
             set -l searchterm $argv
             if not set -q argv[1]
                 read -P"Search term: " searchterm
             end
 
-            if test -z "$search_mode"
-                set search_mode --contains
-            end
-
-            if test $search_mode = --exact
+            if test "$search_mode" = --exact
                 builtin history delete $search_mode $_flag_case_sensitive -- $searchterm
                 builtin history save
                 return
@@ -197,21 +176,10 @@ function history --description "display or manipulate interactive command histor
             end
 
         case save # save our interactive command history to the persistent history
-            __fish_unexpected_hist_args $argv
-            and return 1
-
             builtin history save -- $argv
-
         case merge # merge the persistent interactive command history with our history
-            __fish_unexpected_hist_args $argv
-            and return 1
-
             builtin history merge -- $argv
-
         case clear # clear the interactive command history
-            __fish_unexpected_hist_args $argv
-            and return 1
-
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
             if test "$choice" = yes
@@ -221,9 +189,6 @@ function history --description "display or manipulate interactive command histor
                 printf (_ "You did not say 'yes' so I will not clear your command history\n")
             end
         case clear-session # clears only session
-            __fish_unexpected_hist_args $argv
-            and return 1
-
             builtin history clear-session -- $argv
             printf (_ "Command history for session cleared!\n")
         case append

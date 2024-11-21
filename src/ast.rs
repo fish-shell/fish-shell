@@ -3603,11 +3603,11 @@ impl<'s> Populator<'s> {
                 ParseKeyword::kw_switch,
                 ParseKeyword::kw_while,
             ];
-            if (help_only_kws.contains(&self.peek_token(0).keyword)
-                && self.peek_token(1).is_help_argument)
-                || (!help_only_kws.contains(&self.peek_token(0).keyword)
-                    && self.peek_token(1).is_dash_prefix_string())
-            {
+            if if help_only_kws.contains(&self.peek_token(0).keyword) {
+                self.peek_token(1).is_help_argument
+            } else {
+                self.peek_token(1).is_dash_prefix_string()
+            } {
                 return new_decorated_statement(self);
             }
 

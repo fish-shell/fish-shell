@@ -674,7 +674,7 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                if brace_offsets.is_empty() {
+                if brace_offsets.pop().is_none() {
                     return self.call_error(
                         TokenizerError::closing_unopened_brace,
                         self.token_cursor,
@@ -683,7 +683,6 @@ impl<'c> Tokenizer<'c> {
                         0,
                     );
                 }
-                brace_offsets.pop();
                 if brace_offsets.is_empty() {
                     mode &= !TOK_MODE_CURLY_BRACES;
                 }

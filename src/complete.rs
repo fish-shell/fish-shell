@@ -512,14 +512,17 @@ fn compare_completions_by_tilde(a: &Completion, b: &Completion) -> Ordering {
 /// Unique the list of completions, without perturbing their order.
 fn unique_completions_retaining_order(comps: &mut Vec<Completion>) {
     let mut seen = HashSet::with_capacity(comps.len());
+    let removals = comps.iter().enumerate().fold(vec![], |mut v, (i, c)| {
+        if !seen.insert(&c.completion) {
+            v.push(i);
+        }
+        v
+    });
 
-    let pred = |c: &Completion| {
-        // Keep (return true) if insertion succeeds.
-        // todo!("don't clone here");
-        seen.insert(c.completion.to_owned())
-    };
-
-    comps.retain(pred);
+    // Remove in reverse order so the indexes remain valid
+    for idx in removals.iter().rev() {
+        comps.remove(*idx);
+    }
 }
 
 /// Sorts and removes any duplicate completions in the completion list, then puts them in priority

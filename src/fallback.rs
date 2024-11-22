@@ -89,6 +89,11 @@ pub fn fish_wcwidth(c: char) -> isize {
 /// fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if
 /// the system one is busted.
 pub fn fish_wcswidth(s: &wstr) -> isize {
+    // ascii fast path; empty iterator returns true for .all()
+    if s.chars().all(|c| c.is_ascii() && !c.is_ascii_control()) {
+        return s.len() as isize;
+    }
+
     let mut result = 0;
     for c in s.chars() {
         let w = fish_wcwidth(c);

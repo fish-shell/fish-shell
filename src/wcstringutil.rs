@@ -102,59 +102,67 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
 }
 
 // The ways one string can contain another.
+//
+// Note that the order of entries below affects the sort order of completions.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ContainType {
-    /// exact match: foobar matches foo
-    exact,
-    /// prefix match: foo matches foobar
-    prefix,
-    /// substring match: ooba matches foobar
-    substr,
-    /// subsequence match: fbr matches foobar
-    subseq,
+    /// Exact match: `foobar` matches `foo`
+    Exact,
+    /// Prefix match: `foo` matches `foobar`
+    Prefix,
+    /// Substring match: `ooba` matches `foobar`
+    Substr,
+    /// Subsequence match: `fbr` matches `foobar`
+    Subseq,
 }
 
 // The case-folding required for the match.
+//
+// Note that the order of entries below affects the sort order of completions.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-pub enum CaseFold {
-    /// exact match: foobar matches foobar
-    samecase,
-    /// case insensitive match with lowercase input. foobar matches FoBar.
-    smartcase,
-    /// case insensitive: FoBaR matches foobAr
-    icase,
+pub enum CaseSensitivity {
+    /// Exact match: `foobar` only matches `foobar`
+    Sensitive,
+    /// Case insensitive match if lowercase input: `foobar` matches `FooBar`.
+    Smart,
+    /// Case insensitive: `FooBaR` matches `foobAr`
+    Insensitive,
 }
 
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct StringFuzzyMatch {
     pub typ: ContainType,
-    pub case_fold: CaseFold,
+    pub case_fold: CaseSensitivity,
 }
 
 impl StringFuzzyMatch {
-    pub fn new(typ: ContainType, case_fold: CaseFold) -> Self {
+    pub fn new(typ: ContainType, case_fold: CaseSensitivity) -> Self {
         Self { typ, case_fold }
     }
     // Helper to return an exact match.
+    #[inline(always)]
     pub fn exact_match() -> Self {
-        Self::new(ContainType::exact, CaseFold::samecase)
+        Self::new(ContainType::Exact, CaseSensitivity::Sensitive)
     }
     /// Return whether this is a samecase exact match.
+    #[inline(always)]
     pub fn is_samecase_exact(&self) -> bool {
-        self.typ == ContainType::exact && self.case_fold == CaseFold::samecase
+        self.typ == ContainType::Exact && self.case_fold == CaseSensitivity::Sensitive
     }
     /// Return if we are exact or prefix match.
+    #[inline(always)]
     pub fn is_exact_or_prefix(&self) -> bool {
-        matches!(self.typ, ContainType::exact | ContainType::prefix)
+        matches!(self.typ, ContainType::Exact | ContainType::Prefix)
     }
     // Return if our match requires a full replacement, i.e. is not a strict extension of our
-    // existing string. This is false only if our case matches, and our type is prefix or exact.
+    // existing string. This is false only if our case matches and our type is prefix or exact.
+    #[inline(always)]
     pub fn requires_full_replacement(&self) -> bool {
-        if self.case_fold != CaseFold::samecase {
+        if self.case_fold != CaseSensitivity::Sensitive {
             return true;
         }
-        matches!(self.typ, ContainType::substr | ContainType::subseq)
+        matches!(self.typ, ContainType::Substr | ContainType::Subseq)
     }
 
     /// Try creating a fuzzy match for `string` against `match_against`.
@@ -170,10 +178,10 @@ impl StringFuzzyMatch {
         let get_case_fold = || {
             for c in string.chars() {
                 if c.to_lowercase().next().unwrap() != c {
-                    return CaseFold::icase;
+                    return CaseSensitivity::Insensitive;
                 }
             }
-            CaseFold::smartcase
+            CaseSensitivity::Smart
         };
 
         // A string cannot fuzzy match against a shorter string.
@@ -184,27 +192,27 @@ impl StringFuzzyMatch {
         // exact samecase
         if string == match_against {
             return Some(StringFuzzyMatch::new(
-                ContainType::exact,
-                CaseFold::samecase,
+                ContainType::Exact,
+                CaseSensitivity::Sensitive,
             ));
         }
 
         // prefix samecase
         if match_against.starts_with(string) {
             return Some(StringFuzzyMatch::new(
-                ContainType::prefix,
-                CaseFold::samecase,
+                ContainType::Prefix,
+                CaseSensitivity::Sensitive,
             ));
         }
 
         // exact icase
         if wcscasecmp(string, match_against).is_eq() {
-            return Some(StringFuzzyMatch::new(ContainType::exact, get_case_fold()));
+            return Some(StringFuzzyMatch::new(ContainType::Exact, get_case_fold()));
         }
 
         // prefix icase
         if string_prefixes_string_case_insensitive(string, match_against) {
-            return Some(StringFuzzyMatch::new(ContainType::prefix, get_case_fold()));
+            return Some(StringFuzzyMatch::new(ContainType::Prefix, get_case_fold()));
         }
 
         // If anchor_start is set, this is as far as we go.
@@ -219,21 +227,21 @@ impl StringFuzzyMatch {
             .any(|window| wstr::from_char_slice(window) == string)
         {
             return Some(StringFuzzyMatch::new(
-                ContainType::substr,
-                CaseFold::samecase,
+                ContainType::Substr,
+                CaseSensitivity::Sensitive,
             ));
         }
 
         // substr icase
         if ifind(match_against, string, true /* fuzzy */).is_some() {
-            return Some(StringFuzzyMatch::new(ContainType::substr, get_case_fold()));
+            return Some(StringFuzzyMatch::new(ContainType::Substr, get_case_fold()));
         }
 
         // subseq samecase
         if subsequence_in_string(string, match_against) {
             return Some(StringFuzzyMatch::new(
-                ContainType::subseq,
-                CaseFold::samecase,
+                ContainType::Subseq,
+                CaseSensitivity::Sensitive,
             ));
         }
 
@@ -246,13 +254,13 @@ impl StringFuzzyMatch {
         // smaller. Treat 'exact' types the same as 'prefix' types; this is because we do not
         // prefer exact matches to prefix matches when presenting completions to the user.
         // Treat smartcase the same as samecase; see #3978.
-        let effective_type = if self.typ == ContainType::exact {
-            ContainType::prefix
+        let effective_type = if self.typ == ContainType::Exact {
+            ContainType::Prefix
         } else {
             self.typ
         };
-        let effective_case = if self.case_fold == CaseFold::smartcase {
-            CaseFold::samecase
+        let effective_case = if self.case_fold == CaseSensitivity::Smart {
+            CaseSensitivity::Sensitive
         } else {
             self.case_fold
         };
@@ -587,18 +595,63 @@ fn test_fuzzy_match() {
             );
         };
     }
-    validate!("", "", ContainType::exact, CaseFold::samecase);
-    validate!("alpha", "alpha", ContainType::exact, CaseFold::samecase);
-    validate!("alp", "alpha", ContainType::prefix, CaseFold::samecase);
-    validate!("alpha", "AlPhA", ContainType::exact, CaseFold::smartcase);
-    validate!("alpha", "AlPhA!", ContainType::prefix, CaseFold::smartcase);
-    validate!("ALPHA", "alpha!", ContainType::prefix, CaseFold::icase);
-    validate!("ALPHA!", "alPhA!", ContainType::exact, CaseFold::icase);
-    validate!("alPh", "ALPHA!", ContainType::prefix, CaseFold::icase);
-    validate!("LPH", "ALPHA!", ContainType::substr, CaseFold::samecase);
-    validate!("lph", "AlPhA!", ContainType::substr, CaseFold::smartcase);
-    validate!("lPh", "ALPHA!", ContainType::substr, CaseFold::icase);
-    validate!("AA", "ALPHA!", ContainType::subseq, CaseFold::samecase);
+    validate!("", "", ContainType::Exact, CaseSensitivity::Sensitive);
+    validate!(
+        "alpha",
+        "alpha",
+        ContainType::Exact,
+        CaseSensitivity::Sensitive
+    );
+    validate!(
+        "alp",
+        "alpha",
+        ContainType::Prefix,
+        CaseSensitivity::Sensitive
+    );
+    validate!("alpha", "AlPhA", ContainType::Exact, CaseSensitivity::Smart);
+    validate!(
+        "alpha",
+        "AlPhA!",
+        ContainType::Prefix,
+        CaseSensitivity::Smart
+    );
+    validate!(
+        "ALPHA",
+        "alpha!",
+        ContainType::Prefix,
+        CaseSensitivity::Insensitive
+    );
+    validate!(
+        "ALPHA!",
+        "alPhA!",
+        ContainType::Exact,
+        CaseSensitivity::Insensitive
+    );
+    validate!(
+        "alPh",
+        "ALPHA!",
+        ContainType::Prefix,
+        CaseSensitivity::Insensitive
+    );
+    validate!(
+        "LPH",
+        "ALPHA!",
+        ContainType::Substr,
+        CaseSensitivity::Sensitive
+    );
+    validate!("lph", "AlPhA!", ContainType::Substr, CaseSensitivity::Smart);
+    validate!(
+        "lPh",
+        "ALPHA!",
+        ContainType::Substr,
+        CaseSensitivity::Insensitive
+    );
+    validate!(
+        "AA",
+        "ALPHA!",
+        ContainType::Subseq,
+        CaseSensitivity::Sensitive
+    );
     // no subseq icase
     validate!("lh", "ALPHA!", None);
     validate!("BB", "ALPHA!", None);

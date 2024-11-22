@@ -126,6 +126,7 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), E
     }
 }
 
+/// Compare two wide strings in a case-insensitive fashion
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
     use std::char::ToLowercase;
     use widestring::utfstr::CharsUtf32;
@@ -149,18 +150,20 @@ pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {
             }
 
             self.current = self.chars.next()?.to_lowercase();
-            self.next()
+            self.current.next()
         }
     }
 
     impl<'a> ToLowerBuffer<'a> {
         pub fn from(w: &'a wstr) -> Self {
-            let mut empty = 'a'.to_lowercase();
-            let _ = empty.next();
-            debug_assert!(empty.next().is_none());
             let mut chars = w.chars();
             Self {
-                current: chars.next().map(|c| c.to_lowercase()).unwrap_or(empty),
+                current: chars.next().map(|c| c.to_lowercase()).unwrap_or_else(|| {
+                    let mut empty = 'a'.to_lowercase();
+                    let _ = empty.next();
+                    debug_assert!(empty.next().is_none());
+                    empty
+                }),
                 chars,
             }
         }

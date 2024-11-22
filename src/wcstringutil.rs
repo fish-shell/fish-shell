@@ -175,14 +175,14 @@ impl StringFuzzyMatch {
     ) -> Option<StringFuzzyMatch> {
         // Helper to lazily compute if case insensitive matches should use icase or smartcase.
         // Use icase if the input contains any uppercase characters, smartcase otherwise.
-        let get_case_fold = || {
-            for c in string.chars() {
-                if c.to_lowercase().next().unwrap() != c {
-                    return CaseSensitivity::Insensitive;
-                }
+        #[inline(always)]
+        fn get_case_fold(s: &widestring::Utf32Str) -> CaseSensitivity {
+            if s.chars().any(|c| c.is_uppercase()) {
+                CaseSensitivity::Insensitive
+            } else {
+                CaseSensitivity::Smart
             }
-            CaseSensitivity::Smart
-        };
+        }
 
         // A string cannot fuzzy match against a shorter string.
         if string.len() > match_against.len() {
@@ -207,12 +207,18 @@ impl StringFuzzyMatch {
 
         // exact icase
         if wcscasecmp(string, match_against).is_eq() {
-            return Some(StringFuzzyMatch::new(ContainType::Exact, get_case_fold()));
+            return Some(StringFuzzyMatch::new(
+                ContainType::Exact,
+                get_case_fold(string),
+            ));
         }
 
         // prefix icase
         if string_prefixes_string_case_insensitive(string, match_against) {
-            return Some(StringFuzzyMatch::new(ContainType::Prefix, get_case_fold()));
+            return Some(StringFuzzyMatch::new(
+                ContainType::Prefix,
+                get_case_fold(string),
+            ));
         }
 
         // If anchor_start is set, this is as far as we go.
@@ -234,7 +240,10 @@ impl StringFuzzyMatch {
 
         // substr icase
         if ifind(match_against, string, true /* fuzzy */).is_some() {
-            return Some(StringFuzzyMatch::new(ContainType::Substr, get_case_fold()));
+            return Some(StringFuzzyMatch::new(
+                ContainType::Substr,
+                get_case_fold(string),
+            ));
         }
 
         // subseq samecase

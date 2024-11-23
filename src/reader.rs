@@ -75,6 +75,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
@@ -5688,6 +5689,9 @@ impl<'a> Reader<'a> {
         }
         token_range.start += cmdsub_range.start;
         token_range.end += cmdsub_range.start;
+
+        // Wildcard expansion and completion below check for cancellation.
+        terminal_protocols_disable_ifn();
 
         // Check if we have a wildcard within this string; if so we first attempt to expand the
         // wildcard; if that succeeds we don't then apply user completions (#8593).

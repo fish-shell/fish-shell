@@ -14,6 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -609,6 +610,8 @@ impl Parser {
         // Create a new execution context.
         let mut execution_context =
             ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
+
+        terminal_protocols_disable_ifn();
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;

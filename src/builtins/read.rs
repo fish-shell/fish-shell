@@ -12,6 +12,7 @@ use crate::env::EnvMode;
 use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
@@ -243,6 +244,7 @@ fn read_interactive(
 
         reader_readline(parser, nchars)
     };
+    terminal_protocols_disable_ifn();
     if let Some(line) = mline {
         *buff = line;
         if nchars > 0 && nchars < buff.len() {

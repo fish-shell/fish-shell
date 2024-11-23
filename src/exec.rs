@@ -72,10 +72,6 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
         return true;
     }
 
-    if job.entitled_to_terminal() {
-        crate::input_common::terminal_protocols_disable_ifn();
-    }
-
     // Handle an exec call.
     if job.processes()[0].typ == ProcessType::exec {
         // If we are interactive, perhaps disallow exec if there are background jobs.

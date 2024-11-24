@@ -714,7 +714,7 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
             0x19830326 | // fhgfs / BeeGFS. Undocumented magic number.
             0x013111A7 | 0x013111A8 | // IBRIX. Undocumented.
             0x65735546 | // FUSE_SUPER_MAGIC
-            0xa501FCF5 // VXFS_SUPER_MAGIC
+            0xA501FCF5 // VXFS_SUPER_MAGIC
                 => DirRemoteness::remote,
             _ => {
                 DirRemoteness::unknown

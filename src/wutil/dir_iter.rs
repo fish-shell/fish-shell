@@ -105,6 +105,8 @@ impl DirEntry {
         let narrow = wcs2zstring(&self.name);
         let mut s: libc::stat = unsafe { std::mem::zeroed() };
         if unsafe { libc::fstatat(fd, narrow.as_ptr(), &mut s, 0) } == 0 {
+            // st_dev is a dev_t, which is i32 on OpenBSD/Haiku and u32 in FreeBSD 11
+            #[allow(clippy::unnecessary_cast)]
             let dev_inode = DevInode {
                 device: s.st_dev as u64,
                 inode: s.st_ino as u64,

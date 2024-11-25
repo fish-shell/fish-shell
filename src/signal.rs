@@ -275,21 +275,23 @@ pub fn signal_handle(sig: Signal) {
     sigaction(sig, &act, std::ptr::null_mut());
 }
 
-pub fn get_signals_with_handlers(set: &mut libc::sigset_t) {
-    unsafe { libc::sigemptyset(set) };
+pub fn get_signals_to_default() -> libc::sigset_t {
+    let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
+    unsafe { libc::sigemptyset(&mut set) };
     for data in SIGNAL_TABLE.iter() {
-        let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-        unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), &mut act) };
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
-        if data.signal == libc::SIGHUP && act.sa_sigaction == libc::SIG_IGN {
-            continue;
+        if data.signal == libc::SIGHUP {
+            let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
+            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), &mut act) };
+            if act.sa_sigaction == libc::SIG_IGN {
+                continue;
+            }
         }
-        if act.sa_sigaction != libc::SIG_DFL {
-            unsafe { libc::sigaddset(set, data.signal.code()) };
-        }
+        unsafe { libc::sigaddset(&mut set, data.signal.code()) };
     }
+    return set;
 }
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.

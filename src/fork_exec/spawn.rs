@@ -112,20 +112,10 @@ impl PosixSpawner {
             None
         };
 
-        // Set the handling for job control signals back to the default.
-        let reset_signal_handlers = true;
-
-        // Remove all signal blocks.
-        let reset_sigmask = true;
-
         // Set our flags.
         let mut flags: i32 = 0;
-        if reset_signal_handlers {
-            flags |= libc::POSIX_SPAWN_SETSIGDEF;
-        }
-        if reset_sigmask {
-            flags |= libc::POSIX_SPAWN_SETSIGMASK;
-        }
+        flags |= libc::POSIX_SPAWN_SETSIGDEF;
+        flags |= libc::POSIX_SPAWN_SETSIGMASK;
         if desired_pgid.is_some() {
             flags |= libc::POSIX_SPAWN_SETPGROUP;
         }
@@ -136,19 +126,15 @@ impl PosixSpawner {
         }
 
         // Everybody gets default handlers.
-        if reset_signal_handlers {
-            let mut sigdefault: libc::sigset_t = unsafe { std::mem::zeroed() };
-            get_signals_with_handlers(&mut sigdefault);
-            attr.set_sigdefault(&sigdefault)?;
-        }
+        let mut sigdefault: libc::sigset_t = unsafe { std::mem::zeroed() };
+        get_signals_with_handlers(&mut sigdefault);
+        attr.set_sigdefault(&sigdefault)?;
 
-        // Potentially reset the sigmask.
-        if reset_sigmask {
-            let mut sigmask = unsafe { std::mem::zeroed() };
-            unsafe { libc::sigemptyset(&mut sigmask) };
-            blocked_signals_for_job(j, &mut sigmask);
-            attr.set_sigmask(&sigmask)?;
-        }
+        // Reset the sigmask.
+        let mut sigmask = unsafe { std::mem::zeroed() };
+        unsafe { libc::sigemptyset(&mut sigmask) };
+        blocked_signals_for_job(j, &mut sigmask);
+        attr.set_sigmask(&sigmask)?;
 
         // Apply our dup2s.
         for act in dup2s.get_actions() {

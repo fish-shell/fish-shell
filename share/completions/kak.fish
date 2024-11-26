@@ -9,7 +9,7 @@ complete -c kak -o p -x -a '(command kak -l)' -d 'just send stdin as commands to
 complete -c kak -o f -x -d 'filter: for each file, select the entire buffer and execute the given keys'
 complete -c kak -o i -x -d 'backup the files on which a filter is applied using the given suffix'
 complete -c kak -o q -d 'in filter mode be quiet about errors applying keys'
-complete -c kak -o ui -x -a 'ncurses dummy json' -d 'set the type of user interface to use'
+complete -c kak -o ui -x -a 'terminal dummy json' -d 'set the type of user interface to use'
 complete -c kak -o l -d 'list existing sessions'
 complete -c kak -o clear -d 'clear dead sessions'
 complete -c kak -o debug -x -d 'initial debug option value' -a 'hooks shell profile keys commands'

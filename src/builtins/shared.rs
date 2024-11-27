@@ -242,6 +242,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: fg::fg,
     },
     BuiltinData {
+        name: L!("fish_indent"),
+        func: fish_indent::fish_indent,
+    },
+    BuiltinData {
         name: L!("fish_key_reader"),
         func: fish_key_reader::fish_key_reader,
     },

@@ -203,9 +203,6 @@ if (NOT "${Rust_TOOLCHAIN}" STREQUAL "$CACHE{Rust_TOOLCHAIN}")
     set(Rust_TOOLCHAIN ${Rust_TOOLCHAIN} CACHE STRING "Requested rustup toolchain" FORCE)
 endif()
 
-set(_RESOLVE_RUSTUP_TOOLCHAINS_DESC "Indicates whether to descend into the toolchain pointed to by rustup")
-set(Rust_RESOLVE_RUSTUP_TOOLCHAINS ON CACHE BOOL ${_RESOLVE_RUSTUP_TOOLCHAINS_DESC})
-
 # This block checks to see if we're prioritizing a rustup-managed toolchain.
 if (DEFINED Rust_TOOLCHAIN)
     # If the user specifies `Rust_TOOLCHAIN`, then look for `rustup` first, rather than `rustc`.
@@ -264,31 +261,7 @@ else()
             )
     endif()
 
-    if (_RUSTC_VERSION_RAW MATCHES "rustup [0-9\\.]+")
-        if (_USER_SPECIFIED_RUSTC)
-            message(
-                WARNING "User-specified Rust_COMPILER pointed to rustup's rustc proxy. Corrosion's "
-                "FindRust will always try to evaluate to an actual Rust toolchain, and so the "
-                "user-specified Rust_COMPILER will be discarded in favor of the default "
-                "rustup-managed toolchain."
-            )
-
-            unset(Rust_COMPILER)
-            unset(Rust_COMPILER CACHE)
-        endif()
-
-        # Get `rustup` next to the `rustc` proxy
-        get_filename_component(_RUST_PROXIES_PATH "${_Rust_COMPILER_TEST}" DIRECTORY)
-        find_program(Rust_RUSTUP rustup HINTS "${_RUST_PROXIES_PATH}" NO_DEFAULT_PATH)
-    endif()
-
     unset(_Rust_COMPILER_TEST CACHE)
-endif()
-
-# At this point, the only thing we should have evaluated is a path to `rustup` _if that's what the
-# best source for a Rust toolchain was determined to be_.
-if (NOT Rust_RUSTUP)
-    set(Rust_RESOLVE_RUSTUP_TOOLCHAINS OFF CACHE BOOL ${_RESOLVE_RUSTUP_TOOLCHAINS_DESC} FORCE)
 endif()
 
 # List of user variables that will override any toolchain-provided setting
@@ -301,190 +274,7 @@ foreach(_VAR ${_Rust_USER_VARS})
     endif()
 endforeach()
 
-# Discover what toolchains are installed by rustup, if the discovered `rustc` is a proxy from
-# `rustup` and the user hasn't explicitly requested to override this behavior, then select either
-# the default toolchain, or the requested toolchain Rust_TOOLCHAIN
-if (Rust_RESOLVE_RUSTUP_TOOLCHAINS)
-    execute_process(
-        COMMAND
-            "${Rust_RUSTUP}" toolchain list --verbose
-        OUTPUT_VARIABLE _TOOLCHAINS_RAW
-    )
-
-    string(REPLACE "\n" ";" _TOOLCHAINS_RAW "${_TOOLCHAINS_RAW}")
-    set(_DISCOVERED_TOOLCHAINS "")
-    set(_DISCOVERED_TOOLCHAINS_RUSTC_PATH "")
-    set(_DISCOVERED_TOOLCHAINS_CARGO_PATH "")
-    set(_DISCOVERED_TOOLCHAINS_VERSION "")
-
-    foreach(_TOOLCHAIN_RAW ${_TOOLCHAINS_RAW})
-        if (_TOOLCHAIN_RAW MATCHES "([a-zA-Z0-9\\._\\-]+)[ \t\r\n]?(\\(default\\) \\(override\\)|\\(default\\)|\\(override\\))?[ \t\r\n]+(.+)")
-            set(_TOOLCHAIN "${CMAKE_MATCH_1}")
-            set(_TOOLCHAIN_TYPE "${CMAKE_MATCH_2}")
-
-            set(_TOOLCHAIN_PATH "${CMAKE_MATCH_3}")
-            set(_TOOLCHAIN_${_TOOLCHAIN}_PATH "${CMAKE_MATCH_3}")
-
-            if (_TOOLCHAIN_TYPE MATCHES ".*\\(default\\).*")
-                set(_TOOLCHAIN_DEFAULT "${_TOOLCHAIN}")
-            endif()
-
-            if (_TOOLCHAIN_TYPE MATCHES ".*\\(override\\).*")
-                set(_TOOLCHAIN_OVERRIDE "${_TOOLCHAIN}")
-            endif()
-
-            execute_process(
-                    COMMAND
-                    "${_TOOLCHAIN_PATH}/bin/rustc" --version
-                    OUTPUT_VARIABLE _TOOLCHAIN_RAW_VERSION
-            )
-            if (_TOOLCHAIN_RAW_VERSION MATCHES "rustc ([0-9]+)\\.([0-9]+)\\.([0-9]+)(-nightly)?")
-                list(APPEND _DISCOVERED_TOOLCHAINS "${_TOOLCHAIN}")
-                list(APPEND _DISCOVERED_TOOLCHAINS_RUSTC_PATH "${_TOOLCHAIN_PATH}/bin/rustc")
-                list(APPEND _DISCOVERED_TOOLCHAINS_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
-
-                # We need this variable to determine the default toolchain, since `foreach(... IN ZIP_LISTS ...)`
-                # requires CMake 3.17. As a workaround we define this variable to lookup the version when iterating
-                # through the `_DISCOVERED_TOOLCHAINS` lists.
-                set(_TOOLCHAIN_${_TOOLCHAIN}_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
-                if(CMAKE_MATCH_4)
-                    set(_TOOLCHAIN_${_TOOLCHAIN}_IS_NIGHTLY "TRUE")
-                else()
-                    set(_TOOLCHAIN_${_TOOLCHAIN}_IS_NIGHTLY "FALSE")
-                endif()
-                if(EXISTS "${_TOOLCHAIN_PATH}/bin/cargo")
-                    list(APPEND _DISCOVERED_TOOLCHAINS_CARGO_PATH "${_TOOLCHAIN_PATH}/bin/cargo")
-                else()
-                    list(APPEND _DISCOVERED_TOOLCHAINS_CARGO_PATH "NOTFOUND")
-                endif()
-            else()
-                message(AUTHOR_WARNING "Unexpected output from `rustc --version` for Toolchain `${_TOOLCHAIN}`: "
-                        "`${_TOOLCHAIN_RAW_VERSION}`.\n"
-                        "Ignoring this toolchain."
-                )
-            endif()
-        else()
-            message(AUTHOR_WARNING "Didn't recognize toolchain: ${_TOOLCHAIN_RAW}. Ignoring this toolchain.\n"
-                "Rustup toolchain list output( `${Rust_RUSTUP} toolchain list --verbose`):\n"
-                "${_TOOLCHAINS_RAW}"
-            )
-        endif()
-    endforeach()
-
-    # Expose a list of available rustup toolchains.
-    list(LENGTH _DISCOVERED_TOOLCHAINS _toolchain_len)
-    list(LENGTH _DISCOVERED_TOOLCHAINS_RUSTC_PATH _toolchain_rustc_len)
-    list(LENGTH _DISCOVERED_TOOLCHAINS_CARGO_PATH _toolchain_cargo_len)
-    list(LENGTH _DISCOVERED_TOOLCHAINS_VERSION _toolchain_version_len)
-    if(NOT
-        (_toolchain_len EQUAL _toolchain_rustc_len
-            AND _toolchain_cargo_len EQUAL _toolchain_version_len
-            AND _toolchain_len EQUAL _toolchain_cargo_len)
-        )
-        message(FATAL_ERROR "Internal error - list length mismatch."
-            "List lengths: ${_toolchain_len} toolchains, ${_toolchain_rustc_len} rustc, ${_toolchain_cargo_len} cargo,"
-            " ${_toolchain_version_len} version. The lengths should be the same."
-        )
-    endif()
-
-    set(Rust_RUSTUP_TOOLCHAINS CACHE INTERNAL "List of available Rustup toolchains" "${_DISCOVERED_TOOLCHAINS}")
-    set(Rust_RUSTUP_TOOLCHAINS_RUSTC_PATH
-        CACHE INTERNAL
-        "List of the rustc paths corresponding to the toolchain at the same index in `Rust_RUSTUP_TOOLCHAINS`."
-        "${_DISCOVERED_TOOLCHAINS_RUSTC_PATH}"
-    )
-    set(Rust_RUSTUP_TOOLCHAINS_CARGO_PATH
-        CACHE INTERNAL
-        "List of the cargo paths corresponding to the toolchain at the same index in `Rust_RUSTUP_TOOLCHAINS`. \
-        May also be `NOTFOUND` if the toolchain does not have a cargo executable."
-        "${_DISCOVERED_TOOLCHAINS_CARGO_PATH}"
-    )
-    set(Rust_RUSTUP_TOOLCHAINS_VERSION
-        CACHE INTERNAL
-        "List of the rust toolchain version corresponding to the toolchain at the same index in \
-        `Rust_RUSTUP_TOOLCHAINS`."
-        "${_DISCOVERED_TOOLCHAINS_VERSION}"
-    )
-
-    # Rust_TOOLCHAIN is preferred over a requested version if it is set.
-    if (NOT DEFINED Rust_TOOLCHAIN)
-        if (NOT DEFINED _TOOLCHAIN_OVERRIDE)
-            set(_TOOLCHAIN_SELECTED "${_TOOLCHAIN_DEFAULT}")
-        else()
-            set(_TOOLCHAIN_SELECTED "${_TOOLCHAIN_OVERRIDE}")
-        endif()
-        # Check default toolchain first.
-        _findrust_version_ok("_TOOLCHAIN_${_TOOLCHAIN_SELECTED}_VERSION" _VERSION_OK)
-        if(NOT "${_VERSION_OK}")
-            foreach(_TOOLCHAIN "${_DISCOVERED_TOOLCHAINS}")
-                _findrust_version_ok("_TOOLCHAIN_${_TOOLCHAIN}_VERSION" _VERSION_OK)
-                if("${_VERSION_OK}")
-                    set(_TOOLCHAIN_SELECTED "${_TOOLCHAIN}")
-                    break()
-                endif()
-            endforeach()
-            # Check if we found a suitable version in the for loop.
-            if(NOT "${_VERSION_OK}")
-                string(REPLACE ";" "\n" _DISCOVERED_TOOLCHAINS "${_DISCOVERED_TOOLCHAINS}")
-                _findrust_failed("Failed to find a Rust toolchain matching the version requirements of "
-                        "${Rust_FIND_VERSION}. Available toolchains: ${_DISCOVERED_TOOLCHAINS}")
-            endif()
-        endif()
-    endif()
-
-    set(Rust_TOOLCHAIN "${_TOOLCHAIN_SELECTED}" CACHE STRING "The rustup toolchain to use")
-    set_property(CACHE Rust_TOOLCHAIN PROPERTY STRINGS "${_DISCOVERED_TOOLCHAINS}")
-
-    if(NOT Rust_FIND_QUIETLY)
-        message(STATUS "Rust Toolchain: ${Rust_TOOLCHAIN}")
-    endif()
-
-    if (NOT Rust_TOOLCHAIN IN_LIST _DISCOVERED_TOOLCHAINS)
-        # If the precise toolchain wasn't found, try appending the default host
-        execute_process(
-            COMMAND
-                "${Rust_RUSTUP}" show
-            RESULT_VARIABLE _SHOW_RESULT
-            OUTPUT_VARIABLE _SHOW_RAW
-        )
-        if(NOT "${_SHOW_RESULT}" EQUAL "0")
-            _findrust_failed("Command `${Rust_RUSTUP} show` failed")
-        endif()
-
-        if (_SHOW_RAW MATCHES "Default host: ([a-zA-Z0-9_\\-]*)\n")
-            set(_DEFAULT_HOST "${CMAKE_MATCH_1}")
-        else()
-            _findrust_failed("Failed to parse \"Default host\" from `${Rust_RUSTUP} show`. Got: ${_SHOW_RAW}")
-        endif()
-
-        if (NOT "${Rust_TOOLCHAIN}-${_DEFAULT_HOST}" IN_LIST _DISCOVERED_TOOLCHAINS)
-            set(_NOT_FOUND_MESSAGE "Could not find toolchain '${Rust_TOOLCHAIN}'\n"
-                "Available toolchains:\n"
-            )
-            foreach(_TOOLCHAIN ${_DISCOVERED_TOOLCHAINS})
-                list(APPEND _NOT_FOUND_MESSAGE "  `${_TOOLCHAIN}`\n")
-            endforeach()
-            _findrust_failed(${_NOT_FOUND_MESSAGE})
-        endif()
-
-        set(_RUSTUP_TOOLCHAIN_FULL "${Rust_TOOLCHAIN}-${_DEFAULT_HOST}")
-    else()
-        set(_RUSTUP_TOOLCHAIN_FULL "${Rust_TOOLCHAIN}")
-    endif()
-
-    set(_RUST_TOOLCHAIN_PATH "${_TOOLCHAIN_${_RUSTUP_TOOLCHAIN_FULL}_PATH}")
-    if(NOT "${Rust_FIND_QUIETLY}")
-        message(VERBOSE "Rust toolchain ${_RUSTUP_TOOLCHAIN_FULL}")
-        message(VERBOSE "Rust toolchain path ${_RUST_TOOLCHAIN_PATH}")
-    endif()
-
-    # Is overridden if the user specifies `Rust_COMPILER` explicitly.
-    find_program(
-        Rust_COMPILER_CACHED
-        rustc
-            HINTS "${_RUST_TOOLCHAIN_PATH}/bin"
-            NO_DEFAULT_PATH)
-elseif (Rust_RUSTUP)
+if (Rust_RUSTUP)
     get_filename_component(_RUST_TOOLCHAIN_PATH "${Rust_RUSTUP}" DIRECTORY)
     get_filename_component(_RUST_TOOLCHAIN_PATH "${_RUST_TOOLCHAIN_PATH}" DIRECTORY)
     find_program(
@@ -509,40 +299,20 @@ if (NOT EXISTS "${Rust_COMPILER_CACHED}")
     _findrust_failed(${_NOT_FOUND_MESSAGE})
 endif()
 
-if (Rust_RESOLVE_RUSTUP_TOOLCHAINS)
-    set(_NOT_FOUND_MESSAGE "Rust was detected to be managed by rustup, but failed to find `cargo` "
-        "next to `rustc` in `${_RUST_TOOLCHAIN_PATH}/bin`. This can happen for custom toolchains, "
-        "if cargo was not built. "
-        "Please manually specify the path to a compatible `cargo` by setting `Rust_CARGO`."
-    )
-    find_program(
-        Rust_CARGO_CACHED
-        cargo
-            HINTS "${_RUST_TOOLCHAIN_PATH}/bin"
-            NO_DEFAULT_PATH
-    )
-    # note: maybe can use find_package_handle_standard_args here, if we remove the _CACHED postfix.
-    # not sure why that is here...
-    if(NOT EXISTS "${Rust_CARGO_CACHED}")
-        _findrust_failed(${_NOT_FOUND_MESSAGE})
-    endif()
-    set(Rust_TOOLCHAIN_IS_RUSTUP_MANAGED TRUE CACHE INTERNAL "" FORCE)
-else()
-    set(_NOT_FOUND_MESSAGE "Failed to find `cargo` in PATH and `${_RUST_TOOLCHAIN_PATH}/bin`.\n"
-        "Please ensure cargo is in PATH or manually specify the path to a compatible `cargo` by "
-        "setting `Rust_CARGO`."
-    )
-    # On some systems (e.g. NixOS) cargo is not managed by rustup and also not next to rustc.
-    find_program(
-            Rust_CARGO_CACHED
-            cargo
-                HINTS "${_RUST_TOOLCHAIN_PATH}/bin"
-    )
-    # note: maybe can use find_package_handle_standard_args here, if we remove the _CACHED postfix.
-    # not sure why that is here...
-    if(NOT EXISTS "${Rust_CARGO_CACHED}")
-        _findrust_failed(${_NOT_FOUND_MESSAGE})
-    endif()
+set(_NOT_FOUND_MESSAGE "Failed to find `cargo` in PATH and `${_RUST_TOOLCHAIN_PATH}/bin`.\n"
+  "Please ensure cargo is in PATH or manually specify the path to a compatible `cargo` by "
+  "setting `Rust_CARGO`."
+)
+# On some systems (e.g. NixOS) cargo is not managed by rustup and also not next to rustc.
+find_program(
+  Rust_CARGO_CACHED
+  cargo
+  HINTS "${_RUST_TOOLCHAIN_PATH}/bin"
+)
+# note: maybe can use find_package_handle_standard_args here, if we remove the _CACHED postfix.
+# not sure why that is here...
+if(NOT EXISTS "${Rust_CARGO_CACHED}")
+  _findrust_failed(${_NOT_FOUND_MESSAGE})
 endif()
 
 execute_process(

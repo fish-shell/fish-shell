@@ -27,6 +27,7 @@ use fish::common::wcs2osstring;
 use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
+    builtins::fish_indent,
     builtins::fish_key_reader,
     builtins::shared::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
@@ -715,6 +716,8 @@ fn main() {
         let p = Path::new(&name).file_name().and_then(|x| x.to_str());
         if p == Some("fish_key_reader") {
             return fish_key_reader::main();
+        } else if p == Some("fish_indent") {
+            return fish_indent::main();
         }
     }
     PROGRAM_NAME.set(L!("fish")).unwrap();

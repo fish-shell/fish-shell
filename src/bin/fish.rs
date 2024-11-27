@@ -27,6 +27,7 @@ use fish::common::wcs2osstring;
 use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
+    builtins::fish_key_reader,
     builtins::shared::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
@@ -709,6 +710,13 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
 }
 
 fn main() {
+    // If we are called as "/path/to/fish_key_reader", become fish_key_reader.
+    if let Some(name) = env::args_os().next() {
+        let p = Path::new(&name).file_name().and_then(|x| x.to_str());
+        if p == Some("fish_key_reader") {
+            return fish_key_reader::main();
+        }
+    }
     PROGRAM_NAME.set(L!("fish")).unwrap();
     if !cfg!(small_main_stack) {
         panic_handler(throwing_main);

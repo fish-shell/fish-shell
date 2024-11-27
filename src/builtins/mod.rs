@@ -18,6 +18,7 @@ pub mod emit;
 pub mod eval;
 pub mod exit;
 pub mod fg;
+pub mod fish_key_reader;
 pub mod function;
 pub mod functions;
 pub mod history;

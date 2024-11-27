@@ -241,7 +241,8 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
     }
     let mut funcset = FUNCTION_SET.lock().unwrap();
     // Check if we either have the function, or it could be autoloaded.
-    funcset.get_props(cmd).is_some() || funcset.autoloader.can_autoload(cmd)
+    !(funcset.autoload_tombstones.contains(cmd) && !funcset.funcs.contains_key(cmd))
+        && (funcset.get_props(cmd).is_some() || funcset.autoloader.can_autoload(cmd))
 }
 
 /// Remove the function with the specified name.

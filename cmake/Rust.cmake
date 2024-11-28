@@ -1,3 +1,7 @@
+# Trying to build using the resolved toolchain causes all kinds of weird errors
+# Just let rustup do its job
+set(Rust_RESOLVE_RUSTUP_TOOLCHAINS Off)
+
 include(FindRust)
 find_package(Rust REQUIRED)
 

@@ -212,10 +212,10 @@ fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
     // Safety: only used on main thread.
     unsafe impl Sync for ReaderDataStack {}
 
-    static mut READER_DATA_STACK: ReaderDataStack = ReaderDataStack(UnsafeCell::new(vec![]));
+    static READER_DATA_STACK: ReaderDataStack = ReaderDataStack(UnsafeCell::new(vec![]));
 
     assert_is_main_thread();
-    unsafe { READER_DATA_STACK.0.get_mut() }
+    unsafe { &mut *READER_DATA_STACK.0.get() }
 }
 
 /// Access the top level reader data.

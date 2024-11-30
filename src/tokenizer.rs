@@ -760,8 +760,7 @@ impl<'c> Tokenizer<'c> {
                     1,
                 );
             } else if mode & TOK_MODE_SUBSHELL {
-                assert!(!paran_offsets.is_empty());
-                let offset_of_open_paran = *paran_offsets.last().unwrap();
+                let offset_of_open_paran = *paran_offsets.last().expect("paran_offsets is empty");
 
                 return self.call_error(
                     TokenizerError::unterminated_subshell,
@@ -771,8 +770,7 @@ impl<'c> Tokenizer<'c> {
                     1,
                 );
             } else if mode & TOK_MODE_CURLY_BRACES {
-                assert!(!brace_offsets.is_empty());
-                let offset_of_open_brace = *brace_offsets.last().unwrap();
+                let offset_of_open_brace = *brace_offsets.last().expect("brace_offsets is empty");
 
                 return self.call_error(
                     TokenizerError::unterminated_brace,

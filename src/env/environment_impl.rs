@@ -344,8 +344,8 @@ impl EnvScopedImpl {
     }
 
     fn try_get_computed(&self, key: &wstr) -> Option<EnvVar> {
-        let ev = ElectricVar::for_name(key);
-        if ev.is_none() || !ev.unwrap().computed() {
+        let ev = ElectricVar::for_name(key)?;
+        if !ev.computed() {
             return None;
         }
 
@@ -994,8 +994,8 @@ impl EnvStackImpl {
         let mut exports = false;
         if query.has_export_unexport {
             exports = query.exports;
-        } else if oldvar.is_some() {
-            exports = oldvar.unwrap().exports();
+        } else if let Some(v) = oldvar {
+            exports = v.exports();
         }
 
         // Resolve whether to be a path variable.
@@ -1003,8 +1003,8 @@ impl EnvStackImpl {
         let pathvar;
         if query.has_pathvar_unpathvar {
             pathvar = query.pathvar;
-        } else if oldvar.is_some() {
-            pathvar = oldvar.unwrap().is_pathvar();
+        } else if let Some(v) = oldvar {
+            pathvar = v.is_pathvar();
         } else {
             pathvar = variable_should_auto_pathvar(key);
         }

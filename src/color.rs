@@ -252,7 +252,7 @@ impl RgbColor {
     /// - `#F3A035`
     /// - `FA3`
     /// - `F3A035`
-
+    ///
     /// Parses input in the form of `#RGB` or `#RRGGBB` with an optional single leading `#` into
     /// an instance of [`RgbColor`].
     ///

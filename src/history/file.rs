@@ -273,9 +273,9 @@ fn maybe_unescape_yaml_fish_2_0(s: &[u8]) -> Cow<[u8]> {
     unescape_yaml_fish_2_0(s).into()
 }
 
-/// Unescapes the fish-specific yaml variant. Use [`maybe_unescape_yaml_fish_2_0()`] if you're not
-/// positive the input contains an escape.
-
+// Unescapes the fish-specific yaml variant. Use [`maybe_unescape_yaml_fish_2_0()`] if you're not
+// positive the input contains an escape.
+//
 // This function is called on every input event and shows up heavily in all flamegraphs.
 // Various approaches were benchmarked against real-world fish-history files on lines with escapes,
 // and this implementation (chunk_loop_box) won out. Make changes with care!

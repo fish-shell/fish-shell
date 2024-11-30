@@ -795,7 +795,6 @@ fn create_output_stream_for_builtin(
 
 /// Handle output from a builtin, by printing the contents of builtin_io_streams to the redirections
 /// given in io_chain.
-
 fn handle_builtin_output(
     parser: &Parser,
     j: &Job,

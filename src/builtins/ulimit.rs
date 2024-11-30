@@ -305,7 +305,16 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             None => return STATUS_CMD_ERROR,
         }
     } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
-        limit as rlim_t * get_multiplier(what)
+        let Some(x) = get_multiplier(what).checked_mul(limit as rlim_t) else {
+            streams.err.append(wgettext_fmt!(
+                "%ls: Invalid limit '%ls'\n",
+                cmd,
+                w.argv[w.wopt_index]
+            ));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        };
+        x
     } else {
         streams.err.append(wgettext_fmt!(
             "%ls: Invalid limit '%ls'\n",

@@ -120,7 +120,7 @@ Building
 Dependencies
 ~~~~~~~~~~~~
 
-Compiling fish from a tarball requires:
+Compiling fish requires:
 
 -  Rust (version 1.70 or later)
 -  CMake (version 3.5 or later)
@@ -134,8 +134,8 @@ cloned git repository.
 
 Additionally, running the full test suite requires Python 3, tmux, and the pexpect package.
 
-Building from source (all platforms) - Makefile generator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building from source with CMake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To install into ``/usr/local``, run:
 
@@ -149,10 +149,34 @@ To install into ``/usr/local``, run:
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
 
+Building fish as self-installable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also build fish as a self-installing binary.
+
+This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary,
+and you can unpack them to ~/.local/share/fish/install/ by running ``fish --install`` (or ``fish --install=noconfirm`` to skip the confirmation).
+
+You will have to use ``--install`` once per user and you will have to run it again when you upgrade fish. It will tell you to.
+
+To install fish as self-installable, just use ``cargo``, like:
+
+.. code:: bash
+
+   cargo install --path /path/to/fish # if you have a git clone
+   cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0 # to build from git once 4.0 is released
+   cargo install --git https://github.com/fish-shell/fish-shell # to build the current development snapshot without cloning
+
+This will place the binaries in ~/.cargo/bin/, but you can place them wherever you want.
+
+This build won't have the html docs (``help`` will open the online version) or translations.
+
+You can also link it statically (but not against glibc) and move it to other computers.
+
 Build options
 ~~~~~~~~~~~~~
 
-In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish has some other options available to customize it.
+In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish's CMake build has some other options available to customize it.
 
 - BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
 - INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).

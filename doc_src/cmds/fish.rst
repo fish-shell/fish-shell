@@ -40,6 +40,10 @@ The following options are available:
 **-i** or **--interactive**
     The shell is interactive.
 
+**--install[=noconfirm]**
+    When built as self-installable (via cargo), this will unpack fish's datafiles and place them in ~/.local/share/fish/install/.
+    Using ``--install=noconfirm`` will skip the confirmation step.
+
 **-l** or **--login**
     Act as if invoked as a login shell.
 

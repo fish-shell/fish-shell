@@ -27,11 +27,8 @@ use crate::common::{
 use crate::env::env_init;
 use crate::env::environment::Environment;
 use crate::env::EnvStack;
-// TODO: We should use streams instead of this.
-use crate::eprintf;
 use crate::expand::INTERNAL_SEPARATOR;
 use crate::fds::set_cloexec;
-use crate::fprintf;
 #[allow(unused_imports)]
 use crate::future::{IsSomeAnd, IsSorted};
 use crate::global_safety::RelaxedAtomicBool;
@@ -41,7 +38,6 @@ use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::{apply_indents, parse_util_compute_indents, SPACES_PER_INDENT};
 use crate::print_help::print_help;
-use crate::printf;
 use crate::threads;
 use crate::tokenizer::{TokenType, Tokenizer, TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS};
 use crate::topic_monitor::topic_monitor_init;
@@ -742,8 +738,19 @@ pub fn main() {
 }
 
 fn throwing_main() -> i32 {
+    // TODO: Duplicated with fish_key_reader
+    use crate::io::FdOutputStream;
+    use crate::io::IoChain;
+    use crate::io::OutputStream::Fd;
+    use libc::{STDERR_FILENO, STDOUT_FILENO};
+
     topic_monitor_init();
     threads::init();
+
+    let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
+    let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
+    let io_chain = IoChain::new();
+    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //
@@ -755,26 +762,24 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    do_indent(args)
-}
 
-pub fn fish_indent(
-    _parser: &Parser,
-    _streams: &mut IoStreams,
-    args: &mut [&wstr],
-) -> Option<c_int> {
-    let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    Some(do_indent(args))
-}
-
-fn do_indent(args: Vec<WString>) -> i32 {
+    // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
             future_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 
-    // Types of output we support.
+    do_indent(&mut streams, args)
+}
+
+pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+    let args = args.iter_mut().map(|x| x.to_owned()).collect();
+    Some(do_indent(streams, args))
+}
+
+fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
+    // Types of output we support
     #[derive(Eq, PartialEq)]
     enum OutputType {
         PlainText,
@@ -822,14 +827,11 @@ fn do_indent(args: Vec<WString>) -> i32 {
                 return STATUS_CMD_OK.unwrap();
             }
             'v' => {
-                printf!(
-                    "%s",
-                    wgettext_fmt!(
-                        "%s, version %s\n",
-                        PROGRAM_NAME.get().unwrap(),
-                        crate::BUILD_VERSION
-                    )
-                );
+                streams.out.appendln(wgettext_fmt!(
+                    "%s, version %s",
+                    PROGRAM_NAME.get().unwrap(),
+                    crate::BUILD_VERSION
+                ));
                 return STATUS_CMD_OK.unwrap();
             }
             'w' => output_type = OutputType::File,
@@ -844,7 +846,9 @@ fn do_indent(args: Vec<WString>) -> i32 {
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {
-                        printf!("Debug enabled for category: %s\n", cat.name);
+                        streams
+                            .out
+                            .appendln(wgettext_fmt!("Debug enabled for category: %s", cat.name));
                     }
                 }
             }
@@ -861,6 +865,7 @@ fn do_indent(args: Vec<WString>) -> i32 {
 
     let args = &w.argv[w.wopt_index..];
 
+    // TODO: Figure out if this works and potentially remove it.
     // Direct any debug output right away.
     if let Some(debug_output) = debug_output {
         let file = {
@@ -869,7 +874,9 @@ fn do_indent(args: Vec<WString>) -> i32 {
             unsafe { libc::fopen(debug_output.as_ptr(), mode.as_ptr()) }
         };
         if file.is_null() {
-            eprintf!("Could not open file %s\n", debug_output);
+            streams
+                .err
+                .appendln(wgettext_fmt!("Could not open file %s", debug_output));
             perror("fopen");
             return -1;
         }
@@ -886,13 +893,10 @@ fn do_indent(args: Vec<WString>) -> i32 {
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                eprintf!(
-                    "%s",
-                    wgettext_fmt!(
-                        "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n",
-                        PROGRAM_NAME.get().unwrap()
-                    )
-                );
+                streams.err.appendln(wgettext_fmt!(
+                    "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish",
+                    PROGRAM_NAME.get().unwrap()
+                ));
                 return STATUS_CMD_ERROR.unwrap();
             }
             match read_file(stdin()) {
@@ -910,10 +914,11 @@ fn do_indent(args: Vec<WString>) -> i32 {
                     output_location = arg;
                 }
                 Err(err) => {
-                    eprintf!(
-                        "%s",
-                        wgettext_fmt!("Opening \"%s\" failed: %s\n", arg, err.to_string())
-                    );
+                    streams.err.appendln(wgettext_fmt!(
+                        "Opening \"%s\" failed: %s",
+                        arg,
+                        err.to_string()
+                    ));
                     return STATUS_CMD_ERROR.unwrap();
                 }
             }
@@ -963,7 +968,7 @@ fn do_indent(args: Vec<WString>) -> i32 {
                 }
             }
         } else {
-            prettify(&src, do_indent)
+            prettify(streams, &src, do_indent)
         };
 
         // Maybe colorize.
@@ -990,14 +995,11 @@ fn do_indent(args: Vec<WString>) -> i32 {
                             let _ = file.write_all(&wcs2string(&output_wtext));
                         }
                         Err(err) => {
-                            eprintf!(
-                                "%s",
-                                wgettext_fmt!(
-                                    "Opening \"%s\" failed: %s\n",
-                                    output_location,
-                                    err.to_string()
-                                )
-                            );
+                            streams.err.appendln(wgettext_fmt!(
+                                "Opening \"%s\" failed: %s",
+                                output_location,
+                                err.to_string()
+                            ));
                             return STATUS_CMD_ERROR.unwrap();
                         }
                     }
@@ -1015,7 +1017,7 @@ fn do_indent(args: Vec<WString>) -> i32 {
             OutputType::Check => {
                 if output_wtext != src {
                     if let Some(arg) = args.get(i) {
-                        eprintf!("%s\n", arg);
+                        streams.err.appendln(*arg);
                     }
                     retval += 1;
                 }
@@ -1123,7 +1125,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
 }
 
 // Entry point for prettification.
-fn prettify(src: &wstr, do_indent: bool) -> WString {
+fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
     if DUMP_PARSE_TREE.load() {
         let ast = Ast::parse(
             src,
@@ -1133,7 +1135,7 @@ fn prettify(src: &wstr, do_indent: bool) -> WString {
             None,
         );
         let ast_dump = ast.dump(src);
-        eprintf!("%s\n", ast_dump);
+        streams.err.appendln(ast_dump);
     }
     let mut printer = PrettyPrinter::new(src, do_indent);
     printer.prettify()

@@ -17,7 +17,6 @@ use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
-    eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
@@ -27,7 +26,6 @@ use crate::{
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
-    printf,
     proc::set_interactive_session,
     reader::{check_exit_loop_maybe_warning, reader_init},
     signal::signal_set_handlers,
@@ -40,7 +38,7 @@ use crate::{
 use super::prelude::*;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-fn should_exit(recent_keys: &mut Vec<Key>, key: Key) -> bool {
+fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<Key>, key: Key) -> bool {
     recent_keys.push(key);
 
     for evt in [VINTR, VEOF] {
@@ -51,10 +49,10 @@ fn should_exit(recent_keys: &mut Vec<Key>, key: Key) -> bool {
             if recent_keys.iter().rev().nth(1) == Some(&cc) {
                 return true;
             }
-            eprintf!(
+            streams.err.append(wgettext_fmt!(
                 "Press ctrl-%c again to exit\n",
                 char::from(modes.c_cc[evt] + 0x60)
-            );
+            ));
             return false;
         }
     }
@@ -89,12 +87,12 @@ fn sequence_name(recent_chars: &mut Vec<u8>, c: char) -> Option<WString> {
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
+fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> i32 {
     let mut first_char_seen = false;
     let mut queue = InputEventQueue::new(STDIN_FILENO);
     let mut recent_chars1 = vec![];
     let mut recent_chars2 = vec![];
-    eprintf!("Press a key:\n");
+    streams.err.appendln("Press a key:\n");
 
     terminal_protocols_enable_ifn();
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
@@ -108,19 +106,23 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
             continue;
         }
         if verbose {
-            printf!("# decoded from: ");
+            streams.out.append(L!("# decoded from: "));
             for byte in kevt.seq.chars() {
-                printf!("%s", &char_to_symbol(byte));
+                streams.out.append(char_to_symbol(byte));
             }
-            printf!("\n");
+            streams.out.append(L!("\n"));
         }
-        printf!("bind %s 'do something'\n", kevt.key);
+        streams
+            .out
+            .append(sprintf!("bind %s 'do something'\n", kevt.key));
         if let Some(name) = sequence_name(&mut recent_chars1, c) {
-            printf!("bind -k %ls 'do something'\n", name);
+            streams
+                .out
+                .append(sprintf!("bind -k %ls 'do something'\n", name));
         }
 
-        if continuous_mode && should_exit(&mut recent_chars2, kevt.key) {
-            eprintf!("\nExiting at your request.\n");
+        if continuous_mode && should_exit(streams, &mut recent_chars2, kevt.key) {
+            streams.err.appendln("\nExiting at your request.");
             break;
         }
 
@@ -130,7 +132,7 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
+fn setup_and_process_keys(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> i32 {
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
@@ -138,21 +140,23 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     terminal_protocol_hacks();
 
     if continuous_mode {
-        eprintf!("\n");
-        eprintf!("To terminate this program type \"exit\" or \"quit\" in this window,\n");
+        streams
+            .err
+            .appendln("To terminate this program type \"exit\" or \"quit\" in this window,");
         let modes = shell_modes();
-        eprintf!(
-            "or press ctrl-%c or ctrl-%c twice in a row.\n",
+        streams.err.appendln(wgettext_fmt!(
+            "or press ctrl-%c or ctrl-%c twice in a row.",
             char::from(modes.c_cc[VINTR] + 0x60),
             char::from(modes.c_cc[VEOF] + 0x60)
-        );
-        eprintf!("\n");
+        ));
+        streams.err.appendln(L!("\n"));
     }
 
-    process_input(continuous_mode, verbose)
+    process_input(streams, continuous_mode, verbose)
 }
 
 fn parse_flags(
+    streams: &mut IoStreams,
     args: Vec<WString>,
     continuous_mode: &mut bool,
     verbose: &mut bool,
@@ -177,28 +181,22 @@ fn parse_flags(
                 return ControlFlow::Break(0);
             }
             'v' => {
-                printf!(
-                    "%s",
-                    wgettext_fmt!(
-                        "%ls, version %s\n",
-                        PROGRAM_NAME.get().unwrap(),
-                        crate::BUILD_VERSION
-                    )
-                );
+                streams.out.appendln(wgettext_fmt!(
+                    "%ls, version %s",
+                    PROGRAM_NAME.get().unwrap(),
+                    crate::BUILD_VERSION
+                ));
                 return ControlFlow::Break(0);
             }
             'V' => {
                 *verbose = true;
             }
             '?' => {
-                printf!(
-                    "%s",
-                    wgettext_fmt!(
-                        BUILTIN_ERR_UNKNOWN,
-                        "fish_key_reader",
-                        w.argv[w.wopt_index - 1]
-                    )
-                );
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_UNKNOWN,
+                    "fish_key_reader",
+                    w.argv[w.wopt_index - 1]
+                ));
                 return ControlFlow::Break(1);
             }
             _ => panic!(),
@@ -207,7 +205,9 @@ fn parse_flags(
 
     let argc = args.len() - w.wopt_index;
     if argc != 0 {
-        eprintf!("Expected no arguments, got %d\n", argc);
+        streams
+            .err
+            .appendln(wgettext_fmt!("Expected no arguments, got %d", argc));
         return ControlFlow::Break(1);
     }
 
@@ -223,16 +223,16 @@ pub fn fish_key_reader(
     let mut verbose = false;
 
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    if let ControlFlow::Break(i) = parse_flags(args, &mut continuous_mode, &mut verbose) {
+    if let ControlFlow::Break(i) = parse_flags(streams, args, &mut continuous_mode, &mut verbose) {
         return Some(i);
     }
 
-    if unsafe { libc::isatty(STDIN_FILENO) } == 0 {
-        eprintf!("Stdin must be attached to a tty.\n");
+    if streams.stdin_fd < 0 || unsafe { libc::isatty(streams.stdin_fd) } == 0 {
+        streams.err.appendln("Stdin must be attached to a tty.");
         return Some(1);
     }
 
-    Some(setup_and_process_keys(continuous_mode, verbose))
+    Some(setup_and_process_keys(streams, continuous_mode, verbose))
 }
 
 pub fn main() {
@@ -241,25 +241,40 @@ pub fn main() {
 }
 
 fn throwing_main() -> i32 {
-    let mut continuous_mode = false;
-    let mut verbose = false;
-
-    let args: Vec<WString> = std::env::args_os()
-        .map(|osstr| str2wcstring(osstr.as_bytes()))
-        .collect();
-    if let ControlFlow::Break(i) = parse_flags(args, &mut continuous_mode, &mut verbose) {
-        return i;
-    }
-
-    if !isatty(libc::STDOUT_FILENO) {
-        eprintf!("Stdin must be attached to a tty.\n");
-        return 1;
-    }
+    use crate::io::FdOutputStream;
+    use crate::io::IoChain;
+    use crate::io::OutputStream::Fd;
+    use libc::{STDERR_FILENO, STDOUT_FILENO};
 
     set_interactive_session(true);
     topic_monitor_init();
     threads::init();
     env_init(None, true, false);
     reader_init(false);
-    setup_and_process_keys(continuous_mode, verbose)
+
+    let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
+    let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
+    let io_chain = IoChain::new();
+    let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
+
+    let mut continuous_mode = false;
+    let mut verbose = false;
+
+    let args: Vec<WString> = std::env::args_os()
+        .map(|osstr| str2wcstring(osstr.as_bytes()))
+        .collect();
+    if let ControlFlow::Break(i) =
+        parse_flags(&mut streams, args, &mut continuous_mode, &mut verbose)
+    {
+        return i;
+    }
+
+    if !isatty(libc::STDIN_FILENO) {
+        streams
+            .err
+            .appendln(wgettext!("Stdin must be attached to a tty."));
+        return 1;
+    }
+
+    setup_and_process_keys(&mut streams, continuous_mode, verbose)
 }

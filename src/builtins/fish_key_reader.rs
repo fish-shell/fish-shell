@@ -11,8 +11,6 @@ use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 
-#[allow(unused_imports)]
-use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},

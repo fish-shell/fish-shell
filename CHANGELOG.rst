@@ -110,6 +110,7 @@ Scripting improvements
 - Universal variables can now store strings containing invalid Unicode codepoints (:issue:`10313`).
 - A new ``path basename -E`` option that causes it to return the basename ("filename" with the directory prefix removed) with the final extension (if any) also removed. This is a shorter version of ``path change-extension "" (path basename $foo)`` (:issue:`10521`).
 - A new ``math --scale-mode`` option to select ``truncate``, ``round``, ``floor``, ``ceiling`` as you wish; the default value is ``truncate``. (:issue:`9117`).
+- ``random`` is now less strict about its arguments, allowing a start larger or equal to the end. (:issue:`10879`)
 
 Interactive improvements
 ------------------------

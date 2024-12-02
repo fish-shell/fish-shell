@@ -135,22 +135,14 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
         }
     }
 
-    if end <= start {
-        streams
-            .err
-            .append(wgettext_fmt!("%ls: END must be greater than START\n", cmd,));
-        return STATUS_INVALID_ARGS;
-    }
+    let (start, end) = if start <= end {
+        (start, end)
+    } else {
+        (end, start)
+    };
 
     // Using abs_diff() avoids an i64 overflow if start is i64::MIN and end is i64::MAX
     let possibilities = end.abs_diff(start) / step;
-    if possibilities == 0 {
-        streams.err.append(wgettext_fmt!(
-            "%ls: range contains only one possible value\n",
-            cmd,
-        ));
-        return STATUS_INVALID_ARGS;
-    }
 
     let rand = {
         let mut engine = RNG.lock().unwrap();

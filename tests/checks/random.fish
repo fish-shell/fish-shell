@@ -12,16 +12,12 @@ random $diff_max
 #CHECKERR: random: 18446744073709551614: invalid integer
 random -- 1 2 3 4
 #CHECKERR: random: too many arguments
-random -- 10 -10
-#CHECKERR: random: END must be greater than START
 random -- 10 $diff_max
 #CHECKERR: random: 18446744073709551614: invalid integer
 random -- 1 1d
 random -- 1 1c 10
 #CHECKERR: random: 1d: invalid integer
 #CHECKERR: random: 1c: invalid integer
-random -- 10 10
-#CHECKERR: random: END must be greater than START
 random -- 1 - 10
 #CHECKERR: random: -: invalid integer
 random -- 1 -1 10
@@ -30,10 +26,6 @@ random -- 1 $min 10
 #CHECKERR: random: -9223372036854775807: invalid integer
 random -- 1 0 10
 #CHECKERR: random: STEP must be a positive integer
-random -- 1 11 10
-#CHECKERR: random: range contains only one possible value
-random -- 0 $diff_max $max
-#CHECKERR: random: range contains only one possible value
 random choice
 #CHECKERR: random: nothing to choose from
 random choic a b c
@@ -42,6 +34,7 @@ random choic a b c
 function check_boundaries
     if not test "$argv[1]" -ge "$argv[2]" -a "$argv[1]" -le "$argv[3]"
         printf "Unexpected: %s <= %s <= %s not verified\n" $argv[2] $argv[1] $argv[3] >&2
+        status print-stack-trace
         return 1
     end
 end
@@ -55,6 +48,7 @@ function check_contains
         printf "Unexpected: %s not among possibilities" $argv[1] >&2
         printf " %s" $argv[2..-1] >&2
         printf "\n" >&2
+        status print-stack-trace
         return 1
     end
 end
@@ -73,6 +67,7 @@ for i in (seq 10)
     test_range 0 10
     test_range -10 -1
     test_range -10 10
+    test_range 5 5
 
     test_range 0 $max
     test_range $min -1
@@ -89,6 +84,7 @@ for i in (seq 10)
     check_contains (random -- $min $close_max 0) $min -1
     check_contains (random -- $min $max $max) $min 0 $max
     check_contains (random -- $min $diff_max $max) $min $max
+    check_contains (random -- 5 0) 0 1 2 3 4 5
 
     test_step 0 $i 10
     test_step -5 $i 5

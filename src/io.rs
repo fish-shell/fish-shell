@@ -20,7 +20,6 @@ use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::RefCell;
@@ -30,7 +29,7 @@ use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, LazyLock, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -1034,7 +1033,7 @@ const NOCLOB_ERROR: &wstr = L!("The file '%ls' already exists");
 const OPEN_MASK: Mode = Mode::from_bits_truncate(0o666);
 
 /// Provide the fd monitor used for background fillthread operations.
-static FD_MONITOR: Lazy<FdMonitor> = Lazy::new(FdMonitor::new);
+static FD_MONITOR: LazyLock<FdMonitor> = LazyLock::new(FdMonitor::new);
 
 pub fn fd_monitor() -> &'static FdMonitor {
     &FD_MONITOR

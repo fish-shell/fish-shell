@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
+use std::sync::LazyLock;
 
 use libc::{c_uint, rlim_t, RLIM_INFINITY};
 use nix::errno::Errno;
-use once_cell::sync::Lazy;
 
 use crate::fallback::{fish_wcswidth, wcscasecmp};
 use crate::libc::*;
@@ -353,7 +353,7 @@ impl Resource {
 }
 
 /// Array of resource_t structs, describing all known resource types.
-static RESOURCE_ARR: Lazy<Box<[Resource]>> = Lazy::new(|| {
+static RESOURCE_ARR: LazyLock<Box<[Resource]>> = LazyLock::new(|| {
     let resources_info = [
         (
             RLIMIT_SBSIZE(),

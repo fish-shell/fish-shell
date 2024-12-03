@@ -1,11 +1,11 @@
 use std::{
     panic::{set_hook, take_hook, UnwindSafe},
     sync::atomic::{AtomicBool, Ordering},
+    sync::OnceLock,
     time::Duration,
 };
 
 use libc::STDIN_FILENO;
-use once_cell::sync::OnceCell;
 
 use crate::{
     common::{read_blocked, PROGRAM_NAME},
@@ -13,7 +13,7 @@ use crate::{
     threads::{asan_maybe_exit, is_main_thread},
 };
 
-pub static AT_EXIT: OnceCell<Box<dyn Fn(bool) + Send + Sync>> = OnceCell::new();
+pub static AT_EXIT: OnceLock<Box<dyn Fn(bool) + Send + Sync>> = OnceLock::new();
 
 pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
     // The isatty() check will stop us from hanging in most fish tests, but not those

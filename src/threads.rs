@@ -6,7 +6,7 @@ use crate::reader::Reader;
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 impl FloggableDebug for std::thread::ThreadId {}
@@ -30,8 +30,8 @@ const IO_WAIT_FOR_WORK_DURATION: Duration = Duration::from_millis(500);
 static IO_THREAD_POOL: OnceLock<Mutex<ThreadPool>> = OnceLock::new();
 
 /// The event signaller singleton used for completions and queued main thread requests.
-static NOTIFY_SIGNALLER: once_cell::sync::Lazy<crate::fd_monitor::FdEventSignaller> =
-    once_cell::sync::Lazy::new(crate::fd_monitor::FdEventSignaller::new);
+static NOTIFY_SIGNALLER: LazyLock<crate::fd_monitor::FdEventSignaller> =
+    LazyLock::new(crate::fd_monitor::FdEventSignaller::new);
 
 /// A [`ThreadPool`] work request.
 type WorkItem = Box<dyn FnOnce() + 'static + Send>;

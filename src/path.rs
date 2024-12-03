@@ -12,10 +12,10 @@ use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{errno, set_errno, Errno};
 use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
-use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::os::unix::prelude::*;
+use std::sync::LazyLock;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
@@ -198,7 +198,7 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 }
 
 // PREFIX is defined at build time.
-pub static DEFAULT_PATH: Lazy<[WString; 3]> = Lazy::new(|| {
+pub static DEFAULT_PATH: LazyLock<[WString; 3]> = LazyLock::new(|| {
     [
         WString::from_str(env!("PREFIX")) + L!("/bin"),
         L!("/usr/bin").to_owned(),
@@ -759,20 +759,20 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
 }
 
 fn get_data_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_DATA_HOME"), L!("/.local/share/fish")));
     &DIR
 }
 
 fn get_cache_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
     &DIR
 }
 
 fn get_config_directory() -> &'static BaseDirectory {
-    static DIR: Lazy<BaseDirectory> =
-        Lazy::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
+    static DIR: LazyLock<BaseDirectory> =
+        LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
     &DIR
 }
 

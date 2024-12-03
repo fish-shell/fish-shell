@@ -37,11 +37,11 @@ pub mod prelude {
     use crate::topic_monitor::topic_monitor_init;
     use crate::wutil::wgetcwd;
     use crate::{env::EnvStack, proc::proc_init};
-    use once_cell::sync::OnceCell;
     use std::cell::RefCell;
     use std::env::set_current_dir;
     use std::ffi::CString;
     use std::rc::Rc;
+    use std::sync::OnceLock;
 
     /// A wrapper around a Parser with some test helpers.
     pub struct TestParser {
@@ -85,7 +85,7 @@ pub mod prelude {
     }
 
     pub fn test_init() -> impl ScopeGuarding<Target = ()> {
-        static DONE: OnceCell<()> = OnceCell::new();
+        static DONE: OnceLock<()> = OnceLock::new();
         DONE.get_or_init(|| {
             // If we are building with `cargo build` and have build w/ `cmake`, FISH_BUILD_DIR might
             // not yet exist.

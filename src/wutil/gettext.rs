@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::ffi::CString;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex, OnceLock};
 
 use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use errno::{errno, set_errno};
-use once_cell::sync::{Lazy, OnceCell};
 
 #[cfg(gettext)]
 mod internal {
@@ -54,7 +53,7 @@ fn wgettext_really_init() {
 }
 
 fn wgettext_init_if_necessary() {
-    static INIT: OnceCell<()> = OnceCell::new();
+    static INIT: OnceLock<()> = OnceLock::new();
     INIT.get_or_init(wgettext_really_init);
 }
 
@@ -86,8 +85,8 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
     );
 
     // Note that because entries are immortal, we simply leak non-static keys, and all values.
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
-        Lazy::new(|| Mutex::new(HashMap::new()));
+    static WGETTEXT_MAP: LazyLock<Mutex<HashMap<&'static wstr, &'static wstr>>> =
+        LazyLock::new(|| Mutex::new(HashMap::new()));
     let mut wmap = WGETTEXT_MAP.lock().unwrap();
     let res = match wmap.get(key) {
         Some(v) => *v,

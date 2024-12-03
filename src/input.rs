@@ -14,11 +14,10 @@ use crate::reader::{
 use crate::signal::signal_clear_cancel;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
-use once_cell::sync::{Lazy, OnceCell};
 use std::ffi::CString;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
-    Mutex, MutexGuard,
+    LazyLock, Mutex, MutexGuard, OnceLock,
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
@@ -246,13 +245,13 @@ pub struct InputMappingSet {
 
 /// Access the singleton input mapping set.
 pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
-    static INPUT_MAPPINGS: Lazy<Mutex<InputMappingSet>> =
-        Lazy::new(|| Mutex::new(InputMappingSet::default()));
+    static INPUT_MAPPINGS: LazyLock<Mutex<InputMappingSet>> =
+        LazyLock::new(|| Mutex::new(InputMappingSet::default()));
     INPUT_MAPPINGS.lock().unwrap()
 }
 
 /// Terminfo map list.
-static TERMINFO_MAPPINGS: OnceCell<Box<[TerminfoMapping]>> = OnceCell::new();
+static TERMINFO_MAPPINGS: OnceLock<Box<[TerminfoMapping]>> = OnceLock::new();
 
 /// Return the current bind mode.
 fn input_get_bind_mode(vars: &dyn Environment) -> WString {

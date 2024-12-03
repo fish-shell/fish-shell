@@ -16,6 +16,10 @@ use crate::screen::screen_set_midnight_commander_hack;
 use crate::screen::LAYOUT_CACHE_SHARED;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
+// FIXME: Replace this with `std::sync::LazyLock` once `std::sync::LazyLock::get` function is stablized.
+// To avoid extra unnecessary works, the `Lazy` is renamed to `LazyLock` to make its name corresponds to the std one.
+// See https://github.com/rust-lang/rust/issues/129333 for more details about `get` function.
+use once_cell::sync::Lazy as LazyLock;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
@@ -41,54 +45,53 @@ const CURSES_VARIABLES: [&wstr; 3] = [
 static USE_POSIX_SPAWN: AtomicBool = AtomicBool::new(false);
 
 /// The variable dispatch table. This is set at startup and cannot be modified after.
-static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
-    once_cell::sync::Lazy::new(|| {
-        let mut table = VarDispatchTable::default();
+static VAR_DISPATCH_TABLE: LazyLock<VarDispatchTable> = LazyLock::new(|| {
+    let mut table = VarDispatchTable::default();
 
-        for name in LOCALE_VARIABLES {
-            table.add_anon(name, handle_locale_change);
-        }
+    for name in LOCALE_VARIABLES {
+        table.add_anon(name, handle_locale_change);
+    }
 
-        for name in CURSES_VARIABLES {
-            table.add_anon(name, handle_curses_change);
-        }
+    for name in CURSES_VARIABLES {
+        table.add_anon(name, handle_curses_change);
+    }
 
-        table.add(L!("TZ"), handle_tz_change);
-        table.add_anon(L!("fish_term256"), handle_fish_term_change);
-        table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
-        table.add_anon(L!("fish_escape_delay_ms"), update_wait_on_escape_ms);
-        table.add_anon(
-            L!("fish_sequence_key_delay_ms"),
-            update_wait_on_sequence_key_ms,
-        );
-        table.add_anon(L!("fish_emoji_width"), guess_emoji_width);
-        table.add_anon(L!("fish_ambiguous_width"), handle_change_ambiguous_width);
-        table.add_anon(L!("LINES"), handle_term_size_change);
-        table.add_anon(L!("COLUMNS"), handle_term_size_change);
-        table.add_anon(L!("fish_complete_path"), handle_complete_path_change);
-        table.add_anon(L!("fish_function_path"), handle_function_path_change);
-        table.add_anon(L!("fish_read_limit"), handle_read_limit_change);
-        table.add_anon(L!("fish_history"), handle_fish_history_change);
-        table.add_anon(
-            L!("fish_autosuggestion_enabled"),
-            handle_autosuggestion_change,
-        );
-        table.add_anon(
-            L!("fish_use_posix_spawn"),
-            handle_fish_use_posix_spawn_change,
-        );
-        table.add_anon(L!("fish_trace"), handle_fish_trace);
-        table.add_anon(
-            L!("fish_cursor_selection_mode"),
-            handle_fish_cursor_selection_mode_change,
-        );
-        table.add_anon(
-            L!("fish_cursor_end_mode"),
-            handle_fish_cursor_end_mode_change,
-        );
+    table.add(L!("TZ"), handle_tz_change);
+    table.add_anon(L!("fish_term256"), handle_fish_term_change);
+    table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
+    table.add_anon(L!("fish_escape_delay_ms"), update_wait_on_escape_ms);
+    table.add_anon(
+        L!("fish_sequence_key_delay_ms"),
+        update_wait_on_sequence_key_ms,
+    );
+    table.add_anon(L!("fish_emoji_width"), guess_emoji_width);
+    table.add_anon(L!("fish_ambiguous_width"), handle_change_ambiguous_width);
+    table.add_anon(L!("LINES"), handle_term_size_change);
+    table.add_anon(L!("COLUMNS"), handle_term_size_change);
+    table.add_anon(L!("fish_complete_path"), handle_complete_path_change);
+    table.add_anon(L!("fish_function_path"), handle_function_path_change);
+    table.add_anon(L!("fish_read_limit"), handle_read_limit_change);
+    table.add_anon(L!("fish_history"), handle_fish_history_change);
+    table.add_anon(
+        L!("fish_autosuggestion_enabled"),
+        handle_autosuggestion_change,
+    );
+    table.add_anon(
+        L!("fish_use_posix_spawn"),
+        handle_fish_use_posix_spawn_change,
+    );
+    table.add_anon(L!("fish_trace"), handle_fish_trace);
+    table.add_anon(
+        L!("fish_cursor_selection_mode"),
+        handle_fish_cursor_selection_mode_change,
+    );
+    table.add_anon(
+        L!("fish_cursor_end_mode"),
+        handle_fish_cursor_end_mode_change,
+    );
 
-        table
-    });
+    table
+});
 
 type NamedEnvCallback = fn(name: &wstr, env: &EnvStack);
 type AnonEnvCallback = fn(env: &EnvStack);
@@ -207,10 +210,8 @@ fn guess_emoji_width(vars: &EnvStack) {
 
 /// React to modifying the given variable.
 pub fn env_dispatch_var_change(key: &wstr, vars: &EnvStack) {
-    use once_cell::sync::Lazy;
-
     // We want to ignore variable changes until the dispatch table is explicitly initialized.
-    if let Some(dispatch_table) = Lazy::get(&VAR_DISPATCH_TABLE) {
+    if let Some(dispatch_table) = LazyLock::get(&VAR_DISPATCH_TABLE) {
         dispatch_table.dispatch(key, vars);
     }
 }
@@ -357,12 +358,10 @@ fn handle_fish_trace(vars: &EnvStack) {
 }
 
 pub fn env_dispatch_init(vars: &EnvStack) {
-    use once_cell::sync::Lazy;
-
     run_inits(vars);
     // env_dispatch_var_change() purposely supresses change notifications until the dispatch table
     // was initialized elsewhere (either explicitly as below or via deref of VAR_DISPATCH_TABLE).
-    Lazy::force(&VAR_DISPATCH_TABLE);
+    LazyLock::force(&VAR_DISPATCH_TABLE);
 }
 
 /// Runs the subset of dispatch functions that need to be called at startup.

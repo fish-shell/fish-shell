@@ -6,11 +6,11 @@
 use crate::widecharwidth::{WcLookupTable, WcWidth};
 use crate::{common::is_console_session, wchar::prelude::*};
 use errno::{errno, Errno};
-use once_cell::sync::Lazy;
 use std::cmp;
 use std::fs::File;
 use std::os::fd::FromRawFd;
 use std::sync::atomic::{AtomicIsize, Ordering};
+use std::sync::LazyLock;
 use std::{ffi::CString, mem};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
@@ -29,7 +29,7 @@ pub static FISH_AMBIGUOUS_WIDTH: AtomicIsize = AtomicIsize::new(1);
 // For some reason, this is declared here and exposed here, but is set in `env_dispatch`.
 pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
 
-static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
+static WC_LOOKUP_TABLE: LazyLock<WcLookupTable> = LazyLock::new(WcLookupTable::new);
 
 /// A safe wrapper around the system `wcwidth()` function
 pub fn wcwidth(c: char) -> isize {

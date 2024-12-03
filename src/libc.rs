@@ -1,14 +1,14 @@
 use std::sync::atomic::AtomicPtr;
+use std::sync::LazyLock;
 
 use libc::{c_char, c_int};
-use once_cell::sync::Lazy;
 
 pub static _PATH_BSHELL: AtomicPtr<c_char> = AtomicPtr::new(std::ptr::null_mut());
 extern "C" {
     pub fn C_PATH_BSHELL() -> *const c_char;
 }
 
-pub static _PC_CASE_SENSITIVE: Lazy<c_int> = Lazy::new(|| unsafe { C_PC_CASE_SENSITIVE() });
+pub static _PC_CASE_SENSITIVE: LazyLock<c_int> = LazyLock::new(|| unsafe { C_PC_CASE_SENSITIVE() });
 extern "C" {
     fn C_PC_CASE_SENSITIVE() -> c_int;
 }

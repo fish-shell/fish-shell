@@ -31,7 +31,6 @@ use libc::{
     WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED, WIFSTOPPED, WNOHANG, WTERMSIG,
     WUNTRACED, _SC_CLK_TCK,
 };
-use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Cell, Ref, RefCell, RefMut};
@@ -43,7 +42,7 @@ use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 /// Types of processes.
 #[derive(Default, Eq, PartialEq)]
@@ -1866,8 +1865,8 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
 
 pub fn have_proc_stat() -> bool {
     // Check for /proc/self/stat to see if we are running with Linux-style procfs.
-    static HAVE_PROC_STAT_RESULT: Lazy<bool> =
-        Lazy::new(|| fs::metadata("/proc/self/stat").is_ok());
+    static HAVE_PROC_STAT_RESULT: LazyLock<bool> =
+        LazyLock::new(|| fs::metadata("/proc/self/stat").is_ok());
     *HAVE_PROC_STAT_RESULT
 }
 

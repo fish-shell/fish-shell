@@ -20,14 +20,13 @@ use crate::wutil::fish_iswalnum;
 use bitflags::bitflags;
 use core::slice;
 use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
-use once_cell::sync::OnceCell;
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicI32, AtomicU32, Ordering};
-use std::sync::{Arc, MutexGuard};
+use std::sync::{Arc, MutexGuard, OnceLock};
 use std::time;
 use std::{env, process};
 
@@ -1073,7 +1072,7 @@ pub fn get_obfuscation_read_char() -> char {
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Name of the current program. Should be set at startup. Used by the debug function.
-pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
+pub static PROGRAM_NAME: OnceLock<&'static wstr> = OnceLock::new();
 
 /// MS Windows tty devices do not currently have either a read or write timestamp - those respective
 /// fields of `struct stat` are always set to the current time, which means we can't rely on them.
@@ -1831,7 +1830,7 @@ pub const fn assert_sync<T: Sync>() {}
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
 pub fn is_console_session() -> bool {
-    static IS_CONSOLE_SESSION: OnceCell<bool> = OnceCell::new();
+    static IS_CONSOLE_SESSION: OnceLock<bool> = OnceLock::new();
     *IS_CONSOLE_SESSION.get_or_init(|| {
         const PATH_MAX: usize = libc::PATH_MAX as usize;
         let mut tty_name = [0u8; PATH_MAX];

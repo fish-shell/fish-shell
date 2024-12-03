@@ -19,7 +19,6 @@ use libc::{
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
-use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::UnsafeCell;
@@ -36,7 +35,7 @@ use std::rc::Rc;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, LazyLock, Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 
 use errno::{errno, Errno};
@@ -144,16 +143,16 @@ enum ExitState {
 
 static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 
-pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+pub static SHELL_MODES: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode on startup, which we restore on exit.
-pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+pub static TERMINAL_MODE_ON_STARTUP: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 /// Mode we use to execute programs.
-static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<libc::termios>> =
+    LazyLock::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
 static RUN_COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -180,19 +179,19 @@ static GENERATION: AtomicU32 = AtomicU32::new(0);
 /// Get the debouncer for autosuggestions and background highlighting.
 fn debounce_autosuggestions() -> &'static Debounce {
     const AUTOSUGGEST_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
+    static RES: OnceLock<Box<Debounce>> = OnceLock::new();
     RES.get_or_init(|| Box::new(Debounce::new(AUTOSUGGEST_TIMEOUT)))
 }
 
 fn debounce_highlighting() -> &'static Debounce {
     const HIGHLIGHT_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
+    static RES: OnceLock<Box<Debounce>> = OnceLock::new();
     RES.get_or_init(|| Box::new(Debounce::new(HIGHLIGHT_TIMEOUT)))
 }
 
 fn debounce_history_pager() -> &'static Debounce {
     const HISTORY_PAGER_TIMEOUT: Duration = Duration::from_millis(500);
-    static RES: once_cell::race::OnceBox<Debounce> = once_cell::race::OnceBox::new();
+    static RES: OnceLock<Box<Debounce>> = OnceLock::new();
     RES.get_or_init(|| Box::new(Debounce::new(HISTORY_PAGER_TIMEOUT)))
 }
 

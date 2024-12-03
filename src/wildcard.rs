@@ -4,6 +4,7 @@ use libc::X_OK;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs;
+use std::sync::LazyLock;
 
 use crate::common::{
     char_offset, is_windows_subsystem_for_linux, unescape_string, UnescapeFlags,
@@ -20,14 +21,14 @@ use crate::wcstringutil::{
 };
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
-use once_cell::sync::Lazy;
 
-static COMPLETE_EXEC_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command"));
-static COMPLETE_EXEC_LINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("command link"));
-static COMPLETE_FILE_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("file"));
-static COMPLETE_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("symlink"));
-static COMPLETE_DIRECTORY_SYMLINK_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("dir symlink"));
-static COMPLETE_DIRECTORY_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("directory"));
+static COMPLETE_EXEC_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("command"));
+static COMPLETE_EXEC_LINK_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("command link"));
+static COMPLETE_FILE_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("file"));
+static COMPLETE_SYMLINK_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("symlink"));
+static COMPLETE_DIRECTORY_SYMLINK_DESC: LazyLock<&wstr> =
+    LazyLock::new(|| wgettext!("dir symlink"));
+static COMPLETE_DIRECTORY_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("directory"));
 
 /// Character representing any character except '/' (slash).
 pub const ANY_CHAR: char = char_offset(WILDCARD_RESERVED_BASE, 0);

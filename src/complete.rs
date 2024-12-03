@@ -4,7 +4,7 @@ use std::{
     mem,
     sync::{
         atomic::{self, AtomicUsize},
-        Mutex, MutexGuard,
+        LazyLock, Mutex, MutexGuard,
     },
     time::{Duration, Instant},
 };
@@ -16,7 +16,6 @@ use crate::{
     wutil::sprintf,
 };
 use bitflags::bitflags;
-use once_cell::sync::Lazy;
 
 use crate::{
     abbrs::with_abbrs,
@@ -61,13 +60,13 @@ use crate::{
 // description strings should be defined in the same file?
 
 /// Description for ~USER completion.
-static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %ls"));
+static COMPLETE_USER_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("Home for %ls"));
 
 /// Description for short variables. The value is concatenated to this description.
-static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %ls"));
+static COMPLETE_VAR_DESC_VAL: LazyLock<&wstr> = LazyLock::new(|| wgettext!("Variable: %ls"));
 
 /// Description for abbreviations.
-static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
+static ABBR_DESC: LazyLock<&wstr> = LazyLock::new(|| wgettext!("Abbreviation: %ls"));
 
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
@@ -456,7 +455,7 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;
-static wrapper_map: Lazy<Mutex<WrapperMap>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static wrapper_map: LazyLock<Mutex<WrapperMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
 /// depending on the suffix of the string.
@@ -611,8 +610,8 @@ struct Completer<'ctx> {
     condition_cache: HashMap<WString, bool>,
 }
 
-static completion_autoloader: Lazy<Mutex<Autoload>> =
-    Lazy::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
+static completion_autoloader: LazyLock<Mutex<Autoload>> =
+    LazyLock::new(|| Mutex::new(Autoload::new(L!("fish_complete_path"))));
 
 impl<'ctx> Completer<'ctx> {
     pub fn new(ctx: &'ctx OperationContext<'ctx>, flags: CompletionRequestOptions) -> Self {

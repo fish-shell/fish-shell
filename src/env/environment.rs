@@ -28,13 +28,12 @@ use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
 use libc::{c_int, uid_t, STDOUT_FILENO, _IONBF};
-use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
 use std::io::Write;
 use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -561,7 +560,7 @@ fn setup_path() {
 
 /// The originally inherited variables and their values.
 /// This is a simple key->value map and not e.g. cut into paths.
-pub static INHERITED_VARS: OnceCell<HashMap<WString, WString>> = OnceCell::new();
+pub static INHERITED_VARS: OnceLock<HashMap<WString, WString>> = OnceLock::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
     let vars = EnvStack::globals();

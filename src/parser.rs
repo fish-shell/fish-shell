@@ -860,7 +860,7 @@ impl Parser {
         }
     }
 
-    /// Pushes a new block. Returns a pointer to the block, stored in the parser.
+    /// Pushes a new block. Returns an id (index) of the block, which is stored in the parser.
     pub fn push_block(&self, mut block: Block) -> BlockId {
         block.src_lineno = self.get_lineno();
         block.src_filename = self.current_filename();

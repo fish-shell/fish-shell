@@ -83,7 +83,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         Some(func_filename.clone()),
     );
 
-    // Construct argv from our null-terminated list.
+    // Construct argv for the sourced file from our remaining args.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
     let remaining_args = &args[optind + if argc == optind { 0 } else { 1 }..];
@@ -105,7 +105,5 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         retval = parser.get_last_status();
     }
 
-    // Do not close fd after calling reader_read. reader_read automatically closes it before calling
-    // eval.
     Some(retval)
 }

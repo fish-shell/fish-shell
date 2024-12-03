@@ -1363,8 +1363,7 @@ impl LayoutCache {
         }
     }
 
-    /// Finds the layout for a prompt, promoting it to the front. Returns nullptr if not found.
-    /// Note this points into our cache; do not modify the cache while the pointer lives.
+    /// Finds the layout for a prompt, promoting it to the front. Returns whether this was found.
     /// Exposed for testing.
     pub fn find_prompt_layout(
         &mut self,

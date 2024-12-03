@@ -1942,8 +1942,8 @@ pub trait Named {
     fn name(&self) -> &'static wstr;
 }
 
-/// Return a pointer to the first entry with the given name, assuming the entries are sorted by
-/// name. Return nullptr if not found.
+/// Return a reference to the first entry with the given name, assuming the entries are sorted by
+/// name. Return None if not found.
 pub fn get_by_sorted_name<T: Named>(name: &wstr, vals: &'static [T]) -> Option<&'static T> {
     match vals.binary_search_by_key(&name, |val| val.name()) {
         Ok(index) => Some(&vals[index]),

@@ -10,7 +10,6 @@ use std::ffi::{CString, OsStr};
 use std::fs;
 use std::io::{stdin, Read, Write};
 use std::os::unix::ffi::OsStrExt;
-use std::sync::atomic::Ordering;
 
 use crate::panic::panic_handler;
 use libc::{LC_ALL, STDOUT_FILENO};
@@ -21,19 +20,17 @@ use crate::ast::{
 };
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
 use crate::common::{
-    str2wcstring, unescape_string, wcs2string, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
-    PROGRAM_NAME,
+    str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
 use crate::env::env_init;
 use crate::env::environment::Environment;
 use crate::env::EnvStack;
 use crate::expand::INTERNAL_SEPARATOR;
-use crate::fds::set_cloexec;
 #[allow(unused_imports)]
 use crate::future::{IsSomeAnd, IsSorted};
+use crate::future_feature_flags;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{colorize, highlight_shell, HighlightRole, HighlightSpec};
-use crate::libc::setlinebuf;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
 use crate::parse_util::{apply_indents, parse_util_compute_indents, SPACES_PER_INDENT};
@@ -44,12 +41,7 @@ use crate::topic_monitor::topic_monitor_init;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::count_preceding_backslashes;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
-use crate::wutil::perror;
 use crate::wutil::{fish_iswalnum, write_to_fd};
-use crate::{
-    flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd},
-    future_feature_flags,
-};
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -795,14 +787,9 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
     let mut do_indent = true;
     let mut only_indent = false;
     let mut only_unindent = false;
-    // File path for debug output.
-    let mut debug_output = None;
 
-    let short_opts: &wstr = L!("+d:hvwicD:");
+    let short_opts: &wstr = L!("+hvwic");
     let long_opts: &[WOption] = &[
-        wopt(L!("debug"), ArgType::RequiredArgument, 'd'),
-        wopt(L!("debug-output"), ArgType::RequiredArgument, 'o'),
-        wopt(L!("debug-stack-frames"), ArgType::RequiredArgument, 'D'),
         wopt(L!("dump-parse-tree"), ArgType::NoArgument, 'P'),
         wopt(L!("no-indent"), ArgType::NoArgument, 'i'),
         wopt(L!("only-indent"), ArgType::NoArgument, '\x04'),
@@ -842,49 +829,11 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
-            'd' => {
-                activate_flog_categories_by_pattern(w.woptarg.unwrap());
-                for cat in flog::categories::all_categories() {
-                    if cat.enabled.load(Ordering::Relaxed) {
-                        streams
-                            .out
-                            .appendln(wgettext_fmt!("Debug enabled for category: %s", cat.name));
-                    }
-                }
-            }
-            'D' => {
-                // TODO: Option is currently useless.
-                // Either remove it or make it work with FLOG.
-            }
-            'o' => {
-                debug_output = Some(w.woptarg.unwrap());
-            }
             _ => return STATUS_CMD_ERROR.unwrap(),
         }
     }
 
     let args = &w.argv[w.wopt_index..];
-
-    // TODO: Figure out if this works and potentially remove it.
-    // Direct any debug output right away.
-    if let Some(debug_output) = debug_output {
-        let file = {
-            let debug_output = wcs2zstring(debug_output);
-            let mode = CString::new("w").unwrap();
-            unsafe { libc::fopen(debug_output.as_ptr(), mode.as_ptr()) }
-        };
-        if file.is_null() {
-            streams
-                .err
-                .appendln(wgettext_fmt!("Could not open file %s", debug_output));
-            perror("fopen");
-            return -1;
-        }
-        let fd = unsafe { libc::fileno(file) };
-        set_cloexec(fd, true);
-        unsafe { setlinebuf(file) };
-        set_flog_file_fd(fd);
-    }
 
     let mut retval = 0;
 

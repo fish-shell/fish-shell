@@ -543,6 +543,26 @@ pub struct ReaderData {
     in_flight_autosuggest_request: WString,
 
     rls: Option<ReadlineLoopState>,
+    redraw_attempt: RedrawAttempt,
+}
+
+pub struct RedrawAttempt {
+    threshold: usize,
+    attempts: usize,
+}
+
+impl RedrawAttempt {
+    fn exceeded(&self) -> bool {
+        self.threshold == self.attempts
+    }
+
+    fn reset(&mut self) {
+        self.attempts = 0;
+    }
+
+    fn record(&mut self) {
+        self.attempts += 1;
+    }
 }
 
 /// Reader is ReaderData equippeed with a Parser, so it can execute fish script.
@@ -922,6 +942,24 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     }
 }
 
+/// Change the number of attempts to redraw a prompt before giving up.
+pub fn reader_set_handle_redraw_attempts_change(vars: &dyn Environment) {
+    // We don't need to _change_ if we're not initialized yet.
+    let Some(data) = current_data() else {
+        return;
+    };
+    let attempts: usize = vars
+        .get(L!("fish_redraw_attempts"))
+        .and_then(|v| v.as_string().to_string().parse().ok())
+        .unwrap_or(3);
+    if data.redraw_attempt.threshold != attempts {
+        data.redraw_attempt.threshold = attempts;
+        data.force_exec_prompt_and_repaint = true;
+        data.input_data
+            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+    }
+}
+
 /// Tell the reader that it needs to re-exec the prompt and repaint.
 /// This may be called in response to e.g. a color variable change.
 pub fn reader_schedule_prompt_repaint() {
@@ -1166,6 +1204,10 @@ impl ReaderData {
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
             rls: None,
+            redraw_attempt: RedrawAttempt {
+                threshold: 3,
+                attempts: 0,
+            },
         }))
     }
 
@@ -4168,16 +4210,20 @@ impl<'a> Reader<'a> {
                 // producing an error.
                 let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
                     && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
-                exec_subshell(
-                    if left_prompt_deleted {
+                let status = exec_subshell(
+                    if zelf.redraw_attempt.exceeded() || left_prompt_deleted {
+                        zelf.redraw_attempt.reset();
                         DEFAULT_PROMPT
                     } else {
                         &zelf.conf.left_prompt_cmd
                     },
                     zelf.parser,
                     Some(&mut prompt_list),
-                    /*apply_exit_status=*/ false,
+                    /*apply_exit_status=*/ true,
                 );
+                if status != 0 {
+                    zelf.redraw_attempt.record();
+                }
                 zelf.left_prompt_buff = join_strings(&prompt_list, '\n');
             }
 

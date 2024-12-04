@@ -267,7 +267,8 @@ Now let's see a few cases::
 
   # Redirect both stderr and stdout to less
   print 2>&1 | less
-  print &| less       # equivalent using &|
+  # or
+  print &| less
 
   # Show the "out" on stderr, silence the "err"
   print >&2 2>/dev/null

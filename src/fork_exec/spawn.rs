@@ -3,7 +3,7 @@
 use super::blocked_signals_for_job;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
-use crate::signal::get_signals_to_default;
+use crate::signal::signals_to_default;
 use crate::{exec::is_thompson_shell_script, libc::_PATH_BSHELL};
 use errno::Errno;
 use libc::{c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
@@ -126,8 +126,7 @@ impl PosixSpawner {
         }
 
         // Everybody gets default handlers.
-        let sigdefault = get_signals_to_default();
-        attr.set_sigdefault(&sigdefault)?;
+        attr.set_sigdefault(&signals_to_default)?;
 
         // Reset the sigmask.
         let mut sigmask = unsafe { std::mem::zeroed() };

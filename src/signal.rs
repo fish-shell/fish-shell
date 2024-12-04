@@ -10,6 +10,7 @@ use crate::topic_monitor::{topic_monitor_principal, Generation, GenerationsList,
 use crate::wchar::prelude::*;
 use crate::wutil::{fish_wcstoi, perror};
 use errno::{errno, set_errno};
+use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 /// Store the "main" pid. This allows us to reliably determine if we are in a forked child.
@@ -275,7 +276,7 @@ pub fn signal_handle(sig: Signal) {
     sigaction(sig, &act, std::ptr::null_mut());
 }
 
-pub fn get_signals_to_default() -> libc::sigset_t {
+pub static signals_to_default: Lazy<libc::sigset_t> = Lazy::new(|| {
     let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
     unsafe { libc::sigemptyset(&mut set) };
     for data in SIGNAL_TABLE.iter() {
@@ -292,7 +293,7 @@ pub fn get_signals_to_default() -> libc::sigset_t {
         unsafe { libc::sigaddset(&mut set, data.signal.code()) };
     }
     return set;
-}
+});
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 pub fn signal_unblock_all() {

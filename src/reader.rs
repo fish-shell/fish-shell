@@ -942,24 +942,6 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     }
 }
 
-/// Change the number of attempts to redraw a prompt before giving up.
-pub fn reader_set_handle_redraw_attempts_change(vars: &dyn Environment) {
-    // We don't need to _change_ if we're not initialized yet.
-    let Some(data) = current_data() else {
-        return;
-    };
-    let attempts: usize = vars
-        .get(L!("fish_redraw_attempts"))
-        .and_then(|v| v.as_string().to_string().parse().ok())
-        .unwrap_or(3);
-    if data.redraw_attempt.threshold != attempts {
-        data.redraw_attempt.threshold = attempts;
-        data.force_exec_prompt_and_repaint = true;
-        data.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
-    }
-}
-
 /// Tell the reader that it needs to re-exec the prompt and repaint.
 /// This may be called in response to e.g. a color variable change.
 pub fn reader_schedule_prompt_repaint() {
@@ -4219,7 +4201,7 @@ impl<'a> Reader<'a> {
                     },
                     zelf.parser,
                     Some(&mut prompt_list),
-                    /*apply_exit_status=*/ true,
+                    /*apply_exit_status=*/ false,
                 );
                 if status != 0 {
                     zelf.redraw_attempt.record();

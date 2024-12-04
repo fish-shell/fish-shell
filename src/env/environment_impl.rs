@@ -14,8 +14,9 @@ use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstol_radix;
 
-use lazy_static::lazy_static;
-use std::cell::{RefCell, UnsafeCell};
+use once_cell::sync::Lazy;
+
+use std::cell::UnsafeCell;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::marker::PhantomData;
@@ -26,7 +27,7 @@ use std::ops::{Deref, DerefMut};
 use portable_atomic::AtomicU64;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::{atomic::Ordering, Arc, Mutex, MutexGuard};
+use std::sync::{atomic::Ordering, Arc, Mutex, MutexGuard, RwLock};
 
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
@@ -202,12 +203,11 @@ impl EnvNode {
 }
 
 /// EnvNodeRef is a reference to an EnvNode. It may be shared between different environments.
-/// The type Arc<RefCell<...>> may look suspicious, but all accesses to the EnvNode are protected by a global lock.
 #[derive(Clone)]
-struct EnvNodeRef(Arc<RefCell<EnvNode>>);
+struct EnvNodeRef(Arc<RwLock<EnvNode>>);
 
 impl Deref for EnvNodeRef {
-    type Target = RefCell<EnvNode>;
+    type Target = RwLock<EnvNode>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -217,9 +217,7 @@ impl Deref for EnvNodeRef {
 impl EnvNodeRef {
     fn new(is_new_scope: bool, next: Option<EnvNodeRef>) -> EnvNodeRef {
         // Accesses are protected by the global lock.
-        #[allow(unknown_lints)]
-        #[allow(clippy::arc_with_non_send_sync)]
-        EnvNodeRef(Arc::new(RefCell::new(EnvNode {
+        EnvNodeRef(Arc::new(RwLock::new(EnvNode {
             env: VarTable::new(),
             new_scope: is_new_scope,
             export_gen: 0,
@@ -234,12 +232,12 @@ impl EnvNodeRef {
 
     /// Cover over find_entry.
     fn find_entry(&self, key: &wstr) -> Option<EnvVar> {
-        self.borrow().find_entry(key)
+        self.read().unwrap().find_entry(key)
     }
 
     /// Cover over next.
     fn next(&self) -> Option<EnvNodeRef> {
-        self.borrow().next.clone()
+        self.read().unwrap().next.clone()
     }
 
     /// Helper to get an iterator over the chain of EnvNodeRefs.
@@ -276,15 +274,13 @@ impl Iterator for EnvNodeIter {
     }
 }
 
-lazy_static! {
-    // All accesses to the EnvNode are protected by a global lock.
-    static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
-}
+// All accesses to the EnvNode are protected by a global lock.
+static GLOBAL_NODE: Lazy<EnvNodeRef> = Lazy::new(|| EnvNodeRef::new(false, None));
 
 /// Recursive helper to snapshot a series of nodes.
 fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
     let next = node.next().as_ref().map(copy_node_chain);
-    let node = node.borrow();
+    let node = node.read().unwrap();
     let new_node = EnvNode {
         env: node.env.clone(),
         export_gen: node.export_gen,
@@ -293,7 +289,7 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
     };
     #[allow(unknown_lints)]
     #[allow(clippy::arc_with_non_send_sync)]
-    EnvNodeRef(Arc::new(RefCell::new(new_node)))
+    EnvNodeRef(Arc::new(RwLock::new(new_node)))
 }
 
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
@@ -432,7 +428,7 @@ impl EnvScopedImpl {
             // The first node that introduces a new scope is ours.
             // If this doesn't happen, we go on until we've reached the
             // topmost local scope.
-            if node.borrow().new_scope {
+            if node.read().unwrap().new_scope {
                 break;
             }
         }
@@ -499,12 +495,12 @@ impl EnvScopedImpl {
 
         if query.local {
             for cur in self.locals.iter() {
-                add_keys(&cur.borrow().env, &mut names);
+                add_keys(&cur.read().unwrap().env, &mut names);
             }
         }
 
         if query.global {
-            add_keys(&self.globals.borrow().env, &mut names);
+            add_keys(&self.globals.read().unwrap().env, &mut names);
             // Add electrics.
             for ev in ELECTRIC_VARIABLES {
                 let matches = if ev.exports() {
@@ -559,12 +555,12 @@ impl EnvScopedImpl {
         // Our uvars generation count doesn't come from next_export_generation(), so always supply
         // it even if it's 0.
         func(uvars().get_export_generation());
-        if self.globals.borrow().exports() {
-            func(self.globals.borrow().export_gen);
+        if self.globals.read().unwrap().exports() {
+            func(self.globals.read().unwrap().export_gen);
         }
         for node in self.locals.iter() {
-            if node.borrow().exports() {
-                func(node.borrow().export_gen);
+            if node.read().unwrap().exports() {
+                func(node.read().unwrap().export_gen);
             }
         }
     }
@@ -593,7 +589,7 @@ impl EnvScopedImpl {
 
     /// Get the exported variables into a variable table.
     fn get_exported(n: &EnvNodeRef, table: &mut VarTable) {
-        let n = n.borrow();
+        let n = n.read().unwrap();
 
         // Allow parent scopes to populate first, since we may want to overwrite those results.
         if let Some(next) = n.next.as_ref() {
@@ -768,7 +764,7 @@ impl EnvStackImpl {
                     // The first node that introduces a new scope is ours.
                     // If this doesn't happen, we go on until we've reached the
                     // topmost local scope.
-                    if node.borrow().new_scope {
+                    if node.read().unwrap().new_scope {
                         break;
                     }
                 }
@@ -833,7 +829,7 @@ impl EnvStackImpl {
                 let mut node = self.base.locals.clone();
                 while node.next().is_some() {
                     node = node.next().unwrap();
-                    if node.borrow().new_scope {
+                    if node.read().unwrap().new_scope {
                         break;
                     }
                 }
@@ -858,9 +854,9 @@ impl EnvStackImpl {
         // Propagate local exported variables.
         let node = EnvNodeRef::new(true, None);
         for cursor in self.base.locals.iter() {
-            for (key, val) in cursor.borrow().env.iter() {
+            for (key, val) in cursor.read().unwrap().env.iter() {
                 if val.exports() {
-                    let mut node_ref = node.borrow_mut();
+                    let mut node_ref = node.write().unwrap();
                     // Do NOT overwrite existing values, since we go from inner scopes outwards.
                     if !node_ref.env.contains_key(key) {
                         node_ref.env.insert(key.clone(), val.clone());
@@ -895,7 +891,7 @@ impl EnvStackImpl {
                 panic!("Attempt to pop last local scope")
             }
         }
-        let var_names = popped.borrow().env.keys().cloned().collect();
+        let var_names = popped.read().unwrap().env.keys().cloned().collect();
         var_names
     }
 
@@ -903,7 +899,7 @@ impl EnvStackImpl {
     fn find_in_chain(node: &EnvNodeRef, key: &wstr) -> Option<EnvNodeRef> {
         #[allow(clippy::manual_find)]
         for cur in node.iter() {
-            if cur.borrow().env.contains_key(key) {
+            if cur.read().unwrap().env.contains_key(key) {
                 return Some(cur);
             }
         }
@@ -914,7 +910,7 @@ impl EnvStackImpl {
     /// Return true if the variable was found and removed.
     fn remove_from_chain(node: &mut EnvNodeRef, key: &wstr) -> bool {
         for cur in node.iter() {
-            let mut cur_ref = cur.borrow_mut();
+            let mut cur_ref = cur.write().unwrap();
             if let Some(var) = cur_ref.env.remove(key) {
                 if var.exports() {
                     cur_ref.changed_exported();
@@ -967,7 +963,7 @@ impl EnvStackImpl {
             let pwd = val.pop().unwrap();
             if pwd != self.base.perproc_data.pwd {
                 self.base.perproc_data.pwd = pwd;
-                self.base.globals.borrow_mut().changed_exported();
+                self.base.globals.write().unwrap().changed_exported();
             }
             return Some(EnvStackSetResult::Ok);
         }
@@ -1026,7 +1022,7 @@ impl EnvStackImpl {
     /// Set a variable in a given node `node`.
     fn set_in_node(node: &mut EnvNodeRef, key: &wstr, mut val: Vec<WString>, flags: VarFlags) {
         // Read the var from the node. In C++ this was node->env[key] which establishes a default.
-        let mut node_ref = node.borrow_mut();
+        let mut node_ref = node.write().unwrap();
         let var = node_ref.env.entry(key.to_owned()).or_default();
 
         // Use an explicit exports, or inherit from the existing variable.
@@ -1059,7 +1055,7 @@ impl EnvStackImpl {
     // Implement the default behavior of 'set' by finding the node for an unspecified scope.
     fn resolve_unspecified_scope(&mut self) -> EnvNodeRef {
         for cursor in self.base.locals.iter() {
-            if cursor.borrow().new_scope {
+            if cursor.read().unwrap().new_scope {
                 return cursor;
             }
         }
@@ -1074,7 +1070,7 @@ impl EnvStackImpl {
             node = Self::find_in_chain(&self.base.globals, key);
         }
         if let Some(node) = node {
-            let iter = node.borrow().env.get(key).cloned();
+            let iter = node.read().unwrap().env.get(key).cloned();
             assert!(iter.is_some(), "Node should contain key");
             return iter;
         }

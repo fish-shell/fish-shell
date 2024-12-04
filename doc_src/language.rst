@@ -266,8 +266,8 @@ Consider this helper function::
 Now let's see a few cases::
 
   # Redirect both stderr and stdout to less
-  # (can also be spelt as `&|`)
   print 2>&1 | less
+  print &| less       # equivalent using &|
 
   # Show the "out" on stderr, silence the "err"
   print >&2 2>/dev/null

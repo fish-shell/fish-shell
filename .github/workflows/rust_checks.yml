@@ -32,8 +32,10 @@ jobs:
       # into automatic CI failure day, so we don't do that.
       run: cargo clippy --workspace --all-targets
 
-  cargo-deny:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: EmbarkStudios/cargo-deny-action@v1
+  # Disabling for now because it also checks "advisories",
+  # making CI fail for reasons unrelated to the patch
+  # cargo-deny:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - uses: EmbarkStudios/cargo-deny-action@v1

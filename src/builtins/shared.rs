@@ -503,6 +503,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "exit" => wgettext!("Exit the shell"),
         _ if name == "false" => wgettext!("Return an unsuccessful result"),
         _ if name == "fg" => wgettext!("Send job to foreground"),
+        _ if name == "fish_indent" => wgettext!("indent and prettify fish script"),
         _ if name == "fish_key_reader" => wgettext!("explore what characters keyboard keys send"),
         _ if name == "for" => wgettext!("Perform a set of commands multiple times"),
         _ if name == "function" => wgettext!("Define a new function"),

@@ -287,8 +287,6 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
         new_scope: node.new_scope,
         next,
     };
-    #[allow(unknown_lints)]
-    #[allow(clippy::arc_with_non_send_sync)]
     EnvNodeRef(Arc::new(RwLock::new(new_node)))
 }
 

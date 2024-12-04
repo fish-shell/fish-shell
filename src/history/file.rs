@@ -1,11 +1,13 @@
 //! Implemention of history files.
 
+use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     fs::File,
-    io::{Read, Seek, SeekFrom, Write},
+    io::{Read, Seek, SeekFrom},
     ops::{Deref, DerefMut},
     os::fd::{AsRawFd, RawFd},
+    result::Result,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -13,17 +15,29 @@ use libc::{mmap, munmap, ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_RE
 
 use super::{HistoryItem, PersistenceMode};
 use crate::{
-    common::{str2wcstring, subslice_position, wcs2string},
+    common::str2wcstring,
     flog::FLOG,
+    history::history_impl,
     path::{path_get_config_remoteness, DirRemoteness},
+    wchar::WString,
 };
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HistoryFileType {
+    /// JSON format, where each "line" is an individual history item.
+    /// See [RFC 7464](https://datatracker.ietf.org/doc/rfc7464/) for details of the format used.
+    FishJson,
     Fish2_0,
     Fish1_x,
 }
+
+/// Default history file type for new files or re-written ones.
+pub const DEFAULT_HISTORY_FILE_TYPE: HistoryFileType = HistoryFileType::FishJson;
+
+/// The record separator that marks the beginning of a history entry.
+/// See [RFC 7464](https://datatracker.ietf.org/doc/rfc7464/).
+const RECORD_SEPARATOR: u8 = 0x1E;
 
 /// A type wrapping up the logic around mmap and munmap.
 struct MmapRegion {
@@ -151,7 +165,11 @@ impl HistoryFileContents {
     /// Decode an item at a given offset.
     pub fn decode_item(&self, offset: usize) -> Option<HistoryItem> {
         let contents = &self.region[offset..];
-        decode_item_fish_2_0(contents)
+        match self.get_type() {
+            HistoryFileType::FishJson => decode_json_item(contents),
+            HistoryFileType::Fish2_0 => decode_item_fish_2_0(contents),
+            HistoryFileType::Fish1_x => None,
+        }
     }
 
     /// Support for iterating item offsets.
@@ -163,23 +181,35 @@ impl HistoryFileContents {
         cursor: &mut usize,
         cutoff: Option<SystemTime>,
     ) -> Option<usize> {
-        offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
+        match self.get_type() {
+            HistoryFileType::FishJson => {
+                offset_of_next_item_fish_json(self.contents(), cursor, cutoff)
+            }
+            HistoryFileType::Fish2_0 => {
+                offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
+            }
+            HistoryFileType::Fish1_x => None,
+        }
     }
 
     /// Returns a view of the file contents.
     pub fn contents(&self) -> &[u8] {
         &self.region
     }
+
+    /// Returns the file type of these contents. If empty, [`DEFAULT_HISTORY_FILE_TYPE`] is used.
+    pub fn get_type(&self) -> HistoryFileType {
+        infer_file_type(self.contents())
+    }
 }
 
 /// Try to infer the history file type based on inspecting the data.
 fn infer_file_type(contents: &[u8]) -> HistoryFileType {
     assert!(!contents.is_empty(), "File should never be empty");
-    if contents[0] == b'#' {
-        HistoryFileType::Fish1_x
-    } else {
-        // assume new fish
-        HistoryFileType::Fish2_0
+    match contents[0] {
+        b'#' => HistoryFileType::Fish1_x,
+        RECORD_SEPARATOR => HistoryFileType::FishJson,
+        _ => HistoryFileType::Fish2_0,
     }
 }
 
@@ -196,34 +226,73 @@ impl TryFrom<MmapRegion> for HistoryFileContents {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+struct JsonHistoryItem {
+    cmd: String,
+    #[serde(default)]
+    ts: i64,
+    #[serde(default)]
+    paths: Vec<String>,
+}
+
 /// Append a history item to a buffer, in preparation for outputting it to the history file.
+/// Always outputs in JSON format.
 pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
     assert!(item.should_write_to_disk(), "Item should not be persisted");
 
-    let mut cmd = wcs2string(item.str());
-    escape_yaml_fish_2_0(&mut cmd);
-    buffer.extend(b"- cmd: ");
-    buffer.extend(&cmd);
-    buffer.push(b'\n');
-    writeln!(buffer, "  when: {}", time_to_seconds(item.timestamp())).unwrap();
+    let json_item = JsonHistoryItem {
+        cmd: item.str().to_string(),
+        ts: time_to_seconds(item.timestamp()),
+        paths: item
+            .get_required_paths()
+            .iter()
+            .map(|p| p.to_string())
+            .collect(),
+    };
 
-    let paths = item.get_required_paths();
-    if !paths.is_empty() {
-        writeln!(buffer, "  paths:").unwrap();
-        for path in paths {
-            let mut path = wcs2string(path);
-            escape_yaml_fish_2_0(&mut path);
-            buffer.extend(b"    - ");
-            buffer.extend(&path);
-            buffer.push(b'\n');
-        }
-    }
+    buffer.push(RECORD_SEPARATOR); // Record separator, as required by rfc7464.
+    buffer.extend(serde_json::to_vec(&json_item).unwrap().iter());
+    buffer.push(b'\n');
+}
+
+fn decode_json_item(data: &[u8]) -> Option<HistoryItem> {
+    let json_item: JsonHistoryItem = serde_json::from_slice(isolate_next_record(data)).ok()?;
+    let paths: Vec<WString> = json_item
+        .paths
+        .iter()
+        .map(|s| str2wcstring(s.trim().as_bytes()))
+        .collect();
+    let mut item = HistoryItem::new(
+        str2wcstring(json_item.cmd.as_bytes()),
+        time_from_seconds(json_item.ts),
+        0,
+        PersistenceMode::Disk,
+    );
+    item.set_required_paths(paths);
+
+    Some(item)
+}
+
+/// Returns a view of the `data` slice that has all `RECORD_SEPARATOR` and
+/// whitespace characters removed from the start of the slice, until the next `RECORD_SEPARATOR`.
+fn isolate_next_record(data: &[u8]) -> &[u8] {
+    // Find the beginning and end record separators.
+    let begin_index = match index_of_separator(data, 1) {
+        Some(index) => index + 1,
+        None => 0,
+    };
+    let end_index = match index_of_separator(data, 2) {
+        Some(index) => index,
+        None => data.len() - 1,
+    };
+
+    trim_start(&data[begin_index..end_index])
 }
 
 /// Check if we should mmap the fd.
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
-    if super::NEVER_MMAP.load() {
+    if history_impl::NEVER_MMAP.load() {
         return false;
     }
 
@@ -245,21 +314,6 @@ fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()>
     }
     dest.fill(0u8);
     Ok(())
-}
-
-fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {
-    let mut offset = 0;
-    while let Some(relpos) = subslice_position(&s[offset..], needle) {
-        offset += relpos;
-        s.splice(offset..(offset + needle.len()), replacement.iter().copied());
-        offset += replacement.len();
-    }
-}
-
-/// Support for escaping and unescaping the nonstandard "yaml" format introduced in fish 2.0.
-fn escape_yaml_fish_2_0(s: &mut Vec<u8>) {
-    replace_all(s, b"\\", b"\\\\"); // replace one backslash with two
-    replace_all(s, b"\n", b"\\n"); // replace newline with backslash + literal n
 }
 
 #[inline(always)]
@@ -452,6 +506,68 @@ pub fn time_to_seconds(ts: SystemTime) -> i64 {
     }
 }
 
+/// Returns the number of bytes until the next record in the given `contents` given the `cursor`.
+/// If no new suitable record could be found, then returns [`None`].
+fn offset_of_next_item_fish_json(
+    contents: &[u8],
+    cursor: &mut usize,
+    cutoff_timestamp: Option<SystemTime>,
+) -> Option<usize> {
+    fn next_timestamp(data: &[u8]) -> Option<SystemTime> {
+        let v: serde_json::Value = serde_json::from_slice(data).ok()?;
+        Some(time_from_seconds(v.get("ts")?.as_i64()?))
+    }
+
+    let mut offset: usize;
+    loop {
+        // Find the index of the next record.
+        let next_record = index_of_separator(&contents[*cursor..], /*nth=*/ 2)?;
+
+        // The current cursor will always point to the beginning of a valid record, so store it and
+        // return it as the offset.
+        offset = *cursor;
+        *cursor += next_record;
+
+        if let Some(cutoff) = cutoff_timestamp {
+            // Check the timestamp of this record. If it is greater than the cutoff, then skip this
+            // record.
+            let next_ts = next_timestamp(isolate_next_record(&contents[offset..]));
+            match next_ts {
+                Some(timestamp) if timestamp > cutoff => {
+                    continue;
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+        break;
+    }
+
+    Some(offset)
+}
+
+// Finds the index of the nth separator, or [`None`] if no separator exists.
+fn index_of_separator(contents: &[u8], nth: usize) -> Option<usize> {
+    let mut i = 0;
+    let mut num_found = 0;
+    while i < contents.len() {
+        if contents[i] == RECORD_SEPARATOR {
+            num_found += 1;
+            if num_found == nth {
+                break;
+            }
+        }
+        i += 1;
+    }
+
+    if num_found > 0 {
+        Some(i)
+    } else {
+        None
+    }
+}
+
 /// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
 /// We know the string contains a newline, so stop when we reach it.
 fn parse_timestamp(s: &[u8]) -> Option<SystemTime> {
@@ -580,4 +696,97 @@ fn offset_of_next_item_fish_2_0(
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::L;
+
+    #[test]
+    fn test_offset_of_next_item_fish_json() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n");
+
+        let mut cursor: usize = 0;
+
+        // The offset of the first record is at position 0.
+        assert_eq!(
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
+            Some(0)
+        );
+        assert_eq!(cursor, 22);
+
+        // Offset of the second record is at position 22.
+        assert_eq!(
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
+            Some(22)
+        );
+        assert_eq!(cursor, 46);
+
+        // Offset of the third record is at position 44.
+        assert_eq!(
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
+            Some(46)
+        );
+        assert_eq!(cursor, 70);
+
+        // There is no fourth record.
+        assert_eq!(
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
+            None
+        );
+        assert_eq!(cursor, 70);
+    }
+
+    #[test]
+    fn test_offset_of_next_item_fish_json_with_timestamps() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\",\"ts\":10}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\",\"ts\":20}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye again\",\"ts\":30}\n");
+
+        let mut cursor: usize = 0;
+
+        // The offset of the first record before 15 is 0.
+        assert_eq!(
+            offset_of_next_item_fish_json(
+                data.as_bytes(),
+                &mut cursor,
+                Some(time_from_seconds(15))
+            ),
+            Some(0)
+        );
+        assert_eq!(cursor, 30);
+
+        assert_eq!(
+            offset_of_next_item_fish_json(
+                data.as_bytes(),
+                &mut cursor,
+                Some(time_from_seconds(15))
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn test_decode_json_item() {
+        let data = String::from("\x1E{\"cmd\":\"echo hello\"}\n")
+            + &String::from("\x1E{\"cmd\":\"echo goodbye\"}\n");
+
+        let mut cursor: usize = 0;
+        let mut offset = offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
+
+        let mut item = decode_json_item(&data.as_bytes()[offset..]);
+        assert_eq!(item.unwrap().str(), L!("echo hello"));
+
+        offset = offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None).unwrap();
+        item = decode_json_item(&data.as_bytes()[offset..]);
+        assert_eq!(item.unwrap().str(), L!("echo goodbye"));
+
+        assert_eq!(
+            offset_of_next_item_fish_json(data.as_bytes(), &mut cursor, None),
+            None
+        );
+    }
 }

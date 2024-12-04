@@ -588,13 +588,18 @@ fn test_history_path_detection() {
     history.clear();
 }
 
-fn install_sample_history(name: &wstr) {
+fn install_sample_history(name: &wstr, is_json: bool) {
     let path = path_get_data().expect("Failed to get data directory");
+    let suffix = if is_json {
+        L!("_history.jsonseq")
+    } else {
+        L!("_history")
+    };
     std::fs::copy(
         env!("CARGO_MANIFEST_DIR").to_owned()
             + "/tests/"
             + std::str::from_utf8(&wcs2string(name)).unwrap(),
-        wcs2osstring(&(path + L!("/") + name + L!("_history"))),
+        wcs2osstring(&(path + L!("/") + name + suffix)),
     )
     .unwrap();
 }
@@ -605,7 +610,7 @@ fn test_history_formats() {
     let _cleanup = test_init();
     // Test inferring and reading legacy and bash history formats.
     let name = L!("history_sample_fish_2_0");
-    install_sample_history(name);
+    install_sample_history(name, /*is_json=*/ false);
     let expected: Vec<WString> = vec![
         "echo this has\\\nbackslashes".into(),
         "function foo\necho bar\nend".into(),
@@ -639,7 +644,7 @@ fn test_history_formats() {
     test_history_imported_from_bash.clear();
 
     let name = L!("history_sample_corrupt1");
-    install_sample_history(name);
+    install_sample_history(name, /*is_json=*/ false);
     // We simply invoke get_string_representation. If we don't die, the test is a success.
     let test_history_imported_from_corrupted = History::with_name(name);
     let expected: Vec<WString> = vec![
@@ -649,4 +654,24 @@ fn test_history_formats() {
     ];
     assert_eq!(test_history_imported_from_corrupted.get_history(), expected);
     test_history_imported_from_corrupted.clear();
+}
+
+#[test]
+#[serial]
+fn test_history_json() {
+    let _cleanup = test_init();
+
+    // Test that the history is read correctly.
+    let name = L!("history_sample_fish_json");
+    install_sample_history(name, /*is_json=*/ true);
+
+    let expected: Vec<WString> = vec![
+        "echo 🐟".into(),
+        "echo this has\\\nbackslashes".into(),
+        "function foo\necho bar\nend".into(),
+        "echo alpha".into(),
+    ];
+    let test_history_imported = History::with_name(name);
+    assert_eq!(test_history_imported.get_history(), expected);
+    test_history_imported.clear();
 }

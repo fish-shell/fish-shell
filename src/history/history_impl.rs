@@ -39,6 +39,7 @@ use std::{
         fd::{AsFd, AsRawFd, RawFd},
         unix::fs::MetadataExt,
     },
+    path::Path,
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -61,7 +62,10 @@ use crate::{
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
-    history::file::{append_history_item_to_buffer, HistoryFileContents},
+    history::file::{
+        append_history_item_to_buffer, time_to_seconds, HistoryFileContents,
+        DEFAULT_HISTORY_FILE_TYPE,
+    },
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
     parse_constants::{ParseTreeFlags, StatementDecoration},
@@ -81,7 +85,7 @@ use crate::{
     },
 };
 
-mod file;
+use super::HistoryFileType;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SearchType {
@@ -117,8 +121,6 @@ pub enum SearchDirection {
     Forward,
     Backward,
 }
-
-use self::file::time_to_seconds;
 
 // Our history format is intended to be valid YAML. Here it is:
 //
@@ -216,7 +218,16 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
 
 /// Returns the path for the history file for the given `session_id`, or `None` if it could not be
 /// loaded. If `suffix` is provided, append that suffix to the path; this is used for temporary files.
-fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
+/// `file_type` is used to distinguish between fish 2.0 and fish json formats.
+fn history_filename(
+    session_id: &wstr,
+    file_type: HistoryFileType,
+    suffix: &wstr,
+) -> Option<WString> {
+    // Fish1_x is no longer supported.
+    if file_type == HistoryFileType::Fish1_x {
+        return None;
+    }
     if session_id.is_empty() {
         return None;
     }
@@ -226,6 +237,9 @@ fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
     result.push('/');
     result.push_utfstr(session_id);
     result.push_utfstr(L!("_history"));
+    if file_type == HistoryFileType::FishJson {
+        result.push_utfstr(L!(".jsonseq"));
+    }
     result.push_utfstr(suffix);
     Some(result)
 }
@@ -396,7 +410,7 @@ struct HistoryImpl {
 
 /// If set, we gave up on file locking because it took too long.
 /// Note this is shared among all history instances.
-static ABANDONED_LOCKING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub static ABANDONED_LOCKING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 impl HistoryImpl {
     /// Add a new history item to the end. If `pending` is set, the item will not be returned by
@@ -489,36 +503,98 @@ impl HistoryImpl {
         }
         self.loaded_old = true;
 
+        let try_open = |type_: HistoryFileType| -> Option<File> {
+            let filename = history_filename(&self.name, type_, L!(""))?;
+            wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()).ok()
+        };
+
+        // Check if the new format is available, if so, then load it.
+        let mut file = if let Some(f) = try_open(HistoryFileType::FishJson) {
+            f
+        } else if let Some(f) = try_open(HistoryFileType::Fish2_0) {
+            f
+        } else {
+            return;
+        };
+
         let _profiler = TimeProfiler::new("load_old");
-        if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(mut file) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
-                return;
-            };
 
-            // Take a read lock to guard against someone else appending. This is released after
-            // getting the file's length. We will read the file after releasing the lock, but that's
-            // not a problem, because we never modify already written data. In short, the purpose of
-            // this lock is to ensure we don't see the file size change mid-update.
-            //
-            // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
-            // as if it did not fail. The risk is that we may get an incomplete history item; this
-            // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(&mut file);
-            self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(file.as_fd())
-            } else {
-                INVALID_FILE_ID
-            };
-            if locked {
-                unsafe {
-                    Self::unlock_file(&mut file);
-                }
+        // Take a read lock to guard against someone else appending. This is released after
+        // getting the file's length. We will read the file after releasing the lock, but that's
+        // not a problem, because we never modify already written data. In short, the purpose of
+        // this lock is to ensure we don't see the file size change mid-update.
+        //
+        // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
+        // as if it did not fail. The risk is that we may get an incomplete history item; this
+        // is unlikely because we only treat an item as valid if it has a terminating newline.
+        let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
+        self.file_contents = HistoryFileContents::create(&mut file);
+        self.history_file_id = if self.file_contents.is_some() {
+            file_id_for_fd(file.as_fd())
+        } else {
+            INVALID_FILE_ID
+        };
+        if locked {
+            unsafe {
+                Self::unlock_file(&mut file);
             }
-
-            let _profiler = TimeProfiler::new("populate_from_file_contents");
-            self.populate_from_file_contents();
         }
+
+        let _profiler = TimeProfiler::new("populate_from_file_contents");
+        self.populate_from_file_contents();
+
+        // Rewrite if the original is HistoryFileType::Fish2_0
+        if self.get_file_type() == HistoryFileType::Fish2_0 {
+            match self.rewrite_into_json() {
+                // If all went well, then reload the old history.
+                Ok(()) => self.load_old_if_needed(),
+                Err(err) => FLOGF!(
+                    history_file,
+                    "Error %s when rewriting history file into JSON",
+                    (*err).to_string()
+                ),
+            }
+        }
+    }
+
+    /// Takes the current file (represented by `self.file_contents`) and writes it into a json file.
+    fn rewrite_into_json(&mut self) -> std::result::Result<(), Box<dyn std::error::Error>> {
+        let old_file = self
+            .file_contents
+            .as_ref()
+            .ok_or("expected some file contents")?;
+
+        if old_file.get_type() == HistoryFileType::FishJson {
+            return Err("File is already JSON, not rewriting".into());
+        }
+
+        let _profiler = TimeProfiler::new("rewrite_into_json");
+
+        // Get all of the old items.
+        let mut cursor = 0;
+        let mut old_items: Vec<HistoryItem> = vec![];
+        while let Some(offset) = old_file.offset_of_next_item(&mut cursor, None) {
+            // Try decoding an old item.
+            if let Some(old_item) = old_file.decode_item(offset) {
+                old_items.push(old_item);
+            };
+        }
+        let filename = history_filename(&self.name, HistoryFileType::FishJson, L!(""))
+            .ok_or("could not find filename")?
+            .to_string();
+
+        let path = Path::new(&filename);
+        // Create the new file.
+        let mut new_file = std::fs::File::create(path)?;
+
+        let mut buf: Vec<u8> = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
+        for item in old_items {
+            append_history_item_to_buffer(&item, &mut buf);
+        }
+        new_file.write_all(&buf)?;
+        new_file.sync_data()?;
+
+        Ok(())
     }
 
     /// Deletes duplicates in new_items.
@@ -646,6 +722,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by rewriting the file.
+    /// This will always rewrite to a `FishJson` file, regardless of the type of original file.
     fn save_internal_via_rewrite(&mut self) {
         FLOGF!(
             history,
@@ -656,10 +733,14 @@ impl HistoryImpl {
         // We want to rewrite the file, while holding the lock for as briefly as possible
         // To do this, we speculatively write a file, and then lock and see if our original file changed
         // Repeat until we succeed or give up
-        let Some(possibly_indirect_target_name) = history_filename(&self.name, L!("")) else {
+        let Some(possibly_indirect_target_name) =
+            history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!(""))
+        else {
             return;
         };
-        let Some(tmp_name_template) = history_filename(&self.name, L!(".XXXXXX")) else {
+        let Some(tmp_name_template) =
+            history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!(".XXXXXX"))
+        else {
             return;
         };
 
@@ -814,13 +895,19 @@ impl HistoryImpl {
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
 
+        if self.get_file_type() != HistoryFileType::FishJson {
+            if self.rewrite_into_json().is_err() {
+                return false;
+            }
+        }
+
         let mut ok = false;
 
         // If the file is different (someone vacuumed it) then we need to update our mmap.
         let mut file_changed = false;
 
         // Get the path to the real history file.
-        let Some(history_path) = history_filename(&self.name, L!("")) else {
+        let Some(history_path) = history_filename(&self.name, self.get_file_type(), L!("")) else {
             return true;
         };
 
@@ -934,7 +1021,7 @@ impl HistoryImpl {
             return;
         }
 
-        if history_filename(&self.name, L!("")).is_none() {
+        if history_filename(&self.name, self.get_file_type(), L!("")).is_none() {
             // We're in the "incognito" mode. Pretend we've saved the history.
             self.first_unwritten_new_item_index = self.new_items.len();
             self.deleted_items.clear();
@@ -1032,7 +1119,7 @@ impl HistoryImpl {
         } else {
             // If we have not loaded old items, don't actually load them (which may be expensive); just
             // stat the file and see if it exists and is nonempty.
-            let Some(where_) = history_filename(&self.name, L!("")) else {
+            let Some(where_) = history_filename(&self.name, self.get_file_type(), L!("")) else {
                 return true;
             };
 
@@ -1043,6 +1130,14 @@ impl HistoryImpl {
                 // Access failed, assume missing.
                 true
             }
+        }
+    }
+
+    /// Returns the `HistoryFileType` of this history. Can change when the file is re-written.
+    fn get_file_type(&self) -> HistoryFileType {
+        match &self.file_contents {
+            Some(contents) => contents.get_type(),
+            None => DEFAULT_HISTORY_FILE_TYPE,
         }
     }
 
@@ -1089,7 +1184,7 @@ impl HistoryImpl {
         self.deleted_items.clear();
         self.first_unwritten_new_item_index = 0;
         self.old_item_offsets.clear();
-        if let Some(filename) = history_filename(&self.name, L!("")) {
+        if let Some(filename) = history_filename(&self.name, self.get_file_type(), L!("")) {
             wunlink(&filename);
         }
         self.clear_file_state();
@@ -1110,7 +1205,7 @@ impl HistoryImpl {
     /// file to the new history file.
     /// The new contents will automatically be re-mapped later.
     fn populate_from_config_path(&mut self) {
-        let Some(new_file) = history_filename(&self.name, L!("")) else {
+        let Some(new_file) = history_filename(&self.name, DEFAULT_HISTORY_FILE_TYPE, L!("")) else {
             return;
         };
 
@@ -2060,7 +2155,7 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 }
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
-static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Whether we're in maximum chaos mode, useful for testing.
 /// This causes things like locks to fail.

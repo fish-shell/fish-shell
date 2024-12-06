@@ -49,6 +49,21 @@ Notable improvements and fixes
    - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
 
    Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long, not a named key, and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings.
+- fish can now be built as a self-installing binary (:issue:`10367`). That means it can be easily built on one system and copied to another, where it will extract the datafiles again.
+  To do this, run::
+
+    cargo install --path . # in a clone of the fish repository
+    # or `cargo build --release` and copy target/release/fish{,_indent,_key_reader} wherever you want
+
+    # and then, wherever you use it, run
+    /path/to/fish --install # or --install=noconfirm for non-interactive use
+
+  This will extract all the data files to ~/.local/share/fish/install/. To uninstall, remove the fish binaries and that directory.
+
+  This configuration is experimental.
+  It does not affect the main configuration, which is a regular install via ``cmake``.
+  We hope to improve this in future, especially if ``cargo`` learns how to handle auxilliary files,
+  and also to offer statically linked builds on fishshell.com that should work as long as the operating system (e.g. "linux") and processor architecture match.
 - A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
 - :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
 - Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).

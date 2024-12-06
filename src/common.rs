@@ -196,7 +196,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     );
 
     let mut need_escape = false;
-    let mut need_complex_escape = false;
+    let mut need_complex_escape = no_tilde && input.char_at(0) == '~';
     let mut double_quotes = 0;
     let mut single_quotes = 0;
     let mut dollars = 0;

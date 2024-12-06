@@ -138,6 +138,7 @@ fn setup_and_process_keys(streams: &mut IoStreams, continuous_mode: bool, verbos
     terminal_protocol_hacks();
 
     if continuous_mode {
+        streams.err.append(L!("\n"));
         streams
             .err
             .appendln("To terminate this program type \"exit\" or \"quit\" in this window,");

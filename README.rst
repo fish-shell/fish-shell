@@ -149,13 +149,25 @@ To install into ``/usr/local``, run:
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
 
-Building fish as self-installable
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CMake Build options
+~~~~~~~~~~~~~~~~~~~
+
+In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish's CMake build has some other options available to customize it.
+
+- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
+- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
+- FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
+- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
+- WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
+- extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
+
+Building fish as self-installable (experimental)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can also build fish as a self-installing binary.
 
 This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary,
-and you can unpack them to ~/.local/share/fish/install/ by running ``fish --install`` (or ``fish --install=noconfirm`` to skip the confirmation).
+and you can unpack them to ~/.local/share/fish/install/ (currently, subject to change) by running ``fish --install`` (or ``fish --install=noconfirm`` to skip the confirmation).
 
 You will have to use ``--install`` once per user and you will have to run it again when you upgrade fish. It will tell you to.
 
@@ -172,18 +184,6 @@ This will place the binaries in ~/.cargo/bin/, but you can place them wherever y
 This build won't have the html docs (``help`` will open the online version) or translations.
 
 You can also link it statically (but not against glibc) and move it to other computers.
-
-Build options
-~~~~~~~~~~~~~
-
-In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish's CMake build has some other options available to customize it.
-
-- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
-- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
-- FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
-- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
-- WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
-- extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
 Contributing Changes to the Code
 --------------------------------

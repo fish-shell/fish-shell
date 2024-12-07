@@ -58,7 +58,7 @@ Notable improvements and fixes
     # and then, wherever you use it, run
     /path/to/fish --install # or --install=noconfirm for non-interactive use
 
-  This will extract all the data files to ~/.local/share/fish/install/. To uninstall, remove the fish binaries and that directory.
+  This will extract all the data files to (currently) ~/.local/share/fish/install/. To uninstall, remove the fish binaries and that directory.
 
   This configuration is experimental.
   It does not affect the main configuration, which is a regular install via ``cmake``.

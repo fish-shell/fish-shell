@@ -109,77 +109,254 @@ struct BuiltinData {
     func: BuiltinCmd,
 }
 
-impl BuiltinData {
-    const fn new(name: &'static wstr, func: BuiltinCmd) -> Self {
-        Self { name, func }
-    }
-}
-
 // Data about all the builtin commands in fish.
 // Functions that are bound to builtin_generic are handled directly by the parser.
 // NOTE: These must be kept in sorted order!
 const BUILTIN_DATAS: &[BuiltinData] = &[
-    BuiltinData::new(L!("."), source::source),
-    BuiltinData::new(L!(":"), builtin_true),
-    BuiltinData::new(L!("["), test::test), // ]
-    BuiltinData::new(L!("_"), builtin_gettext),
-    BuiltinData::new(L!("abbr"), abbr::abbr),
-    BuiltinData::new(L!("and"), builtin_generic),
-    BuiltinData::new(L!("argparse"), argparse::argparse),
-    BuiltinData::new(L!("begin"), builtin_generic),
-    BuiltinData::new(L!("bg"), bg::bg),
-    BuiltinData::new(L!("bind"), bind::bind),
-    BuiltinData::new(L!("block"), block::block),
-    BuiltinData::new(L!("break"), builtin_break_continue),
-    BuiltinData::new(L!("breakpoint"), builtin_breakpoint),
-    BuiltinData::new(L!("builtin"), builtin::builtin),
-    BuiltinData::new(L!("case"), builtin_generic),
-    BuiltinData::new(L!("cd"), cd::cd),
-    BuiltinData::new(L!("command"), command::command),
-    BuiltinData::new(L!("commandline"), commandline::commandline),
-    BuiltinData::new(L!("complete"), complete::complete),
-    BuiltinData::new(L!("contains"), contains::contains),
-    BuiltinData::new(L!("continue"), builtin_break_continue),
-    BuiltinData::new(L!("count"), count::count),
-    BuiltinData::new(L!("disown"), disown::disown),
-    BuiltinData::new(L!("echo"), echo::echo),
-    BuiltinData::new(L!("else"), builtin_generic),
-    BuiltinData::new(L!("emit"), emit::emit),
-    BuiltinData::new(L!("end"), builtin_generic),
-    BuiltinData::new(L!("eval"), eval::eval),
-    BuiltinData::new(L!("exec"), builtin_generic),
-    BuiltinData::new(L!("exit"), exit::exit),
-    BuiltinData::new(L!("false"), builtin_false),
-    BuiltinData::new(L!("fg"), fg::fg),
-    BuiltinData::new(L!("for"), builtin_generic),
-    BuiltinData::new(L!("function"), builtin_generic),
-    BuiltinData::new(L!("functions"), functions::functions),
-    BuiltinData::new(L!("history"), history::history),
-    BuiltinData::new(L!("if"), builtin_generic),
-    BuiltinData::new(L!("jobs"), jobs::jobs),
-    BuiltinData::new(L!("math"), math::math),
-    BuiltinData::new(L!("not"), builtin_generic),
-    BuiltinData::new(L!("or"), builtin_generic),
-    BuiltinData::new(L!("path"), path::path),
-    BuiltinData::new(L!("printf"), printf::printf),
-    BuiltinData::new(L!("pwd"), pwd::pwd),
-    BuiltinData::new(L!("random"), random::random),
-    BuiltinData::new(L!("read"), read::read),
-    BuiltinData::new(L!("realpath"), realpath::realpath),
-    BuiltinData::new(L!("return"), r#return::r#return),
-    BuiltinData::new(L!("set"), set::set),
-    BuiltinData::new(L!("set_color"), set_color::set_color),
-    BuiltinData::new(L!("source"), source::source),
-    BuiltinData::new(L!("status"), status::status),
-    BuiltinData::new(L!("string"), string::string),
-    BuiltinData::new(L!("switch"), builtin_generic),
-    BuiltinData::new(L!("test"), test::test),
-    BuiltinData::new(L!("time"), builtin_generic),
-    BuiltinData::new(L!("true"), builtin_true),
-    BuiltinData::new(L!("type"), r#type::r#type),
-    BuiltinData::new(L!("ulimit"), ulimit::ulimit),
-    BuiltinData::new(L!("wait"), wait::wait),
-    BuiltinData::new(L!("while"), builtin_generic),
+    BuiltinData {
+        name: L!("."),
+        func: source::source,
+    },
+    BuiltinData {
+        name: L!(":"),
+        func: builtin_true,
+    },
+    BuiltinData {
+        name: L!("["), // ]
+        func: test::test,
+    },
+    BuiltinData {
+        name: L!("_"),
+        func: builtin_gettext,
+    },
+    BuiltinData {
+        name: L!("abbr"),
+        func: abbr::abbr,
+    },
+    BuiltinData {
+        name: L!("and"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("argparse"),
+        func: argparse::argparse,
+    },
+    BuiltinData {
+        name: L!("begin"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("bg"),
+        func: bg::bg,
+    },
+    BuiltinData {
+        name: L!("bind"),
+        func: bind::bind,
+    },
+    BuiltinData {
+        name: L!("block"),
+        func: block::block,
+    },
+    BuiltinData {
+        name: L!("break"),
+        func: builtin_break_continue,
+    },
+    BuiltinData {
+        name: L!("breakpoint"),
+        func: builtin_breakpoint,
+    },
+    BuiltinData {
+        name: L!("builtin"),
+        func: builtin::builtin,
+    },
+    BuiltinData {
+        name: L!("case"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("cd"),
+        func: cd::cd,
+    },
+    BuiltinData {
+        name: L!("command"),
+        func: command::command,
+    },
+    BuiltinData {
+        name: L!("commandline"),
+        func: commandline::commandline,
+    },
+    BuiltinData {
+        name: L!("complete"),
+        func: complete::complete,
+    },
+    BuiltinData {
+        name: L!("contains"),
+        func: contains::contains,
+    },
+    BuiltinData {
+        name: L!("continue"),
+        func: builtin_break_continue,
+    },
+    BuiltinData {
+        name: L!("count"),
+        func: count::count,
+    },
+    BuiltinData {
+        name: L!("disown"),
+        func: disown::disown,
+    },
+    BuiltinData {
+        name: L!("echo"),
+        func: echo::echo,
+    },
+    BuiltinData {
+        name: L!("else"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("emit"),
+        func: emit::emit,
+    },
+    BuiltinData {
+        name: L!("end"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("eval"),
+        func: eval::eval,
+    },
+    BuiltinData {
+        name: L!("exec"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("exit"),
+        func: exit::exit,
+    },
+    BuiltinData {
+        name: L!("false"),
+        func: builtin_false,
+    },
+    BuiltinData {
+        name: L!("fg"),
+        func: fg::fg,
+    },
+    BuiltinData {
+        name: L!("for"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("function"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("functions"),
+        func: functions::functions,
+    },
+    BuiltinData {
+        name: L!("history"),
+        func: history::history,
+    },
+    BuiltinData {
+        name: L!("if"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("jobs"),
+        func: jobs::jobs,
+    },
+    BuiltinData {
+        name: L!("math"),
+        func: math::math,
+    },
+    BuiltinData {
+        name: L!("not"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("or"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("path"),
+        func: path::path,
+    },
+    BuiltinData {
+        name: L!("printf"),
+        func: printf::printf,
+    },
+    BuiltinData {
+        name: L!("pwd"),
+        func: pwd::pwd,
+    },
+    BuiltinData {
+        name: L!("random"),
+        func: random::random,
+    },
+    BuiltinData {
+        name: L!("read"),
+        func: read::read,
+    },
+    BuiltinData {
+        name: L!("realpath"),
+        func: realpath::realpath,
+    },
+    BuiltinData {
+        name: L!("return"),
+        func: r#return::r#return,
+    },
+    BuiltinData {
+        name: L!("set"),
+        func: set::set,
+    },
+    BuiltinData {
+        name: L!("set_color"),
+        func: set_color::set_color,
+    },
+    BuiltinData {
+        name: L!("source"),
+        func: source::source,
+    },
+    BuiltinData {
+        name: L!("status"),
+        func: status::status,
+    },
+    BuiltinData {
+        name: L!("string"),
+        func: string::string,
+    },
+    BuiltinData {
+        name: L!("switch"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("test"),
+        func: test::test,
+    },
+    BuiltinData {
+        name: L!("time"),
+        func: builtin_generic,
+    },
+    BuiltinData {
+        name: L!("true"),
+        func: builtin_true,
+    },
+    BuiltinData {
+        name: L!("type"),
+        func: r#type::r#type,
+    },
+    BuiltinData {
+        name: L!("ulimit"),
+        func: ulimit::ulimit,
+    },
+    BuiltinData {
+        name: L!("wait"),
+        func: wait::wait,
+    },
+    BuiltinData {
+        name: L!("while"),
+        func: builtin_generic,
+    },
 ];
 assert_sorted_by_name!(BUILTIN_DATAS);
 

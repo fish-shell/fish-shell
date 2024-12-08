@@ -543,6 +543,26 @@ pub struct ReaderData {
     in_flight_autosuggest_request: WString,
 
     rls: Option<ReadlineLoopState>,
+    redraw_attempt: RedrawAttempt,
+}
+
+pub struct RedrawAttempt {
+    threshold: usize,
+    attempts: usize,
+}
+
+impl RedrawAttempt {
+    fn exceeded(&self) -> bool {
+        self.threshold == self.attempts
+    }
+
+    fn reset(&mut self) {
+        self.attempts = 0;
+    }
+
+    fn record(&mut self) {
+        self.attempts += 1;
+    }
 }
 
 /// Reader is ReaderData equippeed with a Parser, so it can execute fish script.
@@ -1166,6 +1186,10 @@ impl ReaderData {
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
             rls: None,
+            redraw_attempt: RedrawAttempt {
+                threshold: 3,
+                attempts: 0,
+            },
         }))
     }
 
@@ -4168,8 +4192,9 @@ impl<'a> Reader<'a> {
                 // producing an error.
                 let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
                     && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
-                exec_subshell(
-                    if left_prompt_deleted {
+                let status = exec_subshell(
+                    if zelf.redraw_attempt.exceeded() || left_prompt_deleted {
+                        zelf.redraw_attempt.reset();
                         DEFAULT_PROMPT
                     } else {
                         &zelf.conf.left_prompt_cmd
@@ -4178,6 +4203,9 @@ impl<'a> Reader<'a> {
                     Some(&mut prompt_list),
                     /*apply_exit_status=*/ false,
                 );
+                if status != 0 {
+                    zelf.redraw_attempt.record();
+                }
                 zelf.left_prompt_buff = join_strings(&prompt_list, '\n');
             }
 

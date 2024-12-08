@@ -277,7 +277,6 @@ fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 
     reader_change_cursor_end_mode(mode);
 }
-
 fn handle_autosuggestion_change(vars: &EnvStack) {
     reader_set_autosuggestion_enabled(vars);
 }

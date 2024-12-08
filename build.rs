@@ -84,6 +84,13 @@ fn detect_cfgs(target: &mut Target) {
         ),
         ("bsd", &detect_bsd),
         ("gettext", &have_gettext),
+        ("HAVE_NL_MSG_CAT_CNTR", &|target| {
+            Ok(
+            target.has_symbol_in("_nl_msg_cat_cntr", &["intl"])
+                ||
+            target.has_symbol_in("_nl_msg_cat_cntr", &["gettextlib"])
+                    )
+        }),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
         ("localeconv_l", &|target| {
@@ -159,7 +166,7 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
     // symbol _nl_msg_cat_cntr, we cannot use gettext even if we find it.
     let mut libraries = Vec::new();
     let mut found = 0;
-    let symbols = ["gettext", "_nl_msg_cat_cntr"];
+    let symbols = ["gettext"];
     for symbol in &symbols {
         // Historically, libintl was required in order to use gettext() and co, but that
         // functionality was subsumed by some versions of libc.
@@ -178,7 +185,6 @@ fn have_gettext(target: &Target) -> Result<bool, Box<dyn Error>> {
     }
     match found {
         0 => Ok(false),
-        1 => Err(format!("gettext found but cannot be used without {}", symbols[1]).into()),
         _ => {
             rsconf::link_libraries(&libraries, LinkType::Default);
             Ok(true)

@@ -751,7 +751,7 @@ fn init_locale(vars: &EnvStack) {
         new_msg_locale.to_string_lossy()
     );
 
-    #[cfg(all(gettext, HAVE_NL_MSG_CAT_CNTR))]
+    #[cfg(gettext)]
     {
         if old_msg_locale.as_c_str() != new_msg_locale {
             // Make change known to GNU gettext.

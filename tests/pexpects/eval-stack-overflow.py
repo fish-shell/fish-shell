@@ -2,7 +2,6 @@
 from pexpect_helper import SpawnedProc
 import re
 import os
-import platform
 import sys
 
 # Disable under SAN - keeps failing because the timing is too tight

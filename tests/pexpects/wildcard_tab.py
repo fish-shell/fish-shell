@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import signal
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()

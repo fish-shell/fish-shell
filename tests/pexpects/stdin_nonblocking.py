@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # Verify that stdin is properly set to blocking even if a job tweaks it.
 from pexpect_helper import SpawnedProc
-import sys
-import signal
-import time
 import os
 
 sp = SpawnedProc()

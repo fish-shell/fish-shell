@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
-import subprocess
-import sys
-import time
 import os
 
 env = os.environ.copy()

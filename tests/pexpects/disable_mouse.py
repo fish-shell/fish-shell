@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
-import subprocess
-import sys
-import time
 
 sp = SpawnedProc(args=["-d", "reader"])
 sp.expect_prompt()

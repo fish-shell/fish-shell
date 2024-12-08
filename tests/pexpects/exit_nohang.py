@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
-import subprocess
 import sys
 import signal
-import time
 import os
 
 sp = SpawnedProc()

@@ -3,7 +3,6 @@ from pexpect_helper import SpawnedProc
 import os
 import signal
 import tempfile
-from time import sleep
 
 # Ensure that on-exit handlers run even if we get SIGHUP.
 with tempfile.NamedTemporaryFile(mode="r", encoding="utf8") as tf:

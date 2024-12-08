@@ -4204,6 +4204,11 @@ impl<'a> Reader<'a> {
         // hack to work.
         reader_write_title(L!(""), zelf.parser, false);
 
+        // Reap jobs but do NOT trigger a repaint.
+        // This is to prevent infinite loops in case a job from the prompt triggers a repaint.
+        // See #9796.
+        job_reap(zelf.parser, true);
+
         // Some prompt may have requested an exit (#8033).
         let exit_current_script = zelf.parser.libdata().exit_current_script;
         zelf.exit_loop_requested |= exit_current_script;

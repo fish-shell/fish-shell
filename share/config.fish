@@ -3,7 +3,6 @@
 #
 # Set default field separators
 #
-set -g IFS \n\ \t
 set -qg __fish_added_user_paths
 or set -g __fish_added_user_paths
 

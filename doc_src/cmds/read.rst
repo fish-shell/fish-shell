@@ -84,7 +84,7 @@ The following options control how much is read and how it is stored:
     Makes ``read`` return after reading *NCHARS* characters or the end of the line, whichever comes first.
 
 **-t** -or **--tokenize**
-    Causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like **--delimiter** and does not honor :envvar:`IFS` (like fish's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
+    Causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like **--delimiter**. It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
 
 **-a** or **--list**
     Stores the result as a list in a single variable. This option is also available as **--array** for backwards compatibility.
@@ -97,7 +97,7 @@ The following options control how much is read and how it is stored:
 
 Without the ``--line`` option, ``read`` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in *VARIABLES*. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
-If no option to determine how to split like ``--delimiter``, ``--line`` or ``--tokenize`` is given, the variable ``IFS`` is used as a list of characters to split on. Relying on the use of ``IFS`` is deprecated and this behaviour will be removed in future versions. The default value of ``IFS`` contains space, tab and newline characters. As a special case, if ``IFS`` is set to the empty string, each character of the input is considered a separate token.
+If no option to determine how to split like ``--delimiter``, ``--line`` or ``--tokenize`` is given, the default fish behavior of splitting output on space, tab, and new-line characters is used.
 
 With the ``--line`` option, ``read`` reads a line of input from standard input into each provided variable, stopping when each variable has been filled. The line is not tokenized.
 

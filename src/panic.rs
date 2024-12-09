@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use libc::STDIN_FILENO;
+use libc::{SIGINT, SIG_DFL, STDIN_FILENO};
 use once_cell::sync::OnceCell;
 
 use crate::{
@@ -45,6 +45,15 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                 eprintf!(" Debug PID %d or press Enter to exit\n", unsafe {
                     libc::getpid()
                 });
+
+                {
+                    let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
+                    act.sa_sigaction = SIG_DFL;
+                    unsafe { libc::sigemptyset(&mut act.sa_mask) };
+                    act.sa_flags = 0;
+                    unsafe { libc::sigaction(SIGINT, &act, std::ptr::null_mut()) };
+                }
+
                 let mut buf = [0_u8; 1];
                 while let Ok(n) = read_blocked(STDIN_FILENO, &mut buf) {
                     if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {

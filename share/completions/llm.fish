@@ -10,7 +10,7 @@ function __fish_llm_subcmds
         "collections" "View/manage embedding collections" \
         "embed" "Embed text and get/store result" \
         "embed-models" "Manage available embedding models" \
-        "embed-multi\Store embeddings for multiple strings" \
+        "embed-multi" "Store embeddings for multiple strings" \
         "install" "Install PyPI packages into llm env" \
         "keys" "Manage stored API keys" \
         "logs" "Explore logged prompts/responses" \

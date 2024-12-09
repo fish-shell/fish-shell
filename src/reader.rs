@@ -1991,7 +1991,7 @@ impl<'a> Reader<'a> {
             zelf.clear_pager();
         }
 
-        if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
+        if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as u8 {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
             if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &old_modes) } == -1

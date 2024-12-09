@@ -311,7 +311,28 @@ fn get_version(src_dir: &Path) -> String {
         }
     }
 
-    panic!("Could not get a version. Either set $FISH_BUILD_VERSION or install git.");
+    // git did not tell us a SHA either because it isn't installed,
+    // or because it refused (safe.directory applies to `git describe`!)
+    // So we read the SHA ourselves.
+    fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
+        let gitdir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".git");
+
+        // .git/HEAD contains ref: refs/heads/branch
+        let headpath = gitdir.join("HEAD");
+        let headstr = read_to_string(headpath)?;
+        let headref = headstr.split(" ").collect::<Vec<_>>()[1].trim();
+
+        // .git/refs/heads/branch contains the SHA
+        let refpath = gitdir.join(headref);
+        // Shorten to 9 characters (what git describe does currently)
+        let refstr = &read_to_string(refpath)?[0..9];
+        let refstr = refstr.trim();
+
+        let version = env!("CARGO_PKG_VERSION").to_owned();
+        Ok(version + "-g" + refstr)
+    }
+
+    get_git_hash().expect("Could not get a version. Either set $FISH_BUILD_VERSION or install git.")
 }
 
 #[cfg(feature = "installable")]

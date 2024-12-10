@@ -55,10 +55,7 @@ Notable improvements and fixes
     cargo install --path . # in a clone of the fish repository
     # or `cargo build --release` and copy target/release/fish{,_indent,_key_reader} wherever you want
 
-    # and then, wherever you use it, run
-    /path/to/fish --install # or --install=noconfirm for non-interactive use
-
-  This will extract all the data files to (currently) ~/.local/share/fish/install/. To uninstall, remove the fish binaries and that directory.
+  The first time it runs interactively, it will extract all the data files to (currently) ~/.local/share/fish/install/. To uninstall, remove the fish binaries and that directory.
 
   This configuration is experimental.
   It does not affect the main configuration, which is a regular install via ``cmake``.

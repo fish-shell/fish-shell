@@ -80,7 +80,7 @@ const BIN_DIR: &str = env!("BINDIR");
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
-fn install(confirm: bool) {
+fn install(confirm: bool) -> bool {
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -98,7 +98,7 @@ fn install(confirm: bool) {
     use std::io::{stderr, stdin};
     let Some(home) = fish::env::get_home() else {
         eprintln!("Can't find $HOME",);
-        std::process::exit(1);
+        return false;
     };
     let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);
 
@@ -125,7 +125,7 @@ fn install(confirm: bool) {
 
         if input != "yes\n" {
             eprintln!("Exiting without writing any files\n");
-            std::process::exit(1);
+            return false;
         }
     } else {
         eprintln!("Installing fish's data files to '{}'.", dir.display());
@@ -135,7 +135,7 @@ fn install(confirm: bool) {
     if let Err(err) = fs::remove_dir_all(dir.clone()) {
         if err.kind() != ErrorKind::NotFound {
             eprintln!("Removing '{}' failed: {}", dir.display(), err);
-            std::process::exit(1);
+            return false;
         }
     }
 
@@ -148,7 +148,7 @@ fn install(confirm: bool) {
                 "Creating directory '{}' failed",
                 path.parent().unwrap().display()
             );
-            std::process::exit(1);
+            return false;
         };
         let res = File::create(&path);
         let Ok(mut f) = res else {
@@ -159,7 +159,7 @@ fn install(confirm: bool) {
         let d = Asset::get(&file).expect("File was somehow not included???");
         if let Err(error) = f.write_all(&d.data) {
             eprintln!("error: {error}");
-            std::process::exit(1);
+            return false;
         }
     }
 
@@ -170,7 +170,7 @@ fn install(confirm: bool) {
                 "Creating directory '{}' failed",
                 path.parent().unwrap().display()
             );
-            std::process::exit(1);
+            return false;
         };
         let res = File::create(&path);
         let Ok(mut f) = res else {
@@ -181,7 +181,7 @@ fn install(confirm: bool) {
         let d = Docs::get(&file).expect("File was somehow not included???");
         if let Err(error) = f.write_all(&d.data) {
             eprintln!("error: {error}");
-            std::process::exit(1);
+            return false;
         }
     }
 
@@ -193,13 +193,13 @@ fn install(confirm: bool) {
     } else {
         eprintln!("Creating file '{}' failed", verfile.display());
     };
-    std::process::exit(0);
+    return true;
 }
 
 #[cfg(any(clippy, not(feature = "installable")))]
-fn install(_confirm: bool) {
+fn install(_confirm: bool) -> bool {
     eprintln!("Fish was built without support for self-installation");
-    std::process::exit(1);
+    return false;
 }
 
 /// container to hold the options specified within the command line
@@ -410,50 +410,58 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     return true;
 }
 
+#[cfg(feature = "installable")]
+fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
+    // (false-positive, is_none_or is a backport, this builds with 1.70)
+    #[allow(clippy::incompatible_msrv)]
+    if paths
+        .bin
+        .clone()
+        .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
+    {
+        // When fish is installable, we write the version to a file,
+        // now we check it.
+        let verfile =
+            PathBuf::from(fish::common::wcs2osstring(datapath)).join("fish-install-version");
+        let version = std::fs::read_to_string(verfile).ok()?;
+
+        return Some(version == fish::BUILD_VERSION);
+    }
+    // When running from the manifest dir, we'll just run.
+    return Some(true);
+}
+
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
     let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
 
     #[cfg(feature = "installable")]
     {
-        // (false-positive, is_none_or is a backport, this builds with 1.70)
-        #[allow(clippy::incompatible_msrv)]
-        if paths
-            .bin
-            .clone()
-            .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
-        {
-            // When fish is installable, we write the version to a file,
-            // now we check it.
-            let verfile =
-                PathBuf::from(fish::common::wcs2osstring(&datapath)).join("fish-install-version");
-            let version = match std::fs::read_to_string(verfile) {
-                Ok(x) => x,
-                Err(err) => {
-                    let escaped_pathname = escape(&datapath);
-                    FLOGF!(
-                        error,
-                        "Fish cannot find its asset files in '%ls'.\n\
-                         Refusing to read configuration because of this.\n\
-                         The underlying error is: '%ls'",
-                        escaped_pathname,
-                        err.to_string()
-                    );
-                    return;
-                }
-            };
+        // If the version file is non-existent or out of date,
+        // we try to install automatically, but only if we're interactive.
+        // If we're not interactive, we still print an error later on pointing to `--install` if they don't exist,
+        // but don't complain if they're merely out-of-date.
+        // We do specifically check for a tty because we want to read input to confirm.
+        let v = check_version_file(paths, &datapath);
 
-            if version != fish::BUILD_VERSION {
-                FLOGF!(
-                    error,
-                    "Asset files are version %s, this fish is version %s. Please run `fish --install` again",
-                    version,
-                    fish::BUILD_VERSION
+        #[allow(clippy::incompatible_msrv)]
+        if v.is_none_or(|x| !x) && is_interactive_session() && isatty(libc::STDIN_FILENO) {
+            if v.is_none() {
+                FLOG!(
+                    warning,
+                    "Fish's asset files are missing. Trying to install them."
                 );
-                // We could refuse to read any config,
-                // but that seems a bit harsh.
-                // return;
+            } else {
+                FLOG!(
+                    warning,
+                    "Fish's asset files are out of date. Trying to install them."
+                );
             }
+
+            install(true);
+            // We try to go on if installation failed (or was rejected) here
+            // If the assets are missing, we will trigger a later error,
+            // if they are outdated, things will probably (tm) work somewhat.
         }
     }
     if !source_config_in_directory(parser, &datapath) {
@@ -580,7 +588,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                         std::process::exit(1);
                     }
                 };
-                install(!noconfirm);
+                let ret = install(!noconfirm);
+                std::process::exit(if ret { 0 } else { 1 });
             }
             'l' => opts.is_login = true,
             'N' => {

@@ -176,9 +176,7 @@ and you can unpack them to ~/.local/share/fish/install/ (currently, subject to c
 
 You will have to use ``--install`` once per user and you will have to run it again when you upgrade fish. It will tell you to.
 
-To install fish as self-installable, just use ``cargo``, like:
-
-.. code:: bash
+To install fish as self-installable, just use ``cargo``, like::
 
    cargo install --path /path/to/fish # if you have a git clone
    cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0 # to build from git once 4.0 is released
@@ -187,6 +185,10 @@ To install fish as self-installable, just use ``cargo``, like:
 This will place the binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
 
 This build won't have the HTML docs (``help`` will open the online version) or translations.
+
+It requires sphinx by default, if sphinx-build is not available you can build without man pages by running it with $FISH_BUILD_DOCS set to 0::
+
+  FISH_BUILD_DOCS=0 cargo install --path .
 
 You can also link it statically (but not against glibc) and move it to other computers.
 

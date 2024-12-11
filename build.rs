@@ -362,22 +362,43 @@ fn build_man(build_dir: &Path) {
     ];
     let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
 
-    match Command::new("sphinx-build").args(args).output() {
+    rsconf::rebuild_if_env_changed("FISH_BUILD_DOCS");
+    if env::var("FISH_BUILD_DOCS") == Ok("0".to_string()) {
+        println!("cargo:warning=Skipping man pages because $FISH_BUILD_DOCS is set to 0");
+        return;
+    }
+
+    // We run sphinx to build the man pages.
+    // Every error here is fatal so cargo doesn't cache the result
+    // - if we skipped the docs with sphinx not installed, installing it would not then build the docs.
+    // That means you need to explicitly set $FISH_BUILD_DOCS=0 (`FISH_BUILD_DOCS=0 cargo install --path .`),
+    // which is unfortunate - but the docs are pretty important because they're also used for --help.
+    match Command::new("sphinx-build").args(args).spawn() {
+        Err(x) if x.kind() == std::io::ErrorKind::NotFound => {
+            panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
+        }
         Err(x) => {
-            println!("cargo:warning=Could not build man pages: {:?}", x);
+            // Another error - permissions wrong etc
+            panic!(
+                "Error starting sphinx-build to build man pages: {:?}",
+                x
+            );
         }
-        Ok(x) => {
-            if !x.status.success() {
-                println!(
-                    "cargo:warning=Could not build man pages: {:?}",
-                    std::str::from_utf8(&x.stdout).unwrap()
+        Ok(mut x) => match x.wait() {
+            Err(err) => {
+                panic!(
+                    "Error waiting for sphinx-build to build man pages: {:?}",
+                    err
                 );
-                println!(
-                    "cargo:warning=Could not build man pages: {:?}",
-                    std::str::from_utf8(&x.stderr).unwrap()
-                );
-                panic!("Building docs failed");
             }
-        }
+            Ok(out) => {
+                if out.success() {
+                    // Success!
+                    return;
+                } else {
+                    panic!("sphinx-build failed to build the man pages.");
+                }
+            }
+        },
     }
 }

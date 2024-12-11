@@ -3089,6 +3089,18 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         };
 
         if let Some((header_kw_range, missing_end, enclosing_stmt)) = header {
+            let next_token = self.peek_token(0);
+            if next_token.typ == ParseTokenType::string
+                && matches!(
+                    next_token.keyword,
+                    ParseKeyword::kw_case
+                        | ParseKeyword::kw_else
+                        | ParseKeyword::kw_end
+                        | ParseKeyword::kw_rbrace
+                )
+            {
+                self.consume_excess_token_generating_error();
+            }
             parse_error_range!(
                 self,
                 header_kw_range,

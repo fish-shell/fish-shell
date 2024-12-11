@@ -78,7 +78,12 @@ const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 #[cfg(feature = "installable")]
+#[allow(unused_variables)]
+#[allow(unreachable_code)]
 fn install(confirm: bool) {
+    // Disable for clippy because otherwise it would require sphinx
+    #[cfg(clippy)]
+    return;
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]

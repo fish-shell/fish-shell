@@ -447,16 +447,15 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             streams.out.append(L!("Profile: "));
             streams.out.appendln(profile);
             streams.out.append(L!("Features: "));
-            streams.out.appendln(str2wcstring(
-                [
-                    #[cfg(gettext)]
-                    "gettext",
-                    #[cfg(feature = "installable")]
-                    "installable",
-                ]
-                .join(" ")
-                .as_bytes(),
-            ));
+            let features: &[&str] = &[
+                #[cfg(gettext)]
+                "gettext",
+                #[cfg(feature = "installable")]
+                "installable",
+            ];
+            streams
+                .out
+                .appendln(str2wcstring(features.join(" ").as_bytes()));
             streams.out.appendln("");
             return STATUS_CMD_OK;
         }

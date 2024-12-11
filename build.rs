@@ -37,6 +37,7 @@ fn main() {
     std::env::set_var("FISH_BUILD_VERSION", version);
 
     #[cfg(feature = "installable")]
+    #[cfg(not(clippy))]
     {
         let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
         let targetman = cman.as_path().join("target").join("man");
@@ -336,6 +337,8 @@ fn get_version(src_dir: &Path) -> String {
 }
 
 #[cfg(feature = "installable")]
+// disable clippy because otherwise it would panic without sphinx
+#[cfg(not(clippy))]
 fn build_man(build_dir: &Path) {
     use std::process::Command;
     let mandir = build_dir;

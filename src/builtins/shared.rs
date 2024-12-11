@@ -242,6 +242,14 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: fg::fg,
     },
     BuiltinData {
+        name: L!("fish_indent"),
+        func: fish_indent::fish_indent,
+    },
+    BuiltinData {
+        name: L!("fish_key_reader"),
+        func: fish_key_reader::fish_key_reader,
+    },
+    BuiltinData {
         name: L!("for"),
         func: builtin_generic,
     },
@@ -495,6 +503,8 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "exit" => wgettext!("Exit the shell"),
         _ if name == "false" => wgettext!("Return an unsuccessful result"),
         _ if name == "fg" => wgettext!("Send job to foreground"),
+        _ if name == "fish_indent" => wgettext!("indent and prettify fish script"),
+        _ if name == "fish_key_reader" => wgettext!("explore what characters keyboard keys send"),
         _ if name == "for" => wgettext!("Perform a set of commands multiple times"),
         _ if name == "function" => wgettext!("Define a new function"),
         _ if name == "functions" => wgettext!("List or remove functions"),

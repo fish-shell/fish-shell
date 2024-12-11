@@ -137,14 +137,19 @@ Additionally, running the full test suite requires Python 3, tmux, and the pexpe
 Building from source with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Rather than building from source, consider using a packaged build for your platform. Using the
+steps below makes fish difficult to uninstall or upgrade. Release packages are available from the
+links above, and up-to-date `development builds of fish are available for many platforms
+<https://github.com/fish-shell/fish-shell/wiki/Development-builds>`__
+
 To install into ``/usr/local``, run:
 
 .. code:: bash
 
    mkdir build; cd build
    cmake ..
-   make
-   sudo make install
+   cmake --build .
+   sudo cmake --install .
 
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.

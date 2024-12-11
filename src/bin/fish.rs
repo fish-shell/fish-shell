@@ -78,12 +78,9 @@ const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 #[cfg(feature = "installable")]
-#[allow(unused_variables)]
-#[allow(unreachable_code)]
+// Disable for clippy because otherwise it would require sphinx
+#[cfg(not(clippy))]
 fn install(confirm: bool) {
-    // Disable for clippy because otherwise it would require sphinx
-    #[cfg(clippy)]
-    return;
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -199,7 +196,7 @@ fn install(confirm: bool) {
     std::process::exit(0);
 }
 
-#[cfg(not(feature = "installable"))]
+#[cfg(any(clippy, not(feature = "installable")))]
 fn install(_confirm: bool) {
     eprintln!("Fish was built without support for self-installation");
     std::process::exit(1);

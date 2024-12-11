@@ -379,10 +379,7 @@ fn build_man(build_dir: &Path) {
         }
         Err(x) => {
             // Another error - permissions wrong etc
-            panic!(
-                "Error starting sphinx-build to build man pages: {:?}",
-                x
-            );
+            panic!("Error starting sphinx-build to build man pages: {:?}", x);
         }
         Ok(mut x) => match x.wait() {
             Err(err) => {

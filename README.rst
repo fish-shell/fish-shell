@@ -186,7 +186,7 @@ To install fish as self-installable, just use ``cargo``, like:
 
 This will place the binaries in ~/.cargo/bin/, but you can place them wherever you want.
 
-This build won't have the html docs (``help`` will open the online version) or translations.
+This build won't have the HTML docs (``help`` will open the online version) or translations.
 
 You can also link it statically (but not against glibc) and move it to other computers.
 

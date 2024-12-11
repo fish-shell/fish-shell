@@ -602,7 +602,7 @@ fn test_new_parser_errors() {
     validate!("if true ; end ; else", ParseErrorCode::unbalancing_else);
 
     validate!("case", ParseErrorCode::unbalancing_case);
-    validate!("if true ; case ; end", ParseErrorCode::generic);
+    validate!("if true ; case ; end", ParseErrorCode::unbalancing_case);
 
     validate!("true | and", ParseErrorCode::andor_in_pipeline);
 

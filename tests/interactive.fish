@@ -31,7 +31,7 @@ function test_pexpect_file
         set -lx TERM dumb
 
         # Help the script find the pexpect_helper module in our parent directory.
-        set -lx --prepend PYTHONPATH (realpath $PWD/..)
+        set -lx --prepend PYTHONPATH (realpath $PWD)
         set -lx fish ../test/root/bin/fish
         set -lx fish_key_reader ../test/root/bin/fish_key_reader
         set -lx fish_test_helper ../test/root/bin/fish_test_helper

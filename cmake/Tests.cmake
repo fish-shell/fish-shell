@@ -71,12 +71,6 @@ if(NOT FISH_IN_TREE_BUILD)
                        VERBATIM)
 endif()
 
-# Copy littlecheck.py
-configure_file(build_tools/littlecheck.py littlecheck.py COPYONLY)
-
-# Copy pexpect_helper.py
-configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
-
 # Suppress generating Xcode schemes for all tests, there's too many.
 set(CMAKE_XCODE_GENERATE_SCHEME 0)
 

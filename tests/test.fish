@@ -38,7 +38,7 @@ if set -q files_to_test[1]
     test "$FISH_FORCE_COLOR" = 1
     and set force_color --force-color
 
-    $python -S ../littlecheck.py \
+    $python -S littlecheck.py \
         --progress $force_color \
         -s fish=../test/root/bin/fish \
         -s fish_test_helper=../test/root/bin/fish_test_helper \

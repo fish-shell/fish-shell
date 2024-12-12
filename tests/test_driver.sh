@@ -1,3 +1,4 @@
+#!/bin/sh
 # vim: set ts=4 sw=4 tw=100 et:
 
 # POSIX sh test driver to reduce dependency on fish in tests.
@@ -12,9 +13,13 @@
 # Folks, this is why you should use fish!
 IFS="$(printf "\n\b")"
 
+# If CDPATH is set, `cd foo` will print the directory.
+unset CDPATH
+
 # The first argument is the path to the script to launch; all remaining arguments are forwarded to
 # the script.
-fish_script="$1"
+# Resolve the script now because we are going to `cd` later.
+fish_script="$(realpath $1)"
 shift 1
 script_args="${@}"
 # Prevent $@ from persisting to sourced commands
@@ -32,6 +37,9 @@ die() {
 TESTS_ROOT="$(cd $(dirname "$0") && pwd -P)"
 BUILD_ROOT="$(cd $(dirname "$TESTS_ROOT") && pwd -P)"
 
+test -n "$FISHDIR" && FISHDIR=$(realpath -- "$FISHDIR")
+fish="${FISHDIR:-${BUILD_ROOT}/test/root/bin}/fish"
+
 if ! test -z "$__fish_is_running_tests"; then
     echo "Recursive test invocation detected!" 1>&2
     exit 10
@@ -42,7 +50,7 @@ fi
 
 # These are used read-only so it's OK to symlink instead of copy
 rm -f "$XDG_CONFIG_HOME/fish/functions"
-ln -s "$PWD/test_functions" "$XDG_CONFIG_HOME/fish/functions" || die "Failed to symlink"
+ln -s "${TESTS_ROOT}/test_functions" "$XDG_CONFIG_HOME/fish/functions" || die "Failed to symlink"
 
 # Set the function path at startup, referencing the default fish functions and the test-specific
 # functions.
@@ -68,8 +76,13 @@ export FISH_FAST_FAIL
 # Run the test script, but don't exec so we can clean up after it succeeds/fails. Each test is
 # launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
 # TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).
-(cd $TMPDIR && env HOME="$homedir" "${BUILD_ROOT}/test/root/bin/fish" \
-    --init-command "${fish_init_cmd}" "$fish_script" "$script_args")
+if test -n "$script_args"; then
+    (cd $TMPDIR && env HOME="$homedir" "$fish" \
+                       --init-command "${fish_init_cmd}" "$fish_script" "$script_args")
+else
+    (cd $TMPDIR && env HOME="$homedir" "$fish" \
+                       --init-command "${fish_init_cmd}" "$fish_script")
+fi
 test_status="$?"
 
 rm -rf "$homedir"

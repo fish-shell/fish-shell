@@ -30,6 +30,9 @@ or begin
     exit 125
 end
 
+set -q FISHDIR
+or set -l FISHDIR ../test/root/bin
+
 # Test littlecheck files.
 set -l skipped 0
 set -l failed 0
@@ -40,9 +43,9 @@ if set -q files_to_test[1]
 
     $python -S littlecheck.py \
         --progress $force_color \
-        -s fish=../test/root/bin/fish \
-        -s fish_test_helper=../test/root/bin/fish_test_helper \
-        -s filter-control-sequences='../test/root/bin/fish ../tests/filter-control-sequences.fish' \
+        -s fish=$FISHDIR/fish \
+        -s fish_test_helper=$FISHDIR/fish_test_helper \
+        -s filter-control-sequences="$FISHDIR/fish ../tests/filter-control-sequences.fish" \
         $files_to_test
 
     set -l littlecheck_status $status

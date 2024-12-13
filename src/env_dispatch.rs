@@ -619,9 +619,15 @@ fn init_curses(vars: &EnvStack) {
             // We do not warn for xterm-256color at all, we know that one.
             if term != Some("xterm-256color".into()) {
                 if let Some(term) = term {
-                    FLOG!(warning, wgettext_fmt!("Could not set up terminal for $TERM '%ls'", term));
+                    FLOG!(
+                        warning,
+                        wgettext_fmt!("Could not set up terminal for $TERM '%ls'", term)
+                    );
                 } else {
-                    FLOG!(warning, wgettext!("Could not set up terminal because $TERM is unset."));
+                    FLOG!(
+                        warning,
+                        wgettext!("Could not set up terminal because $TERM is unset.")
+                    );
                 }
             }
         }

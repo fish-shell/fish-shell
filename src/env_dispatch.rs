@@ -501,62 +501,6 @@ fn update_fish_color_support(vars: &EnvStack) {
     crate::output::set_color_support(color_support);
 }
 
-/// Try to initialize the terminfo/curses subsystem using our fallback terminal name. Do not set
-/// `$TERM` to our fallback. We're only doing this in the hope of getting a functional shell.
-/// If we launch an external command that uses `$TERM`, it should get the same value we were given,
-/// if any.
-fn initialize_curses_using_fallbacks(vars: &EnvStack) {
-    // xterm-256color is the most used terminal type by a massive margin, especially counting
-    // terminals that are mostly compatible.
-    const FALLBACKS: [&str; 4] = ["xterm-256color", "xterm", "ansi", "dumb"];
-
-    let current_term = vars
-        .get_unless_empty(L!("TERM"))
-        .map(|v| v.as_string())
-        .unwrap_or(Default::default());
-
-    let mut success = false;
-    if current_term == "xterm-256color" {
-        // If we have xterm-256color, let's just use our hard-coded version
-        // instead of trying to read xterm or "ansi".
-        // It's almost certain we can't find terminfo.
-        FLOG!(
-            term_support,
-            "Could not read xterm-256color. Using fallback."
-        );
-        curses::setup_fallback_term();
-        return;
-    }
-
-    for term in FALLBACKS {
-        // If $TERM is already set to the fallback name we're about to use, there's no point in
-        // seeing if the fallback name can be used.
-        if current_term == term {
-            continue;
-        }
-
-        // `term` here is one of our hard-coded strings above; we can unwrap because we can
-        // guarantee it doesn't contain any interior NULs.
-        success = curses::setup(Some(term), |term| apply_term_hacks(vars, term)).is_some();
-        if is_interactive_session() && success {
-            FLOG!(warning, wgettext!("Using fallback terminal type"), term);
-        }
-
-        if success {
-            break;
-        }
-    }
-    if !success {
-        if is_interactive_session() {
-            FLOG!(
-                warning,
-                wgettext!("Could not get any terminfo database, falling back to hardcoded xterm-256color values"),
-            );
-        }
-        curses::setup_fallback_term();
-    }
-}
-
 /// Apply any platform- or environment-specific hacks to our curses [`Term`] instance.
 fn apply_term_hacks(vars: &EnvStack, term: &mut Term) {
     if cfg!(target_os = "macos") {
@@ -621,18 +565,18 @@ fn init_curses(vars: &EnvStack) {
                 if let Some(term) = term {
                     FLOG!(
                         warning,
-                        wgettext_fmt!("Could not set up terminal for $TERM '%ls'", term)
+                        wgettext_fmt!("Could not set up terminal for $TERM '%ls'. Falling back to hardcoded xterm-256color values", term)
                     );
                 } else {
                     FLOG!(
                         warning,
-                        wgettext!("Could not set up terminal because $TERM is unset.")
+                        wgettext!("Could not set up terminal because $TERM is unset. Falling back to hardcoded xterm-256color values")
                     );
                 }
             }
         }
 
-        initialize_curses_using_fallbacks(vars);
+        curses::setup_fallback_term();
     }
 
     // Configure hacks that apply regardless of whether we successfully init curses or not.

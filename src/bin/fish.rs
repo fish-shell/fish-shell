@@ -540,7 +540,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
-        wopt(L!("install"), OptionalArgument, 'I'),
+        wopt(L!("install"), NoArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -576,20 +576,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'I' => {
-                let noconfirm = match w.woptarg {
-                    None => false,
-                    Some(n) if n == L!("noconfirm") => true,
-                    _ => {
-                        FLOGF!(
-                            error,
-                            "Unknown argument to --install: '%ls'",
-                            w.woptarg.unwrap()
-                        );
-                        std::process::exit(1);
-                    }
-                };
-                let ret = install(!noconfirm);
-                std::process::exit(if ret { 0 } else { 1 });
+                install(false);
             }
             'l' => opts.is_login = true,
             'N' => {

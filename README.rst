@@ -173,7 +173,7 @@ You can also build fish as a self-installing binary.
 
 This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary.
 
-On the first interactive run, and whenever it notices they are out of date, it will extract the datafiles to ~/.local/share/fish/install/ (currently, subject to change). You can do this manually by running ``fish --install`` (or ``fish --install=noconfirm`` to skip the confirmation).
+On the first interactive run, and whenever it notices they are out of date, it will extract the datafiles to ~/.local/share/fish/install/ (currently, subject to change). You can do this manually by running ``fish --install``.
 
 To install fish as self-installable, just use ``cargo``, like::
 

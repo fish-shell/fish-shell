@@ -298,7 +298,7 @@ fn get_version(src_dir: &Path) -> String {
         if !rev.is_empty() {
             // If it contains a ".", we have a proper version like "3.7",
             // or "23.2.1-1234-gfab1234"
-            if rev.contains(".") {
+            if rev.contains('.') {
                 return rev;
             }
             // If it doesn't, we probably got *just* the commit SHA,
@@ -321,7 +321,7 @@ fn get_version(src_dir: &Path) -> String {
         // .git/HEAD contains ref: refs/heads/branch
         let headpath = gitdir.join("HEAD");
         let headstr = read_to_string(headpath)?;
-        let headref = headstr.split(" ").collect::<Vec<_>>()[1].trim();
+        let headref = headstr.split(' ').collect::<Vec<_>>()[1].trim();
 
         // .git/refs/heads/branch contains the SHA
         let refpath = gitdir.join(headref);

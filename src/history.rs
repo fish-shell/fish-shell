@@ -1436,6 +1436,8 @@ fn format_history_record(
 ) -> WString {
     let mut result = WString::new();
     let seconds = time_to_seconds(item.timestamp());
+    // This warns for musl, but the warning is useless to us - there is nothing we can or should do.
+    #[allow(deprecated)]
     let seconds = seconds as libc::time_t;
     let mut timestamp: libc::tm = unsafe { std::mem::zeroed() };
     if let Some(show_time_format) = show_time_format.and_then(|s| CString::new(s).ok()) {

@@ -1284,14 +1284,14 @@ impl<'ctx> Completer<'ctx> {
                     // Check if we are entering a combined option and argument (like --color=auto or
                     // -I/usr/include).
                     for o in &options {
-                        let arg = if o.typ == CompleteOptionType::Short {
+                        let arg_offset = if o.typ == CompleteOptionType::Short {
                             let Some(short_opt_pos) = short_opt_pos else {
                                 continue;
                             };
                             if o.option.char_at(0) != s.char_at(short_opt_pos) {
                                 continue;
                             }
-                            Some(s.slice_from(short_opt_pos + 1))
+                            Some(short_opt_pos + 1)
                         } else {
                             param_match2(o, s)
                         };
@@ -1304,7 +1304,7 @@ impl<'ctx> Completer<'ctx> {
                                     .get_or_insert(o.result_mode.requires_param) &=
                                     o.result_mode.requires_param;
                             }
-                            if let Some(arg) = arg {
+                            if let Some(arg_offset) = arg_offset {
                                 if o.result_mode.requires_param {
                                     use_common = false;
                                 }
@@ -1314,7 +1314,14 @@ impl<'ctx> Completer<'ctx> {
                                 if o.result_mode.force_files {
                                     has_force = true;
                                 }
+                                let (arg_prefix, arg) = s.split_once(arg_offset);
+                                let first_new = self.completions.completions.len();
                                 self.complete_from_args(arg, &o.comp, o.localized_desc(), o.flags);
+                                for compl in &mut self.completions.completions[first_new..] {
+                                    if compl.replaces_token() {
+                                        compl.completion.insert_utfstr(0, arg_prefix);
+                                    }
+                                }
                             }
                         }
                     }
@@ -2213,7 +2220,7 @@ fn param_match(e: &CompleteEntryOpt, optstr: &wstr) -> bool {
 }
 
 /// Test if a string is an option with an argument, like --color=auto or -I/usr/include.
-fn param_match2<'s>(e: &CompleteEntryOpt, optstr: &'s wstr) -> Option<&'s wstr> {
+fn param_match2(e: &CompleteEntryOpt, optstr: &wstr) -> Option<usize> {
     // We may get a complete_entry_opt_t with no options if it's just arguments.
     if e.option.is_empty() {
         return None;
@@ -2238,7 +2245,7 @@ fn param_match2<'s>(e: &CompleteEntryOpt, optstr: &'s wstr) -> Option<&'s wstr> 
         return None;
     }
     cursor += 1;
-    Some(optstr.slice_from(cursor))
+    Some(cursor)
 }
 
 /// Parses a token of short options plus one optional parameter like

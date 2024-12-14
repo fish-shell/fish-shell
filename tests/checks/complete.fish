@@ -133,6 +133,12 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
+function foo2; end
+complete -c foo2 -s s -l long -xa "hello-world goodbye-friend"
+complete -C"foo2 -sfrie"
+# CHECK: -sgoodbye-friend
+complete -C"foo2 --long=frien"
+# CHECK: --long=goodbye-friend
 
 # Builtins (with subcommands; #2705)
 complete -c complete_test_subcommand -n 'test (commandline -xp)[1] = complete_test_subcommand' -xa ok

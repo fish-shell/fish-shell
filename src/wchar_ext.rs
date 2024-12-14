@@ -244,6 +244,10 @@ pub trait WExt {
         }
     }
 
+    fn split_once(&self, pos: usize) -> (&wstr, &wstr) {
+        (self.slice_to(pos), self.slice_from(pos))
+    }
+
     /// Returns the index of the first match against the provided substring or `None`.
     fn find(&self, search: impl AsRef<[char]>) -> Option<usize> {
         subslice_position(self.as_char_slice(), search.as_ref())

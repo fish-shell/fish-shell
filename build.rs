@@ -378,7 +378,11 @@ fn build_man(build_dir: &Path) {
     // which is unfortunate - but the docs are pretty important because they're also used for --help.
     match Command::new("sphinx-build").args(args).spawn() {
         Err(x) if x.kind() == std::io::ErrorKind::NotFound => {
-            panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
+            if env::var("FISH_BUILD_DOCS") == Ok("1".to_string()) {
+                panic!("Could not find sphinx-build to build man pages.\nInstall sphinx or disable building the docs by setting $FISH_BUILD_DOCS=0.");
+            }
+            println!("cargo:warning=Cannot find sphinx-build to build man pages.");
+            println!("cargo:warning=If you install it now you need to run `cargo clean` and rebuild, or set $FISH_BUILD_DOCS=1 explicitly.");
         }
         Err(x) => {
             // Another error - permissions wrong etc

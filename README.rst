@@ -185,11 +185,13 @@ This will place the binaries in ``~/.cargo/bin/``, but you can place them wherev
 
 This build won't have the HTML docs (``help`` will open the online version) or translations.
 
-It requires sphinx by default, if sphinx-build is not available you can build without man pages by running it with $FISH_BUILD_DOCS set to 0::
+It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::
 
-  FISH_BUILD_DOCS=0 cargo install --path .
+  FISH_BUILD_DOCS=1 cargo install --path .
 
-You can also link it statically (but not against glibc) and move it to other computers.
+Setting it to "0" disables the inclusion of man pages.
+
+You can also link this build statically (but not against glibc) and move it to other computers.
 
 Contributing Changes to the Code
 --------------------------------

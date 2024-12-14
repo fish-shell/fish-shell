@@ -1,4 +1,4 @@
-set -l rclone_version (rclone version | string match -rg 'rclone v(.*)' | string split .)
+set -l rclone_version (rclone version | string match -rg 'rclone v?(.*)' | string split .)
 or return
 
 # Yes, rclone's parsing here has changed, now they *require* a `-` argument

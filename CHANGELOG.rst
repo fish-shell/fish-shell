@@ -207,6 +207,10 @@ Improved terminal support
 - Focus reporting in tmux is no longer disabled on the first prompt.
 - Focus reporting is now disabled during execution of bind commands (:issue:`6942`).
 - Cursor changes are applied to all terminals that support them, and the list of specifically-supported terminals has been removed (:issue:`10693`).
+- If it cannot find the terminfo entry given by $TERM, fish will now use an included xterm-256color definition (:issue:`10905`).
+  This is important because it no longer uses ncurses to read terminfo, so it will not read termcap or hashed terminfo databases (:issue:`10269`).
+  Usually, xterm-256color is correct in the sequences that fish uses, and so this will typically work.
+  If you need to have a specific $TERM, install a terminfo database.
 
 Other improvements
 ------------------
@@ -227,14 +231,15 @@ Fish has been ported to Rust. That means the dependencies have changed.
 It now requires Rust 1.70 at least.
 
 CMake remains for now because cargo is unable to install the many asset files that fish needs. The minimum required CMake version has increased to 3.19.
+There is a separate configuration to build fish just with ``cargo``, but this has a few limitations (no html documentation, no translations),
+and so we would strongly encourage packagers to keep using CMake.
 
 Some smaller changes:
 
 - Xcode support has been removed (:issue:`9924`).
 - fish no longer links against the (n)curses library, opting to read the terminfo database via the terminfo crate.
   This means hashed terminfo databases are no longer supported (from our research, they are basically unmaintained and unused).
-  When packaging fish, please add a dependency on the package containing your terminfo database instead of curses,
-  if such a package is required.
+  When packaging fish, please add a dependency on the package containing your terminfo database instead of curses.
   If it cannot find a terminfo database, fish will now fall back on an included ``xterm-256color`` definition (:issue:`10269`).
 
 --------------

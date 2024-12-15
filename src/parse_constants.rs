@@ -83,8 +83,10 @@ pub enum ParseKeyword {
     kw_function,
     kw_if,
     kw_in,
+    kw_lbrace,
     kw_not,
     kw_or,
+    kw_rbrace,
     kw_switch,
     kw_time,
     kw_while,
@@ -212,7 +214,6 @@ impl ParseKeyword {
     /// Return the keyword as a string.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_and => L!("and"),
             ParseKeyword::kw_begin => L!("begin"),
             ParseKeyword::kw_builtin => L!("builtin"),
@@ -220,13 +221,16 @@ impl ParseKeyword {
             ParseKeyword::kw_command => L!("command"),
             ParseKeyword::kw_else => L!("else"),
             ParseKeyword::kw_end => L!("end"),
+            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_exec => L!("exec"),
             ParseKeyword::kw_for => L!("for"),
             ParseKeyword::kw_function => L!("function"),
             ParseKeyword::kw_if => L!("if"),
             ParseKeyword::kw_in => L!("in"),
+            ParseKeyword::kw_lbrace => L!("{"),
             ParseKeyword::kw_not => L!("not"),
             ParseKeyword::kw_or => L!("or"),
+            ParseKeyword::kw_rbrace => L!("}"),
             ParseKeyword::kw_switch => L!("switch"),
             ParseKeyword::kw_time => L!("time"),
             ParseKeyword::kw_while => L!("while"),
@@ -245,6 +249,8 @@ impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
         match s {
             _ if s == "!" => ParseKeyword::kw_exclam,
+            _ if s == "{" => ParseKeyword::kw_lbrace,
+            _ if s == "}" => ParseKeyword::kw_rbrace,
             _ if s == "and" => ParseKeyword::kw_and,
             _ if s == "begin" => ParseKeyword::kw_begin,
             _ if s == "builtin" => ParseKeyword::kw_builtin,
@@ -514,7 +520,3 @@ pub const ERROR_BAD_COMMAND_ASSIGN_ERR_MSG: &str =
 /// Error message for a command like `time foo &`.
 pub const ERROR_TIME_BACKGROUND: &str =
     "'time' is not supported for background jobs. Consider using 'command time'.";
-
-/// Error issued on { echo; echo }.
-pub const ERROR_NO_BRACE_GROUPING: &str =
-    "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'";

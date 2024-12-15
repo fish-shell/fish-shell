@@ -268,6 +268,7 @@ pub struct Tokenizer<'c> {
     continue_line_after_comment: bool,
     /// Called on every quote change.
     on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
+    command_position: bool,
 }
 
 impl<'c> Tokenizer<'c> {
@@ -303,6 +304,7 @@ impl<'c> Tokenizer<'c> {
             continue_after_error: flags & TOK_CONTINUE_AFTER_ERROR,
             continue_line_after_comment: false,
             on_quote_toggle,
+            command_position: true,
         }
     }
 }
@@ -368,7 +370,8 @@ impl<'c> Iterator for Tokenizer<'c> {
             .get(self.token_cursor + 1)
             .copied();
         let buff = &self.start[self.token_cursor..];
-        match this_char {
+        let mut terminates_command = false;
+        let token = match this_char {
             '\0'=> {
                 self.has_next = false;
                 None
@@ -380,6 +383,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 result.offset = start_pos as u32;
                 result.length = 1;
                 self.token_cursor+=1;
+                terminates_command = true;
                 // Hack: when we get a newline, swallow as many as we can. This compresses multiple
                 // subsequent newlines into a single one.
                 if !self.show_blank_lines {
@@ -498,7 +502,9 @@ impl<'c> Iterator for Tokenizer<'c> {
                     }
                 }
             }
-        }
+        };
+        self.command_position = terminates_command;
+        token
     }
 }
 
@@ -618,6 +624,17 @@ impl<'c> Tokenizer<'c> {
                 expecting.push(')');
                 mode |= TOK_MODE_SUBSHELL;
             } else if c == '{' {
+                if self.command_position
+                    && self
+                        .start
+                        .as_char_slice()
+                        .get(self.token_cursor + 1)
+                        .copied()
+                        .map_or(true, |next| next.is_whitespace() || next == ';')
+                {
+                    self.token_cursor += 1;
+                    break;
+                }
                 brace_offsets.push(self.token_cursor);
                 expecting.push('}');
                 mode |= TOK_MODE_CURLY_BRACES;
@@ -665,6 +682,10 @@ impl<'c> Tokenizer<'c> {
                     }
                 }
             } else if c == '}' {
+                if self.command_position {
+                    self.token_cursor += 1;
+                    break;
+                }
                 if expecting.last() == Some(&')') {
                     return self.call_error(
                         TokenizerError::expected_pclose_found_bclose,
@@ -736,6 +757,7 @@ impl<'c> Tokenizer<'c> {
                 .copied();
             is_token_begin = is_token_delimiter(c, next);
             self.token_cursor += 1;
+            self.command_position = false;
         }
 
         if !self.accept_unfinished && mode != TOK_MODE_REGULAR_TEXT {

@@ -129,14 +129,6 @@ end" >$__fish_config_dir/config.fish
     end
 
     #
-    # We want to show our completions for the [ (test) builtin, but
-    # we don't want to create a [.fish. test.fish will not be loaded until
-    # the user tries [ interactively.
-    #
-    complete -c [ --wraps test
-    complete -c ! --wraps not
-
-    #
     # Only a few builtins take filenames; initialize the rest with no file completions
     #
     complete -c(builtin -n | string match -rv '(\.|:|source|cd|contains|count|echo|exec|printf|random|realpath|set|\\[|test|for)') --no-files

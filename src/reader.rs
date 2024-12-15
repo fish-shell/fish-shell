@@ -43,6 +43,7 @@ use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Ast, Category, Traversal};
+use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
 use crate::common::restore_term_foreground_process_group_for_exit;
@@ -2308,6 +2309,12 @@ impl<'a> Reader<'a> {
                     .update_buff_pos(EditableLineTag::Commandline, Some(self.command_line_len()));
             }
             rl::CancelCommandline => {
+                if self.conf.exit_on_interrupt {
+                    self.parser
+                        .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
+                    self.exit_loop_requested = true;
+                    return;
+                }
                 if self.command_line.is_empty() {
                     return;
                 }

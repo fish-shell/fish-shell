@@ -15,6 +15,7 @@ use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
 use std::io::Write;
+use std::ops::Range;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 use std::time::SystemTime;
@@ -255,9 +256,9 @@ impl Screen {
         left_prompt: &wstr,
         right_prompt: &wstr,
         commandline: &wstr,
-        explicit_len: usize,
-        colors: &[HighlightSpec],
-        indent: &[i32],
+        autosuggested_range: Range<usize>,
+        mut colors: Vec<HighlightSpec>,
+        mut indent: Vec<i32>,
         cursor_pos: usize,
         pager_search_field_position: Option<usize>,
         vars: &dyn Environment,
@@ -282,17 +283,19 @@ impl Screen {
         let mut scrolled_cursor: Option<ScrolledCursor> = None;
 
         // Turn the command line into the explicit portion and the autosuggestion.
-        let (explicit_command_line, autosuggestion) = commandline.split_at(explicit_len);
+        let explicit_before_suggestion = &commandline[..autosuggested_range.start];
+        let autosuggestion = &commandline[autosuggested_range.clone()];
+        let explicit_after_suggestion = &commandline[autosuggested_range.end..];
 
         // If we are using a dumb terminal, don't try any fancy stuff, just print out the text.
         // right_prompt not supported.
         if is_dumb() {
             let prompt_narrow = wcs2string(left_prompt);
-            let command_line_narrow = wcs2string(explicit_command_line);
 
             let _ = write_loop(&STDOUT_FILENO, b"\r");
             let _ = write_loop(&STDOUT_FILENO, &prompt_narrow);
-            let _ = write_loop(&STDOUT_FILENO, &command_line_narrow);
+            let _ = write_loop(&STDOUT_FILENO, &wcs2string(explicit_before_suggestion));
+            let _ = write_loop(&STDOUT_FILENO, &wcs2string(explicit_after_suggestion));
 
             return;
         }
@@ -311,10 +314,13 @@ impl Screen {
 
         // Compute a layout.
         let layout = compute_layout(
+            get_ellipsis_char(),
             screen_width,
             left_prompt,
             right_prompt,
-            explicit_command_line,
+            explicit_before_suggestion,
+            &mut colors,
+            &mut indent,
             autosuggestion,
         );
 
@@ -345,7 +351,9 @@ impl Screen {
         let first_line_prompt_space = layout.left_prompt_space;
 
         // Reconstruct the command line.
-        let effective_commandline = explicit_command_line.to_owned() + &layout.autosuggestion[..];
+        let effective_commandline = explicit_before_suggestion.to_owned()
+            + &layout.autosuggestion[..]
+            + explicit_after_suggestion;
 
         // Output the command line.
         let mut i = 0;
@@ -375,7 +383,12 @@ impl Screen {
                 break scrolled_cursor.unwrap();
             }
             if !self.desired_append_char(
-                /*offset_in_cmdline=*/ i,
+                /*offset_in_cmdline=*/
+                if i <= explicit_before_suggestion.len() + layout.autosuggestion.len() {
+                    i.min(explicit_before_suggestion.len())
+                } else {
+                    i - layout.autosuggestion.len()
+                },
                 if is_final_rendering {
                     usize::MAX
                 } else {
@@ -1835,16 +1848,17 @@ fn is_dumb() -> bool {
     })
 }
 
-#[derive(Default)]
-struct ScreenLayout {
+// Exposed for testing.
+#[derive(Debug, Default, Eq, PartialEq)]
+pub(crate) struct ScreenLayout {
     // The left prompt that we're going to use.
-    left_prompt: WString,
+    pub(crate) left_prompt: WString,
     // How much space to leave for it.
-    left_prompt_space: usize,
+    pub(crate) left_prompt_space: usize,
     // The right prompt.
-    right_prompt: WString,
+    pub(crate) right_prompt: WString,
     // The autosuggestion.
-    autosuggestion: WString,
+    pub(crate) autosuggestion: WString,
 }
 
 // Given a vector whose indexes are offsets and whose values are the widths of the string if
@@ -1864,11 +1878,15 @@ fn truncation_offset_for_width(width_by_offset: &[usize], max_width: usize) -> u
     i - 1
 }
 
-fn compute_layout(
+// Exposed for testing.
+pub(crate) fn compute_layout(
+    ellipsis_char: char,
     screen_width: usize,
     left_untrunc_prompt: &wstr,
     right_untrunc_prompt: &wstr,
-    commandline: &wstr,
+    commandline_before_suggestion: &wstr,
+    colors: &mut Vec<HighlightSpec>,
+    indent: &mut Vec<i32>,
     autosuggestion_str: &wstr,
 ) -> ScreenLayout {
     let mut result = ScreenLayout::default();
@@ -1901,24 +1919,23 @@ fn compute_layout(
     assert!(left_prompt_width + right_prompt_width <= screen_width);
 
     // Get the width of the first line, and if there is more than one line.
-    let multiline = commandline.contains('\n');
-    let first_command_line_width: usize = line_at_cursor(commandline, 0)
+    let first_command_line_width: usize = line_at_cursor(commandline_before_suggestion, 0)
         .chars()
         .map(wcwidth_rendered_min_0)
         .sum();
+    let autosuggestion_line_explicit_width: usize = line_at_cursor(
+        commandline_before_suggestion,
+        commandline_before_suggestion.len(),
+    )
+    .chars()
+    .map(wcwidth_rendered_min_0)
+    .sum();
 
-    // If we have more than one line, ensure we have no autosuggestion.
-    let mut autosuggestion = autosuggestion_str;
     let mut autosuggest_total_width = 0;
-    let mut autosuggest_truncated_widths = vec![];
-    if multiline {
-        autosuggestion = L!("");
-    } else {
-        autosuggest_truncated_widths.reserve(1 + autosuggestion_str.len());
-        for c in autosuggestion_str.chars() {
-            autosuggest_truncated_widths.push(autosuggest_total_width);
-            autosuggest_total_width += wcwidth_rendered_min_0(c);
-        }
+    let mut autosuggest_truncated_widths = Vec::with_capacity(autosuggestion_str.len());
+    for c in autosuggestion_str.chars() {
+        autosuggest_truncated_widths.push(autosuggest_total_width);
+        autosuggest_total_width += wcwidth_rendered_min_0(c);
     }
 
     // Here are the layouts we try in turn:
@@ -1940,21 +1957,35 @@ fn compute_layout(
     // prompt will wrap to the next line. This means that we can't go back to the line that we were
     // on, and things turn to chaos very quickly.
 
-    let truncated_autosuggestion = |right_prompt_width: usize| {
-        let width = left_prompt_width + right_prompt_width + first_command_line_width;
+    let mut truncated_autosuggestion = |indent: &mut Vec<i32>, right_prompt_width: usize| {
+        let width = if let Some(pos) = commandline_before_suggestion
+            .chars()
+            .rposition(|c| c == '\n')
+        {
+            left_prompt_width
+                + usize::try_from(indent[pos]).unwrap() * INDENT_STEP
+                + autosuggestion_line_explicit_width
+        } else {
+            left_prompt_width + right_prompt_width + first_command_line_width
+        };
         // Need at least two characters to show an autosuggestion.
-        let available_autosuggest_space = screen_width - width;
+        let available_autosuggest_space = screen_width.saturating_sub(width);
         let mut result = WString::new();
         if available_autosuggest_space > autosuggest_total_width {
-            result = autosuggestion.to_owned();
+            result = autosuggestion_str.to_owned();
         } else if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
             let truncation_offset = truncation_offset_for_width(
                 &autosuggest_truncated_widths,
                 available_autosuggest_space - 2,
             );
-            result = autosuggestion[..truncation_offset].to_owned();
-            result.push(get_ellipsis_char());
+            result = autosuggestion_str[..truncation_offset].to_owned();
+            result.push(ellipsis_char);
         }
+        let suggestion_start = commandline_before_suggestion.len();
+        let truncation_range =
+            suggestion_start + result.len()..suggestion_start + autosuggestion_str.len();
+        colors.drain(truncation_range.clone());
+        indent.drain(truncation_range);
         result
     };
 
@@ -1965,7 +1996,7 @@ fn compute_layout(
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
         result.right_prompt = right_prompt;
-        result.autosuggestion = truncated_autosuggestion(right_prompt_width);
+        result.autosuggestion = truncated_autosuggestion(indent, right_prompt_width);
         return result;
     }
 
@@ -1974,14 +2005,14 @@ fn compute_layout(
     if calculated_width <= screen_width {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
-        result.autosuggestion = truncated_autosuggestion(0);
+        result.autosuggestion = truncated_autosuggestion(indent, 0);
         return result;
     }
 
     // Case 5
     result.left_prompt = left_prompt;
     result.left_prompt_space = left_prompt_width;
-    result.autosuggestion = autosuggestion.to_owned();
+    result.autosuggestion = autosuggestion_str.to_owned();
     result
 }
 

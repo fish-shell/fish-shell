@@ -58,8 +58,7 @@ use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
     CompletionRequestOptions,
 };
-use crate::editable_line::line_at_cursor;
-use crate::editable_line::{Edit, EditableLine};
+use crate::editable_line::{line_at_cursor, range_of_line_at_cursor, Edit, EditableLine};
 use crate::env::{EnvMode, Environment, Statuses};
 use crate::exec::exec_subshell;
 use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
@@ -100,6 +99,7 @@ use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_tree::ParsedSource;
+use crate::parse_util::parse_util_process_extent;
 use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::{
@@ -133,7 +133,8 @@ use crate::tokenizer::{
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
-    count_preceding_backslashes, join_strings, string_prefixes_string, StringFuzzyMatch,
+    count_preceding_backslashes, join_strings, string_prefixes_string,
+    string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror};
@@ -983,7 +984,8 @@ pub fn reader_showing_suggestion(parser: &Parser) -> bool {
         let reader = Reader { parser, data };
         let suggestion = &reader.autosuggestion.text;
         let is_single_space = suggestion.ends_with(L!(" "))
-            && reader.command_line.text() == suggestion[..suggestion.len() - 1];
+            && line_at_cursor(reader.command_line.text(), reader.command_line.position())
+                == suggestion[..suggestion.len() - 1];
         !suggestion.is_empty() && !is_single_space
     } else {
         false
@@ -1322,8 +1324,8 @@ impl ReaderData {
 
     /// Update the cursor position.
     fn update_buff_pos(&mut self, elt: EditableLineTag, mut new_pos: Option<usize>) -> bool {
+        let el = self.edit_line(elt);
         if self.cursor_end_mode == CursorEndMode::Inclusive {
-            let el = self.edit_line(elt);
             let mut pos = new_pos.unwrap_or(el.position());
             if !el.is_empty() && pos == el.len() {
                 pos = el.len() - 1;
@@ -1333,12 +1335,24 @@ impl ReaderData {
                 new_pos = Some(pos);
             }
         }
+        let old_pos = el.position();
         if let Some(pos) = new_pos {
             self.edit_line_mut(elt).set_position(pos);
         }
 
         if elt != EditableLineTag::Commandline {
             return true;
+        }
+        // When moving across lines, hold off on autosuggestions until the next insertion.
+        if let Some(new_pos) = new_pos {
+            let range = if new_pos <= old_pos {
+                new_pos..old_pos
+            } else {
+                old_pos..new_pos
+            };
+            if self.command_line.text()[range].contains('\n') {
+                self.suppress_autosuggestion = true;
+            }
         }
         let buff_pos = self.command_line.position();
         let target_char = if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
@@ -1386,36 +1400,50 @@ impl ReaderData {
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
 /// Exposed for testing purposes only.
-pub fn combine_command_and_autosuggestion(cmdline: &wstr, autosuggestion: &wstr) -> WString {
+pub fn combine_command_and_autosuggestion(
+    cmdline: &wstr,
+    line_range: Range<usize>,
+    autosuggestion: &wstr,
+) -> WString {
     // We want to compute the full line, containing the command line and the autosuggestion They may
-    // disagree on whether characters are uppercase or lowercase Here we do something funny: if the
-    // last token of the command line contains any uppercase characters, we use its case. Otherwise
-    // we use the case of the autosuggestion. This is an idea from issue #335.
-    let mut full_line;
-    if autosuggestion.len() <= cmdline.len() || cmdline.is_empty() {
-        // No or useless autosuggestion, or no command line.
-        full_line = cmdline.to_owned();
-    } else if string_prefixes_string(cmdline, autosuggestion) {
-        // No case disagreements, or no extra characters in the autosuggestion.
-        full_line = autosuggestion.to_owned();
-    } else {
+    // disagree on whether characters are uppercase or lowercase.
+    let pos = line_range.end;
+    let full_line;
+    assert!(!autosuggestion.is_empty());
+    assert!(autosuggestion.len() >= line_range.len());
+    let available = autosuggestion.len() - line_range.len();
+    let line = &cmdline[line_range.clone()];
+
+    if !string_prefixes_string(line, autosuggestion) {
         // We have an autosuggestion which is not a prefix of the command line, i.e. a case
         // disagreement. Decide whose case we want to use.
+        assert!(string_prefixes_string_case_insensitive(
+            line,
+            autosuggestion
+        ));
+        // Here we do something funny: if the last token of the command line contains any uppercase
+        // characters, we use its case. Otherwise we use the case of the autosuggestion. This
+        // is an idea from issue #335.
         let mut tok = 0..0;
         parse_util_token_extent(cmdline, cmdline.len() - 1, &mut tok, None);
         let last_token_contains_uppercase = cmdline[tok].chars().any(|c| c.is_uppercase());
         if !last_token_contains_uppercase {
             // Use the autosuggestion's case.
-            full_line = autosuggestion.to_owned();
-        } else {
-            // Use the command line case for its characters, then append the remaining characters in
-            // the autosuggestion. Note that we know that autosuggestion.size() > cmdline.size() due
-            // to the first test above.
-            full_line = cmdline.to_owned();
-            full_line.push_utfstr(&autosuggestion[cmdline.len()..]);
+            let start: usize = unsafe {
+                (line.as_char_slice().first().unwrap() as *const char)
+                    .offset_from(&cmdline.as_char_slice()[0])
+            }
+            .try_into()
+            .unwrap();
+            full_line = cmdline[..start].to_owned() + autosuggestion + &cmdline[pos..];
+            return full_line;
         }
     }
-    full_line
+    // Use the command line case for its characters, then append the remaining characters in
+    // the autosuggestion.
+    cmdline[..pos].to_owned()
+        + &autosuggestion[autosuggestion.len() - available..]
+        + &cmdline[pos..]
 }
 
 impl<'a> Reader<'a> {
@@ -1510,17 +1538,35 @@ impl<'a> Reader<'a> {
     /// `reason` is used in FLOG to explain why.
     fn paint_layout(&mut self, reason: &wstr, is_final_rendering: bool) {
         FLOGF!(reader_render, "Repainting from %ls", reason);
-        let data = &self.data.rendered_layout;
         let cmd_line = &self.data.command_line;
 
-        let full_line = if self.conf.in_silent_mode {
-            wstr::from_char_slice(&[get_obfuscation_read_char()]).repeat(cmd_line.len())
-        } else {
+        let (full_line, autosuggested_range) = if self.conf.in_silent_mode {
+            (
+                Cow::Owned(
+                    wstr::from_char_slice(&[get_obfuscation_read_char()]).repeat(cmd_line.len()),
+                ),
+                0..0,
+            )
+        } else if self.is_at_line_with_autosuggestion() {
             // Combine the command and autosuggestion into one string.
-            combine_command_and_autosuggestion(cmd_line.text(), &self.autosuggestion.text)
+            let autosuggestion = &self.autosuggestion;
+            let search_string_range = &autosuggestion.search_string_range;
+            let autosuggested_start = search_string_range.end;
+            let autosuggested_end = search_string_range.start + autosuggestion.text.len();
+            (
+                Cow::Owned(combine_command_and_autosuggestion(
+                    cmd_line.text(),
+                    autosuggestion.search_string_range.clone(),
+                    &autosuggestion.text,
+                )),
+                autosuggested_start..autosuggested_end,
+            )
+        } else {
+            (Cow::Borrowed(cmd_line.text()), 0..0)
         };
 
-        // Copy the colors and extend them with autosuggestion color.
+        // Copy the colors and insert the autosuggestion color.
+        let data = &self.data.rendered_layout;
         let mut colors = data.colors.clone();
 
         // Highlight any history search.
@@ -1546,16 +1592,23 @@ impl<'a> Reader<'a> {
             }
         }
 
-        // Extend our colors with the autosuggestion.
-        colors.resize(
-            full_line.len(),
-            HighlightSpec::with_fg(HighlightRole::autosuggestion),
-        );
+        let mut indents;
+        {
+            // Extend our colors with the autosuggestion.
+            let pos = autosuggested_range.start;
+            colors.splice(
+                pos..pos,
+                vec![
+                    HighlightSpec::with_fg(HighlightRole::autosuggestion);
+                    autosuggested_range.len()
+                ],
+            );
 
-        // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
-        // always conceptually has an indent of 0.
-        let mut indents = parse_util_compute_indents(cmd_line.text());
-        indents.resize(full_line.len(), 0);
+            // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
+            // always conceptually has an indent of 0.
+            indents = parse_util_compute_indents(cmd_line.text());
+            indents.splice(pos..pos, vec![0; autosuggested_range.len()]);
+        }
 
         let screen = &mut self.data.screen;
         let pager = &mut self.data.pager;
@@ -1565,9 +1618,9 @@ impl<'a> Reader<'a> {
             &(self.data.mode_prompt_buff.clone() + &self.data.left_prompt_buff[..]),
             &self.data.right_prompt_buff,
             &full_line,
-            cmd_line.len(),
-            &colors,
-            &indents,
+            autosuggested_range,
+            colors,
+            indents,
             data.position,
             data.pager_search_field_position,
             self.parser.vars(),
@@ -1682,15 +1735,19 @@ impl ReaderData {
         // text avoid recomputing the autosuggestion.
         assert!(string_prefixes_string_maybe_case_insensitive(
             autosuggestion.icase,
-            &self.command_line.text(),
+            &self.command_line.text()[autosuggestion.search_string_range.clone()],
             &autosuggestion.text
         ));
+        let search_string_range = autosuggestion.search_string_range.clone();
 
         // This is a heuristic with false negatives but that seems fine.
-        let Some(remaining) = autosuggestion.text.get(edit.range.start..) else {
+        let Some(offset) = edit.range.start.checked_sub(search_string_range.start) else {
             return false;
         };
-        if edit.range.end != self.command_line.len()
+        let Some(remaining) = autosuggestion.text.get(offset..) else {
+            return false;
+        };
+        if edit.range.end != search_string_range.end
             || !string_prefixes_string_maybe_case_insensitive(
                 autosuggestion.icase,
                 &edit.replacement,
@@ -1700,6 +1757,9 @@ impl ReaderData {
         {
             return false;
         }
+        self.autosuggestion.search_string_range.end = search_string_range.end
+            - edit.range.len().min(search_string_range.end)
+            + edit.replacement.len();
         true
     }
 
@@ -2379,10 +2439,9 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::EndOfLine => {
-                let (_elt, el) = self.active_edit_line();
-                if self.is_at_end(el) {
+                if self.is_at_autosuggestion() {
                     self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
-                } else {
+                } else if !self.is_at_end() {
                     loop {
                         let position = {
                             let (_elt, el) = self.active_edit_line();
@@ -2860,7 +2919,7 @@ impl<'a> Reader<'a> {
             rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
                 let is_history_search = !self.history_search.is_at_end();
-                if is_history_search || !self.autosuggestion.is_empty() {
+                if is_history_search || self.is_at_line_with_autosuggestion() {
                     self.history.remove(if is_history_search {
                         self.history_search.current_result()
                     } else {
@@ -2909,10 +2968,9 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::ForwardChar | rl::ForwardSingleChar => {
-                let (elt, el) = self.active_edit_line();
                 if self.is_navigating_pager_contents() {
                     self.select_completion_in_direction(SelectionMotion::East, false);
-                } else if self.is_at_end(el) {
+                } else if self.is_at_autosuggestion() {
                     self.accept_autosuggestion(AutosuggestionPortion::Count(
                         if c == rl::ForwardSingleChar {
                             1
@@ -2920,13 +2978,14 @@ impl<'a> Reader<'a> {
                             usize::MAX
                         },
                     ));
-                } else {
+                } else if !self.is_at_end() {
+                    let (elt, el) = self.active_edit_line();
                     self.update_buff_pos(elt, Some(el.position() + 1));
                 }
             }
             rl::ForwardCharPassive => {
-                let (elt, el) = self.active_edit_line();
-                if !self.is_at_end(el) {
+                if !self.is_at_end() {
+                    let (elt, el) = self.active_edit_line();
                     if elt == EditableLineTag::SearchField || !self.is_navigating_pager_contents() {
                         self.update_buff_pos(elt, Some(el.position() + 1));
                     }
@@ -3016,15 +3075,16 @@ impl<'a> Reader<'a> {
                 );
             }
             rl::ForwardToken => {
-                let (_elt, el) = self.active_edit_line();
-                if self.is_at_end(el) {
+                if self.is_at_autosuggestion() {
                     let Some(new_position) = self.forward_token(true) else {
                         return;
                     };
+                    let (_elt, el) = self.active_edit_line();
+                    let search_string_range = range_of_line_at_cursor(el.text(), el.position());
                     self.accept_autosuggestion(AutosuggestionPortion::Count(
-                        new_position - el.len(),
+                        new_position - search_string_range.end,
                     ));
-                } else {
+                } else if !self.is_at_end() {
                     let Some(new_position) = self.forward_token(false) else {
                         return;
                     };
@@ -3068,10 +3128,10 @@ impl<'a> Reader<'a> {
                 } else {
                     MoveWordStyle::Whitespace
                 };
-                let (elt, el) = self.active_edit_line();
-                if self.is_at_end(el) {
+                if self.is_at_autosuggestion() {
                     self.accept_autosuggestion(AutosuggestionPortion::PerMoveWordStyle(style));
-                } else {
+                } else if !self.is_at_end() {
+                    let (elt, _el) = self.active_edit_line();
                     self.move_word(elt, MoveWordDir::Right, /*erase=*/ false, style, false);
                 }
             }
@@ -3165,14 +3225,16 @@ impl<'a> Reader<'a> {
             }
             rl::SuppressAutosuggestion => {
                 self.suppress_autosuggestion = true;
-                let success = !self.autosuggestion.is_empty();
+                let success = self.is_at_line_with_autosuggestion();
                 self.autosuggestion.clear();
                 // Return true if we had a suggestion to clear.
                 self.input_data.function_set_status(success);
             }
             rl::AcceptAutosuggestion => {
-                let success = !self.autosuggestion.is_empty();
-                self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
+                let success = self.is_at_line_with_autosuggestion();
+                if success {
+                    self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
+                }
                 self.input_data.function_set_status(success);
             }
             rl::TransposeChars => {
@@ -3312,7 +3374,7 @@ impl<'a> Reader<'a> {
                 let mut replacement = WString::new();
                 while pos
                     < if self.cursor_selection_mode == CursorSelectionMode::Inclusive
-                        && self.is_at_end(el)
+                        && self.is_at_end()
                     {
                         el.len()
                     } else {
@@ -3606,15 +3668,19 @@ impl<'a> Reader<'a> {
     }
 
     fn forward_token(&self, autosuggest: bool) -> Option<usize> {
-        let (_elt, el) = self.active_edit_line();
+        let (elt, el) = self.active_edit_line();
         let pos = el.position();
         let buffer = if autosuggest {
-            if pos > self.autosuggestion.text.len() {
-                return None;
-            }
-            &self.autosuggestion.text
+            assert!(elt == EditableLineTag::Commandline);
+            assert!(self.is_at_line_with_autosuggestion());
+            let autosuggestion = &self.autosuggestion;
+            Cow::Owned(combine_command_and_autosuggestion(
+                el.text(),
+                autosuggestion.search_string_range.clone(),
+                &autosuggestion.text,
+            ))
         } else {
-            el.text()
+            Cow::Borrowed(el.text())
         };
         if pos == buffer.len() {
             return None;
@@ -3628,7 +3694,7 @@ impl<'a> Reader<'a> {
                 .count();
 
         let mut tok = 0..0;
-        parse_util_token_extent(buffer, buff_pos, &mut tok, None);
+        parse_util_token_extent(&buffer, buff_pos, &mut tok, None);
 
         let new_position = if tok.end == pos { pos + 1 } else { tok.end };
 
@@ -4364,8 +4430,11 @@ impl<'a> Reader<'a> {
 
 #[derive(Default)]
 struct Autosuggestion {
-    // The text to use, as an extension/replacement of the command line.
+    // The text to use, as an extension/replacement of the current line.
     text: WString,
+
+    // The range within the commandline that was searched. Always a whole line.
+    search_string_range: Range<usize>,
 
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
@@ -4387,10 +4456,11 @@ impl Autosuggestion {
 /// The result of an autosuggestion computation.
 #[derive(Default)]
 struct AutosuggestionResult {
+    // The autosuggestion.
     autosuggestion: Autosuggestion,
 
-    // The string which was searched for.
-    search_string: WString,
+    // The commandline this result is based off.
+    command_line: WString,
 
     // The list of completions which may need loading.
     needs_load: Vec<WString>,
@@ -4404,12 +4474,26 @@ impl std::ops::Deref for AutosuggestionResult {
 }
 
 impl AutosuggestionResult {
-    fn new(text: WString, search_string: WString, icase: bool) -> Self {
+    fn new(
+        command_line: WString,
+        search_string_range: Range<usize>,
+        text: WString,
+        icase: bool,
+    ) -> Self {
         Self {
-            autosuggestion: Autosuggestion { text, icase },
-            search_string,
+            autosuggestion: Autosuggestion {
+                text,
+                search_string_range,
+                icase,
+            },
+            command_line,
             needs_load: vec![],
         }
+    }
+
+    /// The line which was searched for.
+    fn search_string(&self) -> &wstr {
+        &self.command_line[self.search_string_range.clone()]
     }
 }
 
@@ -4417,7 +4501,7 @@ impl AutosuggestionResult {
 // on a background thread) to determine the autosuggestion
 fn get_autosuggestion_performer(
     parser: &Parser,
-    search_string: WString,
+    command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
 ) -> impl FnOnce() -> AutosuggestionResult {
@@ -4433,29 +4517,38 @@ fn get_autosuggestion_performer(
         }
 
         // Let's make sure we aren't using the empty string.
-        if search_string.is_empty() {
+        let search_string_range = range_of_line_at_cursor(&command_line, cursor_pos);
+        let search_string = &command_line[search_string_range.clone()];
+        let Some(last_char) = search_string.chars().next_back() else {
             return nothing;
-        }
+        };
 
-        // Search history for a matching item.
-        let mut searcher =
-            HistorySearch::new_with_type(history, search_string.to_owned(), SearchType::Prefix);
-        while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
-            let item = searcher.current_item();
+        // Search history for a matching item unless this line is not a continuation line or quoted.
+        if range_of_line_at_cursor(
+            &command_line,
+            parse_util_process_extent(&command_line, cursor_pos, None).start,
+        ) == search_string_range
+        {
+            let mut searcher =
+                HistorySearch::new_with_type(history, search_string.to_owned(), SearchType::Prefix);
+            while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
+                let item = searcher.current_item();
 
-            // Skip items with newlines because they make terrible autosuggestions.
-            if item.str().contains('\n') {
-                continue;
-            }
+                // Skip items with newlines because they make terrible autosuggestions.
+                if item.str().contains('\n') {
+                    continue;
+                }
 
-            if autosuggest_validate_from_history(item, &working_directory, &ctx) {
-                // The command autosuggestion was handled specially, so we're done.
-                // History items are case-sensitive, see #3978.
-                return AutosuggestionResult::new(
-                    searcher.current_string().to_owned(),
-                    search_string.to_owned(),
-                    /*icase=*/ false,
-                );
+                if autosuggest_validate_from_history(item, &working_directory, &ctx) {
+                    // The command autosuggestion was handled specially, so we're done.
+                    // History items are case-sensitive, see #3978.
+                    return AutosuggestionResult::new(
+                        command_line,
+                        search_string_range,
+                        searcher.current_string().to_owned(),
+                        /*icase=*/ false,
+                    );
+                }
             }
         }
 
@@ -4467,8 +4560,8 @@ fn get_autosuggestion_performer(
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
         // stuff get spammed on the right while you go back to edit a line
-        let last_char = search_string.chars().next_back().unwrap();
-        let cursor_at_end = cursor_pos == search_string.len();
+        let cursor_at_end =
+            cursor_pos == command_line.len() || command_line.as_char_slice()[cursor_pos] == '\n';
         if !cursor_at_end && last_char.is_whitespace() {
             return nothing;
         }
@@ -4480,25 +4573,28 @@ fn get_autosuggestion_performer(
 
         // Try normal completions.
         let complete_flags = CompletionRequestOptions::autosuggest();
-        let (mut completions, needs_load) = complete(&search_string, complete_flags, &ctx);
+        let (mut completions, needs_load) =
+            complete(&command_line[..cursor_pos], complete_flags, &ctx);
 
-        let full_line = if completions.is_empty() {
+        let suggestion = if completions.is_empty() {
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
             let comp = &completions[0];
             let mut cursor = cursor_pos;
-            completion_apply_to_command_line(
+            let full_line = completion_apply_to_command_line(
                 &comp.completion,
                 comp.flags,
-                &search_string,
+                &command_line,
                 &mut cursor,
                 /*append_only=*/ true,
-            )
+            );
+            line_at_cursor(&full_line, search_string_range.end).to_owned()
         };
         let mut result = AutosuggestionResult::new(
-            full_line,
-            search_string.to_owned(),
+            command_line,
+            search_string_range.clone(),
+            suggestion,
             true, // normal completions are case-insensitive
         );
         result.needs_load = needs_load;
@@ -4529,10 +4625,10 @@ impl<'a> Reader<'a> {
     // Called after an autosuggestion has been computed on a background thread.
     fn autosuggest_completed(&mut self, result: AutosuggestionResult) {
         assert_is_main_thread();
-        if result.search_string == self.data.in_flight_autosuggest_request {
+        if result.command_line == self.data.in_flight_autosuggest_request {
             self.data.in_flight_autosuggest_request.clear();
         }
-        if result.search_string != self.command_line.text() {
+        if result.command_line != self.command_line.text() {
             // This autosuggestion is stale.
             return;
         }
@@ -4556,7 +4652,7 @@ impl<'a> Reader<'a> {
             && self.can_autosuggest()
             && string_prefixes_string_maybe_case_insensitive(
                 result.icase,
-                &result.search_string,
+                result.search_string(),
                 &result.text,
             )
         {
@@ -4578,10 +4674,10 @@ impl<'a> Reader<'a> {
 
         let el = &self.data.command_line;
         let autosuggestion = &self.autosuggestion;
-        if !self.autosuggestion.is_empty() {
+        if self.is_at_line_with_autosuggestion() {
             assert!(string_prefixes_string_maybe_case_insensitive(
                 autosuggestion.icase,
-                &el.text(),
+                &el.text()[autosuggestion.search_string_range.clone()],
                 &autosuggestion.text
             ));
             return;
@@ -4612,52 +4708,87 @@ impl<'a> Reader<'a> {
         debounce_autosuggestions().perform_with_completion(performer, completion);
     }
 
-    fn is_at_end(&self, el: &EditableLine) -> bool {
+    fn is_at_end(&self) -> bool {
+        let (_elt, el) = self.active_edit_line();
         match self.cursor_end_mode {
             CursorEndMode::Exclusive => el.position() == el.len(),
             CursorEndMode::Inclusive => el.position() + 1 >= el.len(),
         }
     }
 
+    fn is_at_autosuggestion(&self) -> bool {
+        if self.active_edit_line_tag() != EditableLineTag::Commandline {
+            return false;
+        }
+        let autosuggestion = &self.autosuggestion;
+        if autosuggestion.is_empty() {
+            return false;
+        }
+        let el = &self.command_line;
+        (match self.cursor_end_mode {
+            CursorEndMode::Exclusive => el.position(),
+            CursorEndMode::Inclusive => el.position() + 1,
+        }) == autosuggestion.search_string_range.end
+    }
+
+    fn is_at_line_with_autosuggestion(&self) -> bool {
+        if self.active_edit_line_tag() != EditableLineTag::Commandline {
+            return false;
+        }
+        let autosuggestion = &self.autosuggestion;
+        if autosuggestion.is_empty() {
+            return false;
+        }
+        let el = &self.command_line;
+        range_of_line_at_cursor(el.text(), el.position()) == autosuggestion.search_string_range
+    }
+
     // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
     // thing; if it's false, then respect the passed in style.
     fn accept_autosuggestion(&mut self, amount: AutosuggestionPortion) {
-        if self.autosuggestion.is_empty() {
-            return;
-        }
+        assert!(self.is_at_line_with_autosuggestion());
+
         // Accepting an autosuggestion clears the pager.
         self.clear_pager();
 
+        let autosuggestion = &self.autosuggestion;
+        let autosuggestion_text = &autosuggestion.text;
+        let search_string_range = autosuggestion.search_string_range.clone();
         // Accept the autosuggestion.
         let (range, replacement) = match amount {
             AutosuggestionPortion::Count(count) => {
-                let pos = self.command_line.len();
                 if count == usize::MAX {
-                    (0..self.command_line.len(), self.autosuggestion.text.clone())
+                    (search_string_range, autosuggestion_text.clone())
                 } else {
-                    let count = count.min(self.autosuggestion.text.len() - pos);
+                    let pos = search_string_range.end;
+                    let available = autosuggestion_text.len() - search_string_range.len();
+                    let count = count.min(available);
                     if count == 0 {
                         return;
                     }
+                    let start = autosuggestion_text.len() - available;
                     (
                         pos..pos,
-                        self.autosuggestion.text[pos..pos + count].to_owned(),
+                        autosuggestion_text[start..start + count].to_owned(),
                     )
                 }
             }
             AutosuggestionPortion::PerMoveWordStyle(style) => {
                 // Accept characters according to the specified style.
                 let mut state = MoveWordStateMachine::new(style);
-                let mut want = self.command_line.len();
-                while want < self.autosuggestion.text.len() {
-                    let wc = self.autosuggestion.text.as_char_slice()[want];
+                let have = search_string_range.len();
+                let mut want = have;
+                while want < autosuggestion_text.len() {
+                    let wc = autosuggestion_text.as_char_slice()[want];
                     if !state.consume_char(wc) {
                         break;
                     }
                     want += 1;
                 }
-                let have = self.command_line.len();
-                (have..have, self.autosuggestion.text[have..want].to_owned())
+                (
+                    search_string_range.end..search_string_range.end,
+                    autosuggestion_text[have..want].to_owned(),
+                )
             }
         };
         self.data

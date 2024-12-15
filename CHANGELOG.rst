@@ -12,6 +12,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
+- Autosuggestions are now also provided in  multi-line command lines. Like `ctrl-r`, autosuggestions operate only on the current line.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

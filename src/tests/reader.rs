@@ -5,30 +5,43 @@ use crate::wchar::prelude::*;
 #[test]
 fn test_autosuggestion_combining() {
     assert_eq!(
-        combine_command_and_autosuggestion(L!("alpha"), L!("alphabeta")),
+        combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("alphabeta")),
         L!("alphabeta")
     );
 
     // When the last token contains no capital letters, we use the case of the autosuggestion.
     assert_eq!(
-        combine_command_and_autosuggestion(L!("alpha"), L!("ALPHABETA")),
+        combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHABETA")),
         L!("ALPHABETA")
     );
 
     // When the last token contains capital letters, we use its case.
     assert_eq!(
-        combine_command_and_autosuggestion(L!("alPha"), L!("alphabeTa")),
+        combine_command_and_autosuggestion(L!("alPha"), 0..5, L!("alphabeTa")),
         L!("alPhabeTa")
     );
 
     // If autosuggestion is not longer than input, use the input's case.
     assert_eq!(
-        combine_command_and_autosuggestion(L!("alpha"), L!("ALPHAA")),
+        combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHAA")),
         L!("ALPHAA")
     );
     assert_eq!(
-        combine_command_and_autosuggestion(L!("alpha"), L!("ALPHA")),
-        L!("alpha")
+        combine_command_and_autosuggestion(L!("alpha"), 0..5, L!("ALPHA")),
+        L!("ALPHA")
+    );
+
+    assert_eq!(
+        combine_command_and_autosuggestion(L!("al\nbeta"), 0..2, L!("alpha")),
+        L!("alpha\nbeta").to_owned()
+    );
+    assert_eq!(
+        combine_command_and_autosuggestion(L!("alpha\nbe"), 6..8, L!("beta")),
+        L!("alpha\nbeta").to_owned()
+    );
+    assert_eq!(
+        combine_command_and_autosuggestion(L!("alpha\nbe\ngamma"), 6..8, L!("beta")),
+        L!("alpha\nbeta\ngamma").to_owned()
     );
 }
 

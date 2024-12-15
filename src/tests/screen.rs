@@ -1,5 +1,7 @@
 use crate::common::get_ellipsis_char;
-use crate::screen::{LayoutCache, PromptCacheEntry, PromptLayout};
+use crate::highlight::HighlightSpec;
+use crate::parse_util::parse_util_compute_indents;
+use crate::screen::{compute_layout, LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout};
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
@@ -244,4 +246,113 @@ fn test_prompt_truncation() {
         },
     );
     assert_eq!(trunc, ellipsis());
+}
+
+#[test]
+fn test_compute_layout() {
+    macro_rules! validate {
+        (
+            (
+                $screen_width:expr,
+                $left_untrunc_prompt:literal,
+                $right_untrunc_prompt:literal,
+                $commandline_before_suggestion:literal,
+                $autosuggestion_str:literal,
+                $commandline_after_suggestion:literal
+            )
+            -> (
+                $left_prompt:literal,
+                $left_prompt_space:expr,
+                $right_prompt:literal,
+                $autosuggestion:literal $(,)?
+            )
+        ) => {{
+            let full_commandline = L!($commandline_before_suggestion).to_owned()
+                + L!($autosuggestion_str)
+                + L!($commandline_after_suggestion);
+            let mut colors = vec![HighlightSpec::default(); full_commandline.len()];
+            let mut indent = parse_util_compute_indents(&full_commandline);
+            assert_eq!(
+                compute_layout(
+                    '…',
+                    $screen_width,
+                    L!($left_untrunc_prompt),
+                    L!($right_untrunc_prompt),
+                    L!($commandline_before_suggestion),
+                    &mut colors,
+                    &mut indent,
+                    L!($autosuggestion_str),
+                ),
+                ScreenLayout {
+                    left_prompt: L!($left_prompt).to_owned(),
+                    left_prompt_space: $left_prompt_space,
+                    right_prompt: L!($right_prompt).to_owned(),
+                    autosuggestion: L!($autosuggestion).to_owned(),
+                }
+            );
+            indent
+        }};
+    }
+
+    validate!(
+        (
+            80, "left>", "<right", "command", " autosuggestion", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosuggestion",
+        )
+    );
+    validate!(
+        (
+            30, "left>", "<right", "command", " autosuggestion", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosugge…",
+        )
+    );
+    validate!(
+        (
+            30, "left>", "<right", "foo\ncommand", " autosuggestion", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosuggestion",
+        )
+    );
+    validate!(
+        (
+            30, "left>", "<right", "foo\ncommand", " autosuggestion TRUNCATED", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosuggestion …",
+        )
+    );
+    validate!(
+        (
+            30, "left>", "<right", "if :\ncommand", " autosuggestion TRUNCATED", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosuggest…",
+        )
+    );
+    let indent = validate!(
+        (
+            30, "left>", "<right", "if :\ncommand", " autosuggestion TRUNCATED", "\nfoo"
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            " autosuggest…",
+        )
+    );
+    assert_eq!(indent["if :\ncommand autosuggest…\n".len()], 1);
 }

@@ -342,7 +342,7 @@ fn cursor_position_after_edit(edit: &Edit) -> usize {
     cursor.saturating_sub(removed)
 }
 
-fn range_of_line_at_cursor(buffer: &wstr, cursor: usize) -> Range<usize> {
+pub fn range_of_line_at_cursor(buffer: &wstr, cursor: usize) -> Range<usize> {
     let start = buffer[0..cursor]
         .as_char_slice()
         .iter()

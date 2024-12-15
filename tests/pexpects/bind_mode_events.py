@@ -5,10 +5,7 @@ import sys
 import signal
 import platform
 
-if platform.system() == "FreeBSD": # Spurious failure. TODO Only disable this in CI.
-    sys.exit(127)
-
-if "CI" in os.environ and platform.system() == "Darwin":
+if "CI" in os.environ and platform.system() in ["Darwin", "FreeBSD"]:
     sys.exit(127)
 
 sp = SpawnedProc()

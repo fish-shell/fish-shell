@@ -33,6 +33,8 @@ BuildRequires: python3 procps
 
 Requires:      python3
 Requires:      man
+Requires:      ncurses-base
+Requires:      procps
 
 # Although the build scripts mangle the version number to be RPM compatible
 # for continuous builds (transforming the output of `git describe`), Fedora 32+

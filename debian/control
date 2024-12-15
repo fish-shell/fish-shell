@@ -6,7 +6,7 @@ Uploaders: David Adam <zanchey@ucc.gu.uwa.edu.au>
 Build-Depends: debhelper (>= 12), cmake (>= 3.19.0) | cmake-mozilla (>= 3.19.0), gettext,
  rustc (>= 1.70), cargo (>= 0.66) | cargo-mozilla (>= 0.66), libpcre2-dev,
 # Test dependencies
- locales-all, python3
+ locales-all, ncurses-base, python3
 Standards-Version: 4.1.5
 Homepage: https://fishshell.com/
 Vcs-Git: https://github.com/fish-shell/fish-shell.git
@@ -14,8 +14,8 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, passwd (>= 4.0.3-10), gettext-base, man-db,
- procps, python3 (>=3.5)
+Depends: ${shlibs:Depends}, ${misc:Depends}, gettext-base, man-db, ncurses-base, procps,
+ python3 (>=3.5)
 Conflicts: fish-common
 Recommends: xsel (>=1.2.0)
 Suggests: xdg-utils

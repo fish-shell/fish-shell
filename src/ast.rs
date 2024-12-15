@@ -1983,7 +1983,7 @@ define_keyword_node!(KeywordFor, kw_for);
 define_keyword_node!(KeywordFunction, kw_function);
 define_keyword_node!(KeywordIf, kw_if);
 define_keyword_node!(KeywordIn, kw_in);
-define_keyword_node!(KeywordNot, kw_not, kw_builtin, kw_exclam);
+define_keyword_node!(KeywordNot, kw_not, kw_exclam);
 define_keyword_node!(KeywordSwitch, kw_switch);
 define_keyword_node!(KeywordTime, kw_time);
 define_keyword_node!(KeywordWhile, kw_while);

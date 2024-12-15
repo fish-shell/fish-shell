@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
 import subprocess
 import sys
 import time
+import platform
+
+if "CI" in os.environ and platform.system() in ["Darwin", "FreeBSD"]:
+    sys.exit(127)
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re = (

@@ -218,7 +218,7 @@ Other improvements
 For distributors
 ----------------
 
-fish has been ported to Rust. This means a significant change in dependencies, which are listed in the README. In short, Rust 1.70 or greater is required, and a C++ compiler is no longer needed (although a C compiler is still required for the tests).
+fish has been ported to Rust. This means a significant change in dependencies, which are listed in the README. In short, Rust 1.70 or greater is required, and a C++ compiler is no longer needed (although a C compiler is still required, for some C glue code and the tests).
 
 CMake remains the recommended build system, because of cargo's limited support for installing support files. Version 3.5 remains the minimum supported version. The Xcode generator for CMake is not supported any longer (:issue:`9924`)
 

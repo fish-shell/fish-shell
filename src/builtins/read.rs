@@ -9,6 +9,7 @@ use crate::common::unescape_string;
 use crate::common::valid_var_name;
 use crate::common::UnescapeStringStyle;
 use crate::env::EnvMode;
+use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::input_common::terminal_protocols_disable_ifn;
@@ -688,11 +689,18 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             continue;
         }
 
-        // todo!("don't clone")
+        // Order of precedence: --delimiter, an explicitly set $IFS, the default IFS constant above.
+        // An empty --delimiter or $IFS is a special mode that splits by character (i.e. does not
+        // fall back to the next candidate).
+        let mut ifs_var = None;
         let delimiter = opts
             .delimiter
             .as_ref()
-            .map(|delim| delim.as_utfstr())
+            .or_else(|| {
+                ifs_var = Some(parser.vars().get(L!("IFS")).map(|ifs| ifs.as_string()));
+                ifs_var.as_ref().unwrap().as_ref()
+            })
+            .map(|s| s.as_utfstr())
             .unwrap_or(IFS);
 
         if delimiter.is_empty() {

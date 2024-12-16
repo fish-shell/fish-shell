@@ -43,6 +43,31 @@ echo -n a | read -l one
 echo "$status $one"
 #CHECK: 0 a
 
+# Test splitting input with IFS empty
+set -l IFS
+echo hello | read -l one
+print_vars one
+#CHECK: 1 'hello'
+echo hello | read -l one two
+print_vars one two
+#CHECK: 1 'h' 1 'ello'
+echo hello | read -l one two three
+print_vars one two three
+#CHECK: 1 'h' 1 'e' 1 'llo'
+echo '' | read -l one
+print_vars one
+#CHECK: 0
+echo t | read -l one two
+print_vars one two
+#CHECK: 1 't' 0
+echo t | read -l one two three
+print_vars one two three
+#CHECK: 1 't' 0 0
+echo ' t' | read -l one two
+print_vars one two
+#CHECK: 1 ' ' 1 't'
+set -le IFS
+
 echo 'hello there' | read -la ary
 print_vars ary
 #CHECK: 2 'hello' 'there'
@@ -58,6 +83,18 @@ print_vars ary
 echo '' | read -la ary
 print_vars ary
 #CHECK: 0
+
+set -l IFS
+echo hello | read -la ary
+print_vars ary
+#CHECK: 5 'h' 'e' 'l' 'l' 'o'
+echo h | read -la ary
+print_vars ary
+#CHECK: 1 'h'
+echo '' | read -la ary
+print_vars ary
+#CHECK: 0
+set -le IFS
 
 # read -n tests
 echo testing | read -n 3 foo
@@ -190,7 +227,7 @@ echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b' | $filt
 #CHECK: $b: set in global scope, unexported, with 1 elements
 #CHECK: $b[1]: |def|
 
-# Test --delimiter
+# Test --delimiter (and $IFS, for now)
 echo a=b | read -l foo bar
 echo $foo
 echo $bar
@@ -212,7 +249,18 @@ echo $bar
 echo $baz
 #CHECK: b
 
-# Default behavior
+# IFS empty string
+set -l IFS ''
+echo a=b | read -l foo bar baz
+echo $foo
+#CHECK: a
+echo $bar
+#CHECK: =
+echo $baz
+#CHECK: b
+
+# IFS unset
+set -e IFS
 echo a=b | read -l foo bar baz
 echo $foo
 #CHECK: a=b
@@ -238,6 +286,17 @@ echo $b
 #CHECK: b
 echo $c
 #CHECK: c
+# Multi-char delimiters with IFS
+begin
+    set -l IFS "..."
+    echo a...b...c | read -l a b c
+    echo $a
+    echo $b
+    echo $c
+end
+#CHECK: a
+#CHECK: b
+#CHECK: ..c
 
 # At one point, whatever was read was printed _before_ banana
 echo banana (echo sausage | read)

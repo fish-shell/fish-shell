@@ -1,2 +1,2 @@
 #RUN: %fish -v
-# CHECK: fish, version {{[-.gabcdeflpha0-9]*(irty)?}}
+# CHECK: fish, version {{[-.gabcdeflphat0-9]*(irty)?}}

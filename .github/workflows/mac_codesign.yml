@@ -13,8 +13,8 @@ jobs:
         uses: dtolnay/rust-toolchain@1.73.0
         with:
           targets: x86_64-apple-darwin
-      - name: Install Rust 1.79
-        uses: dtolnay/rust-toolchain@1.79
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
       - name: build-and-codesign

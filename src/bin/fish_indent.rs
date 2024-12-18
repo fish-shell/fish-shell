@@ -162,39 +162,36 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
 
     // Return the gap ranges from our ast.
     fn compute_gaps(&self) -> Vec<SourceRange> {
-        let range_compare = |r1: SourceRange, r2: SourceRange| {
-            (r1.start(), r1.length()).cmp(&(r2.start(), r2.length()))
-        };
-        // Collect the token ranges into a list.
-        let mut tok_ranges = vec![];
-        for node in Traversal::new(self.ast.top()) {
+        let mut tok_ranges: Vec<SourceRange> = Traversal::new(self.ast.top())
+        .filter_map(|node| {
             if node.category() == Category::leaf {
-                let r = node.source_range();
-                if r.length() > 0 {
-                    tok_ranges.push(r);
+                let range = node.source_range();
+                if range.length() > 0 {
+                    Some(range)
+                } else {
+                    None
                 }
+            } else {
+                None
             }
-        }
-        // Place a zero length range at end to aid in our inverting.
-        tok_ranges.push(SourceRange::new(self.state.source.len(), 0));
+        })
+        .collect();
 
-        // Our tokens should be sorted.
-        assert!(tok_ranges.is_sorted_by(|x, y| Some(range_compare(*x, *y))));
+    tok_ranges.push(SourceRange::new(self.state.source.len(), 0)); // Add end marker.
 
-        // For each range, add a gap range between the previous range and this range.
-        let mut gaps = vec![];
-        let mut prev_end = 0;
-        for tok_range in tok_ranges {
-            assert!(
-                tok_range.start() >= prev_end,
-                "Token range should not overlap or be out of order"
-            );
-            if tok_range.start() >= prev_end {
-                gaps.push(SourceRange::new(prev_end, tok_range.start() - prev_end));
-            }
-            prev_end = tok_range.start() + tok_range.length();
+    assert!(tok_ranges.is_sorted_by(|x, y| Some((x.start(), x.length()).cmp(&(y.start(), y.length())))));
+
+    let mut gaps = Vec::with_capacity(tok_ranges.len());
+    let mut prev_end = 0;
+
+    for tok_range in tok_ranges {
+        if tok_range.start() > prev_end {
+            gaps.push(SourceRange::new(prev_end, tok_range.start() - prev_end));
         }
-        gaps
+        prev_end = tok_range.start() + tok_range.length();
+    }
+
+    gaps
     }
 
     // Return sorted list of semi-preferring semi_nl nodes.

@@ -14,7 +14,7 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, gettext-base, man-db, ncurses-base, procps,
+Depends: ${shlibs:Depends}, ${misc:Depends}, file, gettext-base, man-db, ncurses-base, procps,
  python3 (>=3.5)
 Conflicts: fish-common
 Recommends: xsel (>=1.2.0)

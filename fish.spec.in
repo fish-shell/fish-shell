@@ -31,6 +31,7 @@ BuildRequires: glibc-langpack-en
 %endif
 BuildRequires: python3 procps
 
+Requires:      file
 Requires:      python3
 Requires:      man
 Requires:      ncurses-base

@@ -30,7 +30,7 @@ use fish::{
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2string, wcs2osstring, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        str2wcstring, wcs2osstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -334,7 +334,8 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             let Some(home) = fish::env::get_home() else {
                 FLOG!(
                     error,
-                    "Cannot find home directory and will refuse to read configuration"
+                    "Cannot find home directory and will refuse to read configuration.\n",
+                    "Consider installing into a directory tree with `fish --install=PATH`."
                 );
                 return paths;
             };
@@ -416,8 +417,7 @@ fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
     {
         // When fish is installable, we write the version to a file,
         // now we check it.
-        let verfile =
-            PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
+        let verfile = PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
         let version = std::fs::read_to_string(verfile).ok()?;
 
         return Some(version == fish::BUILD_VERSION);
@@ -535,7 +535,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
-        wopt(L!("install"), NoArgument, 'I'),
+        wopt(L!("install"), OptionalArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -571,14 +571,57 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'I' => {
-                let paths = Some(determine_config_directory_paths(OsString::from_vec(
-                    wcs2string(&args[0]),
-                )));
-                let Some(paths) = paths else {
-                    FLOG!(error, "Cannot find config paths");
-                    std::process::exit(1);
-                };
-                install(true, paths.data);
+                if let Some(path) = w.woptarg {
+                    // We were given an explicit path.
+                    // Install us there as a relocatable install.
+                    // That means:
+                    // path/bin/fish is the fish binary
+                    // path/share/fish/ is the data directory
+                    // path/etc/fish is sysconf????
+                    use std::fs;
+                    let dir = PathBuf::from(wcs2osstring(path));
+                    if install(true, dir.join("share/fish")) {
+                        for sub in &["share/fish", "etc/fish", "bin"] {
+                            let p = dir.join(sub);
+                            let Ok(_) = fs::create_dir_all(p.clone()) else {
+                                eprintln!("Creating directory '{}' failed", p.display());
+                                std::process::exit(1);
+                            };
+                        }
+
+                        // Copy ourselves there.
+                        let argv0 = OsString::from_vec(wcs2string(&args[0]));
+                        let exec_path =
+                            get_executable_path(<OsString as AsRef<Path>>::as_ref(&argv0));
+                        let binpath = dir.join("bin/fish");
+                        if let Ok(exec_path) = exec_path.canonicalize() {
+                            if exec_path != binpath {
+                                if let Err(err) = std::fs::copy(exec_path, binpath.clone()) {
+                                    FLOG!(error, "Cannot copy fish to", binpath.display());
+                                    FLOG!(error, err);
+                                    std::process::exit(1);
+                                }
+                                println!(
+                                    "Fish installed in '{}'. Start that from now on.",
+                                    binpath.display()
+                                );
+                                // TODO: Reexec fish?
+                                std::process::exit(0);
+                            }
+                        } else {
+                            FLOG!(error, "Cannot copy fish to '%ls'. Please copy the fish binary there manually", binpath.display());
+                        }
+                    }
+                } else {
+                    let paths = Some(determine_config_directory_paths(OsString::from_vec(
+                        wcs2string(&args[0]),
+                    )));
+                    let Some(paths) = paths else {
+                        FLOG!(error, "Cannot find config paths");
+                        std::process::exit(1);
+                    };
+                    install(true, paths.data);
+                }
             }
             'l' => opts.is_login = true,
             'N' => {

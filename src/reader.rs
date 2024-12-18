@@ -4470,13 +4470,21 @@ impl<'a> Reader<'a> {
         match amount {
             AutosuggestionPortion::Count(count) => {
                 let pos = self.command_line.len();
-                let count = count.min(self.autosuggestion.text.len() - pos);
-                if count != 0 {
+                if count == usize::MAX {
                     self.data.replace_substring(
                         EditableLineTag::Commandline,
-                        pos..pos,
-                        self.autosuggestion.text[pos..pos + count].to_owned(),
+                        0..self.command_line.len(),
+                        self.autosuggestion.text.clone(),
                     );
+                } else {
+                    let count = count.min(self.autosuggestion.text.len() - pos);
+                    if count != 0 {
+                        self.data.replace_substring(
+                            EditableLineTag::Commandline,
+                            pos..pos,
+                            self.autosuggestion.text[pos..pos + count].to_owned(),
+                        );
+                    }
                 }
             }
             AutosuggestionPortion::PerMoveWordStyle(style) => {

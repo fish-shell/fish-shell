@@ -80,7 +80,7 @@ const BIN_DIR: &str = env!("BINDIR");
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
-fn install(confirm: bool) -> bool {
+fn install(confirm: bool, dir: PathBuf) -> bool {
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -96,11 +96,6 @@ fn install(confirm: bool) -> bool {
     use std::io::ErrorKind;
     use std::io::Write;
     use std::io::{stderr, stdin};
-    let Some(home) = fish::env::get_home() else {
-        FLOG!(error, "Can't find home directory.");
-        return false;
-    };
-    let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);
 
     // TODO: Translation,
     // FLOG?
@@ -197,7 +192,7 @@ fn install(confirm: bool) -> bool {
 }
 
 #[cfg(any(clippy, not(feature = "installable")))]
-fn install(_confirm: bool) -> bool {
+fn install(_confirm: bool, _dir: PathBuf) -> bool {
     eprintln!("Fish was built without support for self-installation");
     return false;
 }
@@ -458,7 +453,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
                 );
             }
 
-            install(true);
+            install(true, PathBuf::from(fish::common::wcs2osstring(&datapath)));
             // We try to go on if installation failed (or was rejected) here
             // If the assets are missing, we will trigger a later error,
             // if they are outdated, things will probably (tm) work somewhat.
@@ -576,7 +571,14 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'I' => {
-                install(false);
+                let paths = Some(determine_config_directory_paths(OsString::from_vec(
+                    wcs2string(&args[0]),
+                )));
+                let Some(paths) = paths else {
+                    FLOG!(error, "Cannot find config paths");
+                    std::process::exit(1);
+                };
+                install(true, paths.data);
             }
             'l' => opts.is_login = true,
             'N' => {

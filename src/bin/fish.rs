@@ -97,7 +97,7 @@ fn install(confirm: bool) -> bool {
     use std::io::Write;
     use std::io::{stderr, stdin};
     let Some(home) = fish::env::get_home() else {
-        eprintln!("Can't find $HOME",);
+        FLOG!(error, "Can't find home directory.");
         return false;
     };
     let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);

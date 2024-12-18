@@ -581,6 +581,9 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'I' => {
+                #[cfg(not(feature = "installable"))]
+                eprintln!("Fish was built without support for self-installation");
+                #[cfg(feature = "installable")]
                 if let Some(path) = w.woptarg {
                     // We were given an explicit path.
                     // Install us there as a relocatable install.

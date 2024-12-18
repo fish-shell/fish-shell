@@ -295,10 +295,17 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         }
 
         if !done {
-            // The next check is that we are in a reloctable directory tree
+            // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
                 paths = ConfigPaths {
+                    // One obvious path is ~/.local (with fish in ~/.local/bin/).
+                    // If we picked ~/.local/share/fish as our data path,
+                    // we would install there and erase history.
+                    // So let's isolate us a bit more.
+                    #[cfg(feature = "installable")]
+                    data: base_path.join("share/fish/install"),
+                    #[cfg(not(feature = "installable"))]
                     data: base_path.join("share/fish"),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
@@ -311,6 +318,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 );
                 let base_path = exec_path.parent().unwrap();
                 paths = ConfigPaths {
+                    #[cfg(feature = "installable")]
+                    data: base_path.join("share/install"),
+                    #[cfg(not(feature = "installable"))]
                     data: base_path.join("share"),
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
@@ -580,8 +590,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                     // path/etc/fish is sysconf????
                     use std::fs;
                     let dir = PathBuf::from(wcs2osstring(path));
-                    if install(true, dir.join("share/fish")) {
-                        for sub in &["share/fish", "etc/fish", "bin"] {
+                    if install(true, dir.join("share/fish/install")) {
+                        for sub in &["share/fish/install", "etc/fish", "bin"] {
                             let p = dir.join(sub);
                             let Ok(_) = fs::create_dir_all(p.clone()) else {
                                 eprintln!("Creating directory '{}' failed", p.display());

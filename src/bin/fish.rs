@@ -30,7 +30,7 @@ use fish::{
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        str2wcstring, wcs2string, wcs2osstring, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -417,7 +417,7 @@ fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
         // When fish is installable, we write the version to a file,
         // now we check it.
         let verfile =
-            PathBuf::from(fish::common::wcs2osstring(datapath)).join("fish-install-version");
+            PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
         let version = std::fs::read_to_string(verfile).ok()?;
 
         return Some(version == fish::BUILD_VERSION);
@@ -453,7 +453,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
                 );
             }
 
-            install(true, PathBuf::from(fish::common::wcs2osstring(&datapath)));
+            install(true, PathBuf::from(wcs2osstring(&datapath)));
             // We try to go on if installation failed (or was rejected) here
             // If the assets are missing, we will trigger a later error,
             // if they are outdated, things will probably (tm) work somewhat.

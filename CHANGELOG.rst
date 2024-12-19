@@ -1,6 +1,7 @@
 Changes since 4.0b1
 -------------------
 - :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta. :issue:`10928`
+- Fix a BSD-specific regression in the beta that caused crashes when a child process exited with a status like -1 (:issue:`10919`).
 - Fix a regression in the beta where ``__fish_cancel_commandline`` caused glitches on multi-line command lines (:issue:`10935`).
 - Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
     fish --install=$HOME/.local/

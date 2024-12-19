@@ -37,11 +37,10 @@ use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 /// produce a stream of bytes, and those get stored directly. However other commands produce
 /// explicitly separated output, in particular `string` like `string collect` and `string split0`.
 /// The buffer tracks a sequence of elements. Some elements are explicitly separated and should not
-/// be further split; other elements have inferred separation and may be split by IFS (or not,
-/// depending on its value).
+/// be further split; other elements have inferred separation.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SeparationType {
-    /// this element should be further separated by IFS
+    /// this element should be further separated according to default behavior
     inferred,
     /// this element is explicitly separated and should not be further split
     explicitly,
@@ -65,7 +64,7 @@ impl BufferElement {
 }
 
 /// A separated_buffer_t contains a list of elements, some of which may be separated explicitly and
-/// others which must be separated further by the user (e.g. via IFS).
+/// others which must be separated further by the user.
 pub struct SeparatedBuffer {
     /// Limit on how much data we'll buffer. Zero means no limit.
     buffer_limit: usize,

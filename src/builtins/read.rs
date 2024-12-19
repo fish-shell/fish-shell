@@ -30,6 +30,9 @@ use libc::SEEK_CUR;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
+/// Fish's hard-coded set of default output delimiters
+const IFS: &wstr = L!(" \n\t");
+
 #[derive(Default)]
 struct Options {
     print_help: bool,
@@ -686,15 +689,19 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             continue;
         }
 
-        // todo!("don't clone")
+        // Order of precedence: --delimiter, an explicitly set $IFS, the default IFS constant above.
+        // An empty --delimiter or $IFS is a special mode that splits by character (i.e. does not
+        // fall back to the next candidate).
+        let mut ifs_var = None;
         let delimiter = opts
             .delimiter
-            .clone()
+            .as_ref()
             .or_else(|| {
-                let ifs = parser.vars().get_unless_empty(L!("IFS"));
-                ifs.map(|ifs| ifs.as_string())
+                ifs_var = Some(parser.vars().get(L!("IFS")).map(|ifs| ifs.as_string()));
+                ifs_var.as_ref().unwrap().as_ref()
             })
-            .unwrap_or_default();
+            .map(|s| s.as_utfstr())
+            .unwrap_or(IFS);
 
         if delimiter.is_empty() {
             // Every character is a separate token with one wrinkle involving non-array mode where

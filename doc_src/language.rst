@@ -827,7 +827,7 @@ A ``command substitution`` is an expansion that uses the *output* of a command a
 
 This executes the :doc:`pwd <cmds/pwd>` command, takes its output (more specifically what it wrote to the standard output "stdout" stream) and uses it as arguments to :doc:`echo <cmds/echo>`. So the inner command (the ``pwd``) is run first and has to complete before the outer command can even be started.
 
-If the inner command prints multiple lines, fish will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used [#]_, fish splits on newlines.
+If the inner command prints multiple lines, fish will use each separate line as a separate argument to the outer command. Unlike other shells, the value of ``$IFS`` is not used, fish splits on newlines.
 
 Command substitutions can also be double-quoted::
 
@@ -871,8 +871,6 @@ but if you need multiple or the command doesn't read from standard input, "proce
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
 Fish has a default limit of 100 MiB on the data it will read in a command sustitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
-
-.. [#] One exception: Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 
 .. _expand-brace:
 
@@ -1696,10 +1694,6 @@ Fish also provides additional information through the values of certain environm
 .. envvar:: hostname
 
    the machine's hostname.
-
-.. ENVVAR:: IFS
-
-   the internal field separator that is used for word splitting with the :doc:`read <cmds/read>` builtin. Setting this to the empty string will also disable line splitting in :ref:`command substitution <expand-command-substitution>`. This variable can be changed.
 
 .. envvar:: last_pid
 

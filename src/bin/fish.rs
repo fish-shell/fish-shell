@@ -279,7 +279,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
         // Detect if we're running right out of the CMAKE build directory
         if exec_path.starts_with(env!("CARGO_MANIFEST_DIR")) {
-            let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
             FLOG!(
                 config,
                 "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
@@ -352,7 +352,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
             PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR)
         } else {
-            PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR)
+            Path::new(DATA_DIR).join(DATA_DIR_SUBDIR)
         };
         let bin = if cfg!(feature = "installable") {
             exec_path.parent().map(|x| x.to_path_buf())
@@ -363,7 +363,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
             data,
-            sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+            sysconf: Path::new(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
         }

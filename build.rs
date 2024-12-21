@@ -227,7 +227,7 @@ fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
 }
 
 fn setup_paths() {
-    fn get_path(name: &str, default: &str, onvar: PathBuf) -> PathBuf {
+    fn get_path(name: &str, default: &str, onvar: &Path) -> PathBuf {
         let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
         if var.is_relative() {
             var = onvar.join(var);
@@ -250,7 +250,7 @@ fn setup_paths() {
     rsconf::rebuild_if_env_changed("PREFIX");
     rsconf::set_env_value("PREFIX", prefix.to_str().unwrap());
 
-    let datadir = get_path("DATADIR", "share/", prefix.clone());
+    let datadir = get_path("DATADIR", "share/", &prefix);
     rsconf::set_env_value("DATADIR", datadir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DATADIR");
 
@@ -261,7 +261,7 @@ fn setup_paths() {
     };
     rsconf::set_env_value("DATADIR_SUBDIR", datadir_subdir);
 
-    let bindir = get_path("BINDIR", "bin/", prefix.clone());
+    let bindir = get_path("BINDIR", "bin/", &prefix);
     rsconf::set_env_value("BINDIR", bindir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("BINDIR");
 
@@ -270,16 +270,16 @@ fn setup_paths() {
         // If we get our prefix from $HOME, we should use the system's /etc/
         // ~/.local/share/etc/ makes no sense
         if prefix_from_home { "/etc/" } else { "etc/" },
-        datadir.clone(),
+        &datadir,
     );
     rsconf::set_env_value("SYSCONFDIR", sysconfdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("SYSCONFDIR");
 
-    let localedir = get_path("LOCALEDIR", "locale/", datadir.clone());
+    let localedir = get_path("LOCALEDIR", "locale/", &datadir);
     rsconf::set_env_value("LOCALEDIR", localedir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("LOCALEDIR");
 
-    let docdir = get_path("DOCDIR", "doc/fish", datadir.clone());
+    let docdir = get_path("DOCDIR", "doc/fish", &datadir);
     rsconf::set_env_value("DOCDIR", docdir.to_str().unwrap());
     rsconf::rebuild_if_env_changed("DOCDIR");
 }
@@ -292,7 +292,7 @@ fn get_version(src_dir: &Path) -> String {
         return var;
     }
 
-    let path = PathBuf::from(src_dir).join("version");
+    let path = src_dir.join("version");
     if let Ok(strver) = read_to_string(path) {
         return strver.to_string();
     }
@@ -321,7 +321,7 @@ fn get_version(src_dir: &Path) -> String {
     // or because it refused (safe.directory applies to `git describe`!)
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let gitdir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(".git");
+        let gitdir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".git");
 
         // .git/HEAD contains ref: refs/heads/branch
         let headpath = gitdir.join("HEAD");

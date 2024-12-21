@@ -1,6 +1,6 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux (next-3.4|3\.[0123][a-z]*($|[.-]))'
-#REQUIRES: command -v less
+#REQUIRES: command -v less && ! less --version 2>&1 || grep -q BusyBox
 # Disable on GitHub macOS CI because it fails more than it passes there
 #REQUIRES: uname -s | grep -qv Darwin || test -z "$CI"
 

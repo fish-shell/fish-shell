@@ -6,7 +6,10 @@ use crate::flog::FLOG;
 use crate::input_common::{
     CharEvent, CharInputStyle, InputData, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
 };
-use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
+use crate::key::ViewportPosition;
+use crate::key::{
+    self, canonicalize_raw_escapes, ctrl, Key, Modifiers, MouseButton, MouseEvent, MouseEventType,
+};
 use crate::proc::job_reap;
 use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
@@ -457,6 +460,28 @@ impl<'a> InputEventQueuer for Reader<'a> {
             "__fish_paste %s",
             escape(&str2wcstring(&buffer))
         )));
+    }
+
+    fn handle_mouse_event(&mut self, event: MouseEvent) {
+        FLOG!(reader, "Mouse event", event);
+        if !matches!(event.r#type, MouseEventType::Click(MouseButton::Left)) {
+            return;
+        }
+        if self.pending_mouse_left.is_some() {
+            FLOG!(
+                error,
+                "Received mouse event while still waiting for previous position"
+            );
+            return;
+        }
+        self.pending_mouse_left = Some(event.position);
+        self.screen.write_bytes(b"\x1b[6n");
+    }
+    fn has_pending_mouse_left(&mut self) -> bool {
+        self.pending_mouse_left.is_some()
+    }
+    fn on_mouse_left(&mut self, cursor: ViewportPosition) {
+        self.mouse_left(cursor);
     }
 }
 

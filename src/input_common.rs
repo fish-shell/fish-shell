@@ -11,7 +11,7 @@ use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
-    Key, Modifiers,
+    Key, Modifiers, MouseButton, MouseEvent, MouseEventType, ViewportPosition,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -902,22 +902,72 @@ pub trait InputEventQueuer {
             b'H' => masked_key(key::Home, None), // PC/xterm style
             b'M' | b'm' => {
                 self.disable_mouse_tracking();
+                // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
+                // reporting mode, with semicolon-separated parameters for button code, Px,
+                // and Py, ending with 'M' for button press or 'm' for button release.
                 let sgr = private_mode == Some(b'<');
                 if !sgr && c == b'm' {
                     return None;
                 }
-                // Extended (SGR/1006) mouse reporting mode, with semicolon-separated parameters
-                // for button code, Px, and Py, ending with 'M' for button press or 'm' for
-                // button release.
-                if sgr {
-                    return None;
-                }
-                // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6
-                // chars (although in mode 1005, the characters may be unicode and not necessarily
-                // just one byte long) reporting the button that was clicked and its location.
-                let _ = next_char(self);
-                let _ = next_char(self);
-                let _ = next_char(self);
+                let button = if sgr {
+                    params[0][0]
+                } else {
+                    u32::from(next_char(self)) - 32
+                };
+                let x = usize::try_from(
+                    if sgr {
+                        params[1][0]
+                    } else {
+                        u32::from(next_char(self)) - 32
+                    } - 1,
+                )
+                .unwrap();
+                let y = usize::try_from(
+                    if sgr {
+                        params[2][0]
+                    } else {
+                        u32::from(next_char(self)) - 32
+                    } - 1,
+                )
+                .unwrap();
+                let position = ViewportPosition { x, y };
+                let modifiers = parse_mask((button >> 2) & 0x07);
+                let code = button & 0x43;
+                let mouse_event = match code {
+                    0..=2 => {
+                        let button = [MouseButton::Left, MouseButton::Right, MouseButton::Middle]
+                            [usize::try_from(code).unwrap()];
+                        MouseEvent {
+                            modifiers,
+                            r#type: if c == b'm' {
+                                MouseEventType::Release(button)
+                            } else {
+                                MouseEventType::Click(button)
+                            },
+                            position,
+                        }
+                    }
+                    3 => {
+                        // Insert button release handling here.
+                        return None;
+                    }
+                    64 => MouseEvent {
+                        modifiers,
+                        r#type: MouseEventType::ScrollUp,
+                        position,
+                    },
+                    65 => MouseEvent {
+                        modifiers,
+                        r#type: MouseEventType::ScrollUp,
+                        position,
+                    },
+                    _ => MouseEvent {
+                        modifiers,
+                        r#type: MouseEventType::Nop,
+                        position,
+                    },
+                };
+                self.handle_mouse_event(mouse_event);
                 return None;
             }
             b't' => {
@@ -937,7 +987,16 @@ pub trait InputEventQueuer {
             }
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
-            b'R' => masked_key(function_key(3), None),
+            b'R' => {
+                if self.has_pending_mouse_left() {
+                    let y = usize::try_from(params[0][0] - 1).unwrap();
+                    let x = usize::try_from(params[1][0] - 1).unwrap();
+                    self.on_mouse_left(ViewportPosition { x, y });
+                    return None;
+                } else {
+                    masked_key(function_key(3), None)
+                }
+            }
             b'S' => masked_key(function_key(4), None),
             b'~' => match params[0][0] {
                 1 => masked_key(key::Home, None), // VT220/tmux style
@@ -1271,6 +1330,12 @@ pub trait InputEventQueuer {
             }
         }
     }
+
+    fn handle_mouse_event(&mut self, _event: MouseEvent) {}
+    fn has_pending_mouse_left(&mut self) -> bool {
+        false
+    }
+    fn on_mouse_left(&mut self, _cursor: ViewportPosition) {}
 
     /// Override point for when we are about to (potentially) block in select(). The default does
     /// nothing.

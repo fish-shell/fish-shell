@@ -83,6 +83,7 @@ use crate::input_common::{
     ReadlineCmd,
 };
 use crate::io::IoChain;
+use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
@@ -491,7 +492,9 @@ pub struct ReaderData {
     last_flash: Option<Instant>,
 
     /// The representation of the current screen contents.
-    screen: Screen,
+    pub screen: Screen,
+
+    pub pending_mouse_left: Option<ViewportPosition>,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1144,6 +1147,7 @@ impl ReaderData {
             first_prompt: true,
             last_flash: Default::default(),
             screen: Screen::new(),
+            pending_mouse_left: None,
             input_data,
             queued_repaint: false,
             history,
@@ -1346,6 +1350,22 @@ impl ReaderData {
             selection.stop = selection.begin + target_char;
         }
         true
+    }
+
+    pub fn mouse_left(&mut self, cursor: ViewportPosition) {
+        let click_position = self.pending_mouse_left.take().unwrap();
+        FLOG!(
+            reader,
+            "Cursor is at",
+            cursor,
+            "; received left mouse click at",
+            click_position
+        );
+        let new_pos = self
+            .screen
+            .offset_in_cmdline_given_cursor(click_position, cursor);
+        let (elt, _el) = self.active_edit_line();
+        self.update_buff_pos(elt, Some(new_pos));
     }
 }
 

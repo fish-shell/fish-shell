@@ -29,6 +29,11 @@ fn main() {
             .unwrap(),
     );
 
+    // Some build info
+    rsconf::set_env_value("BUILD_TARGET_TRIPLE", &env::var("TARGET").unwrap());
+    rsconf::set_env_value("BUILD_HOST_TRIPLE", &env::var("HOST").unwrap());
+    rsconf::set_env_value("BUILD_PROFILE", &env::var("PROFILE").unwrap());
+
     let version = &get_version(&env::current_dir().unwrap());
     // Per https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script,
     // the source directory is the current working directory of the build script

@@ -1472,7 +1472,8 @@ fn exec_subshell_internal(
         }
     });
 
-    let split_output = parser.vars().get_unless_empty(L!("IFS")).is_some();
+    // Holdover from when we checked for an empty $IFS
+    let split_output = true;
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.

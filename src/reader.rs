@@ -2275,6 +2275,10 @@ impl<'a> Reader<'a> {
                     self.mouse_left_click(cursor, click_position);
                     self.stop_waiting_for_cursor_position();
                 }
+                ImplicitEvent::ScrollbackPushContinuation(cursor_y) => {
+                    self.screen.push_to_scrollback(cursor_y);
+                    self.stop_waiting_for_cursor_position();
+                }
             },
         }
         ControlFlow::Continue(())
@@ -3498,6 +3502,9 @@ impl<'a> Reader<'a> {
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
                 self.parser.libdata_mut().is_repaint = false;
+            }
+            rl::ScrollbackPush => {
+                self.request_cursor_position(WaitingForCursorPosition::ScrollbackPush);
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc

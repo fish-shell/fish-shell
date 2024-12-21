@@ -47,8 +47,7 @@ isolated-tmux capture-pane -p | grep 'prompt 2>'
 isolated-tmux send-keys C-c
 
 isolated-tmux send-keys 'echo 1' Enter 'echo 2' Enter 'echo 3' Enter
-isolated-tmux send-keys C-l echo Up
-isolated-tmux send-keys echo M-d
+isolated-tmux send-keys C-l echo Up M-d
 tmux-sleep
 isolated-tmux capture-pane -p
 #CHECK: prompt 5> echo 2

@@ -198,6 +198,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("repaint-mode"), ReadlineCmd::RepaintMode),
     make_md(L!("repeat-jump"), ReadlineCmd::RepeatJump),
     make_md(L!("repeat-jump-reverse"), ReadlineCmd::ReverseRepeatJump),
+    make_md(L!("scrollback-push"), ReadlineCmd::ScrollbackPush),
     make_md(L!("self-insert"), ReadlineCmd::SelfInsert),
     make_md(L!("self-insert-notfirst"), ReadlineCmd::SelfInsertNotFirst),
     make_md(L!("suppress-autosuggestion"), ReadlineCmd::SuppressAutosuggestion),

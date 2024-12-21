@@ -43,7 +43,7 @@ isolated-tmux capture-pane -p | sed -n '1p;$p'
 # Also ensure that the pager is actually fully disclosed.
 # CHECK: rows 1 to {{\d+}} of {{\d+}}
 
-# Canceling the pager removes the inserted completion, no mater what happens in the search field.
+# Canceling the pager removes the inserted completion, no matter what happens in the search field.
 # The common prefix remains because it is inserted before the pager is shown.
 isolated-tmux send-keys C-c
 tmux-sleep

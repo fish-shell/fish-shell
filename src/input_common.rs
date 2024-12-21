@@ -131,6 +131,7 @@ pub enum ReadlineCmd {
     EndUndoGroup,
     RepeatJump,
     ClearScreenAndRepaint,
+    ScrollbackPush,
     // NOTE: This one has to be last.
     ReverseRepeatJump,
 }
@@ -191,6 +192,8 @@ pub enum ImplicitEvent {
     DisableMouseTracking,
     /// Handle mouse left click.
     MouseLeftClickContinuation(ViewportPosition, ViewportPosition),
+    /// Push prompt to top.
+    ScrollbackPushContinuation(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -590,6 +593,7 @@ impl InputData {
 
 pub enum WaitingForCursorPosition {
     MouseLeft(ViewportPosition),
+    ScrollbackPush,
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -1024,6 +1028,9 @@ pub trait InputEventQueuer {
                             ViewportPosition { x, y },
                             *click_position,
                         )
+                    }
+                    WaitingForCursorPosition::ScrollbackPush => {
+                        ImplicitEvent::ScrollbackPushContinuation(y)
                     }
                 };
                 self.push_front(CharEvent::Implicit(continuation));

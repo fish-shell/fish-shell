@@ -488,6 +488,28 @@ impl Screen {
         self.r#move(0, self.actual.line_count());
     }
 
+    pub fn push_to_scrollback(&mut self, cursor_y: usize) {
+        let mut prompt_y = self.command_line_y_given_cursor_y(cursor_y);
+        prompt_y -= calc_prompt_lines(&self.actual_left_prompt) - 1;
+        if prompt_y == 0 {
+            return;
+        }
+        let zelf = self.scoped_buffer();
+        let Some(term) = term() else {
+            return;
+        };
+        let mut out = zelf.outp.borrow_mut();
+        let prompt_y = i32::try_from(prompt_y).unwrap();
+        // Scroll down.
+        if let Some(scroll) = term.parm_index.as_ref() {
+            out.tputs_if_some(&tparm1(scroll, prompt_y));
+        }
+        // Reposition cursor.
+        if let Some(up) = term.parm_cursor_up.as_ref() {
+            out.tputs_if_some(&tparm1(up, prompt_y));
+        }
+    }
+
     fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {

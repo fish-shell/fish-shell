@@ -22,6 +22,8 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
 )
 expect_prompt()
 
+sendline("bind ctrl-l repaint")
+expect_prompt()
 # Clear twice (regression test for #7280).
 send("\f")
 expect_prompt(increment=False)

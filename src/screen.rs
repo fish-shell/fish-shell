@@ -473,6 +473,10 @@ impl Screen {
         self.save_status();
     }
 
+    pub fn move_to_end(&mut self) {
+        self.r#move(0, self.actual.line_count());
+    }
+
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// abandoning the current line and going to the next line.
     /// If clear_to_eos is set,

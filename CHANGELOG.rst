@@ -1,3 +1,36 @@
+fish 4.1.0 (released ???)
+=========================
+
+Notable improvements and fixes
+------------------------------
+
+Deprecations and removed features
+---------------------------------
+
+Scripting improvements
+----------------------
+
+Interactive improvements
+------------------------
+
+New or improved bindings
+^^^^^^^^^^^^^^^^^^^^^^^^
+- :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
+
+Completions
+^^^^^^^^^^^
+
+Improved terminal support
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Other improvements
+------------------
+
+For distributors
+----------------
+
+--------------
+
 fish 4.0b1 (released December 17, 2024)
 =======================================
 

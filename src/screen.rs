@@ -122,8 +122,7 @@ pub struct Cursor {
 pub struct ScreenData {
     line_datas: Vec<Line>,
 
-    /// The width of the screen in this rendering.
-    /// -1 if not set, i.e. we have not rendered before.
+    /// The width of the screen once we have rendered.
     screen_width: Option<usize>,
 
     cursor: Cursor,

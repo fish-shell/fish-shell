@@ -64,8 +64,8 @@ impl FdReadableSet {
         fd >= 0 && unsafe { libc::FD_ISSET(fd, &self.fdset_) }
     }
 
-    /// Call `select()` or `poll()`, according to FISH_READABLE_SET_USE_POLL. Note this
-    /// destructively modifies the set. Returns the result of `select()` or `poll()`.
+    /// Call `select()`. Note this destructively modifies the set. Returns the result of
+    /// `select()`.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {
         let null = std::ptr::null_mut();
         let mut tvs;
@@ -188,8 +188,7 @@ impl FdReadableSet {
         };
     }
 
-    /// Call select() or poll(), according to FISH_READABLE_SET_USE_POLL. Note this destructively
-    /// modifies the set. Return the result of select() or poll().
+    /// Call poll(). Note this destructively modifies the set. Return the result of poll().
     ///
     /// TODO: Change to [`Duration`](std::time::Duration) once FFI usage is done.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {

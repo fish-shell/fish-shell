@@ -3,6 +3,7 @@ use libc::VERASE;
 use crate::{
     common::{escape_string, EscapeFlags, EscapeStringStyle},
     fallback::fish_wcwidth,
+    flog::FloggableDebug,
     reader::TERMINAL_MODE_ON_STARTUP,
     wchar::{decode_byte_from_char, prelude::*},
     wutil::{fish_is_pua, fish_wcstoi},
@@ -76,6 +77,14 @@ impl Modifiers {
         !self.is_some()
     }
 }
+
+/// Position in terminal coordinates, i.e. not starting from the prompt
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct ViewportPosition {
+    pub x: usize,
+    pub y: usize,
+}
+impl FloggableDebug for ViewportPosition {}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Key {

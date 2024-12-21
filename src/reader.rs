@@ -78,12 +78,15 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::ImplicitEvent;
+use crate::input_common::InputEventQueuer;
+use crate::input_common::WaitingForCursorPosition;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
 };
 use crate::io::IoChain;
+use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
@@ -494,6 +497,8 @@ pub struct ReaderData {
 
     /// The representation of the current screen contents.
     screen: Screen,
+
+    pub waiting_for_cursor_position: Option<WaitingForCursorPosition>,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1146,6 +1151,7 @@ impl ReaderData {
             first_prompt: true,
             last_flash: Default::default(),
             screen: Screen::new(),
+            waiting_for_cursor_position: None,
             input_data,
             queued_repaint: false,
             history,
@@ -1348,6 +1354,30 @@ impl ReaderData {
             selection.stop = selection.begin + target_char;
         }
         true
+    }
+
+    pub fn request_cursor_position(
+        &mut self,
+        waiting_for_cursor_position: WaitingForCursorPosition,
+    ) {
+        assert!(self.waiting_for_cursor_position.is_none());
+        self.waiting_for_cursor_position = Some(waiting_for_cursor_position);
+        self.screen.write_bytes(b"\x1b[6n");
+    }
+
+    pub fn mouse_left_click(&mut self, cursor: ViewportPosition, click_position: ViewportPosition) {
+        FLOG!(
+            reader,
+            "Cursor is at",
+            cursor,
+            "; received left mouse click at",
+            click_position
+        );
+        let new_pos = self
+            .screen
+            .offset_in_cmdline_given_cursor(click_position, cursor);
+        let (elt, _el) = self.active_edit_line();
+        self.update_buff_pos(elt, Some(new_pos));
     }
 }
 
@@ -2240,6 +2270,10 @@ impl<'a> Reader<'a> {
                     Outputter::stdoutput()
                         .borrow_mut()
                         .write_wstr(L!("\x1B[?1000l"));
+                }
+                ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
+                    self.mouse_left_click(cursor, click_position);
+                    self.stop_waiting_for_cursor_position();
                 }
             },
         }

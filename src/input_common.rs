@@ -6,12 +6,12 @@ use crate::common::{
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
-use crate::flog::FLOG;
+use crate::flog::{FloggableDebug, FLOG};
 use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
-    Key, Modifiers,
+    Key, Modifiers, ViewportPosition,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -189,6 +189,8 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Request to disable mouse tracking.
     DisableMouseTracking,
+    /// Handle mouse left click.
+    MouseLeftClickContinuation(ViewportPosition, ViewportPosition),
 }
 
 #[derive(Debug, Clone)]
@@ -205,6 +207,7 @@ pub enum CharEvent {
     /// Any event that has no user-visible representation.
     Implicit(ImplicitEvent),
 }
+impl FloggableDebug for CharEvent {}
 
 impl CharEvent {
     pub fn is_char(&self) -> bool {
@@ -585,11 +588,23 @@ impl InputData {
     }
 }
 
+pub enum WaitingForCursorPosition {
+    MouseLeft(ViewportPosition),
+}
+
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
+        if self.is_waiting_for_cursor_position() {
+            match self.get_input_data().queue.front()? {
+                CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
+                    return None; // No code execution while we're waiting for CPR.
+                }
+                CharEvent::Implicit(_) => (),
+            }
+        }
         self.get_input_data_mut().queue.pop_front()
     }
 
@@ -697,15 +712,42 @@ pub trait InputEventQueuer {
                     if !ok {
                         continue;
                     }
-                    return if let Some(key) = key {
-                        Some(CharEvent::from_key_seq(key, seq))
+                    let (key_evt, extra) = if let Some(key) = key {
+                        (CharEvent::from_key_seq(key, seq), None)
                     } else {
-                        self.insert_front(seq.chars().skip(1).map(CharEvent::from_char));
                         let Some(c) = seq.chars().next() else {
                             continue;
                         };
-                        Some(CharEvent::from_key_seq(Key::from_raw(c), seq))
+                        (
+                            CharEvent::from_key_seq(Key::from_raw(c), seq.clone()),
+                            Some(seq.chars().skip(1).map(CharEvent::from_char)),
+                        )
                     };
+                    if self.is_waiting_for_cursor_position() {
+                        FLOG!(
+                            reader,
+                            "Still waiting for cursor position report from terminal, deferring key event",
+                            key_evt
+                        );
+                        self.push_back(key_evt);
+                        extra.map(|extra| {
+                            for evt in extra {
+                                self.push_back(evt);
+                            }
+                        });
+                        let vintr = shell_modes().c_cc[libc::VINTR];
+                        if vintr != 0 && key == Some(Key::from_single_byte(vintr)) {
+                            FLOG!(
+                                reader,
+                                "Received interrupt key, giving up waiting for cursor position"
+                            );
+                            let ok = self.stop_waiting_for_cursor_position();
+                            assert!(ok);
+                        }
+                        continue;
+                    }
+                    extra.map(|extra| self.insert_front(extra));
+                    return Some(key_evt);
                 }
                 ReadbResult::NothingToRead => return None,
             }
@@ -902,22 +944,49 @@ pub trait InputEventQueuer {
             b'H' => masked_key(key::Home, None), // PC/xterm style
             b'M' | b'm' => {
                 self.disable_mouse_tracking();
+                // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
+                // reporting mode, with semicolon-separated parameters for button code, Px,
+                // and Py, ending with 'M' for button press or 'm' for button release.
                 let sgr = private_mode == Some(b'<');
                 if !sgr && c == b'm' {
                     return None;
                 }
-                // Extended (SGR/1006) mouse reporting mode, with semicolon-separated parameters
-                // for button code, Px, and Py, ending with 'M' for button press or 'm' for
-                // button release.
-                if sgr {
+                let button = if sgr {
+                    params[0][0]
+                } else {
+                    u32::from(next_char(self)) - 32
+                };
+                let x = usize::try_from(
+                    if sgr {
+                        params[1][0]
+                    } else {
+                        u32::from(next_char(self)) - 32
+                    } - 1,
+                )
+                .unwrap();
+                let y = usize::try_from(
+                    if sgr {
+                        params[2][0]
+                    } else {
+                        u32::from(next_char(self)) - 32
+                    } - 1,
+                )
+                .unwrap();
+                let position = ViewportPosition { x, y };
+                let modifiers = parse_mask((button >> 2) & 0x07);
+                let code = button & 0x43;
+                if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                // Generic X10 or modified VT200 sequence. It doesn't matter which, they're both 6
-                // chars (although in mode 1005, the characters may be unicode and not necessarily
-                // just one byte long) reporting the button that was clicked and its location.
-                let _ = next_char(self);
-                let _ = next_char(self);
-                let _ = next_char(self);
+                if self.is_waiting_for_cursor_position() {
+                    // TODO: re-queue it I guess.
+                    FLOG!(
+                        reader,
+                        "Received mouse left click while still waiting for Cursor Position Report"
+                    );
+                    return None;
+                }
+                self.on_mouse_left_click(position);
                 return None;
             }
             b't' => {
@@ -937,6 +1006,22 @@ pub trait InputEventQueuer {
             }
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
+            b'R' => {
+                let wait_reason = self.cursor_position_wait_reason().as_ref()?;
+                let y = usize::try_from(params[0][0] - 1).unwrap();
+                let x = usize::try_from(params[1][0] - 1).unwrap();
+                FLOG!(reader, "Received cursor position report y:", y, "x:", x);
+                let continuation = match wait_reason {
+                    WaitingForCursorPosition::MouseLeft(click_position) => {
+                        ImplicitEvent::MouseLeftClickContinuation(
+                            ViewportPosition { x, y },
+                            *click_position,
+                        )
+                    }
+                };
+                self.push_front(CharEvent::Implicit(continuation));
+                return None;
+            }
             b'S' => masked_key(function_key(4), None),
             b'~' => match params[0][0] {
                 1 => masked_key(key::Home, None), // VT220/tmux style
@@ -1273,12 +1358,39 @@ pub trait InputEventQueuer {
         }
     }
 
+    fn is_waiting_for_cursor_position(&self) -> bool {
+        false
+    }
+    fn cursor_position_wait_reason(&self) -> &Option<WaitingForCursorPosition> {
+        &None
+    }
+    fn stop_waiting_for_cursor_position(&mut self) -> bool {
+        false
+    }
+    fn on_mouse_left_click(&mut self, _position: ViewportPosition) {}
+
     /// Override point for when we are about to (potentially) block in select(). The default does
     /// nothing.
     fn prepare_to_select(&mut self) {}
 
     /// Called when select() is interrupted by a signal.
     fn select_interrupted(&mut self) {}
+
+    fn enqueue_interrupt_key(&mut self) {
+        let vintr = shell_modes().c_cc[libc::VINTR];
+        if vintr != 0 {
+            let interrupt_evt = CharEvent::from_key(Key::from_single_byte(vintr));
+            if self.stop_waiting_for_cursor_position() {
+                FLOG!(
+                    reader,
+                    "Received interrupt, giving up on waiting for cursor position"
+                );
+                self.push_back(interrupt_evt);
+            } else {
+                self.push_front(interrupt_evt);
+            }
+        }
+    }
 
     /// Override point for when when select() is interrupted by the universal variable notifier.
     /// The default does nothing.
@@ -1323,10 +1435,7 @@ impl InputEventQueuer for InputEventQueue {
 
     fn select_interrupted(&mut self) {
         if reader_test_and_clear_interrupted() != 0 {
-            let vintr = shell_modes().c_cc[libc::VINTR];
-            if vintr != 0 {
-                self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));
-            }
+            self.enqueue_interrupt_key();
         }
     }
 }

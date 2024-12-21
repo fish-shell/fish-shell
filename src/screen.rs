@@ -7,7 +7,9 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
+use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
+use crate::FLOG;
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
@@ -42,6 +44,8 @@ use crate::wutil::fstat;
 pub struct HighlightedChar {
     highlight: HighlightSpec,
     character: char,
+    // Logical offset within the command line.
+    offset_in_cmdline: usize,
 }
 
 /// A class representing a single line of a screen.
@@ -64,17 +68,18 @@ impl Line {
     }
 
     /// Append a single character `txt` to the line with color `c`.
-    pub fn append(&mut self, character: char, highlight: HighlightSpec) {
+    pub fn append(&mut self, character: char, highlight: HighlightSpec, offset_in_cmdline: usize) {
         self.text.push(HighlightedChar {
             highlight,
             character: rendered_character(character),
+            offset_in_cmdline,
         })
     }
 
     /// Append a nul-terminated string `txt` to the line, giving each character `color`.
-    pub fn append_str(&mut self, txt: &wstr, highlight: HighlightSpec) {
+    pub fn append_str(&mut self, txt: &wstr, highlight: HighlightSpec, offset_in_cmdline: usize) {
         for c in txt.chars() {
-            self.append(c, highlight);
+            self.append(c, highlight, offset_in_cmdline);
         }
     }
 
@@ -91,6 +96,11 @@ impl Line {
     /// Return the color at a char index.
     pub fn color_at(&self, idx: usize) -> HighlightSpec {
         self.text[idx].highlight
+    }
+
+    /// Return the logical offset corresponding to this cell
+    pub fn offset_in_cmdline_at(&self, idx: usize) -> usize {
+        self.text[idx].offset_in_cmdline
     }
 
     /// Append the contents of `line` to this line.
@@ -320,6 +330,7 @@ impl Screen {
         // Append spaces for the left prompt.
         for _ in 0..layout.left_prompt_space {
             let _ = self.desired_append_char(
+                /*offset_in_cmdline=*/ 0,
                 usize::MAX,
                 ' ',
                 HighlightSpec::new(),
@@ -363,6 +374,7 @@ impl Screen {
                 break scrolled_cursor.unwrap();
             }
             if !self.desired_append_char(
+                /*offset_in_cmdline=*/ i,
                 if is_final_rendering {
                     usize::MAX
                 } else {
@@ -474,6 +486,43 @@ impl Screen {
 
     pub fn move_to_end(&mut self) {
         self.r#move(0, self.actual.line_count());
+    }
+
+    fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
+        let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
+        prompt_y.unwrap_or_else(|| {
+            FLOG!(
+                error,
+                "Reported cursor line index",
+                viewport_cursor_y,
+                "is above fish's cursor",
+                self.actual.cursor.y
+            );
+            0
+        })
+    }
+
+    pub fn offset_in_cmdline_given_cursor(
+        &mut self,
+        viewport_position: ViewportPosition,
+        viewport_cursor: ViewportPosition,
+    ) -> usize {
+        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor.y);
+        let y = viewport_position.y - viewport_prompt_y;
+        let y = y.min(self.actual.line_count() - 1);
+        let viewport_prompt_x = viewport_cursor.x - self.actual.cursor.x;
+        let x = viewport_position.x - viewport_prompt_x;
+        let line = self.actual.line(y);
+        let x = x.max(line.indentation);
+        if x >= line.len() {
+            if self.actual.line_count() == 1 {
+                0
+            } else {
+                line.text.last().unwrap().offset_in_cmdline + 1
+            }
+        } else {
+            line.offset_in_cmdline_at(x)
+        }
     }
 
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
@@ -597,6 +646,7 @@ impl Screen {
     /// automatically handles linebreaks and lines longer than the screen width.
     fn desired_append_char(
         &mut self,
+        offset_in_cmdline: usize,
         max_y: usize,
         b: char,
         c: HighlightSpec,
@@ -622,6 +672,7 @@ impl Screen {
             line.indentation = indentation;
             for _ in 0..indentation {
                 if !self.desired_append_char(
+                    offset_in_cmdline,
                     max_y,
                     ' ',
                     HighlightSpec::default(),
@@ -659,7 +710,9 @@ impl Screen {
                 self.desired.cursor.x = 0;
             }
 
-            self.desired.line_mut(line_no).append(b, c);
+            self.desired
+                .line_mut(line_no)
+                .append(b, c, offset_in_cmdline);
             self.desired.cursor.x += cw;
 
             // Maybe wrap the cursor to the next line, even if the line itself did not wrap. This
@@ -935,7 +988,7 @@ impl Screen {
             zelf.r#move(0, 0);
             let mut start = 0;
             let osc_133_prompt_start =
-                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;special_key=1\x07");
+                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;click_events=1\x07");
             if left_prompt_layout.line_breaks.is_empty() {
                 osc_133_prompt_start(&mut zelf);
             }

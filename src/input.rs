@@ -1,12 +1,13 @@
-use crate::common::{escape, get_by_sorted_name, shell_modes, str2wcstring, Named};
+use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
 use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
     CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, ReadlineCmd,
-    R_END_INPUT_FUNCTIONS,
+    WaitingForCursorPosition, R_END_INPUT_FUNCTIONS,
 };
+use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
 use crate::reader::{
@@ -424,10 +425,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
 
         // Tell the reader an event occurred.
         if reader_reading_interrupted(self) != 0 {
-            let vintr = shell_modes().c_cc[libc::VINTR];
-            if vintr != 0 {
-                self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));
-            }
+            self.enqueue_interrupt_key();
             return;
         }
         self.push_front(CharEvent::from_check_exit());
@@ -455,6 +453,21 @@ impl<'a> InputEventQueuer for Reader<'a> {
             "__fish_paste %s",
             escape(&str2wcstring(&buffer))
         )));
+    }
+
+    fn is_waiting_for_cursor_position(&self) -> bool {
+        self.waiting_for_cursor_position.is_some()
+    }
+    fn cursor_position_wait_reason(&self) -> &Option<WaitingForCursorPosition> {
+        &self.waiting_for_cursor_position
+    }
+    fn stop_waiting_for_cursor_position(&mut self) -> bool {
+        self.waiting_for_cursor_position.take().is_some()
+    }
+
+    fn on_mouse_left_click(&mut self, position: ViewportPosition) {
+        FLOG!(reader, "Mouse left click", position);
+        self.request_cursor_position(WaitingForCursorPosition::MouseLeft(position));
     }
 }
 

@@ -30,7 +30,7 @@ use fish::{
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        str2wcstring, wcs2osstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -80,7 +80,7 @@ const BIN_DIR: &str = env!("BINDIR");
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
-fn install(confirm: bool) -> bool {
+fn install(confirm: bool, dir: PathBuf) -> bool {
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -96,11 +96,6 @@ fn install(confirm: bool) -> bool {
     use std::io::ErrorKind;
     use std::io::Write;
     use std::io::{stderr, stdin};
-    let Some(home) = fish::env::get_home() else {
-        FLOG!(error, "Can't find home directory.");
-        return false;
-    };
-    let dir = PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR);
 
     // TODO: Translation,
     // FLOG?
@@ -197,7 +192,7 @@ fn install(confirm: bool) -> bool {
 }
 
 #[cfg(any(clippy, not(feature = "installable")))]
-fn install(_confirm: bool) -> bool {
+fn install(_confirm: bool, _dir: PathBuf) -> bool {
     eprintln!("Fish was built without support for self-installation");
     return false;
 }
@@ -300,10 +295,17 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         }
 
         if !done {
-            // The next check is that we are in a reloctable directory tree
+            // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
                 paths = ConfigPaths {
+                    // One obvious path is ~/.local (with fish in ~/.local/bin/).
+                    // If we picked ~/.local/share/fish as our data path,
+                    // we would install there and erase history.
+                    // So let's isolate us a bit more.
+                    #[cfg(feature = "installable")]
+                    data: base_path.join("share/fish/install"),
+                    #[cfg(not(feature = "installable"))]
                     data: base_path.join("share/fish"),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
@@ -316,6 +318,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 );
                 let base_path = exec_path.parent().unwrap();
                 paths = ConfigPaths {
+                    #[cfg(feature = "installable")]
+                    data: base_path.join("share/install"),
+                    #[cfg(not(feature = "installable"))]
                     data: base_path.join("share"),
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
@@ -339,7 +344,8 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             let Some(home) = fish::env::get_home() else {
                 FLOG!(
                     error,
-                    "Cannot find home directory and will refuse to read configuration"
+                    "Cannot find home directory and will refuse to read configuration.\n",
+                    "Consider installing into a directory tree with `fish --install=PATH`."
                 );
                 return paths;
             };
@@ -421,8 +427,7 @@ fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
     {
         // When fish is installable, we write the version to a file,
         // now we check it.
-        let verfile =
-            PathBuf::from(fish::common::wcs2osstring(datapath)).join("fish-install-version");
+        let verfile = PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
         let version = std::fs::read_to_string(verfile).ok()?;
 
         return Some(version == fish::BUILD_VERSION);
@@ -458,7 +463,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
                 );
             }
 
-            install(true);
+            install(true, PathBuf::from(wcs2osstring(&datapath)));
             // We try to go on if installation failed (or was rejected) here
             // If the assets are missing, we will trigger a later error,
             // if they are outdated, things will probably (tm) work somewhat.
@@ -540,7 +545,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
-        wopt(L!("install"), NoArgument, 'I'),
+        wopt(L!("install"), OptionalArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -576,7 +581,60 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
             'I' => {
-                install(false);
+                #[cfg(not(feature = "installable"))]
+                eprintln!("Fish was built without support for self-installation");
+                #[cfg(feature = "installable")]
+                if let Some(path) = w.woptarg {
+                    // We were given an explicit path.
+                    // Install us there as a relocatable install.
+                    // That means:
+                    // path/bin/fish is the fish binary
+                    // path/share/fish/ is the data directory
+                    // path/etc/fish is sysconf????
+                    use std::fs;
+                    let dir = PathBuf::from(wcs2osstring(path));
+                    if install(true, dir.join("share/fish/install")) {
+                        for sub in &["share/fish/install", "etc/fish", "bin"] {
+                            let p = dir.join(sub);
+                            let Ok(_) = fs::create_dir_all(p.clone()) else {
+                                eprintln!("Creating directory '{}' failed", p.display());
+                                std::process::exit(1);
+                            };
+                        }
+
+                        // Copy ourselves there.
+                        let argv0 = OsString::from_vec(wcs2string(&args[0]));
+                        let exec_path =
+                            get_executable_path(<OsString as AsRef<Path>>::as_ref(&argv0));
+                        let binpath = dir.join("bin/fish");
+                        if let Ok(exec_path) = exec_path.canonicalize() {
+                            if exec_path != binpath {
+                                if let Err(err) = std::fs::copy(exec_path, binpath.clone()) {
+                                    FLOG!(error, "Cannot copy fish to", binpath.display());
+                                    FLOG!(error, err);
+                                    std::process::exit(1);
+                                }
+                                println!(
+                                    "Fish installed in '{}'. Start that from now on.",
+                                    binpath.display()
+                                );
+                                // TODO: Reexec fish?
+                                std::process::exit(0);
+                            }
+                        } else {
+                            FLOG!(error, "Cannot copy fish to '%ls'. Please copy the fish binary there manually", binpath.display());
+                        }
+                    }
+                } else {
+                    let paths = Some(determine_config_directory_paths(OsString::from_vec(
+                        wcs2string(&args[0]),
+                    )));
+                    let Some(paths) = paths else {
+                        FLOG!(error, "Cannot find config paths");
+                        std::process::exit(1);
+                    };
+                    install(true, paths.data);
+                }
             }
             'l' => opts.is_login = true,
             'N' => {

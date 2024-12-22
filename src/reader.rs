@@ -495,6 +495,7 @@ pub struct ReaderData {
     pub screen: Screen,
 
     pub pending_mouse_left: Option<ViewportPosition>,
+    pub pending_scroll_content: bool,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1148,6 +1149,7 @@ impl ReaderData {
             last_flash: Default::default(),
             screen: Screen::new(),
             pending_mouse_left: None,
+            pending_scroll_content: false,
             input_data,
             queued_repaint: false,
             history,
@@ -3450,6 +3452,19 @@ impl<'a> Reader<'a> {
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
                 self.parser.libdata_mut().is_repaint = false;
+            }
+            rl::ScrollbackPushAsync => {
+                if self.pending_scroll_content {
+                    return;
+                }
+                self.pending_scroll_content = true;
+                self.parser.libdata_mut().is_repaint = true;
+                self.screen.request_cursor_position();
+            }
+            rl::ScrollbackPush(cursor_y) => {
+                assert!(self.pending_scroll_content);
+                self.pending_scroll_content = false;
+                self.screen.push_to_scrollback(cursor_y);
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc

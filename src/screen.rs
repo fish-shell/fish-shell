@@ -9,6 +9,7 @@
 
 use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
+use crate::FLOG;
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
@@ -131,8 +132,7 @@ pub struct Cursor {
 pub struct ScreenData {
     line_datas: Vec<Line>,
 
-    /// The width of the screen in this rendering.
-    /// -1 if not set, i.e. we have not rendered before.
+    /// The width of the screen once we have rendered.
     screen_width: Option<usize>,
 
     cursor: Cursor,
@@ -488,12 +488,35 @@ impl Screen {
         self.r#move(0, self.actual.line_count());
     }
 
+    pub fn push_to_scrollback(&mut self, cursor_y: usize) {
+        let mut prompt_y = self.command_line_y_given_cursor_y(cursor_y);
+        prompt_y -= calc_prompt_lines(&self.actual_left_prompt) - 1;
+        if prompt_y != 0 {
+            let scroll_and_reposition_cursor = format!("\x1b[{0}S\x1b[{0}A", prompt_y);
+            self.write_bytes(scroll_and_reposition_cursor.as_bytes());
+        }
+    }
+
+    fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
+        let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
+        prompt_y.unwrap_or_else(|| {
+            FLOG!(
+                error,
+                "Reported cursor line index",
+                viewport_cursor_y,
+                "is above fish's cursor",
+                self.actual.cursor.y
+            );
+            0
+        })
+    }
+
     pub fn offset_in_cmdline_given_cursor(
         &mut self,
         viewport_position: ViewportPosition,
         viewport_cursor: ViewportPosition,
     ) -> usize {
-        let viewport_prompt_y = viewport_cursor.y - self.actual.cursor.y;
+        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor.y);
         let y = viewport_position.y - viewport_prompt_y;
         let y = y.min(self.actual.line_count() - 1);
         let viewport_prompt_x = viewport_cursor.x - self.actual.cursor.x;
@@ -865,6 +888,10 @@ impl Screen {
 
     pub(crate) fn write_bytes(&mut self, s: &[u8]) {
         self.outp.borrow_mut().tputs_bytes(s);
+    }
+
+    pub(crate) fn request_cursor_position(&mut self) {
+        self.write_bytes(b"\x1b[6n");
     }
 
     /// Convert a wide string to a multibyte string and append it to the buffer.

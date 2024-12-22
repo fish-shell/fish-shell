@@ -16,6 +16,9 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
+- :kbd:`ctrl-l` no longer clears the screen but only pushes all text before the prompt to the terminal's scrollback
+  (via a new special input function ``scrollback-push``).
+  You can restore previous behavior with `bind ctrl-l clear-screen`.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 
 Completions

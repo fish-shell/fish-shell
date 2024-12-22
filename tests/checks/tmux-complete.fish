@@ -17,15 +17,17 @@ isolated-tmux capture-pane -p
 # CHECK: ~/file-1  ~/file-2
 
 # No pager on single smartcase completion (#7738).
-isolated-tmux send-keys C-u C-l 'mkdir cmake CMakeFiles' Enter C-l \
-    'cat cmake' Tab
+isolated-tmux send-keys C-u 'mkdir cmake CMakeFiles' Enter C-l
+tmux-sleep
+isolated-tmux send-keys 'cat cmake' Tab
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> cat cmake/
 
 # Correct case in pager when prefixes differ in case (#7743).
-isolated-tmux send-keys C-u C-l 'complete -c foo2 -a "aabc aaBd" -f' Enter C-l \
-    'foo2 A' Tab
+isolated-tmux send-keys C-u 'complete -c foo2 -a "aabc aaBd" -f' Enter C-l
+tmux-sleep
+isolated-tmux send-keys 'foo2 A' Tab
 tmux-sleep
 isolated-tmux capture-pane -p
 # The "bc" part is the autosuggestion - we could use "capture-pane -e" to check colors.
@@ -34,7 +36,9 @@ isolated-tmux capture-pane -p
 
 # Check that a larger-than-screen completion list does not stomp a multiline commandline (#8509).
 isolated-tmux send-keys C-u 'complete -c foo3 -fa "(seq $LINES)\t(string repeat -n $COLUMNS d)"' Enter \
-    C-l begin Enter foo3 Enter "echo some trailing line" \
+    C-l
+tmux-sleep
+isolated-tmux send-keys begin Enter foo3 Enter "echo some trailing line" \
     C-p C-e Space Tab Tab
 tmux-sleep
 isolated-tmux capture-pane -p | sed -n '1p;$p'
@@ -47,7 +51,9 @@ isolated-tmux capture-pane -p | sed -n '1p;$p'
 # The common prefix remains because it is inserted before the pager is shown.
 isolated-tmux send-keys C-c
 tmux-sleep
-isolated-tmux send-keys C-l foo2 Space BTab b BSpace b Escape
+isolated-tmux send-keys C-l
+tmux-sleep
+isolated-tmux send-keys foo2 Space BTab b BSpace b Escape
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 3> foo2 aa
@@ -65,7 +71,9 @@ isolated-tmux capture-pane -p
 # Check that a larger-than-screen completion does not break down-or-search.
 isolated-tmux send-keys C-u 'complete -c foo4 -f -a "
     a-long-arg-\"$(seq $LINES | string pad -c_ --width $COLUMNS)\"
-    b-short-arg"' Enter C-l foo4 Space Tab Tab Down
+    b-short-arg"' Enter C-l
+tmux-sleep
+isolated-tmux send-keys foo4 Space Tab Tab Down
 tmux-sleep
 isolated-tmux capture-pane -p | head -1
 # The second one is the autosuggestion. Maybe we should turn them off for this test.
@@ -73,7 +81,9 @@ isolated-tmux capture-pane -p | head -1
 # CHECK: {{.*}} b-short-arg a-long-arg{{.*}}
 
 # Check that completion pager followed by token search search inserts two separate tokens.
-isolated-tmux send-keys C-u echo Space old-arg Enter C-l foo2 Space Tab Tab M-.
+isolated-tmux send-keys C-u echo Space old-arg Enter C-l
+tmux-sleep
+isolated-tmux send-keys foo2 Space Tab Tab M-.
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 5> foo2 aabc old-arg
@@ -86,6 +96,7 @@ isolated-tmux capture-pane -p
 # CHECK: prompt 6> echo suggest this
 
 isolated-tmux send-keys C-u 'bind ctrl-s forward-single-char' Enter C-l
+tmux-sleep
 isolated-tmux send-keys 'echo suggest thi'
 tmux-sleep
 isolated-tmux send-keys C-s
@@ -103,16 +114,19 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 7> echo suggest nothing
 
-isolated-tmux send-keys C-u 'bind \cs forward-char-passive' Enter C-l
-isolated-tmux send-keys C-u 'bind \cb backward-char-passive' Enter C-l
+isolated-tmux send-keys C-u 'bind \cs forward-char-passive' Enter
+isolated-tmux send-keys C-u 'bind \cb backward-char-passive' Enter
 isolated-tmux send-keys C-u 'echo do not accept this' Enter C-l
+tmux-sleep
 tmux-sleep
 isolated-tmux send-keys 'echo do not accept thi' C-b C-b DC C-b C-s 'h'
 tmux-sleep
 isolated-tmux send-keys C-s C-s C-s 'x'
 isolated-tmux capture-pane -p
 # CHECK: prompt 10> echo do not accept thix
-isolated-tmux send-keys C-u C-l ': {*,' Tab Tab Space ,
+isolated-tmux send-keys C-u C-l
+tmux-sleep
+isolated-tmux send-keys ': {*,' Tab Tab Space ,
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 10> : {*,cmake/ ,{{.*}}

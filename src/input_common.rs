@@ -26,9 +26,6 @@ use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
-// The range of key codes for inputrc-style keyboard functions.
-pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
-
 /// Hackish: the input style, which describes how char events (only) are applied to the command
 /// line. Note this is set only after applying bindings; it is not set from readb().
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -41,7 +38,6 @@ pub enum CharInputStyle {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(u8)]
 pub enum ReadlineCmd {
     BeginningOfLine,
     EndOfLine,
@@ -134,6 +130,8 @@ pub enum ReadlineCmd {
     FocusOut,
     // ncurses uses the obvious name
     ClearScreenAndRepaint,
+    ScrollbackPushAsync,
+    ScrollbackPush(usize),
     // NOTE: This one has to be last.
     ReverseRepeatJump,
 }
@@ -988,10 +986,17 @@ pub trait InputEventQueuer {
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
             b'R' => {
-                if self.has_pending_mouse_left() {
+                if self.has_pending_mouse_left() || self.has_pending_scroll_content() {
                     let y = usize::try_from(params[0][0] - 1).unwrap();
                     let x = usize::try_from(params[1][0] - 1).unwrap();
-                    self.on_mouse_left(ViewportPosition { x, y });
+                    if self.has_pending_mouse_left() {
+                        self.on_mouse_left(ViewportPosition { x, y });
+                    } else {
+                        self.push_front(CharEvent::Readline(ReadlineCmdEvent {
+                            cmd: ReadlineCmd::ScrollbackPush(y),
+                            seq: Default::default(),
+                        }));
+                    }
                     return None;
                 } else {
                     masked_key(function_key(3), None)
@@ -1336,6 +1341,11 @@ pub trait InputEventQueuer {
         false
     }
     fn on_mouse_left(&mut self, _cursor: ViewportPosition) {}
+
+    fn has_pending_scroll_content(&self) -> bool {
+        false
+    }
+    fn on_scroll_content(&mut self, _cursor_y: usize) {}
 
     /// Override point for when we are about to (potentially) block in select(). The default does
     /// nothing.

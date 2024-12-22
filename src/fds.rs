@@ -23,11 +23,8 @@ pub const FIRST_HIGH_FD: RawFd = 10;
 /// A sentinel value indicating no timeout.
 pub const NO_TIMEOUT: u64 = u64::MAX;
 
-/// A helper type for managing and automatically closing a file descriptor
-///
-/// This was implemented in rust as a port of the existing C++ code but it didn't take its place
-/// (yet) and there's still the original cpp implementation in `src/fds.h`, so its name is
-/// disambiguated because some code uses a mix of both for interop purposes.
+/// A helper type for managing and automatically closing a file descriptor.
+/// Importantly this supports an invalid state with an fd of -1.
 pub struct AutoCloseFd {
     fd_: RawFd,
 }

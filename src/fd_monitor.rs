@@ -178,7 +178,7 @@ impl FdEventSignaller {
     }
 }
 
-/// Each item added to fd_monitor_t is assigned a unique ID, which is not recycled. Items may have
+/// Each item added to FdMonitor is assigned a unique ID, which is not recycled. Items may have
 /// their callback triggered immediately by passing the ID. Zero is a sentinel.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FdMonitorItemId(u64);
@@ -481,7 +481,6 @@ impl BackgroundFdMonitor {
 
             // Service all items that are either readable or have timed out, and remove any which
             // say to do so.
-
             self.items
                 .retain_mut(|item| servicer(item) == ItemAction::Retain);
 
@@ -541,9 +540,6 @@ impl BackgroundFdMonitor {
 /// fds arounds; this is why it's very hacky!
 impl Drop for FdMonitor {
     fn drop(&mut self) {
-        // Safety: this is a port of the C++ code and we are running in the destructor. The C++ code
-        // had no way to bubble back any errors encountered here, and the pthread mutex the C++ code
-        // uses does not have a concept of mutex poisoning.
         self.data.lock().expect("Mutex poisoned!").terminate = true;
         self.change_signaller.post();
 

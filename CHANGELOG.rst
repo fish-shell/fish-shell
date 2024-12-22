@@ -36,7 +36,10 @@ fish 4.0b1 (released December 17, 2024)
 
 Changes since 4.0b1
 -------------------
-- :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta.
+- :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta. :issue:`10928`
+- Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
+    fish --install=$HOME/.local/
+  In that case, the fish binary will be moved to "bin/" in that path. :issue:`10923`
 
 These are the draft release notes for fish 4.0.0. Like this release of fish itself, they are in beta and are not complete. Please report any issues you find.
 

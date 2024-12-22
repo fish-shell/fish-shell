@@ -12,7 +12,7 @@ env:
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
 
 jobs:
-  staticbuilds:
+  staticbuilds-linux:
 
     runs-on: ubuntu-latest
 
@@ -40,8 +40,40 @@ jobs:
            tar -cazf fish-aarch64.tar.xz -C target/aarch64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
     - uses: actions/upload-artifact@v4
       with:
-        name: fish
+        name: fish-static-linux
         path: |
               fish-amd64.tar.xz
               fish-aarch64.tar.xz
+        retention-days: 14
+  staticbuilds-macos:
+
+    runs-on: macos-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - uses: dtolnay/rust-toolchain@1.70
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Prepare
+      run: |
+           sudo pip3 install --break-system-packages sphinx
+           rustup target add x86_64-apple-darwin
+           rustup target add aarch64-apple-darwin
+    - name: Build
+      run: |
+           cargo build --release --target aarch64-apple-darwin
+           cargo build --release --target x86_64-apple-darwin
+    - name: Compress
+      run: |
+           tar -cazf fish-macos-aarch64.tar.xz -C target/aarch64-apple-darwin/release/ fish{,_indent,_key_reader}
+           tar -cazf fish-macos-amd64.tar.xz -C target/x86_64-apple-darwin/release/ fish{,_indent,_key_reader}
+    - uses: actions/upload-artifact@v4
+      with:
+        name: fish-static-macos
+        path: |
+              fish-macos-amd64.tar.xz
+              fish-macos-aarch64.tar.xz
         retention-days: 14

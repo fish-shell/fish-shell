@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(unstable_name_collisions)]
 #![allow(clippy::uninlined_format_args)]
 
+#[cfg(feature = "installable")]
+use fish::common::wcs2osstring;
 #[allow(unused_imports)]
 use fish::future::IsSomeAnd;
 use fish::{
@@ -30,7 +32,7 @@ use fish::{
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2osstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -191,10 +193,9 @@ fn install(confirm: bool, dir: PathBuf) -> bool {
     return true;
 }
 
-#[cfg(any(clippy, not(feature = "installable")))]
+#[cfg(clippy)]
 fn install(_confirm: bool, _dir: PathBuf) -> bool {
-    eprintln!("Fish was built without support for self-installation");
-    return false;
+    unreachable!()
 }
 
 /// container to hold the options specified within the command line

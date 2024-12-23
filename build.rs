@@ -317,16 +317,35 @@ fn get_version(src_dir: &Path) -> String {
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
         let gitdir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".git");
+        let jjdir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".jj");
+        let commit_id = if gitdir.exists() {
+            // .git/HEAD contains ref: refs/heads/branch
+            let headpath = gitdir.join("HEAD");
+            let headstr = read_to_string(headpath)?;
+            let headref = headstr.split(' ').collect::<Vec<_>>()[1].trim();
 
-        // .git/HEAD contains ref: refs/heads/branch
-        let headpath = gitdir.join("HEAD");
-        let headstr = read_to_string(headpath)?;
-        let headref = headstr.split(' ').collect::<Vec<_>>()[1].trim();
-
-        // .git/refs/heads/branch contains the SHA
-        let refpath = gitdir.join(headref);
-        // Shorten to 9 characters (what git describe does currently)
-        let refstr = &read_to_string(refpath)?[0..9];
+            // .git/refs/heads/branch contains the SHA
+            let refpath = gitdir.join(headref);
+            // Shorten to 9 characters (what git describe does currently)
+            read_to_string(refpath)?
+        } else if jjdir.exists() {
+            let output = Command::new("jj")
+                .args([
+                    "log",
+                    "--revisions",
+                    "@",
+                    "--no-graph",
+                    "--ignore-working-copy",
+                    "--template",
+                    "commit_id",
+                ])
+                .output()
+                .unwrap();
+            String::from_utf8_lossy(&output.stdout).to_string()
+        } else {
+            return Err("did not find either of .git or .jj".into());
+        };
+        let refstr = &commit_id[0..9];
         let refstr = refstr.trim();
 
         let version = env!("CARGO_PKG_VERSION").to_owned();

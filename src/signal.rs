@@ -402,7 +402,7 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     LookupEntry::new(libc::SIGINFO,   L!("SIGINFO"), L!("Information request")),
 
     #[cfg(target_os = "linux")]
-    LookupEntry::new(libc::SIGSTKFLT, L!("SISTKFLT"), L!("Stack fault")),
+    LookupEntry::new(libc::SIGSTKFLT, L!("SIGSTKFLT"), L!("Stack fault")),
 
     #[cfg(target_os = "linux")]
     LookupEntry::new(libc::SIGIOT,   L!("SIGIOT"), L!("Abort (Alias for SIGABRT)")),

@@ -49,7 +49,7 @@ Notable backwards-incompatible changes
 - Terminals that fail to ignore unrecognized OSC or CSI sequences may display garbage. We know cool-retro-term and emacs' ansi-term are affected,
   most mainstream terminals are not.
 - :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word like :kbd:`ctrl-left` and :kbd:`ctrl-right` do.
-- :kbd:`alt-backspace` will delete an entire argument, not just one word (which is :kbd:`ctrl-backspace` now).
+- :kbd:`alt-backspace` will delete an entire argument, not just one word. The old word behavior has been moved to :kbd:`ctrl-backspace`. If your terminal doesn't support `ctrl-backspace`, consider using :kbd:`ctrl-w`, or :kbd:`alt-b` + :kbd:`alt-d`.
 - ``random`` will produce different values from previous versions of fish when used with the same seed, and will work more sensibly with small seed numbers.
   The seed was never guaranteed to give the same result across systems,
   so we do not expect this to have a large impact (:issue:`9593`).

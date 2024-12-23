@@ -219,16 +219,10 @@ pub enum ItemAction {
 }
 
 impl FdMonitorItem {
-    /// Invoke this item's callback if its fd is readable.
-    /// Returns `true` if the item should be retained or `false` if it should be removed from the
-    /// set.
-    fn service_item(&mut self, fds: &FdReadableSet) -> ItemAction {
-        let mut result = ItemAction::Retain;
-        let readable = fds.test(self.fd.as_raw_fd());
-        if readable {
-            result = (self.callback)(&mut self.fd, ItemWakeReason::Readable);
-        }
-        result
+    /// Invoke this item's callback because the fd is readable.
+    /// Returns the [`ItemAction`] to indicate whether the item should be removed from the [`FdMonitor`] set.
+    fn service_readable(&mut self) -> ItemAction {
+        (self.callback)(&mut self.fd, ItemWakeReason::Readable)
     }
 
     /// Invoke this item's callback with a poke, if its id is present in the sorted poke list.
@@ -418,19 +412,22 @@ impl BackgroundFdMonitor {
                 perror("select");
             }
 
-            // A predicate which services each item in turn, returning true if it should be removed
-            let servicer = |item: &mut FdMonitorItem| {
+            // A predicate which services each item in turn, returning false if it should be removed.
+            let servicer = |item: &mut FdMonitorItem| -> bool {
                 let fd = item.fd.as_raw_fd();
-                let action = item.service_item(&fds);
+                if !fds.test(fd) {
+                    // Not readable, so retain it.
+                    return true;
+                }
+                let action = item.service_readable();
                 if action == ItemAction::Remove {
                     FLOG!(fd_monitor, "Removing fd", fd);
                 }
-                action
+                action == ItemAction::Retain
             };
 
             // Service all items that are readable, and remove any which say to do so.
-            self.items
-                .retain_mut(|item| servicer(item) == ItemAction::Retain);
+            self.items.retain_mut(servicer);
 
             // Handle any changes if the change signaller was set. Alternatively, this may be the
             // wait lap, in which case we might want to commit to exiting.
@@ -479,7 +476,7 @@ impl BackgroundFdMonitor {
             if action == ItemAction::Remove {
                 FLOG!(fd_monitor, "Removing fd", item.fd.as_raw_fd());
             }
-            return action == ItemAction::Retain;
+            action == ItemAction::Retain
         });
     }
 }

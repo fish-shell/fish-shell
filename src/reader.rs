@@ -87,6 +87,7 @@ use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
+use crate::output::parse_color;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -2308,7 +2309,7 @@ impl<'a> Reader<'a> {
                 self.data
                     .update_buff_pos(EditableLineTag::Commandline, Some(self.command_line_len()));
             }
-            rl::CancelCommandline => {
+            rl::CancelCommandline | rl::CancelCommandlineTraditional => {
                 if self.conf.exit_on_interrupt {
                     self.parser
                         .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
@@ -2318,10 +2319,37 @@ impl<'a> Reader<'a> {
                 if self.command_line.is_empty() {
                     return;
                 }
+                if c == rl::CancelCommandlineTraditional {
+                    // Move cursor to the end of the line.
+                    let end = self.command_line.len();
+                    self.update_buff_pos(EditableLineTag::Commandline, Some(end));
+                    self.autosuggestion.clear();
+                    // Repaint also changes the actual cursor position
+                    if self.is_repaint_needed(None) {
+                        self.layout_and_repaint(L!("cancel"));
+                    }
+
+                    let mut outp = Outputter::stdoutput().borrow_mut();
+                    if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
+                        outp.set_color(
+                            parse_color(&fish_color_cancel, false),
+                            parse_color(&fish_color_cancel, true),
+                        );
+                    }
+                    outp.write_wstr(L!("^C"));
+                    outp.set_color(RgbColor::RESET, RgbColor::RESET);
+
+                    // We print a newline last so the prompt_sp hack doesn't get us.
+                    outp.push(b'\n');
+                }
                 self.push_edit(
                     EditableLineTag::Commandline,
                     Edit::new(0..self.command_line_len(), L!("").to_owned()),
                 );
+                if c == rl::CancelCommandlineTraditional {
+                    self.screen
+                        .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+                }
 
                 // Post fish_cancel.
                 event::fire_generic(self.parser, L!("fish_cancel").to_owned(), vec![]);
@@ -5006,6 +5034,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::AcceptAutosuggestion
         | rl::DeleteOrExit
         | rl::CancelCommandline
+        | rl::CancelCommandlineTraditional
         | rl::Cancel =>
         // These commands always end paging.
         {

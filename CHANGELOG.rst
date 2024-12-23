@@ -1,16 +1,13 @@
 Changes since 4.0b1
 -------------------
 - :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta. :issue:`10928`
+- Fix a regression in the beta where ``__fish_cancel_commandline`` caused glitches on multi-line command lines (:issue:`10935`).
 - Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
     fish --install=$HOME/.local/
   In that case, the fish binary will be moved to "bin/" in that path. :issue:`10923`
 
 fish 4.0b1 (released December 17, 2024)
 =======================================
-
-Changes since 4.0b1
--------------------
-- :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta.
 
 These are the draft release notes for fish 4.0.0. Like this release of fish itself, they are in beta and are not complete. Please report any issues you find.
 
@@ -72,7 +69,7 @@ Notable improvements and fixes
 
   This build system is experimental; the main build system, using ``cmake``, remains the recommended approach for packaging and installation to a prefix.
 - A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
-- :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt, but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior, use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
+- :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt, but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior, use ``for mode in (bind --list-modes); bind -M $mode ctrl-c cancel-commandline-traditional; end`` (:issue:`10213`).
 - Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
 - Special input functions run from bindings via ``commandline -f`` are now applied immediately, instead of after the currently executing binding (:issue:`3031`).
   For example, ``commandline -i foo; commandline | grep foo`` succeeds now.

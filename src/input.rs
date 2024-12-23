@@ -146,6 +146,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("beginning-of-line"), ReadlineCmd::BeginningOfLine),
     make_md(L!("cancel"), ReadlineCmd::Cancel),
     make_md(L!("cancel-commandline"), ReadlineCmd::CancelCommandline),
+    make_md(L!("cancel-commandline-traditional"), ReadlineCmd::CancelCommandlineTraditional),
     make_md(L!("capitalize-word"), ReadlineCmd::CapitalizeWord),
     make_md(L!("clear-screen"), ReadlineCmd::ClearScreenAndRepaint),
     make_md(L!("complete"), ReadlineCmd::Complete),

@@ -5,7 +5,7 @@ use std::os::unix::prelude::*;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex, Weak};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use crate::common::exit_without_destructors;
 use crate::fd_readable_set::FdReadableSet;
@@ -26,8 +26,6 @@ use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
 pub enum ItemWakeReason {
     /// The fd became readable (or was HUP'd)
     Readable,
-    /// The requested timeout was hit
-    Timeout,
     /// The item was "poked" (woken up explicitly)
     Poke,
 }
@@ -209,11 +207,6 @@ pub struct FdMonitorItem {
     /// A callback to be invoked when the fd is readable, or for another reason given by the wake reason.
     /// If the fd is invalid on return from the function, then the item is removed from the [`FdMonitor`] set.
     callback: Callback,
-    /// The timeout associated with waiting on this item or `None` to wait indefinitely. A timeout
-    /// of `0` is not supported.
-    timeout: Option<Duration>,
-    /// The last time we were called or the time of initialization.
-    last_time: Option<Instant>,
     /// The id for this item, assigned by [`FdMonitor`].
     item_id: FdMonitorItemId,
 }
@@ -226,35 +219,14 @@ pub enum ItemAction {
 }
 
 impl FdMonitorItem {
-    /// Return the duration until the timeout should trigger or `None`. A return of `0` means we are
-    /// at or past the timeout.
-    fn remaining_time(&self, now: &Instant) -> Option<Duration> {
-        let last_time = self.last_time.expect("Should always have a last_time!");
-        let timeout = self.timeout?;
-        assert!(now >= &last_time, "Steady clock went backwards or bug!");
-        let since = *now - last_time;
-        Some(if since >= timeout {
-            Duration::ZERO
-        } else {
-            timeout - since
-        })
-    }
-
-    /// Invoke this item's callback if its value (when its value is set in the fd or has timed out).
+    /// Invoke this item's callback if its fd is readable.
     /// Returns `true` if the item should be retained or `false` if it should be removed from the
     /// set.
-    fn service_item(&mut self, fds: &FdReadableSet, now: &Instant) -> ItemAction {
+    fn service_item(&mut self, fds: &FdReadableSet) -> ItemAction {
         let mut result = ItemAction::Retain;
         let readable = fds.test(self.fd.as_raw_fd());
-        let timed_out = !readable && self.remaining_time(now) == Some(Duration::ZERO);
-        if readable || timed_out {
-            self.last_time = Some(*now);
-            let reason = if readable {
-                ItemWakeReason::Readable
-            } else {
-                ItemWakeReason::Timeout
-            };
-            result = (self.callback)(&mut self.fd, reason);
+        if readable {
+            result = (self.callback)(&mut self.fd, ItemWakeReason::Readable);
         }
         result
     }
@@ -269,19 +241,17 @@ impl FdMonitorItem {
         (self.callback)(&mut self.fd, ItemWakeReason::Poke)
     }
 
-    pub fn new(fd: AutoCloseFd, timeout: Option<Duration>, callback: Callback) -> Self {
+    pub fn new(fd: AutoCloseFd, callback: Callback) -> Self {
         FdMonitorItem {
             fd,
-            timeout,
             callback,
             item_id: FdMonitorItemId(0),
-            last_time: None,
         }
     }
 }
 
 /// A thread-safe class which can monitor a set of fds, invoking a callback when any becomes
-/// readable (or has been HUP'd) or when per-item-configurable timeouts are reached.
+/// readable (or has been HUP'd).
 pub struct FdMonitor {
     /// Our self-signaller. When this is written to, it means there are new items pending, new items
     /// in the poke list, or terminate has been set.
@@ -330,7 +300,6 @@ impl FdMonitor {
     /// Add an item to the monitor. Returns the [`FdMonitorItemId`] assigned to the item.
     pub fn add(&self, mut item: FdMonitorItem) -> FdMonitorItemId {
         assert!(item.fd.is_valid());
-        assert!(item.timeout != Some(Duration::ZERO), "Invalid timeout!");
         assert!(
             item.item_id == FdMonitorItemId(0),
             "Item should not already have an id!"
@@ -423,16 +392,8 @@ impl BackgroundFdMonitor {
             let change_signal_fd = self.change_signaller.upgrade().unwrap().read_fd();
             fds.add(change_signal_fd);
 
-            let mut now = Instant::now();
-            // Use Duration::MAX to represent no timeout for comparison purposes.
-            let mut timeout = Duration::MAX;
-
             for item in &mut self.items {
                 fds.add(item.fd.as_raw_fd());
-                if item.last_time.is_none() {
-                    item.last_time = Some(now);
-                }
-                timeout = timeout.min(item.timeout.unwrap_or(Duration::MAX));
             }
 
             // If we have no items, then we wish to allow the thread to exit, but after a time, so
@@ -440,18 +401,10 @@ impl BackgroundFdMonitor {
             // msec; if nothing becomes readable by then we will exit. We refer to this as the
             // wait-lap.
             let is_wait_lap = self.items.is_empty();
-            if is_wait_lap {
-                assert!(
-                    timeout == Duration::MAX,
-                    "Should not have a timeout on wait lap!"
-                );
-                timeout = Duration::from_millis(256);
-            }
-
-            // Don't leave Duration::MAX as an actual timeout value
-            let timeout = match timeout {
-                Duration::MAX => None,
-                timeout => Some(timeout),
+            let timeout = if is_wait_lap {
+                Some(Duration::from_millis(256))
+            } else {
+                None
             };
 
             // Call select()
@@ -465,22 +418,17 @@ impl BackgroundFdMonitor {
                 perror("select");
             }
 
-            // Update the value of `now` after waiting on `fds.check_readable()`; it's used in the
-            // servicer closure.
-            now = Instant::now();
-
             // A predicate which services each item in turn, returning true if it should be removed
             let servicer = |item: &mut FdMonitorItem| {
                 let fd = item.fd.as_raw_fd();
-                let action = item.service_item(&fds, &now);
+                let action = item.service_item(&fds);
                 if action == ItemAction::Remove {
                     FLOG!(fd_monitor, "Removing fd", fd);
                 }
                 action
             };
 
-            // Service all items that are either readable or have timed out, and remove any which
-            // say to do so.
+            // Service all items that are readable, and remove any which say to do so.
             self.items
                 .retain_mut(|item| servicer(item) == ItemAction::Retain);
 

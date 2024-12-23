@@ -609,7 +609,7 @@ fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: OwnedFd) {
     };
 
     let fd = AutoCloseFd::new(fd.into_raw_fd());
-    let item_id = fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
+    let item_id = fd_monitor().add(FdMonitorItem::new(fd, item_callback));
     iobuffer.item_id.store(u64::from(item_id), Ordering::SeqCst);
 }
 

@@ -123,6 +123,7 @@ pub enum ReadlineCmd {
     DeleteOrExit,
     Exit,
     CancelCommandline,
+    CancelCommandlineTraditional,
     Cancel,
     Undo,
     Redo,

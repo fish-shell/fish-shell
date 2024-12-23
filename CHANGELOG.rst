@@ -94,7 +94,7 @@ Notable improvements and fixes
 
   This build system is experimental; the main build system, using ``cmake``, remains the recommended approach for packaging and installation to a prefix.
 - A new function ``fish_should_add_to_history`` can be overridden to decide whether a command should be added to the history (:issue:`10302`).
-- :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt, but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior, use ``bind ctrl-c __fish_cancel_commandline`` (:issue:`10213`).
+- :kbd:`ctrl-c` during command input no longer prints ``^C`` and a new prompt, but merely clears the command line. This restores the behavior from version 2.2. To revert to the old behavior, use ``for mode in (bind --list-modes); bind -M $mode ctrl-c cancel-commandline-traditional; end`` (:issue:`10213`).
 - Bindings can now mix special input functions and shell commands, so ``bind ctrl-g expand-abbr "commandline -i \n"`` works as expected (:issue:`8186`).
 - Special input functions run from bindings via ``commandline -f`` are now applied immediately, instead of after the currently executing binding (:issue:`3031`).
   For example, ``commandline -i foo; commandline | grep foo`` succeeds now.

@@ -408,10 +408,6 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     LookupEntry::new(libc::SIGIOT,   L!("SIGIOT"), L!("Abort (Alias for SIGABRT)")),
 
     #[cfg(target_os = "linux")]
-    #[allow(deprecated)]
-    LookupEntry::new(libc::SIGUNUSED, L!("SIGUNUSED"), L!("Unused signal")),
-
-    #[cfg(target_os = "linux")]
     LookupEntry::new(libc::SIGPWR,    L!("SIGPWR"), L!("Power failure")),
 
     // TODO: determine whether SIGWIND is defined on any platform.

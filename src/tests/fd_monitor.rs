@@ -2,17 +2,19 @@
 use portable_atomic::AtomicU64;
 use std::fs::File;
 use std::io::Write;
-use std::os::fd::{AsRawFd, IntoRawFd};
+use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd};
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Barrier, Mutex};
+use std::thread;
 use std::time::Duration;
 
-use crate::fd_monitor::{
-    FdEventSignaller, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemAction, ItemWakeReason,
-};
-use crate::fds::{make_autoclose_pipes, AutoCloseFd};
+use errno::errno;
+
+use crate::fd_monitor::{FdEventSignaller, FdMonitor};
+use crate::fd_readable_set::FdReadableSet;
+use crate::fds::{make_autoclose_pipes, AutoCloseFd, AutoClosePipes};
 use crate::tests::prelude::*;
 
 /// Helper to make an item which counts how many times its callback was invoked.
@@ -21,10 +23,9 @@ use crate::tests::prelude::*;
 /// since this is just used for test purposes.
 struct ItemMaker {
     pub length_read: AtomicUsize,
-    pub pokes: AtomicUsize,
     pub total_calls: AtomicUsize,
     item_id: AtomicU64,
-    pub always_exit: bool,
+    pub always_close: bool,
     pub writer: Mutex<Option<File>>,
 }
 
@@ -38,10 +39,9 @@ impl ItemMaker {
 
         let mut result = ItemMaker {
             length_read: 0.into(),
-            pokes: 0.into(),
             total_calls: 0.into(),
             item_id: 0.into(),
-            always_exit: false,
+            always_close: false,
             writer: Mutex::new(Some(File::from(pipes.write))),
         };
 
@@ -50,42 +50,25 @@ impl ItemMaker {
         let result = Arc::new(result);
         let callback = {
             let result = Arc::clone(&result);
-            move |fd: &mut AutoCloseFd, reason: ItemWakeReason| result.callback(fd, reason)
+            move |fd: &mut AutoCloseFd| result.callback(fd)
         };
         let fd = AutoCloseFd::new(pipes.read.into_raw_fd());
-        let item = FdMonitorItem::new(fd, Box::new(callback));
-        let item_id = monitor.add(item);
+        let item_id = monitor.add(fd, Box::new(callback));
         result.item_id.store(u64::from(item_id), Ordering::Relaxed);
 
         result
     }
 
-    fn item_id(&self) -> FdMonitorItemId {
-        self.item_id.load(Ordering::Relaxed).into()
-    }
-
-    fn callback(&self, fd: &mut AutoCloseFd, reason: ItemWakeReason) -> ItemAction {
-        let mut was_closed = false;
-
-        match reason {
-            ItemWakeReason::Poke => {
-                self.pokes.fetch_add(1, Ordering::Relaxed);
-            }
-            ItemWakeReason::Readable => {
-                let mut buf = [0u8; 1024];
-                let res = nix::unistd::read(fd.as_raw_fd(), &mut buf);
-                let amt = res.expect("read error!");
-                self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
-                was_closed = amt == 0;
-            }
-        }
+    fn callback(&self, fd: &mut AutoCloseFd) {
+        let mut buf = [0u8; 1024];
+        let res = nix::unistd::read(fd.as_raw_fd(), &mut buf);
+        let amt = res.expect("read error!");
+        self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
+        let was_closed = amt == 0;
 
         self.total_calls.fetch_add(1, Ordering::Relaxed);
-        if self.always_exit || was_closed {
+        if was_closed || self.always_close {
             fd.close();
-            ItemAction::Remove
-        } else {
-            ItemAction::Retain
         }
     }
 
@@ -116,20 +99,15 @@ fn fd_monitor_items() {
     // Item which should get 42 bytes then get notified it is closed.
     let item42_then_close = ItemMaker::insert_new_into(&monitor);
 
-    // Item which gets one poke.
-    let item_pokee = ItemMaker::insert_new_into(&monitor);
-
     // Item which should get a callback exactly once.
     let item_oneshot = ItemMaker::insert_new_into2(&monitor, |item| {
-        item.always_exit = true;
+        item.always_close = true;
     });
 
     item42.write42();
     item42_then_close.write42();
     *item42_then_close.writer.lock().expect("Mutex poisoned!") = None;
     item_oneshot.write42();
-
-    monitor.poke_item(item_pokee.item_id());
 
     // May need to loop here to ensure our fd_monitor gets scheduled. See #7699.
     for _ in 0..100 {
@@ -142,22 +120,14 @@ fn fd_monitor_items() {
     drop(monitor);
 
     assert_eq!(item_never.length_read.load(Ordering::Relaxed), 0);
-    assert_eq!(item_never.pokes.load(Ordering::Relaxed), 0);
 
     assert_eq!(item42.length_read.load(Ordering::Relaxed), 42);
-    assert_eq!(item42.pokes.load(Ordering::Relaxed), 0);
 
     assert_eq!(item42_then_close.length_read.load(Ordering::Relaxed), 42);
     assert_eq!(item42_then_close.total_calls.load(Ordering::Relaxed), 2);
-    assert_eq!(item42_then_close.pokes.load(Ordering::Relaxed), 0);
 
     assert_eq!(item_oneshot.length_read.load(Ordering::Relaxed), 42);
     assert_eq!(item_oneshot.total_calls.load(Ordering::Relaxed), 1);
-    assert_eq!(item_oneshot.pokes.load(Ordering::Relaxed), 0);
-
-    assert_eq!(item_pokee.length_read.load(Ordering::Relaxed), 0);
-    assert_eq!(item_pokee.total_calls.load(Ordering::Relaxed), 1);
-    assert_eq!(item_pokee.pokes.load(Ordering::Relaxed), 1);
 }
 
 #[test]
@@ -183,4 +153,87 @@ fn test_fd_event_signaller() {
     assert!(sema.try_consume());
     assert!(!sema.poll(false));
     assert!(!sema.try_consume());
+}
+
+// A helper function which calls poll() or selects() on a file descriptor in the background,
+// and then invokes the `bad_action` function on the file descriptor while the poll/select is
+// waiting. The function returns Result<i32, i32>: either the number of readable file descriptors
+// or the error code from poll/select.
+fn do_something_bad_during_select<F>(bad_action: F) -> Result<i32, i32>
+where
+    F: FnOnce(OwnedFd) -> Option<OwnedFd>,
+{
+    let AutoClosePipes {
+        read: read_fd,
+        write: write_fd,
+    } = make_autoclose_pipes().expect("Failed to create pipe");
+    let raw_read_fd = read_fd.as_raw_fd();
+
+    // Try to ensure that the thread will be scheduled by waiting until it is.
+    let barrier = Arc::new(Barrier::new(2));
+    let barrier_clone = Arc::clone(&barrier);
+
+    let select_thread = thread::spawn(move || -> Result<i32, i32> {
+        let mut fd_set = FdReadableSet::new();
+        fd_set.add(raw_read_fd);
+
+        barrier_clone.wait();
+
+        // Timeout after 500 msec.
+        // macOS will eagerly return EBADF if the fd is closed; Linux will hit the timeout.
+        let timeout_usec = 500 * 1_000;
+        let ret = fd_set.check_readable(timeout_usec);
+        if ret < 0 {
+            Err(errno().0)
+        } else {
+            Ok(ret)
+        }
+    });
+
+    barrier.wait();
+    thread::sleep(Duration::from_millis(100));
+    let read_fd = bad_action(read_fd);
+
+    let result = select_thread.join().expect("Select thread panicked");
+    // Ensure these stay alive until after thread is joined.
+    drop(read_fd);
+    drop(write_fd);
+    result
+}
+
+#[test]
+fn test_close_during_select_ebadf() {
+    let close_it = |read_fd: OwnedFd| {
+        drop(read_fd);
+        None
+    };
+    let result = do_something_bad_during_select(close_it);
+    assert!(
+        matches!(result, Err(libc::EBADF) | Ok(1)),
+        "select/poll should have failed with EBADF or marked readable"
+    );
+}
+
+#[test]
+fn test_dup2_during_select_ebadf() {
+    // Make a random file descriptor that we can dup2 stdin to.
+    let AutoClosePipes {
+        read: pipe_read,
+        write: pipe_write,
+    } = make_autoclose_pipes().expect("Failed to create pipe");
+
+    let dup2_it = |read_fd: OwnedFd| {
+        // We are going to dup2 stdin to this fd, which should cause select/poll to fail.
+        assert!(read_fd.as_raw_fd() > 0, "fd should be valid and not stdin");
+        unsafe { libc::dup2(pipe_read.as_raw_fd(), read_fd.as_raw_fd()) };
+        Some(read_fd)
+    };
+    let result = do_something_bad_during_select(dup2_it);
+    assert!(
+        matches!(result, Err(libc::EBADF) | Ok(0)),
+        "select/poll should have failed with EBADF or timed out"
+    );
+    // Ensure these stay alive until after thread is joined.
+    drop(pipe_read);
+    drop(pipe_write);
 }

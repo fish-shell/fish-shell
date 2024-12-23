@@ -1,8 +1,6 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
 use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
-use crate::fd_monitor::{
-    Callback, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemAction, ItemWakeReason,
-};
+use crate::fd_monitor::{Callback, FdMonitor};
 use crate::fds::{
     make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
 };
@@ -23,14 +21,13 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
-use std::cell::RefCell;
 use std::fs::File;
 use std::io;
 use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -436,13 +433,8 @@ pub struct IoBuffer {
     /// Buffer storing what we have read.
     buffer: Mutex<SeparatedBuffer>,
 
-    /// Atomic flag indicating our fillthread should shut down.
-    shutdown_fillthread: RelaxedAtomicBool,
-
-    /// A promise, allowing synchronization with the background fill operation.
-    /// The operation has a reference to this as well, and fulfills this promise when it exits.
-    #[allow(clippy::type_complexity)]
-    fill_waiter: RefCell<Option<Arc<(Mutex<bool>, Condvar)>>>,
+    /// Atomic flag indicating our fillthread is running.
+    fillthread_running: RelaxedAtomicBool,
 
     /// The item id of our background fillthread fd monitor item.
     item_id: AtomicU64,
@@ -456,8 +448,7 @@ impl IoBuffer {
     pub fn new(limit: usize) -> Self {
         IoBuffer {
             buffer: Mutex::new(SeparatedBuffer::new(limit)),
-            shutdown_fillthread: RelaxedAtomicBool::new(false),
-            fill_waiter: RefCell::new(None),
+            fillthread_running: RelaxedAtomicBool::new(false),
             item_id: AtomicU64::new(0),
         }
     }
@@ -508,108 +499,65 @@ impl IoBuffer {
     /// End the background fillthread operation, and return the buffer, transferring ownership.
     pub fn complete_background_fillthread_and_take_buffer(&self) -> SeparatedBuffer {
         // Mark that our fillthread is done, then wake it up.
-        assert!(self.fillthread_running(), "Should have a fillthread");
+        assert!(self.fillthread_running.load(), "Should have a fillthread");
         assert!(
             self.item_id.load(Ordering::SeqCst) != 0,
             "Should have a valid item ID"
         );
-        self.shutdown_fillthread.store(true);
-        fd_monitor().poke_item(FdMonitorItemId::from(self.item_id.load(Ordering::SeqCst)));
+        let item_id = self.item_id.load(Ordering::SeqCst).into();
+        let fd = fd_monitor().remove_item(item_id);
 
-        // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
-        // longer have one.
-
-        let mut promise = self.fill_waiter.borrow_mut();
-        let (mutex, condvar) = &**promise.as_ref().unwrap();
-        {
-            let done_guard = mutex.lock().unwrap();
-            let _done_guard = condvar.wait_while(done_guard, |done| !*done).unwrap();
+        // Read any remaining data from the pipe.
+        let mut locked_buff = self.buffer.lock().unwrap();
+        while fd.is_valid() && IoBuffer::read_once(fd.as_raw_fd(), &mut locked_buff) > 0 {
+            // pass
         }
-        *promise = None;
 
         // Return our buffer, transferring ownership.
-        let mut locked_buff = self.buffer.lock().unwrap();
         let mut result = SeparatedBuffer::new(locked_buff.limit());
         std::mem::swap(&mut result, &mut locked_buff);
         locked_buff.clear();
         result
     }
-
-    /// Helper to return whether the fillthread is running.
-    pub fn fillthread_running(&self) -> bool {
-        return self.fill_waiter.borrow().is_some();
-    }
 }
 
 /// Begin the fill operation, reading from the given fd in the background.
 fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: OwnedFd) {
-    assert!(!iobuffer.fillthread_running(), "Already have a fillthread");
+    assert!(
+        !iobuffer.fillthread_running.load(),
+        "Already have a fillthread"
+    );
+    iobuffer.fillthread_running.store(true);
 
     // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
     // owned by another process, or something else writing in fish.
     // Pass fd to an fd_monitor. It will add fd to its select() loop, and give us a callback when
-    // the fd is readable, or when our item is poked. The usual path is that we will get called
-    // back, read a bit from the fd, and append it to the buffer. Eventually the write end of the
-    // pipe will be closed - probably the other process exited - and fd will be widowed; read() will
-    // then return 0 and we will stop reading.
+    // the fd is readable. The usual path is that we will get called back, read a bit from the fd,
+    // and append it to the buffer. Eventually the write end of the pipe will be closed - probably
+    // the other process exited - and fd will be widowed; read() will then return 0 and we will stop
+    // reading.
     // In exotic circumstances the write end of the pipe will not be closed; this may happen in
     // e.g.:
     //   cmd ( background & ; echo hi )
     // Here the background process will inherit the write end of the pipe and hold onto it forever.
-    // In this case, when complete_background_fillthread() is called, the callback will be invoked
-    // with item_wake_reason_t::poke, and we will notice that the shutdown flag is set (this
-    // indicates that the command substitution is done); in this case we will read until we get
-    // EAGAIN and then give up.
-
-    // Construct a promise. We will fulfill it in our fill thread, and wait for it in
-    // complete_background_fillthread(). Note that TSan complains if the promise's dtor races with
-    // the future's call to wait(), so we store the promise, not just its future (#7681).
-    let promise = Arc::new((Mutex::new(false), Condvar::new()));
-    iobuffer.fill_waiter.replace(Some(promise.clone()));
+    // In this case, when complete_background_fillthread() is called, we grab the file descriptor
+    // and read until we get EAGAIN and then give up.
     // Run our function to read until the receiver is closed.
-    // It's OK to capture 'buffer' because 'this' waits for the promise in its dtor.
     let item_callback: Callback = {
         let iobuffer = iobuffer.clone();
-        Box::new(move |fd: &mut AutoCloseFd, reason: ItemWakeReason| {
-            // Only check the shutdown flag if we timed out or were poked.
-            // It's important that if select() indicated we were readable, that we call select() again
-            // allowing it to time out. Note the typical case is that the fd will be closed, in which
-            // case select will return immediately.
-            let mut done = false;
-            if reason == ItemWakeReason::Readable {
-                // select() reported us as readable; read a bit.
-                let mut buf = iobuffer.buffer.lock().unwrap();
-                let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
-                done = ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
-            } else if iobuffer.shutdown_fillthread.load() {
-                // Here our caller asked us to shut down; read while we keep getting data.
-                // This will stop when the fd is closed or if we get EAGAIN.
-                let mut buf = iobuffer.buffer.lock().unwrap();
-                loop {
-                    let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
-                    if ret <= 0 {
-                        break;
-                    }
-                }
-                done = true;
-            }
-            if !done {
-                ItemAction::Retain
-            } else {
+        Box::new(move |fd: &mut AutoCloseFd| {
+            assert!(fd.as_raw_fd() >= 0, "Invalid fd");
+            let mut buf = iobuffer.buffer.lock().unwrap();
+            let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
+            if ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0)) {
+                // Either it's finished or some other error - we're done.
                 fd.close();
-                let (mutex, condvar) = &*promise;
-                {
-                    let mut done = mutex.lock().unwrap();
-                    *done = true;
-                }
-                condvar.notify_one();
-                ItemAction::Remove
             }
         })
     };
 
     let fd = AutoCloseFd::new(fd.into_raw_fd());
-    let item_id = fd_monitor().add(FdMonitorItem::new(fd, item_callback));
+    let item_id = fd_monitor().add(fd, item_callback);
     iobuffer.item_id.store(u64::from(item_id), Ordering::SeqCst);
 }
 

@@ -4,7 +4,7 @@ use std::os::unix::prelude::*;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::common::exit_without_destructors;
@@ -291,7 +291,7 @@ struct BackgroundFdMonitor {
     items: Vec<FdMonitorItem>,
     /// Our self-signaller. When this is written to, it means there are new items pending, new items
     /// in the poke list, or terminate has been set.
-    change_signaller: Weak<FdEventSignaller>,
+    change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
     data: Arc<Mutex<SharedData>>,
 }
@@ -325,7 +325,7 @@ impl FdMonitor {
             FLOG!(fd_monitor, "Thread starting");
             let background_monitor = BackgroundFdMonitor {
                 data: Arc::clone(&self.data),
-                change_signaller: Arc::downgrade(&self.change_signaller),
+                change_signaller: Arc::clone(&self.change_signaller),
                 items: Vec::new(),
             };
             crate::threads::spawn(move || {
@@ -389,7 +389,7 @@ impl BackgroundFdMonitor {
             fds.clear();
 
             // Our change_signaller is special-cased
-            let change_signal_fd = self.change_signaller.upgrade().unwrap().read_fd();
+            let change_signal_fd = self.change_signaller.read_fd();
             fds.add(change_signal_fd);
 
             for item in &mut self.items {
@@ -437,7 +437,7 @@ impl BackgroundFdMonitor {
             let change_signalled = fds.test(change_signal_fd);
             if change_signalled || is_wait_lap {
                 // Clear the change signaller before processing incoming changes
-                self.change_signaller.upgrade().unwrap().try_consume();
+                self.change_signaller.try_consume();
                 let mut data = self.data.lock().expect("Mutex poisoned!");
 
                 // Move from `pending` to the end of `items`

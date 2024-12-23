@@ -10,7 +10,9 @@ isolated-tmux send-keys '
         commandline -f repaint
     end
 ' Enter
-isolated-tmux send-keys C-l 'kill -SIGUSR1 $fish_pid' Enter
+isolated-tmux send-keys C-l
+tmux-sleep
+isolated-tmux send-keys 'kill -SIGUSR1 $fish_pid' Enter
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> kill -SIGUSR1 $fish_pid

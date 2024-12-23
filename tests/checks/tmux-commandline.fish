@@ -9,7 +9,9 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> echo foobar|cat
 
-isolated-tmux send-keys C-k C-u C-l 'commandline -i (seq $LINES) scroll_here' Enter
+isolated-tmux send-keys C-k C-u C-l
+tmux-sleep
+isolated-tmux send-keys 'commandline -i (seq $LINES) scroll_here' Enter
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: 2

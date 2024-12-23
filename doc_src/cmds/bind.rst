@@ -171,7 +171,10 @@ The following special input functions are available:
     make the current word begin with a capital letter
 
 ``clear-screen``
-    clears the screen and redraws the prompt. if the terminal doesn't support clearing the screen it is the same as ``repaint``.
+    clears the screen and redraws the prompt.
+
+``scrollback-push``
+    pushes earlier output to the terminal scrollback, positioning the prompt at the top.
 
 ``complete``
     guess the remainder of the current token

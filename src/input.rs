@@ -3,9 +3,7 @@ use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
-use crate::input_common::{
-    CharEvent, CharInputStyle, InputData, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
-};
+use crate::input_common::{CharEvent, CharInputStyle, InputData, InputEventQueuer, ReadlineCmd};
 use crate::key::ViewportPosition;
 use crate::key::{
     self, canonicalize_raw_escapes, ctrl, Key, Modifiers, MouseButton, MouseEvent, MouseEventType,
@@ -127,6 +125,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!(""), ReadlineCmd::DisableMouseTracking),
     make_md(L!(""), ReadlineCmd::FocusIn),
     make_md(L!(""), ReadlineCmd::FocusOut),
+    make_md(L!(""), ReadlineCmd::ScrollbackPush(0)),
     make_md(L!("accept-autosuggestion"), ReadlineCmd::AcceptAutosuggestion),
     make_md(L!("and"), ReadlineCmd::FuncAnd),
     make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
@@ -202,6 +201,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("repaint-mode"), ReadlineCmd::RepaintMode),
     make_md(L!("repeat-jump"), ReadlineCmd::RepeatJump),
     make_md(L!("repeat-jump-reverse"), ReadlineCmd::ReverseRepeatJump),
+    make_md(L!("scrollback-push"), ReadlineCmd::ScrollbackPushAsync),
     make_md(L!("self-insert"), ReadlineCmd::SelfInsert),
     make_md(L!("self-insert-notfirst"), ReadlineCmd::SelfInsertNotFirst),
     make_md(L!("suppress-autosuggestion"), ReadlineCmd::SuppressAutosuggestion),
@@ -218,27 +218,17 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
 ];
 assert_sorted_by_name!(INPUT_FUNCTION_METADATA);
 
-const fn _assert_sizes_match() {
-    let input_function_count = R_END_INPUT_FUNCTIONS;
-    assert!(
-        INPUT_FUNCTION_METADATA.len() == input_function_count,
-        concat!(
-            "input_function_metadata size mismatch with input_common. ",
-            "Did you forget to update input_function_metadata?"
-        )
-    );
-}
-const _: () = _assert_sizes_match();
-
-// Keep this function for debug purposes
-// See 031b265
-#[allow(dead_code)]
-pub fn describe_char(c: i32) -> WString {
-    if c > 0 && (c as usize) < R_END_INPUT_FUNCTIONS {
-        return sprintf!("%02x (%ls)", c, INPUT_FUNCTION_METADATA[c as usize].name);
-    }
-    return sprintf!("%02x", c);
-}
+// const fn _assert_sizes_match() {
+//     assert_eq!(
+//         INPUT_FUNCTION_METADATA.len(),
+//         std::mem::variant_count::<ReadlineCmd>(),
+//         concat!(
+//             "input_function_metadata size mismatch with input_common. ",
+//             "Did you forget to update input_function_metadata?"
+//         )
+//     );
+// }
+// const _: () = _assert_sizes_match();
 
 /// The input mapping set is the set of mappings from character sequences to commands.
 #[derive(Debug, Default)]
@@ -475,13 +465,17 @@ impl<'a> InputEventQueuer for Reader<'a> {
             return;
         }
         self.pending_mouse_left = Some(event.position);
-        self.screen.write_bytes(b"\x1b[6n");
+        self.screen.request_cursor_position();
     }
     fn has_pending_mouse_left(&self) -> bool {
         self.pending_mouse_left.is_some()
     }
     fn on_mouse_left(&mut self, cursor: ViewportPosition) {
         self.mouse_left(cursor);
+    }
+
+    fn has_pending_scroll_content(&self) -> bool {
+        self.pending_scroll_content
     }
 }
 

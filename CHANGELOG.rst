@@ -29,8 +29,6 @@ Other improvements
 For distributors
 ----------------
 
---------------
-
 fish 4.0b1 (released December 17, 2024)
 =======================================
 

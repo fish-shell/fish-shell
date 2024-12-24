@@ -108,10 +108,12 @@ impl TimerSnapshot {
 
         let mut output = String::new();
         if !verbose {
-            output += "\n_______________________________";
-            output += &format!("\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name());
-            output += &format!("\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name());
-            output += &format!("\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name());
+            output += &format!(
+                "\n_______________________________\n{}\n   {}\n   {}",
+                format_args!("Executed in  {:6.2} {}", wall_time, wall_unit.long_name()),
+                format_args!("usr time  {:6.2} {}", usr_time, cpu_unit.long_name()),
+                format_args!("sys time  {:6.2} {}", sys_time, cpu_unit.long_name()),
+            );
         } else {
             let fish_unit = Unit::for_micros(fish_sys.max(fish_usr).as_micros() as i64);
             let child_unit = Unit::for_micros(child_sys.max(child_usr).as_micros() as i64);
@@ -129,15 +131,17 @@ impl TimerSnapshot {
             let fish_unit = fish_unit.short_name();
             let child_unit = child_unit.short_name();
 
-            output += "\n________________________________________________________";
             output += &format!(
-                "\nExecuted in  {wall_time:6.2} {wall_unit:<width1$}    {fish:<width2$}  external",
-                width1 = column2_unit_len,
-                fish = "fish",
-                width2 = fish_unit.len() + 7
+                "\n________________________________________________________\n{}\n   {}\n   {}",
+                format_args!(
+                    "Executed in  {wall_time:6.2} {wall_unit:<width1$}    {fish:<width2$}  external",
+                    width1 = column2_unit_len,
+                    fish = "fish",
+                    width2 = fish_unit.len() + 7
+                ),
+                format_args!("usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}"),
+                format_args!("sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}")
             );
-            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}");
-            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}");
         }
         output += "\n";
 

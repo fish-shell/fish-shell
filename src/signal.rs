@@ -361,57 +361,63 @@ impl LookupEntry {
     }
 }
 
+macro_rules! signal_entry {
+    ($name:ident, $desc:expr) => {
+        LookupEntry::new(libc::$name, L!(stringify!($name)), L!($desc))
+    };
+}
+
 // Lookup table used to convert between signal names and signal ids, etc.
 #[rustfmt::skip]
 const SIGNAL_TABLE : &[LookupEntry] = &[
-    LookupEntry::new(libc::SIGHUP,    L!("SIGHUP"), L!("Terminal hung up")),
-    LookupEntry::new(libc::SIGINT,    L!("SIGINT"), L!("Quit request from job control (^C)")),
-    LookupEntry::new(libc::SIGQUIT,   L!("SIGQUIT"), L!("Quit request from job control with core dump (^\\)")),
-    LookupEntry::new(libc::SIGILL,    L!("SIGILL"), L!("Illegal instruction")),
-    LookupEntry::new(libc::SIGTRAP,   L!("SIGTRAP"), L!("Trace or breakpoint trap")),
-    LookupEntry::new(libc::SIGABRT,   L!("SIGABRT"), L!("Abort")),
-    LookupEntry::new(libc::SIGBUS,    L!("SIGBUS"), L!("Misaligned address error")),
-    LookupEntry::new(libc::SIGFPE,    L!("SIGFPE"), L!("Floating point exception")),
-    LookupEntry::new(libc::SIGKILL,   L!("SIGKILL"), L!("Forced quit")),
-    LookupEntry::new(libc::SIGUSR1,   L!("SIGUSR1"), L!("User defined signal 1")),
-    LookupEntry::new(libc::SIGUSR2,   L!("SIGUSR2"), L!("User defined signal 2")),
-    LookupEntry::new(libc::SIGSEGV,   L!("SIGSEGV"), L!("Address boundary error")),
-    LookupEntry::new(libc::SIGPIPE,   L!("SIGPIPE"), L!("Broken pipe")),
-    LookupEntry::new(libc::SIGALRM,   L!("SIGALRM"), L!("Timer expired")),
-    LookupEntry::new(libc::SIGTERM,   L!("SIGTERM"), L!("Polite quit request")),
-    LookupEntry::new(libc::SIGCHLD,   L!("SIGCHLD"), L!("Child process status changed")),
-    LookupEntry::new(libc::SIGCONT,   L!("SIGCONT"), L!("Continue previously stopped process")),
-    LookupEntry::new(libc::SIGSTOP,   L!("SIGSTOP"), L!("Forced stop")),
-    LookupEntry::new(libc::SIGTSTP,   L!("SIGTSTP"), L!("Stop request from job control (^Z)")),
-    LookupEntry::new(libc::SIGTTIN,   L!("SIGTTIN"), L!("Stop from terminal input")),
-    LookupEntry::new(libc::SIGTTOU,   L!("SIGTTOU"), L!("Stop from terminal output")),
-    LookupEntry::new(libc::SIGURG,    L!("SIGURG"), L!("Urgent socket condition")),
-    LookupEntry::new(libc::SIGXCPU,   L!("SIGXCPU"), L!("CPU time limit exceeded")),
-    LookupEntry::new(libc::SIGXFSZ,   L!("SIGXFSZ"), L!("File size limit exceeded")),
-    LookupEntry::new(libc::SIGVTALRM, L!("SIGVTALRM"), L!("Virtual timefr expired")),
-    LookupEntry::new(libc::SIGPROF,   L!("SIGPROF"), L!("Profiling timer expired")),
-    LookupEntry::new(libc::SIGWINCH,  L!("SIGWINCH"), L!("Window size change")),
-    LookupEntry::new(libc::SIGIO,     L!("SIGIO"), L!("I/O on asynchronous file descriptor is possible")),
-    LookupEntry::new(libc::SIGSYS,    L!("SIGSYS"), L!("Bad system call")),
-    LookupEntry::new(libc::SIGIOT,    L!("SIGIOT"), L!("Abort (Alias for SIGABRT)")),
+    signal_entry!(SIGHUP, "Terminal hung up"),
+    signal_entry!(SIGINT, "Quit request from job control (^C)"),
+    signal_entry!(SIGQUIT, "Quit request from job control with core dump (^\\)"),
+    signal_entry!(SIGILL, "Illegal instruction"),
+    signal_entry!(SIGTRAP, "Trace or breakpoint trap"),
+    signal_entry!(SIGABRT, "Abort"),
+    signal_entry!(SIGBUS, "Misaligned address error"),
+    signal_entry!(SIGFPE, "Floating point exception"),
+    signal_entry!(SIGKILL, "Forced quit"),
+    signal_entry!(SIGUSR1, "User defined signal 1"),
+    signal_entry!(SIGUSR2, "User defined signal 2"),
+    signal_entry!(SIGSEGV, "Address boundary error"),
+    signal_entry!(SIGPIPE, "Broken pipe"),
+    signal_entry!(SIGALRM, "Timer expired"),
+    signal_entry!(SIGTERM, "Polite quit request"),
+    signal_entry!(SIGCHLD, "Child process status changed"),
+    signal_entry!(SIGCONT, "Continue previously stopped process"),
+    signal_entry!(SIGSTOP, "Forced stop"),
+    signal_entry!(SIGTSTP, "Stop request from job control (^Z)"),
+    signal_entry!(SIGTTIN, "Stop from terminal input"),
+    signal_entry!(SIGTTOU, "Stop from terminal output"),
+    signal_entry!(SIGURG, "Urgent socket condition"),
+    signal_entry!(SIGXCPU, "CPU time limit exceeded"),
+    signal_entry!(SIGXFSZ, "File size limit exceeded"),
+    signal_entry!(SIGVTALRM, "Virtual timefr expired"),
+    signal_entry!(SIGPROF, "Profiling timer expired"),
+    signal_entry!(SIGWINCH, "Window size change"),
+    signal_entry!(SIGIO, "I/O on asynchronous file descriptor is possible"),
+    signal_entry!(SIGSYS, "Bad system call"),
+    signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
 
     #[cfg(any(bsd, target_os = "macos"))]
-    LookupEntry::new(libc::SIGEMT,    L!("SIGEMT"), L!("Unused signal")),
+    signal_entry!(SIGEMT, "Unused signal"),
 
     #[cfg(any(bsd, target_os = "macos"))]
-    LookupEntry::new(libc::SIGINFO,   L!("SIGINFO"), L!("Information request")),
+    signal_entry!(SIGINFO, "Information request"),
 
     #[cfg(target_os = "linux")]
-    LookupEntry::new(libc::SIGSTKFLT, L!("SIGSTKFLT"), L!("Stack fault")),
+    signal_entry!(SIGSTKFLT, "Stack fault"),
 
     #[cfg(target_os = "linux")]
-    LookupEntry::new(libc::SIGIOT,   L!("SIGIOT"), L!("Abort (Alias for SIGABRT)")),
+    signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
 
     #[cfg(target_os = "linux")]
-    LookupEntry::new(libc::SIGPWR,    L!("SIGPWR"), L!("Power failure")),
+    signal_entry!(SIGPWR, "Power failure"),
 
     // TODO: determine whether SIGWIND is defined on any platform.
-    //LookupEntry::new(libc::SIGWIND,   L!("SIGWIND"), L!("Window size change")),
+    //signal_entry!(SIGWIND, "Window size change"),
 ];
 
 // Return true if two strings are equal, ignoring ASCII case.

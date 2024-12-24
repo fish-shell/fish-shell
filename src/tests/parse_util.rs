@@ -102,6 +102,7 @@ fn test_parse_util_process_extent() {
         };
     }
     validate!("for file in (path base\necho", 22, 13..22);
+    validate!("begin\n\n\nec", 10, 8..10);
 }
 
 #[test]

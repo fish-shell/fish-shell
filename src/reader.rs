@@ -22,6 +22,7 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
+use std::borrow::Cow;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
@@ -3774,18 +3775,19 @@ impl ReaderData {
         let mut cursor_pos = self.cycle_cursor_pos;
 
         let new_cmd_line = match completion {
-            None => self.cycle_command_line.clone(),
-            Some(completion) => completion_apply_to_command_line(
+            None => Cow::Borrowed(&self.cycle_command_line),
+            Some(completion) => Cow::Owned(completion_apply_to_command_line(
                 &completion.completion,
                 completion.flags,
                 &self.cycle_command_line,
                 &mut cursor_pos,
                 false,
-            ),
+            )),
         };
 
         // Only update if something changed, to avoid useless edits in the undo history.
-        if new_cmd_line != self.command_line.text() {
+        if new_cmd_line.as_utfstr() != self.command_line.text() {
+            let new_cmd_line = new_cmd_line.into_owned();
             self.set_buffer_maintaining_pager(&new_cmd_line, cursor_pos, /*transient=*/ true);
         }
     }

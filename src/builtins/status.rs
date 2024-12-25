@@ -452,6 +452,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 "gettext",
                 #[cfg(feature = "installable")]
                 "installable",
+                #[cfg(target_feature = "crt-static")]
+                "crt-static",
             ];
             streams
                 .out

@@ -243,7 +243,10 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     let data = ReaderData::new(hist, conf);
     reader_data_stack().push(data);
     let data = current_data().unwrap();
-    data.command_line_changed(EditableLineTag::Commandline);
+    data.command_line_changed(
+        EditableLineTag::Commandline,
+        /*keep_autosuggestion=*/ false,
+    );
     if reader_data_stack().len() == 1 {
         reader_interactive_init(parser);
     }
@@ -1231,12 +1234,15 @@ impl ReaderData {
     }
 
     /// Do what we need to do whenever our command line changes.
-    fn command_line_changed(&mut self, elt: EditableLineTag) {
+    fn command_line_changed(&mut self, elt: EditableLineTag, keep_autosuggestion: bool) {
         assert_is_main_thread();
         match elt {
             EditableLineTag::Commandline => {
                 // Update the gen count.
                 GENERATION.fetch_add(1, Ordering::Relaxed);
+                if !keep_autosuggestion {
+                    self.autosuggestion.clear();
+                }
             }
             EditableLineTag::SearchField => {
                 if self.history_pager.is_some() {
@@ -1660,9 +1666,58 @@ impl ReaderData {
         self.update_buff_pos(elt, Some(pos));
     }
 
+    fn try_apply_edit_to_autosuggestion(&mut self, elt: EditableLineTag, edit: &Edit) -> bool {
+        if elt != EditableLineTag::Commandline {
+            return false;
+        }
+        let autosuggestion = &self.autosuggestion;
+        if autosuggestion.is_empty() {
+            return true;
+        }
+
+        // Check to see if our autosuggestion still applies; if so, don't recompute it.
+        // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
+        // the autosuggestion.
+        // This is also the main mechanism by which readline commands that don't change the command line
+        // text avoid recomputing the autosuggestion.
+        assert!(string_prefixes_string_maybe_case_insensitive(
+            autosuggestion.icase,
+            &self.command_line.text(),
+            &autosuggestion.text
+        ));
+
+        // This is a heuristic with false negatives but that seems fine.
+        let Some(remaining) = autosuggestion.text.get(edit.range.start..) else {
+            return false;
+        };
+        if edit.range.end != self.command_line.len()
+            || !string_prefixes_string_maybe_case_insensitive(
+                autosuggestion.icase,
+                &edit.replacement,
+                &remaining,
+            )
+            || edit.replacement.len() == remaining.len()
+        {
+            return false;
+        }
+        true
+    }
+
     fn push_edit_internal(&mut self, elt: EditableLineTag, edit: Edit, allow_coalesce: bool) {
+        let preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(elt, &edit);
         self.edit_line_mut(elt).push_edit(edit, allow_coalesce);
-        self.command_line_changed(elt);
+        self.command_line_changed(elt, preserves_autosuggestion);
+    }
+
+    fn undo(&mut self, elt: EditableLineTag) -> bool {
+        let ok = self.edit_line_mut(elt).undo();
+        self.command_line_changed(elt, /*keep_autosuggestion=*/ false);
+        ok
+    }
+    fn redo(&mut self, elt: EditableLineTag) -> bool {
+        let ok = self.edit_line_mut(elt).redo();
+        self.command_line_changed(elt, /*keep_autosuggestion=*/ false);
+        ok
     }
 
     /// Undo the transient edit und update commandline accordingly.
@@ -1670,7 +1725,7 @@ impl ReaderData {
         if !self.command_line_has_transient_edit {
             return;
         }
-        self.command_line.undo();
+        self.undo(EditableLineTag::Commandline);
         self.update_buff_pos(EditableLineTag::Commandline, None);
         self.command_line_has_transient_edit = false;
     }
@@ -1693,7 +1748,7 @@ impl ReaderData {
         }
         .to_owned();
         if self.command_line_has_transient_edit {
-            self.command_line.undo();
+            self.undo(EditableLineTag::Commandline);
         }
         if self.history_search.by_token() {
             self.replace_current_token(new_text);
@@ -2415,8 +2470,8 @@ impl<'a> Reader<'a> {
                         Some(rl::Complete | rl::CompleteAndSearch)
                     )
                 {
-                    let (elt, el) = self.active_edit_line_mut();
-                    el.undo();
+                    let (elt, _el) = self.active_edit_line();
+                    self.undo(elt);
                     self.update_buff_pos(elt, None);
                 }
             }
@@ -3467,8 +3522,12 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::Undo | rl::Redo => {
-                let (elt, el) = self.active_edit_line_mut();
-                let ok = if c == rl::Undo { el.undo() } else { el.redo() };
+                let (elt, _el) = self.active_edit_line();
+                let ok = if c == rl::Undo {
+                    self.undo(elt)
+                } else {
+                    self.redo(elt)
+                };
                 if !ok {
                     self.flash();
                     return;
@@ -3478,7 +3537,6 @@ impl<'a> Reader<'a> {
                     self.clear_pager();
                 }
                 self.update_buff_pos(elt, None);
-                self.command_line_changed(elt);
             }
             rl::BeginUndoGroup => {
                 let (_elt, el) = self.active_edit_line_mut();
@@ -3811,7 +3869,7 @@ impl ReaderData {
         let command_line_len = b.len();
         if transient {
             if self.command_line_has_transient_edit {
-                self.command_line.undo();
+                self.undo(EditableLineTag::Commandline);
             }
             self.command_line_has_transient_edit = true;
         }
@@ -4518,20 +4576,14 @@ impl<'a> Reader<'a> {
             return;
         }
 
-        // Check to see if our autosuggestion still applies; if so, don't recompute it.
-        // Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into
-        // the autosuggestion.
-        // This is also the main mechanism by which readline commands that don't change the command line
-        // text avoid recomputing the autosuggestion.
         let el = &self.data.command_line;
         let autosuggestion = &self.autosuggestion;
-        if self.autosuggestion.text.len() > el.text().len()
-            && string_prefixes_string_maybe_case_insensitive(
+        if !self.autosuggestion.is_empty() {
+            assert!(string_prefixes_string_maybe_case_insensitive(
                 autosuggestion.icase,
                 &el.text(),
-                &autosuggestion.text,
-            )
-        {
+                &autosuggestion.text
+            ));
             return;
         }
 

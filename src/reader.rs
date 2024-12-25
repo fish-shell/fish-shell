@@ -4407,22 +4407,26 @@ fn get_autosuggestion_performer(
         let complete_flags = CompletionRequestOptions::autosuggest();
         let (mut completions, needs_load) = complete(&search_string, complete_flags, &ctx);
 
-        let mut result = Autosuggestion::default();
-        result.search_string = search_string.to_owned();
-        result.needs_load = needs_load;
-        result.icase = true; // normal completions are case-insensitive
-        if !completions.is_empty() {
+        let full_line = if completions.is_empty() {
+            WString::new()
+        } else {
             sort_and_prioritize(&mut completions, complete_flags);
             let comp = &completions[0];
             let mut cursor = cursor_pos;
-            result.text = completion_apply_to_command_line(
+            completion_apply_to_command_line(
                 &comp.completion,
                 comp.flags,
                 &search_string,
                 &mut cursor,
                 /*append_only=*/ true,
-            );
-        }
+            )
+        };
+        let mut result = Autosuggestion::new(
+            full_line,
+            search_string.to_owned(),
+            true, // normal completions are case-insensitive
+        );
+        result.needs_load = needs_load;
         result
     }
 }

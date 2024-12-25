@@ -3589,13 +3589,9 @@ impl<'a> Reader<'a> {
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
             if self.history_pager.is_some() && self.pager.selected_completion_idx.is_none() {
-                self.data.command_line.push_edit(
-                    Edit::new(
-                        0..self.data.command_line.len(),
-                        self.data.pager.search_field_line.text().to_owned(),
-                    ),
-                    /*allow_coalesce=*/ false,
-                );
+                let range = 0..self.data.command_line.len();
+                let failed_search_string = self.data.pager.search_field_line.text().to_owned();
+                self.replace_substring(EditableLineTag::Commandline, range, failed_search_string);
                 self.data
                     .command_line
                     .set_position(self.data.pager.search_field_line.position());

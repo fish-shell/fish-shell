@@ -4551,24 +4551,20 @@ impl<'a> Reader<'a> {
         self.clear_pager();
 
         // Accept the autosuggestion.
-        match amount {
+        let (range, replacement) = match amount {
             AutosuggestionPortion::Count(count) => {
                 let pos = self.command_line.len();
                 if count == usize::MAX {
-                    self.data.replace_substring(
-                        EditableLineTag::Commandline,
-                        0..self.command_line.len(),
-                        self.autosuggestion.text.clone(),
-                    );
+                    (0..self.command_line.len(), self.autosuggestion.text.clone())
                 } else {
                     let count = count.min(self.autosuggestion.text.len() - pos);
-                    if count != 0 {
-                        self.data.replace_substring(
-                            EditableLineTag::Commandline,
-                            pos..pos,
-                            self.autosuggestion.text[pos..pos + count].to_owned(),
-                        );
+                    if count == 0 {
+                        return;
                     }
+                    (
+                        pos..pos,
+                        self.autosuggestion.text[pos..pos + count].to_owned(),
+                    )
                 }
             }
             AutosuggestionPortion::PerMoveWordStyle(style) => {
@@ -4583,13 +4579,11 @@ impl<'a> Reader<'a> {
                     want += 1;
                 }
                 let have = self.command_line.len();
-                self.data.replace_substring(
-                    EditableLineTag::Commandline,
-                    have..have,
-                    self.autosuggestion.text[have..want].to_owned(),
-                );
+                (have..have, self.autosuggestion.text[have..want].to_owned())
             }
-        }
+        };
+        self.data
+            .replace_substring(EditableLineTag::Commandline, range, replacement);
     }
 }
 

@@ -1,6 +1,14 @@
 #RUN: %fish %s
-# THIS WILL FAIL ON CI
-# There is no real good way to match this other than
-# Version: {{.*}}
-# and so on (with some exceptions like build system being "Cargo" or "CMake")
+# Example output:
+# Build system: CMake
+# Version: 3.7.1-2573-gea8301631-dirty
+# Target (and host): x86_64-unknown-linux-gnu
+# Profile: release
+# Features: gettext
+
 status buildinfo
+# CHECK: Build system: {{CMake|Cargo}}
+# CHECK: Version: {{.+}}
+# CHECK: Target (and host): {{.+}}
+# CHECK: Profile: {{release|debug}}
+# CHECK: Features:{{.*}}

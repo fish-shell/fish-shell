@@ -186,15 +186,15 @@ impl EditableLine {
             return;
         }
 
+        if range.is_empty() && edit.replacement.is_empty() {
+            return; // nop
+        }
+
         // Assign a new group id or propagate the old one if we're in a logical grouping of edits
         if self.edit_group_level.is_some() {
             edit.group_id = Some(self.edit_group_id);
         }
 
-        let edit_does_nothing = range.is_empty() && edit.replacement.is_empty();
-        if edit_does_nothing {
-            return;
-        }
         if self.undo_history.edits_applied != self.undo_history.edits.len() {
             // After undoing some edits, the user is making a new edit;
             // we are about to create a new edit branch.

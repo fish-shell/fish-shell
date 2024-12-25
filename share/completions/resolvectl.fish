@@ -18,6 +18,7 @@ end
 
 function __resolvectl_commands
     printf "%b\n" "query\tResolve domain names or IP addresses" \
+        "query\tResolve domain names, IPv4 and IPv6 addresses" \
         "service\tResolve service records" \
         "openpgp\tQuery PGP keys for email" \
         "tlsa\tQuery TLS public keys" \
@@ -26,6 +27,9 @@ function __resolvectl_commands
         "reset-statistics\tReset statistics counters" \
         "flush-caches\tFlush DNS RR caches" \
         "reset-server-features\tFlushe all feature level information" \
+        "monitor\tMonitor DNS queries" \
+        "show-cache\tShow cache contents" \
+        "show-server-state\tShow server state" \
         "dns\tSet per-interface DNS servers" \
         "domain\tSet per-interface search or routing domains" \
         "default-route\tSet per-interface default route flag" \

@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::HighlightSpec;
@@ -142,21 +144,8 @@ impl EditableLine {
         self.text.char_at(idx)
     }
 
-    pub fn line_at_cursor(&self) -> &wstr {
-        let start = self.text[0..self.position()]
-            .as_char_slice()
-            .iter()
-            .rposition(|&c| c == '\n')
-            .map(|newline| newline + 1)
-            .unwrap_or(0);
-        let end = self.text[self.position()..]
-            .as_char_slice()
-            .iter()
-            .position(|&c| c == '\n')
-            .map(|pos| self.position() + pos)
-            .unwrap_or(self.len());
-        // Remove any traililng newline
-        self.text[start..end].trim_matches('\n')
+    pub fn offset_to_line(&self, offset: usize) -> usize {
+        self.text[0..offset].chars().filter(|&c| c == '\n').count()
     }
 
     /// Modify the commandline according to @edit. Most modifications to the
@@ -351,4 +340,28 @@ fn cursor_position_after_edit(edit: &Edit) -> usize {
     let cursor = edit.cursor_position_before_edit + edit.replacement.len();
     let removed = chars_deleted_left_of_cursor(edit);
     cursor.saturating_sub(removed)
+}
+
+fn range_of_line_at_cursor(buffer: &wstr, cursor: usize) -> Range<usize> {
+    let start = buffer[0..cursor]
+        .as_char_slice()
+        .iter()
+        .rposition(|&c| c == '\n')
+        .map(|newline| newline + 1)
+        .unwrap_or(0);
+    let mut end = buffer[cursor..]
+        .as_char_slice()
+        .iter()
+        .position(|&c| c == '\n')
+        .map(|pos| cursor + pos)
+        .unwrap_or(buffer.len());
+    // Remove any trailing newline
+    if end != start && buffer.char_at(end - 1) == '\n' {
+        end -= 1;
+    }
+    start..end
+}
+
+pub fn line_at_cursor(buffer: &wstr, cursor: usize) -> &wstr {
+    &buffer[range_of_line_at_cursor(buffer, cursor)]
 }

@@ -58,6 +58,7 @@ use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
     CompletionRequestOptions,
 };
+use crate::editable_line::line_at_cursor;
 use crate::editable_line::{Edit, EditableLine};
 use crate::env::{EnvMode, Environment, Statuses};
 use crate::exec::exec_subshell;
@@ -2791,7 +2792,7 @@ impl<'a> Reader<'a> {
                     let needle = if !cmdsub.contains('\n') {
                         cmdsub
                     } else {
-                        self.command_line.line_at_cursor()
+                        line_at_cursor(self.command_line.text(), self.command_line.position())
                     };
                     parse_util_escape_wildcards(needle)
                 } else {

@@ -7,6 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
+use crate::editable_line::line_at_cursor;
 use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
 use crate::FLOG;
@@ -1902,17 +1903,11 @@ fn compute_layout(
     assert!(left_prompt_width + right_prompt_width <= screen_width);
 
     // Get the width of the first line, and if there is more than one line.
-    let mut multiline = false;
-    let mut first_line_width = 0;
-    for c in commandline.chars() {
-        if c == '\n' {
-            multiline = true;
-            break;
-        } else {
-            first_line_width += wcwidth_rendered_min_0(c);
-        }
-    }
-    let first_command_line_width = first_line_width;
+    let multiline = commandline.contains('\n');
+    let first_command_line_width: usize = line_at_cursor(commandline, 0)
+        .chars()
+        .map(wcwidth_rendered_min_0)
+        .sum();
 
     // If we have more than one line, ensure we have no autosuggestion.
     let mut autosuggestion = autosuggestion_str;
@@ -1922,7 +1917,7 @@ fn compute_layout(
         autosuggestion = L!("");
     } else {
         autosuggest_truncated_widths.reserve(1 + autosuggestion_str.len());
-        for c in autosuggestion.chars() {
+        for c in autosuggestion_str.chars() {
             autosuggest_truncated_widths.push(autosuggest_total_width);
             autosuggest_total_width += wcwidth_rendered_min_0(c);
         }
@@ -1947,65 +1942,41 @@ fn compute_layout(
     // prompt will wrap to the next line. This means that we can't go back to the line that we were
     // on, and things turn to chaos very quickly.
 
-    // Case 1
-    let calculated_width =
-        left_prompt_width + right_prompt_width + first_command_line_width + autosuggest_total_width;
-    if calculated_width <= screen_width {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.right_prompt = right_prompt;
-        result.autosuggestion = autosuggestion.to_owned();
-        return result;
-    }
+    let truncated_autosuggestion = |right_prompt_width: usize| {
+        let width = left_prompt_width + right_prompt_width + first_command_line_width;
+        // Need at least two characters to show an autosuggestion.
+        let available_autosuggest_space = screen_width - width;
+        let mut result = WString::new();
+        if available_autosuggest_space > autosuggest_total_width {
+            result = autosuggestion.to_owned();
+        } else if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
+            let truncation_offset = truncation_offset_for_width(
+                &autosuggest_truncated_widths,
+                available_autosuggest_space - 2,
+            );
+            result = autosuggestion[..truncation_offset].to_owned();
+            result.push(get_ellipsis_char());
+        }
+        result
+    };
 
-    // Case 2. Note that we require strict inequality so that there's always at least one space
-    // between the left edge and the rprompt.
+    // Case 1 and 2. Note that we require strict inequality so that there's always at least
+    // one space between the left edge and the rprompt.
     let calculated_width = left_prompt_width + right_prompt_width + first_command_line_width;
     if calculated_width <= screen_width {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
         result.right_prompt = right_prompt;
-
-        // Need at least two characters to show an autosuggestion.
-        let available_autosuggest_space =
-            screen_width - (left_prompt_width + right_prompt_width + first_command_line_width);
-        if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
-            let truncation_offset = truncation_offset_for_width(
-                &autosuggest_truncated_widths,
-                available_autosuggest_space - 2,
-            );
-            result.autosuggestion = autosuggestion[..truncation_offset].to_owned();
-            result.autosuggestion.push(get_ellipsis_char());
-        }
+        result.autosuggestion = truncated_autosuggestion(right_prompt_width);
         return result;
     }
 
-    // Case 3
-    let calculated_width = left_prompt_width + first_command_line_width + autosuggest_total_width;
-    if calculated_width <= screen_width {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.autosuggestion = autosuggestion.to_owned();
-        return result;
-    }
-
-    // Case 4
+    // Case 3 and 4
     let calculated_width = left_prompt_width + first_command_line_width;
     if calculated_width <= screen_width {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
-
-        // Need at least two characters to show an autosuggestion.
-        let available_autosuggest_space =
-            screen_width - (left_prompt_width + first_command_line_width);
-        if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
-            let truncation_offset = truncation_offset_for_width(
-                &autosuggest_truncated_widths,
-                available_autosuggest_space - 2,
-            );
-            result.autosuggestion = autosuggestion[..truncation_offset].to_owned();
-            result.autosuggestion.push(get_ellipsis_char());
-        }
+        result.autosuggestion = truncated_autosuggestion(0);
         return result;
     }
 

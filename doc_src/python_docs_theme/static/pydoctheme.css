@@ -626,6 +626,9 @@ div.document {
 
 /* On print media remove anything non-essential. */
 @media print {
+    div.document {
+        display: block;
+    }
     .inline-search {
         display: none;
     }

@@ -653,9 +653,8 @@ fn read_i(parser: &Parser) -> i32 {
             continue;
         }
 
-        data.command_line.clear();
+        data.clear(EditableLineTag::Commandline);
         data.update_buff_pos(EditableLineTag::Commandline, None);
-        data.command_line_changed(EditableLineTag::Commandline);
         // OSC 133 End of command
         data.screen.write_bytes(b"\x1b]133;C\x07");
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
@@ -1246,6 +1245,9 @@ impl ReaderData {
                     );
                     return;
                 }
+                if self.pager.is_empty() {
+                    return;
+                }
                 self.pager.refilter_completions();
                 self.pager_selection_changed();
             }
@@ -1308,13 +1310,6 @@ impl ReaderData {
                 Edit::new(0..self.pager.search_field_line.len(), new_search_field),
             );
             self.pager.search_field_line.set_position(new_cursor_pos);
-        }
-    }
-
-    fn maybe_refilter_pager(&mut self, elt: EditableLineTag) {
-        match elt {
-            EditableLineTag::Commandline => (),
-            EditableLineTag::SearchField => self.command_line_changed(elt),
         }
     }
 
@@ -1607,25 +1602,29 @@ impl ReaderData {
     /// using syntax highlighting, etc.
     /// Returns true if the string changed.
     fn insert_string(&mut self, elt: EditableLineTag, s: &wstr) {
-        if !s.is_empty() {
-            let history_search_active = self.history_search.active();
-            let el = self.edit_line_mut(elt);
-            el.push_edit(
-                Edit::new(el.position()..el.position(), s.to_owned()),
-                /*allow_coalesce=*/ !history_search_active,
-            );
-        }
-
+        let history_search_active = self.history_search.active();
+        let el = self.edit_line(elt);
+        self.push_edit_internal(
+            elt,
+            Edit::new(el.position()..el.position(), s.to_owned()),
+            /*allow_coalesce=*/ !history_search_active,
+        );
         if elt == EditableLineTag::Commandline {
             self.command_line_has_transient_edit = false;
             self.suppress_autosuggestion = false;
         }
-        self.maybe_refilter_pager(elt);
     }
 
     /// Erase @length characters starting at @offset.
     fn erase_substring(&mut self, elt: EditableLineTag, range: Range<usize>) {
         self.push_edit(elt, Edit::new(range, L!("").to_owned()));
+    }
+
+    fn clear(&mut self, elt: EditableLineTag) {
+        let el = self.edit_line(elt);
+        if !el.is_empty() {
+            self.erase_substring(elt, 0..el.len());
+        }
     }
 
     /// Replace the text of length @length at @offset by @replacement.
@@ -1639,9 +1638,7 @@ impl ReaderData {
     }
 
     fn push_edit(&mut self, elt: EditableLineTag, edit: Edit) {
-        self.edit_line_mut(elt)
-            .push_edit(edit, /*allow_coalesce=*/ false);
-        self.maybe_refilter_pager(elt);
+        self.push_edit_internal(elt, edit, /*allow_coalesce=*/ false);
     }
 
     /// Insert the character into the command line buffer and print it to the screen using syntax
@@ -1660,6 +1657,11 @@ impl ReaderData {
         self.push_edit(elt, Edit::new(0..self.edit_line(elt).len(), new_str));
         self.edit_line_mut(elt).set_position(pos);
         self.update_buff_pos(elt, Some(pos));
+    }
+
+    fn push_edit_internal(&mut self, elt: EditableLineTag, edit: Edit, allow_coalesce: bool) {
+        self.edit_line_mut(elt).push_edit(edit, allow_coalesce);
+        self.command_line_changed(elt);
     }
 
     /// Undo the transient edit und update commandline accordingly.
@@ -3475,7 +3477,7 @@ impl<'a> Reader<'a> {
                     self.clear_pager();
                 }
                 self.update_buff_pos(elt, None);
-                self.maybe_refilter_pager(elt);
+                self.command_line_changed(elt);
             }
             rl::BeginUndoGroup => {
                 let (_elt, el) = self.active_edit_line_mut();
@@ -3697,6 +3699,7 @@ impl ReaderData {
     fn clear_pager(&mut self) {
         self.pager.clear();
         self.history_pager = None;
+        self.clear(EditableLineTag::SearchField);
         self.command_line_has_transient_edit = false;
     }
 
@@ -3812,7 +3815,6 @@ impl ReaderData {
             0..self.command_line.len(),
             b.to_owned(),
         );
-        self.command_line_changed(EditableLineTag::Commandline);
 
         // Don't set a position past the command line length.
         if pos > command_line_len {

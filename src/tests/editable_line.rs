@@ -42,7 +42,7 @@ fn test_undo() {
     assert_eq!(line.position(), 5);
 
     // Undo coalesced edits
-    line.clear();
+    line.push_edit(Edit::new(0..line.len(), L!("").to_owned()), false);
     line.push_edit(Edit::new(insert(&line), L!("a").to_owned()), true);
     line.push_edit(Edit::new(insert(&line), L!("b").to_owned()), true);
     line.push_edit(Edit::new(insert(&line), L!("c").to_owned()), true);

@@ -989,7 +989,6 @@ impl Pager {
         self.selected_completion_idx = None;
         self.fully_disclosed = false;
         self.search_field_shown = false;
-        self.search_field_line.clear();
         self.extra_progress_text.clear();
         self.suggested_row_start = 0;
     }

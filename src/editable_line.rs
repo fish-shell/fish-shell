@@ -159,16 +159,6 @@ impl EditableLine {
         self.text[start..end].trim_matches('\n')
     }
 
-    pub fn clear(&mut self) {
-        if self.is_empty() {
-            return;
-        }
-        self.push_edit(
-            Edit::new(0..self.len(), L!("").to_owned()),
-            /*allow_coalesce=*/ false,
-        );
-    }
-
     /// Modify the commandline according to @edit. Most modifications to the
     /// text should pass through this function.
     pub fn push_edit(&mut self, mut edit: Edit, allow_coalesce: bool) {

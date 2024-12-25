@@ -4300,17 +4300,10 @@ impl<'a> Reader<'a> {
     }
 }
 
-/// The result of an autosuggestion computation.
 #[derive(Default)]
 struct Autosuggestion {
-    // The text to use, as an extension of the command line.
+    // The text to use, as an extension/replacement of the command line.
     text: WString,
-
-    // The string which was searched for.
-    search_string: WString,
-
-    // The list of completions which may need loading.
-    needs_load: Vec<WString>,
 
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
@@ -4318,23 +4311,43 @@ struct Autosuggestion {
 }
 
 impl Autosuggestion {
-    fn new(text: WString, search_string: WString, icase: bool) -> Self {
-        Self {
-            text,
-            search_string,
-            needs_load: vec![],
-            icase,
-        }
-    }
     // Clear our contents.
     fn clear(&mut self) {
         self.text.clear();
-        self.search_string.clear();
     }
 
     // Return whether we have empty text.
     fn is_empty(&self) -> bool {
         self.text.is_empty()
+    }
+}
+
+/// The result of an autosuggestion computation.
+#[derive(Default)]
+struct AutosuggestionResult {
+    autosuggestion: Autosuggestion,
+
+    // The string which was searched for.
+    search_string: WString,
+
+    // The list of completions which may need loading.
+    needs_load: Vec<WString>,
+}
+
+impl std::ops::Deref for AutosuggestionResult {
+    type Target = Autosuggestion;
+    fn deref(&self) -> &Self::Target {
+        &self.autosuggestion
+    }
+}
+
+impl AutosuggestionResult {
+    fn new(text: WString, search_string: WString, icase: bool) -> Self {
+        Self {
+            autosuggestion: Autosuggestion { text, icase },
+            search_string,
+            needs_load: vec![],
+        }
     }
 }
 
@@ -4345,13 +4358,13 @@ fn get_autosuggestion_performer(
     search_string: WString,
     cursor_pos: usize,
     history: Arc<History>,
-) -> impl FnOnce() -> Autosuggestion {
+) -> impl FnOnce() -> AutosuggestionResult {
     let generation_count = read_generation_count();
     let vars = parser.vars().snapshot();
     let working_directory = parser.vars().get_pwd_slash();
     move || {
         assert_is_background_thread();
-        let nothing = Autosuggestion::default();
+        let nothing = AutosuggestionResult::default();
         let ctx = get_bg_context(&vars, generation_count);
         if ctx.check_cancel() {
             return nothing;
@@ -4376,7 +4389,7 @@ fn get_autosuggestion_performer(
             if autosuggest_validate_from_history(item, &working_directory, &ctx) {
                 // The command autosuggestion was handled specially, so we're done.
                 // History items are case-sensitive, see #3978.
-                return Autosuggestion::new(
+                return AutosuggestionResult::new(
                     searcher.current_string().to_owned(),
                     search_string.to_owned(),
                     /*icase=*/ false,
@@ -4421,7 +4434,7 @@ fn get_autosuggestion_performer(
                 /*append_only=*/ true,
             )
         };
-        let mut result = Autosuggestion::new(
+        let mut result = AutosuggestionResult::new(
             full_line,
             search_string.to_owned(),
             true, // normal completions are case-insensitive
@@ -4452,7 +4465,7 @@ impl<'a> Reader<'a> {
     }
 
     // Called after an autosuggestion has been computed on a background thread.
-    fn autosuggest_completed(&mut self, result: Autosuggestion) {
+    fn autosuggest_completed(&mut self, result: AutosuggestionResult) {
         assert_is_main_thread();
         if result.search_string == self.data.in_flight_autosuggest_request {
             self.data.in_flight_autosuggest_request.clear();
@@ -4482,7 +4495,7 @@ impl<'a> Reader<'a> {
             && string_prefixes_string_case_insensitive(&result.search_string, &result.text)
         {
             // Autosuggestion is active and the search term has not changed, so we're good to go.
-            self.autosuggestion = result;
+            self.autosuggestion = result.autosuggestion;
             if self.is_repaint_needed(None) {
                 self.layout_and_repaint(L!("autosuggest"));
             }

@@ -20,13 +20,13 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: bsdextrautils,
+Depends: bsdextrautils, # for col and look
  file,
- gettext-base,
- groff-base,
+ gettext-base, # for the gettext command
+ groff-base, # for nroff and preconv
  man-db,
- ncurses-base,
- procps,
+ ncurses-base, # for terminal definitions
+ procps, # for kill
  python3 (>=3.5),
  ${misc:Depends},
  ${shlibs:Depends}

@@ -54,10 +54,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                 end
                 set cursor_from_editor (mktemp)
                 set -a editor +$line "+norm! $col|" $f \
-                    '+autocmd VimLeave * ++once call writefile(
-                        [printf("%s %s %s", shellescape(bufname()), line("."), col("."))],
-                        "'$cursor_from_editor'"
-                     )'
+                    '+au VimLeave * ++once call writefile([printf("%s %s %s", shellescape(bufname()), line("."), col("."))], "'$cursor_from_editor'")'
             case emacs emacsclient gedit
                 set -a editor +$line:$col $f
             case kak

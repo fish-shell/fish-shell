@@ -20,8 +20,10 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: file,
+Depends: bsdextrautils,
+ file,
  gettext-base,
+ groff-base,
  man-db,
  ncurses-base,
  procps,

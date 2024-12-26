@@ -14,7 +14,7 @@ BuildRequires:          cargo gettext gcc xz pcre2-devel
 BuildRequires:          rust >= 1.70
 # Packaging guidelines say to use a BuildRequires: rust-packaging, but it adds no value for our package
 
-BuildRequires: cmake >= 3.19
+BuildRequires: cmake >= 3.15
 
 %if 0%{?suse_version}
 BuildRequires: update-desktop-files

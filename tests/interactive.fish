@@ -36,7 +36,8 @@ function test_pexpect_file
         set -lx --prepend PYTHONPATH (realpath $PWD)
         set -lx fish $FISHDIR/fish
         set -lx fish_key_reader $FISHDIR/fish_key_reader
-        set -lx fish_test_helper $FISHDIR/fish_test_helper
+        path is -fx -- $FISHDIR/fish_test_helper
+        and set -lx fish_test_helper $FISHDIR/fish_test_helper
 
         # Note we require Python3.
         python3 $file

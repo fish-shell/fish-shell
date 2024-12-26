@@ -12,6 +12,10 @@ send, sendline, expect_prompt, expect_str, sleep = (
     sp.sleep,
 )
 
+if not os.environ.get("fish_test_helper", ""):
+    import sys
+    sys.exit(127)
+
 # Launch fish_test_helper.
 expect_prompt()
 exe_path = os.environ.get("fish_test_helper")

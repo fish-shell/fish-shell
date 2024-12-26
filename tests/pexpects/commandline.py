@@ -42,7 +42,7 @@ sendline(
     "function handle_tilde; echo; echo '@GUARD:1@'; commandline -b; echo '@/GUARD:1@'; commandline -b ''; end"
 )
 expect_prompt()
-sendline("echo \en one \"two three\" four'five six'{7} 'eight~")
+sendline("echo \\en one \"two three\" four'five six'{7} 'eight~")
 expect_prompt("\r\n@GUARD:1@\r\n(.*)\r\n@/GUARD:1@\r\n")
 
 # printing the buffer with -o should remove quoting

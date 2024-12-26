@@ -123,7 +123,7 @@ Dependencies
 Compiling fish requires:
 
 -  Rust (version 1.70 or later)
--  CMake (version 3.5 or later)
+-  CMake (version 3.15 or later)
 -  a C compiler (for system feature detection and the test helper binary)
 -  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
 -  gettext (headers and libraries) - optional, for translation support

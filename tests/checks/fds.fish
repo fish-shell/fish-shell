@@ -1,4 +1,5 @@
 # RUN: %fish -C "set helper %fish_test_helper" %s
+#REQUIRES: command -v %fish_test_helper
 
 # Check that we don't leave stray FDs.
 

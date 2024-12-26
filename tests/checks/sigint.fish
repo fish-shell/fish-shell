@@ -1,4 +1,5 @@
 #RUN: %fish -C "set -g helper %fish_test_helper; set -g fish %fish" %s
+#REQUIRES: command -v %fish_test_helper
 
 # Check that nohup is propagated.
 set output_path (mktemp)

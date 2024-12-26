@@ -2,6 +2,7 @@
 from pexpect_helper import SpawnedProc
 import platform
 import subprocess
+import os
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -74,6 +75,10 @@ send("\x03")  # control-c to cancel it
 expect_prompt()
 sendline("jobs")
 expect_prompt("jobs: There are no jobs")
+
+if not os.environ.get("fish_test_helper", ""):
+    import sys
+    sys.exit(127)
 
 # Regression test for #2214: foregrounding from a key binding works!
 sendline(r"bind ctrl-r 'fg >/dev/null 2>/dev/null'")

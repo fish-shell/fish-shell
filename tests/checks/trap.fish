@@ -1,4 +1,5 @@
 # RUN: env fth=%fish_test_helper %fish %s
+#REQUIRES: command -v %fish_test_helper
 
 set -g SIGUSR1_COUNT 0
 

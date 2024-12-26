@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
 
 sp = SpawnedProc()
 send, sendline, expect_prompt, expect_str = (
@@ -12,6 +13,10 @@ send, sendline, expect_prompt, expect_str = (
 expect_prompt()
 sendline("function echo_wrap ; /bin/echo $argv ; sleep 0.1; end")
 expect_prompt()
+
+if not os.environ.get("fish_test_helper", ""):
+    import sys
+    sys.exit(127)
 
 for i in range(5):
     sendline(

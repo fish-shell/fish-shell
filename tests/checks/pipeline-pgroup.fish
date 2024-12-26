@@ -1,4 +1,5 @@
 # RUN: env fth=%fish_test_helper fish=%fish %fish %s
+#REQUIRES: command -v %fish_test_helper
 
 status job-control full
 

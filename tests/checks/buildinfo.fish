@@ -6,9 +6,10 @@
 # Profile: release
 # Features: gettext
 
-status buildinfo
+status buildinfo | grep -v 'Host:'
 # CHECK: Build system: {{CMake|Cargo}}
 # CHECK: Version: {{.+}}
-# CHECK: Target (and host): {{.+}}
+# (this could be "Target (and Host)" or "Target:" and a separate line "Host:")
+# CHECK: Target{{.*}}: {{.+}}
 # CHECK: Profile: {{release|debug}}
 # CHECK: Features:{{.*}}

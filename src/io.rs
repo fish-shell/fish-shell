@@ -178,8 +178,8 @@ pub trait IoData: Send + Sync {
     /// That is, we call dup2(source_fd, fd).
     fn source_fd(&self) -> RawFd;
     fn print(&self);
-    // The address of the object, for comparison.
-    fn as_ptr(&self) -> *const ();
+
+    // If this is an IoBufferfill, return a reference to it.
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         None
     }
@@ -206,9 +206,6 @@ impl IoData for IoClose {
     fn print(&self) {
         eprintf!("close %d\n", self.fd)
     }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
-    }
 }
 
 pub struct IoFd {
@@ -234,9 +231,6 @@ impl IoData for IoFd {
     }
     fn print(&self) {
         eprintf!("FD map %d -> %d\n", self.source_fd, self.fd)
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -266,9 +260,6 @@ impl IoData for IoFile {
     }
     fn print(&self) {
         eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd)
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -306,9 +297,6 @@ impl IoData for IoPipe {
             if self.is_input { "yes" } else { "no" },
             self.fd
         )
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -392,9 +380,6 @@ impl IoData for IoBufferfill {
             self.write_fd.as_raw_fd(),
             self.fd()
         )
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         Some(self)
@@ -512,12 +497,14 @@ impl IoChain {
         Default::default()
     }
     pub fn remove(&mut self, element: &dyn IoData) {
-        let element = element as *const _;
-        let element = element as *const ();
-        self.0.retain(|e| {
-            let e = Arc::as_ptr(e) as *const ();
-            !std::ptr::eq(e, element)
-        });
+        // Discard vtable pointers when comparing.
+        let e1 = element as *const dyn IoData as *const ();
+        let idx = self
+            .0
+            .iter()
+            .position(|e2| Arc::as_ref(e2) as *const dyn IoData as *const () == e1)
+            .expect("Element not found");
+        self.0.remove(idx);
     }
     pub fn clear(&mut self) {
         self.0.clear()

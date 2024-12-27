@@ -169,7 +169,7 @@ pub enum IoMode {
 }
 
 /// Represents a FD redirection.
-pub trait IoData {
+pub trait IoData: Send + Sync {
     /// Type of redirect.
     fn io_mode(&self) -> IoMode;
     /// FD to redirect.
@@ -184,24 +184,6 @@ pub trait IoData {
         None
     }
 }
-
-// todo!("this should be safe because of how it's used. Rationalize this better.")
-pub trait IoDataSync: IoData + Send + Sync {}
-unsafe impl Send for IoClose {}
-unsafe impl Send for IoFd {}
-unsafe impl Send for IoFile {}
-unsafe impl Send for IoPipe {}
-unsafe impl Send for IoBufferfill {}
-unsafe impl Sync for IoClose {}
-unsafe impl Sync for IoFd {}
-unsafe impl Sync for IoFile {}
-unsafe impl Sync for IoPipe {}
-unsafe impl Sync for IoBufferfill {}
-impl IoDataSync for IoClose {}
-impl IoDataSync for IoFd {}
-impl IoDataSync for IoFile {}
-impl IoDataSync for IoPipe {}
-impl IoDataSync for IoBufferfill {}
 
 pub struct IoClose {
     fd: RawFd,
@@ -520,7 +502,7 @@ fn begin_filling(iobuffer: IoBuffer, fd: OwnedFd) -> FdMonitorItemId {
     fd_monitor().add(fd, item_callback)
 }
 
-pub type IoDataRef = Arc<dyn IoDataSync>;
+pub type IoDataRef = Arc<dyn IoData>;
 
 #[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
@@ -529,7 +511,7 @@ impl IoChain {
     pub fn new() -> Self {
         Default::default()
     }
-    pub fn remove(&mut self, element: &dyn IoDataSync) {
+    pub fn remove(&mut self, element: &dyn IoData) {
         let element = element as *const _;
         let element = element as *const ();
         self.0.retain(|e| {

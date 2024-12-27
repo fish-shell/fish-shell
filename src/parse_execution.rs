@@ -381,10 +381,15 @@ impl<'a> ExecutionContext {
         )
     }
 
-    // Utilities
-    fn node_source(&self, node: &dyn ast::Node) -> WString {
-        // todo!("maybe don't copy")
-        node.source(&self.pstree().src).to_owned()
+    // Utilities.
+    // Return the source for a node.
+    fn node_source<'b>(&'b self, node: &dyn ast::Node) -> &'b wstr {
+        node.source(&self.pstree().src)
+    }
+
+    // Return the source for a node as an owning WString.
+    fn node_source_owned(&self, node: &dyn ast::Node) -> WString {
+        self.node_source(node).to_owned()
     }
 
     fn infinite_recursive_statement_in_job_list<'b>(
@@ -432,7 +437,7 @@ impl<'a> ExecutionContext {
             }
 
             // Check the command.
-            let mut cmd = self.node_source(&dc.command);
+            let mut cmd = self.node_source_owned(&dc.command);
             let forbidden = !cmd.is_empty()
                 && expand_one(
                     &mut cmd,
@@ -490,7 +495,7 @@ impl<'a> ExecutionContext {
 
         // Expand the string to produce completions, and report errors.
         let expand_err = expand_to_command_and_args(
-            &unexp_cmd,
+            unexp_cmd,
             ctx,
             out_cmd,
             Some(out_args),
@@ -538,7 +543,7 @@ impl<'a> ExecutionContext {
         // which won't be doing what the user asks for
         //
         // (skipping in no-exec because we don't have the actual variable value)
-        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && &unexp_cmd != out_cmd {
+        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && unexp_cmd != out_cmd {
             return report_error!(
                 self,
                 ctx,
@@ -612,7 +617,7 @@ impl<'a> ExecutionContext {
         *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
             let source = self.node_source(&**variable_assignment);
-            let equals_pos = variable_assignment_equals_pos(&source).unwrap();
+            let equals_pos = variable_assignment_equals_pos(source).unwrap();
             let variable_name = &source[..equals_pos];
             let expression = &source[equals_pos + 1..];
             let mut expression_expanded = vec![];
@@ -896,7 +901,7 @@ impl<'a> ExecutionContext {
     ) -> EndExecutionReason {
         // Get the variable name: `for var_name in ...`. We expand the variable name. It better result
         // in just one.
-        let mut for_var_name = self.node_source(&header.var_name);
+        let mut for_var_name = self.node_source_owned(&header.var_name);
         if !expand_one(&mut for_var_name, ExpandFlags::default(), ctx, None) {
             return report_error!(
                 self,
@@ -1088,7 +1093,7 @@ impl<'a> ExecutionContext {
         statement: &'a ast::SwitchStatement,
     ) -> EndExecutionReason {
         // Get the switch variable.
-        let switch_value = self.node_source(&statement.argument);
+        let switch_value = self.node_source_owned(&statement.argument);
 
         // Expand it. We need to offset any errors by the position of the string.
         let mut switch_values_expanded = vec![];
@@ -1378,7 +1383,7 @@ impl<'a> ExecutionContext {
             let mut errors = ParseErrorList::new();
             let mut arg_expanded = CompletionList::new();
             let expand_ret = expand_string(
-                self.node_source(*arg_node),
+                self.node_source_owned(*arg_node),
                 &mut arg_expanded,
                 ExpandFlags::default(),
                 ctx,
@@ -1446,7 +1451,7 @@ impl<'a> ExecutionContext {
             }
             let redir_node = arg_or_redir.redirection();
 
-            let oper = match PipeOrRedir::try_from(&self.node_source(&redir_node.oper)[..]) {
+            let oper = match PipeOrRedir::try_from(self.node_source(&redir_node.oper)) {
                 Ok(oper) if oper.is_valid() => oper,
                 _ => {
                     // TODO: figure out if this can ever happen. If so, improve this error message.
@@ -1462,7 +1467,7 @@ impl<'a> ExecutionContext {
             };
 
             // PCA: I can't justify this skip_variables flag. It was like this when I got here.
-            let mut target = self.node_source(&redir_node.target);
+            let mut target = self.node_source_owned(&redir_node.target);
             let target_expanded = expand_one(
                 &mut target,
                 if no_exec() {
@@ -1627,7 +1632,7 @@ impl<'a> ExecutionContext {
             props.from_event_handler = ld.is_event != 0;
         }
 
-        let mut job = Job::new(props, self.node_source(job_node));
+        let mut job = Job::new(props, self.node_source_owned(job_node));
 
         // We are about to populate a job. One possible argument to the job is a command substitution
         // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
@@ -1818,7 +1823,7 @@ impl<'a> ExecutionContext {
                 break;
             }
             // Handle the pipe, whose fd may not be the obvious stdout.
-            let parsed_pipe = PipeOrRedir::try_from(&self.node_source(&jc.pipe)[..])
+            let parsed_pipe = PipeOrRedir::try_from(self.node_source(&jc.pipe))
                 .expect("Failed to parse valid pipe");
             if !parsed_pipe.is_valid() {
                 result = report_error!(

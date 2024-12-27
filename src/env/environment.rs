@@ -694,9 +694,6 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     // Set up a default PATH
     setup_path();
 
-    // Set up $IFS - this used to be in share/config.fish, but really breaks if it isn't done.
-    vars.set_one(L!("IFS"), EnvMode::GLOBAL, "\n \t".into());
-
     // Ensure this var is present even before an interactive command is run so that if it is used
     // in a function like `fish_prompt` or `fish_right_prompt` it is defined at the time the first
     // prompt is written.

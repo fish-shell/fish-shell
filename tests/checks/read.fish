@@ -11,35 +11,8 @@ read --array v1 v2
 #CHECKERR: read: expected 1 arguments; got 2
 read --list v1
 
-# Verify correct behavior of subcommands and splitting of input.
-begin
-    count (echo one\ntwo)
-    #CHECK: 2
-    set -l IFS \t
-    count (echo one\ntwo)
-    #CHECK: 2
-    set -l IFS
-    count (echo one\ntwo)
-    #CHECK: 1
-    echo [(echo -n one\ntwo)]
-    #CHECK: [one
-    #CHECK: two]
-    count (echo one\ntwo\n)
-    #CHECK: 1
-    echo [(echo -n one\ntwo\n)]
-    #CHECK: [one
-    #CHECK: two]
-    count (echo one\ntwo\n\n)
-    #CHECK: 1
-    echo [(echo -n one\ntwo\n\n)]
-    #CHECK: [one
-    #CHECK: two
-    #CHECK: ]
-end
-
 function print_vars --no-scope-shadowing
     set -l space
-    set -l IFS \n # ensure our command substitution works right
     for var in $argv
         echo -n $space (count $$var) \'$$var\'
         set space ''

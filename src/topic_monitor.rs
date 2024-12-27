@@ -336,6 +336,7 @@ pub struct TopicMonitor {
 }
 
 // safety: this is only needed for tests
+#[cfg(test)]
 unsafe impl Sync for TopicMonitor {}
 
 /// The principal topic monitor.

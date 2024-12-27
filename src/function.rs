@@ -108,9 +108,6 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
     })
 });
 
-// Safety: global lock.
-unsafe impl Send for FunctionSet {}
-
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {

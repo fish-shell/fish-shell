@@ -48,6 +48,16 @@ fi
 # Set up the test environment. Does not change the current working directory.
 . ${TESTS_ROOT}/test_env.sh
 
+test -n "$homedir" || die "Failed to set up home"
+
+# Compile our fish_test_helper program now.
+# This takes about 50ms.
+if command -v cc >/dev/null ; then
+    cc "$TESTS_ROOT/fish_test_helper.c" -o "$homedir/fish_test_helper"
+else
+    echo "Cannot find a c compiler. Skipping tests that require fish_test_helper" >&2
+fi
+
 # These are used read-only so it's OK to symlink instead of copy
 rm -f "$XDG_CONFIG_HOME/fish/functions"
 ln -s "${TESTS_ROOT}/test_functions" "$XDG_CONFIG_HOME/fish/functions" || die "Failed to symlink"
@@ -77,10 +87,10 @@ export FISH_FAST_FAIL
 # launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
 # TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).
 if test -n "$script_args"; then
-    (cd $TMPDIR && env HOME="$homedir" "$fish" \
+    (cd $TMPDIR && env HOME="$homedir" fish_test_helper="$homedir/fish_test_helper" "$fish" \
                        --init-command "${fish_init_cmd}" "$fish_script" "$script_args")
 else
-    (cd $TMPDIR && env HOME="$homedir" "$fish" \
+    (cd $TMPDIR && env HOME="$homedir" fish_test_helper="$homedir/fish_test_helper" "$fish" \
                        --init-command "${fish_init_cmd}" "$fish_script")
 fi
 test_status="$?"

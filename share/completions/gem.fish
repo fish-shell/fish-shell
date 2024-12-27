@@ -16,6 +16,7 @@ complete -c gem -n __fish_use_subcommand -xa cleanup -d "Cleanup old versions of
 complete -c gem -n __fish_use_subcommand -xa contents -d "Display the contents of the installed gems"
 complete -c gem -n __fish_use_subcommand -xa dependency -d "Show the dependencies of an installed gem"
 complete -c gem -n __fish_use_subcommand -xa environment -d "Display RubyGems environmental information"
+complete -c gem -n __fish_use_subcommand -xa fetch -d "Download a gem into current directory"
 complete -c gem -n __fish_use_subcommand -xa help -d "Provide help on the 'gem' command"
 complete -c gem -n __fish_use_subcommand -xa install -d "Install a gem into the local repository"
 complete -c gem -n __fish_use_subcommand -xa list -d "Display all gems whose name starts with STRING"
@@ -85,6 +86,9 @@ complete $dep_opt -s p -l pipe -d "Pipe Format (name --version ver)"
 # environment
 set -l env_opt -c gem -n 'contains environment (commandline -pxc)'
 complete $env_opt -xa "packageversion\t'display the package version' gemdir\t'display the path where gems are installed' gempath\t'display path used to search for gems' version\t'display the gem format version' remotesources\t'display the remote gem servers'"
+
+set -l fetch_opt -c gem -n 'contains fetch (commandline -pxc)'
+complete $fetch_opt -s v -l version -d "Specify version of gem to download" -x
 
 ##
 # help

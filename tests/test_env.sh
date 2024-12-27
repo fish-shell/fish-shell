@@ -14,14 +14,6 @@
 IFS="$(printf "\n\b")"
 # set -ex
 
-# The first argument is the path to the script to launch; all remaining arguments are forwarded to
-# the script.
-if test $# -gt 0; then
-    target="$1"
-    shift 1
-    target_args="${@}"
-fi
-
 die() {
     if test "$#" -ge 0; then
         printf "%s\n" "$@" 1>&2
@@ -88,16 +80,3 @@ unset LC_TERMINAL_VERSION
 unset TERM_PROGRAM
 unset TERM_PROGRAM_VERSION
 unset VTE_VERSION
-
-# If we are sourced, return without executing
-if test -z ${target}; then
-    return 0
-fi
-echo "Proceeding with target execution"
-
-# Otherwise execute target
-("${target}" "${target_args}")
-test_status="$?"
-
-rm -rf "$homedir"
-exit "$test_status"

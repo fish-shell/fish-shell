@@ -21,9 +21,6 @@ unset CDPATH
 # Resolve the script now because we are going to `cd` later.
 fish_script="$(realpath $1)"
 shift 1
-script_args="${@}"
-# Prevent $@ from persisting to sourced commands
-shift $# 2>/dev/null
 
 die() {
     if test "$#" -ge 0; then
@@ -86,9 +83,9 @@ export FISH_FAST_FAIL
 # Run the test script, but don't exec so we can clean up after it succeeds/fails. Each test is
 # launched directly within its TMPDIR, so that the fish tests themselves do not need to refer to
 # TMPDIR (to ensure their output as displayed in case of failure by littlecheck is reproducible).
-if test -n "$script_args"; then
+if test -n "${@}"; then
     (cd $TMPDIR && env HOME="$homedir" fish_test_helper="$homedir/fish_test_helper" "$fish" \
-                       --init-command "${fish_init_cmd}" "$fish_script" "$script_args")
+                       --init-command "${fish_init_cmd}" "$fish_script" "${@}")
 else
     (cd $TMPDIR && env HOME="$homedir" fish_test_helper="$homedir/fish_test_helper" "$fish" \
                        --init-command "${fish_init_cmd}" "$fish_script")

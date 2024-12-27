@@ -1,4 +1,4 @@
-# RUN: %fish -C "set -g fish %fish; set -g filter_ctrls %fish %filter-control-sequences" %s
+# RUN: fish=%fish filter_ctrls=%filter-control-sequences %fish %s
 # Set term again explicitly to ensure behavior.
 set -gx TERM xterm
 # Read with no vars is not an error
@@ -248,7 +248,7 @@ if test (string length "$x") -ne $fish_read_limit
 end
 
 # Confirm reading non-interactively works -- \#4206 regression
-echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b' | $filter_ctrls
+echo abc\ndef | $fish -i -c 'read a; read b; set --show a; set --show b' | $fish $filter_ctrls
 #CHECK: $a: set in global scope, unexported, with 1 elements
 #CHECK: $a[1]: |abc|
 #CHECK: $b: set in global scope, unexported, with 1 elements

@@ -67,5 +67,5 @@ while now - start < 1:
     sleep(now - start)
     now = time.time()
 
-sendline(r" builtin history save ; %s -c 'string join \n -- $history'" % fish_path)
+sendline(r" builtin history save ; $fish -c 'string join \n -- $history'")
 expect_prompt("\r\n".join(reversed(recorded_history)))

@@ -1314,12 +1314,8 @@ impl ReaderData {
     fn update_buff_pos(&mut self, elt: EditableLineTag, mut new_pos: Option<usize>) -> bool {
         if self.cursor_end_mode == CursorEndMode::Inclusive {
             let el = self.edit_line(elt);
-            let mut pos = new_pos.unwrap_or(el.position());
-            if !el.is_empty() && pos == el.len() {
-                pos = el.len() - 1;
-                if el.position() == pos {
-                    return false;
-                }
+            if new_pos.is_none() && !el.is_empty() && el.position() == el.len() {
+                let pos = el.len() - 1;
                 new_pos = Some(pos);
             }
         }

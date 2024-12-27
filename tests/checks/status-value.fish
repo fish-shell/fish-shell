@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+#RUN: fish=%fish %fish %s
 
 # Empty commands should be 123
 set empty_var

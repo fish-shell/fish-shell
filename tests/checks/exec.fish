@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+# RUN: fish=%fish %fish %s
 
 exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'

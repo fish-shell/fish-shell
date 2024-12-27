@@ -1,4 +1,4 @@
-#RUN: %fish -C "set fish %fish" %s
+# RUN: fish=%fish %fish %s
 # Check that switch with an argument expanding to nothing still works.
 switch $foo
     case a
@@ -117,3 +117,5 @@ begin
     # CHECKERR: switch (doesnotexist)
     # CHECKERR:        ^~~~~~~~~~~~~^
 end
+
+exit 0

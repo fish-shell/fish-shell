@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+# RUN: fish=%fish %fish %s
 # Test that fish doesn't crash if cwd is unreadable at the start (#6597)
 
 set -l oldpwd $PWD

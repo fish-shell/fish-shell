@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: fish=%fish %fish %s
 #
 # Test function, loops, conditionals and some basic elements
 #

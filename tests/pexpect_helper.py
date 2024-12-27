@@ -159,9 +159,14 @@ class SpawnedProc(object):
                      before giving up on some expected output.
             env: a string->string dictionary, describing the environment variables.
         """
+        import shlex
         if name not in env:
             raise ValueError("'%s' variable not found in environment" % name)
         exe_path = env.get(name)
+        # HACK: If there are no args, pexpect will fail if exe_path contains any shell metachars.
+        # But not if there are args, in which case it probably switches spawning method?
+        if "args" not in kwargs:
+            exe_path = shlex.quote(exe_path)
         self.colorize = sys.stdout.isatty() or env.get("FISH_FORCE_COLOR", "0") == "1"
         self.messages = []
         self.start_time = None

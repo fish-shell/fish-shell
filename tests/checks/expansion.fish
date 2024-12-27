@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: fish=%fish %fish %s
 
 # caret position (#5812)
 printf '<%s>\n' ($fish -c ' $f[a]' 2>&1)

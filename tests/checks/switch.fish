@@ -108,12 +108,12 @@ begin
             echo Matched!
     end
     # CHECKERR: fish: Unknown command: doesnotexist
-    # CHECKERR: checks/switch.fish (line {{\d+}}):
+    # CHECKERR: {{.*}}checks/switch.fish (line {{\d+}}):
     # CHECKERR: doesnotexist
     # CHECKERR: ^~~~~~~~~~~^
     # CHECKERR: in command substitution
-    # CHECKERR: {{\t}}called on line {{\d+}} of file checks/switch.fish
-    # CHECKERR: checks/switch.fish (line {{\d+}}): Unknown command
+    # CHECKERR: {{\t}}called on line {{\d+}} of file {{.*}}checks/switch.fish
+    # CHECKERR: {{.*}}checks/switch.fish (line {{\d+}}): Unknown command
     # CHECKERR: switch (doesnotexist)
     # CHECKERR:        ^~~~~~~~~~~~~^
 end

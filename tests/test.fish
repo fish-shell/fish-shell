@@ -8,15 +8,16 @@
 # `fish_update_completions` when running tests.
 set -x FISH_UNIT_TESTS_RUNNING 1
 
-# Change to directory containing this script
-cd (status dirname)
+# Save the directory containing this script
+# Do not *cd* here, otherwise you'll ruin our nice tmpdir setup!!!
+set -l scriptdir (status dirname)
 
 # Test files specified on commandline, or all checks.
 set -l files_to_test
 if set -q argv[1]
-    set files_to_test checks/$argv.fish
+    set files_to_test $scriptdir/checks/$argv.fish
 else
-    set files_to_test checks/*.fish
+    set files_to_test $scriptdir/checks/*.fish
 end
 
 # Be less verbose when running tests one-by-one
@@ -41,11 +42,11 @@ if set -q files_to_test[1]
     test "$FISH_FORCE_COLOR" = 1
     and set force_color --force-color
 
-    $python -S littlecheck.py \
+    $python -S $scriptdir/littlecheck.py \
         --progress $force_color \
         -s fish=$FISHDIR/fish \
         -s fish_test_helper=$fish_test_helper \
-        -s filter-control-sequences="$FISHDIR/fish ../tests/filter-control-sequences.fish" \
+        -s filter-control-sequences="$FISHDIR/fish $scriptdir/filter-control-sequences.fish" \
         $files_to_test
 
     set -l littlecheck_status $status

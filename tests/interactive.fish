@@ -6,21 +6,23 @@
 # `fish_update_completions` when running tests.
 set -gx FISH_UNIT_TESTS_RUNNING 1
 
-# Change to directory containing this script
-cd (status dirname)
+# Save the directory containing this script
+# Do not *cd* here, otherwise you'll ruin our nice tmpdir setup!!!
+set -l scriptdir (status dirname)
 
 # Test files specified on commandline, or all pexpect files.
 if set -q argv[1] && test -n "$argv[1]"
-    set pexpect_files_to_test pexpects/$argv
+    set pexpect_files_to_test $scriptdir/pexpects/$argv
 else if set -q FISH_PEXPECT_FILES
     set pexpect_files_to_test (string replace -r '^.*/(?=pexpects/)' '' -- $FISH_PEXPECT_FILES)
 else
     say -o cyan "Testing interactive functionality"
-    set pexpect_files_to_test pexpects/*.py
+    set pexpect_files_to_test $scriptdir/pexpects/*.py
 end
 
-source test_util.fish || exit
-cat interactive.config >>$XDG_CONFIG_HOME/fish/config.fish
+source $scriptdir/test_util.fish || exit
+cat $scriptdir/interactive.config >>$XDG_CONFIG_HOME/fish/config.fish
+set -lx --prepend PYTHONPATH (realpath $scriptdir)
 
 function test_pexpect_file
     set -l file $argv[1]
@@ -33,7 +35,6 @@ function test_pexpect_file
         # Help the script find the pexpect_helper module in our parent directory.
         set -q FISHDIR
         or set -l FISHDIR ../test/root/bin/
-        set -lx --prepend PYTHONPATH (realpath $PWD)
         set -lx fish $FISHDIR/fish
         set -lx fish_key_reader $FISHDIR/fish_key_reader
         path is -fx -- $FISHDIR/fish_test_helper

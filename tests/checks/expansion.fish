@@ -337,7 +337,7 @@ printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
 
 set -l pager command less
 echo foo | $pager
-#CHECKERR: checks/expansion.fish (line 339): The expanded command is a keyword.
+#CHECKERR: {{.*}}checks/expansion.fish (line 339): The expanded command is a keyword.
 #CHECKERR: echo foo | $pager
 #CHECKERR:            ^~~~~^
 

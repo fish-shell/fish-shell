@@ -40,6 +40,8 @@ complete -c t -fa '(t)'
 complete -C't '
 # CHECK: t
 
+touch test.fish
+
 # Ensure file completion happens even though it was disabled above.
 complete -c t -l fileoption -rF
 # Only match one file because I don't want to touch this any time we add a test file.

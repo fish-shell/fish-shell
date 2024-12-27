@@ -81,8 +81,6 @@ create_target(fish_key_reader)
 # Set up the docs.
 include(cmake/Docs.cmake)
 
-# A helper for running tests.
-add_executable(fish_test_helper src/fish_test_helper.c)
 # Set up tests.
 include(cmake/Tests.cmake)
 

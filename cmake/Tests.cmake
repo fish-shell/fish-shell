@@ -89,14 +89,11 @@ add_custom_target(tests_buildroot_target
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
                   COMMAND env DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
                           --build ${CMAKE_CURRENT_BINARY_DIR} --target install
-                  # Put fish_test_helper there too:
-                  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/fish_test_helper
-                          ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}/bin
                   # Also symlink fish to where the tests expect it to be:
                   COMMAND ${CMAKE_COMMAND} -E create_symlink
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
-                  DEPENDS fish fish_test_helper)
+                  DEPENDS fish)
 
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})

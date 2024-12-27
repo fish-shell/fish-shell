@@ -141,7 +141,7 @@ echo $status
 abbr --query banana --function
 echo $status
 # CHECKERR: abbr: --function: option requires an argument
-# CHECKERR: checks/abbr.fish (line 141):
+# CHECKERR: {{.*}}checks/abbr.fish (line 141):
 # CHECKERR: abbr --query banana --function
 # CHECKERR: ^
 # CHECKERR: (Type 'help abbr' for related documentation)

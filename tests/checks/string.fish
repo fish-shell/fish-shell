@@ -889,7 +889,7 @@ echo $status
 function string
     builtin string $argv
 end
-# CHECKERR: checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
+# CHECKERR: {{.*}}checks/string.fish (line {{\d+}}): function: string: cannot use reserved keyword as function name
 # CHECKERR: function string
 # CHECKERR: ^
 

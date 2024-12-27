@@ -21,6 +21,7 @@ else
     echo fish_variables is still a symlink
 end
 # CHECK: fish_variables is still a symlink
+rm $fish_variables
 
 
 # fish_history
@@ -45,3 +46,4 @@ else
     echo fish_history is still a symlink
 end
 # CHECK: fish_history is still a symlink
+rm $history_file

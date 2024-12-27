@@ -170,7 +170,7 @@ functions --no-details t2
 functions --no-details --details t
 # CHECKERR: functions: invalid option combination
 # CHECKERR:
-# CHECKERR: checks/functions.fish (line {{\d+}}):
+# CHECKERR: {{.*}}checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions --no-details --details t
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)
@@ -205,7 +205,7 @@ functions --names -a | string match __fish_config_interactive
 
 functions --description ""
 # CHECKERR: functions: Expected exactly one function name
-# CHECKERR: checks/functions.fish (line {{\d+}}):
+# CHECKERR: {{.*}}checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions --description ""
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)

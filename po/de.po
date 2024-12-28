@@ -2,21 +2,21 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.
 # Hermann J. Beckers <hj.beckers@onlinehome.de>, 2006.
-# Benjamin Weis <benjamin.weis@gmx.com>, 2013
+# Benjamin Weis <benjamin.weis@gmx.com>, 2013, 2024.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-10 16:38+0100\n"
-"PO-Revision-Date: 2023-06-01 23:33+0200\n"
-"Last-Translator: Fabian Boehm\n"
+"PO-Revision-Date: 2024-12-28 16:00+0100\n"
+"Last-Translator: Benjamin Weis\n"
 "Language-Team: deutsch <de@li.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.3.1\n"
+"X-Generator: Poedit 3.5\n"
 
 #: src/builtins/set.rs:696
 msgid "$%ls: originally inherited as |%ls|\n"
@@ -139,17 +139,12 @@ msgid "Command not executable"
 msgstr "Befehl nicht ausführbar"
 
 #: src/expand.rs:1347
-msgid ""
-"command substitutions not allowed in command position. Try var=(your-cmd) "
-"$var ..."
-msgstr ""
-"Befehlsersetzung sind in Befehlsposition nicht erlaubt. Probier stattdessen "
-"var=(befehl) $var ..."
+msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+msgstr "Befehlsersetzung sind in Befehlsposition nicht erlaubt. Probier stattdessen var=(befehl) $var ..."
 
 #: src/complete.rs:623
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr ""
-"Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
+msgstr "Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
 
 #: src/builtins/shared.rs:519
 msgid "Conditionally run blocks of code"
@@ -168,19 +163,12 @@ msgid ", copied via `source`"
 msgstr ", kopiert via `source`"
 
 #: src/env/environment.rs:264
-msgid ""
-"Could not determine current working directory. Is your locale set correctly?"
-msgstr ""
-"Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die locale "
-"korrekt eingestellt?"
+msgid "Could not determine current working directory. Is your locale set correctly?"
+msgstr "Das aktuelle Arbeitsverzeichnis konnte nicht bestimmt werden. Ist die locale korrekt eingestellt?"
 
 #: src/env_dispatch.rs:534
-msgid ""
-"Could not get any terminfo database, falling back to hardcoded "
-"xterm-256color values"
-msgstr ""
-"Konnte keine Terminfo-Datenbank finden, nutze hardkodierte xterm-256color "
-"Werte"
+msgid "Could not get any terminfo database, falling back to hardcoded xterm-256color values"
+msgstr "Konnte keine Terminfo-Datenbank finden, nutze hardkodierte xterm-256color Werte"
 
 #: src/reader.rs:3294
 msgid "Could not set terminal mode for new job"
@@ -344,7 +332,7 @@ msgid ""
 "\n"
 " $ %ls -w foo.fish\n"
 msgstr ""
-"Erwartete Datepfad zum Lesen/Schreiben für -w:\n"
+"Erwartete Dateipfad zum Lesen/Schreiben für -w:\n"
 "\n"
 " $ %ls -w foo.fish\n"
 
@@ -747,7 +735,7 @@ msgstr ""
 
 #: src/builtins/ulimit.rs:330
 msgid "%ls: Invalid limit '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Grenzwert '%ls'\n"
 
 #: src/builtins/argparse.rs:517
 msgid "%ls: Invalid --max-args value '%ls'\n"
@@ -755,7 +743,7 @@ msgstr ""
 
 #: src/builtins/string/shorten.rs:53
 msgid "%ls: Invalid max value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Maximalwert '%ls'\n"
 
 #: src/builtins/argparse.rs:503
 msgid "%ls: Invalid --min-args value '%ls'\n"
@@ -783,7 +771,7 @@ msgstr "%ls: Ungültiger Sortierschlüssel '%ls'\n"
 
 #: src/builtins/string/sub.rs:33
 msgid "%ls: Invalid start value '%ls'\n"
-msgstr ""
+msgstr "%ls: Ungültiger Startwert '%ls'\n"
 
 #: src/builtins/bind.rs:559
 msgid "%ls: Invalid state\n"
@@ -863,11 +851,11 @@ msgstr ""
 
 #: src/builtins/complete.rs:473
 msgid "%ls: %ls: contains a syntax error\n"
-msgstr ""
+msgstr "%ls: %ls: enthält einen Syntaxfehler\n"
 
 #: src/builtins/math.rs:55
 msgid "%ls: %ls: invalid base value\n"
-msgstr ""
+msgstr "%ls: %ls: ungültiger Basiswert\n"
 
 #: src/builtins/function.rs:233
 msgid "%ls: %ls: invalid function name"
@@ -923,43 +911,43 @@ msgstr ""
 
 #: src/builtins/abbr.rs:214
 msgid "%ls %ls: Name cannot be empty\n"
-msgstr ""
+msgstr "%ls %ls: Name darf nicht leer sein\n"
 
 #: src/builtins/abbr.rs:233
 msgid "%ls %ls: No abbreviation named %ls\n"
-msgstr ""
+msgstr "%ls %ls: Keine Abkürzung namens %ls\n"
 
 #: src/builtins/abbr.rs:278
 msgid "%ls %ls: Requires at least two arguments\n"
-msgstr ""
+msgstr "%ls %ls: Erfordert mindestens zwei Argumente\n"
 
 #: src/builtins/abbr.rs:204
 msgid "%ls %ls: Requires exactly two arguments\n"
-msgstr ""
+msgstr "%ls %ls: Erfordert genau zwei Argumente\n"
 
 #: src/builtins/history.rs:113
 msgid "%ls: %ls: subcommand takes no options\n"
-msgstr ""
+msgstr "%ls: %ls: Unterbefehl nimmt keine Optionen an\n"
 
 #: src/builtins/abbr.rs:180
 msgid "%ls %ls: Unexpected argument -- '%ls'\n"
-msgstr ""
+msgstr "%ls %ls: Unerwartetes Argument - '%ls'\n"
 
 #: src/builtins/function.rs:96
 msgid "%ls: %ls: unexpected positional argument"
-msgstr ""
+msgstr "%ls: %ls: unerwartetes Positionsargument"
 
 #: src/builtins/argparse.rs:446
 msgid "%ls: Missing -- separator\n"
-msgstr ""
+msgstr "%ls: Fehlendes Trennzeichen --\n"
 
 #: src/builtins/type.rs:148
 msgid " (%ls)\n"
-msgstr ""
+msgstr " (%ls)\n"
 
 #: src/builtins/ulimit.rs:309
 msgid "%ls: New limit cannot be an empty string\n"
-msgstr ""
+msgstr "%ls: Neuer Grenzwert darf keine leere Zeichenkette sein\n"
 
 #: src/builtins/bind.rs:359
 msgid "%ls: No binding found for key '%ls'\n"
@@ -1007,23 +995,23 @@ msgstr ""
 
 #: src/builtins/cd.rs:165
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr ""
+msgstr "%ls: Berechtigung verweigert: '%ls'\n"
 
 #: src/builtins/abbr.rs:66
 msgid "%ls: --position option requires --add\n"
-msgstr ""
+msgstr "%ls: Option --position erfordert --add\n"
 
 #: src/builtins/random.rs:148
 msgid "%ls: range contains only one possible value\n"
-msgstr ""
+msgstr "%ls: Bereich enthält nur einen möglichen Wert\n"
 
 #: src/builtins/pwd.rs:52
 msgid "%ls: realpath failed: %s\n"
-msgstr ""
+msgstr "%ls: realpath fehlgeschlagen: %s\n"
 
 #: src/builtins/abbr.rs:74
 msgid "%ls: --regex option requires --add\n"
-msgstr ""
+msgstr "%ls: Option --regex erfordert --add\n"
 
 #: src/builtins/abbr.rs:317
 msgid "%ls: Regular expression compile error: %ls\n"
@@ -1035,7 +1023,7 @@ msgstr "%ls: Fehler beim Ersetzen von Regulärem Ausdruck: %ls\n"
 
 #: src/builtins/ulimit.rs:275
 msgid "%ls: Resource limit not available on this operating system\n"
-msgstr ""
+msgstr "%ls: Ressourcenlimit ist auf diesem Betriebssystem nicht verfügbar\n"
 
 #: src/builtins/abbr.rs:98
 msgid "%ls: --set-cursor argument cannot be empty\n"
@@ -1059,23 +1047,23 @@ msgstr ""
 
 #: src/builtins/complete.rs:344
 msgid "%ls: -s requires a non-empty string\n"
-msgstr ""
+msgstr "%ls: -s erfordert eine nicht leere Zeichenkette\n"
 
 #: src/builtins/complete.rs:374
 msgid "%ls: -S requires a non-empty string\n"
-msgstr ""
+msgstr "%ls: -S erfordert eine nicht leere Zeichenkette\n"
 
 #: src/builtins/source.rs:43
 msgid "%ls: stdin is closed\n"
-msgstr ""
+msgstr "%ls: stdin ist geschlossen\n"
 
 #: src/builtins/random.rs:118
 msgid "%ls: STEP must be a positive integer\n"
-msgstr ""
+msgstr "%ls: STEP muss eine positive ganze Zahl sein\n"
 
 #: src/builtins/cd.rs:69
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr ""
+msgstr "%ls: Das Verzeichnis '%ls' existiert nicht\n"
 
 #: src/builtins/jobs.rs:260
 msgid "%ls: There are no jobs\n"
@@ -1091,11 +1079,11 @@ msgstr ""
 
 #: src/builtins/shared.rs:51:pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS
 msgid "%ls: too many arguments\n"
-msgstr ""
+msgstr "%ls: zu viele Argumente\n"
 
 #: src/builtins/cd.rs:153
 msgid "%ls: Too many levels of symbolic links: '%ls'\n"
-msgstr ""
+msgstr "%ls: Zu viele Ebenen von symbolischen Links: '%ls'\n"
 
 #: src/builtins/argparse.rs:468
 msgid "%ls: Too many long-only options\n"
@@ -1115,7 +1103,7 @@ msgstr ""
 
 #: src/builtins/set_color.rs:178
 msgid "%ls: Unknown color '%ls'\n"
-msgstr ""
+msgstr "%ls: Unbekannte Farbe '%ls'\n"
 
 #: src/builtins/cd.rs:173
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
@@ -1127,16 +1115,14 @@ msgstr ""
 
 #: src/builtins/function.rs:109
 msgid "%ls: Unknown signal '%ls'"
-msgstr ""
+msgstr "%ls: Unbekanntes Signal '%ls'"
 
-msgid ""
-"%ls: usage of -i for --silent is deprecated. Please use -s or --silent "
-"instead.\n"
+msgid "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
 msgstr ""
 
 #: src/builtins/printf.rs:227
 msgid "%ls: value not completely converted (can't convert '%ls')"
-msgstr ""
+msgstr "%ls: Wert nicht vollständig konvertiert (kann '%ls' nicht konvertieren)"
 
 #: src/bin/fish_key_reader.rs:332
 msgid "%ls, version %s\n"
@@ -1144,7 +1130,7 @@ msgstr "%ls, Version %s\n"
 
 #: src/builtins/abbr.rs:539
 msgid "%ls: Warning: Option '%ls' was removed and is now ignored"
-msgstr ""
+msgstr "%ls: Warnung: Option '%ls' wurde entfernt und wird nun ignoriert"
 
 #: src/builtins/ulimit.rs:46
 msgid "%lu\n"
@@ -1168,11 +1154,11 @@ msgstr "Unpassende Klammern"
 
 #: src/expand.rs:944
 msgid "Mismatched parenthesis"
-msgstr ""
+msgstr "Nicht übereinstimmende Klammer"
 
 #: src/tinyexpr.rs:102
 msgid "Missing closing parenthesis"
-msgstr ""
+msgstr "Fehlende schließende Klammer"
 
 #: src/ast.rs:2849
 msgid "Missing end to balance this %ls"
@@ -1188,7 +1174,7 @@ msgstr "fehlende Hexzahl in Unicode-Escapesequenz"
 
 #: src/tinyexpr.rs:103
 msgid "Missing opening parenthesis"
-msgstr ""
+msgstr "Fehlende öffnende Klammer"
 
 #: src/tinyexpr.rs:106
 msgid "Missing operator"
@@ -1212,11 +1198,11 @@ msgstr "(keine Treffer)"
 
 #: src/builtins/status.rs:449
 msgid "Not a function"
-msgstr ""
+msgstr "Keine Funktion"
 
 #: src/builtins/test.rs:816
 msgid "Not a number"
-msgstr ""
+msgstr "Keine Zahl"
 
 #: src/reader.rs:3402
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
@@ -1227,10 +1213,12 @@ msgid ""
 "\n"
 "   PID  Command\n"
 msgstr ""
+"\n"
+"   PID  Befehl\n"
 
 #: src/builtins/test.rs:818
 msgid "Number is infinite"
-msgstr ""
+msgstr "Zahl ist unendlich"
 
 #: src/tinyexpr.rs:112
 msgid "Number is too large"
@@ -1242,7 +1230,7 @@ msgstr ""
 
 #: src/builtins/printf.rs:215
 msgid "Number was empty"
-msgstr ""
+msgstr "Zahl war leer"
 
 #: src/builtins/status.rs:346
 msgid "Only on interactive jobs"
@@ -1270,8 +1258,7 @@ msgstr "Bitte setzen sie $%ls auf ein Verzeichnis in das sie schreiben können."
 
 #: src/path.rs:143
 msgid "Please set the %ls or HOME environment variable before starting fish."
-msgstr ""
-"Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
+msgstr "Bitte setzen sie %ls oder die HOME Umgebungsvariable bevor sie fish starten."
 
 #: src/builtins/shared.rs:489
 msgid "Print arguments"
@@ -1311,8 +1298,7 @@ msgstr "Job aus der Jobliste entfernen"
 
 #: src/parse_execution.rs:1532
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr ""
-"Umleitung zu '%ls' angefordert, dies ist aber kein gültiger Dateideskriptor"
+msgstr "Umleitung zu '%ls' angefordert, dies ist aber kein gültiger Dateideskriptor"
 
 #: src/builtins/test.rs:820
 msgid "Result too large: %ls"
@@ -1400,7 +1386,7 @@ msgstr ""
 
 #: src/parser.rs:662
 msgid "Startup (line %d): "
-msgstr ""
+msgstr "Start (Zeile %d): "
 
 #: src/builtins/jobs.rs:71
 msgid "State\tCommand\n"
@@ -1448,7 +1434,7 @@ msgstr "Teste eine Bedingung"
 
 #: src/path.rs:160
 msgid "The error was '%s'."
-msgstr ""
+msgstr "Der Fehler war '%s'."
 
 #: src/parse_execution.rs:582
 msgid "The expanded command is a keyword."
@@ -1488,7 +1474,7 @@ msgstr ""
 
 #: src/tinyexpr.rs:105
 msgid "Too many arguments"
-msgstr ""
+msgstr "Zu viele Argumente"
 
 #: src/expand.rs:965
 msgid "Too much data emitted by command substitution so it was discarded"
@@ -1580,11 +1566,11 @@ msgstr ""
 
 #: src/tinyexpr.rs:107
 msgid "Unexpected token"
-msgstr ""
+msgstr "Unerwartetes Token"
 
 #: src/env/var.rs:30
 msgid "unexported"
-msgstr ""
+msgstr "nicht exportiert"
 
 #: src/builtins/printf.rs:670
 msgid "Unicode character out of range: \\%c%0*x"
@@ -1592,11 +1578,11 @@ msgstr "Unicodezeichen ausserhalb der Gültigkeit: \\%c%0*x"
 
 #: src/fish_test_helper.cpp:145
 msgid "Unknown"
-msgstr ""
+msgstr "Unbekannt"
 
 #: src/fish_test_helper.cpp:282
 msgid "Unknown command"
-msgstr ""
+msgstr "Unbekannter Befehl"
 
 #: src/fish_test_helper.cpp:282
 msgid "Unknown command:"
@@ -1606,24 +1592,20 @@ msgstr "Befehl nicht gefunden:"
 msgid "Unknown command. A component of '%ls' is not a directory."
 msgstr "Befehl nicht gefunden. Eine Komponente von '%ls' ist kein Verzeichnis."
 
-msgid ""
-"Unknown command. A component of '%ls' is not a directory. Check your $PATH."
-msgstr ""
-"Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis. Überprüfe "
-"deinen $PATH"
+msgid "Unknown command. A component of '%ls' is not a directory. Check your $PATH."
+msgstr "Befehl nicht gefunden. Ein Element von '%ls' ist kein Verzeichnis. Überprüfe deinen $PATH"
 
 #: src/parse_execution.rs:359
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr ""
-"Befehl nicht gefunden. '%ls' existiert, ist aber keine ausführbare Datei."
+msgstr "Befehl nicht gefunden. '%ls' existiert, ist aber keine ausführbare Datei."
 
 #: src/expand.rs:1003
 msgid "Unknown error while evaluating command substitution"
-msgstr ""
+msgstr "Unbekannter Fehler bei der Auswertung der Befehlssubstitution"
 
 #: src/tinyexpr.rs:101
 msgid "Unknown function"
-msgstr ""
+msgstr "Unbekannte Funktion"
 
 #: src/exec.rs:1007
 msgid "Unknown function '%ls'"
@@ -1635,15 +1617,14 @@ msgstr "Unbekannte Tastenkombination 0x%X"
 
 #: src/builtins/ulimit.rs:42
 msgid "unlimited\n"
-msgstr ""
+msgstr "unbegrenzt\n"
 
 #: src/expand.rs:1000
 msgid "Unmatched wildcard"
-msgstr ""
+msgstr "Nicht passender Platzhalter"
 
 #: src/proc.rs:1199
-msgid ""
-"Use 'disown PID' to remove jobs from the list without terminating them.\n"
+msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
 
 #: src/env_dispatch.rs:523
@@ -1664,7 +1645,7 @@ msgstr "mit den Parametern '%ls'"
 
 #: src/builtins/type.rs:124
 msgid " with definition"
-msgstr ""
+msgstr " mit Definition"
 
 #: src/builtins/shared.rs:26:pub const BUILTIN_ERR_MISSING
 msgid "%ls: %ls: option requires an argument\n"
@@ -1690,7 +1671,7 @@ msgstr ""
 
 #: src/builtins/shared.rs:45:pub const BUILTIN_ERR_UNKNOWN
 msgid "%ls: %ls: unknown option\n"
-msgstr ""
+msgstr "%ls: %ls: unbekannte Option\n"
 
 #: src/builtins/shared.rs:48:pub const BUILTIN_ERR_BIND_MODE
 msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
@@ -1698,11 +1679,11 @@ msgstr ""
 
 #: src/builtins/shared.rs:57:pub const BUILTIN_ERR_MISSING_SUBCMD
 msgid "%ls: missing subcommand\n"
-msgstr ""
+msgstr "%ls: fehlender Unterbefehl\n"
 
 #: src/builtins/shared.rs:58:pub const BUILTIN_ERR_INVALID_SUBCMD
 msgid "%ls: %ls: invalid subcommand\n"
-msgstr ""
+msgstr "%ls: %ls: ungültiger Unterbefehl\n"
 
 #: src/builtins/shared.rs:68:pub const BUILTIN_ERR_VARNAME
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
@@ -1710,7 +1691,7 @@ msgstr ""
 
 #: src/builtins/shared.rs:71:pub const BUILTIN_ERR_COMBO
 msgid "%ls: invalid option combination\n"
-msgstr ""
+msgstr "%ls: ungültige Optionskombination\n"
 
 #: src/builtins/shared.rs:76:pub const FG_MSG
 msgid "Send job %d (%ls) to foreground\n"
@@ -1725,8 +1706,7 @@ msgid "%ls: given %d indexes but %d values\n"
 msgstr ""
 
 #: src/builtins/set.rs:25
-msgid ""
-"%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
+msgid "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
 msgstr ""
 
 #: src/fds.rs:16:pub const PIPE_ERROR
@@ -1838,7 +1818,7 @@ msgstr "Der 'time' Befehl darf nur am Anfang einer Pipeline stehen"
 
 #: src/print_help.rs:7:const HELP_ERR
 msgid "Could not show help message"
-msgstr ""
+msgstr "Hilfemeldung konnte nicht angezeigt werden"
 
 #: src/env/var.rs:56
 msgid "/usr/local/share/doc/fish"
@@ -1861,7 +1841,7 @@ msgstr ""
 
 #: share/functions/__fish_md5.fish:1 share/functions/__fish_md5.fish:2
 msgid "%s: Too many arguments %s\\n"
-msgstr ""
+msgstr "%s: Zu viele Argumente %s\\n"
 
 #: share/functions/__fish_print_help.fish:1
 msgid "Cannot format help; no parser found"
@@ -1881,19 +1861,19 @@ msgstr ""
 
 #: share/functions/alias.fish:1
 msgid "%s: name cannot be empty\\n"
-msgstr ""
+msgstr "%s: Name darf nicht leer sein\\n"
 
 #: share/functions/alias.fish:2
 msgid "%s: body cannot be empty\\n"
-msgstr ""
+msgstr "%s: Körper darf nicht leer sein\\n"
 
 #: share/functions/cd.fish:1
 msgid "Too many args for cd command"
-msgstr ""
+msgstr "Zu viele Argumente für den cd-Befehl"
 
 #: share/functions/cdh.fish:1
 msgid "cdh: Expected zero or one arguments"
-msgstr ""
+msgstr "cdh: Erwartete null oder ein Argument"
 
 #: share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
@@ -1922,7 +1902,7 @@ msgstr ""
 
 #: share/functions/edit_command_buffer.fish:2
 msgid "or the file was empty"
-msgstr ""
+msgstr "oder die Datei war leer"
 
 #: share/functions/fish_add_path.fish:1
 msgid "Skipping non-existent path: %s\\n"
@@ -2167,11 +2147,11 @@ msgstr ""
 
 #: share/completions/7z.fish:2
 msgid "Extract with full paths"
-msgstr ""
+msgstr "Mit vollständigen Pfaden extrahieren"
 
 #: share/completions/7z.fish:3
 msgid "Include archives"
-msgstr ""
+msgstr "Archive einbeziehen"
 
 #: share/completions/7z.fish:4
 msgid "Disable archive_name field"
@@ -2179,15 +2159,15 @@ msgstr ""
 
 #: share/completions/7z.fish:5
 msgid "Overwrite mode"
-msgstr ""
+msgstr "Überschreibmodus"
 
 #: share/completions/7z.fish:6
 msgid "Exclude archives"
-msgstr ""
+msgstr "Archive ausschließen"
 
 #: share/completions/7z.fish:7
 msgid "Set output log level"
-msgstr ""
+msgstr "Ausgabeprotokollierungsstufe festlegen"
 
 #: share/completions/7z.fish:8
 msgid "Disable progress indicator"
@@ -2239,19 +2219,19 @@ msgstr ""
 
 #: share/completions/7z.fish:20
 msgid "Delete files after compression"
-msgstr ""
+msgstr "Dateien nach der Komprimierung löschen"
 
 #: share/completions/7z.fish:21
 msgid "Send archive by email"
-msgstr ""
+msgstr "Archiv per E-Mail senden"
 
 #: share/completions/7z.fish:22
 msgid "Create SFX archive"
-msgstr ""
+msgstr "SFX-Archiv erstellen"
 
 #: share/completions/7z.fish:23
 msgid "Read data from stdin"
-msgstr ""
+msgstr "Daten von stdin lesen"
 
 #: share/completions/7z.fish:24
 msgid "Set large pages mode"
@@ -2259,31 +2239,31 @@ msgstr ""
 
 #: share/completions/7z.fish:25
 msgid "Show technical information"
-msgstr ""
+msgstr "Technische Informationen anzeigen"
 
 #: share/completions/7z.fish:26
 msgid "Store NT security information"
-msgstr ""
+msgstr "NT-Sicherheitsinformationen speichern"
 
 #: share/completions/7z.fish:27
 msgid "Store NTFS alternate streams"
-msgstr ""
+msgstr "Alternative Datenströme von NTFS speichern"
 
 #: share/completions/7z.fish:28
 msgid "Store hard links"
-msgstr ""
+msgstr "Harte Links speichern"
 
 #: share/completions/7z.fish:29
 msgid "Store symbolic links"
-msgstr ""
+msgstr "Symbolische Links speichern"
 
 #: share/completions/7z.fish:30
 msgid "Write data to stdout"
-msgstr ""
+msgstr "Daten nach stdout schreiben"
 
 #: share/completions/7z.fish:31
 msgid "Disable wildcard matching"
-msgstr ""
+msgstr "Platzhalterabgleich deaktivieren"
 
 #: share/completions/7z.fish:32
 msgid "Eliminate duplication of root folder"
@@ -2299,11 +2279,11 @@ msgstr ""
 
 #: share/completions/7z.fish:35
 msgid "Compress shared files"
-msgstr ""
+msgstr "Gemeinsame Dateien komprimieren"
 
 #: share/completions/7z.fish:36
 msgid "Set archive timestamp"
-msgstr ""
+msgstr "Zeitstempel des Archivs festlegen"
 
 #: share/completions/7z.fish:37
 msgid "Set CPU thread affinity mask"
@@ -2311,11 +2291,11 @@ msgstr ""
 
 #: share/completions/7z.fish:38
 msgid "Exclude archive type"
-msgstr ""
+msgstr "Archivtyp ausschließen"
 
 #: share/completions/7z.fish:39
 msgid "Type of archive"
-msgstr ""
+msgstr "Art des Archivs"
 
 #: share/completions/7z.fish:40
 msgid "Update options"
@@ -2327,30 +2307,28 @@ msgstr ""
 
 #: share/completions/7z.fish:42
 msgid "Assign work directory"
-msgstr ""
+msgstr "Arbeitsverzeichnis zuweisen"
 
 #: share/completions/7z.fish:43
 msgid "Exclude filenames"
-msgstr ""
+msgstr "Dateinamen ausschließen"
 
 #: share/completions/7z.fish:44
 msgid "Assume yes on all queries"
-msgstr ""
+msgstr "Alle Abfragen mit Ja beantworten"
 
-#: share/completions/a2disconf.fish:1 share/completions/a2dismod.fish:1
-#: share/completions/a2dissite.fish:1 share/completions/a2enconf.fish:1
-#: share/completions/a2enmod.fish:1 share/completions/a2ensite.fish:1
+#: share/completions/a2disconf.fish:1 share/completions/a2dismod.fish:1 share/completions/a2dissite.fish:1
+#: share/completions/a2enconf.fish:1 share/completions/a2enmod.fish:1 share/completions/a2ensite.fish:1
 msgid "Don't show informative messages"
-msgstr ""
+msgstr "Keine informativen Meldungen anzeigen"
 
-#: share/completions/a2disconf.fish:2 share/completions/a2dismod.fish:2
-#: share/completions/a2dissite.fish:2
+#: share/completions/a2disconf.fish:2 share/completions/a2dismod.fish:2 share/completions/a2dissite.fish:2
 msgid "Purge all traces of module"
 msgstr ""
 
 #: share/completions/abbr.fish:1
 msgid "Add abbreviation"
-msgstr ""
+msgstr "Abkürzung hinzufügen"
 
 #: share/completions/abbr.fish:2
 msgid "Check if an abbreviation exists"
@@ -2358,19 +2336,19 @@ msgstr ""
 
 #: share/completions/abbr.fish:3
 msgid "Rename an abbreviation"
-msgstr ""
+msgstr "Eine Abkürzung umbenennen"
 
 #: share/completions/abbr.fish:4
 msgid "Erase abbreviation"
-msgstr ""
+msgstr "Abkürzung löschen"
 
 #: share/completions/abbr.fish:5
 msgid "Print all abbreviations"
-msgstr ""
+msgstr "Alle Abkürzungen ausgeben"
 
 #: share/completions/abbr.fish:6
 msgid "Print all abbreviation names"
-msgstr ""
+msgstr "Alle Abkürzungsnamen ausgeben"
 
 #: share/completions/abbr.fish:7
 msgid "Expand only as a command, or anywhere"
@@ -2390,7 +2368,7 @@ msgstr ""
 
 #: share/completions/abook.fish:1
 msgid "Complete abook formats"
-msgstr ""
+msgstr "Vollständige abook-Formate"
 
 #: share/completions/abook.fish:2 share/completions/grub-install.fish:32
 msgid "Show usage"
@@ -2426,31 +2404,29 @@ msgstr ""
 
 #: share/completions/abook.fish:10 share/completions/pg_dump.fish:2
 msgid "Output file format"
-msgstr ""
+msgstr "Format der Ausgabedatei"
 
 #: share/completions/abook.fish:11
 msgid "Input file (default: stdin)"
-msgstr ""
+msgstr "Eingabedatei (Standard: stdin)"
 
 #: share/completions/abook.fish:12
 msgid "Output file (default: stdout)"
-msgstr ""
+msgstr "Ausgabedatei (Standard: stdout)"
 
 #: share/completions/abook.fish:13
 msgid "Print available formats"
-msgstr ""
+msgstr "Verfügbare Formate ausgeben"
 
-#: share/completions/acat.fish:1 share/completions/als.fish:1
-#: share/completions/aunpack.fish:1
+#: share/completions/acat.fish:1 share/completions/als.fish:1 share/completions/aunpack.fish:1
 msgid "Archive content"
-msgstr ""
+msgstr "Inhalt des Archivs"
 
 #: share/completions/accept.fish:1 share/completions/cupsaccept.fish:1
 msgid "Accept reason"
-msgstr ""
+msgstr "Grund akzeptieren"
 
-#: share/completions/ack.fish:1 share/completions/grep.fish:23
-#: share/completions/sort.fish:3
+#: share/completions/ack.fish:1 share/completions/grep.fish:23 share/completions/sort.fish:3
 msgid "Ignore case"
 msgstr "Gross-/Kleinschreibung ignorieren"
 
@@ -2496,11 +2472,11 @@ msgstr ""
 
 #: share/completions/ack.fish:12
 msgid "Print all lines"
-msgstr ""
+msgstr "Alle Zeilen ausgeben"
 
 #: share/completions/ack.fish:13
 msgid "Specify pattern explicitly"
-msgstr ""
+msgstr "Muster explizit angeben"
 
 #: share/completions/ack.fish:14
 msgid "Stop searching in each file after NUM matches"
@@ -2592,7 +2568,7 @@ msgstr ""
 
 #: share/completions/ack.fish:36
 msgid "Set the color for filenames"
-msgstr ""
+msgstr "Farbe für Dateinamen festlegen"
 
 #: share/completions/ack.fish:37
 msgid "Set the color for matches"
@@ -2608,19 +2584,19 @@ msgstr ""
 
 #: share/completions/ack.fish:40
 msgid "Only print the files selected"
-msgstr ""
+msgstr "Nur die ausgewählten Dateien ausgeben"
 
 #: share/completions/ack.fish:41
 msgid "Only select files matching pattern"
-msgstr ""
+msgstr "Nur Dateien auswählen, die dem Muster entsprechen"
 
 #: share/completions/ack.fish:42
 msgid "Sort the found files lexically"
-msgstr ""
+msgstr "Gefundene Dateien lexikalisch sortieren"
 
 #: share/completions/ack.fish:43
 msgid "Show which types each file has"
-msgstr ""
+msgstr "Anzeigen, welchen Typ jede Datei hat"
 
 #: share/completions/ack.fish:44
 msgid "Read the list of files to search from file"
@@ -2632,15 +2608,15 @@ msgstr ""
 
 #: share/completions/ack.fish:46
 msgid "Ignore directory"
-msgstr ""
+msgstr "Verzeichnis ignorieren"
 
 #: share/completions/ack.fish:47
 msgid "Don't ignore directory"
-msgstr ""
+msgstr "Verzeichnis nicht ignorieren"
 
 #: share/completions/ack.fish:48
 msgid "Add filter for ignoring files"
-msgstr ""
+msgstr "Filter zum Ignorieren von Dateien hinzufügen"
 
 #: share/completions/ack.fish:49
 msgid "Recurse into subdirectories"
@@ -2648,11 +2624,10 @@ msgstr ""
 
 #: share/completions/ack.fish:50
 msgid "No descending into subdirectories"
-msgstr ""
+msgstr "Kein Absteigen in Unterverzeichnisse"
 
-#: share/completions/ack.fish:51 share/completions/file.fish:9
-#: share/completions/find.fish:2 share/completions/ls.fish:17
-#: share/completions/ls.fish:20 share/completions/s3cmd.fish:129
+#: share/completions/ack.fish:51 share/completions/file.fish:9 share/completions/find.fish:2
+#: share/completions/ls.fish:17 share/completions/ls.fish:20 share/completions/s3cmd.fish:129
 msgid "Follow symlinks"
 msgstr "Symbolischen Links folgen"
 
@@ -2662,19 +2637,19 @@ msgstr "Symbolischen Links nicht folgen"
 
 #: share/completions/ack.fish:53
 msgid "Include only recognized files"
-msgstr ""
+msgstr "Nur erkannte Dateien einbeziehen"
 
 #: share/completions/ack.fish:54
 msgid "Include only X files"
-msgstr ""
+msgstr "Nur X Dateien einbeziehen"
 
 #: share/completions/ack.fish:55
 msgid "Replaces definition of type"
-msgstr ""
+msgstr "Ersetzt die Definition des Typs"
 
 #: share/completions/ack.fish:56
 msgid "Specify definition of type"
-msgstr ""
+msgstr "Definition des Typs angeben"
 
 #: share/completions/ack.fish:57
 msgid "Removes all filters associated with type"
@@ -2696,14 +2671,13 @@ msgstr ""
 msgid "Outputs default ackrc"
 msgstr ""
 
-#: share/completions/ack.fish:62 share/completions/udisksctl.fish:1
-#: share/completions/udisksctl.fish:2
+#: share/completions/ack.fish:62 share/completions/udisksctl.fish:1 share/completions/udisksctl.fish:2
 msgid "Shows help"
 msgstr ""
 
 #: share/completions/ack.fish:63
 msgid "Shows all known types"
-msgstr ""
+msgstr "Zeigt alle bekannten Typen an"
 
 #: share/completions/ack.fish:64
 msgid "Dump information on which options are loaded"
@@ -2735,11 +2709,11 @@ msgstr ""
 
 #: share/completions/acpi.fish:1
 msgid "Show battery information"
-msgstr ""
+msgstr "Akku-Informationen anzeigen"
 
 #: share/completions/acpi.fish:2
 msgid "Suppress battery information"
-msgstr ""
+msgstr "Akku-Informationen unterdrücken"
 
 #: share/completions/acpi.fish:3
 msgid "Show thermal information"
@@ -2897,15 +2871,15 @@ msgstr ""
 
 #: share/completions/adb.fish:6
 msgid "Use first USB device"
-msgstr ""
+msgstr "Erstes USB-Gerät verwenden"
 
 #: share/completions/adb.fish:7
 msgid "Use first TCP/IP device"
-msgstr ""
+msgstr "Erstes TCP/IP-Gerät verwenden"
 
 #: share/completions/adb.fish:8
 msgid "Use device with given serial"
-msgstr ""
+msgstr "Gerät mit angegebener Seriennummer verwenden"
 
 #: share/completions/adb.fish:9
 msgid "Use device with given transport id"
@@ -2925,23 +2899,23 @@ msgstr ""
 
 #: share/completions/adb.fish:13
 msgid "Connect to device"
-msgstr ""
+msgstr "Mit Gerät verbinden"
 
 #: share/completions/adb.fish:14
 msgid "Disconnect from device"
-msgstr ""
+msgstr "Gerät trennen"
 
 #: share/completions/adb.fish:15
 msgid "List all connected devices"
-msgstr ""
+msgstr "Alle verbundenen Geräte auflisten"
 
 #: share/completions/adb.fish:16
 msgid "Copy file to device"
-msgstr ""
+msgstr "Datei auf Gerät kopieren"
 
 #: share/completions/adb.fish:17
 msgid "Copy file from device"
-msgstr ""
+msgstr "Datei vom Gerät kopieren"
 
 #: share/completions/adb.fish:18
 msgid "Copy host->device only if changed"
@@ -2957,15 +2931,15 @@ msgstr ""
 
 #: share/completions/adb.fish:21
 msgid "View device log"
-msgstr ""
+msgstr "Geräteprotokoll ansehen"
 
 #: share/completions/adb.fish:22 share/completions/dnf.fish:44
 msgid "Install package"
-msgstr ""
+msgstr "Paket installieren"
 
 #: share/completions/adb.fish:23
 msgid "Uninstall package"
-msgstr ""
+msgstr "Paket deinstallieren"
 
 #: share/completions/adb.fish:24
 msgid "List PIDs of processes hosting a JDWP transport"
@@ -2973,7 +2947,7 @@ msgstr ""
 
 #: share/completions/adb.fish:25
 msgid "Port forwarding"
-msgstr ""
+msgstr "Portweiterleitung"
 
 #: share/completions/adb.fish:26
 msgid "Return bugreport information"
@@ -2981,11 +2955,11 @@ msgstr ""
 
 #: share/completions/adb.fish:27
 msgid "Perform device backup"
-msgstr ""
+msgstr "Gerätesicherung durchführen"
 
 #: share/completions/adb.fish:28
 msgid "Restore device from backup"
-msgstr ""
+msgstr "Gerät aus Sicherung wiederherstellen"
 
 #: share/completions/adb.fish:29
 msgid "Show adb version"
@@ -2997,7 +2971,7 @@ msgstr ""
 
 #: share/completions/adb.fish:31
 msgid "Block until device is online"
-msgstr ""
+msgstr "Blockieren, bis das Gerät online ist"
 
 #: share/completions/adb.fish:32
 msgid "Ensure that there is a server running"
@@ -3025,7 +2999,7 @@ msgstr ""
 
 #: share/completions/adb.fish:38
 msgid "Prints device path"
-msgstr ""
+msgstr "Gibt den Gerätepfad aus"
 
 #: share/completions/adb.fish:39
 msgid "Continuously print the device status"
@@ -3049,7 +3023,7 @@ msgstr ""
 
 #: share/completions/adb.fish:44
 msgid "Run PPP over USB"
-msgstr ""
+msgstr "PPP über USB ausführen"
 
 #: share/completions/adb.fish:45
 msgid "Sideloads the given package"
@@ -3077,7 +3051,7 @@ msgstr ""
 
 #: share/completions/adb.fish:51
 msgid "Algorithm name"
-msgstr ""
+msgstr "Name des Algorithmus"
 
 #: share/completions/adb.fish:52
 msgid "Hex-encoded key"
@@ -3097,7 +3071,7 @@ msgstr ""
 
 #: share/completions/adb.fish:56
 msgid "Device to disconnect"
-msgstr ""
+msgstr "Zu trennendes Gerät"
 
 #: share/completions/adb.fish:57
 msgid "File to write backup data to"
@@ -3142,7 +3116,7 @@ msgstr ""
 
 #: share/completions/adb.fish:67
 msgid "Package(s) to backup"
-msgstr ""
+msgstr "Zu sichernde(s) Paket(e)"
 
 #: share/completions/adb.fish:68
 msgid "List all forward socket connections"
@@ -3164,10 +3138,9 @@ msgstr ""
 msgid "Kick current connection from device side and make it reconnect."
 msgstr ""
 
-#: share/completions/adb.fish:73 share/completions/adb.fish:74
-#: share/completions/adb.fish:75
+#: share/completions/adb.fish:73 share/completions/adb.fish:74 share/completions/adb.fish:75
 msgid "File on device"
-msgstr ""
+msgstr "Datei auf dem Gerät"
 
 #: share/completions/adb.fish:76
 msgid "Dump logs from prior to last reboot from pstore"
@@ -3233,7 +3206,7 @@ msgstr ""
 
 #: share/completions/adb.fish:91
 msgid "Output statistics"
-msgstr ""
+msgstr "Statistiken ausgeben"
 
 #: share/completions/adb.fish:92
 msgid "Print prune rules"
@@ -3256,22 +3229,18 @@ msgid "Quit after print <count> lines"
 msgstr ""
 
 #: share/completions/adb.fish:97
-msgid ""
-"Print all message even if they do not matches, requires --regex and --max-"
-"count"
+msgid "Print all message even if they do not matches, requires --regex and --max-count"
 msgstr ""
 
 #: share/completions/adb.fish:98
-msgid ""
-"Only display log messages from UIDs present in the comma separate list <uids>"
+msgid "Only display log messages from UIDs present in the comma separate list <uids>"
 msgstr ""
 
 #: share/completions/adb.fish:99 share/completions/adb.fish:100
 msgid "Command on device"
-msgstr ""
+msgstr "Befehl auf dem Gerät"
 
-#: share/completions/adb.fish:101 share/completions/zfs.fish:73
-#: share/completions/zpool.fish:126
+#: share/completions/adb.fish:101 share/completions/zfs.fish:73 share/completions/zpool.fish:126
 msgid "Property to set"
 msgstr ""
 
@@ -3307,7 +3276,7 @@ msgstr ""
 
 #: share/completions/adduser.fish:7
 msgid "Create a group"
-msgstr ""
+msgstr "Eine Gruppe erstellen"
 
 #: share/completions/adduser.fish:8
 msgid "Display brief instructions"
@@ -3373,15 +3342,15 @@ msgstr ""
 
 #: share/completions/age-keygen.fish:3 share/completions/age.fish:5
 msgid "print version number"
-msgstr ""
+msgstr "Versionsnummer ausgeben"
 
 #: share/completions/age.fish:1
 msgid "public key"
-msgstr ""
+msgstr "öffentlicher Schlüssel"
 
 #: share/completions/age.fish:2
 msgid "file with public key(s)"
-msgstr ""
+msgstr "Datei mit öffentlichem/n Schlüssel(n)"
 
 #: share/completions/age.fish:3
 msgid "PEM encode ciphertext"
@@ -3389,23 +3358,19 @@ msgstr ""
 
 #: share/completions/age.fish:4
 msgid "file with private key(s)"
-msgstr ""
+msgstr "Datei mit privatem/n Schlüssel(n)"
 
-#: share/completions/alias.fish:1 share/completions/conda.fish:1
-#: share/completions/dolphin.fish:1 share/completions/elvish.fish:1
-#: share/completions/htop.fish:4 share/completions/ilasm.fish:1
-#: share/completions/kb.fish:1 share/completions/konsole.fish:1
-#: share/completions/mkdocs.fish:1 share/completions/mkdosfs.fish:22
-#: share/completions/perl.fish:21 share/completions/pix.fish:1
-#: share/completions/pv.fish:32 share/completions/s3cmd.fish:41
-#: share/completions/subl.fish:8 share/completions/virsh.fish:4
-#: share/completions/wine.fish:1 share/completions/wineboot.fish:1
-#: share/completions/xed.fish:1 share/completions/xonsh.fish:1
-#: share/completions/xplayer.fish:1 share/completions/xreader.fish:1
-#: share/completions/xviewer.fish:1 share/completions/xviewer.fish:3
+#: share/completions/alias.fish:1 share/completions/conda.fish:1 share/completions/dolphin.fish:1
+#: share/completions/elvish.fish:1 share/completions/htop.fish:4 share/completions/ilasm.fish:1
+#: share/completions/kb.fish:1 share/completions/konsole.fish:1 share/completions/mkdocs.fish:1
+#: share/completions/mkdosfs.fish:22 share/completions/perl.fish:21 share/completions/pix.fish:1
+#: share/completions/pv.fish:32 share/completions/s3cmd.fish:41 share/completions/subl.fish:8
+#: share/completions/virsh.fish:4 share/completions/wine.fish:1 share/completions/wineboot.fish:1
+#: share/completions/xed.fish:1 share/completions/xonsh.fish:1 share/completions/xplayer.fish:1
+#: share/completions/xreader.fish:1 share/completions/xviewer.fish:1 share/completions/xviewer.fish:3
 #: share/completions/yash.fish:1
 msgid "Show help and exit"
-msgstr ""
+msgstr "Hilfe anzeigen und beenden"
 
 #: share/completions/alias.fish:2
 msgid "Automatically funcsave the alias"
@@ -3413,11 +3378,11 @@ msgstr ""
 
 #: share/completions/alsactl.fish:1
 msgid "Save current driver state"
-msgstr ""
+msgstr "Aktuellen Treiberstatus speichern"
 
 #: share/completions/alsactl.fish:2
 msgid "Load driver state"
-msgstr ""
+msgstr "Treiberstatus laden"
 
 #: share/completions/alsactl.fish:3
 msgid "Restore and rescan for available soundcards"
@@ -3445,7 +3410,7 @@ msgstr ""
 
 #: share/completions/alsactl.fish:9
 msgid "Periodically save state"
-msgstr ""
+msgstr "Status regelmäßig speichern"
 
 #: share/completions/alsactl.fish:10
 msgid "Restore state and then periodically save it"
@@ -3457,7 +3422,7 @@ msgstr ""
 
 #: share/completions/alsactl.fish:12 share/completions/gio.fish:49
 msgid "Monitor events"
-msgstr ""
+msgstr "Ereignisse überwachen"
 
 #: share/completions/alsactl.fish:13
 msgid "Show available flags and commands"
@@ -3477,7 +3442,7 @@ msgstr ""
 
 #: share/completions/alsactl.fish:17
 msgid "Use a lock file"
-msgstr ""
+msgstr "Sperrdatei verwenden"
 
 #: share/completions/alsactl.fish:18
 msgid "Do not use a lock file"
@@ -3497,7 +3462,7 @@ msgstr ""
 
 #: share/completions/alsactl.fish:22
 msgid "Set environment variable"
-msgstr ""
+msgstr "Umgebungsvariable festlegen"
 
 #: share/completions/alsactl.fish:23
 msgid "The configuration file for init"
@@ -3527,47 +3492,34 @@ msgstr ""
 msgid "Set the process scheduling policy to idle (SCHED_IDLE)"
 msgstr ""
 
-#: share/completions/alsamixer.fish:1 share/completions/apk.fish:1
-#: share/completions/archlinux-java.fish:6 share/completions/argparse.fish:2
-#: share/completions/attrib.fish:4 share/completions/black.fish:23
-#: share/completions/blender.fish:2 share/completions/bzr.fish:1
-#: share/completions/cf.fish:1 share/completions/checkinstall.fish:55
-#: share/completions/choice.fish:7 share/completions/cleanmgr.fish:7
-#: share/completions/climate.fish:1 share/completions/clj.fish:16
-#: share/completions/cmd.fish:9 share/completions/cmdkey.fish:6
-#: share/completions/comp.fish:8 share/completions/connmanctl.fish:17
-#: share/completions/create_ap.fish:1 share/completions/cygport.fish:25
-#: share/completions/dotnet.fish:8 share/completions/dotnet.fish:17
-#: share/completions/ebuild.fish:7 share/completions/ffmpeg.fish:3
-#: share/completions/ffplay.fish:2 share/completions/ffprobe.fish:2
-#: share/completions/fish_opt.fish:1 share/completions/forfiles.fish:5
-#: share/completions/gacutil.fish:1 share/completions/godoc.fish:25
-#: share/completions/gofmt.fish:8 share/completions/goimports.fish:6
-#: share/completions/golint.fish:3 share/completions/gorename.fish:10
-#: share/completions/grub-install.fish:31
-#: share/completions/grub-mkrescue.fish:23 share/completions/ikdasm.fish:1
-#: share/completions/jest.fish:1 share/completions/lz4.fish:25
-#: share/completions/lz4cat.fish:8 share/completions/matlab.fish:1
-#: share/completions/meson.fish:1 share/completions/meson.fish:11
-#: share/completions/meson.fish:146 share/completions/mkvextract.fish:2
-#: share/completions/mocha.fish:1 share/completions/modinfo.fish:11
-#: share/completions/mono.fish:1 share/completions/monodis.fish:1
-#: share/completions/netctl-auto.fish:1 share/completions/networkctl.fish:12
-#: share/completions/octave.fish:1 share/completions/pg_restore.fish:7
-#: share/completions/ping.fish:56 share/completions/poweroff.fish:1
-#: share/completions/powershell.fish:1 share/completions/pzstd.fish:11
-#: share/completions/quilt.fish:1 share/completions/reflector.fish:1
-#: share/completions/resolvectl.fish:19 share/completions/setx.fish:5
-#: share/completions/sops.fish:53 share/completions/ssh-copy-id.fish:5
-#: share/completions/stow.fish:13 share/completions/synclient.fish:2
-#: share/completions/terraform.fish:2 share/completions/udevadm.fish:1
-#: share/completions/unlz4.fish:11 share/completions/unzstd.fish:18
-#: share/completions/userdbctl.fish:6 share/completions/xsp.fish:1
-#: share/completions/yast2.fish:1 share/completions/zopflipng.fish:13
-#: share/completions/zstd.fish:28 share/completions/zstdcat.fish:11
-#: share/completions/zstdmt.fish:27
+#: share/completions/alsamixer.fish:1 share/completions/apk.fish:1 share/completions/archlinux-java.fish:6
+#: share/completions/argparse.fish:2 share/completions/attrib.fish:4 share/completions/black.fish:23
+#: share/completions/blender.fish:2 share/completions/bzr.fish:1 share/completions/cf.fish:1
+#: share/completions/checkinstall.fish:55 share/completions/choice.fish:7 share/completions/cleanmgr.fish:7
+#: share/completions/climate.fish:1 share/completions/clj.fish:16 share/completions/cmd.fish:9
+#: share/completions/cmdkey.fish:6 share/completions/comp.fish:8 share/completions/connmanctl.fish:17
+#: share/completions/create_ap.fish:1 share/completions/cygport.fish:25 share/completions/dotnet.fish:8
+#: share/completions/dotnet.fish:17 share/completions/ebuild.fish:7 share/completions/ffmpeg.fish:3
+#: share/completions/ffplay.fish:2 share/completions/ffprobe.fish:2 share/completions/fish_opt.fish:1
+#: share/completions/forfiles.fish:5 share/completions/gacutil.fish:1 share/completions/godoc.fish:25
+#: share/completions/gofmt.fish:8 share/completions/goimports.fish:6 share/completions/golint.fish:3
+#: share/completions/gorename.fish:10 share/completions/grub-install.fish:31
+#: share/completions/grub-mkrescue.fish:23 share/completions/ikdasm.fish:1 share/completions/jest.fish:1
+#: share/completions/lz4.fish:25 share/completions/lz4cat.fish:8 share/completions/matlab.fish:1
+#: share/completions/meson.fish:1 share/completions/meson.fish:11 share/completions/meson.fish:146
+#: share/completions/mkvextract.fish:2 share/completions/mocha.fish:1 share/completions/modinfo.fish:11
+#: share/completions/mono.fish:1 share/completions/monodis.fish:1 share/completions/netctl-auto.fish:1
+#: share/completions/networkctl.fish:12 share/completions/octave.fish:1 share/completions/pg_restore.fish:7
+#: share/completions/ping.fish:56 share/completions/poweroff.fish:1 share/completions/powershell.fish:1
+#: share/completions/pzstd.fish:11 share/completions/quilt.fish:1 share/completions/reflector.fish:1
+#: share/completions/resolvectl.fish:19 share/completions/setx.fish:5 share/completions/sops.fish:53
+#: share/completions/ssh-copy-id.fish:5 share/completions/stow.fish:13 share/completions/synclient.fish:2
+#: share/completions/terraform.fish:2 share/completions/udevadm.fish:1 share/completions/unlz4.fish:11
+#: share/completions/unzstd.fish:18 share/completions/userdbctl.fish:6 share/completions/xsp.fish:1
+#: share/completions/yast2.fish:1 share/completions/zopflipng.fish:13 share/completions/zstd.fish:28
+#: share/completions/zstdcat.fish:11 share/completions/zstdmt.fish:27
 msgid "Show help"
-msgstr ""
+msgstr "Hilfe anzeigen"
 
 #: share/completions/alsamixer.fish:2
 msgid "Soundcard number or id to use"
@@ -3671,7 +3623,7 @@ msgstr ""
 
 #: share/completions/amixer.fish:1
 msgid "this help"
-msgstr ""
+msgstr "diese Hilfe"
 
 #: share/completions/amixer.fish:2
 msgid "select the card"
@@ -3691,11 +3643,11 @@ msgstr ""
 
 #: share/completions/amixer.fish:6
 msgid "print version of this program"
-msgstr ""
+msgstr "Version dieses Programms ausgeben"
 
 #: share/completions/amixer.fish:7 share/completions/efibootmgr.fish:23
 msgid "be quiet"
-msgstr ""
+msgstr "still sein"
 
 #: share/completions/amixer.fish:8
 msgid "show also inactive controls"
@@ -3952,13 +3904,11 @@ msgstr ""
 msgid "Width and height of image [geometry]"
 msgstr ""
 
-#: share/completions/animate.fish:39 share/completions/compare.fish:35
-#: share/completions/composite.fish:41 share/completions/convert.fish:74
-#: share/completions/display.fish:45 share/completions/import.fish:44
-#: share/completions/mogrify.fish:77 share/completions/montage.fish:64
-#: share/completions/stream.fish:26
+#: share/completions/animate.fish:39 share/completions/compare.fish:35 share/completions/composite.fish:41
+#: share/completions/convert.fish:74 share/completions/display.fish:45 share/completions/import.fish:44
+#: share/completions/mogrify.fish:77 share/completions/montage.fish:64 share/completions/stream.fish:26
 msgid "Transparent color [color]"
-msgstr ""
+msgstr "Transparente Farbe [color]"
 
 #: share/completions/animate.fish:40 share/completions/composite.fish:42
 #: share/completions/convert.fish:73 share/completions/display.fish:46
@@ -4175,7 +4125,7 @@ msgstr ""
 
 #: share/completions/ansible-playbook.fish:8 share/completions/ansible.fish:8
 msgid "Shows a help message"
-msgstr ""
+msgstr "Zeigt eine Hilfemeldung an"
 
 #: share/completions/ansible-playbook.fish:9 share/completions/ansible.fish:9
 msgid "Specify inventory host path or comma separated host list"
@@ -4231,14 +4181,14 @@ msgstr ""
 msgid "Only run plays and tasks tagged with these values"
 msgstr ""
 
-#: share/completions/ansible-playbook.fish:22
-#: share/completions/ansible-vault.fish:9 share/completions/ansible.fish:20
+#: share/completions/ansible-playbook.fish:22 share/completions/ansible-vault.fish:9
+#: share/completions/ansible.fish:20
 msgid "Vault password file"
-msgstr ""
+msgstr "Tresor-Passwort-Datei"
 
 #: share/completions/ansible-playbook.fish:23 share/completions/ansible.fish:21
 msgid "Verbose mode (-vv/-vvv/-vvvv for more)"
-msgstr ""
+msgstr "Ausführlicher Modus (-vv/-vvv/-vvvv für mehr)"
 
 #: share/completions/ansible-playbook.fish:24
 #: share/completions/ansible-vault.fish:2 share/completions/ansible.fish:22
@@ -4296,7 +4246,7 @@ msgstr "Version anzeigen und beenden"
 
 #: share/completions/ansible-playbook.fish:25 share/completions/ansible.fish:23
 msgid "Ask for connection password"
-msgstr ""
+msgstr "Nach dem Verbindungspasswort fragen"
 
 #: share/completions/ansible-playbook.fish:26 share/completions/ansible.fish:24
 #: share/completions/ansible.fish:25
@@ -4372,19 +4322,19 @@ msgstr ""
 
 #: share/completions/ansible-vault.fish:10
 msgid "Decrypt encrypted file or stdin"
-msgstr ""
+msgstr "Verschlüsselte Datei oder stdin entschlüsseln"
 
 #: share/completions/ansible-vault.fish:11
 msgid "Encrypt a file or stdin"
-msgstr ""
+msgstr "Datei oder stdin verschlüsseln"
 
 #: share/completions/ansible-vault.fish:12
 msgid "Create encrypted file"
-msgstr ""
+msgstr "Verschlüsselte Datei erstellen"
 
 #: share/completions/ansible-vault.fish:13
 msgid "Edit encrypted file"
-msgstr ""
+msgstr "Verschlüsselte Datei bearbeiten"
 
 #: share/completions/ansible-vault.fish:14
 msgid "Rekey encrypted file"
@@ -4396,7 +4346,7 @@ msgstr ""
 
 #: share/completions/ansible-vault.fish:16
 msgid "Encrypt string"
-msgstr ""
+msgstr "Zeichenkette verschlüsseln"
 
 #: share/completions/ansible-vault.fish:17
 msgid "Specify the variable name for stdin"
@@ -4489,7 +4439,7 @@ msgstr ""
 
 #: share/completions/ant.fish:13
 msgid "be extra quiet"
-msgstr ""
+msgstr "besonders leise sein"
 
 #: share/completions/ant.fish:14
 msgid "print nothing but task outputs and build failures"
@@ -4623,7 +4573,7 @@ msgstr ""
 
 #: share/completions/apk.fish:15
 msgid "Show a progress bar"
-msgstr ""
+msgstr "Fortschrittsbalken anzeigen"
 
 #: share/completions/apk.fish:16
 msgid "Write progress to FD"
@@ -4657,7 +4607,7 @@ msgstr ""
 
 #: share/completions/apk.fish:23
 msgid "Don't use network"
-msgstr ""
+msgstr "Netzwerk nicht verwenden"
 
 #: share/completions/apk.fish:24
 msgid "Don't use any local cache path"
@@ -4681,17 +4631,16 @@ msgstr ""
 
 #: share/completions/apk.fish:29 share/completions/yarn.fish:2
 msgid "Add packages"
-msgstr ""
+msgstr "Pakete hinzufügen"
 
-#: share/completions/apk.fish:30 share/completions/apt-build.fish:8
-#: share/completions/dnf.fish:87 share/completions/yarn.fish:14
-#: share/completions/zypper.fish:16
+#: share/completions/apk.fish:30 share/completions/apt-build.fish:8 share/completions/dnf.fish:87
+#: share/completions/yarn.fish:14 share/completions/zypper.fish:16
 msgid "Remove packages"
 msgstr "Pakete entfernen"
 
 #: share/completions/apk.fish:31
 msgid "Repair package"
-msgstr ""
+msgstr "Paket reparieren"
 
 #: share/completions/apk.fish:32
 msgid "Update repository indexes"
@@ -4703,11 +4652,11 @@ msgstr ""
 
 #: share/completions/apk.fish:34
 msgid "List packages"
-msgstr ""
+msgstr "Pakete auflisten"
 
 #: share/completions/apk.fish:35
 msgid "Search package"
-msgstr ""
+msgstr "Paket suchen"
 
 #: share/completions/apk.fish:36
 msgid "Upgrade installed packages"
@@ -4719,7 +4668,7 @@ msgstr ""
 
 #: share/completions/apk.fish:38
 msgid "Compare package versions"
-msgstr ""
+msgstr "Paketversionen vergleichen"
 
 #: share/completions/apk.fish:39
 msgid "Create repository index file"
@@ -4727,7 +4676,7 @@ msgstr ""
 
 #: share/completions/apk.fish:40
 msgid "Download packages"
-msgstr ""
+msgstr "Pakete herunterladen"
 
 #: share/completions/apk.fish:41
 msgid "Audit the directories for changes"
@@ -4779,21 +4728,19 @@ msgstr ""
 
 #: share/completions/apk.fish:53
 msgid "Initialize database"
-msgstr ""
+msgstr "Datenbank initialisieren"
 
-#: share/completions/apk.fish:54 share/completions/apk.fish:61
-#: share/completions/apk.fish:98
+#: share/completions/apk.fish:54 share/completions/apk.fish:61 share/completions/apk.fish:98
 msgid "Prefer to upgrade package"
 msgstr ""
 
-#: share/completions/apk.fish:55 share/completions/apk.fish:93
-#: share/completions/apk.fish:99
+#: share/completions/apk.fish:55 share/completions/apk.fish:93 share/completions/apk.fish:99
 msgid "Select latest version of package"
 msgstr ""
 
 #: share/completions/apk.fish:56
 msgid "Create virtual package"
-msgstr ""
+msgstr "Virtuelles Paket erstellen"
 
 #: share/completions/apk.fish:57
 msgid "Don't change file owner or group"
@@ -4833,7 +4780,7 @@ msgstr ""
 
 #: share/completions/apk.fish:67
 msgid "List the dependencies"
-msgstr ""
+msgstr "Abhängigkeiten auflisten"
 
 #: share/completions/apk.fish:68
 msgid "List virtual packages provided"
@@ -4861,15 +4808,15 @@ msgstr ""
 
 #: share/completions/apk.fish:74
 msgid "Show installed size"
-msgstr ""
+msgstr "Installierte Größe anzeigen"
 
 #: share/completions/apk.fish:75
 msgid "Print the description"
-msgstr ""
+msgstr "Beschreibung ausgeben"
 
 #: share/completions/apk.fish:76
 msgid "Print the license"
-msgstr ""
+msgstr "Lizenz ausgeben"
 
 #: share/completions/apk.fish:77
 msgid "Print active triggers"
@@ -4877,19 +4824,19 @@ msgstr ""
 
 #: share/completions/apk.fish:78 share/completions/uname.fish:8
 msgid "Print all information"
-msgstr ""
+msgstr "Alle Informationen ausgeben"
 
 #: share/completions/apk.fish:79
 msgid "List installed packages only"
-msgstr ""
+msgstr "Nur installierte Pakete auflisten"
 
 #: share/completions/apk.fish:80
 msgid "List orphaned packages only"
-msgstr ""
+msgstr "Nur verwaiste Pakete auflisten"
 
 #: share/completions/apk.fish:81 share/completions/composer.fish:156
 msgid "List available packages only"
-msgstr ""
+msgstr "Nur verfügbare Pakete auflisten"
 
 #: share/completions/apk.fish:82
 msgid "List upgradable packages only"
@@ -4897,23 +4844,23 @@ msgstr ""
 
 #: share/completions/apk.fish:83
 msgid "List packages by origin"
-msgstr ""
+msgstr "Pakete nach Herkunft auflisten"
 
 #: share/completions/apk.fish:84
 msgid "List packages by dependency"
-msgstr ""
+msgstr "Pakete nach Abhängigkeit auflisten"
 
 #: share/completions/apk.fish:85
 msgid "List packages by provider"
-msgstr ""
+msgstr "Pakete nach Anbieter auflisten"
 
 #: share/completions/apk.fish:86
 msgid "Show all package versions"
-msgstr ""
+msgstr "Alle Paketversionen anzeigen"
 
 #: share/completions/apk.fish:87
 msgid "Search package descriptions"
-msgstr ""
+msgstr "Paketbeschreibungen durchsuchen"
 
 #: share/completions/apk.fish:88
 msgid "Require exact match"
@@ -4921,7 +4868,7 @@ msgstr ""
 
 #: share/completions/apk.fish:89
 msgid "Print origin package name"
-msgstr ""
+msgstr "Name des Ursprungspakets ausgeben"
 
 #: share/completions/apk.fish:90
 msgid "Print reverse dependencies"
@@ -4957,7 +4904,7 @@ msgstr ""
 
 #: share/completions/apk.fish:101
 msgid "Compare two given versions"
-msgstr ""
+msgstr "Zwei gegebene Versionen vergleichen"
 
 #: share/completions/apk.fish:102
 msgid "Check the given version strings"
@@ -5282,7 +5229,7 @@ msgstr ""
 #: share/completions/xdg-mime.fish:11 share/completions/xxh64sum.fish:3
 #: share/completions/xz.fish:34 share/completions/yaourt.fish:12
 msgid "Display help"
-msgstr ""
+msgstr "Hilfe anzeigen"
 
 #: share/completions/apm.fish:4 share/completions/base64.fish:5
 #: share/completions/cdrecord.fish:1 share/completions/fastboot.fish:3
@@ -5294,16 +5241,15 @@ msgstr ""
 #: share/completions/umount.fish:2 share/completions/xxh64sum.fish:1
 #: share/completions/xz.fish:36
 msgid "Display version"
-msgstr ""
+msgstr "Version anzeigen"
 
 #: share/completions/apm.fish:5
 msgid "Enable colored output"
-msgstr ""
+msgstr "Farbige Ausgabe aktivieren"
 
-#: share/completions/apm.fish:6 share/completions/grunt.fish:3
-#: share/completions/magento.fish:24
+#: share/completions/apm.fish:6 share/completions/grunt.fish:3 share/completions/magento.fish:24
 msgid "Disable colored output"
-msgstr ""
+msgstr "Farbige Ausgabe deaktivieren"
 
 #: share/completions/apm.fish:7
 msgid "Modify or list configuration items"
@@ -5460,7 +5406,7 @@ msgstr ""
 
 #: share/completions/apm.fish:46
 msgid "Only list packages"
-msgstr ""
+msgstr "Nur Pakete auflisten"
 
 #: share/completions/apm.fish:47
 msgid "Save Atom API token to keychain"
@@ -5468,7 +5414,7 @@ msgstr ""
 
 #: share/completions/apm.fish:48
 msgid "Specify API token"
-msgstr ""
+msgstr "API-Token angeben"
 
 #: share/completions/apm.fish:49
 msgid "Upgrade out of date packages"
@@ -5655,11 +5601,11 @@ msgstr "Ausführlicher Modus"
 
 #: share/completions/apropos.fish:6
 msgid "Keyword as regex (default)"
-msgstr ""
+msgstr "Schlüsselwort als regulärer Ausdruck (Standard)"
 
 #: share/completions/apropos.fish:7
 msgid "Keyword as wildcards"
-msgstr ""
+msgstr "Schlüsselwort als Platzhalter"
 
 #: share/completions/apropos.fish:8
 msgid "Keyword as exactly match"
@@ -5687,7 +5633,7 @@ msgstr ""
 
 #: share/completions/apropos.fish:15 share/completions/whatis.fish:5
 msgid "Set locale"
-msgstr ""
+msgstr "Gebietsschema festlegen"
 
 #: share/completions/apropos.fish:16
 msgid "specify manual section"
@@ -5767,7 +5713,7 @@ msgstr ""
 
 #: share/completions/apropos.fish:35
 msgid "HTML formatting"
-msgstr ""
+msgstr "HTML-Formatierung"
 
 #: share/completions/apropos.fish:36
 msgid "terminal escape formatting"
@@ -6273,7 +6219,7 @@ msgstr ""
 
 #: share/completions/apt-get.fish:29
 msgid "Show full versions for packages"
-msgstr ""
+msgstr "Vollständige Versionen für Pakete anzeigen"
 
 #: share/completions/apt-get.fish:30
 msgid "Compile source packages"
@@ -6281,11 +6227,11 @@ msgstr "Quellpakete kompilieren"
 
 #: share/completions/apt-get.fish:31 share/completions/apt.fish:11
 msgid "Install recommended packages"
-msgstr ""
+msgstr "Empfohlene Pakete installieren"
 
 #: share/completions/apt-get.fish:32 share/completions/apt.fish:12
 msgid "Install suggested packages"
-msgstr ""
+msgstr "Vorgeschlagene Pakete installieren"
 
 #: share/completions/apt-get.fish:33
 msgid "Ignore package Holds"
@@ -6305,7 +6251,7 @@ msgstr ""
 
 #: share/completions/apt-get.fish:38
 msgid "Reinstall packages"
-msgstr ""
+msgstr "Pakete neu installieren"
 
 #: share/completions/apt-get.fish:39
 msgid "Erase obsolete files"
@@ -6732,7 +6678,7 @@ msgstr "Konfigurationsdatei angeben"
 
 #: share/completions/apt-spy.fish:2
 msgid "Debian distribution"
-msgstr ""
+msgstr "Debian-Distribution"
 
 #: share/completions/apt-spy.fish:3
 msgid "Servers in the areas"
@@ -6983,7 +6929,7 @@ msgstr ""
 
 #: share/completions/aptitude.fish:15
 msgid "Install the packages"
-msgstr ""
+msgstr "Pakete installieren"
 
 #: share/completions/aptitude.fish:16
 msgid "Cancel any scheduled actions on the packages"
@@ -6999,11 +6945,11 @@ msgstr ""
 
 #: share/completions/aptitude.fish:19
 msgid "Reinstall the packages"
-msgstr ""
+msgstr "Pakete neu installieren"
 
 #: share/completions/aptitude.fish:20
 msgid "Remove the packages"
-msgstr ""
+msgstr "Pakete entfernen"
 
 #: share/completions/aptitude.fish:21
 msgid "Display detailed information about the packages"

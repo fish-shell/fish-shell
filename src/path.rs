@@ -667,7 +667,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     let mut remoteness = DirRemoteness::unknown;
     if path.is_empty() {
         err = ENOENT;
-    } else if let Err(io_error) = std::fs::create_dir_all(wcs2osstring(&path)) {
+    } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
         err = io_error.raw_os_error().unwrap_or_default();
     } else {
         err = 0;
@@ -683,6 +683,15 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         err,
         used_xdg,
     }
+}
+
+// Like std::fs::create_dir_all, but new directories are created using the given mode (e.g. 0o700).
+fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> std::io::Result<()> {
+    use std::os::unix::fs::DirBuilderExt;
+    std::fs::DirBuilder::new()
+        .recursive(true)
+        .mode(mode)
+        .create(path.as_ref())
 }
 
 /// Return whether the given path is on a remote filesystem.

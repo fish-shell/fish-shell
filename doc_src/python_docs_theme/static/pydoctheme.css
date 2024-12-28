@@ -53,7 +53,6 @@ body {
 div.related ul {
   margin: 0;
   padding: 0 0 0 10px;
-  list-style: none;
 }
 
 div.related {
@@ -581,7 +580,7 @@ div.document {
     }
 
     /* Reduce margins to save space */
-    div.sphinxsidebar ul ul, div.sphinxsidebar ul, div.bodywrapper, div.content {
+    div.sphinxsidebar ul ul, div.bodywrapper, div.content {
         margin-left: 0;
     }
 

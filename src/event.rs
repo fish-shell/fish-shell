@@ -264,7 +264,7 @@ impl Event {
 
     /// Test if specified event is blocked.
     fn is_blocked(&self, parser: &Parser) -> bool {
-        for block in parser.blocks().iter().rev() {
+        for block in parser.blocks_iter_rev() {
             if block.event_blocks {
                 return true;
             }

@@ -873,7 +873,7 @@ fn builtin_break_continue(
     // Paranoia: ensure we have a real loop.
     // This is checked in the AST but we may be invoked dynamically, e.g. just via "eval break".
     let mut has_loop = false;
-    for b in parser.blocks().iter().rev() {
+    for b in parser.blocks_iter_rev() {
         if [BlockType::while_block, BlockType::for_block].contains(&b.typ()) {
             has_loop = true;
             break;

@@ -198,10 +198,7 @@ impl<'a> ExecutionContext {
 
         // Check for stack overflow in case of function calls (regular stack overflow) or string
         // substitution blocks, which can be recursively called with eval (issue #9302).
-        let block_type = {
-            let blocks = ctx.parser().blocks();
-            blocks.get(associated_block).unwrap().typ()
-        };
+        let block_type = ctx.parser().block_with_id(associated_block).typ();
         if (block_type == BlockType::top && ctx.parser().function_stack_is_overflowing())
             || (block_type == BlockType::subst && ctx.parser().is_eval_depth_exceeded())
         {

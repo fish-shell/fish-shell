@@ -25,7 +25,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     // buffer in that case.
     let mut stdout_fill = None;
     if streams.out_is_piped {
-        match IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO) {
+        match IoBufferfill::create_opts(parser.scope().read_limit, STDOUT_FILENO) {
             Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
                 return Err(STATUS_CMD_ERROR);
@@ -40,7 +40,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
     // Of course the same applies to stderr.
     let mut stderr_fill = None;
     if streams.err_is_piped {
-        match IoBufferfill::create_opts(parser.libdata().read_limit, STDERR_FILENO) {
+        match IoBufferfill::create_opts(parser.scope().read_limit, STDERR_FILENO) {
             Err(_) => {
                 // We were unable to create a pipe, probably fd exhaustion.
                 return Err(STATUS_CMD_ERROR);

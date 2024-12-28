@@ -204,12 +204,14 @@ impl ReaderHistorySearch {
     /// Attempt to append matches from the current history item.
     /// Return true if something was appended.
     fn append_matches_from_search(&mut self) -> bool {
-        fn find(zelf: &ReaderHistorySearch, haystack: &wstr, needle: &wstr) -> Option<usize> {
-            if zelf.search().ignores_case() {
-                return ifind(haystack, needle, false);
+        let icase = self.search().ignores_case();
+        let find = |haystack: &wstr, needle: &wstr| -> Option<usize> {
+            if icase {
+                ifind(haystack, needle, false)
+            } else {
+                haystack.find(needle)
             }
-            haystack.find(needle)
-        }
+        };
         let before = self.matches.len();
         let text = self.search().current_string();
         let needle = self.search_string();
@@ -220,7 +222,7 @@ impl ReaderHistorySearch {
             // However, because the user experience of having it crash is horrible,
             // and the worst thing that can otherwise happen here is that a search is unsuccessful,
             // we just check it instead.
-            if let Some(offset) = find(self, text, needle) {
+            if let Some(offset) = find(text, needle) {
                 self.add_if_new(SearchMatch::new(text.to_owned(), offset));
             }
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
@@ -232,7 +234,7 @@ impl ReaderHistorySearch {
                     continue;
                 }
                 let text = tok.text_of(&token);
-                if let Some(offset) = find(self, text, needle) {
+                if let Some(offset) = find(text, needle) {
                     local_tokens.push(SearchMatch::new(text.to_owned(), offset));
                 }
             }

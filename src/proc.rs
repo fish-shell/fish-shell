@@ -4,8 +4,8 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output,
-    scoped_push_replacer, timef, Timepoint, WSL,
+    charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output, timef,
+    Timepoint, WSL,
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
@@ -1044,7 +1044,7 @@ impl Job {
             } else {
                 "UNCOMPLETED"
             },
-            if parser.libdata().is_interactive {
+            if parser.scope().is_interactive {
                 "INTERACTIVE"
             } else {
                 "NON-INTERACTIVE"
@@ -1357,7 +1357,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
 /// Wait for any process finishing, or receipt of a signal.
 pub fn proc_wait_any(parser: &Parser) {
     process_mark_finished_children(parser, true /*block_ok*/);
-    let is_interactive = parser.libdata().is_interactive;
+    let is_interactive = parser.scope().is_interactive;
     process_clean_after_marking(parser, is_interactive);
 }
 
@@ -1779,14 +1779,11 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
-    if parser.libdata().is_cleaning_procs {
+    if parser.scope().is_cleaning_procs {
         return false;
     }
 
-    let _cleaning = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_cleaning_procs, new_value),
-        true,
-    );
+    let _cleaning = parser.push_scope(|s| s.is_cleaning_procs = true);
 
     // This may be invoked in an exit handler, after the TERM has been torn down
     // Don't try to print in that case (#3222)

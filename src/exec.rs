@@ -8,8 +8,8 @@ use crate::builtins::shared::{
     STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
-    exit_without_destructors, scoped_push_replacer, str2wcstring, truncate_at_nul, wcs2string,
-    wcs2zstring, write_loop, ScopeGuard,
+    exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring, write_loop,
+    ScopeGuard,
 };
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 use crate::env_dispatch::use_posix_spawn;
@@ -1450,18 +1450,14 @@ fn exec_subshell_internal(
     is_subcmd: bool,
 ) -> Result<(), ErrorCode> {
     parser.assert_can_execute();
-    let _is_subshell = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_subshell, new_value),
-        true,
-    );
-    let _read_limit = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().read_limit, new_value),
-        if is_subcmd {
+    let _scoped = parser.push_scope(|s| {
+        s.is_subshell = true;
+        s.read_limit = if is_subcmd {
             READ_BYTE_LIMIT.load(Ordering::Relaxed)
         } else {
             0
-        },
-    );
+        };
+    });
 
     let prev_statuses = parser.get_last_statuses();
     let _put_back = ScopeGuard::new((), |()| {
@@ -1474,8 +1470,7 @@ fn exec_subshell_internal(
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may
     // be null.
-    let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO)
-    else {
+    let Ok(bufferfill) = IoBufferfill::create_opts(parser.scope().read_limit, STDOUT_FILENO) else {
         *break_expand = true;
         return Err(STATUS_CMD_ERROR);
     };

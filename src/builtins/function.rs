@@ -134,9 +134,8 @@ fn parse_cmd_opts(
                 let woptarg = w.woptarg.unwrap();
                 let e: EventDescription;
                 if opt == 'j' && woptarg == "caller" {
-                    let libdata = parser.libdata();
-                    let caller_id = if libdata.is_subshell {
-                        libdata.caller_id
+                    let caller_id = if parser.scope().is_subshell {
+                        parser.libdata().caller_id
                     } else {
                         0
                     };

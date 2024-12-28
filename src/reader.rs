@@ -51,9 +51,8 @@ use crate::color::RgbColor;
 use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    redirect_tty_output, scoped_push_replacer, scoped_push_replacer_ctx, shell_modes, str2wcstring,
-    wcs2string, write_loop, EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME,
-    UTF8_BOM_WCHAR,
+    redirect_tty_output, shell_modes, str2wcstring, wcs2string, write_loop, EscapeFlags,
+    EscapeStringStyle, ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -637,10 +636,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
         }
     }
 
-    let _interactive_push = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
-        interactive,
-    );
+    let _interactive_push = parser.push_scope(|s| s.is_interactive = interactive);
     signal_set_handlers_once(interactive);
 
     let res = if interactive {
@@ -2155,40 +2151,31 @@ impl<'a> Reader<'a> {
 
         // Suppress fish_trace during executing key bindings.
         // This is simply to reduce noise.
-        let mut zelf = scoped_push_replacer_ctx(
-            self,
-            |zelf, new_value| {
-                std::mem::replace(
-                    &mut zelf.parser.libdata_mut().suppress_fish_trace,
-                    new_value,
-                )
-            },
-            true,
-        );
+        let _restore = self.parser.push_scope(|s| s.suppress_fish_trace = true);
 
         // If nchars_or_0 is positive, then that's the maximum number of chars. Otherwise keep it at
         // SIZE_MAX.
-        zelf.rls_mut().nchars = nchars;
+        self.rls_mut().nchars = nchars;
 
         // The command line before completion.
-        zelf.cycle_command_line.clear();
-        zelf.cycle_cursor_pos = 0;
+        self.cycle_command_line.clear();
+        self.cycle_cursor_pos = 0;
 
-        zelf.history_search.reset();
+        self.history_search.reset();
 
         // It may happen that a command we ran when job control was disabled nevertheless stole the tty
         // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
         // unconditionally reclaim the tty. See #9181.
-        unsafe { libc::tcsetpgrp(zelf.conf.inputfd, libc::getpgrp()) };
+        unsafe { libc::tcsetpgrp(self.conf.inputfd, libc::getpgrp()) };
 
         // Get the current terminal modes. These will be restored when the function returns.
         let mut old_modes: libc::termios = unsafe { std::mem::zeroed() };
-        if unsafe { libc::tcgetattr(zelf.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
+        if unsafe { libc::tcgetattr(self.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
             redirect_tty_output(false);
         }
 
         // Set the new modes.
-        if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
+        if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
             let err = errno().0;
             if err == EIO {
                 redirect_tty_output(false);
@@ -2202,17 +2189,17 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if *zelf.blocking_wait() == Some(BlockingWait::Startup(Queried::NotYet)) {
+        if *self.blocking_wait() == Some(BlockingWait::Startup(Queried::NotYet)) {
             if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
-                *zelf.blocking_wait() = None;
+                *self.blocking_wait() = None;
             } else {
-                *zelf.blocking_wait() = Some(BlockingWait::Startup(Queried::Once));
+                *self.blocking_wait() = Some(BlockingWait::Startup(Queried::Once));
                 let mut out = Outputter::stdoutput().borrow_mut();
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
                 let _ = out.write_all(kitty_progressive_enhancements_query());
                 // Query for cursor position reporting support.
-                zelf.request_cursor_position(&mut out, None);
+                self.request_cursor_position(&mut out, None);
                 // Query for synchronized output support.
                 let _ = out.write_all(b"\x1b[?2026$p");
                 let _ = out.write_all(b"\x1b[>0q"); // XTVERSION
@@ -2230,64 +2217,64 @@ impl<'a> Reader<'a> {
         // appear constantly.
         //
         // I can't see a good way around this.
-        if !zelf.first_prompt {
-            zelf.screen
+        if !self.first_prompt {
+            self.screen
                 .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
         }
-        zelf.first_prompt = false;
+        self.first_prompt = false;
 
-        if !zelf.conf.event.is_empty() {
-            event::fire_generic(zelf.parser, zelf.conf.event.to_owned(), vec![]);
+        if !self.conf.event.is_empty() {
+            event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
         }
-        zelf.exec_prompt();
+        self.exec_prompt();
 
         // Start out as initially dirty.
-        zelf.force_exec_prompt_and_repaint = true;
+        self.force_exec_prompt_and_repaint = true;
 
-        while !zelf.rls().finished && !check_exit_loop_maybe_warning(Some(&mut zelf)) {
-            if zelf.handle_char_event(None).is_break() {
+        while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
+            if self.handle_char_event(None).is_break() {
                 break;
             }
         }
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
         // user presses enter.
-        if zelf.is_repaint_needed(None)
-            || zelf.screen.scrolled()
-            || zelf.conf.inputfd != STDIN_FILENO
+        if self.is_repaint_needed(None)
+            || self.screen.scrolled()
+            || self.conf.inputfd != STDIN_FILENO
         {
-            zelf.layout_and_repaint_before_execution();
+            self.layout_and_repaint_before_execution();
         }
 
         // Finish syntax highlighting (but do not wait forever).
-        if zelf.rls().finished {
-            zelf.finish_highlighting_before_exec();
+        if self.rls().finished {
+            self.finish_highlighting_before_exec();
         }
 
         // Emit a newline so that the output is on the line after the command.
         // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
-        if !zelf.screen.cursor_is_wrapped_to_own_line() {
+        if !self.screen.cursor_is_wrapped_to_own_line() {
             let _ = write_to_fd(b"\n", STDOUT_FILENO);
         }
 
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
-        if zelf.conf.inputfd != STDIN_FILENO {
+        if self.conf.inputfd != STDIN_FILENO {
             let _ = write_loop(&STDOUT_FILENO, b"\r");
         }
 
         // Ensure we have no pager contents when we exit.
-        if !zelf.pager.is_empty() {
+        if !self.pager.is_empty() {
             // Clear to end of screen to erase the pager contents.
             // TODO: this may fail if eos doesn't exist, in which case we should emit newlines.
             screen_force_clear_to_end();
-            zelf.clear_pager();
+            self.clear_pager();
         }
 
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            if unsafe { libc::tcsetattr(zelf.conf.inputfd, TCSANOW, &old_modes) } == -1
+            if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
                 && is_interactive_session()
             {
                 if errno().0 == EIO {
@@ -2299,11 +2286,11 @@ impl<'a> Reader<'a> {
                 .borrow_mut()
                 .set_color(RgbColor::RESET, RgbColor::RESET);
         }
-        let result = zelf
+        let result = self
             .rls()
             .finished
-            .then(|| zelf.command_line.text().to_owned());
-        zelf.rls = None;
+            .then(|| self.command_line.text().to_owned());
+        self.rls = None;
         result
     }
 
@@ -4513,14 +4500,10 @@ pub fn reader_write_title(
     parser: &Parser,
     reset_cursor_position: bool, /* = true */
 ) {
-    let _noninteractive = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
-        false,
-    );
-    let _in_title = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().suppress_fish_trace, new_value),
-        true,
-    );
+    let _scoped = parser.push_scope(|s| {
+        s.is_interactive = false;
+        s.suppress_fish_trace = true;
+    });
 
     let mut fish_title_command = DEFAULT_TITLE.to_owned();
     if function::exists(L!("fish_title"), parser) {
@@ -4586,67 +4569,51 @@ impl<'a> Reader<'a> {
         self.right_prompt_buff.clear();
 
         // Suppress fish_trace while in the prompt.
-        let mut zelf = scoped_push_replacer_ctx(
-            self,
-            |zelf, new_value| {
-                std::mem::replace(
-                    &mut zelf.parser.libdata_mut().suppress_fish_trace,
-                    new_value,
-                )
-            },
-            true,
-        );
+        let _suppress_trace = self.parser.push_scope(|s| s.suppress_fish_trace = true);
 
         // Update the termsize now.
         // This allows prompts to react to $COLUMNS.
-        zelf.update_termsize();
+        self.update_termsize();
 
         // If we have any prompts, they must be run non-interactively.
-        if !zelf.conf.left_prompt_cmd.is_empty() || !zelf.conf.right_prompt_cmd.is_empty() {
-            let mut zelf = scoped_push_replacer_ctx(
-                &mut zelf,
-                |zelf, new_value| {
-                    std::mem::replace(&mut zelf.parser.libdata_mut().is_interactive, new_value)
-                },
-                false,
-            );
+        if !self.conf.left_prompt_cmd.is_empty() || !self.conf.right_prompt_cmd.is_empty() {
+            let _noninteractive = self.parser.push_scope(|s| s.is_interactive = false);
+            self.exec_mode_prompt();
 
-            zelf.exec_mode_prompt();
-
-            if !zelf.conf.left_prompt_cmd.is_empty() {
+            if !self.conf.left_prompt_cmd.is_empty() {
                 // Status is ignored.
                 let mut prompt_list = vec![];
                 // Historic compatibility hack.
                 // If the left prompt function is deleted, then use a default prompt instead of
                 // producing an error.
-                let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
-                    && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
+                let left_prompt_deleted = self.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
+                    && !function::exists(&self.conf.left_prompt_cmd, self.parser);
                 let _ = exec_subshell(
                     if left_prompt_deleted {
                         DEFAULT_PROMPT
                     } else {
-                        &zelf.conf.left_prompt_cmd
+                        &self.conf.left_prompt_cmd
                     },
-                    zelf.parser,
+                    self.parser,
                     Some(&mut prompt_list),
                     /*apply_exit_status=*/ false,
                 );
-                zelf.left_prompt_buff = join_strings(&prompt_list, '\n');
+                self.left_prompt_buff = join_strings(&prompt_list, '\n');
             }
 
-            if !zelf.conf.right_prompt_cmd.is_empty() {
-                if function::exists(&zelf.conf.right_prompt_cmd, zelf.parser) {
+            if !self.conf.right_prompt_cmd.is_empty() {
+                if function::exists(&self.conf.right_prompt_cmd, self.parser) {
                     // Status is ignored.
                     let mut prompt_list = vec![];
                     let _ = exec_subshell(
-                        &zelf.conf.right_prompt_cmd,
-                        zelf.parser,
+                        &self.conf.right_prompt_cmd,
+                        self.parser,
                         Some(&mut prompt_list),
                         /*apply_exit_status=*/ false,
                     );
                     // Right prompt does not support multiple lines, so just concatenate all of them.
                     for i in prompt_list {
-                        zelf.right_prompt_buff.push_utfstr(&i);
+                        self.right_prompt_buff.push_utfstr(&i);
                     }
                 }
             }
@@ -4655,17 +4622,17 @@ impl<'a> Reader<'a> {
         // Write the screen title. Do not reset the cursor position: exec_prompt is called when there
         // may still be output on the line from the previous command (#2499) and we need our PROMPT_SP
         // hack to work.
-        reader_write_title(L!(""), zelf.parser, false);
+        reader_write_title(L!(""), self.parser, false);
 
         // Reap jobs but do NOT trigger a repaint.
         // This is to prevent infinite loops in case a job from the prompt triggers a repaint.
         // See #9796.
-        job_reap(zelf.parser, true);
+        job_reap(self.parser, true);
 
         // Some prompt may have requested an exit (#8033).
-        let exit_current_script = zelf.parser.libdata().exit_current_script;
-        zelf.exit_loop_requested |= exit_current_script;
-        zelf.parser.libdata_mut().exit_current_script = false;
+        let exit_current_script = self.parser.libdata().exit_current_script;
+        self.exit_loop_requested |= exit_current_script;
+        self.parser.libdata_mut().exit_current_script = false;
     }
 }
 
@@ -5354,10 +5321,7 @@ fn expand_replacer(
     let mut cmd = escape(&repl.replacement);
     cmd.push(' ');
     cmd.push_utfstr(&escape(token));
-    let _not_interactive = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
-        false,
-    );
+    let _not_interactive = parser.push_scope(|s| s.is_interactive = false);
 
     let mut outputs = vec![];
     if exec_subshell(
@@ -5807,10 +5771,7 @@ impl<'a> Reader<'a> {
 
         let mut cmd: WString = L!("fish_should_add_to_history ").into();
         cmd.push_utfstr(&escape(text));
-        let _not_interactive = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
-            false,
-        );
+        let _not_interactive = parser.push_scope(|s| s.is_interactive = false);
 
         exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false).is_ok()
     }

@@ -7,7 +7,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::common::{escape, scoped_push_replacer, ScopeGuard};
+use crate::common::{escape, ScopeGuard};
 use crate::flog::FLOG;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
@@ -461,14 +461,10 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// allocated/initialized unless needed.
 fn fire_internal(parser: &Parser, event: &Event) {
     // Suppress fish_trace during events.
-    let _set_event = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().is_event, new_value),
-        true,
-    );
-    let _suppress_trace = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().suppress_fish_trace, new_value),
-        true,
-    );
+    let _saved = parser.push_scope(|s| {
+        s.is_event = true;
+        s.suppress_fish_trace = true;
+    });
 
     // Capture the event handlers that match this event.
     let fire: Vec<_> = EVENT_HANDLERS
@@ -497,12 +493,10 @@ fn fire_internal(parser: &Parser, event: &Event) {
 
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
-        let saved_is_interactive =
-            std::mem::replace(&mut parser.libdata_mut().is_interactive, false);
+        let _non_interactive = parser.push_scope(|s| s.is_interactive = false);
         let saved_statuses = parser.get_last_statuses();
         let _cleanup = ScopeGuard::new((), |()| {
             parser.set_last_statuses(saved_statuses);
-            parser.libdata_mut().is_interactive = saved_is_interactive;
         });
 
         FLOG!(
@@ -530,10 +524,8 @@ fn fire_internal(parser: &Parser, event: &Event) {
 /// Fire all delayed events attached to the given parser.
 pub fn fire_delayed(parser: &Parser) {
     {
-        let ld = &parser.libdata();
-
         // Do not invoke new event handlers from within event handlers.
-        if ld.is_event {
+        if parser.scope().is_event {
             return;
         };
     }

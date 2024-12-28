@@ -4,7 +4,7 @@ use crate::ast::{self, Ast, List, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     escape_string, scoped_push_replacer, CancelChecker, EscapeFlags, EscapeStringStyle,
-    FilenameRef, ScopeGuarding, PROFILING_ACTIVE,
+    FilenameRef, ScopeGuarding, ScopedCell, PROFILING_ACTIVE,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
@@ -217,6 +217,30 @@ impl ProfileItem {
     }
 }
 
+/// Data which is managed in a scoped fashion: is generally set for the duration of a block
+/// of code. Note this is stored in a Cell and so must be Copy.
+#[derive(Copy, Clone, Default)]
+pub struct ScopedData {
+    /// Whether we are running a subshell command.
+    pub is_subshell: bool,
+
+    /// Whether we are running an event handler.
+    pub is_event: bool,
+
+    /// Whether we are currently interactive.
+    pub is_interactive: bool,
+
+    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
+    /// bindings.
+    pub suppress_fish_trace: bool,
+
+    /// The read limit to apply to captured subshell output, or 0 for none.
+    pub read_limit: usize,
+
+    /// Whether we are currently cleaning processes.
+    pub is_cleaning_procs: bool,
+}
+
 /// Miscellaneous data used to avoid recursion and others.
 #[derive(Default)]
 pub struct LibraryData {
@@ -232,6 +256,7 @@ pub struct LibraryData {
     /// This is never null and never invalid.
     pub cwd_fd: Option<Arc<OwnedFd>>,
 
+    /// Variables supporting the "status" builtin.
     pub status_vars: StatusVars,
 
     /// A counter incremented every time a command executes.
@@ -259,25 +284,9 @@ pub struct LibraryData {
     /// Whether we called builtin_complete -C without parameter.
     pub builtin_complete_current_commandline: bool,
 
-    /// Whether we are currently cleaning processes.
-    pub is_cleaning_procs: bool,
-
     /// The internal job id of the job being populated, or 0 if none.
     /// This supports the '--on-job-exit caller' feature.
     pub caller_id: u64, // TODO should be InternalJobId
-
-    /// Whether we are running a subshell command.
-    pub is_subshell: bool,
-
-    /// Whether we are running an event handler.
-    pub is_event: bool,
-
-    /// Whether we are currently interactive.
-    pub is_interactive: bool,
-
-    /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
-    /// bindings.
-    pub suppress_fish_trace: bool,
 
     /// Whether we should break or continue the current loop.
     /// This is set by the 'break' and 'continue' commands.
@@ -292,9 +301,6 @@ pub struct LibraryData {
     /// Note this only exits up to the "current script boundary." That is, a call to exit within a
     /// 'source' or 'read' command will only exit up to that command.
     pub exit_current_script: bool,
-
-    /// The read limit to apply to captured subshell output, or 0 for none.
-    pub read_limit: usize,
 }
 
 impl LibraryData {
@@ -395,6 +401,9 @@ pub struct Parser {
     /// Set of variables for the parser.
     pub variables: Rc<EnvStack>,
 
+    /// Data managed in a scoped fashion.
+    scoped_data: ScopedCell<ScopedData>,
+
     /// Miscellaneous library data.
     library_data: RefCell<LibraryData>,
 
@@ -422,6 +431,7 @@ impl Parser {
             block_list: RefCell::default(),
             eval_level: AtomicIsize::new(-1),
             variables,
+            scoped_data: ScopedCell::new(ScopedData::default()),
             library_data: RefCell::new(LibraryData::new()),
             syncs_uvars: RelaxedAtomicBool::new(false),
             cancel_behavior,
@@ -814,10 +824,28 @@ impl Parser {
         Rc::clone(&self.variables)
     }
 
+    /// Get a copy of the scoped data.
+    #[inline(always)]
+    pub fn scope(&self) -> ScopedData {
+        self.scoped_data.get()
+    }
+
+    /// Modify the scoped values for the duration of the caller's scope (or whenever the ParserScope is dropped).
+    /// This accepts a closure which modifies the ScopedData, and returns a ParserScope which restores the
+    /// data when dropped.
+    pub fn push_scope<'a, F: FnOnce(&mut ScopedData)>(
+        &'a self,
+        modifier: F,
+    ) -> impl ScopeGuarding + 'a {
+        self.scoped_data.scoped_mod(modifier)
+    }
+
     /// Get the library data.
     pub fn libdata(&self) -> Ref<'_, LibraryData> {
         self.library_data.borrow()
     }
+
+    /// Get the library data, mutably.
     pub fn libdata_mut(&self) -> RefMut<'_, LibraryData> {
         self.library_data.borrow_mut()
     }
@@ -1074,7 +1102,7 @@ impl Parser {
     /// Return if we are interactive, which means we are executing a command that the user typed in
     /// (and not, say, a prompt).
     pub fn is_interactive(&self) -> bool {
-        self.libdata().is_interactive
+        self.scope().is_interactive
     }
 
     /// Return a string representing the current stack trace.

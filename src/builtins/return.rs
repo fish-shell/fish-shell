@@ -68,9 +68,8 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
-        let ld = &mut parser.libdata_mut();
-        if !ld.is_interactive {
-            ld.exit_current_script = true;
+        if !parser.scope().is_interactive {
+            parser.libdata_mut().exit_current_script = true;
         }
         return retval;
     }

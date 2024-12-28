@@ -3,7 +3,6 @@
 use super::prelude::*;
 use crate::common::escape;
 use crate::common::read_blocked;
-use crate::common::scoped_push_replacer;
 use crate::common::str2wcstring;
 use crate::common::unescape_string;
 use crate::common::valid_var_name;
@@ -238,11 +237,7 @@ fn read_interactive(
     commandline_set_buffer(Some(commandline.to_owned()), None);
 
     let mline = {
-        let _interactive = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),
-            true,
-        );
-
+        let _interactive = parser.push_scope(|s| s.is_interactive = true);
         reader_readline(parser, nchars)
     };
     terminal_protocols_disable_ifn();

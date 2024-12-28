@@ -56,7 +56,7 @@ function(CREATE_TARGET target)
           ${Rust_CARGO}
             build --bin ${target}
             $<$<CONFIG:Release>:--release>
-            $<$<CONFIG:RelWithDebInfo>:--release>
+            $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
             --target ${Rust_CARGO_TARGET}
             --no-default-features
             ${CARGO_FLAGS}

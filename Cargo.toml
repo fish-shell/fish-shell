@@ -10,6 +10,10 @@ edition = "2021"
 overflow-checks = true
 lto = true
 
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
 [package]
 name = "fish"
 version = "4.0.0-beta.1"

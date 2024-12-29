@@ -49,6 +49,8 @@ set(VARS_FOR_CARGO
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
     # Temporary hack to propogate CMake flags/options to build.rs.
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
+    # Cheesy so we can tell cmake was used to build
+    "CMAKE=1"
     "DOCDIR=${CMAKE_INSTALL_FULL_DOCDIR}"
     "DATADIR=${CMAKE_INSTALL_FULL_DATADIR}"
     "SYSCONFDIR=${CMAKE_INSTALL_FULL_SYSCONFDIR}"

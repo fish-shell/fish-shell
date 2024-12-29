@@ -2,7 +2,7 @@ use libc::STDOUT_FILENO;
 
 use crate::common::{
     fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
-    str2wcstring, WSL,
+    str2wcstring, write_loop, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
@@ -18,7 +18,7 @@ use crate::threads::{iothread_port, is_main_thread};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
-use crate::wutil::{fish_wcstol, write_to_fd};
+use crate::wutil::fish_wcstol;
 use std::collections::VecDeque;
 use std::ops::ControlFlow;
 use std::os::fd::RawFd;
@@ -495,9 +495,9 @@ pub fn terminal_protocols_enable_ifn() {
         )
     };
     FLOG!(term_protocols, "Enabling extended keys and bracketed paste");
-    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+    let _ = write_loop(&STDOUT_FILENO, sequences.as_bytes());
     if IS_TMUX.load() {
-        let _ = write_to_fd("\x1b[?1004h".as_bytes(), STDOUT_FILENO);
+        let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes());
     }
     reader_current_data().map(|data| data.save_screen_state());
 }
@@ -522,9 +522,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         term_protocols,
         "Disabling extended keys and bracketed paste"
     );
-    let _ = write_to_fd(sequences.as_bytes(), STDOUT_FILENO);
+    let _ = write_loop(&STDOUT_FILENO, sequences.as_bytes());
     if IS_TMUX.load() {
-        let _ = write_to_fd("\x1b[?1004l".as_bytes(), STDOUT_FILENO);
+        let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
     }
     if is_main_thread() {
         reader_current_data().map(|data| data.save_screen_state());

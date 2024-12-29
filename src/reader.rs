@@ -3204,7 +3204,15 @@ impl<'a> Reader<'a> {
                 );
                 let (elt, el) = self.active_edit_line();
                 let mut replacement = WString::new();
-                while pos < el.position() {
+                while pos
+                    < if self.cursor_selection_mode == CursorSelectionMode::Inclusive
+                        && self.is_at_end(el)
+                    {
+                        el.len()
+                    } else {
+                        el.position()
+                    }
+                {
                     let chr = el.text().as_char_slice()[pos];
 
                     // We always change the case; this decides whether we go uppercase (true) or

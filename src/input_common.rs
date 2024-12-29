@@ -938,7 +938,6 @@ pub trait InputEventQueuer {
             }
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
-            b'R' => masked_key(function_key(3), None),
             b'S' => masked_key(function_key(4), None),
             b'~' => match params[0][0] {
                 1 => masked_key(key::Home, None), // VT220/tmux style

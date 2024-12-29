@@ -130,10 +130,6 @@ pub enum ReadlineCmd {
     BeginUndoGroup,
     EndUndoGroup,
     RepeatJump,
-    DisableMouseTracking,
-    FocusIn,
-    FocusOut,
-    // ncurses uses the obvious name
     ClearScreenAndRepaint,
     // NOTE: This one has to be last.
     ReverseRepeatJump,
@@ -181,6 +177,21 @@ pub struct KeyEvent {
 }
 
 #[derive(Debug, Clone)]
+pub enum ImplicitEvent {
+    /// end-of-file was reached.
+    Eof,
+    /// An event was handled internally, or an interrupt was received. Check to see if the reader
+    /// loop should exit.
+    CheckExit,
+    /// Our terminal window gained focus.
+    FocusIn,
+    /// Our terminal window lost focus.
+    FocusOut,
+    /// Request to disable mouse tracking.
+    DisableMouseTracking,
+}
+
+#[derive(Debug, Clone)]
 pub enum CharEvent {
     /// A character was entered.
     Key(KeyEvent),
@@ -191,25 +202,13 @@ pub enum CharEvent {
     /// A shell command.
     Command(WString),
 
-    /// end-of-file was reached.
-    Eof,
-
-    /// An event was handled internally, or an interrupt was received. Check to see if the reader
-    /// loop should exit.
-    CheckExit,
+    /// Any event that has no user-visible representation.
+    Implicit(ImplicitEvent),
 }
 
 impl CharEvent {
     pub fn is_char(&self) -> bool {
         matches!(self, CharEvent::Key(_))
-    }
-
-    pub fn is_eof(&self) -> bool {
-        matches!(self, CharEvent::Eof)
-    }
-
-    pub fn is_check_exit(&self) -> bool {
-        matches!(self, CharEvent::CheckExit)
     }
 
     pub fn is_readline(&self) -> bool {
@@ -273,7 +272,7 @@ impl CharEvent {
     }
 
     pub fn from_check_exit() -> CharEvent {
-        CharEvent::CheckExit
+        CharEvent::Implicit(ImplicitEvent::CheckExit)
     }
 }
 
@@ -631,7 +630,7 @@ pub trait InputEventQueuer {
             let rr = readb(self.get_in_fd(), blocking);
             match rr {
                 ReadbResult::Eof => {
-                    return Some(CharEvent::Eof);
+                    return Some(CharEvent::Implicit(ImplicitEvent::Eof));
                 }
 
                 ReadbResult::Interrupted => {
@@ -1028,11 +1027,11 @@ pub trait InputEventQueuer {
             }
             b'Z' => shift(key::Tab),
             b'I' => {
-                self.push_front(CharEvent::from_readline(ReadlineCmd::FocusIn));
+                self.push_front(CharEvent::Implicit(ImplicitEvent::FocusIn));
                 return Some(Key::from_raw(key::Invalid));
             }
             b'O' => {
-                self.push_front(CharEvent::from_readline(ReadlineCmd::FocusOut));
+                self.push_front(CharEvent::Implicit(ImplicitEvent::FocusOut));
                 return Some(Key::from_raw(key::Invalid));
             }
             _ => return None,
@@ -1051,7 +1050,7 @@ pub trait InputEventQueuer {
 
         // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
         // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
-        self.push_front(CharEvent::from_readline(ReadlineCmd::DisableMouseTracking));
+        self.push_front(CharEvent::Implicit(ImplicitEvent::DisableMouseTracking));
     }
 
     fn parse_ss3(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
@@ -1227,7 +1226,9 @@ pub trait InputEventQueuer {
         // Find the first sequence of non-char events.
         // EOF is considered a char: we don't want to pull EOF in front of real chars.
         let queue = &mut self.get_input_data_mut().queue;
-        let is_char = |evt: &CharEvent| evt.is_char() || evt.is_eof();
+        let is_char = |evt: &CharEvent| {
+            evt.is_char() || matches!(evt, CharEvent::Implicit(ImplicitEvent::Eof))
+        };
         // Find the index of the first non-char event.
         // If there's none, we're done.
         let Some(first): Option<usize> = queue.iter().position(|e| !is_char(e)) else {

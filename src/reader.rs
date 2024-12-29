@@ -77,6 +77,7 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::terminal_protocols_disable_ifn;
+use crate::input_common::ImplicitEvent;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
@@ -2161,22 +2162,16 @@ impl<'a> Reader<'a> {
         let Some(event_needing_handling) = event_needing_handling else {
             return ControlFlow::Continue(());
         };
-        if event_needing_handling.is_check_exit() {
-            return ControlFlow::Continue(());
-        } else if event_needing_handling.is_eof() {
-            reader_sighup();
-            return ControlFlow::Continue(());
-        }
-
-        if !matches!(
-            self.rls().last_cmd,
-            Some(ReadlineCmd::Yank | ReadlineCmd::YankPop)
-        ) {
-            self.rls_mut().yank_len = 0;
-        }
 
         match event_needing_handling {
             CharEvent::Readline(readline_cmd_evt) => {
+                if !matches!(
+                    self.rls().last_cmd,
+                    Some(ReadlineCmd::Yank | ReadlineCmd::YankPop)
+                ) {
+                    self.rls_mut().yank_len = 0;
+                }
+
                 let readline_cmd = readline_cmd_evt.cmd;
                 if readline_cmd == ReadlineCmd::Cancel && self.is_navigating_pager_contents() {
                     self.clear_transient_edit();
@@ -2230,9 +2225,23 @@ impl<'a> Reader<'a> {
                 }
                 self.rls_mut().last_cmd = None;
             }
-            CharEvent::Eof | CharEvent::CheckExit => {
-                panic!("Should have a char, readline or command")
-            }
+            CharEvent::Implicit(implicit_event) => match implicit_event {
+                ImplicitEvent::Eof => {
+                    reader_sighup();
+                }
+                ImplicitEvent::CheckExit => (),
+                ImplicitEvent::FocusIn => {
+                    event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
+                }
+                ImplicitEvent::FocusOut => {
+                    event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
+                }
+                ImplicitEvent::DisableMouseTracking => {
+                    Outputter::stdoutput()
+                        .borrow_mut()
+                        .write_wstr(L!("\x1B[?1000l"));
+                }
+            },
         }
         ControlFlow::Continue(())
     }
@@ -3436,17 +3445,6 @@ impl<'a> Reader<'a> {
             rl::EndUndoGroup => {
                 let (_elt, el) = self.active_edit_line_mut();
                 el.end_edit_group();
-            }
-            rl::DisableMouseTracking => {
-                Outputter::stdoutput()
-                    .borrow_mut()
-                    .write_wstr(L!("\x1B[?1000l"));
-            }
-            rl::FocusIn => {
-                event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
-            }
-            rl::FocusOut => {
-                event::fire_generic(self.parser, L!("fish_focus_out").to_owned(), vec![]);
             }
             rl::ClearScreenAndRepaint => {
                 self.parser.libdata_mut().is_repaint = true;
@@ -5129,8 +5127,6 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::EndOfHistory
             | rl::Repaint
             | rl::ForceRepaint
-            | rl::FocusIn
-            | rl::FocusOut
     )
 }
 

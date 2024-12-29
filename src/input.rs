@@ -4,7 +4,8 @@ use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
-    CharEvent, CharInputStyle, InputData, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, ReadlineCmd,
+    R_END_INPUT_FUNCTIONS,
 };
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
@@ -120,10 +121,6 @@ const fn make_md(name: &'static wstr, code: ReadlineCmd) -> InputFunctionMetadat
 /// Keep this list sorted alphabetically!
 #[rustfmt::skip]
 const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
-    // NULL makes it unusable - this is specially inserted when we detect mouse input
-    make_md(L!(""), ReadlineCmd::DisableMouseTracking),
-    make_md(L!(""), ReadlineCmd::FocusIn),
-    make_md(L!(""), ReadlineCmd::FocusOut),
     make_md(L!("accept-autosuggestion"), ReadlineCmd::AcceptAutosuggestion),
     make_md(L!("and"), ReadlineCmd::FuncAnd),
     make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
@@ -621,9 +618,10 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
 
     /// Test if any of our peeked events are readline or check_exit.
     fn char_sequence_interrupted(&self) -> bool {
-        self.peeked
-            .iter()
-            .any(|evt| evt.is_readline_or_command() || evt.is_check_exit())
+        self.peeked.iter().any(|evt| {
+            evt.is_readline_or_command()
+                || matches!(evt, CharEvent::Implicit(ImplicitEvent::CheckExit))
+        })
     }
 
     /// Reset our index back to 0.
@@ -774,15 +772,6 @@ impl<'a> Reader<'a> {
                 CharEvent::Command(_) => {
                     return evt;
                 }
-                CharEvent::Eof => {
-                    // If we have EOF, we need to immediately quit.
-                    // There's no need to go through the input functions.
-                    return evt;
-                }
-                CharEvent::CheckExit => {
-                    // Allow the reader to check for exit conditions.
-                    return evt;
-                }
                 CharEvent::Key(ref kevt) => {
                     FLOG!(
                         reader,
@@ -796,6 +785,9 @@ impl<'a> Reader<'a> {
                     );
                     self.push_front(evt);
                     self.mapping_execute_matching_or_generic();
+                }
+                CharEvent::Implicit(_) => {
+                    return evt;
                 }
             }
         }

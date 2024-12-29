@@ -8,5 +8,4 @@ for file in *.fish
             echo FAILING FILE $file
         end
     end
-
 end

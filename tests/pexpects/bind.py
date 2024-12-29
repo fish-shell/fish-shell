@@ -241,6 +241,12 @@ expect_prompt("foo")
 # send("hh~~bbve~\r")
 # expect_prompt(TO_END + "SOME TeXT\r\n", unmatched="Couldn't find expected output 'SOME TeXT")
 
+send("echo 125")
+send("\033")
+sleep(0.200)
+send("0$i34\r")
+expect_prompt("echo 12345")
+
 # Now test that exactly the expected bind modes are defined
 sendline("bind --list-modes")
 expect_prompt(

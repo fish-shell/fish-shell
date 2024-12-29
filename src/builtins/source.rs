@@ -13,18 +13,18 @@ use super::prelude::*;
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let argc = args.len();
 
-    let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
-        Ok(opts) => opts,
-        Err(err) => return err,
+    let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
+    let cmd = match args.get(0) {
+        Some(&cmd) => cmd,
+        None => return Err(STATUS_INVALID_ARGS),
     };
-    let cmd = args[0];
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // If we open a file, this ensures it stays open until the end of scope.
@@ -40,7 +40,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             streams
                 .err
                 .append(wgettext_fmt!("%ls: stdin is closed\n", cmd));
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         }
         // Either a bare `source` which means to implicitly read from stdin or an explicit `-`.
         if argc == optind && isatty(streams.stdin_fd) {
@@ -49,7 +49,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 "%ls: missing filename argument or input redirection\n",
                 cmd
             ));
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
         fd = streams.stdin_fd;
@@ -66,7 +66,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                     &esc
                 ));
                 builtin_wperror(cmd, streams);
-                return STATUS_CMD_ERROR;
+                return Err(STATUS_CMD_ERROR);
             }
         };
 
@@ -90,20 +90,20 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     let argv_list = remaining_args.iter().map(|&arg| arg.to_owned()).collect();
     parser.vars().set_argv(argv_list);
 
-    let mut retval = reader_read(parser, fd, streams.io_chain);
+    let retval = reader_read(parser, fd, streams.io_chain);
 
     parser.pop_block(sb);
 
-    if retval != STATUS_CMD_OK.unwrap() {
-        let esc = escape(&func_filename);
-        streams.err.append(wgettext_fmt!(
-            "%ls: Error while reading file '%ls'\n",
-            cmd,
-            if esc == "-" { L!("<stdin>") } else { &esc }
-        ));
-    } else {
-        retval = parser.get_last_status();
+    match retval {
+        Ok(_) => BuiltinResult::from_dynamic(parser.get_last_status()),
+        Err(err) => {
+            let esc = escape(&func_filename);
+            streams.err.append(wgettext_fmt!(
+                "%ls: Error while reading file '%ls'\n",
+                cmd,
+                if esc == "-" { L!("<stdin>") } else { &esc }
+            ));
+            Err(err)
+        }
     }
-
-    Some(retval)
 }

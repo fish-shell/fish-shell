@@ -9,7 +9,7 @@ use std::sync::Mutex;
 
 static RNG: Lazy<Mutex<SmallRng>> = Lazy::new(|| Mutex::new(get_rng()));
 
-pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -23,15 +23,15 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
         match c {
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from WGetopter");
@@ -49,12 +49,12 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             streams
                 .err
                 .append(wgettext_fmt!("%ls: nothing to choose from\n", cmd));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         let rand = RNG.lock().unwrap().gen_range(0..arg_count - 1);
         streams.out.appendln(argv[i + 1 + rand]);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
     fn parse_ll(streams: &mut IoStreams, cmd: &wstr, num: &wstr) -> Result<i64, wutil::Error> {
         let res = fish_wcstol(num);
@@ -83,47 +83,47 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             // Seed the engine persistently
             let num = parse_ll(streams, cmd, argv[i]);
             match num {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => {
                     let mut engine = RNG.lock().unwrap();
                     *engine = SmallRng::seed_from_u64(x as u64);
                 }
             }
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         }
         2 => {
             // start is first, end is second
             match parse_ll(streams, cmd, argv[i]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => start = x,
             }
 
             match parse_ll(streams, cmd, argv[i + 1]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => end = x,
             }
         }
         3 => {
             // start, step, end
             match parse_ll(streams, cmd, argv[i]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => start = x,
             }
 
             // start, step, end
             match parse_ull(streams, cmd, argv[i + 1]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(0) => {
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: STEP must be a positive integer\n", cmd,));
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
                 Ok(x) => step = x,
             }
 
             match parse_ll(streams, cmd, argv[i + 2]) {
-                Err(_) => return STATUS_INVALID_ARGS,
+                Err(_) => return Err(STATUS_INVALID_ARGS),
                 Ok(x) => end = x,
             }
         }
@@ -131,7 +131,7 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             streams
                 .err
                 .append(wgettext_fmt!("%ls: too many arguments\n", cmd,));
-            return Some(1);
+            return Err(STATUS_CMD_ERROR);
         }
     }
 
@@ -153,5 +153,5 @@ pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     let result: i64 = start.checked_add_unsigned(rand * step).unwrap();
 
     streams.out.appendln(result.to_wstring());
-    return STATUS_CMD_OK;
+    return Ok(SUCCESS);
 }

@@ -72,15 +72,15 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         optind: &mut usize,
         args: &[&'args wstr],
         streams: &mut IoStreams,
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let cmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         self.pattern = arg;
-        STATUS_CMD_OK
+        Ok(())
     }
 
     fn handle(
@@ -89,7 +89,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let cmd = args[0];
 
         if self.entire && self.index {
@@ -98,7 +98,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                 cmd,
                 wgettext!("--entire and --index are mutually exclusive")
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         if self.invert_match && self.groups_only {
@@ -107,7 +107,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                 cmd,
                 wgettext!("--invert and --groups-only are mutually exclusive")
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         if self.entire && self.groups_only {
@@ -116,14 +116,14 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                 cmd,
                 wgettext!("--entire and --groups-only are mutually exclusive")
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         let mut matcher = match StringMatcher::new(self.pattern, self) {
             Ok(m) => m,
             Err(e) => {
                 e.print_error(args, streams);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
         };
 
@@ -152,9 +152,9 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         }
 
         if match_count > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

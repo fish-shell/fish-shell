@@ -192,7 +192,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_CMD_ERROR.unwrap(),
+                STATUS_CMD_ERROR,
                 infinite_recursive_node,
                 INFINITE_FUNC_RECURSION_ERR_MSG,
                 func_name
@@ -208,7 +208,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_CMD_ERROR.unwrap(),
+                STATUS_CMD_ERROR,
                 job_list,
                 CALL_STACK_LIMIT_EXCEEDED_ERR_MSG
             );
@@ -287,7 +287,7 @@ impl<'a> ExecutionContext {
                     return report_error!(
                         self,
                         ctx,
-                        STATUS_NOT_EXECUTABLE.unwrap(),
+                        STATUS_NOT_EXECUTABLE,
                         &statement.command,
                         concat!(
                             "Unknown command. A component of '%ls' is not a ",
@@ -299,7 +299,7 @@ impl<'a> ExecutionContext {
                     return report_error!(
                         self,
                         ctx,
-                        STATUS_NOT_EXECUTABLE.unwrap(),
+                        STATUS_NOT_EXECUTABLE,
                         &statement.command,
                         "Unknown command. A component of '%ls' is not a directory.",
                         cmd
@@ -310,7 +310,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_NOT_EXECUTABLE.unwrap(),
+                STATUS_NOT_EXECUTABLE,
                 &statement.command,
                 "Unknown command. '%ls' exists but is not an executable file.",
                 cmd
@@ -368,13 +368,7 @@ impl<'a> ExecutionContext {
 
         // Here we want to report an error (so it shows a backtrace).
         // If the handler printed text, that's already shown, so error will be empty.
-        report_error_formatted!(
-            self,
-            ctx,
-            STATUS_CMD_UNKNOWN.unwrap(),
-            &statement.command,
-            error
-        )
+        report_error_formatted!(self, ctx, STATUS_CMD_UNKNOWN, &statement.command, error)
     }
 
     // Utilities.
@@ -504,13 +498,13 @@ impl<'a> ExecutionContext {
                 // This means that the error positions are relative to the beginning
                 // of the token; we need to make them relative to the original source.
                 parse_error_offset_source_start(&mut errors, pos_of_command_token);
-                return self.report_errors(ctx, STATUS_ILLEGAL_CMD.unwrap(), &errors);
+                return self.report_errors(ctx, STATUS_ILLEGAL_CMD, &errors);
             }
             ExpandResultCode::wildcard_no_match => {
                 return report_error!(
                     self,
                     ctx,
-                    STATUS_UNMATCHED_WILDCARD.unwrap(),
+                    STATUS_UNMATCHED_WILDCARD,
                     statement,
                     WILDCARD_ERR_MSG,
                     &self.node_source(statement)
@@ -528,7 +522,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_ILLEGAL_CMD.unwrap(),
+                STATUS_ILLEGAL_CMD,
                 &statement.command,
                 "The expanded command was empty."
             );
@@ -545,7 +539,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_ILLEGAL_CMD.unwrap(),
+                STATUS_ILLEGAL_CMD,
                 &statement.command,
                 "The expanded command is a keyword."
             );
@@ -907,7 +901,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_EXPAND_ERROR.unwrap(),
+                STATUS_EXPAND_ERROR,
                 &header.var_name,
                 FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG,
                 for_var_name
@@ -918,7 +912,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_INVALID_ARGS.unwrap(),
+                STATUS_INVALID_ARGS,
                 header.var_name,
                 BUILTIN_ERR_VARNAME,
                 "for",
@@ -939,7 +933,7 @@ impl<'a> ExecutionContext {
             return report_error!(
                 self,
                 ctx,
-                STATUS_INVALID_ARGS.unwrap(),
+                STATUS_INVALID_ARGS,
                 header.var_name,
                 "%ls: %ls: cannot overwrite read-only variable",
                 "for",
@@ -1065,7 +1059,7 @@ impl<'a> ExecutionContext {
                 // 'if' condition failed, no else clause, return 0, we're done.
                 // No job list means no successful conditions, so return 0 (issue #1443).
                 ctx.parser()
-                    .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+                    .set_last_statuses(Statuses::just(STATUS_CMD_OK));
             }
             Some(job_list_to_execute) => {
                 // Execute the job list we got.
@@ -1119,7 +1113,7 @@ impl<'a> ExecutionContext {
                 return report_error!(
                     self,
                     ctx,
-                    STATUS_UNMATCHED_WILDCARD.unwrap(),
+                    STATUS_UNMATCHED_WILDCARD,
                     &statement.argument,
                     WILDCARD_ERR_MSG,
                     &self.node_source(&statement.argument)
@@ -1130,7 +1124,7 @@ impl<'a> ExecutionContext {
                     return report_error!(
                         self,
                         ctx,
-                        STATUS_INVALID_ARGS.unwrap(),
+                        STATUS_INVALID_ARGS,
                         &statement.argument,
                         "switch: Expected at most one argument, got %lu\n",
                         switch_values_expanded.len()
@@ -1321,7 +1315,7 @@ impl<'a> ExecutionContext {
                 statement as *const ast::BlockStatement,
             ),
         );
-        let err_code = err_code.unwrap();
+
         ctx.parser().libdata_mut().status_count += 1;
         ctx.parser().set_last_statuses(Statuses::just(err_code));
 
@@ -1408,7 +1402,7 @@ impl<'a> ExecutionContext {
                         return report_error!(
                             self,
                             ctx,
-                            STATUS_UNMATCHED_WILDCARD.unwrap(),
+                            STATUS_UNMATCHED_WILDCARD,
                             arg_node,
                             WILDCARD_ERR_MSG,
                             &self.node_source(*arg_node)
@@ -1458,7 +1452,7 @@ impl<'a> ExecutionContext {
                     return report_error!(
                         self,
                         ctx,
-                        STATUS_INVALID_ARGS.unwrap(),
+                        STATUS_INVALID_ARGS,
                         redir_node,
                         "Invalid redirection: %ls",
                         &self.node_source(redir_node)
@@ -1483,7 +1477,7 @@ impl<'a> ExecutionContext {
                 return report_error!(
                     self,
                     ctx,
-                    STATUS_INVALID_ARGS.unwrap(),
+                    STATUS_INVALID_ARGS,
                     redir_node,
                     "Invalid redirection target: %ls",
                     target
@@ -1502,7 +1496,7 @@ impl<'a> ExecutionContext {
                 return report_error!(
                     self,
                     ctx,
-                    STATUS_INVALID_ARGS.unwrap(),
+                    STATUS_INVALID_ARGS,
                     redir_node,
                     "Requested redirection to '%ls', which is not a valid file descriptor",
                     &spec.target
@@ -1563,7 +1557,7 @@ impl<'a> ExecutionContext {
                 return report_error!(
                     self,
                     ctx,
-                    STATUS_INVALID_ARGS.unwrap(),
+                    STATUS_INVALID_ARGS,
                     job_node,
                     ERROR_TIME_BACKGROUND
                 );
@@ -1832,7 +1826,7 @@ impl<'a> ExecutionContext {
                 result = report_error!(
                     self,
                     ctx,
-                    STATUS_INVALID_ARGS.unwrap(),
+                    STATUS_INVALID_ARGS,
                     &jc.pipe,
                     ILLEGAL_FD_ERR_MSG,
                     &self.node_source(&jc.pipe)

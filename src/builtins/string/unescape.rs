@@ -36,7 +36,7 @@ impl StringSubCommand<'_> for Unescape {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut nesc = 0;
         for (arg, want_newline) in arguments(args, optind, streams) {
             if let Some(res) = unescape_string(&arg, self.style) {
@@ -49,9 +49,9 @@ impl StringSubCommand<'_> for Unescape {
         }
 
         if nesc > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

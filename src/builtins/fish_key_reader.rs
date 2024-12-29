@@ -87,7 +87,7 @@ fn sequence_name(recent_chars: &mut Vec<u8>, c: char) -> Option<WString> {
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> i32 {
+fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> BuiltinResult {
     let mut first_char_seen = false;
     let mut queue = InputEventQueue::new(STDIN_FILENO);
     let mut recent_chars1 = vec![];
@@ -125,11 +125,15 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
 
         first_char_seen = true;
     }
-    0
+    Ok(SUCCESS)
 }
 
 /// Setup our environment (e.g., tty modes), process key strokes, then reset the environment.
-fn setup_and_process_keys(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> i32 {
+fn setup_and_process_keys(
+    streams: &mut IoStreams,
+    continuous_mode: bool,
+    verbose: bool,
+) -> BuiltinResult {
     signal_set_handlers(true);
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
@@ -164,7 +168,7 @@ fn parse_flags(
     args: Vec<WString>,
     continuous_mode: &mut bool,
     verbose: &mut bool,
-) -> ControlFlow<i32> {
+) -> ControlFlow<BuiltinResult> {
     let short_opts: &wstr = L!("+chvV");
     let long_opts: &[WOption] = &[
         wopt(L!("continuous"), ArgType::NoArgument, 'c'),
@@ -182,7 +186,7 @@ fn parse_flags(
             }
             'h' => {
                 print_help("fish_key_reader");
-                return ControlFlow::Break(0);
+                return ControlFlow::Break(Ok(SUCCESS));
             }
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
@@ -190,7 +194,7 @@ fn parse_flags(
                     PROGRAM_NAME.get().unwrap(),
                     crate::BUILD_VERSION
                 ));
-                return ControlFlow::Break(0);
+                return ControlFlow::Break(Ok(SUCCESS));
             }
             'V' => {
                 *verbose = true;
@@ -201,7 +205,7 @@ fn parse_flags(
                     "fish_key_reader",
                     w.argv[w.wopt_index - 1]
                 ));
-                return ControlFlow::Break(1);
+                return ControlFlow::Break(Err(STATUS_CMD_ERROR));
             }
             _ => panic!(),
         }
@@ -212,7 +216,7 @@ fn parse_flags(
         streams
             .err
             .appendln(wgettext_fmt!("Expected no arguments, got %d", argc));
-        return ControlFlow::Break(1);
+        return ControlFlow::Break(Err(STATUS_CMD_ERROR));
     }
 
     ControlFlow::Continue(())
@@ -222,21 +226,21 @@ pub fn fish_key_reader(
     _parser: &Parser,
     streams: &mut IoStreams,
     args: &mut [&wstr],
-) -> Option<c_int> {
+) -> BuiltinResult {
     let mut continuous_mode = false;
     let mut verbose = false;
 
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    if let ControlFlow::Break(i) = parse_flags(streams, args, &mut continuous_mode, &mut verbose) {
-        return Some(i);
+    if let ControlFlow::Break(s) = parse_flags(streams, args, &mut continuous_mode, &mut verbose) {
+        return s;
     }
 
     if streams.stdin_fd < 0 || unsafe { libc::isatty(streams.stdin_fd) } == 0 {
         streams.err.appendln("Stdin must be attached to a tty.");
-        return Some(1);
+        return Err(STATUS_CMD_ERROR);
     }
 
-    Some(setup_and_process_keys(streams, continuous_mode, verbose))
+    setup_and_process_keys(streams, continuous_mode, verbose)
 }
 
 pub fn main() {
@@ -267,10 +271,10 @@ fn throwing_main() -> i32 {
     let args: Vec<WString> = std::env::args_os()
         .map(|osstr| str2wcstring(osstr.as_bytes()))
         .collect();
-    if let ControlFlow::Break(i) =
+    if let ControlFlow::Break(s) =
         parse_flags(&mut streams, args, &mut continuous_mode, &mut verbose)
     {
-        return i;
+        return s.builtin_status_code();
     }
 
     if !isatty(libc::STDIN_FILENO) {
@@ -280,5 +284,5 @@ fn throwing_main() -> i32 {
         return 1;
     }
 
-    setup_and_process_keys(&mut streams, continuous_mode, verbose)
+    setup_and_process_keys(&mut streams, continuous_mode, verbose).builtin_status_code()
 }

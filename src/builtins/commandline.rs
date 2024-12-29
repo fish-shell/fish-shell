@@ -236,7 +236,7 @@ fn write_part(
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;
@@ -315,7 +315,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                         wgettext!("--tokens options are mutually exclusive")
                     ));
                     builtin_print_error_trailer(parser, streams.err, cmd);
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
                 token_mode = Some(match c {
                     'x' => TokenMode::Expanded,
@@ -342,15 +342,15 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             '\x04' => showing_suggestion = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => panic!(),
         }
@@ -374,12 +374,12 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         if positional_args == 0 {
             builtin_missing_argument(parser, streams, cmd, L!("--function"), true);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         type RL = ReadlineCmd;
@@ -389,7 +389,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     .err
                     .append(wgettext_fmt!("%ls: Unknown input function '%ls'", cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             };
             // Don't enqueue a repaint if we're currently in the middle of one,
             // because that's an infinite loop.
@@ -403,14 +403,14 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             reader_execute_readline_cmd(parser, CharEvent::from_readline(cmd));
         }
 
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     if selection_mode {
         if let Some(selection) = rstate.selection {
             streams.out.append(&rstate.text[selection]);
         }
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // Check for invalid switch combinations.
@@ -419,7 +419,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if (search_mode || line_mode || column_mode || cursor_mode || paging_mode)
@@ -429,7 +429,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if (buffer_part.is_some() || token_mode.is_some() || cut_at_cursor || search_field_mode)
@@ -439,7 +439,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if (token_mode.is_some() || cut_at_cursor) && positional_args != 0 {
@@ -449,18 +449,18 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             "--cut-at-cursor and --tokens can not be used when setting the commandline"
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if search_field_mode && (buffer_part.is_some() || token_mode.is_some()) {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if append_mode.is_some() && positional_args == 0 {
         // No tokens in insert mode just means we do nothing.
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
     // Set default modes.
@@ -477,7 +477,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 "--search-field"
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
         match buffer_part {
             TextScope::String | TextScope::Job | TextScope::Process => (),
@@ -490,7 +490,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     "--current-token"
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
         }
     }
@@ -513,7 +513,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     .err
                     .append(wgettext_fmt!("%ls: line/column index starts at 1", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             };
 
             let new_pos = if line_mode {
@@ -525,7 +525,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                         .err
                         .append(wgettext_fmt!("%ls: there is no line %ls\n", cmd, arg));
                     builtin_print_error_trailer(parser, streams.err, cmd);
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 };
                 offset
             } else {
@@ -543,7 +543,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                         arg
                     ));
                     builtin_print_error_trailer(parser, streams.err, cmd);
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
                 line_offset + new_coord
             };
@@ -564,47 +564,47 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 }
             ));
         }
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     if search_mode {
         return if rstate.search_mode {
-            STATUS_CMD_OK
+            Ok(SUCCESS)
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         };
     }
 
     if paging_mode {
         return if rstate.pager_mode {
-            STATUS_CMD_OK
+            Ok(SUCCESS)
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         };
     }
 
     if paging_full_mode {
         return if rstate.pager_mode && rstate.pager_fully_disclosed {
-            STATUS_CMD_OK
+            Ok(SUCCESS)
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         };
     }
 
     if selection_start_mode {
         let Some(selection) = rstate.selection else {
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         };
         streams.out.append(sprintf!("%lu\n", selection.start));
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     if selection_end_mode {
         let Some(selection) = rstate.selection else {
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         };
         streams.out.append(sprintf!("%lu\n", selection.end));
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // At this point we have (nearly) exhausted the options which always operate on the true command
@@ -617,7 +617,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if search_field_mode {
         let Some((search_field_text, cursor_pos)) = rstate.search_field else {
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         };
         transient = search_field_text;
         current_buffer = &transient;
@@ -647,21 +647,21 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 .append(L!(": Can not set commandline in non-interactive mode\n"));
             builtin_print_error_trailer(parser, streams.err, cmd);
         }
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
     if is_valid {
         if current_buffer.is_empty() {
-            return Some(1);
+            return Err(STATUS_CMD_ERROR);
         }
         let res = parse_util_detect_errors(current_buffer, None, /*accept_incomplete=*/ true);
         return match res {
-            Ok(()) => STATUS_CMD_OK,
+            Ok(()) => Ok(SUCCESS),
             Err(err) => {
                 if err.contains(ParserTestErrorBits::INCOMPLETE) {
-                    Some(2)
+                    Err(STATUS_INVALID_ARGS)
                 } else {
-                    STATUS_CMD_ERROR
+                    Err(STATUS_CMD_ERROR)
                 }
             }
         };
@@ -669,9 +669,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     if showing_suggestion {
         if reader_showing_suggestion(parser) {
-            return Some(0);
+            return Ok(SUCCESS);
         }
-        return Some(1);
+        return Err(STATUS_CMD_ERROR);
     }
 
     let range;
@@ -720,7 +720,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 .out
                 .append(sprintf!("%lu\n", current_cursor_pos - range.start));
         }
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     if positional_args == 0 {
@@ -755,5 +755,5 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         );
     }
 
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }

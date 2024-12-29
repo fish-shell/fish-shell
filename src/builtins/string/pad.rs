@@ -66,7 +66,7 @@ impl StringSubCommand<'_> for Pad {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut max_width = 0usize;
         let mut inputs: Vec<(Cow<'args, wstr>, usize)> = Vec::new();
         let mut print_trailing_newline = true;
@@ -105,6 +105,6 @@ impl StringSubCommand<'_> for Pad {
             streams.out.append(padded);
         }
 
-        STATUS_CMD_OK
+        Ok(())
     }
 }

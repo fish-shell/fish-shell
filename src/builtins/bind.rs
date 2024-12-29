@@ -448,7 +448,7 @@ fn parse_cmd_opts(
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<i32> {
+) -> BuiltinResult {
     let cmd = argv[0];
     let short_options = L!(":aehkKfM:Lm:s");
     const long_options: &[WOption] = &[
@@ -477,7 +477,7 @@ fn parse_cmd_opts(
             'K' => opts.mode = BIND_KEY_NAMES,
             'L' => {
                 opts.list_modes = true;
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             'M' => {
                 if !valid_var_name(w.woptarg.unwrap()) {
@@ -486,7 +486,7 @@ fn parse_cmd_opts(
                         cmd,
                         w.woptarg.unwrap()
                     ));
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
                 opts.bind_mode = w.woptarg.unwrap().to_owned();
                 opts.bind_mode_given = true;
@@ -497,7 +497,7 @@ fn parse_cmd_opts(
                     streams
                         .err
                         .append(wgettext_fmt!(BUILTIN_ERR_BIND_MODE, cmd, new_mode));
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
                 opts.sets_bind_mode = Some(new_mode.to_owned());
             }
@@ -512,11 +512,11 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from WGetopter")
@@ -524,7 +524,7 @@ fn parse_cmd_opts(
         }
     }
     *optind = w.wopt_index;
-    return STATUS_CMD_OK;
+    return Ok(SUCCESS);
 }
 
 impl BuiltinBind {
@@ -534,22 +534,19 @@ impl BuiltinBind {
         parser: &Parser,
         streams: &mut IoStreams,
         argv: &mut [&wstr],
-    ) -> Option<c_int> {
+    ) -> BuiltinResult {
         let cmd = argv[0];
         let mut optind = 0;
-        let retval = parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams);
-        if retval != STATUS_CMD_OK {
-            return retval;
-        }
+        parse_cmd_opts(&mut self.opts, &mut optind, argv, parser, streams)?;
 
         if self.opts.list_modes {
             self.list_modes(streams);
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         }
 
         if self.opts.print_help {
             builtin_print_help(parser, streams, cmd);
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         }
 
         // Default to user mode
@@ -567,7 +564,7 @@ impl BuiltinBind {
                         true, /* user */
                         streams,
                     ) {
-                        return STATUS_CMD_ERROR;
+                        return Err(STATUS_CMD_ERROR);
                     }
                 }
                 if self.opts.preset {
@@ -577,13 +574,13 @@ impl BuiltinBind {
                         false, /* user */
                         streams,
                     ) {
-                        return STATUS_CMD_ERROR;
+                        return Err(STATUS_CMD_ERROR);
                     }
                 }
             }
             BIND_INSERT => {
                 if self.insert(optind, argv, parser, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             BIND_KEY_NAMES => self.key_names(self.opts.all, streams),
@@ -592,13 +589,13 @@ impl BuiltinBind {
                 streams
                     .err
                     .append(wgettext_fmt!("%ls: Invalid state\n", cmd));
-                return STATUS_CMD_ERROR;
+                return Err(STATUS_CMD_ERROR);
             }
         }
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     }
 }
 
-pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     BuiltinBind::new().bind(parser, streams, args)
 }

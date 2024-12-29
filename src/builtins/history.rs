@@ -139,34 +139,37 @@ fn parse_cmd_opts(
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
-    let cmd = argv[0];
+) -> BuiltinResult {
+    let Some(&cmd) = argv.get(0) else {
+        return Err(STATUS_INVALID_ARGS);
+    };
+
     let mut w = WGetopter::new(short_options, longopts, argv);
     while let Some(opt) = w.next_opt() {
         match opt {
             '\x01' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Delete, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             '\x02' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Search, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             '\x03' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Save, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             '\x04' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Clear, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             '\x05' => {
                 if !set_hist_cmd(cmd, &mut opts.hist_cmd, HistCmd::Merge, streams) {
-                    return STATUS_CMD_ERROR;
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             'C' => {
@@ -195,7 +198,7 @@ fn parse_cmd_opts(
                         cmd,
                         w.woptarg.unwrap()
                     ));
-                    return STATUS_INVALID_ARGS;
+                    return Err(STATUS_INVALID_ARGS);
                 }
             },
             'z' => {
@@ -206,7 +209,7 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // Try to parse it as a number; e.g., "-123".
@@ -214,7 +217,7 @@ fn parse_cmd_opts(
                     Ok(x) => opts.max_items = Some(x as _), // todo!("historical behavior is to cast")
                     Err(_) => {
                         builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                        return STATUS_INVALID_ARGS;
+                        return Err(STATUS_INVALID_ARGS);
                     }
                 }
                 w.remaining_text = L!("");
@@ -226,22 +229,23 @@ fn parse_cmd_opts(
     }
 
     *optind = w.wopt_index;
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }
 
 /// Manipulate history of interactive commands executed by the user.
-pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = HistoryCmdOpts::default();
     let mut optind = 0;
-    let retval = parse_cmd_opts(&mut opts, &mut optind, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
-    let cmd = &args[0];
+
+    parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
+
+    let Some(&cmd) = args.get(0) else {
+        return Err(STATUS_INVALID_ARGS);
+    };
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
@@ -256,7 +260,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     if optind < args.len() {
         if let Ok(subcmd) = HistCmd::try_from(args[optind]) {
             if !set_hist_cmd(cmd, &mut opts.hist_cmd, subcmd, streams) {
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             optind += 1;
         }
@@ -266,7 +270,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
     // search term).
     let args = &args[optind..];
 
-    let mut status = STATUS_CMD_OK;
+    let mut status = Ok(SUCCESS);
     match opts.hist_cmd {
         HistCmd::None | HistCmd::Search => {
             if !history.search(
@@ -281,7 +285,7 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 &parser.context().cancel_checker,
                 streams,
             ) {
-                status = STATUS_CMD_ERROR;
+                status = Err(STATUS_CMD_ERROR);
             }
         }
         HistCmd::Delete => {
@@ -293,13 +297,13 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                 streams
                     .err
                     .append(wgettext!("builtin history delete only supports --exact\n"));
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             if !opts.case_sensitive {
                 streams.err.append(wgettext!(
                     "builtin history delete --exact requires --case-sensitive\n"
                 ));
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
 
             for delete_string in args {
@@ -308,21 +312,21 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
         }
         HistCmd::Clear => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             history.clear();
             history.save();
         }
         HistCmd::ClearSession => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             history.clear_session();
             history.save();
         }
         HistCmd::Merge => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
 
             if in_private_mode(parser.vars()) {
@@ -330,13 +334,13 @@ pub fn history(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> 
                     "%ls: can't merge history in private mode\n",
                     cmd
                 ));
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             history.incorporate_external_changes();
         }
         HistCmd::Save => {
             if check_for_unexpected_hist_args(&opts, cmd, args, streams) {
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             history.save();
         }

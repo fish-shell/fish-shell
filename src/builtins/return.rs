@@ -1,5 +1,7 @@
 // Implementation of the return builtin.
 
+use std::ops::ControlFlow;
+
 use super::prelude::*;
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -11,7 +13,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> ControlFlow<ErrorCode, (Options, usize)> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":h");
@@ -26,13 +28,13 @@ fn parse_options(
             'h' => opts.print_help = true,
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], true);
-                return Err(STATUS_INVALID_ARGS);
+                return ControlFlow::Break(STATUS_INVALID_ARGS);
             }
             '?' => {
                 // We would normally invoke builtin_unknown_option() and return an error.
                 // But for this command we want to let it try and parse the value as a negative
                 // return value.
-                return Ok((opts, w.wopt_index - 1));
+                return ControlFlow::Continue((opts, w.wopt_index - 1));
             }
             _ => {
                 panic!("unexpected retval from next_opt");
@@ -40,14 +42,14 @@ fn parse_options(
         }
     }
 
-    Ok((opts, w.wopt_index))
+    ControlFlow::Continue((opts, w.wopt_index))
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut retval = match parse_return_value(args, parser, streams) {
-        Ok(v) => v,
-        Err(e) => return e,
+        ControlFlow::Continue(r) => r,
+        ControlFlow::Break(result) => return result,
     };
 
     let has_function_block = parser.blocks_iter_rev().any(|b| b.is_function_call());
@@ -60,7 +62,9 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
     // Note in Rust, dividend % divisor has the same sign as the dividend.
     if retval < 0 {
         retval = 256 - (retval % 256).abs();
-    }
+    };
+
+    let retval = BuiltinResult::from_dynamic(retval);
 
     // If we're not in a function, exit the current script (but not an interactive shell).
     if !has_function_block {
@@ -68,48 +72,51 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         if !ld.is_interactive {
             ld.exit_current_script = true;
         }
-        return Some(retval);
+        return retval;
     }
 
     // Mark a return in the libdata.
     parser.libdata_mut().returning = true;
 
-    return Some(retval);
+    retval
 }
 
 pub fn parse_return_value(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<i32, Option<c_int>> {
+) -> ControlFlow<BuiltinResult, i32> {
+    // TODO: use map_break <https://github.com/rust-lang/rust/issues/75744>
     let cmd = args[0];
     let (opts, optind) = match parse_options(args, parser, streams) {
-        Ok((opts, optind)) => (opts, optind),
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return Err(err),
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
+        ControlFlow::Continue(o) => o,
+        ControlFlow::Break(error_code) => {
+            return ControlFlow::Break(BuiltinResult::Err(error_code))
+        }
     };
+
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return Err(STATUS_CMD_OK);
+        return ControlFlow::Break(Ok(SUCCESS));
     }
     if optind + 1 < args.len() {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return Err(STATUS_INVALID_ARGS);
+        return ControlFlow::Break(Err(STATUS_INVALID_ARGS));
     }
     if optind == args.len() {
-        Ok(parser.get_last_status())
+        ControlFlow::Continue(parser.get_last_status())
     } else {
         match fish_wcstoi(args[optind]) {
-            Ok(i) => Ok(i),
+            Ok(i) => ControlFlow::Continue(i),
             Err(_e) => {
                 streams
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_NOT_NUMBER, cmd, args[1]));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return Err(STATUS_INVALID_ARGS);
+                ControlFlow::Break(Err(STATUS_INVALID_ARGS))
             }
         }
     }

@@ -229,7 +229,7 @@ fn parse_opts<'args>(
     args: &mut [&'args wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> BuiltinResult {
     let cmd = args[0];
     let mut args_read = Vec::with_capacity(args.len());
     args_read.extend_from_slice(args);
@@ -242,11 +242,11 @@ fn parse_opts<'args>(
             ':' => {
                 streams.err.append(L!("path ")); // clone of string_error
                 builtin_missing_argument(parser, streams, cmd, args_read[w.wopt_index - 1], false);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             'q' => {
                 opts.quiet = true;
@@ -270,7 +270,7 @@ fn parse_opts<'args>(
                 for t in types_args {
                     let Ok(r#type) = t.try_into() else {
                         path_error!(streams, "%ls: Invalid type '%ls'\n", "path", t);
-                        return STATUS_INVALID_ARGS;
+                        return Err(STATUS_INVALID_ARGS);
                     };
                     *types |= r#type;
                 }
@@ -282,7 +282,7 @@ fn parse_opts<'args>(
                 for p in perms_args {
                     let Ok(perm) = p.try_into() else {
                         path_error!(streams, "%ls: Invalid permission '%ls'\n", "path", p);
-                        return STATUS_INVALID_ARGS;
+                        return Err(STATUS_INVALID_ARGS);
                     };
                     *perms |= perm;
                 }
@@ -341,7 +341,7 @@ fn parse_opts<'args>(
             }
             _ => {
                 path_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
         }
     }
@@ -357,17 +357,17 @@ fn parse_opts<'args>(
 
         if opts.arg1.is_none() && n_req_args == 1 {
             path_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
     }
 
     // At this point we should not have optional args and be reading args from stdin.
     if streams.stdin_is_directly_redirected && args.len() > *optind {
         path_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }
 
 fn path_transform(
@@ -376,14 +376,12 @@ fn path_transform(
     args: &mut [&wstr],
     func: impl Fn(&wstr) -> WString,
     custom_opts: impl Fn(&mut Options),
-) -> Option<c_int> {
+) -> BuiltinResult {
     let mut opts = Options::default();
     custom_opts(&mut opts);
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     let mut n_transformed = 0;
     let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
@@ -406,20 +404,20 @@ fn path_transform(
             // Return okay if path wasn't already in this form
             // TODO: Is that correct?
             if opts.quiet {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             };
         }
         path_out(streams, &opts, transformed);
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
-fn path_basename(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_basename(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     path_transform(
         parser,
         streams,
@@ -431,7 +429,7 @@ fn path_basename(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     )
 }
 
-fn path_dirname(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_dirname(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     path_transform(parser, streams, args, |s| wdirname(s).to_owned(), |_| {})
 }
 
@@ -443,18 +441,16 @@ fn normalize_help(path: &wstr) -> WString {
     np
 }
 
-fn path_normalize(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_normalize(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     path_transform(parser, streams, args, normalize_help, |_| {})
 }
 
-fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = Options::default();
     opts.relative_valid = true;
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     let mut n_transformed = 0;
 
@@ -472,7 +468,7 @@ fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
         if ret != INVALID_FILE_ID {
             if opts.quiet {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             n_transformed += 1;
             if !opts.relative {
@@ -487,9 +483,9 @@ fn path_mtime(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
@@ -531,13 +527,11 @@ fn test_find_extension() {
     }
 }
 
-fn path_extension(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_extension(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = Options::default();
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     let mut n_transformed = 0;
     let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
@@ -555,16 +549,16 @@ fn path_extension(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
 
         let ext = arg.slice_from(pos);
         if opts.quiet && !ext.is_empty() {
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         }
         path_out(streams, &opts, ext);
         n_transformed += 1;
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
@@ -572,13 +566,11 @@ fn path_change_extension(
     parser: &Parser,
     streams: &mut IoStreams,
     args: &mut [&wstr],
-) -> Option<c_int> {
+) -> BuiltinResult {
     let mut opts = Options::default();
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 1, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 1, args, parser, streams)?;
 
     let mut n_transformed = 0usize;
     let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
@@ -611,19 +603,17 @@ fn path_change_extension(
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
-fn path_resolve(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_resolve(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = Options::default();
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     let mut n_transformed = 0usize;
     let arguments = arguments(args, &mut optind, streams).with_split_behavior(match opts.null_in {
@@ -669,28 +659,26 @@ fn path_resolve(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
         // Return 0 if we found a realpath.
         if opts.quiet {
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         }
         path_out(streams, &opts, real);
         n_transformed += 1;
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
-fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut opts = Options::default();
     opts.reverse_valid = true;
     opts.unique_valid = true;
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     let keyfunc: fn(&wstr) -> &wstr = match &opts.key {
         Some(k) if k == "basename" => wbasename,
@@ -703,7 +691,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
         None => wbasename,
         Some(k) => {
             path_error!(streams, "%ls: Invalid sort key '%ls'\n", args[0], k);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
     };
 
@@ -744,7 +732,7 @@ fn path_sort(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
     }
 
     /* TODO: Return true only if already sorted? */
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }
 
 fn filter_path(opts: &Options, path: &wstr, uid: Option<u32>, gid: Option<u32>) -> bool {
@@ -853,16 +841,14 @@ fn path_filter_maybe_is(
     streams: &mut IoStreams,
     args: &mut [&wstr],
     is_is: bool,
-) -> Option<c_int> {
+) -> BuiltinResult {
     let mut opts = Options::default();
     opts.types_valid = true;
     opts.perms_valid = true;
     opts.invert_valid = true;
     let mut optind = 0;
-    let retval = parse_opts(&mut opts, &mut optind, 0, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
 
     // If we have been invoked as "path is", which is "path filter -q".
     if is_is {
@@ -911,28 +897,30 @@ fn path_filter_maybe_is(
         }
         n_transformed += 1;
         if opts.quiet {
-            return STATUS_CMD_OK;
+            return Ok(SUCCESS);
         };
     }
 
     if n_transformed > 0 {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }
 
-fn path_filter(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_filter(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     path_filter_maybe_is(parser, streams, args, false)
 }
 
-fn path_is(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+fn path_is(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     path_filter_maybe_is(parser, streams, args, true)
 }
 
 /// The path builtin, for handling paths.
-pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    let cmd = args[0];
+pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    let Some(&cmd) = args.get(0) else {
+        return Err(STATUS_INVALID_ARGS);
+    };
     let argc = args.len();
 
     if argc <= 1 {
@@ -940,12 +928,12 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if args[1] == "-h" || args[1] == "--help" {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     let subcmd_name = args[1];
@@ -966,14 +954,14 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, subcmd_name));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
     };
 
     if argc >= 3 && (args[2] == "-h" || args[2] == "--help") {
         // Unlike string, we don't have separate docs (yet)
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
     let args = &mut args[1..];
     return subcmd(parser, streams, args);

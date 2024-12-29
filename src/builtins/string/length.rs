@@ -28,7 +28,7 @@ impl StringSubCommand<'_> for Length {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut nnonempty = 0usize;
 
         for (arg, _) in arguments(args, optind, streams) {
@@ -54,7 +54,7 @@ impl StringSubCommand<'_> for Length {
                     if !self.quiet {
                         streams.out.appendln(max.to_wstring());
                     } else if nnonempty > 0 {
-                        return STATUS_CMD_OK;
+                        return Ok(());
                     }
                 }
             } else {
@@ -65,14 +65,14 @@ impl StringSubCommand<'_> for Length {
                 if !self.quiet {
                     streams.out.appendln(n.to_wstring());
                 } else if nnonempty > 0 {
-                    return STATUS_CMD_OK;
+                    return Ok(());
                 }
             }
         }
         if nnonempty > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

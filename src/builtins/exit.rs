@@ -1,11 +1,13 @@
+use std::ops::ControlFlow;
+
 use super::prelude::*;
 use super::r#return::parse_return_value;
 
 /// Function for handling the exit builtin.
-pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let retval = match parse_return_value(args, parser, streams) {
-        Ok(v) => v,
-        Err(e) => return e,
+        ControlFlow::Continue(r) => r,
+        ControlFlow::Break(result) => return result,
     };
 
     // Mark that we are exiting in the parser.
@@ -14,5 +16,5 @@ pub fn exit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opt
     // behavior we want here.
     parser.libdata_mut().exit_current_script = true;
 
-    return Some(retval);
+    BuiltinResult::from_dynamic(retval)
 }

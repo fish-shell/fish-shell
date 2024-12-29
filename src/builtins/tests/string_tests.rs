@@ -6,7 +6,9 @@ use crate::wchar::prelude::*;
 #[serial]
 fn test_string() {
     let _cleanup = test_init();
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::shared::{
+        BuiltinResultExt, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS,
+    };
     use crate::builtins::string::string;
     use crate::common::escape;
     use crate::future_feature_flags::{scoped_test, FeatureFlag};
@@ -21,7 +23,7 @@ fn test_string() {
     }
 
     // TODO: these should be individual tests, not all in one, port when we can run these with `cargo test`
-    fn string_test(mut args: Vec<&wstr>, expected_rc: Option<i32>, expected_out: &wstr) {
+    fn string_test(mut args: Vec<&wstr>, expected_rc: i32, expected_out: &wstr) {
         let parser = TestParser::new();
         let mut outs = OutputStream::String(StringOutputStream::new());
         let mut errs = OutputStream::Null;
@@ -29,7 +31,7 @@ fn test_string() {
         let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
         streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
-        let rc = string(&parser, &mut streams, args.as_mut_slice()).expect("string failed");
+        let rc = string(&parser, &mut streams, args.as_mut_slice());
 
         let actual = escape(outs.contents());
         let expected = escape(expected_out);
@@ -40,8 +42,8 @@ fn test_string() {
 
         // Check return code after so we get a chance to identify the difference first
         assert_eq!(
-            expected_rc.unwrap(),
-            rc,
+            expected_rc,
+            rc.builtin_status_code(),
             "string builtin returned unexpected return code"
         );
     }

@@ -32,7 +32,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), ErrorCode> {
     const cmd: &wstr = L!("math");
     let print_hints = true;
 
@@ -210,7 +210,7 @@ fn evaluate_expression(
     streams: &mut IoStreams,
     opts: &Options,
     expression: &wstr,
-) -> Option<c_int> {
+) -> BuiltinResult {
     let ret = te_interp(expression);
 
     match ret {
@@ -230,7 +230,7 @@ fn evaluate_expression(
                 s.push('\n');
 
                 streams.out.append(s);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             };
 
             streams
@@ -238,7 +238,7 @@ fn evaluate_expression(
                 .append(sprintf!("%ls: Error: %ls\n", cmd, error_message));
             streams.err.append(sprintf!("'%ls'\n", expression));
 
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
         Err(err) => {
             streams.err.append(sprintf!(
@@ -255,7 +255,7 @@ fn evaluate_expression(
                 streams.err.append(sprintf!("%ls^\n", padding));
             }
 
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }
@@ -264,17 +264,14 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
 
-    let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {
-        Ok(x) => x,
-        Err(e) => return e,
-    };
+    let (opts, mut optind) = parse_cmd_opts(argv, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     let mut expression = WString::new();
@@ -289,7 +286,7 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
     evaluate_expression(cmd, streams, &opts, &expression)

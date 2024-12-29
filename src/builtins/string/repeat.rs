@@ -44,26 +44,26 @@ impl StringSubCommand<'_> for Repeat {
         optind: &mut usize,
         args: &[&'_ wstr],
         streams: &mut IoStreams,
-    ) -> Option<c_int> {
+    ) -> Result<(), ErrorCode> {
         if self.count.is_some() || self.max.is_some() {
-            return STATUS_CMD_OK;
+            return Ok(());
         }
 
         let name = args[0];
 
         let Some(arg) = args.get(*optind) else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, name);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
 
         let Ok(Ok(count)) = fish_wcstol(arg).map(|count| count.try_into()) else {
             string_error!(streams, "%ls: Invalid count value '%ls'\n", name, arg);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         };
 
         self.count = Some(count);
-        return STATUS_CMD_OK;
+        Ok(())
     }
 
     fn handle(
@@ -72,7 +72,7 @@ impl StringSubCommand<'_> for Repeat {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let max = self.max.unwrap_or_default();
         let count = self.count.unwrap_or_default();
 
@@ -80,7 +80,7 @@ impl StringSubCommand<'_> for Repeat {
             // XXX: This used to be allowed, but returned 1.
             // Keep it that way for now instead of adding an error.
             // streams.err.append(L"Count or max must be greater than zero");
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         }
 
         let mut all_empty = true;
@@ -97,7 +97,7 @@ impl StringSubCommand<'_> for Repeat {
 
             if self.quiet {
                 // Early out if we can - see #7495.
-                return STATUS_CMD_OK;
+                return Ok(());
             }
 
             if !first {
@@ -147,8 +147,8 @@ impl StringSubCommand<'_> for Repeat {
                         // so we need to check every so often if the pipe has been closed.
                         // If we didn't, running `string repeat -n LARGENUMBER foo | pv`
                         // and pressing ctrl-c seems to hang.
-                        if streams.out.flush_and_check_error() != STATUS_CMD_OK.unwrap() {
-                            return STATUS_CMD_ERROR;
+                        if streams.out.flush_and_check_error() != STATUS_CMD_OK {
+                            return Err(STATUS_CMD_ERROR);
                         }
                         i -= chunk.len();
                     }
@@ -168,9 +168,9 @@ impl StringSubCommand<'_> for Repeat {
         }
 
         if all_empty {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         } else {
-            STATUS_CMD_OK
+            Ok(())
         }
     }
 }

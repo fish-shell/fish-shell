@@ -25,7 +25,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), ErrorCode> {
     let cmd = args[0];
 
     let mut opts = Options::default();
@@ -54,17 +54,13 @@ fn parse_options(
 /// An implementation of the external realpath command. Doesn't support any options.
 /// In general scripts shouldn't invoke this directly. They should just use `realpath` which
 /// will fallback to this builtin if an external command cannot be found.
-pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
-    let (opts, optind) = match parse_options(args, parser, streams) {
-        Ok((opts, optind)) => (opts, optind),
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
-    };
+    let (opts, optind) = parse_options(args, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // TODO: allow arbitrary args. `realpath *` should print many paths
@@ -76,7 +72,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             args.len() - 1
         ));
         builtin_print_help(parser, streams, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let arg = args[optind];
@@ -102,7 +98,7 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                     .append(wgettext_fmt!("builtin %ls: Invalid arg: %ls\n", cmd, arg));
             }
 
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         }
     } else {
         // We need to get the *physical* pwd here.
@@ -121,11 +117,11 @@ pub fn realpath(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
                 cmd,
                 errno().to_string()
             ));
-            return STATUS_CMD_ERROR;
+            return Err(STATUS_CMD_ERROR);
         }
     }
 
     streams.out.append(L!("\n"));
 
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }

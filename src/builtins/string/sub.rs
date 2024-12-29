@@ -52,7 +52,7 @@ impl StringSubCommand<'_> for Sub {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let cmd = args[0];
         if self.length.is_some() && self.end.is_some() {
             streams.err.append(wgettext_fmt!(
@@ -60,7 +60,7 @@ impl StringSubCommand<'_> for Sub {
                 cmd,
                 wgettext!("--end and --length are mutually exclusive")
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
 
         let mut nsub = 0;
@@ -101,14 +101,14 @@ impl StringSubCommand<'_> for Sub {
             }
             nsub += 1;
             if self.quiet {
-                return STATUS_CMD_OK;
+                return Ok(());
             }
         }
 
         if nsub > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

@@ -18,7 +18,6 @@ use super::prelude::*;
 use crate::ast::{
     self, Ast, Category, Leaf, List, Node, NodeVisitor, SourceRangeList, Traversal, Type,
 };
-use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -855,15 +854,15 @@ fn throwing_main() -> i32 {
         }
     }
 
-    do_indent(&mut streams, args)
+    do_indent(&mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn fish_indent(_parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
-    Some(do_indent(streams, args))
+    do_indent(streams, args)
 }
 
-fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
+fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> BuiltinResult {
     // Types of output we support
     #[derive(Eq, PartialEq)]
     enum OutputType {
@@ -904,7 +903,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
                 print_help("fish_indent");
-                return STATUS_CMD_OK.unwrap();
+                return Ok(SUCCESS);
             }
             'v' => {
                 streams.out.appendln(wgettext_fmt!(
@@ -912,7 +911,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                     PROGRAM_NAME.get().unwrap(),
                     crate::BUILD_VERSION
                 ));
-                return STATUS_CMD_OK.unwrap();
+                return Ok(SUCCESS);
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
@@ -922,7 +921,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
             '\x02' => output_type = OutputType::Ansi,
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
-            _ => return STATUS_CMD_ERROR.unwrap(),
+            _ => return Err(STATUS_CMD_ERROR),
         }
     }
 
@@ -939,7 +938,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                     "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish",
                     PROGRAM_NAME.get().unwrap()
                 ));
-                return STATUS_CMD_ERROR.unwrap();
+                return Err(STATUS_CMD_ERROR);
             }
             use std::os::fd::FromRawFd;
             let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
@@ -949,7 +948,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                 Err(_) => {
                     // Don't close the fd
                     std::mem::forget(fd);
-                    return STATUS_CMD_ERROR.unwrap();
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
             std::mem::forget(fd);
@@ -960,7 +959,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
-                        Err(()) => return STATUS_CMD_ERROR.unwrap(),
+                        Err(()) => return Err(STATUS_CMD_ERROR),
                     }
                     output_location = arg;
                 }
@@ -970,7 +969,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                         arg,
                         err.to_string()
                     ));
-                    return STATUS_CMD_ERROR.unwrap();
+                    return Err(STATUS_CMD_ERROR);
                 }
             }
         }
@@ -1051,7 +1050,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                                 output_location,
                                 err.to_string()
                             ));
-                            return STATUS_CMD_ERROR.unwrap();
+                            return Err(STATUS_CMD_ERROR);
                         }
                     }
                 }
@@ -1078,7 +1077,11 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
         streams.out.append(str2wcstring(&colored_output));
         i += 1;
     }
-    retval
+    if retval == 0 {
+        Ok(SUCCESS)
+    } else {
+        Err(retval)
+    }
 }
 
 static DUMP_PARSE_TREE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

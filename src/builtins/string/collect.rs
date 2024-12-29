@@ -28,7 +28,7 @@ impl StringSubCommand<'_> for Collect {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut appended = 0usize;
 
         for (arg, want_newline) in
@@ -60,9 +60,9 @@ impl StringSubCommand<'_> for Collect {
         }
 
         if appended > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

@@ -66,7 +66,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut min_width = usize::MAX;
         let mut inputs = Vec::new();
 
@@ -84,7 +84,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             for (arg, _) in iter {
                 streams.out.appendln(arg);
             }
-            return STATUS_CMD_OK;
+            return Ok(());
         }
 
         for (arg, _) in iter {
@@ -168,7 +168,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     pos += skip_escapes(&line, pos).max(1);
                 }
                 if self.quiet && pos != 0 {
-                    return STATUS_CMD_OK;
+                    return Ok(());
                 }
 
                 let output = match pos {
@@ -217,7 +217,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             }
 
             if self.quiet && pos != line.len() {
-                return STATUS_CMD_OK;
+                return Ok(());
             }
 
             if pos == line.len() {
@@ -235,9 +235,9 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
         // Return true if we have shortened something and false otherwise.
         if nsub > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

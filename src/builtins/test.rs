@@ -985,10 +985,10 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     // Whether we are invoked with bracket '[' or not.
@@ -1008,7 +1008,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 .err
                 .appendln(wgettext!("[: the last argument must be ']'"));
             builtin_print_error_trailer(parser, streams.err, program_name);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         }
     }
 
@@ -1026,12 +1026,12 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 program_name
             ));
             builtin_print_error_trailer(parser, streams.err, program_name);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         } else if argc == 1 {
             if args[0] == "-n" {
-                return STATUS_CMD_ERROR;
+                return Err(STATUS_CMD_ERROR);
             } else if args[0] == "-z" {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
         }
     } else if argc == 0 {
@@ -1042,7 +1042,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             ));
             streams.err.append(parser.current_line());
         }
-        return STATUS_INVALID_ARGS; // Per 1003.1, exit false.
+        return Err(STATUS_INVALID_ARGS); // Per 1003.1, exit false.
     } else if argc == 1 {
         if should_flog!(deprecated_test) {
             if args[0] != "-z" {
@@ -1055,9 +1055,9 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
         // Per 1003.1, exit true if the arg is non-empty.
         return if args[0].is_empty() {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         } else {
-            STATUS_CMD_OK
+            Ok(SUCCESS)
         };
     }
 
@@ -1067,7 +1067,7 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
     let Some(expr) = expr else {
         streams.err.append(err);
         streams.err.append(parser.current_line());
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     };
 
     let mut eval_errors = Vec::new();
@@ -1081,12 +1081,12 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             // because this isn't about passing the wrong options.
             streams.err.append(parser.current_line());
         }
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if result {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }

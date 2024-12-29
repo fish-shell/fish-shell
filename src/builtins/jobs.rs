@@ -1,9 +1,6 @@
 // Functions for executing the jobs builtin.
 
-use super::shared::{
-    builtin_missing_argument, builtin_print_help, builtin_unknown_option, STATUS_CMD_ERROR,
-    STATUS_INVALID_ARGS,
-};
+use super::prelude::*;
 use crate::common::{escape_string, timef, EscapeFlags, EscapeStringStyle};
 use crate::io::IoStreams;
 use crate::job_group::{JobId, MaybeJobId};
@@ -13,11 +10,9 @@ use crate::wchar_ext::WExt;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 use crate::wutil::wgettext;
 use crate::{
-    builtins::shared::STATUS_CMD_OK,
     wchar::{wstr, WString, L},
     wutil::{fish_wcstoi, sprintf, wgettext_fmt},
 };
-use libc::c_int;
 use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.
@@ -134,8 +129,12 @@ const LONG_OPTIONS: &[WOption] = &[
 ];
 
 /// The jobs builtin. Used for printing running jobs. Defined in builtin_jobs.c.
-pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
-    let cmd = argv[0];
+pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+    let cmd = match argv.get(0) {
+        Some(cmd) => *cmd,
+        None => return Err(STATUS_INVALID_ARGS),
+    };
+
     let argc = argv.len();
     let mut found = false;
     let mut mode = JobsPrintMode::Default;
@@ -161,15 +160,15 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected retval from WGetopter"),
         }
@@ -180,10 +179,10 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         for j in &parser.jobs()[..] {
             if j.is_visible() {
                 builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
         }
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
     if w.wopt_index < argc {
@@ -197,7 +196,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                             cmd,
                             arg
                         ));
-                        return STATUS_INVALID_ARGS;
+                        return Err(STATUS_INVALID_ARGS);
                     }
                     Some(job_id) => {
                         let job_id = if job_id == 0 {
@@ -218,7 +217,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                             cmd,
                             arg
                         ));
-                        return STATUS_INVALID_ARGS;
+                        return Err(STATUS_INVALID_ARGS);
                     }
                     Some(job_id) => {
                         j = parser.job_get_from_pid(job_id);
@@ -235,7 +234,7 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                         .err
                         .append(wgettext_fmt!("%ls: No suitable job: %ls\n", cmd, arg));
                 }
-                return STATUS_CMD_ERROR;
+                return Err(STATUS_CMD_ERROR);
             }
         }
     } else {
@@ -255,8 +254,8 @@ pub fn jobs(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 .out
                 .append(wgettext_fmt!("%ls: There are no jobs\n", argv[0]));
         }
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }

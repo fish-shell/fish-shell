@@ -8,7 +8,7 @@ struct command_cmd_opts_t {
     find_path: bool,
 }
 
-pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -33,15 +33,15 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             'v' => opts.find_path = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -52,7 +52,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // Quiet implies find_path.
     if !opts.find_path && !opts.all && !opts.quiet {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let mut res = false;
@@ -69,7 +69,7 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         for path in paths.iter() {
             res = true;
             if opts.quiet {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
 
             streams.out.appendln(path);
@@ -80,8 +80,8 @@ pub fn r#command(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     if res {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_UNKNOWN
+        Err(STATUS_CMD_UNKNOWN)
     }
 }

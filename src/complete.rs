@@ -907,7 +907,8 @@ impl<'ctx> Completer<'ctx> {
             // Compute new value and reinsert it.
             let test_res = exec_subshell(
                 condition, parser, None, false, /* don't apply exit status */
-            ) == 0;
+            )
+            .is_ok();
             self.condition_cache.insert(condition.to_owned(), test_res);
             test_res
         }
@@ -1025,7 +1026,7 @@ impl<'ctx> Completer<'ctx> {
         // search if we know the location of the whatis database. This can take some time on slower
         // systems with a large set of manuals, but it should be ok since apropos is only called once.
         let mut list = vec![];
-        exec_subshell(
+        let _ = exec_subshell(
             &lookup_cmd,
             parser,
             Some(&mut list),

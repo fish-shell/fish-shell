@@ -50,7 +50,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         // If neither left or right is specified, we do both.
         if !self.left && !self.right {
             self.left = true;
@@ -86,14 +86,14 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
                     streams.out.append1('\n');
                 }
             } else if ntrim > 0 {
-                return STATUS_CMD_OK;
+                return Ok(());
             }
         }
 
         if ntrim > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

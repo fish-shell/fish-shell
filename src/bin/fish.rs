@@ -27,10 +27,12 @@ use fish::common::wcs2osstring;
 use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
-    builtins::fish_indent,
-    builtins::fish_key_reader,
-    builtins::shared::{
-        BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
+    builtins::{
+        fish_indent, fish_key_reader,
+        shared::{
+            BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_ERROR, STATUS_CMD_OK,
+            STATUS_CMD_UNKNOWN,
+        },
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
@@ -482,8 +484,8 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
     }
 }
 
-fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
-    let mut retval = STATUS_CMD_OK;
+fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
+    let mut retval = Ok(());
     for cmd in cmds {
         let cmd_wcs = str2wcstring(cmd.as_bytes());
 
@@ -497,16 +499,16 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
             // Construct a parsed source ref.
             let ps = Arc::new(ParsedSource::new(cmd_wcs, ast));
             let _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::top);
-            retval = STATUS_CMD_OK;
+            retval = Ok(());
         } else {
             let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
             eprintf!("%s", backtrace);
             // XXX: Why is this the return for "unknown command"?
-            retval = STATUS_CMD_UNKNOWN;
+            retval = Err(STATUS_CMD_UNKNOWN);
         }
     }
 
-    retval.unwrap()
+    retval
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
@@ -720,7 +722,7 @@ fn main() {
 }
 
 fn throwing_main() -> i32 {
-    let mut res = 1;
+    let mut res = Err(STATUS_CMD_ERROR);
 
     signal_unblock_all();
     topic_monitor::topic_monitor_init();
@@ -855,7 +857,7 @@ fn throwing_main() -> i32 {
             L!("fish_default_key_bindings").to_owned(),
         );
         if function::exists(L!("fish_default_key_bindings"), parser) {
-            run_command_list(parser, &[OsString::from("fish_default_key_bindings")]);
+            let _ = run_command_list(parser, &[OsString::from("fish_default_key_bindings")]);
         }
     }
 
@@ -863,7 +865,7 @@ fn throwing_main() -> i32 {
     term_copy_modes();
 
     // Stomp the exit status of any initialization commands (issue #635).
-    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
     // TODO: if-let-chains
     if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
@@ -942,7 +944,7 @@ fn throwing_main() -> i32 {
                     Some(Arc::new(rel_filename.to_owned())),
                 );
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
-                if res != 0 {
+                if res.is_err() {
                     FLOGF!(
                         warning,
                         wgettext!("Error while reading file %ls\n"),
@@ -953,8 +955,8 @@ fn throwing_main() -> i32 {
         }
     }
 
-    let exit_status = if res != 0 {
-        STATUS_CMD_UNKNOWN.unwrap()
+    let exit_status = if res.is_err() {
+        STATUS_CMD_UNKNOWN
     } else {
         parser.get_last_status()
     };

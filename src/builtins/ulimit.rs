@@ -101,9 +101,9 @@ fn set_limit(
     soft: bool,
     value: rlim_t,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> BuiltinResult {
     let Some((mut rlim_cur, mut rlim_max)) = getrlimit(resource) else {
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     };
     if hard {
         rlim_max = value;
@@ -127,9 +127,9 @@ fn set_limit(
             builtin_wperror(L!("ulimit"), streams);
         }
 
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     } else {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     }
 }
 
@@ -168,7 +168,7 @@ impl Default for Options {
     }
 }
 
-pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":HSabcdefilmnqrstuvwyKPTh");
@@ -231,15 +231,15 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             'T' => opts.what = RLIMIT_NTHR(),
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, w.argv[w.wopt_index - 1], true);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from WGetopter");
@@ -258,7 +258,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
         ));
 
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let what: c_uint = opts.what.try_into().unwrap();
@@ -267,14 +267,14 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
     let arg_count = argc - w.wopt_index;
     if arg_count == 0 {
         print(what, opts.hard, streams);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     } else if arg_count != 1 {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_TOO_MANY_ARGUMENTS, cmd));
 
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let mut hard = opts.hard;
@@ -291,18 +291,18 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             cmd
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     } else if wcscasecmp(w.argv[w.wopt_index], L!("unlimited")) == Ordering::Equal {
         RLIM_INFINITY
     } else if wcscasecmp(w.argv[w.wopt_index], L!("hard")) == Ordering::Equal {
         match get(what, true) {
             Some(limit) => limit,
-            None => return STATUS_CMD_ERROR,
+            None => return Err(STATUS_CMD_ERROR),
         }
     } else if wcscasecmp(w.argv[w.wopt_index], L!("soft")) == Ordering::Equal {
         match get(what, soft) {
             Some(limit) => limit,
-            None => return STATUS_CMD_ERROR,
+            None => return Err(STATUS_CMD_ERROR),
         }
     } else if let Ok(limit) = fish_wcstol(w.argv[w.wopt_index]) {
         let Some(x) = get_multiplier(what).checked_mul(limit as rlim_t) else {
@@ -312,7 +312,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 w.argv[w.wopt_index]
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         };
         x
     } else {
@@ -322,7 +322,7 @@ pub fn ulimit(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             w.argv[w.wopt_index]
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     };
 
     set_limit(what, hard, soft, new_limit, streams)

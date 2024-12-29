@@ -22,7 +22,7 @@ impl StringSubCommand<'_> for Transform {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         let mut n_transformed = 0usize;
 
         for (arg, want_newline) in arguments(args, optind, streams) {
@@ -36,14 +36,14 @@ impl StringSubCommand<'_> for Transform {
                     streams.out.append1('\n');
                 }
             } else if n_transformed > 0 {
-                return STATUS_CMD_OK;
+                return Ok(());
             }
         }
 
         if n_transformed > 0 {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

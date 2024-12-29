@@ -34,7 +34,7 @@ impl StringSubCommand<'_> for Escape {
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
-    ) -> Option<libc::c_int> {
+    ) -> Result<(), ErrorCode> {
         // Currently, only the script style supports options.
         // Ignore them for other styles for now.
         let style = match self.style {
@@ -57,9 +57,9 @@ impl StringSubCommand<'_> for Escape {
         }
 
         if escaped_any {
-            STATUS_CMD_OK
+            Ok(())
         } else {
-            STATUS_CMD_ERROR
+            Err(STATUS_CMD_ERROR)
         }
     }
 }

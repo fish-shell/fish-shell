@@ -17,7 +17,7 @@ struct type_cmd_opts_t {
     query: bool,
 }
 
-pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -48,15 +48,15 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             'q' => opts.query = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from wgeopter.next()");
@@ -66,7 +66,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
     if opts.query as i64 + opts.path as i64 + opts.get_type as i64 + opts.force_path as i64 > 1 {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     let mut res = false;
@@ -80,7 +80,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
                 res = true;
                 // Early out - query means *any of the args exists*.
                 if opts.query {
-                    return STATUS_CMD_OK;
+                    return Ok(SUCCESS);
                 }
                 if !opts.get_type {
                     let path = props.definition_file().unwrap_or(L!(""));
@@ -164,7 +164,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             found += 1;
             res = true;
             if opts.query {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             if !opts.get_type {
                 streams.out.append(wgettext_fmt!("%ls is a builtin\n", arg));
@@ -189,7 +189,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             found += 1;
             res = true;
             if opts.query {
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             if !opts.get_type {
                 if opts.path || opts.force_path {
@@ -220,8 +220,8 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
     }
 
     if res {
-        STATUS_CMD_OK
+        Ok(SUCCESS)
     } else {
-        STATUS_CMD_ERROR
+        Err(STATUS_CMD_ERROR)
     }
 }

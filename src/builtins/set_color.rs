@@ -116,14 +116,14 @@ const LONG_OPTIONS: &[WOption] = &[
 ];
 
 /// set_color builtin.
-pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     // Variables used for parsing the argument list.
     let argc = argv.len();
 
     // Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a
     // hack, quietly return failure.
     if argc <= 1 {
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     }
 
     let mut bgcolor = None;
@@ -143,7 +143,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             }
             'h' => {
                 builtin_print_help(parser, streams, argv[0]);
-                return STATUS_CMD_OK;
+                return Ok(SUCCESS);
             }
             'o' => bold = true,
             'i' => italics = true,
@@ -154,7 +154,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             ':' => {
                 // We don't error here because "-b" is the only option that requires an argument,
                 // and we don't error for missing colors.
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(
@@ -164,7 +164,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                     argv[w.wopt_index - 1],
                     true, /* print_hints */
                 );
-                return STATUS_INVALID_ARGS;
+                return Err(STATUS_INVALID_ARGS);
             }
             _ => unreachable!("unexpected retval from WGetopter"),
         }
@@ -179,7 +179,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             argv[0],
             bgcolor.unwrap()
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(STATUS_INVALID_ARGS);
     }
 
     if print {
@@ -191,7 +191,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         }
         let args = &argv[wopt_index..argc];
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
     // Remaining arguments are foreground color.
@@ -204,7 +204,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 argv[0],
                 argv[wopt_index]
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(STATUS_INVALID_ARGS);
         };
         fgcolors.push(fg);
         wopt_index += 1;
@@ -218,10 +218,10 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
     let Some(term) = terminal::term() else {
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     };
     let Some(exit_attribute_mode) = &term.exit_attribute_mode else {
-        return STATUS_CMD_ERROR;
+        return Err(STATUS_CMD_ERROR);
     };
 
     let outp = &mut output::Outputter::new_buffering();
@@ -248,5 +248,5 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let contents = outp.contents();
     streams.out.append(str2wcstring(contents));
 
-    STATUS_CMD_OK
+    Ok(SUCCESS)
 }

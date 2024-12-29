@@ -666,16 +666,10 @@ fn test_eval_illegal_exit_code() {
     parser.pushd("test/temp");
     validate!(L!("echo -n"), STATUS_CMD_OK.unwrap());
     validate!(L!("pwd"), STATUS_CMD_OK.unwrap());
-    validate!(
-        L!("UNMATCHABLE_WILDCARD*"),
-        STATUS_UNMATCHED_WILDCARD.unwrap()
-    );
-    validate!(
-        L!("UNMATCHABLE_WILDCARD**"),
-        STATUS_UNMATCHED_WILDCARD.unwrap()
-    );
-    validate!(L!("?"), STATUS_UNMATCHED_WILDCARD.unwrap());
-    validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD.unwrap());
+    validate!(L!("UNMATCHABLE_WILDCARD*"), STATUS_UNMATCHED_WILDCARD);
+    validate!(L!("UNMATCHABLE_WILDCARD**"), STATUS_UNMATCHED_WILDCARD);
+    validate!(L!("?"), STATUS_UNMATCHED_WILDCARD);
+    validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD);
     parser.popd();
 }
 

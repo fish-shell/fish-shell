@@ -1,15 +1,14 @@
 // Implementation of the disown builtin.
 
-use super::shared::{builtin_print_help, STATUS_CMD_ERROR, STATUS_INVALID_ARGS};
+use super::prelude::*;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{add_disowned_job, Job, Pid};
 use crate::{
-    builtins::shared::{HelpOnlyCmdOpts, STATUS_CMD_OK},
+    builtins::shared::HelpOnlyCmdOpts,
     wchar::wstr,
     wutil::{fish_wcstoi, wgettext_fmt},
 };
-use libc::c_int;
 use libc::SIGCONT;
 
 /// Helper for builtin_disown.
@@ -43,20 +42,16 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
 }
 
 /// Builtin for removing jobs from the job list.
-pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    let opts = match HelpOnlyCmdOpts::parse(args, parser, streams) {
-        Ok(opts) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
-    };
+pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
     let cmd = args[0];
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(SUCCESS);
     }
 
-    let mut retval;
+    let mut retval: BuiltinResult;
     if opts.optind == args.len() {
         // Select last constructed job (ie first job in the job queue) that is possible to disown.
         // Stopped jobs can be disowned (they will be continued).
@@ -72,15 +67,15 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
 
         if let Some(job) = job {
             disown_job(cmd, streams, &job);
-            retval = STATUS_CMD_OK;
+            retval = Ok(SUCCESS);
         } else {
             streams
                 .err
                 .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
-            retval = STATUS_CMD_ERROR;
+            retval = Err(STATUS_CMD_ERROR);
         }
     } else {
-        retval = STATUS_CMD_OK;
+        retval = Ok(SUCCESS);
 
         // If one argument is not a valid pid (i.e. integer >= 0), fail without disowning anything,
         // but still print errors for all of them.
@@ -97,7 +92,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                             cmd,
                             arg
                         ));
-                        retval = STATUS_INVALID_ARGS;
+                        retval = Err(STATUS_INVALID_ARGS);
                         None
                     }
                     Some(pid) => parser.job_get_from_pid(pid).or_else(|| {
@@ -113,9 +108,7 @@ pub fn disown(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             })
             .collect();
 
-        if retval != STATUS_CMD_OK {
-            return retval;
-        }
+        retval?;
 
         // One PID/JID may be repeated or multiple PIDs may refer to the same job;
         // include the job only once.

@@ -77,7 +77,7 @@ fn parse_cmd_opts(
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     let cmd = L!("function");
     let print_hints = false;
     let mut handling_named_arguments = false;
@@ -231,7 +231,7 @@ fn validate_function_name(
     function_name: &mut WString,
     cmd: &wstr,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> c_int {
     if argv.len() < 2 {
         // This is currently impossible but let's be paranoid.
         streams
@@ -267,7 +267,7 @@ pub fn function(
     streams: &mut IoStreams,
     c_args: &mut [&wstr],
     func_node: NodeRef<BlockStatement>,
-) -> Option<c_int> {
+) -> c_int {
     // The wgetopt function expects 'function' as the first argument. Make a new vec with
     // that property. This is needed because this builtin has a different signature than the other
     // builtins.

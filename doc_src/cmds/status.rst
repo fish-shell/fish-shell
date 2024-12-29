@@ -29,6 +29,7 @@ Synopsis
     status job-control CONTROL_TYPE
     status features
     status test-feature FEATURE
+    status buildinfo
 
 Description
 -----------
@@ -96,6 +97,10 @@ The following operations (subcommands) are available:
 
 **test-feature** *FEATURE*
     Returns 0 when FEATURE is enabled, 1 if it is disabled, and 2 if it is not recognized.
+
+**buildinfo**
+    This prints information on how fish was build - which architecture, which build system or profile was used, etc.
+    This is mainly useful for debugging.
 
 Notes
 -----

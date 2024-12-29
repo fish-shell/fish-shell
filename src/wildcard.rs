@@ -432,19 +432,27 @@ fn wildcard_test_flags_then_complete(
         == WildcardResult::Match
 }
 
-use expander::WildCardExpander;
 mod expander {
     use libc::F_OK;
 
     use crate::{
-        common::scoped_push,
         path::append_path_component,
         wutil::{dir_iter::DirIter, normalize_path, DevInode},
     };
 
     use super::*;
 
-    pub struct WildCardExpander<'e> {
+    // State associated with expanding a path.
+    // This may be different for different paths discovered during expansion,
+    // and so it is passed along in the recursive invocations and not stored.
+    #[derive(Copy, Clone, Default)]
+    pub(super) struct ParentInfo {
+        // Whether some parent expansion is fuzzy, and therefore completions always prepend their prefix.
+        has_fuzzy_ancestor: bool,
+    }
+
+    // A stateful object for expanding wildcards.
+    pub(super) struct WildCardExpander<'e> {
         /// A function to call to check cancellation.
         cancel_checker: &'e mut dyn FnMut() -> bool,
         /// The working directory to resolve paths against
@@ -463,10 +471,6 @@ mod expander {
         did_overflow: bool,
         /// Whether we have successfully added any completions.
         did_add: bool,
-        /// Whether some parent expansion is fuzzy, and therefore completions always prepend their prefix
-        /// This variable is a little suspicious - it should be passed along, not stored here
-        /// If we ever try to do parallel wildcard expansion we'll have to remove this
-        has_fuzzy_ancestor: bool,
     }
 
     impl<'e> WildCardExpander<'e> {
@@ -489,7 +493,6 @@ mod expander {
                 did_add: false,
                 did_interrupt: false,
                 did_overflow: false,
-                has_fuzzy_ancestor: false,
             }
         }
 
@@ -505,7 +508,14 @@ mod expander {
         /// effective_prefix: the string that should be prepended for completions that replace their token.
         ///    This is usually the same thing as the original wildcard, but for fuzzy matching, we
         ///    expand intermediate segments. effective_prefix is always either empty, or ends with a slash
-        pub fn expand(&mut self, base_dir: &wstr, wc: &wstr, effective_prefix: &wstr) {
+        /// info: the parent info for expansion of this path, such as whether we have a fuzzy ancestor.
+        pub fn expand(
+            &mut self,
+            base_dir: &wstr,
+            wc: &wstr,
+            effective_prefix: &wstr,
+            info: ParentInfo,
+        ) {
             if self.interrupted_or_overflowed() {
                 return;
             }
@@ -525,11 +535,11 @@ mod expander {
             if wc_segment.is_empty() {
                 assert!(!segment_has_wildcards);
                 if is_last_segment {
-                    self.expand_trailing_slash(base_dir, effective_prefix);
+                    self.expand_trailing_slash(base_dir, effective_prefix, info);
                 } else {
                     let mut prefix = effective_prefix.to_owned();
                     prefix.push('/');
-                    self.expand(base_dir, wc_remainder.unwrap(), &prefix);
+                    self.expand(base_dir, wc_remainder.unwrap(), &prefix, info);
                 }
             } else if !segment_has_wildcards && !is_last_segment {
                 // Literal intermediate match. Note that we may not be able to actually read the directory
@@ -542,7 +552,7 @@ mod expander {
                 // This just trumps everything
                 let before = self.resolved_completions.len();
                 let prefix: WString = effective_prefix.to_owned() + wc_segment + L!("/");
-                self.expand(&intermediate_dirpath, wc_remainder, &prefix);
+                self.expand(&intermediate_dirpath, wc_remainder, &prefix, info);
 
                 // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
                 // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
@@ -562,10 +572,12 @@ mod expander {
                             wc_segment,
                             wc_remainder,
                             effective_prefix,
+                            info,
                         );
                     }
                 }
             } else {
+                // Either a wildcard intermediate segment or the last segment.
                 assert!(!wc_segment.is_empty() && (segment_has_wildcards || is_last_segment));
 
                 if !is_last_segment && matches!(wc_segment.as_char_slice(), [ANY_STRING_RECURSIVE])
@@ -576,7 +588,7 @@ mod expander {
                     // Implement this by matching the wildcard tail only, in this directory.
                     // Note if the segment is not exactly ANY_STRING_RECURSIVE then the segment may only
                     // match subdirectories.
-                    self.expand(base_dir, wc_remainder.unwrap(), effective_prefix);
+                    self.expand(base_dir, wc_remainder.unwrap(), effective_prefix, info);
                     if self.interrupted_or_overflowed() {
                         return;
                     }
@@ -598,10 +610,17 @@ mod expander {
                         wc_segment,
                         wc_remainder,
                         effective_prefix,
+                        info,
                     );
                 } else {
                     // Last wildcard segment, nonempty wildcard.
-                    self.expand_last_segment(base_dir, &mut dir, wc_segment, effective_prefix);
+                    self.expand_last_segment(
+                        base_dir,
+                        &mut dir,
+                        wc_segment,
+                        effective_prefix,
+                        info,
+                    );
                 }
 
                 let Some(asr_idx) = wc_segment.find_char(ANY_STRING_RECURSIVE) else {
@@ -624,6 +643,7 @@ mod expander {
                     head_any,
                     any_tail,
                     effective_prefix,
+                    info,
                 );
             }
         }
@@ -643,7 +663,7 @@ mod expander {
 
     impl<'e> WildCardExpander<'e> {
         /// We are a trailing slash - expand at the end.
-        fn expand_trailing_slash(&mut self, base_dir: &wstr, prefix: &wstr) {
+        fn expand_trailing_slash(&mut self, base_dir: &wstr, prefix: &wstr, info: ParentInfo) {
             if self.interrupted_or_overflowed() {
                 return;
             }
@@ -681,6 +701,7 @@ mod expander {
                         L!(""),
                         prefix,
                         entry,
+                        info,
                     );
                 }
             }
@@ -697,6 +718,7 @@ mod expander {
             wc_segment: &wstr,
             wc_remainder: &wstr,
             prefix: &wstr,
+            info: ParentInfo,
         ) {
             let is_final = wc_remainder.is_empty() && !wc_segment.contains(ANY_STRING_RECURSIVE);
             while !self.interrupted_or_overflowed() {
@@ -722,7 +744,7 @@ mod expander {
                     let full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
                     let prefix: WString = prefix.to_owned() + wc_segment + L!("/");
 
-                    self.expand(&full_path, wc_remainder, &prefix);
+                    self.expand(&full_path, wc_remainder, &prefix, info);
                     continue;
                 }
 
@@ -738,7 +760,7 @@ mod expander {
                 let full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
                 let prefix: WString = prefix.to_owned() + wc_segment + L!("/");
 
-                self.expand(&full_path, wc_remainder, &prefix);
+                self.expand(&full_path, wc_remainder, &prefix, info);
 
                 // Now remove the visited file. This is for #2414: only directories "beneath" us should be
                 // considered visited.
@@ -755,10 +777,11 @@ mod expander {
             wc_segment: &wstr,
             wc_remainder: &wstr,
             prefix: &wstr,
+            mut info: ParentInfo,
         ) {
-            // Mark that we are fuzzy for the duration of this function
-            let mut zelf = scoped_push(self, |e| &mut e.has_fuzzy_ancestor, true);
-            while !zelf.interrupted_or_overflowed() {
+            // Mark that all children of this directory have a fuzzy ancestor.
+            info.has_fuzzy_ancestor = true;
+            while !self.interrupted_or_overflowed() {
                 let Some(Ok(entry)) = base_dir_iter.next() else {
                     break;
                 };
@@ -789,12 +812,12 @@ mod expander {
                 let new_full_path: WString = base_dir.to_owned() + entry.name.as_utfstr() + L!("/");
 
                 // Ok, this directory matches. Recurse to it. Then mark each resulting completion as fuzzy.
-                let before = zelf.resolved_completions.len();
-                zelf.expand(&new_full_path, wc_remainder, &child_prefix);
-                let after = zelf.resolved_completions.len();
+                let before = self.resolved_completions.len();
+                self.expand(&new_full_path, wc_remainder, &child_prefix, info);
+                let after = self.resolved_completions.len();
 
                 assert!(before <= after);
-                for c in zelf.resolved_completions[before..after].iter_mut() {
+                for c in self.resolved_completions[before..after].iter_mut() {
                     // Mark the completion as replacing.
                     if !c.replaces_token() {
                         c.flags |= CompleteFlags::REPLACES_TOKEN;
@@ -821,6 +844,7 @@ mod expander {
             base_dir_iter: &mut DirIter,
             wc: &wstr,
             prefix: &wstr,
+            info: ParentInfo,
         ) {
             let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
 
@@ -840,6 +864,7 @@ mod expander {
                         wc,
                         prefix,
                         entry,
+                        info,
                     );
                 } else {
                     // Normal wildcard expansion, not for completions.
@@ -935,6 +960,7 @@ mod expander {
             wildcard: &wstr,
             prefix: &wstr,
             entry: &DirEntry,
+            info: ParentInfo,
         ) {
             // This function is only for the completions case.
             assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
@@ -961,7 +987,7 @@ mod expander {
                 // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
                 let after = self.resolved_completions.len();
                 for c in self.resolved_completions[before..after].iter_mut() {
-                    if self.has_fuzzy_ancestor && !(c.flags.contains(CompleteFlags::REPLACES_TOKEN))
+                    if info.has_fuzzy_ancestor && !(c.flags.contains(CompleteFlags::REPLACES_TOKEN))
                     {
                         c.flags |= CompleteFlags::REPLACES_TOKEN;
                         c.prepend_token_prefix(wildcard);
@@ -1023,7 +1049,8 @@ mod expander {
 /// \param working_directory The working directory
 /// \param flags flags for the search. Can be any combination of for_completions and
 /// executables_only
-/// \param output The list in which to put the output
+/// \param cancel_checker A function to call to check for cancellation
+/// \param output The completion receiver to receive expanded wildcards
 ///
 pub fn wildcard_expand_string<'closure>(
     wc: &wstr,
@@ -1032,6 +1059,7 @@ pub fn wildcard_expand_string<'closure>(
     mut cancel_checker: impl FnMut() -> bool + 'closure,
     output: &mut CompletionReceiver,
 ) -> WildcardResult {
+    use expander::{ParentInfo, WildCardExpander};
     // Fuzzy matching only if we're doing completions.
     assert!(
         flags.contains(ExpandFlags::FOR_COMPLETIONS) || !flags.contains(ExpandFlags::FUZZY_MATCH)
@@ -1046,10 +1074,8 @@ pub fn wildcard_expand_string<'closure>(
                 && (!flags.contains(ExpandFlags::GEN_DESCRIPTIONS)))
     );
 
-    // Hackish fix for issue #1631. We are about to call c_str(), which will produce a string
-    // truncated at any embedded nulls. We could fix this by passing around the size, etc. However
-    // embedded nulls are never allowed in a filename, so we just check for them and return 0 (no
-    // matches) if there is an embedded null.
+    // Hackish fix for issue #1631. Embedded nulls are never allowed in a filename,
+    // so we just check for them and return 0 (no matches) if there is an embedded null.
     if wc.contains('\0') {
         return WildcardResult::NoMatch;
     }
@@ -1075,7 +1101,7 @@ pub fn wildcard_expand_string<'closure>(
     };
 
     let mut expander = WildCardExpander::new(prefix, flags, &mut cancel_checker, output);
-    expander.expand(base_dir, effective_wc, base_dir);
+    expander.expand(base_dir, effective_wc, base_dir, ParentInfo::default());
     return expander.status_code();
 }
 

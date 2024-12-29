@@ -146,10 +146,9 @@ To install into ``/usr/local``, run:
 
 .. code:: bash
 
-   mkdir build; cd build
-   cmake ..
-   cmake --build .
-   sudo cmake --install .
+   cmake -B build
+   cmake --build build
+   sudo cmake --install build
 
 The install directory can be changed using the
 ``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.

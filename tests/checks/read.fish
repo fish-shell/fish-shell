@@ -1,4 +1,4 @@
-# RUN: %fish -C "set -g fish %fish; set -g filter_ctrls %filter-control-sequences" %s
+# RUN: %fish -C "set -g fish %fish; set -g filter_ctrls %fish %filter-control-sequences" %s
 # Set term again explicitly to ensure behavior.
 set -gx TERM xterm
 # Read with no vars is not an error

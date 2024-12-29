@@ -130,7 +130,7 @@ use crate::wcstringutil::{
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
-use crate::wutil::{fstat, perror, write_to_fd};
+use crate::wutil::{fstat, perror};
 use crate::{abbrs, event, function, history};
 
 /// A description of where fish is in the process of exiting.
@@ -1979,7 +1979,7 @@ impl<'a> Reader<'a> {
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
         if zelf.conf.inputfd != STDIN_FILENO {
-            let _ = write_to_fd(b"\r", STDOUT_FILENO);
+            let _ = write_loop(&STDOUT_FILENO, b"\r");
         }
 
         // Ensure we have no pager contents when we exit.
@@ -4142,7 +4142,7 @@ pub fn reader_write_title(
         .set_color(RgbColor::RESET, RgbColor::RESET);
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
-        let _ = write_to_fd(b"\r", STDOUT_FILENO);
+        let _ = write_loop(&STDOUT_FILENO, b"\r");
     }
 }
 

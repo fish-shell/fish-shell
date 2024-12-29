@@ -68,24 +68,18 @@ impl FdReadableSet {
     /// destructively modifies the set. Returns the result of `select()` or `poll()`.
     pub fn check_readable(&mut self, timeout_usec: u64) -> c_int {
         let null = std::ptr::null_mut();
-        if timeout_usec == Self::kNoTimeout {
-            unsafe {
-                return libc::select(
-                    self.nfds_,
-                    &mut self.fdset_,
-                    null,
-                    null,
-                    std::ptr::null_mut(),
-                );
-            }
+        let mut tvs;
+        let timeout = if timeout_usec == Self::kNoTimeout {
+            std::ptr::null_mut()
         } else {
-            let mut tvs = libc::timeval {
+            tvs = libc::timeval {
                 tv_sec: (timeout_usec / kUsecPerSec) as libc::time_t,
                 tv_usec: (timeout_usec % kUsecPerSec) as libc::suseconds_t,
             };
-            unsafe {
-                return libc::select(self.nfds_, &mut self.fdset_, null, null, &mut tvs);
-            }
+            &mut tvs
+        };
+        unsafe {
+            return libc::select(self.nfds_, &mut self.fdset_, null, null, timeout);
         }
     }
 

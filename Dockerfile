@@ -16,4 +16,3 @@ WORKDIR /src
 RUN cmake3 . &&\
   make &&\
   make install
-

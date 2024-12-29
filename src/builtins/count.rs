@@ -5,7 +5,11 @@ use super::prelude::*;
 const COUNT_CHUNK_SIZE: usize = 512 * 256;
 
 /// Implementation of the builtin count command, used to count the number of arguments sent to it.
-pub fn count(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn count(
+    _parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     // Always add the size of argv (minus 0, which is "count").
     // That means if you call `something | count a b c`, you'll get the count of something _plus 3_.
     let mut numargs = argv.len() - 1;
@@ -22,8 +26,8 @@ pub fn count(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
 
     streams.out.appendln(numargs.to_wstring());
 
-    if numargs == 0 {
-        return STATUS_CMD_ERROR;
+    match numargs {
+        0 => Err(StatusError::STATUS_CMD_ERROR),
+        _ => Ok(StatusOk::OK),
     }
-    STATUS_CMD_OK
 }

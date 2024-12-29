@@ -84,7 +84,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             for (arg, _) in iter {
                 streams.out.appendln(arg);
             }
-            return STATUS_CMD_OK;
+            return Some(STATUS_CMD_OK);
         }
 
         for (arg, _) in iter {
@@ -168,7 +168,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                     pos += skip_escapes(&line, pos).max(1);
                 }
                 if self.quiet && pos != 0 {
-                    return STATUS_CMD_OK;
+                    return Some(STATUS_CMD_OK);
                 }
 
                 let output = match pos {
@@ -217,7 +217,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
             }
 
             if self.quiet && pos != line.len() {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
 
             if pos == line.len() {
@@ -235,9 +235,9 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
         // Return true if we have shortened something and false otherwise.
         if nsub > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

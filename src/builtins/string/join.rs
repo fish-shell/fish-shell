@@ -41,17 +41,17 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         streams: &mut IoStreams,
     ) -> Option<libc::c_int> {
         if self.is_join0 {
-            return STATUS_CMD_OK;
+            return Some(STATUS_CMD_OK);
         }
 
         let Some(arg) = args.get(*optind).copied() else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         self.sep = arg;
 
-        STATUS_CMD_OK
+        Some(STATUS_CMD_OK)
     }
 
     fn handle(
@@ -76,7 +76,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
                 streams.out.append(arg);
             } else if nargs > 1 {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
             nargs += 1;
             print_trailing_newline = want_newline;
@@ -91,9 +91,9 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
         }
 
         if nargs > 1 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

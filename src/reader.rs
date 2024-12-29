@@ -13,8 +13,8 @@
 //! end of the list is reached, at which point regular searching will commence.
 
 use libc::{
-    c_char, c_int, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR,
-    IXOFF, IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
+    c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR, IXOFF,
+    IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
     TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use nix::fcntl::OFlag;
@@ -43,6 +43,8 @@ use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
 use crate::ast::{self, Ast, Category, Traversal};
+use crate::builtins::shared::StatusError;
+use crate::builtins::shared::StatusOk;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
 use crate::color::RgbColor;
@@ -576,7 +578,7 @@ impl<'a> Reader<'a> {
 
 /// Read commands from \c fd until encountering EOF.
 /// The fd is not closed.
-pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
+pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<StatusOk, StatusError> {
     // If reader_read is called recursively through the '.' builtin, we need to preserve
     // is_interactive. This, and signal handler setup is handled by
     // proc_push_interactive/proc_pop_interactive.
@@ -601,7 +603,8 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
     signal_set_handlers_once(interactive);
 
     let res = if interactive {
-        read_i(parser)
+        read_i(parser);
+        Ok(StatusOk::OK)
     } else {
         read_ni(parser, fd, io)
     };
@@ -613,7 +616,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> c_int {
 }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
-fn read_i(parser: &Parser) -> i32 {
+fn read_i(parser: &Parser) {
     assert_is_main_thread();
     parser.assert_can_execute();
     let mut conf = ReaderConfig::default();
@@ -701,14 +704,12 @@ fn read_i(parser: &Parser) -> i32 {
         EXIT_STATE.store(ExitState::FinishedHandlers as u8, Ordering::Relaxed);
         hup_jobs(&parser.jobs());
     }
-
-    0
 }
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
 /// The file is not closed.
-fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
+fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<StatusOk, StatusError> {
     let md = match fstat(fd) {
         Ok(md) => md,
         Err(err) => {
@@ -716,7 +717,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
                 error,
                 wgettext_fmt!("Unable to read input file: %s", err.to_string())
             );
-            return 1;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     };
 
@@ -728,7 +729,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
             error,
             wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
         );
-        return 1;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Read all data into a vec.
@@ -758,7 +759,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
                         error,
                         wgettext_fmt!("Unable to read input file: %s", err.to_string())
                     );
-                    return 1;
+                    return Err(StatusError::STATUS_CMD_ERROR);
                 }
             }
         }
@@ -784,14 +785,15 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> i32 {
     if errored {
         let sb = parser.get_backtrace(&s, &errors);
         eprintf!("%ls", sb);
-        return 1;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Construct a parsed source ref.
     // Be careful to transfer ownership, this could be a very large string.
     let ps = Arc::new(ParsedSource::new(s, ast));
     parser.eval_parsed_source(&ps, io, None, BlockType::top);
-    0
+
+    Ok(StatusOk::OK)
 }
 
 /// Initialize the reader.
@@ -2309,7 +2311,7 @@ impl<'a> Reader<'a> {
             rl::CancelCommandline | rl::CancelCommandlineTraditional => {
                 if self.conf.exit_on_interrupt {
                     self.parser
-                        .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
+                        .set_last_statuses(Statuses::just(STATUS_CMD_ERROR));
                     self.exit_loop_requested = true;
                     return;
                 }
@@ -2591,8 +2593,7 @@ impl<'a> Reader<'a> {
             }
             rl::Exit => {
                 // This is by definition a successful exit, override the status
-                self.parser
-                    .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+                self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
                 self.exit_loop_requested = true;
                 check_exit_loop_maybe_warning(Some(self));
             }
@@ -2604,8 +2605,7 @@ impl<'a> Reader<'a> {
                     self.delete_char(false);
                 } else if c == rl::DeleteOrExit && el.is_empty() {
                     // This is by definition a successful exit, override the status
-                    self.parser
-                        .set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+                    self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
                     self.exit_loop_requested = true;
                     check_exit_loop_maybe_warning(Some(self));
                 }
@@ -4113,7 +4113,7 @@ pub fn reader_write_title(
     }
 
     let mut lst = vec![];
-    exec_subshell(
+    let _ = exec_subshell(
         &fish_title_command,
         parser,
         Some(&mut lst),
@@ -4143,7 +4143,7 @@ impl<'a> Reader<'a> {
         self.mode_prompt_buff.clear();
         if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
             let mut mode_indicator_list = vec![];
-            exec_subshell(
+            let _ = exec_subshell(
                 MODE_PROMPT_FUNCTION_NAME,
                 self.parser,
                 Some(&mut mode_indicator_list),
@@ -4199,7 +4199,7 @@ impl<'a> Reader<'a> {
                 // producing an error.
                 let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
                     && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
-                exec_subshell(
+                let _ = exec_subshell(
                     if left_prompt_deleted {
                         DEFAULT_PROMPT
                     } else {
@@ -4216,7 +4216,7 @@ impl<'a> Reader<'a> {
                 if function::exists(&zelf.conf.right_prompt_cmd, zelf.parser) {
                     // Status is ignored.
                     let mut prompt_list = vec![];
-                    exec_subshell(
+                    let _ = exec_subshell(
                         &zelf.conf.right_prompt_cmd,
                         zelf.parser,
                         Some(&mut prompt_list),
@@ -4851,7 +4851,7 @@ fn expand_replacer(
         Some(&mut outputs),
         /*apply_exit_status=*/ false,
     );
-    if ret != STATUS_CMD_OK.unwrap() {
+    if ret.is_err() {
         return None;
     }
     let result = join_strings(&outputs, '\n');
@@ -5292,9 +5292,7 @@ impl<'a> Reader<'a> {
             false,
         );
 
-        let ret = exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false);
-
-        ret == STATUS_CMD_OK.unwrap()
+        exec_subshell(&cmd, parser, None, /*apply_exit_status=*/ false).is_ok()
     }
 
     // Add the current command line contents to history.

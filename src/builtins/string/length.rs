@@ -54,7 +54,7 @@ impl StringSubCommand<'_> for Length {
                     if !self.quiet {
                         streams.out.appendln(max.to_wstring());
                     } else if nnonempty > 0 {
-                        return STATUS_CMD_OK;
+                        return Some(STATUS_CMD_OK);
                     }
                 }
             } else {
@@ -65,14 +65,14 @@ impl StringSubCommand<'_> for Length {
                 if !self.quiet {
                     streams.out.appendln(n.to_wstring());
                 } else if nnonempty > 0 {
-                    return STATUS_CMD_OK;
+                    return Some(STATUS_CMD_OK);
                 }
             }
         }
         if nnonempty > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

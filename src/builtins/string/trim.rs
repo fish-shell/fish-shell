@@ -86,14 +86,14 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
                     streams.out.append1('\n');
                 }
             } else if ntrim > 0 {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
         }
 
         if ntrim > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

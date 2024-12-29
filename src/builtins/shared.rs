@@ -16,7 +16,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
 use std::sync::Arc;
 
-pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> Option<c_int>;
+pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> Result<StatusOk, StatusError>;
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &wstr =
@@ -77,30 +77,128 @@ pub const FG_MSG: &str = "Send job %d (%ls) to foreground\n";
 
 // Return values (`$status` values for fish scripts) for various situations.
 
+pub trait get_status_code {
+    fn get_code(&self) -> c_int;
+}
+
+pub fn get_code(result: &Result<StatusOk, StatusError>) -> i32 {
+    match result {
+        Ok(ok) => ok.get_code(),
+        Err(err) => err.get_code(),
+    }
+}
+
+/// Functions that return a status code should have return type
+/// `Result<StatusOk, StatusError>`.
+#[derive(Debug)]
+pub enum StatusOk {
+    OK,
+    OK_PRESERVE_FAILURE,
+}
+
+impl get_status_code for StatusOk {
+    fn get_code(&self) -> c_int {
+        0
+    }
+}
+#[derive(Debug)]
+pub enum StatusError {
+    STATUS_CMD_ERROR,
+    STATUS_INVALID_ARGS,
+    STATUS_EXPAND_ERROR,
+    STATUS_READ_TOO_MUCH,
+    STATUS_ILLEGAL_CMD,
+    STATUS_UNMATCHED_WILDCARD,
+    STATUS_NOT_EXECUTABLE,
+    STATUS_CMD_UNKNOWN,
+    STATUS_SIG_INT,
+    STATUS_NO_VARIABLES_GIVEN,
+    // used when the return code is not reserved
+    STATUS_UNKNOWN_CODE(c_int),
+    // used when converting from EnvStackSetResult
+    // seperate enum value so it's less confusing when a conversion has to happen
+    STATUS_ENV_STACK_PERM,      // 1     // The variable is read-only.
+    STATUS_ENV_STACK_SCOPE,     // 2    // Variable cannot be set in the given scope.
+    STATUS_ENV_STACK_INVALID,   // 3  // The variable's value is invalid (e.g. umask).
+    STATUS_ENV_STACK_NOT_FOUND, // 4 // The variable was not found (only possible when removing a variable)
+}
+
+impl StatusError {
+    pub fn from(int: c_int) -> StatusError {
+        match int {
+            STATUS_CMD_ERROR => StatusError::STATUS_CMD_ERROR,
+            STATUS_INVALID_ARGS => StatusError::STATUS_INVALID_ARGS,
+            STATUS_EXPAND_ERROR => StatusError::STATUS_EXPAND_ERROR,
+            STATUS_READ_TOO_MUCH => StatusError::STATUS_READ_TOO_MUCH,
+            STATUS_ILLEGAL_CMD => StatusError::STATUS_ILLEGAL_CMD,
+            STATUS_UNMATCHED_WILDCARD => StatusError::STATUS_UNMATCHED_WILDCARD,
+            STATUS_NOT_EXECUTABLE => StatusError::STATUS_NOT_EXECUTABLE,
+            STATUS_CMD_UNKNOWN => StatusError::STATUS_CMD_UNKNOWN,
+            STATUS_SIG_INT => StatusError::STATUS_SIG_INT,
+            STATUS_NO_VARIABLES_GIVEN => StatusError::STATUS_NO_VARIABLES_GIVEN,
+            _ => StatusError::STATUS_UNKNOWN_CODE(int),
+        }
+    }
+}
+
+impl get_status_code for StatusError {
+    fn get_code(&self) -> c_int {
+        match self {
+            StatusError::STATUS_CMD_ERROR => 1,
+            StatusError::STATUS_INVALID_ARGS => 2,
+            StatusError::STATUS_CMD_UNKNOWN => 127,
+            StatusError::STATUS_EXPAND_ERROR => 121,
+            StatusError::STATUS_READ_TOO_MUCH => 122,
+            StatusError::STATUS_ILLEGAL_CMD => 123,
+            StatusError::STATUS_UNMATCHED_WILDCARD => 124,
+            StatusError::STATUS_NOT_EXECUTABLE => 126,
+            StatusError::STATUS_SIG_INT => 130,
+            StatusError::STATUS_NO_VARIABLES_GIVEN => 255,
+            StatusError::STATUS_UNKNOWN_CODE(code) => *code,
+            StatusError::STATUS_ENV_STACK_PERM => 1, // The variable is read-only.
+            StatusError::STATUS_ENV_STACK_SCOPE => 2, // Variable cannot be set in the given scope.
+            StatusError::STATUS_ENV_STACK_INVALID => 3, // The variable's value is invalid (e.g. umask).
+            StatusError::STATUS_ENV_STACK_NOT_FOUND => 4, // The variable was not found (only possible when removing a variable
+        }
+    }
+}
+
 /// The status code used for normal exit in a command.
-pub const STATUS_CMD_OK: Option<c_int> = Some(0);
+pub const STATUS_CMD_OK: c_int = 0;
+
 /// The status code used for failure exit in a command (but not if the args were invalid).
-pub const STATUS_CMD_ERROR: Option<c_int> = Some(1);
+pub const STATUS_CMD_ERROR: c_int = 1;
 /// The status code used for invalid arguments given to a command. This is distinct from valid
 /// arguments that might result in a command failure. An invalid args condition is something
 /// like an unrecognized flag, missing or too many arguments, an invalid integer, etc.
-pub const STATUS_INVALID_ARGS: Option<c_int> = Some(2);
+pub const STATUS_INVALID_ARGS: c_int = 2;
+// The variable was not found (only possible when removing a variable).
+// Used by EnvStackSetResult
+pub const STATUS_NOT_FOUND: c_int = 4;
 
 /// The status code used when a command was not found.
-pub const STATUS_CMD_UNKNOWN: Option<c_int> = Some(127);
+pub const STATUS_CMD_UNKNOWN: c_int = 127;
 
 /// The status code used when an external command can not be run.
-pub const STATUS_NOT_EXECUTABLE: Option<c_int> = Some(126);
+pub const STATUS_NOT_EXECUTABLE: c_int = 126;
 
 /// The status code used when a wildcard had no matches.
-pub const STATUS_UNMATCHED_WILDCARD: Option<c_int> = Some(124);
+pub const STATUS_UNMATCHED_WILDCARD: c_int = 124;
 /// The status code used when illegal command name is encountered.
-pub const STATUS_ILLEGAL_CMD: Option<c_int> = Some(123);
+pub const STATUS_ILLEGAL_CMD: c_int = 123;
 /// The status code used when `read` is asked to consume too much data.
-pub const STATUS_READ_TOO_MUCH: Option<c_int> = Some(122);
+pub const STATUS_READ_TOO_MUCH: c_int = 122;
 /// The status code when an expansion fails, for example, "$foo["
-pub const STATUS_EXPAND_ERROR: Option<c_int> = Some(121);
+pub const STATUS_EXPAND_ERROR: c_int = 121;
 
+// this status when a sigint is received 128 + libc::SIGINT
+pub const STATUS_SIG_INT: c_int = 130;
+
+pub const STATUS_NO_VARIABLES_GIVEN: c_int = 255;
+
+// when preserve_failure_exit_status is true return this to ignore the new value
+// only used for `set`
+pub const STATUS_PRESERVE_FAILURE: c_int = -127;
 /// Data structure to describe a builtin.
 struct BuiltinData {
     // Name of the builtin.
@@ -392,7 +490,7 @@ fn cmd_needs_help(cmd: &wstr) -> bool {
 /// Execute a builtin command
 pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams) -> ProcStatus {
     if argv.is_empty() {
-        return ProcStatus::from_exit_code(STATUS_INVALID_ARGS.unwrap());
+        return ProcStatus::from_exit_code(STATUS_INVALID_ARGS);
     }
 
     // We can be handed a keyword by the parser as if it was a command. This happens when the user
@@ -400,12 +498,12 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // handle displaying help for it here.
     if argv.len() == 2 && parse_util_argument_is_help(argv[1]) && cmd_needs_help(argv[0]) {
         builtin_print_help(parser, streams, argv[0]);
-        return ProcStatus::from_exit_code(STATUS_CMD_OK.unwrap());
+        return ProcStatus::from_exit_code(STATUS_CMD_OK);
     }
 
     let Some(builtin) = builtin_lookup(argv[0]) else {
         FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
-        return ProcStatus::from_exit_code(STATUS_CMD_ERROR.unwrap());
+        return ProcStatus::from_exit_code(STATUS_CMD_ERROR);
     };
 
     let builtin_ret = (builtin.func)(parser, streams, argv);
@@ -417,7 +515,11 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
     // Resolve our status code.
     // If the builtin itself produced an error, use that error.
     // Otherwise use any errors from writing to out and writing to err, in that order.
-    let mut code = builtin_ret.unwrap_or(0);
+    let mut code = match builtin_ret {
+        Ok(ref ok) => ok.get_code(),
+        Err(ref err) => err.get_code(),
+    };
+
     if code == 0 {
         code = out_ret;
     }
@@ -431,10 +533,11 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         code = 255;
     }
 
-    // Handle the case of an empty status.
-    if code == 0 && builtin_ret.is_none() {
+    // Handle the case of an STATUS_PRESERVE_FAILURE.
+    if let (0, Ok(StatusOk::OK_PRESERVE_FAILURE)) = (code, builtin_ret) {
         return ProcStatus::empty();
     }
+
     if code < 0 {
         // If the code is below 0, constructing a proc_status_t
         // would assert() out, which is a terrible failure mode
@@ -645,7 +748,7 @@ impl HelpOnlyCmdOpts {
         args: &mut [&wstr],
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<Self, Option<c_int>> {
+    ) -> Result<Self, StatusError> {
         let cmd = args[0];
         let print_hints = true;
 
@@ -667,7 +770,7 @@ impl HelpOnlyCmdOpts {
                         args[w.wopt_index - 1],
                         print_hints,
                     );
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     builtin_unknown_option(
@@ -677,7 +780,7 @@ impl HelpOnlyCmdOpts {
                         args[w.wopt_index - 1],
                         print_hints,
                     );
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 _ => {
                     panic!("unexpected retval from WGetopter");
@@ -832,26 +935,27 @@ impl<'args> Iterator for Arguments<'args, '_> {
 
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+fn builtin_generic(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let argc = argv.len();
-    let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {
-        Ok(opts) => opts,
-        Err(err) => return err,
-    };
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, argv[0]);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     // Hackish - if we have no arguments other than the command, we are a "naked invocation" and we
     // just print help.
     if argc == 1 || argv[0] == "time" {
         builtin_print_help(parser, streams, argv[0]);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
-    STATUS_CMD_ERROR
+    Err(StatusError::STATUS_CMD_ERROR)
 }
 
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
@@ -860,14 +964,14 @@ fn builtin_break_continue(
     parser: &Parser,
     streams: &mut IoStreams,
     argv: &mut [&wstr],
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     let is_break = argv[0] == "break";
     let argc = argv.len();
 
     if argc != 1 {
         let error_message = wgettext_fmt!(BUILTIN_ERR_UNKNOWN, argv[0], argv[1]);
         builtin_print_help_error(parser, streams, argv[0], &error_message);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // Paranoia: ensure we have a real loop.
@@ -885,7 +989,7 @@ fn builtin_break_continue(
     if !has_loop {
         let error_message = wgettext_fmt!("%ls: Not inside of loop\n", argv[0]);
         builtin_print_help_error(parser, streams, argv[0], &error_message);
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Mark the status in the libdata.
@@ -894,7 +998,7 @@ fn builtin_break_continue(
     } else {
         LoopStatus::continues
     };
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
@@ -902,7 +1006,7 @@ fn builtin_breakpoint(
     parser: &Parser,
     streams: &mut IoStreams,
     argv: &mut [&wstr],
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     if argv.len() != 1 {
         streams.err.append(wgettext_fmt!(
@@ -911,12 +1015,12 @@ fn builtin_breakpoint(
             0,
             argv.len() - 1
         ));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // If we're not interactive then we can't enter the debugger. So treat this command as a no-op.
     if !parser.is_interactive() {
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     // Ensure we don't allow creating a breakpoint at an interactive prompt. There may be a simpler
@@ -930,28 +1034,43 @@ fn builtin_breakpoint(
                 "%ls: Command not valid at an interactive prompt\n",
                 cmd,
             ));
-            return STATUS_ILLEGAL_CMD;
+            return Err(StatusError::STATUS_ILLEGAL_CMD);
         }
     }
 
     let bpb = parser.push_block(Block::breakpoint_block());
     let io_chain = &streams.io_chain;
-    reader_read(parser, STDIN_FILENO, io_chain);
+    reader_read(parser, STDIN_FILENO, io_chain)?;
     parser.pop_block(bpb);
-    Some(parser.get_last_status())
+    match parser.get_last_status() {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }
 
-fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Option<c_int> {
-    STATUS_CMD_OK
+fn builtin_true(
+    _parser: &Parser,
+    _streams: &mut IoStreams,
+    _argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
+    Ok(StatusOk::OK)
 }
 
-fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> Option<c_int> {
-    STATUS_CMD_ERROR
+fn builtin_false(
+    _parser: &Parser,
+    _streams: &mut IoStreams,
+    _argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
+    Err(StatusError::STATUS_CMD_ERROR)
 }
 
-fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+fn builtin_gettext(
+    _parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     for arg in &argv[1..] {
         streams.out.append(wgettext_str(arg));
     }
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }

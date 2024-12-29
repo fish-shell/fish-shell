@@ -36,14 +36,14 @@ impl StringSubCommand<'_> for Transform {
                     streams.out.append1('\n');
                 }
             } else if n_transformed > 0 {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
         }
 
         if n_transformed > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

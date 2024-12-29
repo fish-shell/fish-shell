@@ -28,7 +28,8 @@ use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
     builtins::shared::{
-        BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
+        get_status_code, BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK,
+        STATUS_CMD_UNKNOWN,
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
@@ -523,7 +524,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> i32 {
         }
     }
 
-    retval.unwrap()
+    retval
 }
 
 fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i32, usize> {
@@ -869,7 +870,7 @@ fn throwing_main() -> i32 {
     term_copy_modes();
 
     // Stomp the exit status of any initialization commands (issue #635).
-    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
+    parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
 
     // TODO: if-let-chains
     if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
@@ -917,7 +918,10 @@ fn throwing_main() -> i32 {
             // above line should always exit
             return libc::EXIT_FAILURE;
         }
-        res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
+        res = match reader_read(parser, libc::STDIN_FILENO, &IoChain::new()) {
+            Ok(ok) => ok.get_code(),
+            Err(err) => err.get_code(),
+        };
     } else {
         let n = wcs2string(&args[my_optind]);
         let path = OsStr::from_bytes(&n);
@@ -947,7 +951,10 @@ fn throwing_main() -> i32 {
                     },
                     Some(Arc::new(rel_filename.to_owned())),
                 );
-                res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
+                res = match reader_read(parser, f.as_raw_fd(), &IoChain::new()) {
+                    Ok(ok) => ok.get_code(),
+                    Err(err) => err.get_code(),
+                };
                 if res != 0 {
                     FLOGF!(
                         warning,
@@ -960,7 +967,7 @@ fn throwing_main() -> i32 {
     }
 
     let exit_status = if res != 0 {
-        STATUS_CMD_UNKNOWN.unwrap()
+        STATUS_CMD_UNKNOWN
     } else {
         parser.get_last_status()
     };

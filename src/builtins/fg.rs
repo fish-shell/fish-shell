@@ -11,17 +11,21 @@ use libc::{STDIN_FILENO, TCSADRAIN};
 use super::prelude::*;
 
 /// Builtin for putting a job in the foreground.
-pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
-    let opts = match HelpOnlyCmdOpts::parse(argv, parser, streams) {
-        Ok(opts) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
+pub fn fg(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
+    let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
+
+    let cmd = match argv.get(0) {
+        Some(cmd) => *cmd,
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
     };
 
-    let cmd = argv[0];
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let job;
@@ -40,7 +44,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
                 streams
                     .err
                     .append(wgettext_fmt!("%ls: There are no suitable jobs\n", cmd));
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             Some((pos, j)) => {
                 job_pos = Some(pos);
@@ -116,7 +120,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
     };
 
     let Some(job) = job else {
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     };
     let job_pos = job_pos.unwrap();
 
@@ -170,8 +174,8 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
     }
     transfer.reclaim();
     if resumed {
-        STATUS_CMD_OK
+        Ok(StatusOk::OK)
     } else {
-        STATUS_CMD_ERROR
+        Err(StatusError::STATUS_CMD_ERROR)
     }
 }

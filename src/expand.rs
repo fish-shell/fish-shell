@@ -3,10 +3,7 @@
 //! from using a more clever memory allocation scheme, perhaps an evil combination of talloc,
 //! string buffers and reference counting.
 
-use crate::builtins::shared::{
-    STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
-    STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
-};
+use crate::builtins::shared::{get_status_code, StatusError, STATUS_EXPAND_ERROR};
 use crate::common::{
     char_offset, charptr2wcstring, escape, escape_string, escape_string_for_double_quotes,
     unescape_string, valid_var_name_char, wcs2zstring, EscapeFlags, EscapeStringStyle,
@@ -411,7 +408,7 @@ fn append_overflow_error(
         error.text = wgettext!("Expansion produced too many results").to_owned();
         errors.push(error);
     }
-    ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap())
+    ExpandResult::make_error(STATUS_EXPAND_ERROR)
 }
 
 /// Test if the specified string does not contain character which can not be used inside a quoted
@@ -630,7 +627,7 @@ fn expand_variables(
                 errors,
             );
         }
-        return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+        return ExpandResult::make_error(STATUS_EXPAND_ERROR);
     }
 
     // Do a dirty hack to make sliced history fast (#4650). We expand from either a variable, or a
@@ -682,7 +679,7 @@ fn expand_variables(
                         append_syntax_error!(errors, slice_start + bad_pos, "Invalid index value");
                     }
                 }
-                return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                return ExpandResult::make_error(STATUS_EXPAND_ERROR);
             }
         }
     }
@@ -860,7 +857,7 @@ fn expand_braces(
 
     if syntax_error {
         append_syntax_error!(errors, SOURCE_LOCATION_UNKNOWN, "Mismatched braces");
-        return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+        return ExpandResult::make_error(STATUS_EXPAND_ERROR);
     }
 
     let Some(brace_begin) = brace_begin else {
@@ -938,7 +935,7 @@ pub fn expand_cmdsubst(
     ) {
         MaybeParentheses::Error => {
             append_syntax_error!(errors, SOURCE_LOCATION_UNKNOWN, "Mismatched parenthesis");
-            return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+            return ExpandResult::make_error(STATUS_EXPAND_ERROR);
         }
         MaybeParentheses::None => {
             if !out.add(input) {
@@ -957,54 +954,47 @@ pub fn expand_cmdsubst(
         job_group.as_ref(),
         &mut sub_res,
     );
-    if subshell_status != 0 {
-        // TODO: Ad-hoc switch, how can we enumerate the possible errors more safely?
-        let err = match subshell_status {
-            _ if subshell_status == STATUS_READ_TOO_MUCH.unwrap() => {
-                wgettext!("Too much data emitted by command substitution so it was discarded")
-            }
-            // TODO: STATUS_CMD_ERROR is overused and too generic. We shouldn't have to test things
-            // to figure out what error to show after we've already been given an error code.
-            _ if subshell_status == STATUS_CMD_ERROR.unwrap() => {
+
+    if let Err(error_status) = subshell_status {
+        let err = match error_status {
+            StatusError::STATUS_CMD_ERROR => {
                 if ctx.parser().is_eval_depth_exceeded() {
                     wgettext!("Unable to evaluate string substitution")
                 } else {
                     wgettext!("Too many active file descriptors")
                 }
             }
-            _ if subshell_status == STATUS_CMD_UNKNOWN.unwrap() => {
-                wgettext!("Unknown command")
+            // TODO: Also overused
+            // This is sent for:
+            // invalid redirections or pipes (like `<&foo`),
+            // invalid variables (invalid name or read-only) for for-loops,
+            // switch $foo if $foo expands to more than one argument
+            // time in a background job.
+            StatusError::STATUS_INVALID_ARGS => wgettext!("Invalid arguments"),
+            StatusError::STATUS_EXPAND_ERROR => wgettext!("Expansion error"),
+            StatusError::STATUS_READ_TOO_MUCH => {
+                wgettext!("Too much data emitted by command substitution so it was discarded")
             }
-            _ if subshell_status == STATUS_ILLEGAL_CMD.unwrap() => {
-                wgettext!("Commandname was invalid")
+            StatusError::STATUS_ILLEGAL_CMD => wgettext!("Commandname was invalid"),
+            StatusError::STATUS_UNMATCHED_WILDCARD => wgettext!("Unmatched wildcard"),
+            StatusError::STATUS_NOT_EXECUTABLE => wgettext!("Command not executable"),
+            StatusError::STATUS_CMD_UNKNOWN => wgettext!("Unknown command"),
+            StatusError::STATUS_SIG_INT => wgettext!("Sig int received"),
+            StatusError::STATUS_NO_VARIABLES_GIVEN => wgettext!("No variables given"),
+            StatusError::STATUS_UNKNOWN_CODE(_) => wgettext!("Unknown status code"),
+            // these should probably never be printed?
+            StatusError::STATUS_ENV_STACK_PERM => wgettext!("Environment stack is read-only"),
+            StatusError::STATUS_ENV_STACK_SCOPE => {
+                wgettext!("Environment stack is not in the correct scope")
             }
-            _ if subshell_status == STATUS_NOT_EXECUTABLE.unwrap() => {
-                wgettext!("Command not executable")
-            }
-            _ if subshell_status == STATUS_INVALID_ARGS.unwrap() => {
-                // TODO: Also overused
-                // This is sent for:
-                // invalid redirections or pipes (like `<&foo`),
-                // invalid variables (invalid name or read-only) for for-loops,
-                // switch $foo if $foo expands to more than one argument
-                // time in a background job.
-                wgettext!("Invalid arguments")
-            }
-            _ if subshell_status == STATUS_EXPAND_ERROR.unwrap() => {
-                // Sent in `for $foo in ...` if $foo expands to more than one word
-                wgettext!("Expansion error")
-            }
-            _ if subshell_status == STATUS_UNMATCHED_WILDCARD.unwrap() => {
-                // Sent in `for $foo in ...` if $foo expands to more than one word
-                wgettext!("Unmatched wildcard")
-            }
-            _ => {
-                wgettext!("Unknown error while evaluating command substitution")
+            StatusError::STATUS_ENV_STACK_INVALID => wgettext!("Environment stack is invalid"),
+            StatusError::STATUS_ENV_STACK_NOT_FOUND => {
+                wgettext!("Environment stack property not found")
             }
         };
         append_cmdsub_error_formatted!(errors, parens.start(), parens.end() - 1, err.to_owned());
-        return ExpandResult::make_error(subshell_status);
-    }
+        return ExpandResult::make_error(error_status.get_code());
+    };
 
     // Expand slices like (cat /var/words)[1]
     let mut tail_begin = parens.end();
@@ -1026,7 +1016,7 @@ pub fn expand_cmdsubst(
                         append_syntax_error!(errors, slice_begin + bad_pos, "Invalid index value");
                     }
                 }
-                return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                return ExpandResult::make_error(STATUS_EXPAND_ERROR);
             }
         };
 
@@ -1329,7 +1319,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             let mut cursor = 0;
             match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
                 MaybeParentheses::Error => {
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
                 }
                 MaybeParentheses::None => {
                     if !out.add(input) {
@@ -1344,7 +1334,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                                 parens.end()-1,
                                 "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
                             );
-                    return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
+                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
                 }
             }
         } else {

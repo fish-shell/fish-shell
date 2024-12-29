@@ -49,9 +49,9 @@ impl StringSubCommand<'_> for Unescape {
         }
 
         if nesc > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

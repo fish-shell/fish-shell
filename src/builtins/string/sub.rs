@@ -60,7 +60,7 @@ impl StringSubCommand<'_> for Sub {
                 cmd,
                 wgettext!("--end and --length are mutually exclusive")
             ));
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         }
 
         let mut nsub = 0;
@@ -101,14 +101,14 @@ impl StringSubCommand<'_> for Sub {
             }
             nsub += 1;
             if self.quiet {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
         }
 
         if nsub > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

@@ -57,9 +57,9 @@ impl StringSubCommand<'_> for Escape {
         }
 
         if escaped_any {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

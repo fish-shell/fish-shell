@@ -808,7 +808,7 @@ fn throwing_main() -> i32 {
             'P' => DUMP_PARSE_TREE.store(true),
             'h' => {
                 print_help("fish_indent");
-                return STATUS_CMD_OK.unwrap();
+                return STATUS_CMD_OK;
             }
             'v' => {
                 printf!(
@@ -819,7 +819,7 @@ fn throwing_main() -> i32 {
                         fish::BUILD_VERSION
                     )
                 );
-                return STATUS_CMD_OK.unwrap();
+                return STATUS_CMD_OK;
             }
             'w' => output_type = OutputType::File,
             'i' => do_indent = false,
@@ -844,7 +844,7 @@ fn throwing_main() -> i32 {
             'o' => {
                 debug_output = Some(w.woptarg.unwrap());
             }
-            _ => return STATUS_CMD_ERROR.unwrap(),
+            _ => return STATUS_CMD_ERROR,
         }
     }
 
@@ -882,11 +882,11 @@ fn throwing_main() -> i32 {
                         PROGRAM_NAME.get().unwrap()
                     )
                 );
-                return STATUS_CMD_ERROR.unwrap();
+                return STATUS_CMD_ERROR;
             }
             match read_file(stdin()) {
                 Ok(s) => src = s,
-                Err(()) => return STATUS_CMD_ERROR.unwrap(),
+                Err(()) => return STATUS_CMD_ERROR,
             }
         } else {
             let arg = args[i];
@@ -894,7 +894,7 @@ fn throwing_main() -> i32 {
                 Ok(file) => {
                     match read_file(file) {
                         Ok(s) => src = s,
-                        Err(()) => return STATUS_CMD_ERROR.unwrap(),
+                        Err(()) => return STATUS_CMD_ERROR,
                     }
                     output_location = arg;
                 }
@@ -903,7 +903,7 @@ fn throwing_main() -> i32 {
                         "%s",
                         wgettext_fmt!("Opening \"%s\" failed: %s\n", arg, err.to_string())
                     );
-                    return STATUS_CMD_ERROR.unwrap();
+                    return STATUS_CMD_ERROR;
                 }
             }
         }
@@ -987,7 +987,7 @@ fn throwing_main() -> i32 {
                                     err.to_string()
                                 )
                             );
-                            return STATUS_CMD_ERROR.unwrap();
+                            return STATUS_CMD_ERROR;
                         }
                     }
                 }

@@ -505,10 +505,10 @@ impl Parser {
         eprintf!("%s\n", backtrace_and_desc);
 
         // Set a valid status.
-        self.set_last_statuses(Statuses::just(STATUS_ILLEGAL_CMD.unwrap()));
+        self.set_last_statuses(Statuses::just(STATUS_ILLEGAL_CMD));
         let break_expand = true;
         EvalRes {
-            status: ProcStatus::from_exit_code(STATUS_ILLEGAL_CMD.unwrap()),
+            status: ProcStatus::from_exit_code(STATUS_ILLEGAL_CMD),
             break_expand,
             ..Default::default()
         }
@@ -810,7 +810,7 @@ impl Parser {
         &self.variables
     }
 
-    /// Get the variables as an Arc.
+    /// Get the variables as an Rc.
     pub fn vars_ref(&self) -> Rc<EnvStack> {
         Rc::clone(&self.variables)
     }

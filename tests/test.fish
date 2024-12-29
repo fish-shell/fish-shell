@@ -46,7 +46,7 @@ if set -q files_to_test[1]
         --progress $force_color \
         -s fish=$FISHDIR/fish \
         -s fish_test_helper=$fish_test_helper \
-        -s filter-control-sequences="$FISHDIR/fish $scriptdir/filter-control-sequences.fish" \
+        -s filter-control-sequences="$scriptdir/filter-control-sequences.fish" \
         $files_to_test
 
     set -l littlecheck_status $status

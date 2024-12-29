@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish; set -l filter_ctrls %filter-control-sequences' %s
+#RUN: %fish -C 'set -l fish %fish; set -l filter_ctrls %fish %filter-control-sequences' %s
 # Some tests of the "return" builtin.
 
 $fish -c 'return 5'

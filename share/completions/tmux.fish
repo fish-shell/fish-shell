@@ -94,6 +94,8 @@ complete -c tmux -n __fish_use_subcommand -a $rename -d 'rename session'
 complete -c tmux -n __fish_use_subcommand -a $showmsgs -d 'save msgs in status bar in per-client msg log'
 
 complete -c tmux -n __fish_use_subcommand -a $source -d 'execute commands from path'
+complete -c tmux -n "__fish_seen_subcommand_from $source" -F
+
 complete -c tmux -n __fish_use_subcommand -a $start -d 'start tmux server if not running; do not create a session'
 
 complete -c tmux -n __fish_use_subcommand -a $suspendc -d 'send SIGTSTP signal to client (tty stop)'
@@ -113,14 +115,114 @@ complete -c tmux -xs t -n "__fish_seen_subcommand_from $detach $lockc $refresh $
 complete -c tmux -xs c -n "__fish_seen_subcommand_from $switchc" -a '(__fish_tmux_clients)' -d target-client
 
 #commands with the -F format flag
-complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -rs F -d 'format string'
+complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -xs F -d 'format string'
 
 ###############  End: Clients and Sessions ###############
 
 ###############  Begin: Windows and Panes ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+
+set -l breakp "break-pane breakp"
+set -l capturep "capture-pane capturep"
+set -l chooseclient choose-client
+set -l choosetree choose-tree
+set -l customizemode customize-mode
+set -l displayp "display-panes displayp"
+set -l findw "find-window findw"
+set -l joinp "join-pane joinp move-pane movep"
+set -l killp "kill-pane killp"
+set -l killw "kill-window killw"
+set -l lastp "last-pane lastp"
+set -l lastw "last-window lastw"
+set -l linkw "link-window linkw"
+set -l lsp "list-panes lsp"
+set -l lsw "list-windows lsw"
+set -l movew "move-window movew"
+set -l neww "new-window neww"
+set -l nextl "next-layout nextl"
+set -l next "next-window next"
+set -l pipep "pipe-pane pipep"
+set -l prevl "previous-layout prevl"
+set -l prev "previous-window prev"
+set -l renamew "rename-window renamew"
+set -l resizep "resize-pane resizep"
+set -l resizew "resize-window resizew"
+set -l respawnp "respawn-pane respawnp"
+set -l respawnw "respawn-window respawnw"
+set -l rotatew "rotate-window rotatew"
+set -l selectl "select-layout selectl"
+set -l selectp "select-pane selectp"
+set -l selectw "select-window selectw"
+set -l splitw "split-window splitw"
+set -l swapp "swap-pane swapp"
+set -l swapw "swap-window swapw"
+set -l unlinkw "unlink-window unlinkw"
+
+complete -c tmux -n __fish_use_subcommand -a $breakp -d 'break pane off into a new window'
+complete -c tmux -n __fish_use_subcommand -a $capturep -d 'capture contents of a pane into a buffer'
+complete -c tmux -n __fish_use_subcommand -a $chooseclient -d 'interactively choose client'
+complete -c tmux -n __fish_use_subcommand -a $choosetree -d 'interactively choose session/window/pane'
+complete -c tmux -n __fish_use_subcommand -a $customizemode -d 'interactively customize settings'
+complete -c tmux -n __fish_use_subcommand -a $displayp -d 'display a visible indicator for each pane'
+complete -c tmux -n __fish_use_subcommand -a $findw -d 'interactively choose window matching pattern'
+complete -c tmux -n __fish_use_subcommand -a $joinp -d 'split destination pane and move source pane into one of the halves'
+complete -c tmux -n __fish_use_subcommand -a $killp -d 'destroy a pane'
+complete -c tmux -n __fish_use_subcommand -a $killw -d 'destroy a window'
+complete -c tmux -n __fish_use_subcommand -a $lastp -d 'select the previusly selected pane'
+complete -c tmux -n __fish_use_subcommand -a $lastw -d 'select the previusly selected window'
+complete -c tmux -n __fish_use_subcommand -a $linkw -d 'link source window to destination window'
+complete -c tmux -n __fish_use_subcommand -a $lsp -d 'list panes'
+complete -c tmux -n __fish_use_subcommand -a $lsw -d 'list windows'
+complete -c tmux -n __fish_use_subcommand -a $movew -d 'move window'
+# TODO: Should accept shell command
+complete -c tmux -n __fish_use_subcommand -a $neww -d 'create a new window'
+complete -c tmux -n __fish_use_subcommand -a $nextl -d 'rearrange panes in a window according to the next layout'
+complete -c tmux -n __fish_use_subcommand -a $next -d 'move to the next window in the session'
+# TODO: Should accept shell command
+complete -c tmux -n __fish_use_subcommand -a $pipep -d 'pipe output from pane to a shell command'
+complete -c tmux -n __fish_use_subcommand -a $prevl -d 'rearrange panes in a window according to the previous layout'
+complete -c tmux -n __fish_use_subcommand -a $prev -d 'move to the previous window in the session'
+complete -c tmux -n __fish_use_subcommand -a $renamew -d 'rename a window'
+complete -c tmux -n __fish_use_subcommand -a $resizep -d 'resize a pane'
+complete -c tmux -n __fish_use_subcommand -a $resizew -d 'resize a window'
+# TODO: Should accept shell command
+complete -c tmux -n __fish_use_subcommand -a $respawnp -d 'reactivate a pane where a command exited'
+# TODO: Should accept shell command
+complete -c tmux -n __fish_use_subcommand -a $respawnw -d 'reactivate a window where a command exited'
+complete -c tmux -n __fish_use_subcommand -a $rotatew -d 'rotate panes within a window'
+
+complete -c tmux -n __fish_use_subcommand -a $selectl -d 'rearrange panes according to a given layout'
+set -l layouts 'even-horizontal even-vertical main-horizontal main-horizontal-mirrored main-vertical main-vertical-mirrored tiled'
+complete -c tmux -n "__fish_seen_subcommand_from $selectl" -x -a "$layouts" -d 'predefined layout'
+
+complete -c tmux -n __fish_use_subcommand -a $selectp -d 'activate specific pane'
+complete -c tmux -n __fish_use_subcommand -a $selectw -d 'activate specific window'
+# TODO: Should accept shell command
+complete -c tmux -n __fish_use_subcommand -a $splitw -d 'create a new pane by splitting target-pane'
+complete -c tmux -n __fish_use_subcommand -a $swapp -d 'swap two panes'
+complete -c tmux -n __fish_use_subcommand -a $swapw -d 'swap two windows'
+complete -c tmux -n __fish_use_subcommand -a $unlinkw -d 'unlink target-window'
+
+## commands with pane flag
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $joinp $swapp" -xs s -a '(__fish_tmux_panes)' -d 'source pane'
+complete -c tmux -n "__fish_seen_subcommand_from $capturep $chooseclient $choosetree $customizemode $findw" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $killp $pipep $resizep $respawnp $selectl $selectp $splitw" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+# Unclear if there's a meaningful difference between "target pane" and "destination pane", but tmux makes the distinction
+complete -c tmux -n "__fish_seen_subcommand_from $joinp $swapp" -xs t -a '(__fish_tmux_panes)' -d 'destination pane'
+
+## commands with session flag
+complete -c tmux -n "__fish_seen_subcommand_from $lastw $lsw $next $prev" -xs t -a '(__fish_tmux_sessions)' -d 'target session'
+
+## commands with the -F format flag
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $lsp $lsw $neww $chooseclient $choosetree" -xs F -d 'format string'
+
+## commands with -s/-t flags that are not panes/sessions (nice completion not yet implemented)
+complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" -xs s -d 'source window'
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $swapw" -xs t -d 'destination window'
+complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" -xs t -d 'target window'
+complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" -xs t -d 'target window'
+complete -c tmux -n "__fish_seen_subcommand_from $displayp" -xs t -d 'target client'
+complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d 'target'
+
 ###############  End:   Windows and Panes ###############
 
 ###############  Begin: Key Bindings ###############

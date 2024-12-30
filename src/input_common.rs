@@ -11,8 +11,8 @@ use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
-    Key, Modifiers,
+    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, ctrl, function_key,
+    shift, Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -762,6 +762,7 @@ pub trait InputEventQueuer {
             }
             return None;
         };
+        let invalid = Key::from_raw(key::Invalid);
         if buffer.len() == 2 && next == b'\x1b' {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
@@ -769,17 +770,17 @@ pub trait InputEventQueuer {
                         nested_sequence.modifiers.alt = true;
                         nested_sequence
                     }
-                    None => Key::from_raw(key::Invalid),
+                    None => invalid,
                 },
             );
         }
         if next == b'[' {
             // potential CSI
-            return Some(self.parse_csi(buffer).unwrap_or(alt('[')));
+            return Some(self.parse_csi(buffer).unwrap_or(invalid));
         }
         if next == b'O' {
             // potential SS3
-            return Some(self.parse_ss3(buffer).unwrap_or(alt('O')));
+            return Some(self.parse_ss3(buffer).unwrap_or(invalid));
         }
         match canonicalize_control_char(next) {
             Some(mut key) => {
@@ -794,10 +795,12 @@ pub trait InputEventQueuer {
     }
 
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
-        let mut next_char = |zelf: &mut Self| zelf.try_readb(buffer).unwrap_or(0xff);
         // The maximum number of CSI parameters is defined by NPAR, nominally 16.
         let mut params = [[0_u32; 4]; 16];
-        let mut c = next_char(self);
+        let Some(mut c) = self.try_readb(buffer) else {
+            return Some(ctrl('['));
+        };
+        let mut next_char = |zelf: &mut Self| zelf.try_readb(buffer).unwrap_or(0xff);
         let private_mode;
         if matches!(c, b'?' | b'<' | b'=' | b'>') {
             // private mode
@@ -943,11 +946,11 @@ pub trait InputEventQueuer {
                 } // rxvt style
                 200 => {
                     self.paste_start_buffering();
-                    return Some(Key::from_raw(key::Invalid));
+                    return None;
                 }
                 201 => {
                     self.paste_commit();
-                    return Some(Key::from_raw(key::Invalid));
+                    return None;
                 }
                 _ => return None,
             },
@@ -993,11 +996,11 @@ pub trait InputEventQueuer {
             b'Z' => shift(key::Tab),
             b'I' => {
                 self.push_front(CharEvent::from_readline(ReadlineCmd::FocusIn));
-                return Some(Key::from_raw(key::Invalid));
+                return None;
             }
             b'O' => {
                 self.push_front(CharEvent::from_readline(ReadlineCmd::FocusOut));
-                return Some(Key::from_raw(key::Invalid));
+                return None;
             }
             _ => return None,
         };
@@ -1020,13 +1023,12 @@ pub trait InputEventQueuer {
 
     fn parse_ss3(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
         let mut raw_mask = 0;
-        let mut code = b'0';
-        loop {
+        let Some(mut code) = self.try_readb(buffer) else {
+            return Some(alt('O'));
+        };
+        while (b'0'..=b'9').contains(&code) {
             raw_mask = raw_mask * 10 + u32::from(code - b'0');
             code = self.try_readb(buffer).unwrap_or(0xff);
-            if !(b'0'..=b'9').contains(&code) {
-                break;
-            }
         }
         let modifiers = parse_mask(raw_mask.saturating_sub(1));
         #[rustfmt::skip]

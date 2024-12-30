@@ -23,7 +23,7 @@ pub(crate) const End: char = '\u{F50b}';
 pub(crate) const Insert: char = '\u{F50c}';
 pub(crate) const Tab: char = '\u{F50d}';
 pub(crate) const Space: char = '\u{F50e}';
-pub const Invalid: char = '\u{F50f}';
+pub(crate) const Invalid: char = '\u{F50f}';
 pub(crate) fn function_key(n: u32) -> char {
     assert!((1..=12).contains(&n));
     char::from_u32(u32::from(Invalid) + n).unwrap()

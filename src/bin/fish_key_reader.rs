@@ -23,7 +23,7 @@ use fish::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
         InputEventQueuer,
     },
-    key::{self, char_to_symbol, Key},
+    key::{char_to_symbol, Key},
     panic::panic_handler,
     print_help::print_help,
     printf,
@@ -101,9 +101,6 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
             continue;
         };
         let c = kevt.key.codepoint;
-        if c == key::Invalid {
-            continue;
-        }
         if verbose {
             printf!("# decoded from: ");
             for byte in kevt.seq.chars() {

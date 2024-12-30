@@ -691,6 +691,7 @@ pub trait InputEventQueuer {
                     if key == Some(Key::from_raw(key::Invalid)) {
                         continue;
                     }
+                    assert!(key.map_or(true, |key| key.codepoint != key::Invalid));
                     let mut consumed = 0;
                     let mut state = zero_mbstate();
                     let mut i = 0;
@@ -767,10 +768,13 @@ pub trait InputEventQueuer {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {
+                        if nested_sequence == invalid {
+                            return Some(Key::from_raw(key::Escape));
+                        }
                         nested_sequence.modifiers.alt = true;
                         nested_sequence
                     }
-                    None => invalid,
+                    _ => invalid,
                 },
             );
         }

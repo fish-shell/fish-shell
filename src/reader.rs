@@ -3508,6 +3508,10 @@ impl<'a> Reader<'a> {
                 self.parser.libdata_mut().is_repaint = false;
             }
             rl::ScrollbackPush => {
+                if self.waiting_for_cursor_position.is_some() {
+                    // TODO: re-queue it I guess.
+                    return;
+                }
                 self.request_cursor_position(WaitingForCursorPosition::ScrollbackPush);
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {

@@ -34,6 +34,10 @@ function help --description 'Show help for the fish shell'
         if set -q BROWSER
             # User has manually set a preferred browser, so we respect that
             echo $BROWSER | read -at fish_browser
+            if not type -q $fish_browser[1]
+                printf (_ 'help: %s is not a valid command: %s\n') '$fish_browser' "$fish_browser"
+                return 2
+            end
         else
             # No browser set up, inferring.
             # We check a bunch and use the last we find.
@@ -92,6 +96,11 @@ function help --description 'Show help for the fish shell'
                     set fish_browser wsl-open
                 end
             end
+        end
+    else
+        if not type -q $fish_browser[1]
+            printf (_ 'help: %s is not a valid command: %s\n') '$fish_help_browser' "$fish_browser"
+            return 2
         end
     end
 

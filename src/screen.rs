@@ -502,9 +502,7 @@ impl Screen {
         let mut out = zelf.outp.borrow_mut();
         let prompt_y = i32::try_from(prompt_y).unwrap();
         // Scroll down.
-        if let Some(scroll) = term.parm_index.as_ref() {
-            out.tputs_if_some(&tparm1(scroll, prompt_y));
-        }
+        out.tputs_bytes(format!("\x1b[{}S", prompt_y).as_bytes());
         // Reposition cursor.
         if let Some(up) = term.parm_cursor_up.as_ref() {
             out.tputs_if_some(&tparm1(up, prompt_y));

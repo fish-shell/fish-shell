@@ -37,6 +37,12 @@ BUILD_ROOT="$(cd $(dirname "$TESTS_ROOT") && pwd -P)"
 test -n "$FISHDIR" && FISHDIR=$(realpath -- "$FISHDIR")
 fish="${FISHDIR:-${BUILD_ROOT}/test/root/bin}/fish"
 
+if ! test -x "$fish" || ! test -f "$fish"; then
+    printf '%s\n' "'$fish' is not an executable fish." \
+           "Please set \$FISHDIR to a directory that contains fish, fish_indent and fish_key_reader" >&2
+    exit 7
+fi
+
 if ! test -z "$__fish_is_running_tests"; then
     echo "Recursive test invocation detected!" 1>&2
     exit 10
@@ -52,7 +58,7 @@ test -n "$homedir" || die "Failed to set up home"
 if command -v cc >/dev/null ; then
     cc "$TESTS_ROOT/fish_test_helper.c" -o "$homedir/fish_test_helper"
 else
-    echo "Cannot find a c compiler. Skipping tests that require fish_test_helper" >&2
+    echo "Cannot find a C compiler. Skipping tests that require fish_test_helper" >&2
 fi
 
 # These are used read-only so it's OK to symlink instead of copy

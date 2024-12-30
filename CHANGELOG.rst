@@ -9,6 +9,7 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
+- `fish_cmd_entered` event emitted after the user hits enter
 
 Interactive improvements
 ------------------------

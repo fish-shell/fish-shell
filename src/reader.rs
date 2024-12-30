@@ -1960,6 +1960,7 @@ impl<'a> Reader<'a> {
                 break;
             }
         }
+        event::fire_generic(zelf.parser, L!("fish_cmd_entered").to_owned(), vec![]);
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
         // user presses enter.

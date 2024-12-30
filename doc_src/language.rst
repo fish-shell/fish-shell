@@ -2083,6 +2083,8 @@ Fish already has the following named events for the ``--on-event`` switch:
 
 - ``fish_prompt`` is emitted whenever a new fish prompt is about to be displayed.
 
+- ``fish_cmd_entered`` is emitted after the user finishes entering a command.
+
 - ``fish_preexec`` is emitted right before executing an interactive command. The commandline is passed as the first parameter. Not emitted if command is empty.
 
 - ``fish_posterror`` is emitted right after executing a command with syntax errors. The commandline is passed as the first parameter.

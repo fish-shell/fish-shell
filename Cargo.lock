@@ -118,7 +118,6 @@ dependencies = [
  "cc",
  "errno",
  "fish-printf",
- "lazy_static",
  "libc",
  "lru",
  "nix",

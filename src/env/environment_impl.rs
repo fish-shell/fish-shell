@@ -14,7 +14,7 @@ use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstol_radix;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -201,16 +201,28 @@ impl EnvNode {
     }
 }
 
+// RefCell except we promise it can be used as Sync.
+// Safety: in order to do anything with this, the caller must be holding ENV_LOCK.
+struct EnvNodeSyncCell(RefCell<EnvNode>);
+
+impl EnvNodeSyncCell {
+    fn new(node: EnvNode) -> Self {
+        Self(RefCell::new(node))
+    }
+}
+
+unsafe impl Sync for EnvNodeSyncCell {}
+
 /// EnvNodeRef is a reference to an EnvNode. It may be shared between different environments.
-/// The type Arc<RefCell<...>> may look suspicious, but all accesses to the EnvNode are protected by a global lock.
+/// All accesses to the EnvNode are protected by a global lock.
 #[derive(Clone)]
-struct EnvNodeRef(Arc<RefCell<EnvNode>>);
+struct EnvNodeRef(Arc<EnvNodeSyncCell>);
 
 impl Deref for EnvNodeRef {
     type Target = RefCell<EnvNode>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.0 .0
     }
 }
 
@@ -219,7 +231,7 @@ impl EnvNodeRef {
         // Accesses are protected by the global lock.
         #[allow(unknown_lints)]
         #[allow(clippy::arc_with_non_send_sync)]
-        EnvNodeRef(Arc::new(RefCell::new(EnvNode {
+        EnvNodeRef(Arc::new(EnvNodeSyncCell::new(EnvNode {
             env: VarTable::new(),
             new_scope: is_new_scope,
             export_gen: 0,
@@ -248,9 +260,6 @@ impl EnvNodeRef {
     }
 }
 
-// Safety: in order to do anything with an EnvNodeRef, the caller must be holding ENV_LOCK.
-unsafe impl Sync for EnvNodeRef {}
-
 /// Helper to iterate over a chain of EnvNodeRefs.
 struct EnvNodeIter {
     current: Option<EnvNodeRef>,
@@ -276,10 +285,7 @@ impl Iterator for EnvNodeIter {
     }
 }
 
-lazy_static! {
-    // All accesses to the EnvNode are protected by a global lock.
-    static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
-}
+static GLOBAL_NODE: Lazy<EnvNodeRef> = Lazy::new(|| EnvNodeRef::new(false, None));
 
 /// Recursive helper to snapshot a series of nodes.
 fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
@@ -293,7 +299,7 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
     };
     #[allow(unknown_lints)]
     #[allow(clippy::arc_with_non_send_sync)]
-    EnvNodeRef(Arc::new(RefCell::new(new_node)))
+    EnvNodeRef(Arc::new(EnvNodeSyncCell::new(new_node)))
 }
 
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in

@@ -3,9 +3,16 @@ Changes since 4.0b1
 - :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta. :issue:`10928`
 - Fix a BSD-specific regression in the beta that caused crashes when a child process exited with a status like -1 (:issue:`10919`).
 - Fix a regression in the beta where ``__fish_cancel_commandline`` caused glitches on multi-line command lines (:issue:`10935`).
+- Autosuggestions are case-correcting again (:issue:`10915`).
 - Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
     fish --install=$HOME/.local/
   In that case, the fish binary will be moved to "bin/" in that path. :issue:`10923`
+- The config directories will now be created with mode 700 again (:issue:`10962`).
+- A ``status buildinfo`` command to print information on how fish was built, to help with debugging (:issue:`10896`).
+- Remove the completions for ``dust`` because it conflicted with the Debian/Ubuntu package (:issue:`10922`).
+- Improve the documentation style for narrow interfaces (like phones) (:issue:`10942`).
+- Add debug information back to cmake builds with the "RelWithDebInfo" profile (:issue:`10959`).
+
 
 fish 4.0b1 (released December 17, 2024)
 =======================================

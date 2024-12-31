@@ -1,5 +1,7 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux
+# Somehow $LINES is borked on NetBSD?
+#REQUIRES: test $(uname) != NetBSD
 
 isolated-tmux-start
 

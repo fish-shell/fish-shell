@@ -36,6 +36,9 @@ fn test_topic_monitor() {
 }
 
 #[test]
+// FIXME: Does not compile on NetBSD
+// "`*mut sem` cannot be sent between threads safely"
+#[cfg(not(target_os = "netbsd"))]
 #[serial]
 fn test_topic_monitor_torture() {
     let _cleanup = test_init();

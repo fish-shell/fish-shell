@@ -29,11 +29,15 @@ jobs:
            sudo apt install python3-sphinx
            rustup target add x86_64-unknown-linux-musl
            rustup target add aarch64-unknown-linux-musl
-           sudo apt install musl-tools crossbuild-essential-arm64 -y
+           sudo apt install musl-tools crossbuild-essential-arm64 python3-pexpect tmux -y
     - name: Build
       run: |
            CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2" CMAKE_WITH_GETTEXT=0 CC=aarch64-linux-gnu-gcc RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" cargo build --release --target aarch64-unknown-linux-musl
            cargo build --release --target x86_64-unknown-linux-musl
+    - name: Test
+      run: |
+           FISHDIR=target/x86_64-unknown-linux-musl/release/ tests/test_driver.sh tests/test.fish
+           FISHDIR=target/x86_64-unknown-linux-musl/release/ tests/test_driver.sh tests/interactive.fish
     - name: Compress
       run: |
            tar -cazf fish-amd64.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish{,_indent,_key_reader}

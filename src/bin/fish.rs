@@ -817,10 +817,9 @@ fn throwing_main() -> i32 {
         save_term_foreground_process_group();
     }
 
-    let mut paths: Option<ConfigPaths> = None;
     // If we're not executing, there's no need to find the config.
-    if !opts.no_exec {
-        paths = Some(determine_config_directory_paths(OsString::from_vec(
+    let paths: Option<ConfigPaths> = if !opts.no_exec {
+        let paths = Some(determine_config_directory_paths(OsString::from_vec(
             wcs2string(&args[0]),
         )));
         env_init(
@@ -828,7 +827,10 @@ fn throwing_main() -> i32 {
             /* do uvars */ !opts.no_config,
             /* default paths */ opts.no_config,
         );
-    }
+        paths
+    } else {
+        None
+    };
 
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
@@ -845,7 +847,7 @@ fn throwing_main() -> i32 {
 
     // Construct the root parser!
     let env = Rc::new(EnvStack::globals().create_child(true /* dispatches_var_changes */));
-    let parser: &Parser = &Parser::new(env, CancelBehavior::Clear);
+    let parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {
@@ -1008,7 +1010,6 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -
         return false;
     }
 
-    let mut result = false;
     let cmd = &cmds[0];
     if cmd == "exec \"${@}\"" || cmd == "exec \"$@\"" {
         // We're going to construct a new command that starts with exec, and then has the
@@ -1020,7 +1021,8 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -
         }
 
         cmds[0] = new_cmd;
-        result = true;
+        true
+    } else {
+        false
     }
-    result
 }

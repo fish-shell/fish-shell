@@ -1,4 +1,4 @@
-# RUN: env FISH=%fish filter_ctrls=%filter-control-sequences %fish %s
+# RUN: env FISH=%fish %fish %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -367,7 +367,7 @@ begin
     env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
     # CHECK: SHLVL: 4
     # CHECK: SHLVL: 4
-end | $FISH $filter_ctrls
+end
 
 # Non-interactive fish doesn't touch $SHLVL
 env SHLVL=2 $FISH -c 'echo SHLVL: $SHLVL'

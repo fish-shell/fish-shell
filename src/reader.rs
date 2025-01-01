@@ -131,9 +131,9 @@ use crate::tokenizer::{
     TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
+use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
-    count_preceding_backslashes, join_strings, string_prefixes_string,
-    string_prefixes_string_case_insensitive, StringFuzzyMatch,
+    count_preceding_backslashes, join_strings, string_prefixes_string, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror};
@@ -4496,7 +4496,11 @@ impl<'a> Reader<'a> {
             self.update_autosuggestion();
         } else if !result.is_empty()
             && self.can_autosuggest()
-            && string_prefixes_string_case_insensitive(&result.search_string, &result.text)
+            && string_prefixes_string_maybe_case_insensitive(
+                result.icase,
+                &result.search_string,
+                &result.text,
+            )
         {
             // Autosuggestion is active and the search term has not changed, so we're good to go.
             self.autosuggestion = result.autosuggestion;
@@ -4520,12 +4524,13 @@ impl<'a> Reader<'a> {
         // This is also the main mechanism by which readline commands that don't change the command line
         // text avoid recomputing the autosuggestion.
         let el = &self.data.command_line;
+        let autosuggestion = &self.autosuggestion;
         if self.autosuggestion.text.len() > el.text().len()
-            && if self.autosuggestion.icase {
-                string_prefixes_string_case_insensitive(el.text(), &self.autosuggestion.text)
-            } else {
-                string_prefixes_string(el.text(), &self.autosuggestion.text)
-            }
+            && string_prefixes_string_maybe_case_insensitive(
+                autosuggestion.icase,
+                &el.text(),
+                &autosuggestion.text,
+            )
         {
             return;
         }

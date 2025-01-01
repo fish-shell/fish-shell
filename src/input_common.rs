@@ -961,6 +961,8 @@ pub trait InputEventQueuer {
             b'u' => {
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
                 let key = match params[0][0] {
+                    57361 => key::PrintScreen,
+                    57363 => key::Menu,
                     57399 => '0',
                     57400 => '1',
                     57401 => '2',

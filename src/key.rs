@@ -18,16 +18,18 @@ pub(crate) const Left: char = '\u{F506}';
 pub(crate) const Right: char = '\u{F507}';
 pub(crate) const PageUp: char = '\u{F508}';
 pub(crate) const PageDown: char = '\u{F509}';
-pub(crate) const Home: char = '\u{F50a}';
-pub(crate) const End: char = '\u{F50b}';
-pub(crate) const Insert: char = '\u{F50c}';
-pub(crate) const Tab: char = '\u{F50d}';
-pub(crate) const Space: char = '\u{F50e}';
-pub(crate) const Invalid: char = '\u{F50f}';
+pub(crate) const Home: char = '\u{F50A}';
+pub(crate) const End: char = '\u{F50B}';
+pub(crate) const Insert: char = '\u{F50C}';
+pub(crate) const Tab: char = '\u{F50D}';
+pub(crate) const Space: char = '\u{F50E}';
+pub(crate) const Menu: char = '\u{F50F}';
+pub(crate) const PrintScreen: char = '\u{F510}';
 pub(crate) fn function_key(n: u32) -> char {
     assert!((1..=12).contains(&n));
-    char::from_u32(u32::from(Invalid) + n).unwrap()
+    char::from_u32(u32::from('\u{F5FF}') - n).unwrap()
 }
+pub(crate) const Invalid: char = '\u{F5FF}';
 
 const KEY_NAMES: &[(char, &wstr)] = &[
     ('-', L!("minus")),
@@ -47,6 +49,8 @@ const KEY_NAMES: &[(char, &wstr)] = &[
     (Insert, L!("insert")),
     (Tab, L!("tab")),
     (Space, L!("space")),
+    (Menu, L!("menu")),
+    (PrintScreen, L!("printscreen")),
 ];
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

@@ -773,7 +773,7 @@ fn throwing_main() -> i32 {
             .write(true)
             .truncate(true)
             .create(true)
-            .open(debug_path.clone())
+            .open(&debug_path)
         {
             Ok(dbg_file) => {
                 // Rust sets O_CLOEXEC by default

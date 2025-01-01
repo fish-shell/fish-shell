@@ -1,4 +1,4 @@
-#RUN: fish=%fish %fish %s | %fish %filter-control-sequences
+#RUN: fish=%fish %fish %s
 set -g PATH
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234

@@ -100,8 +100,8 @@ foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
   get_filename_component(CHECK ${CHECK} NAME_WE)
   add_test(NAME ${CHECK_NAME}
-    COMMAND env FISHDIR=${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
-               ${CMAKE_CURRENT_BINARY_DIR}/tests/test.fish ${CHECK}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
+                checks/${CHECK}.fish
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${CHECK_NAME} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
@@ -113,8 +113,8 @@ FILE(GLOB PEXPECTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/pexpects/*.py)
 foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
   add_test(NAME ${PEXPECT}
-    COMMAND env FISHDIR=${CMAKE_CURRENT_BINARY_DIR}/ ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.sh
-      ${CMAKE_CURRENT_BINARY_DIR}/tests/interactive.fish ${PEXPECT}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
+                pexpects/${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
   set_tests_properties(${PEXPECT} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})

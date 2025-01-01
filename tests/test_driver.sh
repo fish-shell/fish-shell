@@ -34,8 +34,12 @@ die() {
 TESTS_ROOT="$(cd $(dirname "$0") && pwd -P)"
 BUILD_ROOT="$(cd $(dirname "$TESTS_ROOT") && pwd -P)"
 
-test -n "$FISHDIR" && FISHDIR=$(realpath -- "$FISHDIR")
-fish="${FISHDIR:-${BUILD_ROOT}/test/root/bin}/fish"
+if test -z "$FISHDIR"; then
+    die "Please set \$FISHDIR to a directory that contains fish, fish_indent and fish_key_reader"
+fi
+
+FISHDIR=$(realpath -- "$FISHDIR")
+fish="${FISHDIR}/fish"
 
 if ! test -x "$fish" || ! test -f "$fish"; then
     printf '%s\n' "'$fish' is not an executable fish." \

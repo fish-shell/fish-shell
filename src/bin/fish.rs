@@ -873,16 +873,13 @@ fn throwing_main() -> i32 {
     // Stomp the exit status of any initialization commands (issue #635).
     parser.set_last_statuses(Statuses::just(STATUS_CMD_OK.unwrap()));
 
-    match (&opts.profile_startup_output, &opts.profile_output) {
-        (Some(profile_startup_output), Some(profile_output))
-            if profile_startup_output != profile_output =>
-        {
-            parser.emit_profiling(profile_startup_output);
-            // If we are profiling both, ensure the startup data only
-            // ends up in the startup file.
-            parser.clear_profiling();
-        }
-        _ => (),
+    // TODO: if-let-chains
+    if opts.profile_startup_output.is_some() && opts.profile_startup_output != opts.profile_output {
+        parser.emit_profiling(&opts.profile_startup_output.unwrap());
+
+        // If we are profiling both, ensure the startup data only
+        // ends up in the startup file.
+        parser.clear_profiling();
     }
 
     PROFILING_ACTIVE.store(opts.profile_output.is_some());

@@ -44,7 +44,7 @@ use fish::{
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
-    nix::{getpid, isatty},
+    nix::{getpid, getrusage, isatty, RUsage},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -237,13 +237,7 @@ fn tv_to_msec(tv: &libc::timeval) -> i64 {
 }
 
 fn print_rusage_self() {
-    let mut rs = MaybeUninit::uninit();
-    if unsafe { libc::getrusage(libc::RUSAGE_SELF, rs.as_mut_ptr()) } != 0 {
-        let s = CString::new("getrusage").unwrap();
-        unsafe { libc::perror(s.as_ptr()) }
-        return;
-    }
-    let rs: libc::rusage = unsafe { rs.assume_init() };
+    let rs = getrusage(RUsage::RSelf);
     let rss_kb = if cfg!(target_os = "macos") {
         // mac use bytes.
         rs.ru_maxrss / 1024

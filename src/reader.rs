@@ -77,7 +77,6 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::WaitingForCursorPosition;
@@ -86,6 +85,7 @@ use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
 };
+use crate::input_common::{terminal_protocols_disable_ifn, READING_BUFFERED_INPUT};
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -4072,6 +4072,7 @@ fn term_steal(copy_modes: bool) {
             break;
         }
     }
+    READING_BUFFERED_INPUT.store(true);
 
     termsize_invalidate_tty();
 }

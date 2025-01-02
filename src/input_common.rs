@@ -291,6 +291,8 @@ static WAIT_ON_ESCAPE_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_ESCAPE_DEFAULT)
 const WAIT_ON_SEQUENCE_KEY_INFINITE: usize = usize::MAX;
 static WAIT_ON_SEQUENCE_KEY_MS: AtomicUsize = AtomicUsize::new(WAIT_ON_SEQUENCE_KEY_INFINITE);
 
+pub(crate) static READING_BUFFERED_INPUT: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 /// Internal function used by readch to read one byte.
 /// This calls select() on three fds: input (e.g. stdin), the ioport notifier fd (for main thread
 /// requests), and the uvar notifier. This returns either the byte which was read, or one of the
@@ -333,7 +335,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
         }
 
         // Here's where we call select().
-        let select_res = fdset.check_readable(if blocking {
+        let select_res = fdset.check_readable(if blocking && !READING_BUFFERED_INPUT.load() {
             FdReadableSet::kNoTimeout
         } else {
             0
@@ -371,6 +373,8 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
             FLOG!(reader, "Read byte", arr[0]);
             // The common path is to return a u8.
             return ReadbResult::Byte(arr[0]);
+        } else {
+            READING_BUFFERED_INPUT.store(false);
         }
         if !blocking {
             return ReadbResult::NothingToRead;

@@ -13,6 +13,9 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - Autosuggestions are now also provided in  multi-line command lines. Like `ctrl-r`, autosuggestions operate only on the current line.
+- When typing a command while the previous one is still running, :kbd:`enter` will no longer execute the would-be command, and keys that are bound to shell commands will be ignored.
+  This mitigates a security issue where a command like ``cat malicious-file.txt`` could write terminal escape codes prompting the terminal to write arbitrary text to fish's standard input.
+  Such a malicious file can still potentially insert arbitrary text into the command line but can no longer execute it directly (:issue:`10987`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

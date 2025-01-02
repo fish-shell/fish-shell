@@ -14,11 +14,6 @@ extern "C" {
 }
 
 extern "C" {
-    pub(crate) fn confstr(
-        name: libc::c_int,
-        buf: *mut libc::c_char,
-        len: libc::size_t,
-    ) -> libc::size_t;
     pub fn stdout_stream() -> *mut libc::FILE;
     pub fn setlinebuf(stream: *mut libc::FILE);
 }

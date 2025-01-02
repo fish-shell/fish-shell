@@ -47,7 +47,8 @@ pub enum RUsage {
     RChildren,
 }
 
-/// A safe wrapper around `libc::getrusage()`
+/// A safe wrapper around `libc::getrusage()`. If `libc::getrusage()` fails,
+/// `wutil::perror()` will be called and a zeroed struct will be returned.
 pub fn getrusage(resource: RUsage) -> libc::rusage {
     let mut rusage = std::mem::MaybeUninit::uninit();
     let result = unsafe {

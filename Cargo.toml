@@ -65,7 +65,7 @@ portable-atomic = { version = "1", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-serial_test = { version = "1.0.0", default-features = false }
+serial_test = { version = "3", default-features = false }
 
 [build-dependencies]
 cc = "1.0.94"

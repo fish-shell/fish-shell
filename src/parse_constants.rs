@@ -44,6 +44,21 @@ pub struct SourceRange {
     pub length: u32,
 }
 
+impl Default for SourceRange {
+    fn default() -> Self {
+        SourceRange {
+            start: 0,
+            length: 0,
+        }
+    }
+}
+
+impl SourceRange {
+    pub fn as_usize(&self) -> std::ops::Range<usize> {
+        (*self).into()
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ParseTokenType {
     invalid = 1,

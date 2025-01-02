@@ -2,6 +2,8 @@
 
 use std::time::Duration;
 
+use crate::wutil;
+
 #[allow(clippy::unnecessary_cast)]
 pub const fn timeval_to_duration(val: &libc::timeval) -> Duration {
     let micros = val.tv_sec as i64 * (1E6 as i64) + val.tv_usec as i64;
@@ -64,6 +66,9 @@ pub fn getrusage(resource: RUsage) -> libc::rusage {
     // return an empty value.
     match result {
         0 => unsafe { rusage.assume_init() },
-        _ => unsafe { std::mem::zeroed() },
+        _ => unsafe {
+            wutil::perror("getrusage");
+            std::mem::zeroed()
+        },
     }
 }

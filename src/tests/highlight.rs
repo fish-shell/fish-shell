@@ -38,12 +38,17 @@ fn test_is_potential_path() {
     let vars = EnvStack::new();
     let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);
 
+    let path_require_dir = PathFlags {
+        require_dir: true,
+        ..Default::default()
+    };
+
     assert!(is_potential_path(
         L!("al"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
 
     assert!(is_potential_path(
@@ -51,28 +56,32 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(is_potential_path(
         L!("aard"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("aard"),
         false,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("alp/"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR | PathFlags::PATH_FOR_CD
+        PathFlags {
+            require_dir: true,
+            for_cd: true,
+            ..Default::default()
+        }
     ));
 
     assert!(!is_potential_path(
@@ -80,28 +89,28 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aard"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aarde"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aarde"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
 
     assert!(is_potential_path(
@@ -109,21 +118,21 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(is_potential_path(
         L!("test/is_potential_path_test/al"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(is_potential_path(
         L!("test/is_potential_path_test/aardv"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
 
     assert!(!is_potential_path(
@@ -131,28 +140,28 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("test/is_potential_path_test/al/"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("test/is_potential_path_test/ar"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(is_potential_path(
         L!("/usr"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
 }
 

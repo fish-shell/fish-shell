@@ -49,7 +49,6 @@ use crate::wutil::dir_iter::DirIter;
 use crate::wutil::fish_wcstoi;
 use crate::wutil::{normalize_path, waccess, wstat};
 use crate::wutil::{wbasename, wdirname};
-use bitflags::bitflags;
 use libc::{ENOENT, PATH_MAX, R_OK, W_OK};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -697,7 +696,10 @@ fn range_is_potential_path(
             at_cursor,
             &[working_directory.to_owned()],
             ctx,
-            PathFlags::PATH_EXPAND_TILDE,
+            PathFlags {
+                expand_tilde: true,
+                ..Default::default()
+            },
         );
     }
     result
@@ -708,16 +710,14 @@ fn range_is_potential_path(
 // This does I/O!
 //
 // This is used only internally to this file, and is exposed only for testing.
-bitflags! {
-    #[derive(Clone, Copy, Default)]
-    pub struct PathFlags: u8 {
-        // The path must be to a directory.
-        const PATH_REQUIRE_DIR = 1 << 0;
-        // Expand any leading tilde in the path.
-        const PATH_EXPAND_TILDE = 1 << 1;
-        // Normalize directories before resolving, as "cd".
-        const PATH_FOR_CD = 1 << 2;
-    }
+#[derive(Clone, Copy, Default)]
+pub struct PathFlags {
+    // The path must be to a directory.
+    pub require_dir: bool,
+    // Expand any leading tilde in the path.
+    pub expand_tilde: bool,
+    // Normalize directories before resolving, as "cd".
+    pub for_cd: bool,
 }
 
 /// Tests whether the specified string cpath is the prefix of anything we could cd to. directories
@@ -741,12 +741,12 @@ pub fn is_potential_path(
         return false;
     }
 
-    let require_dir = flags.contains(PathFlags::PATH_REQUIRE_DIR);
+    let require_dir = flags.require_dir;
     let mut clean_potential_path_fragment = WString::new();
     let mut has_magic = false;
 
     let mut path_with_magic = potential_path_fragment.to_owned();
-    if flags.contains(PathFlags::PATH_EXPAND_TILDE) {
+    if flags.expand_tilde {
         expand_tilde(&mut path_with_magic, ctx.vars());
     }
 
@@ -785,7 +785,7 @@ pub fn is_potential_path(
         }
         let mut abs_path = path_apply_working_directory(&clean_potential_path_fragment, wd);
         let must_be_full_dir = abs_path.chars().next_back() == Some('/');
-        if flags.contains(PathFlags::PATH_FOR_CD) {
+        if flags.for_cd {
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
         }
 
@@ -856,7 +856,7 @@ fn is_potential_cd_path(
     at_cursor: bool,
     working_directory: &wstr,
     ctx: &OperationContext<'_>,
-    flags: PathFlags,
+    mut flags: PathFlags,
 ) -> bool {
     let mut directories = vec![];
 
@@ -883,13 +883,9 @@ fn is_potential_cd_path(
     }
 
     // Call is_potential_path with all of these directories.
-    is_potential_path(
-        path,
-        at_cursor,
-        &directories,
-        ctx,
-        flags | PathFlags::PATH_REQUIRE_DIR | PathFlags::PATH_FOR_CD,
-    )
+    flags.require_dir = true;
+    flags.for_cd = true;
+    is_potential_path(path, at_cursor, &directories, ctx, flags)
 }
 
 pub type ColorArray = Vec<HighlightSpec>;
@@ -1144,7 +1140,10 @@ impl<'s> Highlighter<'s> {
                         at_cursor,
                         &self.working_directory,
                         self.ctx,
-                        PathFlags::PATH_EXPAND_TILDE,
+                        PathFlags {
+                            expand_tilde: true,
+                            ..Default::default()
+                        },
                     );
                     if !is_valid_path {
                         self.color_node(

@@ -65,7 +65,6 @@ use fish::{
 };
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
-use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;

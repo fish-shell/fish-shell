@@ -1751,7 +1751,7 @@ impl ReaderData {
             || !string_prefixes_string_maybe_case_insensitive(
                 autosuggestion.icase,
                 &edit.replacement,
-                &remaining,
+                remaining,
             )
             || edit.replacement.len() == remaining.len()
         {

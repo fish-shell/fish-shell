@@ -27,6 +27,9 @@ pub enum FeatureFlag {
 
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
     test_require_arg,
+
+    /// Buffered enter (typed wile running a command) does not execute.
+    buffered_enter_noexec,
 }
 
 struct Features {
@@ -107,6 +110,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: false,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::buffered_enter_noexec,
+        name: L!("buffered-enter-noexec"),
+        groups: L!("4.1"),
+        description: L!("enter typed while executing will not execute"),
+        default_value: false,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -168,6 +179,7 @@ impl Features {
                 AtomicBool::new(METADATA[3].default_value),
                 AtomicBool::new(METADATA[4].default_value),
                 AtomicBool::new(METADATA[5].default_value),
+                AtomicBool::new(METADATA[6].default_value),
             ],
         }
     }

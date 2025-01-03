@@ -503,9 +503,22 @@ impl Screen {
     }
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {
-        let mut prompt_y = self.command_line_y_given_cursor_y(cursor_y);
-        prompt_y -= calc_prompt_lines(&self.actual_left_prompt) - 1;
-        if prompt_y == 0 {
+        let prompt_y = self.command_line_y_given_cursor_y(cursor_y);
+        let trailing_prompt_lines = calc_prompt_lines(&self.actual_left_prompt);
+        let lines_to_scroll = prompt_y
+            .checked_sub(trailing_prompt_lines - 1)
+            .unwrap_or_else(|| {
+                FLOG!(
+                    error,
+                    "Number of trailing prompt lines prompt lines",
+                    trailing_prompt_lines,
+                    "exceeds prompt's y",
+                    prompt_y,
+                    "inferred from reported cursor position",
+                );
+                0
+            });
+        if lines_to_scroll == 0 {
             return;
         }
         let zelf = self.scoped_buffer();
@@ -513,12 +526,12 @@ impl Screen {
             return;
         };
         let mut out = zelf.outp.borrow_mut();
-        let prompt_y = i32::try_from(prompt_y).unwrap();
+        let lines_to_scroll = i32::try_from(lines_to_scroll).unwrap();
         // Scroll down.
-        out.tputs_bytes(format!("\x1b[{}S", prompt_y).as_bytes());
+        out.tputs_bytes(format!("\x1b[{}S", lines_to_scroll).as_bytes());
         // Reposition cursor.
         if let Some(up) = term.parm_cursor_up.as_ref() {
-            out.tputs_if_some(&tparm1(up, prompt_y));
+            out.tputs_if_some(&tparm1(up, lines_to_scroll));
         }
     }
 
@@ -542,7 +555,20 @@ impl Screen {
         viewport_cursor: ViewportPosition,
     ) -> usize {
         let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor.y);
-        let y = viewport_position.y - viewport_prompt_y;
+        let y = viewport_position
+            .y
+            .checked_sub(viewport_prompt_y)
+            .unwrap_or_else(|| {
+                FLOG!(
+                    error,
+                    "Given y",
+                    viewport_position.y,
+                    "exceeds the prompt's y",
+                    viewport_prompt_y,
+                    "inferred from reported cursor position",
+                );
+                0
+            });
         let y = y.min(self.actual.line_count() - 1);
         let viewport_prompt_x = viewport_cursor.x - self.actual.cursor.x;
         let x = viewport_position.x - viewport_prompt_x;

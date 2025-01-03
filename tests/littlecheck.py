@@ -32,6 +32,8 @@ CHECK_STDOUT_RE = re.compile(COMMENT_RE + r"CHECK:\s+(.*)\n")
 # A regex capturing lines that should be checked against stderr.
 CHECK_STDERR_RE = re.compile(COMMENT_RE + r"CHECKERR:\s+(.*)\n")
 
+VARIABLE_OVERRIDE_RE = re.compile(r"\w+=.*")
+
 SKIP = object()
 
 def find_command(program):
@@ -489,7 +491,7 @@ class TestRun(object):
         # most likely when the last command in a shell script doesn't exist.
         # So we check if the command *we execute* exists, and complain then.
         status = proc.returncode
-        cmd = shlex.split(self.subbed_command)[0]
+        cmd = next((word for word in shlex.split(self.subbed_command) if not VARIABLE_OVERRIDE_RE.match(word)))
         if status == 127 and not find_command(cmd):
             raise CheckerError("Command could not be found: " + cmd)
         if status == 126 and not find_command(cmd):

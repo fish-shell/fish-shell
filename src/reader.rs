@@ -4573,23 +4573,23 @@ fn get_autosuggestion_performer(
 
         // Try normal completions.
         let complete_flags = CompletionRequestOptions::autosuggest();
+        let mut would_be_cursor = search_string_range.end;
         let (mut completions, needs_load) =
-            complete(&command_line[..cursor_pos], complete_flags, &ctx);
+            complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
         let suggestion = if completions.is_empty() {
             WString::new()
         } else {
             sort_and_prioritize(&mut completions, complete_flags);
             let comp = &completions[0];
-            let mut cursor = cursor_pos;
             let full_line = completion_apply_to_command_line(
                 &comp.completion,
                 comp.flags,
                 &command_line,
-                &mut cursor,
+                &mut would_be_cursor,
                 /*append_only=*/ true,
             );
-            line_at_cursor(&full_line, search_string_range.end).to_owned()
+            line_at_cursor(&full_line, would_be_cursor).to_owned()
         };
         let mut result = AutosuggestionResult::new(
             command_line,

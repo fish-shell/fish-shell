@@ -24,7 +24,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering, Ordering::Relaxed};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -436,10 +436,23 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 
+#[repr(u8)]
+enum Capability {
+    Unknown,
+    Supported,
+    NotSupported,
+}
+static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+
+macro_rules! kitty_progressive_enhancements {
+    () => {
+        "\x1b[=5u"
+    };
+}
+
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-static IN_JETBRAINS: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -454,10 +467,8 @@ pub fn terminal_protocol_hacks() {
                 version < (3, 5, 6)
             }),
     );
-    IN_JETBRAINS.store(
-        var_os("TERMINAL_EMULATOR")
-            .is_some_and(|term| term.as_os_str().as_bytes() == b"JetBrains-JediTerm"),
-    );
+    // Request kitty progressive enhancement value and primary device attribute.
+    let _ = write_loop(&STDOUT_FILENO, b"\x1b[?u\x1b[5n");
 }
 
 fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
@@ -488,15 +499,14 @@ pub fn terminal_protocols_enable_ifn() {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
-    } else if IN_JETBRAINS.load() {
-        // Jetbrains IDE terminals vomit CSI u
+    } else if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) != Capability::Supported as _ {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
     } else {
         concat!(
             "\x1b[?2004h", // Bracketed paste
             "\x1b[>4;1m",  // XTerm's modifyOtherKeys
-            "\x1b[=5u",    // CSI u with kitty progressive enhancement
-            "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
+            kitty_progressive_enhancements!(),
+            "\x1b=", // set application keypad mode, so the keypad keys send unique codes
         )
     };
     FLOG!(term_protocols, "Enabling extended keys and bracketed paste");
@@ -513,7 +523,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     }
     let sequences = if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
-    } else if IN_JETBRAINS.load() {
+    } else if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) != Capability::Supported as _ {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else {
         concat!(
@@ -1086,6 +1096,21 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'u' => {
+                if private_mode == Some(b'?') {
+                    FLOG!(
+                        reader,
+                        "Received kitty progressive enhancement flags, marking as supported"
+                    );
+                    KITTY_KEYBOARD_SUPPORTED.store(Capability::Supported as _, Relaxed);
+                    if !IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() && !IN_ITERM_PRE_CSI_U.load() {
+                        let _ = write_loop(
+                            &STDOUT_FILENO,
+                            kitty_progressive_enhancements!().as_bytes(),
+                        );
+                    }
+                    return None;
+                }
+
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
                 let key = match params[0][0] {
                     57399 => '0',
@@ -1131,6 +1156,16 @@ pub trait InputEventQueuer {
             }
             b'O' => {
                 self.push_front(CharEvent::Implicit(ImplicitEvent::FocusOut));
+                return None;
+            }
+            b'n' => {
+                if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) == Capability::Unknown as _ {
+                    FLOG!(
+                        reader,
+                        "Did not receive kitty progressive enhancement flags, marking as unsupported"
+                    );
+                    KITTY_KEYBOARD_SUPPORTED.store(Capability::NotSupported as _, Relaxed);
+                }
                 return None;
             }
             _ => return None,

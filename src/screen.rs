@@ -504,12 +504,12 @@ impl Screen {
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {
         let prompt_y = self.command_line_y_given_cursor_y(cursor_y);
-        let trailing_prompt_lines = calc_prompt_lines(&self.actual_left_prompt);
+        let trailing_prompt_lines = calc_prompt_lines(&self.actual_left_prompt) - 1;
         let lines_to_scroll = prompt_y
-            .checked_sub(trailing_prompt_lines - 1)
+            .checked_sub(trailing_prompt_lines)
             .unwrap_or_else(|| {
                 FLOG!(
-                    error,
+                    reader,
                     "Number of trailing prompt lines prompt lines",
                     trailing_prompt_lines,
                     "exceeds prompt's y",
@@ -539,7 +539,7 @@ impl Screen {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {
             FLOG!(
-                error,
+                reader,
                 "Reported cursor line index",
                 viewport_cursor_y,
                 "is above fish's cursor",
@@ -560,7 +560,7 @@ impl Screen {
             .checked_sub(viewport_prompt_y)
             .unwrap_or_else(|| {
                 FLOG!(
-                    error,
+                    reader,
                     "Given y",
                     viewport_position.y,
                     "exceeds the prompt's y",

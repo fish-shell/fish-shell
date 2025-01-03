@@ -1545,7 +1545,7 @@ impl<'a> Reader<'a> {
                 Cow::Owned(
                     wstr::from_char_slice(&[get_obfuscation_read_char()]).repeat(cmd_line.len()),
                 ),
-                0..0,
+                None,
             )
         } else if self.is_at_line_with_autosuggestion() {
             // Combine the command and autosuggestion into one string.
@@ -1559,11 +1559,12 @@ impl<'a> Reader<'a> {
                     autosuggestion.search_string_range.clone(),
                     &autosuggestion.text,
                 )),
-                autosuggested_start..autosuggested_end,
+                Some(autosuggested_start..autosuggested_end),
             )
         } else {
-            (Cow::Borrowed(cmd_line.text()), 0..0)
+            (Cow::Borrowed(cmd_line.text()), None)
         };
+        let autosuggested_range = autosuggested_range.unwrap_or(full_line.len()..full_line.len());
 
         // Copy the colors and insert the autosuggestion color.
         let data = &self.data.rendered_layout;

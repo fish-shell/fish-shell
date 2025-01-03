@@ -11,7 +11,7 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> echo foobar|cat
 
-isolated-tmux send-keys C-k C-u C-l 'commandline -i (seq $LINES) scroll_here' Enter
+isolated-tmux send-keys C-k C-u C-l 'commandline -i "\'$(seq $LINES)" scroll_here' Enter
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: 2
@@ -24,3 +24,19 @@ isolated-tmux capture-pane -p
 # CHECK: 9
 # CHECK: 10
 # CHECK: scroll_here
+
+# Soft-wrapped commandline with omitted right prompt.
+isolated-tmux send-keys C-c
+tmux-sleep
+isolated-tmux send-keys C-l '
+    function fish_right_prompt
+        echo right-prompt
+    end
+    commandline -i "echo $(printf %0"$COLUMNS"d)"
+' Enter
+tmux-sleep
+isolated-tmux capture-pane -p | sed 1,5d
+# CHECK: prompt 4> echo 00000000000000000000000000000000000000000000000000000000000000000
+# CHECK: 000000000000000
+# CHECK: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
+# CHECK: prompt 5>                                                           right-prompt

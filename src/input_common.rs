@@ -10,8 +10,8 @@ use crate::flog::{FloggableDebug, FLOG};
 use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, ctrl, function_key,
-    shift, Key, Modifiers, ViewportPosition,
+    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
+    function_key, shift, Key, Modifiers, ViewportPosition,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -368,9 +368,10 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
                 // The terminal has been closed.
                 return ReadbResult::Eof;
             }
-            FLOG!(reader, "Read byte", arr[0]);
+            let c = arr[0];
+            FLOG!(reader, "Read byte", char_to_symbol(char::from(c)));
             // The common path is to return a u8.
-            return ReadbResult::Byte(arr[0]);
+            return ReadbResult::Byte(c);
         }
         if !blocking {
             return ReadbResult::NothingToRead;

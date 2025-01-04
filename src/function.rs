@@ -93,7 +93,7 @@ impl FunctionSet {
         // tombstoned.
         let props = self.get_props(name);
         let has_explicit_func =
-            props.map_or(false, |p: Arc<FunctionProperties>| !p.is_autoload.load());
+            props.is_some_and(|p: Arc<FunctionProperties>| !p.is_autoload.load());
         let tombstoned = self.autoload_tombstones.contains(name);
         !has_explicit_func && !tombstoned
     }

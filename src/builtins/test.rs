@@ -852,10 +852,10 @@ mod test_expressions {
                 } else {
                     errors.push(wgettext_fmt!("Argument is not a number: '%ls'", arg));
                 }
-            } else if floating.map_or(false, |x| x.is_nan()) {
+            } else if floating.is_ok_and(|x| x.is_nan()) {
                 // NaN is an error as far as we're concerned.
                 errors.push(wgettext!("Not a number").to_owned());
-            } else if floating.map_or(false, |x| x.is_infinite()) {
+            } else if floating.is_ok_and(|x| x.is_infinite()) {
                 errors.push(wgettext!("Number is infinite").to_owned());
             } else if integral == Err(Error::Overflow) {
                 errors.push(wgettext_fmt!("Result too large: %ls", arg));

@@ -1871,9 +1871,11 @@ impl<'a> ExecutionContext {
     // Assign a job group to the given job.
     fn setup_group(&self, ctx: &OperationContext<'_>, j: &mut Job) {
         // We can use the parent group if it's compatible and we're not backgrounded.
-        if ctx.job_group.as_ref().map_or(false, |job_group| {
-            job_group.has_job_id() || !j.wants_job_id()
-        }) && !j.is_initially_background()
+        if ctx
+            .job_group
+            .as_ref()
+            .is_some_and(|job_group| job_group.has_job_id() || !j.wants_job_id())
+            && !j.is_initially_background()
         {
             j.group = ctx.job_group.clone();
             return;

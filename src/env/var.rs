@@ -102,7 +102,7 @@ bitflags! {
 pub struct EnvVar {
     /// The list of values in this variable.
     /// Arc allows for cheap copying
-    values: Arc<Box<[WString]>>,
+    values: Arc<[WString]>,
     /// The variable's flags.
     flags: EnvVarFlags,
 }
@@ -111,8 +111,8 @@ impl Default for EnvVar {
     fn default() -> Self {
         use std::sync::OnceLock;
         /// A shared read-only empty list.
-        static EMPTY_LIST: OnceLock<Arc<Box<[WString]>>> = OnceLock::new();
-        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new(Box::new([])));
+        static EMPTY_LIST: OnceLock<Arc<[WString]>> = OnceLock::new();
+        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new([]));
 
         EnvVar {
             values: Arc::clone(empty_list),
@@ -130,7 +130,7 @@ impl EnvVar {
     /// Creates a new `EnvVar`.
     pub fn new_vec(values: Vec<WString>, flags: EnvVarFlags) -> Self {
         EnvVar {
-            values: Arc::new(values.into_boxed_slice()),
+            values: values.into(),
             flags,
         }
     }
@@ -201,7 +201,7 @@ impl EnvVar {
     /// Returns a copy of the variable with new values.
     pub fn setting_vals(&mut self, values: Vec<WString>) -> Self {
         EnvVar {
-            values: Arc::new(values.into_boxed_slice()),
+            values: values.into(),
             flags: self.flags,
         }
     }

@@ -159,6 +159,7 @@ fn test_fd_event_signaller() {
 // and then invokes the `bad_action` function on the file descriptor while the poll/select is
 // waiting. The function returns Result<i32, i32>: either the number of readable file descriptors
 // or the error code from poll/select.
+#[cfg(test)]
 fn do_something_bad_during_select<F>(bad_action: F) -> Result<i32, i32>
 where
     F: FnOnce(OwnedFd) -> Option<OwnedFd>,

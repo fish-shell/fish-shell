@@ -596,9 +596,17 @@ impl InputData {
     }
 }
 
-pub enum WaitingForCursorPosition {
+#[derive(Eq, PartialEq)]
+pub enum CursorPositionBlockingWait {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum CursorPositionWait {
+    None,
+    InitialFeatureProbe,
+    Blocking(CursorPositionBlockingWait),
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -606,7 +614,7 @@ pub enum WaitingForCursorPosition {
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        if self.is_waiting_for_cursor_position() {
+        if self.is_blocked_waiting_for_cursor_position() {
             match self.get_input_data().queue.front()? {
                 CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
                     return None; // No code execution while we're waiting for CPR.
@@ -733,7 +741,7 @@ pub trait InputEventQueuer {
                             Some(seq.chars().skip(1).map(CharEvent::from_char)),
                         )
                     };
-                    if self.is_waiting_for_cursor_position() {
+                    if self.is_blocked_waiting_for_cursor_position() {
                         FLOG!(
                             reader,
                             "Still waiting for cursor position report from terminal, deferring key event",
@@ -994,15 +1002,17 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                if self.is_waiting_for_cursor_position() {
-                    // TODO: re-queue it I guess.
-                    FLOG!(
-                        reader,
-                        "Received mouse left click while still waiting for Cursor Position Report"
-                    );
-                    return None;
+                match self.cursor_position_wait() {
+                    CursorPositionWait::None => self.on_mouse_left_click(position),
+                    CursorPositionWait::InitialFeatureProbe => (),
+                    CursorPositionWait::Blocking(_) => {
+                        // TODO: re-queue it I guess.
+                        FLOG!(
+                            reader,
+                            "Ignoring mouse left click received while still waiting for Cursor Position Report"
+                        );
+                    }
                 }
-                self.on_mouse_left_click(position);
                 return None;
             }
             b't' => {
@@ -1023,18 +1033,25 @@ pub trait InputEventQueuer {
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
             b'R' => {
-                let wait_reason = self.cursor_position_wait_reason().as_ref()?;
                 let y = usize::try_from(params[0][0] - 1).unwrap();
                 let x = usize::try_from(params[1][0] - 1).unwrap();
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let continuation = match wait_reason {
-                    WaitingForCursorPosition::MouseLeft(click_position) => {
+                let blocking_wait = match self.cursor_position_wait() {
+                    CursorPositionWait::None => return None,
+                    CursorPositionWait::InitialFeatureProbe => {
+                        self.cursor_position_reporting_supported();
+                        return None;
+                    }
+                    CursorPositionWait::Blocking(blocking_wait) => blocking_wait,
+                };
+                let continuation = match blocking_wait {
+                    CursorPositionBlockingWait::MouseLeft(click_position) => {
                         ImplicitEvent::MouseLeftClickContinuation(
                             ViewportPosition { x, y },
                             *click_position,
                         )
                     }
-                    WaitingForCursorPosition::ScrollbackPush => {
+                    CursorPositionBlockingWait::ScrollbackPush => {
                         ImplicitEvent::ScrollbackPushContinuation(y)
                     }
                 };
@@ -1393,11 +1410,12 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn is_waiting_for_cursor_position(&self) -> bool {
-        false
+    fn cursor_position_wait(&self) -> &CursorPositionWait {
+        &CursorPositionWait::InitialFeatureProbe
     }
-    fn cursor_position_wait_reason(&self) -> &Option<WaitingForCursorPosition> {
-        &None
+    fn cursor_position_reporting_supported(&mut self) {}
+    fn is_blocked_waiting_for_cursor_position(&self) -> bool {
+        false
     }
     fn stop_waiting_for_cursor_position(&mut self) -> bool {
         false

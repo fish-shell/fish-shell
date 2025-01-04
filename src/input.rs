@@ -3,12 +3,14 @@ use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
+use crate::input_common::CursorPositionBlockingWait::MouseLeft;
 use crate::input_common::{
-    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, ReadlineCmd,
-    WaitingForCursorPosition, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData, InputEventQueuer,
+    ReadlineCmd, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
+use crate::output::Outputter;
 use crate::proc::job_reap;
 use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
@@ -456,19 +458,30 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn is_waiting_for_cursor_position(&self) -> bool {
-        self.waiting_for_cursor_position.is_some()
+    fn cursor_position_wait(&self) -> &CursorPositionWait {
+        &self.cursor_position_wait
     }
-    fn cursor_position_wait_reason(&self) -> &Option<WaitingForCursorPosition> {
-        &self.waiting_for_cursor_position
+    fn is_blocked_waiting_for_cursor_position(&self) -> bool {
+        matches!(self.cursor_position_wait, CursorPositionWait::Blocking(_))
+    }
+    fn cursor_position_reporting_supported(&mut self) {
+        assert!(self.cursor_position_wait == CursorPositionWait::InitialFeatureProbe);
+        self.cursor_position_wait = CursorPositionWait::None;
     }
     fn stop_waiting_for_cursor_position(&mut self) -> bool {
-        self.waiting_for_cursor_position.take().is_some()
+        if !self.is_blocked_waiting_for_cursor_position() {
+            return false;
+        }
+        self.cursor_position_wait = CursorPositionWait::None;
+        true
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {
         FLOG!(reader, "Mouse left click", position);
-        self.request_cursor_position(WaitingForCursorPosition::MouseLeft(position));
+        self.request_cursor_position(
+            &mut Outputter::stdoutput().borrow_mut(),
+            CursorPositionWait::Blocking(MouseLeft(position)),
+        );
     }
 }
 

@@ -78,9 +78,10 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::terminal_protocols_disable_ifn;
+use crate::input_common::CursorPositionBlockingWait;
+use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
-use crate::input_common::WaitingForCursorPosition;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
 use crate::input_common::KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY;
 use crate::input_common::{
@@ -505,7 +506,7 @@ pub struct ReaderData {
     /// The representation of the current screen contents.
     screen: Screen,
 
-    pub waiting_for_cursor_position: Option<WaitingForCursorPosition>,
+    pub cursor_position_wait: CursorPositionWait,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1158,7 +1159,7 @@ impl ReaderData {
             first_prompt: true,
             last_flash: Default::default(),
             screen: Screen::new(),
-            waiting_for_cursor_position: None,
+            cursor_position_wait: CursorPositionWait::None,
             input_data,
             queued_repaint: false,
             history,
@@ -1376,11 +1377,12 @@ impl ReaderData {
 
     pub fn request_cursor_position(
         &mut self,
-        waiting_for_cursor_position: WaitingForCursorPosition,
+        out: &mut Outputter,
+        cursor_position_wait: CursorPositionWait,
     ) {
-        assert!(self.waiting_for_cursor_position.is_none());
-        self.waiting_for_cursor_position = Some(waiting_for_cursor_position);
-        self.screen.write_bytes(b"\x1b[6n");
+        assert!(self.cursor_position_wait == CursorPositionWait::None);
+        self.cursor_position_wait = cursor_position_wait;
+        let _ = out.write(b"\x1b[6n");
     }
 
     pub fn mouse_left_click(&mut self, cursor: ViewportPosition, click_position: ViewportPosition) {
@@ -2087,8 +2089,13 @@ impl<'a> Reader<'a> {
         static queried: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
         if !queried.load() {
             queried.store(true);
+            let mut out = Outputter::stdoutput().borrow_mut();
+            out.begin_buffering();
             // Query for kitty keyboard protocol support.
-            let _ = write_loop(&STDOUT_FILENO, KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
+            let _ = out.write(KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
+            // Query for cursor position reporting support.
+            zelf.request_cursor_position(&mut out, CursorPositionWait::InitialFeatureProbe);
+            out.end_buffering();
         }
 
         // HACK: Don't abandon line for the first prompt, because
@@ -3618,36 +3625,47 @@ impl<'a> Reader<'a> {
                 el.end_edit_group();
             }
             rl::ClearScreenAndRepaint => {
-                self.parser.libdata_mut().is_repaint = true;
-                let clear = screen_clear();
-                if !clear.is_empty() {
-                    // Clear the screen if we can.
-                    // This is subtle: We first clear, draw the old prompt,
-                    // and *then* reexecute the prompt and overdraw it.
-                    // This removes the flicker,
-                    // while keeping the prompt up-to-date.
-                    Outputter::stdoutput().borrow_mut().write_wstr(&clear);
-                    self.screen.reset_line(/*repaint_prompt=*/ true);
-                    self.layout_and_repaint(L!("readline"));
-                }
-                self.exec_prompt();
-                self.screen.reset_line(/*repaint_prompt=*/ true);
-                self.layout_and_repaint(L!("readline"));
-                self.force_exec_prompt_and_repaint = false;
-                self.parser.libdata_mut().is_repaint = false;
+                self.clear_screen_and_repaint();
             }
-            rl::ScrollbackPush => {
-                if self.waiting_for_cursor_position.is_some() {
+            rl::ScrollbackPush => match self.cursor_position_wait() {
+                CursorPositionWait::None => self.request_cursor_position(
+                    &mut Outputter::stdoutput().borrow_mut(),
+                    CursorPositionWait::Blocking(CursorPositionBlockingWait::ScrollbackPush),
+                ),
+                CursorPositionWait::InitialFeatureProbe => self.clear_screen_and_repaint(),
+                CursorPositionWait::Blocking(_) => {
                     // TODO: re-queue it I guess.
-                    return;
+                    FLOG!(
+                        reader,
+                        "Ignoring scrollback-push received while still waiting for Cursor Position Report"
+                    );
                 }
-                self.request_cursor_position(WaitingForCursorPosition::ScrollbackPush);
-            }
+            },
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc
                 // panic!("should have been handled by inputter_t::readch");
             }
         }
+    }
+
+    fn clear_screen_and_repaint(&mut self) {
+        self.parser.libdata_mut().is_repaint = true;
+        let clear = screen_clear();
+        if !clear.is_empty() {
+            // Clear the screen if we can.
+            // This is subtle: We first clear, draw the old prompt,
+            // and *then* reexecute the prompt and overdraw it.
+            // This removes the flicker,
+            // while keeping the prompt up-to-date.
+            Outputter::stdoutput().borrow_mut().write_wstr(&clear);
+            self.screen.reset_line(/*repaint_prompt=*/ true);
+            self.layout_and_repaint(L!("readline"));
+        }
+        self.exec_prompt();
+        self.screen.reset_line(/*repaint_prompt=*/ true);
+        self.layout_and_repaint(L!("readline"));
+        self.force_exec_prompt_and_repaint = false;
+        self.parser.libdata_mut().is_repaint = false;
     }
 
     fn backward_token(&mut self) -> Option<usize> {

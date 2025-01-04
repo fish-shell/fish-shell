@@ -65,18 +65,18 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         let cmd = args[0];
         let Some(pattern) = args.get(*optind).copied() else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         let Some(replacement) = args.get(*optind).copied() else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT1, cmd, 1, 2);
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         };
         *optind += 1;
 
         self.pattern = pattern;
         self.replacement = replacement;
-        return STATUS_CMD_OK;
+        return Some(STATUS_CMD_OK);
     }
 
     fn handle(
@@ -92,7 +92,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             Ok(x) => x,
             Err(e) => {
                 e.print_error(args, streams);
-                return STATUS_INVALID_ARGS;
+                return Some(STATUS_INVALID_ARGS);
             }
         };
 
@@ -108,7 +108,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
                         cmd,
                         e.error_message()
                     );
-                    return STATUS_INVALID_ARGS;
+                    return Some(STATUS_INVALID_ARGS);
                 }
             };
             replace_count += replaced as usize;
@@ -121,20 +121,20 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
             }
 
             if self.quiet && replace_count > 0 {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
             if self
                 .max_matches
                 .is_some_and(|max| max.get() == replace_count)
             {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
         }
 
         if replace_count > 0 {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         }
     }
 }

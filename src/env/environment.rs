@@ -4,6 +4,7 @@ use super::environment_impl::{
 };
 use super::{ConfigPaths, ElectricVar};
 use crate::abbrs::{abbrs_get_set, Abbreviation, Position};
+use crate::builtins::shared::{StatusError, StatusOk};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
@@ -63,6 +64,18 @@ impl From<EnvStackSetResult> for c_int {
             EnvStackSetResult::Scope => 2,
             EnvStackSetResult::Invalid => 3,
             EnvStackSetResult::NotFound => 4,
+        }
+    }
+}
+
+impl From<EnvStackSetResult> for Result<StatusOk, StatusError> {
+    fn from(r: EnvStackSetResult) -> Self {
+        match r {
+            EnvStackSetResult::Ok => Ok(StatusOk::OK),
+            EnvStackSetResult::Perm => Err(StatusError::STATUS_ENV_STACK_PERM),
+            EnvStackSetResult::Scope => Err(StatusError::STATUS_ENV_STACK_SCOPE),
+            EnvStackSetResult::Invalid => Err(StatusError::STATUS_ENV_STACK_INVALID),
+            EnvStackSetResult::NotFound => Err(StatusError::STATUS_ENV_STACK_NOT_FOUND),
         }
     }
 }

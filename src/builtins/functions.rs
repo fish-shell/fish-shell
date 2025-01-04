@@ -74,7 +74,7 @@ fn parse_cmd_opts<'args>(
     argv: &mut [&'args wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     let cmd = L!("functions");
     let print_hints = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
@@ -99,11 +99,11 @@ fn parse_cmd_opts<'args>(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             other => {
                 panic!("Unexpected retval from WGetopter: {}", other);
@@ -112,24 +112,30 @@ fn parse_cmd_opts<'args>(
     }
 
     *optind = w.wopt_index;
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
-pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
-    let cmd = args[0];
+pub fn functions(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
+    let cmd = match args.get(0) {
+        Some(cmd) => *cmd,
+        None => return Err(StatusError::STATUS_INVALID_ARGS),
+    };
 
     let mut opts = FunctionsCmdOpts::default();
     let mut optind = 0;
-    let retval = parse_cmd_opts(&mut opts, &mut optind, args, parser, streams);
-    if retval != STATUS_CMD_OK {
-        return retval;
-    }
+
+    parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
+
     // Shadow our args with the positionals
     let args = &args[optind..];
 
     if opts.print_help {
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let describe = opts.description.is_some();
@@ -141,13 +147,13 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
     {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.report_metadata && opts.no_metadata {
         streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if opts.erase {
@@ -155,7 +161,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             function::remove(arg);
         }
         // Historical - this never failed?
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if let Some(desc) = opts.description {
@@ -165,7 +171,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
         let current_func = args[0];
 
@@ -176,11 +182,11 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 current_func
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
 
         function::set_desc(current_func, desc.into(), parser);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.report_metadata {
@@ -197,7 +203,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 1,
                 args.len()
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
         let props = function::get_props_autoload(args[0], parser);
         let def_file = if let Some(p) = props.as_ref() {
@@ -252,7 +258,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             streams.out.appendln(desc);
         }
         // Historical - this never failed?
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.handlers {
@@ -264,14 +270,14 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n",
                 cmd
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
         event::print(streams, opts.handlers_type.unwrap_or(L!("")));
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.query && args.is_empty() {
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     if opts.list || args.is_empty() {
@@ -295,7 +301,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 streams.out.appendln(name);
             }
         }
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.copy {
@@ -305,7 +311,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
         let current_func = args[0];
         let new_func = args[1];
@@ -317,7 +323,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 current_func
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
@@ -327,7 +333,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 new_func
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         if function::exists(new_func, parser) {
@@ -338,15 +344,15 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 current_func
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
         if function::copy(current_func, new_func.into(), parser) {
-            return STATUS_CMD_OK;
+            return Ok(StatusOk::OK);
         }
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
-    let mut res: c_int = STATUS_CMD_OK.unwrap();
+    let mut res: c_int = 0;
 
     let mut first = true;
     for arg in args.iter() {
@@ -425,5 +431,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         first = false;
     }
 
-    return Some(res);
+    match res {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }

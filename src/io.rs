@@ -668,7 +668,7 @@ impl OutputStream {
         match self {
             OutputStream::Fd(stream) => stream.flush_and_check_error(),
             OutputStream::Buffered(stream) => stream.flush_and_check_error(),
-            OutputStream::Null | OutputStream::String(_) => STATUS_CMD_OK.unwrap(),
+            OutputStream::Null | OutputStream::String(_) => STATUS_CMD_OK,
         }
     }
 
@@ -794,7 +794,6 @@ impl FdOutputStream {
         } else {
             STATUS_CMD_OK
         }
-        .unwrap()
     }
 }
 
@@ -839,7 +838,7 @@ impl BufferedOutputStream {
     }
     fn flush_and_check_error(&mut self) -> libc::c_int {
         if self.buffer.discarded() {
-            return STATUS_READ_TOO_MUCH.unwrap();
+            return STATUS_READ_TOO_MUCH;
         }
         0
     }

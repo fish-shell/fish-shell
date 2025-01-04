@@ -69,17 +69,17 @@ trait StringSubCommand<'args> {
                         args_read[w.wopt_index - 1],
                         false,
                     );
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(Some(STATUS_INVALID_ARGS));
                 }
                 '?' => {
                     string_unknown_option(parser, streams, cmd, args_read[w.wopt_index - 1]);
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(Some(STATUS_INVALID_ARGS));
                 }
                 c => {
                     let retval = self.parse_opt(cmd, c, w.woptarg);
                     if let Err(e) = retval {
                         e.print_error(&args_read, parser, streams, w.woptarg, w.wopt_index);
-                        return Err(e.retval());
+                        return Err(Some(e.retval()));
                     }
                 }
             }
@@ -96,7 +96,7 @@ trait StringSubCommand<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Option<c_int> {
-        STATUS_CMD_OK
+        Some(STATUS_CMD_OK)
     }
 
     /// Perform the business logic of the command.
@@ -117,7 +117,7 @@ trait StringSubCommand<'args> {
         if args.len() >= 3 && (args[2] == "-h" || args[2] == "--help") {
             let string_dash_subcmd = WString::from(args[0]) + L!("-") + args[1];
             builtin_print_help(parser, streams, &string_dash_subcmd);
-            return STATUS_CMD_OK;
+            return Some(STATUS_CMD_OK);
         }
 
         let args = &mut args[1..];
@@ -128,13 +128,13 @@ trait StringSubCommand<'args> {
         };
 
         let retval = self.take_args(&mut optind, args, streams);
-        if retval != STATUS_CMD_OK {
+        if retval != Some(STATUS_CMD_OK) {
             return retval;
         }
 
         if streams.stdin_is_directly_redirected && args.len() > optind {
             string_error!(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, args[0]);
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         }
 
         return self.handle(parser, streams, &mut optind, args);
@@ -228,7 +228,7 @@ impl StringError {
         }
     }
 
-    fn retval(&self) -> Option<c_int> {
+    fn retval(&self) -> c_int {
         STATUS_INVALID_ARGS
     }
 }
@@ -284,7 +284,11 @@ fn arguments<'iter, 'args>(
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn string(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
     let argc = args.len();
 
@@ -293,17 +297,17 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MISSING_SUBCMD, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     if args[1] == "-h" || args[1] == "--help" {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let subcmd_name = args[1];
 
-    match subcmd_name.to_string().as_str() {
+    let result = match subcmd_name.to_string().as_str() {
         "collect" => collect::Collect::default().run(parser, streams, args),
         "escape" => escape::Escape::default().run(parser, streams, args),
         "join" => join::Join::default().run(parser, streams, args),
@@ -342,7 +346,9 @@ pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_INVALID_SUBCMD, cmd, args[0]));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
-    }
+    };
+
+    Err(StatusError::from(result.unwrap()))
 }

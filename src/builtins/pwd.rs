@@ -12,7 +12,11 @@ const long_options: &[WOption] = &[
     wopt(L!("physical"), NoArgument, 'P'),
 ];
 
-pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn pwd(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;
@@ -23,11 +27,11 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
             'P' => resolve_symlinks = true,
             'h' => {
                 builtin_print_help(parser, streams, cmd);
-                return STATUS_CMD_OK;
+                return Ok(StatusOk::OK);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, argv[w.wopt_index - 1], false);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             _ => panic!("unexpected retval from WGetopter"),
         }
@@ -37,7 +41,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_ARG_COUNT1, cmd, 0, argc - 1));
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     let mut pwd = WString::new();
@@ -53,12 +57,12 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opti
                 cmd,
                 errno().to_string()
             ));
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
     }
     if pwd.is_empty() {
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
     streams.out.appendln(pwd);
-    return STATUS_CMD_OK;
+    Ok(StatusOk::OK)
 }

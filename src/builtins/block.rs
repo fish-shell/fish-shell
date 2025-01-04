@@ -27,7 +27,7 @@ fn parse_options(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), StatusError> {
     let cmd = args[0];
 
     const SHORT_OPTS: &wstr = L!(":eghl");
@@ -57,11 +57,11 @@ fn parse_options(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 builtin_unknown_option(parser, streams, cmd, args[w.wopt_index - 1], false);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             _ => {
                 panic!("unexpected retval from WGetopter");
@@ -73,18 +73,18 @@ fn parse_options(
 }
 
 /// The block builtin, used for temporarily blocking events.
-pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn block(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
 
-    let opts = match parse_options(args, parser, streams) {
-        Ok((opts, _)) => opts,
-        Err(err @ Some(_)) if err != STATUS_CMD_OK => return err,
-        Err(err) => panic!("Illogical exit code from parse_options(): {err:?}"),
-    };
+    let (opts, _) = parse_options(args, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     if opts.erase {
@@ -93,17 +93,17 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
                 "%ls: Can not specify scope when removing block\n",
                 cmd
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
             streams
                 .err
                 .append(wgettext_fmt!("%ls: No blocks defined\n", cmd));
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         }
         parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let mut block_idx = 0;
@@ -144,5 +144,5 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Op
         parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
     }
 
-    return STATUS_CMD_OK;
+    return Ok(StatusOk::OK);
 }

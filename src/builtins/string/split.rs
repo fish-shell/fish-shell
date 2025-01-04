@@ -147,15 +147,15 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
         streams: &mut IoStreams,
     ) -> Option<libc::c_int> {
         if self.is_split0 {
-            return STATUS_CMD_OK;
+            return Some(STATUS_CMD_OK);
         }
         let Some(arg) = args.get(*optind).copied() else {
             string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         };
         *optind += 1;
         self.sep = arg;
-        return STATUS_CMD_OK;
+        return Some(STATUS_CMD_OK);
     }
 
     fn handle(
@@ -171,7 +171,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
                 args[0],
                 wgettext!("--allow-empty is only valid with --fields")
             ));
-            return STATUS_INVALID_ARGS;
+            return Some(STATUS_INVALID_ARGS);
         }
 
         let sep = self.sep;
@@ -216,7 +216,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
 
             // If we're quiet, we return early if we've found something to split.
             if self.quiet && splits.len() > 1 {
-                return STATUS_CMD_OK;
+                return Some(STATUS_CMD_OK);
             }
             split_count += splits.len();
             arg_count += 1;
@@ -225,9 +225,9 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
 
         if self.quiet {
             return if split_count > arg_count {
-                STATUS_CMD_OK
+                Some(STATUS_CMD_OK)
             } else {
-                STATUS_CMD_ERROR
+                Some(STATUS_CMD_ERROR)
             };
         }
 
@@ -251,7 +251,7 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
                     for field in self.fields.iter() {
                         // we already have checked the start
                         if *field >= splits.len() {
-                            return STATUS_CMD_ERROR;
+                            return Some(STATUS_CMD_ERROR);
                         }
                     }
                 }
@@ -273,9 +273,9 @@ impl<'args> StringSubCommand<'args> for Split<'args> {
 
         // We split something if we have more split values than args.
         return if split_count > arg_count {
-            STATUS_CMD_OK
+            Some(STATUS_CMD_OK)
         } else {
-            STATUS_CMD_ERROR
+            Some(STATUS_CMD_ERROR)
         };
     }
 }

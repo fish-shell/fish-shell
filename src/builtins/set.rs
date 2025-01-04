@@ -96,7 +96,7 @@ impl Options {
         args: &mut [&wstr],
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<(Options, usize), Option<c_int>> {
+    ) -> Result<Option<(Options, usize)>, StatusError> {
         /// Values used for long-only options.
         const PATH_ARG: char = 1 as char;
         const UNPATH_ARG: char = 2 as char;
@@ -161,7 +161,7 @@ impl Options {
                 }
                 ':' => {
                     builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], false);
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 '?' => {
                     // Specifically detect `set -o` because people might be bringing over bashisms.
@@ -186,7 +186,7 @@ impl Options {
                     }
 
                     builtin_unknown_option(parser, streams, cmd, args[optind - 1], false);
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
                 _ => {
                     panic!("unexpected retval from WGetopter");
@@ -198,12 +198,12 @@ impl Options {
 
         if opts.print_help {
             builtin_print_help(parser, streams, cmd);
-            return Err(STATUS_CMD_OK);
+            return Ok(None);
         }
 
         Self::validate(&opts, cmd, args, optind, parser, streams)?;
 
-        Ok((opts, optind))
+        Ok(Some((opts, optind)))
     }
 
     fn validate(
@@ -213,19 +213,19 @@ impl Options {
         optind: usize,
         parser: &Parser,
         streams: &mut IoStreams,
-    ) -> Result<(), Option<c_int>> {
+    ) -> Result<(), StatusError> {
         // Can't query and erase or list.
         if opts.query && (opts.erase || opts.list) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // We can't both list and erase variables.
         if opts.erase && opts.list {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one scope...
@@ -239,14 +239,14 @@ impl Options {
         {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_GLOCAL, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one export status.
         if opts.exportv && opts.unexport {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_EXPUNEXP, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Variables can only have one path status.
@@ -255,14 +255,14 @@ impl Options {
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_PATHUNPATH, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Trying to erase and (un)export at the same time doesn't make sense.
         if opts.erase && (opts.exportv || opts.unexport) {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // The --show flag cannot be combined with any other flag.
@@ -277,7 +277,7 @@ impl Options {
         {
             streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         if args.len() == optind && opts.erase {
@@ -285,7 +285,7 @@ impl Options {
                 .err
                 .append(wgettext_fmt!(BUILTIN_ERR_MISSING, cmd, L!("--erase")));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return Err(STATUS_INVALID_ARGS);
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         Ok(())
@@ -530,7 +530,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 
 /// Print the names of all environment variables in the scope. It will include the values unless the
 /// `set --names` flag was used.
-fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> Option<c_int> {
+fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> Result<StatusOk, StatusError> {
     let names_only = opts.list;
     let mut names = parser.vars().get_names(opts.scope());
     names.sort();
@@ -573,7 +573,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> Option<c_in
         streams.out.append(out);
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 fn query(
@@ -582,20 +582,20 @@ fn query(
     parser: &Parser,
     streams: &mut IoStreams,
     args: &[&wstr],
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     let mut retval = 0;
     let scope = opts.scope();
 
     // No variables given, this is an error.
     // 255 is the maximum return code we allow.
     if args.is_empty() {
-        return Some(255);
+        return Err(StatusError::STATUS_NO_VARIABLES_GIVEN);
     }
 
     for arg in args {
         let Some(split) = split_var_and_indexes(arg, scope, parser.vars(), streams) else {
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_CMD_ERROR;
+            return Err(StatusError::STATUS_CMD_ERROR);
         };
 
         if split.indexes.is_empty() {
@@ -614,7 +614,10 @@ fn query(
         }
     }
 
-    Some(retval)
+    match retval {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }
 
 fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &dyn Environment) {
@@ -682,7 +685,12 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
 }
 
 /// Show mode. Show information about the named variable(s).
-fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) -> Option<c_int> {
+fn show(
+    cmd: &wstr,
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &[&wstr],
+) -> Result<StatusOk, StatusError> {
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
@@ -716,7 +724,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, arg));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
 
             if arg.contains('[') {
@@ -725,7 +733,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
                     cmd
                 ));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             }
 
             show_scope(arg, EnvMode::LOCAL, streams, vars);
@@ -745,7 +753,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
         }
     }
 
-    STATUS_CMD_OK
+    Ok(StatusOk::OK)
 }
 
 fn erase(
@@ -754,8 +762,8 @@ fn erase(
     parser: &Parser,
     streams: &mut IoStreams,
     args: &[&wstr],
-) -> Option<c_int> {
-    let mut ret = STATUS_CMD_OK;
+) -> Result<StatusOk, StatusError> {
+    let mut ret = Ok(StatusOk::OK);
     let scopes = opts.scope();
     // `set -e` is allowed to be called with multiple scopes.
     for bit in (0..).take_while(|bit| 1 << bit <= EnvMode::USER.bits()) {
@@ -766,7 +774,7 @@ fn erase(
         for arg in args {
             let Some(split) = split_var_and_indexes(arg, scope, parser.vars(), streams) else {
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_CMD_ERROR;
+                return Err(StatusError::STATUS_CMD_ERROR);
             };
 
             if !valid_var_name(split.varname) {
@@ -774,7 +782,7 @@ fn erase(
                     .err
                     .append(wgettext_fmt!(BUILTIN_ERR_VARNAME, cmd, split.varname));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             let retval;
             if split.indexes.is_empty() {
@@ -792,7 +800,7 @@ fn erase(
             } else {
                 // remove just the specified indexes of the var
                 let Some(var) = split.var else {
-                    return STATUS_CMD_ERROR;
+                    return Err(StatusError::STATUS_CMD_ERROR);
                 };
                 let result = erased_at_indexes(var.as_list().to_owned(), split.indexes);
                 retval = env_set_reporting_errors(
@@ -809,21 +817,11 @@ fn erase(
             // Set $status to the last error value.
             // This is cheesy, but I don't expect this to be checked often.
             if retval != EnvStackSetResult::Ok {
-                ret = env_result_to_status(retval);
+                ret = retval.into();
             }
         }
     }
     ret
-}
-
-fn env_result_to_status(retval: EnvStackSetResult) -> Option<c_int> {
-    Some(match retval {
-        EnvStackSetResult::Ok => 0,
-        EnvStackSetResult::Perm => 1,
-        EnvStackSetResult::Scope => 2,
-        EnvStackSetResult::Invalid => 3,
-        EnvStackSetResult::NotFound => 4,
-    })
 }
 
 /// Return a list of new values for the variable `varname`, respecting the `opts`.
@@ -897,16 +895,15 @@ fn set_internal(
     cmd: &wstr,
     opts: &Options,
     parser: &Parser,
-
     streams: &mut IoStreams,
     argv: &[&wstr],
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     if argv.is_empty() {
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1));
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     let scope = opts.scope();
@@ -915,7 +912,7 @@ fn set_internal(
 
     let Some(split) = split_var_and_indexes(var_expr, scope, parser.vars(), streams) else {
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     };
 
     // Is the variable valid?
@@ -932,7 +929,7 @@ fn set_internal(
             ));
         }
         builtin_print_error_trailer(parser, streams.err, cmd);
-        return STATUS_INVALID_ARGS;
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
@@ -944,7 +941,7 @@ fn set_internal(
                     .err
                     .append(wgettext_fmt!("%ls: array index out of bounds\n", cmd));
                 builtin_print_error_trailer(parser, streams.err, cmd);
-                return STATUS_INVALID_ARGS;
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
         }
         // Append and prepend are disallowed.
@@ -954,7 +951,7 @@ fn set_internal(
                 cmd
             ));
             builtin_print_error_trailer(parser, streams.err, cmd);
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
 
         // Argument count and index count must agree.
@@ -965,7 +962,7 @@ fn set_internal(
                 split.indexes.len(),
                 argv.len()
             ));
-            return STATUS_INVALID_ARGS;
+            return Err(StatusError::STATUS_INVALID_ARGS);
         }
     }
 
@@ -984,15 +981,20 @@ fn set_internal(
     if retval == EnvStackSetResult::Ok {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);
     }
-    env_result_to_status(retval)
+
+    retval.into()
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
-pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
+pub fn set(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = args[0];
-    let (opts, optind) = match Options::parse(cmd, args, parser, streams) {
-        Ok(res) => res,
-        Err(err) => return err,
+    let (opts, optind) = match Options::parse(cmd, args, parser, streams)? {
+        Some((opts, optind)) => (opts, optind),
+        None => return Ok(StatusOk::OK),
     };
 
     let args = &args[optind..];
@@ -1011,8 +1013,8 @@ pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Opti
         set_internal(cmd, &opts, parser, streams, args)
     };
 
-    if retval == STATUS_CMD_OK && opts.preserve_failure_exit_status {
-        return None;
+    if retval.is_ok() && opts.preserve_failure_exit_status {
+        return Ok(StatusOk::OK_PRESERVE_FAILURE);
     }
 
     return retval;

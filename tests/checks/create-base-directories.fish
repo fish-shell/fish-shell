@@ -10,7 +10,8 @@ $fish -c ''
 
 # Check that existing directories kept their permissions, and new directories
 # have the right permissions according to the XDG Base Directory Specification.
-ls -ld $dir/old $dir/old/new $dir/old/new/fish | awk '{print $1}'
+# depending on your environment, there might be a '.' printed at the end of the permissions
+ls -ld $dir/old $dir/old/new $dir/old/new/fish | awk '{gsub(/\.$/, "", $1); print $1}'
 # CHECK: drwxr-xr-x
 # CHECK: drwx------
 # CHECK: drwx------

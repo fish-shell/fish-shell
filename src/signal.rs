@@ -426,7 +426,7 @@ fn equals_ascii_icase(left: &wstr, right: &wstr) -> bool {
         return false;
     }
     for (lc, rc) in left.chars().zip(right.chars()) {
-        if lc.to_ascii_lowercase() != rc.to_ascii_lowercase() {
+        if !lc.eq_ignore_ascii_case(&rc) {
             return false;
         }
     }

@@ -199,7 +199,7 @@ impl EnvVar {
     }
 
     /// Returns a copy of the variable with new values.
-    pub fn setting_vals(&mut self, values: Vec<WString>) -> Self {
+    pub fn setting_vals(&self, values: Vec<WString>) -> Self {
         EnvVar {
             values: values.into(),
             flags: self.flags,
@@ -207,7 +207,7 @@ impl EnvVar {
     }
 
     /// Returns a copy of the variable with the export flag changed.
-    pub fn setting_exports(&mut self, export: bool) -> Self {
+    pub fn setting_exports(&self, export: bool) -> Self {
         let mut flags = self.flags;
         flags.set(EnvVarFlags::EXPORT, export);
         EnvVar {
@@ -217,7 +217,7 @@ impl EnvVar {
     }
 
     /// Returns a copy of the variable with the path variable flag changed.
-    pub fn setting_pathvar(&mut self, pathvar: bool) -> Self {
+    pub fn setting_pathvar(&self, pathvar: bool) -> Self {
         let mut flags = self.flags;
         flags.set(EnvVarFlags::PATHVAR, pathvar);
         EnvVar {

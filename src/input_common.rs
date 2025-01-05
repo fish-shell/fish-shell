@@ -5,7 +5,7 @@ use crate::common::{
     str2wcstring, write_loop, WSL,
 };
 use crate::env::{EnvStack, Environment};
-use crate::fd_readable_set::FdReadableSet;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FLOG};
 use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
@@ -334,9 +334,9 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
 
         // Here's where we call select().
         let select_res = fdset.check_readable(if blocking {
-            FdReadableSet::kNoTimeout
+            Timeout::Forever
         } else {
-            0
+            Timeout::ZERO
         });
         if select_res < 0 {
             let err = errno::errno().0;

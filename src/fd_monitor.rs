@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::common::exit_without_destructors;
-use crate::fd_readable_set::FdReadableSet;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::AutoCloseFd;
 use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
@@ -136,7 +136,11 @@ impl FdEventSignaller {
     /// but guarantees that the next call to wait() will not block.
     /// Return true if readable, false if not readable, or not interrupted by a signal.
     pub fn poll(&self, wait: bool /* = false */) -> bool {
-        let timeout = if wait { FdReadableSet::kNoTimeout } else { 0 };
+        let timeout = if wait {
+            Timeout::Forever
+        } else {
+            Timeout::ZERO
+        };
         FdReadableSet::is_fd_readable(self.read_fd(), timeout)
     }
 
@@ -383,8 +387,8 @@ impl BackgroundFdMonitor {
             drop(data);
             let ret = fds.check_readable(
                 timeout
-                    .map(|duration| duration.as_micros() as u64)
-                    .unwrap_or(FdReadableSet::kNoTimeout),
+                    .map(|d| Timeout::Duration(d))
+                    .unwrap_or(Timeout::Forever),
             );
             if ret < 0 && !matches!(errno().0, libc::EINTR | libc::EBADF) {
                 // Surprising error

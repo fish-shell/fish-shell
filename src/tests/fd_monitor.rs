@@ -13,7 +13,7 @@ use std::time::Duration;
 use errno::errno;
 
 use crate::fd_monitor::{FdEventSignaller, FdMonitor};
-use crate::fd_readable_set::FdReadableSet;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{make_autoclose_pipes, AutoCloseFd, AutoClosePipes};
 use crate::tests::prelude::*;
 
@@ -182,8 +182,8 @@ where
 
         // Timeout after 500 msec.
         // macOS will eagerly return EBADF if the fd is closed; Linux will hit the timeout.
-        let timeout_usec = 500 * 1_000;
-        let ret = fd_set.check_readable(timeout_usec);
+        let timeout = Timeout::Duration(Duration::from_millis(500));
+        let ret = fd_set.check_readable(timeout);
         if ret < 0 {
             Err(errno().0)
         } else {

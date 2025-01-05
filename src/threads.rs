@@ -496,7 +496,9 @@ pub fn iothread_port() -> i32 {
 }
 
 pub fn iothread_service_main_with_timeout(ctx: &mut Reader, timeout: Duration) {
-    if crate::fd_readable_set::is_fd_readable(iothread_port(), timeout.as_millis() as u64) {
+    use crate::fd_readable_set::Timeout;
+
+    if crate::fd_readable_set::is_fd_readable(iothread_port(), Timeout::Duration(timeout)) {
         iothread_service_main(ctx);
     }
 }

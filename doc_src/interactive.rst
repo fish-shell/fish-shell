@@ -327,7 +327,11 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-d` or :kbd:`ctrl-delete` moves the next word to the :ref:`killring`.
 
+- :kbd:`alt-d` lists the directory history if the command line is empty.
+
 - :kbd:`alt-delete` moves the next argument to the :ref:`killring`.
+
+- :kbd:`shift-delete` removes the current history item or autosuggestion from the command history.
 
 - :kbd:`alt-h` (or :kbd:`f1`) shows the manual page for the current command, if one exists.
 
@@ -382,7 +386,7 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`ctrl-z`, :kbd:`ctrl-_` (:kbd:`ctrl-/` on some terminals) undo the most recent edit of the line.
 
-- :kbd:`alt-/` reverts the most recent undo.
+- :kbd:`alt-/` or :kbd:`ctrl-shift-z` reverts the most recent undo.
 
 - :kbd:`ctrl-r` opens the history in a pager. This will show history entries matching the search, a few at a time. Pressing :kbd:`ctrl-r` again will search older entries, pressing :kbd:`ctrl-s` (that otherwise toggles pager search) will go to newer entries. The search bar will always be selected.
 

@@ -24,7 +24,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering, Ordering::Relaxed};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -437,13 +437,7 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 
-#[repr(u8)]
-enum Capability {
-    Unknown,
-    Supported,
-    NotSupported,
-}
-static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 macro_rules! kitty_progressive_enhancements {
     () => {
@@ -451,7 +445,7 @@ macro_rules! kitty_progressive_enhancements {
     };
 }
 
-pub const KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY: &[u8] = b"\x1b[?u\x1b[5n";
+pub const KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY: &[u8] = b"\x1b[?u";
 
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -500,7 +494,7 @@ pub fn terminal_protocols_enable_ifn() {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
-    } else if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) != Capability::Supported as _ {
+    } else if !KITTY_KEYBOARD_SUPPORTED.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
     } else {
         concat!(
@@ -524,7 +518,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     }
     let sequences = if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
-    } else if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) != Capability::Supported as _ {
+    } else if !KITTY_KEYBOARD_SUPPORTED.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else {
         concat!(
@@ -1102,7 +1096,7 @@ pub trait InputEventQueuer {
                         reader,
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
-                    KITTY_KEYBOARD_SUPPORTED.store(Capability::Supported as _, Relaxed);
+                    KITTY_KEYBOARD_SUPPORTED.store(true);
                     if !IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() && !IN_ITERM_PRE_CSI_U.load() {
                         let _ = write_loop(
                             &STDOUT_FILENO,
@@ -1159,16 +1153,6 @@ pub trait InputEventQueuer {
             }
             b'O' => {
                 self.push_front(CharEvent::Implicit(ImplicitEvent::FocusOut));
-                return None;
-            }
-            b'n' => {
-                if KITTY_KEYBOARD_SUPPORTED.load(Relaxed) == Capability::Unknown as _ {
-                    FLOG!(
-                        reader,
-                        "Did not receive kitty progressive enhancement flags, marking as unsupported"
-                    );
-                    KITTY_KEYBOARD_SUPPORTED.store(Capability::NotSupported as _, Relaxed);
-                }
                 return None;
             }
             _ => return None,

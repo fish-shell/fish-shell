@@ -1127,7 +1127,7 @@ impl<'s> Highlighter<'s> {
         let mut is_valid_path = false;
         let at_cursor = self
             .cursor
-            .map_or(false, |c| arg.source_range().contains_inclusive(c));
+            .is_some_and(|c| arg.source_range().contains_inclusive(c));
         if cmd_is_cd {
             // Mark this as an error if it's not 'help' and not a valid cd path.
             let mut param = arg.source(self.buff).to_owned();

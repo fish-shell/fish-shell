@@ -602,9 +602,9 @@ impl EnvUniversal {
             let existing = self.vars.get(key);
 
             // See if the value has changed.
-            let old_exports = existing.map_or(false, |v| v.exports());
+            let old_exports = existing.is_some_and(|v| v.exports());
             let export_changed = old_exports != new_entry.exports();
-            let value_changed = existing.map_or(false, |v| v != new_entry);
+            let value_changed = existing.is_some_and(|v| v != new_entry);
             if export_changed || value_changed {
                 self.export_generation += 1;
             }

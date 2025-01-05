@@ -244,7 +244,7 @@ fn parse_util_locate_cmdsub(
 
     if inout_is_quoted
         .as_ref()
-        .map_or(false, |is_quoted| **is_quoted)
+        .is_some_and(|is_quoted| **is_quoted)
         && !input.is_empty()
     {
         pos = process_opening_quote(

@@ -9,19 +9,19 @@
 
 use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
 
-use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
+use libc::{STDIN_FILENO, STDOUT_FILENO, TCSANOW, VEOF, VINTR};
 
 #[allow(unused_imports)]
 use fish::future::IsSomeAnd;
 use fish::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
-    common::{shell_modes, str2wcstring, PROGRAM_NAME},
+    common::{shell_modes, str2wcstring, write_loop, PROGRAM_NAME},
     env::env_init,
     eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer,
+        InputEventQueuer, KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY,
     },
     key::{char_to_symbol, Key},
     panic::panic_handler,
@@ -137,6 +137,7 @@ fn setup_and_process_keys(continuous_mode: bool, verbose: bool) -> i32 {
     unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) };
 
     terminal_protocol_hacks();
+    let _ = write_loop(&STDOUT_FILENO, KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
 
     if continuous_mode {
         eprintf!("\n");

@@ -451,6 +451,8 @@ macro_rules! kitty_progressive_enhancements {
     };
 }
 
+pub const KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY: &[u8] = b"\x1b[?u\x1b[5n";
+
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -468,8 +470,6 @@ pub fn terminal_protocol_hacks() {
                 version < (3, 5, 6)
             }),
     );
-    // Request kitty progressive enhancement value and primary device attribute.
-    let _ = write_loop(&STDOUT_FILENO, b"\x1b[?u\x1b[5n");
 }
 
 fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {

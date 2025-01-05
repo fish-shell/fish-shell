@@ -150,7 +150,10 @@ end
 # CHECK: disown
 # CHECK: fg
 # CHECK: fish_command_not_found
+# CHECK: fish_prompt
+# CHECK: fish_prompt_event
 # CHECK: fish_sigtrap_handler
+# CHECK: fish_title
 # CHECK: frob
 # CHECK: kill
 # CHECK: name1

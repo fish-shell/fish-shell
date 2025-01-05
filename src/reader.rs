@@ -88,6 +88,7 @@ use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
 };
+use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -2095,6 +2096,11 @@ impl<'a> Reader<'a> {
             let _ = out.write(KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
             // Query for cursor position reporting support.
             zelf.request_cursor_position(&mut out, CursorPositionWait::InitialFeatureProbe);
+            let mut xtgettcap = |cap| {
+                let _ = write!(&mut out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
+            };
+            xtgettcap("indn");
+            xtgettcap("cuu");
             out.end_buffering();
         }
 
@@ -3627,20 +3633,26 @@ impl<'a> Reader<'a> {
             rl::ClearScreenAndRepaint => {
                 self.clear_screen_and_repaint();
             }
-            rl::ScrollbackPush => match self.cursor_position_wait() {
-                CursorPositionWait::None => self.request_cursor_position(
-                    &mut Outputter::stdoutput().borrow_mut(),
-                    CursorPositionWait::Blocking(CursorPositionBlockingWait::ScrollbackPush),
-                ),
-                CursorPositionWait::InitialFeatureProbe => self.clear_screen_and_repaint(),
-                CursorPositionWait::Blocking(_) => {
-                    // TODO: re-queue it I guess.
-                    FLOG!(
+            rl::ScrollbackPush => {
+                if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
+                    self.clear_screen_and_repaint();
+                    return;
+                }
+                match self.cursor_position_wait() {
+                    CursorPositionWait::None => self.request_cursor_position(
+                        &mut Outputter::stdoutput().borrow_mut(),
+                        CursorPositionWait::Blocking(CursorPositionBlockingWait::ScrollbackPush),
+                    ),
+                    CursorPositionWait::InitialFeatureProbe => self.clear_screen_and_repaint(),
+                    CursorPositionWait::Blocking(_) => {
+                        // TODO: re-queue it I guess.
+                        FLOG!(
                         reader,
                         "Ignoring scrollback-push received while still waiting for Cursor Position Report"
                     );
+                    }
                 }
-            },
+            }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc
                 // panic!("should have been handled by inputter_t::readch");
@@ -4259,6 +4271,17 @@ fn reader_interactive_init(parser: &Parser) {
         parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some()
             && parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none(),
     );
+}
+
+struct DisplayAsHex<'a>(&'a str);
+
+impl<'a> std::fmt::Display for DisplayAsHex<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for byte in self.0.bytes() {
+            write!(f, "{:x}", byte)?;
+        }
+        Ok(())
+    }
 }
 
 /// Destroy data for interactive use.

@@ -8,6 +8,7 @@
 //! of text around to handle text insertion.
 
 use crate::editable_line::line_at_cursor;
+use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
 use crate::FLOG;
@@ -522,17 +523,14 @@ impl Screen {
             return;
         }
         let zelf = self.scoped_buffer();
-        let Some(term) = term() else {
-            return;
-        };
         let mut out = zelf.outp.borrow_mut();
         let lines_to_scroll = i32::try_from(lines_to_scroll).unwrap();
         // Scroll down.
+        assert!(SCROLL_FORWARD_SUPPORTED.load());
         out.tputs_bytes(format!("\x1b[{}S", lines_to_scroll).as_bytes());
+        assert!(CURSOR_UP_SUPPORTED.load());
         // Reposition cursor.
-        if let Some(up) = term.parm_cursor_up.as_ref() {
-            out.tputs_if_some(&tparm1(up, lines_to_scroll));
-        }
+        out.tputs_bytes(format!("\x1b[{}A", lines_to_scroll).as_bytes());
     }
 
     fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {

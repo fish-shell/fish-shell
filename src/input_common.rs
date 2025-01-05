@@ -437,6 +437,9 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 
+pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 macro_rules! kitty_progressive_enhancements {
@@ -785,6 +788,8 @@ pub trait InputEventQueuer {
         buffer: &mut Vec<u8>,
         have_escape_prefix: &mut bool,
     ) -> Option<Key> {
+        assert!(buffer.len() <= 2);
+        let recursive_invocation = buffer.len() == 2;
         let Some(next) = self.try_readb(buffer) else {
             if !self.paste_is_buffering() {
                 return Some(Key::from_raw(key::Escape));
@@ -792,7 +797,7 @@ pub trait InputEventQueuer {
             return None;
         };
         let invalid = Key::from_raw(key::Invalid);
-        if buffer.len() == 2 && next == b'\x1b' {
+        if recursive_invocation && next == b'\x1b' {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {
@@ -813,6 +818,10 @@ pub trait InputEventQueuer {
         if next == b'O' {
             // potential SS3
             return Some(self.parse_ss3(buffer).unwrap_or(invalid));
+        }
+        if !recursive_invocation && next == b'P' {
+            // potential DCS
+            return Some(self.parse_dcs(buffer).unwrap_or(invalid));
         }
         match canonicalize_control_char(next) {
             Some(mut key) => {
@@ -1238,6 +1247,56 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
+    fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
+        assert!(buffer.len() == 2);
+        let Some(success) = self.try_readb(buffer) else {
+            return Some(alt('P'));
+        };
+        let success = match success {
+            b'0' => false,
+            b'1' => true,
+            _ => return None,
+        };
+        if self.try_readb(buffer)? != b'+' {
+            return None;
+        }
+        if self.try_readb(buffer)? != b'r' {
+            return None;
+        }
+        while self.try_readb(buffer)? != b'\x1b' {}
+        if self.try_readb(buffer)? != b'\\' {
+            return None;
+        }
+        buffer.pop();
+        buffer.pop();
+        if !success {
+            return None;
+        }
+        // \e P 1 r + Pn ST
+        let mut buffer = buffer[5..].splitn(2, |&c| c == b'=');
+        let key = buffer.next().unwrap();
+        let value = buffer.next()?;
+        let key = parse_hex(key)?;
+        let value = parse_hex(value)?;
+        FLOG!(
+            reader,
+            format!(
+                "Received XTGETTCAP response: {}={:?}",
+                str2wcstring(&key),
+                str2wcstring(&value)
+            )
+        );
+        if key == b"indn" && matches!(&value[..], b"\x1b[%p1%dS" | b"\\E[%p1%dS") {
+            SCROLL_FORWARD_SUPPORTED.store(true);
+            FLOG!(reader, "Scroll forward is supported");
+        }
+        if key == b"cuu" && matches!(&value[..], b"\x1b[%p1%dA" | b"\\E[%p1%dA") {
+            CURSOR_UP_SUPPORTED.store(true);
+            FLOG!(reader, "Cursor up is supported");
+        }
+        return None;
+    }
+
     fn readch_timed_esc(&mut self) -> Option<CharEvent> {
         self.readch_timed(WAIT_ON_ESCAPE_MS.load(Ordering::Relaxed))
     }
@@ -1491,4 +1550,25 @@ impl InputEventQueuer for InputEventQueue {
             self.enqueue_interrupt_key();
         }
     }
+}
+
+fn parse_hex(hex: &[u8]) -> Option<Vec<u8>> {
+    if hex.len() % 2 != 0 {
+        return None;
+    }
+    let mut result = vec![0; hex.len() / 2];
+    let mut i = 0;
+    while i < hex.len() {
+        let d1 = char::from(hex[i]).to_digit(16)?;
+        let d2 = char::from(hex[i + 1]).to_digit(16)?;
+        let decoded = u8::try_from(16 * d1 + d2).unwrap();
+        result[i / 2] = decoded;
+        i += 2;
+    }
+    Some(result)
+}
+
+#[test]
+fn test_parse_hex() {
+    assert_eq!(parse_hex(&[b'3', b'd']), Some(vec![61]));
 }

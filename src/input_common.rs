@@ -468,7 +468,7 @@ pub fn terminal_protocol_hacks() {
                 else {
                     return false;
                 };
-                version < (3, 5, 6)
+                version < (99, 5, 6)
             }),
     );
 }
@@ -499,9 +499,7 @@ pub fn terminal_protocols_enable_ifn() {
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
     let sequences = if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() {
         "\x1b[?2004h"
-    } else if IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
-    } else if !KITTY_KEYBOARD_SUPPORTED.load() {
+    } else if !KITTY_KEYBOARD_SUPPORTED.load() || IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
     } else {
         concat!(
@@ -523,9 +521,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
-    let sequences = if IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
-    } else if !KITTY_KEYBOARD_SUPPORTED.load() {
+    let sequences = if !KITTY_KEYBOARD_SUPPORTED.load() || IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else {
         concat!(

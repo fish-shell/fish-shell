@@ -91,6 +91,8 @@ pub enum SearchType {
     Contains,
     /// Search for commands starting with the given string.
     Prefix,
+    /// Search for commands where any line matches the given string.
+    LinePrefix,
     /// Search for commands containing the given glob pattern.
     ContainsGlob,
     /// Search for commands starting with the given glob pattern.
@@ -291,6 +293,10 @@ impl HistoryItem {
                 find_subslice(term.as_slice(), content_to_match.as_slice()).is_some()
             }
             SearchType::Prefix => content_to_match.as_slice().starts_with(term.as_slice()),
+            SearchType::LinePrefix => content_to_match
+                .as_char_slice()
+                .split(|&c| c == '\n')
+                .any(|line| line.starts_with(term.as_char_slice())),
             SearchType::ContainsGlob => {
                 let mut pat = parse_util_unescape_wildcards(term);
                 if !pat.starts_with(ANY_STRING) {

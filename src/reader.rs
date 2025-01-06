@@ -2977,7 +2977,7 @@ impl<'a> Reader<'a> {
                 let is_autosuggestion = self.is_at_autosuggestion();
                 if is_history_search || is_autosuggestion {
                     self.input_data.function_set_status(true);
-                    if is_autosuggestion && !self.autosuggestion.is_from_history {
+                    if is_autosuggestion && !self.autosuggestion.is_whole_item_from_history {
                         self.flash();
                         return;
                     }
@@ -4532,7 +4532,7 @@ struct Autosuggestion {
     icase: bool,
 
     // Whether the autosuggestion is a whole match from history.
-    is_from_history: bool,
+    is_whole_item_from_history: bool,
 }
 
 impl Autosuggestion {
@@ -4573,14 +4573,14 @@ impl AutosuggestionResult {
         search_string_range: Range<usize>,
         text: WString,
         icase: bool,
-        is_from_history: bool,
+        is_whole_item_from_history: bool,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
                 text,
                 search_string_range,
                 icase,
-                is_from_history,
+                is_whole_item_from_history,
             },
             command_line,
             needs_load: vec![],
@@ -4625,25 +4625,33 @@ fn get_autosuggestion_performer(
             parse_util_process_extent(&command_line, cursor_pos, None).start,
         ) == search_string_range
         {
-            let mut searcher =
-                HistorySearch::new_with_type(history, search_string.to_owned(), SearchType::Prefix);
+            let mut searcher = HistorySearch::new_with_type(
+                history,
+                search_string.to_owned(),
+                SearchType::LinePrefix,
+            );
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                // Skip items with newlines because they make terrible autosuggestions.
-                if item.str().contains('\n') {
-                    continue;
-                }
+                // Suggest only a single line each time.
+                let matched_line = item
+                    .str()
+                    .as_char_slice()
+                    .split(|&c| c == '\n')
+                    .rev()
+                    .find(|line| line.starts_with(search_string.as_char_slice()))
+                    .unwrap();
 
                 if autosuggest_validate_from_history(item, &working_directory, &ctx) {
                     // The command autosuggestion was handled specially, so we're done.
                     // History items are case-sensitive, see #3978.
+                    let is_whole = matched_line.len() == item.str().len();
                     return AutosuggestionResult::new(
                         command_line,
                         search_string_range,
-                        searcher.current_string().to_owned(),
+                        matched_line.into(),
                         /*icase=*/ false,
-                        /*is_history=*/ true,
+                        is_whole,
                     );
                 }
             }
@@ -4693,7 +4701,7 @@ fn get_autosuggestion_performer(
             search_string_range.clone(),
             suggestion,
             true, // normal completions are case-insensitive
-            /*is_from_history=*/ false,
+            /*is_whole_item_from_history=*/ false,
         );
         result.needs_load = needs_load;
         result

@@ -364,6 +364,8 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`ctrl-b`, :kbd:`ctrl-f` move the cursor one character left or right or accept the autosuggestion just like the :kbd:`left` (``←``) and :kbd:`right` (``→``) shared bindings (which are available as well).
 
+- :kbd:`alt-b`, :kbd:`alt-f` move the cursor one word left or right, or accept one word of the autosuggestion. If the command line is empty, moves forward/backward in the directory history instead.
+
 - :kbd:`ctrl-n`, :kbd:`ctrl-p` move the cursor up/down or through history, like the up and down arrow shared bindings.
 
 - :kbd:`delete` or :kbd:`backspace` or :kbd:`ctrl-h` removes one character forwards or backwards respectively.

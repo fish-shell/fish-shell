@@ -422,45 +422,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
             }
             return retval;
         }
-        STATUS_BUILDINFO => {
-            let version = str2wcstring(crate::BUILD_VERSION.as_bytes());
-            let target = str2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
-            let host = str2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
-            let profile = str2wcstring(env!("BUILD_PROFILE").as_bytes());
-            streams.out.append(L!("Build system: "));
-            let buildsystem = match option_env!("CMAKE") {
-                Some("1") => "CMake",
-                _ => "Cargo",
-            };
-            streams.out.appendln(str2wcstring(buildsystem.as_bytes()));
-            streams.out.append(L!("Version: "));
-            streams.out.appendln(version);
-            if target == host {
-                streams.out.append(L!("Target (and host): "));
-                streams.out.appendln(target);
-            } else {
-                streams.out.append(L!("Target: "));
-                streams.out.appendln(target);
-                streams.out.append(L!("Host: "));
-                streams.out.appendln(host);
-            }
-            streams.out.append(L!("Profile: "));
-            streams.out.appendln(profile);
-            streams.out.append(L!("Features: "));
-            let features: &[&str] = &[
-                #[cfg(gettext)]
-                "gettext",
-                #[cfg(feature = "installable")]
-                "installable",
-                #[cfg(target_feature = "crt-static")]
-                "crt-static",
-            ];
-            streams
-                .out
-                .appendln(str2wcstring(features.join(" ").as_bytes()));
-            streams.out.appendln("");
-            return STATUS_CMD_OK;
-        }
         ref s => {
             if !args.is_empty() {
                 streams.err.append(wgettext_fmt!(
@@ -473,6 +434,45 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 return STATUS_INVALID_ARGS;
             }
             match s {
+                STATUS_BUILDINFO => {
+                    let version = str2wcstring(crate::BUILD_VERSION.as_bytes());
+                    let target = str2wcstring(env!("BUILD_TARGET_TRIPLE").as_bytes());
+                    let host = str2wcstring(env!("BUILD_HOST_TRIPLE").as_bytes());
+                    let profile = str2wcstring(env!("BUILD_PROFILE").as_bytes());
+                    streams.out.append(L!("Build system: "));
+                    let buildsystem = match option_env!("CMAKE") {
+                        Some("1") => "CMake",
+                        _ => "Cargo",
+                    };
+                    streams.out.appendln(str2wcstring(buildsystem.as_bytes()));
+                    streams.out.append(L!("Version: "));
+                    streams.out.appendln(version);
+                    if target == host {
+                        streams.out.append(L!("Target (and host): "));
+                        streams.out.appendln(target);
+                    } else {
+                        streams.out.append(L!("Target: "));
+                        streams.out.appendln(target);
+                        streams.out.append(L!("Host: "));
+                        streams.out.appendln(host);
+                    }
+                    streams.out.append(L!("Profile: "));
+                    streams.out.appendln(profile);
+                    streams.out.append(L!("Features: "));
+                    let features: &[&str] = &[
+                        #[cfg(gettext)]
+                        "gettext",
+                        #[cfg(feature = "installable")]
+                        "installable",
+                        #[cfg(target_feature = "crt-static")]
+                        "crt-static",
+                    ];
+                    streams
+                        .out
+                        .appendln(str2wcstring(features.join(" ").as_bytes()));
+                    streams.out.appendln("");
+                    return STATUS_CMD_OK;
+                }
                 STATUS_BASENAME | STATUS_DIRNAME | STATUS_FILENAME => {
                     let res = parser.current_filename();
                     let function = res.unwrap_or_default();
@@ -599,10 +599,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                         streams.out.appendln(path);
                     }
                 }
-                STATUS_BUILDINFO
-                | STATUS_SET_JOB_CONTROL
-                | STATUS_FEATURES
-                | STATUS_TEST_FEATURE => {
+                STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
                     unreachable!("")
                 }
             }

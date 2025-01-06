@@ -15,7 +15,7 @@ complete -c htop -l readonly -d 'Disable all system and process changing feature
 complete -c htop -l version -s V -d 'Show version and exit'
 complete -c htop -l tree -s t -d 'Show processes in tree view'
 complete -c htop -l highlight-changes -s H -d 'Highlight new and old processes' -x
-complete -c htop -l drop-capabilites -d 'Drop unneeded Linux capabilites (Requires libpcap support)' -xka "
+complete -c htop -l drop-capabilities -d 'Drop unneeded Linux capabilities (Requires libpcap support)' -xka "
 		off
 		basic
 		strict

@@ -116,7 +116,7 @@ The following options output metadata about the commandline state:
 **--is-valid**
     Returns true when the commandline is syntactically valid and complete.
     If it is, it would be executed when the ``execute`` bind function is called.
-    If the commandline is incomplete, return 2, if erroneus, return 1.
+    If the commandline is incomplete, return 2, if erroneous, return 1.
 
 **--showing-suggestion**
     Evaluates to true (i.e. returns 0) when the shell is currently showing an automatic history completion/suggestion, available to be consumed via one of the `forward-` bindings.

@@ -2429,6 +2429,14 @@ impl<'a> Reader<'a> {
 }
 
 fn xtgettcap(out: &mut impl Write, cap: &str) {
+    FLOG!(
+        reader,
+        format!(
+            "Sending XTGETTCAP request for {}: {:?}",
+            cap,
+            format!("\x1bP+q{}\x1b\\", DisplayAsHex(cap))
+        )
+    );
     let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 

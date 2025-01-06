@@ -1277,11 +1277,20 @@ pub trait InputEventQueuer {
         }
         buffer.pop();
         buffer.pop();
+        // \e P 1 r + Pn ST
+        // \e P 0 r + msg ST
+        let buffer = &buffer[5..];
         if !success {
+            FLOG!(
+                reader,
+                format!(
+                    "Received XTGETTCAP failure response: {}",
+                    str2wcstring(&parse_hex(buffer)?),
+                )
+            );
             return None;
         }
-        // \e P 1 r + Pn ST
-        let mut buffer = buffer[5..].splitn(2, |&c| c == b'=');
+        let mut buffer = buffer.splitn(2, |&c| c == b'=');
         let key = buffer.next().unwrap();
         let value = buffer.next()?;
         let key = parse_hex(key)?;

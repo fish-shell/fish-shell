@@ -141,7 +141,7 @@ complete -f -c npm -n '__fish_npm_using_command cache' -s h -l help -d 'Display 
 # install-ci-test
 complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install' -d 'Clean install a project'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-ci-test cit' -d 'Install a project with a clean slate and run tests'
-for c in ci clean-install ic install-clean install-clean install-ci-test cit clean-install-test sit
+for c in ci clean-install ic install-clean isntall-clean install-ci-test cit clean-install-test sit
     complete -x -c npm -n "__fish_npm_using_command $c" -l install-strategy -a 'hoisted nested shallow linked' -d 'Install strategy'
     complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
     complete -x -c npm -n "__fish_npm_using_command $c" -l strict-peer-deps -d 'Treat conflicting peerDependencies as failure'
@@ -406,7 +406,7 @@ end
 complete -c npm -n __fish_npm_needs_command -a 'install add i' -d 'Install a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
-for c in install add i in ins inst insta instal isnt isnta isntal install install-test it link ln
+for c in install add i in ins inst insta instal isnt isnta isntal isntall install-test it link ln
     complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -s P -l save-prod -d 'Save to dependencies'
@@ -726,4 +726,4 @@ complete -f -c npm -n '__fish_npm_using_command whoami' -a registry -d 'Check re
 complete -f -c npm -n '__fish_npm_using_command whoami' -s h -l help -d 'Display help'
 
 # misc
-complete -f -c npm -n '__fish_seen_subcommand_from add i in ins inst insta instal isnt isnta isntal install; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"
+complete -f -c npm -n '__fish_seen_subcommand_from add i in ins inst insta instal isnt isnta isntal isntall; and not __fish_is_switch' -a "(__npm_filtered_list_packages \"$npm_install\")"

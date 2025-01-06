@@ -11,22 +11,20 @@ send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.expect_re,
     sp.expect_str,
 )
-expect_prompt()
 
 # We're going to use three history files, including the default, to verify
 # that the fish_history variable works as expected.
-default_histfile = "../test/data/fish/fish_history"
-my_histfile = "../test/data/fish/my_history"
-env_histfile = "../test/data/fish/env_history"
+default_histfile = os.environ["XDG_DATA_HOME"] + "/fish/fish_history"
+my_histfile = os.environ["XDG_DATA_HOME"] + "/fish/my_history"
+env_histfile = os.environ["XDG_DATA_HOME"] + "/fish/env_history"
 
 
 def grephistfile(line, file):
     sendline("grep '^" + line + "' " + file)
 
-
 # Verify that if we spawn fish with no fish_history env var it uses the
 # default file.
-expect_prompt
+expect_prompt()
 
 # Verify that a command is recorded in the default history file.
 cmd1 = "echo $fish_pid default histfile"

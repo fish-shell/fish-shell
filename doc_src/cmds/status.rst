@@ -17,6 +17,7 @@ Synopsis
     status is-no-job-control
     status is-full-job-control
     status is-interactive-job-control
+    status is-in-macos-terminal
     status current-command
     status current-commandline
     status filename
@@ -61,6 +62,10 @@ The following operations (subcommands) are available:
 
 **is-no-job-control** or **--is-no-job-control**
     Returns 0 if no job control is enabled.
+
+**is-in-macos-terminal**
+    Returns 0 if the terminal emulator is running on macOS.
+    Attempts to see through SSH and containers, unlike ``uname(1)``.
 
 **current-command**
     Prints the name of the currently-running function or command, like the deprecated :envvar:`_` variable.

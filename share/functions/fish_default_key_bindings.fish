@@ -55,10 +55,34 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-u upcase-word
 
     bind --preset $argv alt-c capitalize-word
-    bind --preset $argv alt-backspace backward-kill-token
-    bind --preset $argv ctrl-backspace backward-kill-word
-    bind --preset $argv alt-delete kill-token
-    bind --preset $argv ctrl-delete kill-word
+    bind --preset $argv alt-backspace '
+        if status is-in-macos-terminal
+            commandline -f backward-kill-word
+        else
+            commandline -f backward-kill-token
+        end
+    '
+    bind --preset $argv ctrl-backspace '
+        if status is-in-macos-terminal
+            commandline -f backward-kill-token
+        else
+            commandline -f backward-kill-word
+        end
+    '
+    bind --preset $argv alt-delete '
+        if status is-in-macos-terminal
+            commandline -f kill-word
+        else
+            commandline -f kill-token
+        end
+    '
+    bind --preset $argv ctrl-delete '
+        if status is-in-macos-terminal
+            commandline -f kill-token
+        else
+            commandline -f kill-word
+        end
+    '
     bind --preset $argv alt-b backward-word
     bind --preset $argv alt-f forward-word
     if test "$TERM_PROGRAM" = Apple_Terminal

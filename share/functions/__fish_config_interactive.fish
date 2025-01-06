@@ -217,6 +217,12 @@ end" >$__fish_config_dir/config.fish
     end
     __fish_update_cwd_osc # Run once because we might have already inherited a PWD from an old tab
 
+    if set -q TMUX
+        # NOTE This will be invalidated when the next tmux client attaches
+        # to fish's window; but we only use it to detect macOS.
+        set -g __fish_tmux_client_tty (tmux display-message -p '#{client_tty}' 2>/dev/null)
+    end
+
     # Bump this whenever some code below needs to run once when upgrading to a new version.
     # The universal variable __fish_initialized is initialized in share/config.fish.
     set __fish_initialized 3800

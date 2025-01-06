@@ -60,14 +60,8 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-backspace backward-kill-word
     bind --preset $argv ctrl-backspace backward-kill-word
     bind --preset $argv ctrl-delete kill-word
-    bind --preset $argv alt-b backward-word
-    bind --preset $argv alt-f forward-word
-    if test "$TERM_PROGRAM" = Apple_Terminal
-        # Terminal.app sends \eb for alt+left, \ef for alt+right.
-        # Yeah.
-        $legacy_bind --preset $argv alt-b prevd-or-backward-word
-        $legacy_bind --preset $argv alt-f nextd-or-forward-word
-    end
+    bind --preset $argv alt-b prevd-or-backward-word
+    bind --preset $argv alt-f nextd-or-forward-word
 
     bind --preset $argv alt-\< beginning-of-buffer
     bind --preset $argv alt-\> end-of-buffer

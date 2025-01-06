@@ -35,8 +35,7 @@ use crate::flog::FLOGF;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::HighlightColorResolver;
-use crate::highlight::HighlightSpec;
+use crate::highlight::{HighlightColorResolver, HighlightSpec};
 use crate::output::Outputter;
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
@@ -602,7 +601,7 @@ impl Screen {
         let mut abandon_line_string = WString::with_capacity(screen_width + 32);
 
         // Don't need to check for fish_wcwidth errors; this is done when setting up
-        // omitted_newline_char in common.cpp.
+        // omitted_newline_char in common.rs.
         let non_space_width = get_omitted_newline_width();
         let term = term();
         let term = term.as_ref();

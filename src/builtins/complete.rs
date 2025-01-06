@@ -215,7 +215,7 @@ fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) 
 const OPT_ESCAPE: char = '\x01';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
-/// complete.cpp for any heavy lifting.
+/// complete.rs for any heavy lifting.
 pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();

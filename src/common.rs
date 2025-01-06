@@ -1552,7 +1552,7 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
     // any allocations or mutexes. We can't rely on all the std functions to be alloc-free in both
     // Debug and Release modes, so we just mandate that the result already be available.
     //
-    // is_wsl() is called by has_working_timestamps() which is called by `screen.cpp` in the main
+    // is_wsl() is called by has_working_tty_timestamps() which is called by `screen.rs` in the main
     // process. If that's not good enough, we can call is_wsl() manually at shell startup.
     if crate::threads::is_forked_child() {
         debug_assert!(

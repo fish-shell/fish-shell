@@ -634,7 +634,7 @@ fn expand_variables(
     }
 
     // Do a dirty hack to make sliced history fast (#4650). We expand from either a variable, or a
-    // history_t. Note that "history" is read only in env.cpp so it's safe to special-case it in
+    // history_t. Note that "history" is read only in env.rs so it's safe to special-case it in
     // this way (it cannot be shadowed, etc).
     let mut history = None;
     let mut var = None;

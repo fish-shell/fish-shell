@@ -1617,7 +1617,7 @@ pub enum HighlightRole {
     selection,
 
     // Pager support.
-    // NOTE: pager.cpp relies on these being in this order.
+    // NOTE: pager.rs relies on these being in this order.
     pager_progress,
     pager_background,
     pager_prefix,

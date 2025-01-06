@@ -28,6 +28,9 @@ expect_prompt()
 exe_path = os.environ.get("fish_test_helper")
 if not exe_path:
     sys.exit(127)
+if not os.path.exists(exe_path):
+    print(f"{exe_path} does not exist")
+    sys.exit(1)
 
 sp.sendline(exe_path + " nohup_wait")
 
@@ -78,7 +81,9 @@ for i in range(50):
         sys.exit(0)
 else:
     # Our loop completed without the process being returned.
+    os.kill(fish_pid, signal.SIGKILL)
     error_and_exit("fish with pid %d hung after SIGTERM" % fish_pid)
 
 # Should never get here.
+os.kill(fish_pid, signal.SIGKILL)
 error_and_exit("unknown, should be unreachable")

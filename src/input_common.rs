@@ -24,7 +24,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -450,6 +450,31 @@ static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
+#[derive(Copy, Clone, Debug)]
+#[repr(u8)]
+pub(crate) enum ClientOS {
+    Bsd,
+    Linux,
+    macOS,
+    Unknown,
+}
+
+impl std::fmt::Display for ClientOS {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            ClientOS::Bsd => "bsd",
+            ClientOS::Linux => "linux",
+            ClientOS::macOS => "macos",
+            ClientOS::Unknown => "unknown",
+        };
+        f.write_str(name)
+    }
+}
+
+// As first approximation, use the target OS. This should be overwritten by the XTGETTCAP
+// query later.
+pub(crate) static CLIENT_OS: AtomicU8 = AtomicU8::new(ClientOS::Unknown as _);
+
 static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 macro_rules! kitty_progressive_enhancements {
@@ -468,7 +493,7 @@ pub(crate) fn enable_kitty_progressive_enhancements() -> bool {
     true
 }
 
-static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -484,6 +509,20 @@ pub fn terminal_protocol_hacks() {
                 };
                 version < (99, 5, 6)
             }),
+    );
+    CLIENT_OS.store(
+        (if cfg!(target_os = "macos")
+            || var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
+        {
+            ClientOS::macOS
+        } else if cfg!(bsd) {
+            ClientOS::Bsd
+        } else if cfg!(target_os = "linux") {
+            ClientOS::Linux
+        } else {
+            ClientOS::Unknown
+        }) as _,
+        Ordering::Relaxed,
     );
 }
 
@@ -1319,6 +1358,16 @@ pub trait InputEventQueuer {
         if key == b"cuu" && matches!(&value[..], b"\x1b[%p1%dA" | b"\\E[%p1%dA") {
             CURSOR_UP_SUPPORTED.store(true);
             FLOG!(reader, "Cursor up is supported");
+        }
+        if key == b"kitty-query-os_name" {
+            let os = match &value[..] {
+                b"bsd" => ClientOS::Bsd,
+                b"macos" => ClientOS::macOS,
+                b"linux" => ClientOS::Linux,
+                _ => ClientOS::Unknown,
+            };
+            CLIENT_OS.store(os as _, Ordering::Relaxed);
+            FLOG!(reader, "Client OS: ", os);
         }
         return None;
     }

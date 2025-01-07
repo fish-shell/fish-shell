@@ -105,6 +105,6 @@ impl StringSubCommand<'_> for Pad {
             streams.out.append(padded);
         }
 
-        STATUS_CMD_OK
+        Some(STATUS_CMD_OK)
     }
 }

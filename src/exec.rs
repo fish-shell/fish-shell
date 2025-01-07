@@ -4,8 +4,7 @@
 // performed have been massive.
 
 use crate::builtins::shared::{
-    builtin_run, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
-    STATUS_READ_TOO_MUCH,
+    builtin_run, StatusError, StatusOk, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE,
 };
 use crate::common::{
     exit_without_destructors, scoped_push_replacer, str2wcstring, truncate_at_nul, wcs2string,
@@ -254,7 +253,7 @@ pub fn exec_subshell(
     parser: &Parser,
     outputs: Option<&mut Vec<WString>>,
     apply_exit_status: bool,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     let mut break_expand = false;
     exec_subshell_internal(
         cmd,
@@ -276,7 +275,7 @@ pub fn exec_subshell_for_expand(
     parser: &Parser,
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     parser.assert_can_execute();
     let mut break_expand = true;
     let ret = exec_subshell_internal(
@@ -292,7 +291,7 @@ pub fn exec_subshell_for_expand(
     if break_expand {
         ret
     } else {
-        STATUS_CMD_OK.unwrap()
+        Ok(StatusOk::OK)
     }
 }
 
@@ -311,16 +310,16 @@ fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
         ENOENT | ENOTDIR => {
             // This indicates either the command was not found, or a file redirection was not found.
             // We do not use posix_spawn file redirections so this is always command-not-found.
-            STATUS_CMD_UNKNOWN.unwrap()
+            STATUS_CMD_UNKNOWN
         }
         EACCES | ENOEXEC => {
             // The file is not executable for various reasons.
-            STATUS_NOT_EXECUTABLE.unwrap()
+            STATUS_NOT_EXECUTABLE
         }
         #[cfg(target_os = "macos")]
         libc::EBADARCH => {
             // This is for e.g. running ARM app on Intel Mac.
-            STATUS_NOT_EXECUTABLE.unwrap()
+            STATUS_NOT_EXECUTABLE
         }
         _ => {
             // Generic failure.
@@ -1450,7 +1449,7 @@ fn exec_subshell_internal(
     break_expand: &mut bool,
     apply_exit_status: bool,
     is_subcmd: bool,
-) -> libc::c_int {
+) -> Result<StatusOk, StatusError> {
     parser.assert_can_execute();
     let _is_subshell = scoped_push_replacer(
         |new_value| std::mem::replace(&mut parser.libdata_mut().is_subshell, new_value),
@@ -1479,7 +1478,7 @@ fn exec_subshell_internal(
     let Ok(bufferfill) = IoBufferfill::create_opts(parser.libdata().read_limit, STDOUT_FILENO)
     else {
         *break_expand = true;
-        return STATUS_CMD_ERROR.unwrap();
+        return Err(StatusError::STATUS_CMD_ERROR);
     };
 
     let mut io_chain = IoChain::new();
@@ -1488,17 +1487,23 @@ fn exec_subshell_internal(
     let buffer = IoBufferfill::finish(bufferfill);
     if buffer.discarded() {
         *break_expand = true;
-        return STATUS_READ_TOO_MUCH.unwrap();
+        return Err(StatusError::STATUS_READ_TOO_MUCH);
     }
 
     if eval_res.break_expand {
         *break_expand = true;
-        return eval_res.status.status_value();
+        match eval_res.status.status_value() {
+            0 => return Ok(StatusOk::OK),
+            code => return Err(StatusError::from(code)),
+        }
     }
 
     if let Some(lst) = lst {
         populate_subshell_output(lst, &buffer, split_output);
     }
     *break_expand = false;
-    eval_res.status.status_value()
+    match eval_res.status.status_value() {
+        0 => Ok(StatusOk::OK),
+        code => Err(StatusError::from(code)),
+    }
 }

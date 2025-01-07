@@ -32,7 +32,7 @@ fn parse_cmd_opts(
     args: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
-) -> Result<(Options, usize), Option<c_int>> {
+) -> Result<(Options, usize), StatusError> {
     const cmd: &wstr = L!("math");
     let print_hints = true;
 
@@ -70,7 +70,7 @@ fn parse_cmd_opts(
                         streams
                             .err
                             .append(wgettext_fmt!("%ls: %ls: invalid scale\n", cmd, optarg));
-                        return Err(STATUS_INVALID_ARGS);
+                        return Err(StatusError::STATUS_INVALID_ARGS);
                     }
                     // We know the value is in the range [0, 15]
                     opts.scale = scale as usize;
@@ -90,7 +90,7 @@ fn parse_cmd_opts(
                     streams
                         .err
                         .append(wgettext_fmt!("%ls: %ls: invalid mode\n", cmd, optarg));
-                    return Err(STATUS_INVALID_ARGS);
+                    return Err(StatusError::STATUS_INVALID_ARGS);
                 }
             }
             'b' => {
@@ -107,7 +107,7 @@ fn parse_cmd_opts(
                             cmd,
                             optarg
                         ));
-                        return Err(STATUS_INVALID_ARGS);
+                        return Err(StatusError::STATUS_INVALID_ARGS);
                     }
                     // We know the value is 8 or 16.
                     opts.base = base as usize;
@@ -118,7 +118,7 @@ fn parse_cmd_opts(
             }
             ':' => {
                 builtin_missing_argument(parser, streams, cmd, args[w.wopt_index - 1], print_hints);
-                return Err(STATUS_INVALID_ARGS);
+                return Err(StatusError::STATUS_INVALID_ARGS);
             }
             '?' => {
                 // For most commands this is an error. We ignore it because a math expression
@@ -138,7 +138,7 @@ fn parse_cmd_opts(
             "non-zero scale value only valid
             for base 10"
         ));
-        return Err(STATUS_INVALID_ARGS);
+        return Err(StatusError::STATUS_INVALID_ARGS);
     }
 
     Ok((opts, w.wopt_index))
@@ -210,7 +210,7 @@ fn evaluate_expression(
     streams: &mut IoStreams,
     opts: &Options,
     expression: &wstr,
-) -> Option<c_int> {
+) -> Result<StatusOk, StatusError> {
     let ret = te_interp(expression);
 
     match ret {
@@ -230,7 +230,7 @@ fn evaluate_expression(
                 s.push('\n');
 
                 streams.out.append(s);
-                return STATUS_CMD_OK;
+                return Ok(StatusOk::OK);
             };
 
             streams
@@ -238,7 +238,7 @@ fn evaluate_expression(
                 .append(sprintf!("%ls: Error: %ls\n", cmd, error_message));
             streams.err.append(sprintf!("'%ls'\n", expression));
 
-            STATUS_CMD_ERROR
+            Err(StatusError::STATUS_CMD_ERROR)
         }
         Err(err) => {
             streams.err.append(sprintf!(
@@ -255,7 +255,7 @@ fn evaluate_expression(
                 streams.err.append(sprintf!("%ls^\n", padding));
             }
 
-            STATUS_CMD_ERROR
+            Err(StatusError::STATUS_CMD_ERROR)
         }
     }
 }
@@ -264,17 +264,18 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
+pub fn math(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> Result<StatusOk, StatusError> {
     let cmd = argv[0];
 
-    let (opts, mut optind) = match parse_cmd_opts(argv, parser, streams) {
-        Ok(x) => x,
-        Err(e) => return e,
-    };
+    let (opts, mut optind) = parse_cmd_opts(argv, parser, streams)?;
 
     if opts.print_help {
         builtin_print_help(parser, streams, cmd);
-        return STATUS_CMD_OK;
+        return Ok(StatusOk::OK);
     }
 
     let mut expression = WString::new();
@@ -289,7 +290,7 @@ pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         streams
             .err
             .append(wgettext_fmt!(BUILTIN_ERR_MIN_ARG_COUNT1, cmd, 1, 0));
-        return STATUS_CMD_ERROR;
+        return Err(StatusError::STATUS_CMD_ERROR);
     }
 
     evaluate_expression(cmd, streams, &opts, &expression)

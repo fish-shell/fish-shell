@@ -141,6 +141,7 @@ complete -f -c npm -n '__fish_npm_using_command cache' -s h -l help -d 'Display 
 # install-ci-test
 complete -f -c npm -n __fish_npm_needs_command -a 'ci clean-install' -d 'Clean install a project'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-ci-test cit' -d 'Install a project with a clean slate and run tests'
+# typos are intentional
 for c in ci clean-install ic install-clean isntall-clean install-ci-test cit clean-install-test sit
     complete -x -c npm -n "__fish_npm_using_command $c" -l install-strategy -a 'hoisted nested shallow linked' -d 'Install strategy'
     complete -x -c npm -n "__fish_npm_using_command $c" -l omit -a 'dev optional peer' -d 'Omit dependency type'
@@ -406,6 +407,7 @@ end
 complete -c npm -n __fish_npm_needs_command -a 'install add i' -d 'Install a package'
 complete -f -c npm -n __fish_npm_needs_command -a 'install-test it' -d 'Install package(s) and run tests'
 complete -f -c npm -n __fish_npm_needs_command -a 'link ln' -d 'Symlink a package folder'
+# typos are intentional
 for c in install add i in ins inst insta instal isnt isnta isntal isntall install-test it link ln
     complete -f -c npm -n "__fish_npm_using_command $c" -s S -l save -d 'Save to dependencies'
     complete -f -c npm -n "__fish_npm_using_command $c" -l no-save -d 'Prevents saving to dependencies'

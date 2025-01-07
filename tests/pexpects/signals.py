@@ -77,7 +77,7 @@ sendline("mkfifo fifoo")
 expect_prompt()
 sendline("cat >fifoo")
 subprocess.call(["kill", "-WINCH", str(sp.spawn.pid)])
-expect_re("open: ", shouldfail=True, timeout=10)
+expect_re("open: ", shouldfail=True, timeout=2)
 subprocess.call(["kill", "-INT", str(sp.spawn.pid)])
 expect_prompt()
 

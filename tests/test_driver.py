@@ -169,11 +169,23 @@ def main():
                 print(f"{BLUE}SKIPPED{RESET}")
                 skipcount += 1
                 continue
-            proc = subprocess.run(
-                ["python3", f],
-                capture_output=True,
-                env=pyenviron,
-            )
+            try:
+                proc = subprocess.run(
+                    ["python3", f],
+                    capture_output=True,
+                    env=pyenviron,
+                    # Timeout of 90 seconds, about 9 times what any of these takes
+                    timeout=90,
+                )
+            except subprocess.TimeoutExpired as e:
+                print(f"{RED}FAILED due to timeout{RESET}")
+                if e.output:
+                    print(e.output.decode("utf-8"))
+                if e.stderr:
+                    print(e.stderr.decode("utf-8"))
+                failcount += 1
+                continue
+
             endtime = datetime.now()
             duration_ms = round((endtime - starttime).total_seconds() * 1000)
             if proc.returncode == 0:

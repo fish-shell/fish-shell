@@ -5,11 +5,18 @@
 
 isolated-tmux-start
 
+isolated-tmux send-keys 'echo LINES $LINES' Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 0> echo LINES $LINES
+# CHECK: LINES 10
+# CHECK: prompt 1>
+
 isolated-tmux send-keys 'bind alt-g "commandline -p -C -- -4"' Enter C-l
 isolated-tmux send-keys 'echo bar|cat' \eg foo
 tmux-sleep
 isolated-tmux capture-pane -p
-# CHECK: prompt 1> echo foobar|cat
+# CHECK: prompt 2> echo foobar|cat
 
 isolated-tmux send-keys C-k C-u C-l 'commandline -i "\'$(seq $LINES)" scroll_here' Enter
 tmux-sleep
@@ -36,7 +43,7 @@ isolated-tmux send-keys C-l '
 ' Enter
 tmux-sleep
 isolated-tmux capture-pane -p | sed 1,5d
-# CHECK: prompt 4> echo 00000000000000000000000000000000000000000000000000000000000000000
+# CHECK: prompt 5> echo 00000000000000000000000000000000000000000000000000000000000000000
 # CHECK: 000000000000000
 # CHECK: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
-# CHECK: prompt 5>                                                           right-prompt
+# CHECK: prompt 6>                                                           right-prompt

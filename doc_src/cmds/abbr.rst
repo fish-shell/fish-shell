@@ -53,7 +53,7 @@ Combining these features, it is possible to create custom syntaxes, where a regu
 
      > abbr > ~/.config/fish/conf.d/myabbrs.fish
 
-   This will save all your abbrevations in "myabbrs.fish", overwriting the whole file so it doesn't leave any duplicates,
+   This will save all your abbreviations in "myabbrs.fish", overwriting the whole file so it doesn't leave any duplicates,
    or restore abbreviations you had erased.
    Of course any functions will have to be saved separately, see :doc:`funcsave <funcsave>`.
 

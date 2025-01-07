@@ -2,7 +2,7 @@
 complete -c apt-build -l help -d "Display help and exit"
 complete -f -c apt-build -a update -d "Update list of packages"
 complete -f -c apt-build -a upgrade -d "Upgrade packages"
-complete -f -c apt-bulid -a world -d "Rebuild your system"
+complete -f -c apt-build -a world -d "Rebuild your system"
 complete -x -c apt-build -a install -d "Build and install a new package"
 complete -x -c apt-build -a source -d "Download and extract a source"
 complete -x -c apt-build -a info -d "Info on a package"

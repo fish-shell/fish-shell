@@ -55,7 +55,7 @@ complete -c wget -o nd -d "Do not create a hierarchy of directories"
 complete -c wget -s x -l force-directories -d "Force creation of a hierarchy of directories"
 complete -c wget -l no-host-directories -d "Disable generation of host-prefixed directories"
 complete -c wget -o nH -d "Disable generation of host-prefixed directories"
-complete -c wget -l protocal-directories -d "Use the protocol name as a directory component"
+complete -c wget -l protocol-directories -d "Use the protocol name as a directory component"
 complete -c wget -l cut-dirs -d "Ignore specified number of directory components" -xa "1 2 3 4 5"
 complete -c wget -s P -l directory-prefix -d "Set directory prefix" -r
 complete -c wget -s E -l html-extension -d "Force html files to have html extension"

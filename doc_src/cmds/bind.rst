@@ -259,7 +259,7 @@ The following special input functions are available:
     search the history for the next matching argument
 
 ``forward-jump`` and ``backward-jump``
-    read another character and jump to its next occurence after/before the cursor
+    read another character and jump to its next occurrence after/before the cursor
 
 ``forward-jump-till`` and ``backward-jump-till``
     jump to right *before* the next occurrence
@@ -269,7 +269,7 @@ The following special input functions are available:
 
 ``jump-to-matching-bracket``
     jump to matching bracket if the character under the cursor is bracket;
-    otherwise, jump to the next occurence of *any right* bracket after the cursor.
+    otherwise, jump to the next occurrence of *any right* bracket after the cursor.
     The following brackets are considered: ``([{}])``
 
 ``jump-till-matching-bracket``
@@ -292,7 +292,7 @@ The following special input functions are available:
     move the selected text to the killring
 
 ``kill-whole-line``
-    move the line (including the following newline) to the killring. If the line is the last line, its preceeding newline is also removed
+    move the line (including the following newline) to the killring. If the line is the last line, its preceding newline is also removed
 
 ``kill-inner-line``
     move the line (without the following newline) to the killring

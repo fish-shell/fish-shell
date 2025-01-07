@@ -34,7 +34,7 @@ If **-q** or **--quiet** is given, ``string shorten`` only runs for the return v
 
 The default ellipsis is ``…``. If fish thinks your system is incapable because of your locale, it will use ``...`` instead.
 
-The return value is 0 if any shortening occured, 1 otherwise.
+The return value is 0 if any shortening occurred, 1 otherwise.
 
 .. END DESCRIPTION
 

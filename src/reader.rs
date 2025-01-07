@@ -78,7 +78,6 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
-use crate::input_common::KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
@@ -1931,13 +1930,6 @@ impl<'a> Reader<'a> {
             if err != ENOTTY || is_interactive_session() {
                 perror("tcsetattr");
             }
-        }
-
-        static queried: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-        if !queried.load() {
-            queried.store(true);
-            // Query for kitty keyboard protocol support.
-            let _ = write_loop(&STDOUT_FILENO, KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
         }
 
         // HACK: Don't abandon line for the first prompt, because

@@ -25,7 +25,8 @@ None of this is a legal document, and fish remains developed by hobbyists in the
 
 These tiers depend on how important a given target is to us, and how much information we get about it.
 
-That means, a tier 1 target requires a core developer to run it in anger, and working CI for operating systems/architectures.
+That means, a tier 1 target requires a core developer to run it regularly or enough users that we are confident we will catch bugs quickly,
+and working CI for operating systems/architectures.
 Since we don't have automated testing of terminals, CI isn't required there.
 
 A tier 2 target needs us to invest a conscious effort to test it before release, but of course if we don't run it ourselves we may not catch things
@@ -83,11 +84,16 @@ Tier 4:
 
 ## The current targets: Terminals
 
+These are expected to be used in their majority configuration - usually the defaults.
+No switching $TERM required.
+
 Tier 1:
 
 - Konsole
-- MS Terminal
+- MS Terminal / Conhost
+- Gnome Terminal
 - tmux (used in our CI)
+- foot
 - other terms the core devs use
 
 Tier 2:
@@ -95,13 +101,11 @@ Tier 2:
 - Ghostty
 - Wezterm
 - Alacritty
-- Kitty?
-- xterm?
+- Kitty
+- xterm
 - iTerm?
 - Terminal.app?
-- Gnome Terminal / Console?
-- zellij?
-- foot?
+- VSCode / xterm.js
 
 Tier 3:
 
@@ -110,6 +114,10 @@ Tier 3:
 - freebsd tty?
 - rxvt(-unicode)
 - Midnight Commander?
+- termux
+- screen?
+- st?
+- zellij?
 
 Tier 4:
 

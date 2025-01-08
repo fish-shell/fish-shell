@@ -382,6 +382,7 @@ sendline("""
         commandline -f delete-char
     "
 """.strip())
+expect_prompt()
 send('\x07') # ctrl-g
 send('\r')
 expect_prompt("foobar")

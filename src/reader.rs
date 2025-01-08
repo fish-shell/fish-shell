@@ -2134,7 +2134,9 @@ impl<'a> Reader<'a> {
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
         // user presses enter.
-        if zelf.is_repaint_needed(None) || zelf.screen.scrolled || zelf.conf.inputfd != STDIN_FILENO
+        if zelf.is_repaint_needed(None)
+            || zelf.screen.scrolled()
+            || zelf.conf.inputfd != STDIN_FILENO
         {
             zelf.layout_and_repaint_before_execution();
         }

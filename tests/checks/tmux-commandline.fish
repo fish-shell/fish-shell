@@ -32,6 +32,23 @@ isolated-tmux capture-pane -p
 # CHECK: 10
 # CHECK: scroll_here
 
+# The output is broken here (seems tmux specific).
+isolated-tmux send-keys C-c
+tmux-sleep
+isolated-tmux send-keys C-l 'commandline -i ": \'$(seq $LINES)" A B "C\'"' Enter Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: 4
+# CHECK: 5
+# CHECK: 6
+# CHECK: 7
+# CHECK: 8
+# CHECK: 9
+# CHECK: 10
+# CHECK: prompt 5>
+# CHECK: B
+# CHECK: C'
+
 # Soft-wrapped commandline with omitted right prompt.
 isolated-tmux send-keys C-c
 tmux-sleep
@@ -43,7 +60,7 @@ isolated-tmux send-keys C-l '
 ' Enter
 tmux-sleep
 isolated-tmux capture-pane -p | sed 1,5d
-# CHECK: prompt 5> echo 00000000000000000000000000000000000000000000000000000000000000000
+# CHECK: prompt {{\d+}}> echo 00000000000000000000000000000000000000000000000000000000000000000
 # CHECK: 000000000000000
 # CHECK: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
-# CHECK: prompt 6>                                                           right-prompt
+# CHECK: prompt {{\d+}}>                                                           right-prompt

@@ -2089,9 +2089,9 @@ impl<'a> Reader<'a> {
             }
         }
 
-        static queried: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-        if !queried.load() {
-            queried.store(true);
+        static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+        if !QUERIED.load() {
+            QUERIED.store(true);
             let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
             // Query for kitty keyboard protocol support.

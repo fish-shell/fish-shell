@@ -1,6 +1,6 @@
 complete -c VBoxSDL -l startvm -x -d "Set virtual machine to start" -a "(__fish_print_VBox_vms)"
 
-complete -c VBoxSDL -l seperate -d "Run separate VM process or attach to a running VM"
+complete -c VBoxSDL -l separate -d "Run separate VM process or attach to a running VM"
 complete -c VBoxSDL -l hda -f -d "Set temporary first hard disk"
 complete -c VBoxSDL -l fda -f -d "Set temporary first floppy disk"
 complete -c VBoxSDL -l cdrom -r -d "Set temporary CDROM/DVD" -a "none\tunmount"

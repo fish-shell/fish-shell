@@ -75,7 +75,7 @@ function __fish_virsh_get_networks
         set -l network_autostart $network[3]
         set -l network_persistent $network[4]
 
-        set -l network_qualities $network_state (test $network_autostart = 'yes'; and echo 'autostart') (test $network_persistent = 'yes'; and echo 'persistant')
+        set -l network_qualities $network_state (test $network_autostart = 'yes'; and echo 'autostart') (test $network_persistent = 'yes'; and echo 'persistent')
         set -l show true
         if set -q argv[1]
             for filter in $argv

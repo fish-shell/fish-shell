@@ -1,4 +1,4 @@
-complete -c gprof -s A -l annoted-source -d "Print annotated source"
+complete -c gprof -s A -l annotated-source -d "Print annotated source"
 complete -c gprof -s b -l brief -d "Do not print explanations"
 complete -c gprof -s C -l exec-counts -d "Print tally"
 complete -c gprof -s i -l file-info -d "Display summary"

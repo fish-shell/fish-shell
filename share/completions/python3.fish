@@ -35,7 +35,7 @@ complete -c python3 -n __fish_python_no_arg -s x -d 'Skip first line of source, 
 complete -c python3 -n __fish_python_no_arg -k -fa "(__fish_complete_suffix .py)"
 complete -c python3 -n __fish_python_no_arg -fa - -d 'Read program from stdin'
 complete -c python3 -n __fish_python_no_arg -s q -d 'Don\'t print version and copyright messages on interactive startup'
-complete -c python3 -n __fish_python_no_arg -s X -x -d 'Set implementation-specific option' -a 'faulthandler showrefcount tracemalloc showalloccount importtime dev utf8 pycache_prefex=PATH:'
+complete -c python3 -n __fish_python_no_arg -s X -x -d 'Set implementation-specific option' -a 'faulthandler showrefcount tracemalloc showalloccount importtime dev utf8 pycache_prefix=PATH:'
 complete -c python3 -n __fish_python_no_arg -s b -d 'Issue warnings for possible misuse of `bytes` with `str`'
 complete -c python3 -n __fish_python_no_arg -o bb -d 'Issue errors for possible misuse of `bytes` with `str`'
 complete -c python3 -n __fish_python_no_arg -s m -d 'Run library module as a script (terminates option list)' -xa '(python3 -c "import pkgutil; print(\'\n\'.join([p[1] for p in pkgutil.iter_modules()]))")'

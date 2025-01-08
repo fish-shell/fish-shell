@@ -169,7 +169,7 @@ complete -c pkg -n '__fish_pkg_is list' -xa '(pkg query "%n")'
 complete -c pkg -n '__fish_pkg_is add update' -s f -l force -d "Force a full download of a repository"
 
 # alias 
-set -l with_packge_names all-depends annotations build-depends cinfo comment csearch desc iinfo isearch \
+set -l with_package_names all-depends annotations build-depends cinfo comment csearch desc iinfo isearch \
     list options origin provided-depends roptions shared-depends show size
 
 for alias in (pkg alias -lq)

@@ -23,8 +23,9 @@ New or improved bindings
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 - :kbd:`ctrl-l` no longer clears the screen but only pushes to the terminal's scrollback all text above the prompt (via a new special input function ``scrollback-push``).
-  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities.
-  If not presesnt, the binding falls back to ``clear-screen``.
+  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities,
+  and on the terminal supporting Synchronized Output (which is used by fish to detect features).
+  If any is missing, the binding falls back to ``clear-screen``.
 
 Completions
 ^^^^^^^^^^^

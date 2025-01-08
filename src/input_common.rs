@@ -194,6 +194,8 @@ pub enum ImplicitEvent {
     MouseLeftClickContinuation(ViewportPosition, ViewportPosition),
     /// Push prompt to top.
     ScrollbackPushContinuation(usize),
+    /// The Synchronized Output feature is supported by the terminal.
+    SynchronizedOutputSupported,
 }
 
 #[derive(Debug, Clone)]
@@ -957,8 +959,14 @@ pub trait InputEventQueuer {
 
         let key = match c {
             b'$' => {
+                // DECRPM
                 if private_mode == Some(b'?') && next_char(self) == b'y' {
-                    // DECRPM
+                    if params[0][0] == 2026 && matches!(params[1][0], 1 | 2) {
+                        self.push_front(CharEvent::Implicit(
+                            ImplicitEvent::SynchronizedOutputSupported,
+                        ));
+                    }
+
                     return None;
                 }
                 match params[0][0] {

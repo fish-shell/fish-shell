@@ -2098,11 +2098,8 @@ impl<'a> Reader<'a> {
             let _ = out.write(KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
             // Query for cursor position reporting support.
             zelf.request_cursor_position(&mut out, CursorPositionWait::InitialFeatureProbe);
-            let mut xtgettcap = |cap| {
-                let _ = write!(&mut out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
-            };
-            xtgettcap("indn");
-            xtgettcap("cuu");
+            // Query for synchronized output support.
+            let _ = out.write(b"\x1b[?2026$p");
             out.end_buffering();
         }
 
@@ -2422,10 +2419,34 @@ impl<'a> Reader<'a> {
                     self.screen.push_to_scrollback(cursor_y);
                     self.stop_waiting_for_cursor_position();
                 }
+                ImplicitEvent::SynchronizedOutputSupported => {
+                    synchronized_supported();
+                }
             },
         }
         ControlFlow::Continue(())
     }
+}
+
+fn xtgettcap(out: &mut impl Write, cap: &str) {
+    let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
+}
+
+fn synchronized_supported() {
+    static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+    if QUERIED.load() {
+        return;
+    }
+    QUERIED.store(true);
+    let mut out = Outputter::stdoutput().borrow_mut();
+    out.begin_buffering();
+    let _ = out.write(b"\x1b[?2026h"); // begin synchronized update
+    let _ = out.write(b"\x1b[?1049h"); // enable alternative screen buffer
+    xtgettcap(out.by_ref(), "indn");
+    xtgettcap(out.by_ref(), "cuu");
+    let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
+    let _ = out.write(b"\x1b[?2026l"); // end synchronized update
+    out.end_buffering();
 }
 
 impl<'a> Reader<'a> {

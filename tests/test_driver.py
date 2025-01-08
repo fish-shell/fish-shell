@@ -52,11 +52,11 @@ def main():
     else:
         files = [
             (os.path.abspath(path), path.relative_to(script_path))
-            for path in script_path.glob("checks/*.fish")
+            for path in sorted(script_path.glob("checks/*.fish"))
         ]
         files += [
             (os.path.abspath(path), path.relative_to(script_path))
-            for path in script_path.glob("pexpects/*.py")
+            for path in sorted(script_path.glob("pexpects/*.py"))
         ]
 
     # Set up tempdir

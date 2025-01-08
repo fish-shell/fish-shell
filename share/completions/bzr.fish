@@ -61,7 +61,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l pull -d 'If destina
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l remember -d 'Remember the specified location as a default'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l force -d 'Merge even if the destination tree has uncommitted changes'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l reprocess -d 'Reprocess to reduce spurious conflicts'
-complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l uncommited -d 'Apply uncommitted changes from a working copy, instead of branch changes'
+complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l uncommitted -d 'Apply uncommitted changes from a working copy, instead of branch changes'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l show-base -d 'Show base revision text in conflicts'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l preview -d 'Instead of merging, show a diff of the merge'
 complete -f -c bzr -n '__fish_seen_subcommand_from merge' -l interactive -s i -d 'Select changes interactively'

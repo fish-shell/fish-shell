@@ -169,7 +169,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> O
             if !opts.get_type {
                 streams.out.append(wgettext_fmt!("%ls is a builtin\n", arg));
             } else if opts.get_type {
-                streams.out.append(wgettext!("builtin\n"));
+                streams.out.append(L!("builtin\n"));
             }
             if !opts.all {
                 continue;

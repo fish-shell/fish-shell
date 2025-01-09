@@ -767,6 +767,7 @@ complete -c cargo -n "__fish_seen_subcommand_from update" -s v -l verbose -d 'Us
 complete -c cargo -n "__fish_seen_subcommand_from update" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from update" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from update" -l offline -d 'Run without accessing the network'
+complete -c cargo -n "__fish_seen_subcommand_from update" -l ignore-rust-version -d 'Ignore MSRV when checking updates'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -l manifest-path -d 'Path to Cargo.toml'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -s s -l sync -d 'Additional `Cargo.toml` to sync and vendor'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -l color -d 'Coloring: auto, always, never'

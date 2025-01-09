@@ -1,6 +1,14 @@
 # This adds ctest support to the project
 enable_testing()
 
+# By default, ctest runs tests serially
+if(NOT CTEST_PARALLEL_LEVEL)
+  include(ProcessorCount)
+  ProcessorCount(CORES)
+  set(CTEST_PARALLEL_LEVEL ${CORES})
+endif()
+
+
 # Put in a tests folder to reduce the top level targets in IDEs.
 set(CMAKE_FOLDER tests)
 
@@ -15,6 +23,8 @@ set(SKIP_RETURN_CODE 125)
 #    shells out to `ctest`, so there are no build-related benefits to not doing that ourselves.
 #  * CMake devs insist that it is appropriate for `make test` to never depend on `make all`, i.e.
 #    running `make test` does not require any of the binaries to be built before testing.
+#  * It is not possible to set top-level CTest options/settings such as CTEST_PARALLEL_LEVEL from
+#    within the CMake configuration file.
 #  * The only way to have a test depend on a binary is to add a fake test with a name like
 #    "build_fish" that executes CMake recursively to build the `fish` target.
 #  * Circling back to the point about individual tests not being actual Makefile targets, CMake does
@@ -24,7 +34,7 @@ set(SKIP_RETURN_CODE 125)
 
 # The top-level test target is "fish_run_tests".
 add_custom_target(fish_run_tests
-  COMMAND env FISH_FORCE_COLOR=1
+  COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress

@@ -204,13 +204,18 @@ where
 
 #[test]
 fn test_close_during_select_ebadf() {
+    use crate::common::{is_windows_subsystem_for_linux as is_wsl, WSL};
     let close_it = |read_fd: OwnedFd| {
         drop(read_fd);
         None
     };
     let result = do_something_bad_during_select(close_it);
+
+    // WSLv1 does not error out with EBADF if the fd is closed mid-select.
+    // This is OK because we do not _depend_ on this behavior; the only
+    // true requirement is that we don't panic in the handling code above.
     assert!(
-        matches!(result, Err(libc::EBADF) | Ok(1)),
+        is_wsl(WSL::V1) || matches!(result, Err(libc::EBADF) | Ok(1)),
         "select/poll should have failed with EBADF or marked readable"
     );
 }

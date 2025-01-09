@@ -384,6 +384,8 @@ impl BackgroundFdMonitor {
             // in particular it may even close file descriptors that we are waiting on. That is why
             // we handle EBADF. Note that even if the file descriptor is recycled, we don't invoke
             // a callback for it unless its ItemID is still present.
+            //
+            // Note that WSLv1 doesn't throw EBADF if the fd is closed is mid-select.
             drop(data);
             let ret = fds.check_readable(
                 timeout

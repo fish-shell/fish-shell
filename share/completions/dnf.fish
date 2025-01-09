@@ -3,8 +3,7 @@
 #
 
 function __dnf_is_dnf5
-    set -l dnf_target (readlink (type -P dnf))
-    string match -q -- dnf5 $dnf_target
+    path resolve -- $PATH/dnf | path filter | string match -q -- '*/dnf5'
 end
 
 function __dnf_list_installed_packages
@@ -47,7 +46,7 @@ function __dnf_list_available_packages
 end
 
 function __dnf_list_transactions
-    if not __dnf_is_dnf5 and type -q sqlite3
+    if not __dnf_is_dnf5 && type -q sqlite3
         sqlite3 /var/lib/dnf/history.sqlite "SELECT id, cmdline FROM trans" 2>/dev/null | string replace "|" \t
     end
 end

@@ -1,0 +1,3 @@
+[resolver]
+# Make cargo 1.84+ respect MSRV (rust-version in Cargo.toml)
+incompatible-rust-versions = "fallback"

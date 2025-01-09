@@ -2,6 +2,10 @@
 # Completions for the dnf command
 #
 
+function __dnf_is_dnf5
+    path resolve -- $PATH/dnf | path filter | string match -q -- '*/dnf5'
+end
+
 function __dnf_list_installed_packages
     dnf repoquery --cacheonly "$cur*" --qf "%{name}\n" --installed </dev/null
 end
@@ -15,9 +19,14 @@ function __dnf_list_available_packages
         return
     end
     set -l results
-    # dnf --cacheonly list --available gives a list of non-installed packages dnf is aware of,
-    # but it is slow as molasses. Unfortunately, sqlite3 is not available oob (Fedora Server 32).
-    if type -q sqlite3
+    if __dnf_is_dnf5
+        # dnf5 provides faster completions than repoquery, but does not maintain the
+        # same sqlite db as dnf4
+        set results (dnf --complete=2 dnf install "$tok*")
+    else if type -q sqlite3
+        # dnf --cacheonly list --available gives a list of non-installed packages dnf is aware of,
+        # but it is slow as molasses. Unfortunately, sqlite3 is not available oob (Fedora Server 32).
+
         # This schema is bad, there is only a "pkg" field with the full
         #    packagename-version-release.fedorarelease.architecture
         # tuple. We are only interested in the packagename.
@@ -37,7 +46,7 @@ function __dnf_list_available_packages
 end
 
 function __dnf_list_transactions
-    if type -q sqlite3
+    if not __dnf_is_dnf5 && type -q sqlite3
         sqlite3 /var/lib/dnf/history.sqlite "SELECT id, cmdline FROM trans" 2>/dev/null | string replace "|" \t
     end
 end

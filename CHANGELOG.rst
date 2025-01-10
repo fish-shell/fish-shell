@@ -235,11 +235,12 @@ Completions
 - Option completion now uses fuzzy subsequence filtering, just like non-option completion (:issue:`830`).
   This means that ``--fb`` may be completed to ``--foobar`` if there is no better match.
 - Completions that insert an entire token now use quotes instead of backslashes to escape special characters (:issue:`5433`).
-- Historically, file name completions are provided after the last ``:``  or ``=`` within a token.
+- Normally, file name completions start after the last ``:``  or ``=`` in a token.
   This helps commands like ``rsync --files-from=``.
-  If the ``=`` or ``:`` is actually part of the filename, it will be escaped as ``\:`` and ``\=``,
-  and no longer get this special treatment.
+  This special meaning can now disabled by escaping these separators as ``\:`` and ``\=``.
   This matches Bash's behavior.
+  Note that this escaping is usually not necessary since the completion engine already tries
+  to guess whether the separator is actually part of a file name.
 - Various new completion scripts and numerous updates to existing ones.
 - Generated completions are now stored in ``$XDG_CACHE_HOME/fish`` or ``~/.cache/fish`` by default (:issue:`10369`)
 

@@ -131,6 +131,7 @@ use crate::threads::{
     Debounce,
 };
 use crate::tokenizer::quote_end;
+use crate::tokenizer::variable_assignment_equals_pos;
 use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
@@ -5953,6 +5954,7 @@ pub fn completion_apply_to_command_line(
     let do_replace_line = flags.contains(CompleteFlags::REPLACES_LINE);
     let do_escape = !flags.contains(CompleteFlags::DONT_ESCAPE);
     let no_tilde = flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
+    let keep_variable_override = flags.contains(CompleteFlags::KEEP_VARIABLE_OVERRIDE_PREFIX);
 
     let cursor_pos = *inout_cursor_pos;
     let mut back_into_trailing_quote = false;
@@ -5978,19 +5980,27 @@ pub fn completion_apply_to_command_line(
     }
 
     if do_replace_token {
-        let mut move_cursor;
+        let mut move_cursor = 0;
         let mut range = 0..0;
         parse_util_token_extent(command_line, cursor_pos, &mut range, None);
 
         let mut sb = command_line[..range.start].to_owned();
 
+        if keep_variable_override {
+            let tok = &command_line[range.clone()];
+            let separator_pos = variable_assignment_equals_pos(tok).unwrap();
+            let key = &tok[..=separator_pos];
+            sb.push_utfstr(&key);
+            move_cursor += key.len();
+        }
+
         if do_escape {
             let escaped = escape_string(val_str, EscapeStringStyle::Script(escape_flags));
             sb.push_utfstr(&escaped);
-            move_cursor = escaped.len();
+            move_cursor += escaped.len();
         } else {
             sb.push_utfstr(val_str);
-            move_cursor = val_str.len();
+            move_cursor += val_str.len();
         }
 
         if add_space {

@@ -23,3 +23,10 @@ isolated-tmux send-keys C-u 'complete nofilecomp -f' Enter C-l 'nofilecomp ./CO'
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 2> : ./COMPL
+
+isolated-tmux send-keys C-u C-k C-l ': ./CO'
+tmux-sleep
+isolated-tmux send-keys A C-h
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 2> : ./COMPL

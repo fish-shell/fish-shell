@@ -490,6 +490,8 @@ pub struct ReaderData {
     rendered_layout: LayoutData,
     /// The current autosuggestion.
     autosuggestion: Autosuggestion,
+    /// A previously valid autosuggestion.
+    saved_autosuggestion: Option<Autosuggestion>,
     /// Current pager.
     pager: Pager,
     /// The output of the pager.
@@ -1155,6 +1157,7 @@ impl ReaderData {
             command_line_has_transient_edit: false,
             rendered_layout: Default::default(),
             autosuggestion: Default::default(),
+            saved_autosuggestion: Default::default(),
             pager: Default::default(),
             current_page_rendering: Default::default(),
             suppress_autosuggestion: Default::default(),
@@ -1248,7 +1251,9 @@ impl ReaderData {
                 // Update the gen count.
                 GENERATION.fetch_add(1, Ordering::Relaxed);
                 if !keep_autosuggestion {
-                    self.autosuggestion.clear();
+                    if !self.autosuggestion.is_empty() {
+                        self.saved_autosuggestion = Some(std::mem::take(&mut self.autosuggestion));
+                    }
                 }
             }
             EditableLineTag::SearchField => {
@@ -1771,7 +1776,27 @@ impl ReaderData {
     }
 
     fn push_edit_internal(&mut self, elt: EditableLineTag, edit: Edit, allow_coalesce: bool) {
-        let preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(elt, &edit);
+        let mut preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(elt, &edit);
+        if elt == EditableLineTag::Commandline {
+            let saved_autosuggestion = self.saved_autosuggestion.take();
+            if (self.autosuggestion.is_empty()
+                || !preserves_autosuggestion
+                || self.suppress_autosuggestion)
+                && saved_autosuggestion
+                    .as_ref()
+                    .is_some_and(|saved_autosuggestion| {
+                        self.conf.autosuggest_ok
+                            && self.history_search.is_at_end()
+                            && edit.replacement.is_empty()
+                            && edit.range.start == saved_autosuggestion.search_string_range.end
+                            && edit.range.len() == 1
+                    })
+            {
+                self.autosuggestion = saved_autosuggestion.unwrap();
+                self.suppress_autosuggestion = false;
+                preserves_autosuggestion = true;
+            }
+        }
         self.edit_line_mut(elt).push_edit(edit, allow_coalesce);
         self.command_line_changed(elt, preserves_autosuggestion);
     }
@@ -1860,9 +1885,9 @@ impl ReaderData {
                 break;
             }
         }
+        self.suppress_autosuggestion = true;
         self.erase_substring(elt, pos..pos_end);
         self.update_buff_pos(elt, None);
-        self.suppress_autosuggestion = true;
     }
 }
 
@@ -2800,10 +2825,10 @@ impl<'a> Reader<'a> {
                     };
                     let begin = el.position() + bias - self.rls().yank_len;
                     let end = el.position() + bias;
+                    self.suppress_autosuggestion = true;
                     self.replace_substring(elt, begin..end, yank_str);
                     self.update_buff_pos(elt, None);
                     self.rls_mut().yank_len = new_yank_len;
-                    self.suppress_autosuggestion = true;
                 }
             }
             rl::BackwardDeleteChar => {

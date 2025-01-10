@@ -119,10 +119,8 @@ bitflags! {
         const NO_TILDE = 1 << 2;
         /// Replace non-printable control characters with Unicode symbols.
         const SYMBOLIC = 1 << 3;
-        /// Escape : and =
-        const SEPARATORS = 1 << 4;
         /// Escape ,
-        const COMMA = 1 << 5;
+        const COMMA = 1 << 4;
     }
 }
 
@@ -183,7 +181,6 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 /// Escape a string in a fashion suitable for using in fish script.
 fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
     let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
-    let escape_separators = flags.contains(EscapeFlags::SEPARATORS);
     let escape_comma = flags.contains(EscapeFlags::COMMA);
     let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
     let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
@@ -294,13 +291,6 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
             }
             ANY_STRING_RECURSIVE => {
                 out += L!("**");
-            }
-            ':' | '=' => {
-                if escape_separators {
-                    need_escape = true;
-                    out.push('\\');
-                }
-                out.push(c);
             }
             ',' => {
                 if escape_comma {

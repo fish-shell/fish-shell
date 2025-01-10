@@ -41,8 +41,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv shift-tab complete-and-search
     $legacy_bind --preset $argv -k btab complete-and-search
-    bind --preset $argv shift-delete history-pager-delete or backward-delete-char
-    $legacy_bind --preset $argv -k sdc history-pager-delete or backward-delete-char
+    bind --preset $argv shift-delete history-delete or backward-delete-char
+    $legacy_bind --preset $argv -k sdc history-delete or backward-delete-char
 
     bind --preset $argv down down-or-search
     $legacy_bind --preset $argv -k down down-or-search

@@ -58,11 +58,13 @@ pub enum ReadlineCmd {
     BackwardToken,
     NextdOrForwardWord,
     PrevdOrBackwardWord,
+    HistoryDelete,
     HistorySearchBackward,
     HistorySearchForward,
     HistoryPrefixSearchBackward,
     HistoryPrefixSearchForward,
     HistoryPager,
+    #[deprecated]
     HistoryPagerDelete,
     DeleteChar,
     BackwardDeleteChar,

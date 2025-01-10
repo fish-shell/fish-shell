@@ -3,11 +3,11 @@
 # disable on github actions because it's flakey
 #REQUIRES: test -z "$CI"
 
-# The default history-pager-delete binding is shift-delete which
+# The default history-delete binding is shift-delete which
 # won't work on terminals that don't support CSI u, so rebind.
 set -g isolated_tmux_fish_extra_args -C '
     set -g fish_autosuggestion_enabled 0
-    bind alt-d history-pager-delete or backward-delete-char
+    bind alt-d history-delete or backward-delete-char
 '
 isolated-tmux-start
 

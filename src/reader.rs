@@ -2971,7 +2971,8 @@ impl<'a> Reader<'a> {
                 };
                 self.insert_string(EditableLineTag::SearchField, &search_string);
             }
-            rl::HistoryPagerDelete => {
+            #[allow(deprecated)]
+            rl::HistoryDelete | rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
                 let is_history_search = !self.history_search.is_at_end();
                 let is_autosuggestion = self.is_at_autosuggestion();
@@ -5470,6 +5471,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
 fn command_ends_history_search(c: ReadlineCmd) -> bool {
     #[allow(non_camel_case_types)]
     type rl = ReadlineCmd;
+    #[allow(deprecated)]
     !matches!(
         c,
         rl::HistoryPrefixSearchBackward
@@ -5478,6 +5480,7 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::HistorySearchForward
             | rl::HistoryTokenSearchBackward
             | rl::HistoryTokenSearchForward
+            | rl::HistoryDelete
             | rl::HistoryPagerDelete
             | rl::BeginningOfHistory
             | rl::EndOfHistory

@@ -172,7 +172,9 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("forward-single-char"), ReadlineCmd::ForwardSingleChar),
     make_md(L!("forward-token"), ReadlineCmd::ForwardToken),
     make_md(L!("forward-word"), ReadlineCmd::ForwardWord),
+    make_md(L!("history-delete"), ReadlineCmd::HistoryDelete),
     make_md(L!("history-pager"), ReadlineCmd::HistoryPager),
+    #[allow(deprecated)]
     make_md(L!("history-pager-delete"), ReadlineCmd::HistoryPagerDelete),
     make_md(L!("history-prefix-search-backward"), ReadlineCmd::HistoryPrefixSearchBackward),
     make_md(L!("history-prefix-search-forward"), ReadlineCmd::HistoryPrefixSearchForward),

@@ -2974,7 +2974,13 @@ impl<'a> Reader<'a> {
             rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
                 let is_history_search = !self.history_search.is_at_end();
-                if is_history_search || self.is_at_line_with_autosuggestion() {
+                let is_autosuggestion = self.is_at_line_with_autosuggestion();
+                if is_history_search || is_autosuggestion {
+                    self.input_data.function_set_status(true);
+                    if is_autosuggestion && !self.autosuggestion.is_from_history {
+                        self.flash();
+                        return;
+                    }
                     self.history.remove(if is_history_search {
                         self.history_search.current_result()
                     } else {
@@ -2987,7 +2993,6 @@ impl<'a> Reader<'a> {
                     } else {
                         self.autosuggestion.clear();
                     }
-                    self.input_data.function_set_status(true);
                     return;
                 }
                 if self.history_pager.is_none() {
@@ -4525,6 +4530,9 @@ struct Autosuggestion {
     // Whether the autosuggestion should be case insensitive.
     // This is true for file-generated autosuggestions, but not for history.
     icase: bool,
+
+    // Whether the autosuggestion is a whole match from history.
+    is_from_history: bool,
 }
 
 impl Autosuggestion {
@@ -4565,12 +4573,14 @@ impl AutosuggestionResult {
         search_string_range: Range<usize>,
         text: WString,
         icase: bool,
+        is_from_history: bool,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
                 text,
                 search_string_range,
                 icase,
+                is_from_history,
             },
             command_line,
             needs_load: vec![],
@@ -4633,6 +4643,7 @@ fn get_autosuggestion_performer(
                         search_string_range,
                         searcher.current_string().to_owned(),
                         /*icase=*/ false,
+                        /*is_history=*/ true,
                     );
                 }
             }
@@ -4682,6 +4693,7 @@ fn get_autosuggestion_performer(
             search_string_range.clone(),
             suggestion,
             true, // normal completions are case-insensitive
+            /*is_from_history=*/ false,
         );
         result.needs_load = needs_load;
         result

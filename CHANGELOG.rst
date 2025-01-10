@@ -35,9 +35,12 @@ Improved terminal support
 
 Other improvements
 ------------------
+- ``fish_indent`` and ``fish_key_reader`` are now available as builtins, and if fish is called with that name it will act like the given tool (as a multi-call binary).
+  This allows truly distributing fish as a single file. (:issue:`10876`)
 
 For distributors
 ----------------
+- ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space.
 
 fish 4.0b1 (released December 17, 2024)
 =======================================

@@ -112,13 +112,14 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv "&" self-insert expand-abbr
         bind --preset $argv ">" self-insert expand-abbr
         bind --preset $argv "<" self-insert expand-abbr
-        bind --preset $argv shift-enter "commandline -i \n" expand-abbr
-        bind --preset $argv alt-enter "commandline -i \n" expand-abbr
+        set -l maybe_search_field '(commandline --search-field >/dev/null && echo --search-field)'
+        bind --preset $argv shift-enter "commandline -i \n $maybe_search_field" expand-abbr
+        bind --preset $argv alt-enter "commandline -i \n $maybe_search_field" expand-abbr
         bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
-        bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " "'
-        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
+        bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
+        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
         # Shift-space behaves like space because it's easy to mistype.
-        bind --preset $argv shift-space 'commandline -i " "' expand-abbr
+        bind --preset $argv shift-space 'commandline -i " " '$maybe_search_field expand-abbr
 
         bind --preset $argv enter execute
         bind --preset $argv ctrl-j execute

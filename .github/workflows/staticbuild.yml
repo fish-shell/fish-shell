@@ -68,8 +68,8 @@ jobs:
            rustup target add aarch64-apple-darwin
     - name: Build
       run: |
-           RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target aarch64-apple-darwin
-           RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-apple-darwin
+           PCRE2_SYS_STATIC=1 cargo build --release --target aarch64-apple-darwin
+           PCRE2_SYS_STATIC=1 cargo build --release --target x86_64-apple-darwin
     - name: Compress
       run: |
            tar -cazf fish-macos-aarch64.tar.xz -C target/aarch64-apple-darwin/release/ fish{,_indent,_key_reader}

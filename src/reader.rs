@@ -2974,7 +2974,7 @@ impl<'a> Reader<'a> {
             rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
                 let is_history_search = !self.history_search.is_at_end();
-                let is_autosuggestion = self.is_at_line_with_autosuggestion();
+                let is_autosuggestion = self.is_at_autosuggestion();
                 if is_history_search || is_autosuggestion {
                     self.input_data.function_set_status(true);
                     if is_autosuggestion && !self.autosuggestion.is_from_history {

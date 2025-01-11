@@ -5179,9 +5179,9 @@ impl ReaderData {
                 }
             }
             HistoryPagerInvocation::Refresh => {
-                // Redo the previous search previous direction.
+                // Make backward search from current position
                 let history_pager = self.history_pager.as_ref().unwrap();
-                direction = history_pager.direction;
+                direction = SearchDirection::Backward;
                 index = history_pager.history_index_start;
                 old_pager_index = Some(self.pager.selected_completion_index());
             }

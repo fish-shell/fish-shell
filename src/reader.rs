@@ -5082,6 +5082,7 @@ struct HistoryPagerResult {
     matched_commands: Vec<Completion>,
     range: Range<usize>,
     first_shown: usize,
+    motion: Option<SelectionMotion>,
 }
 
 #[derive(Eq, PartialEq)]
@@ -5094,6 +5095,7 @@ enum HistoryPagerInvocation {
 fn history_pager_search(
     history: &Arc<History>,
     direction: SearchDirection,
+    motion: Option<SelectionMotion>,
     history_index: usize,
     search_string: &wstr,
 ) -> HistoryPagerResult {
@@ -5143,10 +5145,22 @@ fn history_pager_search(
         next_match_found = search.go_to_next_match(SearchDirection::Backward);
     }
     let last_index = search.current_index();
-    HistoryPagerResult {
-        matched_commands: completions,
-        range: first_index..last_index,
-        first_shown,
+    let range = first_index..last_index;
+    if completions.is_empty() && range != (0..history.size() + 1) {
+        history_pager_search(
+            history,
+            SearchDirection::Forward,
+            Some(SelectionMotion::Prev),
+            history.size() + 1,
+            search_string,
+        )
+    } else {
+        HistoryPagerResult {
+            matched_commands: completions,
+            range,
+            first_shown,
+            motion,
+        }
     }
 }
 
@@ -5183,7 +5197,7 @@ impl ReaderData {
         let performer = {
             let history = self.history.clone();
             let search_term = search_term.clone();
-            move || history_pager_search(&history, direction, index, &search_term)
+            move || history_pager_search(&history, direction, motion, index, &search_term)
         };
         let canary = Rc::downgrade(&self.canary);
         let completion = move |zelf: &mut Reader, result: HistoryPagerResult| {
@@ -5216,7 +5230,7 @@ impl ReaderData {
                 zelf.pager.set_selected_completion_index(old_pager_index);
                 zelf.pager_selection_changed();
             }
-            if let Some(motion) = motion {
+            if let Some(motion) = result.motion {
                 zelf.select_completion_in_direction(motion, true);
             }
             zelf.super_highlight_me_plenty();

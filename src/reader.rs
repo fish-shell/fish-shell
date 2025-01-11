@@ -145,7 +145,7 @@ use crate::wcstringutil::{
 };
 use crate::wildcard::wildcard_has;
 use crate::wutil::{fstat, perror};
-use crate::{abbrs, event, function, history};
+use crate::{abbrs, event, function};
 
 /// A description of where fish is in the process of exiting.
 #[repr(u8)]
@@ -521,7 +521,7 @@ pub struct ReaderData {
     /// The history search.
     history_search: ReaderHistorySearch,
     /// In-pager history search.
-    history_pager: Option<HistoryPager>,
+    history_pager: Option<Range<usize>>,
 
     /// The cursor selection mode.
     cursor_selection_mode: CursorSelectionMode,
@@ -2717,7 +2717,7 @@ impl<'a> Reader<'a> {
             }
             rl::PagerToggleSearch => {
                 if let Some(history_pager) = &self.history_pager {
-                    if history_pager.history_index_start == 0 {
+                    if history_pager.start == 0 {
                         self.flash();
                         return;
                     }
@@ -2986,7 +2986,7 @@ impl<'a> Reader<'a> {
             }
             rl::HistoryPager => {
                 if let Some(history_pager) = &self.history_pager {
-                    if !history_pager.can_go_backwards {
+                    if history_pager.end > self.history.size() {
                         self.flash();
                         return;
                     }
@@ -3001,12 +3001,7 @@ impl<'a> Reader<'a> {
                 self.cycle_command_line = self.command_line.text().to_owned();
                 self.cycle_cursor_pos = self.command_line.position();
 
-                self.history_pager = Some(HistoryPager {
-                    direction: SearchDirection::Backward,
-                    history_index_start: 0,
-                    history_index_end: 0,
-                    can_go_backwards: false,
-                });
+                self.history_pager = Some(0..1);
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
                 self.pager.set_prefix(
@@ -5082,8 +5077,7 @@ impl<'a> Reader<'a> {
 
 struct HistoryPagerResult {
     matched_commands: Vec<Completion>,
-    final_index: usize,
-    have_more_results: bool,
+    range: Range<usize>,
 }
 
 #[derive(Eq, PartialEq)]
@@ -5091,15 +5085,6 @@ enum HistoryPagerInvocation {
     Anew,
     Advance,
     Refresh,
-}
-
-struct HistoryPager {
-    /// The direction of the last successful history pager search.
-    direction: SearchDirection,
-    /// The range in history covered by the history pager's current page.
-    history_index_start: usize,
-    history_index_end: usize,
-    can_go_backwards: bool,
 }
 
 fn history_pager_search(
@@ -5114,29 +5099,34 @@ fn history_pager_search(
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
-    let page_size = usize::try_from(std::cmp::max(termsize_last().height / 2 - 2, 12)).unwrap();
-
-    let mut completions = vec![];
+    let page_size = usize::try_from(cmp::max(termsize_last().height / 2 - 2, 12)).unwrap();
+    let mut completions = Vec::with_capacity(page_size);
     let mut search = HistorySearch::new_with(
         history.clone(),
         search_string.to_owned(),
-        history::SearchType::ContainsGlob,
+        SearchType::ContainsGlob,
         smartcase_flags(search_string),
         history_index,
     );
-    let mut next_match_found = search.go_to_next_match(direction);
-    if !next_match_found && !parse_util_contains_wildcards(search_string) {
+    if !search.go_to_next_match(direction) && !parse_util_contains_wildcards(search_string) {
         // If there were no matches, and the user is not intending for
         // wildcard search, try again with subsequence search.
         search = HistorySearch::new_with(
             history.clone(),
             search_string.to_owned(),
-            history::SearchType::ContainsSubsequence,
+            SearchType::ContainsSubsequence,
             smartcase_flags(search_string),
             history_index,
         );
-        next_match_found = search.go_to_next_match(direction);
+        search.go_to_next_match(direction);
     }
+    // When searching, first we need to find the element before first shown.
+    search.search_forward(match direction {
+        SearchDirection::Forward => page_size,
+        SearchDirection::Backward => 0,
+    });
+    let first_index = search.current_index();
+    let mut next_match_found = search.go_to_next_match(SearchDirection::Backward);
     while completions.len() < page_size && next_match_found {
         let item = search.current_item();
         completions.push(Completion::new(
@@ -5145,17 +5135,12 @@ fn history_pager_search(
             StringFuzzyMatch::exact_match(),
             CompleteFlags::REPLACES_LINE | CompleteFlags::DONT_ESCAPE | CompleteFlags::DONT_SORT,
         ));
-
-        next_match_found = search.go_to_next_match(direction);
+        next_match_found = search.go_to_next_match(SearchDirection::Backward);
     }
     let last_index = search.current_index();
-    if direction == SearchDirection::Forward {
-        completions.reverse();
-    }
     HistoryPagerResult {
         matched_commands: completions,
-        final_index: last_index,
-        have_more_results: search.go_to_next_match(direction),
+        range: first_index..last_index,
     }
 }
 
@@ -5175,15 +5160,15 @@ impl ReaderData {
             HistoryPagerInvocation::Advance => {
                 let history_pager = self.history_pager.as_ref().unwrap();
                 index = match direction {
-                    SearchDirection::Forward => history_pager.history_index_start,
-                    SearchDirection::Backward => history_pager.history_index_end,
+                    SearchDirection::Forward => history_pager.start + 1,
+                    SearchDirection::Backward => history_pager.end - 1,
                 }
             }
             HistoryPagerInvocation::Refresh => {
                 // Make backward search from current position
                 let history_pager = self.history_pager.as_ref().unwrap();
                 direction = SearchDirection::Backward;
-                index = history_pager.history_index_start;
+                index = history_pager.start;
                 old_pager_index = Some(self.pager.selected_completion_index());
             }
         }
@@ -5201,24 +5186,14 @@ impl ReaderData {
             if search_term != zelf.pager.search_field_line.text() {
                 return; // Stale request.
             }
+            let history_size = zelf.history.size();
             let history_pager = zelf.history_pager.as_mut().unwrap();
-            history_pager.direction = direction;
-            match direction {
-                SearchDirection::Forward => {
-                    history_pager.can_go_backwards = true;
-                    if index == 0 || index <= result.final_index {
-                        return;
-                    }
-                    history_pager.history_index_start = result.final_index;
-                    history_pager.history_index_end = index;
-                }
-                SearchDirection::Backward => {
-                    history_pager.history_index_start = index;
-                    history_pager.history_index_end = result.final_index;
-                    history_pager.can_go_backwards = result.have_more_results;
-                }
-            };
-            zelf.pager.extra_progress_text = if result.have_more_results {
+            assert!(result.range.start < result.range.end);
+            *history_pager = result.range;
+            zelf.pager.extra_progress_text = if direction == SearchDirection::Forward
+                && history_pager.start != 0
+                || direction == SearchDirection::Backward && history_pager.end != history_size + 1
+            {
                 wgettext!("Search again for more results")
             } else {
                 L!("")

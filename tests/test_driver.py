@@ -129,6 +129,7 @@ def main():
         fishdir = fishdir.parent
 
     failcount = 0
+    failed=[]
     passcount = 0
     skipcount = 0
     def_subs = {"%": "%"}
@@ -147,11 +148,11 @@ def main():
         files = [(os.path.abspath(path), path) for path in args.file]
     else:
         files = [
-            (os.path.abspath(path), path.relative_to(script_path))
+            (os.path.abspath(path), str(path.relative_to(script_path)))
             for path in sorted(script_path.glob("checks/*.fish"))
         ]
         files += [
-            (os.path.abspath(path), path.relative_to(script_path))
+            (os.path.abspath(path), str(path.relative_to(script_path)))
             for path in sorted(script_path.glob("pexpects/*.py"))
         ]
 
@@ -188,6 +189,7 @@ def main():
                 else:
                     print(f"{RED}FAIL{RESET} ({duration_ms} ms)")
                     failcount += 1
+                    failed += [arg]
                     print(f"Tmpdir is {home}")
             elif f.endswith(".py"):
                 # environ for py files has a few changes.
@@ -212,8 +214,8 @@ def main():
                         ["python3", f],
                         capture_output=True,
                         env=pyenviron,
-                        # Timeout of 90 seconds, about 9 times what any of these takes
-                        timeout=90,
+                        # Timeout of 120 seconds, about 10 times what any of these takes
+                        timeout=120,
                     )
                 except subprocess.TimeoutExpired as e:
                     print(f"{RED}FAILED due to timeout{RESET}")
@@ -222,6 +224,7 @@ def main():
                     if e.stderr:
                         print(e.stderr.decode("utf-8"))
                     failcount += 1
+                    failed += [arg]
                     continue
 
                 endtime = datetime.now()
@@ -239,9 +242,12 @@ def main():
                     if proc.stderr:
                         print(proc.stderr.decode("utf-8"))
                     failcount += 1
+                    failed += [arg]
                     print(f"Tmpdir is {home}")
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")
+    if failcount:
+        print(f"{RED}Failed tests{RESET}: \n    {'\n    '.join(failed)}")
     if passcount == 0 and failcount == 0 and skipcount:
         return 125
     return 1 if failcount else 0

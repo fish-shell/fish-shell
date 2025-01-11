@@ -21,6 +21,7 @@ Interactive improvements
   when typing a command and :kbd:`enter` while the previous one is still running, the new one will no longer execute immediately. Similarly, keys that are bound to shell commands will be ignored.
   This mitigates a security issue where a command like ``cat malicious-file.txt`` could write terminal escape codes prompting the terminal to write arbitrary text to fish's standard input.
   Such a malicious file can still potentially insert arbitrary text into the command line but can no longer execute it directly (:issue:`10987`).
+- The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Left mouse click now can select pager items.
 
 New or improved bindings

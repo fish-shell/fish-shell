@@ -1,4 +1,4 @@
-#RUN: fish=%fish filter_ctrls=%filter-control-sequences %fish %s
+#RUN: fish=%fish %fish %s
 # Some tests of the "return" builtin.
 
 $fish -c 'return 5'
@@ -21,7 +21,7 @@ begin
     # but not bar
     echo $status
     # CHECK: 69
-end | $fish $filter_ctrls
+end
 
 # Verify negative return values don't cause UB and never map to 0
 function empty_return

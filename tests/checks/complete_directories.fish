@@ -1,4 +1,4 @@
-#RUN: %fish --interactive %s | %fish %filter-control-sequences
+#RUN: %fish --interactive %s
 # ^ interactive so we can do `complete`
 mkdir -p __fish_complete_directories/
 cd __fish_complete_directories

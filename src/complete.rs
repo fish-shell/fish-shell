@@ -1584,43 +1584,8 @@ impl<'ctx> Completer<'ctx> {
         };
         let complete_from_start = sep_index.is_none() || !string_prefixes_string(L!("-"), s);
 
-        if let Some(sep_index) = sep_index {
-            let sep_string = s.slice_from(sep_index + 1);
-            let mut local_completions = Vec::new();
-            if matches!(
-                expand_string(
-                    sep_string.to_owned(),
-                    &mut local_completions,
-                    flags,
-                    self.ctx,
-                    None,
-                )
-                .result,
-                ExpandResultCode::error | ExpandResultCode::overflow
-            ) {
-                FLOGF!(complete, "Error while expanding string '%ls'", sep_string);
-            }
-
-            // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
-            // inserting our separator and prefix.
-            Self::escape_opening_brackets(&mut local_completions, s);
-            Self::escape_separators(
-                &mut local_completions,
-                variable_override_prefix,
-                self.flags.autosuggestion,
-                true,
-                quoted,
-            );
-            let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
-            for comp in &mut local_completions {
-                comp.prepend_token_prefix(prefix_with_sep);
-            }
-            if !self.completions.extend(local_completions) {
-                return;
-            }
-        }
-
         if complete_from_start {
+            let mut flags = flags;
             // Don't do fuzzy matching for files if the string begins with a dash (issue #568). We could
             // consider relaxing this if there was a preceding double-dash argument.
             if string_prefixes_string(L!("-"), s) {
@@ -1644,6 +1609,43 @@ impl<'ctx> Completer<'ctx> {
                 have_token,
                 quoted,
             );
+        }
+
+        let Some(sep_index) = sep_index else {
+            return;
+        };
+        let sep_string = s.slice_from(sep_index + 1);
+        let mut local_completions = Vec::new();
+        if matches!(
+            expand_string(
+                sep_string.to_owned(),
+                &mut local_completions,
+                flags,
+                self.ctx,
+                None,
+            )
+            .result,
+            ExpandResultCode::error | ExpandResultCode::overflow
+        ) {
+            FLOGF!(complete, "Error while expanding string '%ls'", sep_string);
+        }
+
+        // Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by
+        // inserting our separator and prefix.
+        Self::escape_opening_brackets(&mut local_completions, s);
+        Self::escape_separators(
+            &mut local_completions,
+            variable_override_prefix,
+            self.flags.autosuggestion,
+            true,
+            quoted,
+        );
+        let prefix_with_sep = s.as_char_slice()[..sep_index + 1].into();
+        for comp in &mut local_completions {
+            comp.prepend_token_prefix(prefix_with_sep);
+        }
+        if !self.completions.extend(local_completions) {
+            return;
         }
     }
 

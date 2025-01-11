@@ -46,7 +46,7 @@ function __fish_zfs_needs_command
         set bookmark bookmark
     end
 
-    not __fish_seen_subcommand_from \? create destroy snap{,shot} rollback clone promote rename list set get inherit upgrade {user,group}space {u,un,}mount {un,}share $bookmark send receive recv {un,}allow hold{s,} release diff program
+    not __fish_seen_subcommand_from \? create destroy snap{,shot} rollback clone promote rename list set get inherit upgrade {user,group}space {u,un,}mount {un,}share $bookmark send receive recv {un,}allow hold{s,} release diff program load-key unload-key change-key
 end
 
 function __fish_zfs_using_command # ZFS command whose completions are looked for
@@ -161,6 +161,9 @@ function __fish_zfs_complete_property_values -a name
     casesensitivity=sensitive|insensitive|mixed
     normalization=none|formC|formD|formKC|formKD
     utf8only=on|off
+    keyformat=raw|passphrase|hex
+    keylocation=stdin|file:///
+    encryption=off|on|aes-128-ccm|aes-192-ccm|aes-256-ccm|aes-128-gcm|aes-192-gcm|aes-256-gcm
 "
     # Convert the list above into an array of strings
     set all_options (string split \n -- $all_options | string trim)
@@ -354,6 +357,11 @@ complete -c zfs -f -n __fish_zfs_needs_command -a release -d 'Remove a named hol
 complete -c zfs -f -n __fish_zfs_needs_command -a diff -d 'List changed files between a snapshot, and a filesystem or a previous snapshot'
 if test $OS = SunOS # This is currently only supported under Illumos, but that will probably change
     complete -c zfs -f -n __fish_zfs_needs_command -a program -d 'Execute a ZFS Channel Program'
+end
+if __fish_is_openzfs
+    complete -c zfs -f -n __fish_zfs_needs_command -a load-key -d "Load encryption key for dataset"
+    complete -c zfs -f -n __fish_zfs_needs_command -a unload-key -d "Unload encryption key for dataset"
+    complete -c zfs -f -n __fish_zfs_needs_command -a change-key -d "Change wrapper encryption key for dataset"
 end
 
 # Completions hereafter try to follow the man pages commands order, for maintainability, at the cost
@@ -603,3 +611,26 @@ if test $OS = SunOS # This is currently only supported under Illumos, but that w
     complete -c zfs -x -n '__fish_zfs_using_command program' -s t -d 'Execution memory limit'
     complete -c zfs -x -n '__fish_zfs_using_command program' -d 'Pool program will be executed on' -a '(__fish_complete_zfs_pools)'
 end
+
+# encryption-related completions
+complete -c zfs -f -n '__fish_zfs_using_command load-key' -s n -d 'Dry run; checks but doesn\'t load'
+complete -c zfs -f -n '__fish_zfs_using_command load-key' -s r -d 'Recursively load key for child datasets'
+complete -c zfs -f -n '__fish_zfs_using_command load-key' -s a -d 'Load keys for all imported pools'
+complete -c zfs -n '__fish_zfs_using_command load-key' -s L -d 'Key location' -r
+# todo: maybe query properties to list only encrypted datasets (that haven't had their keys loaded)
+complete -c zfs -n '__fish_zfs_using_command load-key' -d 'Dataset to load key for' -xa '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
+
+complete -c zfs -f -n '__fish_zfs_using_command unload-key' -s r -d 'Recursively unload key for child datasets'
+complete -c zfs -f -n '__fish_zfs_using_command unload-key' -s a -d 'Unload keys for all imported pools'
+# todo: maybe query properties to list only encrypted datasets (that have had their keys loaded)
+complete -c zfs -n '__fish_zfs_using_command unload-key' -d 'Dataset to unload key for' -xa '(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)'
+
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s l -d 'Ensure key is loaded before changing key'
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s i -d 'Inherit key from its parent'
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keylocation=file:///" -d "Absolute path to key"
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keylocation=prompt" -d "Obtain key from stdin"
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keyformat=hex keyformat=raw keyformat=passphrase"
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keyformat=hex keyformat=raw keyformat=passphrase"
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "pbkdf2iters=" -d "Specify PBKDF2 iteration count"
+# todo: maybe query properties to list only encrypted datasets
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -d "Dataset to change wraper key for" -xa "(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)"

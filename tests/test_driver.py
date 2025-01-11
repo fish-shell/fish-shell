@@ -247,7 +247,8 @@ def main():
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")
     if failcount:
-        print(f"{RED}Failed tests{RESET}: \n    {'\n    '.join(failed)}")
+        failstr = '\n    '.join(failed)
+        print(f"{RED}Failed tests{RESET}: \n    {failstr}")
     if passcount == 0 and failcount == 0 and skipcount:
         return 125
     return 1 if failcount else 0

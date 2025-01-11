@@ -2,10 +2,14 @@
 enable_testing()
 
 # By default, ctest runs tests serially
+# Support CTEST_PARALLEL_LEVEL as an environment variable in addition to a CMake variable
 if(NOT CTEST_PARALLEL_LEVEL)
-  include(ProcessorCount)
-  ProcessorCount(CORES)
-  set(CTEST_PARALLEL_LEVEL ${CORES})
+  set(CTEST_PARALLEL_LEVEL $ENV{CTEST_PARALLEL_LEVEL})
+  if(NOT CTEST_PARALLEL_LEVEL)
+    include(ProcessorCount)
+    ProcessorCount(CORES)
+    set(CTEST_PARALLEL_LEVEL ${CORES})
+  endif()
 endif()
 
 

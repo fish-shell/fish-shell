@@ -5077,6 +5077,7 @@ impl<'a> Reader<'a> {
 struct HistoryPagerResult {
     matched_commands: Vec<Completion>,
     range: Range<usize>,
+    first_shown: usize,
 }
 
 #[derive(Eq, PartialEq)]
@@ -5126,6 +5127,7 @@ fn history_pager_search(
     });
     let first_index = search.current_index();
     let mut next_match_found = search.go_to_next_match(SearchDirection::Backward);
+    let first_shown = search.current_index();
     while completions.len() < page_size && next_match_found {
         let item = search.current_item();
         completions.push(Completion::new(
@@ -5140,6 +5142,7 @@ fn history_pager_search(
     HistoryPagerResult {
         matched_commands: completions,
         range: first_index..last_index,
+        first_shown,
     }
 }
 
@@ -5189,15 +5192,20 @@ impl ReaderData {
             let history_pager = zelf.history_pager.as_mut().unwrap();
             assert!(result.range.start < result.range.end);
             *history_pager = result.range;
-            zelf.pager.extra_progress_text = if direction == SearchDirection::Forward
-                && history_pager.start != 0
-                || direction == SearchDirection::Backward && history_pager.end != history_size + 1
-            {
-                wgettext!("Search again for more results")
-            } else {
-                L!("")
-            }
-            .to_owned();
+            zelf.pager.extra_progress_text =
+                if !result.matched_commands.is_empty() && *history_pager != (0..history_size + 1) {
+                    wgettext_fmt!(
+                        "Items %lu to %lu of %lu",
+                        match history_pager.start {
+                            0 => 1,
+                            _ => result.first_shown,
+                        },
+                        history_pager.end - 1,
+                        history_size
+                    )
+                } else {
+                    L!("").to_owned()
+                };
             zelf.pager.set_completions(&result.matched_commands, false);
             if why == HistoryPagerInvocation::Refresh {
                 zelf.pager

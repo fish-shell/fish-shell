@@ -8,7 +8,7 @@
 
 use std::ffi::{CString, OsStr};
 use std::fs;
-use std::io::{stdin, Read, Write};
+use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
 use crate::panic::panic_handler;
@@ -848,10 +848,16 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                 ));
                 return STATUS_CMD_ERROR.unwrap();
             }
-            match read_file(stdin()) {
-                Ok(s) => src = s,
-                Err(()) => return STATUS_CMD_ERROR.unwrap(),
+            let mut zero = 0;
+            let buf = Vec::with_capacity(1024);
+            let mut expression = WString::new();
+            for (arg, _) in Arguments::new(&buf, &mut zero, streams, 1024) {
+                if !expression.is_empty() {
+                    expression.push('\n')
+                }
+                expression.push_utfstr(&arg);
             }
+            src = expression;
         } else {
             let arg = args[i];
             match fs::File::open(OsStr::from_bytes(&wcs2string(arg))) {

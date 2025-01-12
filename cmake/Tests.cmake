@@ -98,6 +98,8 @@ function(add_test_target NAME)
     DEPENDS tests_dir funcs_dir tests_buildroot_target USES_TERMINAL )
 endfunction()
 
+add_executable(fish_test_helper tests/fish_test_helper.c)
+
 add_custom_target(tests_buildroot_target
                   # Make the directory in which to run tests:
                   COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
@@ -107,15 +109,14 @@ add_custom_target(tests_buildroot_target
                   COMMAND ${CMAKE_COMMAND} -E create_symlink
                           ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
                           ${TEST_ROOT_DIR}
-                  DEPENDS fish)
+                  DEPENDS fish fish_test_helper)
 
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
   get_filename_component(CHECK ${CHECK} NAME_WE)
   add_test(NAME ${CHECK_NAME}
-    # Don't use --cachedir here because that races when running these in parallel
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
                 checks/${CHECK}.fish
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )
@@ -128,7 +129,7 @@ FILE(GLOB PEXPECTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/pexpects/*.py)
 foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
   add_test(NAME ${PEXPECT}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
                 pexpects/${PEXPECT}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
   )

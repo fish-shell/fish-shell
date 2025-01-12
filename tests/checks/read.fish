@@ -400,3 +400,31 @@ echo foo | read -n -1
 # CHECKERR: echo foo | read -n -1
 # CHECKERR: ^
 # CHECKERR: (Type 'help read' for related documentation)
+
+echo '1 ( (' | read -lat var
+set -S var
+# CHECK: $var: set in local scope, unexported, with 2 elements
+# CHECK: $var[1]: |1|
+# CHECK: $var[2]: |( (|
+
+echo '1 ) )' | read -lat var
+set -S var
+# CHECK: $var: set in local scope, unexported, with 2 elements
+# CHECK: $var[1]: |1|
+# CHECK: $var[2]: |)|
+
+echo '1 { {' | read -lat var
+set -S var
+# CHECK: $var: set in local scope, unexported, with 2 elements
+# CHECK: $var[1]: |1|
+# CHECK: $var[2]: |{ {|
+
+echo '1 } }' | read -lat var
+set -S var
+# CHECK: $var: set in local scope, unexported, with 2 elements
+# CHECK: $var[1]: |1|
+# CHECK: $var[2]: |}|
+
+echo '1  {} "{}"' | read -lat var
+echo $var
+# CHECK: 1 {} {}

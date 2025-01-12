@@ -678,9 +678,9 @@ impl<'c> Tokenizer<'c> {
                     return self.call_error(
                         TokenizerError::closing_unopened_brace,
                         self.token_cursor,
-                        self.start.len(),
-                        None,
-                        0,
+                        self.token_cursor,
+                        Some(1),
+                        1,
                     );
                 }
                 if brace_offsets.is_empty() {

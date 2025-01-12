@@ -2746,6 +2746,9 @@ impl<'a> Reader<'a> {
                 }
                 assert!(end >= begin);
                 let len = std::cmp::max(end - begin, 1);
+                if elt == EditableLineTag::Commandline {
+                    self.suppress_autosuggestion = true;
+                }
                 self.data.kill(
                     elt,
                     end - len..end,

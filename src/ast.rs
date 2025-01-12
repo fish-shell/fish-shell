@@ -24,6 +24,7 @@ use crate::tokenizer::{
     TOK_ACCEPT_UNFINISHED, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
 };
 use crate::wchar::prelude::*;
+use std::borrow::Cow;
 use std::ops::{ControlFlow, Index, IndexMut};
 
 /**
@@ -3965,11 +3966,11 @@ fn is_keyword_char(c: char) -> bool {
         || c == '!'
 }
 
-/// Given a token, returns the keyword it matches, or ParseKeyword::none.
-fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
+/// Given a token, returns unescaped keyword, or the empty string.
+pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     /* Only strings can be keywords */
     if tok != TokenType::string {
-        return ParseKeyword::none;
+        return Cow::Borrowed(L!(""));
     }
 
     // If token is clean (which most are), we can compare it directly. Otherwise we have to expand
@@ -3977,27 +3978,26 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     // expansions. So we do our own "cleanliness" check; if we find a character not in our allowed
     // set we know it's not a keyword, and if we never find a quote we don't have to expand! Note
     // that this lowercase set could be shrunk to be just the characters that are in keywords.
-    let mut result = ParseKeyword::none;
     let mut needs_expand = false;
-    let mut all_chars_valid = true;
     for c in token.chars() {
         if !is_keyword_char(c) {
-            all_chars_valid = false;
-            break;
+            return Cow::Borrowed(L!(""));
         }
         // If we encounter a quote, we need expansion.
         needs_expand = needs_expand || c == '"' || c == '\'' || c == '\\'
     }
 
-    if all_chars_valid {
-        // Expand if necessary.
-        if !needs_expand {
-            result = ParseKeyword::from(token);
-        } else if let Some(unescaped) = unescape_string(token, UnescapeStringStyle::default()) {
-            result = ParseKeyword::from(&unescaped[..]);
-        }
+    // Expand if necessary.
+    if !needs_expand {
+        return Cow::Borrowed(token);
     }
-    result
+
+    Cow::Owned(unescape_string(token, UnescapeStringStyle::default()).unwrap_or_default())
+}
+
+/// Given a token, returns the keyword it matches, or ParseKeyword::none.
+fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
+    ParseKeyword::from(&unescape_keyword(tok, token)[..])
 }
 
 #[test]

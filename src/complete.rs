@@ -10,6 +10,7 @@ use std::{
 };
 
 use crate::{
+    ast::unescape_keyword,
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
@@ -669,7 +670,12 @@ impl<'ctx> Completer<'ctx> {
         if is_autosuggest {
             let prefixed_supercommand_count = tokens
                 .iter()
-                .take_while(|token| parser_keywords_is_subcommand(token.get_source(&cmdline)))
+                .take_while(|token| {
+                    parser_keywords_is_subcommand(&unescape_keyword(
+                        token.type_,
+                        token.get_source(&cmdline),
+                    ))
+                })
                 .count();
             tokens.drain(..prefixed_supercommand_count);
         }

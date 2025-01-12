@@ -66,8 +66,8 @@ fn reserved_word(cmd: &wstr) -> Option<&'static ReservedWord> {
 }
 
 /// Tests if the specified command's parameters should be interpreted as another command.
-pub fn parser_keywords_is_subcommand(cmd: &wstr) -> bool {
-    reserved_word(cmd).is_some_and(|reserved_word| reserved_word.is_super_command)
+pub fn parser_keywords_is_subcommand(cmd: &impl AsRef<wstr>) -> bool {
+    reserved_word(cmd.as_ref()).is_some_and(|reserved_word| reserved_word.is_super_command)
 }
 
 /// Tests if the specified command is a reserved word, i.e. if it is the name of one of the builtin

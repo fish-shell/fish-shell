@@ -3814,19 +3814,17 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        // If we are not in a token, look for one ahead
-        let buff_pos = pos
-            + buffer[pos..]
-                .chars()
-                .take_while(|c| c.is_ascii_whitespace())
-                .count();
-
-        let mut tok = 0..0;
-        parse_util_token_extent(&buffer, buff_pos, &mut tok, None);
-
-        let new_position = if tok.end == pos { pos + 1 } else { tok.end };
-
-        Some(new_position)
+        let cmdsubst_range = parse_util_cmdsubst_extent(&buffer, pos);
+        for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TOK_ACCEPT_UNFINISHED) {
+            if token.type_ != TokenType::string {
+                continue;
+            }
+            let tok_end = cmdsubst_range.start + token.end();
+            if tok_end > pos {
+                return Some(tok_end);
+            }
+        }
+        Some(el.len())
     }
 }
 

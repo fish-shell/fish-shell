@@ -42,7 +42,7 @@ add_custom_target(fish_run_tests
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
-  DEPENDS tests_dir funcs_dir tests_buildroot_target
+  DEPENDS fish fish_test_helper
   USES_TERMINAL
 )
 
@@ -55,39 +55,6 @@ if(POLICY CMP0037)
 endif()
 cmake_policy(POP)
 
-# The "test" directory.
-set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
-
-# The directory into which fish is installed.
-set(TEST_INSTALL_DIR ${TEST_DIR}/buildroot)
-
-# The directory where the tests expect to find the fish root (./bin, etc)
-set(TEST_ROOT_DIR ${TEST_DIR}/root)
-
-# Copy needed directories for out-of-tree builds
-if(NOT FISH_IN_TREE_BUILD)
-  add_custom_target(funcs_dir)
-  add_custom_command(TARGET funcs_dir
-    POST_BUILD
-    COMMAND mkdir -p ${CMAKE_BINARY_DIR}/share
-    # Don't run ln twice or it will create a new link in the link.
-    COMMAND test -e ${CMAKE_BINARY_DIR}/share/functions || ln -sf
-                          ${CMAKE_SOURCE_DIR}/share/functions/ ${CMAKE_BINARY_DIR}/share/functions
-                       COMMENT "Symlinking fish functions to binary dir"
-                       VERBATIM)
-
-  add_custom_target(tests_dir DEPENDS tests)
-  add_custom_command(TARGET tests_dir
-                       POST_BUILD
-                       COMMAND ${CMAKE_COMMAND} -E copy_directory
-                       ${CMAKE_SOURCE_DIR}/tests/ ${CMAKE_BINARY_DIR}/tests/
-                       COMMENT "Copying test files to binary dir"
-                       VERBATIM)
-endif()
-
-# Suppress generating Xcode schemes for all tests, there's too many.
-set(CMAKE_XCODE_GENERATE_SCHEME 0)
-
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
 # your binaries actually being built before `make test` is executed (requiring `make all` first),
 # and the only dependency a test can have is on another test. So we make building fish
@@ -95,30 +62,19 @@ set(CMAKE_XCODE_GENERATE_SCHEME 0)
 function(add_test_target NAME)
   string(REPLACE "/" "-" NAME ${NAME})
   add_custom_target("test_${NAME}" COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS tests_dir funcs_dir tests_buildroot_target USES_TERMINAL )
+    DEPENDS fish fish_test_helper USES_TERMINAL )
 endfunction()
 
 add_executable(fish_test_helper tests/fish_test_helper.c)
-
-add_custom_target(tests_buildroot_target
-                  # Make the directory in which to run tests:
-                  COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_INSTALL_DIR}
-                  COMMAND env DESTDIR=${TEST_INSTALL_DIR} ${CMAKE_COMMAND}
-                          --build ${CMAKE_CURRENT_BINARY_DIR} --target install
-                  # Also symlink fish to where the tests expect it to be:
-                  COMMAND ${CMAKE_COMMAND} -E create_symlink
-                          ${TEST_INSTALL_DIR}/${CMAKE_INSTALL_PREFIX}
-                          ${TEST_ROOT_DIR}
-                  DEPENDS fish fish_test_helper)
 
 FILE(GLOB FISH_CHECKS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/checks/*.fish)
 foreach(CHECK ${FISH_CHECKS})
   get_filename_component(CHECK_NAME ${CHECK} NAME)
   get_filename_component(CHECK ${CHECK} NAME_WE)
   add_test(NAME ${CHECK_NAME}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
                 checks/${CHECK}.fish
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
   )
   set_tests_properties(${CHECK_NAME} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   set_tests_properties(${CHECK_NAME} PROPERTIES ENVIRONMENT FISH_FORCE_COLOR=1)
@@ -129,9 +85,9 @@ FILE(GLOB PEXPECTS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tests/pexpects/*.py)
 foreach(PEXPECT ${PEXPECTS})
   get_filename_component(PEXPECT ${PEXPECT} NAME)
   add_test(NAME ${PEXPECT}
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/tests/test_driver.py --cachedir=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}
                 pexpects/${PEXPECT}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
   )
   set_tests_properties(${PEXPECT} PROPERTIES SKIP_RETURN_CODE ${SKIP_RETURN_CODE})
   set_tests_properties(${PEXPECT} PROPERTIES ENVIRONMENT FISH_FORCE_COLOR=1)

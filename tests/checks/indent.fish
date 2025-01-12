@@ -526,6 +526,23 @@ end
 # CHECK: {{^}}    end
 # CHECK: {{^}})
 
+echo 'echo (
+if true
+echo "
+multi
+line
+"
+end
+)' | builtin fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo "
+# CHECK: {{^}}multi
+# CHECK: {{^}}line
+# CHECK: {{^}}"
+# CHECK: {{^}}    end
+# CHECK: {{^}})
+
 set -l tmpdir (mktemp -d)
 echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish

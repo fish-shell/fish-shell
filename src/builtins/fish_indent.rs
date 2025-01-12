@@ -8,7 +8,7 @@
 
 use std::ffi::{CString, OsStr};
 use std::fs;
-use std::io::{stdin, Read, Write};
+use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
 use crate::panic::panic_handler;
@@ -743,6 +743,7 @@ fn throwing_main() -> i32 {
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
+    streams.stdin_fd = libc::STDIN_FILENO;
     // Using the user's default locale could be a problem if it doesn't use UTF-8 encoding. That's
     // because the fish project assumes Unicode UTF-8 encoding in all of its scripts.
     //
@@ -848,10 +849,19 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
                 ));
                 return STATUS_CMD_ERROR.unwrap();
             }
-            match read_file(stdin()) {
-                Ok(s) => src = s,
-                Err(()) => return STATUS_CMD_ERROR.unwrap(),
+            use std::os::fd::FromRawFd;
+            let mut fd = unsafe { std::fs::File::from_raw_fd(streams.stdin_fd) };
+            let mut buf = vec![];
+            match fd.read_to_end(&mut buf) {
+                Ok(_) => {}
+                Err(_) => {
+                    // Don't close the fd
+                    std::mem::forget(fd);
+                    return STATUS_CMD_ERROR.unwrap();
+                }
             }
+            std::mem::forget(fd);
+            src = str2wcstring(&buf);
         } else {
             let arg = args[i];
             match fs::File::open(OsStr::from_bytes(&wcs2string(arg))) {

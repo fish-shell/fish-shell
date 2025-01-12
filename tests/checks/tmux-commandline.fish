@@ -3,6 +3,11 @@
 # Somehow $LINES is borked on NetBSD?
 #REQUIRES: test $(uname) != NetBSD
 
+set -g isolated_tmux_fish_extra_args -C '
+    bind ctrl-q "functions --erase fish_right_prompt" "commandline \'\'" clear-screen
+    set -g fish_autosuggestion_enabled 0
+    bind ctrl-g "__fish_echo commandline --current-job"
+'
 isolated-tmux-start
 
 isolated-tmux send-keys 'echo LINES $LINES' Enter
@@ -33,9 +38,7 @@ isolated-tmux capture-pane -p
 # CHECK: scroll_here
 
 # Soft-wrapped commandline with omitted right prompt.
-isolated-tmux send-keys C-c
-tmux-sleep
-isolated-tmux send-keys C-l '
+isolated-tmux send-keys C-q '
     function fish_right_prompt
         echo right-prompt
     end
@@ -47,3 +50,12 @@ isolated-tmux capture-pane -p | sed 1,5d
 # CHECK: 000000000000000
 # CHECK: 00000000000000000000000000000000000000000000000000000000000000000000000000000000
 # CHECK: prompt {{\d+}}>                                                           right-prompt
+
+isolated-tmux send-keys C-q 'echo | echo\;' M-Enter 'another job' C-b C-b C-g
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt {{\d+}}> echo | echo;
+# CHECK:          another job
+# CHECK: another job
+# CHECK: prompt {{\d+}}> echo | echo;
+# CHECK:          another job

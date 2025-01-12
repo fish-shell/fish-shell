@@ -42,7 +42,7 @@ add_custom_target(fish_run_tests
           FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
-  DEPENDS fish fish_test_helper
+  DEPENDS fish fish_indent fish_key_reader fish_test_helper
   USES_TERMINAL
 )
 
@@ -62,7 +62,7 @@ cmake_policy(POP)
 function(add_test_target NAME)
   string(REPLACE "/" "-" NAME ${NAME})
   add_custom_target("test_${NAME}" COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -R "^${NAME}$$"
-    DEPENDS fish fish_test_helper USES_TERMINAL )
+    DEPENDS fish fish_indent fish_key_reader fish_test_helper USES_TERMINAL)
 endfunction()
 
 add_executable(fish_test_helper tests/fish_test_helper.c)

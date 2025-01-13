@@ -2742,7 +2742,7 @@ macro_rules! internal_error {
             )
             $(, $args)*
         );
-        FLOGF!(debug, "Encountered while parsing:<<<<\n{}\n>>>", $self.tokens.src);
+        FLOGF!(debug, "Encountered while parsing:<<<<\n%s\n>>>", $self.tokens.src);
         panic!();
     };
 }

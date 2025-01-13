@@ -1,7 +1,8 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, BlockStatementHeaderVariant, Keyword, Leaf, List, Node, StatementVariant, Token,
+    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, List, Node,
+    StatementVariant, Token,
 };
 use crate::builtins;
 use crate::builtins::shared::{
@@ -44,7 +45,7 @@ use crate::reader::fish_is_unwinding_for_exit;
 use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
 use crate::signal::Signal;
 use crate::timer::push_timer;
-use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
+use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir, TokenType};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
@@ -538,7 +539,10 @@ impl<'a> ExecutionContext {
         // which won't be doing what the user asks for
         //
         // (skipping in no-exec because we don't have the actual variable value)
-        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && unexp_cmd != out_cmd {
+        if !no_exec()
+            && &unescape_keyword(TokenType::string, unexp_cmd) != out_cmd
+            && parser_keywords_is_subcommand(out_cmd)
+        {
             return report_error!(
                 self,
                 ctx,

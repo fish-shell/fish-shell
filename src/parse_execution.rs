@@ -486,7 +486,6 @@ impl<'a> ExecutionContext {
         let mut errors = ParseErrorList::new();
 
         // Get the unexpanded command string. We expect to always get it here.
-        // todo!("remove clone")
         let unexp_cmd = self.node_source(&statement.command);
         let pos_of_command_token = statement.command.range().unwrap().start();
 

@@ -15,7 +15,8 @@ function fish_jj_prompt
                 )
             '
     )"
-    if test -n $info
+    or return 1
+    if test -n "$info"
         printf ' %s' $info
     end
 end

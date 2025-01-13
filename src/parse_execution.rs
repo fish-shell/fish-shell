@@ -486,7 +486,7 @@ impl<'a> ExecutionContext {
 
         // Get the unexpanded command string. We expect to always get it here.
         let unexp_cmd = self.node_source(&statement.command);
-        let pos_of_command_token = statement.command.range().unwrap().start();
+        let pos_of_command_token = statement.command.try_source_range().unwrap().start();
 
         // Expand the string to produce completions, and report errors.
         let expand_err = expand_to_command_and_args(
@@ -733,23 +733,29 @@ impl<'a> ExecutionContext {
         // Get the command and any arguments due to expanding the command.
         let mut cmd = WString::new();
         let mut args_from_cmd_expansion = vec![];
-        let ret = self.expand_command(ctx, statement, &mut cmd, &mut args_from_cmd_expansion);
-        if ret != EndExecutionReason::ok {
-            return ret;
-        }
+        let mut process_type = if statement.command.is_left_brace() {
+            cmd = L!("{").to_owned();
+            ProcessType::builtin
+        } else {
+            let ret = self.expand_command(ctx, statement, &mut cmd, &mut args_from_cmd_expansion);
+            if ret != EndExecutionReason::ok {
+                return ret;
+            }
 
-        // For no-exec, having an empty command is okay. We can't do anything more with it tho.
-        if no_exec() {
-            return EndExecutionReason::ok;
-        }
+            // For no-exec, having an empty command is okay. We can't do anything more with it tho.
+            if no_exec() {
+                return EndExecutionReason::ok;
+            }
 
-        assert!(
-            !cmd.is_empty(),
-            "expand_command should not produce an empty command",
-        );
+            assert!(
+                !cmd.is_empty(),
+                "expand_command should not produce an empty command",
+            );
 
-        // Determine the process type.
-        let mut process_type = self.process_type_for_command(ctx, statement, &cmd);
+            // Determine the process type.
+            self.process_type_for_command(ctx, statement, &cmd)
+        };
+
         let external_cmd = if [ProcessType::external, ProcessType::exec].contains(&process_type) {
             let parser = ctx.parser();
             // Determine the actual command. This may be an implicit cd.

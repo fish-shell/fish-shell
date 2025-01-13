@@ -482,6 +482,9 @@ level 2 } }
     # CHECK: {{^        level 2$}}
     # CHECK: {{^    \}$}}
     # CHECK: {{^\}$}}
+
+echo '{  -h'
+# CHECK: { -h
 } | $fish_indent
 
 echo 'multiline-\\

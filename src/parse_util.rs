@@ -1679,7 +1679,7 @@ fn detect_errors_in_decorated_statement(
     }
 
     let unexp_command = com;
-    if !unexp_command.is_empty() {
+    if !unexp_command.is_empty() && !dst.command.is_left_brace() {
         // Check that we can expand the command.
         // Make a new error list so we can fix the offset for just those, then append later.
         let mut new_errors = ParseErrorList::new();

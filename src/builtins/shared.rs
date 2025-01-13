@@ -415,12 +415,17 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         return ProcStatus::from_exit_code(STATUS_CMD_OK.unwrap());
     }
 
-    let Some(builtin) = builtin_lookup(argv[0]) else {
-        FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
-        return ProcStatus::from_exit_code(STATUS_CMD_ERROR.unwrap());
+    let builtin_func = if argv[0] == L!("{") {
+        builtin_generic
+    } else {
+        let Some(builtin) = builtin_lookup(argv[0]) else {
+            FLOGF!(error, "%s", wgettext_fmt!(UNKNOWN_BUILTIN_ERR_MSG, argv[0]));
+            return ProcStatus::from_exit_code(STATUS_CMD_ERROR.unwrap());
+        };
+        builtin.func
     };
 
-    let builtin_ret = (builtin.func)(parser, streams, argv);
+    let builtin_ret = (builtin_func)(parser, streams, argv);
 
     // Flush our out and error streams, and check for their errors.
     let out_ret = streams.out.flush_and_check_error();

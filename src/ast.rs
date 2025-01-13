@@ -71,6 +71,7 @@ trait NodeVisitorMut {
         &mut self,
         _node: &mut BlockStatementHeaderVariant,
     ) -> VisitResult;
+    fn visit_command_token(&mut self, _node: &mut CommandTokenVariant) -> VisitResult;
     fn visit_statement(&mut self, _node: &mut StatementVariant) -> VisitResult;
 
     fn visit_decorated_statement_decorator(
@@ -177,6 +178,9 @@ pub trait ConcreteNode {
         None
     }
     fn as_argument_or_redirection_list(&self) -> Option<&ArgumentOrRedirectionList> {
+        None
+    }
+    fn as_command_token(&self) -> Option<&CommandToken> {
         None
     }
     fn as_statement(&self) -> Option<&Statement> {
@@ -298,6 +302,9 @@ trait ConcreteNodeMut {
         None
     }
     fn as_mut_argument_or_redirection_list(&mut self) -> Option<&mut ArgumentOrRedirectionList> {
+        None
+    }
+    fn as_mut_command_token(&mut self) -> Option<&mut CommandToken> {
         None
     }
     fn as_mut_statement(&mut self) -> Option<&mut Statement> {
@@ -923,6 +930,9 @@ macro_rules! visit_variant_field_mut {
     (BlockStatementHeaderVariant, $visitor:ident, $field:expr) => {
         $visitor.visit_block_statement_header(&mut $field)
     };
+    (CommandTokenVariant, $visitor:ident, $field:expr) => {
+        $visitor.visit_command_token(&mut $field)
+    };
     (StatementVariant, $visitor:ident, $field:expr) => {
         $visitor.visit_statement(&mut $field)
     };
@@ -1021,6 +1031,19 @@ macro_rules! set_parent_of_union_field {
         } else {
             $self.$field_name.as_mut_redirection().parent = Some($self);
             $self.$field_name.as_mut_redirection().set_parents();
+        }
+    };
+    (
+        $self:ident,
+        $field_name:ident,
+        CommandTokenVariant
+    ) => {
+        if matches!($self.$field_name, CommandTokenVariant::LeftBrace(_)) {
+            $self.$field_name.as_mut_left_brace().parent = Some($self);
+            $self.$field_name.as_mut_left_brace().set_parents();
+        } else {
+            $self.$field_name.as_mut_string().parent = Some($self);
+            $self.$field_name.as_mut_string().set_parents();
         }
     };
     (
@@ -1161,6 +1184,38 @@ impl ConcreteNode for ArgumentOrRedirectionList {
 impl ConcreteNodeMut for ArgumentOrRedirectionList {
     fn as_mut_argument_or_redirection_list(&mut self) -> Option<&mut ArgumentOrRedirectionList> {
         Some(self)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct CommandToken {
+    parent: Option<*const dyn Node>,
+    pub contents: CommandTokenVariant,
+}
+implement_node!(CommandToken, branch, command_token);
+implement_acceptor_for_branch!(
+    CommandToken,
+    (contents: (variant<CommandTokenVariant>))
+);
+impl ConcreteNode for CommandToken {
+    fn as_command_token(&self) -> Option<&CommandToken> {
+        Some(self)
+    }
+}
+impl ConcreteNodeMut for CommandToken {
+    fn as_mut_command_token(&mut self) -> Option<&mut CommandToken> {
+        Some(self)
+    }
+}
+impl CheckParse for CommandToken {
+    fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
+        let typ = pop.peek_type(0);
+        matches!(typ, ParseTokenType::string | ParseTokenType::left_brace)
+    }
+}
+impl CommandToken {
+    pub fn is_left_brace(&self) -> bool {
+        matches!(&self.contents, CommandTokenVariant::LeftBrace(_))
     }
 }
 
@@ -1652,7 +1707,7 @@ pub struct DecoratedStatement {
     /// An optional decoration (command, builtin, exec, etc).
     pub opt_decoration: Option<DecoratedStatementDecorator>,
     /// Command to run.
-    pub command: String_,
+    pub command: CommandToken,
     /// Args and redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
@@ -1660,7 +1715,7 @@ implement_node!(DecoratedStatement, branch, decorated_statement);
 implement_acceptor_for_branch!(
     DecoratedStatement,
     (opt_decoration: (Option<DecoratedStatementDecorator>)),
-    (command: (String_)),
+    (command: (CommandToken)),
     (args_or_redirs: (ArgumentOrRedirectionList)),
 );
 impl ConcreteNode for DecoratedStatement {
@@ -2172,6 +2227,56 @@ impl ArgumentOrRedirection {
 }
 
 #[derive(Debug)]
+pub enum CommandTokenVariant {
+    String(String_),
+    LeftBrace(TokenLeftBrace),
+}
+
+impl Default for CommandTokenVariant {
+    fn default() -> Self {
+        CommandTokenVariant::String(String_::default())
+    }
+}
+
+impl Acceptor for CommandTokenVariant {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+        match self {
+            CommandTokenVariant::String(child) => child.accept(visitor, reversed),
+            CommandTokenVariant::LeftBrace(child) => child.accept(visitor, reversed),
+        }
+    }
+}
+impl AcceptorMut for CommandTokenVariant {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+        match self {
+            CommandTokenVariant::String(child) => child.accept_mut(visitor, reversed),
+            CommandTokenVariant::LeftBrace(child) => child.accept_mut(visitor, reversed),
+        }
+    }
+}
+
+impl CommandTokenVariant {
+    pub fn embedded_node(&self) -> &dyn Node {
+        match self {
+            CommandTokenVariant::String(node) => node,
+            CommandTokenVariant::LeftBrace(node) => node,
+        }
+    }
+    fn as_mut_string(&mut self) -> &mut String_ {
+        match self {
+            CommandTokenVariant::String(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_left_brace(&mut self) -> &mut TokenLeftBrace {
+        match self {
+            CommandTokenVariant::LeftBrace(node) => node,
+            _ => panic!(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum BlockStatementHeaderVariant {
     None,
     ForHeader(ForHeader),
@@ -2425,6 +2530,7 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
         Type::variable_assignment_list => L!("variable_assignment_list"),
         Type::argument_or_redirection => L!("argument_or_redirection"),
         Type::argument_or_redirection_list => L!("argument_or_redirection_list"),
+        Type::command_token => L!("command_token"),
         Type::statement => L!("statement"),
         Type::job_pipeline => L!("job_pipeline"),
         Type::job_conjunction => L!("job_conjunction"),
@@ -3105,6 +3211,17 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         *node = self.allocate_populate_block_header();
         VisitResult::Continue(())
     }
+    fn visit_command_token(&mut self, node: &mut CommandTokenVariant) -> VisitResult {
+        if let Some(lbrace) = self.try_parse::<TokenLeftBrace>() {
+            *node = CommandTokenVariant::LeftBrace(*lbrace);
+        } else if let Some(s) = self.try_parse::<String_>() {
+            *node = CommandTokenVariant::String(*s);
+        } else {
+            // On error, we return an unsourced decorated statement.
+            *node = CommandTokenVariant::String(Default::default());
+        }
+        ControlFlow::Continue(())
+    }
     fn visit_statement(&mut self, node: &mut StatementVariant) -> VisitResult {
         *node = self.allocate_populate_statement_contents();
         VisitResult::Continue(())
@@ -3653,6 +3770,9 @@ impl<'s> Populator<'s> {
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
+            if self.peek_token(1).is_help_argument {
+                return new_decorated_statement(self);
+            }
             let embedded = self.allocate_visit::<BraceStatement>();
             return StatementVariant::BraceStatement(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
@@ -4134,6 +4254,7 @@ pub enum Type {
     variable_assignment_list,
     argument_or_redirection,
     argument_or_redirection_list,
+    command_token,
     statement,
     job_pipeline,
     job_conjunction,

@@ -496,6 +496,7 @@ fn test_new_parser_ll2() {
     validate!("command", "command", "", StatementDecoration::none);
     validate!("command -", "command", "-", StatementDecoration::none);
     validate!("command --", "command", "--", StatementDecoration::none);
+    validate!("{ -h", "{", "-h", StatementDecoration::none);
     validate!(
         "builtin --names",
         "builtin",

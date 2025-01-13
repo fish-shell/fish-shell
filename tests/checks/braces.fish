@@ -187,10 +187,26 @@ PATH= "{"
 # CHECKERR: PATH= "{"
 # CHECKERR:       ^~^
 
+$fish -c '{ -h'
+# CHECKERR: fish: '{': missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help '{'` will show an online version
+
+PATH= "{" -h
+# CHECKERR: fish: Unknown command: '{'
+# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
+# CHECKERR: PATH= "{" -h
+# CHECKERR:       ^~^
+
 $fish -c 'builtin {'
 # CHECKERR: fish: Expected end of the statement, but found a '{'
 # CHECKERR: builtin {
-# CHECKERR:      ^
+# CHECKERR:         ^
+
+$fish -c 'builtin "{"'
+# CHECKERR: fish: Unknown builtin '"{"'
+# CHECKERR: builtin "{"
+# CHECKERR: ^~~~~~~~~~^
 
 $fish -c 'command {'
 # CHECKERR: fish: Expected end of the statement, but found a '{'

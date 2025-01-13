@@ -753,7 +753,7 @@ impl<'s> Highlighter<'s> {
     }
 
     // Color a command.
-    fn color_command(&mut self, node: &ast::String_) {
+    fn color_command(&mut self, node: &ast::CommandToken) {
         let source_range = node.source_range();
         let cmd_str = self.get_source(source_range);
 

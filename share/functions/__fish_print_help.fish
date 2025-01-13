@@ -8,6 +8,8 @@ function __fish_print_help --description "Print help message for the specified f
             set item true
         case '['
             set item test
+        case '{'
+            set item begin
     end
 
     # Do nothing if the file does not exist

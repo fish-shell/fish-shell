@@ -961,14 +961,16 @@ pub trait InputEventQueuer {
 
         let key = match c {
             b'$' => {
-                // DECRPM
-                if private_mode == Some(b'?') && next_char(self) == b'y' {
-                    if params[0][0] == 2026 && matches!(params[1][0], 1 | 2) {
-                        self.push_front(CharEvent::Implicit(
-                            ImplicitEvent::SynchronizedOutputSupported,
-                        ));
+                if next_char(self) == b'y' {
+                    if private_mode == Some(b'?') {
+                        // DECRPM
+                        if params[0][0] == 2026 && matches!(params[1][0], 1 | 2) {
+                            self.push_front(CharEvent::Implicit(
+                                ImplicitEvent::SynchronizedOutputSupported,
+                            ));
+                        }
                     }
-
+                    // DECRQM
                     return None;
                 }
                 match params[0][0] {

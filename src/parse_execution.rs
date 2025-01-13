@@ -157,8 +157,7 @@ impl<'a> ExecutionContext {
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         // Note we only expect block-style statements here. No not statements.
-        let contents = &statement.contents;
-        match &**contents {
+        match &statement.contents {
             StatementVariant::BlockStatement(block) => {
                 self.run_block_statement(ctx, block, associated_block)
             }
@@ -423,7 +422,7 @@ impl<'a> ExecutionContext {
         // Helper to return if a statement is infinitely recursive in this function.
         let statement_recurses = |stat: &'b ast::Statement| -> Option<&'b ast::DecoratedStatement> {
             // Ignore non-decorated statements like `if`, etc.
-            let StatementVariant::DecoratedStatement(dc) = &*stat.contents else {
+            let StatementVariant::DecoratedStatement(dc) = &stat.contents else {
                 return None;
             };
 
@@ -564,7 +563,7 @@ impl<'a> ExecutionContext {
 
         // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
         // type safety (in case we add more specific statement types).
-        match &*job.statement.contents {
+        match &job.statement.contents {
             StatementVariant::BlockStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::SwitchStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::IfStatement(stmt) => no_redirs(&stmt.args_or_redirs),
@@ -680,7 +679,7 @@ impl<'a> ExecutionContext {
             return result;
         }
 
-        match &**specific_statement {
+        match &specific_statement {
             StatementVariant::NotStatement(not_statement) => {
                 self.populate_not_process(ctx, job, proc, not_statement)
             }
@@ -874,7 +873,7 @@ impl<'a> ExecutionContext {
     ) -> EndExecutionReason {
         let bh = &statement.header;
         let contents = &statement.jobs;
-        match &**bh {
+        match bh {
             BlockStatementHeaderVariant::ForHeader(fh) => self.run_for_statement(ctx, fh, contents),
             BlockStatementHeaderVariant::WhileHeader(wh) => {
                 self.run_while_statement(ctx, wh, contents, associated_block)
@@ -1586,7 +1585,7 @@ impl<'a> ExecutionContext {
                 specific_statement
             ));
             if result == EndExecutionReason::ok {
-                result = match &**specific_statement {
+                result = match &specific_statement {
                     StatementVariant::BlockStatement(block_statement) => {
                         self.run_block_statement(ctx, block_statement, associated_block)
                     }
@@ -1942,7 +1941,7 @@ fn profiling_cmd_name_for_redirectable_block(
     let src_end = match node {
         StatementVariant::BlockStatement(block_statement) => {
             let block_header = &block_statement.header;
-            match &**block_header {
+            match block_header {
                 BlockStatementHeaderVariant::ForHeader(for_header) => {
                     for_header.semi_nl.source_range().start()
                 }
@@ -1993,7 +1992,7 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
 
     // Helper to return true if a node is 'not time ...' or 'not not time...' or...
     let is_timed_not_statement = |mut stat: &ast::Statement| loop {
-        match &*stat.contents {
+        match &stat.contents {
             StatementVariant::NotStatement(ns) => {
                 if ns.time.is_some() {
                     return true;

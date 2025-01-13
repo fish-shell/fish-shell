@@ -64,13 +64,13 @@ trait NodeVisitorMut {
 
     fn visit_argument_or_redirection(
         &mut self,
-        _node: &mut Box<ArgumentOrRedirectionVariant>,
+        _node: &mut ArgumentOrRedirectionVariant,
     ) -> VisitResult;
     fn visit_block_statement_header(
         &mut self,
-        _node: &mut Box<BlockStatementHeaderVariant>,
+        _node: &mut BlockStatementHeaderVariant,
     ) -> VisitResult;
-    fn visit_statement(&mut self, _node: &mut Box<StatementVariant>) -> VisitResult;
+    fn visit_statement(&mut self, _node: &mut StatementVariant) -> VisitResult;
 
     fn visit_decorated_statement_decorator(
         &mut self,
@@ -858,10 +858,10 @@ macro_rules! visit_1_field_impl {
     (
         $visit:ident,
         $field:expr,
-        (Box<$field_type:ident>),
+        (variant<$field_type:ident>),
         $visitor:ident
     ) => {
-        visit_union_field!($visit, $field_type, $field, $visitor)
+        visit_variant_field!($visit, $field_type, $field, $visitor)
     };
     (
         $visit:ident,
@@ -890,7 +890,7 @@ macro_rules! apply_borrow {
     };
 }
 
-macro_rules! visit_union_field {
+macro_rules! visit_variant_field {
     (
         visit,
         $field_type:ident,
@@ -905,11 +905,11 @@ macro_rules! visit_union_field {
         $field:expr,
         $visitor:ident
     ) => {
-        visit_union_field_mut!($field_type, $visitor, $field)
+        visit_variant_field_mut!($field_type, $visitor, $field)
     };
 }
 
-macro_rules! visit_union_field_mut {
+macro_rules! visit_variant_field_mut {
     (ArgumentOrRedirectionVariant, $visitor:ident, $field:expr) => {
         $visitor.visit_argument_or_redirection(&mut $field)
     };
@@ -978,7 +978,7 @@ macro_rules! set_parent_of_field {
     (
         $self:ident,
         $field_name:ident,
-        (Box<$field_type:ident>)
+        (variant<$field_type:ident>)
     ) => {
         set_parent_of_union_field!($self, $field_name, $field_type);
     };
@@ -1008,10 +1008,7 @@ macro_rules! set_parent_of_union_field {
         $field_name:ident,
         ArgumentOrRedirectionVariant
     ) => {
-        if matches!(
-            *$self.$field_name,
-            ArgumentOrRedirectionVariant::Argument(_)
-        ) {
+        if matches!($self.$field_name, ArgumentOrRedirectionVariant::Argument(_)) {
             $self.$field_name.as_mut_argument().parent = Some($self);
             $self.$field_name.as_mut_argument().set_parents();
         } else {
@@ -1024,19 +1021,19 @@ macro_rules! set_parent_of_union_field {
         $field_name:ident,
         StatementVariant
     ) => {
-        if matches!(*$self.$field_name, StatementVariant::NotStatement(_)) {
+        if matches!($self.$field_name, StatementVariant::NotStatement(_)) {
             $self.$field_name.as_mut_not_statement().parent = Some($self);
             $self.$field_name.as_mut_not_statement().set_parents();
-        } else if matches!(*$self.$field_name, StatementVariant::BlockStatement(_)) {
+        } else if matches!($self.$field_name, StatementVariant::BlockStatement(_)) {
             $self.$field_name.as_mut_block_statement().parent = Some($self);
             $self.$field_name.as_mut_block_statement().set_parents();
-        } else if matches!(*$self.$field_name, StatementVariant::IfStatement(_)) {
+        } else if matches!($self.$field_name, StatementVariant::IfStatement(_)) {
             $self.$field_name.as_mut_if_statement().parent = Some($self);
             $self.$field_name.as_mut_if_statement().set_parents();
-        } else if matches!(*$self.$field_name, StatementVariant::SwitchStatement(_)) {
+        } else if matches!($self.$field_name, StatementVariant::SwitchStatement(_)) {
             $self.$field_name.as_mut_switch_statement().parent = Some($self);
             $self.$field_name.as_mut_switch_statement().set_parents();
-        } else if matches!(*$self.$field_name, StatementVariant::DecoratedStatement(_)) {
+        } else if matches!($self.$field_name, StatementVariant::DecoratedStatement(_)) {
             $self.$field_name.as_mut_decorated_statement().parent = Some($self);
             $self.$field_name.as_mut_decorated_statement().set_parents();
         }
@@ -1046,26 +1043,23 @@ macro_rules! set_parent_of_union_field {
         $field_name:ident,
         BlockStatementHeaderVariant
     ) => {
-        if matches!(
-            *$self.$field_name,
-            BlockStatementHeaderVariant::ForHeader(_)
-        ) {
+        if matches!($self.$field_name, BlockStatementHeaderVariant::ForHeader(_)) {
             $self.$field_name.as_mut_for_header().parent = Some($self);
             $self.$field_name.as_mut_for_header().set_parents();
         } else if matches!(
-            *$self.$field_name,
+            $self.$field_name,
             BlockStatementHeaderVariant::WhileHeader(_)
         ) {
             $self.$field_name.as_mut_while_header().parent = Some($self);
             $self.$field_name.as_mut_while_header().set_parents();
         } else if matches!(
-            *$self.$field_name,
+            $self.$field_name,
             BlockStatementHeaderVariant::FunctionHeader(_)
         ) {
             $self.$field_name.as_mut_function_header().parent = Some($self);
             $self.$field_name.as_mut_function_header().set_parents();
         } else if matches!(
-            *$self.$field_name,
+            $self.$field_name,
             BlockStatementHeaderVariant::BeginHeader(_)
         ) {
             $self.$field_name.as_mut_begin_header().parent = Some($self);
@@ -1120,12 +1114,12 @@ impl ConcreteNodeMut for VariableAssignmentList {
 #[derive(Default, Debug)]
 pub struct ArgumentOrRedirection {
     parent: Option<*const dyn Node>,
-    pub contents: Box<ArgumentOrRedirectionVariant>,
+    pub contents: ArgumentOrRedirectionVariant,
 }
 implement_node!(ArgumentOrRedirection, branch, argument_or_redirection);
 implement_acceptor_for_branch!(
     ArgumentOrRedirection,
-    (contents: (Box<ArgumentOrRedirectionVariant>))
+    (contents: (variant<ArgumentOrRedirectionVariant>))
 );
 impl ConcreteNode for ArgumentOrRedirection {
     fn as_argument_or_redirection(&self) -> Option<&ArgumentOrRedirection> {
@@ -1164,10 +1158,10 @@ impl ConcreteNodeMut for ArgumentOrRedirectionList {
 #[derive(Default, Debug)]
 pub struct Statement {
     parent: Option<*const dyn Node>,
-    pub contents: Box<StatementVariant>,
+    pub contents: StatementVariant,
 }
 implement_node!(Statement, branch, statement);
-implement_acceptor_for_branch!(Statement, (contents: (Box<StatementVariant>)));
+implement_acceptor_for_branch!(Statement, (contents: (variant<StatementVariant>)));
 impl ConcreteNode for Statement {
     fn as_statement(&self) -> Option<&Statement> {
         Some(self)
@@ -1377,7 +1371,7 @@ impl ConcreteNodeMut for BeginHeader {
 pub struct BlockStatement {
     parent: Option<*const dyn Node>,
     /// A header like for, while, etc.
-    pub header: Box<BlockStatementHeaderVariant>,
+    pub header: BlockStatementHeaderVariant,
     /// List of jobs in this block.
     pub jobs: JobList,
     /// The 'end' node.
@@ -1388,7 +1382,7 @@ pub struct BlockStatement {
 implement_node!(BlockStatement, branch, block_statement);
 implement_acceptor_for_branch!(
     BlockStatement,
-    (header: (Box<BlockStatementHeaderVariant>)),
+    (header: (variant<BlockStatementHeaderVariant>)),
     (jobs: (JobList)),
     (end: (KeywordEnd)),
     (args_or_redirs: (ArgumentOrRedirectionList)),
@@ -2105,17 +2099,17 @@ impl ArgumentOrRedirectionVariant {
 impl ArgumentOrRedirection {
     /// Return whether this represents an argument.
     pub fn is_argument(&self) -> bool {
-        matches!(*self.contents, ArgumentOrRedirectionVariant::Argument(_))
+        matches!(self.contents, ArgumentOrRedirectionVariant::Argument(_))
     }
 
     /// Return whether this represents a redirection
     pub fn is_redirection(&self) -> bool {
-        matches!(*self.contents, ArgumentOrRedirectionVariant::Redirection(_))
+        matches!(self.contents, ArgumentOrRedirectionVariant::Redirection(_))
     }
 
     /// Return this as an argument, assuming it wraps one.
     pub fn argument(&self) -> &Argument {
-        match *self.contents {
+        match self.contents {
             ArgumentOrRedirectionVariant::Argument(ref arg) => arg,
             _ => panic!("Is not an argument"),
         }
@@ -2123,7 +2117,7 @@ impl ArgumentOrRedirection {
 
     /// Return this as an argument, assuming it wraps one.
     pub fn redirection(&self) -> &Redirection {
-        match *self.contents {
+        match self.contents {
             ArgumentOrRedirectionVariant::Redirection(ref arg) => arg,
             _ => panic!("Is not a redirection"),
         }
@@ -2133,11 +2127,10 @@ impl ArgumentOrRedirection {
 #[derive(Debug)]
 pub enum StatementVariant {
     None,
-    NotStatement(NotStatement),
-    BlockStatement(BlockStatement),
-    // IfStatement is much larger than the rest, so we box it.
+    NotStatement(Box<NotStatement>),
+    BlockStatement(Box<BlockStatement>),
     IfStatement(Box<IfStatement>),
-    SwitchStatement(SwitchStatement),
+    SwitchStatement(Box<SwitchStatement>),
     DecoratedStatement(DecoratedStatement),
 }
 
@@ -2214,10 +2207,10 @@ impl StatementVariant {
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => node,
-            StatementVariant::BlockStatement(node) => node,
+            StatementVariant::NotStatement(node) => &**node,
+            StatementVariant::BlockStatement(node) => &**node,
             StatementVariant::IfStatement(node) => &**node,
-            StatementVariant::SwitchStatement(node) => node,
+            StatementVariant::SwitchStatement(node) => &**node,
             StatementVariant::DecoratedStatement(node) => node,
         }
     }
@@ -2999,12 +2992,12 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     // Handle them directly.
     fn visit_argument_or_redirection(
         &mut self,
-        node: &mut Box<ArgumentOrRedirectionVariant>,
+        node: &mut ArgumentOrRedirectionVariant,
     ) -> VisitResult {
         if let Some(arg) = self.try_parse::<Argument>() {
-            **node = ArgumentOrRedirectionVariant::Argument(*arg);
+            *node = ArgumentOrRedirectionVariant::Argument(*arg);
         } else if let Some(redir) = self.try_parse::<Redirection>() {
-            **node = ArgumentOrRedirectionVariant::Redirection(*redir);
+            *node = ArgumentOrRedirectionVariant::Redirection(*redir);
         } else {
             internal_error!(
                 self,
@@ -3016,12 +3009,12 @@ impl<'s> NodeVisitorMut for Populator<'s> {
     }
     fn visit_block_statement_header(
         &mut self,
-        node: &mut Box<BlockStatementHeaderVariant>,
+        node: &mut BlockStatementHeaderVariant,
     ) -> VisitResult {
         *node = self.allocate_populate_block_header();
         VisitResult::Continue(())
     }
-    fn visit_statement(&mut self, node: &mut Box<StatementVariant>) -> VisitResult {
+    fn visit_statement(&mut self, node: &mut StatementVariant) -> VisitResult {
         *node = self.allocate_populate_statement_contents();
         VisitResult::Continue(())
     }
@@ -3537,17 +3530,17 @@ impl<'s> Populator<'s> {
 
     /// Allocate and populate a statement contents pointer.
     /// This must never return null.
-    fn allocate_populate_statement_contents(&mut self) -> Box<StatementVariant> {
+    fn allocate_populate_statement_contents(&mut self) -> StatementVariant {
         // In case we get a parse error, we still need to return something non-null. Use a
         // decorated statement; all of its leaf nodes will end up unsourced.
-        fn got_error(slf: &mut Populator<'_>) -> Box<StatementVariant> {
+        fn got_error(slf: &mut Populator<'_>) -> StatementVariant {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
-        fn new_decorated_statement(slf: &mut Populator<'_>) -> Box<StatementVariant> {
+        fn new_decorated_statement(slf: &mut Populator<'_>) -> StatementVariant {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
-            Box::new(StatementVariant::DecoratedStatement(*embedded))
+            StatementVariant::DecoratedStatement(*embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -3626,22 +3619,22 @@ impl<'s> Populator<'s> {
         match self.peek_token(0).keyword {
             ParseKeyword::kw_not | ParseKeyword::kw_exclam => {
                 let embedded = self.allocate_visit::<NotStatement>();
-                Box::new(StatementVariant::NotStatement(*embedded))
+                StatementVariant::NotStatement(embedded)
             }
             ParseKeyword::kw_for
             | ParseKeyword::kw_while
             | ParseKeyword::kw_function
             | ParseKeyword::kw_begin => {
                 let embedded = self.allocate_visit::<BlockStatement>();
-                Box::new(StatementVariant::BlockStatement(*embedded))
+                StatementVariant::BlockStatement(embedded)
             }
             ParseKeyword::kw_if => {
                 let embedded = self.allocate_visit::<IfStatement>();
-                Box::new(StatementVariant::IfStatement(embedded))
+                StatementVariant::IfStatement(embedded)
             }
             ParseKeyword::kw_switch => {
                 let embedded = self.allocate_visit::<SwitchStatement>();
-                Box::new(StatementVariant::SwitchStatement(*embedded))
+                StatementVariant::SwitchStatement(embedded)
             }
             ParseKeyword::kw_end => {
                 // 'end' is forbidden as a command.
@@ -3663,8 +3656,8 @@ impl<'s> Populator<'s> {
 
     /// Allocate and populate a block statement header.
     /// This must never return null.
-    fn allocate_populate_block_header(&mut self) -> Box<BlockStatementHeaderVariant> {
-        Box::new(match self.peek_token(0).keyword {
+    fn allocate_populate_block_header(&mut self) -> BlockStatementHeaderVariant {
+        match self.peek_token(0).keyword {
             ParseKeyword::kw_for => {
                 let embedded = self.allocate_visit::<ForHeader>();
                 BlockStatementHeaderVariant::ForHeader(*embedded)
@@ -3688,7 +3681,7 @@ impl<'s> Populator<'s> {
                     "should not have descended into block_header"
                 );
             }
-        })
+        }
     }
 
     fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<Box<T>> {

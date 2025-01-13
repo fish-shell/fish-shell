@@ -1046,7 +1046,7 @@ impl<'s> Highlighter<'s> {
         }
     }
     fn visit_block_statement(&mut self, block: &BlockStatement) {
-        match &*block.header {
+        match &block.header {
             BlockStatementHeaderVariant::None => panic!(),
             BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
             BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),

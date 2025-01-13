@@ -55,8 +55,8 @@ expect_prompt()
 # fish_job_summary is called when foreground job is signalled.
 # cmd_line contains the entire pipeline. proc_id and proc_name are set in a pipeline.
 sendline("true | sleep 6")
-sleep(0.100)
+sleep(0.200)
 # Beware: Mac pkill requires that the -P argument come before the process name,
 # else the -P argument is ignored.
 call(["pkill", "-KILL", "-P", str(sp.spawn.pid), "sleep"])
-expect_re("[0-9]+:1:true|sleep 6:SIGKILL:Forced quit:[0-9]+:sleep", timeout=20)
+expect_re("[0-9]+:1:true|sleep 6:SIGKILL:Forced quit:[0-9]+:sleep", timeout=10)

@@ -4650,16 +4650,15 @@ fn get_autosuggestion_performer(
         };
 
         // Search history for a matching item unless this line is not a continuation line or quoted.
-        if {
+        let cursor_line_has_process_start = {
             let mut tokens = vec![];
             parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
-            tokens
-                .first()
-                .map(|tok| {
-                    range_of_line_at_cursor(&command_line, tok.offset()) == search_string_range
-                })
-                .unwrap_or_default()
-        } {
+            range_of_line_at_cursor(
+                &command_line,
+                tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
+            ) == search_string_range
+        };
+        if cursor_line_has_process_start {
             let mut searcher = HistorySearch::new_with_type(
                 history,
                 search_string.to_owned(),

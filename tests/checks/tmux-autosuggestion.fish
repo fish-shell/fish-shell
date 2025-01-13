@@ -30,3 +30,9 @@ isolated-tmux send-keys A C-h
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 2> : ./COMPL
+
+isolated-tmux send-keys C-u 'echo (echo)' Enter
+isolated-tmux send-keys C-l 'echo ('
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 3> echo (echo)

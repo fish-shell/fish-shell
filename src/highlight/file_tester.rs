@@ -163,7 +163,7 @@ impl<'s> FileTester<'s> {
                 // Note we color "try_input" files as errors if they are invalid,
                 // even though it's possible to execute these (replaced via /dev/null).
                 waccess(&target_path, libc::R_OK) == 0
-                    && wstat(&target_path).map_or(false, |md| !md.file_type().is_dir())
+                    && wstat(&target_path).is_ok_and(|md| !md.file_type().is_dir())
             }
             RedirectionMode::overwrite | RedirectionMode::append | RedirectionMode::noclob => {
                 if string_suffixes_string(L!("/"), &target) {

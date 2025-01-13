@@ -891,7 +891,7 @@ impl<'s> Highlighter<'s> {
         let source_range = arg.source_range();
         let is_prefix = self
             .cursor
-            .map_or(false, |c| source_range.contains_inclusive(c));
+            .is_some_and(|c| source_range.contains_inclusive(c));
         let token = arg.source(self.buff).to_owned();
         let test_result = if cmd_is_cd {
             self.file_tester.test_cd_path(&token, is_prefix)

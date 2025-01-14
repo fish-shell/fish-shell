@@ -218,8 +218,7 @@ pub struct Screen {
     actual_lines_before_reset: usize,
     /// Modification times to check if any output has occurred other than from fish's
     /// main loop, in which case we need to redraw.
-    mtime_stdout: Option<SystemTime>,
-    mtime_stderr: Option<SystemTime>,
+    mtime_stdout_stderr: (Option<SystemTime>, Option<SystemTime>),
 }
 
 impl Screen {
@@ -236,8 +235,7 @@ impl Screen {
             need_clear_lines: Default::default(),
             need_clear_screen: Default::default(),
             actual_lines_before_reset: Default::default(),
-            mtime_stdout: Default::default(),
-            mtime_stderr: Default::default(),
+            mtime_stdout_stderr: Default::default(),
         }
     }
 
@@ -691,7 +689,7 @@ impl Screen {
     /// Stat stdout and stderr and save result as the current timestamp.
     /// This is used to avoid reacting to changes that we ourselves made to the screen.
     pub fn save_status(&mut self) {
-        (self.mtime_stdout, self.mtime_stderr) = mtime_stdout_stderr();
+        self.mtime_stdout_stderr = mtime_stdout_stderr();
     }
 
     /// Return whether we believe the cursor is wrapped onto the last line, and that line is
@@ -800,11 +798,7 @@ impl Screen {
             return;
         }
 
-        let mtime_out = fstat(STDOUT_FILENO).and_then(|md| md.modified()).ok();
-        let mtime_err = fstat(STDERR_FILENO).and_then(|md| md.modified()).ok();
-        let changed = self.mtime_stdout != mtime_out || self.mtime_stderr != mtime_err;
-
-        if changed {
+        if self.mtime_stdout_stderr != mtime_stdout_stderr() {
             // Ok, someone has been messing with our screen. We will want to repaint. However, we do not
             // know where the cursor is. It is our best bet that we are still on the same line, so we
             // move to the beginning of the line, reset the modelled screen contents, and then set the

@@ -67,26 +67,33 @@ e{cho,cho,cho}
 { echo no semi }
 # CHECK: no semi
 
-# Ambiguous cases
+{echo no space}
+# CHECK: no space
 
+# Ambiguous case
 { echo ,comma;}
 # CHECK: ,comma
 
-PATH= {echo no space}
-# CHECKERR: fish: Unknown command: '{echo no space}'
-# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
-# CHECKERR: PATH= {echo no space}
-# CHECKERR:       ^~~~~~~~~~~~~~^
-
-PATH= {echo comma, no space;}
-# CHECKERR: fish: Unknown command: 'echo comma'
-# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
-# CHECKERR: PATH= {echo comma, no space;}
-# CHECKERR:       ^~~~~~~~~~~~~~~~~~~~~~^
+# Ambiguous case with no trailing space
+{echo comma, no space;}
+# CHECK: comma, no space
 
 # Ambiguous case with no space
-{echo,hello}
-# CHECK: hello
+PATH= {echo,hello}
+# CHECKERR: fish: Unknown command: echo,hello
+# CHECKERR: {{.*}}/braces.fish (line {{\d+}}):
+# CHECKERR: PATH= {echo,hello}
+# CHECKERR:        ^~~~~~~~~^
+
+function foo,
+    echo foo,
+end
+function bar
+    echo bar
+end
+{foo,;bar}
+# CHECK: foo,
+# CHECK: bar
 
 # Trailing tokens
 set -l fish (status fish-path)
@@ -157,7 +164,7 @@ end
 }
 # CHECK: while
 
-{ { echo inner}
+{{echo inner}
     echo outer}
 # CHECK: inner
 # CHECK: outer
@@ -172,9 +179,8 @@ complete foo -a '123 456'
 complete -C 'foo {' | sed 1q
 # CHECK: {{\{.*}}
 
-complete -C '{'
-echo nothing
-# CHECK: nothing
+complete -C '{' | grep ^if\t
+# CHECK: if{{\t}}Evaluate block if condition is true
 complete -C '{ ' | grep ^if\t
 # CHECK: if{{\t}}Evaluate block if condition is true
 

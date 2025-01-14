@@ -114,6 +114,10 @@ struct BuiltinData {
 // NOTE: These must be kept in sorted order!
 const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
+        name: L!("!"),
+        func: builtin_generic,
+    },
+    BuiltinData {
         name: L!("."),
         func: source::source,
     },
@@ -471,6 +475,7 @@ pub fn builtin_get_names() -> impl Iterator<Item = &'static wstr> {
 /// Return a one-line description of the specified builtin.
 pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
     let desc = match name {
+        _ if name == "!" => wgettext!("Negate exit status of job"),
         _ if name == "." => wgettext!("Evaluate contents of file"),
         _ if name == ":" => wgettext!("Return a successful result"),
         _ if name == "[" => wgettext!("Test a condition"), // ]

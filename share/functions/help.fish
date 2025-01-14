@@ -129,6 +129,8 @@ function help --description 'Show help for the fish shell'
 
     set -l fish_help_page
     switch "$fish_help_item"
+        case "!"
+            set fish_help_page "cmds/not.html"
         case "."
             set fish_help_page "cmds/source.html"
         case ":"

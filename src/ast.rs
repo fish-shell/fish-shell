@@ -2126,6 +2126,112 @@ impl ArgumentOrRedirection {
 }
 
 #[derive(Debug)]
+pub enum BlockStatementHeaderVariant {
+    None,
+    ForHeader(ForHeader),
+    WhileHeader(WhileHeader),
+    FunctionHeader(FunctionHeader),
+    BeginHeader(BeginHeader),
+}
+
+impl Default for BlockStatementHeaderVariant {
+    fn default() -> Self {
+        BlockStatementHeaderVariant::None
+    }
+}
+
+impl Acceptor for BlockStatementHeaderVariant {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+        match self {
+            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
+            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor, reversed),
+            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor, reversed),
+            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor, reversed),
+            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor, reversed),
+        }
+    }
+}
+impl AcceptorMut for BlockStatementHeaderVariant {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+        match self {
+            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
+            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor, reversed),
+            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor, reversed),
+            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor, reversed),
+            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor, reversed),
+        }
+    }
+}
+
+impl BlockStatementHeaderVariant {
+    pub fn typ(&self) -> Type {
+        self.embedded_node().typ()
+    }
+    pub fn try_source_range(&self) -> Option<SourceRange> {
+        self.embedded_node().try_source_range()
+    }
+
+    pub fn as_for_header(&self) -> Option<&ForHeader> {
+        match self {
+            BlockStatementHeaderVariant::ForHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_while_header(&self) -> Option<&WhileHeader> {
+        match self {
+            BlockStatementHeaderVariant::WhileHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_function_header(&self) -> Option<&FunctionHeader> {
+        match self {
+            BlockStatementHeaderVariant::FunctionHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+    pub fn as_begin_header(&self) -> Option<&BeginHeader> {
+        match self {
+            BlockStatementHeaderVariant::BeginHeader(node) => Some(node),
+            _ => None,
+        }
+    }
+
+    fn embedded_node(&self) -> &dyn NodeMut {
+        match self {
+            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
+            BlockStatementHeaderVariant::ForHeader(node) => node,
+            BlockStatementHeaderVariant::WhileHeader(node) => node,
+            BlockStatementHeaderVariant::FunctionHeader(node) => node,
+            BlockStatementHeaderVariant::BeginHeader(node) => node,
+        }
+    }
+    fn as_mut_for_header(&mut self) -> &mut ForHeader {
+        match self {
+            BlockStatementHeaderVariant::ForHeader(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_while_header(&mut self) -> &mut WhileHeader {
+        match self {
+            BlockStatementHeaderVariant::WhileHeader(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_function_header(&mut self) -> &mut FunctionHeader {
+        match self {
+            BlockStatementHeaderVariant::FunctionHeader(node) => node,
+            _ => panic!(),
+        }
+    }
+    fn as_mut_begin_header(&mut self) -> &mut BeginHeader {
+        match self {
+            BlockStatementHeaderVariant::BeginHeader(node) => node,
+            _ => panic!(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum StatementVariant {
     None,
     NotStatement(Box<NotStatement>),
@@ -2242,112 +2348,6 @@ impl StatementVariant {
     fn as_mut_decorated_statement(&mut self) -> &mut DecoratedStatement {
         match self {
             StatementVariant::DecoratedStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum BlockStatementHeaderVariant {
-    None,
-    ForHeader(ForHeader),
-    WhileHeader(WhileHeader),
-    FunctionHeader(FunctionHeader),
-    BeginHeader(BeginHeader),
-}
-
-impl Default for BlockStatementHeaderVariant {
-    fn default() -> Self {
-        BlockStatementHeaderVariant::None
-    }
-}
-
-impl Acceptor for BlockStatementHeaderVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor, reversed),
-        }
-    }
-}
-impl AcceptorMut for BlockStatementHeaderVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor, reversed),
-        }
-    }
-}
-
-impl BlockStatementHeaderVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    pub fn as_for_header(&self) -> Option<&ForHeader> {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_while_header(&self) -> Option<&WhileHeader> {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_function_header(&self) -> Option<&FunctionHeader> {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_begin_header(&self) -> Option<&BeginHeader> {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
-        }
-    }
-    fn as_mut_for_header(&mut self) -> &mut ForHeader {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_while_header(&mut self) -> &mut WhileHeader {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_function_header(&mut self) -> &mut FunctionHeader {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_begin_header(&mut self) -> &mut BeginHeader {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
             _ => panic!(),
         }
     }

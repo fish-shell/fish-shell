@@ -64,7 +64,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # Default (command) mode
     bind -s --preset :,q exit
-    bind -s --preset -m insert ctrl-c cancel-commandline repaint-mode
+    bind -s --preset -m insert ctrl-c clear-commandline repaint-mode
     bind -s --preset -M default h backward-char
     bind -s --preset -M default l forward-char
     bind -s --preset -m insert enter execute

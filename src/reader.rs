@@ -2309,7 +2309,7 @@ impl<'a> Reader<'a> {
                 self.data
                     .update_buff_pos(EditableLineTag::Commandline, Some(self.command_line_len()));
             }
-            rl::CancelCommandline | rl::CancelCommandlineTraditional => {
+            rl::CancelCommandline | rl::ClearCommandline => {
                 if self.conf.exit_on_interrupt {
                     self.parser
                         .set_last_statuses(Statuses::just(STATUS_CMD_ERROR.unwrap()));
@@ -2319,10 +2319,11 @@ impl<'a> Reader<'a> {
                 if self.command_line.is_empty() {
                     return;
                 }
-                if c == rl::CancelCommandlineTraditional {
+                if c == rl::CancelCommandline {
                     // Move cursor to the end of the line.
                     let end = self.command_line.len();
                     self.update_buff_pos(EditableLineTag::Commandline, Some(end));
+
                     self.autosuggestion.clear();
                     // Repaint also changes the actual cursor position
                     if self.is_repaint_needed(None) {
@@ -2346,7 +2347,7 @@ impl<'a> Reader<'a> {
                     EditableLineTag::Commandline,
                     Edit::new(0..self.command_line_len(), L!("").to_owned()),
                 );
-                if c == rl::CancelCommandlineTraditional {
+                if c == rl::CancelCommandline {
                     self.screen
                         .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
                 }
@@ -5042,7 +5043,7 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::AcceptAutosuggestion
         | rl::DeleteOrExit
         | rl::CancelCommandline
-        | rl::CancelCommandlineTraditional
+        | rl::ClearCommandline
         | rl::Cancel =>
         // These commands always end paging.
         {

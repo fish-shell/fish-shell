@@ -170,6 +170,9 @@ The following special input functions are available:
 ``capitalize-word``
     make the current word begin with a capital letter
 
+``clear-commandline``
+    empty the entire commandline
+
 ``clear-screen``
     clears the screen and redraws the prompt. if the terminal doesn't support clearing the screen it is the same as ``repaint``.
 

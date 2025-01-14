@@ -13,7 +13,6 @@ use crate::{
     ast::unescape_keyword,
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
-    tokenizer::is_brace_statement,
     util::wcsfilecmp,
     wutil::sprintf,
 };
@@ -667,20 +666,7 @@ impl<'ctx> Completer<'ctx> {
 
         // Get all the arguments.
         let mut tokens = Vec::new();
-        {
-            let proc_range =
-                parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
-            let start = proc_range.start;
-            if start != 0
-                && cmdline.as_char_slice()[start - 1] == '{'
-                && (start == cmdline.len()
-                    || !is_brace_statement(cmdline.as_char_slice().get(start).copied()))
-            {
-                // We don't want to suggest commands here, since this command line parses as
-                // brace expansion.
-                return;
-            }
-        }
+        parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
         let actual_token_count = tokens.len();
 
         // Hack: fix autosuggestion by removing prefixing "and"s #6249.

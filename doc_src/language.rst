@@ -917,6 +917,12 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
 
 To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
 
+The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :ref:`compound statement <cmd-begin>`::
+
+    > {echo hello, && echo world}
+    hello,
+    world
+
 .. _cartesian-product:
 
 Combining lists

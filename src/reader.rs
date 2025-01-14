@@ -120,7 +120,7 @@ use crate::proc::{
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
 use crate::reader_history_search::{smartcase_flags, ReaderHistorySearch, SearchMode};
-use crate::screen::{screen_clear, screen_force_clear_to_end, Screen};
+use crate::screen::{screen_clear, screen_force_clear_to_end, CharOffset, Screen};
 use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
     signal_set_handlers_once,
@@ -1403,11 +1403,20 @@ impl ReaderData {
             "; received left mouse click at",
             click_position
         );
-        let new_pos = self
+        match self
             .screen
-            .offset_in_cmdline_given_cursor(click_position, cursor);
-        let (elt, _el) = self.active_edit_line();
-        self.update_buff_pos(elt, Some(new_pos));
+            .offset_in_cmdline_given_cursor(click_position, cursor)
+        {
+            CharOffset::Cmd(new_pos) | CharOffset::Pointer(new_pos) => {
+                let (elt, _el) = self.active_edit_line();
+                self.update_buff_pos(elt, Some(new_pos));
+            }
+            CharOffset::Pager(idx) if self.pager.selected_completion_idx != Some(idx) => {
+                self.pager.selected_completion_idx = Some(idx);
+                self.pager_selection_changed();
+            }
+            _ => {}
+        }
     }
 }
 

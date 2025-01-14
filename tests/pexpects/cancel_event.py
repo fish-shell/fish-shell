@@ -21,7 +21,7 @@ if "CI" in os.environ:
     import sys
 
     print("SKIPPING cancel_event.py")
-    sys.exit(0)
+    sys.exit(127)
 
 # Verify that cancel-commandline does what we expect - see #7384.
 send("not executed")

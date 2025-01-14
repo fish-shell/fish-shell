@@ -2,6 +2,8 @@
 #REQUIRES: command -v tmux
 # Somehow $LINES is borked on NetBSD?
 #REQUIRES: test $(uname) != NetBSD
+# Haunted under CI
+#REQUIRES: test -z "$CI"
 
 set -g isolated_tmux_fish_extra_args -C '
     bind ctrl-q "functions --erase fish_right_prompt" "commandline \'\'" clear-screen

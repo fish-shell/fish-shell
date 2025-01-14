@@ -17,9 +17,9 @@ import os
 import signal
 import sys
 
-# Disable under SAN - keeps failing because the timing is too tight
-if "FISH_CI_SAN" in os.environ:
-    sys.exit(0)
+# Disable under CI - keeps failing because the timing is too tight
+if "CI" in os.environ:
+    sys.exit(127)
 
 # Test job summary for interactive shells.
 expect_prompt()

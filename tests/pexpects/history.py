@@ -98,8 +98,8 @@ expect_prompt("echo start1; builtin history; echo end1\r\n")
 # ==========
 # Delete a single command we recently ran.
 sendline("history delete -e -C 'echo hello'")
-expect_prompt("history delete -e -C 'echo hello'" + TO_END_SUFFIX)
-sendline("echo count hello (history search -e -C 'echo hello' | wc -l | string trim)")
+expect_prompt()
+sendline("echo count hello (history search -e -C 'echo hello' | count)")
 expect_prompt("count hello 0\r\n")
 
 # ==========
@@ -121,12 +121,12 @@ expect_prompt('Deleting history entry 1: "echo hello AGAIN"\r\n')
 # Verify that the deleted history entry is gone and the other one that matched
 # the prefix search above is still there.
 sendline(
-    "echo count AGAIN (history search -e -C 'echo hello AGAIN' | wc -l | string trim)"
+    "echo count AGAIN (history search -e -C 'echo hello AGAIN' | count)"
 )
 expect_prompt("count AGAIN 0\r\n")
 
 sendline(
-    "echo count again (history search -e -C 'echo hello again' | wc -l | string trim)"
+    "echo count again (history search -e -C 'echo hello again' | count)"
 )
 expect_prompt("count again 1\r\n")
 

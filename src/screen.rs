@@ -418,7 +418,7 @@ impl Screen {
             i += 1;
         };
 
-        let full_line_count = self.desired.cursor.y + 1;
+        let full_line_count = self.desired.cursor.y + calc_prompt_lines(&layout.left_prompt);
         let pager_available_height = std::cmp::max(
             1,
             curr_termsize

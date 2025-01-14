@@ -1392,6 +1392,7 @@ impl ReaderData {
         assert!(self.cursor_position_wait == CursorPositionWait::None);
         self.cursor_position_wait = cursor_position_wait;
         let _ = out.write(b"\x1b[6n");
+        self.save_screen_state();
     }
 
     pub fn mouse_left_click(&mut self, cursor: ViewportPosition, click_position: ViewportPosition) {

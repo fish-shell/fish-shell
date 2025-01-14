@@ -42,12 +42,21 @@ use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string;
 use crate::wutil::fstat;
 
+#[derive(Copy, Clone, Default)]
+pub enum CharOffset {
+    #[default]
+    None,
+    Cmd(usize),
+    Pointer(usize),
+    Pager(usize),
+}
+
 #[derive(Clone, Default)]
 pub struct HighlightedChar {
     highlight: HighlightSpec,
     character: char,
     // Logical offset within the command line.
-    offset_in_cmdline: usize,
+    offset_in_cmdline: CharOffset,
 }
 
 /// A class representing a single line of a screen.
@@ -70,7 +79,12 @@ impl Line {
     }
 
     /// Append a single character `txt` to the line with color `c`.
-    pub fn append(&mut self, character: char, highlight: HighlightSpec, offset_in_cmdline: usize) {
+    pub fn append(
+        &mut self,
+        character: char,
+        highlight: HighlightSpec,
+        offset_in_cmdline: CharOffset,
+    ) {
         self.text.push(HighlightedChar {
             highlight,
             character: rendered_character(character),
@@ -79,7 +93,12 @@ impl Line {
     }
 
     /// Append a nul-terminated string `txt` to the line, giving each character `color`.
-    pub fn append_str(&mut self, txt: &wstr, highlight: HighlightSpec, offset_in_cmdline: usize) {
+    pub fn append_str(
+        &mut self,
+        txt: &wstr,
+        highlight: HighlightSpec,
+        offset_in_cmdline: CharOffset,
+    ) {
         for c in txt.chars() {
             self.append(c, highlight, offset_in_cmdline);
         }
@@ -101,7 +120,7 @@ impl Line {
     }
 
     /// Return the logical offset corresponding to this cell
-    pub fn offset_in_cmdline_at(&self, idx: usize) -> usize {
+    pub fn offset_in_cmdline_at(&self, idx: usize) -> CharOffset {
         self.text[idx].offset_in_cmdline
     }
 
@@ -338,9 +357,14 @@ impl Screen {
         self.desired.cursor.y = 0;
 
         // Append spaces for the left prompt.
+        let prompt_offset = if pager.search_field_shown {
+            CharOffset::None
+        } else {
+            CharOffset::Pointer(0)
+        };
         for _ in 0..layout.left_prompt_space {
             let _ = self.desired_append_char(
-                /*offset_in_cmdline=*/ 0,
+                prompt_offset,
                 usize::MAX,
                 ' ',
                 HighlightSpec::new(),
@@ -386,11 +410,14 @@ impl Screen {
                 break scrolled_cursor.unwrap();
             }
             if !self.desired_append_char(
-                /*offset_in_cmdline=*/
-                if i <= explicit_before_suggestion.len() + layout.autosuggestion.len() {
-                    i.min(explicit_before_suggestion.len())
+                if pager.search_field_shown {
+                    CharOffset::None
+                } else if i < explicit_before_suggestion.len() {
+                    CharOffset::Cmd(i)
+                } else if i < explicit_before_suggestion.len() + layout.autosuggestion.len() {
+                    CharOffset::Pointer(explicit_before_suggestion.len())
                 } else {
-                    i - layout.autosuggestion.len()
+                    CharOffset::Cmd(i - layout.autosuggestion.len())
                 },
                 if is_final_rendering {
                     usize::MAX
@@ -553,7 +580,7 @@ impl Screen {
         &mut self,
         viewport_position: ViewportPosition,
         viewport_cursor: ViewportPosition,
-    ) -> usize {
+    ) -> CharOffset {
         let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor.y);
         let y = viewport_position
             .y
@@ -574,14 +601,11 @@ impl Screen {
         let x = viewport_position.x - viewport_prompt_x;
         let line = self.actual.line(y);
         let x = x.max(line.indentation);
-        if x >= line.len() {
-            if self.actual.line_count() == 1 {
-                0
-            } else {
-                line.text.last().unwrap().offset_in_cmdline + 1
-            }
-        } else {
-            line.offset_in_cmdline_at(x)
+        let char = line.text.get(x).or(line.text.last()).unwrap();
+        match char.offset_in_cmdline {
+            CharOffset::Cmd(value) if x >= line.len() => CharOffset::Cmd(value + 1),
+            CharOffset::Pager(_) if x >= line.len() => CharOffset::None,
+            offset => offset,
         }
     }
 
@@ -706,7 +730,7 @@ impl Screen {
     /// automatically handles linebreaks and lines longer than the screen width.
     fn desired_append_char(
         &mut self,
-        offset_in_cmdline: usize,
+        offset_in_cmdline: CharOffset,
         max_y: usize,
         b: char,
         c: HighlightSpec,

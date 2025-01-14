@@ -66,7 +66,7 @@ send("\033")
 sleep(timeout)
 
 os.kill(sp.spawn.pid, signal.SIGINT)
-sleep(timeout)
+sleep(timeout * 2)
 
 # We should be back in insert mode now.
 send("echo mode changes: $MODE_CHANGES\r")

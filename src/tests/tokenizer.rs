@@ -57,9 +57,8 @@ fn test_tokenizer() {
         let s = L!("{echo, foo}");
         let mut t = Tokenizer::new(s, TokFlags(0));
         let token = t.next().unwrap();
-        assert_eq!(token.type_, TokenType::string);
-        assert_eq!(token.length, 11);
-        assert!(t.next().is_none());
+        assert_eq!(token.type_, TokenType::left_brace);
+        assert_eq!(token.length, 1);
     }
     {
         let s = L!("{ echo; foo}");

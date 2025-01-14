@@ -290,10 +290,6 @@ pub struct Tokenizer<'c> {
     on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
 }
 
-pub(crate) fn is_brace_statement(next_char: Option<char>) -> bool {
-    next_char.map_or(true, |next| next.is_ascii_whitespace() || next == ';')
-}
-
 impl<'c> Tokenizer<'c> {
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
     /// should not be freed by the caller until after the tokenizer is destroyed.
@@ -426,9 +422,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 Some(result)
             }
             '{' if self.brace_statement_parser.as_ref()
-    				.is_some_and(|parser| parser.at_command_position)
-				&& is_brace_statement(self.start.as_char_slice().get(self.token_cursor + 1).copied())
-				=>
+    				.is_some_and(|parser| parser.at_command_position) =>
 			{
                 self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
                 let mut result = Tok::new(TokenType::left_brace);

@@ -435,6 +435,7 @@ static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_JETBRAINS: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_KITTY: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -453,6 +454,8 @@ pub fn terminal_protocol_hacks() {
         var_os("TERMINAL_EMULATOR")
             .is_some_and(|term| term.as_os_str().as_bytes() == b"JetBrains-JediTerm"),
     );
+    IN_KITTY
+        .store(var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"xterm-kitty"));
 }
 
 fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
@@ -486,6 +489,13 @@ pub fn terminal_protocols_enable_ifn() {
     } else if IN_JETBRAINS.load() {
         // Jetbrains IDE terminals vomit CSI u
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
+    } else if IN_KITTY.load() {
+        // Kitty spams the log for modifyotherkeys
+        concat!(
+            "\x1b[?2004h", // Bracketed paste
+            "\x1b[=5u",    // CSI u with kitty progressive enhancement
+            "\x1b=",       // set application keypad mode, so the keypad keys send unique codes
+        )
     } else {
         concat!(
             "\x1b[?2004h", // Bracketed paste
@@ -510,6 +520,13 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
     } else if IN_JETBRAINS.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
+    } else if IN_KITTY.load() {
+        // Kitty spams the log for modifyotherkeys
+        concat!(
+            "\x1b[?2004l", // Bracketed paste
+            "\x1b[=0u",    // CSI u with kitty progressive enhancement
+            "\x1b>",       // application keypad mode
+        )
     } else {
         concat!(
             "\x1b[?2004l", // Bracketed paste

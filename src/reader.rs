@@ -5692,7 +5692,7 @@ impl<'a> Reader<'a> {
             return text.as_char_slice()[0] != ' ';
         }
 
-        let mut cmd: WString = L!("fish_should_add_to_history ").into();
+        let mut cmd: WString = L!("fish_should_add_to_history").into();
         cmd.push_utfstr(&escape(text));
         let _not_interactive = scoped_push_replacer(
             |new_value| std::mem::replace(&mut parser.libdata_mut().is_interactive, new_value),

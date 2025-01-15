@@ -2,22 +2,22 @@
 
 set -l subcmds prompt aliases chat collections embed embed-models embed-multi install keys logs models openai plugins similar templates uninstall
 function __fish_llm_subcmds
-    printf "%s\t%s\n" "prompt" "Execute a prompt" \
-        "aliases" "Manage model aliases" \
-        "chat" "Hold chat with model" \
-        "collections" "View/manage embedding collections" \
-        "embed" "Embed text and get/store result" \
-        "embed-models" "Manage available embedding models" \
-        "embed-multi" "Store embeddings for multiple strings" \
-        "install" "Install PyPI packages into llm env" \
-        "keys" "Manage stored API keys" \
-        "logs" "Explore logged prompts/responses" \
-        "models" "Manage available models" \
-        "openai" "Work with OpenAI API directly" \
-        "plugins" "List installed plugins" \
-        "similar" "Return top-N similar IDs for collection" \
-        "templates" "Manage stored prompt templates" \
-        "uninstall" "Uninstall Python packages from llm env"
+    printf "%s\t%s\n" prompt "Execute a prompt" \
+        aliases "Manage model aliases" \
+        chat "Hold chat with model" \
+        collections "View/manage embedding collections" \
+        embed "Embed text and get/store result" \
+        embed-models "Manage available embedding models" \
+        embed-multi "Store embeddings for multiple strings" \
+        install "Install PyPI packages into llm env" \
+        keys "Manage stored API keys" \
+        logs "Explore logged prompts/responses" \
+        models "Manage available models" \
+        openai "Work with OpenAI API directly" \
+        plugins "List installed plugins" \
+        similar "Return top-N similar IDs for collection" \
+        templates "Manage stored prompt templates" \
+        uninstall "Uninstall Python packages from llm env"
 end
 
 complete -c llm -n __fish_is_first_token -xa "(__fish_llm_subcmds)"
@@ -29,23 +29,23 @@ complete -c llm -l help -d "Show command usage info" -x
 
 function __fish_llm_models
     llm models |
-    string replace -r '^[^:\\n]+: (\\S+)(?: \\(aliases: )?((?:[^),\\s]+,?)?+.*?)\\)?$' '$1 $2' |
-    string split ' ' -n |
-    string trim -c ','
+        string replace -r '^[^:\\n]+: (\\S+)(?: \\(aliases: )?((?:[^),\\s]+,?)?+.*?)\\)?$' '$1 $2' |
+        string split ' ' -n |
+        string trim -c ','
 end
 
 function __fish_embedding_models
     llm models |
-    string replace -r '^[^:\\n]+: (\\S+)(?: \\(aliases: )?((?:[^),\\s]+,?)?+.*?)\\)?$' '$1 $2' |
-    string split ' ' -n |
-    string trim -c ','
+        string replace -r '^[^:\\n]+: (\\S+)(?: \\(aliases: )?((?:[^),\\s]+,?)?+.*?)\\)?$' '$1 $2' |
+        string split ' ' -n |
+        string trim -c ','
 end
 
 # The default subcommand is 'prompt'
 set -l condition "not __fish_seen_subcommand_from $subcmds || __fish_seen_subcommand_from prompt"
 complete -c llm -n $condition -s s -l system -d "System prompt to use" -r
 complete -c llm -n $condition -s m -l model -d "Model to use" -xa "(__fish_llm_models)"
-complete -c llm -n $condition -s a -l attachment -d "Attachment to use" -ra'-'
+complete -c llm -n $condition -s a -l attachment -d "Attachment to use" -ra-
 complete -c llm -n $condition -l at -d "Attachment type" -r
 complete -c llm -n $condition -l attachment-type -d "Attachment type" -r
 complete -c llm -n $condition -s n -l no-log -d "Don't log to db" -x

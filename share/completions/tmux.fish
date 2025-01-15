@@ -221,7 +221,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $sw
 complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" -xs t -d 'target window'
 complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" -xs t -d 'target window'
 complete -c tmux -n "__fish_seen_subcommand_from $displayp" -xs t -d 'target client'
-complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d 'target'
+complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d target
 
 ###############  End:   Windows and Panes ###############
 

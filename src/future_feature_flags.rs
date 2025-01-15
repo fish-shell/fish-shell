@@ -94,7 +94,7 @@ pub const METADATA: &[FeatureMetadata] = &[
     FeatureMetadata {
         flag: FeatureFlag::remove_percent_self,
         name: L!("remove-percent-self"),
-        groups: L!("3.8"),
+        groups: L!("4.0"),
         description: L!("%self is no longer expanded (use $fish_pid)"),
         default_value: false,
         read_only: false,
@@ -102,7 +102,7 @@ pub const METADATA: &[FeatureMetadata] = &[
     FeatureMetadata {
         flag: FeatureFlag::test_require_arg,
         name: L!("test-require-arg"),
-        groups: L!("3.8"),
+        groups: L!("4.0"),
         description: L!("builtin test requires an argument"),
         default_value: false,
         read_only: false,

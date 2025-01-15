@@ -397,8 +397,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if search_field_mode && buffer_part.is_some() {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd,));
+    if search_field_mode && (buffer_part.is_some() || token_mode.is_some()) {
+        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }

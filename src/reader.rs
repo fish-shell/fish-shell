@@ -1271,6 +1271,7 @@ impl ReaderData {
                 if self.history_pager.is_some() {
                     self.fill_history_pager(
                         HistoryPagerInvocation::Anew,
+                        Some(SelectionMotion::Next),
                         SearchDirection::Backward,
                     );
                     return;
@@ -2723,6 +2724,7 @@ impl<'a> Reader<'a> {
                     }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
+                        Some(SelectionMotion::Next),
                         SearchDirection::Forward,
                     );
                     return;
@@ -2992,6 +2994,7 @@ impl<'a> Reader<'a> {
                     }
                     self.fill_history_pager(
                         HistoryPagerInvocation::Advance,
+                        Some(SelectionMotion::Next),
                         SearchDirection::Backward,
                     );
                     return;
@@ -3071,6 +3074,7 @@ impl<'a> Reader<'a> {
                     self.history.save();
                     self.fill_history_pager(
                         HistoryPagerInvocation::Refresh,
+                        None,
                         SearchDirection::Backward,
                     );
                 }
@@ -5150,6 +5154,7 @@ impl ReaderData {
     fn fill_history_pager(
         &mut self,
         why: HistoryPagerInvocation,
+        motion: Option<SelectionMotion>,
         mut direction: SearchDirection, /* = Backward */
     ) {
         let index;
@@ -5171,7 +5176,7 @@ impl ReaderData {
                 let history_pager = self.history_pager.as_ref().unwrap();
                 direction = SearchDirection::Backward;
                 index = history_pager.start;
-                old_pager_index = Some(self.pager.selected_completion_index());
+                old_pager_index = self.pager.selected_completion_index();
             }
         }
         let search_term = self.pager.search_field_line.text().to_owned();
@@ -5208,11 +5213,11 @@ impl ReaderData {
                 };
             zelf.pager.set_completions(&result.matched_commands, false);
             if why == HistoryPagerInvocation::Refresh {
-                zelf.pager
-                    .set_selected_completion_index(old_pager_index.unwrap());
+                zelf.pager.set_selected_completion_index(old_pager_index);
                 zelf.pager_selection_changed();
-            } else {
-                zelf.select_completion_in_direction(SelectionMotion::Next, true);
+            }
+            if let Some(motion) = motion {
+                zelf.select_completion_in_direction(motion, true);
             }
             zelf.super_highlight_me_plenty();
             zelf.layout_and_repaint(L!("history-pager"));

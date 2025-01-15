@@ -5722,7 +5722,10 @@ impl<'a> Reader<'a> {
 
         // Historical behavior is to trim trailing spaces, unless escape (#7661).
         let mut text = self.command_line.text().to_owned();
-        while text.chars().next_back() == Some(' ')
+        while text
+            .chars()
+            .next_back()
+            .is_some_and(|c| matches!(c, ' ' | '\n'))
             && count_preceding_backslashes(&text, text.len() - 1) % 2 == 0
         {
             text.pop();

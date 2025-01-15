@@ -79,6 +79,7 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::enable_kitty_progressive_enhancements;
 use crate::input_common::CursorPositionBlockingWait;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
@@ -2448,6 +2449,7 @@ impl<'a> Reader<'a> {
                     Outputter::stdoutput()
                         .borrow_mut()
                         .write_wstr(L!("\x1B[?1000l"));
+                    self.save_screen_state();
                 }
                 ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
                     self.mouse_left_click(cursor, click_position);
@@ -2458,7 +2460,14 @@ impl<'a> Reader<'a> {
                     self.stop_waiting_for_cursor_position();
                 }
                 ImplicitEvent::SynchronizedOutputSupported => {
-                    synchronized_supported();
+                    if query_capabilities_via_dcs() {
+                        self.save_screen_state();
+                    }
+                }
+                ImplicitEvent::KittyKeyboardSupported => {
+                    if enable_kitty_progressive_enhancements() {
+                        self.save_screen_state();
+                    }
                 }
             },
         }
@@ -2478,10 +2487,10 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
     let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 
-fn synchronized_supported() {
+fn query_capabilities_via_dcs() -> bool {
     static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
     if QUERIED.load() {
-        return;
+        return false;
     }
     QUERIED.store(true);
     let mut out = Outputter::stdoutput().borrow_mut();
@@ -2493,6 +2502,7 @@ fn synchronized_supported() {
     let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
     let _ = out.write(b"\x1b[?2026l"); // end synchronized update
     out.end_buffering();
+    true
 }
 
 impl<'a> Reader<'a> {
@@ -3726,9 +3736,9 @@ impl<'a> Reader<'a> {
                     CursorPositionWait::Blocking(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
-                        reader,
-                        "Ignoring scrollback-push received while still waiting for Cursor Position Report"
-                    );
+                            reader,
+                            "Ignoring scrollback-push received while still waiting for Cursor Position Report"
+                        );
                     }
                 }
             }

@@ -198,6 +198,8 @@ pub enum ImplicitEvent {
     ScrollbackPushContinuation(usize),
     /// The Synchronized Output feature is supported by the terminal.
     SynchronizedOutputSupported,
+    /// Terminal reports support for the kitty keyboard protocol.
+    KittyKeyboardSupported,
 }
 
 #[derive(Debug, Clone)]
@@ -457,6 +459,14 @@ macro_rules! kitty_progressive_enhancements {
 }
 
 pub const KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY: &[u8] = b"\x1b[?u";
+
+pub(crate) fn enable_kitty_progressive_enhancements() -> bool {
+    if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() || IN_ITERM_PRE_CSI_U.load() {
+        return false;
+    }
+    let _ = write_loop(&STDOUT_FILENO, kitty_progressive_enhancements!().as_bytes());
+    true
+}
 
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -1135,12 +1145,7 @@ pub trait InputEventQueuer {
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
                     KITTY_KEYBOARD_SUPPORTED.store(true);
-                    if !IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() && !IN_ITERM_PRE_CSI_U.load() {
-                        let _ = write_loop(
-                            &STDOUT_FILENO,
-                            kitty_progressive_enhancements!().as_bytes(),
-                        );
-                    }
+                    self.push_front(CharEvent::Implicit(ImplicitEvent::KittyKeyboardSupported));
                     return None;
                 }
 

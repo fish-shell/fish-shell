@@ -8,6 +8,7 @@ use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
 use crate::flog::FLOG;
 use crate::fork_exec::flog_safe::FLOG_SAFE;
+use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, function_key, shift,
@@ -482,7 +483,9 @@ pub fn terminal_protocols_enable_ifn() {
         return;
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
-    let sequences = if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() {
+    let sequences = if !feature_test(FeatureFlag::keyboard_protocols)
+        || IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load()
+    {
         "\x1b[?2004h"
     } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
@@ -516,7 +519,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
-    let sequences = if IN_ITERM_PRE_CSI_U.load() {
+    let sequences = if !feature_test(FeatureFlag::keyboard_protocols) {
+        "\x1b[?2004l"
+    } else if IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
     } else if IN_JETBRAINS.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)

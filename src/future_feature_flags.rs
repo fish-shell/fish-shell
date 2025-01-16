@@ -27,6 +27,9 @@ pub enum FeatureFlag {
 
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
     test_require_arg,
+
+    /// Whether keyboard protocols (kitty's CSI x u, xterm's modifyOtherKeys) are used
+    keyboard_protocols,
 }
 
 struct Features {
@@ -107,6 +110,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: false,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::keyboard_protocols,
+        name: L!("keyboard-protocols"),
+        groups: L!("4.0"),
+        description: L!("Use keyboard protocols (kitty, xterm's modifyotherkeys"),
+        default_value: true,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -168,6 +179,7 @@ impl Features {
                 AtomicBool::new(METADATA[3].default_value),
                 AtomicBool::new(METADATA[4].default_value),
                 AtomicBool::new(METADATA[5].default_value),
+                AtomicBool::new(METADATA[6].default_value),
             ],
         }
     }

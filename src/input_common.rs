@@ -518,7 +518,7 @@ pub fn terminal_protocols_enable_ifn() {
     } else {
         concat!(
             "\x1b[?2004h", // Bracketed paste
-            "\x1b[>4;1m",  // XTerm's modifyOtherKeys
+            // "\x1b[>4;1m",  // XTerm's modifyOtherKeys - no use in doing this with kitty protocol
             kitty_progressive_enhancements!(),
             "\x1b=", // set application keypad mode, so the keypad keys send unique codes
         )
@@ -540,7 +540,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     } else {
         concat!(
             "\x1b[?2004l", // Bracketed paste
-            "\x1b[>4;0m",  // XTerm's modifyOtherKeys
+            // "\x1b[>4;0m",  // XTerm's modifyOtherKeys
             "\x1b[=0u",    // CSI u with kitty progressive enhancement
             "\x1b>",       // application keypad mode
         )

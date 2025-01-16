@@ -541,8 +541,8 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         concat!(
             "\x1b[?2004l", // Bracketed paste
             // "\x1b[>4;0m",  // XTerm's modifyOtherKeys
-            "\x1b[=0u",    // CSI u with kitty progressive enhancement
-            "\x1b>",       // application keypad mode
+            "\x1b[=0u", // CSI u with kitty progressive enhancement
+            "\x1b>",    // application keypad mode
         )
     };
     FLOG_SAFE!(

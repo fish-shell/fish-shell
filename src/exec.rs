@@ -1106,7 +1106,6 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
     // Pull out some fields which we want to copy. We don't want to store the process or job in the
     // returned closure.
-    let argv = p.argv().clone();
     let job_group = j.group.clone();
     let io_chain = io_chain.clone();
 
@@ -1114,7 +1113,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
     // thread.
     Box::new(
         move |parser: &Parser,
-              _p: &Process,
+              p: &Process,
               output_stream: Option<&mut OutputStream>,
               errput_stream: Option<&mut OutputStream>| {
             let output_stream = output_stream.unwrap();
@@ -1151,8 +1150,11 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
                 .unwrap_or(false);
 
             // Execute the builtin.
-            let mut shim_argv: Vec<&wstr> =
-                argv.iter().map(|s| truncate_at_nul(s.as_ref())).collect();
+            let mut shim_argv: Vec<&wstr> = p
+                .argv()
+                .iter()
+                .map(|s| truncate_at_nul(s.as_ref()))
+                .collect();
             builtin_run(parser, &mut shim_argv, &mut streams)
         },
     )

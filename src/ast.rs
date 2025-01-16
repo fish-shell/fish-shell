@@ -3466,6 +3466,7 @@ impl<'s> Populator<'s> {
             }
             ParseTokenType::pipe
             | ParseTokenType::redirection
+            | ParseTokenType::right_brace
             | ParseTokenType::background
             | ParseTokenType::andand
             | ParseTokenType::oror => {

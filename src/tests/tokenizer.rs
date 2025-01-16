@@ -68,6 +68,19 @@ fn test_tokenizer() {
         assert_eq!(token.type_, TokenType::left_brace);
     }
 
+    {
+        let s = L!("{ | { name } '");
+        let mut t = Tokenizer::new(s, TokFlags(0));
+        let mut next_type = || t.next().unwrap().type_;
+        assert_eq!(next_type(), TokenType::left_brace);
+        assert_eq!(next_type(), TokenType::pipe);
+        assert_eq!(next_type(), TokenType::left_brace);
+        assert_eq!(next_type(), TokenType::string);
+        assert_eq!(next_type(), TokenType::right_brace);
+        assert_eq!(next_type(), TokenType::error);
+        assert!(t.next().is_none());
+    }
+
     let s = L!(concat!(
         "string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ",
         "){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect ",

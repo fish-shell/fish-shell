@@ -1150,8 +1150,11 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
                 .unwrap_or(false);
 
             // Execute the builtin.
-            let mut shim_argv: Vec<&wstr> =
-                p.argv().iter().map(|s| truncate_at_nul(s.as_ref())).collect();
+            let mut shim_argv: Vec<&wstr> = p
+                .argv()
+                .iter()
+                .map(|s| truncate_at_nul(s.as_ref()))
+                .collect();
             builtin_run(parser, &mut shim_argv, &mut streams)
         },
     )

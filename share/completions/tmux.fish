@@ -117,6 +117,9 @@ complete -c tmux -xs c -n "__fish_seen_subcommand_from $switchc" -a '(__fish_tmu
 #commands with the -F format flag
 complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -xs F -d 'format string'
 
+#commands that take shell commands
+complete -c tmux -x -n "__fish_seen_subcommand_from $new " -a '(__fish_complete_subcommand --fcs-skip=2)'
+
 ###############  End: Clients and Sessions ###############
 
 ###############  Begin: Windows and Panes ###############
@@ -173,20 +176,16 @@ complete -c tmux -n __fish_use_subcommand -a $linkw -d 'link source window to de
 complete -c tmux -n __fish_use_subcommand -a $lsp -d 'list panes'
 complete -c tmux -n __fish_use_subcommand -a $lsw -d 'list windows'
 complete -c tmux -n __fish_use_subcommand -a $movew -d 'move window'
-# TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $neww -d 'create a new window'
 complete -c tmux -n __fish_use_subcommand -a $nextl -d 'rearrange panes in a window according to the next layout'
 complete -c tmux -n __fish_use_subcommand -a $next -d 'move to the next window in the session'
-# TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $pipep -d 'pipe output from pane to a shell command'
 complete -c tmux -n __fish_use_subcommand -a $prevl -d 'rearrange panes in a window according to the previous layout'
 complete -c tmux -n __fish_use_subcommand -a $prev -d 'move to the previous window in the session'
 complete -c tmux -n __fish_use_subcommand -a $renamew -d 'rename a window'
 complete -c tmux -n __fish_use_subcommand -a $resizep -d 'resize a pane'
 complete -c tmux -n __fish_use_subcommand -a $resizew -d 'resize a window'
-# TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $respawnp -d 'reactivate a pane where a command exited'
-# TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $respawnw -d 'reactivate a window where a command exited'
 complete -c tmux -n __fish_use_subcommand -a $rotatew -d 'rotate panes within a window'
 
@@ -196,7 +195,6 @@ complete -c tmux -n "__fish_seen_subcommand_from $selectl" -x -a "$layouts" -d '
 
 complete -c tmux -n __fish_use_subcommand -a $selectp -d 'activate specific pane'
 complete -c tmux -n __fish_use_subcommand -a $selectw -d 'activate specific window'
-# TODO: Should accept shell command
 complete -c tmux -n __fish_use_subcommand -a $splitw -d 'create a new pane by splitting target-pane'
 complete -c tmux -n __fish_use_subcommand -a $swapp -d 'swap two panes'
 complete -c tmux -n __fish_use_subcommand -a $swapw -d 'swap two windows'
@@ -222,6 +220,10 @@ complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $re
 complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" -xs t -d 'target window'
 complete -c tmux -n "__fish_seen_subcommand_from $displayp" -xs t -d 'target client'
 complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d 'target'
+
+#commands that take shell commands
+complete -c tmux -x -n "__fish_seen_subcommand_from $neww $pipep $respawnp $respawnw $splitw" \
+          -a '(__fish_complete_subcommand --fcs-skip=2)'
 
 ###############  End:   Windows and Panes ###############
 

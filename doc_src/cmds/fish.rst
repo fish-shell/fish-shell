@@ -24,7 +24,8 @@ The :ref:`tutorial <tutorial>` is available as HTML via ``help tutorial`` or in 
 The following options are available:
 
 **-c** or **--command=COMMAND**
-    Evaluate the specified commands instead of reading from the commandline, passing additional positional arguments through ``$argv``.
+    Evaluate the specified commands instead of reading from the commandline.
+    Any additional positional arguments are used as ``$argv``.
 
 **-C** or **--init-command=COMMANDS**
     Evaluate specified commands after reading the configuration but before executing command specified by **-c** or reading interactive input.
@@ -106,3 +107,33 @@ These options can also be changed via the :envvar:`FISH_DEBUG` and :envvar:`FISH
 The categories enabled via **--debug** are *added* to the ones enabled by $FISH_DEBUG, so they can be disabled by prefixing them with **-** (**reader-*,-ast*** enables reader debugging and disables ast debugging).
 
 The file given in **--debug-output** takes precedence over the file in :envvar:`FISH_DEBUG_OUTPUT`.
+
+Examples
+--------
+
+To just start fish::
+
+  fish
+
+To run a file with fish::
+
+  fish /path/to/script.fish
+
+To run some commands with fish::
+
+  fish -c 'echo Hi there!'
+
+You can also pass arguments to those commands::
+
+  > fish -c 'printf %s\n $argv' "first line" "second line"
+  first line
+  second line
+
+To run a script, except read this other file first::
+
+  fish --init-cmd "source otherfile" script.fish
+
+To :ref:`profile <profiling>` fish's startup and find what takes the most time in your configuration::
+
+  fish --profile-startup /tmp/start.prof -ic exit
+  sort -nk2 /tmp/start.prof

@@ -2130,6 +2130,8 @@ To start a debug session simply insert the :doc:`builtin command <cmds/breakpoin
 
 Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
 
+.. _profiling:
+
 Profiling fish scripts
 ^^^^^^^^^^^^^^^^^^^^^^
 

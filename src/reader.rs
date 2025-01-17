@@ -1257,11 +1257,9 @@ impl ReaderData {
                 use AutosuggestionUpdate::*;
                 match autosuggestion_update {
                     Preserve => (),
-                    Remove => {
-                        if !self.autosuggestion.is_empty() {
-                            self.saved_autosuggestion =
-                                Some(std::mem::take(&mut self.autosuggestion))
-                        }
+                    Remove => self.autosuggestion.clear(),
+                    RemoveAndSave => {
+                        self.saved_autosuggestion = Some(std::mem::take(&mut self.autosuggestion))
                     }
                     Restore => {
                         self.autosuggestion = saved_autosuggestion.unwrap();
@@ -1669,6 +1667,7 @@ impl<'a> Reader<'a> {
 enum AutosuggestionUpdate {
     Preserve,
     Remove,
+    RemoveAndSave,
     Restore,
 }
 
@@ -1807,6 +1806,13 @@ impl ReaderData {
             let preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(&edit);
             if preserves_autosuggestion {
                 autosuggestion_update = AutosuggestionUpdate::Preserve
+            } else if !self.autosuggestion.is_empty()
+                && edit.range.start == self.autosuggestion.search_string_range.end
+                && edit.range.is_empty()
+                && !edit.replacement.is_empty()
+            {
+                // When inserting at the autosuggestion something that doesn't match, save it.
+                autosuggestion_update = AutosuggestionUpdate::RemoveAndSave;
             } else if self
                 .saved_autosuggestion
                 .as_ref()

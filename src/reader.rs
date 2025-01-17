@@ -251,10 +251,7 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     let data = ReaderData::new(hist, conf);
     reader_data_stack().push(data);
     let data = current_data().unwrap();
-    data.command_line_changed(
-        EditableLineTag::Commandline,
-        /*keep_autosuggestion=*/ false,
-    );
+    data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
     if reader_data_stack().len() == 1 {
         reader_interactive_init(parser);
     }
@@ -1246,15 +1243,29 @@ impl ReaderData {
     }
 
     /// Do what we need to do whenever our command line changes.
-    fn command_line_changed(&mut self, elt: EditableLineTag, keep_autosuggestion: bool) {
+    fn command_line_changed(
+        &mut self,
+        elt: EditableLineTag,
+        autosuggestion_update: AutosuggestionUpdate,
+    ) {
         assert_is_main_thread();
         match elt {
             EditableLineTag::Commandline => {
                 // Update the gen count.
                 GENERATION.fetch_add(1, Ordering::Relaxed);
-                if !keep_autosuggestion {
-                    if !self.autosuggestion.is_empty() {
-                        self.saved_autosuggestion = Some(std::mem::take(&mut self.autosuggestion));
+                let saved_autosuggestion = self.saved_autosuggestion.take();
+                use AutosuggestionUpdate::*;
+                match autosuggestion_update {
+                    Preserve => (),
+                    Remove => {
+                        if !self.autosuggestion.is_empty() {
+                            self.saved_autosuggestion =
+                                Some(std::mem::take(&mut self.autosuggestion))
+                        }
+                    }
+                    Restore => {
+                        self.autosuggestion = saved_autosuggestion.unwrap();
+                        self.suppress_autosuggestion = false;
                     }
                 }
             }
@@ -1655,6 +1666,12 @@ impl<'a> Reader<'a> {
     }
 }
 
+enum AutosuggestionUpdate {
+    Preserve,
+    Remove,
+    Restore,
+}
+
 impl ReaderData {
     /// Internal helper function for handling killing parts of text.
     fn kill(&mut self, elt: EditableLineTag, range: Range<usize>, mode: Kill, newv: bool) {
@@ -1743,13 +1760,10 @@ impl ReaderData {
         self.update_buff_pos(elt, Some(pos));
     }
 
-    fn try_apply_edit_to_autosuggestion(&mut self, elt: EditableLineTag, edit: &Edit) -> bool {
-        if elt != EditableLineTag::Commandline {
-            return false;
-        }
+    fn try_apply_edit_to_autosuggestion(&mut self, edit: &Edit) -> bool {
         let autosuggestion = &self.autosuggestion;
         if autosuggestion.is_empty() {
-            return true;
+            return false;
         }
 
         // Check to see if our autosuggestion still applies; if so, don't recompute it.
@@ -1788,39 +1802,37 @@ impl ReaderData {
     }
 
     fn push_edit_internal(&mut self, elt: EditableLineTag, edit: Edit, allow_coalesce: bool) {
-        let mut preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(elt, &edit);
+        let mut autosuggestion_update = AutosuggestionUpdate::Remove;
         if elt == EditableLineTag::Commandline {
-            let saved_autosuggestion = self.saved_autosuggestion.take();
-            if (self.autosuggestion.is_empty()
-                || !preserves_autosuggestion
-                || self.suppress_autosuggestion)
-                && saved_autosuggestion
-                    .as_ref()
-                    .is_some_and(|saved_autosuggestion| {
-                        self.conf.autosuggest_ok
-                            && self.history_search.is_at_end()
-                            && edit.replacement.is_empty()
-                            && edit.range.start == saved_autosuggestion.search_string_range.end
-                            && edit.range.len() == 1
-                    })
+            let preserves_autosuggestion = self.try_apply_edit_to_autosuggestion(&edit);
+            if preserves_autosuggestion {
+                autosuggestion_update = AutosuggestionUpdate::Preserve
+            } else if self
+                .saved_autosuggestion
+                .as_ref()
+                .is_some_and(|saved_autosuggestion| {
+                    self.conf.autosuggest_ok
+                        && self.history_search.is_at_end()
+                        && edit.replacement.is_empty()
+                        && edit.range.start == saved_autosuggestion.search_string_range.end
+                        && !edit.range.is_empty()
+                })
             {
-                self.autosuggestion = saved_autosuggestion.unwrap();
-                self.suppress_autosuggestion = false;
-                preserves_autosuggestion = true;
+                autosuggestion_update = AutosuggestionUpdate::Restore;
             }
         }
         self.edit_line_mut(elt).push_edit(edit, allow_coalesce);
-        self.command_line_changed(elt, preserves_autosuggestion);
+        self.command_line_changed(elt, autosuggestion_update);
     }
 
     fn undo(&mut self, elt: EditableLineTag) -> bool {
         let ok = self.edit_line_mut(elt).undo();
-        self.command_line_changed(elt, /*keep_autosuggestion=*/ false);
+        self.command_line_changed(elt, AutosuggestionUpdate::Remove);
         ok
     }
     fn redo(&mut self, elt: EditableLineTag) -> bool {
         let ok = self.edit_line_mut(elt).redo();
-        self.command_line_changed(elt, /*keep_autosuggestion=*/ false);
+        self.command_line_changed(elt, AutosuggestionUpdate::Remove);
         ok
     }
 

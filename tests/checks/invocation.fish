@@ -111,5 +111,8 @@ $fish --no-config -c 'echo notprinted | and true'
 # CHECKERR: echo notprinted | and true
 # CHECKERR:                   ^~^
 
+$fish --no-config --features
+# CHECKERR: fish: --features: option requires an argument
+
 # Regression test for a hang.
 echo "set -L" | $fish > /dev/null

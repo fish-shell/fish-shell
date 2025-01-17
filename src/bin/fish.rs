@@ -528,7 +528,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     const PRINT_DEBUG_CATEGORIES_ARG: char = 2 as char;
     const PROFILE_STARTUP_ARG: char = 3 as char;
 
-    const SHORT_OPTS: &wstr = L!("+hPilNnvc:C:p:d:f:D:o:");
+    const SHORT_OPTS: &wstr = L!("+:hPilNnvc:C:p:d:f:D:o:");
     const LONG_OPTS: &[WOption<'static>] = &[
         wopt(L!("command"), RequiredArgument, 'c'),
         wopt(L!("init-command"), RequiredArgument, 'C'),

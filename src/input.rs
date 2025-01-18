@@ -3,6 +3,7 @@ use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
+use crate::future::IsSomeAnd;
 use crate::input_common::CursorPositionBlockingWait::MouseLeft;
 use crate::input_common::{
     CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData, InputEventQueuer,

@@ -2,7 +2,7 @@
 # musl currently does not have a `locale` command, so we skip this test there.
 # REQUIRES: command -v locale
 # We need a comma-using locale we know.
-# REQUIRES: locale -a | grep -i '(bg_BG\|de_DE\|es_ES\|fr_FR\|ru_RU).(UTF-8|utf8)'
+# REQUIRES: locale -a | grep -Ei '(bg_BG|de_DE|es_ES|fr_FR|ru_RU)\.(UTF-8|utf8)'
 # OpenBSD does not use LC_NUMERIC, this test is pointless there.
 # REQUIRES: test "$(uname)" != OpenBSD
 

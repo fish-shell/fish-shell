@@ -363,7 +363,7 @@ impl TtyTransfer {
         let pgid = jg.get_pgid().unwrap();
 
         // It should never be fish's pgroup.
-        let fish_pgrp = unsafe { libc::getpgrp() };
+        let fish_pgrp = crate::nix::getpgrp();
         assert!(
             pgid.as_pid_t() != fish_pgrp,
             "Job should not have fish's pgroup"
@@ -1363,7 +1363,7 @@ pub fn proc_wait_any(parser: &Parser) {
 
 /// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
 pub fn hup_jobs(jobs: &JobList) {
-    let fish_pgrp = unsafe { libc::getpgrp() };
+    let fish_pgrp = crate::nix::getpgrp();
     let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };

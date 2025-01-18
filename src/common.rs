@@ -1491,7 +1491,7 @@ pub fn restore_term_foreground_process_group_for_exit() {
     // failure because doing so is unlikely to be noticed.
     // Safety: All of getpgrp, signal, and tcsetpgrp are async-signal-safe.
     let initial_fg_process_group = INITIAL_FG_PROCESS_GROUP.load(Ordering::Relaxed);
-    if initial_fg_process_group > 0 && initial_fg_process_group != unsafe { libc::getpgrp() } {
+    if initial_fg_process_group > 0 && initial_fg_process_group != crate::nix::getpgrp() {
         unsafe {
             libc::signal(SIGTTOU, SIG_IGN);
             libc::tcsetpgrp(STDIN_FILENO, initial_fg_process_group);

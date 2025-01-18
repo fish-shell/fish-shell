@@ -96,7 +96,7 @@ use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
 use crate::libc::MB_CUR_MAX;
-use crate::nix::isatty;
+use crate::nix::{getpgrp, getpid, isatty};
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
 use crate::output::Outputter;
@@ -845,7 +845,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
     if is_interactive_session() {
-        if unsafe { libc::getpgrp() == libc::tcgetpgrp(STDIN_FILENO) } {
+        if getpgrp() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
             term_donate(/*quiet=*/ true);
         }
     }
@@ -863,7 +863,7 @@ pub fn reader_deinit(in_signal_handler: bool, restore_foreground_pgroup: bool) {
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
 pub fn restore_term_mode(in_signal_handler: bool) {
-    if !is_interactive_session() || unsafe { libc::getpgrp() != libc::tcgetpgrp(STDIN_FILENO) } {
+    if !is_interactive_session() || getpgrp() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
 
@@ -4239,7 +4239,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
     // In some strange cases the tty may be come preassigned to fish's pid, but not its pgroup.
     // In that case we simply attempt to claim our own pgroup.
     // See #7388.
-    if owner == unsafe { libc::getpid() } {
+    if owner == getpid() {
         unsafe { libc::setpgid(owner, owner) };
         return;
     }
@@ -4295,7 +4295,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
         } else {
             if check_for_orphaned_process(loop_count, shell_pgid) {
                 // We're orphaned, so we just die. Another sad statistic.
-                let pid = unsafe { libc::getpid() };
+                let pid = getpid();
                 FLOG!(warning, wgettext_fmt!("I appear to be an orphaned process, so I am quitting politely. My pid is %d.", pid));
                 exit_without_destructors(1);
             }
@@ -4314,8 +4314,8 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
 fn reader_interactive_init(parser: &Parser) {
     assert_is_main_thread();
 
-    let mut shell_pgid = unsafe { libc::getpgrp() };
-    let shell_pid = unsafe { libc::getpid() };
+    let mut shell_pgid = getpgrp();
+    let shell_pid = getpid();
 
     // Set up key bindings.
     init_input();

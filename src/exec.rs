@@ -675,7 +675,7 @@ fn fork_child_for_process(
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
     let claim_tty_from = if p.leads_pgrp && job.group().wants_terminal() {
         // getpgrp(2) cannot fail and always returns the (positive) caller's pgid
-        Some(NonZeroU32::new(unsafe { libc::getpgrp() } as u32).unwrap())
+        Some(NonZeroU32::new(crate::nix::getpgrp() as u32).unwrap())
     } else {
         None
     };
@@ -702,11 +702,7 @@ fn fork_child_for_process(
 
     // Record the pgroup if this is the leader.
     // Both parent and child attempt to send the process to its new group, to resolve the race.
-    let pid = if is_parent {
-        pid
-    } else {
-        unsafe { libc::getpid() }
-    };
+    let pid = if is_parent { pid } else { crate::nix::getpid() };
     p.set_pid(pid);
     if p.leads_pgrp {
         job.group().set_pgid(pid);

@@ -604,7 +604,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         let mut status = f.success_status.clone();
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
+                if err.raw_os_error() != Some(EPIPE) {
                     perror("write");
                 }
                 if status.is_success() {
@@ -614,7 +614,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         }
         if !f.skip_err() {
             if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
-                if err.raw_os_error().unwrap() != EPIPE {
+                if err.raw_os_error() != Some(EPIPE) {
                     perror("write");
                 }
                 if status.is_success() {

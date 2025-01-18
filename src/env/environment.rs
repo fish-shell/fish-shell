@@ -805,7 +805,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
                 // Look for a global exported variable with the same name.
                 let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
-                if global.is_some() && global.unwrap().as_string() == uvar.as_string() {
+                if global.is_some_and(|x| x.as_string() == uvar.as_string()) {
                     to_skip.push(name.to_owned());
                 }
             }

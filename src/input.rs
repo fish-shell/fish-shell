@@ -990,7 +990,7 @@ impl InputMappingSet {
         } else {
             &mut self.preset_mapping_list
         };
-        let should_erase = |m: &InputMapping| mode.is_none() || mode.unwrap() == m.mode;
+        let should_erase = |m: &InputMapping| mode.is_none_or(|x| x == m.mode);
         ml.retain(|m| !should_erase(m));
     }
 

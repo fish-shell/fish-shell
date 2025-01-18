@@ -769,8 +769,8 @@ impl EnvStackImpl {
                 // This is distinct from the unspecified scope,
                 // which is the global scope if no function exists.
                 let mut node = self.base.locals.clone();
-                while node.next().is_some() {
-                    node = node.next().unwrap();
+                while let Some(next_node) = node.next() {
+                    node = next_node;
                     // The first node that introduces a new scope is ours.
                     // If this doesn't happen, we go on until we've reached the
                     // topmost local scope.
@@ -837,8 +837,8 @@ impl EnvStackImpl {
                 result.status = remove_from_chain(&mut self.base.locals, key);
             } else if query.function {
                 let mut node = self.base.locals.clone();
-                while node.next().is_some() {
-                    node = node.next().unwrap();
+                while let Some(next_node) = node.next() {
+                    node = next_node;
                     if node.borrow().new_scope {
                         break;
                     }

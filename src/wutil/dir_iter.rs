@@ -335,7 +335,6 @@ fn test_no_dots() {
     // DirIter does not return . or .. by default.
     let dir = DirIter::new(L!(".")).expect("Should be able to open CWD");
     for entry in dir {
-        assert!(entry.is_ok());
         let entry = entry.unwrap();
         assert_ne!(entry.name, ".");
         assert_ne!(entry.name, "..");
@@ -350,7 +349,6 @@ fn test_dots() {
     let mut seen_dot = false;
     let mut seen_dotdot = false;
     for entry in dir {
-        assert!(entry.is_ok());
         let entry = entry.unwrap();
         if entry.name == "." {
             seen_dot = true;

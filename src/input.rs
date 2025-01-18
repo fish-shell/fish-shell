@@ -3,6 +3,8 @@ use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
+// Polyfill for Option::is_none_or(), stabilized in 1.82.0
+#[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::input_common::CursorPositionBlockingWait::MouseLeft;
 use crate::input_common::{

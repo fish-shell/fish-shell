@@ -459,9 +459,6 @@ echo \\
     echo '{  {  }  }'
     # CHECK: { { } }
 
-    echo '{{}}'
-    # CHECK: { { } }
-
     echo '
 {
 

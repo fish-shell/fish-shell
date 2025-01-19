@@ -278,9 +278,9 @@ end
 
 # Implicit int flag validation fails
 argparse 'm#max' -- argle --max 765x bargle
-and echo unxpected argparse return status >&2
+and echo unexpected argparse return status >&2
 argparse 'm#max' -- argle -ma1 bargle
-and echo unxpected argparse return status >&2
+and echo unexpected argparse return status >&2
 # CHECKERR: argparse: Value '765x' for flag 'max' is not an integer
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 

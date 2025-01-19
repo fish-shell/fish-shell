@@ -2479,7 +2479,7 @@ impl<'a> Reader<'a> {
                     self.stop_waiting_for_cursor_position();
                 }
                 ImplicitEvent::SynchronizedOutputSupported => {
-                    if query_capabilities_via_dcs(self) {
+                    if query_capabilities_via_dcs() {
                         self.save_screen_state();
                     }
                 }
@@ -2506,7 +2506,7 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
     let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 
-fn query_capabilities_via_dcs(reader: &Reader) -> bool {
+fn query_capabilities_via_dcs() -> bool {
     static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
     if QUERIED.load() {
         return false;
@@ -2518,17 +2518,6 @@ fn query_capabilities_via_dcs(reader: &Reader) -> bool {
     let _ = out.write(b"\x1b[?1049h"); // enable alternative screen buffer
     xtgettcap(out.by_ref(), "indn");
     xtgettcap(out.by_ref(), "cuu");
-    // Query the name of the Client OS.
-    xtgettcap(out.by_ref(), "kitty-query-os_name");
-    if let Some(client_tty) = reader.vars().get_unless_empty(L!("__fish_tmux_client_tty")) {
-        if let Ok(mut client_tty) = wopen_cloexec(
-            &client_tty.as_list()[0],
-            OFlag::O_WRONLY,
-            Mode::from_bits_truncate(0o666),
-        ) {
-            xtgettcap(&mut client_tty, "kitty-query-os_name");
-        }
-    }
     let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
     let _ = out.write(b"\x1b[?2026l"); // end synchronized update
     out.end_buffering();

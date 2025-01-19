@@ -1,10 +1,8 @@
 use std::os::unix::prelude::*;
-use std::sync::atomic::Ordering;
 
 use super::prelude::*;
 use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
 use crate::future_feature_flags::{self as features, feature_test};
-use crate::input_common::{ClientOS, CLIENT_OS};
 use crate::proc::{
     get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
 };
@@ -60,7 +58,6 @@ enum StatusCmd {
     STATUS_TEST_FEATURE,
     STATUS_CURRENT_COMMANDLINE,
     STATUS_BUILDINFO,
-    STATUS_CLIENT_OS,
 }
 
 str_enum!(
@@ -68,7 +65,6 @@ str_enum!(
     (STATUS_BASENAME, "basename"),
     (STATUS_BASENAME, "current-basename"),
     (STATUS_BUILDINFO, "buildinfo"),
-    (STATUS_CLIENT_OS, "client-os"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
     (STATUS_DIRNAME, "current-dirname"),
@@ -602,11 +598,6 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                         let path = str2wcstring(path.as_os_str().as_bytes());
                         streams.out.appendln(path);
                     }
-                }
-                STATUS_CLIENT_OS => {
-                    let os: ClientOS =
-                        unsafe { std::mem::transmute(CLIENT_OS.load(Ordering::Relaxed)) };
-                    streams.out.appendln(format!("{}", os));
                 }
                 STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
                     unreachable!("")

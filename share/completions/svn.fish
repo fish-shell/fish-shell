@@ -1,6 +1,5 @@
 function __fish_complete_svn_diff --description 'Complete "svn diff" arguments'
-    set -l cmdl (commandline -cxp)
-    #set -l cmdl svn diff --diff-cmd diff --extensions '-a -b'
+    set -l cmdl (commandline -cxp | string escape)
     set -l diff diff
     set -l args
     while set -q cmdl[1]

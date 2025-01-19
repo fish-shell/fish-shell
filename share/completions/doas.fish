@@ -3,7 +3,7 @@
 #
 
 function __fish_doas_print_remaining_args
-    set -l tokens (commandline -xpc) (commandline -ct)
+    set -l tokens (commandline -xpc | string escape) (commandline -ct)
     set -e tokens[1]
     # These are all the options mentioned in the man page for openbsd's "doas" (in that order).
     set -l opts a= C= L n s u=

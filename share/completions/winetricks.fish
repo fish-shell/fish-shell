@@ -52,9 +52,9 @@ for architecture in 32 64
 end
 
 set -l subcommands (string replace --regex '\\\t.+' '' -- $subcommands_with_descriptions)
-set -l root_conditon "not __fish_seen_subcommand_from $subcommands"
+set -l root_condition "not __fish_seen_subcommand_from $subcommands"
 
-complete -c $command -a "$subcommands_with_descriptions" -n $root_conditon
+complete -c $command -a "$subcommands_with_descriptions" -n $root_condition
 
 complete -c $command -a list \
     -d 'List applications' \
@@ -72,4 +72,4 @@ end
 
 complete -c $command -a '(__fish_winetricks__complete_verbs)' \
     -d 'Specify the verb or path to it' \
-    -n $root_conditon
+    -n $root_condition

@@ -16,7 +16,7 @@ complete -c dhcpcd -l config -s f -r -F -d 'Specify config to load instead of /e
 complete -c dhcpcd -l hostname -s h -x -d 'Send hostname to DHCP server'
 complete -c dhcpcd -l clientid -s I -x -d 'Send given clientid'
 complete -c dhcpcd -l vendorclassid -s i -x -d 'Override DHCPv4 vendorclassid field sent'
-complete -c dhcpcd -l logfile -s j -r -F -d 'Write to specfied log file'
+complete -c dhcpcd -l logfile -s j -r -F -d 'Write to specified log file'
 complete -c dhcpcd -l release -s k -d 'Release lease and de-configure interface'
 complete -c dhcpcd -l leasetime -s l -x -d 'Request specific lease time in secs'
 complete -c dhcpcd -l manager -s M -d 'Start dhcpcd in Manager mode'

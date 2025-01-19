@@ -252,8 +252,8 @@ complete -c tmux -n "__fish_seen_subcommand_from $joinp $splitw" -xs f -d 'full 
 
 complete -c tmux -n __fish_use_subcommand -a $killp -d 'destroy a pane'
 complete -c tmux -n __fish_use_subcommand -a $killw -d 'destroy a window'
-complete -c tmux -n __fish_use_subcommand -a $lastp -d 'select the previusly selected pane'
-complete -c tmux -n __fish_use_subcommand -a $lastw -d 'select the previusly selected window'
+complete -c tmux -n __fish_use_subcommand -a $lastp -d 'select the previously selected pane'
+complete -c tmux -n __fish_use_subcommand -a $lastw -d 'select the previously selected window'
 complete -c tmux -n __fish_use_subcommand -a $linkw -d 'link source window to destination window'
 
 complete -c tmux -n __fish_use_subcommand -a $lsp -d 'list panes'

@@ -6,7 +6,7 @@ complete -c brightnessctl -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -a m
 
 complete -c brightnessctl -s h -l help -d "Print help and exit"
 complete -c brightnessctl -s l -l list -d "List devices with available brightness controls"
-complete -c brightnessctl -s q -l quiet -d "Supress output"
+complete -c brightnessctl -s q -l quiet -d "Suppress output"
 complete -c brightnessctl -s p -l pretend -d "Do not perform write operations"
 complete -c brightnessctl -s m -l machine-readable -d "Produce machine-readable output"
 complete -c brightnessctl -s n -l min-value -x -d "Set minimum brightness when using delta values"

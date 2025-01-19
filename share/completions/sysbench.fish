@@ -15,8 +15,8 @@ complete -c sysbench -n "__fish_contains_opt test=oltp" -a "
 complete -c sysbench -x -l num-threads -d 'The total number of worker threads to create (default: 1)'
 complete -c sysbench -x -l max-requests -d 'Limit for total number of requests. 0 means unlimited (default: 10000)'
 complete -c sysbench -x -l max-time -d 'Limit for total execution time in seconds. 0 means unlimited (default: 0)'
-complete -c sysbench -x -l thread-stack-size -d 'Size of stack for each thread (defaut: 32K)'
-complete -c sysbench -f -l init-rng -d 'Specifies if random numbers generator should be initialized from timer (defaut: off)' -a 'on off'
+complete -c sysbench -x -l thread-stack-size -d 'Size of stack for each thread (default: 32K)'
+complete -c sysbench -f -l init-rng -d 'Specifies if random numbers generator should be initialized from timer (default: off)' -a 'on off'
 complete -c sysbench -x -l test -d 'Name of the test mode to run(required)' -a "
 	cpu\t'Benchmark cpu by calculating prime numbers'
 	threads\t'Benchmark scheduler performance'
@@ -30,7 +30,7 @@ complete -c sysbench -l help -d 'Print help on general syntax'
 complete -c sysbench -l version -d 'Show version of program'
 complete -c sysbench -x -l percentile -d 'A percentile rank of query execution times to count (default: 95)'
 complete -c sysbench -f -l batch -d 'Dump current results periodically (default: off)' -a 'on off'
-complete -c sysbench -x -l batch-delay -d 'Delay between batch dumps in secods (default: 300)'
+complete -c sysbench -x -l batch-delay -d 'Delay between batch dumps in seconds (default: 300)'
 
 ### options for test=`cpu` mode ###
 complete -c sysbench -n "__fish_contains_opt test=cpu" -x -l cpu-max-prime -d 'Calculation of prime numbers up to the specified value'

@@ -536,7 +536,7 @@ fish 3.6.0 (released January 7, 2023)
 Notable improvements and fixes
 ------------------------------
 - By default, :kbd:`ctrl-r` now opens the command history in the pager (:issue:`602`). This is fully searchable and syntax-highlighted, as an alternative to the incremental search seen in other shells. The new special input function ``history-pager`` has been added for custom bindings.
-- Abbrevations are more flexible (:issue:`9313`, :issue:`5003`, :issue:`2287`):
+- Abbreviations are more flexible (:issue:`9313`, :issue:`5003`, :issue:`2287`):
 
   - They may optionally replace tokens anywhere on the command line, instead of only commands
   - Matching tokens may be described using a regular expression instead of a literal word
@@ -632,7 +632,7 @@ Interactive improvements
 - A new variable, :envvar:`fish_cursor_selection_mode`, can be used to configure whether the command line selection includes the character under the cursor (``inclusive``) or not (``exclusive``). The new default is ``exclusive``; use ``set fish_cursor_selection_mode inclusive`` to get the previous behavior back (:issue:`7762`).
 - fish's completion pager now fills half the terminal on first tab press instead of only 4 rows, which should make results visible more often and save key presses, without constantly snapping fish to the top of the terminal (:issue:`9105`, :issue:`2698`).
 - The ``complete-and-search`` binding, used with :kbd:`shift-tab` by default, selects the first item in the results immediately (:issue:`9080`).
-- ``bind`` output is now syntax-highlighted when used interacively.
+- ``bind`` output is now syntax-highlighted when used interactively.
 - :kbd:`alt-h` (the default ``__fish_man_page`` binding) does a better job of showing the manual page of the command under cursor (:issue:`9020`).
 - If :envvar:`fish_color_valid_path` contains an actual color instead of just modifiers, those will be used for valid paths even if the underlying color isn't "normal" (:issue:`9159`).
 - The key combination for the QUIT terminal sequence, often :kbd:`ctrl-\\` (``\x1c``), can now be used as a binding (:issue:`9234`).
@@ -861,7 +861,7 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - The :kbd:`alt-s` binding will now insert ``doas`` instead of ``sudo`` if necessary (:issue:`8942`).
-- The ``kill-whole-line`` special input function now kills the newline preceeding the last line. This makes ``dd`` in vi-mode clear the last line properly.
+- The ``kill-whole-line`` special input function now kills the newline preceding the last line. This makes ``dd`` in vi-mode clear the last line properly.
 - The new ``kill-inner-line`` special input function kills the line without any newlines, allowing ``cc`` in vi-mode to clear the line while preserving newlines (:issue:`8983`).
 - On terminals that emit special sequences for these combinations, :kbd:`shift-space` is bound like :kbd:`space`, and :kbd:`ctrl-enter` is bound like :kbd:`return` (:issue:`8874`).
 
@@ -970,7 +970,7 @@ Deprecations and removed features
     > set -Ua fish_features ampersand-nobg-in-token
 
 - ``$status`` is now forbidden as a command, to prevent a surprisingly common error among new users: Running ``if $status`` (:issue:`8171`). This applies *only* to ``$status``, other variables are still allowed.
-- ``set --query`` now returns an exit status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior, use ``if not set -q foo; or set -q $foo`` - but this is unlikely to be desireable (:issue:`8214`).
+- ``set --query`` now returns an exit status of 255 if given no variable names. This means ``if set -q $foo`` will not enter the if-block if ``$foo`` is empty or unset. To restore the previous behavior, use ``if not set -q foo; or set -q $foo`` - but this is unlikely to be desirable (:issue:`8214`).
 - ``_`` is now a reserved keyword (:issue:`8342`).
 - The special input functions ``delete-or-exit``, ``nextd-or-forward-word`` and ``prevd-or-backward-word`` replace fish functions of the same names (:issue:`8538`).
 - Mac OS X 10.9 is no longer supported. The minimum Mac version is now 10.10 "Yosemite."
@@ -993,7 +993,7 @@ Scripting improvements
 - ``commandline`` gained a ``--paging-full-mode`` option to check if the pager is showing all the possible lines (no "7 more rows" message) (:issue:`8485`).
 - List expansion correctly reports an error when used with all zero indexes (:issue:`8213`).
 - Running ``fish`` with a directory instead of a script as argument (eg ``fish .``) no longer leads to an infinite loop. Instead it errors out immediately (:issue:`8258`)
-- Some error messages occuring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
+- Some error messages occurring after fork, like "text file busy" have been replaced by bespoke error messages for fish (like "File is currently open for writing"). This also restores error messages with current glibc versions that removed sys_errlist (:issue:`8234`, :issue:`4183`).
 - The ``realpath`` builtin now also squashes leading slashes with the ``--no-symlinks`` option (:issue:`8281`).
 - When trying to ``cd`` to a dangling (broken) symbolic link, fish will print an error noting that the target is a broken link (:issue:`8264`).
 - On MacOS terminals that are not granted permissions to access a folder, ``cd`` would print a spurious "rotten symlink" error, which has been corrected to "permission denied" (:issue:`8264`).
@@ -1499,7 +1499,7 @@ Interactive improvements
 -  :kbd:`ctrl-c` handling has been reimplemented in C++ and is therefore quicker (:issue:`5259`), no longer occasionally prints an "unknown command" error (:issue:`7145`) or overwrites multiline prompts (:issue:`3537`).
 -  :kbd:`ctrl-c` no longer kills background jobs for which job control is
    disabled, matching POSIX semantics (:issue:`6828`, :issue:`6861`).
--  Autosuggestions work properly after :kbd:`ctrl-c` cancels the current commmand line (:issue:`6937`).
+-  Autosuggestions work properly after :kbd:`ctrl-c` cancels the current command line (:issue:`6937`).
 -  History search is now case-insensitive unless the search string contains an uppercase character (:issue:`7273`).
 -  ``fish_update_completions`` gained a new ``--keep`` option, which improves speed by skipping completions that already exist (:issue:`6775`, :issue:`6796`).
 -  Aliases containing an embedded backslash appear properly in the output of ``alias`` (:issue:`6910`).
@@ -2053,7 +2053,7 @@ Interactive improvements
    argument.
 -  Syntax highlighting works correctly with variables as commands
    (:issue:`5658`) and redirections to close file descriptors (:issue:`6092`).
--  ``help`` works properly on Windows Subsytem for Linux (:issue:`5759`, :issue:`6338`).
+-  ``help`` works properly on Windows Subsystem for Linux (:issue:`5759`, :issue:`6338`).
 -  A bug where ``disown`` could crash the shell has been fixed (:issue:`5720`).
 -  fish will not autosuggest files ending with ``~`` unless there are no
    other candidates, as these are generally backup files (:issue:`985`).
@@ -2995,7 +2995,7 @@ Other significant changes
 -  Some systems’ ``su`` implementations do not set the ``USER``
    environment variable; it is now reset for root users (:issue:`3916`).
 -  Under terminals which support it, bracketed paste is enabled,
-   escaping problematic characters for security and convience (:issue:`3871`).
+   escaping problematic characters for security and convenience (:issue:`3871`).
    Inside single quotes (``'``), single quotes and backslashes in pasted
    text are escaped (:issue:`967`). The ``fish_clipboard_paste`` function (bound
    to ``C-v`` by default) is still the recommended pasting method where
@@ -3124,9 +3124,9 @@ Other significant changes
 -  fish no longer prints a warning when it identifies a running instance
    of an old version (2.1.0 and earlier). Changes to universal variables
    may not propagate between these old versions and 2.5b1.
--  Improved compatiblity with Android (:issue:`3585`), MSYS/mingw (:issue:`2360`), and
+-  Improved compatibility with Android (:issue:`3585`), MSYS/mingw (:issue:`2360`), and
    Solaris (:issue:`3456`, :issue:`3340`).
--  Like other shells, the ``test`` builting now returns an error for
+-  Like other shells, the ``test`` built-in now returns an error for
    numeric operations on invalid integers (:issue:`3346`, :issue:`3581`).
 -  ``complete`` no longer recognises ``--authoritative`` and
    ``--unauthoritative`` options, and they are marked as obsolete.

@@ -1,5 +1,6 @@
 # RUN: %fish %s
 # REQUIRES: command -v tmux
+# REQUIRES: test -z "$FISH_CI_SAN"
 
 # The default history-delete binding is shift-delete which
 # won't work on terminals that don't support CSI u, so rebind.

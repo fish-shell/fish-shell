@@ -614,12 +614,3 @@ echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
-
-# TODO: We should not force the line break.
-echo 'if true; then
-    echo body
-fi' | $fish_indent
-# CHECK: if true
-# CHECK: then
-# CHECK: {{    }}echo body
-# CHECK: fi

@@ -664,7 +664,6 @@ fn get_first_arg(list: &ast::ArgumentOrRedirectionList) -> Option<&ast::Argument
 /// Given a wide character immediately after a dollar sign, return the appropriate error message.
 /// For example, if wc is @, then the variable name was $@ and we suggest $argv.
 fn error_for_character(c: char) -> WString {
-    // TODO
     match c {
         '?' => wgettext!(ERROR_NOT_STATUS).to_owned(),
         '#' => wgettext!(ERROR_NOT_ARGV_COUNT).to_owned(),
@@ -1201,12 +1200,7 @@ pub fn parse_util_detect_errors_in_ast(
         if let Some(jc) = node.as_job_continuation() {
             // Somewhat clumsy way of checking for a statement without source in a pipeline.
             // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source()
-                && jc
-                    .statement()
-                    .and_then(|stmt| stmt.try_source_range())
-                    .is_none()
-            {
+            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
                 has_unclosed_pipe = true;
             }
         } else if let Some(job_conjunction) = node.as_job_conjunction() {
@@ -1407,21 +1401,7 @@ pub fn parse_util_detect_errors_in_argument(
                     continue;
                 }
                 let next_char = unesc.get(idx + 1).copied().unwrap_or('\0');
-                let prev_char = idx
-                    .checked_sub(1)
-                    .and_then(|i| unesc.get(i).copied())
-                    .unwrap_or('\0');
-                if (![
-                    VARIABLE_EXPAND,
-                    VARIABLE_EXPAND_SINGLE,
-                    '$',
-                    '(',
-                    '?',
-                    '#',
-                    '@',
-                ]
-                .contains(&next_char)
-                    && ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '$'].contains(&prev_char))
+                if ![VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, '('].contains(&next_char)
                     && !valid_var_name_char(next_char)
                 {
                     err = ParserTestErrorBits::ERROR;
@@ -1632,8 +1612,7 @@ fn detect_errors_in_decorated_statement(
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
         PipelinePosition::none
-    } else if job.statement3().unwrap().pointer_eq(st) {
-        // TODO(posix_mode) unwrap
+    } else if job.statement.pointer_eq(st) {
         PipelinePosition::first
     } else {
         PipelinePosition::subsequent
@@ -1914,8 +1893,6 @@ pub fn parse_util_expand_variable_error(
         '\0' => {
             append_syntax_error!(errors, global_dollar_pos, 1, ERROR_NO_VAR_NAME);
         }
-        // TODO
-        '?' | VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE | '$' | '#' | '@' => return,
         _ => {
             let mut token_stop_char = char_after_dollar;
             // Unescape (see issue #50).

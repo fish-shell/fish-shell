@@ -1,69 +1,215 @@
-neofish
-=======
+.. |Cirrus CI| image:: https://api.cirrus-ci.com/github/fish-shell/fish-shell.svg?branch=master
+      :target: https://cirrus-ci.com/github/fish-shell/fish-shell
+      :alt: Cirrus CI Build Status
 
-This is a soft fork of `fish shell <https://fishshell.com/>`_, a Unix shell for interactive use.
+`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
+=============================================================================================
 
-Our goal is to further improve the interactive shell experience, especially for users who are
-already familiar with POSIX shells.
+fish is a smart and user-friendly command line shell for macOS, Linux,
+and the rest of the family. fish includes features like syntax
+highlighting, autosuggest-as-you-type, and fancy tab completions that
+just work, with no configuration required.
 
-Most of the current changes add well-known syntax present in other shells. Just like ZSH, neofish
-will not be strictly POSIX compatible (at least not in the default mode). For scripting, we
-recommend using ``/bin/sh`` instead.
+For downloads, screenshots and more, go to https://fishshell.com/.
 
-Our ``master`` branch is frequently rebased on `upstream
-<https://github.com/fish-shell/fish-shell/>`_ and force-pushed. This makes it easy to both see the
-net difference and to reintegrate any changes into upstream, which we're happy work on. Maybe some
-features should be opt-in?
+Quick Start
+-----------
 
-Here is an overview of the changes, at various stages of completion.
-Some already integrated into upstream, some others are functional but lack polish.
+fish generally works like other shells, like bash or zsh. A few
+important differences can be found at
+https://fishshell.com/docs/current/tutorial.html by searching for the
+magic phrase “unlike other shells”.
 
-- ☑ ``$()`` command substitutions
-- ☑ ``$()`` in command position (to compute the command to run)
-- ☑ ``{}`` compound commands
-- ☑ ``()`` subshells
-- ☐ ``$(())`` arithmetic expansion
-- ☑ control flow like  ``if foo; then; fi`` and ``for; do; done``.
-- ☑ ``foo=bar`` variable overrides
-- ☑ ``foo=bar`` global variable assignments
-- ☐ ``foo() { :; }`` function definitions
-- ☐ POSIX-style single quotes
-- ☐ POSIX-like heredocs (`cat << EOF`)
-- ☑ variables like ``$?``, ``$$``, ``$#`` and ``$@``
-- ☐ ``${foo#prefix}`` variable expansion
-- ☐ process substitution (``<(foo)``)
-- ☐ maybe add nestable and raw quoting syntax
-- ☑ stop overriding ``MANPATH`` which shadows docs of POSIX utilties like ``exec``
-- ☑ familiar abbreviations for modifier keys like ``bind c-x`` for ``bind ctrl-x``
+Detailed user documentation is available by running ``help`` within
+fish, and also at https://fishshell.com/docs/current/index.html
 
-Installation
+Getting fish
 ------------
 
-Compiling fish requires:
+macOS
+~~~~~
 
-- Rust (version 1.70 or later)
-- a C compiler
-- Sphinx (to build documentation)
+fish can be installed:
 
-.. code:: shell
+-  using `Homebrew <http://brew.sh/>`__: ``brew install fish``
+-  using `MacPorts <https://www.macports.org/>`__:
+   ``sudo port install fish``
+-  using the `installer from fishshell.com <https://fishshell.com/>`__
+-  as a `standalone app from fishshell.com <https://fishshell.com/>`__
 
-   git clone https://github.com/krobelus/neofish
-   cd neofish
-   cargo install --path .
-   ~/.cargo/bin/fish
-   # configure your terminal to run that binary
+Note: The minimum supported macOS version is 10.10 "Yosemite".
 
-Optional Dependencies
----------------------
+Packages for Linux
+~~~~~~~~~~~~~~~~~~
+
+Packages for Debian, Fedora, openSUSE, and Red Hat Enterprise
+Linux/CentOS are available from the `openSUSE Build
+Service <https://software.opensuse.org/download.html?project=shells%3Afish&package=fish>`__.
+
+Packages for Ubuntu are available from the `fish
+PPA <https://launchpad.net/~fish-shell/+archive/ubuntu/release-3>`__,
+and can be installed using the following commands:
+
+::
+
+   sudo apt-add-repository ppa:fish-shell/release-3
+   sudo apt update
+   sudo apt install fish
+
+Instructions for other distributions may be found at
+`fishshell.com <https://fishshell.com>`__.
+
+Windows
+~~~~~~~
+
+-  On Windows 10/11, fish can be installed under the WSL Windows Subsystem
+   for Linux with the instructions for the appropriate distribution
+   listed above under “Packages for Linux”, or from source with the
+   instructions below.
+-  fish (4.0 on and onwards) cannot be installed in Cygwin, due to a lack of Rust support.
+
+Building from source
+~~~~~~~~~~~~~~~~~~~~
+
+If packages are not available for your platform, GPG-signed tarballs are
+available from `fishshell.com <https://fishshell.com/>`__ and
+`fish-shell on
+GitHub <https://github.com/fish-shell/fish-shell/releases>`__. See the
+`Building <#building>`__ section for instructions.
+
+Running fish
+------------
+
+Once installed, run ``fish`` from your current shell to try fish out!
+
+Dependencies
+~~~~~~~~~~~~
+
+Running fish requires:
+
+-  A terminfo database, typically from curses or ncurses (preinstalled on most \*nix systems) - this needs to be the directory tree format, not the "hashed" database.
+   If this is unavailable, fish uses an included xterm-256color definition.
+-  some common \*nix system utilities (currently ``mktemp``), in
+   addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
+   ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,
+   ``uname`` and ``sed`` at least, but the full coreutils plus ``find`` and
+   ``awk`` is preferred)
+-  The gettext library, if compiled with
+   translation support
 
 The following optional features also have specific requirements:
 
 -  builtin commands that have the ``--help`` option or print usage
-   messages require ``nroff`` or ``mandoc`` for display
+   messages require ``nroff`` or ``mandoc`` for
+   display
 -  automated completion generation from manual pages requires Python 3.5+
 -  the ``fish_config`` web configuration tool requires Python 3.5+ and a web browser
 -  system clipboard integration (with the default Ctrl-V and Ctrl-X
    bindings) require either the ``xsel``, ``xclip``,
    ``wl-copy``/``wl-paste`` or ``pbcopy``/``pbpaste`` utilities
+-  full completions for ``yarn`` and ``npm`` require the
+   ``all-the-package-names`` NPM module
+-  ``colorls`` is used, if installed, to add color when running ``ls`` on platforms
+   that do not have color support (such as OpenBSD)
+
+Building
+--------
+
+.. _dependencies-1:
+
+Dependencies
+~~~~~~~~~~~~
+
+Compiling fish requires:
+
+-  Rust (version 1.70 or later)
+-  CMake (version 3.15 or later)
+-  a C compiler (for system feature detection and the test helper binary)
+-  PCRE2 (headers and libraries) - optional, this will be downloaded if missing
+-  gettext (headers and libraries) - optional, for translation support
+-  an Internet connection, as other dependencies will be downloaded automatically
+
+Sphinx is also optionally required to build the documentation from a
+cloned git repository.
 
 Additionally, running the full test suite requires Python 3, tmux, and the pexpect package.
+
+Building from source with CMake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Rather than building from source, consider using a packaged build for your platform. Using the
+steps below makes fish difficult to uninstall or upgrade. Release packages are available from the
+links above, and up-to-date `development builds of fish are available for many platforms
+<https://github.com/fish-shell/fish-shell/wiki/Development-builds>`__
+
+To install into ``/usr/local``, run:
+
+.. code:: bash
+
+   mkdir build; cd build
+   cmake ..
+   cmake --build .
+   sudo cmake --install .
+
+The install directory can be changed using the
+``-DCMAKE_INSTALL_PREFIX`` parameter for ``cmake``.
+
+CMake Build options
+~~~~~~~~~~~~~~~~~~~
+
+In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish's CMake build has some other options available to customize it.
+
+- BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
+- INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
+- FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.
+- MAC_CODESIGN_ID=String|OFF - the codesign ID to use on Mac, or "OFF" to disable codesigning.
+- WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
+- extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
+
+Building fish as self-installable (experimental)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also build fish as a self-installing binary.
+
+This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary.
+
+On the first interactive run, and whenever it notices they are out of date, it will extract the datafiles to ~/.local/share/fish/install/ (currently, subject to change). You can do this manually by running ``fish --install``.
+
+To install fish as self-installable, just use ``cargo``, like::
+
+   cargo install --path /path/to/fish # if you have a git clone
+   cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0 # to build from git once 4.0 is released
+   cargo install --git https://github.com/fish-shell/fish-shell # to build the current development snapshot without cloning
+
+This will place the binaries in ``~/.cargo/bin/``, but you can place them wherever you want.
+
+This build won't have the HTML docs (``help`` will open the online version) or translations.
+
+It will try to build the man pages with sphinx-build. If that is not available and you would like to include man pages, you need to install it and retrigger the build script, e.g. by setting FISH_BUILD_DOCS=1::
+
+  FISH_BUILD_DOCS=1 cargo install --path .
+
+Setting it to "0" disables the inclusion of man pages.
+
+You can also link this build statically (but not against glibc) and move it to other computers.
+
+Contributing Changes to the Code
+--------------------------------
+
+See the `Guide for Developers <CONTRIBUTING.rst>`__.
+
+Contact Us
+----------
+
+Questions, comments, rants and raves can be posted to the official fish
+mailing list at https://lists.sourceforge.net/lists/listinfo/fish-users
+or join us on our `matrix
+channel <https://matrix.to/#/#fish-shell:matrix.org>`__. Or use the `fish tag
+on Unix & Linux Stackexchange <https://unix.stackexchange.com/questions/tagged/fish>`__.
+There is also a fish tag on Stackoverflow, but it is typically a poor fit.
+
+Found a bug? Have an awesome idea? Please `open an
+issue <https://github.com/fish-shell/fish-shell/issues/new>`__.
+
+.. |Build Status| image:: https://github.com/fish-shell/fish-shell/workflows/make%20test/badge.svg
+   :target: https://github.com/fish-shell/fish-shell/actions

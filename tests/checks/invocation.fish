@@ -91,20 +91,20 @@ $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
 # CHECKERR:                             ^~~~~~~~^
 
 # Running multiple command lists continues even if one has a syntax error.
-$fish --no-config -c 'echo $% oh no syntax error' -c 'echo this works'
+$fish --no-config -c 'echo $$ oh no syntax error' -c 'echo this works'
 # CHECK: this works
-# CHECKERR: fish: $% is not a valid variable in fish.
-# CHECKERR: echo $% oh no syntax error
+# CHECKERR: fish: $$ is not the pid. In fish, please use $fish_pid.
+# CHECKERR: echo $$ oh no syntax error
 # CHECKERR: ^
 
 $fish --no-config .
 # CHECKERR: error: Unable to read input file: Is a directory
 # CHECKERR: warning: Error while reading file .
 
-$fish --no-config -c 'echo notprinted; echo foo; echo $%'
-# CHECKERR: fish: $% is not a valid variable in fish.
-# CHECKERR: echo notprinted; echo foo; echo $%
-# CHECKERR: ^
+$fish --no-config -c 'echo notprinted; echo foo; a=b'
+# CHECKERR: fish: Unsupported use of '='. In fish, please use 'set a b'.
+# CHECKERR: echo notprinted; echo foo; a=b
+# CHECKERR:                            ^~^
 
 $fish --no-config -c 'echo notprinted | and true'
 # CHECKERR: fish: The 'and' command can not be used in a pipeline

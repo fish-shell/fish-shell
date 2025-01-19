@@ -3,8 +3,6 @@
 //! from using a more clever memory allocation scheme, perhaps an evil combination of talloc,
 //! string buffers and reference counting.
 
-use std::sync::atomic::Ordering;
-
 use crate::builtins::shared::{
     STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
@@ -15,18 +13,16 @@ use crate::common::{
     UnescapeFlags, UnescapeStringStyle, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvVar, EnvVarFlags, Environment};
+use crate::env::{EnvVar, Environment};
 use crate::exec::exec_subshell_for_expand;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::history::{history_session_id, History};
-use crate::libc::_PATH_BSHELL;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
 use crate::parse_util::{
     parse_util_expand_variable_error, parse_util_locate_cmdsubst_range, MaybeParentheses,
 };
 use crate::path::path_apply_working_directory;
-use crate::threads::MainThread;
 use crate::util::wcsfilecmp_glob;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{join_strings, trim};
@@ -34,7 +30,6 @@ use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wildcard::{WildcardResult, ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{normalize_path, wcstoi_partial, Options};
 use bitflags::bitflags;
-use once_cell::unsync::OnceCell;
 
 bitflags! {
     /// Set of flags controlling expansions.
@@ -79,8 +74,6 @@ bitflags! {
         const SPECIAL_FOR_COMMAND = 1 << 13;
         /// The token has an unclosed brace, so don't add a space.
         const NO_SPACE_FOR_UNCLOSED_BRACE = 1 << 14;
-        /// TODO
-        const FOR_COMMAND = 1 << 15;
     }
 }
 
@@ -232,11 +225,7 @@ pub fn expand_to_command_and_args(
         return ExpandResult::ok();
     }
 
-    let mut eflags = if ctx.has_parser() {
-        ExpandFlags::FOR_COMMAND
-    } else {
-        ExpandFlags::FAIL_ON_CMDSUBST
-    };
+    let mut eflags = ExpandFlags::FAIL_ON_CMDSUBST;
     if skip_wildcards {
         eflags |= ExpandFlags::SKIP_WILDCARDS;
     }
@@ -374,6 +363,20 @@ macro_rules! append_syntax_error {
             error.text = wgettext_maybe_fmt!($fmt $(, $arg)*);
             errors.push(error);
         }
+    }
+}
+
+/// Append a cmdsub error to the given error list. But only do so if the error hasn't already been
+/// recorded. This is needed because command substitution is a recursive process and some errors
+/// could consequently be recorded more than once.
+macro_rules! append_cmdsub_error {
+    (
+        $errors:expr, $source_start:expr, $source_end:expr,
+        $fmt:expr $(, $arg:expr )* $(,)?
+    ) => {
+        append_cmdsub_error_formatted!(
+            $errors, $source_start, $source_end,
+            wgettext_maybe_fmt!($fmt $(, $arg)*));
     }
 }
 
@@ -615,33 +618,7 @@ fn expand_variables(
     );
 
     // Get the variable name as a string, then try to get the variable from env.
-    let mut var_name = None;
-    let mut may_slice = true;
-    if var_name_stop == var_name_start {
-        match instr.char_at(var_name_stop) {
-            '?' => {
-                var_name_stop += 1;
-                may_slice = false;
-                var_name = Some(L!("status"));
-            }
-            '$' | VARIABLE_EXPAND | VARIABLE_EXPAND_SINGLE => {
-                var_name_stop += 1;
-                may_slice = false;
-                var_name = Some(L!("fish_pid"));
-            }
-            '#' => {
-                var_name_stop += 1;
-                may_slice = false;
-            }
-            '@' => {
-                var_name_stop += 1;
-                may_slice = false;
-                var_name = Some(L!("argv"));
-            }
-            _ => (),
-        }
-    }
-    let var_name = var_name.unwrap_or(&instr[var_name_start..var_name_stop]);
+    let var_name = &instr[var_name_start..var_name_stop];
 
     // It's an error if the name is empty.
     if var_name.is_empty() {
@@ -663,16 +640,6 @@ fn expand_variables(
     let mut var = None;
     if var_name == "history" {
         history = Some(History::with_name(&history_session_id(vars)));
-    } else if var_name == "#" {
-        var = Some(EnvVar::new(
-            sprintf!(
-                "%lu",
-                vars.get(L!("argv"))
-                    .map(|v| v.as_list().len())
-                    .unwrap_or_default()
-            ),
-            EnvVarFlags::default(),
-        ));
     } else if var_name.as_char_slice() != [VARIABLE_EXPAND_EMPTY] {
         var = vars.get(var_name);
     }
@@ -684,7 +651,7 @@ fn expand_variables(
     let slice_start = var_name_stop;
     let mut var_idx_list = vec![];
 
-    if may_slice && instr.as_char_slice().get(slice_start) == Some(&'[') {
+    if instr.as_char_slice().get(slice_start) == Some(&'[') {
         all_values = false;
         // If a variable is missing, behave as though we have one value, so that $var[1] always
         // works.
@@ -958,7 +925,6 @@ pub fn expand_cmdsubst(
     ctx: &OperationContext,
     out: &mut CompletionReceiver,
     errors: &mut Option<&mut ParseErrorList>,
-    for_command: bool,
 ) -> ExpandResult {
     let mut cursor = 0;
     let mut is_quoted = false;
@@ -980,23 +946,7 @@ pub fn expand_cmdsubst(
             }
             return ExpandResult::ok();
         }
-        MaybeParentheses::CommandSubstitution(parens) => {
-            if for_command {
-                // TODO error on extra args
-                static PATH_BSHELL: MainThread<OnceCell<WString>> =
-                    MainThread::new(OnceCell::new());
-                let shell = PATH_BSHELL
-                    .get()
-                    .get_or_init(|| charptr2wcstring(_PATH_BSHELL.load(Ordering::Relaxed)));
-                for arg in [shell.as_utfstr(), L!("-c"), &input[parens.command()]] {
-                    if !out.add(arg.to_owned()) {
-                        return append_overflow_error(errors, None);
-                    }
-                }
-                return ExpandResult::ok();
-            }
-            parens
-        }
+        MaybeParentheses::CommandSubstitution(parens) => parens,
     };
 
     let mut sub_res = vec![];
@@ -1102,7 +1052,7 @@ pub fn expand_cmdsubst(
         tail.insert(0, '"');
     }
 
-    let _ = expand_cmdsubst(tail, ctx, &mut tail_expand_recv, errors, false); // TODO: offset error locations
+    let _ = expand_cmdsubst(tail, ctx, &mut tail_expand_recv, errors); // TODO: offset error locations
     let tail_expand = tail_expand_recv.take();
 
     // Combine the result of the current command substitution with the result of the recursive tail
@@ -1376,16 +1326,8 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             return ExpandResult::ok();
         }
         if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
-            // TODO this if FOR_COMMAND
             let mut cursor = 0;
-            let mut has_dollar = false;
-            match parse_util_locate_cmdsubst_range(
-                &input,
-                &mut cursor,
-                true,
-                None,
-                Some(&mut has_dollar),
-            ) {
+            match parse_util_locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
                 MaybeParentheses::Error => {
                     return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
                 }
@@ -1395,11 +1337,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     }
                     return ExpandResult::ok();
                 }
-                MaybeParentheses::CommandSubstitution(_parens) => {
-                    if has_dollar {
-                        return ExpandResult::ok();
-                    }
-                    return ExpandResult::ok();
+                MaybeParentheses::CommandSubstitution(parens) => {
+                    append_cmdsub_error!(
+                                self.errors,
+                                parens.start(),
+                                parens.end()-1,
+                                "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                            );
+                    return ExpandResult::make_error(STATUS_EXPAND_ERROR.unwrap());
                 }
             }
         } else {
@@ -1407,13 +1352,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 self.ctx.has_parser(),
                 "Must have a parser to expand command substitutions"
             );
-            expand_cmdsubst(
-                input,
-                self.ctx,
-                out,
-                self.errors,
-                self.flags.contains(ExpandFlags::FOR_COMMAND),
-            )
+            expand_cmdsubst(input, self.ctx, out, self.errors)
         }
     }
 

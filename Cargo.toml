@@ -9,6 +9,7 @@ edition = "2021"
 
 [profile.release]
 overflow-checks = true
+lto = true
 
 [profile.release-with-debug]
 inherits = "release"
@@ -23,7 +24,7 @@ default-run = "fish"
 # see doc_src/license.rst for details
 # don't forget to update COPYING and debian/copyright too
 license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
-repository = "https://github.com/krobelus/neofish"
+repository = "https://github.com/fish-shell/fish-shell"
 homepage = "https://fishshell.com"
 readme = "README.rst"
 

@@ -51,7 +51,7 @@ end
 # don't want to inherit all completions from git
 function __fish_complete_yadm_like_git
     # Remove the first word from the commandline because that is "yadm"
-    set -l cmdline (commandline -xpc; commandline -ct)[2..-1]
+    set -l cmdline (commandline -xpc | string escape; commandline -ct)[2..-1]
 
     # `yadm gitconfig` is same as `git config`
     if __fish_seen_subcommand_from gitconfig

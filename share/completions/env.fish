@@ -62,7 +62,7 @@ end
 
 # Get the text after all env arguments and variables, so we can complete it as a regular command
 function __fish_env_remaining_args -V is_gnu
-    set -l argv (commandline -xpc) (commandline -ct)
+    set -l argv (commandline -xpc | string escape) (commandline -ct)
     if set -q is_gnu[1]
         argparse -s i/ignore-environment u/unset= help version -- $argv 2>/dev/null
         or return 0

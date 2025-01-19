@@ -14,7 +14,7 @@ set -l ip_all_commands $ip_commands $ip_addr $ip_link $ip_neigh $ip_route $ip_ru
 
 function __fish_ip_commandwords
     set -l skip 0
-    set -l cmd (commandline -xpc)
+    set -l cmd (commandline -xpc | string escape)
     # Remove the first word because it's "ip" or an alias for it
     set -e cmd[1]
     set -l have_command 0

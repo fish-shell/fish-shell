@@ -3742,7 +3742,6 @@ impl<'a> Reader<'a> {
             }
             rl::ScrollbackPush => {
                 if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
-                    self.clear_screen_and_repaint();
                     return;
                 }
                 match self.cursor_position_wait() {
@@ -3750,7 +3749,7 @@ impl<'a> Reader<'a> {
                         &mut Outputter::stdoutput().borrow_mut(),
                         CursorPositionWait::Blocking(CursorPositionBlockingWait::ScrollbackPush),
                     ),
-                    CursorPositionWait::InitialFeatureProbe => self.clear_screen_and_repaint(),
+                    CursorPositionWait::InitialFeatureProbe => (),
                     CursorPositionWait::Blocking(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(

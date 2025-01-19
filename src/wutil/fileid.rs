@@ -14,7 +14,7 @@ pub struct DevInode {
 }
 
 /// While an inode / dev pair is sufficient to distinguish co-existing files, Linux
-/// seems to aggressively re-use inodes, so it cannot determine if a file has been deleted
+/// seems to aggressively reuse inodes, so it cannot determine if a file has been deleted
 /// (ABA problem). Therefore we include richer information to detect file changes.
 #[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct FileId {

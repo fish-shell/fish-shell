@@ -1,4 +1,4 @@
-//! Implemention of history files.
+//! Implementation of history files.
 
 use std::{
     borrow::Cow,

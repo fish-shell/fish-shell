@@ -330,7 +330,7 @@ pub struct TopicMonitor {
     status_: AtomicU8,
 
     /// Binary semaphore used to communicate changes.
-    /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has commited to call wait() on our sema and
+    /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has committed to call wait() on our sema and
     /// this must be balanced by the next call to post(). Note only one thread may wait at a time.
     sema_: BinarySemaphore,
 }

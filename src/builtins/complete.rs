@@ -223,7 +223,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut result_mode = CompletionMode::default();
     let mut remove = false;
     let mut short_opt = WString::new();
-    // todo!("these whould be Vec<&wstr>");
+    // todo!("these would be Vec<&wstr>");
     let mut gnu_opt = vec![];
     let mut old_opt = vec![];
     let mut subcommand = vec![];

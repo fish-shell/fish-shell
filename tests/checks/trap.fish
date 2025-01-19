@@ -39,7 +39,7 @@ sleep .1
 kill -USR2 $fish_pid
 sleep .1
 
-# Send the signal and immediately define the function; it should not excute.
+# Send the signal and immediately define the function; it should not execute.
 kill -USR1 $fish_pid
 function handle1 --on-signal SIGUSR1
     gotsigusr1

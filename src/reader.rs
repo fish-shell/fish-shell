@@ -3899,7 +3899,7 @@ impl<'a> Reader<'a> {
     // Return true on success, false if we got an error, in which case the caller should fire the
     // error event.
     fn handle_execute(&mut self) -> bool {
-        // Evaluate. If the current command is unfinished, or if the charater is escaped
+        // Evaluate. If the current command is unfinished, or if the character is escaped
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
@@ -4287,7 +4287,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
     // Bummer, we are not in control of the terminal. Stop until parent has given us control of
     // it.
     //
-    // In theory, reseting signal handlers could cause us to miss signal deliveries. In
+    // In theory, resetting signal handlers could cause us to miss signal deliveries. In
     // practice, this code should only be run during startup, when we're not waiting for any
     // signals.
     signal_reset_handlers();

@@ -1349,7 +1349,7 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
         return None;
     }
 
-    // Find the last non-external process, and return it if it pipes into an extenal process.
+    // Find the last non-external process, and return it if it pipes into an external process.
     for (i, p) in j.processes().iter().enumerate().rev() {
         if p.typ != ProcessType::external {
             return if p.is_last_in_job { None } else { Some(i) };

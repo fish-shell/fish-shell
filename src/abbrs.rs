@@ -177,7 +177,7 @@ pub struct AbbreviationSet {
     /// List of abbreviations, in definition order.
     abbrs: Vec<Abbreviation>,
 
-    /// Set of used abbrevation names.
+    /// Set of used abbreviation names.
     /// This is to avoid a linear scan when adding new abbreviations.
     used_names: HashSet<WString>,
 }

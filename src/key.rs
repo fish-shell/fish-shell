@@ -472,7 +472,7 @@ pub fn char_to_symbol(c: char) -> WString {
     } else if fish_wcwidth(c) > 0 {
         sprintf!(=> buf, "%lc", c);
     } else if c <= '\u{FFFF}' {
-        // BMP Unicode chararacter
+        // BMP Unicode character
         sprintf!(=> buf, "\\u%04X", u32::from(c));
     } else {
         sprintf!(=> buf, "\\U%06X", u32::from(c));

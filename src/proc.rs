@@ -377,7 +377,7 @@ impl TtyTransfer {
         //   1. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
         //      Of course do not transfer it in that case.
         //   2. The tty is owned by the process. This comes about often, as the process will call
-        //      tcsetpgrp() on itself between fork ane exec. This is the essential race inherent in
+        //      tcsetpgrp() on itself between fork and exec. This is the essential race inherent in
         //      tcsetpgrp(). In this case we want to reclaim the tty, but do not need to transfer it
         //      ourselves since the child won the race.
         //   3. The tty is owned by a different process. This may come about if fish is running in the

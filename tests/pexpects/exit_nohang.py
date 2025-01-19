@@ -49,7 +49,7 @@ if fish_pid == tty_owner:
 # It must not hang. But it might hang when trying to restore the tty.
 os.kill(fish_pid, signal.SIGTERM)
 
-# Loop a bit until the process exits (correct) or stops (incorrrect).
+# Loop a bit until the process exits (correct) or stops (incorrect).
 # When it exits it should be due to the SIGTERM that we sent it.
 for i in range(50):
     pid, status = os.waitpid(fish_pid, os.WUNTRACED | os.WNOHANG)

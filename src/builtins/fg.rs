@@ -50,7 +50,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Optio
     } else if optind + 1 < argv.len() {
         // Specifying more than one job to put to the foreground is a syntax error, we still
         // try to locate the job $argv[1], since we need to determine which error message to
-        // emit (ambigous job specification vs malformed job id).
+        // emit (ambiguous job specification vs malformed job id).
         let mut found_job = false;
         if let Ok(Some(pid)) = fish_wcstoi(argv[optind]).map(Pid::new) {
             found_job = parser.job_get_from_pid(pid).is_some();

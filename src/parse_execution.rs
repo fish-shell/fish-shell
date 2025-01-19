@@ -62,7 +62,7 @@ use std::sync::{atomic::Ordering, Arc};
 /// cancellation. Note it does not track the exit status of commands.
 #[derive(Eq, PartialEq)]
 pub enum EndExecutionReason {
-    /// Evaluation was successfull.
+    /// Evaluation was successful.
     ok,
 
     /// Evaluation was skipped due to control flow (break or return).

@@ -533,7 +533,7 @@ pub(crate) fn iothread_drain_all(ctx: &mut Reader) {
     }
 }
 
-/// `Debounce` is a simple class which executes one function on a background thread while enqueing
+/// `Debounce` is a simple class which executes one function on a background thread while enqueuing
 /// at most one more. Subsequent execution requests overwrite the enqueued one. It takes an optional
 /// timeout; if a handler does not finish within the timeout then a new thread is spawned to service
 /// the remaining request.
@@ -677,7 +677,7 @@ impl Debounce {
 }
 
 #[test]
-/// Verify that spawing a thread normally via [`std::thread::spawn()`] causes the calling thread's
+/// Verify that spawning a thread normally via [`std::thread::spawn()`] causes the calling thread's
 /// sigmask to be inherited by the newly spawned thread.
 fn std_thread_inherits_sigmask() {
     // First change our own thread mask

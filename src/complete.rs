@@ -1807,7 +1807,7 @@ impl<'ctx> Completer<'ctx> {
             // The getpwent() function does not exist on Android. A Linux user on Android isn't
             // really a user - each installed app gets an UID assigned. Listing all UID:s is not
             // possible without root access, and doing a ~USER type expansion does not make sense
-            // since every app is sandboxed and can't access eachother.
+            // since every app is sandboxed and can't access each other.
             return false;
         }
         #[cfg(not(target_os = "android"))]

@@ -48,7 +48,7 @@ add_custom_target(fish_run_tests
 )
 
 # If CMP0037 is available, also make an alias "test" target.
-# Note that this policy may not be available, in which case definining such a target silently fails.
+# Note that this policy may not be available, in which case defining such a target silently fails.
 cmake_policy(PUSH)
 if(POLICY CMP0037)
   cmake_policy(SET CMP0037 OLD)

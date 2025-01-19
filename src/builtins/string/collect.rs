@@ -48,7 +48,7 @@ impl StringSubCommand<'_> for Collect {
         }
 
         // If we haven't printed anything and "no_empty" is set,
-        // print something empty. Helps with empty ellision:
+        // print something empty. Helps with empty elision:
         // echo (true | string collect --allow-empty)"bar"
         // prints "bar".
         if self.allow_empty && appended == 0 {

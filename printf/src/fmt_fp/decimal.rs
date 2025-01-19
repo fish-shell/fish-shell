@@ -221,7 +221,7 @@ impl Decimal {
         // Round up if necessary.
         if self.should_round_up(last_digit_idx, remainder_to_round, mod_base) {
             self[last_digit_idx] += mod_base;
-            // Propogate carry.
+            // Propagate carry.
             while self[last_digit_idx] >= DIGIT_BASE {
                 self[last_digit_idx] = 0;
                 last_digit_idx -= 1;

@@ -825,7 +825,7 @@ impl Screen {
         if self.mtime_stdout_stderr != mtime_stdout_stderr() {
             // Ok, someone has been messing with our screen. We will want to repaint. However, we do not
             // know where the cursor is. It is our best bet that we are still on the same line, so we
-            // move to the beginning of the line, reset the modelled screen contents, and then set the
+            // move to the beginning of the line, reset the modeled screen contents, and then set the
             // modeled cursor y-pos to its earlier value.
             let prev_line = self.actual.cursor.y;
             self.reset_line(true /* repaint prompt */);
@@ -1465,7 +1465,7 @@ impl LayoutCache {
             if endc != '\0' {
                 if endc == '\n' || endc == '\x0C' {
                     layout.line_breaks.push(trunc_prompt.len());
-                    // If the prompt ends in a new line, that's one empy last line.
+                    // If the prompt ends in a new line, that's one empty last line.
                     if run_end == prompt_str.len() - 1 {
                         layout.last_line_width = 0;
                     }

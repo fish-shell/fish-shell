@@ -386,7 +386,7 @@ struct HistoryImpl {
     /// The file ID of the history file.
     history_file_id: FileId, // INVALID_FILE_ID
     /// The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
-    /// the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
+    /// the boundary are considered "old". Items whose timestamps are > the boundary are new, and are
     /// ignored by this instance (unless they came from this instance). The timestamp may be adjusted
     /// by incorporate_external_changes().
     boundary_timestamp: SystemTime,

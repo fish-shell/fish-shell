@@ -12,7 +12,7 @@ rm $filename
 set -l filename (echo foo | psub --testing --fifo)
 test -p $filename
 or echo 'psub is not a fifo' >&2
-# hack: the background write that psub peforms may block
+# hack: the background write that psub performs may block
 # until someone opens the fifo for reading. So make sure we
 # actually read it.
 cat $filename >/dev/null

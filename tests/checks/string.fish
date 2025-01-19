@@ -87,7 +87,7 @@ string pad -c_ --width 5 longer-than-width-param x
 # CHECK: ______________________x
 
 # Current behavior is that only a single padding character is supported.
-# We can support longer strings in future without breaking compatibilty.
+# We can support longer strings in future without breaking compatibility.
 string pad -c ab -w4 .
 # CHECKERR: string pad: Padding should be a character 'ab'
 

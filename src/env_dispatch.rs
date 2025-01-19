@@ -359,7 +359,7 @@ pub fn env_dispatch_init(vars: &EnvStack) {
     use once_cell::sync::Lazy;
 
     run_inits(vars);
-    // env_dispatch_var_change() purposely supresses change notifications until the dispatch table
+    // env_dispatch_var_change() purposely suppresses change notifications until the dispatch table
     // was initialized elsewhere (either explicitly as below or via deref of VAR_DISPATCH_TABLE).
     Lazy::force(&VAR_DISPATCH_TABLE);
 }

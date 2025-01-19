@@ -583,7 +583,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                     }
                     if path.is_absolute() {
                         let path = str2wcstring(path.as_os_str().as_bytes());
-                        // This is an absoulte path, we can canonicalize it
+                        // This is an absolute path, we can canonicalize it
                         let real = match wrealpath(&path) {
                             Some(p) if waccess(&p, F_OK) == 0 => p,
                             // realpath did not work, just append the path

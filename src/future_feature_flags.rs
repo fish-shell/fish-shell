@@ -28,7 +28,7 @@ pub enum FeatureFlag {
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
     test_require_arg,
 
-    /// Buffered enter (typed wile running a command) does not execute.
+    /// Buffered enter (typed while running a command) does not execute.
     buffered_enter_noexec,
 }
 

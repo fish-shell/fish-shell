@@ -50,7 +50,7 @@ Contributing completions
 
 Completion scripts are the most common contribution to fish, and they are very welcome.
 
-In general, we'll take all well-written completion scripts for a command that is publically available.
+In general, we'll take all well-written completion scripts for a command that is publicly available.
 This means no private tools or personal scripts, and we do reserve the right to reject for other reasons.
 
 Before you try to contribute them to fish, consider if the authors of the tool you are completing want to maintain the script instead.
@@ -201,7 +201,7 @@ If your littlecheck test has a specific dependency, use ``# REQUIRE: ...`` with 
 The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in tests/pexpect_helper.py, in case you need to modify something there.
 
 These tests can be run via the tests/test_driver.py python script, which will set up the environment.
-It sets up a temporary $HOME and also uses it as the current directory, so you do not need to create a temporary directoy in them.
+It sets up a temporary $HOME and also uses it as the current directory, so you do not need to create a temporary directory in them.
 
 If you need a command to do something weird to test something, maybe add it to the ``fish_test_helper`` binary (in tests/fish_test_helper.c), or see if it can already do it.
 

@@ -5315,7 +5315,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         let mut cursor = Some(node);
         while let Some(cur) = cursor {
             if let Some(stmt) = cur.as_decorated_statement() {
-                if node.pointer_eq(stmt.command.contents.embedded_node()) {
+                if node.pointer_eq(&stmt.command) {
                     return true;
                 }
             }

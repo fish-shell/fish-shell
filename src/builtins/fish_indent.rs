@@ -342,7 +342,6 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
                         let p = node.parent().unwrap();
-                        let p = p.parent().unwrap();
                         if p.typ() != Type::decorated_statement {
                             return result;
                         }

@@ -15,7 +15,7 @@ complete otool -s c -d 'print arg  of a core file' -F
 complete otool -s s -d 'print contents of <seg> <sect>' -x
 complete otool -s P -d 'print Info.plist section' -F
 complete otool -s x -d 'print all text sections' -F
-complete otool -s p -d 'specify routine to dissassemble' -x
+complete otool -s p -d 'specify routine to disassemble' -x
 complete otool -s v -d 'print verbosely'
 complete otool -s V -d 'symbolicate disassembled operands'
 complete otool -s X -d 'omit leading addresses, headers'

@@ -38,7 +38,7 @@ else if string match -eiq -- habets $arping_version
     complete -c arping -s h -d "Displays a help message"
     complete -c arping -s i -xa "(__fish_print_interfaces)" -d "Use the specified interface"
     complete -c arping -s m -x -d "Type of timestamp to use for incoming packets"
-    complete -c arping -s p -d "Turn on promiscious mode on interface"
+    complete -c arping -s p -d "Turn on promiscuous mode on interface"
     complete -c arping -s P -d "Send ARP replies instead of requests"
     complete -c arping -s q -d "Do not display messages, except errors"
     complete -c arping -s Q -x -d "802.1p priority to set"

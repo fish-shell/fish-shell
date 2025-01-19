@@ -30,7 +30,7 @@ complete -c rsync -l backup-dir -xa '(__fish_complete_directories)' -d "Make bac
 complete -c rsync -l suffix -d "Backup suffix (default ~ w/o --backup-dir)"
 complete -c rsync -s u -l update -d "Skip files that are newer on the receiver"
 complete -c rsync -l inplace -d "Update destination files in-place"
-complete -c rsync -l append -d "Append data onto shorter files without verifing old content"
+complete -c rsync -l append -d "Append data onto shorter files without verifying old content"
 complete -c rsync -l append-verify -d "Append with full file checksum, including old data"
 complete -c rsync -s d -l dirs -d "Transfer directories without recursing"
 complete -c rsync -l mkpath -d "Create the destination's path component"

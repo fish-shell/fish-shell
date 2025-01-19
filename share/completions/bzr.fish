@@ -75,7 +75,7 @@ complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l show-diff -s p -d 
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l file -s F -d 'Take commit message from this file'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l exclude -s x -d 'Do not consider changes made to a given path'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l message -s m -d 'Description of the new revision'
-complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l author -d 'Set the author\'s name, if it\'s different from the commiter'
+complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l author -d 'Set the author\'s name, if it\'s different from the committer'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l commit-time -d 'Manually set a commit time using commit date format'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l unchanged -d 'Commit even if nothing has changed'
 complete -f -c bzr -n '__fish_seen_subcommand_from commit' -l fixes -d 'Mark a bug as being fixed by this revision'

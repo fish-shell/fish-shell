@@ -38,7 +38,7 @@ switch (uname -s)
         complete -c telnet -s s -x -d "Set source IP address"
         complete -c telnet -s u -d "Force AF_UNIX addresses only"
     case NetBSD
-        complete -c telnet -s P -x -d "Set IPsec policy specfication"
+        complete -c telnet -s P -x -d "Set IPsec policy specification"
     case OpenBSD
         complete -c telnet -s 7 -d "Do not try to negotiate TELNET BINARY option"
         complete -c telnet -s V -x -d "Set routing table"

@@ -21,8 +21,8 @@ complete -c dua -n 'not __fish_seen_subcommand_from help' -s x -l stay-on-filesy
 
 # Subcommands
 
-complete -c dua -a aggregate -n "not __fish_seen_subcommand_from $_sub_commands help" -d 'Aggregrate the consumed space of one or more directories or files'
-complete -c dua -a a -n "not __fish_seen_subcommand_from $_sub_commands help" -d 'Aggregrate the consumed space of one or more directories or files'
+complete -c dua -a aggregate -n "not __fish_seen_subcommand_from $_sub_commands help" -d 'Aggregate the consumed space of one or more directories or files'
+complete -c dua -a a -n "not __fish_seen_subcommand_from $_sub_commands help" -d 'Aggregate the consumed space of one or more directories or files'
 
 complete -c dua -n '__fish_seen_subcommand_from a aggregate' -l no-sort -d 'Do not sort paths by their size in bytes'
 complete -c dua -n '__fish_seen_subcommand_from a aggregate' -l no-total -d 'Do not compute total column for multiple inputs'

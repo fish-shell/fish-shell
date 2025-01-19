@@ -73,7 +73,7 @@ complete -c rpm-ostree -n "__fish_seen_subcommand_from cleanup" -l peer -d "Forc
 
 # compose
 # All compose subcommands
-# container-encapsulatedoes, image not have --quiet or --verison
+# container-encapsulatedoes, image not have --quiet or --version
 set -l compose_subcommands commit container-encapsulate extensions image install postprocess tree
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and not __fish_seen_subcommand_from $compose_subcommands" -a commit -d "Commit target path to an OSTree repo"
 complete -c rpm-ostree -n "__fish_seen_subcommand_from compose; and not __fish_seen_subcommand_from $compose_subcommands --quiet -q --version" -a container-encapsulate -d "Create Chunked Container image from OSTree Commit"

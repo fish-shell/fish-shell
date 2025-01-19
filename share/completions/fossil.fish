@@ -305,7 +305,7 @@ complete -c fossil -n '__fish_fossil_command revert' -s r -x -a '(__fish_fossil 
 complete -c fossil -n __fish_fossil_needs_command -a 'rm delete' -d 'Remove a file from repository'
 complete -c fossil -n '__fish_fossil_command rm delete' -l hard -d 'Remove files from this checkout'
 complete -c fossil -n '__fish_fossil_command rm delete' -l soft -d 'Skip removing files from this checkout'
-complete -c fossil -n '__fish_fossil_command rm delete' -s n -l dry-run -d 'Display actions without runing'
+complete -c fossil -n '__fish_fossil_command rm delete' -s n -l dry-run -d 'Display actions without running'
 complete -c fossil -n '__fish_fossil_command rm delete' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'
 
 # settings

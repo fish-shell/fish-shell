@@ -3,7 +3,7 @@ complete -c gimp -l help-all -d 'show help with advanced options'
 complete -c gimp -l help-gtk -d 'show help with GTK+ options'
 complete -c gimp -l help-gegl -d 'show help with GEGL options'
 complete -c gimp -s v -l version -d 'show version'
-complete -c gimp -l license -d 'show licence'
+complete -c gimp -l license -d 'show license'
 
 complete -c gimp -l verbose -d 'show verbosely'
 complete -c gimp -s n -l new-instance -d 'open new instance'

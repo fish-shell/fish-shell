@@ -7,7 +7,7 @@ complete -c grub-install -l install-modules -d 'Install only given modules and t
 complete -c grub-install -l pubkey -s k -d 'Embed given file as public key for signature checking' -r
 complete -c grub-install -l locale-directory -d 'Use translations under given directory' -r
 complete -c grub-install -l locales -d 'Install only given locales' -x
-complete -c grub-install -l modules -d 'Preload specfied modules' -x
+complete -c grub-install -l modules -d 'Preload specified modules' -x
 complete -c grub-install -l themes -d 'Install given theme' -x
 complete -c grub-install -l verbose -s v -d 'Verbose mode'
 complete -c grub-install -l allow-floppy -d 'Make drive also bootable as floppy'

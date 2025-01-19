@@ -165,12 +165,12 @@ complete -c firewall-cmd -l get-protocols -d "List protocols added to the perman
 complete -c firewall-cmd -l get-source-ports -d "List source ports added to the permanent service"
 complete -c firewall-cmd -l add-helper -xa "(__fish_print_firewalld_helpers)" -d "Add a new helper to the permanent service"
 complete -c firewall-cmd -l remove-helper -xa "(__fish_print_firewalld_helpers)" -d "Remove a helper from the permanent service"
-complete -c firewall-cmd -l query-helper -xa "(__fish_print_firewalld_helpers)" -d "Return wether the helper has been added to the permanent service"
+complete -c firewall-cmd -l query-helper -xa "(__fish_print_firewalld_helpers)" -d "Return whether the helper has been added to the permanent service"
 complete -c firewall-cmd -l get-service-helpers -d "List helpers added to the permanent service"
 complete -c firewall-cmd -l set-destination -x -d "Set destination for ipv to address[/mask] in the permanent service"
 complete -c firewall-cmd -l add-include -xa "(__fish_print_firewalld_services)" -d "Add a new include to the permanent service"
 complete -c firewall-cmd -l remove-include -xa "(__fish_print_firewalld_services)" -d "Remove a include from the permanent service"
-complete -c firewall-cmd -l query-include -xa "(__fish_print_firewalld_services)" -d "Return wether the include has been added to the permanent service"
+complete -c firewall-cmd -l query-include -xa "(__fish_print_firewalld_services)" -d "Return whether the include has been added to the permanent service"
 complete -c firewall-cmd -l get-includes -d "List includes added to the permanent service"
 
 # Helper Options

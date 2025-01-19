@@ -113,7 +113,7 @@ complete -c svn -n 'not __fish_use_subcommand' -l username -x -d 'Specify a user
 complete -c svn -n 'not __fish_use_subcommand' -l password -x -d 'Specify a password ARG'
 complete -c svn -n 'not __fish_use_subcommand' -l no-auth-cache -d 'Do not cache authentication tokens'
 complete -c svn -n 'not __fish_use_subcommand' -l non-interactive -d 'Do no interactive prompting'
-complete -c svn -n 'not __fish_use_subcommand' -l trust-server-cert -d 'Accept SSL server certificates from unknown authorities (ony with --non-interactive)'
+complete -c svn -n 'not __fish_use_subcommand' -l trust-server-cert -d 'Accept SSL server certificates from unknown authorities (only with --non-interactive)'
 complete -c svn -n 'not __fish_use_subcommand' -l config-dir -x -d 'Read user configuration files from directory ARG'
 complete -c svn -n 'not __fish_use_subcommand' -l config-option -x -d 'Set user configuration option in the format: FILE:SECTION:OPTION=[VALUE]'
 

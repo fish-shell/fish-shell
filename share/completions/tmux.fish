@@ -17,6 +17,10 @@ function __fish_tmux_panes -d 'window panes'
     tmux list-panes -F '#W	window' 2>/dev/null
 end
 
+function __fish_tmux_buffers -d 'buffers'
+    tmux list-buffers -F '#{buffer_name}'\t'#{buffer_sample}' 2>/dev/null
+end
+
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
@@ -542,9 +546,43 @@ complete -c tmux -n "__fish_seen_subcommand_from $display" -s c -xa '(__fish_tmu
 ###############  End:   Status Line ###############
 
 ###############  Begin: Buffers ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+
+set -l choosebuffer "choose-buffer"
+set -l clearhist "clearhist clear-history"
+set -l deleteb "deleteb delete-buffer"
+set -l lsb "lsb list-buffers"
+set -l loadb "loadb load-buffer"
+set -l pasteb "pasteb paste-buffer"
+set -l saveb "saveb save-buffer"
+set -l setb "setb set-buffer"
+set -l showb "showb show-buffer"
+
+complete -c tmux -n __fish_use_subcommand -a $choosebuffer -d 'interactively choose buffer'
+complete -c tmux -n __fish_use_subcommand -a $clearhist -d 'forget history for a pane'
+complete -c tmux -n __fish_use_subcommand -a $deleteb -d 'delete buffer'
+complete -c tmux -n __fish_use_subcommand -a $lsb -d 'list buffers'
+complete -c tmux -n __fish_use_subcommand -a $loadb -d 'load buffer from path, use - for stdin'
+complete -c tmux -n __fish_use_subcommand -a $pasteb -d 'paste buffer to pane'
+complete -c tmux -n __fish_use_subcommand -a $saveb -d 'save buffer to path'
+complete -c tmux -n __fish_use_subcommand -a $setb -d 'set buffer to value'
+complete -c tmux -n __fish_use_subcommand -a $showb -d 'print buffer to stdout'
+
+## commands with buffer flag
+complete -c tmux -n "__fish_seen_subcommand_from $deleteb $loadb $pasteb $saveb $setb $showb" -xs b -a '(__fish_tmux_buffers)' --keep-order -d 'buffer name'
+complete -c tmux -n "__fish_seen_subcommand_from $setb" -xs n -a '(__fish_tmux_buffers)' --keep-order -d 'new buffer name'
+
+## commands with target pane flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $clearhist $pasteb" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+
+#commands with the -F format flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $lsb" -xs F -d 'format string'
+
+#commands with the -f filter flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $loadb $lsb" -xs f -d 'filter format string'
+
+# Commands that take paths
+complete -c tmux -n "__fish_seen_subcommand_from $loadb $saveb" --force-files
+
 ###############  End:   Buffers ###############
 
 ###############  Begin: Miscellaneous ###############

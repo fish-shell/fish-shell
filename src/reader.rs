@@ -504,7 +504,7 @@ pub struct ReaderData {
     /// Whether this is the first prompt.
     first_prompt: bool,
 
-    /// The time when the last flash() completed
+    /// The time when the last flash() completed.
     last_flash: Option<Instant>,
 
     /// The representation of the current screen contents.
@@ -2717,7 +2717,7 @@ impl<'a> Reader<'a> {
             rl::PagerToggleSearch => {
                 if let Some(history_pager) = &self.history_pager {
                     if history_pager.start == 0 {
-                        self.flash();
+                        self.flash(0..self.command_line.len());
                         return;
                     }
                     self.fill_history_pager(
@@ -2972,7 +2972,12 @@ impl<'a> Reader<'a> {
 
                 // Signal that we've found nothing
                 if !found {
-                    self.flash();
+                    let result_range = self.history_search.search_result_range();
+                    self.flash(if !result_range.is_empty() {
+                        result_range
+                    } else {
+                        0..self.command_line.len()
+                    })
                 }
 
                 if !found && !was_active_before {
@@ -2986,7 +2991,7 @@ impl<'a> Reader<'a> {
             rl::HistoryPager => {
                 if let Some(history_pager) = &self.history_pager {
                     if history_pager.end > self.history.size() {
-                        self.flash();
+                        self.flash(0..self.command_line.len());
                         return;
                     }
                     self.fill_history_pager(
@@ -3042,7 +3047,7 @@ impl<'a> Reader<'a> {
                 if is_history_search || is_autosuggestion {
                     self.input_data.function_set_status(true);
                     if is_autosuggestion && !self.autosuggestion.is_whole_item_from_history {
-                        self.flash();
+                        self.flash(0..self.command_line.position());
                         return;
                     }
                     self.history.remove(if is_history_search {
@@ -3714,7 +3719,7 @@ impl<'a> Reader<'a> {
                     self.redo(elt)
                 };
                 if !ok {
-                    self.flash();
+                    self.flash(0..self.command_line.len());
                     return;
                 }
                 self.suppress_autosuggestion = false;
@@ -3993,7 +3998,7 @@ impl<'a> Reader<'a> {
     }
 
     /// Flash the screen. This function changes the color of the current line momentarily.
-    fn flash(&mut self) {
+    fn flash(&mut self, flash_range: Range<usize>) {
         // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
         // significant delay in processing future input while all the flash() calls complete, as we
         // effectively sleep for 100ms each go. See #8610.
@@ -4010,7 +4015,7 @@ impl<'a> Reader<'a> {
 
         // Save off the colors and set the background.
         let saved_colors = data.colors.clone();
-        for color in &mut data.colors[0..self.command_line.position()] {
+        for color in &mut data.colors[flash_range] {
             color.foreground = HighlightRole::search_match;
             color.background = HighlightRole::search_match;
         }
@@ -6174,7 +6179,7 @@ impl<'a> Reader<'a> {
             ExpandResultCode::overflow => {
                 // This may come about if we exceeded the max number of matches.
                 // Return "success" to suppress normal completions.
-                self.flash();
+                self.flash(token_range);
                 return;
             }
             ExpandResultCode::wildcard_no_match => {}
@@ -6264,7 +6269,7 @@ impl<'a> Reader<'a> {
         let len = comp.len();
         if len == 0 {
             // No suitable completions found, flash screen and return.
-            self.flash();
+            self.flash(token_range);
             return false;
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.

@@ -23,6 +23,7 @@ Interactive improvements
   Such a malicious file can still potentially insert arbitrary text into the command line but can no longer execute it directly (:issue:`10987`).
 - The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Left mouse click now can select pager items.
+- Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), and the full command line in all other cases.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

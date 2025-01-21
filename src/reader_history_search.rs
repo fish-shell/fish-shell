@@ -6,6 +6,7 @@ use crate::tokenizer::{TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::ifind;
 use std::collections::HashSet;
+use std::ops::Range;
 use std::sync::Arc;
 
 // Make the search case-insensitive unless we have an uppercase character.
@@ -108,6 +109,12 @@ impl ReaderHistorySearch {
     /// Return the string we are searching for.
     pub fn search_string(&self) -> &wstr {
         self.search().original_term()
+    }
+
+    /// Return the range of the current match in the command line.
+    pub fn search_result_range(&self) -> Range<usize> {
+        assert!(self.active());
+        self.token_offset..self.token_offset + self.matches[self.match_index].text.len()
     }
 
     /// Return the range of the original search string in the new command line.

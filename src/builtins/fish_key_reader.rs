@@ -19,8 +19,9 @@ use crate::{
     env::env_init,
     input::input_terminfo_get_name,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer, KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY,
+        enable_kitty_progressive_enhancements, terminal_protocol_hacks,
+        terminal_protocols_enable_ifn, CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer,
+        KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -98,8 +99,14 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         let evt = queue.readch();
 
-        let CharEvent::Key(kevt) = evt else {
-            continue;
+        let kevt = match evt {
+            CharEvent::Key(kevt) => kevt,
+            CharEvent::Readline(_) | CharEvent::Command(_) => continue,
+            CharEvent::Implicit(ImplicitEvent::KittyKeyboardSupported) => {
+                enable_kitty_progressive_enhancements();
+                continue;
+            }
+            CharEvent::Implicit(_) => continue,
         };
         let c = kevt.key.codepoint;
         if verbose {

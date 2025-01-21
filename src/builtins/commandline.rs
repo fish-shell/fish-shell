@@ -216,7 +216,6 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut is_valid = false;
     let mut showing_suggestion = false;
 
-    let mut range = 0..0;
     let mut override_buffer = None;
 
     const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
@@ -602,6 +601,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return Some(1);
     }
 
+    let range;
     if search_field_mode {
         range = 0..current_buffer.len();
     } else {
@@ -616,7 +616,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
             }
             TextScope::Token => {
-                parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+                (range, _) = parse_util_token_extent(current_buffer, current_cursor_pos);
             }
         }
     }

@@ -437,30 +437,20 @@ fn job_or_process_extent(
 }
 
 /// Find the beginning and end of the token under the cursor and the token before the current token.
-/// Any combination of tok_begin, tok_end, prev_begin and prev_end may be null.
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param tok_begin the start of the current token
-/// \param tok_end the end of the current token
-/// \param prev_begin the start o the token before the current token
-/// \param prev_end the end of the token before the current token
-pub fn parse_util_token_extent(
-    buff: &wstr,
-    cursor_pos: usize,
-    out_tok: &mut ops::Range<usize>,
-    mut out_prev: Option<&mut ops::Range<usize>>,
-) {
+pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
     let cmdsubst_range = parse_util_cmdsubst_extent(buff, cursor_pos);
     let cmdsubst_begin = cmdsubst_range.start;
 
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
     let offset_within_cmdsubst = cursor_pos - cmdsubst_range.start;
 
-    let mut a = cmdsubst_begin + offset_within_cmdsubst;
-    let mut b = a;
-    let mut pa = a;
-    let mut pb = pa;
+    let mut cur_begin = cmdsubst_begin + offset_within_cmdsubst;
+    let mut cur_end = cur_begin;
+    let mut prev_begin = cur_begin;
+    let mut prev_end = cur_begin;
 
     assert!(cmdsubst_begin <= buff.len());
     assert!(cmdsubst_range.end <= buff.len());
@@ -477,31 +467,30 @@ pub fn parse_util_token_extent(
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
         // so we set it to a zero element string and break.
         if tok_begin > offset_within_cmdsubst {
-            a = cmdsubst_begin + offset_within_cmdsubst;
-            b = a;
+            cur_begin = cmdsubst_begin + offset_within_cmdsubst;
+            cur_end = cur_begin;
             break;
         }
 
-        // If cursor is inside the token, this is the token we are looking for. If so, set a and b
-        // and break.
+        // If cursor is inside the token, this is the token we are looking for. If so, set
+        // cur_begin and cur_end and break.
         if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
-            a = cmdsubst_begin + token.offset();
-            b = a + token.length();
+            cur_begin = cmdsubst_begin + token.offset();
+            cur_end = cur_begin + token.length();
             break;
         }
 
         // Remember previous string token.
         if token.type_ == TokenType::string {
-            pa = cmdsubst_begin + token.offset();
-            pb = pa + token.length();
+            prev_begin = cmdsubst_begin + token.offset();
+            prev_end = prev_begin + token.length();
         }
     }
 
-    *out_tok = a..b;
-    out_prev.as_mut().map(|prev| **prev = pa..pb);
-    assert!(pa <= buff.len());
-    assert!(pb >= pa);
-    assert!(pb <= buff.len());
+    assert!(prev_begin <= buff.len());
+    assert!(prev_end >= prev_begin);
+    assert!(prev_end <= buff.len());
+    (cur_begin..cur_end, prev_begin..prev_end)
 }
 
 /// Get the line number at the specified character offset.

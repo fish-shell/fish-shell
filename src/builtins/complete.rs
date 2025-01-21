@@ -475,13 +475,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             Some(param) => param,
         };
 
-        let mut token = 0..0;
-        parse_util_token_extent(
-            &do_complete_param,
-            do_complete_param.len(),
-            &mut token,
-            None,
-        );
+        let (token, _) = parse_util_token_extent(&do_complete_param, do_complete_param.len());
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.

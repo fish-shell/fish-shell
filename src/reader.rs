@@ -1457,8 +1457,7 @@ pub fn combine_command_and_autosuggestion(
         // Here we do something funny: if the last token of the command line contains any uppercase
         // characters, we use its case. Otherwise we use the case of the autosuggestion. This
         // is an idea from issue #335.
-        let mut tok = 0..0;
-        parse_util_token_extent(cmdline, cmdline.len() - 1, &mut tok, None);
+        let (tok, _) = parse_util_token_extent(cmdline, cmdline.len() - 1);
         let last_token_contains_uppercase = cmdline[tok].chars().any(|c| c.is_uppercase());
         if !last_token_contains_uppercase {
             // Use the autosuggestion's case.
@@ -1856,8 +1855,7 @@ impl ReaderData {
     fn replace_current_token(&mut self, new_token: WString) {
         // Find current token.
         let (elt, el) = self.active_edit_line();
-        let mut token_range = 0..0;
-        parse_util_token_extent(el.text(), el.position(), &mut token_range, None);
+        let (token_range, _) = parse_util_token_extent(el.text(), el.position());
 
         self.replace_substring(elt, token_range, new_token);
     }
@@ -2934,8 +2932,7 @@ impl<'a> Reader<'a> {
                     let el = &self.data.command_line;
                     if mode == SearchMode::Token {
                         // Searching by token.
-                        let mut token_range = 0..0;
-                        parse_util_token_extent(el.text(), el.position(), &mut token_range, None);
+                        let (token_range, _) = parse_util_token_extent(el.text(), el.position());
                         self.data.history_search.reset_to_mode(
                             el.text()[token_range.clone()].to_owned(),
                             self.history.clone(),
@@ -3402,15 +3399,13 @@ impl<'a> Reader<'a> {
                 let (elt, el) = self.active_edit_line();
                 let text = el.text();
 
-                let mut tok = 0..0;
-                let mut prev_tok = 0..0;
-                parse_util_token_extent(text, el.position(), &mut tok, Some(&mut prev_tok));
+                let (mut tok, mut prev_tok) = parse_util_token_extent(text, el.position());
 
                 // In case we didn't find a token at or after the cursor...
                 if tok.start == el.len() {
                     // ...retry beginning from the previous token.
                     let pos = prev_tok.end;
-                    parse_util_token_extent(text, pos, &mut tok, Some(&mut prev_tok));
+                    (tok, prev_tok) = parse_util_token_extent(text, pos);
                 }
 
                 // Make sure we have two tokens.
@@ -3792,9 +3787,7 @@ impl<'a> Reader<'a> {
             return None;
         }
 
-        let mut tok = 0..0;
-        let mut prev_tok = 0..0;
-        parse_util_token_extent(el.text(), el.position(), &mut tok, Some(&mut prev_tok));
+        let (tok, prev_tok) = parse_util_token_extent(el.text(), el.position());
 
         // if we are at the start of a token, go back one
         let new_position = if tok.start == pos {
@@ -6012,8 +6005,7 @@ pub fn completion_apply_to_command_line(
 
     if do_replace_token {
         let mut move_cursor = 0;
-        let mut range = 0..0;
-        parse_util_token_extent(command_line, cursor_pos, &mut range, None);
+        let (range, _) = parse_util_token_extent(command_line, cursor_pos);
 
         let mut sb = command_line[..range.start].to_owned();
 
@@ -6049,8 +6041,7 @@ pub fn completion_apply_to_command_line(
 
     let mut quote = None;
     let replaced = if do_escape {
-        let mut tok = 0..0;
-        parse_util_token_extent(command_line, cursor_pos, &mut tok, None);
+        let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
         // Find the last quote in the token to complete.
         let mut have_token = false;
         if tok.contains(&cursor_pos) || cursor_pos == tok.end {
@@ -6155,13 +6146,8 @@ impl<'a> Reader<'a> {
 
         // Figure out the extent of the token within the command substitution. Note we
         // pass cmdsub_begin here, not buff.
-        let mut token_range = 0..0;
-        parse_util_token_extent(
-            &el.text()[cmdsub_range.clone()],
-            position_in_cmdsub,
-            &mut token_range,
-            None,
-        );
+        let (mut token_range, _) =
+            parse_util_token_extent(&el.text()[cmdsub_range.clone()], position_in_cmdsub);
         let position_in_token = position_in_cmdsub - token_range.start;
 
         // Hack: the token may extend past the end of the command substitution, e.g. in

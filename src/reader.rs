@@ -507,6 +507,9 @@ pub struct ReaderData {
     /// The time when the last flash() completed.
     last_flash: Option<Instant>,
 
+    /// Whether flash autosuggestion.
+    flash_autosuggestion: bool,
+
     /// The representation of the current screen contents.
     screen: Screen,
 
@@ -1163,6 +1166,7 @@ impl ReaderData {
             reset_loop_state: Default::default(),
             first_prompt: true,
             last_flash: Default::default(),
+            flash_autosuggestion: false,
             screen: Screen::new(),
             cursor_position_wait: CursorPositionWait::None,
             input_data,
@@ -1632,7 +1636,14 @@ impl<'a> Reader<'a> {
             colors.splice(
                 pos..pos,
                 vec![
-                    HighlightSpec::with_fg(HighlightRole::autosuggestion);
+                    if self.flash_autosuggestion {
+                        HighlightSpec::with_fg_bg(
+                            HighlightRole::search_match,
+                            HighlightRole::search_match,
+                        )
+                    } else {
+                        HighlightSpec::with_fg(HighlightRole::autosuggestion)
+                    };
                     autosuggested_range.len()
                 ],
             );
@@ -3047,7 +3058,8 @@ impl<'a> Reader<'a> {
                 if is_history_search || is_autosuggestion {
                     self.input_data.function_set_status(true);
                     if is_autosuggestion && !self.autosuggestion.is_whole_item_from_history {
-                        self.flash(0..self.command_line.position());
+                        self.flash_autosuggestion = true;
+                        self.flash(0..0);
                         return;
                     }
                     self.history.remove(if is_history_search {
@@ -4006,6 +4018,7 @@ impl<'a> Reader<'a> {
         if self
             .last_flash
             .is_some_and(|last_flash| now.duration_since(last_flash) < Duration::from_millis(50))
+            || flash_range.is_empty() && !self.flash_autosuggestion
         {
             self.last_flash = Some(now);
             return;
@@ -4022,6 +4035,7 @@ impl<'a> Reader<'a> {
         self.rendered_layout = data;
         self.paint_layout(L!("flash"), false);
 
+        self.flash_autosuggestion = false;
         std::thread::sleep(Duration::from_millis(100));
 
         // Re-render with our saved data.

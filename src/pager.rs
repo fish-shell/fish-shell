@@ -293,10 +293,7 @@ impl Pager {
 
         if !progress_text.is_empty() {
             let line = rendering.screen_data.add_line();
-            let spec = HighlightSpec::with_fg_bg(
-                HighlightRole::pager_progress,
-                HighlightRole::pager_progress,
-            );
+            let spec = HighlightSpec::with_both(HighlightRole::pager_progress);
             print_max(
                 CharOffset::None,
                 &progress_text,

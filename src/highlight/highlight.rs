@@ -42,9 +42,6 @@ impl HighlightSpec {
     pub fn new() -> Self {
         Self::default()
     }
-    pub fn with_fg(fg: HighlightRole) -> Self {
-        Self::with_fg_bg(fg, HighlightRole::normal)
-    }
     pub fn with_fg_bg(fg: HighlightRole, bg: HighlightRole) -> Self {
         Self {
             foreground: fg,
@@ -52,8 +49,14 @@ impl HighlightSpec {
             ..Default::default()
         }
     }
+    pub fn with_fg(fg: HighlightRole) -> Self {
+        Self::with_fg_bg(fg, HighlightRole::normal)
+    }
     pub fn with_bg(bg: HighlightRole) -> Self {
         Self::with_fg_bg(HighlightRole::normal, bg)
+    }
+    pub fn with_both(role: HighlightRole) -> Self {
+        Self::with_fg_bg(role, role)
     }
 }
 

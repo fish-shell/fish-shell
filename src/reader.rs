@@ -1621,8 +1621,7 @@ impl<'a> Reader<'a> {
 
         // Apply any selection.
         if let Some(selection) = data.selection {
-            let selection_color =
-                HighlightSpec::with_fg_bg(HighlightRole::selection, HighlightRole::selection);
+            let selection_color = HighlightSpec::with_both(HighlightRole::selection);
             let end = std::cmp::min(selection.stop, colors.len());
             for color in &mut colors[selection.start.min(end)..end] {
                 *color = selection_color;
@@ -1637,10 +1636,7 @@ impl<'a> Reader<'a> {
                 pos..pos,
                 vec![
                     if self.flash_autosuggestion {
-                        HighlightSpec::with_fg_bg(
-                            HighlightRole::search_match,
-                            HighlightRole::search_match,
-                        )
+                        HighlightSpec::with_both(HighlightRole::search_match)
                     } else {
                         HighlightSpec::with_fg(HighlightRole::autosuggestion)
                     };

@@ -21,6 +21,20 @@ function __fish_tmux_buffers -d 'buffers'
     tmux list-buffers -F '#{buffer_name}'\t'#{buffer_sample}' 2>/dev/null
 end
 
+# Meant to be used with `complete --keep-order`, since tmux follows numerical order
+function __fish_tmux_windows -d "list tmux windows in the current session"
+    # Using the same notation as tmux's default status bar. Could use <marked>, <active>, etc.
+    # Unlike tmux's statusbar , we add a space for readability
+    set -l window_flags '#{?window_active, *,}#{?window_marked_flag, M,}#{?window_zoomed_flag, Z,}'
+
+    # In window context, an integer means a window index in this session
+    tmux list-windows -F "#I"\t"#W$window_flags" 2>/dev/null
+
+    # Showing windows in other sessions can be confusing e.g. if there
+    # are session groups. So, we assume the user is interested in the
+    # current (or only) session.
+end
+
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
@@ -299,17 +313,23 @@ complete -c tmux -n "__fish_seen_subcommand_from $killp $pipep $resizep $respawn
 # Unclear if there's a meaningful difference between "target pane" and "destination pane", but tmux makes the distinction
 complete -c tmux -n "__fish_seen_subcommand_from $joinp $swapp" -xs t -a '(__fish_tmux_panes)' -d 'destination pane'
 
+## commands with window flag
+complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs s -d 'source window'
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $swapw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'destination window'
+complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'target window'
+complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'target window'
+
 ## commands with session flag
 complete -c tmux -n "__fish_seen_subcommand_from $lastw $lsw $next $prev" -xs t -a '(__fish_tmux_sessions)' -d 'target session'
 
 ## commands with the -F format flag
 complete -c tmux -n "__fish_seen_subcommand_from $breakp $lsp $lsw $neww $chooseclient $choosetree" -xs F -d 'format string'
 
-## commands with -s/-t flags that are not panes/sessions (nice completion not yet implemented)
-complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" -xs s -d 'source window'
-complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $swapw" -xs t -d 'destination window'
-complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" -xs t -d 'target window'
-complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" -xs t -d 'target window'
+## commands with -s/-t flags that are not panes/sessions/windows  (nice completion not yet implemented)
 complete -c tmux -n "__fish_seen_subcommand_from $displayp" -xs t -d 'target client'
 complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d target
 

@@ -1844,12 +1844,16 @@ impl ReaderData {
 
     fn undo(&mut self, elt: EditableLineTag) -> bool {
         let ok = self.edit_line_mut(elt).undo();
-        self.command_line_changed(elt, AutosuggestionUpdate::Remove);
+        if ok {
+            self.command_line_changed(elt, AutosuggestionUpdate::Remove);
+        }
         ok
     }
     fn redo(&mut self, elt: EditableLineTag) -> bool {
         let ok = self.edit_line_mut(elt).redo();
-        self.command_line_changed(elt, AutosuggestionUpdate::Remove);
+        if ok {
+            self.command_line_changed(elt, AutosuggestionUpdate::Remove);
+        }
         ok
     }
 

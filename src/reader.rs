@@ -4017,20 +4017,17 @@ impl<'a> Reader<'a> {
 
         // Save off the colors and set the background.
         let saved_colors = data.colors.clone();
-        for i in 0..self.command_line.position() {
-            data.colors[i].foreground = HighlightRole::search_match;
-            data.colors[i].background = HighlightRole::search_match;
+        for color in &mut data.colors[0..self.command_line.position()] {
+            color.foreground = HighlightRole::search_match;
+            color.background = HighlightRole::search_match;
         }
-        self.rendered_layout = data.clone(); // need to copy the data since we will use it again.
+        self.rendered_layout = data;
         self.paint_layout(L!("flash"), false);
-
-        let _old_data = std::mem::take(&mut self.rendered_layout);
 
         std::thread::sleep(Duration::from_millis(100));
 
         // Re-render with our saved data.
-        data.colors = saved_colors;
-        self.rendered_layout = data;
+        self.rendered_layout.colors = saved_colors;
         self.paint_layout(L!("unflash"), false);
 
         // Save the time we stopped flashing as the time of the most recent flash. We can't just

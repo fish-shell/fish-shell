@@ -374,8 +374,12 @@ impl Screen {
             );
         }
 
-        // If overflowing, give the prompt its own line to improve the situation.
-        let first_line_prompt_space = layout.left_prompt_space;
+        // If the prompt doesn't occupy the full line, justify the command line to the end of the prompt.
+        let first_line_prompt_space = if layout.left_prompt_space == screen_width {
+            0
+        } else {
+            layout.left_prompt_space
+        };
 
         // Reconstruct the command line.
         let effective_commandline = explicit_before_suggestion.to_owned()

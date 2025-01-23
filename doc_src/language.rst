@@ -2027,12 +2027,12 @@ You can see the current list of features via ``status features``::
 
 Here is what they mean:
 
-- ``stderr-nocaret`` was introduced in fish 3.0 (and made the default in 3.3). It makes ``^`` an ordinary character instead of denoting an stderr redirection, to make dealing with quoting and such easier. Use ``2>`` instead. This can no longer be turned off since fish 3.5. The flag can still be tested for compatibility, but a ``no-stderr-nocaret`` value will simply be ignored.
-- ``qmark-noglob`` was also introduced in fish 3.0 (and made the default in 4.0). It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
-- ``regex-easyesc`` was introduced in 3.1. It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` calls if you use this anywhere.
-- ``ampersand-nobg-in-token`` was introduced in fish 3.4. It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
-- ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
-- ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
+- ``stderr-nocaret`` was introduced in fish 3.0 and cannot be turned off since fish 3.5. It can still be tested for compatibility, but a ``no-stderr-nocaret`` value will simply be ignored. The flag made ``^`` an ordinary character instead of denoting an stderr redirection. Use ``2>`` instead.
+- ``qmark-noglob`` was also introduced in fish 3.0 (and made the default in 3.8). It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
+- ``regex-easyesc`` was introduced in 3.1 (and made the default in 3.5). It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` calls if you use this anywhere.
+- ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
+- ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 3.8. To get fish's pid, you can use the :envvar:`fish_pid` variable.
+- ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 3.8. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
 
 
 These changes are introduced off by default. They can be enabled on a per session basis::
@@ -2052,12 +2052,6 @@ You can also use the version as a group, so ``3.0`` is equivalent to "stderr-noc
 Prefixing a feature with ``no-`` turns it off instead. E.g. to reenable the ``?`` single-character glob::
 
   set -Ua fish_features no-qmark-noglob
-
-Currently, the following features are enabled by default:
-
-- stderr-nocaret - ``^`` no longer redirects stderr, use ``2>``. Enabled by default in fish 3.3.0. No longer changeable since fish 3.5.0.
-- regex-easyesc - ``string replace -r`` requires fewer backslashes in the replacement part. Enabled by default in fish 3.5.0.
-- ampersand-nobg-in-token - ``&`` in the middle of a word is a normal character instead of backgrounding. Enabled by default in fish 3.5.0.
 
 .. _event:
 

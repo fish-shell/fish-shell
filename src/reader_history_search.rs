@@ -88,16 +88,16 @@ impl ReaderHistorySearch {
         }
     }
 
-    /// Go to the beginning (earliest) of the search.
-    pub fn go_to_beginning(&mut self) {
+    /// Go to the oldest match (last match) of the search.
+    pub fn go_to_oldest(&mut self) {
         if self.matches.is_empty() {
             return;
         }
         self.match_index = self.matches.len() - 1;
     }
 
-    /// Go to the end (most recent) of the search.
-    pub fn go_to_end(&mut self) {
+    /// Go to the youngest match (original search string) of the search.
+    pub fn go_to_present(&mut self) {
         self.match_index = 0;
     }
 
@@ -119,7 +119,7 @@ impl ReaderHistorySearch {
 
     /// Return the range of the original search string in the new command line.
     pub fn search_range_if_active(&self) -> Option<SourceRange> {
-        if !self.active() || self.is_at_end() {
+        if !self.active() || self.is_at_present() {
             return None;
         }
         Some(SourceRange::new(
@@ -128,8 +128,8 @@ impl ReaderHistorySearch {
         ))
     }
 
-    /// Return whether we are at the end (most recent) of our search.
-    pub fn is_at_end(&self) -> bool {
+    /// Return whether we are at the youngest match (original search string) in our search.
+    pub fn is_at_present(&self) -> bool {
         self.match_index == 0
     }
 
@@ -140,7 +140,7 @@ impl ReaderHistorySearch {
     }
 
     pub fn handle_deletion(&mut self) {
-        assert!(!self.is_at_end());
+        assert!(!self.is_at_present());
         self.matches.remove(self.match_index);
         self.match_index -= 1;
         self.search_mut().prepare_to_search_after_deletion();

@@ -1825,7 +1825,7 @@ impl ReaderData {
                 .as_ref()
                 .is_some_and(|saved_autosuggestion| {
                     self.conf.autosuggest_ok
-                        && self.history_search.is_at_end()
+                        && self.history_search.is_at_present()
                         && edit.replacement.is_empty()
                         && edit.range.start == saved_autosuggestion.search_string_range.end
                         && !edit.range.is_empty()
@@ -1873,7 +1873,7 @@ impl ReaderData {
 
     /// Apply the history search to the command line.
     fn update_command_line_from_history_search(&mut self) {
-        let new_text = if self.history_search.is_at_end() {
+        let new_text = if self.history_search.is_at_present() {
             self.history_search.search_string()
         } else {
             self.history_search.current_result()
@@ -2939,7 +2939,7 @@ impl<'a> Reader<'a> {
 
                 let was_active_before = self.history_search.active();
 
-                if self.history_search.is_at_end() {
+                if self.history_search.is_at_present() {
                     let el = &self.data.command_line;
                     if mode == SearchMode::Token {
                         // Searching by token.
@@ -2994,7 +2994,7 @@ impl<'a> Reader<'a> {
                 if !found && !was_active_before {
                     self.history_search.reset();
                 } else if found
-                    || (dir == SearchDirection::Forward && self.history_search.is_at_end())
+                    || (dir == SearchDirection::Forward && self.history_search.is_at_present())
                 {
                     self.update_command_line_from_history_search();
                 }
@@ -3053,7 +3053,7 @@ impl<'a> Reader<'a> {
             #[allow(deprecated)]
             rl::HistoryDelete | rl::HistoryPagerDelete => {
                 // Also applies to ordinary history search.
-                let is_history_search = !self.history_search.is_at_end();
+                let is_history_search = !self.history_search.is_at_present();
                 let is_autosuggestion = self.is_at_autosuggestion();
                 if is_history_search || is_autosuggestion {
                     self.input_data.function_set_status(true);
@@ -3290,9 +3290,9 @@ impl<'a> Reader<'a> {
                     );
                 } else {
                     if up {
-                        self.history_search.go_to_beginning();
+                        self.history_search.go_to_oldest();
                     } else {
-                        self.history_search.go_to_end();
+                        self.history_search.go_to_present();
                     }
                     if self.history_search.active() {
                         self.update_command_line_from_history_search();
@@ -4798,7 +4798,7 @@ impl<'a> Reader<'a> {
         let (elt, el) = self.active_edit_line();
         self.conf.autosuggest_ok
             && !self.suppress_autosuggestion
-            && self.history_search.is_at_end()
+            && self.history_search.is_at_present()
             && elt == EditableLineTag::Commandline
             && el
                 .text()

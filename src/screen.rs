@@ -447,6 +447,16 @@ impl Screen {
             i += 1;
         };
 
+        // Add an empty line if there are no lines or if the last line was soft wrapped (but not by autosuggestion).
+        if self.desired.line_datas.last().is_none_or(|line| {
+            line.len() == screen_width
+                && (commandline.is_empty()
+                    || autosuggestion.is_empty()
+                    || !explicit_after_suggestion.is_empty())
+        }) {
+            self.desired.add_line();
+        }
+
         let full_line_count = self.desired.cursor.y + calc_prompt_lines(&layout.left_prompt);
         let pager_available_height = std::cmp::max(
             1,

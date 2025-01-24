@@ -1676,7 +1676,7 @@ impl<'ctx> Completer<'ctx> {
             };
 
             let mut desc = WString::new();
-            if self.flags.descriptions && self.flags.autosuggestion {
+            if self.flags.descriptions && !self.flags.autosuggestion {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
                 if env_name == "history" {

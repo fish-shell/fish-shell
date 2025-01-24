@@ -960,9 +960,9 @@ impl Screen {
     }
 
     /// Convert a wide character to a multibyte string and append it to the buffer.
-    fn write_char(&mut self, c: char, width: isize) {
+    fn write_char(&mut self, c: char, width: usize) {
         let mut zelf = self.scoped_buffer();
-        zelf.actual.cursor.x = zelf.actual.cursor.x.wrapping_add(width as usize);
+        zelf.actual.cursor.x = zelf.actual.cursor.x.wrapping_add(width);
         zelf.outp.borrow_mut().writech(c);
         if Some(zelf.actual.cursor.x) == zelf.actual.screen_width && allow_soft_wrap() {
             zelf.soft_wrap_location = Some(Cursor {
@@ -1254,7 +1254,7 @@ impl Screen {
                 set_color(&mut zelf, color);
                 let ch = o_line(&zelf, i).char_at(j);
                 let width = wcwidth_rendered_min_0(ch);
-                zelf.write_char(ch, isize::try_from(width).unwrap());
+                zelf.write_char(ch, width);
                 current_width += width;
                 j += 1;
             }

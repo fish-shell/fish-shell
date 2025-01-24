@@ -611,8 +611,18 @@ impl Screen {
         let x = viewport_position.x - viewport_prompt_x;
         let line = self.actual.line(y);
         let x = x.max(line.indentation);
-        let char = line.text.get(x).or(line.text.last()).unwrap();
-        match char.offset_in_cmdline {
+        let offset = line
+            .text
+            .get(x)
+            .or(line.text.last())
+            .or(if y > 0 {
+                self.actual.line(y - 1).text.last()
+            } else {
+                None
+            })
+            .map(|char| char.offset_in_cmdline)
+            .unwrap_or(CharOffset::Pointer(0));
+        match offset {
             CharOffset::Cmd(value) if x >= line.len() => CharOffset::Cmd(value + 1),
             CharOffset::Pager(_) if x >= line.len() => CharOffset::None,
             offset => offset,

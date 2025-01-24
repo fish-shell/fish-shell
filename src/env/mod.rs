@@ -26,17 +26,6 @@ pub static TERM_HAS_XN: AtomicBool = AtomicBool::new(false);
 
 static SETENV_LOCK: Mutex<()> = Mutex::new(());
 
-mod ffi {
-    extern "C" {
-        pub fn setenv(
-            name: *const libc::c_char,
-            value: *const libc::c_char,
-            overwrite: libc::c_int,
-        );
-        pub fn unsetenv(name: *const libc::c_char);
-    }
-}
-
 /// Sets an environment variable after obtaining a lock, to try and improve the safety of
 /// environment variables.
 ///
@@ -47,7 +36,7 @@ pub fn setenv_lock<S1: ToCString, S2: ToCString>(name: S1, value: S2, overwrite:
     let value = value.to_cstring();
     let _lock = SETENV_LOCK.lock();
     unsafe {
-        self::ffi::setenv(name.as_ptr(), value.as_ptr(), libc::c_int::from(overwrite));
+        libc::setenv(name.as_ptr(), value.as_ptr(), libc::c_int::from(overwrite));
     }
 }
 
@@ -57,6 +46,6 @@ pub fn unsetenv_lock<S: ToCString>(name: S) {
     let name = name.to_cstring();
     let _lock = SETENV_LOCK.lock();
     unsafe {
-        self::ffi::unsetenv(name.as_ptr());
+        libc::unsetenv(name.as_ptr());
     }
 }

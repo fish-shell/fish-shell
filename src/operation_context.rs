@@ -5,6 +5,7 @@ use crate::parser::Parser;
 use crate::proc::JobGroupRef;
 
 use crate::reader::read_generation_count;
+use crate::signal::signal_check_cancel;
 
 /// A common helper which always returns false.
 pub fn no_cancel() -> bool {
@@ -116,6 +117,14 @@ impl<'a> OperationContext<'a> {
             job_group: None,
             cancel_checker,
         }
+    }
+
+    pub fn background_interruptible(env: &dyn Environment) -> OperationContext {
+        OperationContext::background_with_cancel_checker(
+            env,
+            Box::new(|| signal_check_cancel() != 0),
+            EXPANSION_LIMIT_BACKGROUND,
+        )
     }
 
     pub fn has_parser(&self) -> bool {

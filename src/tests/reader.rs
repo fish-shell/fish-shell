@@ -1,5 +1,7 @@
 use crate::complete::CompleteFlags;
+use crate::operation_context::{no_cancel, OperationContext};
 use crate::reader::{combine_command_and_autosuggestion, completion_apply_to_command_line};
+use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 
 #[test]
@@ -47,6 +49,8 @@ fn test_autosuggestion_combining() {
 
 #[test]
 fn test_completion_insertions() {
+    let parser = TestParser::new();
+
     macro_rules! validate {
         (
             $line:expr, $completion:expr,
@@ -64,7 +68,13 @@ fn test_completion_insertions() {
             expected.remove(out_cursor_pos);
 
             let mut cursor_pos = in_cursor_pos;
+
             let result = completion_apply_to_command_line(
+                &OperationContext::test_only_foreground(
+                    &parser,
+                    parser.vars(),
+                    Box::new(no_cancel),
+                ),
                 completion,
                 $flags,
                 &line,

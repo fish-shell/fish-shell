@@ -119,6 +119,8 @@ bitflags! {
         const REPLACES_LINE = 1 << 7;
         /// If replacing the entire token, keep the "foo=" prefix.
         const KEEP_VARIABLE_OVERRIDE_PREFIX = 1 << 8;
+        /// This is a variable name.
+        const VARIABLE_NAME = 1 << 9;
     }
 }
 
@@ -1683,16 +1685,13 @@ impl<'ctx> Completer<'ctx> {
                 continue;
             };
 
-            let (comp, flags) = if !r#match.requires_full_replacement() {
+            let mut flags = CompleteFlags::VARIABLE_NAME;
+            let comp = if !r#match.requires_full_replacement() {
                 // Take only the suffix.
-                (
-                    env_name.slice_from(varlen).to_owned(),
-                    CompleteFlags::empty(),
-                )
+                env_name.slice_from(varlen).to_owned()
             } else {
-                let comp = whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr();
-                let flags = CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
-                (comp, flags)
+                flags |= CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
+                whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr()
             };
 
             let mut desc = WString::new();

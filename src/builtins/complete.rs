@@ -4,6 +4,7 @@ use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionR
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
 use crate::nix::isatty;
+use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
 use crate::parse_util::parse_util_detect_errors_in_argument_list;
 use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
@@ -507,6 +508,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let faux_cmdline = &do_complete_param[token.clone()];
                 let mut tmp_cursor = faux_cmdline.len();
                 let mut faux_cmdline_with_completion = completion_apply_to_command_line(
+                    &OperationContext::background_interruptible(parser.vars()),
                     &next.completion,
                     next.flags,
                     faux_cmdline,

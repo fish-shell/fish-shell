@@ -59,8 +59,10 @@ use crate::complete::{
     CompletionRequestOptions,
 };
 use crate::editable_line::{line_at_cursor, range_of_line_at_cursor, Edit, EditableLine};
+use crate::env::EnvStack;
 use crate::env::{EnvMode, Environment, Statuses};
 use crate::exec::exec_subshell;
+use crate::expand::expand_one;
 use crate::expand::{expand_string, expand_tilde, ExpandFlags, ExpandResultCode};
 use crate::fallback::fish_wcwidth;
 use crate::fd_readable_set::poll_fd_readable;
@@ -144,6 +146,7 @@ use crate::wcstringutil::{
     string_prefixes_string_case_insensitive, StringFuzzyMatch,
 };
 use crate::wildcard::wildcard_has;
+use crate::wutil::wstat;
 use crate::wutil::{fstat, perror};
 use crate::{abbrs, event, function};
 
@@ -4061,6 +4064,7 @@ impl ReaderData {
         let new_cmd_line = match completion {
             None => Cow::Borrowed(&self.cycle_command_line),
             Some(completion) => Cow::Owned(completion_apply_to_command_line(
+                &OperationContext::background_interruptible(EnvStack::globals()), // To-do: include locals.
                 &completion.completion,
                 completion.flags,
                 &self.cycle_command_line,
@@ -4766,6 +4770,7 @@ fn get_autosuggestion_performer(
             sort_and_prioritize(&mut completions, complete_flags);
             let comp = &completions[0];
             let full_line = completion_apply_to_command_line(
+                &OperationContext::background_interruptible(&vars),
                 &comp.completion,
                 comp.flags,
                 &command_line,
@@ -5986,22 +5991,25 @@ pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
 ///
 /// Return The completed string
 pub fn completion_apply_to_command_line(
+    ctx: &OperationContext,
     val_str: &wstr,
     flags: CompleteFlags,
     command_line: &wstr,
     inout_cursor_pos: &mut usize,
     append_only: bool,
 ) -> WString {
-    let add_space = !flags.contains(CompleteFlags::NO_SPACE);
+    let mut trailer = (!flags.contains(CompleteFlags::NO_SPACE)).then_some(' ');
     let do_replace_token = flags.contains(CompleteFlags::REPLACES_TOKEN);
     let do_replace_line = flags.contains(CompleteFlags::REPLACES_LINE);
     let do_escape = !flags.contains(CompleteFlags::DONT_ESCAPE);
     let no_tilde = flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
     let keep_variable_override = flags.contains(CompleteFlags::KEEP_VARIABLE_OVERRIDE_PREFIX);
+    let is_variable_name = flags.contains(CompleteFlags::VARIABLE_NAME);
 
     let cursor_pos = *inout_cursor_pos;
     let mut back_into_trailing_quote = false;
-    let have_space_after_token = command_line.char_at(cursor_pos) == ' ';
+    assert!(!is_variable_name || command_line.char_at(cursor_pos) != '/');
+    let have_trailer = command_line.char_at(cursor_pos) == ' ';
 
     if do_replace_line {
         assert!(!do_escape, "unsupported completion flag");
@@ -6015,14 +6023,27 @@ pub fn completion_apply_to_command_line(
     }
 
     let mut escape_flags = EscapeFlags::empty();
-    if append_only || !add_space {
+    if append_only || trailer.is_none() {
         escape_flags.insert(EscapeFlags::NO_QUOTED);
     }
     if no_tilde {
         escape_flags.insert(EscapeFlags::NO_TILDE);
     }
 
+    let maybe_add_slash = |trailer: &mut char, token: &wstr| {
+        let mut expanded = token.to_owned();
+        if expand_one(&mut expanded, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
+            && wstat(&expanded).is_ok_and(|md| md.is_dir())
+        {
+            *trailer = '/';
+        }
+    };
+
     if do_replace_token {
+        if is_variable_name {
+            assert!(!do_escape);
+            maybe_add_slash(trailer.as_mut().unwrap(), val_str);
+        }
         let mut move_cursor = 0;
         let (range, _) = parse_util_token_extent(command_line, cursor_pos);
 
@@ -6045,9 +6066,9 @@ pub fn completion_apply_to_command_line(
             move_cursor += val_str.len();
         }
 
-        if add_space {
-            if !have_space_after_token {
-                sb.push(' ');
+        if let Some(trailer) = trailer {
+            if !have_trailer {
+                sb.push(trailer);
             }
             move_cursor += 1;
         }
@@ -6101,14 +6122,21 @@ pub fn completion_apply_to_command_line(
     result.insert_utfstr(insertion_point, &replaced);
     let mut new_cursor_pos =
         insertion_point + replaced.len() + if back_into_trailing_quote { 1 } else { 0 };
-    if add_space {
-        if quote.is_some() && unescaped_quote(command_line, insertion_point) != quote {
+    if let Some(mut trailer) = trailer {
+        if is_variable_name {
+            let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
+            maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
+        }
+        if trailer != '/'
+            && quote.is_some()
+            && unescaped_quote(command_line, insertion_point) != quote
+        {
             // This is a quoted parameter, first print a quote.
             result.insert(new_cursor_pos, quote.unwrap());
             new_cursor_pos += 1;
         }
-        if !have_space_after_token {
-            result.insert(new_cursor_pos, ' ');
+        if !have_trailer {
+            result.insert(new_cursor_pos, trailer);
         }
         new_cursor_pos += 1;
     }
@@ -6447,6 +6475,7 @@ impl<'a> Reader<'a> {
         let (_elt, el) = self.active_edit_line();
         let mut cursor = el.position();
         let new_command_line = completion_apply_to_command_line(
+            &OperationContext::background_interruptible(self.parser.vars()),
             val,
             flags,
             el.text(),

@@ -56,12 +56,13 @@ complete -c llm -n $condition -l save -d "Save prompt as template with name" -x
 
 # llm aliases
 set -l condition "__fish_seen_subcommand_from aliases"
-complete -c llm -n $condition -xa list -d "List current aliases" -x
-complete -c llm -n $condition -xa path -d "Print path of llm's aliases.json" -x
-complete -c llm -n $condition -xa remove -d "Remove an llm alias" -r
-complete -c llm -n $condition -xa set -d "Set an alias for a model" -r
+complete -c llm -n $condition -n '__fish_is_nth_token 2' -xa list -d "List current aliases" -x
+complete -c llm -n $condition -n '__fish_is_nth_token 2' -xa path -d "Print path of llm's aliases.json" -x
+complete -c llm -n $condition -n '__fish_is_nth_token 2' -xa remove -d "Remove an llm alias" -r
+complete -c llm -n $condition -n '__fish_is_nth_token 2' -xa set -d "Set an alias for a model" -r
+complete -c llm -n $condition -n '__fish_is_nth_token 4' -xa "(__fish_llm_models)" -d "Alias target model"
 
-# llm aliases
+# llm chat
 set -l condition "__fish_seen_subcommand_from chat"
 complete -c llm -n $condition -s s -l system -d "System prompt to use" -r
 complete -c llm -n $condition -s m -l model -d "Model to use" -xa "(__fish_llm_models)"

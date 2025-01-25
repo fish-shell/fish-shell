@@ -1149,8 +1149,8 @@ impl Screen {
         // Output all lines.
         for i in 0..zelf.desired.line_count() {
             zelf.actual.create_line(i);
-
-            let start_pos = if i == 0 { left_prompt_width } else { 0 };
+            let is_first_line = i == 0 && !zelf.scrolled();
+            let start_pos = if is_first_line { left_prompt_width } else { 0 };
             let mut current_width = 0;
             let mut has_cleared_line = false;
 
@@ -1209,7 +1209,7 @@ impl Screen {
                 // If we're soft wrapped, and if we're going to change the first character of the next
                 // line, don't skip over the last two characters so that we maintain soft-wrapping.
                 skip_remaining = skip_remaining.min(screen_width.unwrap() - 2);
-                if i == 0 {
+                if is_first_line {
                     skip_remaining = skip_remaining.max(left_prompt_width);
                 }
             }
@@ -1300,7 +1300,7 @@ impl Screen {
             }
 
             // Output any rprompt if this is the first line.
-            if i == 0 && right_prompt_width > 0 {
+            if is_first_line && right_prompt_width > 0 {
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
                 zelf.r#move(0, 0);

@@ -175,6 +175,8 @@ class SpawnedProc(object):
         )
         self.spawn.delaybeforesend = None
         self.prompt_counter = 0
+        if env.get("TERM") != "dumb":
+            self.spawn.send('\x1b[?123c') # Primary Device Attribute
 
     def time_since_first_message(self):
         """Return a delta in seconds since the first message, or 0 if this is the first."""

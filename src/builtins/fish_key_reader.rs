@@ -7,7 +7,7 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::{io::Write, ops::ControlFlow, os::unix::prelude::OsStrExt};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 
@@ -21,10 +21,11 @@ use crate::{
     input_common::{
         enable_kitty_progressive_enhancements, kitty_progressive_enhancements_query,
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
-        InputEventQueue, InputEventQueuer,
+        InputEventQueue, InputEventQueuer, KITTY_KEYBOARD_SUPPORTED,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
+    output::Outputter,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
@@ -102,8 +103,12 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
         let kevt = match evt {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) => continue,
-            CharEvent::Implicit(ImplicitEvent::KittyKeyboardSupported) => {
-                enable_kitty_progressive_enhancements();
+            CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute) => {
+                if KITTY_KEYBOARD_SUPPORTED.load() {
+                    enable_kitty_progressive_enhancements(
+                        Outputter::stdoutput().borrow_mut().by_ref(),
+                    );
+                }
                 continue;
             }
             CharEvent::Implicit(_) => continue,

@@ -83,11 +83,14 @@ use crate::history::{
 use crate::input::init_input;
 use crate::input_common::enable_kitty_progressive_enhancements;
 use crate::input_common::kitty_progressive_enhancements_query;
-use crate::input_common::CursorPositionBlockingWait;
+use crate::input_common::BlockingWait;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
+use crate::input_common::Queried;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
+use crate::input_common::KITTY_KEYBOARD_SUPPORTED;
+use crate::input_common::SYNCHRONIZED_OUTPUT_SUPPORTED;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
@@ -123,6 +126,7 @@ use crate::proc::{
     print_exit_warning_for_jobs, proc_update_jiffies,
 };
 use crate::reader_history_search::{smartcase_flags, ReaderHistorySearch, SearchMode};
+use crate::screen::is_dumb;
 use crate::screen::{screen_clear, screen_force_clear_to_end, CharOffset, Screen};
 use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
@@ -516,7 +520,7 @@ pub struct ReaderData {
     /// The representation of the current screen contents.
     screen: Screen,
 
-    pub cursor_position_wait: CursorPositionWait,
+    pub blocking_wait: Option<BlockingWait>,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1171,7 +1175,7 @@ impl ReaderData {
             last_flash: Default::default(),
             flash_autosuggestion: false,
             screen: Screen::new(),
-            cursor_position_wait: CursorPositionWait::None,
+            blocking_wait: Some(BlockingWait::Startup(Queried::NotYet)),
             input_data,
             queued_repaint: false,
             history,
@@ -1405,10 +1409,12 @@ impl ReaderData {
     pub fn request_cursor_position(
         &mut self,
         out: &mut Outputter,
-        cursor_position_wait: CursorPositionWait,
+        cursor_position_wait: Option<CursorPositionWait>,
     ) {
-        assert!(self.cursor_position_wait == CursorPositionWait::None);
-        self.cursor_position_wait = cursor_position_wait;
+        if let Some(cursor_position_wait) = cursor_position_wait {
+            assert!(self.blocking_wait.is_none());
+            self.blocking_wait = Some(BlockingWait::CursorPosition(cursor_position_wait));
+        }
         let _ = out.write(b"\x1b[6n");
         self.save_screen_state();
     }
@@ -2102,6 +2108,8 @@ impl ReaderData {
     }
 }
 
+const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
+
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
@@ -2157,18 +2165,22 @@ impl<'a> Reader<'a> {
             }
         }
 
-        static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-        if !QUERIED.load() {
-            QUERIED.store(true);
-            let mut out = Outputter::stdoutput().borrow_mut();
-            out.begin_buffering();
-            // Query for kitty keyboard protocol support.
-            let _ = out.write(kitty_progressive_enhancements_query());
-            // Query for cursor position reporting support.
-            zelf.request_cursor_position(&mut out, CursorPositionWait::InitialFeatureProbe);
-            // Query for synchronized output support.
-            let _ = out.write(b"\x1b[?2026$p");
-            out.end_buffering();
+        if zelf.blocking_wait == Some(BlockingWait::Startup(Queried::NotYet)) {
+            if is_dumb() {
+                zelf.blocking_wait = None;
+            } else {
+                zelf.blocking_wait = Some(BlockingWait::Startup(Queried::Once));
+                let mut out = Outputter::stdoutput().borrow_mut();
+                out.begin_buffering();
+                // Query for kitty keyboard protocol support.
+                let _ = out.write(kitty_progressive_enhancements_query());
+                // Query for cursor position reporting support.
+                zelf.request_cursor_position(&mut out, None);
+                // Query for synchronized output support.
+                let _ = out.write(b"\x1b[?2026$p");
+                let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                out.end_buffering();
+            }
         }
 
         // HACK: Don't abandon line for the first prompt, because
@@ -2482,23 +2494,50 @@ impl<'a> Reader<'a> {
                         .write_wstr(L!("\x1B[?1000l"));
                     self.save_screen_state();
                 }
+                ImplicitEvent::PrimaryDeviceAttribute => {
+                    let Some(wait) = &self.blocking_wait else {
+                        // Rogue reply.
+                        return ControlFlow::Continue(());
+                    };
+                    let BlockingWait::Startup(stage) = wait else {
+                        // Rogue reply.
+                        return ControlFlow::Continue(());
+                    };
+                    match stage {
+                        Queried::NotYet => panic!(),
+                        Queried::Once => {
+                            let mut out = Outputter::stdoutput().borrow_mut();
+                            out.begin_buffering();
+                            let mut querying = false;
+                            if KITTY_KEYBOARD_SUPPORTED.load() {
+                                enable_kitty_progressive_enhancements(out.by_ref());
+                                querying = true;
+                            }
+                            if SYNCHRONIZED_OUTPUT_SUPPORTED.load() {
+                                query_capabilities_via_dcs(out.by_ref());
+                                querying = true;
+                            }
+                            if querying {
+                                let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                            }
+                            out.end_buffering();
+                            if querying {
+                                self.save_screen_state();
+                                self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
+                                return ControlFlow::Continue(());
+                            }
+                        }
+                        Queried::Twice => (),
+                    }
+                    self.unblock_input();
+                }
                 ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
                     self.mouse_left_click(cursor, click_position);
-                    self.stop_waiting_for_cursor_position();
+                    self.unblock_input();
                 }
                 ImplicitEvent::ScrollbackPushContinuation(cursor_y) => {
                     self.screen.push_to_scrollback(cursor_y);
-                    self.stop_waiting_for_cursor_position();
-                }
-                ImplicitEvent::SynchronizedOutputSupported => {
-                    if query_capabilities_via_dcs() {
-                        self.save_screen_state();
-                    }
-                }
-                ImplicitEvent::KittyKeyboardSupported => {
-                    if enable_kitty_progressive_enhancements() {
-                        self.save_screen_state();
-                    }
+                    self.unblock_input();
                 }
             },
         }
@@ -2518,22 +2557,13 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
     let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 
-fn query_capabilities_via_dcs() -> bool {
-    static QUERIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-    if QUERIED.load() {
-        return false;
-    }
-    QUERIED.store(true);
-    let mut out = Outputter::stdoutput().borrow_mut();
-    out.begin_buffering();
+fn query_capabilities_via_dcs(out: &mut impl std::io::Write) {
     let _ = out.write(b"\x1b[?2026h"); // begin synchronized update
     let _ = out.write(b"\x1b[?1049h"); // enable alternative screen buffer
     xtgettcap(out.by_ref(), "indn");
     xtgettcap(out.by_ref(), "cuu");
     let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
     let _ = out.write(b"\x1b[?2026l"); // end synchronized update
-    out.end_buffering();
-    true
 }
 
 impl<'a> Reader<'a> {
@@ -3758,13 +3788,16 @@ impl<'a> Reader<'a> {
                 if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
                     return;
                 }
-                match self.cursor_position_wait() {
-                    CursorPositionWait::None => self.request_cursor_position(
+                let Some(wait) = self.blocking_wait() else {
+                    self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionWait::Blocking(CursorPositionBlockingWait::ScrollbackPush),
-                    ),
-                    CursorPositionWait::InitialFeatureProbe => (),
-                    CursorPositionWait::Blocking(_) => {
+                        Some(CursorPositionWait::ScrollbackPush),
+                    );
+                    return;
+                };
+                match wait {
+                    BlockingWait::Startup(_) => panic!(),
+                    BlockingWait::CursorPosition(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                             reader,

@@ -1886,7 +1886,7 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
 }
 
 /// Returns true if we are using a dumb terminal.
-fn is_dumb() -> bool {
+pub(crate) fn is_dumb() -> bool {
     term().is_none_or(|term| {
         term.cursor_up.is_none()
             || term.cursor_down.is_none()

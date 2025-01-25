@@ -6,10 +6,9 @@ use crate::flog::FLOG;
 // Polyfill for Option::is_none_or(), stabilized in 1.82.0
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
-use crate::input_common::CursorPositionBlockingWait::MouseLeft;
 use crate::input_common::{
-    CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData, InputEventQueuer,
-    ReadlineCmd, ReadlineCmdEvent, READING_BUFFERED_INPUT, R_END_INPUT_FUNCTIONS,
+    BlockingWait, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData,
+    InputEventQueuer, ReadlineCmd, ReadlineCmdEvent, READING_BUFFERED_INPUT, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
@@ -463,29 +462,26 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn cursor_position_wait(&self) -> &CursorPositionWait {
-        &self.cursor_position_wait
+    fn is_blocked(&self) -> bool {
+        self.blocking_wait.is_some()
     }
-    fn is_blocked_waiting_for_cursor_position(&self) -> bool {
-        matches!(self.cursor_position_wait, CursorPositionWait::Blocking(_))
-    }
-    fn cursor_position_reporting_supported(&mut self) {
-        assert!(self.cursor_position_wait == CursorPositionWait::InitialFeatureProbe);
-        self.cursor_position_wait = CursorPositionWait::None;
-    }
-    fn stop_waiting_for_cursor_position(&mut self) -> bool {
-        if !self.is_blocked_waiting_for_cursor_position() {
+    fn unblock_input(&mut self) -> bool {
+        if !self.is_blocked() {
             return false;
         }
-        self.cursor_position_wait = CursorPositionWait::None;
+        self.blocking_wait = None;
         true
+    }
+
+    fn blocking_wait(&self) -> Option<&BlockingWait> {
+        self.blocking_wait.as_ref()
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {
         FLOG!(reader, "Mouse left click", position);
         self.request_cursor_position(
             &mut Outputter::stdoutput().borrow_mut(),
-            CursorPositionWait::Blocking(MouseLeft(position)),
+            Some(CursorPositionWait::MouseLeft(position)),
         );
     }
 }

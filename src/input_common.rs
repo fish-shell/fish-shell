@@ -192,14 +192,12 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Request to disable mouse tracking.
     DisableMouseTracking,
+    /// Primary DA response.
+    PrimaryDeviceAttribute,
     /// Handle mouse left click.
     MouseLeftClickContinuation(ViewportPosition, ViewportPosition),
     /// Push prompt to top.
     ScrollbackPushContinuation(usize),
-    /// The Synchronized Output feature is supported by the terminal.
-    SynchronizedOutputSupported,
-    /// Terminal reports support for the kitty keyboard protocol.
-    KittyKeyboardSupported,
 }
 
 #[derive(Debug, Clone)]
@@ -450,7 +448,12 @@ static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) static CURSOR_POSITION_REPORTING_SUPPORTED: RelaxedAtomicBool =
+    RelaxedAtomicBool::new(false);
 
 macro_rules! kitty_progressive_enhancements {
     () => {
@@ -465,11 +468,11 @@ pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
     b"\x1b[?u"
 }
 
-pub(crate) fn enable_kitty_progressive_enhancements() -> bool {
+pub(crate) fn enable_kitty_progressive_enhancements(out: &mut impl std::io::Write) -> bool {
     if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() || IN_ITERM_PRE_CSI_U.load() {
         return false;
     }
-    let _ = write_loop(&STDOUT_FILENO, kitty_progressive_enhancements!().as_bytes());
+    let _ = out.write(kitty_progressive_enhancements!().as_bytes());
     true
 }
 
@@ -619,16 +622,22 @@ impl InputData {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum CursorPositionBlockingWait {
+pub enum CursorPositionWait {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
 }
 
 #[derive(Eq, PartialEq)]
-pub enum CursorPositionWait {
-    None,
-    InitialFeatureProbe,
-    Blocking(CursorPositionBlockingWait),
+pub enum Queried {
+    NotYet,
+    Once,
+    Twice,
+}
+
+#[derive(Eq, PartialEq)]
+pub enum BlockingWait {
+    Startup(Queried),
+    CursorPosition(CursorPositionWait),
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -636,10 +645,10 @@ pub enum CursorPositionWait {
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        if self.is_blocked_waiting_for_cursor_position() {
+        if self.is_blocked() {
             match self.get_input_data().queue.front()? {
                 CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
-                    return None; // No code execution while we're waiting for CPR.
+                    return None; // No code execution while blocked.
                 }
                 CharEvent::Implicit(_) => (),
             }
@@ -763,10 +772,10 @@ pub trait InputEventQueuer {
                             Some(seq.chars().skip(1).map(CharEvent::from_char)),
                         )
                     };
-                    if self.is_blocked_waiting_for_cursor_position() {
+                    if self.is_blocked() {
                         FLOG!(
                             reader,
-                            "Still waiting for cursor position report from terminal, deferring key event",
+                            "Still blocked on response from terminal, deferring key event",
                             key_evt
                         );
                         self.push_back(key_evt);
@@ -779,9 +788,9 @@ pub trait InputEventQueuer {
                         if vintr != 0 && key == Some(Key::from_single_byte(vintr)) {
                             FLOG!(
                                 reader,
-                                "Received interrupt key, giving up waiting for cursor position"
+                                "Received interrupt key, giving up waiting for response from terminal"
                             );
-                            let ok = self.stop_waiting_for_cursor_position();
+                            let ok = self.unblock_input();
                             assert!(ok);
                         }
                         continue;
@@ -980,9 +989,8 @@ pub trait InputEventQueuer {
                     if private_mode == Some(b'?') {
                         // DECRPM
                         if params[0][0] == 2026 && matches!(params[1][0], 1 | 2) {
-                            self.push_front(CharEvent::Implicit(
-                                ImplicitEvent::SynchronizedOutputSupported,
-                            ));
+                            FLOG!(reader, "Synchronized output is supported");
+                            SYNCHRONIZED_OUTPUT_SUPPORTED.store(true);
                         }
                     }
                     // DECRQM
@@ -1038,15 +1046,18 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                match self.cursor_position_wait() {
-                    CursorPositionWait::None => self.on_mouse_left_click(position),
-                    CursorPositionWait::InitialFeatureProbe => (),
-                    CursorPositionWait::Blocking(_) => {
+                let Some(wait) = self.blocking_wait() else {
+                    self.on_mouse_left_click(position);
+                    return None;
+                };
+                match wait {
+                    BlockingWait::Startup(_) => {}
+                    BlockingWait::CursorPosition(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
-                            reader,
-                            "Ignoring mouse left click received while still waiting for Cursor Position Report"
-                        );
+                                reader,
+                                "Ignoring mouse left click received while still waiting for Cursor Position Report"
+                            );
                     }
                 }
                 return None;
@@ -1072,22 +1083,18 @@ pub trait InputEventQueuer {
                 let y = usize::try_from(params[0][0] - 1).unwrap();
                 let x = usize::try_from(params[1][0] - 1).unwrap();
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let blocking_wait = match self.cursor_position_wait() {
-                    CursorPositionWait::None => return None,
-                    CursorPositionWait::InitialFeatureProbe => {
-                        self.cursor_position_reporting_supported();
-                        return None;
-                    }
-                    CursorPositionWait::Blocking(blocking_wait) => blocking_wait,
+                let Some(BlockingWait::CursorPosition(wait)) = self.blocking_wait() else {
+                    CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
+                    return None;
                 };
-                let continuation = match blocking_wait {
-                    CursorPositionBlockingWait::MouseLeft(click_position) => {
+                let continuation = match wait {
+                    CursorPositionWait::MouseLeft(click_position) => {
                         ImplicitEvent::MouseLeftClickContinuation(
                             ViewportPosition { x, y },
                             *click_position,
                         )
                     }
-                    CursorPositionBlockingWait::ScrollbackPush => {
+                    CursorPositionWait::ScrollbackPush => {
                         ImplicitEvent::ScrollbackPushContinuation(y)
                     }
                 };
@@ -1143,6 +1150,10 @@ pub trait InputEventQueuer {
                 }
                 _ => return None,
             },
+            b'c' if private_mode == Some(b'?') => {
+                self.push_front(CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute));
+                return None;
+            }
             b'u' => {
                 if private_mode == Some(b'?') {
                     FLOG!(
@@ -1150,7 +1161,6 @@ pub trait InputEventQueuer {
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
                     KITTY_KEYBOARD_SUPPORTED.store(true);
-                    self.push_front(CharEvent::Implicit(ImplicitEvent::KittyKeyboardSupported));
                     return None;
                 }
 
@@ -1500,16 +1510,16 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn cursor_position_wait(&self) -> &CursorPositionWait {
-        &CursorPositionWait::InitialFeatureProbe
+    fn blocking_wait(&self) -> Option<&BlockingWait> {
+        None
     }
-    fn cursor_position_reporting_supported(&mut self) {}
-    fn is_blocked_waiting_for_cursor_position(&self) -> bool {
+    fn is_blocked(&self) -> bool {
         false
     }
-    fn stop_waiting_for_cursor_position(&mut self) -> bool {
+    fn unblock_input(&mut self) -> bool {
         false
     }
+
     fn on_mouse_left_click(&mut self, _position: ViewportPosition) {}
 
     /// Override point for when we are about to (potentially) block in select(). The default does
@@ -1523,10 +1533,10 @@ pub trait InputEventQueuer {
         let vintr = shell_modes().c_cc[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(Key::from_single_byte(vintr));
-            if self.stop_waiting_for_cursor_position() {
+            if self.unblock_input() {
                 FLOG!(
                     reader,
-                    "Received interrupt, giving up on waiting for cursor position"
+                    "Received interrupt, giving up on waiting for terminal response"
                 );
                 self.push_back(interrupt_evt);
             } else {

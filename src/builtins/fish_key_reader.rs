@@ -7,7 +7,7 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{io::Write, ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 
@@ -19,13 +19,11 @@ use crate::{
     env::env_init,
     input::input_terminfo_get_name,
     input_common::{
-        enable_kitty_progressive_enhancements, kitty_progressive_enhancements_query,
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
-        InputEventQueue, InputEventQueuer, KITTY_KEYBOARD_SUPPORTED,
+        kitty_progressive_enhancements_query, terminal_protocol_hacks,
+        terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
-    output::Outputter,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
@@ -96,22 +94,12 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     let mut recent_chars2 = vec![];
     streams.err.appendln("Press a key:\n");
 
-    terminal_protocols_enable_ifn();
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
+        terminal_protocols_enable_ifn();
         let evt = queue.readch();
 
-        let kevt = match evt {
-            CharEvent::Key(kevt) => kevt,
-            CharEvent::Readline(_) | CharEvent::Command(_) => continue,
-            CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute) => {
-                if KITTY_KEYBOARD_SUPPORTED.load() {
-                    enable_kitty_progressive_enhancements(
-                        Outputter::stdoutput().borrow_mut().by_ref(),
-                    );
-                }
-                continue;
-            }
-            CharEvent::Implicit(_) => continue,
+        let CharEvent::Key(kevt) = evt else {
+            continue;
         };
         let c = kevt.key.codepoint;
         if verbose {

@@ -2,7 +2,7 @@ use libc::STDOUT_FILENO;
 
 use crate::common::{
     fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
-    str2wcstring, write_loop, WSL,
+    str2wcstring, write_loop, ScopeGuard, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
@@ -24,7 +24,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -444,36 +444,29 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 }
 
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
+static BRACKETED_PASTE: AtomicBool = AtomicBool::new(false);
 
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-pub(crate) static KITTY_KEYBOARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+#[repr(u8)]
+pub(crate) enum Capability {
+    Unknown,
+    Supported,
+    NotSupported,
+}
+pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
 
 pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) static CURSOR_POSITION_REPORTING_SUPPORTED: RelaxedAtomicBool =
     RelaxedAtomicBool::new(false);
 
-macro_rules! kitty_progressive_enhancements {
-    () => {
-        "\x1b[=5u"
-    };
-}
-
 pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
     if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
         return b"";
     }
     b"\x1b[?u"
-}
-
-pub(crate) fn enable_kitty_progressive_enhancements(out: &mut impl std::io::Write) -> bool {
-    if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() || IN_ITERM_PRE_CSI_U.load() {
-        return false;
-    }
-    let _ = out.write(kitty_progressive_enhancements!().as_bytes());
-    true
 }
 
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -515,56 +508,72 @@ fn test_parse_version() {
 }
 
 pub fn terminal_protocols_enable_ifn() {
+    let did_write = RelaxedAtomicBool::new(false);
+    let _save_screen_state = ScopeGuard::new((), |()| {
+        if did_write.load() {
+            reader_current_data().map(|data| data.save_screen_state());
+        }
+    });
+    if !BRACKETED_PASTE.load(Ordering::Relaxed) {
+        BRACKETED_PASTE.store(true, Ordering::Release);
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004h");
+        if IS_TMUX.load() {
+            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes()); // focus reporting
+        }
+        did_write.store(true);
+    }
+    if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() {
+        return;
+    }
+    let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
+    if kitty_keyboard_supported == Capability::Unknown as _ {
+        return;
+    }
     if TERMINAL_PROTOCOLS.load(Ordering::Relaxed) {
         return;
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
-    let sequences = if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() {
-        "\x1b[?2004h"
-    } else if !KITTY_KEYBOARD_SUPPORTED.load() || IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
+    FLOG!(term_protocols, "Enabling extended keys");
+    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;1m"); // XTerm's modifyOtherKeys
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b="); // set application keypad mode, so the keypad keys send unique codes
     } else {
-        concat!(
-            "\x1b[?2004h", // Bracketed paste
-            // "\x1b[>4;1m",  // XTerm's modifyOtherKeys - no use in doing this with kitty protocol
-            kitty_progressive_enhancements!(),
-            "\x1b=", // set application keypad mode, so the keypad keys send unique codes
-        )
-    };
-    FLOG!(term_protocols, "Enabling extended keys and bracketed paste");
-    let _ = write_loop(&STDOUT_FILENO, sequences.as_bytes());
-    if IS_TMUX.load() {
-        let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes());
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=5u"); // kitty progressive enhancements
     }
-    reader_current_data().map(|data| data.save_screen_state());
+    did_write.store(true);
 }
 
 pub(crate) fn terminal_protocols_disable_ifn() {
+    let did_write = RelaxedAtomicBool::new(false);
+    let _save_screen_state = is_main_thread().then(|| {
+        ScopeGuard::new((), |()| {
+            if did_write.load() {
+                reader_current_data().map(|data| data.save_screen_state());
+            }
+        })
+    });
+    if BRACKETED_PASTE.load(Ordering::Acquire) {
+        BRACKETED_PASTE.store(false, Ordering::Release);
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004l");
+        if IS_TMUX.load() {
+            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
+        }
+        did_write.store(true);
+    }
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
-    let sequences = if !KITTY_KEYBOARD_SUPPORTED.load() || IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
+    FLOG_SAFE!(term_protocols, "Disabling extended keys");
+    let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Acquire);
+    assert_ne!(kitty_keyboard_supported, Capability::Unknown as _);
+    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;0m"); // XTerm's modifyOtherKeys
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b>"); // application keypad mode
     } else {
-        concat!(
-            "\x1b[?2004l", // Bracketed paste
-            // "\x1b[>4;0m",  // XTerm's modifyOtherKeys
-            "\x1b[=0u", // CSI u with kitty progressive enhancement
-            "\x1b>",    // application keypad mode
-        )
-    };
-    FLOG_SAFE!(
-        term_protocols,
-        "Disabling extended keys and bracketed paste"
-    );
-    let _ = write_loop(&STDOUT_FILENO, sequences.as_bytes());
-    if IS_TMUX.load() {
-        let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
-    }
-    if is_main_thread() {
-        reader_current_data().map(|data| data.save_screen_state());
+        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=0u"); // kitty progressive enhancements
     }
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);
+    did_write.store(true);
 }
 
 fn parse_mask(mask: u32) -> Modifiers {
@@ -1160,7 +1169,7 @@ pub trait InputEventQueuer {
                         reader,
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
-                    KITTY_KEYBOARD_SUPPORTED.store(true);
+                    KITTY_KEYBOARD_SUPPORTED.store(Capability::Supported as _, Ordering::Release);
                     return None;
                 }
 

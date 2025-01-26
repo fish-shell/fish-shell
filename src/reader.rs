@@ -81,9 +81,9 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::enable_kitty_progressive_enhancements;
 use crate::input_common::kitty_progressive_enhancements_query;
 use crate::input_common::BlockingWait;
+use crate::input_common::Capability;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
@@ -2506,22 +2506,18 @@ impl<'a> Reader<'a> {
                     match stage {
                         Queried::NotYet => panic!(),
                         Queried::Once => {
-                            let mut out = Outputter::stdoutput().borrow_mut();
-                            out.begin_buffering();
-                            let mut querying = false;
-                            if KITTY_KEYBOARD_SUPPORTED.load() {
-                                enable_kitty_progressive_enhancements(out.by_ref());
-                                querying = true;
+                            if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
+                                == Capability::Unknown as _
+                            {
+                                KITTY_KEYBOARD_SUPPORTED
+                                    .store(Capability::NotSupported as _, Ordering::Release);
                             }
                             if SYNCHRONIZED_OUTPUT_SUPPORTED.load() {
+                                let mut out = Outputter::stdoutput().borrow_mut();
+                                out.begin_buffering();
                                 query_capabilities_via_dcs(out.by_ref());
-                                querying = true;
-                            }
-                            if querying {
                                 let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
-                            }
-                            out.end_buffering();
-                            if querying {
+                                out.end_buffering();
                                 self.save_screen_state();
                                 self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
                                 return ControlFlow::Continue(());

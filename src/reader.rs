@@ -88,7 +88,8 @@ use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::Queried;
-use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
+use crate::input_common::IN_DVTM;
+use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::KITTY_KEYBOARD_SUPPORTED;
 use crate::input_common::SYNCHRONIZED_OUTPUT_SUPPORTED;
 use crate::input_common::{
@@ -2166,7 +2167,7 @@ impl<'a> Reader<'a> {
         }
 
         if zelf.blocking_wait == Some(BlockingWait::Startup(Queried::NotYet)) {
-            if is_dumb() {
+            if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
                 zelf.blocking_wait = None;
             } else {
                 zelf.blocking_wait = Some(BlockingWait::Startup(Queried::Once));
@@ -4415,10 +4416,6 @@ fn reader_interactive_init(parser: &Parser) {
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
     terminal_protocol_hacks();
-    IN_MIDNIGHT_COMMANDER_PRE_CSI_U.store(
-        parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some()
-            && parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none(),
-    );
 }
 
 struct DisplayAsHex<'a>(&'a str);

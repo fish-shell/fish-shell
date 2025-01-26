@@ -470,11 +470,16 @@ pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
 }
 
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static IN_DVTM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
+    IN_MIDNIGHT_COMMANDER.store(var_os("MC_TMPDIR").is_some());
+    IN_DVTM
+        .store(var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"dvtm-256color"));
     IS_TMUX.store(var_os("TMUX").is_some());
     IN_ITERM_PRE_CSI_U.store(
         var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
@@ -521,9 +526,6 @@ pub fn terminal_protocols_enable_ifn() {
             let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes()); // focus reporting
         }
         did_write.store(true);
-    }
-    if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() {
-        return;
     }
     let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
     if kitty_keyboard_supported == Capability::Unknown as _ {

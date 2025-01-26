@@ -219,7 +219,7 @@ pub struct Screen {
     /// The internal representation of the actual screen contents.
     actual: ScreenData,
     /// A string containing the prompt which was last printed to the screen.
-    actual_left_prompt: WString,
+    actual_left_prompt: Option<WString>,
     /// Last right prompt width.
     last_right_prompt_width: usize,
     /// If we support soft wrapping, we can output to this location without any cursor motion.
@@ -518,9 +518,12 @@ impl Screen {
             // by lying to ourselves and claiming that we're really below what we consider "line 0"
             // (which is the last line of the prompt). This will cause us to move up to try to get back
             // to line 0, but really we're getting back to the initial line of the prompt.
-            let prompt_line_count = calc_prompt_lines(&self.actual_left_prompt);
+            let prompt_line_count = self
+                .actual_left_prompt
+                .as_ref()
+                .map_or(1, |p| calc_prompt_lines(p));
             self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
-            self.actual_left_prompt.clear();
+            self.actual_left_prompt = None;
         }
         self.actual.resize(0);
         self.need_clear_lines = true;
@@ -538,7 +541,10 @@ impl Screen {
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {
         let prompt_y = self.command_line_y_given_cursor_y(cursor_y);
-        let trailing_prompt_lines = calc_prompt_lines(&self.actual_left_prompt) - 1;
+        let trailing_prompt_lines = self
+            .actual_left_prompt
+            .as_ref()
+            .map_or(0, |p| calc_prompt_lines(p) - 1);
         let lines_to_scroll = prompt_y
             .checked_sub(trailing_prompt_lines)
             .unwrap_or_else(|| {
@@ -620,7 +626,7 @@ impl Screen {
     pub fn reset_abandoning_line(&mut self, screen_width: usize) {
         self.actual.cursor.y = 0;
         self.actual.resize(0);
-        self.actual_left_prompt.clear();
+        self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
         // Do the PROMPT_SP hack.
@@ -1066,9 +1072,13 @@ impl Screen {
             zelf.outp
                 .borrow_mut()
                 .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
-            zelf.actual_left_prompt.clear();
+            zelf.actual_left_prompt = None;
             zelf.actual.cursor.x = 0;
-        } else if left_prompt != zelf.actual_left_prompt || (zelf.scrolled() && is_final_rendering)
+        } else if zelf
+            .actual_left_prompt
+            .as_ref()
+            .is_none_or(|p| p != left_prompt)
+            || (zelf.scrolled() && is_final_rendering)
         {
             zelf.r#move(0, 0);
             let mut start = 0;
@@ -1088,7 +1098,7 @@ impl Screen {
                 start = line_break + 1;
             }
             zelf.write_str(&left_prompt[start..]);
-            zelf.actual_left_prompt = left_prompt.to_owned();
+            zelf.actual_left_prompt = Some(left_prompt.to_owned());
             zelf.actual.cursor.x = left_prompt_width;
         }
 

@@ -82,12 +82,12 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::enable_kitty_progressive_enhancements;
+use crate::input_common::kitty_progressive_enhancements_query;
 use crate::input_common::CursorPositionBlockingWait;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::IN_MIDNIGHT_COMMANDER_PRE_CSI_U;
-use crate::input_common::KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
@@ -2163,7 +2163,7 @@ impl<'a> Reader<'a> {
             let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
             // Query for kitty keyboard protocol support.
-            let _ = out.write(KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY);
+            let _ = out.write(kitty_progressive_enhancements_query());
             // Query for cursor position reporting support.
             zelf.request_cursor_position(&mut out, CursorPositionWait::InitialFeatureProbe);
             // Query for synchronized output support.

@@ -19,9 +19,9 @@ use crate::{
     env::env_init,
     input::input_terminfo_get_name,
     input_common::{
-        enable_kitty_progressive_enhancements, terminal_protocol_hacks,
-        terminal_protocols_enable_ifn, CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer,
-        KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY,
+        enable_kitty_progressive_enhancements, kitty_progressive_enhancements_query,
+        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
+        InputEventQueue, InputEventQueuer,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -144,7 +144,7 @@ fn setup_and_process_keys(streams: &mut IoStreams, continuous_mode: bool, verbos
     terminal_protocol_hacks();
     streams
         .out
-        .append(str2wcstring(KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY));
+        .append(str2wcstring(kitty_progressive_enhancements_query()));
 
     if continuous_mode {
         streams.err.append(L!("\n"));

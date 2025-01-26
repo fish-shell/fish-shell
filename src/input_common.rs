@@ -458,7 +458,12 @@ macro_rules! kitty_progressive_enhancements {
     };
 }
 
-pub const KITTY_PROGRESSIVE_ENHANCEMENTS_QUERY: &[u8] = b"\x1b[?u";
+pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
+    if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
+        return b"";
+    }
+    b"\x1b[?u"
+}
 
 pub(crate) fn enable_kitty_progressive_enhancements() -> bool {
     if IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load() || IN_ITERM_PRE_CSI_U.load() {

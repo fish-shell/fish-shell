@@ -11,8 +11,8 @@ use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
-    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, ctrl, function_key,
-    shift, Key, Modifiers,
+    self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
+    function_key, shift, Key, Modifiers,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -966,9 +966,13 @@ pub trait InputEventQueuer {
         while count < 16 && c >= 0x30 && c <= 0x3f {
             if c.is_ascii_digit() {
                 // Return None on invalid ascii numeric CSI parameter exceeding u32 bounds
-                params[count][subcount] = params[count][subcount]
+                match params[count][subcount]
                     .checked_mul(10)
-                    .and_then(|result| result.checked_add(u32::from(c - b'0')))?;
+                    .and_then(|result| result.checked_add(u32::from(c - b'0')))
+                {
+                    Some(c) => params[count][subcount] = c,
+                    None => return invalid_sequence(buffer),
+                };
             } else if c == b':' && subcount < 3 {
                 subcount += 1;
             } else if c == b';' {
@@ -1491,6 +1495,29 @@ pub(crate) fn decode_input_byte(
         *consumed += 1;
     }
     Complete
+}
+
+fn invalid_sequence(buffer: &[u8]) -> Option<KeyEvent> {
+    FLOG!(
+        reader,
+        "Error: invalid escape sequence: ",
+        DisplayBytes(buffer)
+    );
+    None
+}
+
+struct DisplayBytes<'a>(&'a [u8]);
+
+impl<'a> std::fmt::Display for DisplayBytes<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (i, &c) in self.0.iter().enumerate() {
+            if i != 0 {
+                write!(f, " ")?;
+            }
+            write!(f, "{}", char_to_symbol(char::from(c)))?;
+        }
+        Ok(())
+    }
 }
 
 /// A simple, concrete implementation of InputEventQueuer.

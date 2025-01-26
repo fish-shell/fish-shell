@@ -633,7 +633,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             );
             commandline_set_buffer(None, Some(new_pos));
         } else {
-            streams.out.append(sprintf!("%lu\n", current_cursor_pos));
+            streams
+                .out
+                .append(sprintf!("%lu\n", current_cursor_pos - range.start));
         }
         return STATUS_CMD_OK;
     }

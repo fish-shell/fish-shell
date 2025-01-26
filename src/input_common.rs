@@ -959,9 +959,13 @@ pub trait InputEventQueuer {
         while count < 16 && c >= 0x30 && c <= 0x3f {
             if c.is_ascii_digit() {
                 // Return None on invalid ascii numeric CSI parameter exceeding u32 bounds
-                params[count][subcount] = params[count][subcount]
+                match params[count][subcount]
                     .checked_mul(10)
-                    .and_then(|result| result.checked_add(u32::from(c - b'0')))?;
+                    .and_then(|result| result.checked_add(u32::from(c - b'0')))
+                {
+                    Some(c) => params[count][subcount] = c,
+                    None => return invalid_sequence(buffer),
+                };
             } else if c == b':' && subcount < 3 {
                 subcount += 1;
             } else if c == b';' {
@@ -1028,27 +1032,28 @@ pub trait InputEventQueuer {
                 if !sgr && c == b'm' {
                     return None;
                 }
-                let button = if sgr {
-                    params[0][0]
+                let Some(button) = (if sgr {
+                    Some(params[0][0])
                 } else {
-                    u32::from(next_char(self)) - 32
+                    u32::from(next_char(self)).checked_sub(32)
+                }) else {
+                    return invalid_sequence(buffer);
                 };
-                let x = usize::try_from(
-                    if sgr {
-                        params[1][0]
+                let mut convert = |param| {
+                    (if sgr {
+                        Some(param)
                     } else {
-                        u32::from(next_char(self)) - 32
-                    } - 1,
-                )
-                .unwrap();
-                let y = usize::try_from(
-                    if sgr {
-                        params[2][0]
-                    } else {
-                        u32::from(next_char(self)) - 32
-                    } - 1,
-                )
-                .unwrap();
+                        u32::from(next_char(self)).checked_sub(32)
+                    })
+                    .and_then(|coord| coord.checked_sub(1))
+                    .and_then(|coord| usize::try_from(coord).ok())
+                };
+                let Some(x) = convert(params[1][0]) else {
+                    return invalid_sequence(buffer);
+                };
+                let Some(y) = convert(params[2][0]) else {
+                    return invalid_sequence(buffer);
+                };
                 let position = ViewportPosition { x, y };
                 let modifiers = parse_mask((button >> 2) & 0x07);
                 let code = button & 0x43;
@@ -1089,8 +1094,18 @@ pub trait InputEventQueuer {
             b'P' => masked_key(function_key(1), None),
             b'Q' => masked_key(function_key(2), None),
             b'R' => {
-                let y = usize::try_from(params[0][0] - 1).unwrap();
-                let x = usize::try_from(params[1][0] - 1).unwrap();
+                let Some(y) = params[0][0]
+                    .checked_sub(1)
+                    .and_then(|y| usize::try_from(y).ok())
+                else {
+                    return invalid_sequence(buffer);
+                };
+                let Some(x) = params[1][0]
+                    .checked_sub(1)
+                    .and_then(|x| usize::try_from(x).ok())
+                else {
+                    return invalid_sequence(buffer);
+                };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
                 let Some(BlockingWait::CursorPosition(wait)) = self.blocking_wait() else {
                     CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
@@ -1570,6 +1585,29 @@ pub trait InputEventQueuer {
     /// Return if we have any lookahead.
     fn has_lookahead(&self) -> bool {
         !self.get_input_data().queue.is_empty()
+    }
+}
+
+fn invalid_sequence(buffer: &[u8]) -> Option<Key> {
+    FLOG!(
+        reader,
+        "Error: invalid escape sequence: ",
+        DisplayBytes(buffer)
+    );
+    None
+}
+
+struct DisplayBytes<'a>(&'a [u8]);
+
+impl<'a> std::fmt::Display for DisplayBytes<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (i, &c) in self.0.iter().enumerate() {
+            if i != 0 {
+                write!(f, " ")?;
+            }
+            write!(f, "{}", char_to_symbol(char::from(c)))?;
+        }
+        Ok(())
     }
 }
 

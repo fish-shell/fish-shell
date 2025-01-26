@@ -74,6 +74,7 @@ static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
+#[inline(always)]
 #[allow(non_snake_case)]
 fn C_(s: &wstr) -> &'static wstr {
     if s.is_empty() {

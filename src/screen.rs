@@ -2022,7 +2022,7 @@ pub(crate) fn compute_layout(
     // 3. Newline separator (right prompt hidden).
     //
     // Left prompt and command line are always visible.
-    // Autosuggestion is truncated to fit on the line (possibly to zero or not at all).
+    // Autosuggestion is truncated to fit on the line (possibly to ellipsis_char or not at all).
     //
     // A remark about layout #3: if we've pushed the command line to a new line, why can't we draw
     // the right prompt? The issue is resizing: if you resize the window smaller, then the right
@@ -2036,7 +2036,7 @@ pub(crate) fn compute_layout(
     result.left_prompt_space = left_prompt_width;
 
     // Hide the right prompt if it doesn't fit on the first line.
-    if left_prompt_width + first_command_line_width + right_prompt_width <= screen_width {
+    if left_prompt_width + first_command_line_width + right_prompt_width < screen_width {
         result.right_prompt = right_prompt;
     } else {
         right_prompt_width = 0;
@@ -2046,29 +2046,25 @@ pub(crate) fn compute_layout(
     assert!(left_prompt_width + right_prompt_width <= screen_width);
 
     // Calculate space available for autosuggestion.
-    let pos = commandline_before_suggestion
-        .chars()
-        .rposition(|c| c == '\n');
     let width = (left_prompt_width
         + autosuggestion_line_explicit_width
-        + pos.map_or(right_prompt_width, |pos| {
-            usize::try_from(indent[pos]).unwrap() * INDENT_STEP
-        }))
+        + commandline_before_suggestion
+            .chars()
+            .rposition(|c| c == '\n')
+            .map_or(right_prompt_width, |pos| {
+                usize::try_from(indent[pos]).unwrap() * INDENT_STEP
+            }))
         % screen_width;
-    let available_autosuggest_space = if width == 0 && pos.is_none() && right_prompt_width != 0 {
-        0
-    } else {
-        screen_width - width
-    };
+    let available_autosuggest_space = screen_width - width;
 
-    // Need at least two characters to show an autosuggestion.
+    // Truncate the autosuggestion to fit on the line.
     let mut autosuggestion = WString::new();
-    if available_autosuggest_space > autosuggest_total_width {
+    if available_autosuggest_space >= autosuggest_total_width {
         autosuggestion = autosuggestion_str.to_owned();
-    } else if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
+    } else if autosuggest_total_width > 0 {
         let truncation_offset = truncation_offset_for_width(
             &autosuggest_truncated_widths,
-            available_autosuggest_space - 2,
+            available_autosuggest_space - 1,
         );
         autosuggestion = autosuggestion_str[..truncation_offset].to_owned();
         autosuggestion.push(ellipsis_char);

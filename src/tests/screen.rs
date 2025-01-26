@@ -306,12 +306,12 @@ fn test_compute_layout() {
     );
     validate!(
         (
-            30, "left>", "<right", "command", " autosuggestion", ""
+            30, "left>", "<right", "command", " autosuggesTION", ""
         ) -> (
             "left>",
             5,
             "<right",
-            " autosugge…",
+            " autosugges…",
         )
     );
     validate!(
@@ -326,33 +326,134 @@ fn test_compute_layout() {
     );
     validate!(
         (
-            30, "left>", "<right", "foo\ncommand", " autosuggestion TRUNCATED", ""
+            30, "left>", "<right", "foo\ncommand", " autosuggestion tRUNCATED", ""
         ) -> (
             "left>",
             5,
             "<right",
-            " autosuggestion …",
+            " autosuggestion t…",
         )
     );
     validate!(
         (
-            30, "left>", "<right", "if :\ncommand", " autosuggestion TRUNCATED", ""
+            30, "left>", "<right", "if :\ncommand", " autosuggestiON  TRUNCATED", ""
         ) -> (
             "left>",
             5,
             "<right",
-            " autosuggest…",
+            " autosuggesti…",
         )
     );
     let indent = validate!(
         (
-            30, "left>", "<right", "if :\ncommand", " autosuggestion TRUNCATED", "\nfoo"
+            30, "left>", "<right", "if :\ncommand", " autosuggestiON  TRUNCATED", "\nfoo"
         ) -> (
             "left>",
             5,
             "<right",
-            " autosuggest…",
+            " autosuggesti…",
         )
     );
-    assert_eq!(indent["if :\ncommand autosuggest…\n".len()], 1);
+    assert_eq!(indent["if :\ncommand autosuggesti…\n".len()], 1);
+
+    validate!(
+        (
+            18, "left>", "<RIGHT", "command", " autoSUGGESTION", ""
+        ) -> (
+            "left>",
+            5,
+            "",
+            " auto…",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "command auto", "s", ""
+        ) -> (
+            "left>",
+            5,
+            "",
+            "s",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "command auto", "SUGGESTION", ""
+        ) -> (
+            "left>",
+            5,
+            "",
+            "…",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "command autos", "uggestion long soFT WRAP", ""
+        ) -> (
+            "left>",
+            5,
+            "",
+            "uggestion long so…",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<right", "if :\ncomm", "and AUTOSUGGESTION", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            "and …",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<right", "if :\ncommand ", "AUTOSUGGESTION", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            "…",
+        )
+    );
+    validate!( //
+        (
+            18, "left>", "<right", "if :\ncommand a", "utosuggestion sofT WRAP", ""
+        ) -> (
+            "left>",
+            5,
+            "<right",
+            "utosuggestion sof…",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "if true\ncomm", "and AUTOSUGGESTION", "\nfoo"
+        ) -> (
+            "left>",
+            5,
+            "",
+            "and …",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "if true\ncommand ", "AUTOSUGGESTION", "\nfoo"
+        ) -> (
+            "left>",
+            5,
+            "",
+            "…",
+        )
+    );
+    validate!(
+        (
+            18, "left>", "<RIGHT", "if true\ncommand a", "utosuggestion sofT WRAP", "\nfoo"
+        ) -> (
+            "left>",
+            5,
+            "",
+            "utosuggestion sof…",
+        )
+    );
 }

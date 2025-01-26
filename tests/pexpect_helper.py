@@ -37,8 +37,8 @@ SANITIZE_FOR_PRINTING_RE = re.compile(
           \x1b\[\?1004[hl]
         | \x1b\[\?2004[hl]
         | \x1b\[>4;[10]m
-        | \x1b\[>5u
-        | \x1b\[<1u
+        | \x1b\[=5u
+        | \x1b\[=0u
         | \x1b=
         | \x1b>
         | \x1b\].*?\x07

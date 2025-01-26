@@ -9,6 +9,7 @@ set -g isolated_tmux_fish_extra_args -C '
     bind ctrl-q "functions --erase fish_right_prompt" "commandline \'\'" clear-screen
     set -g fish_autosuggestion_enabled 0
     bind ctrl-g "__fish_echo commandline --current-job"
+    bind ctrl-t \'__fish_echo echo cursor is at offset $(commandline --cursor --current-token) in token\'
 '
 isolated-tmux-start
 
@@ -61,3 +62,10 @@ isolated-tmux capture-pane -p
 # CHECK: another job
 # CHECK: prompt {{\d+}}> echo | echo;
 # CHECK:          another job
+
+isolated-tmux send-keys C-q 'echo foobar' Left Left Left C-t
+tmux-sleep
+# CHECK: prompt {{\d+}}> echo foobar
+# CHECK: cursor is at offset 3 in token
+# CHECK: prompt {{\d+}}> echo foobar
+isolated-tmux capture-pane -p

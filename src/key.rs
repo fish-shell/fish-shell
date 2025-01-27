@@ -27,7 +27,7 @@ pub(crate) const Menu: char = '\u{F50F}';
 pub(crate) const PrintScreen: char = '\u{F510}';
 pub(crate) fn function_key(n: u32) -> char {
     assert!((1..=12).contains(&n));
-    char::from_u32(u32::from('\u{F5FF}') - n).unwrap()
+    char::from_u32(u32::from('\u{F5FF}') - 12 + (n - 1)).unwrap()
 }
 pub(crate) const Invalid: char = '\u{F5FF}';
 

@@ -1618,12 +1618,13 @@ impl<'a> Reader<'a> {
 
         // Highlight any history search.
         if !self.conf.in_silent_mode && data.history_search_range.is_some() {
-            let mut end = data.history_search_range.unwrap().end();
-            if colors.len() < end {
-                end = colors.len();
+            let mut range = data.history_search_range.unwrap().as_usize();
+            if range.end > colors.len() {
+                range.start = range.start.min(colors.len());
+                range.end = colors.len();
             }
 
-            for color in &mut colors[data.history_search_range.unwrap().start()..end] {
+            for color in &mut colors[range] {
                 color.foreground = HighlightRole::search_match;
                 color.background = HighlightRole::search_match;
             }

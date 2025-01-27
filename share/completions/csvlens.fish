@@ -6,6 +6,6 @@ complete -c csvlens -l filter -r -d "Use this regex to filter rows to display by
 complete -c csvlens -l find -r -d "Use this regex to find and highlight matches by default"
 complete -c csvlens -s i -l ignore-case -d "Searches ignore case. Ignored if any uppercase letters are present in the search string"
 complete -c csvlens -l echo-column -r -d "Print the value of this column to stdout for the selected row"
-complete -c csvlens -l debug "Show stats for debugging"
+complete -c csvlens -l debug -d "Show stats for debugging"
 complete -c csvlens -s h -l help -f -d "Print help"
 complete -c csvlens -s V -l version -f -d "Print version"

@@ -191,6 +191,7 @@ function __fish_git_files
     set -l ver (__fish_git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
+        set -l fish_read_limit 0 # this can print a lot, better not to error
         set -l stats (__fish_git $git_opt status --porcelain=2 $status_opt)
         if set -ql untracked
             # Fast path for untracked files - it is extremely easy to get a lot of these,
@@ -1135,10 +1136,10 @@ complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore er
 complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 # Renames also show up as untracked + deleted, and to get git to show it as a rename _both_ need to be added.
 # However, we can't do that as it is two tokens, so we don't need renamed here.
-complete -f -c git -n '__fish_git_using_command add; and test "$(git config --get bash.showUntrackedFiles)" != 0' -a '(__fish_git_files modified untracked deleted unmerged modified-staged-deleted)'
+complete -f -c git -n '__fish_git_using_command add; and test "$(__fish_git config --get bash.showUntrackedFiles)" != 0' -a '(__fish_git_files modified untracked deleted unmerged modified-staged-deleted)'
 # If we have so many files that you disable untrackedfiles, let's add file completions,
 # to avoid slurping megabytes of git output.
-complete -F -c git -n '__fish_git_using_command add; and test "$(git config --get bash.showUntrackedFiles)" = 0' -a '(__fish_git_files modified deleted unmerged modified-staged-deleted)'
+complete -F -c git -n '__fish_git_using_command add; and test "$(__fish_git config --get bash.showUntrackedFiles)" = 0' -a '(__fish_git_files modified deleted unmerged modified-staged-deleted)'
 
 ### am
 complete -c git -n __fish_git_needs_command -a am -d 'Apply patches from a mailbox'

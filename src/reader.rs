@@ -4044,7 +4044,7 @@ impl<'a> Reader<'a> {
     }
 
     /// Flash the screen. This function changes the color of the current line momentarily.
-    fn flash(&mut self, flash_range: Range<usize>) {
+    fn flash(&mut self, mut flash_range: Range<usize>) {
         // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
         // significant delay in processing future input while all the flash() calls complete, as we
         // effectively sleep for 100ms each go. See #8610.
@@ -4062,6 +4062,10 @@ impl<'a> Reader<'a> {
 
         // Save off the colors and set the background.
         let saved_colors = data.colors.clone();
+        if flash_range.end > data.colors.len() {
+            flash_range.start = flash_range.start.min(data.colors.len());
+            flash_range.end = data.colors.len();
+        }
         for color in &mut data.colors[flash_range] {
             color.foreground = HighlightRole::search_match;
             color.background = HighlightRole::search_match;

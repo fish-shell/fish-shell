@@ -1008,13 +1008,21 @@ impl Screen {
             .is_some_and(|swl| (x, y) == (swl.x, swl.y))
         {
             // We can soft wrap; but do we want to?
-            if self.desired.line(y - 1).is_soft_wrapped && allow_soft_wrap() {
+            if self.desired.line(y - 1).is_soft_wrapped {
                 // Yes. Just update the actual cursor; that will cause us to elide emitting the commands
                 // to move here, so we will just output on "one big line" (which the terminal soft
                 // wraps.
                 self.actual.cursor = self.soft_wrap_location.unwrap();
             }
         }
+    }
+
+    fn should_wrap(&self, i: usize) -> bool {
+        allow_soft_wrap()
+            && self.desired.line(i).is_soft_wrapped
+            && i + 1 < self.desired.line_count()
+            && !(i + 1 < self.actual.line_count()
+                && line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) > 0)
     }
 
     fn scoped_buffer(&mut self) -> impl ScopeGuarding<Target = &mut Screen> {
@@ -1089,9 +1097,7 @@ impl Screen {
         // Output the left prompt if it has changed.
         if zelf.scrolled() && !is_final_rendering {
             zelf.r#move(0, 0);
-            zelf.outp
-                .borrow_mut()
-                .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+            zelf.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
             zelf.actual_left_prompt = None;
             zelf.actual.cursor.x = 0;
         } else if zelf
@@ -1099,6 +1105,7 @@ impl Screen {
             .as_ref()
             .is_none_or(|p| p != left_prompt)
             || (zelf.scrolled() && is_final_rendering)
+            || Some(left_prompt_width) == screen_width && zelf.should_wrap(0)
         {
             zelf.r#move(0, 0);
             let mut start = 0;
@@ -1107,19 +1114,29 @@ impl Screen {
             if left_prompt_layout.line_breaks.is_empty() {
                 osc_133_prompt_start(&mut zelf);
             }
-            for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
-                zelf.outp
-                    .borrow_mut()
-                    .tputs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
-                if i == 0 {
-                    osc_133_prompt_start(&mut zelf);
+            if zelf
+                .actual_left_prompt
+                .as_ref()
+                .is_none_or(|p| p != left_prompt)
+                || (zelf.scrolled() && is_final_rendering)
+            {
+                for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
+                    zelf.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                    if i == 0 {
+                        osc_133_prompt_start(&mut zelf);
+                    }
+                    zelf.write_str(&left_prompt[start..=line_break]);
+                    start = line_break + 1;
                 }
-                zelf.write_str(&left_prompt[start..=line_break]);
-                start = line_break + 1;
+            } else {
+                start = left_prompt_layout.line_breaks.last().map_or(0, |lb| lb + 1);
             }
             zelf.write_str(&left_prompt[start..]);
             zelf.actual_left_prompt = Some(left_prompt.to_owned());
             zelf.actual.cursor.x = left_prompt_width;
+            if Some(left_prompt_width) == screen_width && zelf.should_wrap(0) {
+                zelf.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+            }
         }
 
         fn o_line(zelf: &Screen, i: usize) -> &Line {
@@ -1188,21 +1205,12 @@ impl Screen {
                 }
             }
 
-            if !should_clear_screen_this_line {
+            if !should_clear_screen_this_line && zelf.should_wrap(i) {
                 // If we're soft wrapped, and if we're going to change the first character of the next
                 // line, don't skip over the last two characters so that we maintain soft-wrapping.
-                if o_line(&zelf, i).is_soft_wrapped && i + 1 < zelf.desired.line_count() {
-                    let mut next_line_will_change = true;
-                    if i + 1 < zelf.actual.line_count() {
-                        if line_shared_prefix(zelf.desired.line(i + 1), zelf.actual.line(i + 1)) > 0
-                        {
-                            next_line_will_change = false;
-                        }
-                    }
-                    if next_line_will_change {
-                        skip_remaining =
-                            std::cmp::min(skip_remaining, zelf.actual.screen_width.unwrap() - 2);
-                    }
+                skip_remaining = skip_remaining.min(screen_width.unwrap() - 2);
+                if i == 0 {
+                    skip_remaining = skip_remaining.max(left_prompt_width);
                 }
             }
 

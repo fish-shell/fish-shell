@@ -1978,8 +1978,6 @@ pub(crate) fn compute_layout(
     indent: &mut Vec<i32>,
     autosuggestion_str: &wstr,
 ) -> ScreenLayout {
-    let mut result = ScreenLayout::default();
-
     // Truncate both prompts to screen width (#904).
     let mut left_prompt = WString::new();
     let left_prompt_layout = LAYOUT_CACHE_SHARED.lock().unwrap().calc_prompt_layout(
@@ -1997,15 +1995,6 @@ pub(crate) fn compute_layout(
 
     let left_prompt_width = left_prompt_layout.last_line_width;
     let mut right_prompt_width = right_prompt_layout.last_line_width;
-
-    if left_prompt_width + right_prompt_width > screen_width {
-        // Nix right_prompt.
-        right_prompt.truncate(0);
-        right_prompt_width = 0;
-    }
-
-    // Now we should definitely fit.
-    assert!(left_prompt_width + right_prompt_width <= screen_width);
 
     // Get the width of the first line, and if there is more than one line.
     let first_command_line_width: usize = line_at_cursor(commandline_before_suggestion, 0)
@@ -2027,81 +2016,71 @@ pub(crate) fn compute_layout(
         autosuggest_total_width += wcwidth_rendered_min_0(c);
     }
 
-    // Here are the layouts we try in turn:
+    // Here are the layouts we try:
+    // 1. Right prompt visible.
+    // 2. Right prompt hidden.
+    // 3. Newline separator (right prompt hidden).
     //
-    // 1. Left prompt visible, right prompt visible, command line visible, autosuggestion visible.
+    // Left prompt and command line are always visible.
+    // Autosuggestion is truncated to fit on the line (possibly to zero or not at all).
     //
-    // 2. Left prompt visible, right prompt visible, command line visible, autosuggestion truncated
-    // (possibly to zero).
-    //
-    // 3. Left prompt visible, right prompt hidden, command line visible, autosuggestion visible
-    //
-    // 4. Left prompt visible, right prompt hidden, command line visible, autosuggestion truncated
-    //
-    // 5. Newline separator (left prompt visible, right prompt hidden, command line visible,
-    // autosuggestion visible).
-    //
-    // A remark about layout #4: if we've pushed the command line to a new line, why can't we draw
+    // A remark about layout #3: if we've pushed the command line to a new line, why can't we draw
     // the right prompt? The issue is resizing: if you resize the window smaller, then the right
     // prompt will wrap to the next line. This means that we can't go back to the line that we were
     // on, and things turn to chaos very quickly.
 
-    let mut truncated_autosuggestion = |indent: &mut Vec<i32>, right_prompt_width: usize| {
-        let width = if let Some(pos) = commandline_before_suggestion
-            .chars()
-            .rposition(|c| c == '\n')
-        {
-            left_prompt_width
-                + usize::try_from(indent[pos]).unwrap() * INDENT_STEP
-                + autosuggestion_line_explicit_width
-        } else {
-            left_prompt_width + right_prompt_width + first_command_line_width
-        };
-        // Need at least two characters to show an autosuggestion.
-        let available_autosuggest_space = screen_width.saturating_sub(width);
-        let mut result = WString::new();
-        if available_autosuggest_space > autosuggest_total_width {
-            result = autosuggestion_str.to_owned();
-        } else if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
-            let truncation_offset = truncation_offset_for_width(
-                &autosuggest_truncated_widths,
-                available_autosuggest_space - 2,
-            );
-            result = autosuggestion_str[..truncation_offset].to_owned();
-            result.push(ellipsis_char);
-        }
-        let suggestion_start = commandline_before_suggestion.len();
-        let truncation_range =
-            suggestion_start + result.len()..suggestion_start + autosuggestion_str.len();
-        colors.drain(truncation_range.clone());
-        indent.drain(truncation_range);
-        result
-    };
+    let mut result = ScreenLayout::default();
 
-    // Case 1 and 2. Note that we require strict inequality so that there's always at least
-    // one space between the left edge and the rprompt.
-    let calculated_width = left_prompt_width + right_prompt_width + first_command_line_width;
-    if calculated_width <= screen_width {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.right_prompt = right_prompt;
-        result.autosuggestion = truncated_autosuggestion(indent, right_prompt_width);
-        return result;
-    }
-
-    // Case 3 and 4
-    let calculated_width = left_prompt_width + first_command_line_width;
-    if calculated_width <= screen_width {
-        result.left_prompt = left_prompt;
-        result.left_prompt_space = left_prompt_width;
-        result.autosuggestion = truncated_autosuggestion(indent, 0);
-        return result;
-    }
-
-    // Case 5
+    // Always visible.
     result.left_prompt = left_prompt;
     result.left_prompt_space = left_prompt_width;
-    result.autosuggestion = autosuggestion_str.to_owned();
+
+    // Hide the right prompt if it doesn't fit on the first line.
+    if left_prompt_width + first_command_line_width + right_prompt_width <= screen_width {
+        result.right_prompt = right_prompt;
+    } else {
+        right_prompt_width = 0;
+    }
+
+    // Now we should definitely fit.
+    assert!(left_prompt_width + right_prompt_width <= screen_width);
+
+    // Calculate space available for autosuggestion.
+    let pos = commandline_before_suggestion
+        .chars()
+        .rposition(|c| c == '\n');
+    let width = (left_prompt_width
+        + autosuggestion_line_explicit_width
+        + pos.map_or(right_prompt_width, |pos| {
+            usize::try_from(indent[pos]).unwrap() * INDENT_STEP
+        }))
+        % screen_width;
+    let available_autosuggest_space = if width == 0 && pos.is_none() && right_prompt_width != 0 {
+        0
+    } else {
+        screen_width - width
+    };
+
+    // Need at least two characters to show an autosuggestion.
+    let mut autosuggestion = WString::new();
+    if available_autosuggest_space > autosuggest_total_width {
+        autosuggestion = autosuggestion_str.to_owned();
+    } else if autosuggest_total_width > 0 && available_autosuggest_space > 2 {
+        let truncation_offset = truncation_offset_for_width(
+            &autosuggest_truncated_widths,
+            available_autosuggest_space - 2,
+        );
+        autosuggestion = autosuggestion_str[..truncation_offset].to_owned();
+        autosuggestion.push(ellipsis_char);
+    }
+
+    let suggestion_start = commandline_before_suggestion.len();
+    let truncation_range =
+        suggestion_start + autosuggestion.len()..suggestion_start + autosuggestion_str.len();
+    colors.drain(truncation_range.clone());
+    indent.drain(truncation_range);
+    result.autosuggestion = autosuggestion;
+
     result
 }
 

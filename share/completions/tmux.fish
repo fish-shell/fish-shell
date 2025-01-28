@@ -1,20 +1,20 @@
 function __fish_tmux_sessions -d 'available sessions'
-    tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' 2>/dev/null
+    tmux list-sessions -F "#S"\t"#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' 2>/dev/null
 end
 
 function __fish_tmux_clients -d 'connected clients'
-    tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" 2>/dev/null
+    tmux list-clients -F "#{client_tty}"\t"#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" 2>/dev/null
 end
 
 function __fish_tmux_panes -d 'window panes'
     #fully qualified pane names
-    tmux list-panes -F '#S:#W.#P	session:window.pane' 2>/dev/null
+    tmux list-panes -F '#S:#W.#P'\t'session:window.pane' 2>/dev/null
 
     #panes by themselves
-    tmux list-panes -F '#P	pane' 2>/dev/null
+    tmux list-panes -F '#P'\t'pane' 2>/dev/null
 
     #windows by themselves
-    tmux list-panes -F '#W	window' 2>/dev/null
+    tmux list-panes -F '#W'\t'window' 2>/dev/null
 end
 
 function __fish_tmux_buffers -d 'buffers'

@@ -1218,20 +1218,10 @@ impl Screen {
             let mut j = 0;
             while j < o_line(&zelf, i).len() {
                 let width = wcwidth_rendered_min_0(o_line(&zelf, i).char_at(j));
-                if skip_remaining < width {
+                if current_width + width > skip_remaining {
                     break;
                 }
-                skip_remaining -= width;
                 current_width += width;
-                j += 1;
-            }
-
-            // Skip over zero-width characters (e.g. combining marks at the end of the prompt).
-            while j < o_line(&zelf, i).len() {
-                let width = wcwidth_rendered_min_0(o_line(&zelf, i).char_at(j));
-                if width > 0 {
-                    break;
-                }
                 j += 1;
             }
 
@@ -1954,16 +1944,14 @@ pub(crate) struct ScreenLayout {
 // truncated at that offset, return the offset that fits in the given width. Returns
 // width_by_offset.size() - 1 if they all fit. The first value in width_by_offset is assumed to be
 // 0.
-fn truncation_offset_for_width(width_by_offset: &[usize], max_width: usize) -> usize {
-    assert!(width_by_offset[0] == 0);
-    let mut i = 1;
-    while i < width_by_offset.len() {
-        if width_by_offset[i] > max_width {
-            break;
-        }
+fn truncation_offset_for_width(str: &wstr, max_width: usize) -> usize {
+    let mut i = 0;
+    let mut width = 0;
+    while i < str.len() && width <= max_width {
+        width += wcwidth_rendered_min_0(str.char_at(i));
         i += 1;
     }
-    // i is the first index that did not fit; i-1 is therefore the last that did.
+    // i is the first index that did not fit; i - 1 is therefore the last that did.
     i - 1
 }
 
@@ -2008,13 +1996,7 @@ pub(crate) fn compute_layout(
     .chars()
     .map(wcwidth_rendered_min_0)
     .sum();
-
-    let mut autosuggest_total_width = 0;
-    let mut autosuggest_truncated_widths = Vec::with_capacity(autosuggestion_str.len());
-    for c in autosuggestion_str.chars() {
-        autosuggest_truncated_widths.push(autosuggest_total_width);
-        autosuggest_total_width += wcwidth_rendered_min_0(c);
-    }
+    let autosuggest_total_width = autosuggestion_str.chars().map(wcwidth_rendered_min_0).sum();
 
     // Here are the layouts we try:
     // 1. Right prompt visible.
@@ -2062,10 +2044,8 @@ pub(crate) fn compute_layout(
     if available_autosuggest_space >= autosuggest_total_width {
         autosuggestion = autosuggestion_str.to_owned();
     } else if autosuggest_total_width > 0 {
-        let truncation_offset = truncation_offset_for_width(
-            &autosuggest_truncated_widths,
-            available_autosuggest_space - 1,
-        );
+        let truncation_offset =
+            truncation_offset_for_width(autosuggestion_str, available_autosuggest_space - 1);
         autosuggestion = autosuggestion_str[..truncation_offset].to_owned();
         autosuggestion.push(ellipsis_char);
     }

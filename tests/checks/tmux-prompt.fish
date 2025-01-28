@@ -29,10 +29,20 @@ isolated-tmux send-keys Enter
 isolated-tmux send-keys echo Space 123
 tmux-sleep
 isolated-tmux send-keys C-g
-
+tmux-sleep
+isolated-tmux capture-pane -p
 # CHECK: prompt 0> <status=0> <> echo 123
 # CHECK: current token is <123>
 # CHECK: prompt 0> <status=0> <> echo 123
-tmux-sleep
 
+isolated-tmux send-keys C-u '
+function fish_prompt
+    printf "full line prompt\nhidden<----------------------------------------------two-last-characters-rendered->!!"
+end' Enter C-l
+isolated-tmux send-keys 'test "' Enter 'indent"'
+tmux-sleep
 isolated-tmux capture-pane -p
+# CHECK: full line prompt
+# CHECK: …<----------------------------------------------two-last-characters-rendered->!!
+# CHECK: test "
+# CHECK: indent"

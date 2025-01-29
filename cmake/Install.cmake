@@ -164,10 +164,6 @@ if(GETTEXT_FOUND)
   endforeach()
 endif()
 
-if (NOT APPLE)
-    install(FILES ${SPHINX_SRC_DIR}/python_docs_theme/static/fish.png DESTINATION ${rel_datadir}/pixmaps)
-endif()
-
 # Group install targets into a InstallTargets folder
 set_property(TARGET build_fish_pc CHECK-FISH-BUILD-VERSION-FILE
              PROPERTY FOLDER cmake/InstallTargets)

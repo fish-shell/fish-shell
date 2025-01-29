@@ -165,7 +165,6 @@ if(GETTEXT_FOUND)
 endif()
 
 if (NOT APPLE)
-    install(FILES fish.desktop DESTINATION ${rel_datadir}/applications)
     install(FILES ${SPHINX_SRC_DIR}/python_docs_theme/static/fish.png DESTINATION ${rel_datadir}/pixmaps)
 endif()
 

@@ -1080,7 +1080,6 @@ impl HistoryImpl {
     fn enable_automatic_saving(&mut self) {
         assert!(self.disable_automatic_save_counter > 0); // negative overflow!
         self.disable_automatic_save_counter -= 1;
-        self.save_unless_disabled();
     }
 
     /// Irreversibly clears history.
@@ -1614,7 +1613,7 @@ impl History {
         let when = imp.timestamp_now();
         let identifier = imp.next_identifier();
         let item = HistoryItem::new(s.to_owned(), when, identifier, persist_mode);
-        let do_save = persist_mode != PersistenceMode::Ephemeral;
+        let to_disk = persist_mode == PersistenceMode::Disk;
 
         if wants_file_detection {
             imp.disable_automatic_saving();
@@ -1622,7 +1621,7 @@ impl History {
             // Add the item. Then check for which paths are valid on a background thread,
             // and unblock the item.
             // Don't hold the lock while we perform this file detection.
-            imp.add(item, /*pending=*/ true, /*do_save=*/ true);
+            imp.add(item, /*pending=*/ true, to_disk);
             drop(imp);
             let vars_snapshot = vars.snapshot();
             iothread_perform(move || {
@@ -1630,16 +1629,17 @@ impl History {
                 let validated_paths = expand_and_detect_paths(potential_paths, &vars_snapshot);
                 let mut imp = self.imp();
                 imp.set_valid_file_paths(validated_paths, identifier);
-                if do_save {
-                    imp.enable_automatic_saving();
+                imp.enable_automatic_saving();
+                if to_disk {
+                    imp.save_unless_disabled();
                 }
             });
         } else {
             // Add the item.
             // If we think we're about to exit, save immediately, regardless of any disabling. This may
             // cause us to lose file hinting for some commands, but it beats losing history items.
-            imp.add(item, /*pending=*/ true, do_save);
-            if do_save && needs_sync_write {
+            imp.add(item, /*pending=*/ true, to_disk);
+            if to_disk && needs_sync_write {
                 imp.save(false);
             }
         }

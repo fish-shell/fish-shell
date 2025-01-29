@@ -35,17 +35,17 @@ The following options are available:
     See :ref:`Debugging <debugging-fish>` below for details.
 
 **-o** or **--debug-output=DEBUG_FILE**
-    Specifies a file path to receive the debug output, including categories and  :envvar:`fish_trace`.
-    The default is stderr.
+    Specifies a file path to receive the debug output, including categories and :envvar:`fish_trace`.
+    The default is standard error.
 
 **-i** or **--interactive**
     The shell is interactive.
 
 **--install[=PATH]**
-    When built as self-installable (via cargo), this will unpack fish's datafiles and place them in ~/.local/share/fish/install/.
-    Fish will also ask to do this automatically when run interactively.
+    When built as self-installable (via cargo), this will unpack fish's data files and place them in ``~/.local/share/fish/install/``.
+    fish will also ask to do this automatically when run interactively.
     If PATH is given, fish will install itself into a relocatable directory tree rooted at that path.
-    That means it will install the datafiles to PATH/share/fish and copy itself to PATH/bin/fish.
+    That means it will install the data files to PATH/share/fish and copy itself to PATH/bin/fish.
 
 **-l** or **--login**
     Act as if invoked as a login shell.

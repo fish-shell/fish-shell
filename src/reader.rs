@@ -6342,7 +6342,7 @@ impl<'a> Reader<'a> {
         let len = comp.len();
         if len == 0 {
             // No suitable completions found, flash screen and return.
-            self.flash(token_range);
+            self.flash(0..self.command_line.len());
             return false;
         } else if len == 1 {
             // Exactly one suitable completion found - insert it.

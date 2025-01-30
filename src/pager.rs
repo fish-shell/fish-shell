@@ -503,15 +503,17 @@ impl Pager {
         let bg_role = modify_role(HighlightRole::pager_background);
         let bg = HighlightSpec::with_bg(bg_role);
         let prefix_col = HighlightSpec::with_fg_bg(
-            if self.highlight_prefix {
+            modify_role(if self.highlight_prefix {
                 HighlightRole::pager_prefix
             } else {
                 HighlightRole::pager_completion
-            },
+            }),
             bg_role,
         );
-        let comp_col = HighlightSpec::with_fg_bg(HighlightRole::pager_completion, bg_role);
-        let desc_col = HighlightSpec::with_fg_bg(HighlightRole::pager_description, bg_role);
+        let comp_col =
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_completion), bg_role);
+        let desc_col =
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_description), bg_role);
 
         // Print the completion part
         let mut comp_remaining = comp_width;

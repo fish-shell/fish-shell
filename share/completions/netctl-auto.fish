@@ -2,7 +2,7 @@ set -l cmds list start stop switch-to enable disable enable-all disable-all is-a
 
 # Helper function that prints network profiles managed by netctl-auto.
 # If no argument is given, it prints all profiles.
-# Othewise, it only prints the ones given as arguments witch are either:
+# Otherwise, it only prints the ones given as arguments witch are either:
 #    - active
 #    - disabled
 #    - other (meaning enabled but not active)

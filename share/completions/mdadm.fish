@@ -92,7 +92,7 @@ function __fish_mdadm_level_options
 end
 
 function __fish_mdadm_update_options
-    echo -e "sparc2.2\tRemove superblock misalignement from SPARC kernel 2.2"
+    echo -e "sparc2.2\tRemove superblock misalignment from SPARC kernel 2.2"
     echo -e "summaries\tCorrect superblock summaries"
     echo -e "uuid\tUpdate array UUID"
     echo -e "name\tUpdate array name"
@@ -112,7 +112,7 @@ end
 function __fish_mdadm_action_options
     echo -e "idle\tAbort currently running actions"
     echo -e "frozen\tAbort currently running actions, prevent their restart"
-    echo -e "check\tScrub the array (i.e. check constistency)"
+    echo -e "check\tScrub the array (i.e. check consistency)"
     echo -e "repair\tCheck, then resync"
 end
 

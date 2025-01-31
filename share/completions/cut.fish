@@ -16,6 +16,6 @@ else
     complete -c cut -s d -x -d "Delimiter instead of \t to use"
     complete -c cut -s f -x -d "Select fields"
     complete -c cut -s n -d "Don't split multi-byte characters"
-    complete -c cut -s s -d "Supress lines without delimiter"
+    complete -c cut -s s -d "Suppress lines without delimiter"
     complete -c cut -s w -d "Use whitespace as delimiter"
 end

@@ -387,7 +387,7 @@ complete -c mvn -a "weblogic:start" -d "Start an artifact on Weblogic server(s) 
 complete -c mvn -a "weblogic:undeploy" -d "Undeploy artifacts from Weblogic server(s) or cluster(s)"
 complete -c mvn -a "weblogic:appc" -d "Run the weblogic appc compiler against an artifact"
 complete -c mvn -a "weblogic:clientgen9" -d "Runs Client Gen on a given WSDL"
-complete -c mvn -a "weblogic:listapps" -d "List the atifacts on Weblogic server(s) or cluster(s)"
+complete -c mvn -a "weblogic:listapps" -d "List the artifacts on Weblogic server(s) or cluster(s)"
 complete -c mvn -a "weblogic:help" -d "Display help information on weblogic-maven-plugin"
 complete -c mvn -a "weblogic:wsdlgen" -d "This class generates wsdl from ear/war package"
 complete -c mvn -a "weblogic:redeploy" -d "Redeploy artifact on Weblogic server(s) or cluster(s)"

@@ -11,7 +11,7 @@ complete -c gacutil -s u -c "! __fish_seen_argument $COMMANDS" \
 complete -c gacutil -o ul -c "! __fish_seen_argument $COMMANDS" \
     -d 'Uninstall one or more assemblies from the global assembly cache'
 complete -c gacutil -o us -c "! __fish_seen_argument $COMMANDS" \
-    -d 'Uninstall an assembly using the specifed assembly\'s full name'
+    -d 'Uninstall an assembly using the specified assembly\'s full name'
 complete -c gacutil -s l -c "! __fish_seen_argument $COMMANDS" \
     -d 'List the contents of the global assembly cache'
 

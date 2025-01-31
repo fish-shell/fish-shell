@@ -1,4 +1,4 @@
-#disable file seletion
+#disable file selection
 complete -f tuned-adm
 
 #get profile list

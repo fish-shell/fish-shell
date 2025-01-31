@@ -56,7 +56,7 @@ complete -c feh -l sort -s S -x -a "name\tSort\ by\ name filename\tSort\ by\ fil
 complete -c feh -l start-at -s l -x -d "Start filelist at given filename"
 complete -c feh -l theme -s T -x -d "Load options from given config file"
 complete -c feh -l thumbnails -s t
-complete -c feh -l thumb-title -s '~' -x -d "Set title for window opended from thumbnail mode"
+complete -c feh -l thumb-title -s '~' -x -d "Set title for window opened from thumbnail mode"
 complete -c feh -l title -s '^' -x -d "Set window title"
 complete -c feh -l unloadable -s u -d "Print names of images that can't be loaded by imlib2"
 complete -c feh -l verbose -s V -d "Verbose mode"
@@ -83,7 +83,7 @@ complete -c feh -l title-font -s '@' -x -d "Set font to print title on index"
 # Background setting
 complete -c feh -l bg-center -d "Center file on background"
 complete -c feh -l bg-fill -d "Set as background by zooming until image fits"
-complete -c feh -l bg-max -d "Set as backround by zooming with black borders on one side"
+complete -c feh -l bg-max -d "Set as background by zooming with black borders on one side"
 complete -c feh -l bg-scale -d "Set as background without tiling, trimming or borders"
 complete -c feh -l bg-tile -d "Tile image if too small for screen"
 complete -c feh -l no-fehbg -d "Do not write a ~/.fehbg file"

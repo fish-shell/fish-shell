@@ -5,7 +5,7 @@ function __iwctl_filter -w iwctl
     #     set -a results "| string match --invert '*$empty*'"
     # end
     # eval "$results" | awk '{print $2}'
-    # awk does not work on multiline entries, therefor we use string match,
+    # awk does not work on multiline entries, therefore we use string match,
     # which has the added benefit of filtering out the `No devices in ...` lines
 
     argparse -i all-columns -- $argv
@@ -78,7 +78,7 @@ end
 
 # The `empty` messages in case we want to go back to using those
 # set ad_hoc '(__iwctl_filter ad-hoc "No devices in Ad-Hoc mode available.")'
-# set adpater '(__iwctl_filter adapter)'
+# set adapter '(__iwctl_filter adapter)'
 # set ap '(__iwctl_filter ap "No devices in access point mode available.")'
 # set device '(__iwctl_filter device)'
 # set dpp '(__iwctl_filter dpp "No DPP-capable devices available")'
@@ -149,7 +149,7 @@ complete -c iwctl -n '__iwctl_match_subcoms "dpp *"' -n 'not __iwctl_match_subco
 complete -c iwctl -n '__iwctl_match_subcoms known-networks' -a list -d "List known networks"
 complete -c iwctl -n '__iwctl_match_subcoms known-networks' -a "(__iwctl_filter known-networks list)"
 complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a forget -d "Forget a known network"
-complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a show -d "Show nown network"
+complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a show -d "Show known network"
 complete -c iwctl -n '__iwctl_match_subcoms "known-networks *"' -n 'not __iwctl_match_subcoms known-networks list' -a set-property -d "Set property"
 
 # station

@@ -1354,7 +1354,7 @@ complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a pool-edit -d "Ed
 
 # virsh pool-info
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a pool-info -d "Storage pool information"
-complete -c virsh -n "__fish_seen_subcommand_from pool-info" -l bytes -d "Reture pool info in bytes"
+complete -c virsh -n "__fish_seen_subcommand_from pool-info" -l bytes -d "Return pool info in bytes"
 
 # virsh pool-list
 complete -c virsh -n "not __fish_seen_subcommand_from $cmds" -a pool-list -d "List pools"

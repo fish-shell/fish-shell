@@ -105,7 +105,7 @@ complete -c obnam --no-files -l fsck-fix -d 'fsck should try to fix problems'
 complete -c obnam --no-files -l no-fsck-fix -d 'fsck should not try to fix problems'
 complete -c obnam --no-files -l fsck-ignore-chunks -d 'Ignore chunks when checking integrity'
 complete -c obnam --no-files -l no-fsck-ignore-chunks -d 'Check chunks when checking integrity'
-complete -c obnam --no-files -l fsck-ignore-client -d 'Do not check data for cient NAME'
+complete -c obnam --no-files -l fsck-ignore-client -d 'Do not check data for client NAME'
 complete -c obnam --no-files -l fsck-last-generation-only -d 'Check only the last generation'
 complete -c obnam --no-files -l no-fsck-last-generation-only -d 'Check all generations'
 complete -c obnam --no-files -l fsck-rm-unused -d 'fsck should remove unused chunks'
@@ -133,7 +133,7 @@ complete -c obnam --no-files -l log-mode -d 'Set permissions of logfiles to MODE
 # Mounting with FUSE
 complete -c obnam --no-files -l fuse-opt -d 'Options to pass to FUSE'
 
-# Peformance
+# Performance
 complete -c obnam --no-files -l dump-memory-profile -a 'none simple meliae heapy' -d 'Make memory profiling dumps using METHOD'
 complete -c obnam --no-files -l memory-dump-interval -d 'Make memory profiling dumps at SECONDS'
 

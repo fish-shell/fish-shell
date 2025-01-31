@@ -53,4 +53,4 @@ complete -c mkbundle -l aot-dedup \
     -d 'Deduplicate AOT\'ed methods based on a unique mangling of method names'
 complete -c mkbundle -l aot-mode -x \
     -a 'full\t"Generate the necessary stubs to not require runtime code generation" llvmonly\t"Do the same, but force all codegen to go through the llvm backend"' \
-    -d 'Specifiy AOT mode'
+    -d 'Specify AOT mode'

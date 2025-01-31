@@ -57,6 +57,6 @@ complete -c cpupower -n "__fish_seen_subcommand_from info" -s b -l perf-bias -d 
 set -l monitors (LC_ALL=C cpupower monitor -l 2>&1 | awk '$1 == "Monitor" {gsub(/"/, "", $2); print $2} $1 == "Available" {print $3}')
 complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s m -x -a "$monitors" -d "Only display this monitor"
 complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s v -d "Increase verbosity if the binary was compiled with the DEBUG option set"
-complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s c -d "Schedule the processs on every core before starting and ending measuring"
+complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s c -d "Schedule the process on every core before starting and ending measuring"
 complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s i -d "Measure interval"
 complete -c cpupower -n "__fish_seen_subcommand_from monitor" -s l -d "List available monitors on your system"

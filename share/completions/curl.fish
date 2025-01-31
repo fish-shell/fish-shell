@@ -29,7 +29,7 @@ complete -c curl -l crlf -d '(FTP SMTP) Convert LF to CRLF in upload.  Useful fo
 complete -c curl -l crlfile -d '(TLS) Provide a file using PEM format with a Certificate Revocation List'
 complete -c curl -l data-ascii -d '(HTTP) Alias for -d, --data'
 complete -c curl -l data-binary -d '(HTTP) Post data exactly as specified with no processing'
-complete -c curl -l data-raw -d '(HTTP) Post data like --data but without interpeting "@"'
+complete -c curl -l data-raw -d '(HTTP) Post data like --data but without interpreting "@"'
 complete -c curl -l data-urlencode -d '(HTTP) Post data URL-encoded'
 complete -c curl -s d -l data -d '(HTTP) Sends the specified data in a POST request to the HTTP server'
 complete -c curl -l delegation -d '(GSS/kerberos) Tell the server how much it can delegate for user creds' -xa '(

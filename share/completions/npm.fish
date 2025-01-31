@@ -37,7 +37,7 @@ function __fish_npm_needs_option
     return 1
 end
 
-# list available npm scripts and their parial content
+# list available npm scripts and their partial content
 function __fish_parse_npm_run_completions
     while read -l name
         set -l trim 20
@@ -69,7 +69,7 @@ end
 complete -f -c npm -n __fish_npm_needs_command -a 'run-script run' -d 'Run arbitrary package scripts'
 for c in run-script run rum urn
     complete -f -c npm -n "__fish_npm_using_command $c" -a "(__fish_npm_run)"
-    complete -f -c npm -n "__fish_npm_using_command $c" -l if-present -d "Don't error on nonexistant script"
+    complete -f -c npm -n "__fish_npm_using_command $c" -l if-present -d "Don't error on nonexistent script"
     complete -f -c npm -n "__fish_npm_using_command $c" -l ignore-scripts -d "Don't run pre-, post- and life-cycle scripts"
     complete -x -c npm -n "__fish_npm_using_command $c" -s script-shell -d 'The shell to use for scripts'
     complete -f -c npm -n "__fish_npm_using_command $c" -l foreground-scripts -d 'Run all build scripts in the foreground'
@@ -526,8 +526,8 @@ complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_sub
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a disable-2fa -d 'Disables two-factor authentication'
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a get -d 'Display profile properties'
 complete -x -c npm -n '__fish_npm_using_command profile' -n "not __fish_seen_subcommand_from $profile_commands" -a set -d 'Set the value of a profile property'
-complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-only -d 'Requiere an OTP on profile changes'
-complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-and-writes -d 'Also requiere an OTP on package changes'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-only -d 'Require an OTP on profile changes'
+complete -x -c npm -n '__fish_npm_using_command profile' -n '__fish_seen_subcommand_from enable-2fa' -a auth-and-writes -d 'Also require an OTP on package changes'
 complete -f -c npm -n '__fish_npm_using_command profile' -s h -l help -d 'Display help'
 
 # prune

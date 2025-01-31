@@ -22,7 +22,7 @@ complete -c ngrok -l region -x -a "us eu au ap" -d "ngrok server region [us , eu
 complete -c ngrok -l hostname -r -d "host tunnel on custom hostname (requires DNS CNAME)"
 complete -c ngrok -l subdomain -r -d "host tunnel on a custom subdomain"
 
-# http's optons
+# http's options
 complete -c ngrok -l auth -r -d "enforce basic auth on tunnel endpoint, 'user:password'"
 complete -c ngrok -l bind-tls -x -a "both https http" -d "listen for http, https or both: true/false/both"
 complete -c ngrok -l host-header -r -d "set Host header; if 'rewrite' use local address hostname"

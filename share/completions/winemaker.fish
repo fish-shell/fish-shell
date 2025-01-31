@@ -15,7 +15,7 @@ complete -c winemaker -l cuiexe -d 'Treat unknown app as console app'
 complete -c winemaker -l console -d 'Treat unknown app as console app'
 complete -c winemaker -l dll -d 'Treat unknown app as library'
 
-complete -c winemaker -l nodlls -d 'Don\'t use stadard libraries'
+complete -c winemaker -l nodlls -d 'Don\'t use standard libraries'
 complete -c winemaker -l mfc -d 'Use MFC based targets'
 complete -c winemaker -l nomfc -d 'Use MFC based targets'
 complete -c winemaker -l nomsvcrt -d 'Don\'t use msvcrt compilation'

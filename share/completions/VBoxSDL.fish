@@ -18,7 +18,7 @@ complete -c VBoxSDL -l nograbonclick -d "Disable mouse/keyboard grabbing on mous
 complete -c VBoxSDL -l detecthostkey -d "Get hostkey identifier and modifier state"
 complete -c VBoxSDL -l hostkey -r -d "Set host key to values obtained using --detecthostkey"
 complete -c VBoxSDL -l termacpi -d "Send APCI power button when closing window"
-complete -c VBoxSDL -l vrdp -d "Listen for VRDP connexions on if one of specified"
+complete -c VBoxSDL -l vrdp -d "Listen for VRDP connections on if one of specified"
 complete -c VBoxSDL -l discardstate -d "Discard saved state (if present) and revert to last snapshot (if present)"
 complete -c VBoxSDL -l settingspw -x -d "Specify settings password"
 complete -c VBoxSDL -l settingspwfile -f -d "Specify file containing setting password"

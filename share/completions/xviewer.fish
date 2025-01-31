@@ -19,7 +19,7 @@ complete -c xviewer -l xim-status
 complete -c xviewer -l gtk-debug -d 'Enabled Gtk+ flags'
 complete -c xviewer -l gtk-no-debug -d 'Disabled Gtk+ flags'
 complete -c xviewer -l g-fatal -d 'Treat warnings as fatal errors'
-complete -c xviewer -l gtk-module -d 'Additinal Gtk module'
+complete -c xviewer -l gtk-module -d 'Additional Gtk module'
 complete -c xviewer -l disable-crash-dialog
 complete -c xviewer -l sm-client-id -d 'Session management ID'
 complete -c xviewer -l sm-config-prefix -d 'Prefix of saved configuration'

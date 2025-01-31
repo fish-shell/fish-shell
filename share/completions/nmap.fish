@@ -102,7 +102,7 @@ complete -c nmap -l script-trace
 complete -c nmap -l script-updatedb
 
 # TIMING AND PERFORMANCE
-complete -c nmap -l min-hostgroup -l max-hostgroup -x -d 'Adjust paralel scan group size'
+complete -c nmap -l min-hostgroup -l max-hostgroup -x -d 'Adjust parallel scan group size'
 complete -c nmap -l min-parallelism -l max-parallelism -x -d 'Adjust probe parallelization'
 complete -c nmap -l min-rtt-timeout -l max-rtt-timeout -l initial-rtt-timeout -x -d 'Adjust probe timeouts'
 complete -c nmap -l max-retries -x -d 'Specify the maximum number of port scan probe retransmissions'

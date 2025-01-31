@@ -6,11 +6,11 @@ complete -c gcc -o std -d "Standard mode" -x -a '
 	c9x \t"ISO C99"
 	iso9899:1999\t"ISO C99"
 	iso9899:199x\t"ISO C99"
-	gnu89\t"ISO C90 plus GNU extentions"
-	gnu99\t"ISO C99 plus GNU extentions"
-	gnu9x\t"ISO C99 plus GNU extentions"
+	gnu89\t"ISO C90 plus GNU extensions"
+	gnu99\t"ISO C99 plus GNU extensions"
+	gnu9x\t"ISO C99 plus GNU extensions"
 	c++98\t"ISO C++98"
-	gnu++98\t"ISO C++98 plus GNU extentions"
+	gnu++98\t"ISO C++98 plus GNU extensions"
 '
 
 complete -c gcc -o ftemplate-depth -d "Set maximum template depth" -a '(seq 1 17)'
@@ -1052,7 +1052,7 @@ complete -c gcc -o mv850 -d 'Specify that the target processor is the V850'
 complete -c gcc -o mv850e1 -d 'Specify that the target processor is the V850E1'
 complete -c gcc -o mv850e -d 'Specify that the target processor is the V850E'
 complete -c gcc -o mdisable-callt -d 'Suppress generation of CALLT instruction for the v850e/v850e1 flavors of v850 architecture'
-complete -c gcc -o mgnu -d 'Ouput certain jump instructions, only compatible with GNU assembler'
+complete -c gcc -o mgnu -d 'Output certain jump instructions, only compatible with GNU assembler'
 complete -c gcc -o mg -d 'Output code for g-format floating point numbers instead of d-format'
 complete -c gcc -o mconst16 -d 'Enable or disable use of "CONST16" instructions for loading constant values'
 complete -c gcc -o mno-const16 -d 'Enable or disable use of "CONST16" instructions for loading constant values'

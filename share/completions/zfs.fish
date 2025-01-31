@@ -633,4 +633,4 @@ complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keyformat=
 complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "keyformat=hex keyformat=raw keyformat=passphrase"
 complete -c zfs -f -n '__fish_zfs_using_command change-key' -s o -xa "pbkdf2iters=" -d "Specify PBKDF2 iteration count"
 # todo: maybe query properties to list only encrypted datasets
-complete -c zfs -f -n '__fish_zfs_using_command change-key' -d "Dataset to change wraper key for" -xa "(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)"
+complete -c zfs -f -n '__fish_zfs_using_command change-key' -d "Dataset to change wrapper key for" -xa "(__fish_print_zfs_filesystems; __fish_print_zfs_volumes)"

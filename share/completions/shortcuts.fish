@@ -2,7 +2,7 @@
 # https://en.wikipedia.org/wiki/Shortcuts_(app)
 
 # Apple added fish completion output to Swift's ArgumentParser.
-# imagine my surprise when I found fish function stirngs in binaries in /usr/bin!
+# imagine my surprise when I found fish function strings in binaries in /usr/bin!
 
 # checking the path is as expected is about as far as we're going with validation
 if test "$(command -s shortcuts)" = /usr/bin/shortcuts

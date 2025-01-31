@@ -40,7 +40,7 @@ complete -c hashcat -l hex-wordlist -d "Assume words in wordlist are given in he
 complete -c hashcat -l force -d "Ignore warnings"
 complete -c hashcat -l deprecated-check-disable -d "Enable deprecated plugins"
 complete -c hashcat -l status -d "Enable automatic update of the status screen"
-complete -c hashcat -l status-json -d "Enable JSON format for status ouput"
+complete -c hashcat -l status-json -d "Enable JSON format for status output"
 complete -c hashcat -l status-timer -x -d "Sets seconds between status screen updates"
 complete -c hashcat -l stdin-timeout-abort -x -d "Abort if there is no input from stdin for X seconds"
 complete -c hashcat -l machine-readable -d "Display the status view in a machine-readable format"

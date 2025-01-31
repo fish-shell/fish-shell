@@ -30,5 +30,5 @@ complete -c xdg-mime -d 'Set mode' -n 'contains_seq xdg-mime uninstall -- (comma
 #complete -c xdg-mime install [--mode mode] [--novendor] mimetypes-file
 #complete -c xdg-mime uninstall [--mode mode] mimetypes-file
 complete -c xdg-mime -l help -d 'Display help'
-complete -c xdg-mime -l manual -d 'Diplay long help'
+complete -c xdg-mime -l manual -d 'Display long help'
 complete -c xdg-mime -l version -d 'Print version'

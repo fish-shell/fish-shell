@@ -35,10 +35,10 @@ complete -n __fish_climate_has_no_argument -c climate -a dir-size -d 'Find direc
 complete -n __fish_climate_has_no_argument -c climate -a remove-empty-dirs -d 'Remove empty directories'
 complete -n __fish_climate_has_no_argument -c climate -a extract -d 'Extract any given archive'
 complete -n __fish_climate_has_no_argument -c climate -a find-duplicates -d 'Report duplicate files in a directory'
-complete -n __fish_climate_has_no_argument -c climate -a count -d 'Count the number of occurences'
+complete -n __fish_climate_has_no_argument -c climate -a count -d 'Count the number of occurrences'
 complete -n __fish_climate_has_no_argument -c climate -a monitor -d 'Monitor file for changes'
 complete -f -n __fish_climate_has_no_argument -c climate -a grep -d 'Search for the given pattern recursively'
-complete -f -n __fish_climate_has_no_argument -c climate -a replace -d 'Replace all occurences'
+complete -f -n __fish_climate_has_no_argument -c climate -a replace -d 'Replace all occurrences'
 complete -f -n __fish_climate_has_no_argument -c climate -a ramfs -d 'Create a ramfs of size (in MB) at path'
 
 # Network

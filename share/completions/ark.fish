@@ -5,7 +5,7 @@ complete -c ark -s o -l destination -d 'Specify an extraction directory'
 complete -c ark -s c -l add -d 'Add files and directories to an archive interactively'
 complete -c ark -s t -l add-to -d 'Add files and directories to an archive'
 complete -c ark -s p -l changetofirstpath -d 'Use a first argument as input path'
-complete -c ark -s f -l autofilename -d 'Specify suffix for automatically choosen filename'
+complete -c ark -s f -l autofilename -d 'Specify suffix for automatically chosen filename'
 
 complete -c ark -s b -l batch -d 'Use a batch interface'
 complete -c ark -s e -l autodestination -d 'Use a first argument as output path'

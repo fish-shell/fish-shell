@@ -77,7 +77,7 @@ complete -c emerge -s V -l version
 #########################
 complete -c emerge -s A -l alert -d "Add a terminal bell character ('\a') to all interactive prompts"
 #complete -c emerge      -l alphabetical -d "Sort flag lists alphabetically"
-complete -c emerge -s a -l ask -d "Prompt the user before peforming the merge"
+complete -c emerge -s a -l ask -d "Prompt the user before performing the merge"
 # ask-enter-invalid
 # autounmask
 # autounmask-backtrack <yn>

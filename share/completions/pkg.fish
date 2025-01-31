@@ -193,7 +193,7 @@ function __fish_pkg_aliases
                 set description 'Display build dependencies for a given package'
 
             case cinfo
-                set description 'Display install package matching case-sensitve regex'
+                set description 'Display install package matching case-sensitive regex'
 
             case comment
                 set description 'Display comment off a package'
@@ -205,7 +205,7 @@ function __fish_pkg_aliases
                 set description 'Show package description'
 
             case iinfo
-                set description 'Display install package matching case-insensitve regex'
+                set description 'Display install package matching case-insensitive regex'
 
             case isearch
                 set description 'Finds package using case-insensitive search'

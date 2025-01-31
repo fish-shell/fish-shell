@@ -19,5 +19,5 @@ else # BSD
     complete -c uniq -s f -d 'Avoid comparing first N fields' -x
     complete -c uniq -s s -d 'Avoid comparing first N characters' -x
     complete -c uniq -s u -d 'Only print unique lines'
-    complete -c uniq -s i -d 'Case insensitive comparision'
+    complete -c uniq -s i -d 'Case insensitive comparison'
 end

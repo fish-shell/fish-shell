@@ -870,7 +870,7 @@ but if you need multiple or the command doesn't read from standard input, "proce
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
 
-Fish has a default limit of 100 MiB on the data it will read in a command substitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
+Fish has a default limit of 1 GiB on the data it will read in a command substitution. If that limit is reached the command (all of it, not just the command substitution - the outer command won't be executed at all) fails and ``$status`` is set to 122. This is so command substitutions can't cause the system to go out of memory, because typically your operating system has a much lower limit, so reading more than that would be useless and harmful. This limit can be adjusted with the ``fish_read_limit`` variable (`0` meaning no limit). This limit also affects the :doc:`read <cmds/read>` command.
 
 .. [#] One exception: Setting ``$IFS`` to empty will disable line splitting. This is deprecated, use :doc:`string split <cmds/string-split>` instead.
 

@@ -10,9 +10,9 @@ use std::sync::{
 };
 pub use var::*;
 
-/// Limit `read` to 100 MiB (bytes, not wide chars) by default. This can be overridden with the
+/// Limit `read` to 1 GiB (bytes, not wide chars) by default. This can be overridden with the
 /// `fish_read_limit` variable.
-pub const DEFAULT_READ_BYTE_LIMIT: usize = 100 * 1024 * 1024;
+pub const DEFAULT_READ_BYTE_LIMIT: usize = 1024 * 1024 * 1024;
 
 /// The actual `read` limit in effect, defaulting to [`DEFAULT_READ_BYTE_LIMIT`] but overridable
 /// with `$fish_read_limit`.

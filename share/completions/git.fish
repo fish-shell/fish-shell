@@ -617,6 +617,76 @@ function __fish_git_config_keys
     printf '%s\n' (__fish_git help --config)[1..-2] # Last line is a footer; ignore it
 end
 
+# Render the subtree completions, these were infered from the output of `git subtree --help`
+function __fish_render_complete_git_subtree_completion
+    # Define available commands for git subtree
+    function __fish_git_subtree_command
+        echo "add Add a new subtree to the repository"
+        echo "merge Merge changes from a subtree into the repository"
+        echo "split Extract a subtree from the repository"
+        echo "pull Fetch and integrate changes from a remote subtree"
+        echo "push Push changes to a remote subtree"
+    end
+
+    # Define available options for all git subtree commands
+    function __fish_git_subtree_option
+        echo "-q Suppress output"
+        echo "--quiet Suppress output"
+        echo "-d Debug output"
+        echo "--debug Debug output"
+        echo "-P Path to the subtree"
+        echo "--prefix Path to the subtree"
+    end
+
+    # Define options for 'add' and 'merge' commands.
+    # The options remain the same for for pull, split --rejoin, and push --rejoin, according to the help output.
+    function __fish_git_subtree_add_merge_options
+        echo "--squash Squash"
+        echo "-m Message"
+        echo "--message Message"
+    end
+
+    # Define options for 'split' and 'push' commands.
+    # The options remain the same for push --rejoin.
+    function __fish_git_subtree_split_push_options
+        echo "--annotate Annotate the commit"
+        echo "-b Branch to split"
+        echo "--branch Branch to split"
+        echo "--ignore-joins Ignore joins during history reconstruction"
+        echo "--onto Specify the commit ID to start history reconstruction"
+        echo "--rejoin Merge the synthetic history back into the main project"
+    end
+
+    ## git subtree completion when invoking git
+    complete -f -c git -n __fish_git_needs_command -a subtree -d 'Manage git subtrees'
+
+    # Completion for commands and the options in subtree invocation
+    for line in (__fish_git_subtree_command) (__fish_git_subtree_option)
+        set -l item (echo $line | cut -d' ' -f1)
+        set -l desc (echo $line | cut -d' ' -f2-)
+        complete -f -c git -n '__fish_seen_subcommand_from subtree' -a $item -d $desc
+    end
+
+    # Completions when invoking 'add' and 'merge'
+    for line in (__fish_git_subtree_add_merge_options)
+        set -l item (echo $line | cut -d' ' -f1)
+        set -l desc (echo $line | cut -d' ' -f2-)
+        complete -f -c git -n '__fish_seen_subcommand_from subtree; and __fish_seen_subcommand_from add' -a $item -d $desc
+        complete -f -c git -n '__fish_seen_subcommand_from subtree; and __fish_seen_subcommand_from merge' -a $item -d $desc
+        complete -f -c git -n '__fish_seen_subcommand_from subtree; and __fish_seen_subcommand_from pull' -a $item -d $desc
+    end
+
+    # Completions when invocking 'split' and 'push'
+    for line in (__fish_git_subtree_split_push_options)
+        set -l item (echo $line | cut -d' ' -f1)
+        set -l desc (echo $line | cut -d' ' -f2-)
+        complete -f -c git -n '__fish_seen_subcommand_from subtree; and __fish_seen_subcommand_from split' -a $item -d $desc
+        complete -f -c git -n '__fish_seen_subcommand_from subtree; and __fish_seen_subcommand_from push' -a $item -d $desc
+    end
+end
+# Run the git subtree completion function
+__fish_render_complete_git_subtree_completion
+
 # HACK: Aliases
 # Git allows aliases, so we need to see what command the current command-token corresponds to
 # (so we can complete e.g. `lg` like `log`).

@@ -13,6 +13,7 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-no-job-control -d "Test if new jobs are never put under job control"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-interactive-job-control -d "Test if only interactive new jobs are put under job control"
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-full-job-control -d "Test if all new jobs are put under job control"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a is-in-macos-terminal -d "Test if the shell is running in a macOS terminal"
 
 # The subcommands that are not "is-something" which don't change the fish state.
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a buildinfo -d "Print information on how this version fish was built"

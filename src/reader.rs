@@ -31,6 +31,7 @@ use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::RawFd;
+use std::os::unix::ffi::OsStrExt;
 use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
@@ -89,6 +90,7 @@ use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::Queried;
 use crate::input_common::IN_DVTM;
+use crate::input_common::IN_MACOS_TERMINAL;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::KITTY_KEYBOARD_SUPPORTED;
 use crate::input_common::SYNCHRONIZED_OUTPUT_SUPPORTED;
@@ -2517,15 +2519,23 @@ impl<'a> Reader<'a> {
                             if SYNCHRONIZED_OUTPUT_SUPPORTED.load() {
                                 let mut out = Outputter::stdoutput().borrow_mut();
                                 out.begin_buffering();
-                                query_capabilities_via_dcs(out.by_ref());
-                                let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                                let pending_primary_da_count =
+                                    query_capabilities_via_dcs(out.by_ref(), self);
                                 out.end_buffering();
                                 self.save_screen_state();
-                                self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
+                                self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice(
+                                    pending_primary_da_count,
+                                )));
                                 return ControlFlow::Continue(());
                             }
                         }
-                        Queried::Twice => (),
+                        Queried::Twice(1) => (),
+                        Queried::Twice(pending_primary_da_count) => {
+                            self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice(
+                                pending_primary_da_count - 1,
+                            )));
+                            return ControlFlow::Continue(());
+                        }
                     }
                     self.unblock_input();
                 }
@@ -2555,13 +2565,31 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
     let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 
-fn query_capabilities_via_dcs(out: &mut impl std::io::Write) {
+fn query_capabilities_via_dcs(out: &mut impl std::io::Write, reader: &Reader) -> usize {
+    let mut pending_primary_da_count = 0;
     let _ = out.write(b"\x1b[?2026h"); // begin synchronized update
     let _ = out.write(b"\x1b[?1049h"); // enable alternative screen buffer
     xtgettcap(out.by_ref(), "indn");
     xtgettcap(out.by_ref(), "cuu");
+    // Query the name of the Client OS.
+    xtgettcap(out.by_ref(), "kitty-query-os_name");
+    if let Some(client_tty) = reader.vars().get_unless_empty(L!("__fish_tmux_client_tty")) {
+        if let Ok(mut client_tty) = wopen_cloexec(
+            &client_tty.as_list()[0],
+            OFlag::O_WRONLY,
+            Mode::from_bits_truncate(0o666),
+        ) {
+            xtgettcap(&mut client_tty, "kitty-query-os_name");
+            if client_tty.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE).is_ok() {
+                pending_primary_da_count += 1;
+            }
+        }
+    }
     let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
     let _ = out.write(b"\x1b[?2026l"); // end synchronized update
+    let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+    pending_primary_da_count += 1;
+    pending_primary_da_count
 }
 
 impl<'a> Reader<'a> {
@@ -4419,6 +4447,12 @@ fn reader_interactive_init(parser: &Parser) {
     parser
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
+
+    IN_MACOS_TERMINAL.store(
+        cfg!(target_os = "macos")
+            || std::env::var_os("LC_TERMINAL")
+                .is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2"),
+    );
 
     terminal_protocol_hacks();
 }

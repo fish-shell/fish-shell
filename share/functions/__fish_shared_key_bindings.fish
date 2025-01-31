@@ -21,8 +21,20 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv -k left backward-char
 
     # Ctrl-left/right - these also work in vim.
-    bind --preset $argv ctrl-right forward-word
-    bind --preset $argv ctrl-left backward-word
+    bind --preset $argv ctrl-right '
+        if status is-in-macos-terminal
+            commandline -f forward-token
+        else
+            commandline -f forward-word
+        end
+    '
+    bind --preset $argv ctrl-left '
+        if status is-in-macos-terminal
+            commandline -f backward-token
+        else
+            commandline -f backward-word
+        end
+    '
 
     bind --preset $argv pageup beginning-of-history
     bind --preset $argv pagedown end-of-history
@@ -54,8 +66,20 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv -k sright forward-bigword
     $legacy_bind --preset $argv -k sleft backward-bigword
 
-    bind --preset $argv alt-right nextd-or-forward-token
-    bind --preset $argv alt-left prevd-or-backward-token
+    bind --preset $argv alt-right '
+        if status is-in-macos-terminal
+            commandline -f nextd-or-forward-word
+        else
+            nextd-or-forward-token
+        end
+    '
+    bind --preset $argv alt-left '
+        if status is-in-macos-terminal
+            commandline -f prevd-or-backward-word
+        else
+            prevd-or-backward-token
+        end
+    '
 
     bind --preset $argv alt-up history-token-search-backward
     bind --preset $argv alt-down history-token-search-forward

@@ -3,6 +3,7 @@ use std::os::unix::prelude::*;
 use super::prelude::*;
 use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
 use crate::future_feature_flags::{self as features, feature_test};
+use crate::input_common::IN_MACOS_TERMINAL;
 use crate::proc::{
     get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
 };
@@ -50,6 +51,7 @@ enum StatusCmd {
     STATUS_IS_FULL_JOB_CTRL,
     STATUS_IS_INTERACTIVE,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
+    STATUS_IS_IN_MACOS_TERMINAL,
     STATUS_IS_LOGIN,
     STATUS_IS_NO_JOB_CTRL,
     STATUS_LINE_NUMBER,
@@ -65,6 +67,7 @@ str_enum!(
     (STATUS_BASENAME, "basename"),
     (STATUS_BASENAME, "current-basename"),
     (STATUS_BUILDINFO, "buildinfo"),
+    (STATUS_IS_IN_MACOS_TERMINAL, "is-in-macos-terminal"),
     (STATUS_CURRENT_CMD, "current-command"),
     (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
     (STATUS_DIRNAME, "current-dirname"),
@@ -597,6 +600,13 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                         // This is a relative path, we can't canonicalize it
                         let path = str2wcstring(path.as_os_str().as_bytes());
                         streams.out.appendln(path);
+                    }
+                }
+                STATUS_IS_IN_MACOS_TERMINAL => {
+                    if IN_MACOS_TERMINAL.load() {
+                        return STATUS_CMD_OK;
+                    } else {
+                        return STATUS_CMD_ERROR;
                     }
                 }
                 STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {

@@ -469,7 +469,9 @@ pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
     b"\x1b[?u"
 }
 
-static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static IN_MACOS_TERMINAL: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_DVTM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -642,7 +644,7 @@ pub enum CursorPositionWait {
 pub enum Queried {
     NotYet,
     Once,
-    Twice,
+    Twice(usize),
 }
 
 #[derive(Eq, PartialEq)]
@@ -1360,6 +1362,11 @@ pub trait InputEventQueuer {
         if key == b"cuu" && matches!(&value[..], b"\x1b[%p1%dA" | b"\\E[%p1%dA") {
             CURSOR_UP_SUPPORTED.store(true);
             FLOG!(reader, "Cursor up is supported");
+        }
+        if key == b"kitty-query-os_name" {
+            let os_name = &value[..];
+            FLOG!(reader, "Client OS: ", String::from_utf8_lossy(os_name));
+            IN_MACOS_TERMINAL.store(os_name == b"macos");
         }
         return None;
     }

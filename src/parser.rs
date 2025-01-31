@@ -565,6 +565,52 @@ impl Parser {
         }
     }
 
+    pub fn eval_wstr(
+        &self,
+        src: WString,
+        io: &IoChain,
+        job_group: Option<&JobGroupRef>,
+        block_type: BlockType,
+    ) -> Result<EvalRes, WString> {
+        use crate::parse_tree::ParsedSource;
+        use crate::parse_util::parse_util_detect_errors_in_ast;
+        let mut errors = vec![];
+        let ast = Ast::parse(&src, ParseTreeFlags::empty(), Some(&mut errors));
+        let mut errored = ast.errored();
+        if !errored {
+            errored = parse_util_detect_errors_in_ast(&ast, &src, Some(&mut errors)).is_err();
+        }
+        if errored {
+            let sb = self.get_backtrace(&src, &errors);
+            return Err(sb);
+        }
+
+        // Construct a parsed source ref.
+        // Be careful to transfer ownership, this could be a very large string.
+        let ps = Arc::new(ParsedSource::new(src, ast));
+        Ok(self.eval_parsed_source(&ps, io, job_group, block_type))
+    }
+
+    pub fn eval_file_wstr(
+        &self,
+        src: WString,
+        filename: Arc<WString>,
+        io: &IoChain,
+        job_group: Option<&JobGroupRef>,
+    ) -> Result<EvalRes, WString> {
+        let _interactive_push = self.push_scope(|s| s.is_interactive = false);
+        let sb = self.push_block(Block::source_block(filename.clone()));
+        let _filename_push = self
+            .library_data
+            .scoped_set(Some(filename.clone()), |s| &mut s.current_filename);
+
+        let ret = self.eval_wstr(src, io, job_group, BlockType::top);
+
+        self.pop_block(sb);
+        self.libdata_mut().exit_current_script = false;
+        ret
+    }
+
     /// Evaluates a node.
     /// The node type must be ast::Statement or ast::JobList.
     pub fn eval_node<T: Node>(

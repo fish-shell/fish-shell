@@ -2,7 +2,7 @@ use crate::common::ToCString;
 use crate::complete::complete_invalidate_path;
 use crate::curses::{self, Term};
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
-use crate::env::{CURSES_INITIALIZED, READ_BYTE_LIMIT, TERM_HAS_XN};
+use crate::env::{CURSES_INITIALIZED, DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT, TERM_HAS_XN};
 use crate::flog::FLOG;
 use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
@@ -339,15 +339,9 @@ fn handle_read_limit_change(vars: &EnvStack) {
             }
         });
 
-    // Clippy should recognize comments in an empty match branch as a valid pattern!
-    #[allow(clippy::single_match)]
     match read_byte_limit {
         Some(new_limit) => READ_BYTE_LIMIT.store(new_limit, Ordering::Relaxed),
-        None => {
-            // TODO: reset READ_BYTE_LIMIT to the default value on receiving an invalid value
-            // instead of persisting the previous value, which may or may not have been the
-            // default.
-        }
+        None => READ_BYTE_LIMIT.store(DEFAULT_READ_BYTE_LIMIT, Ordering::Relaxed),
     }
 }
 

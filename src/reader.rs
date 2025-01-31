@@ -1416,7 +1416,7 @@ impl ReaderData {
             assert!(self.blocking_wait.is_none());
             self.blocking_wait = Some(BlockingWait::CursorPosition(cursor_position_wait));
         }
-        let _ = out.write(b"\x1b[6n");
+        let _ = out.write_all(b"\x1b[6n");
         self.save_screen_state();
     }
 
@@ -2175,12 +2175,12 @@ impl<'a> Reader<'a> {
                 let mut out = Outputter::stdoutput().borrow_mut();
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
-                let _ = out.write(kitty_progressive_enhancements_query());
+                let _ = out.write_all(kitty_progressive_enhancements_query());
                 // Query for cursor position reporting support.
                 zelf.request_cursor_position(&mut out, None);
                 // Query for synchronized output support.
-                let _ = out.write(b"\x1b[?2026$p");
-                let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                let _ = out.write_all(b"\x1b[?2026$p");
+                let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                 out.end_buffering();
             }
         }
@@ -2518,7 +2518,7 @@ impl<'a> Reader<'a> {
                                 let mut out = Outputter::stdoutput().borrow_mut();
                                 out.begin_buffering();
                                 query_capabilities_via_dcs(out.by_ref());
-                                let _ = out.write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                                let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                                 out.end_buffering();
                                 self.save_screen_state();
                                 self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
@@ -2556,12 +2556,12 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
 }
 
 fn query_capabilities_via_dcs(out: &mut impl std::io::Write) {
-    let _ = out.write(b"\x1b[?2026h"); // begin synchronized update
-    let _ = out.write(b"\x1b[?1049h"); // enable alternative screen buffer
+    let _ = out.write_all(b"\x1b[?2026h"); // begin synchronized update
+    let _ = out.write_all(b"\x1b[?1049h"); // enable alternative screen buffer
     xtgettcap(out.by_ref(), "indn");
     xtgettcap(out.by_ref(), "cuu");
-    let _ = out.write(b"\x1b[?1049l"); // disable alternative screen buffer
-    let _ = out.write(b"\x1b[?2026l"); // end synchronized update
+    let _ = out.write_all(b"\x1b[?1049l"); // disable alternative screen buffer
+    let _ = out.write_all(b"\x1b[?2026l"); // end synchronized update
 }
 
 impl<'a> Reader<'a> {

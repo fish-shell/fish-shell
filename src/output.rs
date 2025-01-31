@@ -432,7 +432,7 @@ impl Outputter {
 
     pub fn tputs_bytes(&mut self, str: &[u8]) {
         self.begin_buffering();
-        let _ = self.write(str);
+        let _ = self.write_all(str);
         self.end_buffering();
     }
 

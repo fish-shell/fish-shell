@@ -140,6 +140,7 @@ pub mod categories {
         (abbrs, "abbrs", "Abbreviation expansion");
 
         (refcell, "refcell", "Refcell dynamic borrowing");
+        (autoload, "autoload", "autoloading");
     );
 }
 

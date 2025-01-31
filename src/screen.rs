@@ -457,7 +457,20 @@ impl Screen {
             self.desired.add_line();
         }
 
-        let full_line_count = self.desired.cursor.y + calc_prompt_lines(&layout.left_prompt);
+        let full_line_count = self.desired.cursor.y
+            - if self.desired.cursor.x == 0
+                && self
+                    .desired
+                    .cursor
+                    .y
+                    .checked_sub(1)
+                    .is_some_and(|y| self.desired.line_datas[y].is_soft_wrapped)
+            {
+                1
+            } else {
+                0
+            }
+            + calc_prompt_lines(&layout.left_prompt);
         let pager_available_height = std::cmp::max(
             1,
             curr_termsize

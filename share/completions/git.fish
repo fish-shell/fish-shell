@@ -186,7 +186,6 @@ function __fish_git_files
     set -l ver (__fish_git --version | string replace -rf 'git version (\d+)\.(\d+)\.?.*' '$1\n$2')
     # Version >= 2.11.* has the v2 format.
     if test "$ver[1]" -gt 2 2>/dev/null; or test "$ver[1]" -eq 2 -a "$ver[2]" -ge 11 2>/dev/null
-        set -l fish_read_limit 0 # this can print a lot, better not to error
         set -l stats (__fish_git $git_opt status --porcelain=2 -uno $status_opt)
         if set -ql untracked
             # Fast path for untracked files - it is extremely easy to get a lot of these,

@@ -7,8 +7,9 @@ use crate::flog::FLOG;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::input_common::{
-    BlockingWait, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData,
-    InputEventQueuer, ReadlineCmd, ReadlineCmdEvent, READING_BUFFERED_INPUT, R_END_INPUT_FUNCTIONS,
+    BlockReason, BlockingWaitExpired, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent,
+    InputData, InputEventQueuer, ReadlineCmd, ReadlineCmdEvent, READING_BUFFERED_INPUT,
+    R_END_INPUT_FUNCTIONS,
 };
 use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
@@ -462,19 +463,23 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn is_blocked(&self) -> bool {
-        self.blocking_wait.is_some()
-    }
-    fn unblock_input(&mut self) -> bool {
-        if !self.is_blocked() {
-            return false;
-        }
-        self.blocking_wait = None;
-        true
+    fn is_blocked(&self) -> Result<bool, BlockingWaitExpired> {
+        self.blocking_wait.is_blocked()
     }
 
-    fn blocking_wait(&self) -> Option<&BlockingWait> {
-        self.blocking_wait.as_ref()
+    fn unblock_input(&mut self) -> bool {
+        match self.is_blocked() {
+            Ok(false) => false,
+            Ok(true) | Err(_) => {
+                self.blocking_wait.reset();
+                true
+            }
+        }
+    }
+
+    fn blocking_wait(&self) -> Result<Option<&BlockReason>, BlockingWaitExpired> {
+        self.is_blocked()?;
+        Ok(self.blocking_wait.reason())
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {

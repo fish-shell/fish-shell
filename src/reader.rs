@@ -82,7 +82,9 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::kitty_progressive_enhancements_query;
+use crate::input_common::BlockReason;
 use crate::input_common::BlockingWait;
+use crate::input_common::BlockingWaitExpired;
 use crate::input_common::Capability;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
@@ -521,7 +523,7 @@ pub struct ReaderData {
     /// The representation of the current screen contents.
     screen: Screen,
 
-    pub blocking_wait: Option<BlockingWait>,
+    pub blocking_wait: BlockingWait,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1176,7 +1178,7 @@ impl ReaderData {
             last_flash: Default::default(),
             flash_autosuggestion: false,
             screen: Screen::new(),
-            blocking_wait: Some(BlockingWait::Startup(Queried::NotYet)),
+            blocking_wait: BlockingWait::new(BlockReason::Startup(Queried::NotYet)),
             input_data,
             queued_repaint: false,
             history,
@@ -1413,8 +1415,8 @@ impl ReaderData {
         cursor_position_wait: Option<CursorPositionWait>,
     ) {
         if let Some(cursor_position_wait) = cursor_position_wait {
-            assert!(self.blocking_wait.is_none());
-            self.blocking_wait = Some(BlockingWait::CursorPosition(cursor_position_wait));
+            self.blocking_wait
+                .set(BlockReason::CursorPosition(cursor_position_wait));
         }
         let _ = out.write_all(b"\x1b[6n");
         self.save_screen_state();
@@ -2167,22 +2169,31 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if zelf.blocking_wait == Some(BlockingWait::Startup(Queried::NotYet)) {
-            if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
-                zelf.blocking_wait = None;
-            } else {
-                zelf.blocking_wait = Some(BlockingWait::Startup(Queried::Once));
-                let mut out = Outputter::stdoutput().borrow_mut();
-                out.begin_buffering();
-                // Query for kitty keyboard protocol support.
-                let _ = out.write_all(kitty_progressive_enhancements_query());
-                // Query for cursor position reporting support.
-                zelf.request_cursor_position(&mut out, None);
-                // Query for synchronized output support.
-                let _ = out.write_all(b"\x1b[?2026$p");
-                let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
-                out.end_buffering();
+        match zelf.blocking_wait() {
+            Ok(Some(BlockReason::Startup(Queried::NotYet))) => {
+                if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
+                    zelf.blocking_wait.reset();
+                } else {
+                    zelf.blocking_wait = BlockingWait::new(BlockReason::Startup(Queried::Once));
+                    let mut out = Outputter::stdoutput().borrow_mut();
+                    out.begin_buffering();
+                    // Query for kitty keyboard protocol support.
+                    let _ = out.write_all(kitty_progressive_enhancements_query());
+                    // Query for cursor position reporting support.
+                    zelf.request_cursor_position(&mut out, None);
+                    // Query for synchronized output support.
+                    let _ = out.write_all(b"\x1b[?2026$p");
+                    let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                    out.end_buffering();
+                }
             }
+            Err(BlockingWaitExpired(BlockReason::Startup(Queried::Once))) => {
+                // Timeout waiting for Primary Device Attribute. We treat it the same way we would a
+                // dumb terminal (see above) by doing nothing. Reseting the blocking wait prevents
+                // the query from being sent again.
+                zelf.blocking_wait.reset();
+            }
+            _ => (),
         }
 
         // HACK: Don't abandon line for the first prompt, because
@@ -2497,16 +2508,26 @@ impl<'a> Reader<'a> {
                     self.save_screen_state();
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
-                    let Some(wait) = &self.blocking_wait else {
-                        // Rogue reply.
-                        return ControlFlow::Continue(());
-                    };
-                    let BlockingWait::Startup(stage) = wait else {
-                        // Rogue reply.
-                        return ControlFlow::Continue(());
+                    // We *received* a response, so we should handle it even if there was a timeout
+                    let stage = match self.blocking_wait() {
+                        Ok(Some(BlockReason::Startup(stage))) => stage.clone(),
+                        Err(BlockingWaitExpired(BlockReason::Startup(stage))) => {
+                            let stage = stage.clone();
+                            self.blocking_wait.reset();
+                            stage
+                        }
+                        Ok(_) => {
+                            // Rogue reply: ignore.
+                            return ControlFlow::Continue(());
+                        }
+                        Err(_) => {
+                            // Unexpected timeout: ignore. Safe to reset at this point
+                            self.blocking_wait.reset();
+                            return ControlFlow::Continue(());
+                        }
                     };
                     match stage {
-                        Queried::NotYet => panic!(),
+                        Queried::NotYet => return ControlFlow::Continue(()),
                         Queried::Once => {
                             if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
                                 == Capability::Unknown as _
@@ -2521,7 +2542,8 @@ impl<'a> Reader<'a> {
                                 let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                                 out.end_buffering();
                                 self.save_screen_state();
-                                self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
+                                self.blocking_wait =
+                                    BlockingWait::new(BlockReason::Startup(Queried::Twice));
                                 return ControlFlow::Continue(());
                             }
                         }
@@ -3786,20 +3808,28 @@ impl<'a> Reader<'a> {
                 if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
                     return;
                 }
-                let Some(wait) = self.blocking_wait() else {
-                    self.request_cursor_position(
-                        &mut Outputter::stdoutput().borrow_mut(),
-                        Some(CursorPositionWait::ScrollbackPush),
-                    );
-                    return;
-                };
-                match wait {
-                    BlockingWait::Startup(_) => panic!(),
-                    BlockingWait::CursorPosition(_) => {
+                match self.blocking_wait() {
+                    Ok(None) => {
+                        self.request_cursor_position(
+                            &mut Outputter::stdoutput().borrow_mut(),
+                            Some(CursorPositionWait::ScrollbackPush),
+                        );
+                        return;
+                    }
+                    Err(BlockingWaitExpired(BlockReason::CursorPosition(_))) => {
+                        FLOG!(
+                            reader,
+                            "Did not receive a response to cursor position report request in alloted timespan"
+                        );
+                        SCROLL_FORWARD_SUPPORTED.store(false);
+                        CURSOR_UP_SUPPORTED.store(false);
+                        self.unblock_input();
+                    }
+                    Ok(Some(_)) | Err(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                             reader,
-                            "Ignoring scrollback-push received while still waiting for Cursor Position Report"
+                            "Ignoring scrollback-push received while still waiting for terminal report"
                         );
                     }
                 }

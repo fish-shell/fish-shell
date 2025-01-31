@@ -25,9 +25,11 @@ use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
+use std::time::{Duration, Instant};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
+pub const MAX_BLOCK_TIME: Duration = Duration::from_secs(2);
 
 /// Hackish: the input style, which describes how char events (only) are applied to the command
 /// line. Note this is set only after applying bindings; it is not set from readb().
@@ -632,23 +634,74 @@ impl InputData {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CursorPositionWait {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Queried {
     NotYet,
     Once,
     Twice,
 }
 
-#[derive(Eq, PartialEq)]
-pub enum BlockingWait {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum BlockReason {
     Startup(Queried),
     CursorPosition(CursorPositionWait),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct BlockingWait {
+    reason: Option<BlockReason>,
+    since: Instant,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct BlockingWaitExpired(pub BlockReason);
+
+impl BlockingWait {
+    pub fn reason(&self) -> Option<&BlockReason> {
+        self.reason.as_ref()
+    }
+
+    pub fn reset(&mut self) {
+        self.reason = None;
+    }
+
+    pub fn new(reason: BlockReason) -> Self {
+        Self {
+            reason: Some(reason),
+            since: Instant::now(),
+        }
+    }
+
+    pub fn set(&mut self, reason: BlockReason) {
+        assert_eq!(
+            self.is_blocked(),
+            Ok(false),
+            "Input is already blocked waiting!"
+        );
+
+        self.reason = Some(reason);
+        self.since = Instant::now();
+    }
+
+    pub fn is_blocked(&self) -> Result<bool, BlockingWaitExpired> {
+        if self.reason.is_none() {
+            return Ok(false);
+        }
+
+        let now = Instant::now();
+        if now - self.since > MAX_BLOCK_TIME {
+            eprintln!("max block time exceeded");
+            Err(BlockingWaitExpired(self.reason.as_ref().unwrap().clone()))
+        } else {
+            Ok(true)
+        }
+    }
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -656,7 +709,8 @@ pub enum BlockingWait {
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        if self.is_blocked() {
+        // Handle in case of blocked input or a timeout
+        if self.is_blocked().unwrap_or(true) {
             match self.get_input_data().queue.front()? {
                 CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
                     return None; // No code execution while blocked.
@@ -783,7 +837,20 @@ pub trait InputEventQueuer {
                             Some(seq.chars().skip(1).map(CharEvent::from_char)),
                         )
                     };
-                    if self.is_blocked() {
+                    let is_blocked = match self.is_blocked() {
+                        Ok(is_blocked) => is_blocked,
+                        Err(BlockingWaitExpired(BlockReason::CursorPosition(_))) => {
+                            CURSOR_POSITION_REPORTING_SUPPORTED.store(false);
+                            self.unblock_input();
+                            false
+                        }
+                        Err(BlockingWaitExpired(BlockReason::Startup(reason))) => {
+                            FLOG!(reader, "Wait expired wait for ", format!("{:?}", reason));
+                            self.unblock_input();
+                            false
+                        }
+                    };
+                    if is_blocked {
                         FLOG!(
                             reader,
                             "Still blocked on response from terminal, deferring key event",
@@ -1062,13 +1129,13 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                let Some(wait) = self.blocking_wait() else {
+                let Ok(Some(wait)) = self.blocking_wait() else {
                     self.on_mouse_left_click(position);
                     return None;
                 };
                 match wait {
-                    BlockingWait::Startup(_) => {}
-                    BlockingWait::CursorPosition(_) => {
+                    BlockReason::Startup(_) => {}
+                    BlockReason::CursorPosition(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                                 reader,
@@ -1109,7 +1176,7 @@ pub trait InputEventQueuer {
                     return invalid_sequence(buffer);
                 };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let Some(BlockingWait::CursorPosition(wait)) = self.blocking_wait() else {
+                let Ok(Some(BlockReason::CursorPosition(wait))) = self.blocking_wait() else {
                     CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
                     return None;
                 };
@@ -1536,12 +1603,14 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_wait(&self) -> Option<&BlockingWait> {
-        None
+    fn blocking_wait(&self) -> Result<Option<&BlockReason>, BlockingWaitExpired> {
+        Ok(None)
     }
-    fn is_blocked(&self) -> bool {
-        false
+
+    fn is_blocked(&self) -> Result<bool, BlockingWaitExpired> {
+        Ok(false)
     }
+
     fn unblock_input(&mut self) -> bool {
         false
     }

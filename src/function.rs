@@ -112,7 +112,7 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {
     parser.assert_can_execute();
-    let mut path_to_autoload: Option<WString> = None;
+    let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
     {

@@ -20,7 +20,7 @@ function funced --description 'Edit function definition'
     if set -q _flag_interactive
         set editor fish
     else if set -q _flag_editor
-        set editor $_flag_editor
+        echo $_flag_editor | read -at editor
     else if set -q VISUAL
         echo $VISUAL | read -at editor
     else if set -q EDITOR
@@ -37,11 +37,8 @@ function funced --description 'Edit function definition'
             set init function $funcname\n\nend
     end
 
-    # Break editor up to get its first command (i.e. discard flags)
-    set -l editor_cmd
-    echo $editor | read -ta editor_cmd
-    if not type -q -f "$editor_cmd[1]"
-        echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found") >&2
+    if not type -q -f "$editor[1]"
+        echo (_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor[1]' could not be found") >&2
         set editor fish
     end
 
@@ -88,7 +85,7 @@ function funced --description 'Edit function definition'
     while true
         set -l checksum (__fish_md5 "$tmpname")
 
-        if not $editor_cmd $tmpname
+        if not $editor $tmpname
             echo (_ "Editing failed or was cancelled")
         else
             # Verify the checksum (if present) to detect potential problems

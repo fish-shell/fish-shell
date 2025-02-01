@@ -74,6 +74,9 @@ The following options are available:
 **--escape**
     When used with ``-C``, escape special characters in completions.
 
+**-A** or **--variable** *VAR_NAME*
+    Specifies that *VAR_NAME* is the name of a variable containing completions. The elements of the variable are treated as unquoted/unescaped strings, and the selected completion is quoted/escaped as necessary when inserted into the command line.
+
 **-h** or **--help**
     Displays help about using this command.
 
@@ -156,3 +159,12 @@ Now hub inherits all of the completions from git. Note this can also be specifie
 Shows all completions for ``git``.
 
 Any command ``foo`` that doesn't support grouping multiple short options in one string (not supporting ``-xf`` as short for ``-x -f``) or a short option and its value in one string (not supporting ``-d9`` instead of ``-d 9``) should be specified as a single-character old-style option instead of as a short-style option; for example, ``complete -c foo -o s; complete -c foo -o v`` would never suggest ``foo -ov`` but rather ``foo -o -v``.
+
+The ``-A`` option allows you to specify a variable name containing completions. The elements of the variable are treated as unquoted/unescaped strings, and the selected completion is quoted/escaped as necessary when inserted into the command line. For example:
+
+::
+
+    set vals a 'b c' 'd\'e'
+    complete -c com -rfA vals
+
+This will offer the completions `a`, `b c`, and `d'e`.

@@ -629,3 +629,19 @@ complete -C'testcommand '
 # CHECK: check{{\t}}Check the frobnicator
 # CHECK: search{{\t}}Search for frobs
 # CHECK: show{{\t}}Show all frobs
+
+# Tests for the -A option
+set vals a 'b c' 'd\'e'
+complete -c com -rfA vals
+complete -C'com '
+# CHECK: a
+# CHECK: b c
+# CHECK: d\'e
+
+# Test for empty string completions
+set empty_vals a '' b
+complete -c com_empty -rfA empty_vals
+complete -C'com_empty '
+# CHECK: a
+# CHECK: ''
+# CHECK: b

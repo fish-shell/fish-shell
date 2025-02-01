@@ -237,8 +237,9 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let mut wrap_targets = vec![];
     let mut preserve_order = false;
     let mut unescape_output = true;
+    let mut variable_name = WString::new();
 
-    const short_options: &wstr = L!(":a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
+    const short_options: &wstr = L!(":a:c:p:s:l:o:d:fFrxeuAn:C::w:hkA:");
     const long_options: &[WOption] = &[
         wopt(L!("exclusive"), ArgType::NoArgument, 'x'),
         wopt(L!("no-files"), ArgType::NoArgument, 'f'),
@@ -261,6 +262,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("keep-order"), ArgType::NoArgument, 'k'),
         wopt(L!("escape"), ArgType::NoArgument, OPT_ESCAPE),
+        wopt(L!("variable"), ArgType::RequiredArgument, 'A'),
     ];
 
     let mut have_x = false;
@@ -312,7 +314,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 // This option was removed in commit 1911298 and is now a no-op.
             }
             'A' => {
-                // This option was removed in commit 1911298 and is now a no-op.
+                variable_name = w.woptarg.unwrap().to_owned();
             }
             's' => {
                 let arg = w.woptarg.unwrap();
@@ -584,18 +586,38 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         if remove {
             builtin_complete_remove(&cmd_to_complete, &path, &short_opt, &gnu_opt, &old_opt);
         } else {
-            builtin_complete_add(
-                &cmd_to_complete,
-                &path,
-                &short_opt,
-                &gnu_opt,
-                &old_opt,
-                result_mode,
-                &condition,
-                &comp,
-                &desc,
-                flags,
-            );
+            if !variable_name.is_empty() {
+                let var = parser.vars().get(&variable_name);
+                if let Some(var) = var {
+                    for val in var.as_list() {
+                        builtin_complete_add(
+                            &cmd_to_complete,
+                            &path,
+                            &short_opt,
+                            &gnu_opt,
+                            &old_opt,
+                            result_mode,
+                            &condition,
+                            val,
+                            &desc,
+                            flags,
+                        );
+                    }
+                }
+            } else {
+                builtin_complete_add(
+                    &cmd_to_complete,
+                    &path,
+                    &short_opt,
+                    &gnu_opt,
+                    &old_opt,
+                    result_mode,
+                    &condition,
+                    &comp,
+                    &desc,
+                    flags,
+                );
+            }
         }
 
         // Handle wrap targets (probably empty). We only wrap commands, not paths.

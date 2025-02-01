@@ -463,18 +463,10 @@ impl<'a> InputEventQueuer for Reader<'a> {
     }
 
     fn is_blocked(&self) -> bool {
-        self.blocking_wait.is_some()
+        self.blocking_wait().is_some()
     }
-    fn unblock_input(&mut self) -> bool {
-        if !self.is_blocked() {
-            return false;
-        }
-        self.blocking_wait = None;
-        true
-    }
-
-    fn blocking_wait(&self) -> Option<&BlockingWait> {
-        self.blocking_wait.as_ref()
+    fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
+        self.data.blocking_wait()
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {

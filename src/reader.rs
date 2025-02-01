@@ -82,6 +82,7 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::kitty_progressive_enhancements_query;
+use crate::input_common::unblock_input;
 use crate::input_common::BlockingWait;
 use crate::input_common::Capability;
 use crate::input_common::CursorPositionWait;
@@ -521,7 +522,7 @@ pub struct ReaderData {
     /// The representation of the current screen contents.
     screen: Screen,
 
-    pub blocking_wait: Option<BlockingWait>,
+    pub blocking_wait: Rc<Mutex<Option<BlockingWait>>>,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1159,6 +1160,10 @@ fn reader_received_sighup() -> bool {
 
 impl ReaderData {
     fn new(history: Arc<History>, conf: ReaderConfig) -> Pin<Box<Self>> {
+        let blocking_wait = reader_current_data().map_or_else(
+            || Rc::new(Mutex::new(Some(BlockingWait::Startup(Queried::NotYet)))),
+            |parent| parent.blocking_wait.clone(),
+        );
         let input_data = InputData::new(conf.inputfd);
         Pin::new(Box::new(Self {
             canary: Rc::new(()),
@@ -1176,7 +1181,7 @@ impl ReaderData {
             last_flash: Default::default(),
             flash_autosuggestion: false,
             screen: Screen::new(),
-            blocking_wait: Some(BlockingWait::Startup(Queried::NotYet)),
+            blocking_wait,
             input_data,
             queued_repaint: false,
             history,
@@ -1201,6 +1206,10 @@ impl ReaderData {
             in_flight_autosuggest_request: Default::default(),
             rls: None,
         }))
+    }
+
+    pub(crate) fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
+        self.blocking_wait.lock().unwrap()
     }
 
     // We repaint our prompt if fstat reports the tty as having changed.
@@ -1410,11 +1419,12 @@ impl ReaderData {
     pub fn request_cursor_position(
         &mut self,
         out: &mut Outputter,
-        cursor_position_wait: Option<CursorPositionWait>,
+        wait: Option<CursorPositionWait>,
     ) {
-        if let Some(cursor_position_wait) = cursor_position_wait {
-            assert!(self.blocking_wait.is_none());
-            self.blocking_wait = Some(BlockingWait::CursorPosition(cursor_position_wait));
+        if let Some(cursor_position_wait) = wait {
+            let mut wait_guard = self.blocking_wait();
+            assert!(wait_guard.is_none());
+            *wait_guard = Some(BlockingWait::CursorPosition(cursor_position_wait));
         }
         let _ = out.write_all(b"\x1b[6n");
         self.save_screen_state();
@@ -2167,11 +2177,11 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if zelf.blocking_wait == Some(BlockingWait::Startup(Queried::NotYet)) {
+        if *zelf.blocking_wait() == Some(BlockingWait::Startup(Queried::NotYet)) {
             if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
-                zelf.blocking_wait = None;
+                *zelf.blocking_wait() = None;
             } else {
-                zelf.blocking_wait = Some(BlockingWait::Startup(Queried::Once));
+                *zelf.blocking_wait() = Some(BlockingWait::Startup(Queried::Once));
                 let mut out = Outputter::stdoutput().borrow_mut();
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
@@ -2497,7 +2507,8 @@ impl<'a> Reader<'a> {
                     self.save_screen_state();
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
-                    let Some(wait) = &self.blocking_wait else {
+                    let mut wait_guard = self.blocking_wait();
+                    let Some(wait) = &*wait_guard else {
                         // Rogue reply.
                         return ControlFlow::Continue(());
                     };
@@ -2520,22 +2531,23 @@ impl<'a> Reader<'a> {
                                 query_capabilities_via_dcs(out.by_ref());
                                 let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                                 out.end_buffering();
+                                *wait_guard = Some(BlockingWait::Startup(Queried::Twice));
+                                drop(wait_guard);
                                 self.save_screen_state();
-                                self.blocking_wait = Some(BlockingWait::Startup(Queried::Twice));
                                 return ControlFlow::Continue(());
                             }
                         }
                         Queried::Twice => (),
                     }
-                    self.unblock_input();
+                    unblock_input(wait_guard);
                 }
                 ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
                     self.mouse_left_click(cursor, click_position);
-                    self.unblock_input();
+                    unblock_input(self.blocking_wait());
                 }
                 ImplicitEvent::ScrollbackPushContinuation(cursor_y) => {
                     self.screen.push_to_scrollback(cursor_y);
-                    self.unblock_input();
+                    unblock_input(self.blocking_wait());
                 }
             },
         }
@@ -3786,7 +3798,9 @@ impl<'a> Reader<'a> {
                 if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
                     return;
                 }
-                let Some(wait) = self.blocking_wait() else {
+                let wait_guard = self.blocking_wait();
+                let Some(wait) = &*wait_guard else {
+                    drop(wait_guard);
                     self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
                         Some(CursorPositionWait::ScrollbackPush),

@@ -25,6 +25,7 @@ use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
+use std::sync::{Mutex, MutexGuard};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -801,7 +802,7 @@ pub trait InputEventQueuer {
                                 reader,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
-                            let ok = self.unblock_input();
+                            let ok = unblock_input(self.blocking_wait());
                             assert!(ok);
                         }
                         continue;
@@ -1062,7 +1063,9 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                let Some(wait) = self.blocking_wait() else {
+                let wait_guard = self.blocking_wait();
+                let Some(wait) = &*wait_guard else {
+                    drop(wait_guard);
                     self.on_mouse_left_click(position);
                     return None;
                 };
@@ -1109,7 +1112,8 @@ pub trait InputEventQueuer {
                     return invalid_sequence(buffer);
                 };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let Some(BlockingWait::CursorPosition(wait)) = self.blocking_wait() else {
+                let wait_guard = self.blocking_wait();
+                let Some(BlockingWait::CursorPosition(wait)) = &*wait_guard else {
                     CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
                     return None;
                 };
@@ -1124,6 +1128,7 @@ pub trait InputEventQueuer {
                         ImplicitEvent::ScrollbackPushContinuation(y)
                     }
                 };
+                drop(wait_guard);
                 self.push_front(CharEvent::Implicit(continuation));
                 return None;
             }
@@ -1536,13 +1541,11 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_wait(&self) -> Option<&BlockingWait> {
-        None
+    fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
+        static NO_WAIT: Mutex<Option<BlockingWait>> = Mutex::new(None);
+        NO_WAIT.lock().unwrap()
     }
     fn is_blocked(&self) -> bool {
-        false
-    }
-    fn unblock_input(&mut self) -> bool {
         false
     }
 
@@ -1559,7 +1562,7 @@ pub trait InputEventQueuer {
         let vintr = shell_modes().c_cc[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(Key::from_single_byte(vintr));
-            if self.unblock_input() {
+            if unblock_input(self.blocking_wait()) {
                 FLOG!(
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
@@ -1588,6 +1591,14 @@ pub trait InputEventQueuer {
     fn has_lookahead(&self) -> bool {
         !self.get_input_data().queue.is_empty()
     }
+}
+
+pub(crate) fn unblock_input(mut wait_guard: MutexGuard<Option<BlockingWait>>) -> bool {
+    if wait_guard.is_none() {
+        return false;
+    }
+    *wait_guard = None;
+    true
 }
 
 fn invalid_sequence(buffer: &[u8]) -> Option<Key> {

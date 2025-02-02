@@ -1346,7 +1346,7 @@ impl ReaderData {
         {
             // The commandline builtin changed our contents.
             self.clear_pager();
-            self.set_buffer_maintaining_pager(&state.text, state.cursor_pos, false);
+            self.set_buffer_maintaining_pager(&state.text, state.cursor_pos);
             self.reset_loop_state = true;
         } else if let Some((new_search_field, new_cursor_pos)) = state.search_field {
             if !self.pager.search_field_shown {
@@ -4099,55 +4099,46 @@ impl ReaderData {
     fn pager_selection_changed(&mut self) {
         assert_is_main_thread();
 
-        let completion = self.pager.selected_completion(&self.current_page_rendering);
-
         // Update the cursor and command line.
         let mut cursor_pos = self.cycle_cursor_pos;
 
-        let new_cmd_line = match completion {
-            None => Cow::Borrowed(&self.cycle_command_line),
-            Some(completion) => Cow::Owned(completion_apply_to_command_line(
+        if self.command_line_has_transient_edit {
+            self.undo(EditableLineTag::Commandline);
+            self.command_line_has_transient_edit = false;
+        }
+
+        if let Some(completion) = self.pager.selected_completion(&self.current_page_rendering) {
+            let new_cmd_line = completion_apply_to_command_line(
                 &OperationContext::background_interruptible(EnvStack::globals()), // To-do: include locals.
                 &completion.completion,
                 completion.flags,
                 &self.cycle_command_line,
                 &mut cursor_pos,
                 false,
-            )),
-        };
-
-        // Only update if something changed, to avoid useless edits in the undo history.
-        if new_cmd_line.as_utfstr() != self.command_line.text() {
-            let new_cmd_line = new_cmd_line.into_owned();
-            self.set_buffer_maintaining_pager(&new_cmd_line, cursor_pos, /*transient=*/ true);
+            );
+            // Only update if something changed, to avoid useless edits in the undo history.
+            if new_cmd_line != self.command_line.text() && new_cmd_line != self.cycle_command_line {
+                self.set_buffer_maintaining_pager(&new_cmd_line, cursor_pos);
+                self.command_line_has_transient_edit = true;
+            }
+        } else {
+            self.update_buff_pos(EditableLineTag::Commandline, None);
         }
     }
 
     /// Sets the command line contents, without clearing the pager.
-    fn set_buffer_maintaining_pager(
-        &mut self,
-        b: &wstr,
-        mut pos: usize,
-        transient: bool, /* = false */
-    ) {
-        let command_line_len = b.len();
-        if transient {
-            if self.command_line_has_transient_edit {
-                self.undo(EditableLineTag::Commandline);
-            }
-            self.command_line_has_transient_edit = true;
-        }
+    fn set_buffer_maintaining_pager(&mut self, new_cmd_line: &wstr, pos: usize) {
         self.replace_substring(
             EditableLineTag::Commandline,
             0..self.command_line.len(),
-            b.to_owned(),
+            new_cmd_line.to_owned(),
         );
 
         // Don't set a position past the command line length.
-        if pos > command_line_len {
-            pos = command_line_len;
-        }
-        self.update_buff_pos(EditableLineTag::Commandline, Some(pos));
+        self.update_buff_pos(
+            EditableLineTag::Commandline,
+            Some(pos.min(new_cmd_line.len())),
+        );
 
         // Clear history search.
         self.history_search.reset();
@@ -6525,6 +6516,6 @@ impl<'a> Reader<'a> {
             &mut cursor,
             /*append_only=*/ false,
         );
-        self.set_buffer_maintaining_pager(&new_command_line, cursor, false);
+        self.set_buffer_maintaining_pager(&new_command_line, cursor);
     }
 }

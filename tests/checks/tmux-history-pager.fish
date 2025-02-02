@@ -141,3 +141,9 @@ isolated-tmux capture-pane -p
 # CHECK: ► true 2   ► true 4   ► true 6   ► true 8   ► true 10   ► true 12
 # CHECK: ► true 3!  ► true 5!  ► true 7!  ► true 9!  ► true 11!  ► true 13!
 # CHECK: Items 1 to 12 of 35
+
+isolated-tmux send-keys -
+isolated-tmux send-keys Escape
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 50>

@@ -79,6 +79,9 @@ impl ReaderHistorySearch {
     pub fn by_prefix(&self) -> bool {
         self.mode == SearchMode::Prefix
     }
+    pub fn mode(&self) -> SearchMode {
+        self.mode
+    }
 
     /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {

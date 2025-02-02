@@ -8,13 +8,11 @@ set(CMAKE_FOLDER tests)
 # pass but it should not be considered a failed test run, either.
 set(SKIP_RETURN_CODE 125)
 
-# Even though we are using CMake's ctest for testing, we still define our own `make test` target
+# Even though we are using CMake's ctest for testing, we still define our own `make fish_run_tests` target
 # rather than use its default for many reasons:
 #  * CMake doesn't run tests in-proc or even add each tests as an individual node in the ninja
 #    dependency tree, instead it just bundles all tests into a target called `test` that always just
 #    shells out to `ctest`, so there are no build-related benefits to not doing that ourselves.
-#  * CMake devs insist that it is appropriate for `make test` to never depend on `make all`, i.e.
-#    running `make test` does not require any of the binaries to be built before testing.
 #  * The only way to have a test depend on a binary is to add a fake test with a name like
 #    "build_fish" that executes CMake recursively to build the `fish` target.
 #  * Circling back to the point about individual tests not being actual Makefile targets, CMake does
@@ -31,15 +29,6 @@ add_custom_target(fish_run_tests
   DEPENDS tests_dir funcs_dir tests_buildroot_target
   USES_TERMINAL
 )
-
-# If CMP0037 is available, also make an alias "test" target.
-# Note that this policy may not be available, in which case definining such a target silently fails.
-cmake_policy(PUSH)
-if(POLICY CMP0037)
-  cmake_policy(SET CMP0037 OLD)
-  add_custom_target(test DEPENDS fish_run_tests)
-endif()
-cmake_policy(POP)
 
 # The "test" directory.
 set(TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/test)
@@ -81,7 +70,7 @@ configure_file(build_tools/pexpect_helper.py pexpect_helper.py COPYONLY)
 set(CMAKE_XCODE_GENERATE_SCHEME 0)
 
 # CMake being CMake, you can't just add a DEPENDS argument to add_test to make it depend on any of
-# your binaries actually being built before `make test` is executed (requiring `make all` first),
+# your binaries actually being built before `make fish_run_tests` is executed (requiring `make all` first),
 # and the only dependency a test can have is on another test. So we make building fish
 # prerequisites to our entire top-level `test` target.
 function(add_test_target NAME)

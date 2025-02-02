@@ -14,6 +14,8 @@ Changes since 4.0b1
 - Add debug information back to cmake builds with the "RelWithDebInfo" profile (:issue:`10959`).
 - the :kbd:`ctrl-c` binding now calls a new bind function called "clear-commandline",
   the old behavior that leaves a "^C" marker is available as "cancel-commandline" (:issue:`10935`)
+- The ``make test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``.
+  The built-in test target will run if you built fish before, but will not print output if it fails (:issue:`11116`).
 
 fish 4.0.0 (released ???)
 =========================

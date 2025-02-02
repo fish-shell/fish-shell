@@ -378,6 +378,10 @@ complete -c tmux -n __fish_use_subcommand -a $lsk -d 'list all key bindings'
 
 complete -c tmux -n __fish_use_subcommand -a $send -d 'send key or event'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s R -d 'reset terminal state'
+# TODO: Could list all possible copy mode commands
+complete -c tmux -n "__fish_seen_subcommand_from $send" -s X -d 'copy mode command'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -s l -d 'literal chars'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -s H -d 'hex-encoded chars'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n __fish_use_subcommand -a $sendprefix -d 'send the prefix key'
@@ -393,6 +397,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s n -d 'command bound
 # TODO: Could parse output of `tmux lsk` to get a dynamic list that includes any user key tables
 set -l key_table 'copy-mode copy-mode-vi prefix root'
 complete -c tmux -n "__fish_seen_subcommand_from $bind $unbind $lsk" -xs T -d 'key table' -xa "$key_table"
+complete -c tmux -n "__fish_seen_subcommand_from $switchc" -xs T -d 'switch client key table' -xa "$key_table"
 
 ###############  End:   Key Bindings ###############
 

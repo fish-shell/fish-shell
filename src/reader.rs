@@ -2982,7 +2982,7 @@ impl<'a> Reader<'a> {
 
                 let was_active_before = self.history_search.active();
 
-                if self.history_search.is_at_present() {
+                if self.history_search.is_at_present() && mode != self.history_search.mode() {
                     let el = &self.data.command_line;
                     if mode == SearchMode::Token {
                         // Searching by token.
@@ -3331,15 +3331,13 @@ impl<'a> Reader<'a> {
                         },
                         false,
                     );
-                } else {
+                } else if self.history_search.active() {
                     if up {
                         self.history_search.go_to_oldest();
                     } else {
                         self.history_search.go_to_present();
                     }
-                    if self.history_search.active() {
-                        self.update_command_line_from_history_search();
-                    }
+                    self.update_command_line_from_history_search();
                 }
             }
             rl::UpLine | rl::DownLine => {

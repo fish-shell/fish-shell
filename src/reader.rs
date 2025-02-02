@@ -1894,30 +1894,28 @@ impl ReaderData {
 
     /// Apply the history search to the command line.
     fn update_command_line_from_history_search(&mut self) {
-        let new_text = if self.history_search.is_at_present() {
-            self.history_search.search_string()
-        } else {
-            self.history_search.current_result()
-        }
-        .to_owned();
+        assert!(self.history_search.active());
         if self.command_line_has_transient_edit {
             self.undo(EditableLineTag::Commandline);
+            self.command_line_has_transient_edit = false;
         }
-        if self.history_search.by_token() {
-            self.replace_current_token(new_text);
-        } else {
-            assert!(self.history_search.by_line() || self.history_search.by_prefix());
-            self.replace_substring(
-                EditableLineTag::Commandline,
-                0..self.command_line.len(),
-                new_text,
-            );
-            if self.history_search.by_prefix() {
-                self.command_line
-                    .set_position(self.history_search.search_string().len());
+        if !self.history_search.is_at_present() {
+            let new_text = self.history_search.current_result().to_owned();
+            if self.history_search.by_token() {
+                self.replace_current_token(new_text);
+            } else {
+                self.replace_substring(
+                    EditableLineTag::Commandline,
+                    0..self.command_line.len(),
+                    new_text,
+                );
+                if self.history_search.by_prefix() {
+                    self.command_line
+                        .set_position(self.history_search.search_string().len());
+                }
             }
+            self.command_line_has_transient_edit = true;
         }
-        self.command_line_has_transient_edit = true;
         self.update_buff_pos(EditableLineTag::Commandline, None);
     }
 
@@ -3034,12 +3032,10 @@ impl<'a> Reader<'a> {
                     })
                 }
 
-                if !found && !was_active_before {
-                    self.history_search.reset();
-                } else if found
-                    || (dir == SearchDirection::Forward && self.history_search.is_at_present())
-                {
+                if found {
                     self.update_command_line_from_history_search();
+                } else if !was_active_before {
+                    self.history_search.reset();
                 }
             }
             rl::HistoryPager => {

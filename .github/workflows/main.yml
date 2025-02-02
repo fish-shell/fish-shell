@@ -1,4 +1,4 @@
-name: make test
+name: make fish_run_tests
 
 on: [push, pull_request]
 
@@ -29,7 +29,7 @@ jobs:
     - name: make
       run: |
         make VERBOSE=1
-    - name: make test
+    - name: make fish_run_tests
       run: |
         make VERBOSE=1 test
 
@@ -55,7 +55,7 @@ jobs:
     - name: make
       run: |
         make VERBOSE=1
-    - name: make test
+    - name: make fish_run_tests
       run: |
         make VERBOSE=1 test
 
@@ -93,7 +93,7 @@ jobs:
     - name: make
       run: |
         make VERBOSE=1
-    - name: make test
+    - name: make fish_run_tests
       env:
           FISH_CI_SAN: 1
           ASAN_OPTIONS: check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1:fast_unwind_on_malloc=0
@@ -133,9 +133,9 @@ jobs:
   #   - name: make
   #     run: |
   #       make
-  #   - name: make test
+  #   - name: make fish_run_tests
   #     run: |
-  #       make test
+  #       make fish_run_tests
 
   macos:
 
@@ -161,6 +161,6 @@ jobs:
     - name: make
       run: |
         make VERBOSE=1
-    - name: make test
+    - name: make fish_run_tests
       run: |
         make VERBOSE=1 test

@@ -43,7 +43,7 @@ Guidelines
 In short:
 
 - Be conservative in what you need (keep to the agreed minimum supported Rust version, limit new dependencies)
-- Use automated tools to help you (including ``make test`` and ``build_tools/style.fish``)
+- Use automated tools to help you (including ``make fish_run_tests`` and ``build_tools/style.fish``)
 
 Contributing completions
 ========================
@@ -213,7 +213,7 @@ The tests can be run on your local computer on all operating systems.
 ::
 
    cmake path/to/fish-shell
-   make test
+   make fish_run_tests
 
 Or you can run them on a fish, without involving cmake::
 
@@ -252,7 +252,7 @@ One possibility is a pre-push hook script like this one:
    done
    if [ "x$isprotected" = x1 ]; then
        echo "Running tests before push to master"
-       make test
+       make fish_run_tests
        RESULT=$?
        if [ $RESULT -ne 0 ]; then
            echo "Tests failed for a push to master, we can't let you do that" >&2
@@ -262,7 +262,7 @@ One possibility is a pre-push hook script like this one:
    exit 0
 
 This will check if the push is to the master branch and, if it is, only
-allow the push if running ``make test`` succeeds. In some circumstances
+allow the push if running ``make fish_run_tests`` succeeds. In some circumstances
 it may be advisable to circumvent this check with
 ``git push --no-verify``, but usually that isn’t necessary.
 

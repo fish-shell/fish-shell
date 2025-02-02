@@ -48,6 +48,7 @@ Other improvements
 For distributors
 ----------------
 - ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space.
+- The CMake ``test`` target no longer exists as CMake no longer allows defining a custom "test" target. Use ``make fish_run_tests`` instead (:issue:`11116`).
 
 fish 4.0b1 (released December 17, 2024)
 =======================================

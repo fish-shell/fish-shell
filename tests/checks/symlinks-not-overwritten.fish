@@ -1,7 +1,4 @@
-# Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
 # RUN: fish=%fish %fish %s
-
-mkdir -p $XDG_CONFIG_HOME/fish
 
 # fish_variables
 set -l target_file $XDG_CONFIG_HOME/fish/target_fish_variables

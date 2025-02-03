@@ -1418,8 +1418,7 @@ impl<'a> ExecutionContext {
                 ExpandResultCode::ok => {}
             }
 
-            // Now copy over any expanded arguments. Use std::move() to avoid extra allocations; this
-            // is called very frequently.
+            // Now copy over any expanded arguments.
             if let Some(additional) =
                 (out_arguments.len() + arg_expanded.len()).checked_sub(out_arguments.capacity())
             {

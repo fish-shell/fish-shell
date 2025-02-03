@@ -77,7 +77,7 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
         outp.writech(c);
     }
     outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL);
-    outp.contents().to_owned() // TODO should move
+    outp.contents().to_owned()
 }
 
 /// Perform syntax highlighting for the shell commands in buff. The result is stored in the color

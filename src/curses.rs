@@ -494,13 +494,6 @@ fn get_flag_cap(db: &terminfo::Database, code: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Covers over tparm().
-pub fn tparm0(cap: &CStr) -> Option<CString> {
-    assert!(!cap.to_bytes().is_empty());
-    let cap = cap.to_bytes();
-    terminfo::expand!(cap).ok().map(|x| x.to_cstring())
-}
-
 /// Covers over tparm() with one parameter.
 pub fn tparm1(cap: &CStr, param1: i32) -> Option<CString> {
     assert!(!cap.to_bytes().is_empty());

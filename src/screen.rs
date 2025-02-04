@@ -28,7 +28,7 @@ use crate::common::{
     has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop, ScopeGuard,
     ScopeGuarding,
 };
-use crate::curses::{term, tparm0, tparm1};
+use crate::curses::{term, tparm1};
 use crate::env::{Environment, TERM_HAS_XN};
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
@@ -668,7 +668,7 @@ impl Screen {
                 true
             };
             if let Some(enter_dim_mode) = term.and_then(|term| term.enter_dim_mode.as_ref()) {
-                if add(&mut abandon_line_string, tparm0(enter_dim_mode)) {
+                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
                     // Use dim if they have it, so the color will be based on their actual normal
                     // color and the background of the terminal.
                     justgrey = false;
@@ -688,7 +688,7 @@ impl Screen {
                 } else if max_colors >= 2 {
                     if let Some(enter_bold_mode) = term.unwrap().enter_bold_mode.as_ref() {
                         // we might still get that color by setting black and going bold for bright
-                        add(&mut abandon_line_string, tparm0(enter_bold_mode));
+                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
                         add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
                     }
                 }
@@ -700,7 +700,7 @@ impl Screen {
                 term.and_then(|term| term.exit_attribute_mode.as_ref())
             {
                 // normal text ANSI escape sequence
-                add(&mut abandon_line_string, tparm0(exit_attribute_mode));
+                add(&mut abandon_line_string, Some(exit_attribute_mode.clone()));
             }
 
             let newline_glitch_width = if TERM_HAS_XN.load(Ordering::Relaxed) {
@@ -1763,10 +1763,7 @@ fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
         let Some(p) = p else { continue };
         // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
         // actually seem to do anything these days.
-        let esc_seq_len = std::cmp::max(
-            try_sequence(tparm0(p).unwrap().as_bytes(), code),
-            try_sequence(p.as_bytes(), code),
-        );
+        let esc_seq_len = try_sequence(p.as_bytes(), code);
         if esc_seq_len != 0 {
             return Some(esc_seq_len);
         }

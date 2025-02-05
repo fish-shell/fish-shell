@@ -16,6 +16,7 @@ Changes since 4.0b1
   the old behavior that leaves a "^C" marker is available as "cancel-commandline" (:issue:`10935`)
 - The ``make test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``.
   The built-in test target will run if you built fish before, but will not print output if it fails (:issue:`11116`).
+- :kbd:`alt-backspace`, :kdb:`alt-left` and :kbd:`alt-right` operate on words again instead of full arguments, reverting to how it was in 3.7 and before (:issue:`10926`).
 
 fish 4.0.0 (released ???)
 =========================

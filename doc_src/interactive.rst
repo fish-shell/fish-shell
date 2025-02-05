@@ -303,7 +303,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
-- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one argument left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first argument in the suggestion.
+- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first word in the suggestion.
 
 - :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
 
@@ -370,7 +370,7 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`delete` or :kbd:`backspace` or :kbd:`ctrl-h` removes one character forwards or backwards respectively.
 
-- :kbd:`ctrl-backspace` removes one word backwards and :kbd:`alt-backspace` removes one argument backwards.
+- :kbd:`alt-backspace` removes one word backwards. If supported by the terminal, :kbd:`ctrl-backspace` does the same.
 
 - :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 

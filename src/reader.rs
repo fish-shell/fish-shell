@@ -1671,7 +1671,7 @@ impl ReaderData {
                 0..self.command_line.len(),
                 new_text,
             );
-            if self.history_search.by_prefix() {
+            if self.history_search.by_prefix() && !self.history_search.search_string().is_empty() {
                 self.command_line
                     .set_position(self.history_search.search_string().len());
             }

@@ -364,6 +364,14 @@ send('\x02\x02\x02') # ctrl-b, backward-char
 sendline('\x1bu') # alt+u, upcase word
 expect_prompt("fooBAR")
 
+sendline('bind ctrl-z history-prefix-search-backward')
+expect_prompt()
+sendline("echo this continues")
+expect_prompt()
+send("\x1A")
+sendline(" with this text")
+expect_prompt("this continues with this text")
+
 sendline("""
     bind ctrl-g "
         commandline --insert 'echo foo ar'

@@ -7,6 +7,7 @@ Changes since 4.0b1
 - Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
     fish --install=$HOME/.local/
   In that case, the fish binary will be moved to "bin/" in that path. :issue:`10923`
+
 - The config directories will now be created with mode 700 again (:issue:`10962`).
 - A ``status buildinfo`` command to print information on how fish was built, to help with debugging (:issue:`10896`).
 - Remove the completions for ``dust`` because it conflicted with the Debian/Ubuntu package (:issue:`10922`).
@@ -16,7 +17,7 @@ Changes since 4.0b1
   the old behavior that leaves a "^C" marker is available as "cancel-commandline" (:issue:`10935`)
 - The ``make test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``.
   The built-in test target will run if you built fish before, but will not print output if it fails (:issue:`11116`).
-- :kbd:`alt-backspace`, :kdb:`alt-left` and :kbd:`alt-right` operate on words again instead of full arguments, reverting to how it was in 3.7 and before (:issue:`10926`).
+- :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of full arguments, reverting to how it was in 3.7 and before (:issue:`10926`).
 
 fish 4.0.0 (released ???)
 =========================

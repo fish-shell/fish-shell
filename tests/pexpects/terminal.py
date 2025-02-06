@@ -61,6 +61,7 @@ expect_prompt("0")
 
 # TODO
 import sys
+
 sys.exit(0)
 # HACK: This fails on FreeBSD, macOS and NetBSD for some reason, maybe
 # a pexpect issue?

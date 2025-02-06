@@ -43,7 +43,8 @@ SANITIZE_FOR_PRINTING_RE = re.compile(
         | \x1b>
         | \x1b\].*?\x07
     """,
-    re.VERBOSE)
+    re.VERBOSE,
+)
 
 
 def get_prompt_re(counter):
@@ -129,10 +130,12 @@ class Message(object):
         """Return a output message with the given text."""
         return Message(Message.DIR_OUTPUT, text, when)
 
+
 # Sequences for moving the cursor below the commandline. This happens before executing.
 MOVE_TO_END: str = r"(?:\r\n|\x1b\[2 q|)"
-TO_END: str  = MOVE_TO_END + r"[^\n]*"
-TO_END_SUFFIX: str  = r"[^\n]*" + MOVE_TO_END
+TO_END: str = MOVE_TO_END + r"[^\n]*"
+TO_END_SUFFIX: str = r"[^\n]*" + MOVE_TO_END
+
 
 class SpawnedProc(object):
     """A process, talking to our ptty. This wraps pexpect.spawn.
@@ -160,6 +163,7 @@ class SpawnedProc(object):
             env: a string->string dictionary, describing the environment variables.
         """
         import shlex
+
         if name not in env:
             raise ValueError("'%s' variable not found in environment" % name)
         exe_path = env.get(name)
@@ -176,7 +180,7 @@ class SpawnedProc(object):
         self.spawn.delaybeforesend = None
         self.prompt_counter = 0
         if env.get("TERM") != "dumb":
-            self.spawn.send('\x1b[?123c') # Primary Device Attribute
+            self.spawn.send("\x1b[?123c")  # Primary Device Attribute
 
     def time_since_first_message(self):
         """Return a delta in seconds since the first message, or 0 if this is the first."""
@@ -270,7 +274,11 @@ class SpawnedProc(object):
         failtype = pexpect_error_type(err)
         # If we get an EOF, we check if the process exited with a signal.
         # This shows us e.g. if it crashed
-        if failtype == 'EOF' and self.spawn.signalstatus is not None and self.spawn.signalstatus != 0:
+        if (
+            failtype == "EOF"
+            and self.spawn.signalstatus is not None
+            and self.spawn.signalstatus != 0
+        ):
             failtype = "SIGNAL " + Signals(self.spawn.signalstatus).name
 
         fmtkeys = {"failtype": failtype, "pat": escape(pat)}
@@ -300,12 +308,14 @@ class SpawnedProc(object):
         print("")
         print("{CYAN}When written to the tty, this looks like:{RESET}".format(**colors))
         print("{CYAN}<-------{RESET}".format(**colors))
-        sys.stdout.write(SANITIZE_FOR_PRINTING_RE.sub('', self.spawn.before))
+        sys.stdout.write(SANITIZE_FOR_PRINTING_RE.sub("", self.spawn.before))
         sys.stdout.flush()
-        maybe_nl=""
+        maybe_nl = ""
         if not self.spawn.before.endswith("\n"):
-            maybe_nl="\n{CYAN}(no trailing newline)".format(**colors)
-        print("{RESET}{maybe_nl}{CYAN}------->{RESET}".format(maybe_nl=maybe_nl, **colors))
+            maybe_nl = "\n{CYAN}(no trailing newline)".format(**colors)
+        print(
+            "{RESET}{maybe_nl}{CYAN}------->{RESET}".format(maybe_nl=maybe_nl, **colors)
+        )
 
         print("")
 
@@ -372,22 +382,24 @@ class SpawnedProc(object):
 
 
 def control(char: str) -> str:
-    """ Returns the char sent when control is pressed along the given key. """
+    """Returns the char sent when control is pressed along the given key."""
     assert len(char) == 1
     char = char.lower()
     if ord("a") <= ord(char) <= ord("z"):
         return chr(ord(char) - ord("a") + 1)
-    return chr({
-        "@": 0,
-        "`": 0,
-        "[": 27,
-        "{": 27,
-        "\\": 28,
-        "|": 28,
-        "]": 29,
-        "}": 29,
-        "^": 30,
-        "~": 30,
-        "_": 31,
-        "?": 127,
-    }[char])
+    return chr(
+        {
+            "@": 0,
+            "`": 0,
+            "[": 27,
+            "{": 27,
+            "\\": 28,
+            "|": 28,
+            "]": 29,
+            "}": 29,
+            "^": 30,
+            "~": 30,
+            "_": 31,
+            "?": 127,
+        }[char]
+    )

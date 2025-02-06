@@ -32,5 +32,4 @@ foobar --banana
 # CHECKERR: foobar --banana
 # CHECKERR: ^~~~~^
 
-
 exit 0

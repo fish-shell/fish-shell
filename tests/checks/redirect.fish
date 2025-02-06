@@ -8,7 +8,6 @@ end
 outnerr 0 &| count
 #CHECK: 2
 
-
 outnerr appendfd 2>>&1
 #CHECK: out appendfd
 #CHECK: err appendfd

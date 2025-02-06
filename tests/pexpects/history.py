@@ -111,7 +111,9 @@ expect_re("history delete -p 'echo hello'" + TO_END_SUFFIX)
 expect_re("\\[1\\] echo hello AGAIN" + TO_END_SUFFIX)
 expect_re("\\[2\\] echo hello again" + TO_END_SUFFIX)
 expect_re("Enter nothing to cancel the delete, or\r\n")
-expect_re("Enter one or more of the entry IDs or ranges like '5..12', separated by a space.\r\n")
+expect_re(
+    "Enter one or more of the entry IDs or ranges like '5..12', separated by a space.\r\n"
+)
 expect_re("For example '7 10..15 35 788..812'.\r\n")
 expect_re("Enter 'all' to delete all the matching entries.\r\n")
 expect_re("Delete which entries\\? ")
@@ -120,14 +122,10 @@ expect_prompt('Deleting history entry 1: "echo hello AGAIN"\r\n')
 
 # Verify that the deleted history entry is gone and the other one that matched
 # the prefix search above is still there.
-sendline(
-    "echo count AGAIN (history search -e -C 'echo hello AGAIN' | count)"
-)
+sendline("echo count AGAIN (history search -e -C 'echo hello AGAIN' | count)")
 expect_prompt("count AGAIN 0\r\n")
 
-sendline(
-    "echo count again (history search -e -C 'echo hello again' | count)"
-)
+sendline("echo count again (history search -e -C 'echo hello again' | count)")
 expect_prompt("count again 1\r\n")
 
 # Verify that the $history var has the expected content.
@@ -182,7 +180,9 @@ expect_prompt()
 
 # Check history filtering
 # We store anything that starts with "echo ephemeral".
-sendline("function fish_should_add_to_history; string match -q 'echo ephemeral*' -- $argv; and return 2; return 0; end")
+sendline(
+    "function fish_should_add_to_history; string match -q 'echo ephemeral*' -- $argv; and return 2; return 0; end"
+)
 expect_prompt("")
 # Check that matching the line works
 # (fish_should_add_to_history is itself stored in history so we match "ephemeral!" to avoid it)

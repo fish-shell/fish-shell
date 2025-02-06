@@ -65,7 +65,6 @@ expect_re(r"\r\n?.*read> some other text")
 sendline("another value")
 expect_prompt("another value\r\n")
 
-
 # read -s
 
 sendline("read -s foo")
@@ -121,7 +120,6 @@ expect_read_prompt()
 sendline("bar\r_marker 4540")
 expect_prompt()
 expect_marker(4540)
-
 
 # ==========
 # The fix for issue #2007 initially introduced a problem when using a function

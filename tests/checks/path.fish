@@ -274,7 +274,6 @@ path sort --unique --key=basename {def,abc}/{456,123,789} def/{abc,def,0} abc/{f
 # CHECK: abc/foo
 
 
-
 # Symlink loop.
 # It goes brrr.
 ln -s target link
@@ -287,7 +286,6 @@ and echo target resolves to target
 test (path resolve link) = (pwd -P)/link
 and echo link resolves to link
 # CHECK: link resolves to link
-
 
 # path mtime
 # These tests deal with *time*, so we have to account

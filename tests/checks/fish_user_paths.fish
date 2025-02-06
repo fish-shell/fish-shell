@@ -28,7 +28,6 @@ or begin
     echo OLD: $oldpath
 end
 
-
 # Add a link to the same path.
 set -a fish_user_paths $tmpdir/link
 contains -- $tmpdir/link $PATH

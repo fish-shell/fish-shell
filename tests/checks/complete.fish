@@ -512,7 +512,6 @@ complete -C'oooops '
 echo $oops
 # CHECK: 1
 
-
 # See that we load completions only if the command exists in $PATH,
 # as a workaround for #3117.
 

@@ -21,7 +21,6 @@ setenv var hello you
 # CHECKERR: too many arguments test
 # CHECKERR: setenv: Too many arguments
 
-
 # Two args should set the named var to the second arg
 setenv setenv3 'hello you'
 setenv | grep '^setenv3=hello you'

@@ -177,7 +177,6 @@ function foo --argument-names "banana pajama"; end
 # CHECKERR: function foo --argument-names "banana pajama"; end
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
 
-
 function foo --argument-names status; end
 # CHECKERR: {{.*}}function.fish (line {{\d+}}): function: variable 'status' is read-only
 # CHECKERR: function foo --argument-names status; end

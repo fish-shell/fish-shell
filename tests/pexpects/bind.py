@@ -44,7 +44,9 @@ expect_prompt("")
 # Start by testing with no delay. This should transpose the words.
 send("echo abc def")
 send("\033t\r")
-expect_prompt(TO_END + "def abc\r\n")  # emacs transpose words, default timeout: no delay
+expect_prompt(
+    TO_END + "def abc\r\n"
+)  # emacs transpose words, default timeout: no delay
 
 # Now test with a delay > 0 and < the escape timeout. This should transpose
 # the words.
@@ -76,7 +78,8 @@ expect_prompt()
 # Go through a prompt cycle to let fish catch up, it may be slow due to ASAN
 sendline("echo success: default escape timeout")
 expect_prompt(
-    TO_END + "success: default escape timeout", unmatched="prime vi mode, default timeout"
+    TO_END + "success: default escape timeout",
+    unmatched="prime vi mode, default timeout",
 )
 
 send("echo fail: default escape timeout")
@@ -231,7 +234,6 @@ sleep(0.300)
 send("k\r")
 expect_prompt("foo")
 
-
 # Test '~' (togglecase-char)
 # HACK: Deactivated because it keeps failing on CI
 # send("\033")
@@ -284,7 +286,8 @@ send("echo abc def")
 send("\033")
 send("t\r")
 expect_prompt(
-    TO_END + "def abc\r\n", unmatched="emacs transpose words fail, 200ms timeout: no delay"
+    TO_END + "def abc\r\n",
+    unmatched="emacs transpose words fail, 200ms timeout: no delay",
 )
 
 # Verify special characters, such as \cV, are not intercepted by the kernel
@@ -364,23 +367,24 @@ expect_prompt(TO_END + "b c d")
 # Check that ctrl-z can be bound
 sendline('bind ctrl-z "echo bound ctrl-z"')
 expect_prompt()
-send("\x1A")
+send("\x1a")
 expect_str("bound ctrl-z")
 
-send('echo foobar')
-send('\x02\x02\x02') # ctrl-b, backward-char
-sendline('\x1bu') # alt+u, upcase word
+send("echo foobar")
+send("\x02\x02\x02")  # ctrl-b, backward-char
+sendline("\x1bu")  # alt+u, upcase word
 expect_prompt("fooBAR")
 
-sendline('bind ctrl-z history-prefix-search-backward')
+sendline("bind ctrl-z history-prefix-search-backward")
 expect_prompt()
 sendline("echo this continues")
 expect_prompt()
-send("\x1A")
+send("\x1a")
 sendline(" with this text")
 expect_prompt("this continues with this text")
 
-sendline("""
+sendline(
+    """
     bind ctrl-g "
         commandline --insert 'echo foo ar'
         commandline -f backward-word
@@ -389,10 +393,11 @@ sendline("""
         commandline -f backward-char
         commandline -f delete-char
     "
-""".strip())
+""".strip()
+)
 expect_prompt()
-send('\x07') # ctrl-g
-send('\r')
+send("\x07")  # ctrl-g
+send("\r")
 expect_prompt("foobar")
 
 # This should do nothing instead of crash
@@ -407,7 +412,7 @@ expect_prompt()
 # (for obvious reasons this MUST BE LAST)
 sendline("function myexit; echo exit; exit; end; bind ctrl-z myexit")
 expect_prompt()
-send("\x1A")
+send("\x1a")
 expect_str("exit")
 
 for t in range(0, 50):

@@ -44,7 +44,6 @@ set --show b
 #CHECKERR: set b (string repeat -n 512 x)
 #CHECKERR:       ^~~~~~~~~~~~~~~~~~~~~~~^
 
-
 # Command sub over the limit should fail
 set c (subme 513)
 set --show c
@@ -72,7 +71,6 @@ or echo expected status 122, saw $saved_status >&2
 #CHECKERR: {{.*}}: Too much data emitted by command substitution so it was discarded
 #CHECKERR: echo this will fail (string repeat --max 513 b) to output anything
 #CHECKERR:                     ^~~~~~~~~~~~~~~~~~~~~~~~~~^
-
 
 # Check that it's reset to the default when unset
 begin

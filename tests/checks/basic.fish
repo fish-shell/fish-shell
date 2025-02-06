@@ -42,7 +42,6 @@ end
 #CHECK: b
 #CHECK: c
 
-
 # Simple function tests
 
 function foo
@@ -113,7 +112,6 @@ else
 end
 echo Test 5 $sta
 #CHECK: Test 5 pass
-
 
 function test_builtin_status_clamp_to_255
     return 300
@@ -342,7 +340,6 @@ cat $tmpdir/file_truncation_test.txt
 
 # Test events.
 
-
 # This pattern caused a crash; github issue #449
 
 set -g var before
@@ -360,7 +357,6 @@ emit test
 
 echo $var
 #CHECK: before:test1
-
 
 function test3 --on-event test3
     echo received event test3 with args: $argv

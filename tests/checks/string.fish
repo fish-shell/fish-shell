@@ -863,7 +863,6 @@ string replace -r "(*UTF).*" "aaa"
 # CHECKERR: string replace: (*UTF).*
 # CHECKERR: string replace:      ^
 
-
 string match -eq asd asd
 echo $status
 # CHECK: 0

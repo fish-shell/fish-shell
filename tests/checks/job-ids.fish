@@ -18,7 +18,6 @@ begin
     set -g tokill $tokill $last_pid
 end </dev/null
 
-
 sleep 300 &
 set -g tokill $tokill $last_pid
 
@@ -46,7 +45,6 @@ jobs
 #CHECK: 4{{.*\t}}sleep 400 &
 #CHECK: 3{{.*\t}}sleep 300 &
 #CHECK: 1{{.*\t}}sleep 100 &
-
 
 status job-control interactive
 

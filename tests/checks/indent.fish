@@ -33,7 +33,6 @@ brot' | $fish_indent
 #CHECK: echo foo \
 #CHECK: brot
 
-
 echo 'echo rabarber \\
      banana' | $fish_indent
 #CHECK: echo rabarber \
@@ -66,7 +65,6 @@ echo 'echo foo \\
 echo -n '
 begin
 echo hi
-
 
 end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end arg
 ' | $fish_indent
@@ -222,7 +220,6 @@ echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
 ' | $fish_indent
 #CHECK: echo <stdin >>appended yes 2>&1 no >stdout maybe 2>&4 | cat 2>| cat
 
-
 # issue 7252
 echo -n '
 begin
@@ -261,7 +258,6 @@ end
 #CHECK: {{^    }}cmd \
 #CHECK: {{^    }}{{    }}continuation
 #CHECK: {{^}}end
-
 
 echo -n '
 i\
@@ -507,9 +503,7 @@ echo '\"\"\|\x00' | string unescape | $fish_indent | string unescape
 
 echo 'a
 
-
 ;
-
 
 b
 ' | $fish_indent
@@ -518,7 +512,6 @@ b
 #CHECK: b
 
 echo "
-
 
 
 echo this file starts late
@@ -556,7 +549,6 @@ end' | $fish_indent --only-unindent
 # CHECK: {{^}}    echo
 # CHECK: {{^}}  not indented properly
 # CHECK: {{^}}end
-
 
 echo 'echo (
 if true

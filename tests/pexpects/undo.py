@@ -26,7 +26,9 @@ expect_str("echo")
 send("Redo\r")
 expect_prompt("echo word")
 
-sendline("bind x begin-undo-group 'commandline -i \"+ \"' 'commandline -i 3' end-undo-group")
+sendline(
+    "bind x begin-undo-group 'commandline -i \"+ \"' 'commandline -i 3' end-undo-group"
+)
 expect_prompt()
 send("math 2 x\r")
 expect_prompt("5")
@@ -36,8 +38,8 @@ send("Undo1\r")
 expect_prompt("41")
 
 send("math 5 x")
-send("\x02") # c-b, moving before the 3
+send("\x02")  # c-b, moving before the 3
 send("Undo")
 send("Redo")
-send("9\r") # 5 + 93
+send("9\r")  # 5 + 93
 expect_prompt("98")

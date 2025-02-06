@@ -43,7 +43,6 @@ try:
 except ImportError:
     import simplejson as json
 
-
 # Disable CLI web browsers
 term = os.environ.pop("TERM", None)
 # This import must be done with an empty $TERM, otherwise a command-line browser may be started

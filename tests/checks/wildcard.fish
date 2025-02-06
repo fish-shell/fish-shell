@@ -16,10 +16,8 @@ echo */foo/
 # CHECKERR: echo */foo/
 # CHECKERR:      ^~~~~^
 
-
 cd $oldpwd
 rm -Rf $dir
-
 
 # Verify that we can do wildcard expansion when we don't have read access to some path components.
 # See #2099

@@ -80,7 +80,6 @@ release = ret.strip().split(" ")[-1]
 # The short X.Y version
 version = release.rsplit(".", 1)[0]
 
-
 # -- General configuration ---------------------------------------------------
 
 # The suffix(es) of source filenames.
@@ -109,7 +108,6 @@ exclude_patterns = []
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -134,7 +132,6 @@ html_copy_source = False
 # 'searchbox.html']``.
 #
 html_sidebars = {"**": ["globaltoc.html", "searchbox.html", "localtoc.html"]}
-
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -211,7 +208,6 @@ for path in sorted(glob.glob("cmds/*")):
     cmd = os.path.basename(docname)
     man_pages.append((docname, cmd, get_command_description(path, cmd), "", 1))
 
-
 # -- Options for Texinfo output ----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
@@ -228,7 +224,6 @@ texinfo_documents = [
         "Miscellaneous",
     )
 ]
-
 
 # -- Options for Epub output -------------------------------------------------
 

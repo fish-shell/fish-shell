@@ -121,7 +121,6 @@ expect_prompt(r"1 2 3 4 5")
 sendline(r"echo openparen seq 5 closeparen ")  # expands on space
 expect_prompt(r"1 2 3 4 5")
 
-
 # Verify that 'commandline' is accurate.
 # Abbreviation functions cannot usefully change the command line, but they can read it.
 sendline(
@@ -139,7 +138,6 @@ send(r"@abc@ ?")
 expect_str(r"<@abc@ >")
 sendline(r"echo $last_cursor : $last_cmdline")
 expect_prompt(r"6 : @abc@ ")
-
 
 # Test cursor positioning.
 sendline(r"""abbr --erase (abbr --list) """)
@@ -168,16 +166,19 @@ sendline(r"""true; and builtin echo foo """)
 expect_prompt("bar")
 sendline(r"""abbr fruit --command={git,hg,svn} banana""")
 expect_prompt()
-sendline(r"""function git; echo git $argv; end; function hg; echo hg $argv; end; function svn; echo svn $argv; end""")
+sendline(
+    r"""function git; echo git $argv; end; function hg; echo hg $argv; end; function svn; echo svn $argv; end"""
+)
 expect_prompt()
 sendline(r"""git fruit""")
 expect_prompt("git banana")
 sendline(r"""abbr""")
-expect_prompt("abbr -a --position anywhere --command git --command hg --command svn -- fruit banana")
+expect_prompt(
+    "abbr -a --position anywhere --command git --command hg --command svn -- fruit banana"
+)
 sendline(r"""function banana; echo I am a banana; end""")
 expect_prompt()
 sendline(r"""abbr fruit --command={git,hg,svn,} banana""")
 expect_prompt()
 sendline(r"""fruit foo""")
 expect_prompt("I am a banana")
-

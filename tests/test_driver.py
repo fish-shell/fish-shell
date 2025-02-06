@@ -122,14 +122,14 @@ def main():
     )
     argparser.add_argument("fish", nargs=1, help="Fish to test")
     argparser.add_argument("file", nargs="*", help="Tests to run")
-    args=argparser.parse_args()
+    args = argparser.parse_args()
 
     fishdir = Path(args.fish[0]).absolute()
     if not fishdir.is_dir():
         fishdir = fishdir.parent
 
     failcount = 0
-    failed=[]
+    failed = []
     passcount = 0
     skipcount = 0
     def_subs = {"%": "%"}
@@ -247,7 +247,7 @@ def main():
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")
     if failcount:
-        failstr = '\n    '.join(failed)
+        failstr = "\n    ".join(failed)
         print(f"{RED}Failed tests{RESET}: \n    {failstr}")
     if passcount == 0 and failcount == 0 and skipcount:
         return 125

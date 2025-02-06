@@ -44,7 +44,6 @@ if fish_pid == tty_owner:
         % (fish_pid)
     )
 
-
 # Now we are going to tell fish to exit.
 # It must not hang. But it might hang when trying to restore the tty.
 os.kill(fish_pid, signal.SIGTERM)

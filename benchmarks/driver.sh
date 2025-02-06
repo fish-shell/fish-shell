@@ -38,6 +38,4 @@ for benchmark in "$BENCHMARKS_DIR"/*; do
         echo "$FISH2_PATH"
         "${FISH2_PATH}" --print-rusage-self "$benchmark" > /dev/null
     fi
-
 done
-

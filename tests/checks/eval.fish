@@ -69,7 +69,6 @@ end
 # CHECKERR: function eval
 # CHECKERR: ^
 
-
 function evil --no-scope-shadowing
     eval $argv
 end

@@ -74,7 +74,6 @@ complete -C'cd ../'
 #CHECK: ../a3/
 #CHECK: ../rabbithole/
 
-
 # PWD should be imported and respected by fish
 cd $oldpwd
 mkdir -p $base/realhome
@@ -83,7 +82,6 @@ cd $base/linkhome
 set -l real_getcwd (pwd -P)
 env HOME=$base/linkhome $fish -c 'echo PWD is $PWD'
 #CHECK: PWD is {{.*}}/linkhome
-
 
 # Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)
 env HOME=$base/linkhome PWD=/tmp $fish -c 'echo $PWD' | read output_pwd

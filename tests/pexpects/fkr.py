@@ -31,7 +31,7 @@ expect_str("bind ctrl-g 'do something'\r\n")
 
 # Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
 sleep(0.020)
-send("\x1B")
+send("\x1b")
 expect_str("# decoded from: \\e\r\n")
 expect_str("bind escape 'do something'\r\n")
 send("ö")

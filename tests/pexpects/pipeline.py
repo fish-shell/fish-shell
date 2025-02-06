@@ -16,6 +16,7 @@ expect_prompt()
 
 if not os.environ.get("fish_test_helper", ""):
     import sys
+
     sys.exit(127)
 
 for i in range(5):

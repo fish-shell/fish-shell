@@ -204,3 +204,7 @@ abbr --add regex_name --regex '(*UTF).*' bar
 # CHECKERR: abbr: Regular expression compile error: using UTF is disabled by the application
 # CHECKERR: abbr: (*UTF).*
 # CHECKERR: abbr:      ^
+
+abbr --add foo --set-cursor 'foo % bar'
+abbr | grep foo
+# CHECK: abbr -a --set-cursor='%' -- foo 'foo % bar'

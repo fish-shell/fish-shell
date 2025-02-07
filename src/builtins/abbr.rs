@@ -132,7 +132,7 @@ fn abbr_show(streams: &mut IoStreams) -> Option<c_int> {
         for abbr in abbrs.list() {
             result.clear();
             let mut add_arg = |arg: &wstr| {
-                if !result.is_empty() {
+                if !result.is_empty() && !result.ends_with("=") {
                     result.push_str(" ");
                 }
                 result.push_utfstr(arg);

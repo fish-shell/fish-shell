@@ -36,8 +36,7 @@ jobs:
            cargo build --release --target x86_64-unknown-linux-musl
     - name: Test
       run: |
-           FISHDIR=target/x86_64-unknown-linux-musl/release/ tests/test_driver.sh tests/test.fish
-           FISHDIR=target/x86_64-unknown-linux-musl/release/ tests/test_driver.sh tests/interactive.fish
+           test -e tests/test_driver.py && tests/test_driver.py -f /tmp target/x86_64-unknown-linux-musl/release/
     - name: Compress
       run: |
            tar -cazf fish-amd64.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish{,_indent,_key_reader}

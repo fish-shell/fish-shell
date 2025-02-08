@@ -116,6 +116,11 @@ impl Autoload {
             };
         }
 
+        // HACK: In cargo tests, this used to never load functions
+        // It will hang for reasons unrelated to this.
+        #[cfg(test)]
+        return None;
+
         let narrow = wcs2string(cmd);
         let cmdstr = std::str::from_utf8(&narrow).ok()?;
         let p = if self.env_var_name == "fish_function_path" {

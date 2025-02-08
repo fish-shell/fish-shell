@@ -29,6 +29,7 @@ Currently supported are:
 - ``wl-copy`` using wayland
 - ``xsel`` and ``xclip`` for X11
 - ``clip.exe`` on Windows.
+- The OSC 52 clipboard sequence, which your terminal might support
 
 See also
 --------

@@ -42,6 +42,10 @@ pub struct Autoload {
 #[folder = "share/"]
 struct Asset;
 
+pub fn has_asset(cmd: &str) -> bool {
+    Asset::get(cmd).is_some()
+}
+
 pub enum AutoloadPath {
     Embedded(String),
     Path(WString),
@@ -130,7 +134,7 @@ impl Autoload {
         } else {
             return None;
         };
-        if Asset::get(&p).is_some() {
+        if has_asset(&p) {
             if let Some(loaded_file) = self.autoloaded_files.get(cmd) {
                 if *loaded_file == INVALID_FILE_ID {
                     // The file has been autoloaded and is unchanged.

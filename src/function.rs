@@ -239,7 +239,17 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
     let mut funcset = FUNCTION_SET.lock().unwrap();
     // Check if we either have the function, or it could be autoloaded.
     let tombstoned = funcset.autoload_tombstones.contains(cmd);
-    funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd))
+    if funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd)) {
+        return true;
+    }
+
+    let narrow = crate::common::wcs2string(cmd);
+    if let Ok(cmdstr) = std::str::from_utf8(&narrow) {
+        let cmd = "functions/".to_owned() + cmdstr + ".fish";
+        crate::autoload::has_asset(&cmd)
+    } else {
+        false
+    }
 }
 
 /// Remove the function with the specified name.

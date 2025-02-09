@@ -70,8 +70,6 @@ use crate::fds::{make_fd_blocking, wopen_cloexec, AutoCloseFd};
 use crate::flog::{FLOG, FLOGF};
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
-use crate::future_feature_flags::feature_test;
-use crate::future_feature_flags::FeatureFlag;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
     autosuggest_validate_from_history, highlight_shell, HighlightRole, HighlightSpec,
@@ -82,6 +80,7 @@ use crate::history::{
 };
 use crate::input::init_input;
 use crate::input_common::kitty_progressive_enhancements_query;
+use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::unblock_input;
 use crate::input_common::BlockingWait;
 use crate::input_common::Capability;
@@ -97,7 +96,6 @@ use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
 };
-use crate::input_common::{terminal_protocols_disable_ifn, READING_BUFFERED_INPUT};
 use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -4262,9 +4260,6 @@ fn term_steal(copy_modes: bool) {
             perror("tcsetattr");
             break;
         }
-    }
-    if feature_test(FeatureFlag::buffered_enter_noexec) {
-        READING_BUFFERED_INPUT.store(true);
     }
 
     termsize_invalidate_tty();

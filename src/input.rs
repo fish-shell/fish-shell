@@ -8,7 +8,7 @@ use crate::flog::FLOG;
 use crate::future::IsSomeAnd;
 use crate::input_common::{
     BlockingWait, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData,
-    InputEventQueuer, ReadlineCmd, ReadlineCmdEvent, READING_BUFFERED_INPUT, R_END_INPUT_FUNCTIONS,
+    InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
@@ -879,12 +879,6 @@ impl<'a> Reader<'a> {
         }
         for cmd in m.commands.iter().rev() {
             let evt = match input_function_get_code(cmd) {
-                Some(ReadlineCmd::Execute) if READING_BUFFERED_INPUT.load() => {
-                    CharEvent::Readline(ReadlineCmdEvent {
-                        cmd: ReadlineCmd::SelfInsert,
-                        seq: WString::from_chars([key::Enter]),
-                    })
-                }
                 Some(code) => {
                     self.function_push_args(code);
                     // At this point, the sequence is only used for reinserting the keys into
@@ -898,12 +892,7 @@ impl<'a> Reader<'a> {
                             .collect(),
                     )
                 }
-                None => {
-                    if READING_BUFFERED_INPUT.load() {
-                        continue;
-                    }
-                    CharEvent::Command(cmd.clone())
-                }
+                None => CharEvent::Command(cmd.clone()),
             };
             self.push_front(evt);
         }

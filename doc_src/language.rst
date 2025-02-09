@@ -2024,7 +2024,6 @@ You can see the current list of features via ``status features``::
     ampersand-nobg-in-token on  3.4 & only backgrounds if followed by a separating character
     remove-percent-self     off 4.0 %self is no longer expanded (use $fish_pid)
     test-require-arg        off 4.0 builtin test requires an argument
-    buffered-enter-noexec   off 4.1 enter typed while executing will not execute
 
 Here is what they mean:
 
@@ -2034,7 +2033,6 @@ Here is what they mean:
 - ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
 - ``remove-percent-self`` turns off the special ``%self`` expansion. It was introduced in 4.0. To get fish's pid, you can use the :envvar:`fish_pid` variable.
 - ``test-require-arg`` removes :doc:`builtin test <cmds/test>`'s one-argument form (``test "string"``. It was introduced in 4.0. To test if a string is non-empty, use ``test -n "string"``. If disabled, any call to ``test`` that would change sends a :ref:`debug message <debugging-fish>` of category "deprecated-test", so starting fish with ``fish --debug=deprecated-test`` can be used to find offending calls.
-- ``buffered-enter-noexec`` typing enter during command execution will insert a newline into the next commandline instead of executing it.
 
 
 These changes are introduced off by default. They can be enabled on a per session basis::

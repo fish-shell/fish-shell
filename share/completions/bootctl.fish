@@ -1,5 +1,14 @@
 set -l commands status install update remove is-installed random-seed systemd-efi-options reboot-to-firmware list set-default set-oneshot set-timeout set-timeout-oneshot
 
+# Execute `bootctl list` and return entries
+function __bootctl_entries
+    if not type -q jq
+        return 1
+    end
+
+    bootctl list --json short | jq '.[] | "\(.id)\t\(.showTitle)"' --raw-output
+end
+
 complete -c bootctl -f
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Show status of EFI variables'
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a install -d 'Install systemd-boot'
@@ -13,6 +22,7 @@ complete -c bootctl -n "__fish_seen_subcommand_from reboot-to-firmware" -a 'true
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a list -d 'List boot loader entries'
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set default boot loader entry'
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a set-oneshot -d 'Set default boot loader entry (Once)'
+complete -c bootctl -n "__fish_seen_subcommand_from set-default set-oneshot" -x -a '(__bootctl_entries)'
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a set-timeout -d 'Set default boot loader timeout'
 complete -c bootctl -n "not __fish_seen_subcommand_from $commands" -a set-timeout-oneshot -d 'Set default boot loader timeout (Once)'
 

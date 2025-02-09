@@ -112,7 +112,7 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {
     parser.assert_can_execute();
-    let mut path_to_autoload: Option<WString> = None;
+    let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
     {
@@ -239,7 +239,17 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
     let mut funcset = FUNCTION_SET.lock().unwrap();
     // Check if we either have the function, or it could be autoloaded.
     let tombstoned = funcset.autoload_tombstones.contains(cmd);
-    funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd))
+    if funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd)) {
+        return true;
+    }
+
+    let narrow = crate::common::wcs2string(cmd);
+    if let Some(cmdstr) = std::str::from_utf8(&narrow).ok() {
+        let cmd = "functions/".to_owned() + cmdstr + ".fish";
+        crate::autoload::has_asset(&cmd)
+    } else {
+        false
+    }
 }
 
 /// Remove the function with the specified name.

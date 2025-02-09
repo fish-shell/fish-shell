@@ -23,6 +23,7 @@ env_histfile = "xdg_data_home/fish/env_history"
 def grephistfile(line, file):
     sendline("grep '^" + line + "' " + file)
 
+
 # Verify that if we spawn fish with no fish_history env var it uses the
 # default file.
 expect_prompt()

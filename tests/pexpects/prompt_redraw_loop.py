@@ -17,14 +17,22 @@ expect_prompt()
 # If a process in the prompt exits with a status that would cause a message to be printed,
 # don't trigger another prompt execution which would result in an infinite loop.
 sendline("sh -c 'kill -ABRT $$'")
-expect_prompt(re.escape("fish: Job 1, 'sh -c 'kill -ABRT $$'' terminated by signal SIGABRT (Abort)"))
+expect_prompt(
+    re.escape(
+        "fish: Job 1, 'sh -c 'kill -ABRT $$'' terminated by signal SIGABRT (Abort)"
+    )
+)
 
 # Copy current prompt so we can reuse it.
 sendline("functions --copy fish_prompt fish_prompt_orig")
 expect_prompt()
 
 sendline("function fish_prompt; sh -c 'kill -ABRT $$'; fish_prompt_orig; end")
-expect_prompt(re.escape("fish: Job 1, 'sh -c 'kill -ABRT $$'' terminated by signal SIGABRT (Abort)"))
+expect_prompt(
+    re.escape(
+        "fish: Job 1, 'sh -c 'kill -ABRT $$'' terminated by signal SIGABRT (Abort)"
+    )
+)
 
 sendline("echo still alive!")
 expect_prompt("still alive!")

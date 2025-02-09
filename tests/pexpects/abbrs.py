@@ -168,16 +168,19 @@ sendline(r"""true; and builtin echo foo """)
 expect_prompt("bar")
 sendline(r"""abbr fruit --command={git,hg,svn} banana""")
 expect_prompt()
-sendline(r"""function git; echo git $argv; end; function hg; echo hg $argv; end; function svn; echo svn $argv; end""")
+sendline(
+    r"""function git; echo git $argv; end; function hg; echo hg $argv; end; function svn; echo svn $argv; end"""
+)
 expect_prompt()
 sendline(r"""git fruit""")
 expect_prompt("git banana")
 sendline(r"""abbr""")
-expect_prompt("abbr -a --position anywhere --command git --command hg --command svn -- fruit banana")
+expect_prompt(
+    "abbr -a --position anywhere --command git --command hg --command svn -- fruit banana"
+)
 sendline(r"""function banana; echo I am a banana; end""")
 expect_prompt()
 sendline(r"""abbr fruit --command={git,hg,svn,} banana""")
 expect_prompt()
 sendline(r"""fruit foo""")
 expect_prompt("I am a banana")
-

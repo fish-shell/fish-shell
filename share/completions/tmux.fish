@@ -6,15 +6,34 @@ function __fish_tmux_clients -d 'connected clients'
     tmux list-clients -F "#{client_tty}"\t"#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" 2>/dev/null
 end
 
-function __fish_tmux_panes -d 'window panes'
-    #fully qualified pane names
-    tmux list-panes -F '#S:#W.#P'\t'session:window.pane' 2>/dev/null
+# These are meant to be used with `complete --keep-order`
+function __fish_tmux_panes -d "list tmux panes in the current session"
+    set -l pane_details_format (
+        string join '' \
+        '[#W] #{=/15/...:pane_title}' \
+        '#{?pane_marked, <marked>,}' \
+        '#{?window_active, <active #{?pane_active,pane,win.}>,}'
+        # TODO: Could show <zoomed>/<invisible> for active/inactive panes in a zoomed window
+    )
+    # panes by themselves (current window)
+    # For pane commands, `tmux` understands an integer to mean "pane
+    # with this index in the current window"
+    tmux list-panes -F "#P"\t"#D $pane_details_format" 2>/dev/null
 
-    #panes by themselves
-    tmux list-panes -F '#P'\t'pane' 2>/dev/null
+    # window.pane index
+    tmux list-panes -s -F "#I.#P"\t"#D $pane_details_format" 2>/dev/null
 
-    #windows by themselves
-    tmux list-panes -F '#W'\t'window' 2>/dev/null
+    # unique pane id
+    # These ids start with `%` and do not change when panes are reordered,
+    # nor when they are moved to another window or session. We show them
+    # for context in above completions, and support completing them.
+    tmux list-panes -s -F "#D"\t"#I.#P $pane_details_format" | sort -n -k 1.2  2>/dev/null
+
+    # We could also add the panes in the `session:window.pane` syntax,
+    # but there's not reason to use it in the common case where the
+    # person is interested in the current tmux session (or there is only
+    # one tmux session). This can also be confusing when "sesssion groups"
+    # are used
 end
 
 function __fish_tmux_buffers -d 'buffers'
@@ -307,11 +326,11 @@ complete -c tmux -n __fish_use_subcommand -a $swapw -d 'swap two windows'
 complete -c tmux -n __fish_use_subcommand -a $unlinkw -d 'unlink target-window'
 
 ## commands with pane flag
-complete -c tmux -n "__fish_seen_subcommand_from $breakp $joinp $swapp" -xs s -a '(__fish_tmux_panes)' -d 'source pane'
-complete -c tmux -n "__fish_seen_subcommand_from $capturep $chooseclient $choosetree $customizemode $findw" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
-complete -c tmux -n "__fish_seen_subcommand_from $killp $pipep $resizep $respawnp $selectl $selectp $splitw" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $joinp $swapp" -xs s --keep-order -a '(__fish_tmux_panes)' -d 'source pane'
+complete -c tmux -n "__fish_seen_subcommand_from $capturep $chooseclient $choosetree $customizemode $findw" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $killp $pipep $resizep $respawnp $selectl $selectp $splitw" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
 # Unclear if there's a meaningful difference between "target pane" and "destination pane", but tmux makes the distinction
-complete -c tmux -n "__fish_seen_subcommand_from $joinp $swapp" -xs t -a '(__fish_tmux_panes)' -d 'destination pane'
+complete -c tmux -n "__fish_seen_subcommand_from $joinp $swapp" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'destination pane'
 
 ## commands with window flag
 complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" \
@@ -382,11 +401,11 @@ complete -c tmux -n "__fish_seen_subcommand_from $lsk" -s t -d 'key table' -xa "
 
 complete -c tmux -n __fish_use_subcommand -a $send -d 'list all key bindings'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s R -d 'reset terminal state'
-complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n __fish_use_subcommand -a $sendprefix -d 'send the prefix key'
 complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -s 2 -d 'use secondary prefix'
-complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n __fish_use_subcommand -a $unbind -d 'unbind the command bound to key'
 complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s a -d 'remove all key bindings'
@@ -524,7 +543,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s U -d 'Unset opti
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s o -d 'Prevent override'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s q -d 'Suppress ambiguous option errors'
 complete -c tmux -n "__fish_seen_subcommand_from $setoption" -s a -d Append
-complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s t -x -d 'Target pane' -a '(__fish_tmux_panes)'
+complete -c tmux -n "__fish_seen_subcommand_from $setoption $showoptions" -s t -x -d 'Target pane' --keep-order -a '(__fish_tmux_panes)'
 complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s q -d 'No error if unset'
 complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s v -d 'Only show value'
 complete -c tmux -n "__fish_seen_subcommand_from $showoptions" -s H -d 'Include hooks'
@@ -560,7 +579,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s t -xa '(__fi
 
 complete -c tmux -n __fish_use_subcommand -a $display -d 'Display a message'
 complete -c tmux -n "__fish_seen_subcommand_from $display" -s p -d 'print to stdout'
-complete -c tmux -n "__fish_seen_subcommand_from $display" -s t -xa '(__fish_tmux_panes)' -d target-pane
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s t --keep-order -xa '(__fish_tmux_panes)' -d target-pane
 complete -c tmux -n "__fish_seen_subcommand_from $display" -s c -xa '(__fish_tmux_clients)' -d target-client
 
 ###############  End:   Status Line ###############
@@ -592,7 +611,7 @@ complete -c tmux -n "__fish_seen_subcommand_from $deleteb $loadb $pasteb $saveb 
 complete -c tmux -n "__fish_seen_subcommand_from $setb" -xs n -a '(__fish_tmux_buffers)' --keep-order -d 'new buffer name'
 
 ## commands with target pane flag
-complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $clearhist $pasteb" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $clearhist $pasteb" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
 
 #commands with the -F format flag
 complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $lsb" -xs F -d 'format string'

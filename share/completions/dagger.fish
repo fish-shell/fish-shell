@@ -1,0 +1,1 @@
+dagger completion fish | source

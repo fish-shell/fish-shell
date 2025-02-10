@@ -125,6 +125,7 @@ This first creates a function ``vim_edit`` which prepends ``vim`` before its arg
 This creates an abbreviation "4DIRS" which expands to a multi-line loop "template." The template enters each directory and then leaves it. The cursor is positioned ready to enter the command to run in each directory, at the location of the ``!``, which is itself erased.
 
 ::
+
    abbr --command git co checkout
 
 Turns "co" as an argument to "git" into "checkout". Multiple commands are possible, ``--command={git,hg}`` would expand "co" to "checkout" for both git and hg.

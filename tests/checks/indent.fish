@@ -608,3 +608,7 @@ echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
+
+# See that the builtin can be redirected
+printf %s\n a b c | builtin fish_indent | grep b
+# CHECK: b

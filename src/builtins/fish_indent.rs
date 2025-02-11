@@ -12,7 +12,7 @@ use std::io::{Read, Write};
 use std::os::unix::ffi::OsStrExt;
 
 use crate::panic::panic_handler;
-use libc::{LC_ALL, STDOUT_FILENO};
+use libc::LC_ALL;
 
 use super::prelude::*;
 use crate::ast::{
@@ -41,7 +41,7 @@ use crate::topic_monitor::topic_monitor_init;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::count_preceding_backslashes;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
-use crate::wutil::{fish_iswalnum, write_to_fd};
+use crate::wutil::fish_iswalnum;
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -977,7 +977,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
 
         if output_type == OutputType::PygmentsCsv {
             let output = make_pygments_csv(&src);
-            let _ = write_to_fd(&output, STDOUT_FILENO);
+            streams.out.append(str2wcstring(&output));
             i += 1;
             continue;
         }
@@ -1075,7 +1075,7 @@ fn do_indent(streams: &mut IoStreams, args: Vec<WString>) -> i32 {
             }
         }
 
-        let _ = write_to_fd(&colored_output, STDOUT_FILENO);
+        streams.out.append(str2wcstring(&colored_output));
         i += 1;
     }
     retval

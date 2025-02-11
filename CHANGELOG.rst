@@ -18,6 +18,12 @@ Changes since 4.0b1
 - The ``make test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``.
   The built-in test target will run if you built fish before, but will not print output if it fails (:issue:`11116`).
 - :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of full arguments, reverting to how it was in 3.7 and before (:issue:`10926`).
+- Keyboard protocols can be turned off by disabling the "keyboard-protocols" feature flag::
+
+    set -Ua fish_features no-keyboard-protocols
+
+  This is a temporary measure to work around buggy terminals (:issue:`11056`), which appear to be relatively rare.
+  Use this if something like "=0" or "=5u" appears in your commandline mysteriously.
 
 fish 4.0.0 (released ???)
 =========================

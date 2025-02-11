@@ -6057,20 +6057,21 @@ pub fn completion_apply_to_command_line(
         escape_flags.insert(EscapeFlags::NO_TILDE);
     }
 
-    let maybe_slash = |trailer: Option<char>, token: &wstr| -> Option<char> {
+    let maybe_add_slash = |trailer: &mut char, token: &wstr| {
         let mut expanded = token.to_owned();
         if expand_one(&mut expanded, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
             && wstat(&expanded).is_ok_and(|md| md.is_dir())
         {
-            return Some('/');
+            *trailer = '/';
         }
-        trailer
     };
 
     if do_replace_token {
         if is_variable_name {
             assert!(!do_escape);
-            trailer = maybe_slash(trailer, val_str);
+            if let Some(trailer) = trailer.as_mut() {
+                maybe_add_slash(trailer, val_str);
+            }
         }
         let mut move_cursor = 0;
         let (range, _) = parse_util_token_extent(command_line, cursor_pos);
@@ -6153,7 +6154,7 @@ pub fn completion_apply_to_command_line(
     if let Some(mut trailer) = trailer {
         if is_variable_name {
             let (tok, _) = parse_util_token_extent(command_line, cursor_pos);
-            trailer = maybe_slash(Some(trailer), &result[tok.start..new_cursor_pos]).unwrap();
+            maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
         }
         if trailer != '/'
             && quote.is_some()

@@ -31,7 +31,7 @@ jobs:
         make VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 fish_run_tests
+        make VERBOSE=1 test
 
   ubuntu-32bit-static-pcre2:
 
@@ -57,7 +57,7 @@ jobs:
         make VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 fish_run_tests
+        make VERBOSE=1 test
 
   ubuntu-asan:
 
@@ -107,7 +107,7 @@ jobs:
         llvm_version=$(clang --version | awk 'NR==1 { split($NF, version, "."); print version[1] }')
         export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$llvm_version
         export LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt"
-        make VERBOSE=1 fish_run_tests
+        make VERBOSE=1 test
 
   # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
   # cannot be called while a thread is using the object in question). Rust has its own way of
@@ -163,4 +163,4 @@ jobs:
         make VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 fish_run_tests
+        make VERBOSE=1 test

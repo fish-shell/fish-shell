@@ -482,6 +482,7 @@ Command mode is also known as normal mode.
 - :kbd:`p` pastes text from the :ref:`killring`.
 
 - :kbd:`u` undoes the most recent edit of the command line.
+
 - :kbd:`ctrl-r` redoes the most recent edit.
 
 - :kbd:`[` and :kbd:`]` search the command history for the previous/next token containing the token under the cursor before the search was started. See the :ref:`history <history-search>` section for more information on history searching.
@@ -502,6 +503,8 @@ Insert mode
 - :kbd:`escape` enters :ref:`command mode <vi-mode-command>`.
 
 - :kbd:`backspace` removes one character to the left.
+
+- :kbd:`ctrl-n` accepts the autosuggestion.
 
 .. _vi-mode-visual:
 

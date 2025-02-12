@@ -48,6 +48,11 @@ fn main() {
         let targetman = cman.as_path().join("target").join("man");
         build_man(&targetman);
     }
+    // These are necessary if built with embedded functions,
+    // but technically only in release builds (because debug builds read from the filesystem).
+    rsconf::rebuild_if_path_changed("doc_src/");
+    rsconf::rebuild_if_path_changed("share/");
+
     rsconf::rebuild_if_path_changed("src/libc.c");
     cc::Build::new()
         .file("src/libc.c")

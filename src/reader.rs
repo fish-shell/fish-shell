@@ -477,6 +477,12 @@ enum EditableLineTag {
     SearchField,
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum TransientEdit {
+    Pager,
+    HistorySearch,
+}
+
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 /// ReaderData does not contain a Parser - by itself it cannot execute fish script.
@@ -491,7 +497,7 @@ pub struct ReaderData {
     /// Whether the most recent modification to the command line was done by either history search
     /// or a pager selection change. When this is true and another transient change is made, the
     /// old transient change will be removed from the undo history.
-    command_line_has_transient_edit: bool,
+    command_line_transient_edit: Option<TransientEdit>,
     /// The most recent layout data sent to the screen.
     rendered_layout: LayoutData,
     /// The current autosuggestion.
@@ -1167,7 +1173,7 @@ impl ReaderData {
             canary: Rc::new(()),
             conf,
             command_line: Default::default(),
-            command_line_has_transient_edit: false,
+            command_line_transient_edit: None,
             rendered_layout: Default::default(),
             autosuggestion: Default::default(),
             saved_autosuggestion: Default::default(),
@@ -1736,7 +1742,7 @@ impl ReaderData {
             /*allow_coalesce=*/ !history_search_active,
         );
         if elt == EditableLineTag::Commandline {
-            self.command_line_has_transient_edit = false;
+            self.command_line_transient_edit = None;
             self.suppress_autosuggestion = false;
         }
     }
@@ -1874,12 +1880,12 @@ impl ReaderData {
 
     /// Undo the transient edit und update commandline accordingly.
     fn clear_transient_edit(&mut self) {
-        if !self.command_line_has_transient_edit {
+        if self.command_line_transient_edit.is_none() {
             return;
         }
         self.undo(EditableLineTag::Commandline);
         self.update_buff_pos(EditableLineTag::Commandline, None);
-        self.command_line_has_transient_edit = false;
+        self.command_line_transient_edit = None;
     }
 
     fn replace_current_token(&mut self, new_token: WString) {
@@ -1893,9 +1899,10 @@ impl ReaderData {
     /// Apply the history search to the command line.
     fn update_command_line_from_history_search(&mut self) {
         assert!(self.history_search.active());
-        if self.command_line_has_transient_edit {
-            self.undo(EditableLineTag::Commandline);
-            self.command_line_has_transient_edit = false;
+        if let Some(transient_edit) = self.command_line_transient_edit.take() {
+            if transient_edit == TransientEdit::HistorySearch {
+                self.undo(EditableLineTag::Commandline);
+            }
         }
         if !self.history_search.is_at_present() {
             let new_text = self.history_search.current_result().to_owned();
@@ -1914,7 +1921,7 @@ impl ReaderData {
                         .set_position(self.history_search.search_string().len());
                 }
             }
-            self.command_line_has_transient_edit = true;
+            self.command_line_transient_edit = Some(TransientEdit::HistorySearch);
         }
         self.update_buff_pos(EditableLineTag::Commandline, None);
     }
@@ -2458,7 +2465,7 @@ impl<'a> Reader<'a> {
                         self.clear_transient_edit();
                     }
                     self.history_search.reset();
-                    self.command_line_has_transient_edit = false;
+                    self.command_line_transient_edit = None;
                 }
 
                 self.rls_mut().last_cmd = Some(readline_cmd);
@@ -4023,7 +4030,7 @@ impl ReaderData {
         self.pager.clear();
         self.history_pager = None;
         self.clear(EditableLineTag::SearchField);
-        self.command_line_has_transient_edit = false;
+        self.command_line_transient_edit = None;
     }
 
     fn get_selection(&self) -> Option<Range<usize>> {
@@ -4102,9 +4109,10 @@ impl ReaderData {
         // Update the cursor and command line.
         let mut cursor_pos = self.cycle_cursor_pos;
 
-        if self.command_line_has_transient_edit {
-            self.undo(EditableLineTag::Commandline);
-            self.command_line_has_transient_edit = false;
+        if let Some(transient_edit) = self.command_line_transient_edit.take() {
+            if transient_edit == TransientEdit::Pager {
+                self.undo(EditableLineTag::Commandline);
+            }
         }
 
         if let Some(completion) = self.pager.selected_completion(&self.current_page_rendering) {
@@ -4119,7 +4127,7 @@ impl ReaderData {
             // Only update if something changed, to avoid useless edits in the undo history.
             if new_cmd_line != self.command_line.text() && new_cmd_line != self.cycle_command_line {
                 self.set_buffer_maintaining_pager(&new_cmd_line, cursor_pos);
-                self.command_line_has_transient_edit = true;
+                self.command_line_transient_edit = Some(TransientEdit::Pager);
             }
         } else {
             self.update_buff_pos(EditableLineTag::Commandline, None);

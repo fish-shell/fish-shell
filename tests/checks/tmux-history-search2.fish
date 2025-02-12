@@ -13,3 +13,11 @@ isolated-tmux capture-pane -p
 # CHECK: prompt 2> echo still alive
 # CHECK: still alive
 # CHECK: prompt 3>
+
+isolated-tmux send-keys 'complete : -xa "foobar foobaz"' Enter \
+    C-l ': fooba' Enter C-p Tab
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: prompt 4> : fooba
+# CHECK: prompt 5> : fooba
+# CHECK: foobar  foobaz

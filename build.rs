@@ -49,6 +49,12 @@ fn main() {
         build_man(&targetman);
     }
     rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
+
+    // These are necessary if built with embedded functions,
+    // but technically only in release builds (because debug builds read from the filesystem).
+    #[cfg(feature = "installable")]
+    rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
+
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)

@@ -31,7 +31,7 @@ PREFIX?=/usr/local
 build/fish: build/$(BUILDFILE)
 	$(CMAKE) --build build
 
-# Don't split the mkdir into its own rule because that would cause CMake to regenerate the build 
+# Don't split the mkdir into its own rule because that would cause CMake to regenerate the build
 # files after each build (because it adds the mdate of the build directory into the out-of-date
 # calculation tree). GNUmake supports order-only dependencies, BSDmake does not seem to.
 build/$(BUILDFILE):
@@ -48,7 +48,11 @@ clean:
 
 .PHONY: test
 test: build/fish
-	$(CMAKE) --build build --target test
+	$(CMAKE) --build build --target fish_run_tests
+
+.PHONY: fish_run_tests
+fish_run_tests: build/fish
+	$(CMAKE) --build build --target fish_run_tests
 
 .PHONY: run
 run: build/fish

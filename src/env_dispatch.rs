@@ -1,6 +1,5 @@
 use crate::common::ToCString;
 use crate::complete::complete_invalidate_path;
-use crate::curses::{self, Term};
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT, TERM_HAS_XN};
 use crate::flog::FLOG;
@@ -14,6 +13,7 @@ use crate::reader::{
 };
 use crate::screen::screen_set_midnight_commander_hack;
 use crate::screen::LAYOUT_CACHE_SHARED;
+use crate::terminal::{self, Term};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
 use std::borrow::Cow;
@@ -50,7 +50,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         }
 
         for name in CURSES_VARIABLES {
-            table.add_anon(name, handle_curses_change);
+            table.add_anon(name, handle_term_change);
         }
 
         table.add(L!("TZ"), handle_tz_change);
@@ -299,9 +299,9 @@ fn handle_locale_change(vars: &EnvStack) {
     guess_emoji_width(vars);
 }
 
-fn handle_curses_change(vars: &EnvStack) {
+fn handle_term_change(vars: &EnvStack) {
     guess_emoji_width(vars);
-    init_curses(vars);
+    init_terminal(vars);
 }
 
 fn handle_fish_use_posix_spawn_change(vars: &EnvStack) {
@@ -361,7 +361,7 @@ pub fn env_dispatch_init(vars: &EnvStack) {
 /// Runs the subset of dispatch functions that need to be called at startup.
 fn run_inits(vars: &EnvStack) {
     init_locale(vars);
-    init_curses(vars);
+    init_terminal(vars);
     guess_emoji_width(vars);
     update_wait_on_escape_ms(vars);
     update_wait_on_sequence_key_ms(vars);
@@ -379,7 +379,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         .get(L!("TERM"))
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
-    let max_colors = curses::term().and_then(|term| term.max_colors);
+    let max_colors = terminal::term().and_then(|term| term.max_colors);
     let mut supports_256color = false;
     let mut supports_24bit = false;
 
@@ -494,7 +494,7 @@ fn update_fish_color_support(vars: &EnvStack) {
     crate::output::set_color_support(color_support);
 }
 
-/// Apply any platform- or environment-specific hacks to our curses [`Term`] instance.
+/// Apply any platform- or environment-specific hacks to our terminfo [`Term`] instance.
 fn apply_term_hacks(vars: &EnvStack, term: &mut Term) {
     if cfg!(target_os = "macos") {
         // Hack in missing italics and dim capabilities omitted from macOS xterm-256color terminfo.
@@ -535,8 +535,8 @@ fn apply_non_term_hacks(vars: &EnvStack) {
     }
 }
 
-// Initialize the curses subsystem
-fn init_curses(vars: &EnvStack) {
+// Initialize the terminal subsystem
+fn init_terminal(vars: &EnvStack) {
     for var_name in CURSES_VARIABLES {
         if let Some(value) = vars
             .getf_unless_empty(var_name, EnvMode::EXPORT)
@@ -550,7 +550,7 @@ fn init_curses(vars: &EnvStack) {
         }
     }
 
-    if curses::setup(None, |term| apply_term_hacks(vars, term)).is_none() {
+    if terminal::setup(None, |term| apply_term_hacks(vars, term)).is_none() {
         if is_interactive_session() {
             let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
             // We do not warn for xterm-256color at all, we know that one.
@@ -569,14 +569,14 @@ fn init_curses(vars: &EnvStack) {
             }
         }
 
-        curses::setup_fallback_term();
+        terminal::setup_fallback_term();
     }
 
-    // Configure hacks that apply regardless of whether we successfully init curses or not.
+    // Configure hacks that apply regardless of whether we successfully init
     apply_non_term_hacks(vars);
 
     // Store some global variables that reflect the term's capabilities
-    if let Some(term) = curses::term() {
+    if let Some(term) = terminal::term() {
         TERM_HAS_XN.store(term.eat_newline_glitch, Ordering::Relaxed);
     }
 

@@ -1,5 +1,4 @@
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
-use crate::curses;
 use crate::env::Environment;
 use crate::event;
 use crate::flog::FLOG;
@@ -18,6 +17,7 @@ use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
 };
 use crate::signal::signal_clear_cancel;
+use crate::terminal;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
@@ -1022,8 +1022,8 @@ impl InputMappingSet {
 
 /// Create a list of terminfo mappings.
 fn create_input_terminfo() -> Box<[TerminfoMapping]> {
-    let Some(term) = curses::term() else {
-        // setupterm() failed so we can't reference any key definitions.
+    let Some(term) = terminal::term() else {
+        // loading terminfo failed so we can't reference any key definitions.
         return Box::new([]);
     };
 

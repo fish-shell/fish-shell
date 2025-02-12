@@ -3,8 +3,8 @@
 use super::prelude::*;
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
-use crate::curses::{self, Term};
 use crate::output::{self, Outputter};
+use crate::terminal::{self, Term};
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(
@@ -76,7 +76,7 @@ fn print_colors(
         &named_colors
     };
 
-    let term = curses::term();
+    let term = terminal::term();
     for color_name in args {
         if streams.out_is_terminal() {
             if let Some(term) = term.as_ref() {
@@ -217,7 +217,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    let Some(term) = curses::term() else {
+    let Some(term) = terminal::term() else {
         return STATUS_CMD_ERROR;
     };
     let Some(exit_attribute_mode) = &term.exit_attribute_mode else {

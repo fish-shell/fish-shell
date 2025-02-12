@@ -7,7 +7,6 @@ use crate::common::{
     charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output,
     scoped_push_replacer, timef, Timepoint, WSL,
 };
-use crate::curses::term;
 use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{FLOG, FLOGF};
@@ -19,6 +18,7 @@ use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
 use crate::signal::{signal_set_handlers_once, Signal};
+use crate::terminal::term;
 use crate::threads::MainThread;
 use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};

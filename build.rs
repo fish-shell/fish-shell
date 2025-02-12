@@ -56,6 +56,13 @@ fn main() {
     }
 
     rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
+
+    // These are necessary if built with embedded functions,
+    // but only in release builds (because rust-embed in debug builds reads from the filesystem).
+    #[cfg(feature = "installable")]
+    #[cfg(not(debug_assertions))]
+    rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
+
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)

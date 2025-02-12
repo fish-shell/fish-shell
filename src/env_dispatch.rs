@@ -537,6 +537,8 @@ fn apply_non_term_hacks(vars: &EnvStack) {
 
 // Initialize the terminal subsystem
 fn init_terminal(vars: &EnvStack) {
+    // The current process' environment needs to be modified because the terminfo crate will
+    // read these variables
     for var_name in CURSES_VARIABLES {
         if let Some(value) = vars
             .getf_unless_empty(var_name, EnvMode::EXPORT)

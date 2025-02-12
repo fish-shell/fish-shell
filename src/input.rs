@@ -1,6 +1,6 @@
 use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
 use crate::curses;
-use crate::env::{Environment, CURSES_INITIALIZED};
+use crate::env::Environment;
 use crate::event;
 use crate::flog::FLOG;
 // Polyfill for Option::is_none_or(), stabilized in 1.82.0
@@ -1022,7 +1022,6 @@ impl InputMappingSet {
 
 /// Create a list of terminfo mappings.
 fn create_input_terminfo() -> Box<[TerminfoMapping]> {
-    assert!(CURSES_INITIALIZED.load(Ordering::Relaxed));
     let Some(term) = curses::term() else {
         // setupterm() failed so we can't reference any key definitions.
         return Box::new([]);

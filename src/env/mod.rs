@@ -18,9 +18,6 @@ pub const DEFAULT_READ_BYTE_LIMIT: usize = 1024 * 1024 * 1024;
 /// with `$fish_read_limit`.
 pub static READ_BYTE_LIMIT: AtomicUsize = AtomicUsize::new(DEFAULT_READ_BYTE_LIMIT);
 
-/// The curses `cur_term` TERMINAL pointer has been set up.
-pub static CURSES_INITIALIZED: AtomicBool = AtomicBool::new(false);
-
 /// Does the terminal have the "eat new line" glitch.
 pub static TERM_HAS_XN: AtomicBool = AtomicBool::new(false);
 

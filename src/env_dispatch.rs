@@ -2,7 +2,7 @@ use crate::common::ToCString;
 use crate::complete::complete_invalidate_path;
 use crate::curses::{self, Term};
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
-use crate::env::{CURSES_INITIALIZED, DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT, TERM_HAS_XN};
+use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT, TERM_HAS_XN};
 use crate::flog::FLOG;
 use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
@@ -583,7 +583,6 @@ fn init_curses(vars: &EnvStack) {
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     LAYOUT_CACHE_SHARED.lock().unwrap().clear();
-    CURSES_INITIALIZED.store(true, Ordering::Relaxed);
 }
 
 /// Initialize the locale subsystem

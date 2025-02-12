@@ -55,7 +55,11 @@ clean:
 
 .PHONY: test
 test: build/fish
-	$(CMAKE) --build build --target test
+	$(CMAKE) --build build --target fish_run_tests
+
+.PHONY: fish_run_tests
+fish_run_tests: build/fish
+	$(CMAKE) --build build --target fish_run_tests
 
 .PHONY: install
 install: build/fish

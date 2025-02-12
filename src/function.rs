@@ -337,6 +337,19 @@ pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
         }
         names.insert(name.clone());
     }
+    for name in crate::autoload::Asset::iter() {
+        let Some(bname) = name.strip_prefix("functions/") else {
+            continue;
+        };
+        if !get_hidden && (bname.is_empty() || bname.starts_with('_')) {
+            continue;
+        };
+        let Some(fname) = bname.strip_suffix(".fish") else {
+            continue;
+        };
+        names.insert(fname.into());
+    }
+
     names.into_iter().collect()
 }
 

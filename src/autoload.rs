@@ -40,7 +40,7 @@ pub struct Autoload {
 
 #[derive(RustEmbed)]
 #[folder = "share/"]
-struct Asset;
+pub struct Asset;
 
 pub fn has_asset(cmd: &str) -> bool {
     Asset::get(cmd).is_some()

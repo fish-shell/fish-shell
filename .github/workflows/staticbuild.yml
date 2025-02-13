@@ -32,15 +32,15 @@ jobs:
            sudo apt install musl-tools crossbuild-essential-arm64 python3-pexpect tmux -y
     - name: Build
       run: |
-           CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2" CMAKE_WITH_GETTEXT=0 CC=aarch64-linux-gnu-gcc RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" cargo build --release --target aarch64-unknown-linux-musl
-           cargo build --release --target x86_64-unknown-linux-musl
+           CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2" CMAKE_WITH_GETTEXT=0 CC=aarch64-linux-gnu-gcc RUSTFLAGS="-C linker=aarch64-linux-gnu-gcc -C link-arg=-lgcc -C link-arg=-D_FORTIFY_SOURCE=0" cargo build --release --target aarch64-unknown-linux-musl --bin fish
+           cargo build --release --target x86_64-unknown-linux-musl --bin fish
     - name: Test
       run: |
            test -e tests/test_driver.py && tests/test_driver.py -f /tmp target/x86_64-unknown-linux-musl/release/
     - name: Compress
       run: |
-           tar -cazf fish-amd64.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
-           tar -cazf fish-aarch64.tar.xz -C target/aarch64-unknown-linux-musl/release/ fish{,_indent,_key_reader}
+           tar -cazf fish-amd64.tar.xz -C target/x86_64-unknown-linux-musl/release/ fish
+           tar -cazf fish-aarch64.tar.xz -C target/aarch64-unknown-linux-musl/release/ fish
     - uses: actions/upload-artifact@v4
       with:
         name: fish-static-linux
@@ -67,12 +67,12 @@ jobs:
            rustup target add aarch64-apple-darwin
     - name: Build
       run: |
-           PCRE2_SYS_STATIC=1 cargo build --release --target aarch64-apple-darwin
-           PCRE2_SYS_STATIC=1 cargo build --release --target x86_64-apple-darwin
+           PCRE2_SYS_STATIC=1 cargo build --release --target aarch64-apple-darwin --bin fish
+           PCRE2_SYS_STATIC=1 cargo build --release --target x86_64-apple-darwin --bin fish
     - name: Compress
       run: |
-           tar -cazf fish-macos-aarch64.tar.xz -C target/aarch64-apple-darwin/release/ fish{,_indent,_key_reader}
-           tar -cazf fish-macos-amd64.tar.xz -C target/x86_64-apple-darwin/release/ fish{,_indent,_key_reader}
+           tar -cazf fish-macos-aarch64.tar.xz -C target/aarch64-apple-darwin/release/ fish
+           tar -cazf fish-macos-amd64.tar.xz -C target/x86_64-apple-darwin/release/ fish
     - uses: actions/upload-artifact@v4
       with:
         name: fish-static-macos

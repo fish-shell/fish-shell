@@ -452,6 +452,24 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         parser.libdata_mut().within_fish_init = false;
         if let Err(msg) = ret {
             eprintf!("%ls", msg);
+        // If the version file is out of date,
+        // we try to update automatically, but only if we're interactive.
+        // We do specifically check for a tty because we want to read input to confirm.
+        //
+        // We don't warn if they're *missing* because these are just docs and stuff,
+        // but if they're out-of-date the user wants them.
+        let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
+        let v = check_version_file(paths, &datapath);
+
+        #[allow(clippy::incompatible_msrv)]
+        if v.is_some_and(|x| !x) && is_interactive_session() && isatty(libc::STDIN_FILENO) {
+            FLOG!(
+                warning,
+                "Fish's asset files are out of date. Trying to install them."
+            );
+            // TODO: Do we need confirmation? The user already indicated they want these files.
+            install(true, PathBuf::from(wcs2osstring(&datapath)));
+        }
         }
     }
     #[cfg(not(feature = "installable"))]

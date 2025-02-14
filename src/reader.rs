@@ -1104,6 +1104,12 @@ const LEFT_PROMPT_FUNCTION_NAME: &wstr = L!("fish_prompt");
 /// The name of the function that prints the fish right prompt (RPROMPT).
 const RIGHT_PROMPT_FUNCTION_NAME: &wstr = L!("fish_right_prompt");
 
+/// The name of the function that prints the fish transient prompt.
+const LEFT_TRANSIENT_PROMPT_FUNCTION_NAME: &wstr = L!("fish_transient_prompt");
+
+/// The name of the function that prints the fish right transient prompt.
+const RIGHT_TRANSIENT_PROMPT_FUNCTION_NAME: &wstr = L!("fish_right_transient_prompt");
+
 /// The name of the function to use in place of the left prompt if we're in the debugger context.
 const DEBUG_PROMPT_FUNCTION_NAME: &wstr = L!("fish_breakpoint_prompt");
 
@@ -2229,9 +2235,10 @@ impl<'a> Reader<'a> {
             }
         }
 
-        // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
-        // user presses enter.
-        if zelf.is_repaint_needed(None)
+        // Redraw the command line. This is what ensures the autosuggestion is hidden,
+        // transient prompt is drawn, etc. after the user presses enter.
+        if zelf.exec_transient_prompt()
+            || zelf.is_repaint_needed(None)
             || zelf.screen.scrolled()
             || zelf.conf.inputfd != STDIN_FILENO
         {
@@ -4629,6 +4636,48 @@ impl<'a> Reader<'a> {
         let exit_current_script = zelf.parser.libdata().exit_current_script;
         zelf.exit_loop_requested |= exit_current_script;
         zelf.parser.libdata_mut().exit_current_script = false;
+    }
+
+    /// Execute the transient prompt commands if they are defined. Returns whether they were executed.
+    fn exec_transient_prompt(&mut self) -> bool {
+        let left_transient = self.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
+            && function::exists(LEFT_TRANSIENT_PROMPT_FUNCTION_NAME, self.parser);
+        let right_transient = self.conf.right_prompt_cmd == RIGHT_PROMPT_FUNCTION_NAME
+            && function::exists(RIGHT_TRANSIENT_PROMPT_FUNCTION_NAME, self.parser);
+
+        if !left_transient && !right_transient {
+            return false;
+        }
+
+        FLOG!(reader_render, "Transient prompt");
+        let original_left = if left_transient {
+            Some(std::mem::replace(
+                &mut self.conf.left_prompt_cmd,
+                LEFT_TRANSIENT_PROMPT_FUNCTION_NAME.to_owned(),
+            ))
+        } else {
+            None
+        };
+        let original_right = if right_transient {
+            Some(std::mem::replace(
+                &mut self.conf.right_prompt_cmd,
+                RIGHT_TRANSIENT_PROMPT_FUNCTION_NAME.to_owned(),
+            ))
+        } else {
+            None
+        };
+
+        self.exec_prompt();
+
+        if let Some(orig) = original_left {
+            self.conf.left_prompt_cmd = orig;
+        }
+        if let Some(orig) = original_right {
+            self.conf.right_prompt_cmd = orig;
+        }
+
+        self.screen.reset_line(true);
+        return true;
     }
 }
 

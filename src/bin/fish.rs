@@ -21,10 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(unstable_name_collisions)]
 #![allow(clippy::uninlined_format_args)]
 
-#[cfg(feature = "installable")]
-use fish::common::wcs2osstring;
-#[allow(unused_imports)]
-use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
     builtins::{
@@ -73,8 +69,6 @@ use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
 use std::path::Path;
-#[cfg(feature = "installable")]
-use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -84,117 +78,6 @@ use std::{env, ops::ControlFlow};
 #[derive(RustEmbed)]
 #[folder = "share/"]
 struct Asset;
-
-#[cfg(feature = "installable")]
-// Disable for clippy because otherwise it would require sphinx
-#[cfg(not(clippy))]
-fn install(confirm: bool, dir: &Path) -> bool {
-    use rust_embed::RustEmbed;
-
-    #[derive(RustEmbed)]
-    #[folder = "target/man/man1"]
-    #[prefix = "man/man1/"]
-    struct Docs;
-
-    use std::fs;
-    use std::io::ErrorKind;
-    use std::io::Write;
-    use std::io::{stderr, stdin};
-
-    // TODO: Translation,
-    // FLOG?
-    // - Install: Translations
-    // - Install: Manpages (build via build.rs)
-    // - Don't install: __fish_build_paths.fish.in
-    if confirm {
-        if isatty(libc::STDIN_FILENO) {
-            eprintln!(
-                "This will write fish's data files to '{}'.\n\
-                 Please enter 'yes' to continue.",
-                dir.display()
-            );
-            eprint!("> ");
-            let _ = stderr().flush();
-        }
-
-        let mut input = String::new();
-        if let Err(error) = stdin().read_line(&mut input) {
-            eprintln!("error: {error}")
-        }
-
-        if input != "yes\n" {
-            eprintln!("Exiting without writing any files\n");
-            return false;
-        }
-    } else {
-        eprintln!("Installing fish's data files to '{}'.", dir.display());
-    }
-
-    // Remove the install directory first, to clean out any removed files.
-    if let Err(err) = fs::remove_dir_all(dir) {
-        if err.kind() != ErrorKind::NotFound {
-            eprintln!("Removing '{}' failed: {}", dir.display(), err);
-            return false;
-        }
-    }
-
-    // This function can't be top-level because rust_embed is an optional dependency, so it can't
-    // be a part of the function signature.
-    fn extract_embed<T: rust_embed::Embed>(dir: &Path) -> bool {
-        for file in T::iter() {
-            // These are read as embedded on demand.
-            // (yes it's a hack the docs don't match this)
-            if file.starts_with("functions/")
-                || file.starts_with("completions/")
-                || file == "config.fish"
-            {
-                continue;
-            }
-            let path = dir.join(file.as_ref());
-            let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
-                eprintln!(
-                    "Creating directory '{}' failed",
-                    path.parent().unwrap().display()
-                );
-                return false;
-            };
-            let res = File::create(&path);
-            let Ok(mut f) = res else {
-                eprintln!("Creating file '{}' failed", path.display());
-                continue;
-            };
-            // This should be impossible.
-            let d = T::get(&file).expect("File was somehow not included???");
-            if let Err(error) = f.write_all(&d.data) {
-                eprintln!("error: {error}");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    if !extract_embed::<Asset>(&dir) {
-        return false;
-    }
-    if !extract_embed::<Docs>(&dir) {
-        return false;
-    }
-
-    let verfile = dir.join("fish-install-version");
-    let res = File::create(&verfile);
-    if let Ok(mut f) = res {
-        f.write_all(fish::BUILD_VERSION.as_bytes())
-            .expect("FAILED TO WRITE");
-    } else {
-        eprintln!("Creating file '{}' failed", verfile.display());
-    };
-    return true;
-}
-
-#[cfg(clippy)]
-fn install(_confirm: bool, _dir: &Path) -> bool {
-    unreachable!()
-}
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]
@@ -287,26 +170,6 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     return true;
 }
 
-#[cfg(feature = "installable")]
-fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
-    // (false-positive, is_none_or is a backport, this builds with 1.70)
-    #[allow(clippy::incompatible_msrv)]
-    if paths
-        .bin
-        .clone()
-        .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
-    {
-        // When fish is installable, we write the version to a file,
-        // now we check it.
-        let verfile = PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
-        let version = std::fs::read_to_string(verfile).ok()?;
-
-        return Some(version == fish::BUILD_VERSION);
-    }
-    // When running from the manifest dir, we'll just run.
-    return Some(true);
-}
-
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
     #[cfg(feature = "installable")]
@@ -397,7 +260,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
         wopt(L!("no-config"), NoArgument, 'N'),
         wopt(L!("no-execute"), NoArgument, 'n'),
         wopt(L!("print-rusage-self"), NoArgument, RUSAGE_ARG),
-        wopt(L!("install"), OptionalArgument, 'I'),
         wopt(
             L!("print-debug-categories"),
             NoArgument,
@@ -432,61 +294,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'f' => opts.features = w.woptarg.unwrap().to_owned(),
             'h' => opts.batch_cmds.push("__fish_print_help fish".into()),
             'i' => opts.is_interactive_session = true,
-            'I' => {
-                #[cfg(not(feature = "installable"))]
-                eprintln!("Fish was built without support for self-installation");
-                #[cfg(feature = "installable")]
-                if let Some(path) = w.woptarg {
-                    // We were given an explicit path.
-                    // Install us there as a relocatable install.
-                    // That means:
-                    // path/bin/fish is the fish binary
-                    // path/share/fish/ is the data directory
-                    // path/etc/fish is sysconf????
-                    use std::fs;
-                    let dir = PathBuf::from(wcs2osstring(path));
-                    if install(true, &dir.join("share/fish/install")) {
-                        for sub in &["share/fish/install", "etc/fish", "bin"] {
-                            let p = dir.join(sub);
-                            let Ok(_) = fs::create_dir_all(p.clone()) else {
-                                eprintln!("Creating directory '{}' failed", p.display());
-                                std::process::exit(1);
-                            };
-                        }
-
-                        // Copy ourselves there.
-                        let argv0 = OsString::from_vec(wcs2string(&args[0]));
-                        use fish::common::get_executable_path;
-                        let exec_path =
-                            get_executable_path(<OsString as AsRef<Path>>::as_ref(&argv0));
-                        let binpath = dir.join("bin/fish");
-                        if let Ok(exec_path) = exec_path.canonicalize() {
-                            if exec_path != binpath {
-                                if let Err(err) = std::fs::copy(exec_path, binpath.clone()) {
-                                    FLOG!(error, "Cannot copy fish to", binpath.display());
-                                    FLOG!(error, err);
-                                    std::process::exit(1);
-                                }
-                                println!(
-                                    "Fish installed in '{}'. Start that from now on.",
-                                    binpath.display()
-                                );
-                                // TODO: Reexec fish?
-                                std::process::exit(0);
-                            }
-                        } else {
-                            FLOG!(error, "Cannot copy fish to '%ls'. Please copy the fish binary there manually", binpath.display());
-                        }
-                    }
-                } else {
-                    let paths = Some(&*CONFIG_PATHS);
-                    let Some(paths) = paths else {
-                        FLOG!(error, "Cannot find config paths");
-                        std::process::exit(1);
-                    };
-                    install(true, &paths.data);
-                }
-            }
             'l' => opts.is_login = true,
             'N' => {
                 opts.no_config = true;

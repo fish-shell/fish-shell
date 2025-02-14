@@ -41,12 +41,6 @@ The following options are available:
 **-i** or **--interactive**
     The shell is interactive.
 
-**--install[=PATH]**
-    When built as self-installable (via cargo), this will unpack fish's data files and place them in ``~/.local/share/fish/install/``.
-    fish will also ask to do this automatically when run interactively.
-    If PATH is given, fish will install itself into a relocatable directory tree rooted at that path.
-    That means it will install the data files to PATH/share/fish and copy itself to PATH/bin/fish.
-
 **-l** or **--login**
     Act as if invoked as a login shell.
 

@@ -444,14 +444,6 @@ fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
     #[cfg(feature = "installable")]
     {
-        let emfile = Asset::get("config.fish").expect("Embedded file not found");
-        let src = str2wcstring(&emfile.data);
-        parser.libdata_mut().within_fish_init = true;
-        let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-        let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-        parser.libdata_mut().within_fish_init = false;
-        if let Err(msg) = ret {
-            eprintf!("%ls", msg);
         // If the version file is out of date,
         // we try to update automatically, but only if we're interactive.
         // We do specifically check for a tty because we want to read input to confirm.
@@ -470,6 +462,22 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
             // TODO: Do we need confirmation? The user already indicated they want these files.
             install(true, PathBuf::from(wcs2osstring(&datapath)));
         }
+
+        if let Some(emfile) = Asset::get("config.fish") {
+            let src = str2wcstring(&emfile.data);
+            parser.libdata_mut().within_fish_init = true;
+            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+            parser.libdata_mut().within_fish_init = false;
+            if let Err(msg) = ret {
+                eprintf!("%ls", msg);
+            }
+        } else {
+            FLOG!(
+                error,
+                "Fish cannot find its configuration. It was miscompiled.\n\
+                 Refusing to read configuration because of this.",
+            );
         }
     }
     #[cfg(not(feature = "installable"))]

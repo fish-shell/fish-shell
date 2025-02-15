@@ -552,11 +552,11 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         })
     });
     if BRACKETED_PASTE.load(Ordering::Acquire) {
-        BRACKETED_PASTE.store(false, Ordering::Release);
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004l");
         if IS_TMUX.load() {
             let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
         }
+        BRACKETED_PASTE.store(false, Ordering::Release);
         did_write.store(true);
     }
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {

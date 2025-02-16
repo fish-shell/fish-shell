@@ -2229,9 +2229,10 @@ impl<'a> Reader<'a> {
             }
         }
 
-        // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
-        // user presses enter.
-        if zelf.is_repaint_needed(None)
+        // Redraw the command line. This is what ensures the autosuggestion is hidden,
+        // final prompt is drawn, etc. after the user presses enter.
+        if zelf.update_final_prompt()
+            || zelf.is_repaint_needed(None)
             || zelf.screen.scrolled()
             || zelf.conf.inputfd != STDIN_FILENO
         {
@@ -4625,6 +4626,27 @@ impl<'a> Reader<'a> {
         if exec_left || exec_right {
             self.exec_prompt(exec_left, exec_right);
         }
+    }
+
+    /// Execute final prompt commands if they are defined. Returns whether they were executed.
+    fn update_final_prompt(&mut self) -> bool {
+        let l_len = self.conf.left_prompt_cmd.len();
+        let r_len = self.conf.right_prompt_cmd.len();
+
+        self.conf.left_prompt_cmd += "_final";
+        self.conf.right_prompt_cmd += "_final";
+
+        let exec_left = l_len != 0 && function::exists(&self.conf.left_prompt_cmd, self.parser);
+        let exec_right = r_len != 0 && function::exists(&self.conf.right_prompt_cmd, self.parser);
+
+        if exec_left || exec_right {
+            self.exec_prompt(exec_left, exec_right);
+        }
+
+        self.conf.left_prompt_cmd.drain(l_len..);
+        self.conf.right_prompt_cmd.drain(r_len..);
+
+        return exec_left || exec_right;
     }
 }
 

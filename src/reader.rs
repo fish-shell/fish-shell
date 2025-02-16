@@ -303,6 +303,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to reexecute prompt function before final rendering.
+    pub transient_prompt: bool,
+
     /// Whether to expand abbreviations.
     pub expand_abbrev_ok: bool,
 
@@ -651,12 +654,13 @@ fn read_i(parser: &Parser) -> i32 {
     assert_is_main_thread();
     parser.assert_can_execute();
     let mut conf = ReaderConfig::default();
+    conf.event = L!("fish_prompt");
     conf.complete_ok = true;
     conf.highlight_ok = true;
     conf.syntax_check_ok = true;
-    conf.autosuggest_ok = check_autosuggestion_enabled(parser.vars());
     conf.expand_abbrev_ok = true;
-    conf.event = L!("fish_prompt");
+    conf.autosuggest_ok = check_var(parser.vars(), L!("fish_autosuggestion_enabled"), true);
+    conf.transient_prompt = check_var(parser.vars(), L!("fish_transient_prompt"), false);
 
     if parser.is_breakpoint() && function::exists(DEBUG_PROMPT_FUNCTION_NAME, parser) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME.to_owned();
@@ -935,25 +939,32 @@ pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
     }
 }
 
-fn check_autosuggestion_enabled(vars: &dyn Environment) -> bool {
-    vars.get(L!("fish_autosuggestion_enabled"))
+fn check_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
+    vars.get(name)
         .map(|v| v.as_string())
         .map(|v| v != L!("0"))
-        .unwrap_or(true)
+        .unwrap_or(default)
 }
 
 /// Enable or disable autosuggestions based on the associated variable.
 pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
-    let Some(data) = current_data() else {
-        return;
-    };
-    let enable = check_autosuggestion_enabled(vars);
-    if data.conf.autosuggest_ok != enable {
-        data.conf.autosuggest_ok = enable;
-        data.force_exec_prompt_and_repaint = true;
-        data.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+    if let Some(data) = current_data() {
+        let enable = check_var(vars, L!("fish_autosuggestion_enabled"), true);
+        if data.conf.autosuggest_ok != enable {
+            data.conf.autosuggest_ok = enable;
+            data.force_exec_prompt_and_repaint = true;
+            data.input_data
+                .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+        }
+    }
+}
+
+/// Enable or disable transient prompt based on the associated variable.
+pub fn reader_set_transient_prompt(vars: &dyn Environment) {
+    // We don't need to _change_ if we're not initialized yet.
+    if let Some(data) = current_data() {
+        data.conf.transient_prompt = check_var(vars, L!("fish_transient_prompt"), false);
     }
 }
 
@@ -2229,9 +2240,10 @@ impl<'a> Reader<'a> {
             }
         }
 
-        // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
-        // user presses enter.
-        if zelf.is_repaint_needed(None)
+        // Redraw the command line. This is what ensures the autosuggestion is hidden,
+        // final prompt is drawn, etc. after the user presses enter.
+        if zelf.update_final_prompt()
+            || zelf.is_repaint_needed(None)
             || zelf.screen.scrolled()
             || zelf.conf.inputfd != STDIN_FILENO
         {
@@ -4625,6 +4637,30 @@ impl<'a> Reader<'a> {
         if exec_left || exec_right {
             self.exec_prompt(exec_left, exec_right);
         }
+    }
+
+    /// Execute prompt commands if fish in transient mode, passing `--final-rendering` to them.
+    /// Returns whether any commands were executed.
+    fn update_final_prompt(&mut self) -> bool {
+        if !self.conf.transient_prompt {
+            return false;
+        }
+
+        let l_len = self.conf.left_prompt_cmd.len();
+        let r_len = self.conf.right_prompt_cmd.len();
+
+        let exec_left = l_len != 0 && function::exists(&self.conf.left_prompt_cmd, self.parser);
+        let exec_right = r_len != 0 && function::exists(&self.conf.right_prompt_cmd, self.parser);
+
+        self.conf.left_prompt_cmd += " --final-rendering";
+        self.conf.right_prompt_cmd += " --final-rendering";
+
+        self.exec_prompt(exec_left, exec_right);
+
+        self.conf.left_prompt_cmd.drain(l_len..);
+        self.conf.right_prompt_cmd.drain(r_len..);
+
+        return exec_left || exec_right;
     }
 }
 

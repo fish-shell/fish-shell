@@ -2218,7 +2218,7 @@ impl<'a> Reader<'a> {
         if !zelf.conf.event.is_empty() {
             event::fire_generic(zelf.parser, zelf.conf.event.to_owned(), vec![]);
         }
-        zelf.exec_prompt();
+        zelf.update_prompt();
 
         // Start out as initially dirty.
         zelf.force_exec_prompt_and_repaint = true;
@@ -2728,7 +2728,7 @@ impl<'a> Reader<'a> {
                     // This can happen e.g. if a variable triggers a repaint,
                     // and the variable is set inside the prompt (#7324).
                     // builtin commandline will refuse to enqueue these.
-                    self.exec_mode_prompt();
+                    self.exec_prompt(false, false);
                     if !self.mode_prompt_buff.is_empty() {
                         if self.is_repaint_needed(None) {
                             self.screen.reset_line(/*repaint_prompt=*/ true);
@@ -2739,7 +2739,7 @@ impl<'a> Reader<'a> {
                     }
                     // Else we repaint as normal.
                 }
-                self.exec_prompt();
+                self.update_prompt();
                 self.screen.reset_line(/*repaint_prompt=*/ true);
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
@@ -3839,7 +3839,7 @@ impl<'a> Reader<'a> {
             self.screen.reset_line(/*repaint_prompt=*/ true);
             self.layout_and_repaint(L!("readline"));
         }
-        self.exec_prompt();
+        self.update_prompt();
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));
         self.force_exec_prompt_and_repaint = false;
@@ -4524,95 +4524,72 @@ pub fn reader_write_title(
 }
 
 impl<'a> Reader<'a> {
-    fn exec_mode_prompt(&mut self) {
-        self.mode_prompt_buff.clear();
-        if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
-            let mut mode_indicator_list = vec![];
-            exec_subshell(
-                MODE_PROMPT_FUNCTION_NAME,
-                self.parser,
-                Some(&mut mode_indicator_list),
-                false,
-            );
-            // We do not support multiple lines in the mode indicator, so just concatenate all of
-            // them.
-            for i in mode_indicator_list {
-                self.mode_prompt_buff.push_utfstr(&i);
-            }
-        }
-    }
-
-    /// Reexecute the prompt command. The output is inserted into prompt_buff.
-    fn exec_prompt(&mut self) {
-        // Clear existing prompts.
-        self.left_prompt_buff.clear();
-        self.right_prompt_buff.clear();
-
+    /// Execute prompt commands based on the provided arguments. The output is inserted into prompt_buff.
+    fn exec_prompt(&mut self, exec_left: bool, exec_right: bool) {
         // Suppress fish_trace while in the prompt.
+        // Prompts must be run non-interactively.
         let mut zelf = scoped_push_replacer_ctx(
             self,
             |zelf, new_value| {
-                std::mem::replace(
-                    &mut zelf.parser.libdata_mut().suppress_fish_trace,
-                    new_value,
+                let mut libdata = zelf.parser.libdata_mut();
+                (
+                    std::mem::replace(&mut libdata.suppress_fish_trace, new_value.0),
+                    std::mem::replace(&mut libdata.is_interactive, new_value.1),
                 )
             },
-            true,
+            (true, false),
         );
 
         // Update the termsize now.
         // This allows prompts to react to $COLUMNS.
         zelf.update_termsize();
 
-        // If we have any prompts, they must be run non-interactively.
-        if !zelf.conf.left_prompt_cmd.is_empty() || !zelf.conf.right_prompt_cmd.is_empty() {
-            let mut zelf = scoped_push_replacer_ctx(
-                &mut zelf,
-                |zelf, new_value| {
-                    std::mem::replace(&mut zelf.parser.libdata_mut().is_interactive, new_value)
-                },
+        zelf.mode_prompt_buff.clear();
+        if function::exists(MODE_PROMPT_FUNCTION_NAME, zelf.parser) {
+            let mut mode_indicator_list = vec![];
+            exec_subshell(
+                MODE_PROMPT_FUNCTION_NAME,
+                zelf.parser,
+                Some(&mut mode_indicator_list),
                 false,
             );
+            // We do not support multiline mode indicators, so just concatenate all of them.
+            zelf.mode_prompt_buff = WString::from_iter(mode_indicator_list);
+        }
 
-            zelf.exec_mode_prompt();
+        if exec_left {
+            // Status is ignored.
+            let mut prompt_list = vec![];
+            // Historic compatibility hack.
+            // If the left prompt function is deleted, then use a default prompt instead of
+            // producing an error.
+            let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
+                && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
+            exec_subshell(
+                if left_prompt_deleted {
+                    DEFAULT_PROMPT
+                } else {
+                    &zelf.conf.left_prompt_cmd
+                },
+                zelf.parser,
+                Some(&mut prompt_list),
+                false,
+            );
+            zelf.left_prompt_buff = join_strings(&prompt_list, '\n');
+            zelf.screen.reset_line(true);
+        }
 
-            if !zelf.conf.left_prompt_cmd.is_empty() {
-                // Status is ignored.
-                let mut prompt_list = vec![];
-                // Historic compatibility hack.
-                // If the left prompt function is deleted, then use a default prompt instead of
-                // producing an error.
-                let left_prompt_deleted = zelf.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
-                    && !function::exists(&zelf.conf.left_prompt_cmd, zelf.parser);
-                exec_subshell(
-                    if left_prompt_deleted {
-                        DEFAULT_PROMPT
-                    } else {
-                        &zelf.conf.left_prompt_cmd
-                    },
-                    zelf.parser,
-                    Some(&mut prompt_list),
-                    /*apply_exit_status=*/ false,
-                );
-                zelf.left_prompt_buff = join_strings(&prompt_list, '\n');
-            }
-
-            if !zelf.conf.right_prompt_cmd.is_empty() {
-                if function::exists(&zelf.conf.right_prompt_cmd, zelf.parser) {
-                    // Status is ignored.
-                    let mut prompt_list = vec![];
-                    exec_subshell(
-                        &zelf.conf.right_prompt_cmd,
-                        zelf.parser,
-                        Some(&mut prompt_list),
-                        /*apply_exit_status=*/ false,
-                    );
-                    // Right prompt does not support multiple lines, so just concatenate all of them.
-                    for i in prompt_list {
-                        zelf.right_prompt_buff.push_utfstr(&i);
-                    }
-                }
-            }
+        if exec_right {
+            // Status is ignored.
+            let mut prompt_list = vec![];
+            exec_subshell(
+                &zelf.conf.right_prompt_cmd,
+                zelf.parser,
+                Some(&mut prompt_list),
+                false,
+            );
+            // Right prompt does not support multiple lines, so just concatenate all of them.
+            zelf.right_prompt_buff = WString::from_iter(prompt_list);
         }
 
         // Write the screen title. Do not reset the cursor position: exec_prompt is called when there
@@ -4629,6 +4606,25 @@ impl<'a> Reader<'a> {
         let exit_current_script = zelf.parser.libdata().exit_current_script;
         zelf.exit_loop_requested |= exit_current_script;
         zelf.parser.libdata_mut().exit_current_script = false;
+    }
+
+    /// Execute prompt commands if needed.
+    fn update_prompt(&mut self) {
+        // Clear existing prompts.
+        self.left_prompt_buff.clear();
+        self.right_prompt_buff.clear();
+
+        let exec_left = !self.conf.left_prompt_cmd.is_empty();
+        let exec_right = !self.conf.right_prompt_cmd.is_empty()
+            && (self.conf.right_prompt_cmd != RIGHT_PROMPT_FUNCTION_NAME || {
+                // Load fish_prompt.fish to ensure we don't miss fish_right_prompt if it is defined there.
+                function::load(LEFT_PROMPT_FUNCTION_NAME, self.parser);
+                function::exists(&self.conf.right_prompt_cmd, self.parser)
+            });
+
+        if exec_left || exec_right {
+            self.exec_prompt(exec_left, exec_right);
+        }
     }
 }
 

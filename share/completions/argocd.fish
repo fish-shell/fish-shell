@@ -1,0 +1,1 @@
+argocd completion fish | source

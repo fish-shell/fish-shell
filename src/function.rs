@@ -37,6 +37,9 @@ pub struct FunctionProperties {
     /// Set to true if invoking this function shadows the variables of the underlying function.
     pub shadow_scope: bool,
 
+    /// Whether to reexecute this function for final rendering if it is used as a prompt function.
+    pub transient: bool,
+
     /// Whether the function was autoloaded.
     /// This is the only field which is mutated after the properties are created.
     pub is_autoload: RelaxedAtomicBool,

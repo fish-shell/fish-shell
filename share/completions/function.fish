@@ -39,3 +39,4 @@ complete -c function -s a -l argument-names -d "Specify named arguments" -x
 complete -c function -s S -l no-scope-shadowing -d "Do not shadow variable scope of calling function"
 complete -c function -s w -l wraps -d "Inherit completions from the given command" -xa "(__fish_complete_command)"
 complete -c function -s V -l inherit-variable -d "Snapshot and define local variable" -xa "(__fish_complete_variables)"
+complete -c function -s t -l transient -d "Reexecute for final rendering if used as a prompt"

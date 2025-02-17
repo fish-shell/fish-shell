@@ -17,6 +17,7 @@ use std::sync::Arc;
 struct FunctionCmdOpts {
     print_help: bool,
     shadow_scope: bool,
+    transient: bool,
     description: WString,
     events: Vec<EventDescription>,
     named_arguments: Vec<WString>,
@@ -29,6 +30,7 @@ impl Default for FunctionCmdOpts {
         Self {
             print_help: false,
             shadow_scope: true,
+            transient: false,
             description: WString::new(),
             events: Vec::new(),
             named_arguments: Vec::new(),
@@ -40,7 +42,7 @@ impl Default for FunctionCmdOpts {
 
 // This command is atypical in using the "-" (RETURN_IN_ORDER) option for flag parsing.
 // This is needed due to the semantics of the -a/--argument-names flag.
-const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:");
+const SHORT_OPTIONS: &wstr = L!("-:a:d:e:hj:p:s:v:w:SV:t");
 #[rustfmt::skip]
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("description"), ArgType::RequiredArgument, 'd'),
@@ -54,6 +56,7 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("argument-names"), ArgType::RequiredArgument, 'a'),
     wopt(L!("no-scope-shadowing"), ArgType::NoArgument, 'S'),
     wopt(L!("inherit-variable"), ArgType::RequiredArgument, 'V'),
+    wopt(L!("transient"), ArgType::NoArgument, 't'),
 ];
 
 /// Return the internal_job_id for a pid, or None if none.
@@ -191,6 +194,9 @@ fn parse_cmd_opts(
             }
             'S' => {
                 opts.shadow_scope = false;
+            }
+            't' => {
+                opts.transient = true;
             }
             'w' => {
                 opts.wrap_targets.push(w.woptarg.unwrap().to_owned());
@@ -350,6 +356,7 @@ pub fn function(
         description: opts.description,
         inherit_vars: inherit_vars.into_boxed_slice(),
         shadow_scope: opts.shadow_scope,
+        transient: opts.transient,
         is_autoload: RelaxedAtomicBool::new(false),
         definition_file,
         is_copy: false,

@@ -4628,23 +4628,26 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// Execute final prompt commands if they are defined. Returns whether they were executed.
+    /// Execute prompt commands marked as transient, passing `--final-rendering` to them.
+    /// Returns whether any commands were executed.
     fn update_final_prompt(&mut self) -> bool {
         let l_len = self.conf.left_prompt_cmd.len();
         let r_len = self.conf.right_prompt_cmd.len();
 
-        self.conf.left_prompt_cmd += "_final";
-        self.conf.right_prompt_cmd += "_final";
-
-        let exec_left = l_len != 0 && function::exists(&self.conf.left_prompt_cmd, self.parser);
-        let exec_right = r_len != 0 && function::exists(&self.conf.right_prompt_cmd, self.parser);
+        let exec_left = l_len != 0
+            && function::get_props_autoload(&self.conf.left_prompt_cmd, self.parser)
+                .is_some_and(|opts| opts.transient);
+        let exec_right = r_len != 0
+            && function::get_props_autoload(&self.conf.right_prompt_cmd, self.parser)
+                .is_some_and(|opts| opts.transient);
 
         if exec_left || exec_right {
+            self.conf.left_prompt_cmd += " --final-rendering";
+            self.conf.right_prompt_cmd += " --final-rendering";
             self.exec_prompt(exec_left, exec_right);
+            self.conf.left_prompt_cmd.drain(l_len..);
+            self.conf.right_prompt_cmd.drain(r_len..);
         }
-
-        self.conf.left_prompt_cmd.drain(l_len..);
-        self.conf.right_prompt_cmd.drain(r_len..);
 
         return exec_left || exec_right;
     }

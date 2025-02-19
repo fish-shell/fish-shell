@@ -61,6 +61,7 @@ enum StatusCmd {
     STATUS_CURRENT_COMMANDLINE,
     STATUS_BUILDINFO,
     STATUS_GET_FILE,
+    STATUS_LIST_FILES,
 }
 
 str_enum!(
@@ -80,6 +81,7 @@ str_enum!(
     (STATUS_FISH_PATH, "fish-path"),
     (STATUS_FUNCTION, "function"),
     (STATUS_GET_FILE, "get-file"),
+    (STATUS_LIST_FILES, "list-files"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -479,6 +481,52 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_CMD_ERROR);
             }
         }
+        c @ STATUS_LIST_FILES => {
+            if args.len() > 1 {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_ARG_COUNT2,
+                    cmd,
+                    c.to_wstr(),
+                    1,
+                    args.len()
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
+            #[cfg(feature = "installable")]
+            {
+                let mut have_file = false;
+                let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
+                let arg = std::str::from_utf8(&arg).unwrap();
+                for file in crate::autoload::Asset::iter() {
+                    if arg.is_empty() || file.starts_with(arg) {
+                        have_file = true;
+                        let src = str2wcstring(file.as_bytes());
+                        streams.out.appendln(src);
+                    }
+                }
+                for file in Docs::iter() {
+                    if arg.is_empty() || file.starts_with(arg) {
+                        have_file = true;
+                        let src = str2wcstring(file.as_bytes());
+                        streams.out.appendln(src);
+                    }
+                }
+
+                if have_file {
+                    return Ok(SUCCESS);
+                } else {
+                    return Err(STATUS_CMD_ERROR);
+                }
+            }
+            #[cfg(not(feature = "installable"))]
+            {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: fish was not built with embedded files",
+                    cmd,
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
+        }
         ref s => {
             if !args.is_empty() {
                 streams.err.append(wgettext_fmt!(
@@ -665,7 +713,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 STATUS_SET_JOB_CONTROL
                 | STATUS_FEATURES
                 | STATUS_TEST_FEATURE
-                | STATUS_GET_FILE => {
+                | STATUS_GET_FILE
+                | STATUS_LIST_FILES => {
                     unreachable!("")
                 }
             }

@@ -11,7 +11,7 @@ function __fish_print_help --description "Print help message for the specified f
     end
 
     # Do nothing if the file does not exist
-    if not test -e "$__fish_data_dir/man/man1/$item.1" -o -e "$__fish_data_dir/man/man1/$item.1.gz"
+    if not test -e "$__fish_data_dir/man/man1/$item.1" -o -e "$__fish_data_dir/man/man1/$item.1.gz"; and not status get-file man/man1/$item.1 >/dev/null
         return 2
     end
 
@@ -58,6 +58,8 @@ function __fish_print_help --description "Print help message for the specified f
         else
             set help (gunzip -c "$__fish_data_dir/man/man1/$item.1.gz" 2>/dev/null | $format 2>/dev/null)
         end
+    else
+        set help (status get-file man/man1/$item.1 | $format 2>/dev/null)
     end
 
     # The original implementation trimmed off the top 5 lines and bottom 3 lines

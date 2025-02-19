@@ -1321,13 +1321,14 @@ impl ReaderData {
         snapshot.selection = self.get_selection();
         snapshot.pager_mode = !self.pager.is_empty();
         snapshot.pager_fully_disclosed = self.current_page_rendering.remaining_to_disclose == 0;
-        if snapshot
-            .search_field
-            .as_ref()
-            .is_none_or(|(text, position)| {
-                text != self.pager.search_field_line.text()
-                    || *position != self.pager.search_field_line.position()
-            })
+        if (snapshot.search_field.is_some() != self.pager.search_field_shown)
+            || snapshot
+                .search_field
+                .as_ref()
+                .is_some_and(|(text, position)| {
+                    text != self.pager.search_field_line.text()
+                        || *position != self.pager.search_field_line.position()
+                })
         {
             snapshot.search_field = self.pager.search_field_shown.then(|| {
                 (

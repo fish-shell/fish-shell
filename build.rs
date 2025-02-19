@@ -41,13 +41,20 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
+    let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let targetman = cman.as_path().join("target").join("man");
+
     #[cfg(feature = "installable")]
     #[cfg(not(clippy))]
     {
-        let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
-        let targetman = cman.as_path().join("target").join("man");
         build_man(&targetman);
     }
+    #[cfg(any(not(feature = "installable"), clippy))]
+    {
+        let sec1dir = targetman.join("man1");
+        let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
+    }
+
     // These are necessary if built with embedded functions,
     // but technically only in release builds (because debug builds read from the filesystem).
     rsconf::rebuild_if_path_changed("doc_src/");

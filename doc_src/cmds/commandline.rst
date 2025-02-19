@@ -71,7 +71,7 @@ The following options change what part of the commandline is printed or updated:
     Selects the current token
 
 **--search-field**
-    Use the pager search field instead of the command line. Returns false is the search field is not shown.
+    Use the pager search field instead of the command line. Returns false if the search field is not shown.
 
 The following options change the way ``commandline`` prints the current commandline buffer:
 

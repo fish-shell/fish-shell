@@ -189,7 +189,7 @@ function help --description 'Show help for the fish shell'
     and set -l chromeos_linux_garcon
 
     # Generate the online URL, with one dot in the version string (major.minor)
-    set -l version_string (string split . -f 1,2 -- $version | string join .)
+    set -l version_string (string match -rg '(\d+\.\d+(?:b\d+)?).*' -- $version)
     set -l ext_url https://fishshell.com/docs/$version_string/$fish_help_page
     set -l page_url
     if set -q __fish_help_dir[1]; and test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon

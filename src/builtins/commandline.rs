@@ -475,7 +475,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     rstate.cursor_pos + 1
                         - parse_util_get_offset_from_line(
                             &rstate.text,
-                            i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos))
+                            i32::try_from(parse_util_lineno(&rstate.text, rstate.cursor_pos) - 1)
                                 .unwrap(),
                         )
                         .unwrap_or_default()

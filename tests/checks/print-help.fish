@@ -1,6 +1,8 @@
 # RUN: %fish %s
 # Test redirecting builtin help with a pipe
 # REQUIRES: command -v mandoc || command -v nroff
+# DISABLE for now because we're skipping __fish_print_help
+# REQUIRES: false
 
 set -lx __fish_data_dir (mktemp -d)
 mkdir -p $__fish_data_dir/man/man1

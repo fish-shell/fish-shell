@@ -83,7 +83,7 @@ function fish_config --description "Launch fish's web based configuration"
                         echo
                     end
                 case list ''
-                    string replace -r '.*/([^/]*).fish$' '$1' $prompt_dir/*.fish
+                    files=$prompt_dir/*.theme string replace -r '.*/([^/]*).fish$' '$1' $files (status list-files tools/web_config/sample_prompts/)
                     return
                 case choose
                     if set -q argv[2]
@@ -104,8 +104,16 @@ function fish_config --description "Launch fish's web based configuration"
                         end
                     end
                     if not set -q have[1]
-                        echo "No such prompt: '$argv[1]'" >&2
-                        return 1
+                        if status list-files tools/web_config/sample_prompts/$argv[1].fish >/dev/null
+                            status get-file tools/web_config/sample_prompts/$argv[1].fish | source
+                            # HACK: `source` gives us a filename of "-", so we check manually if we had a right prompt
+                            set have ""
+                            status get-file tools/web_config/sample_prompts/$argv[1].fish | string match -q '*function fish_right_prompt*'
+                            and set have -
+                        else
+                            echo "No such prompt: '$argv[1]'" >&2
+                            return 1
+                        end
                     end
 
                     # Erase the right prompt if it didn't have any.
@@ -139,8 +147,12 @@ function fish_config --description "Launch fish's web based configuration"
                                 end
                             end
                             if not set -q have[1]
-                                echo "No such prompt: '$argv[1]'" >&2
-                                return 1
+                                if status list-files tools/web_config/sample_prompts/$argv[1].fish >/dev/null
+                                    status get-file tools/web_config/sample_prompts/$argv[1].fish | source
+                                else
+                                    echo "No such prompt: '$argv[1]'" >&2
+                                    return 1
+                                end
                             end
                         end
 
@@ -170,7 +182,7 @@ function fish_config --description "Launch fish's web based configuration"
 
             switch $cmd
                 case list ''
-                    string replace -r '.*/([^/]*).theme$' '$1' $dirs/*.theme
+                    files=$dirs/*.theme string replace -r '.*/([^/]*).theme$' '$1' $files (status list-files tools/web_config/themes/)
                     return
                 case demo
                     echo -ns (set_color $fish_color_command || set_color $fish_color_normal) /bright/vixens
@@ -198,8 +210,8 @@ function fish_config --description "Launch fish's web based configuration"
                     echo
                 case show
                     set -l fish (status fish-path)
-                    set -l themes $dirs/$argv.theme
-                    set -q themes[1]; or set themes $dirs/*.theme
+                    set -l themes $dirs/$argv.theme (status list-files tools/web_config/themes/ | string match -- "*/"$argv.theme)
+                    set -q themes[1]; or set themes $dirs/*.theme (status list-files tools/web_config/themes/)
                     set -l used_themes
 
                     echo -s (set_color normal; set_color --underline) Current (set_color normal)
@@ -268,12 +280,23 @@ function fish_config --description "Launch fish's web based configuration"
                         end
 
                         if not set -q file[1]
-                            echo "No such theme: $argv[1]" >&2
-                            echo "Searched directories: $dirs" >&2
-                            return 1
+                            if status list-files tools/web_config/themes/$argv[1].theme >/dev/null
+                                set file tools/web_config/themes/$argv[1].theme
+                            else
+                                echo "No such theme: $argv[1]" >&2
+                                echo "Searched directories: $dirs" >&2
+                                return 1
+                            end
                         end
 
-                        while read -lat toks
+                        set -l content
+                        if string match -qr '^tools/' -- $file
+                            set content (status get-file $file)
+                        else
+                            read -az content < $file
+                        end
+
+                        printf %s\n $content | while read -lat toks
                             # The whitelist allows only color variables.
                             # Not the specific list, but something named *like* a color variable.
                             # This also takes care of empty lines and comment lines.
@@ -287,7 +310,7 @@ function fish_config --description "Launch fish's web based configuration"
                             end
                             set $scope $toks
                             set -a have_colors $toks[1]
-                        end <$file
+                        end
 
                         # Set all colors that aren't mentioned to empty
                         for c in $known_colors

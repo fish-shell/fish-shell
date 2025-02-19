@@ -41,13 +41,20 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
+    let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let targetman = cman.as_path().join("target").join("man");
+
     #[cfg(feature = "installable")]
     #[cfg(not(clippy))]
     {
-        let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
-        let targetman = cman.as_path().join("target").join("man");
         build_man(&targetman);
     }
+    #[cfg(any(not(feature = "installable"), clippy))]
+    {
+        let sec1dir = targetman.join("man1");
+        let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
+    }
+
     rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
     cc::Build::new()
         .file("src/libc.c")

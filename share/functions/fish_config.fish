@@ -20,7 +20,25 @@ function fish_config --description "Launch fish's web based configuration"
         set -l fish_path (status fish-path)
         and set __fish_bin_dir (path dirname -- $fish_path)
         if set -l python (__fish_anypython)
-            $python "$__fish_data_dir/tools/web_config/webconfig.py" $argv
+            set -l mainfile "$__fish_data_dir/tools/web_config/webconfig.py"
+            if not test -e $mainfile
+                if not status list-files tools/web_config >/dev/null
+                    echo "Cannot find web configuration tool. Please check your fish installation."
+                    return 1
+                end
+                set -l temp (mktemp -d)
+                for dir in (status list-files tools/web_config | path dirname | path sort -u)
+                    mkdir -p $temp/$dir
+                    or return
+                end
+                for file in (status list-files tools/web_config)
+                    status get-file $file >$temp/$file
+                    or return
+                end
+                set mainfile $temp/tools/web_config/webconfig.py
+            end
+
+            $python "$mainfile" $argv
 
             # If the execution of 'webconfig.py' fails, display python location and return.
             if test $status -ne 0

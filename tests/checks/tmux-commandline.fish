@@ -86,3 +86,20 @@ tmux-sleep
 # CHECK: cursor is at offset 3 in token
 # CHECK: prompt {{\d+}}> echo foobar
 isolated-tmux capture-pane -p
+
+isolated-tmux send-keys C-a C-k \
+    'bind ctrl-x,a "__fish_echo echo line=(commandline --line) column=(commandline --column)"' \
+    Enter \
+    C-l "echo '1" Enter 2
+tmux-sleep
+isolated-tmux send-keys C-x a C-a Up C-x a
+tmux-sleep
+# CHECK: prompt {{\d+}}> echo '1
+# CHECK: 2
+# CHECK: line=2 column=2
+# CHECK: prompt {{\d+}}> echo '1
+# CHECK: 2
+# CHECK: line=1 column=1
+# CHECK: prompt {{\d+}}> echo '1
+# CHECK: 2
+isolated-tmux capture-pane -p

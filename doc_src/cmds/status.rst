@@ -31,6 +31,8 @@ Synopsis
     status features
     status test-feature FEATURE
     status buildinfo
+    status get-file FILE
+    status list-files [PATH]
 
 Description
 -----------
@@ -105,6 +107,15 @@ The following operations (subcommands) are available:
 **buildinfo**
     This prints information on how fish was build - which architecture, which build system or profile was used, etc.
     This is mainly useful for debugging.
+
+**get-file** *FILE*
+    This prints a file embedded in the fish binary at compile time. This includes the default set of functions and completions,
+    as well as the man pages and themes. Which files are included depends on build settings.
+    Returns 0 if the file was included, 1 otherwise.
+
+**list-files** *FILE*
+    This lists the files embedded in the fish binary at compile time. Only files where the path starts with the optional *FILE* argument are shown.
+    Returns 0 if something was printed, 1 otherwise.
 
 Notes
 -----

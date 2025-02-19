@@ -71,10 +71,12 @@ function funced --description 'Edit function definition'
 
     if not functions -q -- $funcname
         echo $init >$tmpname
-    else if functions --details -- $funcname | string match --invert --quiet --regex '^(?:-|stdin)$'
+    else if functions --details -- $funcname | string match --invert --quiet --regex '^(?:-|stdin|embedded:.*)$'
         set writepath (functions --details -- $funcname)
         # Use cat here rather than cp to avoid copying permissions
         cat "$writepath" >$tmpname
+    else if set -l path (functions --details -- $funcname | string match -rg '^embedded:(.*)$')
+        status get-file $path >$tmpname
     else
         functions -- $funcname >$tmpname
     end

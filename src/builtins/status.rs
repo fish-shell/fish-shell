@@ -60,6 +60,7 @@ enum StatusCmd {
     STATUS_TEST_FEATURE,
     STATUS_CURRENT_COMMANDLINE,
     STATUS_BUILDINFO,
+    STATUS_GET_FILE,
 }
 
 str_enum!(
@@ -78,6 +79,7 @@ str_enum!(
     (STATUS_FILENAME, "filename"),
     (STATUS_FISH_PATH, "fish-path"),
     (STATUS_FUNCTION, "function"),
+    (STATUS_GET_FILE, "get-file"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -313,6 +315,15 @@ fn parse_cmd_opts(
     return Ok(SUCCESS);
 }
 
+#[cfg(feature = "installable")]
+use rust_embed::RustEmbed;
+
+#[cfg(feature = "installable")]
+#[derive(RustEmbed)]
+#[folder = "target/man/man1"]
+#[prefix = "man/man1/"]
+struct Docs;
+
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
     let argc = args.len();
@@ -431,6 +442,42 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 }
             }
             return Err(retval as i32);
+        }
+        c @ STATUS_GET_FILE => {
+            if args.len() != 1 {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_ARG_COUNT2,
+                    cmd,
+                    c.to_wstr(),
+                    1,
+                    args.len()
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
+            #[cfg(feature = "installable")]
+            {
+                let arg = crate::common::wcs2string(args[0]);
+                let arg = std::str::from_utf8(&arg).unwrap();
+                if let Some(emfile) = crate::autoload::Asset::get(arg) {
+                    let src = str2wcstring(&emfile.data);
+                    streams.out.append(src);
+                    return Ok(SUCCESS);
+                } else if let Some(emfile) = Docs::get(arg) {
+                    let src = str2wcstring(&emfile.data);
+                    streams.out.append(src);
+                    return Ok(SUCCESS);
+                } else {
+                    return Err(STATUS_CMD_ERROR);
+                }
+            }
+            #[cfg(not(feature = "installable"))]
+            {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: fish was not built with embedded files",
+                    cmd,
+                ));
+                return Err(STATUS_CMD_ERROR);
+            }
         }
         ref s => {
             if !args.is_empty() {
@@ -615,7 +662,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                         streams.out.appendln(path);
                     }
                 }
-                STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
+                STATUS_SET_JOB_CONTROL
+                | STATUS_FEATURES
+                | STATUS_TEST_FEATURE
+                | STATUS_GET_FILE => {
                     unreachable!("")
                 }
             }

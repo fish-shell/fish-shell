@@ -448,7 +448,7 @@ pub fn terminal_protocol_hacks() {
                 else {
                     return false;
                 };
-                version < (3, 5, 6)
+                version < (3, 5, 12)
             }),
     );
     IN_JETBRAINS.store(

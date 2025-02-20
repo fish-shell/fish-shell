@@ -20,7 +20,8 @@ Description
 ``bind`` manages key bindings.
 
 If both ``KEYS`` and ``COMMAND`` are given, ``bind`` adds (or replaces) a binding in ``MODE``.
-If only ``KEYS`` is given, any existing binding in the given ``MODE`` will be printed.
+If only ``KEYS`` is given, any existing binding for those keys in the given ``MODE`` will be printed.
+If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed.
 
 ``KEYS`` is a comma-separated list of key names.
 Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-`` and ``shift-``.
@@ -58,9 +59,7 @@ To find the name of a key combination you can use :doc:`fish_key_reader <fish_ke
 .. note::
     If a script changes the commandline, it should finish by calling the ``repaint`` special input function.
 
-If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed. If ``KEYS`` is provided but no ``COMMAND``, just the binding matching that sequence is printed.
-
-Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default". Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
+Key bindings may use "modes", which mimics vi's modal input behavior. The default mode is "default" (in vi-mode, that's vi's "normal" mode). Every key binding applies to a single mode; you can specify which one with ``-M MODE``. If the key binding should change the mode, you can specify the new mode with ``-m NEW_MODE``. The mode can be viewed and changed via the ``$fish_bind_mode`` variable. If you want to change the mode from inside a fish function, use ``set fish_bind_mode MODE``.
 
 To save custom key bindings, put the ``bind`` statements into :ref:`config.fish <configuration>`. Alternatively, fish also automatically executes a function called ``fish_user_key_bindings`` if it exists.
 
@@ -75,7 +74,9 @@ The following options are available:
     Display a list of defined bind modes
 
 **-M MODE** or **--mode** *MODE*
-    Specify a bind mode that the bind is used in. Defaults to "default"
+    Specify a bind mode that the bind is used in. Defaults to "default".
+    If you use :ref:`vi bindings <vi-mode>`, that's the *command* mode,
+    what vi calls "normal" mode.
 
 **-m NEW_MODE** or **--sets-mode** *NEW_MODE*
     Change the current mode to *NEW_MODE* after this binding is executed

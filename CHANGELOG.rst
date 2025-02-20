@@ -5,6 +5,7 @@ Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
 - When tab completion results are truncated, any common directory name is omitted.
+- Fish now supports transient prompts: if ``fish_transient_prompt`` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline.
 
 Deprecations and removed features
 ---------------------------------

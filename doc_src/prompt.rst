@@ -148,9 +148,49 @@ And it looks like:
 .. parsed-literal::
     :class: highlight
 
+    :green:`~/M/L/Oneknowing`>false
     :green:`~/M/L/Oneknowing`\ :red:`[1]`>_
 
 after we run ``false`` (which returns 1).
+
+Transient prompt
+----------------
+
+Fish supports transient prompts, which let you to customize the prompt shown in the scrollback. This is handy for decluttering, as you can show less information in the final prompt than the transient (active) one.
+
+To enable transient prompt functionality, set the ``fish_transient_prompt`` variable to 1::
+
+  set -g fish_transient_prompt 1
+
+With this set, fish re-runs ``fish_prompt`` (and ``fish_right_prompt``) with the ``--final-rendering`` argument before pushing commandline to scrollback. We can use this to display only the current directory name in the final prompt::
+
+  function fish_prompt
+      set -l last_status $status
+      set -l stat
+      set -l pwd
+      # Check if it's a transient or final prompt
+      if contains -- --final-rendering $argv
+          set pwd (path basename $PWD)
+      else
+          set pwd (prompt_pwd)
+          # Prompt status only if it's not 0
+          if test $last_status -ne 0
+              set stat (set_color red)"[$last_status]"(set_color normal)
+          end
+      end
+
+      string join '' -- (set_color green) $pwd (set_color normal) $stat '>'
+  end
+
+Now this would print:
+
+.. role:: green
+.. role:: red
+.. parsed-literal::
+    :class: highlight
+
+    :green:`Oneknowing`>false
+    :green:`~/M/L/Oneknowing`\ :red:`[1]`>_
 
 Save the prompt
 ---------------

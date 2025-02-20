@@ -4,6 +4,7 @@ fish 4.1.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
+- Fish now supports transient prompts: if ``fish_transient_prompt`` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before pushing the commandline to scrollback.
 
 Deprecations and removed features
 ---------------------------------

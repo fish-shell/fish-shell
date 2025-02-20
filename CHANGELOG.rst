@@ -4,6 +4,7 @@ fish 4.1.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
+- Fish now supports transient prompts: if ``fish_transient_prompt`` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline.
 - When tab completion results are truncated, any common directory name is omitted. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
   the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once.
 - The self-installing configuration introduced in fish 4.0 has been changed.

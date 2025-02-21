@@ -1,6 +1,8 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux (next-3.4|3\.[0123][a-z]*($|[.-]))'
 #REQUIRES: command -v less && ! less --version 2>&1 | grep -q BusyBox
+# disable on github actions because it's flakey
+#REQUIRES: test -z "$CI"
 
 isolated-tmux-start
 

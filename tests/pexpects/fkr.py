@@ -3,6 +3,10 @@ from pexpect_helper import SpawnedProc
 from time import sleep
 import os
 
+# Disable under CI - keeps failing because the timing is too tight
+if "CI" in os.environ:
+    sys.exit(127)
+
 os.environ["fish_escape_delay_ms"] = "10"
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (

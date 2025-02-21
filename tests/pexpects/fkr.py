@@ -2,6 +2,7 @@
 from pexpect_helper import SpawnedProc
 from time import sleep
 import os
+import sys
 
 # Disable under CI - keeps failing because the timing is too tight
 if "CI" in os.environ:

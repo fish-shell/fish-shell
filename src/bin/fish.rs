@@ -420,83 +420,24 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     return true;
 }
 
-#[cfg(feature = "installable")]
-fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
-    // (false-positive, is_none_or is a backport, this builds with 1.70)
-    #[allow(clippy::incompatible_msrv)]
-    if paths
-        .bin
-        .clone()
-        .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
-    {
-        // When fish is installable, we write the version to a file,
-        // now we check it.
-        let verfile = PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
-        let version = std::fs::read_to_string(verfile).ok()?;
-
-        return Some(version == fish::BUILD_VERSION);
-    }
-    // When running from the manifest dir, we'll just run.
-    return Some(true);
-}
-
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    #[cfg(feature = "installable")]
-    {
-        // If the version file is out of date,
-        // we try to update automatically, but only if we're interactive.
-        // We do specifically check for a tty because we want to read input to confirm.
-        //
-        // We don't warn if they're *missing* because these are just docs and stuff,
-        // but if they're out-of-date the user wants them.
-        let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
-        let v = check_version_file(paths, &datapath);
-
-        #[allow(clippy::incompatible_msrv)]
-        if v.is_some_and(|x| !x) && is_interactive_session() && isatty(libc::STDIN_FILENO) {
-            FLOG!(
-                warning,
-                "Fish's asset files are out of date. Trying to install them."
-            );
-            // TODO: Do we need confirmation? The user already indicated they want these files.
-            install(true, PathBuf::from(wcs2osstring(&datapath)));
+    if let Some(emfile) = Asset::get("config.fish") {
+        let src = str2wcstring(&emfile.data);
+        parser.libdata_mut().within_fish_init = true;
+        let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+        let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+        parser.libdata_mut().within_fish_init = false;
+        if let Err(msg) = ret {
+            eprintf!("%ls", msg);
         }
-
-        if let Some(emfile) = Asset::get("config.fish") {
-            let src = str2wcstring(&emfile.data);
-            parser.libdata_mut().within_fish_init = true;
-            let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
-            let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
-            parser.libdata_mut().within_fish_init = false;
-            if let Err(msg) = ret {
-                eprintf!("%ls", msg);
-            }
-        } else {
-            FLOG!(
-                error,
-                "Fish cannot find its configuration. It was miscompiled.\n\
-                 Refusing to read configuration because of this.",
-            );
-        }
-    }
-    #[cfg(not(feature = "installable"))]
-    {
-        let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
-        if !source_config_in_directory(parser, &datapath) {
-            // If we cannot read share/config.fish, our internal configuration,
-            // something is wrong.
-            // That also means that our functions won't be found,
-            // and so any config we get would almost certainly be broken.
-            let escaped_pathname = escape(&datapath);
-            FLOGF!(
-                error,
-                "Fish cannot find its asset files in '%ls'.\n\
-                 Refusing to read configuration because of this.",
-                escaped_pathname,
-            );
-            return;
-        }
+    } else {
+        FLOG!(
+            error,
+            "Fish cannot find its configuration. It was miscompiled.\n\
+             Refusing to read configuration because of this.",
+        );
+        return;
     }
 
     source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));

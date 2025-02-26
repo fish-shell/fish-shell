@@ -192,7 +192,7 @@ New or improved bindings
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
 - :kbd:`alt-backspace` deletes the argument (including quoted spaces) left of the cursor  (:issue:`10766`).
 - :kbd:`alt-delete` now deletes the argument (including quoted spaces) right of the cursor (:issue:`10766`).
-- :kbd:`alt-right` and :kbd:`alt-left` will move by argument (including quoted spaces) in the command line (:issue:`10766)`.
+- :kbd:`alt-right` and :kbd:`alt-left` will move by argument (including quoted spaces) in the command line (:issue:`10766`).
 - Some improvements to the :kbd:`alt-e` binding which edits the command line in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors, which are now also detected in aliases which use ``complete --wraps``. For example, use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.

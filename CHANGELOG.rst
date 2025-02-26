@@ -1,30 +1,3 @@
-Changes since 4.0b1
--------------------
-- :kbd:`ctrl-c` cancels builtin ``read`` again, fixing a regression in the beta. :issue:`10928`
-- Fix a BSD-specific regression in the beta that caused crashes when a child process exited with a status like -1 (:issue:`10919`).
-- Fix a regression in the beta where ``__fish_cancel_commandline`` caused glitches on multi-line command lines (:issue:`10935`).
-- Autosuggestions are case-correcting again (:issue:`10915`).
-- Self-installable builds can now also be installed to a specific location by giving a path to ``--install``, like::
-    fish --install=$HOME/.local/
-  In that case, the fish binary will be moved to "bin/" in that path. :issue:`10923`
-
-- The config directories will now be created with mode 700 again (:issue:`10962`).
-- A ``status buildinfo`` command to print information on how fish was built, to help with debugging (:issue:`10896`).
-- Remove the completions for ``dust`` because it conflicted with the Debian/Ubuntu package (:issue:`10922`).
-- Improve the documentation style for narrow interfaces (like phones) (:issue:`10942`).
-- Add debug information back to cmake builds with the "RelWithDebInfo" profile (:issue:`10959`).
-- the :kbd:`ctrl-c` binding now calls a new bind function called "clear-commandline",
-  the old behavior that leaves a "^C" marker is available as "cancel-commandline" (:issue:`10935`)
-- The ``make test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``.
-  The built-in test target will run if you built fish before, but will not print output if it fails (:issue:`11116`).
-- :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of full arguments, reverting to how it was in 3.7 and before (:issue:`10926`).
-- Keyboard protocols can be turned off by disabling the "keyboard-protocols" feature flag::
-
-    set -Ua fish_features no-keyboard-protocols
-
-  This is a temporary measure to work around buggy terminals (:issue:`11056`), which appear to be relatively rare.
-  Use this if something like "=0" or "=5u" appears in your commandline mysteriously.
-
 fish 4.0.0 (released ???)
 =========================
 
@@ -40,10 +13,7 @@ Notable backwards-incompatible changes
 - As part of a larger binding rework, ``bind`` gained a new key notation.
   In most cases the old notation should keep working, but in rare cases you may have to change a ``bind`` invocation to use the new notation.
   See :ref:`below <changelog-new-bindings>` for details.
-- Terminals that fail to ignore unrecognized OSC or CSI sequences may display garbage. We know cool-retro-term and emacs' ansi-term are affected,
-  most mainstream terminals are not.
-- :kbd:`alt-left` and :kbd:`alt-right` will now move by one argument (which may contain quoted spaces), not just one word like :kbd:`ctrl-left` and :kbd:`ctrl-right` do.
-- :kbd:`alt-backspace` will delete an entire argument, not just one word. The old word behavior has been moved to :kbd:`ctrl-backspace`. If your terminal doesn't support `ctrl-backspace`, consider using :kbd:`ctrl-w`, or :kbd:`alt-b` + :kbd:`alt-d`.
+- :kbd:`ctrl-c` now calls a new bind function called ``clear-commandline``. The old behavior, which leaves a "^C" marker, is available as ``cancel-commandline`` (:issue:`10935`)
 - ``random`` will produce different values from previous versions of fish when used with the same seed, and will work more sensibly with small seed numbers.
   The seed was never guaranteed to give the same result across systems,
   so we do not expect this to have a large impact (:issue:`9593`).
@@ -58,8 +28,9 @@ Notable backwards-incompatible changes
     set -Ua fish_features no-qmark-noglob
 
   The flag will eventually be made read-only, making it impossible to turn off.
+- Terminals that fail to ignore unrecognized OSC or CSI sequences may display garbage. We know cool-retro-term and emacs' ansi-term are affected, but most mainstream terminals are not.
 - fish no longer searches directories from the Windows system/user ``$PATH`` environment variable for Linux executables. To execute Linux binaries by name (i.e. not with a relative or absolute path) from a Windows folder, make sure the ``/mnt/c/...`` path is explicitly added to ``$fish_user_paths`` and not just automatically appended to ``$PATH`` by ``wsl.exe`` (:issue:`10506`).
-- Under Microsoft Windows Subsystem for Linux 1 (not WSL 2) , backgrounded jobs that have not been disowned and do not terminate on their own after a ``SIGHUP`` + ``SIGCONT`` sequence will be explicitly killed by fish on exit (after the usual prompt to close or disown them) to work around a WSL 1 deficiency that sees backgrounded processes that run into ``SIGTTOU`` remain in a suspended state indefinitely (:issue:`5263`). The workaround is to explicitly ``disown`` processes you wish to outlive the shell session.
+- Under Microsoft Windows Subsystem for Linux 1 (not WSL 2), backgrounded jobs that have not been disowned and do not terminate on their own after a ``SIGHUP`` + ``SIGCONT`` sequence will be explicitly killed by fish on exit (after the usual prompt to close or disown them) to work around a WSL 1 deficiency that sees backgrounded processes that run into ``SIGTTOU`` remain in a suspended state indefinitely (:issue:`5263`). The workaround is to explicitly ``disown`` processes you wish to outlive the shell session.
 
 Notable improvements and fixes
 ------------------------------
@@ -76,6 +47,14 @@ Notable improvements and fixes
    - ``bind ctrl-x,alt-c 'do something'`` binds a sequence of two keys.
 
    Any key argument that starts with an ASCII control character (like ``\e`` or ``\cX``) or is up to 3 characters long, not a named key, and does not contain ``,`` or ``-`` will be interpreted in the old syntax to keep compatibility for the majority of bindings.
+
+   Keyboard protocols can be turned off by disabling the "keyboard-protocols" feature flag::
+
+     set -Ua fish_features no-keyboard-protocols
+
+   This is a temporary measure to work around buggy terminals (:issue:`11056`), which appear to be relatively rare.
+   Use this if something like "=0" or "=5u" appears in your commandline mysteriously.
+
 - fish can now be built as a self-installing binary (:issue:`10367`). That means it can be easily built on one system and copied to another, where it can extract supporting files.
   To do this, run::
 
@@ -190,9 +169,6 @@ New or improved bindings
 - During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager. 
 - :kbd:`shift-delete` will also remove the currently-displayed autosuggestion from history, and remove it as a suggestion.
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
-- :kbd:`alt-backspace` deletes the argument (including quoted spaces) left of the cursor  (:issue:`10766`).
-- :kbd:`alt-delete` now deletes the argument (including quoted spaces) right of the cursor (:issue:`10766`).
-- :kbd:`alt-right` and :kbd:`alt-left` will move by argument (including quoted spaces) in the command line (:issue:`10766`).
 - Some improvements to the :kbd:`alt-e` binding which edits the command line in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors, which are now also detected in aliases which use ``complete --wraps``. For example, use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.
@@ -257,6 +233,7 @@ Improved terminal support
 
 Other improvements
 ------------------
+- ``status`` gained a ``buildinfo`` subcommand, to print information on how fish was built, to help with debugging (:issue:`10896`).
 - ``fish_indent`` will now collapse multiple empty lines into one (:issue:`10325`).
 - ``fish_indent`` now preserves the modification time of files if there were no changes (:issue:`10624`).
 - Performance in launching external processes has been improved for many cases (:issue:`10869`).
@@ -276,7 +253,18 @@ CMake remains the recommended build system, because of cargo's limited support f
 
 fish no longer depends on the ncurses library, but still uses a terminfo database. When packaging fish, please add a dependency on the package containing your terminfo database instead of curses.
 
+The ``test`` target was removed as it can no longer be defined in new CMake versions. Use ``make fish_run_tests``. Any existing test target will not print output if it fails (:issue:`11116`).
+
 The Web-based configuration has been rewritten to use Alpine.js (:issue:`9554`).
+
+--------------
+
+fish 4.0b1 (released December 17, 2024)
+=======================================
+
+A number of improvements were included in fish 4.0.0 following the beta release of 4.0b1. These include fixes for regressions, improvements to completions and documentation, and the removal of a small number of problematic changes.
+
+The full list of fixed issues can be found on the `GitHub milestone page for 4.0-final <https://github.com/fish-shell/fish-shell/milestone/43>`_.
 
 --------------
 

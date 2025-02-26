@@ -10,8 +10,8 @@ $fish -c ''
 
 # Check that existing directories kept their permissions, and new directories
 # have the right permissions according to the XDG Base Directory Specification.
-# Use command ls to turn off indicators in case of xattrs or similar.
-command ls -ld $dir/old $dir/old/new $dir/old/new/fish | awk '{print $1}'
+# Use command ls and awk to strip off xattr or SELinux indicators.
+command ls -ld $dir/old $dir/old/new $dir/old/new/fish | awk '{print substr($1, 1, 10)}'
 # CHECK: drwxr-xr-x
 # CHECK: drwx------
 # CHECK: drwx------

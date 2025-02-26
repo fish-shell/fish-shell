@@ -162,7 +162,7 @@ The following special input functions are available:
     start selecting text
 
 ``cancel``
-    cancel the current commandline and replace it with a new empty one
+    close the pager if it is open, or undo the most recent completion if one was just inserted, or otherwise cancel the current commandline and replace it with a new empty one
 
 ``cancel-commandline``
     cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled

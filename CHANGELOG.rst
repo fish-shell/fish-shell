@@ -28,7 +28,7 @@ Changes since 4.0b1
 fish 4.0.0 (released ???)
 =========================
 
-.. ignore: 751 2037 3017 3018 3162 3299 4770 4865 5284 5924 5991 6981 6996 7172 9332 9439 9440 9442 9452 9461 9469 9480 9482 9520 9536 9541 9542 9544 9556 9559 9561 9563 9566 9567 9568 9573 9575 9576 9579 9585 9586 9588 9589 9591 9592 9593 9594 9599 9600 9603 9607 9608 9612 9613 9615 9616 9619 9621 9625 9626 9630 9636 9637 9638 9641 9642 9643 9653 9654 9658 9661 9666 9671 9673 9688 9725 9726 9729 9735 9739 9745 9746 9754 9765 9767 9768 9771 9777 9778 9786 9797 9816 9818 9821 9839 9845 9856 9859 9861 9862 9863 9864 9867 9869 9873 9874 9879 9881 9893 9894 9896 9902 9916 9923 9925 9927 9928 9930 9947 9948 9950 9952 9962 9963 9966 9968 9980 9981 9984 9990 9991 10040 10061 10090 10101 10102 10108 10111 10114 10115 10121 10128 10129 10143 10145 10146 10161 10173 10174 10175 10179 10180 10181 10182 10184 10185 10186 10188 10195 10198 10200 10201 10204 10210 10214 10219 10220 10222 10223 10227 10228 10232 10235 10237 10241 10243 10244 10245 10246 10251 10254 10260 10263 10267 10268 10270 10272 10276 10277 10278 10279 10281 10288 10290 10291 10293 10305 10306 10307 10308 10309 10316 10317 10321 10327 10328 10329 10330 10336 10338 10340 10342 10345 10346 10347 10348 10349 10353 10354 10355 10356 10357 10358 10360 10366 10368 10370 10371 10372 10373 10377 10379 10381 10388 10389 10390 10395 10398 10400 10403 10404 10407 10408 10409 10411 10412 10415 10417 10418 10427 10429 10434 10438 10439 10440 10441 10442 10443 10445 10446 10448 10450 10451 10452 10456 10457 10462 10463 10464 10466 10467 10471 10473 10474 10479 10481 10485 10486 10487 10490 10491 10492 10494 10499 10500 10503 10504 10505 10507 10508 10509 10510 10511 10512 10513 10518 10519 10520 10524 10528 10529 10530 10538 10539 10541 10542 10547 10548 10549 10555 10560 10562 10564 10565 10568 10569 10572 10573 10574 10575 10578 10580 10582 10583 10585 10588 10591 10594 10595 10596 10609 10616 10622 10623 10627 10628 10634 10635 10636 10637 10640 10646 10647 10649 10650 10652 10653 10654 10655 10657 10659 10662 10664 10667 10669 10670 10674 10679 10681 10685 10686 10687 10688 10689 10697 10698 10702 10703 10707 10708 10711 10712 10713 10716 10718 10719 10721 10726 10727 10728 10731 10760 10762 10763 10767 10770 10775 10776 10778 10779 10782 10784 10787 10788 10789 10792 10795 10796 10801 10812 10817 10825 10836 10839 10844 10845 10847 10851 10854 10855 10858 10863 10864 10873 10874 10880 10885 10891 10892 10894 10896 10899 10906 10907 10909 10911 10912 10913 10915 10916 10919 10920 10922 10923 10928 10935 10936 10941 10942 10943 10944 10945 10946 10947 10949 10951 10952 10953 10958 10959 10962 10968 10971 10994 10995 10999 11002 11005 11014 11015 11016 11017 11019 11026 11034 11035 11037 11040 11041 11049 11060 11067 11074 11086 
+.. ignore: 751 2037 3017 3018 3162 3299 4770 4865 5284 5924 5991 6981 6996 7172 9332 9439 9440 9442 9452 9461 9469 9480 9482 9520 9536 9541 9542 9544 9556 9559 9561 9563 9566 9567 9568 9573 9575 9576 9579 9585 9586 9588 9589 9591 9592 9593 9594 9599 9600 9603 9607 9608 9612 9613 9615 9616 9619 9621 9625 9626 9630 9636 9637 9638 9641 9642 9643 9653 9654 9658 9661 9666 9671 9673 9688 9725 9726 9729 9735 9739 9745 9746 9754 9765 9767 9768 9771 9777 9778 9786 9797 9816 9818 9821 9839 9845 9856 9859 9861 9862 9863 9864 9867 9869 9873 9874 9879 9881 9893 9894 9896 9902 9916 9923 9925 9927 9928 9930 9947 9948 9950 9952 9962 9963 9966 9968 9980 9981 9984 9990 9991 10040 10061 10078 10090 10101 10102 10108 10111 10114 10115 10121 10128 10129 10143 10145 10146 10161 10173 10174 10175 10179 10180 10181 10182 10184 10185 10186 10188 10195 10198 10200 10201 10204 10210 10214 10219 10220 10222 10223 10227 10228 10232 10235 10237 10241 10243 10244 10245 10246 10251 10254 10260 10263 10267 10268 10270 10272 10276 10277 10278 10279 10281 10288 10290 10291 10293 10305 10306 10307 10308 10309 10316 10317 10321 10327 10328 10329 10330 10336 10338 10340 10342 10345 10346 10347 10348 10349 10353 10354 10355 10356 10357 10358 10360 10366 10368 10370 10371 10372 10373 10377 10379 10381 10388 10389 10390 10395 10398 10400 10403 10404 10407 10408 10409 10411 10412 10415 10417 10418 10427 10429 10434 10438 10439 10440 10441 10442 10443 10445 10446 10448 10450 10451 10452 10456 10457 10462 10463 10464 10466 10467 10471 10473 10474 10479 10481 10485 10486 10487 10490 10491 10492 10494 10499 10500 10503 10504 10505 10507 10508 10509 10510 10511 10512 10513 10518 10519 10520 10524 10528 10529 10530 10538 10539 10541 10542 10547 10548 10549 10555 10560 10562 10564 10565 10568 10569 10572 10573 10574 10575 10578 10580 10582 10583 10585 10588 10591 10594 10595 10596 10609 10615 10616 10622 10623 10625 10627 10628 10634 10635 10636 10637 10640 10646 10647 10649 10650 10652 10653 10654 10655 10657 10659 10662 10663 10664 10667 10668 10669 10670 10674 10679 10681 10685 10686 10687 10688 10689 10697 10698 10702 10703 10707 10708 10711 10712 10713 10716 10718 10719 10721 10724 10726 10727 10728 10731 10738 10752 10760 10762 10763 10767 10770 10775 10776 10778 10779 10790 10800 10782 10784 10787 10788 10789 10792 10795 10796 10801 10812 10817 10825 10836 10839 10844 10845 10847 10851 10854 10855 10858 10863 10864 10873 10874 10880 10885 10891 10892 10894 10896 10899 10906 10907 10909 10911 10912 10913 10915 10916 10919 10920 10922 10923 10928 10935 10936 10941 10942 10943 10944 10945 10946 10947 10949 10951 10952 10953 10958 10959 10962 10968 10971 10994 10995 10999 11002 11005 11014 11015 11016 11017 11019 11026 11034 11035 11037 11040 11041 11049 11060 11067 11074 11086 
 
 fish's core code has been ported from C++ to Rust (:issue:`9512`).
 This means a large change in dependencies and how to build fish.
@@ -121,6 +121,7 @@ Deprecations and removed features
   If this happens, you can use the ``reset`` command from ``ncurses`` to restore the terminal state.
 - ``fish_key_reader --verbose`` no longer shows timing information.
 - Terminal information is no longer read from hashed terminfo databases, or termcap databases (:issue:`10269`). The vast majority of systems use a non-hashed terminfo database, which is still supported.
+- ``source`` returns an error if used without a filename or pipe/redirection (:issue:`10774`).
 
 Scripting improvements
 ----------------------
@@ -175,6 +176,8 @@ Interactive improvements
 - Prompts that use external commands will no longer produce an infinite loop if the command crashes (:issue:`9796`).
 - Undo (:kbd:`ctrl-z`) restores the cursor position too (:issue:`10838`).
 - The output of ``jobs`` shows "-" for jobs that have the same process group ID as the fish process, rather than "-2" (:issue:`10833`).
+- Job expansion (``%1`` syntax) works properly for jobs that are a mixture of external commands and functions (:issue:`10832`).
+- Command lines which have more lines than the terminal can be displayed and edited correctly (:issue:`10827`).
 - Functions that have been erased are no longer highlighted as valid commands (:issue:`10866`).
 - ``not``, ``time``, and variable assignments (that is ``not time a=b env``) is correctly recognized as valid syntax (:issue:`10890`).
 - The Web-based configuration removes old right-hand-side prompts again, fixing a regression in fish 3.4.0 (:issue:`10675`).
@@ -187,9 +190,9 @@ New or improved bindings
 - During up-arrow history search, :kbd:`shift-delete` will delete the current search item and move to the next older item. Previously this was only supported in the history pager. 
 - :kbd:`shift-delete` will also remove the currently-displayed autosuggestion from history, and remove it as a suggestion.
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
-- :kbd:`alt-backspace` deletes the argument (including quoted spaces) left of the cursor.
-- :kbd:`alt-delete` now deletes the argument (which may contain quoted spaces) right of the cursor.
-- :kbd:`alt-right` and :kbd:`alt-left` will skip over command line tokens in the command line.
+- :kbd:`alt-backspace` deletes the argument (including quoted spaces) left of the cursor  (:issue:`10766`).
+- :kbd:`alt-delete` now deletes the argument (including quoted spaces) right of the cursor (:issue:`10766`).
+- :kbd:`alt-right` and :kbd:`alt-left` will move by argument (including quoted spaces) in the command line (:issue:`10766)`.
 - Some improvements to the :kbd:`alt-e` binding which edits the command line in an external editor:
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors, which are now also detected in aliases which use ``complete --wraps``. For example, use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.
@@ -209,7 +212,7 @@ New or improved bindings
 - The ``accept-autosuggestion`` special input function now returns false when there was nothing to accept (:issue:`10608`).
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
   - New default cursor shapes for insert and replace mode.
-  - Insert-mode :kbd:`ctrl-n` accepts autosuggestions (:issue:`10339`).
+  - :kbd:`ctrl-n` in insert mode accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.
   - When the cursor is at the end of the commandline, a single :kbd:`l` will accept an autosuggestion (:issue:`10286`).
   - The cursor position after pasting (:kbd:`p`) has been corrected.
@@ -236,6 +239,7 @@ Completions
   Note that this escaping is usually not necessary since the completion engine already tries
   to guess whether the separator is actually part of a file name.
 - Various new completion scripts and numerous updates to existing ones.
+- Completions could hang if the ``PAGER`` environment variable was sent to certain editors on macOS, FreeBSD and some other platforms. This has been fixed (:issue:`10820`).
 - Generated completions are now stored in ``$XDG_CACHE_HOME/fish`` or ``~/.cache/fish`` by default (:issue:`10369`)
 - A regression in fish 3.1, where completing a command line could change it completely, has been fixed (:issue:`10904`).
 
@@ -257,7 +261,9 @@ Other improvements
 - ``fish_indent`` now preserves the modification time of files if there were no changes (:issue:`10624`).
 - Performance in launching external processes has been improved for many cases (:issue:`10869`).
 - Performance and interactivity under Windows Subsystem for Linux has been improved, with a workaround for Windows-specific locations being appended to ``$PATH`` by default (:issue:`10506`).
+- On macOS, paths from ``/etc/paths`` and ``/etc/manpaths`` containing colons are handled correctly (:issue:`10684`).
 - Additional filesystems such as AFS are properly detected as remote, which avoids certain hangs due to expensive filesystem locks (:issue:`10818`).
+- A spurious error when launching multiple instances of fish for the first time has been removed (:issue:`10813`).
 
 .. _rust-packaging:
 
@@ -266,7 +272,7 @@ For distributors
 
 fish has been ported to Rust. This means a significant change in dependencies, which are listed in the README. In short, Rust 1.70 or greater is required, and a C++ compiler is no longer needed (although a C compiler is still required, for some C glue code and the tests).
 
-CMake remains the recommended build system, because of cargo's limited support for installing support files. Version 3.5 remains the minimum supported version. The Xcode generator for CMake is not supported any longer (:issue:`9924`).
+CMake remains the recommended build system, because of cargo's limited support for installing support files. Version 3.5 remains the minimum supported version. The Xcode generator for CMake is not supported any longer (:issue:`9924`). CMake builds default to optimized release builds (:issue:`10799`).
 
 fish no longer depends on the ncurses library, but still uses a terminfo database. When packaging fish, please add a dependency on the package containing your terminfo database instead of curses.
 

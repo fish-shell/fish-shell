@@ -47,12 +47,12 @@ Linux/CentOS are available from the `openSUSE Build
 Service <https://software.opensuse.org/download.html?project=shells%3Afish&package=fish>`__.
 
 Packages for Ubuntu are available from the `fish
-PPA <https://launchpad.net/~fish-shell/+archive/ubuntu/release-3>`__,
+PPA <https://launchpad.net/~fish-shell/+archive/ubuntu/release-4>`__,
 and can be installed using the following commands:
 
 ::
 
-   sudo apt-add-repository ppa:fish-shell/release-3
+   sudo apt-add-repository ppa:fish-shell/release-4
    sudo apt update
    sudo apt install fish
 

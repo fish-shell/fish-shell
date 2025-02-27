@@ -214,6 +214,7 @@ New or improved bindings
 - :kbd:`shift-delete` will also remove the currently-displayed autosuggestion from history, and remove it as a suggestion.
 - :kbd:`ctrl-Z` (also known as :kbd:`ctrl-shift-z`) is now bound to redo.
 - Some improvements to the :kbd:`alt-e` binding which edits the command line in an external editor:
+
   - The editor's cursor position is copied back to fish. This is currently supported for Vim and Kakoune.
   - Cursor position synchronization is only supported for a set of known editors, which are now also detected in aliases which use ``complete --wraps``. For example, use ``complete --wraps my-vim vim`` to synchronize cursors when ``EDITOR=my-vim``.
   - Multiline commands are indented before being sent to the editor, which matches how they are displayed in fish.
@@ -222,15 +223,18 @@ New or improved bindings
 - :kbd:`alt-d` on an empty command line lists the directory history again. This restores the behavior of version 2.1.
 - ``history-prefix-search-backward`` and ``-forward`` now maintain the cursor position, instead of moving the cursor to the end of the command line (:issue:`10430`).
 - The following keys have refined behavior if the terminal supports :ref:`the new keyboard encodings <changelog-new-bindings>`:
+
   - :kbd:`shift-enter` now inserts a newline instead of executing the command line.
   - :kbd:`ctrl-backspace` now deletes the last word instead of only one character (:issue:`10741`).
   - :kbd:`ctrl-delete` deletes the next word (same as :kbd:`alt-d`).
 - New special input functions:
+
   - ``forward-char-passive`` and ``backward-char-passive`` are like their non-passive variants but do not accept autosuggestions or move focus in the completion pager (:issue:`10398`).
   - ``forward-token``, ``backward-token``, ``kill-token``, and ``backward-kill-token`` are similar to the ``*-bigword`` variants but for the whole argument token (which includes escaped spaces) (:issue:`2014`).
   - ``clear-commandline``, which merely clears the command line, as an alternative to ``cancel-commandline`` which prints ``^C`` and a new prompt (:issue:`10213`).
 - The ``accept-autosuggestion`` special input function now returns false when there was nothing to accept (:issue:`10608`).
 - Vi mode has seen some improvements but continues to suffer from the lack of people working on it.
+
   - New default cursor shapes for insert and replace mode.
   - :kbd:`ctrl-n` in insert mode accepts autosuggestions (:issue:`10339`).
   - Outside insert mode, the cursor will no longer be placed beyond the last character on the commandline.

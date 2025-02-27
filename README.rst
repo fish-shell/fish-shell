@@ -178,7 +178,7 @@ On the first interactive run, and whenever it notices they are out of date, it w
 To install fish as self-installable, just use ``cargo``, like::
 
    cargo install --path /path/to/fish # if you have a git clone
-   cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0 # to build from git once 4.0 is released
+   cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0.0 # to build from git with a specific version
    cargo install --git https://github.com/fish-shell/fish-shell # to build the current development snapshot without cloning
 
 This will place the binaries in ``~/.cargo/bin/``, but you can place them wherever you want.

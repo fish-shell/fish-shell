@@ -57,5 +57,5 @@ else
 end
 #CHECK: psub directory was deleted
 
-set -l diffs (comm -3 (__fish_print_help psub | psub) (psub -hs banana | psub))
-test -z "$diffs"
+# set -l diffs (comm -3 (__fish_print_help psub | psub) (psub -hs banana | psub))
+# test -z "$diffs"

@@ -58,6 +58,8 @@ enum StatusCmd {
     STATUS_TEST_FEATURE,
     STATUS_CURRENT_COMMANDLINE,
     STATUS_BUILDINFO,
+    STATUS_GET_FILE,
+    STATUS_LIST_FILES,
 }
 
 str_enum!(
@@ -76,6 +78,8 @@ str_enum!(
     (STATUS_FILENAME, "filename"),
     (STATUS_FISH_PATH, "fish-path"),
     (STATUS_FUNCTION, "function"),
+    (STATUS_GET_FILE, "get-file"),
+    (STATUS_LIST_FILES, "list-files"),
     (STATUS_IS_BLOCK, "is-block"),
     (STATUS_IS_BREAKPOINT, "is-breakpoint"),
     (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
@@ -299,6 +303,12 @@ fn parse_cmd_opts(
     return STATUS_CMD_OK;
 }
 
+use rust_embed::RustEmbed;
+#[derive(RustEmbed)]
+#[folder = "target/man/man1"]
+#[prefix = "man/man1/"]
+struct Docs;
+
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Option<c_int> {
     let cmd = args[0];
     let argc = args.len();
@@ -421,6 +431,66 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 }
             }
             return retval;
+        }
+        c @ STATUS_GET_FILE => {
+            if args.len() != 1 {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_ARG_COUNT2,
+                    cmd,
+                    c.to_wstr(),
+                    1,
+                    args.len()
+                ));
+                return STATUS_INVALID_ARGS;
+            }
+            let arg = crate::common::wcs2string(args[0]);
+            let arg = std::str::from_utf8(&arg).unwrap();
+            if let Some(emfile) = crate::autoload::Asset::get(arg) {
+                let src = str2wcstring(&emfile.data);
+                streams.out.append(src);
+                return STATUS_CMD_OK;
+            } else if let Some(emfile) = Docs::get(arg) {
+                let src = str2wcstring(&emfile.data);
+                streams.out.append(src);
+                return STATUS_CMD_OK;
+            } else {
+                return STATUS_CMD_ERROR;
+            }
+        }
+        c @ STATUS_LIST_FILES => {
+            if args.len() > 1 {
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_ARG_COUNT2,
+                    cmd,
+                    c.to_wstr(),
+                    1,
+                    args.len()
+                ));
+                return STATUS_INVALID_ARGS;
+            }
+            let mut have_file = false;
+            let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
+            let arg = std::str::from_utf8(&arg).unwrap();
+            for file in crate::autoload::Asset::iter() {
+                if arg.is_empty() || file.starts_with(arg) {
+                    have_file = true;
+                    let src = str2wcstring(file.as_bytes());
+                    streams.out.appendln(src);
+                }
+            }
+            for file in Docs::iter() {
+                if arg.is_empty() || file.starts_with(arg) {
+                    have_file = true;
+                    let src = str2wcstring(file.as_bytes());
+                    streams.out.appendln(src);
+                }
+            }
+
+            if have_file {
+                return STATUS_CMD_OK;
+            } else {
+                return STATUS_CMD_ERROR;
+            }
         }
         ref s => {
             if !args.is_empty() {
@@ -599,7 +669,11 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                         streams.out.appendln(path);
                     }
                 }
-                STATUS_SET_JOB_CONTROL | STATUS_FEATURES | STATUS_TEST_FEATURE => {
+                STATUS_SET_JOB_CONTROL
+                | STATUS_FEATURES
+                | STATUS_TEST_FEATURE
+                | STATUS_GET_FILE
+                | STATUS_LIST_FILES => {
                     unreachable!("")
                 }
             }

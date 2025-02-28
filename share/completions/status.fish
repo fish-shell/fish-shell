@@ -1,5 +1,8 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
-set -l __fish_status_all_commands basename current-command current-commandline current-filename current-function current-line-number dirname features filename fish-path function is-block is-breakpoint is-command-substitution is-full-job-control is-interactive is-interactive-job-control is-login is-no-job-control job-control line-number print-stack-trace stack-trace test-feature
+set -l __fish_status_all_commands basename current-command current-commandline current-filename current-function current-line-number \
+    dirname features filename fish-path function get-file is-block is-breakpoint is-command-substitution \
+    is-full-job-control is-interactive is-interactive-job-control is-login is-no-job-control job-control line-number list-files \
+    print-stack-trace stack-trace test-feature
 
 # These are the recognized flags.
 complete -c status -s h -l help -d "Display help and exit"
@@ -32,9 +35,15 @@ complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_com
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a test-feature -d "Test if a feature flag is enabled"
 complete -f -c status -n "__fish_seen_subcommand_from test-feature" -a '(status features | sed "s/[[:space:]]\+[^[:space:]]*[[:space:]]\+[^[:space:]]*/\t/")'
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a get-file -d "Print an embedded file from the fish binary"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a list-files -d "List embedded files contained in the fish binary"
+complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a fish-path -d "Print the path to the current instance of fish"
 
 # The job-control command changes fish state.
 complete -f -c status -n "not __fish_seen_subcommand_from $__fish_status_all_commands" -a job-control -d "Set which jobs are under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a full -d "Set all jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a interactive -d "Set only interactive jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a none -d "Set no jobs under job control"
+
+complete -f -c status -n "__fish_seen_subcommand_from get-file" -a '(status list-files)'
+complete -f -c status -n "__fish_seen_subcommand_from list-files" -a '(status list-files)'

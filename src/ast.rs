@@ -2514,7 +2514,7 @@ pub struct Ast {
     // Its type depends on what was requested to parse.
     top: Box<dyn NodeMut>,
     /// Whether any errors were encountered during parsing.
-    pub any_error: bool,
+    any_error: bool,
     /// Extra fields.
     pub extras: Extras,
 }

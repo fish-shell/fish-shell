@@ -40,8 +40,7 @@ if test $status -eq 0 -a (count $sysver) -eq 3
 
         if test $age -ge $max_age
             test -d "$dir" || mkdir -m 700 -p $dir
-            /usr/libexec/makewhatis -o "$whatis" (/usr/bin/manpath | string split : | xargs realpath) >/dev/null 2>&1 </dev/null &
-            disown $last_pid
+            /bin/sh -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- /usr/libexec/makewhatis -o "$whatis" (/usr/bin/manpath | string split : | xargs realpath)
         end
     end
 else

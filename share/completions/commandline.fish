@@ -1,6 +1,7 @@
 complete -c commandline -s h -l help -d "Display help and exit"
 complete -c commandline -s a -l append -d "Add text to the end of the selected area"
 complete -c commandline -s i -l insert -d "Add text at cursor"
+complete -c commandline -s i -l insert-smart -d 'Add text at cursor but DWIM, stripping leading $'
 complete -c commandline -s r -l replace -d "Replace selected part"
 
 complete -c commandline -s j -l current-job -d "Select job under cursor"

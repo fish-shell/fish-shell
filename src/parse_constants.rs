@@ -17,7 +17,7 @@ bitflags! {
         const CONTINUE_AFTER_ERROR = 1 << 0;
         /// include comment tokens.
         const INCLUDE_COMMENTS = 1 << 1;
-        /// indicate that the tokenizer should accept incomplete tokens */
+        /// indicate that the tokenizer should accept incomplete tokens
         const ACCEPT_INCOMPLETE_TOKENS = 1 << 2;
         /// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
         /// tree where some nodes may have no productions.

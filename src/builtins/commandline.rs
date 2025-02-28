@@ -1,11 +1,12 @@
 use super::prelude::*;
+use crate::ast::{Ast, Leaf};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::Completion;
 use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::operation_context::{no_cancel, OperationContext};
-use crate::parse_constants::ParserTestErrorBits;
+use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{
     parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
     parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
@@ -31,11 +32,14 @@ enum TextScope {
 }
 
 /// For text insertion, how should it be done.
+#[derive(Eq, PartialEq)]
 enum AppendMode {
     // replace current text
     Replace,
     // insert at cursor position
     Insert,
+    // insert at cursor position, DWIM style.
+    InsertSmart,
     // insert at end of current token/command/buffer
     Append,
 }
@@ -75,9 +79,12 @@ fn replace_part(
             out.push_utfstr(&buff[range.clone()]);
             out.push_utfstr(insert);
         }
-        AppendMode::Insert => {
+        AppendMode::Insert | AppendMode::InsertSmart => {
             assert!(cursor_pos >= range.start);
             assert!(cursor_pos <= range.end);
+            let insert = strip_dollar_prefixes(insert_mode, &buff[range.start..cursor_pos], insert)
+                .map(Cow::Owned)
+                .unwrap_or(Cow::Borrowed(insert));
             out.push_utfstr(&buff[range.start..cursor_pos]);
             out.push_utfstr(&insert);
             out.push_utfstr(&buff[cursor_pos..range.end]);
@@ -91,6 +98,43 @@ fn replace_part(
     } else {
         commandline_set_buffer(Some(out), Some(out_pos));
     }
+}
+
+// Prefix must be at the beginning of a process.
+fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) -> Option<WString> {
+    if insert_mode != AppendMode::InsertSmart {
+        return None;
+    }
+    insert.find(L!("$ "))?; // Early return.
+    let source = prefix.to_owned() + insert;
+    let ast = Ast::parse(
+        &source,
+        ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS | ParseTreeFlags::LEAVE_UNTERMINATED,
+        None,
+    );
+    let mut stripped = WString::new();
+    let mut have = prefix.len();
+    for node in ast.walk() {
+        let Some(ds) = node.as_decorated_statement() else {
+            continue;
+        };
+        let Some(range) = ds.command.range() else {
+            continue;
+        };
+        let pos = range.start();
+        if pos < prefix.len() {
+            continue;
+        }
+        if (pos == 0 || source.as_char_slice()[pos - 1] == '\n')
+            && source.as_char_slice()[pos] == '$'
+            && source.char_at(pos + 1) == ' '
+        {
+            stripped.push_utfstr(&source[have..pos]);
+            have = pos + "$ ".len();
+        }
+    }
+    stripped.push_utfstr(&source[have..]);
+    return Some(stripped);
 }
 
 /// Output the specified selection.
@@ -222,6 +266,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let long_options: &[WOption] = &[
         wopt(L!("append"), ArgType::NoArgument, 'a'),
         wopt(L!("insert"), ArgType::NoArgument, 'i'),
+        wopt(L!("insert-smart"), ArgType::NoArgument, '\x06'),
         wopt(L!("replace"), ArgType::NoArgument, 'r'),
         wopt(L!("current-buffer"), ArgType::NoArgument, 'b'),
         wopt(L!("current-job"), ArgType::NoArgument, 'j'),
@@ -255,6 +300,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'a' => append_mode = Some(AppendMode::Append),
             'b' => buffer_part = Some(TextScope::String),
             'i' => append_mode = Some(AppendMode::Insert),
+            '\x06' => append_mode = Some(AppendMode::InsertSmart),
             'r' => append_mode = Some(AppendMode::Replace),
             'c' => cut_at_cursor = true,
             't' => buffer_part = Some(TextScope::Token),
@@ -421,6 +467,33 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let append_mode = append_mode.unwrap_or(AppendMode::Replace);
 
     let buffer_part = buffer_part.unwrap_or(TextScope::String);
+
+    if append_mode == AppendMode::InsertSmart {
+        if search_field_mode {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                cmd,
+                "--insert-smart",
+                "--search-field"
+            ));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+        match buffer_part {
+            TextScope::String | TextScope::Job | TextScope::Process => (),
+            TextScope::Token => {
+                // To-do: we can support it in command position.
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                    cmd,
+                    "--insert-smart",
+                    "--current-token"
+                ));
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
+    }
 
     if line_mode || column_mode {
         if positional_args != 0 {

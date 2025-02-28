@@ -25,3 +25,10 @@ echo Help $status
 commandline -pC 0 --input "test | test"
 echo $status
 # CHECK: 0
+
+commandline --insert-smart '$ echo 123' --current-token
+# CHECKERR: commandline: --insert-smart --current-token: options cannot be used together
+# CHECKERR: {{.*}}/commandline.fish (line {{\d+}}):
+# CHECKERR: commandline --insert-smart '$ echo 123' --current-token
+# CHECKERR: ^
+# CHECKERR: (Type 'help commandline' for related documentation)

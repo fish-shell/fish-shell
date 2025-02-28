@@ -99,9 +99,8 @@ end" >$__fish_config_dir/config.fish
             set -l update_args -B $__fish_data_dir/tools/create_manpage_completions.py --manpath --cleanup-in $__fish_user_data_dir/generated_completions --cleanup-in $__fish_cache_dir/generated_completions
             if set -l python (__fish_anypython)
                 # Run python directly in the background and swallow all output
-                $python $update_args >/dev/null 2>&1 &
-                # Then disown the job so that it continues to run in case of an early exit (#6269)
-                disown >/dev/null 2>&1
+                # Orphan the job so that it continues to run in case of an early exit (#6269)
+                /bin/sh -c '( "$@" ) >/dev/null 2>&1 &' -- $python $update_args
             end
         end
     end

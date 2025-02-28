@@ -20,9 +20,11 @@ Synopsis
 Description
 -----------
 
-The ``fish_prompt`` function is executed when the prompt is to be shown, and the output is used as a prompt.
+The ``fish_prompt`` function is executed when the prompt is to be shown and, if ``fish_transient_prompt`` is set to 1, before the prompt is pushed to the scrollback. The output of this function is used as a prompt.
 
 The exit status of commands within ``fish_prompt`` will not modify the value of :ref:`$status <variables-status>` outside of the ``fish_prompt`` function.
+
+When the function is executed before the prompt is pushed to the scrollback buffer, it is passed a ``--final-rendering`` argument.
 
 ``fish`` ships with a number of example prompts that can be chosen with the ``fish_config`` command.
 

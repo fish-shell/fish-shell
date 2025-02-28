@@ -250,8 +250,7 @@ function help --description 'Show help for the fish shell'
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
     else if contains -- $fish_browser[1] $graphical_browsers
-        $fish_browser $page_url &
-        disown $last_pid >/dev/null 2>&1
+        /bin/sh -c '( "$@" ) &' -- $fish_browser $page_url
     else
         $fish_browser $page_url
     end

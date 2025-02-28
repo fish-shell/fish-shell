@@ -15,6 +15,7 @@ complete -c emacs -l quick -s Q -d "equivalent to: emacs -q --no-site-file --no-
 complete -c emacs -l script -d "run FILE as an Emacs Lisp script"
 complete -c emacs -l terminal -s t -d "use DEVICE for terminal I/O"
 complete -c emacs -l user -s u -d "load ~USER/.emacs instead of your own"
+complete -c emacs -l init-directory -d "start emacs with specified init directory" -rF
 
 # Action options:
 complete -c emacs -l directory -s L -d "prepend DIR to load-path (with :DIR, append DIR)"

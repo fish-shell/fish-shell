@@ -487,10 +487,9 @@ pub fn terminal_protocols_enable_ifn() {
         || IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load()
     {
         "\x1b[?2004h"
-    } else if IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b[>5u", "\x1b=",)
-    } else if IN_JETBRAINS.load() {
+    } else if IN_JETBRAINS.load() || IN_ITERM_PRE_CSI_U.load() {
         // Jetbrains IDE terminals vomit CSI u
+        // iTerm fails to option-modify keys
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
     } else if IN_KITTY.load() {
         // Kitty spams the log for modifyotherkeys
@@ -521,8 +520,8 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     }
     let sequences = if !feature_test(FeatureFlag::keyboard_protocols) {
         "\x1b[?2004l"
-    } else if IN_ITERM_PRE_CSI_U.load() {
-        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b[<1u", "\x1b>",)
+    } else if IN_JETBRAINS.load() || IN_ITERM_PRE_CSI_U.load() {
+        concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else if IN_JETBRAINS.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else if IN_KITTY.load() {

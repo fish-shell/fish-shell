@@ -2126,7 +2126,7 @@ impl ReaderData {
     }
 }
 
-const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
+pub const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
 
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.

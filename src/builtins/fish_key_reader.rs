@@ -27,7 +27,7 @@ use crate::{
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, reader_init},
+    reader::{check_exit_loop_maybe_warning, reader_init, QUERY_PRIMARY_DEVICE_ATTRIBUTE},
     signal::signal_set_handlers,
     threads,
     topic_monitor::topic_monitor_init,
@@ -138,6 +138,9 @@ fn setup_and_process_keys(streams: &mut IoStreams, continuous_mode: bool, verbos
     streams
         .out
         .append(str2wcstring(kitty_progressive_enhancements_query()));
+    streams
+        .out
+        .append(str2wcstring(QUERY_PRIMARY_DEVICE_ATTRIBUTE));
 
     if continuous_mode {
         streams.err.append(L!("\n"));

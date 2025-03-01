@@ -2196,6 +2196,7 @@ impl<'a> Reader<'a> {
                 zelf.request_cursor_position(&mut out, None);
                 // Query for synchronized output support.
                 let _ = out.write_all(b"\x1b[?2026$p");
+                let _ = out.write_all(b"\x1b[>0q"); // XTVERSION
                 let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                 out.end_buffering();
             }

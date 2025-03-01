@@ -1306,6 +1306,30 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
+    fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) {
+        assert!(buffer.len() == 3);
+        loop {
+            match self.try_readb(buffer) {
+                None => return,
+                Some(b'\x1b') => break,
+                Some(_) => continue,
+            }
+        }
+        if self.try_readb(buffer) != Some(b'\\') {
+            return;
+        }
+        if buffer[3] != b'|' {
+            return;
+        }
+        FLOG!(
+            reader,
+            format!(
+                "Received XTVERSION response: {}",
+                str2wcstring(&buffer[4..buffer.len() - 2]),
+            )
+        );
+    }
+
     fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
         assert!(buffer.len() == 2);
         let Some(success) = self.try_readb(buffer) else {
@@ -1314,6 +1338,10 @@ pub trait InputEventQueuer {
         let success = match success {
             b'0' => false,
             b'1' => true,
+            b'>' => {
+                self.parse_xtversion(buffer);
+                return None;
+            }
             _ => return None,
         };
         if self.try_readb(buffer)? != b'+' {

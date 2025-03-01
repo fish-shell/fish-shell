@@ -470,7 +470,7 @@ static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_DVTM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static ITERM_NO_KITTY_KEYBOARD: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -478,14 +478,14 @@ pub fn terminal_protocol_hacks() {
     IN_DVTM
         .store(var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"dvtm-256color"));
     IS_TMUX.store(var_os("TMUX").is_some());
-    IN_ITERM_PRE_CSI_U.store(
+    ITERM_NO_KITTY_KEYBOARD.store(
         var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
             && var_os("LC_TERMINAL_VERSION").is_some_and(|version| {
                 let Some(version) = parse_version(&str2wcstring(version.as_os_str().as_bytes()))
                 else {
                     return false;
                 };
-                version < (99, 5, 6)
+                version < (3, 5, 12)
             }),
     );
 }
@@ -533,7 +533,7 @@ pub fn terminal_protocols_enable_ifn() {
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
     FLOG!(term_protocols, "Enabling extended keys");
-    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+    if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;1m"); // XTerm's modifyOtherKeys
         let _ = write_loop(&STDOUT_FILENO, b"\x1b="); // set application keypad mode, so the keypad keys send unique codes
     } else {
@@ -565,7 +565,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     FLOG_SAFE!(term_protocols, "Disabling extended keys");
     let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Acquire);
     assert_ne!(kitty_keyboard_supported, Capability::Unknown as _);
-    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+    if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;0m"); // XTerm's modifyOtherKeys
         let _ = write_loop(&STDOUT_FILENO, b"\x1b>"); // application keypad mode
     } else {

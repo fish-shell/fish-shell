@@ -56,9 +56,13 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind --preset $argv alt-right nextd-or-forward-word
     bind --preset $argv alt-left prevd-or-backward-word
+    $legacy_bind --preset $argv \e\[1\;9C nextd-or-forward-word # iTerm2 < 3.5.12
+    $legacy_bind --preset $argv \e\[1\;9D prevd-or-backward-word # iTerm2 < 3.5.12
 
     bind --preset $argv alt-up history-token-search-backward
     bind --preset $argv alt-down history-token-search-forward
+    $legacy_bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2 < 3.5.12
+    $legacy_bind --preset $argv \e\[1\;9B history-token-search-forward # iTerm2 < 3.5.12
     # Bash compatibility
     # https://github.com/fish-shell/fish-shell/issues/89
     bind --preset $argv alt-. history-token-search-backward

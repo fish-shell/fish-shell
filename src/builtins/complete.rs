@@ -480,12 +480,12 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
-        parser
+        let saved_transient = parser
             .libdata_mut()
-            .transient_commandlines
-            .push(do_complete_param.clone());
+            .transient_commandline
+            .replace(do_complete_param.clone());
         let _remove_transient = ScopeGuard::new((), |()| {
-            parser.libdata_mut().transient_commandlines.pop();
+            parser.libdata_mut().transient_commandline = saved_transient;
         });
 
         // Prevent accidental recursion (see #6171).

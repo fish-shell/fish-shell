@@ -625,13 +625,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if !parser.libdata().transient_commandlines.is_empty() && !cursor_mode {
-        transient = parser
-            .libdata()
-            .transient_commandlines
-            .last()
-            .unwrap()
-            .clone();
+    } else if parser.libdata().transient_commandline.is_some() && !cursor_mode {
+        transient = parser.libdata().transient_commandline.clone().unwrap();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
     } else if rstate.initialized {

@@ -1961,12 +1961,12 @@ impl<'ctx> Completer<'ctx> {
             (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
         if wants_transient {
             let parser = self.ctx.parser();
-            parser
+            let saved_transient = parser
                 .libdata_mut()
-                .transient_commandlines
-                .push(cmdline.to_owned());
+                .transient_commandline
+                .replace(cmdline.to_owned());
             _remove_transient = Some(ScopeGuard::new((), move |_| {
-                parser.libdata_mut().transient_commandlines.pop();
+                parser.libdata_mut().transient_commandline = saved_transient;
             }));
         }
 

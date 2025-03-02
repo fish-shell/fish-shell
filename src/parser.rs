@@ -223,10 +223,10 @@ pub struct LibraryData {
     /// The current filename we are evaluating, either from builtin source or on the command line.
     pub current_filename: Option<FilenameRef>,
 
-    /// A stack of fake values to be returned by builtin_commandline. This is used by the completion
+    /// A fake value to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.
-    pub transient_commandlines: Vec<WString>,
+    pub transient_commandline: Option<WString>,
 
     /// A file descriptor holding the current working directory, for use in openat().
     /// This is never null and never invalid.

@@ -460,16 +460,10 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
 fn fire_internal(parser: &Parser, event: &Event) {
-    assert!(
-        parser.libdata().is_event >= 0,
-        "is_event should not be negative"
-    );
-
     // Suppress fish_trace during events.
-    let is_event = parser.libdata().is_event;
-    let _inc_event = scoped_push_replacer(
+    let _set_event = scoped_push_replacer(
         |new_value| std::mem::replace(&mut parser.libdata_mut().is_event, new_value),
-        is_event + 1,
+        true,
     );
     let _suppress_trace = scoped_push_replacer(
         |new_value| std::mem::replace(&mut parser.libdata_mut().suppress_fish_trace, new_value),
@@ -539,7 +533,7 @@ pub fn fire_delayed(parser: &Parser) {
         let ld = &parser.libdata();
 
         // Do not invoke new event handlers from within event handlers.
-        if ld.is_event != 0 {
+        if ld.is_event {
             return;
         };
     }

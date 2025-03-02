@@ -269,9 +269,8 @@ pub struct LibraryData {
     /// Whether we are running a subshell command.
     pub is_subshell: bool,
 
-    /// Whether we are running an event handler. This is not a bool because we keep count of the
-    /// event nesting level.
-    pub is_event: i32,
+    /// Whether we are running an event handler.
+    pub is_event: bool,
 
     /// Whether we are currently interactive.
     pub is_interactive: bool,

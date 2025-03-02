@@ -1625,8 +1625,8 @@ impl<'a> ExecutionContext {
             let parser = ctx.parser();
             let ld = &parser.libdata();
             props.skip_notification =
-                ld.is_subshell || parser.is_block() || ld.is_event != 0 || !parser.is_interactive();
-            props.from_event_handler = ld.is_event != 0;
+                ld.is_subshell || parser.is_block() || ld.is_event || !parser.is_interactive();
+            props.from_event_handler = ld.is_event;
         }
 
         let mut job = Job::new(props, self.node_source_owned(job_node));
@@ -1887,7 +1887,7 @@ impl<'a> ExecutionContext {
         } else {
             // This is a "real job" that gets its own pgroup.
             j.processes_mut()[0].leads_pgrp = true;
-            let wants_terminal = ctx.parser().libdata().is_event == 0;
+            let wants_terminal = !ctx.parser().libdata().is_event;
             j.group = Some(JobGroup::create_with_job_control(
                 j.command().to_owned(),
                 wants_terminal,

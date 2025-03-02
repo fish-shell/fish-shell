@@ -1,5 +1,5 @@
 // Generic output functions.
-use crate::color::RgbColor;
+use crate::color::{self, RgbColor};
 use crate::common::{self, wcs2string_appending};
 use crate::env::EnvVar;
 use crate::terminal::{self, tparm1, Term};
@@ -493,6 +493,14 @@ pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
 ///       In particular, the argument parsing still isn't fully capable.
 #[allow(clippy::collapsible_else_if)]
 pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
+    let mut result = parse_color_maybe_none(var, is_background);
+    if result.is_none() {
+        result.typ = color::Type::Normal;
+    }
+    result
+}
+
+pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> RgbColor {
     let mut is_bold = false;
     let mut is_underline = false;
     let mut is_italics = false;
@@ -551,9 +559,6 @@ pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
     }
 
     let mut result = best_color(&candidates, get_color_support());
-    if result.is_none() {
-        result = RgbColor::NORMAL;
-    }
     result.set_bold(is_bold);
     result.set_underline(is_underline);
     result.set_italics(is_italics);

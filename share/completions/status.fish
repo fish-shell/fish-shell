@@ -1,5 +1,30 @@
 # Note that when a completion file is sourced a new block scope is created so `set -l` works.
-set -l __fish_status_all_commands basename current-command current-commandline current-filename current-function current-line-number dirname features filename fish-path function is-block is-breakpoint is-command-substitution is-full-job-control is-interactive is-interactive-job-control is-login is-no-job-control job-control line-number print-stack-trace stack-trace test-feature
+set -l __fish_status_all_commands \
+    basename \
+    buildinfo \
+    current-command \
+    current-commandline \
+    current-filename \
+    current-function \
+    current-line-number \
+    dirname \
+    features \
+    filename \
+    fish-path \
+    function \
+    is-block \
+    is-breakpoint \
+    is-command-substitution \
+    is-full-job-control \
+    is-interactive \
+    is-interactive-job-control \
+    is-login \
+    is-no-job-control \
+    job-control \
+    line-number \
+    print-stack-trace \
+    stack-trace \
+    test-feature
 
 # These are the recognized flags.
 complete -c status -s h -l help -d "Display help and exit"

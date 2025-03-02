@@ -7,8 +7,10 @@ function fish_prompt -d "Write out the prompt"
     set -l git_info
     if git rev-parse 2>/dev/null
         set -l git_branch (
-            { command git symbolic-ref HEAD 2>/dev/null || echo - } |
-            string replace refs/heads/ '')
+            command git symbolic-ref HEAD 2>/dev/null | string replace 'refs/heads/' ''
+            or command git describe HEAD 2>/dev/null
+            or echo unknown
+        )
         set git_branch (set_color -o blue)"$git_branch"
         set -l git_status
         if git rev-parse --quiet --verify HEAD >/dev/null

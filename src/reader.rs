@@ -242,6 +242,13 @@ fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
     unsafe { &mut *READER_DATA_STACK.0.get() }
 }
 
+pub fn reader_in_interactive_read() -> bool {
+    reader_data_stack()
+        .iter()
+        .rev()
+        .any(|reader| reader.conf.exit_on_interrupt)
+}
+
 /// Access the top level reader data.
 pub fn current_data() -> Option<&'static mut ReaderData> {
     reader_data_stack()

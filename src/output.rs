@@ -515,6 +515,7 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> RgbColor {
     let mut color_name = WString::new();
     for next in var.as_list() {
         color_name.clear();
+        #[allow(clippy::collapsible_else_if)]
         if is_background {
             if color_name.is_empty() && next_is_background {
                 color_name = next.to_owned();

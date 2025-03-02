@@ -691,7 +691,10 @@ fn read_i(parser: &Parser) -> i32 {
         data.clear(EditableLineTag::Commandline);
         data.update_buff_pos(EditableLineTag::Commandline, None);
         // OSC 133 End of command
-        data.screen.write_bytes(b"\x1b]133;C\x07");
+
+        let cmd_url = escape_string(&command, EscapeStringStyle::Url);
+        let osc = format!("\x1b]133;C;cmdline_url={cmd_url}\x07");
+        data.screen.write_bytes(osc.as_bytes());
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();

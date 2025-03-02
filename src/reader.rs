@@ -88,6 +88,7 @@ use crate::libc::MB_CUR_MAX;
 use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
+use crate::output::parse_color_maybe_none;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -1499,8 +1500,15 @@ impl<'a> Reader<'a> {
                 range.end = colors.len();
             }
 
+            let explicit_foreground = self
+                .vars()
+                .get_unless_empty(L!("fish_color_search_match"))
+                .is_some_and(|var| !parse_color_maybe_none(&var, false).is_none());
+
             for color in &mut colors[range] {
-                color.foreground = HighlightRole::search_match;
+                if explicit_foreground {
+                    color.foreground = HighlightRole::search_match;
+                }
                 color.background = HighlightRole::search_match;
             }
         }

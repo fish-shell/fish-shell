@@ -6,6 +6,7 @@ use crate::future_feature_flags::{self as features, feature_test};
 use crate::proc::{
     get_job_control_mode, get_login, is_interactive_session, set_job_control_mode, JobControl,
 };
+use crate::reader::reader_in_interactive_read;
 use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
@@ -50,6 +51,7 @@ enum StatusCmd {
     STATUS_IS_FULL_JOB_CTRL,
     STATUS_IS_INTERACTIVE,
     STATUS_IS_INTERACTIVE_JOB_CTRL,
+    STATUS_IS_INTERACTIVE_READ,
     STATUS_IS_LOGIN,
     STATUS_IS_NO_JOB_CTRL,
     STATUS_LINE_NUMBER,
@@ -82,6 +84,7 @@ str_enum!(
     (STATUS_IS_FULL_JOB_CTRL, "is-full-job-control"),
     (STATUS_IS_INTERACTIVE, "is-interactive"),
     (STATUS_IS_INTERACTIVE_JOB_CTRL, "is-interactive-job-control"),
+    (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
     (STATUS_IS_LOGIN, "is-login"),
     (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
     (STATUS_SET_JOB_CONTROL, "job-control"),
@@ -141,6 +144,7 @@ const FISH_PATH_SHORT: char = '\x01';
 const IS_FULL_JOB_CTRL_SHORT: char = '\x02';
 const IS_INTERACTIVE_JOB_CTRL_SHORT: char = '\x03';
 const IS_NO_JOB_CTRL_SHORT: char = '\x04';
+const IS_INTERACTIVE_READ_SHORT: char = '\x05';
 
 const SHORT_OPTIONS: &wstr = L!(":L:cbilfnhj:t");
 const LONG_OPTIONS: &[WOption] = &[
@@ -161,6 +165,11 @@ const LONG_OPTIONS: &[WOption] = &[
         L!("is-interactive-job-control"),
         NoArgument,
         IS_INTERACTIVE_JOB_CTRL_SHORT,
+    ),
+    wopt(
+        L!("is-interactive-read"),
+        NoArgument,
+        IS_INTERACTIVE_READ_SHORT,
     ),
     wopt(L!("is-login"), NoArgument, 'l'),
     wopt(L!("is-no-job-control"), NoArgument, IS_NO_JOB_CTRL_SHORT),
@@ -268,6 +277,11 @@ fn parse_cmd_opts(
             }
             IS_INTERACTIVE_JOB_CTRL_SHORT => {
                 if !opts.try_set_status_cmd(STATUS_IS_INTERACTIVE_JOB_CTRL, streams) {
+                    return STATUS_CMD_ERROR;
+                }
+            }
+            IS_INTERACTIVE_READ_SHORT => {
+                if !opts.try_set_status_cmd(STATUS_IS_INTERACTIVE_READ, streams) {
                     return STATUS_CMD_ERROR;
                 }
             }
@@ -543,6 +557,13 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> O
                 }
                 STATUS_IS_INTERACTIVE_JOB_CTRL => {
                     if get_job_control_mode() == JobControl::interactive {
+                        return STATUS_CMD_OK;
+                    } else {
+                        return STATUS_CMD_ERROR;
+                    }
+                }
+                STATUS_IS_INTERACTIVE_READ => {
+                    if reader_in_interactive_read() {
                         return STATUS_CMD_OK;
                     } else {
                         return STATUS_CMD_ERROR;

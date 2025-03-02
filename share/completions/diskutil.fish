@@ -53,7 +53,7 @@ complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand umountDisk' -a 
 
 # eject
 complete -f -c diskutil -n __fish_use_subcommand -a eject -d 'Eject a volume or disk'
-complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand eject' -a '(__fish_diskutil_volumes ; __fish_diskutil_devices)'
+complete -f -c diskutil -n '__fish_diskutil_using_not_subcommand eject' -a '(__fish_diskutil_mounted_volumes ; __fish_diskutil_devices)'
 
 # mount
 complete -f -c diskutil -n __fish_use_subcommand -a mount -d 'Mount a single volume'

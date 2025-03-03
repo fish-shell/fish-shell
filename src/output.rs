@@ -491,7 +491,6 @@ pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
 /// Return the internal color code representing the specified color.
 /// TODO: This code should be refactored to enable sharing with builtin_set_color.
 ///       In particular, the argument parsing still isn't fully capable.
-#[allow(clippy::collapsible_else_if)]
 pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
     let mut result = parse_color_maybe_none(var, is_background);
     if result.is_none() {

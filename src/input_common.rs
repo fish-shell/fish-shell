@@ -470,7 +470,7 @@ static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static IN_DVTM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static ITERM_NO_KITTY_KEYBOARD: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -478,14 +478,14 @@ pub fn terminal_protocol_hacks() {
     IN_DVTM
         .store(var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"dvtm-256color"));
     IS_TMUX.store(var_os("TMUX").is_some());
-    IN_ITERM_PRE_CSI_U.store(
+    ITERM_NO_KITTY_KEYBOARD.store(
         var_os("LC_TERMINAL").is_some_and(|term| term.as_os_str().as_bytes() == b"iTerm2")
             && var_os("LC_TERMINAL_VERSION").is_some_and(|version| {
                 let Some(version) = parse_version(&str2wcstring(version.as_os_str().as_bytes()))
                 else {
                     return false;
                 };
-                version < (99, 5, 6)
+                version < (3, 5, 12)
             }),
     );
 }
@@ -533,7 +533,7 @@ pub fn terminal_protocols_enable_ifn() {
     }
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
     FLOG!(term_protocols, "Enabling extended keys");
-    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+    if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;1m"); // XTerm's modifyOtherKeys
         let _ = write_loop(&STDOUT_FILENO, b"\x1b="); // set application keypad mode, so the keypad keys send unique codes
     } else {
@@ -552,11 +552,11 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         })
     });
     if BRACKETED_PASTE.load(Ordering::Acquire) {
-        BRACKETED_PASTE.store(false, Ordering::Release);
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004l");
         if IS_TMUX.load() {
             let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
         }
+        BRACKETED_PASTE.store(false, Ordering::Release);
         did_write.store(true);
     }
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
@@ -565,7 +565,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     FLOG_SAFE!(term_protocols, "Disabling extended keys");
     let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Acquire);
     assert_ne!(kitty_keyboard_supported, Capability::Unknown as _);
-    if kitty_keyboard_supported == Capability::NotSupported as _ || IN_ITERM_PRE_CSI_U.load() {
+    if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
         let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;0m"); // XTerm's modifyOtherKeys
         let _ = write_loop(&STDOUT_FILENO, b"\x1b>"); // application keypad mode
     } else {
@@ -1306,6 +1306,30 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
+    fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) {
+        assert!(buffer.len() == 3);
+        loop {
+            match self.try_readb(buffer) {
+                None => return,
+                Some(b'\x1b') => break,
+                Some(_) => continue,
+            }
+        }
+        if self.try_readb(buffer) != Some(b'\\') {
+            return;
+        }
+        if buffer[3] != b'|' {
+            return;
+        }
+        FLOG!(
+            reader,
+            format!(
+                "Received XTVERSION response: {}",
+                str2wcstring(&buffer[4..buffer.len() - 2]),
+            )
+        );
+    }
+
     fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<Key> {
         assert!(buffer.len() == 2);
         let Some(success) = self.try_readb(buffer) else {
@@ -1314,6 +1338,10 @@ pub trait InputEventQueuer {
         let success = match success {
             b'0' => false,
             b'1' => true,
+            b'>' => {
+                self.parse_xtversion(buffer);
+                return None;
+            }
             _ => return None,
         };
         if self.try_readb(buffer)? != b'+' {

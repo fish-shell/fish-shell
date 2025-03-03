@@ -104,6 +104,7 @@ use crate::libc::MB_CUR_MAX;
 use crate::nix::{getpgrp, getpid, isatty};
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
+use crate::output::parse_color_maybe_none;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -239,6 +240,13 @@ fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
 
     assert_is_main_thread();
     unsafe { &mut *READER_DATA_STACK.0.get() }
+}
+
+pub fn reader_in_interactive_read() -> bool {
+    reader_data_stack()
+        .iter()
+        .rev()
+        .any(|reader| reader.conf.exit_on_interrupt)
 }
 
 /// Access the top level reader data.
@@ -1639,8 +1647,15 @@ impl<'a> Reader<'a> {
                 range.end = colors.len();
             }
 
+            let explicit_foreground = self
+                .vars()
+                .get_unless_empty(L!("fish_color_search_match"))
+                .is_some_and(|var| !parse_color_maybe_none(&var, false).is_none());
+
             for color in &mut colors[range] {
-                color.foreground = HighlightRole::search_match;
+                if explicit_foreground {
+                    color.foreground = HighlightRole::search_match;
+                }
                 color.background = HighlightRole::search_match;
             }
         }
@@ -2126,7 +2141,7 @@ impl ReaderData {
     }
 }
 
-const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
+pub const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
 
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
@@ -2196,6 +2211,7 @@ impl<'a> Reader<'a> {
                 zelf.request_cursor_position(&mut out, None);
                 // Query for synchronized output support.
                 let _ = out.write_all(b"\x1b[?2026$p");
+                let _ = out.write_all(b"\x1b[>0q"); // XTVERSION
                 let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                 out.end_buffering();
             }

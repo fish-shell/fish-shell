@@ -75,6 +75,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                 set -a editor $f:$line:$col --wait
             case micro
                 set -a editor $f +$line:$col
+            case helix hx
+                set -a editor $f:$line:$col
             case '*'
                 continue
         end

@@ -325,7 +325,6 @@ function __fish_wine__complete_winepath_subcommand --argument-names command
 end
 
 set -l command wine
-complete -c $command -f
 
 complete -c $command -l help -d 'Show help'
 complete -c $command -l version -d 'Show version'

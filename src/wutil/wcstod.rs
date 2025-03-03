@@ -237,7 +237,7 @@ where
         }
 
         // Look for characters leading "infinity" or "nan", case-insensitive.
-        if inf_nan_chars.next().is_some_and(|c| "iInN".contains(c)) {
+        if matches!(inf_nan_chars.next(), Some('i' | 'I' | 'n' | 'N')) {
             // We think it's inf or nan, so use the parser without underscores.
             // Note that leading underscores will now trigger an error.
             let f = wcstod_inner(chars, '.', consumed)?;

@@ -1,13 +1,11 @@
 function fish_vi_cursor -d 'Set cursor shape for different vi modes'
-    # if stdin is not a tty, there is effectively no bind mode.
-    if not test -t 0
-        return
-    end
-
     set -q fish_cursor_unknown
     or set -g fish_cursor_unknown block
 
     function __fish_vi_cursor --argument-names varname
+        if not status is-interactive; and not status is-interactive-read
+            return
+        end
         if not set -q $varname
             switch $varname
                 case fish_cursor_insert

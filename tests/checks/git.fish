@@ -40,11 +40,16 @@ echo "echo foo" > git-frobnicate
 chmod +x git-frobnicate
 
 complete -c git-frobnicate -xa 'foo bar baz'
+complete -c git-frobnicate -l onto -xa 'onto1 onto2'
 
 complete -C'git frobnicate '
 #CHECK: bar
 #CHECK: baz
 #CHECK: foo
+
+complete -C'git frobnicate --onto '
+#CHECK: onto1
+#CHECK: onto2
 
 complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)

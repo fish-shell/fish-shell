@@ -3,7 +3,7 @@
 ## --- WRITTEN MANUALLY ---
 set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
 
-# Append user-installed extensions (e.g. cargo-foo, invokable as `cargo foo`) to the list of subcommands (à la git)
+# Append user-installed extensions (e.g. cargo-foo, invocable as `cargo foo`) to the list of subcommands (à la git)
 set -la __fish_cargo_subcommands (complete -C'cargo-' | string replace -rf '^cargo-(\w+).*' '$1')
 
 complete -c cargo -f -c cargo -n __fish_use_subcommand -a "$__fish_cargo_subcommands"
@@ -614,7 +614,7 @@ complete -c cargo -n "__fish_seen_subcommand_from rustc" -l all-features -d 'Act
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l no-default-features -d 'Do not activate the `default` feature'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l unit-graph -d 'Output build graph in JSON (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -l ignore-rust-version -d 'Ignore `rust-version` specification in packages (unstable)'
-complete -c cargo -n "__fish_seen_subcommand_from rustc" -l future-incompat-report -d 'Ouputs a future incompatibility report at the end of the build (unstable)'
+complete -c cargo -n "__fish_seen_subcommand_from rustc" -l future-incompat-report -d 'Outputs a future incompatibility report at the end of the build (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -s h -l help -d 'Prints help information'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -s V -l version -d 'Prints version information'
 complete -c cargo -n "__fish_seen_subcommand_from rustc" -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
@@ -700,7 +700,7 @@ complete -c cargo -n "__fish_seen_subcommand_from test" -l all-features -d 'Acti
 complete -c cargo -n "__fish_seen_subcommand_from test" -l no-default-features -d 'Do not activate the `default` feature'
 complete -c cargo -n "__fish_seen_subcommand_from test" -l ignore-rust-version -d 'Ignore `rust-version` specification in packages (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from test" -l unit-graph -d 'Output build graph in JSON (unstable)'
-complete -c cargo -n "__fish_seen_subcommand_from test" -l future-incompat-report -d 'Ouputs a future incompatibility report at the end of the build (unstable)'
+complete -c cargo -n "__fish_seen_subcommand_from test" -l future-incompat-report -d 'Outputs a future incompatibility report at the end of the build (unstable)'
 complete -c cargo -n "__fish_seen_subcommand_from test" -s h -l help -d 'Prints help information'
 complete -c cargo -n "__fish_seen_subcommand_from test" -s V -l version -d 'Prints version information'
 complete -c cargo -n "__fish_seen_subcommand_from test" -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
@@ -767,6 +767,7 @@ complete -c cargo -n "__fish_seen_subcommand_from update" -s v -l verbose -d 'Us
 complete -c cargo -n "__fish_seen_subcommand_from update" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from update" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from update" -l offline -d 'Run without accessing the network'
+complete -c cargo -n "__fish_seen_subcommand_from update" -l ignore-rust-version -d 'Ignore MSRV when checking updates'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -l manifest-path -d 'Path to Cargo.toml'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -s s -l sync -d 'Additional `Cargo.toml` to sync and vendor'
 complete -c cargo -n "__fish_seen_subcommand_from vendor" -l color -d 'Coloring: auto, always, never'

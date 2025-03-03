@@ -1,4 +1,3 @@
-
 complete -c bru -s h -l help -d "Show help"
 complete -c bru -l version -d "Show version number"
 

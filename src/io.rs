@@ -1,13 +1,10 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
 use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
-use crate::fd_monitor::{
-    Callback, FdMonitor, FdMonitorItem, FdMonitorItemId, ItemAction, ItemWakeReason,
-};
+use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
 };
 use crate::flog::{should_flog, FLOG, FLOGF};
-use crate::global_safety::RelaxedAtomicBool;
 use crate::nix::isatty;
 use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
@@ -21,16 +18,10 @@ use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
-#[cfg(not(target_has_atomic = "64"))]
-use portable_atomic::AtomicU64;
-use std::cell::RefCell;
 use std::fs::File;
 use std::io;
 use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
-#[cfg(target_has_atomic = "64")]
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -178,7 +169,7 @@ pub enum IoMode {
 }
 
 /// Represents a FD redirection.
-pub trait IoData {
+pub trait IoData: Send + Sync {
     /// Type of redirect.
     fn io_mode(&self) -> IoMode;
     /// FD to redirect.
@@ -187,30 +178,12 @@ pub trait IoData {
     /// That is, we call dup2(source_fd, fd).
     fn source_fd(&self) -> RawFd;
     fn print(&self);
-    // The address of the object, for comparison.
-    fn as_ptr(&self) -> *const ();
+
+    // If this is an IoBufferfill, return a reference to it.
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         None
     }
 }
-
-// todo!("this should be safe because of how it's used. Rationalize this better.")
-pub trait IoDataSync: IoData + Send + Sync {}
-unsafe impl Send for IoClose {}
-unsafe impl Send for IoFd {}
-unsafe impl Send for IoFile {}
-unsafe impl Send for IoPipe {}
-unsafe impl Send for IoBufferfill {}
-unsafe impl Sync for IoClose {}
-unsafe impl Sync for IoFd {}
-unsafe impl Sync for IoFile {}
-unsafe impl Sync for IoPipe {}
-unsafe impl Sync for IoBufferfill {}
-impl IoDataSync for IoClose {}
-impl IoDataSync for IoFd {}
-impl IoDataSync for IoFile {}
-impl IoDataSync for IoPipe {}
-impl IoDataSync for IoBufferfill {}
 
 pub struct IoClose {
     fd: RawFd,
@@ -232,9 +205,6 @@ impl IoData for IoClose {
     }
     fn print(&self) {
         eprintf!("close %d\n", self.fd)
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -261,9 +231,6 @@ impl IoData for IoFd {
     }
     fn print(&self) {
         eprintf!("FD map %d -> %d\n", self.source_fd, self.fd)
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -293,9 +260,6 @@ impl IoData for IoFile {
     }
     fn print(&self) {
         eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd)
-    }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
     }
 }
 
@@ -334,9 +298,6 @@ impl IoData for IoPipe {
             self.fd
         )
     }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
-    }
 }
 
 /// Represents filling an IoBuffer. Very similar to IoPipe.
@@ -347,7 +308,10 @@ pub struct IoBufferfill {
     write_fd: OwnedFd,
 
     /// The receiving buffer.
-    buffer: Arc<IoBuffer>,
+    buffer: IoBuffer,
+
+    /// The id of the item in the fd monitor, used to stop the background fillthread operation.
+    item_id: FdMonitorItemId,
 }
 impl IoBufferfill {
     /// Create an IoBufferfill which, when written from, fills a buffer with the contents.
@@ -375,18 +339,15 @@ impl IoBufferfill {
                 return Err(e);
             }
         }
-        // Our fillthread gets the read end of the pipe; out_pipe gets the write end.
-        let buffer = Arc::new(IoBuffer::new(buffer_limit));
-        begin_filling(&buffer, pipes.read);
+        // Our fillthread gets the read end of the pipe. Our returned Bufferfill gets the write end.
+        let buffer = IoBuffer::new(buffer_limit);
+        let item_id = begin_filling(buffer.clone(), pipes.read);
         Ok(Arc::new(IoBufferfill {
             target,
             write_fd: pipes.write,
             buffer,
+            item_id,
         }))
-    }
-
-    pub fn buffer_ref(&self) -> &Arc<IoBuffer> {
-        &self.buffer
     }
 
     pub fn buffer(&self) -> &IoBuffer {
@@ -397,12 +358,10 @@ impl IoBufferfill {
     /// of the buffer. Return the buffer.
     pub fn finish(filler: Arc<IoBufferfill>) -> SeparatedBuffer {
         // The io filler is passed in. This typically holds the only instance of the write side of the
-        // pipe used by the buffer's fillthread (except for that side held by other processes). Get the
-        // buffer out of the bufferfill and clear the shared_ptr; this will typically widow the pipe.
+        // pipe used by the buffer's fillthread (except for that side held by other processes).
         // Then allow the buffer to finish.
-        filler
-            .buffer
-            .complete_background_fillthread_and_take_buffer()
+        let fd = fd_monitor().remove_item(filler.item_id);
+        filler.buffer.complete_and_take_buffer(fd)
     }
 }
 impl IoData for IoBufferfill {
@@ -422,54 +381,29 @@ impl IoData for IoBufferfill {
             self.fd()
         )
     }
-    fn as_ptr(&self) -> *const () {
-        (self as *const Self).cast()
-    }
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         Some(self)
     }
 }
 
-/// An IoBuffer is a buffer which can populate itself by reading from an fd.
-/// It is not an IoData.
-pub struct IoBuffer {
-    /// Buffer storing what we have read.
-    buffer: Mutex<SeparatedBuffer>,
-
-    /// Atomic flag indicating our fillthread should shut down.
-    shutdown_fillthread: RelaxedAtomicBool,
-
-    /// A promise, allowing synchronization with the background fill operation.
-    /// The operation has a reference to this as well, and fulfills this promise when it exits.
-    #[allow(clippy::type_complexity)]
-    fill_waiter: RefCell<Option<Arc<(Mutex<bool>, Condvar)>>>,
-
-    /// The item id of our background fillthread fd monitor item.
-    item_id: AtomicU64,
-}
-
-// safety: todo!("rationalize why fill_waiter is safe")
-unsafe impl Send for IoBuffer {}
-unsafe impl Sync for IoBuffer {}
+/// Type wrapping a lock-protected separated buffer.
+#[derive(Clone)]
+pub struct IoBuffer(Arc<Mutex<SeparatedBuffer>>);
 
 impl IoBuffer {
-    pub fn new(limit: usize) -> Self {
-        IoBuffer {
-            buffer: Mutex::new(SeparatedBuffer::new(limit)),
-            shutdown_fillthread: RelaxedAtomicBool::new(false),
-            fill_waiter: RefCell::new(None),
-            item_id: AtomicU64::new(0),
-        }
+    /// Create a new IoBuffer.
+    fn new(buffer_limit: usize) -> Self {
+        IoBuffer(Arc::new(Mutex::new(SeparatedBuffer::new(buffer_limit))))
     }
 
     /// Append a string to the buffer.
     pub fn append(&self, data: &[u8], typ: SeparationType) -> bool {
-        self.buffer.lock().unwrap().append(data, typ)
+        self.0.lock().unwrap().append(data, typ)
     }
 
     /// Return true if output was discarded due to exceeding the read limit.
     pub fn discarded(&self) -> bool {
-        self.buffer.lock().unwrap().discarded()
+        self.0.lock().unwrap().discarded()
     }
 
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
@@ -506,114 +440,54 @@ impl IoBuffer {
     }
 
     /// End the background fillthread operation, and return the buffer, transferring ownership.
-    pub fn complete_background_fillthread_and_take_buffer(&self) -> SeparatedBuffer {
-        // Mark that our fillthread is done, then wake it up.
-        assert!(self.fillthread_running(), "Should have a fillthread");
-        assert!(
-            self.item_id.load(Ordering::SeqCst) != 0,
-            "Should have a valid item ID"
-        );
-        self.shutdown_fillthread.store(true);
-        fd_monitor().poke_item(FdMonitorItemId::from(self.item_id.load(Ordering::SeqCst)));
-
-        // Wait for the fillthread to fulfill its promise, and then clear the future so we know we no
-        // longer have one.
-
-        let mut promise = self.fill_waiter.borrow_mut();
-        let (mutex, condvar) = &**promise.as_ref().unwrap();
-        {
-            let done_guard = mutex.lock().unwrap();
-            let _done_guard = condvar.wait_while(done_guard, |done| !*done).unwrap();
+    /// The read end of the pipe is provided.
+    pub fn complete_and_take_buffer(&self, fd: AutoCloseFd) -> SeparatedBuffer {
+        // Read any remaining data from the pipe.
+        let mut locked_buff = self.0.lock().unwrap();
+        while fd.is_valid() && IoBuffer::read_once(fd.as_raw_fd(), &mut locked_buff) > 0 {
+            // pass
         }
-        *promise = None;
 
         // Return our buffer, transferring ownership.
-        let mut locked_buff = self.buffer.lock().unwrap();
         let mut result = SeparatedBuffer::new(locked_buff.limit());
         std::mem::swap(&mut result, &mut locked_buff);
         locked_buff.clear();
         result
     }
-
-    /// Helper to return whether the fillthread is running.
-    pub fn fillthread_running(&self) -> bool {
-        return self.fill_waiter.borrow().is_some();
-    }
 }
 
 /// Begin the fill operation, reading from the given fd in the background.
-fn begin_filling(iobuffer: &Arc<IoBuffer>, fd: OwnedFd) {
-    assert!(!iobuffer.fillthread_running(), "Already have a fillthread");
-
-    // We want to fill buffer_ by reading from fd. fd is the read end of a pipe; the write end is
+/// Return item ID of the newly created item in the fd monitor.
+fn begin_filling(iobuffer: IoBuffer, fd: OwnedFd) -> FdMonitorItemId {
+    // We want to fill iobuffer by reading from fd. fd is the read end of a pipe; the write end is
     // owned by another process, or something else writing in fish.
-    // Pass fd to an fd_monitor. It will add fd to its select() loop, and give us a callback when
-    // the fd is readable, or when our item is poked. The usual path is that we will get called
-    // back, read a bit from the fd, and append it to the buffer. Eventually the write end of the
-    // pipe will be closed - probably the other process exited - and fd will be widowed; read() will
-    // then return 0 and we will stop reading.
+    // Pass fd to the FdMonitor. It will add fd to its select() loop, and give us a callback when
+    // the fd is readable. The usual path is that we will get called back, read a bit from the fd,
+    // and append it to the buffer. Eventually the write end of the pipe will be closed - probably
+    // the other process exited - and fd will be widowed; read() will then return 0 and we will stop
+    // reading.
     // In exotic circumstances the write end of the pipe will not be closed; this may happen in
     // e.g.:
     //   cmd ( background & ; echo hi )
     // Here the background process will inherit the write end of the pipe and hold onto it forever.
-    // In this case, when complete_background_fillthread() is called, the callback will be invoked
-    // with item_wake_reason_t::poke, and we will notice that the shutdown flag is set (this
-    // indicates that the command substitution is done); in this case we will read until we get
-    // EAGAIN and then give up.
-
-    // Construct a promise. We will fulfill it in our fill thread, and wait for it in
-    // complete_background_fillthread(). Note that TSan complains if the promise's dtor races with
-    // the future's call to wait(), so we store the promise, not just its future (#7681).
-    let promise = Arc::new((Mutex::new(false), Condvar::new()));
-    iobuffer.fill_waiter.replace(Some(promise.clone()));
+    // In this case, when complete_background_fillthread() is called, we grab the file descriptor
+    // and read until we get EAGAIN and then give up.
     // Run our function to read until the receiver is closed.
-    // It's OK to capture 'buffer' because 'this' waits for the promise in its dtor.
-    let item_callback: Callback = {
-        let iobuffer = iobuffer.clone();
-        Box::new(move |fd: &mut AutoCloseFd, reason: ItemWakeReason| {
-            // Only check the shutdown flag if we timed out or were poked.
-            // It's important that if select() indicated we were readable, that we call select() again
-            // allowing it to time out. Note the typical case is that the fd will be closed, in which
-            // case select will return immediately.
-            let mut done = false;
-            if reason == ItemWakeReason::Readable {
-                // select() reported us as readable; read a bit.
-                let mut buf = iobuffer.buffer.lock().unwrap();
-                let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
-                done = ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0));
-            } else if iobuffer.shutdown_fillthread.load() {
-                // Here our caller asked us to shut down; read while we keep getting data.
-                // This will stop when the fd is closed or if we get EAGAIN.
-                let mut buf = iobuffer.buffer.lock().unwrap();
-                loop {
-                    let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
-                    if ret <= 0 {
-                        break;
-                    }
-                }
-                done = true;
-            }
-            if !done {
-                ItemAction::Retain
-            } else {
-                fd.close();
-                let (mutex, condvar) = &*promise;
-                {
-                    let mut done = mutex.lock().unwrap();
-                    *done = true;
-                }
-                condvar.notify_one();
-                ItemAction::Remove
-            }
-        })
-    };
+    let item_callback: Callback = Box::new(move |fd: &mut AutoCloseFd| {
+        assert!(fd.as_raw_fd() >= 0, "Invalid fd");
+        let mut buf = iobuffer.0.lock().unwrap();
+        let ret = IoBuffer::read_once(fd.as_raw_fd(), &mut buf);
+        if ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0)) {
+            // Either it's finished or some other error - we're done.
+            fd.close();
+        }
+    });
 
     let fd = AutoCloseFd::new(fd.into_raw_fd());
-    let item_id = fd_monitor().add(FdMonitorItem::new(fd, None, item_callback));
-    iobuffer.item_id.store(u64::from(item_id), Ordering::SeqCst);
+    fd_monitor().add(fd, item_callback)
 }
 
-pub type IoDataRef = Arc<dyn IoDataSync>;
+pub type IoDataRef = Arc<dyn IoData>;
 
 #[derive(Clone, Default)]
 pub struct IoChain(pub Vec<IoDataRef>);
@@ -622,13 +496,15 @@ impl IoChain {
     pub fn new() -> Self {
         Default::default()
     }
-    pub fn remove(&mut self, element: &dyn IoDataSync) {
-        let element = element as *const _;
-        let element = element as *const ();
-        self.0.retain(|e| {
-            let e = Arc::as_ptr(e) as *const ();
-            !std::ptr::eq(e, element)
-        });
+    pub fn remove(&mut self, element: &dyn IoData) {
+        // Discard vtable pointers when comparing.
+        let e1 = element as *const dyn IoData as *const ();
+        let idx = self
+            .0
+            .iter()
+            .position(|e2| Arc::as_ref(e2) as *const dyn IoData as *const () == e1)
+            .expect("Element not found");
+        self.0.remove(idx);
     }
     pub fn clear(&mut self) {
         self.0.clear()
@@ -944,10 +820,10 @@ impl StringOutputStream {
 /// An output stream for builtins which writes into a separated buffer.
 pub struct BufferedOutputStream {
     /// The buffer we are filling.
-    buffer: Arc<IoBuffer>,
+    buffer: IoBuffer,
 }
 impl BufferedOutputStream {
-    pub fn new(buffer: Arc<IoBuffer>) -> Self {
+    pub fn new(buffer: IoBuffer) -> Self {
         Self { buffer }
     }
     fn append(&mut self, s: &wstr) -> bool {

@@ -1,11 +1,12 @@
 use super::prelude::*;
+use crate::ast::{Ast, Leaf};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::Completion;
 use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
 use crate::input::input_function_get_code;
 use crate::input_common::{CharEvent, ReadlineCmd};
 use crate::operation_context::{no_cancel, OperationContext};
-use crate::parse_constants::ParserTestErrorBits;
+use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
 use crate::parse_util::{
     parse_util_detect_errors, parse_util_get_offset_from_line, parse_util_job_extent,
     parse_util_lineno, parse_util_process_extent, parse_util_token_extent,
@@ -22,6 +23,7 @@ use crate::wcstringutil::join_strings;
 use std::ops::Range;
 
 /// Which part of the comandbuffer are we operating on.
+#[derive(Eq, PartialEq)]
 enum TextScope {
     String,
     Job,
@@ -30,11 +32,14 @@ enum TextScope {
 }
 
 /// For text insertion, how should it be done.
+#[derive(Eq, PartialEq)]
 enum AppendMode {
     // replace current text
     Replace,
     // insert at cursor position
     Insert,
+    // insert at cursor position, DWIM style.
+    InsertSmart,
     // insert at end of current token/command/buffer
     Append,
 }
@@ -74,9 +79,12 @@ fn replace_part(
             out.push_utfstr(&buff[range.clone()]);
             out.push_utfstr(insert);
         }
-        AppendMode::Insert => {
+        AppendMode::Insert | AppendMode::InsertSmart => {
             assert!(cursor_pos >= range.start);
             assert!(cursor_pos <= range.end);
+            let insert = strip_dollar_prefixes(insert_mode, &buff[range.start..cursor_pos], insert)
+                .map(Cow::Owned)
+                .unwrap_or(Cow::Borrowed(insert));
             out.push_utfstr(&buff[range.start..cursor_pos]);
             out.push_utfstr(&insert);
             out.push_utfstr(&buff[cursor_pos..range.end]);
@@ -92,6 +100,43 @@ fn replace_part(
     }
 }
 
+// Prefix must be at the beginning of a process.
+fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) -> Option<WString> {
+    if insert_mode != AppendMode::InsertSmart {
+        return None;
+    }
+    insert.find(L!("$ "))?; // Early return.
+    let source = prefix.to_owned() + insert;
+    let ast = Ast::parse(
+        &source,
+        ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS | ParseTreeFlags::LEAVE_UNTERMINATED,
+        None,
+    );
+    let mut stripped = WString::new();
+    let mut have = prefix.len();
+    for node in ast.walk() {
+        let Some(ds) = node.as_decorated_statement() else {
+            continue;
+        };
+        let Some(range) = ds.command.range() else {
+            continue;
+        };
+        let pos = range.start();
+        if pos < prefix.len() {
+            continue;
+        }
+        if (pos == 0 || source.as_char_slice()[pos - 1] == '\n')
+            && source.as_char_slice()[pos] == '$'
+            && source.char_at(pos + 1) == ' '
+        {
+            stripped.push_utfstr(&source[have..pos]);
+            have = pos + "$ ".len();
+        }
+    }
+    stripped.push_utfstr(&source[have..]);
+    return Some(stripped);
+}
+
 /// Output the specified selection.
 ///
 /// \param begin start of selection
@@ -103,6 +148,7 @@ fn replace_part(
 fn write_part(
     parser: &Parser,
     range: Range<usize>,
+    range_is_single_token: bool,
     cut_at_cursor: bool,
     token_mode: Option<TokenMode>,
     buffer: &wstr,
@@ -121,19 +167,8 @@ fn write_part(
         return;
     };
 
-    let buff = &buffer[range];
-    let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
     let mut args = vec![];
-    while let Some(token) = tok.next() {
-        if cut_at_cursor && token.end() >= pos {
-            break;
-        }
-        if token.type_ != TokenType::string {
-            continue;
-        }
-
-        let token_text = tok.text_of(&token);
-
+    let mut add_token = |token_text: &wstr| {
         match token_mode {
             TokenMode::Expanded => {
                 const COMMANDLINE_TOKENS_MAX_EXPANSION: usize = 512;
@@ -175,7 +210,26 @@ fn write_part(
                 args.push(Completion::from_completion(unescaped));
             }
         }
-    }
+    };
+
+    let buff = &buffer[range];
+    if range_is_single_token {
+        add_token(buff);
+    } else {
+        let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
+        while let Some(token) = tok.next() {
+            if cut_at_cursor && token.end() >= pos {
+                break;
+            }
+            if token.type_ != TokenType::string {
+                continue;
+            }
+
+            let token_text = tok.text_of(&token);
+            add_token(token_text);
+        }
+    };
+
     for arg in args {
         streams.out.appendln(arg.completion);
     }
@@ -206,13 +260,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let mut is_valid = false;
     let mut showing_suggestion = false;
 
-    let mut range = 0..0;
     let mut override_buffer = None;
 
     const short_options: &wstr = L!(":abijpctfxorhI:CBELSsP");
     let long_options: &[WOption] = &[
         wopt(L!("append"), ArgType::NoArgument, 'a'),
         wopt(L!("insert"), ArgType::NoArgument, 'i'),
+        wopt(L!("insert-smart"), ArgType::NoArgument, '\x06'),
         wopt(L!("replace"), ArgType::NoArgument, 'r'),
         wopt(L!("current-buffer"), ArgType::NoArgument, 'b'),
         wopt(L!("current-job"), ArgType::NoArgument, 'j'),
@@ -246,6 +300,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             'a' => append_mode = Some(AppendMode::Append),
             'b' => buffer_part = Some(TextScope::String),
             'i' => append_mode = Some(AppendMode::Insert),
+            '\x06' => append_mode = Some(AppendMode::InsertSmart),
             'r' => append_mode = Some(AppendMode::Replace),
             'c' => cut_at_cursor = true,
             't' => buffer_part = Some(TextScope::Token),
@@ -397,8 +452,8 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return STATUS_INVALID_ARGS;
     }
 
-    if search_field_mode && buffer_part.is_some() {
-        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd,));
+    if search_field_mode && (buffer_part.is_some() || token_mode.is_some()) {
+        streams.err.append(wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return STATUS_INVALID_ARGS;
     }
@@ -412,6 +467,33 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     let append_mode = append_mode.unwrap_or(AppendMode::Replace);
 
     let buffer_part = buffer_part.unwrap_or(TextScope::String);
+
+    if append_mode == AppendMode::InsertSmart {
+        if search_field_mode {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                cmd,
+                "--insert-smart",
+                "--search-field"
+            ));
+            builtin_print_error_trailer(parser, streams.err, cmd);
+            return STATUS_INVALID_ARGS;
+        }
+        match buffer_part {
+            TextScope::String | TextScope::Job | TextScope::Process => (),
+            TextScope::Token => {
+                // To-do: we can support it in command position.
+                streams.err.append(wgettext_fmt!(
+                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                    cmd,
+                    "--insert-smart",
+                    "--current-token"
+                ));
+                builtin_print_error_trailer(parser, streams.err, cmd);
+                return STATUS_INVALID_ARGS;
+            }
+        }
+    }
 
     if line_mode || column_mode {
         if positional_args != 0 {
@@ -592,6 +674,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         return Some(1);
     }
 
+    let range;
     if search_field_mode {
         range = 0..current_buffer.len();
     } else {
@@ -606,7 +689,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 range = parse_util_process_extent(current_buffer, current_cursor_pos, None);
             }
             TextScope::Token => {
-                parse_util_token_extent(current_buffer, current_cursor_pos, &mut range, None);
+                (range, _) = parse_util_token_extent(current_buffer, current_cursor_pos);
             }
         }
     }
@@ -644,6 +727,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         write_part(
             parser,
             range,
+            buffer_part == TextScope::Token,
             cut_at_cursor,
             token_mode,
             current_buffer,

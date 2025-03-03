@@ -10,8 +10,10 @@ use std::{
 };
 
 use crate::{
+    ast::unescape_keyword,
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
+    tokenizer::is_brace_statement,
     util::wcsfilecmp,
     wutil::sprintf,
 };
@@ -72,6 +74,7 @@ static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
 /// the response).
+#[inline(always)]
 #[allow(non_snake_case)]
 fn C_(s: &wstr) -> &'static wstr {
     if s.is_empty() {
@@ -117,6 +120,8 @@ bitflags! {
         const REPLACES_LINE = 1 << 7;
         /// If replacing the entire token, keep the "foo=" prefix.
         const KEEP_VARIABLE_OVERRIDE_PREFIX = 1 << 8;
+        /// This is a variable name.
+        const VARIABLE_NAME = 1 << 9;
     }
 }
 
@@ -662,14 +667,32 @@ impl<'ctx> Completer<'ctx> {
 
         // Get all the arguments.
         let mut tokens = Vec::new();
-        parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
+        {
+            let proc_range =
+                parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
+            let start = proc_range.start;
+            if start != 0
+                && cmdline.as_char_slice()[start - 1] == '{'
+                && (start == cmdline.len()
+                    || !is_brace_statement(cmdline.as_char_slice().get(start).copied()))
+            {
+                // We don't want to suggest commands here, since this command line parses as
+                // brace expansion.
+                return;
+            }
+        }
         let actual_token_count = tokens.len();
 
         // Hack: fix autosuggestion by removing prefixing "and"s #6249.
         if is_autosuggest {
             let prefixed_supercommand_count = tokens
                 .iter()
-                .take_while(|token| parser_keywords_is_subcommand(token.get_source(&cmdline)))
+                .take_while(|token| {
+                    parser_keywords_is_subcommand(&unescape_keyword(
+                        token.type_,
+                        token.get_source(&cmdline),
+                    ))
+                })
                 .count();
             tokens.drain(..prefixed_supercommand_count);
         }
@@ -1663,16 +1686,13 @@ impl<'ctx> Completer<'ctx> {
                 continue;
             };
 
-            let (comp, flags) = if !r#match.requires_full_replacement() {
+            let mut flags = CompleteFlags::VARIABLE_NAME;
+            let comp = if !r#match.requires_full_replacement() {
                 // Take only the suffix.
-                (
-                    env_name.slice_from(varlen).to_owned(),
-                    CompleteFlags::empty(),
-                )
+                env_name.slice_from(varlen).to_owned()
             } else {
-                let comp = whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr();
-                let flags = CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
-                (comp, flags)
+                flags |= CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
+                whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr()
             };
 
             let mut desc = WString::new();
@@ -1787,7 +1807,7 @@ impl<'ctx> Completer<'ctx> {
             // The getpwent() function does not exist on Android. A Linux user on Android isn't
             // really a user - each installed app gets an UID assigned. Listing all UID:s is not
             // possible without root access, and doing a ~USER type expansion does not make sense
-            // since every app is sandboxed and can't access eachother.
+            // since every app is sandboxed and can't access each other.
             return false;
         }
         #[cfg(not(target_os = "android"))]

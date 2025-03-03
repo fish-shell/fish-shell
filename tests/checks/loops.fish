@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+#RUN: fish=%fish %fish %s
 
 function never_runs
     while false

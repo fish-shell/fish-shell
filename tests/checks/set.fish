@@ -1,5 +1,4 @@
-# Explicitly overriding HOME/XDG_CONFIG_HOME is only required if not invoking via `make test`
-# RUN: env FISH=%fish %fish -C 'set -l filter_ctrls %filter-control-sequences' %s
+# RUN: env FISH=%fish %fish %s
 # Environment variable tests
 
 # Test if variables can be properly set
@@ -368,7 +367,7 @@ begin
     env SHLVL="  3" $FISH -ic 'echo SHLVL: $SHLVL'
     # CHECK: SHLVL: 4
     # CHECK: SHLVL: 4
-end | $filter_ctrls
+end
 
 # Non-interactive fish doesn't touch $SHLVL
 env SHLVL=2 $FISH -c 'echo SHLVL: $SHLVL'
@@ -528,7 +527,7 @@ $FISH -c 'set -S EDITOR' | string match -r -e 'global|universal'
 # When the variable has been changed outside of fish we accept it.
 # CHECK: $EDITOR: set in global scope, exported, with 1 elements
 # CHECK: $EDITOR: set in universal scope, exported, with 2 elements
-sh -c "EDITOR='vim -g' $FISH -c "'\'set -S EDITOR\'' | string match -r -e 'global|universal'
+sh -c 'EDITOR=vim "$@" -c "set -S EDITOR"' uselessargument $FISH | string match -r -e 'global|universal'
 
 # Verify behavior of `set --show` given an invalid var name
 set --show 'argle bargle'
@@ -953,7 +952,7 @@ end
 
 set -e undefined[x..]
 # CHECKERR: set: Invalid index starting at 'undefined'
-# CHECKERR: checks/set.fish (line 954):
+# CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
 # CHECKERR: set -e undefined[x..]
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)

@@ -8,13 +8,14 @@ use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::history::{history_session_id_from_var, History};
 use crate::kill::kill_entries;
+use crate::nix::umask;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstol_radix;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
@@ -84,8 +85,7 @@ fn set_umask(list_val: &[WString]) -> EnvStackSetResult {
         return EnvStackSetResult::Invalid;
     }
     // Do not actually create a umask variable. On env_stack_t::get() it will be calculated.
-    // SAFETY: umask cannot fail.
-    unsafe { libc::umask(mask as libc::mode_t) };
+    umask(mask as libc::mode_t);
     EnvStackSetResult::Ok
 }
 
@@ -201,16 +201,28 @@ impl EnvNode {
     }
 }
 
+// RefCell except we promise it can be used as Sync.
+// Safety: in order to do anything with this, the caller must be holding ENV_LOCK.
+struct EnvNodeSyncCell(RefCell<EnvNode>);
+
+impl EnvNodeSyncCell {
+    fn new(node: EnvNode) -> Self {
+        Self(RefCell::new(node))
+    }
+}
+
+unsafe impl Sync for EnvNodeSyncCell {}
+
 /// EnvNodeRef is a reference to an EnvNode. It may be shared between different environments.
-/// The type Arc<RefCell<...>> may look suspicious, but all accesses to the EnvNode are protected by a global lock.
+/// All accesses to the EnvNode are protected by a global lock.
 #[derive(Clone)]
-struct EnvNodeRef(Arc<RefCell<EnvNode>>);
+struct EnvNodeRef(Arc<EnvNodeSyncCell>);
 
 impl Deref for EnvNodeRef {
     type Target = RefCell<EnvNode>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.0 .0
     }
 }
 
@@ -219,7 +231,7 @@ impl EnvNodeRef {
         // Accesses are protected by the global lock.
         #[allow(unknown_lints)]
         #[allow(clippy::arc_with_non_send_sync)]
-        EnvNodeRef(Arc::new(RefCell::new(EnvNode {
+        EnvNodeRef(Arc::new(EnvNodeSyncCell::new(EnvNode {
             env: VarTable::new(),
             new_scope: is_new_scope,
             export_gen: 0,
@@ -248,9 +260,6 @@ impl EnvNodeRef {
     }
 }
 
-// Safety: in order to do anything with an EnvNodeRef, the caller must be holding ENV_LOCK.
-unsafe impl Sync for EnvNodeRef {}
-
 /// Helper to iterate over a chain of EnvNodeRefs.
 struct EnvNodeIter {
     current: Option<EnvNodeRef>,
@@ -276,10 +285,7 @@ impl Iterator for EnvNodeIter {
     }
 }
 
-lazy_static! {
-    // All accesses to the EnvNode are protected by a global lock.
-    static ref GLOBAL_NODE: EnvNodeRef = EnvNodeRef::new(false, None);
-}
+static GLOBAL_NODE: Lazy<EnvNodeRef> = Lazy::new(|| EnvNodeRef::new(false, None));
 
 /// Recursive helper to snapshot a series of nodes.
 fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
@@ -293,7 +299,7 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
     };
     #[allow(unknown_lints)]
     #[allow(clippy::arc_with_non_send_sync)]
-    EnvNodeRef(Arc::new(RefCell::new(new_node)))
+    EnvNodeRef(Arc::new(EnvNodeSyncCell::new(new_node)))
 }
 
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
@@ -402,10 +408,9 @@ impl EnvScopedImpl {
             // value. Thus we have to call it twice, to reset the value. The env_lock protects
             // against races. Guess what the umask is; if we guess right we don't need to reset it.
             let guess: libc::mode_t = 0o022;
-            // Safety: umask cannot error.
-            let res: libc::mode_t = unsafe { libc::umask(guess) };
+            let res: libc::mode_t = umask(guess);
             if res != guess {
-                unsafe { libc::umask(res) };
+                umask(res);
             }
             Some(EnvVar::new_from_name(L!("umask"), sprintf!("0%0.3o", res)))
         } else {
@@ -619,12 +624,12 @@ impl EnvScopedImpl {
         Self::get_exported(&self.globals, &mut vals);
         Self::get_exported(&self.locals, &mut vals);
 
-        let uni = uvars().get_names(true, false);
-        for key in uni {
-            let var = uvars().get(&key).unwrap();
-            // Only insert if not already present, as uvars have lowest precedence.
-            // TODO: a longstanding bug is that an unexported local variable will not mask an exported uvar.
-            vals.entry(key).or_insert(var);
+        for (key, var) in uvars().get_table() {
+            if var.exports() {
+                // Only insert if not already present, as uvars have lowest precedence.
+                // TODO: a longstanding bug is that an unexported local variable will not mask an exported uvar.
+                vals.entry(key.clone()).or_insert(var.clone());
+            }
         }
 
         // Dorky way to add our single exported computed variable.
@@ -763,8 +768,8 @@ impl EnvStackImpl {
                 // This is distinct from the unspecified scope,
                 // which is the global scope if no function exists.
                 let mut node = self.base.locals.clone();
-                while node.next().is_some() {
-                    node = node.next().unwrap();
+                while let Some(next_node) = node.next() {
+                    node = next_node;
                     // The first node that introduces a new scope is ours.
                     // If this doesn't happen, we go on until we've reached the
                     // topmost local scope.
@@ -831,8 +836,8 @@ impl EnvStackImpl {
                 result.status = remove_from_chain(&mut self.base.locals, key);
             } else if query.function {
                 let mut node = self.base.locals.clone();
-                while node.next().is_some() {
-                    node = node.next().unwrap();
+                while let Some(next_node) = node.next() {
+                    node = next_node;
                     if node.borrow().new_scope {
                         break;
                     }

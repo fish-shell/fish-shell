@@ -244,7 +244,7 @@ fn parse_util_locate_cmdsub(
 
     if inout_is_quoted
         .as_ref()
-        .map_or(false, |is_quoted| **is_quoted)
+        .is_some_and(|is_quoted| **is_quoted)
         && !input.is_empty()
     {
         pos = process_opening_quote(
@@ -415,6 +415,8 @@ fn job_or_process_extent(
             | TokenType::background
             | TokenType::andand
             | TokenType::oror
+            | TokenType::left_brace
+            | TokenType::right_brace
                 if (token.type_ != TokenType::pipe || process) =>
             {
                 if tok_begin >= pos {
@@ -435,30 +437,20 @@ fn job_or_process_extent(
 }
 
 /// Find the beginning and end of the token under the cursor and the token before the current token.
-/// Any combination of tok_begin, tok_end, prev_begin and prev_end may be null.
 ///
 /// \param buff the string to search for subshells
 /// \param cursor_pos the position of the cursor
-/// \param tok_begin the start of the current token
-/// \param tok_end the end of the current token
-/// \param prev_begin the start o the token before the current token
-/// \param prev_end the end of the token before the current token
-pub fn parse_util_token_extent(
-    buff: &wstr,
-    cursor_pos: usize,
-    out_tok: &mut ops::Range<usize>,
-    mut out_prev: Option<&mut ops::Range<usize>>,
-) {
+pub fn parse_util_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<usize>) {
     let cmdsubst_range = parse_util_cmdsubst_extent(buff, cursor_pos);
     let cmdsubst_begin = cmdsubst_range.start;
 
     // pos is equivalent to cursor_pos within the range of the command substitution {begin, end}.
     let offset_within_cmdsubst = cursor_pos - cmdsubst_range.start;
 
-    let mut a = cmdsubst_begin + offset_within_cmdsubst;
-    let mut b = a;
-    let mut pa = a;
-    let mut pb = pa;
+    let mut cur_begin = cmdsubst_begin + offset_within_cmdsubst;
+    let mut cur_end = cur_begin;
+    let mut prev_begin = cur_begin;
+    let mut prev_end = cur_begin;
 
     assert!(cmdsubst_begin <= buff.len());
     assert!(cmdsubst_range.end <= buff.len());
@@ -475,31 +467,30 @@ pub fn parse_util_token_extent(
         // Cursor was before beginning of this token, means that the cursor is between two tokens,
         // so we set it to a zero element string and break.
         if tok_begin > offset_within_cmdsubst {
-            a = cmdsubst_begin + offset_within_cmdsubst;
-            b = a;
+            cur_begin = cmdsubst_begin + offset_within_cmdsubst;
+            cur_end = cur_begin;
             break;
         }
 
-        // If cursor is inside the token, this is the token we are looking for. If so, set a and b
-        // and break.
+        // If cursor is inside the token, this is the token we are looking for. If so, set
+        // cur_begin and cur_end and break.
         if token.type_ == TokenType::string && tok_end >= offset_within_cmdsubst {
-            a = cmdsubst_begin + token.offset();
-            b = a + token.length();
+            cur_begin = cmdsubst_begin + token.offset();
+            cur_end = cur_begin + token.length();
             break;
         }
 
         // Remember previous string token.
         if token.type_ == TokenType::string {
-            pa = cmdsubst_begin + token.offset();
-            pb = pa + token.length();
+            prev_begin = cmdsubst_begin + token.offset();
+            prev_end = prev_begin + token.length();
         }
     }
 
-    *out_tok = a..b;
-    out_prev.as_mut().map(|prev| **prev = pa..pb);
-    assert!(pa <= buff.len());
-    assert!(pb >= pa);
-    assert!(pb <= buff.len());
+    assert!(prev_begin <= buff.len());
+    assert!(prev_end >= prev_begin);
+    assert!(prev_end <= buff.len());
+    (cur_begin..cur_end, prev_begin..prev_end)
 }
 
 /// Get the line number at the specified character offset.
@@ -1049,9 +1040,9 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 dec = if switchs.end.has_source() { 1 } else { 0 };
             }
             Type::token_base => {
-                if node.parent().unwrap().typ() == Type::begin_header
-                    && node.as_token().unwrap().token_type() == ParseTokenType::end
-                {
+                let token_type = node.as_token().unwrap().token_type();
+                let parent_type = node.parent().unwrap().typ();
+                if parent_type == Type::begin_header && token_type == ParseTokenType::end {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
                     if node.source(self.src) == "\n" {
@@ -1059,6 +1050,11 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                         dec = 1;
                     }
                 }
+                // if token_type == ParseTokenType::right_brace && parent_type == Type::brace_statement
+                // {
+                //     inc = 1;
+                //     dec = 1;
+                // }
             }
             _ => (),
         }
@@ -1229,6 +1225,15 @@ pub fn parse_util_detect_errors_in_ast(
             }
             errored |=
                 detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
+        } else if let Some(brace_statement) = node.as_brace_statement() {
+            // If our closing brace had no source, we are unsourced.
+            if !brace_statement.right_brace.has_source() {
+                has_unclosed_block = true;
+            }
+            errored |= detect_errors_in_block_redirection_list(
+                &brace_statement.args_or_redirs,
+                &mut out_errors,
+            );
         } else if let Some(ifs) = node.as_if_statement() {
             // If our 'end' had no source, we are unsourced.
             if !ifs.end.has_source() {
@@ -1780,15 +1785,28 @@ fn detect_errors_in_block_redirection_list(
     args_or_redirs: &ast::ArgumentOrRedirectionList,
     out_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
-    if let Some(first_arg) = get_first_arg(args_or_redirs) {
+    let Some(first_arg) = get_first_arg(args_or_redirs) else {
+        return false;
+    };
+    if args_or_redirs
+        .parent()
+        .unwrap()
+        .as_brace_statement()
+        .is_some()
+    {
         return append_syntax_error!(
             out_errors,
             first_arg.source_range().start(),
             first_arg.source_range().length(),
-            END_ARG_ERR_MSG
+            RIGHT_BRACE_ARG_ERR_MSG
         );
     }
-    false
+    append_syntax_error!(
+        out_errors,
+        first_arg.source_range().start(),
+        first_arg.source_range().length(),
+        END_ARG_ERR_MSG
+    )
 }
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors
@@ -1898,6 +1916,7 @@ const BACKGROUND_IN_CONDITIONAL_ERROR_MSG: &str =
 
 /// Error message for arguments to 'end'
 const END_ARG_ERR_MSG: &str = "'end' does not take arguments. Did you forget a ';'?";
+const RIGHT_BRACE_ARG_ERR_MSG: &str = "'}' does not take arguments. Did you forget a ';'?";
 
 /// Error message when 'time' is in a pipeline.
 const TIME_IN_PIPELINE_ERR_MSG: &str =

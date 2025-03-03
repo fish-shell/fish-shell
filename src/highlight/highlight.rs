@@ -1,29 +1,24 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, DecoratedStatement, Keyword,
-    Leaf, List, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
+    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
+    DecoratedStatement, Keyword, Leaf, List, Node, NodeVisitor, Redirection, Token, Type,
+    VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::RgbColor;
 use crate::common::{
-    unescape_string, valid_var_name, valid_var_name_char, UnescapeFlags, ASCII_MAX,
-    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
+    valid_var_name, valid_var_name_char, ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::complete_wrap_map;
 use crate::env::Environment;
 use crate::expand::{
-    expand_one, expand_tilde, expand_to_command_and_args, ExpandFlags, ExpandResultCode,
-    HOME_DIRECTORY, PROCESS_EXPAND_SELF_STR,
-};
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_SINGLE,
+    expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR,
 };
 use crate::function;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
+use crate::highlight::file_tester::FileTester;
 use crate::history::{all_paths_are_valid, HistoryItem};
-use crate::libc::_PC_CASE_SENSITIVE;
 use crate::operation_context::OperationContext;
 use crate::output::{parse_color, Outputter};
 use crate::parse_constants::{
@@ -32,35 +27,20 @@ use crate::parse_constants::{
 use crate::parse_util::{
     parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
 };
-use crate::path::{
-    path_apply_working_directory, path_as_implicit_cd, path_get_cdpath, path_get_path,
-    paths_are_same_file,
-};
-use crate::redirection::RedirectionMode;
+use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
-use crate::wcstringutil::{
-    string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
-};
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::dir_iter::DirIter;
-use crate::wutil::fish_wcstoi;
-use crate::wutil::{normalize_path, waccess, wstat};
-use crate::wutil::{wbasename, wdirname};
-use bitflags::bitflags;
-use libc::{ENOENT, PATH_MAX, R_OK, W_OK};
+use crate::wcstringutil::string_prefixes_string;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
-use std::os::fd::RawFd;
+use std::collections::HashMap;
+
+use super::file_tester::IsFile;
 
 impl HighlightSpec {
     pub fn new() -> Self {
         Self::default()
-    }
-    pub fn with_fg(fg: HighlightRole) -> Self {
-        Self::with_fg_bg(fg, HighlightRole::normal)
     }
     pub fn with_fg_bg(fg: HighlightRole, bg: HighlightRole) -> Self {
         Self {
@@ -69,8 +49,14 @@ impl HighlightSpec {
             ..Default::default()
         }
     }
+    pub fn with_fg(fg: HighlightRole) -> Self {
+        Self::with_fg_bg(fg, HighlightRole::normal)
+    }
     pub fn with_bg(bg: HighlightRole) -> Self {
         Self::with_fg_bg(HighlightRole::normal, bg)
+    }
+    pub fn with_both(role: HighlightRole) -> Self {
+        Self::with_fg_bg(role, role)
     }
 }
 
@@ -91,7 +77,7 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
         outp.writech(c);
     }
     outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL);
-    outp.contents().to_owned() // TODO should move
+    outp.contents().to_owned()
 }
 
 /// Perform syntax highlighting for the shell commands in buff. The result is stored in the color
@@ -665,233 +651,6 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
     }
 }
 
-/// Indicates whether the source range of the given node forms a valid path in the given
-/// working_directory.
-fn range_is_potential_path(
-    src: &wstr,
-    range: SourceRange,
-    at_cursor: bool,
-    ctx: &OperationContext,
-    working_directory: &wstr,
-) -> bool {
-    // Skip strings exceeding PATH_MAX. See #7837.
-    // Note some paths may exceed PATH_MAX, but this is just for highlighting.
-    if range.length() > (PATH_MAX as usize) {
-        return false;
-    }
-    // Get the node source, unescape it, and then pass it to is_potential_path along with the
-    // working directory (as a one element list).
-    let mut result = false;
-    if let Some(mut token) = unescape_string(
-        &src[range.start()..range.end()],
-        crate::common::UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
-    ) {
-        // Big hack: is_potential_path expects a tilde, but unescape_string gives us HOME_DIRECTORY.
-        // Put it back.
-        if token.char_at(0) == HOME_DIRECTORY {
-            token.as_char_slice_mut()[0] = '~';
-        }
-
-        result = is_potential_path(
-            &token,
-            at_cursor,
-            &[working_directory.to_owned()],
-            ctx,
-            PathFlags::PATH_EXPAND_TILDE,
-        );
-    }
-    result
-}
-
-// Tests whether the specified string cpath is the prefix of anything we could cd to. directories is
-// a list of possible parent directories (typically either the working directory, or the cdpath).
-// This does I/O!
-//
-// This is used only internally to this file, and is exposed only for testing.
-bitflags! {
-    #[derive(Clone, Copy, Default)]
-    pub struct PathFlags: u8 {
-        // The path must be to a directory.
-        const PATH_REQUIRE_DIR = 1 << 0;
-        // Expand any leading tilde in the path.
-        const PATH_EXPAND_TILDE = 1 << 1;
-        // Normalize directories before resolving, as "cd".
-        const PATH_FOR_CD = 1 << 2;
-    }
-}
-
-/// Tests whether the specified string cpath is the prefix of anything we could cd to. directories
-/// is a list of possible parent directories (typically either the working directory, or the
-/// cdpath). This does I/O!
-///
-/// Hack: if out_suggested_cdpath is not NULL, it returns the autosuggestion for cd. This descends
-/// the deepest unique directory hierarchy.
-///
-/// We expect the path to already be unescaped.
-pub fn is_potential_path(
-    potential_path_fragment: &wstr,
-    at_cursor: bool,
-    directories: &[WString],
-    ctx: &OperationContext<'_>,
-    flags: PathFlags,
-) -> bool {
-    assert_is_background_thread();
-
-    if ctx.check_cancel() {
-        return false;
-    }
-
-    let require_dir = flags.contains(PathFlags::PATH_REQUIRE_DIR);
-    let mut clean_potential_path_fragment = WString::new();
-    let mut has_magic = false;
-
-    let mut path_with_magic = potential_path_fragment.to_owned();
-    if flags.contains(PathFlags::PATH_EXPAND_TILDE) {
-        expand_tilde(&mut path_with_magic, ctx.vars());
-    }
-
-    for c in path_with_magic.chars() {
-        match c {
-            PROCESS_EXPAND_SELF
-            | VARIABLE_EXPAND
-            | VARIABLE_EXPAND_SINGLE
-            | BRACE_BEGIN
-            | BRACE_END
-            | BRACE_SEP
-            | ANY_CHAR
-            | ANY_STRING
-            | ANY_STRING_RECURSIVE => {
-                has_magic = true;
-            }
-            INTERNAL_SEPARATOR => (),
-            _ => clean_potential_path_fragment.push(c),
-        }
-    }
-
-    if has_magic || clean_potential_path_fragment.is_empty() {
-        return false;
-    }
-
-    // Don't test the same path multiple times, which can happen if the path is absolute and the
-    // CDPATH contains multiple entries.
-    let mut checked_paths = HashSet::new();
-
-    // Keep a cache of which paths / filesystems are case sensitive.
-    let mut case_sensitivity_cache = CaseSensitivityCache::new();
-
-    for wd in directories {
-        if ctx.check_cancel() {
-            return false;
-        }
-        let mut abs_path = path_apply_working_directory(&clean_potential_path_fragment, wd);
-        let must_be_full_dir = abs_path.chars().next_back() == Some('/');
-        if flags.contains(PathFlags::PATH_FOR_CD) {
-            abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
-        }
-
-        // Skip this if it's empty or we've already checked it.
-        if abs_path.is_empty() || checked_paths.contains(&abs_path) {
-            continue;
-        }
-        checked_paths.insert(abs_path.clone());
-
-        // If the user is still typing the argument, we want to highlight it if it's the prefix
-        // of a valid path. This means we need to potentially walk all files in some directory.
-        // There are two easy cases where we can skip this:
-        // 1. If the argument ends with a slash, it must be a valid directory, no prefix.
-        // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
-        //    so we can skip the prefix-match.
-        if must_be_full_dir || !at_cursor {
-            if let Ok(md) = wstat(&abs_path) {
-                if !at_cursor || md.file_type().is_dir() {
-                    return true;
-                }
-            }
-        } else {
-            // We do not end with a slash; it does not have to be a directory.
-            let dir_name = wdirname(&abs_path);
-            let filename_fragment = wbasename(&abs_path);
-            if dir_name == "/" && filename_fragment == "/" {
-                // cd ///.... No autosuggestion.
-                return true;
-            }
-
-            if let Ok(mut dir) = DirIter::new(dir_name) {
-                // Check if we're case insensitive.
-                let do_case_insensitive =
-                    fs_is_case_insensitive(dir_name, dir.fd(), &mut case_sensitivity_cache);
-
-                // We opened the dir_name; look for a string where the base name prefixes it.
-                while let Some(entry) = dir.next() {
-                    let Ok(entry) = entry else { continue };
-                    if ctx.check_cancel() {
-                        return false;
-                    }
-
-                    // Maybe skip directories.
-                    if require_dir && !entry.is_dir() {
-                        continue;
-                    }
-
-                    if string_prefixes_string(filename_fragment, &entry.name)
-                        || (do_case_insensitive
-                            && string_prefixes_string_case_insensitive(
-                                filename_fragment,
-                                &entry.name,
-                            ))
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    false
-}
-
-// Given a string, return whether it prefixes a path that we could cd into. Return that path in
-// out_path. Expects path to be unescaped.
-fn is_potential_cd_path(
-    path: &wstr,
-    at_cursor: bool,
-    working_directory: &wstr,
-    ctx: &OperationContext<'_>,
-    flags: PathFlags,
-) -> bool {
-    let mut directories = vec![];
-
-    if string_prefixes_string(L!("./"), path) {
-        // Ignore the CDPATH in this case; just use the working directory.
-        directories.push(working_directory.to_owned());
-    } else {
-        // Get the CDPATH.
-        let cdpath = ctx.vars().get_unless_empty(L!("CDPATH"));
-        let mut pathsv = match cdpath {
-            None => vec![L!(".").to_owned()],
-            Some(cdpath) => cdpath.as_list().to_vec(),
-        };
-        // The current $PWD is always valid.
-        pathsv.push(L!(".").to_owned());
-
-        for mut next_path in pathsv {
-            if next_path.is_empty() {
-                next_path = L!(".").to_owned();
-            }
-            // Ensure that we use the working directory for relative cdpaths like ".".
-            directories.push(path_apply_working_directory(&next_path, working_directory));
-        }
-    }
-
-    // Call is_potential_path with all of these directories.
-    is_potential_path(
-        path,
-        at_cursor,
-        &directories,
-        ctx,
-        flags | PathFlags::PATH_REQUIRE_DIR | PathFlags::PATH_FOR_CD,
-    )
-}
-
 pub type ColorArray = Vec<HighlightSpec>;
 
 /// Syntax highlighter helper.
@@ -906,6 +665,8 @@ struct Highlighter<'s> {
     io_ok: bool,
     // Working directory.
     working_directory: WString,
+    // Our component for testing strings for being potential file paths.
+    file_tester: FileTester<'s>,
     // The resulting colors.
     color_array: ColorArray,
     // A stack of variables that the current commandline probably defines.  We mark redirections
@@ -922,12 +683,14 @@ impl<'s> Highlighter<'s> {
         working_directory: WString,
         can_do_io: bool,
     ) -> Self {
+        let file_tester = FileTester::new(working_directory.clone(), ctx);
         Self {
             buff,
             cursor,
             ctx,
             io_ok: can_do_io,
             working_directory,
+            file_tester,
             color_array: vec![],
             pending_variables: vec![],
             done: false,
@@ -1110,6 +873,9 @@ impl<'s> Highlighter<'s> {
             ParseTokenType::end | ParseTokenType::pipe | ParseTokenType::background => {
                 role = HighlightRole::statement_terminator
             }
+            ParseTokenType::left_brace | ParseTokenType::right_brace => {
+                role = HighlightRole::keyword;
+            }
             ParseTokenType::andand | ParseTokenType::oror => role = HighlightRole::operat,
             ParseTokenType::string => {
                 // Assume all strings are params. This handles e.g. the variables a for header or
@@ -1127,53 +893,35 @@ impl<'s> Highlighter<'s> {
         if !self.io_still_ok() {
             return;
         }
+
         // Underline every valid path.
-        let mut is_valid_path = false;
-        let at_cursor = self
+        let source_range = arg.source_range();
+        let is_prefix = self
             .cursor
-            .map_or(false, |c| arg.source_range().contains_inclusive(c));
-        if cmd_is_cd {
-            // Mark this as an error if it's not 'help' and not a valid cd path.
-            let mut param = arg.source(self.buff).to_owned();
-            if expand_one(&mut param, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
-                let is_help = string_prefixes_string(&param, L!("--help"))
-                    || string_prefixes_string(&param, L!("-h"));
-                if !is_help {
-                    is_valid_path = is_potential_cd_path(
-                        &param,
-                        at_cursor,
-                        &self.working_directory,
-                        self.ctx,
-                        PathFlags::PATH_EXPAND_TILDE,
-                    );
-                    if !is_valid_path {
-                        self.color_node(
-                            arg.as_node(),
-                            HighlightSpec::with_fg(HighlightRole::error),
-                        );
-                    }
+            .is_some_and(|c| source_range.contains_inclusive(c));
+        let token = arg.source(self.buff).to_owned();
+        let test_result = if cmd_is_cd {
+            self.file_tester.test_cd_path(&token, is_prefix)
+        } else {
+            let is_path = self.file_tester.test_path(&token, is_prefix);
+            Ok(IsFile(is_path))
+        };
+        match test_result {
+            Ok(IsFile(false)) => (),
+            Ok(IsFile(true)) => {
+                for i in source_range.as_usize() {
+                    self.color_array[i].valid_path = true;
                 }
             }
-        } else if range_is_potential_path(
-            self.buff,
-            arg.range().unwrap(),
-            at_cursor,
-            self.ctx,
-            &self.working_directory,
-        ) {
-            is_valid_path = true;
-        }
-        if is_valid_path {
-            for i in arg.range().unwrap().start()..arg.range().unwrap().end() {
-                self.color_array[i].valid_path = true;
-            }
+            Err(..) => self.color_node(arg.as_node(), HighlightSpec::with_fg(HighlightRole::error)),
         }
     }
+
     fn visit_redirection(&mut self, redir: &Redirection) {
         // like 2>
         let oper = PipeOrRedir::try_from(redir.oper.source(self.buff))
             .expect("Should have successfully parsed a pipe_or_redir_t since it was in our ast");
-        let mut target = redir.target.source(self.buff).to_owned(); // like &1 or file path
+        let target = redir.target.source(self.buff).to_owned(); // like &1 or file path
 
         // Color the > part.
         // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
@@ -1197,107 +945,30 @@ impl<'s> Highlighter<'s> {
         // even though it's a command redirection, and don't try to do any other validation.
         if has_cmdsub(&target) {
             self.color_as_argument(redir.target.leaf_as_node(), true);
-        } else {
-            // No command substitution, so we can highlight the target file or fd. For example,
-            // disallow redirections into a non-existent directory.
-            let target_is_valid;
-            if !self.io_still_ok() {
-                // I/O is disallowed, so we don't have much hope of catching anything but gross
-                // errors. Assume it's valid.
-                target_is_valid = true;
-            } else if contains_pending_variable(&self.pending_variables, &target) {
-                target_is_valid = true;
-            } else if !expand_one(&mut target, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
-                // Could not be expanded.
-                target_is_valid = false;
-            } else {
-                // Ok, we successfully expanded our target. Now verify that it works with this
-                // redirection. We will probably need it as a path (but not in the case of fd
-                // redirections). Note that the target is now unescaped.
-                let target_path = path_apply_working_directory(&target, &self.working_directory);
-                match oper.mode {
-                    RedirectionMode::fd => {
-                        if target == "-" {
-                            target_is_valid = true;
-                        } else {
-                            target_is_valid = match fish_wcstoi(&target) {
-                                Ok(fd) => fd >= 0,
-                                Err(_) => false,
-                            };
-                        }
-                    }
-                    RedirectionMode::input | RedirectionMode::try_input => {
-                        // Input redirections must have a readable non-directory.
-                        target_is_valid = waccess(&target_path, R_OK) == 0
-                            && match wstat(&target_path) {
-                                Ok(md) => !md.file_type().is_dir(),
-                                Err(_) => false,
-                            };
-                    }
-                    RedirectionMode::overwrite
-                    | RedirectionMode::append
-                    | RedirectionMode::noclob => {
-                        // Test whether the file exists, and whether it's writable (possibly after
-                        // creating it). access() returns failure if the file does not exist.
-                        let file_exists;
-                        let file_is_writable;
-
-                        if string_suffixes_string(L!("/"), &target) {
-                            // Redirections to things that are directories is definitely not
-                            // allowed.
-                            file_exists = false;
-                            file_is_writable = false;
-                        } else {
-                            match wstat(&target_path) {
-                                Ok(md) => {
-                                    // No err. We can write to it if it's not a directory and we have
-                                    // permission.
-                                    file_exists = true;
-                                    file_is_writable = !md.file_type().is_dir()
-                                        && waccess(&target_path, W_OK) == 0;
-                                }
-                                Err(err) => {
-                                    if err.raw_os_error() == Some(ENOENT) {
-                                        // File does not exist. Check if its parent directory is writable.
-                                        let mut parent = wdirname(&target_path).to_owned();
-
-                                        // Ensure that the parent ends with the path separator. This will ensure
-                                        // that we get an error if the parent directory is not really a
-                                        // directory.
-                                        if !string_suffixes_string(L!("/"), &parent) {
-                                            parent.push('/');
-                                        }
-
-                                        // Now the file is considered writable if the parent directory is
-                                        // writable.
-                                        file_exists = false;
-                                        file_is_writable = waccess(&parent, W_OK) == 0;
-                                    } else {
-                                        // Other errors we treat as not writable. This includes things like
-                                        // ENOTDIR.
-                                        file_exists = false;
-                                        file_is_writable = false;
-                                    }
-                                }
-                            }
-                        }
-
-                        // NOCLOB means that we must not overwrite files that exist.
-                        target_is_valid = file_is_writable
-                            && !(file_exists && oper.mode == RedirectionMode::noclob);
-                    }
-                }
-            }
-            self.color_node(
-                redir.target.leaf_as_node(),
-                HighlightSpec::with_fg(if target_is_valid {
-                    HighlightRole::redirection
-                } else {
-                    HighlightRole::error
-                }),
-            );
+            return;
         }
+        // No command substitution, so we can highlight the target file or fd. For example,
+        // disallow redirections into a non-existent directory.
+        let target_is_valid = if !self.io_still_ok() {
+            // I/O is disallowed, so we don't have much hope of catching anything but gross
+            // errors. Assume it's valid.
+            true
+        } else if contains_pending_variable(&self.pending_variables, &target) {
+            true
+        } else {
+            // Validate the redirection target..
+            self.file_tester.test_redirection_target(&target, oper.mode)
+        };
+        self.color_node(
+            redir.target.leaf_as_node(),
+            HighlightSpec::with_fg(if target_is_valid {
+                HighlightRole::redirection
+            } else {
+                HighlightRole::error
+            }),
+        );
     }
+
     fn visit_variable_assignment(&mut self, varas: &VariableAssignment) {
         self.color_as_argument(varas, true);
         // Highlight the '=' in variable assignments as an operator.
@@ -1382,7 +1053,7 @@ impl<'s> Highlighter<'s> {
         }
     }
     fn visit_block_statement(&mut self, block: &BlockStatement) {
-        match &*block.header {
+        match &block.header {
             BlockStatementHeaderVariant::None => panic!(),
             BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
             BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),
@@ -1398,6 +1069,12 @@ impl<'s> Highlighter<'s> {
         self.visit(&block.jobs);
         self.visit(&block.end);
         self.pending_variables.truncate(pending_variables_count);
+    }
+    fn visit_brace_statement(&mut self, brace_statement: &BraceStatement) {
+        self.visit(&brace_statement.left_brace);
+        self.visit(&brace_statement.args_or_redirs);
+        self.visit(&brace_statement.jobs);
+        self.visit(&brace_statement.right_brace);
     }
 }
 
@@ -1457,6 +1134,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
                 self.visit_decorated_statement(node.as_decorated_statement().unwrap())
             }
             Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
+            Type::brace_statement => self.visit_brace_statement(node.as_brace_statement().unwrap()),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }
@@ -1548,38 +1226,6 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
     }
 }
 
-/// Determine if the filesystem containing the given fd is case insensitive for lookups regardless
-/// of whether it preserves the case when saving a pathname.
-///
-/// Returns:
-///     false: the filesystem is not case insensitive
-///     true: the file system is case insensitive
-pub type CaseSensitivityCache = HashMap<WString, bool>;
-fn fs_is_case_insensitive(
-    path: &wstr,
-    fd: RawFd,
-    case_sensitivity_cache: &mut CaseSensitivityCache,
-) -> bool {
-    let mut result = false;
-    if *_PC_CASE_SENSITIVE != 0 {
-        // Try the cache first.
-        match case_sensitivity_cache.entry(path.to_owned()) {
-            Entry::Occupied(e) => {
-                /* Use the cached value */
-                result = *e.get();
-            }
-            Entry::Vacant(e) => {
-                // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
-                // sensitive, and a 0 value means case insensitive.
-                let ret = unsafe { libc::fpathconf(fd, *_PC_CASE_SENSITIVE) };
-                result = ret == 0;
-                e.insert(result);
-            }
-        }
-    }
-    result
-}
-
 impl Default for HighlightRole {
     fn default() -> Self {
         Self::normal
@@ -1618,7 +1264,7 @@ pub enum HighlightRole {
     selection,
 
     // Pager support.
-    // NOTE: pager.cpp relies on these being in this order.
+    // NOTE: pager.rs relies on these being in this order.
     pager_progress,
     pager_background,
     pager_prefix,

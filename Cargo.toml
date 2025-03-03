@@ -3,6 +3,7 @@ resolver = "2"
 members = ["printf"]
 
 [workspace.package]
+# To build revisions that use Corrosion (those before 2024-01), CMake 3.19 and Rustc 1.78 seem to work.
 rust-version = "1.70"
 edition = "2021"
 
@@ -34,8 +35,7 @@ pcre2 = { git = "https://github.com/fish-shell/rust-pcre2", tag = "0.2.9-utf32",
 
 bitflags = "2.5.0"
 errno = "0.3.0"
-lazy_static = "1.4.0"
-libc = "0.2.155"
+libc = "0.2"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
@@ -65,7 +65,7 @@ portable-atomic = { version = "1", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-serial_test = { version = "1.0.0", default-features = false }
+serial_test = { version = "3", default-features = false }
 
 [build-dependencies]
 cc = "1.0.94"

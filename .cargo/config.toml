@@ -1,0 +1,8 @@
+# This file is _not_ included in the tarballs for now
+# Binary builds on Linux packaging infrastructure need to overwrite it to make `cargo vendor` work
+# Releases and development builds made using OBS/Launchpad will _not_ reflect the contents of this
+# file
+
+[resolver]
+# Make cargo 1.84+ respect MSRV (rust-version in Cargo.toml)
+incompatible-rust-versions = "fallback"

@@ -1,4 +1,4 @@
-#RUN: %fish -i %s | %filter-control-sequences
+#RUN: %fish -i %s
 # Note: ^ this is interactive so we test interactive behavior,
 # e.g. the fish_git_prompt variable handlers test `status is-interactive`.
 #REQUIRES: command -v git

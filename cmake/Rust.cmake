@@ -26,7 +26,7 @@ set(rust_profile $<IF:$<CONFIG:Debug>,debug,$<IF:$<CONFIG:RelWithDebInfo>,releas
 set(rust_debugflags "$<$<CONFIG:Debug>:-g>$<$<CONFIG:RelWithDebInfo>:-g>")
 
 
-# Temporary hack to propogate CMake flags/options to build.rs. We need to get CMake to evaluate the
+# Temporary hack to propagate CMake flags/options to build.rs. We need to get CMake to evaluate the
 # truthiness of the strings if they are set.
 set(CMAKE_WITH_GETTEXT "1")
 if(DEFINED WITH_GETTEXT AND NOT "${WITH_GETTEXT}")
@@ -47,7 +47,7 @@ get_property(
 set(VARS_FOR_CARGO
     "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
     "PREFIX=${CMAKE_INSTALL_PREFIX}"
-    # Temporary hack to propogate CMake flags/options to build.rs.
+    # Temporary hack to propagate CMake flags/options to build.rs.
     "CMAKE_WITH_GETTEXT=${CMAKE_WITH_GETTEXT}"
     # Cheesy so we can tell cmake was used to build
     "CMAKE=1"

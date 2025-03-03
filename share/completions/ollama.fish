@@ -2,7 +2,6 @@ function __fish_ollama_list
     ollama list 2>/dev/null | tail -n +2 | string replace --regex "\s.*" ""
 end
 
-
 complete -f -c ollama
 complete -c ollama -n __fish_use_subcommand -a serve -d "Start ollama"
 complete -c ollama -n __fish_use_subcommand -a create -d "Create a model from a Modelfile"

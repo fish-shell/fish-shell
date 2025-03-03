@@ -91,6 +91,8 @@ pub enum SearchType {
     Contains,
     /// Search for commands starting with the given string.
     Prefix,
+    /// Search for commands where any line matches the given string.
+    LinePrefix,
     /// Search for commands containing the given glob pattern.
     ContainsGlob,
     /// Search for commands starting with the given glob pattern.
@@ -291,6 +293,10 @@ impl HistoryItem {
                 find_subslice(term.as_slice(), content_to_match.as_slice()).is_some()
             }
             SearchType::Prefix => content_to_match.as_slice().starts_with(term.as_slice()),
+            SearchType::LinePrefix => content_to_match
+                .as_char_slice()
+                .split(|&c| c == '\n')
+                .any(|line| line.starts_with(term.as_char_slice())),
             SearchType::ContainsGlob => {
                 let mut pat = parse_util_unescape_wildcards(term);
                 if !pat.starts_with(ANY_STRING) {
@@ -380,7 +386,7 @@ struct HistoryImpl {
     /// The file ID of the history file.
     history_file_id: FileId, // INVALID_FILE_ID
     /// The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
-    /// the boundary are considered "old". Items whose timestemps are > the boundary are new, and are
+    /// the boundary are considered "old". Items whose timestamps are > the boundary are new, and are
     /// ignored by this instance (unless they came from this instance). The timestamp may be adjusted
     /// by incorporate_external_changes().
     boundary_timestamp: SystemTime,
@@ -1899,6 +1905,11 @@ impl HistorySearch {
 
             // We're done if it's empty or we cancelled.
             let Some(item) = self.history.item_at_index(index) else {
+                self.current_index = match direction {
+                    SearchDirection::Backward => self.history.size() + 1,
+                    SearchDirection::Forward => 0,
+                };
+                self.current_item = None;
                 return false;
             };
 
@@ -1917,6 +1928,12 @@ impl HistorySearch {
             self.current_index = index;
             return true;
         }
+    }
+
+    /// Move current index so there is `value` matches in between new and old indexes
+    pub fn search_forward(&mut self, value: usize) {
+        while self.go_to_next_match(SearchDirection::Forward) && self.deduper.len() <= value {}
+        self.deduper.clear();
     }
 
     /// Returns the current search result item.

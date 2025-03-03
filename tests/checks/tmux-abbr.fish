@@ -34,7 +34,7 @@ isolated-tmux send-keys abbr-test C-Space arg3 Enter
 tmux-sleep
 # CHECK: prompt {{\d+}}> abbr-test arg3
 
-# Do not expand abbrevation if the cursor is not at the command, even if it's just white space.
+# Do not expand abbreviation if the cursor is not at the command, even if it's just white space.
 # This makes the behavior more consistent with the above two scenarios.
 isolated-tmux send-keys abbr-test C-Space Enter
 tmux-sleep

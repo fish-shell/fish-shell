@@ -20,7 +20,7 @@ also provides the ability to perform a blocking wait for any topic to change in 
 set. This is the real power of topics: you can wait for a sigchld signal OR a thread exit.
 */
 
-use crate::fd_readable_set::FdReadableSet;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, make_fd_nonblocking, AutoClosePipes};
 use crate::flog::{FloggableDebug, FLOG};
 use crate::wchar::WString;
@@ -240,7 +240,7 @@ impl BinarySemaphore {
                     // call until data is available (that is, fish would use 100% cpu while waiting for
                     // processes). This call prevents that.
                     if cfg!(feature = "tsan") {
-                        let _ = FdReadableSet::is_fd_readable(fd, FdReadableSet::kNoTimeout);
+                        let _ = FdReadableSet::is_fd_readable(fd, Timeout::Forever);
                     }
                     let mut ignored: u8 = 0;
                     match unistd::read(fd, std::slice::from_mut(&mut ignored)) {
@@ -330,12 +330,13 @@ pub struct TopicMonitor {
     status_: AtomicU8,
 
     /// Binary semaphore used to communicate changes.
-    /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has commited to call wait() on our sema and
+    /// If status_ is STATUS_NEEDS_WAKEUP, then a thread has committed to call wait() on our sema and
     /// this must be balanced by the next call to post(). Note only one thread may wait at a time.
     sema_: BinarySemaphore,
 }
 
 // safety: this is only needed for tests
+#[cfg(test)]
 unsafe impl Sync for TopicMonitor {}
 
 /// The principal topic monitor.

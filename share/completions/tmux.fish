@@ -17,6 +17,24 @@ function __fish_tmux_panes -d 'window panes'
     tmux list-panes -F '#W'\t'window' 2>/dev/null
 end
 
+function __fish_tmux_buffers -d 'buffers'
+    tmux list-buffers -F '#{buffer_name}'\t'#{buffer_sample}' 2>/dev/null
+end
+
+# Meant to be used with `complete --keep-order`, since tmux follows numerical order
+function __fish_tmux_windows -d "list tmux windows in the current session"
+    # Using the same notation as tmux's default status bar. Could use <marked>, <active>, etc.
+    # Unlike tmux's statusbar , we add a space for readability
+    set -l window_flags '#{?window_active, *,}#{?window_marked_flag, M,}#{?window_zoomed_flag, Z,}'
+
+    # In window context, an integer means a window index in this session
+    tmux list-windows -F "#I"\t"#W$window_flags" 2>/dev/null
+
+    # Showing windows in other sessions can be confusing e.g. if there
+    # are session groups. So, we assume the user is interested in the
+    # current (or only) session.
+end
+
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
@@ -234,8 +252,8 @@ complete -c tmux -n "__fish_seen_subcommand_from $joinp $splitw" -xs f -d 'full 
 
 complete -c tmux -n __fish_use_subcommand -a $killp -d 'destroy a pane'
 complete -c tmux -n __fish_use_subcommand -a $killw -d 'destroy a window'
-complete -c tmux -n __fish_use_subcommand -a $lastp -d 'select the previusly selected pane'
-complete -c tmux -n __fish_use_subcommand -a $lastw -d 'select the previusly selected window'
+complete -c tmux -n __fish_use_subcommand -a $lastp -d 'select the previously selected pane'
+complete -c tmux -n __fish_use_subcommand -a $lastw -d 'select the previously selected window'
 complete -c tmux -n __fish_use_subcommand -a $linkw -d 'link source window to destination window'
 
 complete -c tmux -n __fish_use_subcommand -a $lsp -d 'list panes'
@@ -295,19 +313,25 @@ complete -c tmux -n "__fish_seen_subcommand_from $killp $pipep $resizep $respawn
 # Unclear if there's a meaningful difference between "target pane" and "destination pane", but tmux makes the distinction
 complete -c tmux -n "__fish_seen_subcommand_from $joinp $swapp" -xs t -a '(__fish_tmux_panes)' -d 'destination pane'
 
+## commands with window flag
+complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs s -d 'source window'
+complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $swapw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'destination window'
+complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'target window'
+complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" \
+            --keep-order -a '(__fish_tmux_windows)' -xs t -d 'target window'
+
 ## commands with session flag
 complete -c tmux -n "__fish_seen_subcommand_from $lastw $lsw $next $prev" -xs t -a '(__fish_tmux_sessions)' -d 'target session'
 
 ## commands with the -F format flag
 complete -c tmux -n "__fish_seen_subcommand_from $breakp $lsp $lsw $neww $chooseclient $choosetree" -xs F -d 'format string'
 
-## commands with -s/-t flags that are not panes/sessions (nice completion not yet implemented)
-complete -c tmux -n "__fish_seen_subcommand_from $linkw $movew $swapw" -xs s -d 'source window'
-complete -c tmux -n "__fish_seen_subcommand_from $breakp $linkw $movew $neww $swapw" -xs t -d 'destination window'
-complete -c tmux -n "__fish_seen_subcommand_from $killw $lastp $nextl $prevl $renamew" -xs t -d 'target window'
-complete -c tmux -n "__fish_seen_subcommand_from $resizew $reswpawnw $rotatew $selectw $unlinkw" -xs t -d 'target window'
+## commands with -s/-t flags that are not panes/sessions/windows  (nice completion not yet implemented)
 complete -c tmux -n "__fish_seen_subcommand_from $displayp" -xs t -d 'target client'
-complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d 'target'
+complete -c tmux -n "__fish_seen_subcommand_from $lsp" -xs t -d target
 
 #commands that take shell commands
 complete -c tmux -x -n "__fish_seen_subcommand_from $neww $pipep $respawnp $respawnw $splitw" \
@@ -542,9 +566,43 @@ complete -c tmux -n "__fish_seen_subcommand_from $display" -s c -xa '(__fish_tmu
 ###############  End:   Status Line ###############
 
 ###############  Begin: Buffers ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+
+set -l choosebuffer "choose-buffer"
+set -l clearhist "clearhist clear-history"
+set -l deleteb "deleteb delete-buffer"
+set -l lsb "lsb list-buffers"
+set -l loadb "loadb load-buffer"
+set -l pasteb "pasteb paste-buffer"
+set -l saveb "saveb save-buffer"
+set -l setb "setb set-buffer"
+set -l showb "showb show-buffer"
+
+complete -c tmux -n __fish_use_subcommand -a $choosebuffer -d 'interactively choose buffer'
+complete -c tmux -n __fish_use_subcommand -a $clearhist -d 'forget history for a pane'
+complete -c tmux -n __fish_use_subcommand -a $deleteb -d 'delete buffer'
+complete -c tmux -n __fish_use_subcommand -a $lsb -d 'list buffers'
+complete -c tmux -n __fish_use_subcommand -a $loadb -d 'load buffer from path, use - for stdin'
+complete -c tmux -n __fish_use_subcommand -a $pasteb -d 'paste buffer to pane'
+complete -c tmux -n __fish_use_subcommand -a $saveb -d 'save buffer to path'
+complete -c tmux -n __fish_use_subcommand -a $setb -d 'set buffer to value'
+complete -c tmux -n __fish_use_subcommand -a $showb -d 'print buffer to stdout'
+
+## commands with buffer flag
+complete -c tmux -n "__fish_seen_subcommand_from $deleteb $loadb $pasteb $saveb $setb $showb" -xs b -a '(__fish_tmux_buffers)' --keep-order -d 'buffer name'
+complete -c tmux -n "__fish_seen_subcommand_from $setb" -xs n -a '(__fish_tmux_buffers)' --keep-order -d 'new buffer name'
+
+## commands with target pane flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $clearhist $pasteb" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
+
+#commands with the -F format flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $lsb" -xs F -d 'format string'
+
+#commands with the -f filter flag
+complete -c tmux -n "__fish_seen_subcommand_from $choosebuffer $loadb $lsb" -xs f -d 'filter format string'
+
+# Commands that take paths
+complete -c tmux -n "__fish_seen_subcommand_from $loadb $saveb" --force-files
+
 ###############  End:   Buffers ###############
 
 ###############  Begin: Miscellaneous ###############

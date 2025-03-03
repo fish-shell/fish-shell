@@ -35,5 +35,4 @@ WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
 
-
 CMD /fish_run_tests.sh

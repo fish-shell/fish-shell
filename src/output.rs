@@ -1,8 +1,8 @@
 // Generic output functions.
 use crate::color::RgbColor;
 use crate::common::{self, wcs2string_appending};
-use crate::curses::{self, tparm1, Term};
 use crate::env::EnvVar;
+use crate::terminal::{self, tparm1, Term};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
@@ -164,7 +164,7 @@ impl Outputter {
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
     pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
-        let Some(term) = curses::term() else {
+        let Some(term) = terminal::term() else {
             return false;
         };
         let term: &Term = &term;
@@ -215,7 +215,7 @@ impl Outputter {
     pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
         // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
         // just give up...
-        let Some(term) = curses::term() else {
+        let Some(term) = terminal::term() else {
             return;
         };
         let term: &Term = &term;
@@ -351,7 +351,7 @@ impl Outputter {
         if is_dim && !self.was_dim && self.tputs_if_some(enter_dim_mode) {
             self.was_dim = is_dim;
         }
-        // N.B. there is no exit_dim_mode in curses, it's handled by exit_attribute_mode above.
+        // N.B. there is no exit_dim_mode in terminfo, it's handled by exit_attribute_mode above.
 
         if is_reverse && !self.was_reverse {
             // Some terms do not have a reverse mode set, so standout mode is a fallback.
@@ -432,7 +432,7 @@ impl Outputter {
 
     pub fn tputs_bytes(&mut self, str: &[u8]) {
         self.begin_buffering();
-        let _ = self.write(str);
+        let _ = self.write_all(str);
         self.end_buffering();
     }
 

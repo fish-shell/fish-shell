@@ -5,9 +5,10 @@
 
 # let git show off diff hunk headers, help git diff -L:
 # https://git-scm.com/docs/gitattributes
-*.cpp diff=cpp
+*.c diff=cpp
 *.h diff=cpp
 *.py diff=py
+*.rs diff=rust
 # add a [diff "fish"] to git config with pattern
 *.fish diff=fish
 
@@ -21,12 +22,13 @@
 /.github/* export-ignore
 /.builds export-ignore
 /.builds/* export-ignore
+# to make cargo vendor work correctly
+/.cargo/ export-ignore
+/.cargo/config.toml export-ignore
 
-# for linguist; let github identify our project as C++ instead of C due to pcre2
-pcre2/** linguist-vendored
+# for linguist, which drives GitHub's language statistics
 alpine.js linguist-vendored
 doc_src/** linguist-documentation
 *.fish linguist-language=fish
-src/*.h linguist-language=c++
-src/builtins/*.h linguist-language=c++
+# see 70f2899fcd which attempts to "rig the count"
 share/completions/*.fish linguist-documentation

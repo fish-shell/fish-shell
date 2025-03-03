@@ -12,6 +12,11 @@ send, sendline, expect_prompt, expect_str, sleep = (
     sp.sleep,
 )
 
+if not os.environ.get("fish_test_helper", ""):
+    import sys
+
+    sys.exit(127)
+
 # Launch fish_test_helper.
 expect_prompt()
 exe_path = os.environ.get("fish_test_helper")
@@ -20,7 +25,7 @@ sendline(exe_path + " stdin_make_nonblocking")
 expect_str("stdin was blocking")
 sleep(0.1)
 
-send("\x1A")  # ctrl-Z
+send("\x1a")  # ctrl-Z
 expect_prompt("has stopped")
 
 # We don't "restore" non-blocking state when continuing a stopped job.

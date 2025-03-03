@@ -1,4 +1,4 @@
-#RUN: %fish -C "set fish %fish" %s
+# RUN: fish=%fish %fish %s
 # This hangs when running on github actions with tsan for unknown reasons,
 # see #7934.
 #REQUIRES: test -z "$GITHUB_WORKFLOW"

@@ -5,7 +5,6 @@ use crate::signal::signal_check_cancel;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::perror;
-use errno::{errno, set_errno};
 use libc::{c_int, EINTR, FD_CLOEXEC, F_GETFD, F_GETFL, F_SETFD, F_SETFL, O_NONBLOCK};
 use nix::fcntl::FcntlArg;
 use nix::{fcntl::OFlag, unistd};
@@ -23,11 +22,8 @@ pub const FIRST_HIGH_FD: RawFd = 10;
 /// A sentinel value indicating no timeout.
 pub const NO_TIMEOUT: u64 = u64::MAX;
 
-/// A helper type for managing and automatically closing a file descriptor
-///
-/// This was implemented in rust as a port of the existing C++ code but it didn't take its place
-/// (yet) and there's still the original cpp implementation in `src/fds.h`, so its name is
-/// disambiguated because some code uses a mix of both for interop purposes.
+/// A helper type for managing and automatically closing a file descriptor.
+/// Importantly this supports an invalid state with an fd of -1.
 pub struct AutoCloseFd {
     fd_: RawFd,
 }
@@ -237,8 +233,6 @@ pub fn wopen_cloexec(
 pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> nix::Result<File> {
     // Port note: the C++ version of this function had a fallback for platforms where
     // O_CLOEXEC is not supported, using fcntl. In 2023, this is no longer needed.
-    let saved_errno = errno();
-    errno::set_errno(errno::Errno(0));
     // We retry this in case of signals,
     // if we get EINTR and it's not a SIGINT, we continue.
     // If it is that's our cancel signal, so we abort.
@@ -247,7 +241,6 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
         let ret = ret.map(|raw_fd| unsafe { File::from_raw_fd(raw_fd) });
         match ret {
             Ok(file) => {
-                set_errno(saved_errno);
                 return Ok(file);
             }
             Err(err) => {

@@ -1,0 +1,1 @@
+complete [ --wraps test

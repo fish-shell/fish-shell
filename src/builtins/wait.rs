@@ -36,13 +36,22 @@ fn find_wait_handles(
     handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
-    // TODO: we can avoid traversing this list if searching by pid.
     let mut matched = false;
     let wait_handles: &mut WaitHandleStore = &mut parser.mut_wait_handles();
-    for wh in wait_handles.iter() {
-        if wait_handle_matches(query, wh) {
-            handles.push(wh.clone());
-            matched = true;
+    match query {
+        WaitHandleQuery::Pid(pid) => {
+            if let Some(wh) = wait_handles.get_by_pid(pid) {
+                handles.push(wh);
+                matched = true;
+            }
+        }
+        _ => {
+            for wh in wait_handles.iter() {
+                if wait_handle_matches(query, wh) {
+                    handles.push(wh.clone());
+                    matched = true;
+                }
+            }
         }
     }
 

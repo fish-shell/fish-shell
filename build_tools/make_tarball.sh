@@ -59,7 +59,7 @@ git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 PREFIX_TMPDIR=$(mktemp -d)
 cd "$PREFIX_TMPDIR"
 echo "$VERSION" > version
-cmake -G "$BUILD_GENERATOR" "$wd"
+cmake -G "$BUILD_GENERATOR" -DCMAKE_BUILD_TYPE=Debug "$wd"
 $BUILD_TOOL doc
 
 TAR_APPEND="$TAR --append --file=$path --mtime=now --owner=0 --group=0 \

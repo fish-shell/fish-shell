@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Command line test driver. """
+"""Command line test driver."""
 
 from __future__ import unicode_literals
 from __future__ import print_function
@@ -32,7 +32,10 @@ CHECK_STDOUT_RE = re.compile(COMMENT_RE + r"CHECK:\s+(.*)\n")
 # A regex capturing lines that should be checked against stderr.
 CHECK_STDERR_RE = re.compile(COMMENT_RE + r"CHECKERR:\s+(.*)\n")
 
+VARIABLE_OVERRIDE_RE = re.compile(r"\w+=.*")
+
 SKIP = object()
+
 
 def find_command(program):
     import os
@@ -47,6 +50,7 @@ def find_command(program):
 
     return None
 
+
 class Config(object):
     def __init__(self):
         # Whether to have verbose output.
@@ -57,7 +61,7 @@ class Config(object):
         self.progress = False
 
     def colors(self):
-        """ Return a dictionary mapping color names to ANSI escapes """
+        """Return a dictionary mapping color names to ANSI escapes"""
 
         def ansic(n):
             return "\033[%dm" % n if self.colorize else ""
@@ -128,7 +132,7 @@ class CheckerError(Exception):
 
 
 class Line(object):
-    """ A line that remembers where it came from. """
+    """A line that remembers where it came from."""
 
     def __init__(self, text, number, file):
         self.text = text
@@ -156,7 +160,7 @@ class Line(object):
         raise NotImplementedError
 
     def subline(self, text):
-        """ Return a substring of our line with the given text, preserving number and file. """
+        """Return a substring of our line with the given text, preserving number and file."""
         return Line(text, self.number, self.file)
 
     @staticmethod
@@ -228,7 +232,7 @@ class TestFailure(object):
         if self.signal:
             fmtstrs += [
                 "  Process was killed by signal {BOLD}" + self.signal + "{RESET}",
-                ""
+                "",
             ]
         if self.line and self.check:
             fmtstrs += [
@@ -349,7 +353,7 @@ class TestFailure(object):
         return "\n".join(fmtstrs).format(**fields)
 
     def print_message(self):
-        """ Print our message to stdout. """
+        """Print our message to stdout."""
         print(self.message())
 
 
@@ -367,7 +371,10 @@ def perform_substitution(input_str, subs):
         text = m.group(1)
         for key, replacement in subs_ordered:
             if text.startswith(key):
-                return replacement + text[len(key) :]
+                # shell-quote the replacement, so it's usable in #RUN lines.
+                # We could loosen this and only do it for #RUN/#REQUIRES,
+                # but so far we don't need it anywhere.
+                return shlex.quote(replacement + text[len(key) :])
         # No substitution found, so we default to running it as-is,
         # which will end up running it via $PATH.
         return text
@@ -376,7 +383,7 @@ def perform_substitution(input_str, subs):
 
 
 def runproc(cmd):
-    """ Wrapper around subprocess.Popen to save typing """
+    """Wrapper around subprocess.Popen to save typing"""
     PIPE = subprocess.PIPE
     proc = subprocess.Popen(
         cmd,
@@ -441,7 +448,7 @@ class TestRun(object):
         # SCREENFULS of text.
         # So we truncate the check list.
         if len(usedchecks) > len(usedlines):
-            usedchecks = usedchecks[:len(usedlines) + 5]
+            usedchecks = usedchecks[: len(usedlines) + 5]
 
         # Do a SequenceMatch! This gives us a diff-like thing.
         diff = SequenceMatcher(a=usedlines, b=usedchecks, autojunk=False)
@@ -469,13 +476,16 @@ class TestRun(object):
             return None
 
     def run(self):
-        """ Run the command. Return a TestFailure, or None. """
+        """Run the command. Return a TestFailure, or None."""
 
         def split_by_newlines(s):
             """Decode a string and split it by newlines only,
             retaining the newlines.
             """
-            return [s + "\n" for s in s.decode("utf-8").split("\n")]
+            return [
+                s + "\n"
+                for s in s.decode("utf-8", errors="backslashreplace").split("\n")
+            ]
 
         if self.config.verbose:
             print(self.subbed_command)
@@ -486,7 +496,13 @@ class TestRun(object):
         # most likely when the last command in a shell script doesn't exist.
         # So we check if the command *we execute* exists, and complain then.
         status = proc.returncode
-        cmd = shlex.split(self.subbed_command)[0]
+        cmd = next(
+            (
+                word
+                for word in shlex.split(self.subbed_command)
+                if not VARIABLE_OVERRIDE_RE.match(word)
+            )
+        )
         if status == 127 and not find_command(cmd):
             raise CheckerError("Command could not be found: " + cmd)
         if status == 126 and not find_command(cmd):
@@ -517,6 +533,7 @@ class TestRun(object):
             # Process was killed by a signal and failed,
             # add a message.
             import signal
+
             # Unfortunately strsignal only exists in python 3.8+,
             # and signal.signals is 3.5+.
             if hasattr(signal, "Signals"):
@@ -619,6 +636,7 @@ class CheckCmd(object):
 class Checker(object):
     def __init__(self, name, lines):
         self.name = name
+
         # Helper to yield subline containing group1 from all matching lines.
         def group1s(regex):
             for line in lines:
@@ -651,7 +669,7 @@ class Checker(object):
 
 
 def check_file(input_file, name, subs, config, failure_handler):
-    """ Check a single file. Return a True on success, False on error. """
+    """Check a single file. Return a True on success, False on error."""
     success = True
     lines = Line.readfile(input_file, name)
     checker = Checker(name, lines)
@@ -659,9 +677,7 @@ def check_file(input_file, name, subs, config, failure_handler):
     # Run all the REQUIRES lines first,
     # if any of them fail it's a SKIP
     for reqcmd in checker.requirecmds:
-        proc = runproc(
-            perform_substitution(reqcmd.args, subs)
-        )
+        proc = runproc(perform_substitution(reqcmd.args, subs))
         proc.communicate()
         if proc.returncode > 0:
             return SKIP
@@ -705,7 +721,7 @@ def parse_subs(subs):
 
 
 def get_argparse():
-    """ Return a littlecheck argument parser. """
+    """Return a littlecheck argument parser."""
     parser = argparse.ArgumentParser(
         description="littlecheck: command line tool tester."
     )

@@ -522,13 +522,13 @@ impl EnvUniversal {
     }
 
     /// Writes our state to the fd. path is provided only for error reporting.
-    fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<usize> {
+    fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<()> {
         let fd = fd.as_fd();
         let contents = Self::serialize_with_vars(&self.vars);
 
         let res = write_loop(&fd, &contents);
         match res.as_ref() {
-            Ok(_) => {
+            Ok(()) => {
                 // Since we just wrote out this file, it matches our internal state; pretend we read from it.
                 self.last_read_file = file_id_for_fd(fd);
             }
@@ -602,9 +602,9 @@ impl EnvUniversal {
             let existing = self.vars.get(key);
 
             // See if the value has changed.
-            let old_exports = existing.map_or(false, |v| v.exports());
+            let old_exports = existing.is_some_and(|v| v.exports());
             let export_changed = old_exports != new_entry.exports();
-            let value_changed = existing.map_or(false, |v| v != new_entry);
+            let value_changed = existing.is_some_and(|v| v != new_entry);
             if export_changed || value_changed {
                 self.export_generation += 1;
             }

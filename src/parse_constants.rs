@@ -17,7 +17,7 @@ bitflags! {
         const CONTINUE_AFTER_ERROR = 1 << 0;
         /// include comment tokens.
         const INCLUDE_COMMENTS = 1 << 1;
-        /// indicate that the tokenizer should accept incomplete tokens */
+        /// indicate that the tokenizer should accept incomplete tokens
         const ACCEPT_INCOMPLETE_TOKENS = 1 << 2;
         /// indicate that the parser should not generate the terminate token, allowing an 'unfinished'
         /// tree where some nodes may have no productions.
@@ -44,6 +44,15 @@ pub struct SourceRange {
     pub length: u32,
 }
 
+impl Default for SourceRange {
+    fn default() -> Self {
+        SourceRange {
+            start: 0,
+            length: 0,
+        }
+    }
+}
+
 impl SourceRange {
     pub fn as_usize(&self) -> std::ops::Range<usize> {
         (*self).into()
@@ -57,6 +66,8 @@ pub enum ParseTokenType {
     // Terminal types.
     string,
     pipe,
+    left_brace,
+    right_brace,
     redirection,
     background,
     andand,
@@ -126,6 +137,7 @@ pub enum ParseErrorCode {
     unbalancing_end,          // end outside of block
     unbalancing_else,         // else outside of if
     unbalancing_case,         // case outside of switch
+    unbalancing_brace,        // } outside of {
     bare_variable_assignment, // a=b without command
     andor_in_pipeline,        // "and" or "or" after a pipe
 }
@@ -198,6 +210,8 @@ impl ParseTokenType {
             ParseTokenType::background => L!("ParseTokenType::background"),
             ParseTokenType::end => L!("ParseTokenType::end"),
             ParseTokenType::pipe => L!("ParseTokenType::pipe"),
+            ParseTokenType::left_brace => L!("ParseTokenType::lbrace"),
+            ParseTokenType::right_brace => L!("ParseTokenType::rbrace"),
             ParseTokenType::redirection => L!("ParseTokenType::redirection"),
             ParseTokenType::string => L!("ParseTokenType::string"),
             ParseTokenType::andand => L!("ParseTokenType::andand"),
@@ -218,7 +232,6 @@ impl ParseKeyword {
     /// Return the keyword as a string.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_and => L!("and"),
             ParseKeyword::kw_begin => L!("begin"),
             ParseKeyword::kw_builtin => L!("builtin"),
@@ -226,6 +239,7 @@ impl ParseKeyword {
             ParseKeyword::kw_command => L!("command"),
             ParseKeyword::kw_else => L!("else"),
             ParseKeyword::kw_end => L!("end"),
+            ParseKeyword::kw_exclam => L!("!"),
             ParseKeyword::kw_exec => L!("exec"),
             ParseKeyword::kw_for => L!("for"),
             ParseKeyword::kw_function => L!("function"),
@@ -417,6 +431,8 @@ pub fn token_type_user_presentable_description(
         ParseTokenType::pipe => L!("a pipe").to_owned(),
         ParseTokenType::redirection => L!("a redirection").to_owned(),
         ParseTokenType::background => L!("a '&'").to_owned(),
+        ParseTokenType::left_brace => L!("a '{'").to_owned(),
+        ParseTokenType::right_brace => L!("a '}'").to_owned(),
         ParseTokenType::andand => L!("'&&'").to_owned(),
         ParseTokenType::oror => L!("'||'").to_owned(),
         ParseTokenType::end => L!("end of the statement").to_owned(),
@@ -520,7 +536,3 @@ pub const ERROR_BAD_COMMAND_ASSIGN_ERR_MSG: &str =
 /// Error message for a command like `time foo &`.
 pub const ERROR_TIME_BACKGROUND: &str =
     "'time' is not supported for background jobs. Consider using 'command time'.";
-
-/// Error issued on { echo; echo }.
-pub const ERROR_NO_BRACE_GROUPING: &str =
-    "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'";

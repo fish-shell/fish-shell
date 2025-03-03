@@ -6,6 +6,7 @@ use crate::tokenizer::{TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::ifind;
 use std::collections::HashSet;
+use std::ops::Range;
 use std::sync::Arc;
 
 // Make the search case-insensitive unless we have an uppercase character.
@@ -78,26 +79,28 @@ impl ReaderHistorySearch {
     pub fn by_prefix(&self) -> bool {
         self.mode == SearchMode::Prefix
     }
+    pub fn mode(&self) -> SearchMode {
+        self.mode
+    }
 
     /// Move the history search in the given direction `dir`.
     pub fn move_in_direction(&mut self, dir: SearchDirection) -> bool {
-        if dir == SearchDirection::Forward {
-            self.move_forwards()
-        } else {
-            self.move_backwards()
+        match dir {
+            SearchDirection::Forward => self.move_forwards(),
+            SearchDirection::Backward => self.move_backwards(),
         }
     }
 
-    /// Go to the beginning (earliest) of the search.
-    pub fn go_to_beginning(&mut self) {
+    /// Go to the oldest match (last match) of the search.
+    pub fn go_to_oldest(&mut self) {
         if self.matches.is_empty() {
             return;
         }
         self.match_index = self.matches.len() - 1;
     }
 
-    /// Go to the end (most recent) of the search.
-    pub fn go_to_end(&mut self) {
+    /// Go to the youngest match (original search string) of the search.
+    pub fn go_to_present(&mut self) {
         self.match_index = 0;
     }
 
@@ -111,9 +114,15 @@ impl ReaderHistorySearch {
         self.search().original_term()
     }
 
+    /// Return the range of the current match in the command line.
+    pub fn search_result_range(&self) -> Range<usize> {
+        assert!(self.active());
+        self.token_offset..self.token_offset + self.matches[self.match_index].text.len()
+    }
+
     /// Return the range of the original search string in the new command line.
     pub fn search_range_if_active(&self) -> Option<SourceRange> {
-        if !self.active() || self.is_at_end() {
+        if !self.active() || self.is_at_present() {
             return None;
         }
         Some(SourceRange::new(
@@ -122,8 +131,8 @@ impl ReaderHistorySearch {
         ))
     }
 
-    /// Return whether we are at the end (most recent) of our search.
-    pub fn is_at_end(&self) -> bool {
+    /// Return whether we are at the youngest match (original search string) in our search.
+    pub fn is_at_present(&self) -> bool {
         self.match_index == 0
     }
 
@@ -134,7 +143,7 @@ impl ReaderHistorySearch {
     }
 
     pub fn handle_deletion(&mut self) {
-        assert!(!self.is_at_end());
+        assert!(!self.is_at_present());
         self.matches.remove(self.match_index);
         self.match_index -= 1;
         self.search_mut().prepare_to_search_after_deletion();

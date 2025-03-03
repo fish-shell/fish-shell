@@ -66,7 +66,7 @@ complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a effects-log -d
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a endurance-log -d "Retrieve Endurance Group Log"
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a predictable-lat-log -d "Retrieve Predictable Latency per Nvmset Log"
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a pred-lat-event-agg-log -d "Retrieve Predictable Latency Event Aggregate Log"
-complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a persistent-event-log -d "Retrieve Presistent Event Log"
+complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a persistent-event-log -d "Retrieve Persistent Event Log"
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a endurance-event-agg-log -d "Retrieve Endurance Group Event Aggregate Log"
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a lba-status-log -d "Retrieve LBA Status Information Log"
 complete -c nvme -f -n "not __fish_seen_subcommand_from $cmds" -a resv-notif-log -d "Retrieve Reservation Notification Log"

@@ -1,7 +1,8 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, BlockStatementHeaderVariant, Keyword, Leaf, List, Node, StatementVariant, Token,
+    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, List, Node,
+    StatementVariant, Token,
 };
 use crate::builtins;
 use crate::builtins::shared::{
@@ -27,9 +28,9 @@ use crate::job_group::JobGroup;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
     parse_error_offset_source_start, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
-    ParseTokenType, StatementDecoration, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG,
-    ERROR_NO_BRACE_GROUPING, ERROR_TIME_BACKGROUND, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG,
-    ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG, WILDCARD_ERR_MSG,
+    ParseTokenType, StatementDecoration, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
+    FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG,
+    WILDCARD_ERR_MSG,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
 use crate::parse_util::parse_util_unescape_wildcards;
@@ -44,7 +45,7 @@ use crate::reader::fish_is_unwinding_for_exit;
 use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
 use crate::signal::Signal;
 use crate::timer::push_timer;
-use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
+use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir, TokenType};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
@@ -61,7 +62,7 @@ use std::sync::{atomic::Ordering, Arc};
 /// cancellation. Note it does not track the exit status of commands.
 #[derive(Eq, PartialEq)]
 pub enum EndExecutionReason {
-    /// Evaluation was successfull.
+    /// Evaluation was successful.
     ok,
 
     /// Evaluation was skipped due to control flow (break or return).
@@ -157,10 +158,12 @@ impl<'a> ExecutionContext {
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         // Note we only expect block-style statements here. No not statements.
-        let contents = &statement.contents;
-        match &**contents {
+        match &statement.contents {
             StatementVariant::BlockStatement(block) => {
                 self.run_block_statement(ctx, block, associated_block)
+            }
+            StatementVariant::BraceStatement(brace_statement) => {
+                self.run_begin_statement(ctx, &brace_statement.jobs)
             }
             StatementVariant::IfStatement(ifstat) => {
                 self.run_if_statement(ctx, ifstat, associated_block)
@@ -198,10 +201,7 @@ impl<'a> ExecutionContext {
 
         // Check for stack overflow in case of function calls (regular stack overflow) or string
         // substitution blocks, which can be recursively called with eval (issue #9302).
-        let block_type = {
-            let blocks = ctx.parser().blocks();
-            blocks.get(associated_block).unwrap().typ()
-        };
+        let block_type = ctx.parser().block_with_id(associated_block).typ();
         if (block_type == BlockType::top && ctx.parser().function_stack_is_overflowing())
             || (block_type == BlockType::subst && ctx.parser().is_eval_depth_exceeded())
         {
@@ -366,10 +366,6 @@ impl<'a> ExecutionContext {
             }
         }
 
-        if cmd.as_char_slice().first() == Some(&'{' /*}*/) {
-            error.push_utfstr(&wgettext!(ERROR_NO_BRACE_GROUPING));
-        }
-
         // Here we want to report an error (so it shows a backtrace).
         // If the handler printed text, that's already shown, so error will be empty.
         report_error_formatted!(
@@ -381,10 +377,15 @@ impl<'a> ExecutionContext {
         )
     }
 
-    // Utilities
-    fn node_source(&self, node: &dyn ast::Node) -> WString {
-        // todo!("maybe don't copy")
-        node.source(&self.pstree().src).to_owned()
+    // Utilities.
+    // Return the source for a node.
+    fn node_source<'b>(&'b self, node: &dyn ast::Node) -> &'b wstr {
+        node.source(&self.pstree().src)
+    }
+
+    // Return the source for a node as an owning WString.
+    fn node_source_owned(&self, node: &dyn ast::Node) -> WString {
+        self.node_source(node).to_owned()
     }
 
     fn infinite_recursive_statement_in_job_list<'b>(
@@ -421,7 +422,7 @@ impl<'a> ExecutionContext {
         // Helper to return if a statement is infinitely recursive in this function.
         let statement_recurses = |stat: &'b ast::Statement| -> Option<&'b ast::DecoratedStatement> {
             // Ignore non-decorated statements like `if`, etc.
-            let StatementVariant::DecoratedStatement(dc) = &*stat.contents else {
+            let StatementVariant::DecoratedStatement(dc) = &stat.contents else {
                 return None;
             };
 
@@ -432,7 +433,7 @@ impl<'a> ExecutionContext {
             }
 
             // Check the command.
-            let mut cmd = self.node_source(&dc.command);
+            let mut cmd = self.node_source_owned(&dc.command);
             let forbidden = !cmd.is_empty()
                 && expand_one(
                     &mut cmd,
@@ -484,13 +485,12 @@ impl<'a> ExecutionContext {
         let mut errors = ParseErrorList::new();
 
         // Get the unexpanded command string. We expect to always get it here.
-        // todo!("remove clone")
         let unexp_cmd = self.node_source(&statement.command);
         let pos_of_command_token = statement.command.range().unwrap().start();
 
         // Expand the string to produce completions, and report errors.
         let expand_err = expand_to_command_and_args(
-            &unexp_cmd,
+            unexp_cmd,
             ctx,
             out_cmd,
             Some(out_args),
@@ -538,7 +538,10 @@ impl<'a> ExecutionContext {
         // which won't be doing what the user asks for
         //
         // (skipping in no-exec because we don't have the actual variable value)
-        if !no_exec() && parser_keywords_is_subcommand(out_cmd) && &unexp_cmd != out_cmd {
+        if !no_exec()
+            && &unescape_keyword(TokenType::string, unexp_cmd) != out_cmd
+            && parser_keywords_is_subcommand(out_cmd)
+        {
             return report_error!(
                 self,
                 ctx,
@@ -563,8 +566,9 @@ impl<'a> ExecutionContext {
 
         // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
         // type safety (in case we add more specific statement types).
-        match &*job.statement.contents {
+        match &job.statement.contents {
             StatementVariant::BlockStatement(stmt) => no_redirs(&stmt.args_or_redirs),
+            StatementVariant::BraceStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::SwitchStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::IfStatement(stmt) => no_redirs(&stmt.args_or_redirs),
             StatementVariant::NotStatement(_) | StatementVariant::DecoratedStatement(_) => {
@@ -612,7 +616,7 @@ impl<'a> ExecutionContext {
         *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
             let source = self.node_source(&**variable_assignment);
-            let equals_pos = variable_assignment_equals_pos(&source).unwrap();
+            let equals_pos = variable_assignment_equals_pos(source).unwrap();
             let variable_name = &source[..equals_pos];
             let expression = &source[equals_pos + 1..];
             let mut expression_expanded = vec![];
@@ -679,11 +683,12 @@ impl<'a> ExecutionContext {
             return result;
         }
 
-        match &**specific_statement {
+        match &specific_statement {
             StatementVariant::NotStatement(not_statement) => {
                 self.populate_not_process(ctx, job, proc, not_statement)
             }
             StatementVariant::BlockStatement(_)
+            | StatementVariant::BraceStatement(_)
             | StatementVariant::IfStatement(_)
             | StatementVariant::SwitchStatement(_) => {
                 self.populate_block_process(ctx, proc, statement, specific_statement)
@@ -848,6 +853,7 @@ impl<'a> ExecutionContext {
         // TODO: args_or_redirs should be available without resolving the statement type.
         let args_or_redirs = match specific_statement {
             StatementVariant::BlockStatement(block_statement) => &block_statement.args_or_redirs,
+            StatementVariant::BraceStatement(brace_statement) => &brace_statement.args_or_redirs,
             StatementVariant::IfStatement(if_statement) => &if_statement.args_or_redirs,
             StatementVariant::SwitchStatement(switch_statement) => &switch_statement.args_or_redirs,
             _ => panic!("Unexpected block node type"),
@@ -873,7 +879,7 @@ impl<'a> ExecutionContext {
     ) -> EndExecutionReason {
         let bh = &statement.header;
         let contents = &statement.jobs;
-        match &**bh {
+        match bh {
             BlockStatementHeaderVariant::ForHeader(fh) => self.run_for_statement(ctx, fh, contents),
             BlockStatementHeaderVariant::WhileHeader(wh) => {
                 self.run_while_statement(ctx, wh, contents, associated_block)
@@ -896,7 +902,7 @@ impl<'a> ExecutionContext {
     ) -> EndExecutionReason {
         // Get the variable name: `for var_name in ...`. We expand the variable name. It better result
         // in just one.
-        let mut for_var_name = self.node_source(&header.var_name);
+        let mut for_var_name = self.node_source_owned(&header.var_name);
         if !expand_one(&mut for_var_name, ExpandFlags::default(), ctx, None) {
             return report_error!(
                 self,
@@ -1088,7 +1094,7 @@ impl<'a> ExecutionContext {
         statement: &'a ast::SwitchStatement,
     ) -> EndExecutionReason {
         // Get the switch variable.
-        let switch_value = self.node_source(&statement.argument);
+        let switch_value = self.node_source_owned(&statement.argument);
 
         // Expand it. We need to offset any errors by the position of the string.
         let mut switch_values_expanded = vec![];
@@ -1378,7 +1384,7 @@ impl<'a> ExecutionContext {
             let mut errors = ParseErrorList::new();
             let mut arg_expanded = CompletionList::new();
             let expand_ret = expand_string(
-                self.node_source(*arg_node),
+                self.node_source_owned(*arg_node),
                 &mut arg_expanded,
                 ExpandFlags::default(),
                 ctx,
@@ -1412,8 +1418,7 @@ impl<'a> ExecutionContext {
                 ExpandResultCode::ok => {}
             }
 
-            // Now copy over any expanded arguments. Use std::move() to avoid extra allocations; this
-            // is called very frequently.
+            // Now copy over any expanded arguments.
             if let Some(additional) =
                 (out_arguments.len() + arg_expanded.len()).checked_sub(out_arguments.capacity())
             {
@@ -1446,7 +1451,7 @@ impl<'a> ExecutionContext {
             }
             let redir_node = arg_or_redir.redirection();
 
-            let oper = match PipeOrRedir::try_from(&self.node_source(&redir_node.oper)[..]) {
+            let oper = match PipeOrRedir::try_from(self.node_source(&redir_node.oper)) {
                 Ok(oper) if oper.is_valid() => oper,
                 _ => {
                     // TODO: figure out if this can ever happen. If so, improve this error message.
@@ -1462,7 +1467,7 @@ impl<'a> ExecutionContext {
             };
 
             // PCA: I can't justify this skip_variables flag. It was like this when I got here.
-            let mut target = self.node_source(&redir_node.target);
+            let mut target = self.node_source_owned(&redir_node.target);
             let target_expanded = expand_one(
                 &mut target,
                 if no_exec() {
@@ -1585,9 +1590,12 @@ impl<'a> ExecutionContext {
                 specific_statement
             ));
             if result == EndExecutionReason::ok {
-                result = match &**specific_statement {
+                result = match &specific_statement {
                     StatementVariant::BlockStatement(block_statement) => {
                         self.run_block_statement(ctx, block_statement, associated_block)
+                    }
+                    StatementVariant::BraceStatement(brace_statement) => {
+                        self.run_begin_statement(ctx, &brace_statement.jobs)
                     }
                     StatementVariant::IfStatement(ifstmt) => {
                         self.run_if_statement(ctx, ifstmt, associated_block)
@@ -1627,7 +1635,7 @@ impl<'a> ExecutionContext {
             props.from_event_handler = ld.is_event != 0;
         }
 
-        let mut job = Job::new(props, self.node_source(job_node));
+        let mut job = Job::new(props, self.node_source_owned(job_node));
 
         // We are about to populate a job. One possible argument to the job is a command substitution
         // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
@@ -1818,7 +1826,7 @@ impl<'a> ExecutionContext {
                 break;
             }
             // Handle the pipe, whose fd may not be the obvious stdout.
-            let parsed_pipe = PipeOrRedir::try_from(&self.node_source(&jc.pipe)[..])
+            let parsed_pipe = PipeOrRedir::try_from(self.node_source(&jc.pipe))
                 .expect("Failed to parse valid pipe");
             if !parsed_pipe.is_valid() {
                 result = report_error!(
@@ -1869,9 +1877,11 @@ impl<'a> ExecutionContext {
     // Assign a job group to the given job.
     fn setup_group(&self, ctx: &OperationContext<'_>, j: &mut Job) {
         // We can use the parent group if it's compatible and we're not backgrounded.
-        if ctx.job_group.as_ref().map_or(false, |job_group| {
-            job_group.has_job_id() || !j.wants_job_id()
-        }) && !j.is_initially_background()
+        if ctx
+            .job_group
+            .as_ref()
+            .is_some_and(|job_group| job_group.has_job_id() || !j.wants_job_id())
+            && !j.is_initially_background()
         {
             j.group = ctx.job_group.clone();
             return;
@@ -1917,6 +1927,7 @@ type AstArgsList<'a> = Vec<&'a ast::Argument>;
 fn type_is_redirectable_block(typ: ast::Type) -> bool {
     [
         ast::Type::block_statement,
+        ast::Type::brace_statement,
         ast::Type::if_statement,
         ast::Type::switch_statement,
     ]
@@ -1939,7 +1950,7 @@ fn profiling_cmd_name_for_redirectable_block(
     let src_end = match node {
         StatementVariant::BlockStatement(block_statement) => {
             let block_header = &block_statement.header;
-            match &**block_header {
+            match block_header {
                 BlockStatementHeaderVariant::ForHeader(for_header) => {
                     for_header.semi_nl.source_range().start()
                 }
@@ -1954,6 +1965,9 @@ fn profiling_cmd_name_for_redirectable_block(
                 }
                 BlockStatementHeaderVariant::None => panic!("Unexpected block header type"),
             }
+        }
+        StatementVariant::BraceStatement(brace_statement) => {
+            brace_statement.left_brace.source_range().start()
         }
         StatementVariant::IfStatement(ifstmt) => {
             ifstmt.if_clause.condition.job.source_range().end()
@@ -1990,7 +2004,7 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
 
     // Helper to return true if a node is 'not time ...' or 'not not time...' or...
     let is_timed_not_statement = |mut stat: &ast::Statement| loop {
-        match &*stat.contents {
+        match &stat.contents {
             StatementVariant::NotStatement(ns) => {
                 if ns.time.is_some() {
                     return true;

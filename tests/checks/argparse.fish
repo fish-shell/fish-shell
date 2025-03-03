@@ -11,7 +11,7 @@
 # No args (not even --) is an error
 argparse
 #CHECKERR: argparse: Missing -- separator
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -19,7 +19,7 @@ argparse
 # Missing -- is an error
 argparse h/help
 #CHECKERR: argparse: Missing -- separator
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h/help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -40,27 +40,27 @@ argparse h/help:
 argparse h-help::
 argparse h-help=x
 #CHECKERR: argparse: Invalid option spec 'h-' at char '-'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Short flag '+' invalid, must be alphanum or '#'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse +help
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h/help:' at char ':'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h/help:
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h-help::' at char ':'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-help::
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
 #CHECKERR: argparse: Invalid option spec 'h-help=x' at char 'x'
-#CHECKERR: checks/argparse.fish (line {{\d+}}):
+#CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
 #CHECKERR: argparse h-help=x
 #CHECKERR: ^
 #CHECKERR: (Type 'help argparse' for related documentation)
@@ -89,7 +89,7 @@ end
 begin
     argparse '#-val=' -- abc -x def
     # CHECKERR: argparse: Implicit int short flag '#' does not allow modifiers like '='
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse '#-val=' -- abc -x def
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -105,7 +105,7 @@ end
 begin
     argparse s/short x/xray s/long -- -s -x --long
     # CHECKERR: argparse: Short flag 's' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse s/short x/xray s/long -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -115,7 +115,7 @@ end
 begin
     argparse s/short x/xray l/short -- -s -x --long
     # CHECKERR: argparse: Long flag 'short' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse s/short x/xray l/short -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -125,7 +125,7 @@ end
 begin
     argparse '#-val' x/xray 'v#val' -- -s -x --long
     # CHECKERR: argparse: Implicit int flag '#' already defined
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse '#-val' x/xray 'v#val' -- -s -x --long
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -135,7 +135,7 @@ end
 begin
     argparse 'v#val=' --
     # CHECKERR: argparse: Implicit int short flag 'v' does not allow modifiers like '='
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse 'v#val=' --
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)
@@ -278,9 +278,9 @@ end
 
 # Implicit int flag validation fails
 argparse 'm#max' -- argle --max 765x bargle
-and echo unxpected argparse return status >&2
+and echo unexpected argparse return status >&2
 argparse 'm#max' -- argle -ma1 bargle
-and echo unxpected argparse return status >&2
+and echo unexpected argparse return status >&2
 # CHECKERR: argparse: Value '765x' for flag 'max' is not an integer
 # CHECKERR: argparse: Value 'a1' for flag 'm' is not an integer
 
@@ -500,7 +500,7 @@ end
 begin
     argparse ''
     #CHECKERR: argparse: An option spec must have at least a short or a long flag
-    #CHECKERR: checks/argparse.fish (line {{\d+}}):
+    #CHECKERR: {{.*}}checks/argparse.fish (line {{\d+}}):
     #CHECKERR: argparse ''
     #CHECKERR: ^
     #CHECKERR: (Type 'help argparse' for related documentation)

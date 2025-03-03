@@ -20,13 +20,17 @@ Vcs-Browser: https://github.com/fish-shell/fish-shell
 
 Package: fish
 Architecture: any
-Depends: bsdextrautils,
+# for col and lock - bsdmainutils is required in Ubuntu focal
 Depends: bsdextrautils | bsdmainutils,
  file,
+# for the gettext command
  gettext-base,
+# for nroff and preconv
  groff-base,
  man-db,
+# for terminal definitions
  ncurses-base,
+# for kill
  procps,
  python3 (>=3.5),
  ${misc:Depends},

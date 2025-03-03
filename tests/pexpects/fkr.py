@@ -2,6 +2,11 @@
 from pexpect_helper import SpawnedProc
 from time import sleep
 import os
+import sys
+
+# Disable under CI - keeps failing because the timing is too tight
+if "CI" in os.environ:
+    sys.exit(127)
 
 os.environ["fish_escape_delay_ms"] = "10"
 sp = SpawnedProc()
@@ -31,7 +36,7 @@ expect_str("bind ctrl-g 'do something'\r\n")
 
 # Is a non-ASCII UTF-8 sequence prefaced by an escape char handled correctly?
 sleep(0.020)
-send("\x1B")
+send("\x1b")
 expect_str("# decoded from: \\e\r\n")
 expect_str("bind escape 'do something'\r\n")
 send("ö")

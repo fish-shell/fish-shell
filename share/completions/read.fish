@@ -5,6 +5,7 @@ complete -c read -s P -l prompt-str -d "Set prompt using provided string" -x
 complete -c read -s x -l export -d "Export variable to subprocess"
 complete -c read -s g -l global -d "Make variable scope global"
 complete -c read -s l -l local -d "Make variable scope local"
+complete -c read -s f -l function -d "Make variable function-scoped"
 complete -c read -s U -l universal -d "Share variable with all the users fish processes on the computer"
 complete -c read -s u -l unexport -d "Do not export variable to subprocess"
 complete -c read -s c -l command -d "Initial contents of read buffer when reading interactively" -r

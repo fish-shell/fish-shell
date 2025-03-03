@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: fish=%fish %fish %s
 
 # Set a XDG_CONFIG_HOME with both pre-existing and non-existing directories.
 set -l dir (mktemp -d)

@@ -313,7 +313,7 @@ fn test_history_races() {
             };
 
             // Remove everything from this item on
-            let removed = list.splice(position.., []);
+            let removed = list.drain(position..);
             for line in removed.into_iter().rev() {
                 println!("Item dropped from history: {line}");
             }

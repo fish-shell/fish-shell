@@ -50,7 +50,7 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
         Err(e) => return e,
     };
 
-    let has_function_block = parser.blocks().iter().any(|b| b.is_function_call());
+    let has_function_block = parser.blocks_iter_rev().any(|b| b.is_function_call());
 
     // *nix does not support negative return values, but our `return` builtin happily accepts being
     // called with negative literals (e.g. `return -1`).

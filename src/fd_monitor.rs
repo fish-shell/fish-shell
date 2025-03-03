@@ -1,14 +1,15 @@
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
+use std::collections::HashMap;
 use std::os::unix::prelude::*;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex, Weak};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use crate::common::exit_without_destructors;
-use crate::fd_readable_set::FdReadableSet;
+use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::AutoCloseFd;
 use crate::flog::FLOG;
 use crate::threads::assert_is_background_thread;
@@ -20,17 +21,6 @@ use libc::{c_void, EAGAIN, EINTR, EWOULDBLOCK};
 use crate::fds::{make_autoclose_pipes, make_fd_nonblocking};
 #[cfg(HAVE_EVENTFD)]
 use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
-
-/// Reason for waking an item
-#[derive(PartialEq, Eq)]
-pub enum ItemWakeReason {
-    /// The fd became readable (or was HUP'd)
-    Readable,
-    /// The requested timeout was hit
-    Timeout,
-    /// The item was "poked" (woken up explicitly)
-    Poke,
-}
 
 /// An event signaller implemented using a file descriptor, so it can plug into
 /// [`select()`](libc::select).
@@ -146,27 +136,12 @@ impl FdEventSignaller {
     /// but guarantees that the next call to wait() will not block.
     /// Return true if readable, false if not readable, or not interrupted by a signal.
     pub fn poll(&self, wait: bool /* = false */) -> bool {
-        let mut timeout = libc::timeval {
-            tv_sec: 0,
-            tv_usec: 0,
+        let timeout = if wait {
+            Timeout::Forever
+        } else {
+            Timeout::ZERO
         };
-        let mut fds: libc::fd_set = unsafe { std::mem::zeroed() };
-        unsafe { libc::FD_ZERO(&mut fds) };
-        unsafe { libc::FD_SET(self.read_fd(), &mut fds) };
-        let res = unsafe {
-            libc::select(
-                self.read_fd() + 1,
-                &mut fds,
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-                if wait {
-                    std::ptr::null_mut()
-                } else {
-                    &mut timeout
-                },
-            )
-        };
-        res > 0
+        FdReadableSet::is_fd_readable(self.read_fd(), timeout)
     }
 
     /// Return the fd to write to.
@@ -178,9 +153,9 @@ impl FdEventSignaller {
     }
 }
 
-/// Each item added to fd_monitor_t is assigned a unique ID, which is not recycled. Items may have
+/// Each item added to FdMonitor is assigned a unique ID, which is not recycled. Items may have
 /// their callback triggered immediately by passing the ID. Zero is a sentinel.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FdMonitorItemId(u64);
 
 impl From<FdMonitorItemId> for u64 {
@@ -196,10 +171,9 @@ impl From<u64> for FdMonitorItemId {
 }
 
 /// The callback type used by [`FdMonitorItem`]. It is passed a mutable reference to the
-/// `FdMonitorItem`'s [`FdMonitorItem::fd`] and [the reason](ItemWakeupReason) for the wakeup.
-/// It should return an [`ItemAction`] to indicate whether the item should be removed from the
-/// [`FdMonitor`] set.
-pub type Callback = Box<dyn Fn(&mut AutoCloseFd, ItemWakeReason) -> ItemAction + Send + Sync>;
+/// `FdMonitorItem`'s [`FdMonitorItem::fd`]. If the fd is closed, the callback will not
+/// be invoked again.
+pub type Callback = Box<dyn Fn(&mut AutoCloseFd) + Send + Sync>;
 
 /// An item containing an fd and callback, which can be monitored to watch when it becomes readable
 /// and invoke the callback.
@@ -209,82 +183,20 @@ pub struct FdMonitorItem {
     /// A callback to be invoked when the fd is readable, or for another reason given by the wake reason.
     /// If the fd is invalid on return from the function, then the item is removed from the [`FdMonitor`] set.
     callback: Callback,
-    /// The timeout associated with waiting on this item or `None` to wait indefinitely. A timeout
-    /// of `0` is not supported.
-    timeout: Option<Duration>,
-    /// The last time we were called or the time of initialization.
-    last_time: Option<Instant>,
-    /// The id for this item, assigned by [`FdMonitor`].
-    item_id: FdMonitorItemId,
-}
-
-/// A value returned by the callback to indicate what to do with the item.
-#[derive(PartialEq, Eq)]
-pub enum ItemAction {
-    Remove,
-    Retain,
 }
 
 impl FdMonitorItem {
-    /// Return the duration until the timeout should trigger or `None`. A return of `0` means we are
-    /// at or past the timeout.
-    fn remaining_time(&self, now: &Instant) -> Option<Duration> {
-        let last_time = self.last_time.expect("Should always have a last_time!");
-        let timeout = self.timeout?;
-        assert!(now >= &last_time, "Steady clock went backwards or bug!");
-        let since = *now - last_time;
-        Some(if since >= timeout {
-            Duration::ZERO
-        } else {
-            timeout - since
-        })
-    }
-
-    /// Invoke this item's callback if its value (when its value is set in the fd or has timed out).
-    /// Returns `true` if the item should be retained or `false` if it should be removed from the
-    /// set.
-    fn service_item(&mut self, fds: &FdReadableSet, now: &Instant) -> ItemAction {
-        let mut result = ItemAction::Retain;
-        let readable = fds.test(self.fd.as_raw_fd());
-        let timed_out = !readable && self.remaining_time(now) == Some(Duration::ZERO);
-        if readable || timed_out {
-            self.last_time = Some(*now);
-            let reason = if readable {
-                ItemWakeReason::Readable
-            } else {
-                ItemWakeReason::Timeout
-            };
-            result = (self.callback)(&mut self.fd, reason);
-        }
-        result
-    }
-
-    /// Invoke this item's callback with a poke, if its id is present in the sorted poke list.
-    fn maybe_poke_item(&mut self, pokelist: &[FdMonitorItemId]) -> ItemAction {
-        if self.item_id.0 == 0 || pokelist.binary_search(&self.item_id).is_err() {
-            // Not pokeable or not in the poke list.
-            return ItemAction::Retain;
-        }
-
-        (self.callback)(&mut self.fd, ItemWakeReason::Poke)
-    }
-
-    pub fn new(fd: AutoCloseFd, timeout: Option<Duration>, callback: Callback) -> Self {
-        FdMonitorItem {
-            fd,
-            timeout,
-            callback,
-            item_id: FdMonitorItemId(0),
-            last_time: None,
-        }
+    /// Invoke this item's callback because the fd is readable.
+    /// Returns the [`ItemAction`] to indicate whether the item should be removed from the [`FdMonitor`] set.
+    fn service(&mut self) {
+        (self.callback)(&mut self.fd)
     }
 }
 
 /// A thread-safe class which can monitor a set of fds, invoking a callback when any becomes
-/// readable (or has been HUP'd) or when per-item-configurable timeouts are reached.
+/// readable (or has been HUP'd).
 pub struct FdMonitor {
-    /// Our self-signaller. When this is written to, it means there are new items pending, new items
-    /// in the poke list, or terminate has been set.
+    /// Our self-signaller, used to wake up the background thread out of select().
     change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
     data: Arc<Mutex<SharedData>>,
@@ -303,11 +215,8 @@ const _: () = {
 
 /// Data shared between the `FdMonitor` instance and its associated `BackgroundFdMonitor`.
 struct SharedData {
-    /// Pending items. This is set by the main thread with the mutex locked, then the background
-    /// thread grabs them.
-    pending: Vec<FdMonitorItem>,
-    /// List of IDs for items that need to be poked (explicitly woken up).
-    pokelist: Vec<FdMonitorItemId>,
+    /// The map of items. This may be modified by the main thread with the mutex locked.
+    items: HashMap<FdMonitorItemId, FdMonitorItem>,
     /// Whether the background thread is running.
     running: bool,
     /// Used to signal that the background thread should terminate.
@@ -316,35 +225,31 @@ struct SharedData {
 
 /// The background half of the fd monitor, running on its own thread.
 struct BackgroundFdMonitor {
-    /// The list of items to monitor. This is only accessed from the background thread.
-    /// This doesn't need to be in any particular order.
-    items: Vec<FdMonitorItem>,
     /// Our self-signaller. When this is written to, it means there are new items pending, new items
     /// in the poke list, or terminate has been set.
-    change_signaller: Weak<FdEventSignaller>,
+    change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
+    /// Note the locking here is very coarse and the lock is held while servicing items.
+    /// This means that an item which reads a lot of data may prevent adding other items.
+    /// When we do true multithreaded execution, we may want to make the locking more fine-grained (per-item).
     data: Arc<Mutex<SharedData>>,
 }
 
 impl FdMonitor {
     /// Add an item to the monitor. Returns the [`FdMonitorItemId`] assigned to the item.
-    pub fn add(&self, mut item: FdMonitorItem) -> FdMonitorItemId {
-        assert!(item.fd.is_valid());
-        assert!(item.timeout != Some(Duration::ZERO), "Invalid timeout!");
-        assert!(
-            item.item_id == FdMonitorItemId(0),
-            "Item should not already have an id!"
-        );
+    pub fn add(&self, fd: AutoCloseFd, callback: Callback) -> FdMonitorItemId {
+        assert!(fd.is_valid());
 
         let item_id = self.last_id.fetch_add(1, Ordering::Relaxed) + 1;
         let item_id = FdMonitorItemId(item_id);
+        let item: FdMonitorItem = FdMonitorItem { fd, callback };
         let start_thread = {
             // Lock around a local region
             let mut data = self.data.lock().expect("Mutex poisoned!");
 
-            // Assign an id and add the item to pending
-            item.item_id = item_id;
-            data.pending.push(item);
+            // Assign an id and add the item.
+            let old_value = data.items.insert(item_id, item);
+            assert!(old_value.is_none(), "Item ID {} already exists!", item_id.0);
 
             // Start the thread if it hasn't already been started
             let already_started = data.running;
@@ -356,8 +261,7 @@ impl FdMonitor {
             FLOG!(fd_monitor, "Thread starting");
             let background_monitor = BackgroundFdMonitor {
                 data: Arc::clone(&self.data),
-                change_signaller: Arc::downgrade(&self.change_signaller),
-                items: Vec::new(),
+                change_signaller: Arc::clone(&self.change_signaller),
             };
             crate::threads::spawn(move || {
                 background_monitor.run();
@@ -370,29 +274,24 @@ impl FdMonitor {
         item_id
     }
 
-    /// Mark that the item with the given ID needs to be woken up explicitly.
-    pub fn poke_item(&self, item_id: FdMonitorItemId) {
+    /// Remove an item from the monitor and return its file descriptor.
+    /// Note we may remove an item whose fd is currently being waited on in select(); this is
+    /// considered benign because the underlying item will no longer be present and so its
+    /// callback will not be invoked.
+    pub fn remove_item(&self, item_id: FdMonitorItemId) -> AutoCloseFd {
         assert!(item_id.0 > 0, "Invalid item id!");
-        let needs_notification = {
-            let mut data = self.data.lock().expect("Mutex poisoned!");
-            let needs_notification = data.pokelist.is_empty();
-            // Insert it, sorted. But not if it already exists.
-            if let Err(pos) = data.pokelist.binary_search(&item_id) {
-                data.pokelist.insert(pos, item_id);
-            };
-            needs_notification
-        };
-
-        if needs_notification {
-            self.change_signaller.post();
-        }
+        let mut data = self.data.lock().expect("Mutex poisoned!");
+        let removed = data.items.remove(&item_id).expect("Item ID not found");
+        drop(data);
+        // Allow it to recompute the wait set.
+        self.change_signaller.post();
+        removed.fd
     }
 
     pub fn new() -> Self {
         Self {
             data: Arc::new(Mutex::new(SharedData {
-                pending: Vec::new(),
-                pokelist: Vec::new(),
+                items: HashMap::new(),
                 running: false,
                 terminate: false,
             })),
@@ -405,110 +304,120 @@ impl FdMonitor {
 impl BackgroundFdMonitor {
     /// Starts monitoring the fd set and listening for new fds to add to the set. Takes ownership
     /// over its instance so that this method cannot be called again.
-    fn run(mut self) {
+    fn run(self) {
         assert_is_background_thread();
 
-        let mut pokelist: Vec<FdMonitorItemId> = Vec::new();
         let mut fds = FdReadableSet::new();
+        let mut item_ids: Vec<FdMonitorItemId> = Vec::new();
 
         loop {
-            // Poke any items that need it
-            if !pokelist.is_empty() {
-                self.poke(&pokelist);
-                pokelist.clear();
-            }
-            fds.clear();
+            // Our general flow is that a client thread adds an item for us to monitor,
+            // and we use select() or poll() to wait on it. However, the client thread
+            // may then reclaim the item. We are currently blocked in select():
+            // how then do we stop waiting on it?
+            //
+            // The safest, slowest approach is:
+            //  - The background thread waits on select() for the set of active file descriptors.
+            //  - The client thread records a request to remove an item.
+            //  - The client thread wakes up the background thread via change_signaller.
+            //  - The background thread check for any pending removals, and removes and returns them.
+            //  - The client thread accepts the removed item and continues on.
+            // However this means a round-trip from the client thread to this background thread,
+            // plus additional blocking system calls. This slows down the client thread.
+            //
+            // A second possibility is that:
+            //  - The background thread waits on select() for the set of active file descriptors.
+            //  - The client thread directly removes an item (protected by the mutex).
+            //  - After select() returns the set of active file descriptors, we only invoke callbacks
+            //    for items whose file descriptors are still in the set.
+            // However this risks the ABA problem: if the client thread reclaims an item, closes its
+            // fd, and then adds a new item which happens to get the same fd, we might falsely
+            // trigger the callback of the new item even though its fd is not readable.
+            //
+            // So we use the following approach:
+            // - The background thread creates a snapshotted list of active ItemIDs.
+            // - The background thread waits in select() on the set of active file descriptors,
+            //   without holding the lock.
+            // - The client thread directly removes an item (protected by the mutex).
+            // - After select() returns the set of active file descriptors, we only invoke callbacks
+            //   for items whose file descriptors are marked active, and whose ItemID was snapshotted.
+            //
+            // This avoids the ABA problem because ItemIDs are never recycled. It does have a race where
+            // we might select() on a file descriptor that has been closed or recycled. Thus we must be
+            // prepared to handle EBADF. This race is otherwise considered benign.
 
-            // Our change_signaller is special-cased
-            let change_signal_fd = self.change_signaller.upgrade().unwrap().read_fd();
+            // Construct the set of fds to monitor.
+            // Our change_signaller is special-cased.
+            fds.clear();
+            let change_signal_fd = self.change_signaller.read_fd();
             fds.add(change_signal_fd);
 
-            let mut now = Instant::now();
-            // Use Duration::MAX to represent no timeout for comparison purposes.
-            let mut timeout = Duration::MAX;
-
-            for item in &mut self.items {
-                fds.add(item.fd.as_raw_fd());
-                if item.last_time.is_none() {
-                    item.last_time = Some(now);
+            // Grab the lock and snapshot the item_ids. Skip items with invalid fds.
+            let mut data = self.data.lock().expect("Mutex poisoned!");
+            item_ids.clear();
+            item_ids.reserve(data.items.len());
+            for (item_id, item) in &data.items {
+                let fd = item.fd.as_raw_fd();
+                if fd >= 0 {
+                    fds.add(fd);
+                    item_ids.push(*item_id);
                 }
-                timeout = timeout.min(item.timeout.unwrap_or(Duration::MAX));
             }
+
+            // Sort it to avoid the non-determinism of the hash table.
+            item_ids.sort_unstable();
 
             // If we have no items, then we wish to allow the thread to exit, but after a time, so
             // we aren't spinning up and tearing down the thread repeatedly. Set a timeout of 256
             // msec; if nothing becomes readable by then we will exit. We refer to this as the
             // wait-lap.
-            let is_wait_lap = self.items.is_empty();
-            if is_wait_lap {
-                assert!(
-                    timeout == Duration::MAX,
-                    "Should not have a timeout on wait lap!"
-                );
-                timeout = Duration::from_millis(256);
-            }
-
-            // Don't leave Duration::MAX as an actual timeout value
-            let timeout = match timeout {
-                Duration::MAX => None,
-                timeout => Some(timeout),
+            let is_wait_lap = item_ids.is_empty();
+            let timeout = if is_wait_lap {
+                Some(Duration::from_millis(256))
+            } else {
+                None
             };
 
-            // Call select()
-            let ret = fds.check_readable(
-                timeout
-                    .map(|duration| duration.as_micros() as u64)
-                    .unwrap_or(FdReadableSet::kNoTimeout),
-            );
-            if ret < 0 && errno::errno().0 != libc::EINTR {
+            // Call select().
+            // We must release and then re-acquire the lock around select() to avoid deadlock.
+            // Note that while we are waiting in select(), the client thread may add or remove items;
+            // in particular it may even close file descriptors that we are waiting on. That is why
+            // we handle EBADF. Note that even if the file descriptor is recycled, we don't invoke
+            // a callback for it unless its ItemID is still present.
+            //
+            // Note that WSLv1 doesn't throw EBADF if the fd is closed is mid-select.
+            drop(data);
+            let ret =
+                fds.check_readable(timeout.map(Timeout::Duration).unwrap_or(Timeout::Forever));
+            if ret < 0 && !matches!(errno().0, libc::EINTR | libc::EBADF) {
                 // Surprising error
                 perror("select");
             }
 
-            // Update the value of `now` after waiting on `fds.check_readable()`; it's used in the
-            // servicer closure.
-            now = Instant::now();
+            // Re-acquire the lock.
+            data = self.data.lock().expect("Mutex poisoned!");
 
-            // A predicate which services each item in turn, returning true if it should be removed
-            let servicer = |item: &mut FdMonitorItem| {
-                let fd = item.fd.as_raw_fd();
-                let action = item.service_item(&fds, &now);
-                if action == ItemAction::Remove {
-                    FLOG!(fd_monitor, "Removing fd", fd);
+            // For each item id that we snapshotted, if the corresponding item is still in our
+            // set of active items and its fd was readable, then service it.
+            for item_id in &item_ids {
+                let Some(item) = data.items.get_mut(item_id) else {
+                    // Item was removed while we were waiting.
+                    // Note there is no risk of an ABA problem because ItemIDs are never recycled.
+                    continue;
+                };
+                if fds.test(item.fd.as_raw_fd()) {
+                    item.service();
                 }
-                action
-            };
-
-            // Service all items that are either readable or have timed out, and remove any which
-            // say to do so.
-
-            self.items
-                .retain_mut(|item| servicer(item) == ItemAction::Retain);
+            }
 
             // Handle any changes if the change signaller was set. Alternatively, this may be the
             // wait lap, in which case we might want to commit to exiting.
             let change_signalled = fds.test(change_signal_fd);
             if change_signalled || is_wait_lap {
                 // Clear the change signaller before processing incoming changes
-                self.change_signaller.upgrade().unwrap().try_consume();
-                let mut data = self.data.lock().expect("Mutex poisoned!");
+                self.change_signaller.try_consume();
 
-                // Move from `pending` to the end of `items`
-                self.items.extend(&mut data.pending.drain(..));
-
-                // Grab any poke list
-                assert!(
-                    pokelist.is_empty(),
-                    "poke list should be empty or else we're dropping pokes!"
-                );
-                std::mem::swap(&mut pokelist, &mut data.pokelist);
-
-                if data.terminate
-                    || (is_wait_lap
-                        && self.items.is_empty()
-                        && pokelist.is_empty()
-                        && !change_signalled)
-                {
+                if data.terminate || (is_wait_lap && data.items.is_empty() && !change_signalled) {
                     // Maybe terminate is set. Alternatively, maybe we had no items, waited a bit,
                     // and still have no items. It's important to do this while holding the lock,
                     // otherwise we race with new items being added.
@@ -523,27 +432,12 @@ impl BackgroundFdMonitor {
             }
         }
     }
-
-    /// Poke items in the poke list, removing any items that close their fd in their callback. The
-    /// poke list is consumed after this. This is only called from the background thread.
-    fn poke(&mut self, pokelist: &[FdMonitorItemId]) {
-        self.items.retain_mut(|item| {
-            let action = item.maybe_poke_item(pokelist);
-            if action == ItemAction::Remove {
-                FLOG!(fd_monitor, "Removing fd", item.fd.as_raw_fd());
-            }
-            return action == ItemAction::Retain;
-        });
-    }
 }
 
 /// In ordinary usage, we never invoke the destructor. This is used in the tests to not leave stale
 /// fds arounds; this is why it's very hacky!
 impl Drop for FdMonitor {
     fn drop(&mut self) {
-        // Safety: this is a port of the C++ code and we are running in the destructor. The C++ code
-        // had no way to bubble back any errors encountered here, and the pthread mutex the C++ code
-        // uses does not have a concept of mutex poisoning.
         self.data.lock().expect("Mutex poisoned!").terminate = true;
         self.change_signaller.post();
 

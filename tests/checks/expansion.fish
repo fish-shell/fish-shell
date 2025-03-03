@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s
+# RUN: fish=%fish %fish %s
 
 # caret position (#5812)
 printf '<%s>\n' ($fish -c ' $f[a]' 2>&1)
@@ -321,7 +321,7 @@ $fish -c 'echo {'
 #CHECKERR: echo {
 #CHECKERR: ^
 $fish -c 'echo {}}'
-#CHECKERR: fish: Unexpected '}' for unopened brace expansion
+#CHECKERR: fish: Unexpected '}' for unopened brace
 #CHECKERR: echo {}}
 #CHECKERR: ^
 printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
@@ -337,9 +337,14 @@ printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
 
 set -l pager command less
 echo foo | $pager
-#CHECKERR: checks/expansion.fish (line 339): The expanded command is a keyword.
+#CHECKERR: {{.*}}checks/expansion.fish (line 339): The expanded command is a keyword.
 #CHECKERR: echo foo | $pager
 #CHECKERR:            ^~~~~^
+
+"command" -h
+#CHECKERR: fish: command: missing man page
+#CHECKERR: Documentation may not be installed.
+#CHECKERR: `help command` will show an online version
 
 echo {~,asdf}
 # CHECK: /{{.*}} asdf

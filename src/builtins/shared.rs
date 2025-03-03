@@ -114,6 +114,10 @@ struct BuiltinData {
 // NOTE: These must be kept in sorted order!
 const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
+        name: L!("!"),
+        func: builtin_generic,
+    },
+    BuiltinData {
         name: L!("."),
         func: source::source,
     },
@@ -240,6 +244,14 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
         name: L!("fg"),
         func: fg::fg,
+    },
+    BuiltinData {
+        name: L!("fish_indent"),
+        func: fish_indent::fish_indent,
+    },
+    BuiltinData {
+        name: L!("fish_key_reader"),
+        func: fish_key_reader::fish_key_reader,
     },
     BuiltinData {
         name: L!("for"),
@@ -463,6 +475,7 @@ pub fn builtin_get_names() -> impl Iterator<Item = &'static wstr> {
 /// Return a one-line description of the specified builtin.
 pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
     let desc = match name {
+        _ if name == "!" => wgettext!("Negate exit status of job"),
         _ if name == "." => wgettext!("Evaluate contents of file"),
         _ if name == ":" => wgettext!("Return a successful result"),
         _ if name == "[" => wgettext!("Test a condition"), // ]
@@ -495,6 +508,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
         _ if name == "exit" => wgettext!("Exit the shell"),
         _ if name == "false" => wgettext!("Return an unsuccessful result"),
         _ if name == "fg" => wgettext!("Send job to foreground"),
+        _ if name == "fish_key_reader" => wgettext!("explore what characters keyboard keys send"),
         _ if name == "for" => wgettext!("Perform a set of commands multiple times"),
         _ if name == "function" => wgettext!("Define a new function"),
         _ if name == "functions" => wgettext!("List or remove functions"),
@@ -873,7 +887,7 @@ fn builtin_break_continue(
     // Paranoia: ensure we have a real loop.
     // This is checked in the AST but we may be invoked dynamically, e.g. just via "eval break".
     let mut has_loop = false;
-    for b in parser.blocks().iter().rev() {
+    for b in parser.blocks_iter_rev() {
         if [BlockType::while_block, BlockType::for_block].contains(&b.typ()) {
             has_loop = true;
             break;

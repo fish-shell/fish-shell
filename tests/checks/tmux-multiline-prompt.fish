@@ -1,8 +1,8 @@
 #RUN: %fish %s
 #REQUIRES: command -v tmux && ! tmux -V | grep -qE '^tmux (next-3.4|3\.[0123][a-z]*($|[.-]))'
-#REQUIRES: command -v less
-# Disable on GitHub macOS CI because it fails more than it passes there
-#REQUIRES: uname -s | grep -qv Darwin || test -z "$CI"
+#REQUIRES: command -v less && ! less --version 2>&1 | grep -q BusyBox
+# disable on github actions because it's flakey
+#REQUIRES: test -z "$CI"
 
 isolated-tmux-start
 
@@ -50,7 +50,7 @@ isolated-tmux capture-pane -p | tail -n 5
 # CHECK:
 
 # Test repainint after running an external program that uses the alternate screen.
-isolated-tmux send-keys 'bind ctrl-r "echo | less +q; commandline \'echo Hello World\'"' Enter C-l \
+isolated-tmux send-keys "bind ctrl-r 'echo | less +q; commandline \"echo Hello World\"'" Enter C-l
 isolated-tmux send-keys C-r
 tmux-sleep
 isolated-tmux send-keys Enter

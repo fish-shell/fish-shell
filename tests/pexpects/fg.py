@@ -2,6 +2,7 @@
 from pexpect_helper import SpawnedProc
 import platform
 import subprocess
+import os
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -18,11 +19,11 @@ expect_prompt()
 # (but also does so under /bin/sh)
 testproc = "sleep 500" if platform.system() != "NetBSD" else "cat"
 sendline(testproc)
-sendline("set -l foo 'bar'1; echo $foo") # ignored because sleep is in fg
+sendline("set -l foo 'bar'1; echo $foo")  # ignored because sleep is in fg
 sleep(1.2)
 
 # ctrl-z - send job to background
-send("\x1A")
+send("\x1a")
 sleep(1.2)
 expect_prompt()
 sendline("set -l foo 'bar'2; echo $foo")
@@ -48,7 +49,7 @@ sendline("sleep 1")
 sleep(0.1)
 
 # ctrl-z - send job to background
-send("\x1A")
+send("\x1a")
 sleep(0.2)
 expect_prompt("has stopped")
 
@@ -64,7 +65,7 @@ expect_prompt("jobs: There are no jobs")
 # Ensure we can do it again.
 sendline("sleep 5")
 sleep(0.2)
-send("\x1A")
+send("\x1a")
 sleep(0.1)
 expect_prompt("has stopped")
 sendline("fg")
@@ -75,20 +76,25 @@ expect_prompt()
 sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
+if not os.environ.get("fish_test_helper", ""):
+    import sys
+
+    sys.exit(127)
+
 # Regression test for #2214: foregrounding from a key binding works!
 sendline(r"bind ctrl-r 'fg >/dev/null 2>/dev/null'")
 expect_prompt()
 sendline("$fish_test_helper print_stop_cont")
 sleep(0.2)
 
-send("\x1A")  # ctrl-z
+send("\x1a")  # ctrl-z
 expect_prompt("SIGTSTP")
 sleep(0.1)
 send("\x12")  # ctrl-r, placing fth in foreground
 expect_str("SIGCONT")
 
 # Do it again.
-send("\x1A")
+send("\x1a")
 expect_str("SIGTSTP")
 sleep(0.1)
 send("\x12")

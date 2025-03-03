@@ -29,7 +29,7 @@ add_custom_target(sphinx-docs
 
 # sphinx-manpages needs the fish_indent binary for the version number
 add_custom_target(sphinx-manpages
-    env FISH_BUILD_VERSION_FILE="${CMAKE_CURRENT_BINARY_DIR}/${FBVF}"
+    env FISH_BUILD_VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/${FBVF}
         ${SPHINX_EXECUTABLE}
         -j auto
         -q -b man

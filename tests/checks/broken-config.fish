@@ -1,6 +1,6 @@
-#RUN: %fish -C 'set -g fish %fish' %s
+#RUN: fish=%fish %fish %s
 begin
-    set -l dir $PWD/(dirname (status -f))
+    set -l dir (dirname (status -f))
     set -gx XDG_CONFIG_HOME $dir/broken-config/
     set -gx HOME $dir/broken-config/
     $fish -l -c 'echo but still going'

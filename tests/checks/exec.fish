@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+# RUN: fish=%fish %fish %s
 
 exec cat <nosuchfile
 #CHECKERR: warning: An error occurred while redirecting file 'nosuchfile'
@@ -12,7 +12,9 @@ echo "neg failed: $status"
 #CHECK: neg failed: 0
 
 # See that variable overrides are applied to exec'd processes
-$fish --no-config -c 'foo=bar exec env' | grep foo=bar
+# Match the entire line because github actions passes commit messages in the environment,
+# so any message that includes "foo=bar" would also be matched.
+$fish --no-config -c 'foo=bar exec env' | grep '^foo=bar$'
 # CHECK: foo=bar
 
 # This needs to be last, because it actually runs exec.

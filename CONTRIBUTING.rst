@@ -50,7 +50,7 @@ Contributing completions
 
 Completion scripts are the most common contribution to fish, and they are very welcome.
 
-In general, we'll take all well-written completion scripts for a command that is publically available.
+In general, we'll take all well-written completion scripts for a command that is publicly available.
 This means no private tools or personal scripts, and we do reserve the right to reject for other reasons.
 
 Before you try to contribute them to fish, consider if the authors of the tool you are completing want to maintain the script instead.
@@ -196,8 +196,14 @@ The tests can be found in three places:
 - tests/pexpects for interactive tests using `pexpect <https://pexpect.readthedocs.io/en/stable/>`__
 
 When in doubt, the bulk of the tests should be added as a littlecheck test in tests/checks, as they are the easiest to modify and run, and much faster and more dependable than pexpect tests. The syntax is fairly self-explanatory. It's a fish script with the expected output in ``# CHECK:`` or ``# CHECKERR:`` (for stderr) comments.
+If your littlecheck test has a specific dependency, use ``# REQUIRE: ...`` with a posix sh script.
 
-The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in build_tools/pexpect_helper.py, in case you need to modify something there.
+The pexpects are written in python and can simulate input and output to/from a terminal, so they are needed for anything that needs actual interactivity. The runner is in tests/pexpect_helper.py, in case you need to modify something there.
+
+These tests can be run via the tests/test_driver.py python script, which will set up the environment.
+It sets up a temporary $HOME and also uses it as the current directory, so you do not need to create a temporary directory in them.
+
+If you need a command to do something weird to test something, maybe add it to the ``fish_test_helper`` binary (in tests/fish_test_helper.c), or see if it can already do it.
 
 Local testing
 -------------
@@ -208,6 +214,17 @@ The tests can be run on your local computer on all operating systems.
 
    cmake path/to/fish-shell
    make fish_run_tests
+
+Or you can run them on a fish, without involving cmake::
+
+  cargo build
+  cargo test # for the unit tests
+  tests/test_driver.py --cachedir=/tmp target/debug # for the script and interactive tests
+
+Here, the first argument to test_driver.py refers to a directory with ``fish``, ``fish_indent`` and ``fish_key_reader`` in it.
+In this example we're in the root of the git repo and have run ``cargo build`` without ``--release``, so it's a debug build.
+The ``--cachedir /tmp`` argument means it will keep the fish_test_helper binary in /tmp instead of recompiling it for every test.
+This saves some time, but isn't strictly necessary.
 
 Git hooks
 ---------

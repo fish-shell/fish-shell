@@ -264,7 +264,7 @@ impl Event {
 
     /// Test if specified event is blocked.
     fn is_blocked(&self, parser: &Parser) -> bool {
-        for block in parser.blocks().iter().rev() {
+        for block in parser.blocks_iter_rev() {
             if block.event_blocks {
                 return true;
             }
@@ -371,7 +371,7 @@ pub fn is_signal_observed(sig: libc::c_int) -> bool {
     // We are in a signal handler!
     OBSERVED_SIGNALS
         .get(usize::try_from(sig).unwrap())
-        .map_or(false, |s| s.load(Ordering::Relaxed) > 0)
+        .is_some_and(|s| s.load(Ordering::Relaxed) > 0)
 }
 
 pub fn get_desc(parser: &Parser, evt: &Event) -> WString {

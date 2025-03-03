@@ -90,12 +90,12 @@ complete -c find -o execdir -d "Execute specified command for each located file,
 complete -c find -o fls -d "List file in ls -dils format, write to specified file" -F
 complete -c find -o fprint -d "Print full file names into specified file" -F
 complete -c find -o fprint0 -d "Print null separated full file names into specified file" -F
-complete -c find -o fprintf -d "Print formated data into specified file" -F
+complete -c find -o fprintf -d "Print formatted data into specified file" -F
 complete -c find -o ok -d "Execute specified command for each located file after asking user" -r
 complete -c find -o print -d "Print full file names"
 complete -c find -o okdir -d "Execute a command for each located file, in its directory, after asking" -r
 complete -c find -o print0 -d "Print null separated full file names"
-complete -c find -o printf -d "Print formated data" -x
+complete -c find -o printf -d "Print formatted data" -x
 complete -c find -o prune -d "Do not recurse unless -depth is specified"
 complete -c find -o quit -d "Exit at once"
 complete -c find -o ls -d "List file in ls -dils format" -r

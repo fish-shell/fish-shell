@@ -27,7 +27,7 @@ use crate::wcstringutil::join_strings;
 use crate::wutil::{fish_wcstol, wgetcwd, wgettext};
 use std::sync::atomic::Ordering;
 
-use libc::{c_int, uid_t, STDOUT_FILENO, _IONBF};
+use libc::{c_int, confstr, uid_t, STDOUT_FILENO, _IONBF};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -568,7 +568,7 @@ fn setup_user(vars: &EnvStack) {
 
 /// Make sure the PATH variable contains something.
 fn setup_path() {
-    use crate::libc::{confstr, _CS_PATH};
+    use crate::libc::_CS_PATH;
 
     let vars = EnvStack::globals();
     let path = vars.get_unless_empty(L!("PATH"));
@@ -805,7 +805,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
 
                 // Look for a global exported variable with the same name.
                 let global = EnvStack::globals().getf(name, EnvMode::GLOBAL | EnvMode::EXPORT);
-                if global.is_some() && global.unwrap().as_string() == uvar.as_string() {
+                if global.is_some_and(|x| x.as_string() == uvar.as_string()) {
                     to_skip.push(name.to_owned());
                 }
             }

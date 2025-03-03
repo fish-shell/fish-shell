@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish_indent %fish_indent' %s
+# RUN: fish_indent=%fish_indent %fish %s
 # Test file for fish_indent
 # Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
 
@@ -424,6 +424,66 @@ echo 'begin
 # CHECK: {{^}}    first-indented-word \
 # CHECK: {{^}}        second-indented-word
 
+{
+    echo '{ no semi }'
+    # CHECK: { no semi }
+    echo '{ semi; }'
+    # CHECK: { semi; }
+
+    echo '{ multi; no semi }'
+    # CHECK: { multi; no semi }
+    echo '{ multi; semi; }'
+    # CHECK: { multi; semi; }
+
+    echo '{ conj && no semi }'
+    # CHECK: { conj && no semi }
+    echo '{ conj && semi; }'
+    # CHECK: { conj && semi; }
+
+    echo '{ }'
+    # CHECK: { }
+    echo '{ ; }'
+    # CHECK: { }
+
+    echo '
+{
+echo \\
+# continuation comment
+}'
+    # CHECK: {
+    # CHECK: {{^    }}echo \
+    # CHECK: {{^        }}# continuation comment
+    # TODO: This is currently broken; so this the begin/end equivalent.
+    # CHECK: {{^    [}]}}
+
+    echo '{  {  }  }'
+    # CHECK: { { } }
+
+    echo '
+{
+
+{
+}
+
+}
+'
+    # CHECK: {{^\{$}}
+    # CHECK: {{^    \{$}}
+    # CHECK: {{^    \}$}}
+    # CHECK: {{^\}$}}
+
+    echo '
+{ level 1; {
+level 2 } }
+'
+    # TODO Should add a line break here.
+    # CHECK: {{^{ level 1$}}
+    # CHECK: {{^    \{$}}
+    # CHECK: {{^        level 2$}}
+    # CHECK: {{^    \}$}}
+    # CHECK: {{^\}$}}
+} | $fish_indent
+
 echo 'multiline-\\
 -word' | $fish_indent --check
 echo $status #CHECK: 0
@@ -526,8 +586,29 @@ end
 # CHECK: {{^}}    end
 # CHECK: {{^}})
 
+echo 'echo (
+if true
+echo "
+multi
+line
+"
+end
+)' | builtin fish_indent --only-indent
+# CHECK: {{^}}echo (
+# CHECK: {{^}}    if true
+# CHECK: {{^}}        echo "
+# CHECK: {{^}}multi
+# CHECK: {{^}}line
+# CHECK: {{^}}"
+# CHECK: {{^}}    end
+# CHECK: {{^}})
+
 set -l tmpdir (mktemp -d)
 echo 'echo "foo" "bar"' > $tmpdir/indent_test.fish
 $fish_indent --write $tmpdir/indent_test.fish
 cat $tmpdir/indent_test.fish
 # CHECK: echo foo bar
+
+# See that the builtin can be redirected
+printf %s\n a b c | builtin fish_indent | grep b
+# CHECK: b

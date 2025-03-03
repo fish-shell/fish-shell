@@ -41,8 +41,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv shift-tab complete-and-search
     $legacy_bind --preset $argv -k btab complete-and-search
-    bind --preset $argv shift-delete history-pager-delete or backward-delete-char
-    $legacy_bind --preset $argv -k sdc history-pager-delete or backward-delete-char
+    bind --preset $argv shift-delete history-delete or backward-delete-char
+    $legacy_bind --preset $argv -k sdc history-delete or backward-delete-char
 
     bind --preset $argv down down-or-search
     $legacy_bind --preset $argv -k down down-or-search
@@ -66,7 +66,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv alt-l __fish_list_current_token
     bind --preset $argv alt-o __fish_preview_current_file
     bind --preset $argv alt-w __fish_whatis_current_token
-    bind --preset $argv ctrl-l clear-screen
+    bind --preset $argv ctrl-l scrollback-push clear-screen
     bind --preset $argv ctrl-c clear-commandline
     bind --preset $argv ctrl-u backward-kill-line
     bind --preset $argv ctrl-k kill-line
@@ -112,13 +112,14 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv "&" self-insert expand-abbr
         bind --preset $argv ">" self-insert expand-abbr
         bind --preset $argv "<" self-insert expand-abbr
-        bind --preset $argv shift-enter "commandline -i \n" expand-abbr
-        bind --preset $argv alt-enter "commandline -i \n" expand-abbr
+        set -l maybe_search_field '(commandline --search-field >/dev/null && echo --search-field)'
+        bind --preset $argv shift-enter "commandline -i \n $maybe_search_field" expand-abbr
+        bind --preset $argv alt-enter "commandline -i \n $maybe_search_field" expand-abbr
         bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
-        bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " "'
-        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
+        bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
+        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
         # Shift-space behaves like space because it's easy to mistype.
-        bind --preset $argv shift-space 'commandline -i " "' expand-abbr
+        bind --preset $argv shift-space 'commandline -i " " '$maybe_search_field expand-abbr
 
         bind --preset $argv enter execute
         bind --preset $argv ctrl-j execute

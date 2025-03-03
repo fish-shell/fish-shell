@@ -166,13 +166,11 @@ if status --is-login
 
             # Populate path according to config files
             for path_file in $argv[2] $argv[3]/*
-                if test -f $path_file
-                    while read -l entry
-                        if not contains -- $entry $result
-                            test -n "$entry"
-                            and set -a result $entry
-                        end
-                    end <$path_file
+                for entry in (string split : <? $path_file)
+                    if not contains -- $entry $result
+                        test -n "$entry"
+                        and set -a result $entry
+                    end
                 end
             end
 
@@ -234,7 +232,7 @@ end
 
 if command -q kill
     # Only define this if something to wrap exists
-    # this allows a nice "commad not found" error to be triggered.
+    # this allows a nice "command not found" error to be triggered.
     function kill
         set -l args (__fish_expand_pid_args $argv)
         and command kill $args

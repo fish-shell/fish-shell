@@ -8,3 +8,14 @@ echo $status
 not not sh -c 'exit 34'
 echo $status
 # CHECK: 34
+
+! -h
+# CHECKERR: fish: !: missing man page
+# CHECKERR: Documentation may not be installed.
+# CHECKERR: `help !` will show an online version
+
+function !
+    echo overridden! $argv
+end
+! -h
+# CHECK: overridden! -h

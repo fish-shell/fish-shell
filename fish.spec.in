@@ -17,7 +17,6 @@ BuildRequires:          rust >= 1.70
 BuildRequires: cmake >= 3.15
 
 %if 0%{?suse_version}
-BuildRequires: update-desktop-files
 # for tests
 BuildRequires: groff
 %else
@@ -76,10 +75,6 @@ make %{?_smp_mflags}
 %make_install
 %endif
 %find_lang %{name}
-# OpenSUSE has strong opinions about categories which do not apply to other systems
-%if 0%{?suse_version}
-%suse_update_desktop_file fish "System;TerminalEmulator"
-%endif
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir
@@ -130,7 +125,3 @@ fi
 
 # pkgconfig
 %{_datadir}/pkgconfig/fish.pc
-
-# FreeDesktop entry
-%{_datadir}/applications/fish.desktop
-%{_datadir}/pixmaps/fish.png

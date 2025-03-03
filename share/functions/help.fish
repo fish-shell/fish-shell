@@ -34,6 +34,10 @@ function help --description 'Show help for the fish shell'
         if set -q BROWSER
             # User has manually set a preferred browser, so we respect that
             echo $BROWSER | read -at fish_browser
+            if not type -q $fish_browser[1]
+                printf (_ 'help: %s is not a valid command: %s\n') '$fish_browser' "$fish_browser"
+                return 2
+            end
         else
             # No browser set up, inferring.
             # We check a bunch and use the last we find.
@@ -93,6 +97,11 @@ function help --description 'Show help for the fish shell'
                 end
             end
         end
+    else
+        if not type -q $fish_browser[1]
+            printf (_ 'help: %s is not a valid command: %s\n') '$fish_help_browser' "$fish_browser"
+            return 2
+        end
     end
 
     # In Cygwin, start the user-specified browser using cygstart,
@@ -120,6 +129,8 @@ function help --description 'Show help for the fish shell'
 
     set -l fish_help_page
     switch "$fish_help_item"
+        case "!"
+            set fish_help_page "cmds/not.html"
         case "."
             set fish_help_page "cmds/source.html"
         case ":"
@@ -178,7 +189,7 @@ function help --description 'Show help for the fish shell'
     and set -l chromeos_linux_garcon
 
     # Generate the online URL, with one dot in the version string (major.minor)
-    set -l version_string (string split . -f 1,2 -- $version | string join .)
+    set -l version_string (string match -rg '(\d+\.\d+(?:b\d+)?).*' -- $version)
     set -l ext_url https://fishshell.com/docs/$version_string/$fish_help_page
     set -l page_url
     if set -q __fish_help_dir[1]; and test -f $__fish_help_dir/index.html; and not set -lq chromeos_linux_garcon

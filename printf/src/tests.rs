@@ -84,7 +84,7 @@ fn smoke() {
 #[test]
 fn test_format_string_str() {
     let mut s: &str = "hello%world%%%%%";
-    assert_eq!(s.is_empty(), false);
+    assert!(!s.is_empty());
     for (idx, c) in s.char_indices() {
         assert_eq!(s.at(idx), Some(c));
     }
@@ -98,7 +98,7 @@ fn test_format_string_str() {
     assert_eq!(s.take_literal(&mut buffer), "world%%");
 
     s.advance_by(1); // advancing over one more %
-    assert_eq!(s.is_empty(), true); // remaining content is empty
+    assert!(s.is_empty()); // remaining content is empty
 }
 
 #[cfg(feature = "widestring")]
@@ -122,7 +122,7 @@ fn test_format_string_wstr() {
     assert_eq!(s.take_literal(&mut buffer), "world%%");
 
     s.advance_by(1); // advancing over one more %
-    assert_eq!(s.is_empty(), true); // remaining content is empty
+    assert!(s.is_empty()); // remaining content is empty
 }
 
 #[test]

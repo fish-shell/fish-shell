@@ -65,7 +65,7 @@ source /banana/\t/foo
 function eval
     builtin eval $argv
 end
-# CHECKERR: checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
+# CHECKERR: {{.*}}checks/eval.fish (line {{\d+}}): function: eval: cannot use reserved keyword as function name
 # CHECKERR: function eval
 # CHECKERR: ^
 

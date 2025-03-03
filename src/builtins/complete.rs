@@ -4,6 +4,7 @@ use crate::complete::{complete_add_wrapper, complete_remove_wrapper, CompletionR
 use crate::highlight::colorize;
 use crate::highlight::highlight_shell;
 use crate::nix::isatty;
+use crate::operation_context::OperationContext;
 use crate::parse_constants::ParseErrorList;
 use crate::parse_util::parse_util_detect_errors_in_argument_list;
 use crate::parse_util::{parse_util_detect_errors, parse_util_token_extent};
@@ -215,14 +216,14 @@ fn builtin_complete_print(cmd: &wstr, streams: &mut IoStreams, parser: &Parser) 
 const OPT_ESCAPE: char = '\x01';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
-/// complete.cpp for any heavy lifting.
+/// complete.rs for any heavy lifting.
 pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Option<c_int> {
     let cmd = argv[0];
     let argc = argv.len();
     let mut result_mode = CompletionMode::default();
     let mut remove = false;
     let mut short_opt = WString::new();
-    // todo!("these whould be Vec<&wstr>");
+    // todo!("these would be Vec<&wstr>");
     let mut gnu_opt = vec![];
     let mut old_opt = vec![];
     let mut subcommand = vec![];
@@ -475,13 +476,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             Some(param) => param,
         };
 
-        let mut token = 0..0;
-        parse_util_token_extent(
-            &do_complete_param,
-            do_complete_param.len(),
-            &mut token,
-            None,
-        );
+        let (token, _) = parse_util_token_extent(&do_complete_param, do_complete_param.len());
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
@@ -513,6 +508,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let faux_cmdline = &do_complete_param[token.clone()];
                 let mut tmp_cursor = faux_cmdline.len();
                 let mut faux_cmdline_with_completion = completion_apply_to_command_line(
+                    &OperationContext::background_interruptible(parser.vars()),
                     &next.completion,
                     next.flags,
                     faux_cmdline,

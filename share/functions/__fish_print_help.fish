@@ -1,5 +1,7 @@
 function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument-names item error_message
     switch $item
+        case !
+            set item not
         case .
             set item source
         case :

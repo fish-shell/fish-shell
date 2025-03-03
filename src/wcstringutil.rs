@@ -28,6 +28,18 @@ pub fn string_prefixes_string_case_insensitive(proposed_prefix: &wstr, value: &w
     prefix_size <= value.len() && wcscasecmp(&value[..prefix_size], proposed_prefix).is_eq()
 }
 
+pub fn string_prefixes_string_maybe_case_insensitive(
+    icase: bool,
+    proposed_prefix: &wstr,
+    value: &wstr,
+) -> bool {
+    (if icase {
+        string_prefixes_string_case_insensitive
+    } else {
+        string_prefixes_string
+    })(proposed_prefix, value)
+}
+
 /// Test if a string is a suffix of another.
 pub fn string_suffixes_string_case_insensitive(proposed_suffix: &wstr, value: &wstr) -> bool {
     let suffix_size = proposed_suffix.len();

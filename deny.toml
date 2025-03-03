@@ -13,6 +13,7 @@ allow = [
     "MPL-2.0",
     "PSF-2.0",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
     "WTFPL",
     "Zlib",
 ]

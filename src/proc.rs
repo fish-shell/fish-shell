@@ -7,7 +7,6 @@ use crate::common::{
     charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output,
     scoped_push_replacer, timef, Timepoint, WSL,
 };
-use crate::curses::term;
 use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{FLOG, FLOGF};
@@ -19,6 +18,7 @@ use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
 use crate::signal::{signal_set_handlers_once, Signal};
+use crate::terminal::term;
 use crate::threads::MainThread;
 use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
@@ -363,7 +363,7 @@ impl TtyTransfer {
         let pgid = jg.get_pgid().unwrap();
 
         // It should never be fish's pgroup.
-        let fish_pgrp = unsafe { libc::getpgrp() };
+        let fish_pgrp = crate::nix::getpgrp();
         assert!(
             pgid.as_pid_t() != fish_pgrp,
             "Job should not have fish's pgroup"
@@ -377,7 +377,7 @@ impl TtyTransfer {
         //   1. There is no tty at all (tcgetpgrp() returns -1). For example running from a pure script.
         //      Of course do not transfer it in that case.
         //   2. The tty is owned by the process. This comes about often, as the process will call
-        //      tcsetpgrp() on itself between fork ane exec. This is the essential race inherent in
+        //      tcsetpgrp() on itself between fork and exec. This is the essential race inherent in
         //      tcsetpgrp(). In this case we want to reclaim the tty, but do not need to transfer it
         //      ourselves since the child won the race.
         //   3. The tty is owned by a different process. This may come about if fish is running in the
@@ -1363,7 +1363,7 @@ pub fn proc_wait_any(parser: &Parser) {
 
 /// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
 pub fn hup_jobs(jobs: &JobList) {
-    let fish_pgrp = unsafe { libc::getpgrp() };
+    let fish_pgrp = crate::nix::getpgrp();
     let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.get_pgid() else { continue };

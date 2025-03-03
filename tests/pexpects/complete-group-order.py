@@ -43,6 +43,6 @@ expect_prompt()
 send("fooc \t")
 
 expect_re(
-    "india\W+hotel\W+charlie\W+alpha\W+delta\W+kilo\r\n"
-    + "foxtrot\W+golf\W+echo\W+bravo\W+juliett\W+lima"
+    "india\\W+hotel\\W+charlie\\W+alpha\\W+delta\\W+kilo\r\n"
+    + "foxtrot\\W+golf\\W+echo\\W+bravo\\W+juliett\\W+lima"
 )

@@ -1,9 +1,9 @@
 function __fish_iftop_sort_orders
-	echo -e "2s\tSort by 2s traffic average"
-	echo -e "10s\tSort by 10s traffic average (default)"
-	echo -e "40s\tSort by 40s traffic average"
-	echo -e "source\tSort by source address"
-	echo -e "destination\tSort by destination address"
+    echo -e "2s\tSort by 2s traffic average"
+    echo -e "10s\tSort by 10s traffic average (default)"
+    echo -e "40s\tSort by 40s traffic average"
+    echo -e "source\tSort by source address"
+    echo -e "destination\tSort by destination address"
 end
 
 complete -c iftop -f

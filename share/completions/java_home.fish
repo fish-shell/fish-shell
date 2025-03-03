@@ -4,7 +4,7 @@ function __fish_complete_macos_java_version
 end
 
 function __fish_complete_macos_java_home_exec
-    # seperate the buffer into two parts
+    # separate the buffer into two parts
     # where the first used to get the JAVA_HOME
     # and the second is the subcommand to complete
     set -l cmds (string replace -a -r ' *java_home *' ''  (commandline) )

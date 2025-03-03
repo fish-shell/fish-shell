@@ -93,7 +93,7 @@ impl FunctionSet {
         // tombstoned.
         let props = self.get_props(name);
         let has_explicit_func =
-            props.map_or(false, |p: Arc<FunctionProperties>| !p.is_autoload.load());
+            props.is_some_and(|p: Arc<FunctionProperties>| !p.is_autoload.load());
         let tombstoned = self.autoload_tombstones.contains(name);
         !has_explicit_func && !tombstoned
     }
@@ -107,9 +107,6 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
         autoloader: Autoload::new(L!("fish_function_path")),
     })
 });
-
-// Safety: global lock.
-unsafe impl Send for FunctionSet {}
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.

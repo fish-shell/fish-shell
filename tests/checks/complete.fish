@@ -1,4 +1,4 @@
-#RUN: %fish -C 'set -l fish %fish' %s
+#RUN: fish=%fish %fish %s
 function complete_test_alpha1
     echo $argv
 end
@@ -39,6 +39,8 @@ end
 complete -c t -fa '(t)'
 complete -C't '
 # CHECK: t
+
+touch test.fish
 
 # Ensure file completion happens even though it was disabled above.
 complete -c t -l fileoption -rF
@@ -409,7 +411,7 @@ complete -c fudge -f
 complete -c fudge -n '__fish_seen_subcommand_from eat' -F
 complete -C'fudge eat yummyin'
 # CHECK: yummyinmytummy
-complete -C"echo no commpletion inside comment # "
+complete -C"echo no completion inside comment # "
 cd -
 
 rm -r $dir

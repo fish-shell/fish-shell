@@ -1,4 +1,5 @@
 # RUN: env fth=%fish_test_helper %fish %s
+#REQUIRES: command -v %fish_test_helper
 
 set -g SIGUSR1_COUNT 0
 
@@ -38,7 +39,7 @@ sleep .1
 kill -USR2 $fish_pid
 sleep .1
 
-# Send the signal and immediately define the function; it should not excute.
+# Send the signal and immediately define the function; it should not execute.
 kill -USR1 $fish_pid
 function handle1 --on-signal SIGUSR1
     gotsigusr1

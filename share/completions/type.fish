@@ -5,6 +5,7 @@ complete -c type -s t -l type -d "Print command type"
 complete -c type -s p -l path -d "Print path to command, or nothing if name is not a command"
 complete -c type -s P -l force-path -d "Print path to command"
 complete -c type -s q -l query -l quiet -d "Check if something exists without output"
+complete -c type -s s -l short -d "Don't print function definition"
 
 complete -c type -a "(builtin -n)" -d Builtin
 complete -c type -a "(functions -n)" -d Function

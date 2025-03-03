@@ -21,16 +21,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(unstable_name_collisions)]
 #![allow(clippy::uninlined_format_args)]
 
+#[cfg(feature = "installable")]
+use fish::common::wcs2osstring;
 #[allow(unused_imports)]
 use fish::future::IsSomeAnd;
 use fish::{
     ast::Ast,
+    builtins::fish_indent,
+    builtins::fish_key_reader,
     builtins::shared::{
         BUILTIN_ERR_MISSING, BUILTIN_ERR_UNKNOWN, STATUS_CMD_OK, STATUS_CMD_UNKNOWN,
     },
     common::{
         escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2osstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -42,7 +46,7 @@ use fish::{
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
-    nix::{getpid, isatty},
+    nix::{getpid, getrusage, isatty, RUsage},
     panic::panic_handler,
     parse_constants::{ParseErrorList, ParseTreeFlags},
     parse_tree::ParsedSource,
@@ -63,7 +67,6 @@ use fish::{
 };
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
-use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -185,10 +188,9 @@ fn install(confirm: bool, dir: &PathBuf) -> bool {
     return true;
 }
 
-#[cfg(any(clippy, not(feature = "installable")))]
+#[cfg(clippy)]
 fn install(_confirm: bool, _dir: PathBuf) -> bool {
-    eprintln!("Fish was built without support for self-installation");
-    return false;
+    unreachable!()
 }
 
 /// container to hold the options specified within the command line
@@ -230,13 +232,7 @@ fn tv_to_msec(tv: &libc::timeval) -> i64 {
 }
 
 fn print_rusage_self() {
-    let mut rs = MaybeUninit::uninit();
-    if unsafe { libc::getrusage(libc::RUSAGE_SELF, rs.as_mut_ptr()) } != 0 {
-        let s = CString::new("getrusage").unwrap();
-        unsafe { libc::perror(s.as_ptr()) }
-        return;
-    }
-    let rs: libc::rusage = unsafe { rs.assume_init() };
+    let rs = getrusage(RUsage::RSelf);
     let rss_kb = if cfg!(target_os = "macos") {
         // mac use bytes.
         rs.ru_maxrss / 1024
@@ -585,6 +581,15 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
 }
 
 fn main() {
+    // If we are called as "/path/to/fish_key_reader", become fish_key_reader.
+    if let Some(name) = env::args_os().next() {
+        let p = Path::new(&name).file_name().and_then(|x| x.to_str());
+        if p == Some("fish_key_reader") {
+            return fish_key_reader::main();
+        } else if p == Some("fish_indent") {
+            return fish_indent::main();
+        }
+    }
     PROGRAM_NAME.set(L!("fish")).unwrap();
     if !cfg!(small_main_stack) {
         panic_handler(throwing_main);
@@ -642,7 +647,7 @@ fn throwing_main() -> i32 {
             .write(true)
             .truncate(true)
             .create(true)
-            .open(debug_path.clone())
+            .open(&debug_path)
         {
             Ok(dbg_file) => {
                 // Rust sets O_CLOEXEC by default
@@ -696,7 +701,10 @@ fn throwing_main() -> i32 {
             /* do uvars */ !opts.no_config,
             /* default paths */ opts.no_config,
         );
-    }
+        paths
+    } else {
+        None
+    };
 
     // Set features early in case other initialization depends on them.
     // Start with the ones set in the environment, then those set on the command line (so the
@@ -713,7 +721,7 @@ fn throwing_main() -> i32 {
 
     // Construct the root parser!
     let env = Rc::new(EnvStack::globals().create_child(true /* dispatches_var_changes */));
-    let parser: &Parser = &Parser::new(env, CancelBehavior::Clear);
+    let parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {
@@ -876,7 +884,6 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -
         return false;
     }
 
-    let mut result = false;
     let cmd = &cmds[0];
     if cmd == "exec \"${@}\"" || cmd == "exec \"$@\"" {
         // We're going to construct a new command that starts with exec, and then has the
@@ -888,7 +895,8 @@ fn fish_xdm_login_hack_hack_hack_hack(cmds: &mut [OsString], args: &[WString]) -
         }
 
         cmds[0] = new_cmd;
-        result = true;
+        true
+    } else {
+        false
     }
-    result
 }

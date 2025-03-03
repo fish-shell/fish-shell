@@ -15,19 +15,21 @@ expect_prompt()
 # Test --showing-suggestion before we dirty the history
 sendline("echo hello")
 expect_prompt()
-sendline("function debug; commandline --showing-suggestion; set -g cmd_status $status; end")
+sendline(
+    "function debug; commandline --showing-suggestion; set -g cmd_status $status; end"
+)
 expect_prompt()
-sendline("bind ctrl-p debug");
+sendline("bind ctrl-p debug")
 expect_prompt()
 send("echo hell")
-sleep(0.1) # wait for suggestion to appear under CI
+sleep(0.1)  # wait for suggestion to appear under CI
 send(control("p"))
 sendline("")
 expect_prompt("hell")
 sendline("echo cmd_status: $cmd_status")
 expect_prompt("cmd_status: 0")
 send("echo goodb")
-sleep(0.1) # wait for suggestion to appear under CI
+sleep(0.1)  # wait for suggestion to appear under CI
 send(control("p"))
 sendline("")
 expect_prompt("goodb")
@@ -42,7 +44,7 @@ sendline(
     "function handle_tilde; echo; echo '@GUARD:1@'; commandline -b; echo '@/GUARD:1@'; commandline -b ''; end"
 )
 expect_prompt()
-sendline("echo \en one \"two three\" four'five six'{7} 'eight~")
+sendline("echo \\en one \"two three\" four'five six'{7} 'eight~")
 expect_prompt("\r\n@GUARD:1@\r\n(.*)\r\n@/GUARD:1@\r\n")
 
 # printing the buffer with -o should remove quoting

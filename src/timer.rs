@@ -17,6 +17,8 @@
 use std::io::Write;
 use std::time::{Duration, Instant};
 
+use crate::nix::{getrusage, RUsage};
+
 enum Unit {
     Minutes,
     Seconds,
@@ -35,33 +37,6 @@ struct TimerSnapshot {
 pub fn push_timer() -> PrintElapsedOnDrop {
     PrintElapsedOnDrop {
         start: TimerSnapshot::take(),
-    }
-}
-
-/// An enumeration of supported libc rusage types used by [`getrusage()`].
-/// NB: RUSAGE_THREAD is not supported on macOS.
-enum RUsage {
-    RSelf, // "Self" is a reserved keyword
-    RChildren,
-}
-
-/// A safe wrapper around `libc::getrusage()`
-fn getrusage(resource: RUsage) -> libc::rusage {
-    let mut rusage = std::mem::MaybeUninit::uninit();
-    let result = unsafe {
-        match resource {
-            RUsage::RSelf => libc::getrusage(libc::RUSAGE_SELF, rusage.as_mut_ptr()),
-            RUsage::RChildren => libc::getrusage(libc::RUSAGE_CHILDREN, rusage.as_mut_ptr()),
-        }
-    };
-
-    // getrusage(2) says the syscall can only fail if the dest address is invalid (EFAULT) or if the
-    // requested resource type is invalid. Since we're in control of both, we can assume it won't
-    // fail. In case it does anyway (e.g. OS where the syscall isn't implemented), we can just
-    // return an empty value.
-    match result {
-        0 => unsafe { rusage.assume_init() },
-        _ => unsafe { std::mem::zeroed() },
     }
 }
 

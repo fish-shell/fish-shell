@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::highlight::HighlightSpec;
@@ -142,31 +144,8 @@ impl EditableLine {
         self.text.char_at(idx)
     }
 
-    pub fn line_at_cursor(&self) -> &wstr {
-        let start = self.text[0..self.position()]
-            .as_char_slice()
-            .iter()
-            .rposition(|&c| c == '\n')
-            .map(|newline| newline + 1)
-            .unwrap_or(0);
-        let end = self.text[self.position()..]
-            .as_char_slice()
-            .iter()
-            .position(|&c| c == '\n')
-            .map(|pos| self.position() + pos)
-            .unwrap_or(self.len());
-        // Remove any traililng newline
-        self.text[start..end].trim_matches('\n')
-    }
-
-    pub fn clear(&mut self) {
-        if self.is_empty() {
-            return;
-        }
-        self.push_edit(
-            Edit::new(0..self.len(), L!("").to_owned()),
-            /*allow_coalesce=*/ false,
-        );
+    pub fn offset_to_line(&self, offset: usize) -> usize {
+        self.text[0..offset].chars().filter(|&c| c == '\n').count()
     }
 
     /// Modify the commandline according to @edit. Most modifications to the
@@ -186,15 +165,15 @@ impl EditableLine {
             return;
         }
 
+        if range.is_empty() && edit.replacement.is_empty() {
+            return; // nop
+        }
+
         // Assign a new group id or propagate the old one if we're in a logical grouping of edits
         if self.edit_group_level.is_some() {
             edit.group_id = Some(self.edit_group_id);
         }
 
-        let edit_does_nothing = range.is_empty() && edit.replacement.is_empty();
-        if edit_does_nothing {
-            return;
-        }
         if self.undo_history.edits_applied != self.undo_history.edits.len() {
             // After undoing some edits, the user is making a new edit;
             // we are about to create a new edit branch.
@@ -361,4 +340,28 @@ fn cursor_position_after_edit(edit: &Edit) -> usize {
     let cursor = edit.cursor_position_before_edit + edit.replacement.len();
     let removed = chars_deleted_left_of_cursor(edit);
     cursor.saturating_sub(removed)
+}
+
+pub fn range_of_line_at_cursor(buffer: &wstr, cursor: usize) -> Range<usize> {
+    let start = buffer[0..cursor]
+        .as_char_slice()
+        .iter()
+        .rposition(|&c| c == '\n')
+        .map(|newline| newline + 1)
+        .unwrap_or(0);
+    let mut end = buffer[cursor..]
+        .as_char_slice()
+        .iter()
+        .position(|&c| c == '\n')
+        .map(|pos| cursor + pos)
+        .unwrap_or(buffer.len());
+    // Remove any trailing newline
+    if end != start && buffer.char_at(end - 1) == '\n' {
+        end -= 1;
+    }
+    start..end
+}
+
+pub fn line_at_cursor(buffer: &wstr, cursor: usize) -> &wstr {
+    &buffer[range_of_line_at_cursor(buffer, cursor)]
 }

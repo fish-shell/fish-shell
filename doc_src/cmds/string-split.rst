@@ -30,6 +30,7 @@ See also the **--delimiter** option of the :doc:`read <read>` command.
 
 ``split0`` has the important property that its output is not further split when used in a command substitution, allowing for the command substitution to produce elements containing newlines. This is most useful when used with Unix tools that produce zero bytes, such as ``find -print0`` or ``sort -z``. See split0 examples below.
 
+Be aware that commandline arguments cannot include NULs, so you likely want to pass to ``string split0`` via a pipe, not a command substitution.
 
 .. END DESCRIPTION
 
@@ -65,6 +66,7 @@ NUL Delimited Examples
 ::
 
     >_ # Count files in a directory, without being confused by newlines.
+    >_ # Note: Don't use `string split0 (find . -print0)`, because arguments cannot include NUL.
     >_ count (find . -print0 | string split0)
     42
 

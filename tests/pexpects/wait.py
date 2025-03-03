@@ -28,9 +28,7 @@ sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
 # three job ids specified
-sendline("sleep 0.5 &; sleep 0.1 &; sleep 0.3 &; sleep 0.7 &;")
-expect_prompt()
-sendline("wait %1 %3 %4")
+sendline("sleep 0.5 &; sleep 0.1 &; sleep 0.3 &; sleep 0.7 &; wait %1 %3 %4")
 expect_str("Job 2, 'sleep 0.1 &' has ended")
 expect_str("Job 3, 'sleep 0.3 &' has ended")
 expect_str("Job 1, 'sleep 0.5 &' has ended")
@@ -39,9 +37,7 @@ sendline("jobs")
 expect_prompt("jobs: There are no jobs")
 
 # specify job ids with -n option
-sendline("sleep 0.5 &; sleep 0.1 &; sleep 0.3 &")
-expect_prompt()
-sendline("wait -n %1 %3")
+sendline("sleep 0.5 &; sleep 0.1 &; sleep 0.3 &; wait -n %1 %3")
 expect_str("Job 2, 'sleep 0.1 &' has ended")
 expect_prompt("Job 3, 'sleep 0.3 &' has ended")
 sendline("wait -n %1")

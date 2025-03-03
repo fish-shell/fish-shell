@@ -38,6 +38,8 @@ fn test_complete() {
                 (WString::from_str("ALPHA!"), WString::new()),
                 (WString::from_str("gamma1"), WString::new()),
                 (WString::from_str("GAMMA2"), WString::new()),
+                (WString::from_str("SOMEDIR"), L!("/").to_owned()),
+                (WString::from_str("SOMEVAR"), WString::new()),
             ]),
         },
     };
@@ -56,7 +58,7 @@ fn test_complete() {
             .collect::<Vec<_>>(),
         [
             "alpha", "ALPHA!", "Bar1", "Bar2", "Bar3", "Foo1", "Foo2", "Foo3", "gamma1", "GAMMA2",
-            "PWD"
+            "PWD", "SOMEDIR", "SOMEVAR",
         ]
         .into_iter()
         .map(|s| s.to_owned())
@@ -156,6 +158,7 @@ fn test_complete() {
             );
             let mut cursor = cmdline.len();
             let newcmdline = completion_apply_to_command_line(
+                &ctx,
                 &completions[0].completion,
                 completions[0].flags,
                 cmdline,
@@ -216,9 +219,14 @@ fn test_complete() {
         );
     }
 
+    unique_completion_applies_as!("echo $SOMEV", r"AR", "echo $SOMEVAR ");
+    unique_completion_applies_as!("echo $SOMED", r"IR", "echo $SOMEDIR/");
+    unique_completion_applies_as!(r#"echo "$SOMED"#, r"IR", r#"echo "$SOMEDIR/"#);
+
     // #8820
     let mut cursor_pos = 11;
     let newcmdline = completion_apply_to_command_line(
+        &ctx,
         L!("Debug/"),
         CompleteFlags::REPLACES_TOKEN | CompleteFlags::NO_SPACE,
         L!("mv debug debug"),

@@ -5,7 +5,8 @@ use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::{
     env::EnvStack,
-    highlight::{highlight_shell, is_potential_path, HighlightRole, HighlightSpec, PathFlags},
+    highlight::file_tester::{is_potential_path, PathFlags},
+    highlight::{highlight_shell, HighlightRole, HighlightSpec},
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND, EXPANSION_LIMIT_DEFAULT},
 };
 use libc::PATH_MAX;
@@ -38,12 +39,17 @@ fn test_is_potential_path() {
     let vars = EnvStack::new();
     let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);
 
+    let path_require_dir = PathFlags {
+        require_dir: true,
+        ..Default::default()
+    };
+
     assert!(is_potential_path(
         L!("al"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
 
     assert!(is_potential_path(
@@ -51,28 +57,32 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(is_potential_path(
         L!("aard"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("aard"),
         false,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("alp/"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR | PathFlags::PATH_FOR_CD
+        PathFlags {
+            require_dir: true,
+            for_cd: true,
+            ..Default::default()
+        }
     ));
 
     assert!(!is_potential_path(
@@ -80,28 +90,28 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aard"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aarde"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("aarde"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
 
     assert!(is_potential_path(
@@ -109,21 +119,21 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(is_potential_path(
         L!("test/is_potential_path_test/al"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(is_potential_path(
         L!("test/is_potential_path_test/aardv"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
 
     assert!(!is_potential_path(
@@ -131,28 +141,28 @@ fn test_is_potential_path() {
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
     assert!(!is_potential_path(
         L!("test/is_potential_path_test/al/"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(!is_potential_path(
         L!("test/is_potential_path_test/ar"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::empty()
+        PathFlags::default()
     ));
     assert!(is_potential_path(
         L!("/usr"),
         true,
         &wds[..],
         &ctx,
-        PathFlags::PATH_REQUIRE_DIR
+        path_require_dir
     ));
 }
 
@@ -303,6 +313,16 @@ fn test_highlighting() {
         ("; ", fg(HighlightRole::statement_terminator)),
         ("/bin/definitely_not_a_command", fg(HighlightRole::error)),
         ("; ", fg(HighlightRole::statement_terminator)),
+        ("end", fg(HighlightRole::keyword)),
+    );
+
+    validate!(
+        ("if", fg(HighlightRole::keyword)),
+        ("true", fg(HighlightRole::command)),
+        (";", fg(HighlightRole::statement_terminator)),
+        ("else", fg(HighlightRole::keyword)),
+        ("true", fg(HighlightRole::command)),
+        (";", fg(HighlightRole::statement_terminator)),
         ("end", fg(HighlightRole::keyword)),
     );
 
@@ -636,4 +656,251 @@ fn test_highlighting() {
         (">", fg(HighlightRole::error)),
         ("echo", fg(HighlightRole::error)),
     );
+}
+
+pub use super::file_tester::{FileTester, IsErr, IsFile};
+mod file_tester_tests {
+    use super::*;
+    use crate::common::charptr2wcstring;
+    use crate::redirection::RedirectionMode;
+    use std::fs::{self, create_dir_all, File, Permissions};
+    use std::os::unix::fs::PermissionsExt;
+
+    struct TempDir {
+        basepath: WString,
+        ctx: OperationContext<'static>,
+    }
+
+    impl TempDir {
+        fn new() -> TempDir {
+            let mut t1 = *b"/tmp/fish_file_tester_dir.XXXXXX\0";
+            let basepath_narrow = unsafe { libc::mkdtemp(t1.as_mut_ptr().cast()) };
+            assert!(!basepath_narrow.is_null(), "mkdtemp failed");
+            let basepath: WString = charptr2wcstring(basepath_narrow);
+            TempDir {
+                basepath,
+                ctx: OperationContext::empty(),
+            }
+        }
+
+        fn filepath(&self, name: &str) -> String {
+            let mut result = self.basepath.to_string();
+            result.push('/');
+            result.push_str(name);
+            result
+        }
+
+        fn file_tester(&self) -> FileTester<'_> {
+            FileTester::new(self.basepath.clone(), &self.ctx)
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(self.basepath.to_string());
+        }
+    }
+
+    #[test]
+    fn test_ispath() {
+        let temp = TempDir::new();
+        let tester = temp.file_tester();
+
+        let file_path = temp.filepath("file.txt");
+        File::create(&file_path).unwrap();
+
+        let result = tester.test_path(L!("file.txt"), false);
+        assert!(result);
+
+        let result = tester.test_path(L!("file.txt"), true);
+        assert!(result);
+
+        let result = tester.test_path(L!("fi"), false);
+        assert!(!result);
+
+        let result = tester.test_path(L!("fi"), true);
+        assert!(result);
+
+        let result = tester.test_path(L!("file.txt-more"), false);
+        assert!(!result);
+
+        let result = tester.test_path(L!("file.txt-more"), true);
+        assert!(!result);
+
+        let result = tester.test_path(L!("ffiledfk.txt"), false);
+        assert!(!result);
+
+        let result = tester.test_path(L!("ffiledfk.txt"), true);
+        assert!(!result);
+
+        // Directories are also files.
+        let dir_path = temp.filepath("somedir");
+        create_dir_all(&dir_path).unwrap();
+
+        let result = tester.test_path(L!("somedir"), false);
+        assert!(result);
+
+        let result = tester.test_path(L!("somedir"), true);
+        assert!(result);
+
+        let result = tester.test_path(L!("some"), false);
+        assert!(!result);
+
+        let result = tester.test_path(L!("some"), true);
+        assert!(result);
+    }
+
+    #[test]
+    fn test_iscdpath() {
+        let temp = TempDir::new();
+        let tester = temp.file_tester();
+
+        // Note cd (unlike file paths) should report IsErr for invalid cd paths,
+        // rather than IsFile(false).
+
+        let dir_path = temp.filepath("somedir");
+        create_dir_all(&dir_path).unwrap();
+
+        let result = tester.test_cd_path(L!("somedir"), false);
+        assert_eq!(result, Ok(IsFile(true)));
+
+        let result = tester.test_cd_path(L!("somedir"), true);
+        assert_eq!(result, Ok(IsFile(true)));
+
+        let result = tester.test_cd_path(L!("some"), false);
+        assert_eq!(result, Err(IsErr));
+
+        let result = tester.test_cd_path(L!("some"), true);
+        assert_eq!(result, Ok(IsFile(true)));
+
+        let result = tester.test_cd_path(L!("notdir"), false);
+        assert_eq!(result, Err(IsErr));
+
+        let result = tester.test_cd_path(L!("notdir"), true);
+        assert_eq!(result, Err(IsErr));
+    }
+
+    #[test]
+    fn test_redirections() {
+        // Note we use is_ok and is_err since we don't care about the IsFile part.
+        let temp = TempDir::new();
+        let tester = temp.file_tester();
+        let file_path = temp.filepath("file.txt");
+        File::create(&file_path).unwrap();
+
+        let dir_path = temp.filepath("somedir");
+        create_dir_all(&dir_path).unwrap();
+
+        // Normal redirection.
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
+        assert!(result);
+
+        // Can't redirect from a missing file
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::input);
+        assert!(!result);
+        let result =
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::input);
+        assert!(!result);
+
+        // Can't redirect from a directory.
+        let result = tester.test_redirection_target(L!("somedir"), RedirectionMode::input);
+        assert!(!result);
+
+        // Can't redirect from an unreadable file.
+        fs::set_permissions(&file_path, Permissions::from_mode(0o200)).unwrap();
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::input);
+        assert!(!result);
+        fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap();
+
+        // try_input syntax highlighting reports an error even though the command will succeed.
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::try_input);
+        assert!(result);
+        let result = tester.test_redirection_target(L!("notfile.txt"), RedirectionMode::try_input);
+        assert!(!result);
+        let result =
+            tester.test_redirection_target(L!("bogus_path/file.txt"), RedirectionMode::try_input);
+        assert!(!result);
+
+        // Test write redirections.
+        // Overwrite an existing file.
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::overwrite);
+        assert!(result);
+
+        // Append to an existing file.
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::append);
+        assert!(result);
+
+        // Write to a missing file.
+        let result = tester.test_redirection_target(L!("newfile.txt"), RedirectionMode::overwrite);
+        assert!(result);
+
+        // No-clobber write to existing file should fail.
+        let result = tester.test_redirection_target(L!("file.txt"), RedirectionMode::noclob);
+        assert!(!result);
+
+        // No-clobber write to missing file should succeed.
+        let result = tester.test_redirection_target(L!("unique.txt"), RedirectionMode::noclob);
+        assert!(result);
+
+        let write_modes = &[
+            RedirectionMode::overwrite,
+            RedirectionMode::append,
+            RedirectionMode::noclob,
+        ];
+
+        // Can't write to a directory.
+        for mode in write_modes {
+            assert!(
+                !tester.test_redirection_target(L!("somedir"), *mode),
+                "Should not be able to write to a directory with mode {:?}",
+                mode
+            );
+        }
+
+        // Can't write without write permissions.
+        fs::set_permissions(&file_path, Permissions::from_mode(0o400)).unwrap(); // Read-only.
+        for mode in write_modes {
+            assert!(
+                !tester.test_redirection_target(L!("file.txt"), *mode),
+                "Should not be able to write to a read-only file with mode {:?}",
+                mode
+            );
+        }
+        fs::set_permissions(&file_path, Permissions::from_mode(0o600)).unwrap(); // Restore permissions.
+
+        // Writing into a directory without write permissions (loop through all modes).
+        fs::set_permissions(&dir_path, Permissions::from_mode(0o500)).unwrap(); // Read and execute, no write.
+        for mode in write_modes {
+            assert!(
+                !tester.test_redirection_target(L!("somedir/newfile.txt"), *mode),
+                "Should not be able to create/write in a read-only directory with mode {:?}",
+                mode
+            );
+        }
+        fs::set_permissions(&dir_path, Permissions::from_mode(0o700)).unwrap(); // Restore permissions.
+
+        // Test fd redirections.
+        assert!(tester.test_redirection_target(L!("-"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("0"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("1"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("2"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("3"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("500"), RedirectionMode::fd));
+
+        // We are base 10, despite the leading 0.
+        assert!(tester.test_redirection_target(L!("000"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("01"), RedirectionMode::fd));
+        assert!(tester.test_redirection_target(L!("07"), RedirectionMode::fd));
+
+        // Invalid fd redirections.
+        assert!(!tester.test_redirection_target(L!("0x2"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("0x3F"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("0F"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("-1"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("-0009"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("--"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("derp"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("123boo"), RedirectionMode::fd));
+        assert!(!tester.test_redirection_target(L!("18446744073709551616"), RedirectionMode::fd));
+    }
 }

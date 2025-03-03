@@ -89,6 +89,7 @@ complete -c set -n "__fish_is_nth_token 1" -s p -l prepend -d "Prepend value to 
 complete -c set -n "__fish_is_nth_token 1" -s S -l show -d "Show variable"
 complete -c set -n "__fish_is_nth_token 1" -l path -d "Make variable as a path variable"
 complete -c set -n "__fish_is_nth_token 1" -l unpath -d "Make variable not as a path variable"
+complete -c set -n "__fish_is_nth_token 1" -l no-event -d "Don't emit an event"
 
 #TODO: add CPP code to generate list of read-only variables and exclude them from the following completions
 

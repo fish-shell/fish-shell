@@ -1,6 +1,6 @@
 function __fish_complete_subcommand -d "Complete subcommand" --no-scope-shadowing
     # How many non-option tokens we skip in the input commandline before completing the subcommand
-    # Usually 1; for ssh 2.
+    # Usually 1; use "--fcs-skip=2" to make it 2 (see e.g. tmux and ssh completions)
     set -l skip_next 1
     set -l subcommand
     while string match -rq -- '^--[a-z]' $argv[1]

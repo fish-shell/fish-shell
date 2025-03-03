@@ -8,7 +8,6 @@ mod env;
 mod env_universal_common;
 mod expand;
 mod fd_monitor;
-mod highlight;
 mod history;
 mod input;
 mod input_common;

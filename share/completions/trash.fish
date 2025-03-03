@@ -1,5 +1,5 @@
 # Completions for trash-cli
-# There are many implementations of trash cli tools, identify different version of ``trash`` excutable by its help message.
+# There are many implementations of trash cli tools, identify different version of ``trash`` executable by its help message.
 
 # https://github.com/andreafrancia/trash-cli
 function __trash_by_andreafrancia

@@ -32,7 +32,7 @@ functions d
 # CHECK: '/mnt/c/Program Files (x86)/devenv.exe' /Edit $argv
 # CHECK: end
 
-# Use "command" to prevent recusion, and don't add --wraps to avoid accidental recursion in completion.
+# Use "command" to prevent recursion, and don't add --wraps to avoid accidental recursion in completion.
 alias e 'e --option=value'
 functions e
 # CHECK: # Defined via `source`

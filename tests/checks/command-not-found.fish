@@ -1,4 +1,4 @@
-# RUN: %fish -C 'set -g fish %fish' %s | %filter-control-sequences
+#RUN: fish=%fish %fish %s
 set -g PATH
 $fish -c "nonexistent-command-1234 banana rama"
 #CHECKERR: fish: Unknown command: nonexistent-command-1234
@@ -25,17 +25,10 @@ command -v nonexistent-command-1234
 echo $status
 #CHECK: 127
 
-
-{ echo; echo }
-# CHECKERR: {{.*}}: Unknown command: '{ echo; echo }'
-# CHECKERR: {{.*}}: '{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'
-# CHECKERR: { echo; echo }
-# CHECKERR: ^~~~~~~~~~~~~^
-
 set -g PATH .
 echo banana > foobar
 foobar --banana
-# CHECKERR: checks/command-not-found.fish (line {{\d+}}): Unknown command. './foobar' exists but is not an executable file.
+# CHECKERR: {{.*}}checks/command-not-found.fish (line {{\d+}}): Unknown command. './foobar' exists but is not an executable file.
 # CHECKERR: foobar --banana
 # CHECKERR: ^~~~~^
 

@@ -20,6 +20,7 @@ use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
+use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
@@ -644,7 +645,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
         }
 
         if opts.tokenize {
-            let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED);
+            let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED | TOK_ARGUMENT_LIST);
             if opts.array {
                 // Array mode: assign each token as a separate element of the sole var.
                 let mut tokens = vec![];
@@ -686,15 +687,15 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             continue;
         }
 
-        // todo!("don't clone")
-        let delimiter = opts
-            .delimiter
-            .clone()
-            .or_else(|| {
-                let ifs = parser.vars().get_unless_empty(L!("IFS"));
-                ifs.map(|ifs| ifs.as_string())
-            })
-            .unwrap_or_default();
+        let mut ifs_delimiter = WString::new();
+        let delimiter: &wstr = opts.delimiter.as_deref().unwrap_or_else(|| {
+            ifs_delimiter = parser
+                .vars()
+                .get_unless_empty(L!("IFS"))
+                .map(|var| var.as_string())
+                .unwrap_or_default();
+            &ifs_delimiter
+        });
 
         if delimiter.is_empty() {
             // Every character is a separate token with one wrinkle involving non-array mode where
@@ -735,7 +736,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
             if opts.delimiter.is_none() {
                 // We're using IFS, so tokenize the buffer using each IFS char. This is for backward
                 // compatibility with old versions of fish.
-                let tokens = split_string_tok(&buff, &delimiter, None)
+                let tokens = split_string_tok(&buff, delimiter, None)
                     .into_iter()
                     .map(|s| s.to_owned())
                     .collect();
@@ -743,7 +744,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 var_ptr += 1;
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
-                let splits = split_about(&buff, &delimiter, usize::MAX, false)
+                let splits = split_about(&buff, delimiter, usize::MAX, false)
                     .into_iter()
                     .map(|s| s.to_owned())
                     .collect();
@@ -757,7 +758,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 // compatibility with old versions of fish.
                 // Note the final variable gets any remaining text.
                 let mut var_vals: Vec<WString> =
-                    split_string_tok(&buff, &delimiter, Some(vars_left(var_ptr)))
+                    split_string_tok(&buff, delimiter, Some(vars_left(var_ptr)))
                         .into_iter()
                         .map(|s| s.to_owned())
                         .collect();
@@ -775,7 +776,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Opt
                 // We're using a delimiter provided by the user so use the `string split` behavior.
                 // We're making at most argc - 1 splits so the last variable
                 // is set to the remaining string.
-                let splits = split_about(&buff, &delimiter, argc - 1, false);
+                let splits = split_about(&buff, delimiter, argc - 1, false);
                 assert!(splits.len() <= vars_left(var_ptr));
                 for split in splits {
                     parser.set_var_and_fire(argv[var_ptr], opts.place, vec![split.to_owned()]);

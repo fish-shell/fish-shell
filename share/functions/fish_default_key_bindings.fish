@@ -23,8 +23,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
     __fish_shared_key_bindings $argv
     or return # protect against invalid $argv
 
-    bind --preset $argv ctrl-k kill-line
-
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
     $legacy_bind --preset $argv -k right forward-char

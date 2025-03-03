@@ -3,7 +3,7 @@
 
 complete -c jq -l version -d 'Output jq version'
 complete -c jq -l seq -d 'Use application/json-seq MIME type'
-complete -c jq -l stream -d 'Parse input in streaming fasion'
+complete -c jq -l stream -d 'Parse input in streaming fashion'
 complete -c jq -l slurp -s s -d 'Read input to array and filter once'
 complete -c jq -l raw-input -s R -d 'Parse input as string (not JSON)'
 complete -c jq -l null-input -s n -d 'Ignore input and treat it as null'

@@ -629,3 +629,7 @@ complete -C'testcommand '
 # CHECK: check{{\t}}Check the frobnicator
 # CHECK: search{{\t}}Search for frobs
 # CHECK: show{{\t}}Show all frobs
+
+abbr cat cat
+complete -C ca | string match -r '^cat(?:\t.*)?$'
+# CHECK: cat{{\t}}Abbreviation: cat

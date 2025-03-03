@@ -387,14 +387,14 @@ fn test_complete() {
     )
     .0;
     assert_eq!(completions.len(), 2);
-    assert_eq!(completions[0].completion, L!("four"));
-    assert!(!completions[0].flags.contains(CompleteFlags::NO_SPACE));
     // Abbreviations should not have a space after them.
-    assert_eq!(completions[1].completion, L!("zero"));
-    assert!(completions[1].flags.contains(CompleteFlags::NO_SPACE));
+    assert_eq!(completions[0].completion, L!("zero"));
+    assert!(completions[0].flags.contains(CompleteFlags::NO_SPACE));
     with_abbrs_mut(|abbrset| {
         abbrset.erase(L!("testabbrsonetwothreezero"));
     });
+    assert_eq!(completions[1].completion, L!("four"));
+    assert!(!completions[1].flags.contains(CompleteFlags::NO_SPACE));
 
     // Test wraps.
     assert!(comma_join(complete_get_wrap_targets(L!("wrapper1"))).is_empty());

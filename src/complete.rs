@@ -776,8 +776,8 @@ impl<'ctx> Completer<'ctx> {
             }
             // Complete command filename.
             let current_token = current_token.to_owned();
-            self.complete_cmd(current_token.clone());
-            self.complete_abbr(current_token);
+            self.complete_abbr(current_token.clone());
+            self.complete_cmd(current_token);
             return;
         }
         // See whether we are in an argument, in a redirection or in the whitespace in between.

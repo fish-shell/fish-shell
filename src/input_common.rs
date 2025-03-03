@@ -437,6 +437,7 @@ pub static IN_MIDNIGHT_COMMANDER_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBoo
 static IN_ITERM_PRE_CSI_U: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_JETBRAINS: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static IN_KITTY: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static IN_WEZTERM: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub fn terminal_protocol_hacks() {
     use std::env::var_os;
@@ -457,6 +458,10 @@ pub fn terminal_protocol_hacks() {
     );
     IN_KITTY
         .store(var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"xterm-kitty"));
+    IN_WEZTERM.store(
+        var_os("TERM_PROGRAM")
+            .is_some_and(|term_program| term_program.as_os_str().as_bytes() == b"WezTerm"),
+    );
 }
 
 fn parse_version(version: &wstr) -> Option<(i64, i64, i64)> {
@@ -491,7 +496,7 @@ pub fn terminal_protocols_enable_ifn() {
         // Jetbrains IDE terminals vomit CSI u
         // iTerm fails to option-modify keys
         concat!("\x1b[?2004h", "\x1b[>4;1m", "\x1b=",)
-    } else if IN_KITTY.load() {
+    } else if IN_KITTY.load() || IN_WEZTERM.load() {
         // Kitty spams the log for modifyotherkeys
         concat!(
             "\x1b[?2004h", // Bracketed paste
@@ -524,7 +529,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
     } else if IN_JETBRAINS.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)
-    } else if IN_KITTY.load() {
+    } else if IN_KITTY.load() || IN_WEZTERM.load() {
         // Kitty spams the log for modifyotherkeys
         concat!(
             "\x1b[?2004l", // Bracketed paste

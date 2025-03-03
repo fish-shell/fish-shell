@@ -89,6 +89,7 @@ use crate::nix::isatty;
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
 use crate::output::parse_color_maybe_none;
+use crate::output::BufferedOuputter;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -658,8 +659,13 @@ fn read_i(parser: &Parser) -> i32 {
         data.command_line.clear();
         data.update_buff_pos(EditableLineTag::Commandline, None);
         data.command_line_changed(EditableLineTag::Commandline);
-        // OSC 133 End of command
-        data.screen.write_bytes(b"\x1b]133;C\x07");
+        // OSC 133 "Command start"
+        write!(
+            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
+            "\x1b]133;C;cmdline_url={}\x07",
+            escape_string(&command, EscapeStringStyle::Url),
+        )
+        .unwrap();
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();

@@ -456,6 +456,35 @@ impl Outputter {
     }
 }
 
+pub struct BufferedOuputter<'a>(&'a mut Outputter);
+
+impl<'a> BufferedOuputter<'a> {
+    pub fn new(outputter: &'a mut Outputter) -> Self {
+        outputter.begin_buffering();
+        Self(outputter)
+    }
+}
+
+impl<'a> Drop for BufferedOuputter<'a> {
+    fn drop(&mut self) {
+        self.0.end_buffering();
+    }
+}
+
+impl<'a> Write for BufferedOuputter<'a> {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.0
+            .write(buf)
+            .expect("Writing to in-memory buffer should never fail");
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        self.0.flush().unwrap();
+        Ok(())
+    }
+}
+
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
 pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {

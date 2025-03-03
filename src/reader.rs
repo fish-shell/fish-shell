@@ -672,11 +672,12 @@ fn read_i(parser: &Parser) -> i32 {
         parser.libdata_mut().exit_current_script = false;
 
         // OSC 133 "Command finished"
-        let _ = write!(
-            Outputter::stdoutput().borrow_mut(),
+        write!(
+            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
             "\x1b]133;D;{}\x07",
             parser.get_last_status()
-        );
+        )
+        .unwrap();
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();

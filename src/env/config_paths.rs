@@ -15,8 +15,10 @@ const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
-pub static CONFIG_PATHS: Lazy<ConfigPaths> =
-    Lazy::new(|| determine_config_directory_paths(std::env::args().next().unwrap()));
+pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
+    // Read the current executable and follow all symlinks to it.
+    determine_config_directory_paths(std::env::current_exe().unwrap().canonicalize().unwrap())
+});
 
 fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
     // PORTING: why is this not just an associated method on ConfigPaths?

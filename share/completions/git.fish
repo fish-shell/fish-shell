@@ -2565,11 +2565,11 @@ complete -c git -n __fish_git_needs_command -a '(__fish_git_custom_commands)' -d
 function __fish_git_complete_custom_command -a subcommand
     set -l cmd (commandline -xpc)
     set -e cmd[1] # Drop "git".
-    set -lx subcommand_args
+    set -l subcommand_args
     if argparse -s (__fish_git_global_optspecs) -- $cmd
         set subcommand_args $argv[2..] # Drop the subcommand.
     end
-    complete -C "git-$subcommand \$subcommand_args "(commandline -ct)
+    complete -C "git-$subcommand $(string escape -- $subcommand_args) "(commandline -ct)
 end
 
 # source git-* commands' autocompletion file if exists

@@ -18,13 +18,6 @@ const BIN_DIR: &str = env!("BINDIR");
 pub static CONFIG_PATHS: Lazy<ConfigPaths> =
     Lazy::new(|| determine_config_directory_paths(std::env::args().next().unwrap()));
 
-fn trim_nul(buf: &str) -> &str {
-    match buf.chars().position(|c| c == '\0') {
-        Some(nul_pos) => &buf[..nul_pos],
-        None => buf,
-    }
-}
-
 fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
     // PORTING: why is this not just an associated method on ConfigPaths?
 
@@ -97,7 +90,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             if paths.data.exists() && paths.sysconf.exists() {
                 // The docs dir may not exist; in that case fall back to the compiled in path.
                 if !paths.doc.exists() {
-                    paths.doc = PathBuf::from(trim_nul(DOC_DIR));
+                    paths.doc = PathBuf::from(DOC_DIR);
                 }
                 done = true;
             }
@@ -116,23 +109,21 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 return paths;
             };
 
-            PathBuf::from(home)
-                .join(trim_nul(DATA_DIR))
-                .join(trim_nul(DATA_DIR_SUBDIR))
+            PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR)
         } else {
-            PathBuf::from(trim_nul(DATA_DIR)).join(trim_nul(DATA_DIR_SUBDIR))
+            PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR)
         };
         let bin = if cfg!(feature = "installable") {
             exec_path.parent().map(|x| x.to_path_buf())
         } else {
-            Some(PathBuf::from(trim_nul(BIN_DIR)))
+            Some(PathBuf::from(BIN_DIR))
         };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
             data: data.clone(),
-            sysconf: PathBuf::from(trim_nul(SYSCONF_DIR)).join("fish"),
-            doc: trim_nul(DOC_DIR).into(),
+            sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
+            doc: DOC_DIR.into(),
             bin,
             locale: data.join("share"),
         }

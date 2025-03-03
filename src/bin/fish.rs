@@ -189,7 +189,7 @@ fn install(confirm: bool, dir: &PathBuf) -> bool {
 }
 
 #[cfg(clippy)]
-fn install(_confirm: bool, _dir: PathBuf) -> bool {
+fn install(_confirm: bool, _dir: &PathBuf) -> bool {
     unreachable!()
 }
 

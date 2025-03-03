@@ -1,3 +1,22 @@
+fish 4.0.1 (released ???)
+=========================
+
+This release of fish fixes the following problems identified in fish 4.0.0:
+
+- Kitty keyboard protocol in iTerm < 3.5.12 is now correctly disabled.
+  This works around an iTerm bug where it sends option+left as simply :kbd:`left` (:issue:`11192`).
+- A Konsole bug related to OSC 7 is worked around, which enables the "open folder with" menu in that terminal again (:issue:`11198`).
+- $fish_color_search_match will now only be applied to the foreground color if it has an explicit foreground. This allows setting e.g.::
+    set -g fish_color_search_match --reverse
+- Cursor shape commands (``\e[2 q``) are no longer sent in non-interactive shells
+- The acidhub prompt properly displays the git branch again
+- Wine completes files again
+- /etc/manpath and /etc/path now have the lines split on colons, improving interoperability with ghostty. This was originally meant to be applied to 4.0.0, but the commit was missed (:issue:`10684`).
+- Fish no longer tries to enable the modifyOtherKeys protocol in Wezterm as it is buggy there and it would support the kitty keyboard protocol (:issue:`11204`).
+- Fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
+- Git completions for third-party commands like "git-absorb" are completed correctly again (:issue:`11205`).
+
+
 fish 4.0.0 (released February 27, 2025)
 =======================================
 

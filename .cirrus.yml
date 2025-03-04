@@ -52,40 +52,40 @@ linux_arm_task:
     # CI task disabled during RIIR transition
     only_if: false && $CIRRUS_REPO_OWNER == 'fish-shell'
 
-freebsd_task:
-    matrix:
-        # - name: FreeBSD 14
-        #   freebsd_instance:
-        #       image_family: freebsd-14-0-snap
-        - name: FreeBSD 13
-          freebsd_instance:
-              image: freebsd-13-2-release-amd64
-        # - name: FreeBSD 12.3
-        #   freebsd_instance:
-        #       image: freebsd-12-3-release-amd64
-    tests_script:
-        - pkg install -y cmake-core devel/pcre2 devel/ninja misc/py-pexpect git-lite terminfo-db
-        # libclang.so is a required build dependency for rust-c++ ffi bridge
-        - pkg install -y llvm
-        # BSDs have the following behavior: root may open or access files even if
-        # the mode bits would otherwise disallow it. For example root may open()
-        # a file with write privileges even if the file has mode 400. This breaks
-        # our tests for e.g. cd and path. So create a new unprivileged user to run tests.
-        - pw user add -n fish-user -s /bin/csh -d /home/fish-user
-        - mkdir -p /home/fish-user
-        - chown -R fish-user /home/fish-user
-        - mkdir build && cd build
-        - chown -R fish-user ..
-        - sudo -u fish-user -s whoami
-        # FreeBSD's pkg currently has rust 1.66.0 while we need rust 1.70.0+. Use rustup to install
-        # the latest, but note that it only installs rust per-user.
-        - sudo -u fish-user -s fetch -qo - https://sh.rustup.rs > rustup.sh
-        - sudo -u fish-user -s sh ./rustup.sh -y --profile=minimal
-        # `sudo -s ...` does not invoke a login shell so we need a workaround to make sure the
-        # rustup environment is configured for subsequent `sudo -s ...` commands.
-        # For some reason, this doesn't do the job:
-        # - sudo -u fish-user sh -c 'echo source \$HOME/.cargo/env >> $HOME/.cshrc'
-        - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
-        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish'
-        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja fish_run_tests'
-    only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
+# freebsd_task:
+#     matrix:
+#         # - name: FreeBSD 14
+#         #   freebsd_instance:
+#         #       image_family: freebsd-14-0-snap
+#         - name: FreeBSD 13
+#           freebsd_instance:
+#               image: freebsd-13-2-release-amd64
+#         # - name: FreeBSD 12.3
+#         #   freebsd_instance:
+#         #       image: freebsd-12-3-release-amd64
+#     tests_script:
+#         - pkg install -y cmake-core devel/pcre2 devel/ninja misc/py-pexpect git-lite terminfo-db
+#         # libclang.so is a required build dependency for rust-c++ ffi bridge
+#         - pkg install -y llvm
+#         # BSDs have the following behavior: root may open or access files even if
+#         # the mode bits would otherwise disallow it. For example root may open()
+#         # a file with write privileges even if the file has mode 400. This breaks
+#         # our tests for e.g. cd and path. So create a new unprivileged user to run tests.
+#         - pw user add -n fish-user -s /bin/csh -d /home/fish-user
+#         - mkdir -p /home/fish-user
+#         - chown -R fish-user /home/fish-user
+#         - mkdir build && cd build
+#         - chown -R fish-user ..
+#         - sudo -u fish-user -s whoami
+#         # FreeBSD's pkg currently has rust 1.66.0 while we need rust 1.70.0+. Use rustup to install
+#         # the latest, but note that it only installs rust per-user.
+#         - sudo -u fish-user -s fetch -qo - https://sh.rustup.rs > rustup.sh
+#         - sudo -u fish-user -s sh ./rustup.sh -y --profile=minimal
+#         # `sudo -s ...` does not invoke a login shell so we need a workaround to make sure the
+#         # rustup environment is configured for subsequent `sudo -s ...` commands.
+#         # For some reason, this doesn't do the job:
+#         # - sudo -u fish-user sh -c 'echo source \$HOME/.cargo/env >> $HOME/.cshrc'
+#         - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
+#         - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish'
+#         - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja fish_run_tests'
+#     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

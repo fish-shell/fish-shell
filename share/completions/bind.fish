@@ -64,7 +64,7 @@ function __fish_bind_complete
         a/all function-names list-modes e/erase -- (commandline -xpc)[2..] 2>/dev/null
     or return 1
     set -l token (commandline -ct)
-    if test (count $argv) = 0 && set -l prefix (string match -r -- '(.*,)?(ctrl-|alt-|shift-)*' $token)
+    if test (count $argv) = 0 && set -l prefix (string match -r -- '(.*,)?(ctrl-|alt-|shift-|super-)*' $token)
         printf '%sctrl-\tCtrl modifier…\n' $prefix
         printf '%sc-\tCtrl modifier…\n' $prefix
         printf '%salt-\tAlt modifier…\n' $prefix

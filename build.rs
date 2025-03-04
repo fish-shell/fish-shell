@@ -327,7 +327,7 @@ fn get_version(src_dir: &Path) -> String {
             // .git/HEAD contains ref: refs/heads/branch
             let headpath = gitdir.join("HEAD");
             let headstr = read_to_string(headpath)?;
-            let headref = headstr.split(' ').collect::<Vec<_>>()[1].trim();
+            let headref = headstr.split(' ').nth(1).unwrap().trim();
 
             // .git/refs/heads/branch contains the SHA
             let refpath = gitdir.join(headref);

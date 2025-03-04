@@ -150,7 +150,7 @@ Resources
 
 - The `GitHub page <https://github.com/fish-shell/fish-shell/>`_
 
-- The official `Gitter channel <https://gitter.im/fish-shell/fish-shell>`_
+- The official `Matrix room <https://matrix.to/#/#fish-shell:matrix.org>`_
 
 - The official mailing list at `fish-users@lists.sourceforge.net <https://lists.sourceforge.net/lists/listinfo/fish-users>`_
 

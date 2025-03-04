@@ -332,7 +332,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
         let select_res = fdset.check_readable(if blocking {
             FdReadableSet::kNoTimeout
         } else {
-            0
+            1000
         });
         if select_res < 0 {
             let err = errno::errno().0;

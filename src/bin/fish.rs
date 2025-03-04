@@ -137,50 +137,38 @@ fn install(confirm: bool, dir: PathBuf) -> bool {
         }
     }
 
-    // TODO: These are duplicated, no idea how to extract
-    //       them into a function
-    for file in Asset::iter() {
-        let path = dir.join(file.as_ref());
-        let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
-            eprintln!(
-                "Creating directory '{}' failed",
-                path.parent().unwrap().display()
-            );
-            return false;
-        };
-        let res = File::create(&path);
-        let Ok(mut f) = res else {
-            eprintln!("Creating file '{}' failed", path.display());
-            continue;
-        };
-        // This should be impossible.
-        let d = Asset::get(&file).expect("File was somehow not included???");
-        if let Err(error) = f.write_all(&d.data) {
-            eprintln!("error: {error}");
-            return false;
+    // This function can't be top-level because rust_embed is an optional dependency, so it can't
+    // be a part of the function signature.
+    fn extract_embed<T: rust_embed::Embed>(dir: &Path) -> bool {
+        for file in T::iter() {
+            let path = dir.join(file.as_ref());
+            let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
+                eprintln!(
+                    "Creating directory '{}' failed",
+                    path.parent().unwrap().display()
+                );
+                return false;
+            };
+            let res = File::create(&path);
+            let Ok(mut f) = res else {
+                eprintln!("Creating file '{}' failed", path.display());
+                continue;
+            };
+            // This should be impossible.
+            let d = T::get(&file).expect("File was somehow not included???");
+            if let Err(error) = f.write_all(&d.data) {
+                eprintln!("error: {error}");
+                return false;
+            }
         }
+        return true;
     }
 
-    for file in Docs::iter() {
-        let path = dir.join(file.as_ref());
-        let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
-            eprintln!(
-                "Creating directory '{}' failed",
-                path.parent().unwrap().display()
-            );
-            return false;
-        };
-        let res = File::create(&path);
-        let Ok(mut f) = res else {
-            eprintln!("Creating file '{}' failed", path.display());
-            continue;
-        };
-        // This should be impossible.
-        let d = Docs::get(&file).expect("File was somehow not included???");
-        if let Err(error) = f.write_all(&d.data) {
-            eprintln!("error: {error}");
-            return false;
-        }
+    if !extract_embed::<Asset>(&dir) {
+        return false;
+    }
+    if !extract_embed::<Docs>(&dir) {
+        return false;
     }
 
     let verfile = dir.join("fish-install-version");

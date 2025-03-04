@@ -6,7 +6,7 @@ end
 
 # Check for macOS Catalina or above. This is Darwin 19.x or above. See unames reported here:
 # https://en.wikipedia.org/wiki/Darwin_(operating_system)
-set -l sysver (uname -sr | string match -r "(Darwin) (\d\d)"\.)
+set -l sysver (uname -sr | string match -r "(Darwin) (\d+)")
 
 if test $status -eq 0 -a (count $sysver) -eq 3
     and test $sysver[2] = Darwin -a $sysver[3] -ge 19

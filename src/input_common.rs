@@ -26,6 +26,7 @@ use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard};
+use std::time::Duration;
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -341,7 +342,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
         let select_res = fdset.check_readable(if blocking {
             Timeout::Forever
         } else {
-            Timeout::ZERO
+            Timeout::Duration(Duration::from_millis(1))
         });
         if select_res < 0 {
             let err = errno::errno().0;

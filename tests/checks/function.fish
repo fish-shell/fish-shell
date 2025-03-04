@@ -138,30 +138,9 @@ touch $tmpdir/actual_function.fish
 
 begin
     set -l fish_function_path $tmpdir
-    functions
+    functions | grep '^$\|directory\|^actual_function$'
 end
 # CHECK: actual_function
-
-# these are functions defined either in this file,
-# or eagerly in share/config.fish.
-# I don't know of a way to ignore just them.
-#
-# CHECK: bg
-# CHECK: disown
-# CHECK: fg
-# CHECK: fish_command_not_found
-# CHECK: fish_prompt
-# CHECK: fish_prompt_event
-# CHECK: fish_sigtrap_handler
-# CHECK: fish_title
-# CHECK: frob
-# CHECK: kill
-# CHECK: name1
-# CHECK: name1a
-# CHECK: name3
-# CHECK: name3a
-# CHECK: t
-# CHECK: wait
 
 rm -r $tmpdir
 

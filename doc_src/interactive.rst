@@ -303,9 +303,11 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
-- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor one word left or right (to the next space or punctuation mark), or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first word in the suggestion.
+- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor left or right by one argument (or one word on macOS).
+  If the command line is empty, they move forward/backward in the directory history.
+  If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first argument (or word on macOS) in the suggestion.
 
-- :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor one word left or right. These accept one word of the autosuggestion - the part they'd move over.
+- :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor left or right by one word. These accept one word of the autosuggestion - the part they'd move over.
 
 - :kbd:`shift-left` (``←``) and :kbd:`shift-right` (``→``) move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
@@ -325,11 +327,13 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`ctrl-x` copies the current buffer to the system's clipboard, :kbd:`ctrl-v` inserts the clipboard contents. (see :doc:`fish_clipboard_copy <cmds/fish_clipboard_copy>` and :doc:`fish_clipboard_paste <cmds/fish_clipboard_paste>`)
 
-- :kbd:`alt-d` or :kbd:`ctrl-delete` moves the next word to the :ref:`killring`.
+- :kbd:`alt-d` moves the next word to the :ref:`killring`.
+
+- :kbd:`ctrl-delete` moves the next word (or next argument on macOS) to the :ref:`killring`.
 
 - :kbd:`alt-d` lists the directory history if the command line is empty.
 
-- :kbd:`alt-delete` moves the next argument to the :ref:`killring`.
+- :kbd:`alt-delete` moves the next argument (or word on macOS) to the :ref:`killring`.
 
 - :kbd:`shift-delete` removes the current history item or autosuggestion from the command history.
 
@@ -370,7 +374,8 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`delete` or :kbd:`backspace` or :kbd:`ctrl-h` removes one character forwards or backwards respectively.
 
-- :kbd:`alt-backspace` removes one word backwards. If supported by the terminal, :kbd:`ctrl-backspace` does the same.
+- :kbd:`ctrl-backspace` removes one word backwards and :kbd:`alt-backspace` removes one argument backwards.
+  On macOS, it's the other way round.
 
 - :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 

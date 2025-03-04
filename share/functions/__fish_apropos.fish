@@ -4,12 +4,9 @@ if not type -q apropos
     exit
 end
 
-# Check for macOS Catalina or above. This is Darwin 19.x or above. See unames reported here:
-# https://en.wikipedia.org/wiki/Darwin_(operating_system)
-set -l sysver (uname -sr | string match -r "(Darwin) (\d+)")
-
-if test $status -eq 0 -a (count $sysver) -eq 3
-    and test $sysver[2] = Darwin -a $sysver[3] -ge 19
+# Check for macOS Catalina or above.
+if test (__fish_uname) = Darwin
+    and test (string match -r "(\d+)" "$(uname -r)") -ge 19
     and test -x /usr/libexec/makewhatis
 
     set -l dir

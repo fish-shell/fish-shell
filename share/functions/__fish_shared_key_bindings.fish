@@ -21,7 +21,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv -k left backward-char
 
     # Ctrl-left/right - these also work in vim.
-    if set -q XPC_FLAGS || set -q __CFBundleIdentifier || test (uname) = Darwin
+    if test (__fish_uname) = Darwin
         bind --preset $argv ctrl-right forward-token
         bind --preset $argv ctrl-left backward-token
     else
@@ -61,7 +61,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     set -l alt_right_aliases alt-right \e\[1\;9C # iTerm2 < 3.5.12
     set -l alt_left_aliases alt-left \e\[1\;9D # iTerm2 < 3.5.12
-    if set -q XPC_FLAGS || set -q __CFBundleIdentifier || test (uname) = Darwin
+    if test (__fish_uname) = Darwin
         for alt_right in $alt_left_aliases
             bind --preset $argv $alt_right nextd-or-forward-word
         end

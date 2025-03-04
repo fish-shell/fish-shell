@@ -24,7 +24,7 @@ If only ``KEYS`` is given, any existing binding for those keys in the given ``MO
 If no ``KEYS`` argument is provided, all bindings (in the given ``MODE``) are printed.
 
 ``KEYS`` is a comma-separated list of key names.
-Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-`` and ``shift-``.
+Modifier keys can be specified by prefixing a key name with a combination of ``ctrl-``, ``alt-``, ``shift-`` and ``super-`` (i.e. the "windows" or "command" key).
 For example, pressing :kbd:`w` while holding the Alt modifier is written as ``alt-w``.
 Key names are case-sensitive; for example ``alt-W`` is the same as ``alt-shift-w``.
 ``ctrl-x,ctrl-e`` would mean pressing :kbd:`ctrl-x` followed by :kbd:`ctrl-e`.

@@ -59,6 +59,7 @@ pub struct Modifiers {
     pub ctrl: bool,
     pub alt: bool,
     pub shift: bool,
+    pub sup: bool,
 }
 
 impl Modifiers {
@@ -67,6 +68,7 @@ impl Modifiers {
             ctrl: false,
             alt: false,
             shift: false,
+            sup: false,
         }
     }
     pub(crate) const ALT: Self = {
@@ -284,6 +286,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                     _ if modifier == "ctrl" => modifiers.ctrl = true,
                     _ if modifier == "alt" => modifiers.alt = true,
                     _ if modifier == "shift" => modifiers.shift = true,
+                    _ if modifier == "super" => modifiers.sup = true,
                     _ => {
                         return Err(wgettext_fmt!(
                             "unknown modifier '%s' in '%s'",
@@ -419,6 +422,9 @@ impl From<Key> for WString {
         }
         if key.modifiers.ctrl {
             res.insert_utfstr(0, L!("ctrl-"));
+        }
+        if key.modifiers.sup {
+            res.insert_utfstr(0, L!("super-"));
         }
 
         res

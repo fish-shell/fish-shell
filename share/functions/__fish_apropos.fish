@@ -6,7 +6,7 @@ end
 
 # Check for macOS Catalina or above.
 if test (__fish_uname) = Darwin
-    and test (string match -r "(\d+)" "$(uname -r)") -ge 19
+    and test (string match -r "^\d+" "$(uname -r)") -ge 19
     and test -x /usr/libexec/makewhatis
 
     set -l dir

@@ -55,7 +55,7 @@ use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
 use std::cell::RefCell;
 use std::io::ErrorKind;
 use std::rc::Rc;
-use std::sync::{atomic::Ordering, Arc};
+use std::sync::Arc;
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
@@ -1529,10 +1529,7 @@ impl<'a> ExecutionContext {
         }
 
         // Increment the eval_level for the duration of this command.
-        let _saved_eval_level = scoped_push_replacer(
-            |new_value| ctx.parser().eval_level.swap(new_value, Ordering::Relaxed),
-            ctx.parser().eval_level.load(Ordering::Relaxed) + 1,
-        );
+        let _saved_eval_level = ctx.parser().push_scope(|s| s.eval_level += 1);
 
         // Save the executing node.
         let line_counter = Rc::clone(&self.line_counter);
@@ -1610,7 +1607,7 @@ impl<'a> ExecutionContext {
                 let mut profile_items = parser.profile_items_mut();
                 let profile_item = &mut profile_items[profile_item_id];
                 profile_item.duration = ProfileItem::now() - start_time;
-                profile_item.level = ctx.parser().eval_level.load(Ordering::Relaxed);
+                profile_item.level = ctx.parser().scope().eval_level;
                 profile_item.cmd =
                     profiling_cmd_name_for_redirectable_block(specific_statement, self.pstree());
                 profile_item.skipped = false;
@@ -1686,7 +1683,7 @@ impl<'a> ExecutionContext {
             let mut profile_items = parser.profile_items_mut();
             let profile_item = &mut profile_items[profile_item_id];
             profile_item.duration = ProfileItem::now() - start_time;
-            profile_item.level = ctx.parser().eval_level.load(Ordering::Relaxed);
+            profile_item.level = ctx.parser().scope().eval_level;
             profile_item.cmd = job.command().to_owned();
             profile_item.skipped = pop_result != EndExecutionReason::ok;
         }

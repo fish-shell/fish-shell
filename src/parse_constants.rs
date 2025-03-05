@@ -460,14 +460,14 @@ pub fn parse_error_offset_source_start(errors: &mut ParseErrorList, amt: usize) 
 }
 
 /// Maximum number of function calls.
-pub const FISH_MAX_STACK_DEPTH: usize = 128;
+pub const FISH_MAX_STACK_DEPTH: isize = 128;
 
 /// Maximum number of nested string substitutions (in lieu of evals)
 /// Reduced under TSAN: our CI test creates 500 jobs and this is very slow with TSAN.
 #[cfg(feature = "tsan")]
-pub const FISH_MAX_EVAL_DEPTH: usize = 250;
+pub const FISH_MAX_EVAL_DEPTH: isize = 250;
 #[cfg(not(feature = "tsan"))]
-pub const FISH_MAX_EVAL_DEPTH: usize = 500;
+pub const FISH_MAX_EVAL_DEPTH: isize = 500;
 
 /// Error message on a function that calls itself immediately.
 pub const INFINITE_FUNC_RECURSION_ERR_MSG: &str =

@@ -42,10 +42,7 @@ use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::{
-    atomic::{AtomicIsize, Ordering},
-    Arc,
-};
+use std::sync::Arc;
 
 pub enum BlockData {
     Function {
@@ -219,8 +216,13 @@ impl ProfileItem {
 
 /// Data which is managed in a scoped fashion: is generally set for the duration of a block
 /// of code. Note this is stored in a Cell and so must be Copy.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub struct ScopedData {
+    /// The 'depth' of the fish call stack.
+    /// -1 means nothing is executing. 0 means we are running a top-level command.
+    /// Larger values indicate deeper nesting.
+    pub eval_level: isize,
+
     /// Whether we are running a subshell command.
     pub is_subshell: bool,
 
@@ -239,6 +241,20 @@ pub struct ScopedData {
 
     /// Whether we are currently cleaning processes.
     pub is_cleaning_procs: bool,
+}
+
+impl Default for ScopedData {
+    fn default() -> Self {
+        Self {
+            eval_level: -1,
+            is_subshell: false,
+            is_event: false,
+            is_interactive: false,
+            suppress_fish_trace: false,
+            read_limit: 0,
+            is_cleaning_procs: false,
+        }
+    }
 }
 
 /// Miscellaneous data used to avoid recursion and others.
@@ -395,9 +411,6 @@ pub struct Parser {
     /// indexes during recursive evaluation.
     block_list: RefCell<Vec<Block>>,
 
-    /// The 'depth' of the fish call stack.
-    pub eval_level: AtomicIsize,
-
     /// Set of variables for the parser.
     pub variables: Rc<EnvStack>,
 
@@ -429,7 +442,6 @@ impl Parser {
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
             block_list: RefCell::default(),
-            eval_level: AtomicIsize::new(-1),
             variables,
             scoped_data: ScopedCell::new(ScopedData::default()),
             library_data: RefCell::new(LibraryData::new()),
@@ -1124,8 +1136,7 @@ impl Parser {
         // We are interested in whether the count of functions on the stack exceeds
         // FISH_MAX_STACK_DEPTH. We don't separately track the number of functions, but we can have a
         // fast path through the eval_level. If the eval_level is in bounds, so must be the stack depth.
-        if self.eval_level.load(Ordering::Relaxed) <= isize::try_from(FISH_MAX_STACK_DEPTH).unwrap()
-        {
+        if self.scope().eval_level <= FISH_MAX_STACK_DEPTH {
             return false;
         }
         // Count the functions.
@@ -1133,7 +1144,7 @@ impl Parser {
             .blocks_iter_rev()
             .filter(|b| b.is_function_call())
             .count();
-        depth > FISH_MAX_STACK_DEPTH
+        depth > (FISH_MAX_STACK_DEPTH as usize)
     }
 
     /// Mark whether we should sync universal variables.
@@ -1152,7 +1163,7 @@ impl Parser {
 
     /// Checks if the max eval depth has been exceeded
     pub fn is_eval_depth_exceeded(&self) -> bool {
-        self.eval_level.load(Ordering::Relaxed) >= isize::try_from(FISH_MAX_EVAL_DEPTH).unwrap()
+        self.scope().eval_level >= FISH_MAX_EVAL_DEPTH
     }
 }
 

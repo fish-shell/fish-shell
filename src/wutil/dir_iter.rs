@@ -1,5 +1,5 @@
 use super::wopendir;
-use crate::common::{cstr2wcstring, wcs2zstring};
+use crate::common::{str2wcstring, wcs2zstring};
 use crate::wchar::{wstr, WString};
 use crate::wutil::DevInode;
 use libc::{
@@ -8,11 +8,10 @@ use libc::{
     S_IFSOCK,
 };
 use std::cell::Cell;
-use std::io::{self};
+use std::io;
 use std::os::fd::RawFd;
-use std::ptr::NonNull;
+use std::ptr::{addr_of, NonNull};
 use std::rc::Rc;
-use std::slice;
 
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -267,19 +266,23 @@ impl DirIter {
 
         // dent.d_name is c_char; pretend it's u8.
         assert!(std::mem::size_of::<libc::c_char>() == std::mem::size_of::<u8>());
-        let d_name_cchar = &dent.d_name;
-        let d_name = unsafe {
-            slice::from_raw_parts(d_name_cchar.as_ptr() as *const u8, d_name_cchar.len())
-        };
+
+        // Do not rely on `libc::dirent::d_name.len()` as dirent names may exceed
+        // the nominal buffer size; instead use the terminating nul byte.
+        // TODO: This should use &raw from Rust 1.82 on
+        // https://github.com/rust-lang/libc/issues/2669
+        // https://github.com/fish-shell/fish-shell/issues/11221
+        let d_name_ptr = addr_of!((*dent).d_name);
+        let d_name = unsafe { std::ffi::CStr::from_ptr(d_name_ptr.cast()) }.to_bytes();
 
         // Skip . and ..,
         // unless we've been told not to.
-        if !self.withdot && (d_name.starts_with(b".\0") || d_name.starts_with(b"..\0")) {
+        if !self.withdot && (d_name == b"." || d_name == b"..") {
             return self.next();
         }
 
         self.entry.reset();
-        self.entry.name = cstr2wcstring(d_name);
+        self.entry.name = str2wcstring(d_name);
         #[cfg(any(target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
         {
             self.entry.inode = dent.d_fileno;

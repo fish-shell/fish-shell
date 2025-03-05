@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc, TO_END
+from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -75,6 +75,6 @@ send("echo fo\t")
 expect_re("foooo")
 send("\x07")
 sendline("echo bar")
-expect_re(TO_END + "bar")
+expect_re("\n.*bar")
 sendline("echo fo\t")
 expect_re("foooo")

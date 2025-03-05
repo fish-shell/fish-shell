@@ -1988,9 +1988,7 @@ impl<'a> Reader<'a> {
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
         // user presses enter.
-        if zelf.is_repaint_needed(None)
-            || zelf.screen.scrolled()
-            || zelf.conf.inputfd != STDIN_FILENO
+        if zelf.is_repaint_needed(None) || zelf.screen.scrolled || zelf.conf.inputfd != STDIN_FILENO
         {
             zelf.layout_and_repaint_before_execution();
         }
@@ -2000,8 +1998,11 @@ impl<'a> Reader<'a> {
             zelf.finish_highlighting_before_exec();
         }
 
-        // Move the cursor so that output is on the line after the command.
-        zelf.screen.move_to_end();
+        // Emit a newline so that the output is on the line after the command.
+        // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
+        if !zelf.screen.cursor_is_wrapped_to_own_line() {
+            let _ = write_to_fd(b"\n", STDOUT_FILENO);
+        }
 
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
@@ -3643,6 +3644,7 @@ impl<'a> Reader<'a> {
 
         self.add_to_history();
         self.rls_mut().finished = true;
+        self.update_buff_pos(elt, Some(self.command_line_len()));
         true
     }
 

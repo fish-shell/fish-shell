@@ -15,6 +15,7 @@ This release of fish fixes the following problems identified in fish 4.0.0:
 - Fish no longer tries to enable the modifyOtherKeys protocol in Wezterm as it is buggy there and it would support the kitty keyboard protocol (:issue:`11204`).
 - Fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
 - Git completions for third-party commands like "git-absorb" are completed correctly again (:issue:`11205`).
+- A crash when working with file names longer than 255 bytes has been fixed (:issue:`11221`).
 
 
 fish 4.0.0 (released February 27, 2025)

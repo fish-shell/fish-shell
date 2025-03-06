@@ -55,7 +55,7 @@ function __fish_flatpak
     # We can't rely on the first line being the headers because modern flatpak will omit it when running in a "subshell".
     # Based off our invocations, we expect the first column of actual output to never contain a capitalized letter
     # (unlike the header row).
-    flatpak $argv | string replace -rf '^([^A-Z]+)(?: +|\t)(.*?)\s*$' '$1\t$2'
+    flatpak $argv | string replace -rf '^([^A-Z].*?)(?: +|\t)(.*?)\s*$' '$1\t$2'
 end
 
 complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(__fish_flatpak list --app --columns=application,name)"

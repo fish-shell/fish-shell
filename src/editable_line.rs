@@ -100,6 +100,7 @@ pub struct EditableLine {
     colors: Vec<HighlightSpec>,
     /// The current position of the cursor in the command line.
     position: usize,
+    pub pending_position: Option<usize>,
 
     /// The history of all edits.
     undo_history: UndoHistory,
@@ -183,7 +184,7 @@ impl EditableLine {
                 .edits
                 .truncate(self.undo_history.edits_applied);
         }
-        edit.cursor_position_before_edit = self.position();
+        edit.cursor_position_before_edit = self.pending_position.take().unwrap_or(self.position());
         edit.old = self.text[range.clone()].to_owned();
         apply_edit(&mut self.text, &mut self.colors, &edit);
         self.set_position(cursor_position_after_edit(&edit));

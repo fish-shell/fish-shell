@@ -4014,6 +4014,7 @@ impl<'a> Reader<'a> {
 
         self.add_to_history();
         self.rls_mut().finished = true;
+        self.command_line.pending_position = Some(self.command_line.position());
         self.update_buff_pos(elt, Some(self.command_line_len()));
         true
     }

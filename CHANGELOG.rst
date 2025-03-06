@@ -26,6 +26,7 @@ New or improved bindings
 - On non-macOS systems, :kbd:`alt-left`, :kbd:`alt-right`, :kbd:`alt-backspace`, :kbd:`alt-delete` no longer operate on punctuation-delimited words but on whole arguments, possibly including special characters like ``/`` and quoted spaces.
   On macOS, the same corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
   Word operations are still available via the other respective modifier, same as in the browser.
+- :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
   This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities,

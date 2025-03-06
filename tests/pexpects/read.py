@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc, TO_END
+from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -17,7 +17,7 @@ def expect_read_prompt():
 
 
 def expect_marker(text):
-    expect_prompt(TO_END + "@MARKER:" + str(text) + "@\\r\\n")
+    expect_prompt("\r\n.*@MARKER:" + str(text) + "@\\r\\n")
 
 
 def print_var_contents(varname, expected):

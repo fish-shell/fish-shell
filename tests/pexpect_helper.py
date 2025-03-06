@@ -131,12 +131,6 @@ class Message(object):
         return Message(Message.DIR_OUTPUT, text, when)
 
 
-# Sequences for moving the cursor below the commandline. This happens before executing.
-MOVE_TO_END: str = r"(?:\r\n|\x1b\[2 q|)"
-TO_END: str = MOVE_TO_END + r"[^\n]*"
-TO_END_SUFFIX: str = r"[^\n]*" + MOVE_TO_END
-
-
 class SpawnedProc(object):
     """A process, talking to our ptty. This wraps pexpect.spawn.
 

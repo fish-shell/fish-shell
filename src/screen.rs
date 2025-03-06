@@ -207,9 +207,8 @@ impl ScreenData {
 pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
     pub autosuggestion_is_truncated: bool,
-    /// If the last rendering was so large we could only display part of the command line,
-    /// this is the number of lines that were pushed to scrollback.
-    pub scroll_amount: usize,
+    /// True if the last rendering was so large we could only display part of the command line.
+    pub scrolled: bool,
 
     /// Receiver for our output.
     outp: &'static RefCell<Outputter>,
@@ -245,7 +244,7 @@ impl Screen {
         Self {
             outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
-            scroll_amount: Default::default(),
+            scrolled: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
@@ -258,8 +257,9 @@ impl Screen {
         }
     }
 
+    /// Return whether the last rendering was so large we could only display part of the command line.
     pub fn scrolled(&self) -> bool {
-        self.scroll_amount != 0
+        self.scrolled
     }
 
     /// This is the main function for the screen output library. It is used to define the desired
@@ -515,7 +515,7 @@ impl Screen {
         // Append pager_data (none if empty).
         self.desired.append_lines(&page_rendering.screen_data);
 
-        self.scroll_amount = scrolled_cursor.scroll_amount;
+        self.scrolled = scrolled_cursor.scroll_amount != 0;
 
         self.update(
             vars,
@@ -556,10 +556,6 @@ impl Screen {
         self.actual.cursor.x = 0;
 
         self.save_status();
-    }
-
-    pub fn move_to_end(&mut self) {
-        self.r#move(0, self.actual.line_count() - self.scroll_amount);
     }
 
     pub fn push_to_scrollback(&mut self, cursor_y: usize) {

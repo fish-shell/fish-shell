@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc, TO_END
+from pexpect_helper import SpawnedProc
 import os
 import sys
 import signal
@@ -16,7 +16,7 @@ send("set -g fish_key_bindings fish_vi_key_bindings\r")
 expect_prompt()
 
 send("echo ready to go\r")
-expect_prompt(TO_END + f"ready to go\r\n")
+expect_prompt(f"\r\n.*ready to go\r\n")
 send(
     "function add_change --on-variable fish_bind_mode ; set -g MODE_CHANGES $MODE_CHANGES $fish_bind_mode ; end\r"
 )
@@ -42,7 +42,7 @@ send("i")
 sleep(10 if "CI" in os.environ else 1)
 
 send("echo mode changes: $MODE_CHANGES\r")
-expect_prompt(TO_END + "mode changes: default insert default insert\r\n")
+expect_prompt("\r\n.*mode changes: default insert default insert\r\n")
 
 # Regression test for #8125.
 # Control-C should return us to insert mode.
@@ -70,4 +70,4 @@ sleep(timeout * 2)
 
 # We should be back in insert mode now.
 send("echo mode changes: $MODE_CHANGES\r")
-expect_prompt(TO_END + "mode changes: default insert\r\n")
+expect_prompt("\r\n.*mode changes: default insert\r\n")

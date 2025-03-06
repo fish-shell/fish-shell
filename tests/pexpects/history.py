@@ -11,7 +11,7 @@
 
 # The history function might pipe output through the user's pager. We don't
 # want something like `less` to complicate matters so force the use of `cat`.
-from pexpect_helper import SpawnedProc, TO_END, TO_END_SUFFIX
+from pexpect_helper import SpawnedProc
 import os
 
 os.environ["PAGER"] = "cat"
@@ -107,16 +107,13 @@ expect_prompt("count hello 0\r\n")
 # delete the first entry matched by the prefix search (the most recent command
 # sent above that matches).
 sendline("history delete -p 'echo hello'")
-expect_re("history delete -p 'echo hello'" + TO_END_SUFFIX)
-expect_re("\\[1\\] echo hello AGAIN" + TO_END_SUFFIX)
-expect_re("\\[2\\] echo hello again" + TO_END_SUFFIX)
-expect_re("Enter nothing to cancel the delete, or\r\n")
+expect_re("history delete -p 'echo hello'\r\n")
+expect_re("\[1\] echo hello AGAIN\r\n")
+expect_re("\[2\] echo hello again\r\n\r\n")
 expect_re(
-    "Enter one or more of the entry IDs or ranges like '5..12', separated by a space.\r\n"
+    "Enter nothing to cancel the delete, or\r\nEnter one or more of the entry IDs or ranges like '5..12', separated by a space.\r\nFor example '7 10..15 35 788..812'.\r\nEnter 'all' to delete all the matching entries.\r\n"
 )
-expect_re("For example '7 10..15 35 788..812'.\r\n")
-expect_re("Enter 'all' to delete all the matching entries.\r\n")
-expect_re("Delete which entries\\? ")
+expect_re("Delete which entries\? ")
 sendline("1")
 expect_prompt('Deleting history entry 1: "echo hello AGAIN"\r\n')
 
@@ -176,7 +173,7 @@ expect_prompt()
 sendline("history clear-session")
 expect_prompt()
 sendline("history search --exact 'echo after' | cat")
-expect_prompt()
+expect_prompt("\r\n")
 
 # Check history filtering
 # We store anything that starts with "echo ephemeral".

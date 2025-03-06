@@ -36,7 +36,7 @@ use std::{
     num::NonZeroUsize,
     ops::ControlFlow,
     os::{
-        fd::{AsFd, AsRawFd, RawFd},
+        fd::{AsFd, AsRawFd},
         unix::fs::MetadataExt,
     },
     sync::{Arc, Mutex, MutexGuard},
@@ -52,7 +52,7 @@ use rand::Rng;
 use crate::{
     ast::{Ast, Node},
     common::{
-        str2wcstring, unescape_string, valid_var_name, wcs2zstring, write_loop, CancelChecker,
+        str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
         UnescapeStringStyle,
     },
     env::{EnvMode, EnvStack, Environment},
@@ -154,14 +154,18 @@ pub const VACUUM_FREQUENCY: usize = 25;
 
 /// If the size of `buffer` is at least `min_size`, output the contents `buffer` to `fd`,
 /// and clear the string.
-fn flush_to_fd(buffer: &mut Vec<u8>, fd: RawFd, min_size: usize) -> std::io::Result<()> {
+fn flush_to_file(buffer: &mut Vec<u8>, file: &mut File, min_size: usize) -> std::io::Result<()> {
     if buffer.is_empty() || buffer.len() < min_size {
         return Ok(());
     }
 
-    write_loop(&fd, buffer)?;
+    file.write_all(buffer)?;
     buffer.clear();
-    return Ok(());
+    // Ensure that the file content is actually written to persistent storage.
+    // This might be unnecessary.
+    // It is used to help eliminate possible causes for
+    // https://github.com/fish-shell/fish-shell/issues/10300
+    file.sync_all()
 }
 
 struct TimeProfiler {
@@ -633,7 +637,7 @@ impl HistoryImpl {
         let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in items {
             append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_fd(&mut buffer, dst.as_raw_fd(), HISTORY_OUTPUT_BUFFER_SIZE) {
+            if let Err(e) = flush_to_file(&mut buffer, dst, HISTORY_OUTPUT_BUFFER_SIZE) {
                 err = Some(e);
                 break;
             }
@@ -647,7 +651,7 @@ impl HistoryImpl {
 
             false
         } else {
-            flush_to_fd(&mut buffer, dst.as_raw_fd(), 0).is_ok()
+            flush_to_file(&mut buffer, dst, 0).is_ok()
         }
     }
 
@@ -865,7 +869,7 @@ impl HistoryImpl {
             }
         }
 
-        if let Some(history_file) = history_file {
+        if let Some(mut history_file) = history_file {
             // We (hopefully successfully) took the exclusive lock. Append to the file.
             // Note that this is sketchy for a few reasons:
             //   - Another shell may have appended its own items with a later timestamp, so our file may
@@ -894,11 +898,7 @@ impl HistoryImpl {
                 let item = &self.new_items[self.first_unwritten_new_item_index];
                 if item.should_write_to_disk() {
                     append_history_item_to_buffer(item, &mut buffer);
-                    res = flush_to_fd(
-                        &mut buffer,
-                        history_file.as_raw_fd(),
-                        HISTORY_OUTPUT_BUFFER_SIZE,
-                    );
+                    res = flush_to_file(&mut buffer, &mut history_file, HISTORY_OUTPUT_BUFFER_SIZE);
                     if res.is_err() {
                         break;
                     }
@@ -908,7 +908,7 @@ impl HistoryImpl {
             }
 
             if res.is_ok() {
-                res = flush_to_fd(&mut buffer, history_file.as_raw_fd(), 0);
+                res = flush_to_file(&mut buffer, &mut history_file, 0);
             }
 
             // Since we just modified the file, update our history_file_id to match its current state

@@ -9,8 +9,8 @@ This release of fish fixes the following problems identified in fish 4.0.0:
 - $fish_color_search_match will now only be applied to the foreground color if it has an explicit foreground. This allows setting e.g.::
     set -g fish_color_search_match --reverse
 - Cursor shape commands (``\e[2 q``) are no longer sent in non-interactive shells
-- The acidhub prompt properly displays the git branch again
-- Wine completes files again
+- The acidhub prompt properly displays the git branch again (:issue:`11179`)
+- Wine completes files again (:issue:`11202`).
 - /etc/manpath and /etc/path now have the lines split on colons, improving interoperability with ghostty. This was originally meant to be applied to 4.0.0, but the commit was missed (:issue:`10684`).
 - Fish no longer tries to enable the modifyOtherKeys protocol in Wezterm as it is buggy there and it would support the kitty keyboard protocol (:issue:`11204`).
 - Fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).

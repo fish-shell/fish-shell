@@ -3,7 +3,7 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn main() {
     setup_paths();
@@ -232,6 +232,11 @@ fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
 }
 
 fn setup_paths() {
+    #[cfg(unix)]
+    use std::path::PathBuf;
+    #[cfg(windows)]
+    use unix_path::{Path, PathBuf};
+
     fn get_path(name: &str, default: &str, onvar: &Path) -> PathBuf {
         let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
         if var.is_relative() {

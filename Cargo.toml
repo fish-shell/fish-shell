@@ -64,6 +64,9 @@ portable-atomic = { version = "1", default-features = false, features = [
     "fallback",
 ] }
 
+[target.'cfg(target_os = "cygwin")'.dependencies]
+unicode-width = "0.2.0"
+
 [dev-dependencies]
 serial_test = { version = "3", default-features = false }
 

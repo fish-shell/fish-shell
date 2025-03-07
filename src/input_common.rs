@@ -898,7 +898,7 @@ pub trait InputEventQueuer {
         let mut codepoint = u32::from(res);
         let sz = unsafe {
             mbrtowc(
-                std::ptr::addr_of_mut!(codepoint).cast(),
+                std::ptr::addr_of_mut!(codepoint),
                 std::ptr::addr_of!(read_byte).cast(),
                 1,
                 state,

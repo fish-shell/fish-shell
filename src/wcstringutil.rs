@@ -331,7 +331,7 @@ pub fn wcs2string_callback(input: &wstr, mut func: impl FnMut(&[u8]) -> bool) ->
             let len = unsafe {
                 wcrtomb(
                     std::ptr::addr_of_mut!(converted[0]).cast(),
-                    c as libc::wchar_t,
+                    c as u32,
                     &mut state,
                 )
             };

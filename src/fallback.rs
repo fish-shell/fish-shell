@@ -75,8 +75,16 @@ pub fn fish_wcwidth(c: char) -> isize {
     let width = WC_LOOKUP_TABLE.classify(c);
     match width {
         WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => {
-            // Fall back to system wcwidth in this case.
-            wcwidth(c)
+            #[cfg(not(target_os = "cygwin"))]
+            {
+                // Fall back to system wcwidth in this case.
+                wcwidth(c)
+            }
+            #[cfg(target_os = "cygwin")]
+            {
+                // No system wcwidth for UTF-32 on cygwin.
+                0
+            }
         }
         WcWidth::Ambiguous | WcWidth::PrivateUse => {
             // TR11: "All private-use characters are by default classified as Ambiguous".

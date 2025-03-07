@@ -1,11 +1,8 @@
 extern "C" {
-    pub fn wcrtomb(s: *mut libc::c_char, wc: libc::wchar_t, ps: *mut mbstate_t) -> usize;
-    pub fn mbrtowc(
-        pwc: *mut libc::wchar_t,
-        s: *const libc::c_char,
-        n: usize,
-        p: *mut mbstate_t,
-    ) -> usize;
+    #[cfg_attr(target_os = "cygwin", link_name = "c32rtomb")]
+    pub fn wcrtomb(s: *mut libc::c_char, wc: u32, ps: *mut mbstate_t) -> usize;
+    #[cfg_attr(target_os = "cygwin", link_name = "mbrtoc32")]
+    pub fn mbrtowc(pwc: *mut u32, s: *const libc::c_char, n: usize, p: *mut mbstate_t) -> usize;
 }
 
 // HACK This should be mbstate_t from libc but that's not exposed.  Since it's only written by

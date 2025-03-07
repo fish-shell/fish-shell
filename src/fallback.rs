@@ -46,9 +46,8 @@ pub fn wcwidth(c: char) -> isize {
 /// A safe wrapper around the system `wcwidth()` function
 #[cfg(target_os = "cygwin")]
 pub fn wcwidth(c: char) -> isize {
-    use unicode_width::UnicodeWidthChar;
-
-    c.width().map(|w| w as isize).unwrap_or_default()
+    // https://github.com/fish-shell/fish-shell/pull/11238#discussion_r1985414670
+    2
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is

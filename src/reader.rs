@@ -4087,7 +4087,10 @@ fn reader_interactive_init(parser: &Parser) {
     terminal_protocol_hacks();
     IN_MIDNIGHT_COMMANDER_PRE_CSI_U.store(
         parser.vars().get_unless_empty(L!("MC_TMPDIR")).is_some()
-            && parser.vars().get_unless_empty(L!("__mc_csi_u")).is_none(),
+            && parser
+                .vars()
+                .get_unless_empty(L!("__mc_kitty_keyboard"))
+                .is_none(),
     );
 }
 

@@ -114,10 +114,7 @@ impl PosixSpawner {
 
         // Set our flags.
         let mut flags: i32 = 0;
-        // Bug of cygwin: `posix_spawn` reports error if `POSIX_SPAWN_SETSIGDEF` is set.
-        if cfg!(not(target_os = "cygwin")) {
-            flags |= libc::POSIX_SPAWN_SETSIGDEF;
-        }
+        flags |= libc::POSIX_SPAWN_SETSIGDEF;
         flags |= libc::POSIX_SPAWN_SETSIGMASK;
         if desired_pgid.is_some() {
             flags |= libc::POSIX_SPAWN_SETPGROUP;

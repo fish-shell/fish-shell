@@ -8,10 +8,10 @@ use crate::{common::is_console_session, wchar::prelude::*};
 use errno::{errno, Errno};
 use once_cell::sync::Lazy;
 use std::cmp;
+use std::ffi::CString;
 use std::fs::File;
 use std::os::fd::FromRawFd;
 use std::sync::atomic::{AtomicIsize, Ordering};
-use std::{ffi::CString, mem};
 
 /// Width of ambiguous East Asian characters and, as of TR11, all private-use characters.
 /// 1 is the typical default, but we accept any non-negative override via `$fish_ambiguous_width`.
@@ -32,14 +32,23 @@ pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
 static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
 
 /// A safe wrapper around the system `wcwidth()` function
+#[cfg(not(target_os = "cygwin"))]
 pub fn wcwidth(c: char) -> isize {
     extern "C" {
         pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
     }
 
-    const _: () = assert!(mem::size_of::<libc::wchar_t>() >= mem::size_of::<char>());
+    const _: () = assert!(std::mem::size_of::<libc::wchar_t>() >= std::mem::size_of::<char>());
     let width = unsafe { wcwidth(c as libc::wchar_t) };
     isize::try_from(width).unwrap()
+}
+
+/// A safe wrapper around the system `wcwidth()` function
+#[cfg(target_os = "cygwin")]
+pub fn wcwidth(c: char) -> isize {
+    use unicode_width::UnicodeWidthChar;
+
+    c.width().map(|w| w as isize).unwrap_or_default()
 }
 
 // Big hack to use our versions of wcswidth where we know them to be broken, which is

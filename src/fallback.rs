@@ -3,8 +3,8 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
+use crate::wchar::prelude::*;
 use crate::widecharwidth::{WcLookupTable, WcWidth};
-use crate::{common::is_console_session, wchar::prelude::*};
 use errno::{errno, Errno};
 use once_cell::sync::Lazy;
 use std::cmp;
@@ -50,7 +50,7 @@ pub fn fish_wcwidth(c: char) -> isize {
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
     #[cfg(not(target_os = "cygwin"))]
-    if is_console_session() {
+    if crate::common::is_console_session() {
         return wcwidth(c);
     }
 

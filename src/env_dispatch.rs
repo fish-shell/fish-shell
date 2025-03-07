@@ -199,7 +199,10 @@ fn guess_emoji_width(vars: &EnvStack) {
     } else {
         // Default to whatever the system's wcwidth gives for U+1F603, but only if it's at least
         // 1 and at most 2.
+        #[cfg(not(target_os = "cygwin"))]
         let width = crate::fallback::wcwidth('😃').clamp(1, 2);
+        #[cfg(target_os = "cygwin")]
+        let width = 2_isize;
         FISH_EMOJI_WIDTH.store(width, Ordering::Relaxed);
         FLOG!(term_support, "default emoji width:", width);
     }

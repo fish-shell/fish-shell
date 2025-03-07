@@ -97,7 +97,12 @@ fn detect_cfgs(target: &mut Target) {
             Ok(target.has_symbol("localeconv_l"))
         }),
         ("FISH_USE_POSIX_SPAWN", &|target| {
-            Ok(target.has_header("spawn.h"))
+            if env::var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin" {
+                // `POSIX_SPAWN_SETSIGDEF` is broken
+                Ok(false)
+            } else {
+                Ok(target.has_header("spawn.h"))
+            }
         }),
         ("HAVE_PIPE2", &|target| {
             Ok(target.has_symbol("pipe2"))

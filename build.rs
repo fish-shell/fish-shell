@@ -3,15 +3,11 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn main() {
-    if cfg!(windows) {
-        // Cross compiling from Windows, keep the paths in Unix style.
-        rsconf::set_env_value("DATADIR_SUBDIR", "fish");
-    } else {
-        setup_paths();
-    }
+    setup_paths();
+
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
 
@@ -236,6 +232,11 @@ fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
 }
 
 fn setup_paths() {
+    #[cfg(unix)]
+    use std::path::PathBuf;
+    #[cfg(windows)]
+    use unix_path::{Path, PathBuf};
+
     fn get_path(name: &str, default: &str, onvar: &Path) -> PathBuf {
         let mut var = PathBuf::from(env::var(name).unwrap_or(default.to_string()));
         if var.is_relative() {

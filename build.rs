@@ -6,8 +6,12 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 
 fn main() {
-    setup_paths();
-
+    if cfg!(windows) {
+        // Cross compiling from Windows, keep the paths in Unix style.
+        rsconf::set_env_value("DATADIR_SUBDIR", "fish");
+    } else {
+        setup_paths();
+    }
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
 

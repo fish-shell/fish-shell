@@ -3,8 +3,8 @@
 use crate::ast::{self, Ast, List, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
-    escape_string, scoped_push_replacer, CancelChecker, EscapeFlags, EscapeStringStyle,
-    FilenameRef, ScopeGuarding, ScopedCell, PROFILING_ACTIVE,
+    escape_string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding,
+    ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
@@ -241,6 +241,10 @@ pub struct ScopedData {
 
     /// Whether we are currently cleaning processes.
     pub is_cleaning_procs: bool,
+
+    /// The internal job id of the job being populated, or 0 if none.
+    /// This supports the '--on-job-exit caller' feature.
+    pub caller_id: u64, // TODO should be InternalJobId
 }
 
 impl Default for ScopedData {
@@ -253,6 +257,7 @@ impl Default for ScopedData {
             suppress_fish_trace: false,
             read_limit: 0,
             is_cleaning_procs: false,
+            caller_id: 0,
         }
     }
 }
@@ -299,10 +304,6 @@ pub struct LibraryData {
 
     /// Whether we called builtin_complete -C without parameter.
     pub builtin_complete_current_commandline: bool,
-
-    /// The internal job id of the job being populated, or 0 if none.
-    /// This supports the '--on-job-exit caller' feature.
-    pub caller_id: u64, // TODO should be InternalJobId
 
     /// Whether we should break or continue the current loop.
     /// This is set by the 'break' and 'continue' commands.
@@ -397,7 +398,7 @@ pub enum CancelBehavior {
 pub struct Parser {
     /// A shared line counter. This is handed out to each execution context
     /// so they can communicate the line number back to this Parser.
-    line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
+    line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -438,7 +439,7 @@ impl Parser {
     /// Create a parser.
     pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
-            line_counter: Rc::new(RefCell::new(LineCounter::empty())),
+            line_counter: Rc::new(ScopedRefCell::new(LineCounter::empty())),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
             block_list: RefCell::default(),
@@ -624,8 +625,8 @@ impl Parser {
 
         // Restore the line counter.
         let line_counter = Rc::clone(&self.line_counter);
-        let scoped_line_counter =
-            scoped_push_replacer(|v| line_counter.replace(v), ps.line_counter());
+        let restore_line_counter =
+            line_counter.scoped_replace(ps.line_counter::<ast::JobPipeline>());
 
         // Create a new execution context.
         let mut execution_context =
@@ -640,7 +641,7 @@ impl Parser {
         let new_exec_count = self.libdata().exec_count;
         let new_status_count = self.libdata().status_count;
 
-        ScopeGuarding::commit(scoped_line_counter);
+        ScopeGuarding::commit(restore_line_counter);
         self.pop_block(scope_block);
 
         job_reap(self, false); // reap again

@@ -786,25 +786,14 @@ fn test_line_counter() {
         assert_eq!(line_offset, expected);
     }
 
-    fn ref_eq<T>(a: Option<&T>, b: Option<&T>) -> bool {
-        match (a, b) {
-            (Some(a), Some(b)) => std::ptr::eq(a, b),
-            (None, None) => true,
-            _ => false,
-        }
-    }
-
     let pipelines: Vec<_> = ps.ast.walk().filter_map(|n| n.as_job_pipeline()).collect();
     assert_eq!(pipelines.len(), 3);
     let src_offsets = [0, 0, 2];
     assert_eq!(line_counter.source_offset_of_node(), None);
     assert_eq!(line_counter.line_offset_of_node(), None);
 
-    let mut last_set = None;
     for (idx, &node) in pipelines.iter().enumerate() {
-        let orig = line_counter.set_node(Some(node));
-        assert!(ref_eq(orig, last_set));
-        last_set = Some(node);
+        line_counter.node = node as *const _;
         assert_eq!(
             line_counter.source_offset_of_node(),
             Some(node.source_range().start())
@@ -813,9 +802,7 @@ fn test_line_counter() {
     }
 
     for (idx, &node) in pipelines.iter().enumerate().rev() {
-        let orig = line_counter.set_node(Some(node));
-        assert!(ref_eq(orig, last_set));
-        last_set = Some(node);
+        line_counter.node = node as *const _;
         assert_eq!(
             line_counter.source_offset_of_node(),
             Some(node.source_range().start())

@@ -204,7 +204,7 @@ pub struct LineCounter<NodeType: Node> {
     parsed_source: Pin<Arc<ParsedSource>>,
 
     /// The node itself. This points into the parsed source, or it may be null.
-    node: *const NodeType,
+    pub node: *const NodeType,
 
     // Cached line number information: the line number of the start of the node, and the number of newlines.
     cached_offset: usize,
@@ -260,14 +260,6 @@ impl<NodeType: Node> LineCounter<NodeType> {
         let node = unsafe { self.node.as_ref()? };
         let range = node.try_source_range()?;
         Some(range.start())
-    }
-
-    // Set the node. The node must belong to the parsed source.
-    // Returns the original node.
-    pub fn set_node<'a>(&mut self, node: Option<&'a NodeType>) -> Option<&'a NodeType> {
-        let node_ptr = node.map_or(std::ptr::null(), |node| node);
-        let prev = std::mem::replace(&mut self.node, node_ptr);
-        unsafe { prev.as_ref() }
     }
 
     // Return the source.

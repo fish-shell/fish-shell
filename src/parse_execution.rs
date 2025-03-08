@@ -11,8 +11,8 @@ use crate::builtins::shared::{
     STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    escape, scoped_push_replacer, should_suppress_stderr_for_tests, truncate_at_nul,
-    valid_var_name, ScopeGuard, ScopeGuarding,
+    escape, should_suppress_stderr_for_tests, truncate_at_nul, valid_var_name, ScopeGuard,
+    ScopeGuarding, ScopedRefCell,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};
@@ -52,7 +52,6 @@ use crate::wchar_ext::WExt;
 use crate::wildcard::wildcard_match;
 use crate::wutil::{wgettext, wgettext_maybe_fmt};
 use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
-use std::cell::RefCell;
 use std::io::ErrorKind;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -85,7 +84,7 @@ pub struct ExecutionContext {
 
     // Helper to count lines.
     // This is shared with the Parser so that the Parser can access the current line.
-    line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
+    line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
@@ -118,7 +117,7 @@ impl<'a> ExecutionContext {
     pub fn new(
         pstree: ParsedSourceRef,
         block_io: IoChain,
-        line_counter: Rc<RefCell<LineCounter<ast::JobPipeline>>>,
+        line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
     ) -> Self {
         Self {
             pstree,
@@ -1533,10 +1532,7 @@ impl<'a> ExecutionContext {
 
         // Save the executing node.
         let line_counter = Rc::clone(&self.line_counter);
-        let _saved_node = scoped_push_replacer(
-            |node| line_counter.borrow_mut().set_node(node),
-            Some(job_node),
-        );
+        let _saved_node = line_counter.scoped_set(job_node as *const _, |s| &mut s.node);
 
         // Profiling support.
         let profile_item_id = ctx.parser().create_profile_item();
@@ -1631,10 +1627,9 @@ impl<'a> ExecutionContext {
         // We are about to populate a job. One possible argument to the job is a command substitution
         // which may be interested in the job that's populating it, via '--on-job-exit caller'. Record
         // the job ID here.
-        let _caller_id = scoped_push_replacer(
-            |new_value| std::mem::replace(&mut ctx.parser().libdata_mut().caller_id, new_value),
-            job.internal_job_id,
-        );
+        let _caller_id = ctx
+            .parser()
+            .push_scope(move |s| s.caller_id = job.internal_job_id);
 
         // Populate the job. This may fail for reasons like command_not_found. If this fails, an error
         // will have been printed.

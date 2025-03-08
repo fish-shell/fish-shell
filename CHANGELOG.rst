@@ -19,7 +19,7 @@ Interactive improvements
 - The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
 - Left mouse click now can select pager items.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
-- Pasted commands are now stripped of any ``$ `` prefix.
+- Pasted commands are now stripped of any ``$`` prefix.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

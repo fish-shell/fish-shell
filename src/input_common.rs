@@ -1697,5 +1697,5 @@ fn parse_hex(hex: &[u8]) -> Option<Vec<u8>> {
 
 #[test]
 fn test_parse_hex() {
-    assert_eq!(parse_hex(&[b'3', b'd']), Some(vec![61]));
+    assert_eq!(parse_hex(b"3d"), Some(vec![61]));
 }

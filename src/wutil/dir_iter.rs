@@ -272,7 +272,7 @@ impl DirIter {
         // TODO: This should use &raw from Rust 1.82 on
         // https://github.com/rust-lang/libc/issues/2669
         // https://github.com/fish-shell/fish-shell/issues/11221
-        let d_name_ptr = addr_of!((*dent).d_name);
+        let d_name_ptr = addr_of!(dent.d_name);
         let d_name = unsafe { std::ffi::CStr::from_ptr(d_name_ptr.cast()) }.to_bytes();
 
         // Skip . and ..,

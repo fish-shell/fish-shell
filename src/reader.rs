@@ -6511,10 +6511,22 @@ impl<'a> Reader<'a> {
             prefix.push_utfstr(&tok);
             prefix.push_utfstr(&common_prefix);
         } else {
-            // Append just the end of the string.
+            // Collapse parent directories and append end of string
             prefix.push(get_ellipsis_char());
+
             let full = tok + &common_prefix[..];
-            prefix.push_utfstr(&full[full.len() - PREFIX_MAX_LEN..]);
+            let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+            let parts: Vec<&wstr> = truncated.split('/').collect();
+            if parts.len() < 2 {
+                // No path separators were found in the common prefix, so we can't collapse
+                // any further
+                prefix.push_utfstr(&truncated);
+            } else {
+                // Discard any parent directories and include whats left
+                let last_part = parts.last().expect("parts is non-empty");
+                prefix.push('/');
+                prefix.push_utfstr(last_part);
+            }
         }
 
         // Update the pager data.

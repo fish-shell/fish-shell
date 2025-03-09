@@ -183,7 +183,7 @@ fn maybe_issue_path_warning(
             )
         );
     }
-    printf!("\n");
+    eprintf!("\n");
 }
 
 /// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.

@@ -1,0 +1,1 @@
+cue completion fish | source

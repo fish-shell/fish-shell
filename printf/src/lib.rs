@@ -62,6 +62,26 @@ macro_rules! sprintf {
             ).unwrap()
         }
     };
+
+    // Handling the case where there is no arguments
+    (
+      $fmt:expr // format string
+      $(,)? // optional trailing comma
+    ) => {
+      {
+        String::from($fmt)
+      }
+    };
+
+    (
+      => $target:expr, // target string
+      $fmt:expr, // format string
+      $(,)? // optional trailing comma
+    ) => {
+      {
+        $target.write_str($fmt).unwrap()
+      }
+   };
 }
 
 /// Formats a string using the provided format specifiers and arguments, using the C locale,

@@ -6497,10 +6497,21 @@ impl<'a> Reader<'a> {
             prefix.push_utfstr(&tok);
             prefix.push_utfstr(&common_prefix);
         } else {
-            // Append just the end of the string.
+            // Collapse parent directories and append end of string
             prefix.push(get_ellipsis_char());
+
             let full = tok + &common_prefix[..];
-            prefix.push_utfstr(&full[full.len() - PREFIX_MAX_LEN..]);
+            let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+            let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
+            if i == 0 {
+                // No path separators were found in the common prefix, so we can't collapse
+                // any further
+                prefix.push_utfstr(&truncated);
+            } else {
+                // Discard any parent directories and include whats left
+                prefix.push('/');
+                prefix.push_utfstr(last_component);
+            };
         }
 
         // Update the pager data.

@@ -32,13 +32,12 @@ macro_rules! sprintf {
     // Write to a newly allocated String, and return it.
     // This panics if the format string or arguments are invalid.
     (
-        $fmt:expr, // Format string, which should implement FormatString.
-        $($arg:expr),* // arguments
-        $(,)? // optional trailing comma
+        $fmt:expr // Format string, which should implement FormatString.
+        $(, $($arg:expr),*)? // arguments
     ) => {
         {
             let mut target = String::new();
-            $crate::sprintf!(=> &mut target, $fmt, $($arg),*);
+            $crate::sprintf!(=> &mut target, $fmt $(, $($arg),*)?);
             target
         }
     };
@@ -47,9 +46,8 @@ macro_rules! sprintf {
     // The target should implement std::fmt::Write.
     (
         => $target:expr, // target string
-        $fmt:expr, // format string
-        $($arg:expr),* // arguments
-        $(,)? // optional trailing comma
+        $fmt:expr // format string
+        $(, $($arg:expr),*)? // arguments
     ) => {
         {
             // May be no args!
@@ -58,7 +56,7 @@ macro_rules! sprintf {
             $crate::printf_c_locale(
                 $target,
                 $fmt,
-                &mut [$($arg.to_arg()),*],
+                &mut [$( $($arg.to_arg()),* )?],
             ).unwrap()
         }
     };

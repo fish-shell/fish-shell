@@ -659,6 +659,18 @@ fn test_crate_macros() {
 
     target = crate::sprintf!("%d ok %d", 3, 4);
     assert_eq!(target, "3 ok 4");
+
+    let target = crate::sprintf!("noargs1");
+    assert_eq!(target, "noargs1");
+    let target = crate::sprintf!("noargs1",);
+    assert_eq!(target, "noargs1");
+
+    let mut target = String::new();
+    crate::sprintf!(=> &mut target, "noargs2");
+    assert_eq!(target, "noargs2");
+    let mut target = String::new();
+    crate::sprintf!(=> &mut target, "noargs2", );
+    assert_eq!(target, "noargs2");
 }
 
 #[test]

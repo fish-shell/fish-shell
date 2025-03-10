@@ -28,10 +28,10 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - name: make
       run: |
-        make VERBOSE=1
+        make -C build VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 test
+        make -C build VERBOSE=1 fish_run_tests
 
   ubuntu-32bit-static-pcre2:
 
@@ -54,10 +54,10 @@ jobs:
         cmake -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i586-unknown-linux-gnu ..
     - name: make
       run: |
-        make VERBOSE=1
+        make -C build VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 test
+        make -C build VERBOSE=1 fish_run_tests
 
   ubuntu-asan:
 
@@ -92,7 +92,7 @@ jobs:
         cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu -DCMAKE_BUILD_TYPE=Debug
     - name: make
       run: |
-        make VERBOSE=1
+        make -C build VERBOSE=1
     - name: make fish_run_tests
       env:
           FISH_CI_SAN: 1
@@ -107,7 +107,7 @@ jobs:
         llvm_version=$(clang --version | awk 'NR==1 { split($NF, version, "."); print version[1] }')
         export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$llvm_version
         export LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt"
-        make VERBOSE=1 test
+        make -C build VERBOSE=1 fish_run_tests
 
   # Our clang++ tsan builds are not recognizing safe rust patterns (such as the fact that Drop
   # cannot be called while a thread is using the object in question). Rust has its own way of
@@ -135,7 +135,7 @@ jobs:
   #       make
   #   - name: make fish_run_tests
   #     run: |
-  #       make fish_run_tests
+  #       make -C build fish_run_tests
 
   macos:
 
@@ -160,7 +160,7 @@ jobs:
         cmake -DWITH_GETTEXT=NO -DCMAKE_BUILD_TYPE=Debug ..
     - name: make
       run: |
-        make VERBOSE=1
+        make -C build VERBOSE=1
     - name: make fish_run_tests
       run: |
-        make VERBOSE=1 test
+        make -C build VERBOSE=1 fish_run_tests

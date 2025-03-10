@@ -39,7 +39,7 @@ use crate::output::Outputter;
 use crate::terminal::{term, tparm1};
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
-use crate::wcstringutil::string_prefixes_string;
+use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;
 
 #[derive(Copy, Clone, Default)]
@@ -1811,7 +1811,7 @@ fn measure_run_from(
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            width += wcwidth_rendered_min_0(input.char_at(idx));
+            width += usize::try_from(fish_wcwidth_visible(input.char_at(idx))).unwrap();
         }
         idx += 1;
     }
@@ -1857,7 +1857,7 @@ fn truncate_run(
             curr_width = measure_run_from(run, 0, None, cache);
             idx = 0;
         } else {
-            let char_width = wcwidth_rendered_min_0(c);
+            let char_width = usize::try_from(fish_wcwidth_visible(c)).unwrap();
             curr_width -= std::cmp::min(curr_width, char_width);
             run.remove(idx);
         }

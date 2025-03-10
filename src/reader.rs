@@ -2936,7 +2936,7 @@ impl<'a> Reader<'a> {
                 self.data
                     .insert_string(self.active_edit_line_tag(), &yank_str);
                 self.rls_mut().yank_len = yank_str.len();
-                if self.cursor_end_mode == CursorEndMode::Inclusive {
+                if !yank_str.is_empty() && self.cursor_end_mode == CursorEndMode::Inclusive {
                     let (_elt, el) = self.active_edit_line();
                     self.update_buff_pos(self.active_edit_line_tag(), Some(el.position() - 1));
                 }

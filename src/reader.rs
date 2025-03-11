@@ -2684,7 +2684,12 @@ impl<'a> Reader<'a> {
                 if c == rl::CancelCommandline {
                     // Move cursor to the end of the line.
                     let end = self.command_line.len();
-                    self.update_buff_pos(EditableLineTag::Commandline, Some(end));
+                    {
+                        let tmp =
+                            std::mem::replace(&mut self.cursor_end_mode, CursorEndMode::Exclusive);
+                        self.update_buff_pos(EditableLineTag::Commandline, Some(end));
+                        self.cursor_end_mode = tmp;
+                    }
 
                     self.autosuggestion.clear();
                     // Repaint also changes the actual cursor position

@@ -419,7 +419,7 @@ pub struct Parser {
     scoped_data: ScopedCell<ScopedData>,
 
     /// Miscellaneous library data.
-    library_data: RefCell<LibraryData>,
+    pub library_data: ScopedRefCell<LibraryData>,
 
     /// If set, we synchronize universal variables after external commands,
     /// including sending on-variable change events.
@@ -445,7 +445,7 @@ impl Parser {
             block_list: RefCell::default(),
             variables,
             scoped_data: ScopedCell::new(ScopedData::default()),
-            library_data: RefCell::new(LibraryData::new()),
+            library_data: ScopedRefCell::new(LibraryData::new()),
             syncs_uvars: RelaxedAtomicBool::new(false),
             cancel_behavior,
             profile_items: RefCell::default(),

@@ -1,7 +1,7 @@
 use std::os::fd::AsRawFd;
 
 use crate::{
-    common::{escape, scoped_push_replacer, FilenameRef},
+    common::{escape, FilenameRef},
     fds::wopen_cloexec,
     nix::isatty,
     parser::Block,
@@ -78,10 +78,9 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     assert!(fd >= 0, "Should have a valid fd");
 
     let sb = parser.push_block(Block::source_block(func_filename.clone()));
-    let _filename_push = scoped_push_replacer(
-        |new_value| std::mem::replace(&mut parser.libdata_mut().current_filename, new_value),
-        Some(func_filename.clone()),
-    );
+    let _filename_push = parser
+        .library_data
+        .scoped_set(Some(func_filename.clone()), |s| &mut s.current_filename);
 
     // Construct argv for the sourced file from our remaining args.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already

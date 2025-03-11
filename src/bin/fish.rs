@@ -35,8 +35,8 @@ use fish::{
         },
     },
     common::{
-        escape, get_executable_path, save_term_foreground_process_group, scoped_push_replacer,
-        str2wcstring, wcs2string, PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        escape, get_executable_path, save_term_foreground_process_group, str2wcstring, wcs2string,
+        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -937,12 +937,11 @@ fn throwing_main() -> i32 {
                     list.iter().map(|s| s.to_owned()).collect(),
                 );
                 let rel_filename = &args[my_optind - 1];
-                let _filename_push = scoped_push_replacer(
-                    |new_value| {
-                        std::mem::replace(&mut parser.libdata_mut().current_filename, new_value)
-                    },
-                    Some(Arc::new(rel_filename.to_owned())),
-                );
+                let _filename_push = parser
+                    .library_data
+                    .scoped_set(Some(Arc::new(rel_filename.to_owned())), |s| {
+                        &mut s.current_filename
+                    });
                 res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
                 if res.is_err() {
                     FLOGF!(

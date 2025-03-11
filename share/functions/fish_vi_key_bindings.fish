@@ -350,6 +350,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
         end
     end
     function __fish_vi_key_bindings_remove_handlers --on-variable __fish_active_key_bindings
+        __fish_vi_cursor fish_cursor_default
         functions --erase __fish_vi_key_bindings_remove_handlers
         functions --erase __fish_vi_key_bindings_on_mode_change
         functions --erase fish_vi_cursor_handle

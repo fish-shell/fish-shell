@@ -17,7 +17,24 @@ const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     // Read the current executable and follow all symlinks to it.
-    determine_config_directory_paths(std::env::current_exe().unwrap().canonicalize().unwrap())
+    // OpenBSD has issues with `std::env::current_exe`, see gh-9086 and
+    // https://github.com/rust-lang/rust/issues/60560
+    determine_config_directory_paths(
+        std::env::args()
+            .next()
+            .map(|x| {
+                if !x.is_empty() {
+                    // Is not empty on OpenBSD but just the executable
+                    // name rather than the path.
+                    PathBuf::from(x)
+                } else {
+                    std::env::current_exe().unwrap()
+                }
+            })
+            .unwrap()
+            .canonicalize()
+            .unwrap(),
+    )
 });
 
 fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {

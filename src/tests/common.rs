@@ -1,4 +1,4 @@
-use crate::common::{scoped_push, truncate_at_nul, ScopeGuard, ScopedCell, ScopedRefCell};
+use crate::common::{truncate_at_nul, ScopeGuard, ScopedCell, ScopedRefCell};
 use crate::wchar::prelude::*;
 
 #[test]
@@ -34,29 +34,6 @@ fn test_scoped_refcell() {
         assert_eq!(*cell.borrow(), Data { x: 42, y: 99 });
     }
     assert_eq!(*cell.borrow(), Data { x: 1, y: 2 });
-}
-
-#[test]
-fn test_scoped_push() {
-    struct Context {
-        value: i32,
-    }
-
-    let mut value = 0;
-    let mut ctx = Context { value };
-    {
-        let mut ctx = scoped_push(&mut ctx, |ctx| &mut ctx.value, value + 1);
-        value = ctx.value;
-        assert_eq!(value, 1);
-        {
-            let mut ctx = scoped_push(&mut ctx, |ctx| &mut ctx.value, value + 1);
-            assert_eq!(ctx.value, 2);
-            ctx.value = 5;
-            assert_eq!(ctx.value, 5);
-        }
-        assert_eq!(ctx.value, 1);
-    }
-    assert_eq!(ctx.value, 0);
 }
 
 #[test]

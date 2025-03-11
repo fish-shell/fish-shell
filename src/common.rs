@@ -1887,7 +1887,7 @@ impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
     }
 }
 
-/// A trait expressing what ScopeGuard can do. This is necessary because scoped_push returns an
+/// A trait expressing what ScopeGuard can do. This is necessary because our scoped cells return an
 /// `impl Trait` object and therefore methods on ScopeGuard which take a self parameter cannot be
 /// used.
 pub trait ScopeGuarding: DerefMut + Sized {
@@ -1898,54 +1898,6 @@ pub trait ScopeGuarding: DerefMut + Sized {
 }
 
 impl<T, F: FnOnce(&mut T)> ScopeGuarding for ScopeGuard<T, F> {}
-
-/// A scoped manager to save the current value of some variable, and set it to a new value. When
-/// dropped, it restores the variable to its old value.
-pub fn scoped_push<Context, Accessor, T>(
-    mut ctx: Context,
-    accessor: Accessor,
-    new_value: T,
-) -> impl ScopeGuarding<Target = Context>
-where
-    Accessor: Fn(&mut Context) -> &mut T,
-{
-    let saved = mem::replace(accessor(&mut ctx), new_value);
-    let restore_saved = move |ctx: &mut Context| {
-        *accessor(ctx) = saved;
-    };
-    ScopeGuard::new(ctx, restore_saved)
-}
-
-/// Similar to scoped_push but takes a function like "std::mem::replace" instead of a function
-/// that returns a mutable reference.
-pub fn scoped_push_replacer<Replacer, T>(
-    replacer: Replacer,
-    new_value: T,
-) -> impl ScopeGuarding<Target = ()>
-where
-    Replacer: Fn(T) -> T,
-{
-    let saved = replacer(new_value);
-    let restore_saved = move |_ctx: &mut ()| {
-        replacer(saved);
-    };
-    ScopeGuard::new((), restore_saved)
-}
-
-pub fn scoped_push_replacer_ctx<Context, Replacer, T>(
-    mut ctx: Context,
-    replacer: Replacer,
-    new_value: T,
-) -> impl ScopeGuarding<Target = Context>
-where
-    Replacer: Fn(&mut Context, T) -> T,
-{
-    let saved = replacer(&mut ctx, new_value);
-    let restore_saved = move |ctx: &mut Context| {
-        replacer(ctx, saved);
-    };
-    ScopeGuard::new(ctx, restore_saved)
-}
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}

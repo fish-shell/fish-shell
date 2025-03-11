@@ -3000,10 +3000,15 @@ impl<'a> Reader<'a> {
             | rl::HistorySearchBackward
             | rl::HistorySearchForward
             | rl::HistoryTokenSearchBackward
-            | rl::HistoryTokenSearchForward => {
+            | rl::HistoryTokenSearchForward
+            | rl::HistoryLastTokenSearchBackward
+            | rl::HistoryLastTokenSearchForward => {
                 let mode = match c {
                     rl::HistoryTokenSearchBackward | rl::HistoryTokenSearchForward => {
                         SearchMode::Token
+                    }
+                    rl::HistoryLastTokenSearchBackward | rl::HistoryLastTokenSearchForward => {
+                        SearchMode::LastToken
                     }
                     rl::HistoryPrefixSearchBackward | rl::HistoryPrefixSearchForward => {
                         SearchMode::Prefix
@@ -3016,13 +3021,13 @@ impl<'a> Reader<'a> {
 
                 if self.history_search.is_at_present() && mode != self.history_search.mode() {
                     let el = &self.data.command_line;
-                    if mode == SearchMode::Token {
+                    if matches!(mode, SearchMode::Token | SearchMode::LastToken) {
                         // Searching by token.
                         let (token_range, _) = parse_util_token_extent(el.text(), el.position());
                         self.data.history_search.reset_to_mode(
                             el.text()[token_range.clone()].to_owned(),
                             self.history.clone(),
-                            SearchMode::Token,
+                            mode,
                             token_range.start,
                         );
                     } else {
@@ -3048,9 +3053,11 @@ impl<'a> Reader<'a> {
                 let dir = match c {
                     rl::HistorySearchBackward
                     | rl::HistoryTokenSearchBackward
+                    | rl::HistoryLastTokenSearchBackward
                     | rl::HistoryPrefixSearchBackward => SearchDirection::Backward,
                     rl::HistorySearchForward
                     | rl::HistoryTokenSearchForward
+                    | rl::HistoryLastTokenSearchForward
                     | rl::HistoryPrefixSearchForward => SearchDirection::Forward,
                     _ => unreachable!(),
                 };
@@ -5536,6 +5543,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::HistorySearchForward
         | rl::HistoryTokenSearchBackward
         | rl::HistoryTokenSearchForward
+        | rl::HistoryLastTokenSearchBackward
+        | rl::HistoryLastTokenSearchForward
         | rl::AcceptAutosuggestion
         | rl::DeleteOrExit
         | rl::CancelCommandline
@@ -5626,6 +5635,8 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::HistorySearchForward
             | rl::HistoryTokenSearchBackward
             | rl::HistoryTokenSearchForward
+            | rl::HistoryLastTokenSearchBackward
+            | rl::HistoryLastTokenSearchForward
             | rl::HistoryDelete
             | rl::HistoryPagerDelete
             | rl::BeginningOfHistory

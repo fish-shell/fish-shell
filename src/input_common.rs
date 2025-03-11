@@ -90,6 +90,8 @@ pub enum ReadlineCmd {
     BackwardKillToken,
     HistoryTokenSearchBackward,
     HistoryTokenSearchForward,
+    HistoryLastTokenSearchBackward,
+    HistoryLastTokenSearchForward,
     SelfInsert,
     SelfInsertNotFirst,
     TransposeChars,

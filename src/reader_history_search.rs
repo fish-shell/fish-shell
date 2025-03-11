@@ -42,6 +42,8 @@ pub enum SearchMode {
     Prefix,
     /// searching by token
     Token,
+    /// search by the last token of the command
+    LastToken,
 }
 
 /// Encapsulation of the reader's history search functionality.
@@ -71,7 +73,7 @@ impl ReaderHistorySearch {
         self.mode != SearchMode::Inactive
     }
     pub fn by_token(&self) -> bool {
-        self.mode == SearchMode::Token
+        matches!(self.mode, SearchMode::Token | SearchMode::LastToken)
     }
     pub fn by_line(&self) -> bool {
         self.mode == SearchMode::Line
@@ -221,7 +223,7 @@ impl ReaderHistorySearch {
             if let Some(offset) = find(self, text, needle) {
                 self.add_if_new(SearchMatch::new(text.to_owned(), offset));
             }
-        } else if self.mode == SearchMode::Token {
+        } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
             let mut tok = Tokenizer::new(text, TOK_ACCEPT_UNFINISHED);
 
             let mut local_tokens = vec![];
@@ -238,6 +240,9 @@ impl ReaderHistorySearch {
             // Make sure tokens are added in reverse order. See #5150
             for tok in local_tokens.into_iter().rev() {
                 self.add_if_new(tok);
+                if self.mode == SearchMode::LastToken {
+                    break;
+                }
             }
         }
         self.matches.len() > before

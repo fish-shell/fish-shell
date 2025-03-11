@@ -1675,27 +1675,24 @@ impl<'a> Reader<'a> {
             }
         }
 
-        let mut indents;
-        {
-            // Extend our colors with the autosuggestion.
-            let pos = autosuggested_range.start;
-            colors.splice(
-                pos..pos,
-                vec![
-                    if self.flash_autosuggestion {
-                        HighlightSpec::with_both(HighlightRole::search_match)
-                    } else {
-                        HighlightSpec::with_fg(HighlightRole::autosuggestion)
-                    };
-                    autosuggested_range.len()
-                ],
-            );
+        // Extend our colors with the autosuggestion.
+        let pos = autosuggested_range.start;
+        colors.splice(
+            pos..pos,
+            vec![
+                if self.flash_autosuggestion {
+                    HighlightSpec::with_both(HighlightRole::search_match)
+                } else {
+                    HighlightSpec::with_fg(HighlightRole::autosuggestion)
+                };
+                autosuggested_range.len()
+            ],
+        );
 
-            // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
-            // always conceptually has an indent of 0.
-            indents = parse_util_compute_indents(cmd_line.text());
-            indents.splice(pos..pos, vec![0; autosuggested_range.len()]);
-        }
+        // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
+        // always conceptually has an indent of 0.
+        let mut indents = parse_util_compute_indents(cmd_line.text());
+        indents.splice(pos..pos, vec![0; autosuggested_range.len()]);
 
         let screen = &mut self.data.screen;
         let pager = &mut self.data.pager;

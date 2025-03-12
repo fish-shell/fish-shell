@@ -26,15 +26,12 @@ The first argument to fish_title contains the most recently executed foreground 
 
 This requires that your terminal supports programmable titles and the feature is turned on.
 
+To disable setting the title, use an empty function (see below).
 
 Example
 -------
 
-A simple title:
-
-
-
-::
+A simple title::
 
    function fish_title
        set -q argv[1]; or set argv fish
@@ -43,3 +40,7 @@ A simple title:
        echo (fish_prompt_pwd_dir_length=1 prompt_pwd): $argv; 
    end
 
+Do not change the title::
+
+   function fish_title
+   end

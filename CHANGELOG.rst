@@ -1,22 +1,29 @@
 fish 4.0.1 (released ???)
 =========================
 
-This release of fish fixes the following problems identified in fish 4.0.0:
+This release of fish includes the following improvements compared to fish 4.0.0:
 
-- Kitty keyboard protocol in iTerm < 3.5.12 is now correctly disabled.
-  This works around an iTerm bug where it sends option+left as simply :kbd:`left` (:issue:`11192`).
-- A Konsole bug related to OSC 7 is worked around, which enables the "open folder with" menu in that terminal again (:issue:`11198`).
-- $fish_color_search_match will now only be applied to the foreground color if it has an explicit foreground. This allows setting e.g.::
+- Key combinations using the super (Windows/command) key can be bound using the :kbd:`super-` prefix (:issue:`11217`).
+- Konsole's menu shows the "Open folder with" option again (:issue:`11198`).
+- ``$fish_color_search_match`` will now only be applied to the foreground color if it has an explicit foreground. For example, this allows setting::
     set -g fish_color_search_match --reverse
-- Cursor shape commands (``\e[2 q``) are no longer sent in non-interactive shells
-- The acidhub prompt properly displays the git branch again (:issue:`11179`)
-- Wine completes files again (:issue:`11202`).
-- /etc/manpath and /etc/path now have the lines split on colons, improving interoperability with ghostty. This was originally meant to be applied to 4.0.0, but the commit was missed (:issue:`10684`).
-- Fish no longer tries to enable the modifyOtherKeys protocol in Wezterm as it is buggy there and it would support the kitty keyboard protocol (:issue:`11204`).
-- Fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
+- Cursor shape commands (``\e[2 q``) are no longer sent in non-interactive shells or in redirections (:issue:`11255`).
+- :doc:`status <cmds/status>` gained a ``is-interactive-read`` subcommand, to check whether the script is being called from an interactive :doc:`read <cmds/read>` invocation.
+- Prompts containing control characters no longer cause incorrect display of command lines (:issue:`11252`).
+- Cancelling the commandline in Vi mode displays correctly again (:issue:`11261`).
+- The acidhub prompt properly displays the git branch again (:issue:`11179`).
+- Completions for ``wine`` correctly include files again (:issue:`11202`).
+- On macOS, paths from ``/etc/paths`` and ``/etc/manpaths`` containing colons are handled correctly (:issue:`10684`). This functionality was included in the 4.0.0 release notes but was missing from the source code.
+- The XTerm ``modifyOtherKeys`` keyboard encoding is no longer used under WezTerm, as it does not work correctly in all layouts (:issue:`11204`).
+- kbd:`option-left` and other similar keys should now work in iTerm versions before 3.5.12; the Kitty keyboard protocol is now disabled on these versions (:issue:`11192`).
+- The kitty keyboard protocol is no longer used under Midnight Commander, as it does not work correctly (:issue:`10640`).
+- fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
 - Git completions for third-party commands like "git-absorb" are completed correctly again (:issue:`11205`).
-- A crash when working with file names longer than 255 bytes has been fixed (:issue:`11221`).
+- Completions for ``diskutil`` no longer produce an error (:issue:`11201`).
+- The output of certain error messages no longer prints newlines to standard output (:issue:`11248`).
+- A number of crashes have been fixed, including file names longer than 255 bytes (:issue:`11221`), using fish on a btrfs filesystem (:issue:`11219`), history files that do not have the expected format (:issue:`11236`), and pasting into an empty command line (:issue:`11256`).
 
+--------------
 
 fish 4.0.0 (released February 27, 2025)
 =======================================

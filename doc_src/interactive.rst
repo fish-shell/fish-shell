@@ -549,8 +549,8 @@ Custom bindings
 
 In addition to the standard bindings listed here, you can also define your own with :doc:`bind <cmds/bind>`::
 
-  # Just clear the commandline on control-c
-  bind ctrl-c 'commandline -r ""'
+  # Prints ``^C`` and a new prompt
+  bind ctrl-c cancel-commandline
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 

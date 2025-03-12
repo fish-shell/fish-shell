@@ -3,7 +3,7 @@ resolver = "2"
 members = ["printf"]
 
 [workspace.package]
-# To build revisions that use Corrosion (those before 2024-01), CMake 3.19 and Rustc 1.78 seem to work.
+# To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.70"
 edition = "2021"
 

@@ -20,6 +20,7 @@ Interactive improvements
 - Left mouse click now can select pager items.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any ``$`` prefix.
+- Undo (:kbd:`ctrl-z`) restores the cursor position too (:issue:`10838`).
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -230,7 +231,6 @@ Interactive improvements
   The color scheme will not be upgraded for existing installs. If you want, you should select it again via ``fish_config``.
 - Command lines which are larger than the terminal are now displayed correctly, instead of multiple blank lines being displayed (:issue:`7296`).
 - Prompts that use external commands will no longer produce an infinite loop if the command crashes (:issue:`9796`).
-- Undo (:kbd:`ctrl-z`) restores the cursor position too (:issue:`10838`).
 - The output of ``jobs`` shows "-" for jobs that have the same process group ID as the fish process, rather than "-2" (:issue:`10833`).
 - Job expansion (``%1`` syntax) works properly for jobs that are a mixture of external commands and functions (:issue:`10832`).
 - Command lines which have more lines than the terminal can be displayed and edited correctly (:issue:`10827`).

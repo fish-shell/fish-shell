@@ -9,13 +9,15 @@ This release of fish includes the following improvements compared to fish 4.0.0:
     set -g fish_color_search_match --reverse
 - Cursor shape commands (``\e[2 q``) are no longer sent in non-interactive shells or in redirections (:issue:`11255`).
 - :doc:`status <cmds/status>` gained a ``is-interactive-read`` subcommand, to check whether the script is being called from an interactive :doc:`read <cmds/read>` invocation.
+- fish's background tasks are now started in a way that avoids an error on macOS Terminal.app (:issue:`11181`).
+- Using key combinations within qemu should work correctly.
 - Prompts containing control characters no longer cause incorrect display of command lines (:issue:`11252`).
-- Cancelling the commandline in Vi mode displays correctly again (:issue:`11261`).
+- Cancelling the command-line in Vi mode displays correctly again (:issue:`11261`).
 - The acidhub prompt properly displays the git branch again (:issue:`11179`).
 - Completions for ``wine`` correctly include files again (:issue:`11202`).
 - On macOS, paths from ``/etc/paths`` and ``/etc/manpaths`` containing colons are handled correctly (:issue:`10684`). This functionality was included in the 4.0.0 release notes but was missing from the source code.
 - The XTerm ``modifyOtherKeys`` keyboard encoding is no longer used under WezTerm, as it does not work correctly in all layouts (:issue:`11204`).
-- kbd:`option-left` and other similar keys should now work in iTerm versions before 3.5.12; the Kitty keyboard protocol is now disabled on these versions (:issue:`11192`).
+- kbd:`option-left` and other similar keys should now work in iTerm versions before 3.5.12; the kitty keyboard protocol is now disabled on these versions (:issue:`11192`).
 - The kitty keyboard protocol is no longer used under Midnight Commander, as it does not work correctly (:issue:`10640`).
 - fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
 - Git completions for third-party commands like "git-absorb" are completed correctly again (:issue:`11205`).

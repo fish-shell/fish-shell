@@ -3,7 +3,7 @@
 set(Rust_RESOLVE_RUSTUP_TOOLCHAINS Off)
 
 include(FindRust)
-find_package(Rust REQUIRED)
+find_package(Rust 1.70 REQUIRED)
 
 set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo/build")
 

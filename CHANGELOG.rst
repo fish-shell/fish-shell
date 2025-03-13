@@ -69,7 +69,7 @@ This release of fish includes the following improvements compared to fish 4.0.0:
 - Completions for ``wine`` correctly include files again (:issue:`11202`).
 - On macOS, paths from ``/etc/paths`` and ``/etc/manpaths`` containing colons are handled correctly (:issue:`10684`). This functionality was included in the 4.0.0 release notes but was missing from the source code.
 - The XTerm ``modifyOtherKeys`` keyboard encoding is no longer used under WezTerm, as it does not work correctly in all layouts (:issue:`11204`).
-- kbd:`option-left` and other similar keys should now work in iTerm versions before 3.5.12; the kitty keyboard protocol is now disabled on these versions (:issue:`11192`).
+- :kbd:`option-left` and other similar keys should now work in iTerm versions before 3.5.12; the kitty keyboard protocol is now disabled on these versions (:issue:`11192`).
 - The kitty keyboard protocol is no longer used under Midnight Commander, as it does not work correctly (:issue:`10640`).
 - fish now sends the commandline along with the OSC 133 semantic prompt command start sequence. This fixes a test in the kitty terminal (:issue:`11203`).
 - Git completions for third-party commands like "git-absorb" are completed correctly again (:issue:`11205`).

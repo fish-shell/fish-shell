@@ -163,7 +163,8 @@ fn test_complete() {
                 completions[0].flags,
                 cmdline,
                 &mut cursor,
-                false,
+                /*append_only=*/ false,
+                /*is_unique=*/ true,
             );
             assert_eq!(newcmdline, L!($applied), "apply result mismatch");
         };
@@ -232,6 +233,7 @@ fn test_complete() {
         L!("mv debug debug"),
         &mut cursor_pos,
         true,
+        /*is_unique=*/ false,
     );
     assert_eq!(newcmdline, L!("mv debug Debug/"));
 

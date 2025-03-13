@@ -80,6 +80,7 @@ fn test_completion_insertions() {
                 &line,
                 &mut cursor_pos,
                 $append_only,
+                /*is_unique=*/ false,
             );
             assert_eq!(result, expected);
             assert_eq!(cursor_pos, out_cursor_pos);

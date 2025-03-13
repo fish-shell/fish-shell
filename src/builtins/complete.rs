@@ -513,7 +513,8 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     next.flags,
                     faux_cmdline,
                     &mut tmp_cursor,
-                    false,
+                    /*append_only=*/ false,
+                    /*is_unique=*/ false,
                 );
 
                 // completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE

@@ -113,40 +113,28 @@ echo comment after conjunction
 
 # --help works
 builtin and --help >/dev/null
-# CHECKERR: fish: and: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help and` will show an online version
+# CHECKERR: Documentation for and
 echo $status
 and --help >/dev/null
-# CHECKERR: fish: and: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help and` will show an online version
+# CHECKERR: Documentation for and
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin or --help >/dev/null
-# CHECKERR: fish: or: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help or` will show an online version
+# CHECKERR: Documentation for or
 echo $status
 or --help >/dev/null
-# CHECKERR: fish: or: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help or` will show an online version
+# CHECKERR: Documentation for or
 echo $status
 # CHECK: 0
 # CHECK: 0
 
 builtin not --help >/dev/null
-# CHECKERR: fish: not: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help not` will show an online version
+# CHECKERR: Documentation for not
 echo $status
 not --help >/dev/null
-# CHECKERR: fish: not: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help not` will show an online version
+# CHECKERR: Documentation for not
 echo $status
 # CHECK: 0
 # CHECK: 0

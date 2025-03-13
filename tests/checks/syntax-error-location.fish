@@ -86,9 +86,7 @@ $fish -c 'begin --notanoption; end'
 # CHECKERR:       ^~~~~~~~~~~~^
 
 $fish -c 'begin --help'
-# CHECKERR: fish: begin: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help begin` will show an online version
+# CHECKERR: Documentation for begin
 
 $fish -c 'echo (for status in foo; end)'
 # CHECKERR: fish: for: status: cannot overwrite read-only variable

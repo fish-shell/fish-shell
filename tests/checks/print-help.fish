@@ -11,6 +11,6 @@ echo '.\" Test manpage for and (not real).
 and \- conditionally execute a command' >$__fish_data_dir/man/man1/and.1
 
 # help should be redirected to grep instead of appearing on STDOUT
-builtin and --help | grep -q "and - conditionally execute a command"
+builtin and --help 2>| grep -q "Documentation for and"
 echo $status
 #CHECK: 0

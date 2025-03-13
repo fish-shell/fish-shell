@@ -10,9 +10,7 @@ echo $status
 # CHECK: 34
 
 ! -h
-# CHECKERR: fish: !: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help !` will show an online version
+# CHECKERR: Documentation for !
 
 function !
     echo overridden! $argv

@@ -241,9 +241,7 @@ echo 7 $status # no passthrough
 #CHECK: 7 4
 false
 set -h >/dev/null
-# CHECKERR: fish: set: missing man page
-# CHECKERR: Documentation may not be installed.
-# CHECKERR: `help set` will show an online version
+# CHECKERR: Documentation for set
 
 echo 8 $status # no passthrough
 #CHECK: 8 0

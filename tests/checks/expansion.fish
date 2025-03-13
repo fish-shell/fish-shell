@@ -342,9 +342,7 @@ echo foo | $pager
 #CHECKERR:            ^~~~~^
 
 "command" -h
-#CHECKERR: fish: command: missing man page
-#CHECKERR: Documentation may not be installed.
-#CHECKERR: `help command` will show an online version
+#CHECKERR: Documentation for command
 
 echo {~,asdf}
 # CHECK: /{{.*}} asdf

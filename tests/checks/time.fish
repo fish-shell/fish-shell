@@ -46,13 +46,9 @@ not time a=b true
 
 # Currently illegal syntax. Same in zsh. POSIX shells call the external command "time" here.
 a=b time true
-#CHECKERR: fish: time: missing man page
-#CHECKERR: Documentation may not be installed.
-#CHECKERR: `help time` will show an online version
+#CHECKERR: Documentation for time
 not a=b time true
-#CHECKERR: fish: time: missing man page
-#CHECKERR: Documentation may not be installed.
-#CHECKERR: `help time` will show an online version
+#CHECKERR: Documentation for time
 
 $fish -c 'time true&'
 #CHECKERR: fish: {{.*}}

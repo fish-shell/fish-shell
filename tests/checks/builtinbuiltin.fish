@@ -10,7 +10,7 @@ builtin -nq string
 echo $status
 #CHECK: 2
 
-builtin -- -q &| grep -q "builtin - run a builtin command\|fish: builtin: missing man page"
+builtin -- -q &| grep -q "Documentation for builtin"
 echo $status
 #CHECK: 0
 

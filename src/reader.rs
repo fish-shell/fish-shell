@@ -3777,6 +3777,7 @@ impl ReaderData {
                 &self.cycle_command_line,
                 &mut cursor_pos,
                 false,
+                /*is_unique=*/ false, // don't care
             ),
         };
 
@@ -4414,6 +4415,7 @@ fn get_autosuggestion_performer(
                 &search_string,
                 &mut cursor,
                 /*append_only=*/ true,
+                /*is_unique=*/ false,
             );
         }
         result
@@ -5597,6 +5599,7 @@ pub fn completion_apply_to_command_line(
     command_line: &wstr,
     inout_cursor_pos: &mut usize,
     append_only: bool,
+    is_unique: bool,
 ) -> WString {
     let add_space = !flags.contains(CompleteFlags::NO_SPACE);
     let do_replace_token = flags.contains(CompleteFlags::REPLACES_TOKEN);
@@ -5621,7 +5624,7 @@ pub fn completion_apply_to_command_line(
     }
 
     let mut escape_flags = EscapeFlags::empty();
-    if append_only || !add_space {
+    if append_only || !is_unique || !add_space {
         escape_flags.insert(EscapeFlags::NO_QUOTED);
     }
     if no_tilde {
@@ -5869,7 +5872,12 @@ impl<'a> Reader<'a> {
         // If this is a replacement completion, check that we know how to replace it, e.g. that
         // the token doesn't contain evil operators like {}.
         if !c.flags.contains(CompleteFlags::REPLACES_TOKEN) || reader_can_replace(tok, c.flags) {
-            self.completion_insert(&c.completion, token_range.end, c.flags);
+            self.completion_insert(
+                &c.completion,
+                token_range.end,
+                c.flags,
+                /*is_unique=*/ true,
+            );
         }
     }
 
@@ -6005,7 +6013,12 @@ impl<'a> Reader<'a> {
                 if prefix_is_partial_completion {
                     flags |= CompleteFlags::NO_SPACE;
                 }
-                self.completion_insert(&common_prefix, token_range.end, flags);
+                self.completion_insert(
+                    &common_prefix,
+                    token_range.end,
+                    flags,
+                    /*is_unique=*/ false,
+                );
                 self.cycle_command_line = self.command_line.text().to_owned();
                 self.cycle_cursor_pos = self.command_line.position();
             }
@@ -6049,7 +6062,13 @@ impl<'a> Reader<'a> {
     /// \param token_end the position after the token to complete
     /// \param flags A union of all flags describing the completion to insert. See the completion_t
     /// struct for more information on possible values.
-    fn completion_insert(&mut self, val: &wstr, token_end: usize, flags: CompleteFlags) {
+    fn completion_insert(
+        &mut self,
+        val: &wstr,
+        token_end: usize,
+        flags: CompleteFlags,
+        is_unique: bool,
+    ) {
         let (elt, el) = self.active_edit_line();
 
         // Move the cursor to the end of the token.
@@ -6065,6 +6084,7 @@ impl<'a> Reader<'a> {
             el.text(),
             &mut cursor,
             /*append_only=*/ false,
+            is_unique,
         );
         self.set_buffer_maintaining_pager(&new_command_line, cursor, false);
     }

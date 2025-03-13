@@ -10,7 +10,7 @@ complete -c complete_test_alpha3 --no-files -w 'complete_test_alpha2 extra2'
 complete -C'complete_test_alpha1 arg1 '
 # CHECK: complete_test_alpha1 arg1
 complete --escape -C'complete_test_alpha1 arg1 '
-# CHECK: 'complete_test_alpha1 arg1 '
+# CHECK: complete_test_alpha1\ arg1\{{ }}
 complete -C'complete_test_alpha2 arg2 '
 # CHECK: complete_test_alpha1 extra1 arg2
 complete -C'complete_test_alpha3 arg3 '

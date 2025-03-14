@@ -1811,7 +1811,11 @@ fn measure_run_from(
             width = next_tab_stop(width);
         } else {
             // Ordinary char. Add its width with care to ignore control chars which have width -1.
-            width += usize::try_from(fish_wcwidth_visible(input.char_at(idx))).unwrap();
+            if let Ok(ww) = usize::try_from(fish_wcwidth_visible(input.char_at(idx))) {
+                width += ww;
+            } else {
+                width = width.saturating_sub(1);
+            }
         }
         idx += 1;
     }
@@ -1857,7 +1861,8 @@ fn truncate_run(
             curr_width = measure_run_from(run, 0, None, cache);
             idx = 0;
         } else {
-            let char_width = usize::try_from(fish_wcwidth_visible(c)).unwrap();
+            // FIXME: In case of backspace, this would remove the last width.
+            let char_width = usize::try_from(fish_wcwidth_visible(c)).unwrap_or(0);
             curr_width -= std::cmp::min(curr_width, char_width);
             run.remove(idx);
         }

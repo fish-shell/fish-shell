@@ -555,19 +555,16 @@ fn init_terminal(vars: &EnvStack) {
     if terminal::setup(None, |term| apply_term_hacks(vars, term)).is_none() {
         if is_interactive_session() {
             let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
-            // We do not warn for xterm-256color at all, we know that one.
-            if term != Some("xterm-256color".into()) {
-                if let Some(term) = term {
-                    FLOG!(
-                        warning,
-                        wgettext_fmt!("Could not set up terminal for $TERM '%ls'. Falling back to hardcoded xterm-256color values", term)
-                    );
-                } else {
-                    FLOG!(
-                        warning,
-                        wgettext!("Could not set up terminal because $TERM is unset. Falling back to hardcoded xterm-256color values")
-                    );
-                }
+            if let Some(term) = term {
+                FLOG!(
+                    term_support,
+                    wgettext_fmt!("Could not set up terminal for $TERM '%ls'. Falling back to hardcoded xterm-256color values", term)
+                );
+            } else {
+                FLOG!(
+                    term_support,
+                    wgettext!("Could not set up terminal because $TERM is unset. Falling back to hardcoded xterm-256color values")
+                );
             }
         }
 

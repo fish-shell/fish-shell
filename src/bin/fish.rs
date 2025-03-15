@@ -65,6 +65,7 @@ use fish::{
     wchar::prelude::*,
     wutil::waccess,
 };
+use rust_embed::RustEmbed;
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
@@ -80,15 +81,15 @@ const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
+#[derive(RustEmbed)]
+#[folder = "share/"]
+struct Asset;
+
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
 fn install(confirm: bool, dir: PathBuf) -> bool {
     use rust_embed::RustEmbed;
-
-    #[derive(RustEmbed)]
-    #[folder = "share/"]
-    struct Asset;
 
     #[derive(RustEmbed)]
     #[folder = "target/man/man1"]
@@ -141,6 +142,14 @@ fn install(confirm: bool, dir: PathBuf) -> bool {
     // be a part of the function signature.
     fn extract_embed<T: rust_embed::Embed>(dir: &Path) -> bool {
         for file in T::iter() {
+            // These are read as embedded on demand.
+            // (yes it's a hack the docs don't match this)
+            if file.starts_with("functions/")
+                || file.starts_with("completions/")
+                || file == "config.fish"
+            {
+                continue;
+            }
             let path = dir.join(file.as_ref());
             let Ok(_) = fs::create_dir_all(path.parent().unwrap()) else {
                 eprintln!(
@@ -400,78 +409,26 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     return true;
 }
 
-#[cfg(feature = "installable")]
-fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
-    // (false-positive, is_none_or is a backport, this builds with 1.70)
-    #[allow(clippy::incompatible_msrv)]
-    if paths
-        .bin
-        .clone()
-        .is_none_or(|x| !x.starts_with(env!("CARGO_MANIFEST_DIR")))
-    {
-        // When fish is installable, we write the version to a file,
-        // now we check it.
-        let verfile = PathBuf::from(wcs2osstring(datapath)).join("fish-install-version");
-        let version = std::fs::read_to_string(verfile).ok()?;
-
-        return Some(version == fish::BUILD_VERSION);
-    }
-    // When running from the manifest dir, we'll just run.
-    return Some(true);
-}
-
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
-
-    #[cfg(feature = "installable")]
-    {
-        // If the version file is non-existent or out of date,
-        // we try to install automatically, but only if we're interactive.
-        // If we're not interactive, we still print an error later on pointing to `--install` if they don't exist,
-        // but don't complain if they're merely out-of-date.
-        // We do specifically check for a tty because we want to read input to confirm.
-        let v = check_version_file(paths, &datapath);
-
-        #[allow(clippy::incompatible_msrv)]
-        if v.is_none_or(|x| !x) && is_interactive_session() && isatty(libc::STDIN_FILENO) {
-            if v.is_none() {
-                FLOG!(
-                    warning,
-                    "Fish's asset files are missing. Trying to install them."
-                );
-            } else {
-                FLOG!(
-                    warning,
-                    "Fish's asset files are out of date. Trying to install them."
-                );
-            }
-
-            install(true, PathBuf::from(wcs2osstring(&datapath)));
-            // We try to go on if installation failed (or was rejected) here
-            // If the assets are missing, we will trigger a later error,
-            // if they are outdated, things will probably (tm) work somewhat.
+    if let Some(emfile) = Asset::get("config.fish") {
+        let src = str2wcstring(&emfile.data);
+        parser.libdata_mut().within_fish_init = true;
+        let fname: Arc<WString> = Arc::new(L!("embedded:config.fish").into());
+        let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
+        parser.libdata_mut().within_fish_init = false;
+        if let Err(msg) = ret {
+            eprintf!("%ls", msg);
         }
-    }
-    if !source_config_in_directory(parser, &datapath) {
-        // If we cannot read share/config.fish, our internal configuration,
-        // something is wrong.
-        // That also means that our functions won't be found,
-        // and so any config we get would almost certainly be broken.
-        let escaped_pathname = escape(&datapath);
-        FLOGF!(
-            error,
-            "Fish cannot find its asset files in '%ls'.\n\
-             Refusing to read configuration because of this.",
-            escaped_pathname,
-        );
-        #[cfg(feature = "installable")]
+    } else {
         FLOG!(
             error,
-            "If you installed via `cargo install`, please run `fish --install` and restart fish."
+            "Fish cannot find its configuration. It was miscompiled.\n\
+             Refusing to read configuration because of this.",
         );
         return;
     }
+
     source_config_in_directory(parser, &str2wcstring(paths.sysconf.as_os_str().as_bytes()));
 
     // We need to get the configuration directory before we can source the user configuration file.

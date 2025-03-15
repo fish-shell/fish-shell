@@ -265,6 +265,12 @@ The following special input functions are available:
 ``history-token-search-forward``
     search the history for the next matching argument
 
+``history-last-token-search-backward``
+    search the history for the previous matching last argument
+
+``history-last-token-search-forward``
+    search the history for the next matching last argument
+
 ``forward-jump`` and ``backward-jump``
     read another character and jump to its next occurrence after/before the cursor
 

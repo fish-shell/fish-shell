@@ -33,7 +33,10 @@ use crate::parse_constants::{
     WILDCARD_ERR_MSG,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
-use crate::parse_util::parse_util_unescape_wildcards;
+use crate::parse_util::{
+    parse_util_locate_cmdsubst_range, parse_util_unescape_wildcards,
+    MaybeParentheses::CommandSubstitution,
+};
 use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
@@ -1471,16 +1474,37 @@ impl<'a> ExecutionContext<'a> {
                 ctx,
                 None,
             );
+
+            let mention_psub = {
+                let target_unexpanded = self.node_source_owned(&redir_node.target);
+                let subst =
+                    parse_util_locate_cmdsubst_range(&target_unexpanded, &mut 0, false, None, None);
+                oper.mode == RedirectionMode::input && matches!(subst, CommandSubstitution(_))
+            };
+
             if !target_expanded || target.is_empty() {
                 // TODO: Improve this error message.
-                return report_error!(
-                    self,
-                    ctx,
-                    STATUS_INVALID_ARGS,
-                    redir_node,
-                    "Invalid redirection target: %ls",
-                    target
-                );
+
+                if mention_psub {
+                    return report_error!(
+                        self,
+                        ctx,
+                        STATUS_INVALID_ARGS,
+                        redir_node,
+                        "Invalid redirection target: %ls\n\
+                         To do process substitution, use the psub command, see: `help psub'",
+                        target
+                    );
+                } else {
+                    return report_error!(
+                        self,
+                        ctx,
+                        STATUS_INVALID_ARGS,
+                        redir_node,
+                        "Invalid redirection target: %ls",
+                        target
+                    );
+                }
             }
 
             // Make a redirection spec from the redirect token.

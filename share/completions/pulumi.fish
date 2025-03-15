@@ -1,1 +1,1 @@
-pulumi completion fish 2>/dev/null | source
+PULUMI_SKIP_UPDATE_CHECK=true pulumi completion fish | source

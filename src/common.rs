@@ -1711,11 +1711,9 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
         Self(Some((value, on_drop)))
     }
 
-    /// Invokes the callback and returns the wrapped value, consuming the ScopeGuard.
-    pub fn commit(mut guard: Self) -> T {
-        let (mut value, on_drop) = guard.0.take().expect("Should always have Some value");
-        on_drop(&mut value);
-        value
+    /// Invokes the callback, consuming the ScopeGuard.
+    pub fn commit(guard: Self) {
+        std::mem::drop(guard)
     }
 
     /// Cancels the invocation of the callback, returning the original wrapped value.
@@ -1750,16 +1748,14 @@ impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
 /// A trait expressing what ScopeGuard can do. This is necessary because scoped_push returns an
 /// `impl Trait` object and therefore methods on ScopeGuard which take a self parameter cannot be
 /// used.
-pub trait ScopeGuarding: DerefMut {
-    /// Invokes the callback and returns the wrapped value, consuming the ScopeGuard.
-    fn commit(guard: Self) -> Self::Target;
-}
-
-impl<T, F: FnOnce(&mut T)> ScopeGuarding for ScopeGuard<T, F> {
-    fn commit(guard: Self) -> T {
-        ScopeGuard::commit(guard)
+pub trait ScopeGuarding: DerefMut + Sized {
+    /// Invokes the callback, consuming the guard.
+    fn commit(guard: Self) {
+        std::mem::drop(guard);
     }
 }
+
+impl<T, F: FnOnce(&mut T)> ScopeGuarding for ScopeGuard<T, F> {}
 
 /// A scoped manager to save the current value of some variable, and set it to a new value. When
 /// dropped, it restores the variable to its old value.

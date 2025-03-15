@@ -1,4 +1,4 @@
-use crate::common::{scoped_push, truncate_at_nul, ScopeGuard, ScopeGuarding};
+use crate::common::{scoped_push, truncate_at_nul, ScopeGuard};
 use crate::wchar::prelude::*;
 
 #[test]
@@ -44,28 +44,9 @@ fn test_scope_guard() {
             counter.fetch_add(1, relaxed);
         });
         assert_eq!(counter.load(relaxed), 1);
-        let val = ScopeGuard::commit(guard);
+        ScopeGuard::commit(guard);
         assert_eq!(counter.load(relaxed), 2);
-        assert_eq!(val, 123);
     }
-}
-
-#[test]
-fn test_scope_guard_consume() {
-    // The following pattern works.
-    struct Storage {
-        value: &'static str,
-    }
-    let obj = Storage { value: "nu" };
-    assert_eq!(obj.value, "nu");
-    let obj = scoped_push(obj, |obj| &mut obj.value, "mu");
-    assert_eq!(obj.value, "mu");
-    let obj = scoped_push(obj, |obj| &mut obj.value, "mu2");
-    assert_eq!(obj.value, "mu2");
-    let obj = ScopeGuarding::commit(obj);
-    assert_eq!(obj.value, "mu");
-    let obj = ScopeGuarding::commit(obj);
-    assert_eq!(obj.value, "nu");
 }
 
 #[test]

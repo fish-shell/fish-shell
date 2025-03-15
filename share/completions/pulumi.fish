@@ -1,1 +1,1 @@
-pulumi completion fish | source
+pulumi completion fish 2>/dev/null | source

@@ -52,7 +52,7 @@ The following options are available:
 These flags can appear before or immediately after one of the sub-commands listed above.
 
 **-C** or **--case-sensitive**
-    Does a case-sensitive search. The default is case-insensitive. Note that prior to fish 2.4.0 the default was case-sensitive.
+    Does a case-sensitive search. The default is case-insensitive.
 
 **-c** or **--contains**
     Searches items in the history that contain the specified text string. This is the default for the **--search** flag. This is not currently supported by the **delete** subcommand.

@@ -42,7 +42,7 @@ fn test_scope_guard() {
     let counter = std::sync::atomic::AtomicUsize::new(0);
     {
         let guard = ScopeGuard::new(123, |arg| {
-            assert_eq!(*arg, 123);
+            assert_eq!(arg, 123);
             counter.fetch_add(1, relaxed);
         });
         assert_eq!(counter.load(relaxed), 0);
@@ -52,7 +52,7 @@ fn test_scope_guard() {
     // commit also invokes the callback.
     {
         let guard = ScopeGuard::new(123, |arg| {
-            assert_eq!(*arg, 123);
+            assert_eq!(arg, 123);
             counter.fetch_add(1, relaxed);
         });
         assert_eq!(counter.load(relaxed), 1);

@@ -1729,7 +1729,7 @@ impl<T: Copy> ScopedCell<T> {
         let mut val = self.get();
         modifier(&mut val);
         let saved = self.replace(val);
-        ScopeGuard::new(self, move |cell| (*cell).set(saved))
+        ScopeGuard::new(self, move |cell| cell.set(saved))
     }
 }
 
@@ -1838,15 +1838,15 @@ impl<T> ScopedRefCell<T> {
 /// let file = std::fs::File::create("/dev/null").unwrap();
 /// // Create a scope guard to write to the file when the scope expires.
 /// // To be able to still use the file, shadow `file` with the ScopeGuard itself.
-/// let mut file = ScopeGuard::new(file, |file| file.write_all(b"goodbye\n").unwrap());
+/// let mut file = ScopeGuard::new(file, |mut file| file.write_all(b"goodbye\n").unwrap());
 /// // Now write to the file normally "through" the capturing ScopeGuard instance.
 /// file.write_all(b"hello\n").unwrap();
 ///
 /// // hello will be written first, then goodbye.
 /// ```
-pub struct ScopeGuard<T, F: FnOnce(&mut T)>(Option<(T, F)>);
+pub struct ScopeGuard<T, F: FnOnce(T)>(Option<(T, F)>);
 
-impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
+impl<T, F: FnOnce(T)> ScopeGuard<T, F> {
     /// Creates a new `ScopeGuard` wrapping `value`. The `on_drop` callback is executed when the
     /// ScopeGuard's lifetime expires or when it is manually dropped.
     pub fn new(value: T, on_drop: F) -> Self {
@@ -1865,7 +1865,7 @@ impl<T, F: FnOnce(&mut T)> ScopeGuard<T, F> {
     }
 }
 
-impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
+impl<T, F: FnOnce(T)> Deref for ScopeGuard<T, F> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -1873,16 +1873,16 @@ impl<T, F: FnOnce(&mut T)> Deref for ScopeGuard<T, F> {
     }
 }
 
-impl<T, F: FnOnce(&mut T)> DerefMut for ScopeGuard<T, F> {
+impl<T, F: FnOnce(T)> DerefMut for ScopeGuard<T, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0.as_mut().unwrap().0
     }
 }
 
-impl<T, F: FnOnce(&mut T)> Drop for ScopeGuard<T, F> {
+impl<T, F: FnOnce(T)> Drop for ScopeGuard<T, F> {
     fn drop(&mut self) {
-        if let Some((mut value, on_drop)) = self.0.take() {
-            on_drop(&mut value);
+        if let Some((value, on_drop)) = self.0.take() {
+            on_drop(value);
         }
     }
 }
@@ -1897,7 +1897,7 @@ pub trait ScopeGuarding: DerefMut + Sized {
     }
 }
 
-impl<T, F: FnOnce(&mut T)> ScopeGuarding for ScopeGuard<T, F> {}
+impl<T, F: FnOnce(T)> ScopeGuarding for ScopeGuard<T, F> {}
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}

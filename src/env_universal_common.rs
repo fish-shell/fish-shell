@@ -761,7 +761,7 @@ impl EnvUniversal {
         };
         // unlink pfp upon failure. In case of success, it (already) won't exist.
         let delete_pfp = ScopeGuard::new(private_file_path, |path| {
-            wunlink(path);
+            wunlink(&path);
         });
         let private_file_path = &delete_pfp;
 

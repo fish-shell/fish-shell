@@ -398,7 +398,7 @@ pub enum CancelBehavior {
 pub struct Parser {
     /// A shared line counter. This is handed out to each execution context
     /// so they can communicate the line number back to this Parser.
-    line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
+    line_counter: ScopedRefCell<LineCounter<ast::JobPipeline>>,
 
     /// The jobs associated with this parser.
     job_list: RefCell<JobList>,
@@ -439,7 +439,7 @@ impl Parser {
     /// Create a parser.
     pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
-            line_counter: Rc::new(ScopedRefCell::new(LineCounter::empty())),
+            line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
             wait_handles: RefCell::new(WaitHandleStore::new()),
             block_list: RefCell::default(),
@@ -624,13 +624,13 @@ impl Parser {
         op_ctx.cancel_checker = cancel_checker;
 
         // Restore the line counter.
-        let line_counter = Rc::clone(&self.line_counter);
-        let restore_line_counter =
-            line_counter.scoped_replace(ps.line_counter::<ast::JobPipeline>());
+        let restore_line_counter = self
+            .line_counter
+            .scoped_replace(ps.line_counter::<ast::JobPipeline>());
 
         // Create a new execution context.
         let mut execution_context =
-            ExecutionContext::new(ps.clone(), block_io.clone(), Rc::clone(&line_counter));
+            ExecutionContext::new(ps.clone(), block_io.clone(), &self.line_counter);
 
         terminal_protocols_disable_ifn();
 

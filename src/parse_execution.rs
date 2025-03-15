@@ -74,7 +74,7 @@ pub enum EndExecutionReason {
     error,
 }
 
-pub struct ExecutionContext {
+pub struct ExecutionContext<'a> {
     // The parsed source and its AST.
     pstree: ParsedSourceRef,
 
@@ -84,7 +84,7 @@ pub struct ExecutionContext {
 
     // Helper to count lines.
     // This is shared with the Parser so that the Parser can access the current line.
-    line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
+    line_counter: &'a ScopedRefCell<LineCounter<ast::JobPipeline>>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
@@ -111,13 +111,13 @@ macro_rules! report_error_formatted {
     }};
 }
 
-impl<'a> ExecutionContext {
+impl<'a> ExecutionContext<'a> {
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
     pub fn new(
         pstree: ParsedSourceRef,
         block_io: IoChain,
-        line_counter: Rc<ScopedRefCell<LineCounter<ast::JobPipeline>>>,
+        line_counter: &'a ScopedRefCell<LineCounter<ast::JobPipeline>>,
     ) -> Self {
         Self {
             pstree,
@@ -134,7 +134,7 @@ impl<'a> ExecutionContext {
     pub fn eval_node(
         &mut self,
         ctx: &OperationContext<'_>,
-        node: &dyn Node,
+        node: &'a dyn Node,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         match node.typ() {
@@ -1531,8 +1531,9 @@ impl<'a> ExecutionContext {
         let _saved_eval_level = ctx.parser().push_scope(|s| s.eval_level += 1);
 
         // Save the executing node.
-        let line_counter = Rc::clone(&self.line_counter);
-        let _saved_node = line_counter.scoped_set(job_node as *const _, |s| &mut s.node);
+        let _saved_node = self
+            .line_counter
+            .scoped_set(job_node as *const _, |s| &mut s.node);
 
         // Profiling support.
         let profile_item_id = ctx.parser().create_profile_item();

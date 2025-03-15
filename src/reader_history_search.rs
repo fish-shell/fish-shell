@@ -238,14 +238,11 @@ impl ReaderHistorySearch {
                 }
             }
 
-            if self.mode == SearchMode::LastToken {
-                if let Some(tok) = local_tokens.into_iter().next_back() {
-                    self.add_if_new(tok);
-                }
-            } else {
-                // Make sure tokens are added in reverse order. See #5150
-                for tok in local_tokens.into_iter().rev() {
-                    self.add_if_new(tok);
+            // Make sure tokens are added in reverse order. See #5150
+            for tok in local_tokens.into_iter().rev() {
+                self.add_if_new(tok);
+                if self.mode == SearchMode::LastToken {
+                    break;
                 }
             }
         }

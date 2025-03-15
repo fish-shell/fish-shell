@@ -1485,7 +1485,9 @@ impl<'a> ExecutionContext {
                     ctx,
                     STATUS_INVALID_ARGS.unwrap(),
                     redir_node,
-                    "Invalid redirection target: %ls",
+                    "Invalid redirection target: %ls\n\
+                     To do subprocess subsitution, use the psub command\n\
+                     see: `help psub'",
                     target
                 );
             }

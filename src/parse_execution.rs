@@ -33,7 +33,10 @@ use crate::parse_constants::{
     WILDCARD_ERR_MSG,
 };
 use crate::parse_tree::{LineCounter, NodeRef, ParsedSourceRef};
-use crate::parse_util::parse_util_unescape_wildcards;
+use crate::parse_util::{
+    parse_util_locate_cmdsubst_range, parse_util_unescape_wildcards,
+    MaybeParentheses::CommandSubstitution,
+};
 use crate::parser::{Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ProfileItem};
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
@@ -1471,9 +1474,10 @@ impl<'a> ExecutionContext<'a> {
                 ctx,
                 None,
             );
+
             if !target_expanded || target.is_empty() {
                 // TODO: Improve this error message.
-                return report_error!(
+                let error_ret = report_error!(
                     self,
                     ctx,
                     STATUS_INVALID_ARGS,
@@ -1481,6 +1485,23 @@ impl<'a> ExecutionContext<'a> {
                     "Invalid redirection target: %ls",
                     target
                 );
+                if oper.mode == RedirectionMode::input && {
+                    let redir_unexpanded = self.node_source(redir_node);
+                    redir_unexpanded.starts_with(L!("<("))
+                        && match parse_util_locate_cmdsubst_range(
+                            &redir_unexpanded[1..],
+                            &mut 0,
+                            false,
+                            None,
+                            None,
+                        ) {
+                            CommandSubstitution(p) => p.start() == 0,
+                            _ => false,
+                        }
+                } {
+                    eprintf!("If you wish to use process substitution, consider the psub command, see: `help psub`\n");
+                }
+                return error_ret;
             }
 
             // Make a redirection spec from the redirect token.

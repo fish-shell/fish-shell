@@ -59,3 +59,22 @@ end
 
 set -l diffs (comm -3 (__fish_print_help psub 2>| psub) (psub -hs banana 2>| psub))
 test -z "$diffs"
+
+# In cases that look like process substitutions, mention psub.
+
+echo <(seq 0)
+# CHECKERR: {{.*}}/psub.fish (line {{\d+}}): Invalid redirection target:
+# CHECKERR: echo <(seq 0)
+# CHECKERR:      ^~~~~~~^
+# CHECKERR: If you wish to use process substitution, consider the psub command, see: `help psub`
+
+# To-do: should also mention psub here.
+echo <(seq 1)
+# CHECKERR: warning: An error occurred while redirecting file '1'
+# CHECKERR: warning: Path '1' does not exist
+
+echo <(seq 2)
+# CHECKERR: {{.*}}/psub.fish (line {{\d+}}): Invalid redirection target:
+# CHECKERR: echo <(seq 2)
+# CHECKERR:      ^~~~~~~^
+# CHECKERR: If you wish to use process substitution, consider the psub command, see: `help psub`

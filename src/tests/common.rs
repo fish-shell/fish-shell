@@ -1,5 +1,40 @@
-use crate::common::{scoped_push, truncate_at_nul, ScopeGuard};
+use crate::common::{scoped_push, truncate_at_nul, ScopeGuard, ScopedCell, ScopedRefCell};
 use crate::wchar::prelude::*;
+
+#[test]
+fn test_scoped_cell() {
+    let cell = ScopedCell::new(42);
+
+    {
+        let _guard = cell.scoped_mod(|x| *x += 1);
+        assert_eq!(cell.get(), 43);
+    }
+
+    assert_eq!(cell.get(), 42);
+}
+
+#[test]
+fn test_scoped_refcell() {
+    #[derive(Debug, PartialEq, Clone)]
+    struct Data {
+        x: i32,
+        y: i32,
+    }
+
+    let cell = ScopedRefCell::new(Data { x: 1, y: 2 });
+
+    {
+        let _guard = cell.scoped_set(10, |d| &mut d.x);
+        assert_eq!(cell.borrow().x, 10);
+    }
+    assert_eq!(cell.borrow().x, 1);
+
+    {
+        let _guard = cell.scoped_replace(Data { x: 42, y: 99 });
+        assert_eq!(*cell.borrow(), Data { x: 42, y: 99 });
+    }
+    assert_eq!(*cell.borrow(), Data { x: 1, y: 2 });
+}
 
 #[test]
 fn test_scoped_push() {

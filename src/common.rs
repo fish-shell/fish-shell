@@ -21,6 +21,7 @@ use bitflags::bitflags;
 use core::slice;
 use libc::{EIO, O_WRONLY, SIGTTOU, SIG_IGN, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use once_cell::sync::OnceCell;
+use std::cell::{Cell, RefCell};
 use std::ffi::{CStr, CString, OsStr, OsString};
 use std::mem;
 use std::ops::{Deref, DerefMut};
@@ -1674,6 +1675,147 @@ pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
         return path;
     }
     argv0.as_ref().to_owned()
+}
+
+/// A wrapper around Cell which supports modifying the contents, scoped to a region of code.
+/// This provides a somewhat nicer API than ScopedRefCell because you can directly modify the value,
+/// instead of requiring an accessor function which returns a mutable reference to a field.
+pub struct ScopedCell<T>(Cell<T>);
+
+impl<T> Deref for ScopedCell<T> {
+    type Target = Cell<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for ScopedCell<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T: Copy> ScopedCell<T> {
+    pub fn new(value: T) -> Self {
+        Self(Cell::new(value))
+    }
+
+    /// Temporarily modify a value in the ScopedCell, restoring it when the returned object is dropped.
+    ///
+    /// This is useful when you want to apply a change for the duration of a scope
+    /// without having to manually restore the previous value.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use fish::common::ScopedCell;
+    ///
+    /// let cell = ScopedCell::new(5);
+    /// assert_eq!(cell.get(), 5);
+    ///
+    /// {
+    ///     let _guard = cell.scoped_mod(|v| *v += 10);
+    ///     assert_eq!(cell.get(), 15);
+    /// }
+    ///
+    /// // Restored after scope
+    /// assert_eq!(cell.get(), 5);
+    /// ```
+    pub fn scoped_mod<'a, Modifier: FnOnce(&mut T)>(
+        &'a self,
+        modifier: Modifier,
+    ) -> impl ScopeGuarding + 'a {
+        let mut val = self.get();
+        modifier(&mut val);
+        let saved = self.replace(val);
+        ScopeGuard::new(self, move |cell| (*cell).set(saved))
+    }
+}
+
+/// A wrapper around RefCell which supports modifying the contents, scoped to a region of code.
+pub struct ScopedRefCell<T>(RefCell<T>);
+
+impl<T> Deref for ScopedRefCell<T> {
+    type Target = RefCell<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for ScopedRefCell<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> ScopedRefCell<T> {
+    pub fn new(value: T) -> Self {
+        Self(RefCell::new(value))
+    }
+
+    /// Temporarily modify a field in the ScopedRefCell, restoring it when the returned guard is dropped.
+    ///
+    /// This is useful when you want to change part of a data structure for the duration of a scope,
+    /// and automatically restore the original value afterward.
+    ///
+    /// The `accessor` function selects the field to modify by returning a mutable reference to it.
+    ///
+    /// # Example
+    /// ```
+    /// use fish::common::ScopedRefCell;
+    ///
+    /// struct State { flag: bool }
+    ///
+    /// let cell = ScopedRefCell::new(State { flag: false });
+    /// assert_eq!(cell.borrow().flag, false);
+    ///
+    /// {
+    ///     let _guard = cell.scoped_set(true, |s| &mut s.flag);
+    ///     assert_eq!(cell.borrow().flag, true);
+    /// }
+    ///
+    /// // Restored after scope
+    /// assert_eq!(cell.borrow().flag, false);
+    /// ```
+    pub fn scoped_set<'a, Accessor, Value: 'a>(
+        &'a self,
+        value: Value,
+        accessor: Accessor,
+    ) -> impl ScopeGuarding + 'a
+    where
+        Accessor: Fn(&mut T) -> &mut Value + 'a,
+    {
+        let mut data = self.borrow_mut();
+        let mut saved = std::mem::replace(accessor(&mut data), value);
+        ScopeGuard::new(self, move |cell| {
+            let mut data = cell.borrow_mut();
+            std::mem::swap((accessor)(&mut data), &mut saved);
+        })
+    }
+
+    /// Convenience method for replacing the entire contents of the ScopedRefCell, restoring it when dropped.
+    ///
+    /// Equivalent to `scoped_set(value, |s| s)`.
+    ///
+    /// # Example
+    /// ```
+    /// use fish::common::ScopedRefCell;
+    ///
+    /// let cell = ScopedRefCell::new(10);
+    /// assert_eq!(*cell.borrow(), 10);
+    ///
+    /// {
+    ///     let _guard = cell.scoped_replace(99);
+    ///     assert_eq!(*cell.borrow(), 99);
+    /// }
+    ///
+    /// assert_eq!(*cell.borrow(), 10);
+    /// ```
+    pub fn scoped_replace<'a>(&'a self, value: T) -> impl ScopeGuarding + 'a {
+        self.scoped_set(value, |s| s)
+    }
 }
 
 /// A RAII cleanup object. Unlike in C++ where there is no borrow checker, we can't just provide a

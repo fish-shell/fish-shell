@@ -649,6 +649,23 @@ This prompt would look like:
     :purple:`02/06/13`
     :red:`/home/tutorial >` _
 
+You can use transient prompt functionality by setting ``fish_transient_prompt`` to 1 and checking for ``--final-rendering`` argument::
+
+    function fish_prompt
+        if contains -- --final-rendering $argv
+            echo 'final> '
+        else
+            echo 'transient> '
+        end
+    end
+
+This would look like:
+
+.. parsed-literal::
+    :class: highlight
+
+    :red:`final>` command
+    :red:`transient>` _
 
 You can choose among some sample prompts by running ``fish_config`` for a web UI or ``fish_config prompt`` for a simpler version inside your terminal.
 

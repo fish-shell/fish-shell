@@ -401,7 +401,6 @@ complete -c tmux -n "__fish_seen_subcommand_from $send" -s R -d 'reset terminal 
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s X -d 'copy mode command'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s l -d 'literal chars'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s H -d 'hex-encoded chars'
-complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t --keep-order -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n __fish_use_subcommand -a $sendprefix -d 'send the prefix key'

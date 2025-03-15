@@ -14,6 +14,7 @@
 //! but it's still the best we can do because we don't know how long of a time might elapse between
 //! `TimerSnapshot` instances and need to avoid rollover.
 
+use std::fmt::Write as FmtWrite;
 use std::io::Write;
 use std::time::{Duration, Instant};
 
@@ -82,11 +83,12 @@ impl TimerSnapshot {
         let usr_time = cpu_unit.convert_micros(net_usr_micros);
 
         let mut output = String::new();
+        #[rustfmt::skip]
         if !verbose {
-            output += "\n_______________________________";
-            output += &format!("\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name());
-            output += &format!("\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name());
-            output += &format!("\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name());
+            write!(output, "\n_______________________________").unwrap();
+            write!(output, "\nExecuted in  {:6.2} {}", wall_time, wall_unit.long_name()).unwrap();
+            write!(output, "\n   usr time  {:6.2} {}", usr_time, cpu_unit.long_name()).unwrap();
+            write!(output, "\n   sys time  {:6.2} {}", sys_time, cpu_unit.long_name()).unwrap();
         } else {
             let fish_unit = Unit::for_micros(fish_sys.max(fish_usr).as_micros() as i64);
             let child_unit = Unit::for_micros(child_sys.max(child_usr).as_micros() as i64);
@@ -105,15 +107,17 @@ impl TimerSnapshot {
             let child_unit = child_unit.short_name();
 
             output += "\n________________________________________________________";
-            output += &format!(
+            write!(
+                output,
                 "\nExecuted in  {wall_time:6.2} {wall_unit:<width1$}    {fish:<width2$}  external",
                 width1 = column2_unit_len,
                 fish = "fish",
                 width2 = fish_unit.len() + 7
-            );
-            output += &format!("\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}");
-            output += &format!("\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}");
-        }
+            )
+            .unwrap();
+            write!(output, "\n   usr time  {usr_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_usr_time:6.2} {fish_unit}  {child_usr_time:6.2} {child_unit}").unwrap();
+            write!(output, "\n   sys time  {sys_time:6.2} {cpu_unit:<column2_unit_len$}  {fish_sys_time:6.2} {fish_unit}  {child_sys_time:6.2} {child_unit}").unwrap();
+        };
         output += "\n";
 
         output

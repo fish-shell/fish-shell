@@ -438,8 +438,8 @@ pub trait Keyword: Leaf {
 // A simple variable-sized array, possibly empty.
 pub trait List: Node {
     type ContentsNode: Node + Default;
-    fn contents(&self) -> &[Box<Self::ContentsNode>];
-    fn contents_mut(&mut self) -> &mut Box<[Box<Self::ContentsNode>]>;
+    fn contents(&self) -> &[Self::ContentsNode];
+    fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]>;
     /// Return our count.
     fn count(&self) -> usize {
         self.contents().len()
@@ -449,11 +449,11 @@ pub trait List: Node {
         self.contents().is_empty()
     }
     /// Iteration support.
-    fn iter(&self) -> std::slice::Iter<Box<Self::ContentsNode>> {
+    fn iter(&self) -> std::slice::Iter<Self::ContentsNode> {
         self.contents().iter()
     }
     fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
-        self.contents().get(index).map(|b| &**b)
+        self.contents().get(index)
     }
 }
 
@@ -636,22 +636,21 @@ macro_rules! define_list_node {
         #[derive(Default, Debug)]
         pub struct $name {
             parent: Option<*const dyn Node>,
-            // Note we box the nodes themselves, for pointer stability.
-            list_contents: Box<[Box<$contents>]>,
+            list_contents: Box<[$contents]>,
         }
         implement_node!($name, list, $type);
         impl List for $name {
             type ContentsNode = $contents;
-            fn contents(&self) -> &[Box<Self::ContentsNode>] {
+            fn contents(&self) -> &[Self::ContentsNode] {
                 &self.list_contents
             }
-            fn contents_mut(&mut self) -> &mut Box<[Box<Self::ContentsNode>]> {
+            fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]> {
                 &mut self.list_contents
             }
         }
         impl<'a> IntoIterator for &'a $name {
-            type Item = &'a Box<$contents>;
-            type IntoIter = std::slice::Iter<'a, Box<$contents>>;
+            type Item = &'a $contents;
+            type IntoIter = std::slice::Iter<'a, $contents>;
             fn into_iter(self) -> Self::IntoIter {
                 self.contents().into_iter()
             }
@@ -659,12 +658,12 @@ macro_rules! define_list_node {
         impl Index<usize> for $name {
             type Output = <$name as List>::ContentsNode;
             fn index(&self, index: usize) -> &Self::Output {
-                &*self.contents()[index]
+                &self.contents()[index]
             }
         }
         impl IndexMut<usize> for $name {
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut *self.contents_mut()[index]
+                &mut self.contents_mut()[index]
             }
         }
         impl Acceptor for $name {
@@ -3598,7 +3597,7 @@ impl<'s> Populator<'s> {
                 if contents.is_empty() {
                     contents.reserve(16);
                 }
-                contents.push(node);
+                contents.push(*node);
             } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
                 self.consume_excess_token_generating_error()

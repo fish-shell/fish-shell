@@ -120,32 +120,10 @@ impl std::fmt::Display for AstSizeMetrics {
     }
 }
 
-/// If this is a list node, return the amount of memory in bytes occupied by its allocated pointers.
-/// Note this is separate from the memory occupied by the nodes themselves,
-/// as nodes are boxed to ensure pointer stability. We don't bother to look at the boxed type.
-fn list_pointer_memory_size(n: &dyn Node) -> usize {
-    let count = match n.typ() {
-        Type::variable_assignment_list => n.as_variable_assignment_list().unwrap().count(),
-        Type::argument_or_redirection_list => n.as_argument_or_redirection_list().unwrap().count(),
-        Type::elseif_clause_list => n.as_elseif_clause_list().unwrap().count(),
-        Type::job_continuation_list => n.as_job_continuation_list().unwrap().count(),
-        Type::andor_job_list => n.as_andor_job_list().unwrap().count(),
-        Type::freestanding_argument_list => 0, // not actually a list node
-        Type::job_conjunction_continuation_list => {
-            n.as_job_conjunction_continuation_list().unwrap().count()
-        }
-        Type::case_item_list => n.as_case_item_list().unwrap().count(),
-        Type::argument_list => n.as_argument_list().unwrap().count(),
-        Type::job_list => n.as_job_list().unwrap().count(),
-        _ => 0,
-    };
-    count * std::mem::size_of::<Box<()>>()
-}
-
 impl<'a> NodeVisitor<'a> for AstSizeMetrics {
     fn visit(&mut self, node: &'a dyn Node) {
         self.node_count += 1;
-        self.memory_size += node.self_memory_size() + list_pointer_memory_size(node);
+        self.memory_size += node.self_memory_size();
         match node.category() {
             Category::branch => self.branch_count += 1,
             Category::leaf => self.leaf_count += 1,

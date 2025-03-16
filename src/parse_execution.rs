@@ -611,7 +611,7 @@ impl<'a> ExecutionContext<'a> {
         }
         *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
-            let source = self.node_source(&**variable_assignment);
+            let source = self.node_source(variable_assignment);
             let equals_pos = variable_assignment_equals_pos(source).unwrap();
             let variable_name = &source[..equals_pos];
             let expression = &source[equals_pos + 1..];
@@ -1347,7 +1347,7 @@ impl<'a> ExecutionContext<'a> {
     fn get_argument_nodes(args: &ast::ArgumentList) -> AstArgsList<'_> {
         let mut result = AstArgsList::new();
         for arg in args {
-            result.push(&**arg);
+            result.push(arg);
         }
         result
     }

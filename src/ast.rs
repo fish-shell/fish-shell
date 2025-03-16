@@ -439,7 +439,7 @@ pub trait Keyword: Leaf {
 pub trait List: Node {
     type ContentsNode: Node + Default;
     fn contents(&self) -> &[Box<Self::ContentsNode>];
-    fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>>;
+    fn contents_mut(&mut self) -> &mut Box<[Box<Self::ContentsNode>]>;
     /// Return our count.
     fn count(&self) -> usize {
         self.contents().len()
@@ -636,7 +636,8 @@ macro_rules! define_list_node {
         #[derive(Default, Debug)]
         pub struct $name {
             parent: Option<*const dyn Node>,
-            list_contents: Vec<Box<$contents>>,
+            // Note we box the nodes themselves, for pointer stability.
+            list_contents: Box<[Box<$contents>]>,
         }
         implement_node!($name, list, $type);
         impl List for $name {
@@ -644,7 +645,7 @@ macro_rules! define_list_node {
             fn contents(&self) -> &[Box<Self::ContentsNode>] {
                 &self.list_contents
             }
-            fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>> {
+            fn contents_mut(&mut self) -> &mut Box<[Box<Self::ContentsNode>]> {
                 &mut self.list_contents
             }
         }
@@ -3547,7 +3548,6 @@ impl<'s> Populator<'s> {
         }
 
         // We're going to populate a vector with our nodes.
-        // Later on we will copy this to the heap with a single allocation.
         let mut contents = vec![];
 
         loop {
@@ -3614,7 +3614,7 @@ impl<'s> Populator<'s> {
                 "Contents size out of bounds"
             );
             assert!(list.contents().is_empty(), "List should still be empty");
-            *list.contents_mut() = contents;
+            *list.contents_mut() = contents.into_boxed_slice();
         }
 
         FLOGF!(

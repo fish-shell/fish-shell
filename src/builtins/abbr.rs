@@ -21,6 +21,7 @@ struct Options {
     position: Option<Position>,
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
+    description: Option<WString>,
 }
 
 impl Options {
@@ -405,6 +406,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
             set_cursor_marker: opts.set_cursor_marker.clone(),
             from_universal: false,
             commands: opts.commands.clone(),
+            description: opts.description.clone(),
         })
     });
 

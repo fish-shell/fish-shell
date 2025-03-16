@@ -75,6 +75,8 @@ With **--set-cursor=MARKER**, the cursor is moved to the first occurrence of **M
 
 With **-f FUNCTION** or **--function FUNCTION**, **FUNCTION** is treated as the name of a fish function instead of a literal replacement. When the abbreviation matches, the function will be called with the matching token as an argument. If the function's exit status is 0 (success), the token will be replaced by the function's output; otherwise the token will be left unchanged. No **EXPANSION** may be given separately.
 
+The description set by **--description=DESCRIPTION** will be added to the completion description in the completion pager.
+
 Examples
 ########
 

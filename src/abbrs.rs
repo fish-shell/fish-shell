@@ -63,6 +63,9 @@ pub struct Abbreviation {
 
     /// Mark if we came from a universal variable.
     pub from_universal: bool,
+
+    // Extra description, shown in the completion pager.
+    pub description: Option<WString>,
 }
 
 impl Abbreviation {
@@ -85,6 +88,7 @@ impl Abbreviation {
             position,
             set_cursor_marker: None,
             from_universal,
+            description: None,
         }
     }
 
@@ -444,6 +448,7 @@ mod tests {
                     position,
                     set_cursor_marker: None,
                     from_universal: false,
+                    description: None,
                 });
             };
             add(L!("gc"), L!("git checkout"), Position::Command);

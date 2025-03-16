@@ -7,6 +7,7 @@ Interactive improvements
 - Fix slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
 - To mitigate issues in Konsole v26.07.80's initial implementation of the kitty keyboard protocol, fish no longer requests that protocol on Konsole.
   The ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable the kitty keyboard protocol on Konsole again (:issue:`12948`).
+- Abbreviations can now be given a description, which will be displayed in the completion pager (:issue:`11291`).
 
 Scripting improvements
 ----------------------

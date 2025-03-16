@@ -1179,7 +1179,12 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             for abbr in set.list() {
                 if !abbr.is_regex() {
                     possible_comp.push(Completion::from_completion(abbr.key.clone()));
-                    descs.insert(abbr.key.clone(), abbr.replacement.clone());
+                    if let Some(description) = &abbr.description {
+                        let desc = sprintf!("%s # %s", abbr.replacement, description);
+                        descs.insert(abbr.key.clone(), desc);
+                    } else {
+                        descs.insert(abbr.key.clone(), abbr.replacement.clone());
+                    }
                 }
             }
         });

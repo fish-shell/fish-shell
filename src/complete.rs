@@ -69,7 +69,8 @@ static COMPLETE_USER_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Home for %ls"))
 static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %ls"));
 
 /// Description for abbreviations.
-static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
+static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbr: %ls"));
+static ABBR_WITH_DESCRIPTION: Lazy<&wstr> = Lazy::new(|| wgettext!("%ls # %ls"));
 
 /// The special cased translation macro for completions. The empty string needs to be special cased,
 /// since it can occur, and should not be translated. (Gettext returns the version information as
@@ -1169,7 +1170,13 @@ impl<'ctx> Completer<'ctx> {
             for abbr in set.list() {
                 if !abbr.is_regex() {
                     possible_comp.push(Completion::from_completion(abbr.key.clone()));
-                    descs.insert(abbr.key.clone(), abbr.replacement.clone());
+                    if let Some(ref description) = abbr.description {
+                        let desc = sprintf!(*ABBR_WITH_DESCRIPTION, abbr.replacement.clone(), description);
+                        descs.insert(abbr.key.clone(), desc);
+                    }
+                    else {
+                        descs.insert(abbr.key.clone(), abbr.replacement.clone());
+                    }
                 }
             }
         });

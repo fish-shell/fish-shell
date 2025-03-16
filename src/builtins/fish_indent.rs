@@ -85,6 +85,82 @@ struct PrettyPrinterState<'source, 'ast> {
     errors: Option<&'ast SourceRangeList>,
 }
 
+#[derive(Copy, Clone, Default, Debug)]
+struct AstSizeMetrics {
+    /// The total number of nodes.
+    node_count: usize,
+    /// The number of branches, leaves, and lists, tokens, and keywords.
+    /// Note tokens and keywords are also counted as leaves.
+    branch_count: usize,
+    leaf_count: usize,
+    list_count: usize,
+    token_count: usize,
+    keyword_count: usize,
+    // An estimate of the total allocated size of the ast in bytes.
+    memory_size: usize,
+}
+
+impl std::fmt::Display for AstSizeMetrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "AstSizeMetrics:")?;
+        writeln!(f, "  nodes: {}", self.node_count)?;
+        writeln!(f, "  branches: {}", self.branch_count)?;
+        writeln!(f, "  leaves: {}", self.leaf_count)?;
+        writeln!(f, "  lists: {}", self.list_count)?;
+        writeln!(f, "  tokens: {}", self.token_count)?;
+        writeln!(f, "  keywords: {}", self.keyword_count)?;
+
+        let memsize = self.memory_size;
+        let (val, unit) = if memsize >= 1024 * 1024 {
+            (memsize as f64 / (1024.0 * 1024.0), "MB")
+        } else {
+            (memsize as f64 / 1024.0, "KB")
+        };
+        writeln!(f, "  memory: {} bytes ({:.2} {})", memsize, val, unit)
+    }
+}
+
+/// If this is a list node, return the amount of memory in bytes occupied by its allocated pointers.
+/// Note this is separate from the memory occupied by the nodes themselves,
+/// as nodes are boxed to ensure pointer stability. We don't bother to look at the boxed type.
+fn list_pointer_memory_size(n: &dyn Node) -> usize {
+    let count = match n.typ() {
+        Type::variable_assignment_list => n.as_variable_assignment_list().unwrap().count(),
+        Type::argument_or_redirection_list => n.as_argument_or_redirection_list().unwrap().count(),
+        Type::elseif_clause_list => n.as_elseif_clause_list().unwrap().count(),
+        Type::job_continuation_list => n.as_job_continuation_list().unwrap().count(),
+        Type::andor_job_list => n.as_andor_job_list().unwrap().count(),
+        Type::freestanding_argument_list => 0, // not actually a list node
+        Type::job_conjunction_continuation_list => {
+            n.as_job_conjunction_continuation_list().unwrap().count()
+        }
+        Type::case_item_list => n.as_case_item_list().unwrap().count(),
+        Type::argument_list => n.as_argument_list().unwrap().count(),
+        Type::job_list => n.as_job_list().unwrap().count(),
+        _ => 0,
+    };
+    count * std::mem::size_of::<Box<()>>()
+}
+
+impl<'a> NodeVisitor<'a> for AstSizeMetrics {
+    fn visit(&mut self, node: &'a dyn Node) {
+        self.node_count += 1;
+        self.memory_size += node.self_memory_size() + list_pointer_memory_size(node);
+        match node.category() {
+            Category::branch => self.branch_count += 1,
+            Category::leaf => self.leaf_count += 1,
+            Category::list => self.list_count += 1,
+        }
+        if node.as_token().is_some() {
+            self.token_count += 1;
+        }
+        if node.as_keyword().is_some() {
+            self.keyword_count += 1;
+        }
+        node.accept(self, false);
+    }
+}
+
 /// Flags we support.
 #[derive(Copy, Clone, Default)]
 struct GapFlags {
@@ -1190,6 +1266,11 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
         );
         let ast_dump = ast.dump(src);
         streams.err.appendln(ast_dump);
+
+        // Output metrics too.
+        let mut metrics = AstSizeMetrics::default();
+        metrics.visit(ast.top());
+        streams.err.appendln(format!("{}", metrics));
     }
     let mut printer = PrettyPrinter::new(src, do_indent);
     printer.prettify()

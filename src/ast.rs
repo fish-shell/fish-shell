@@ -139,6 +139,12 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
         self.try_source(orig).unwrap_or_default()
     }
 
+    /// The raw byte size of this node, excluding children.
+    /// This also excludes the allocations stored in lists.
+    fn self_memory_size(&self) -> usize {
+        std::mem::size_of_val(self)
+    }
+
     // The address of the object, for comparison.
     fn as_ptr(&self) -> *const ();
 

@@ -3095,9 +3095,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         node: &mut ArgumentOrRedirectionVariant,
     ) -> VisitResult {
         if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirectionVariant::Argument(*arg);
+            *node = ArgumentOrRedirectionVariant::Argument(arg);
         } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirectionVariant::Redirection(*redir);
+            *node = ArgumentOrRedirectionVariant::Redirection(redir);
         } else {
             internal_error!(
                 self,
@@ -3123,22 +3123,22 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         &mut self,
         node: &mut Option<DecoratedStatementDecorator>,
     ) {
-        *node = self.try_parse::<DecoratedStatementDecorator>().map(|b| *b);
+        *node = self.try_parse::<DecoratedStatementDecorator>();
     }
     fn visit_job_conjunction_decorator(&mut self, node: &mut Option<JobConjunctionDecorator>) {
-        *node = self.try_parse::<JobConjunctionDecorator>().map(|b| *b);
+        *node = self.try_parse::<JobConjunctionDecorator>();
     }
     fn visit_else_clause(&mut self, node: &mut Option<ElseClause>) {
-        *node = self.try_parse::<ElseClause>().map(|b| *b);
+        *node = self.try_parse::<ElseClause>();
     }
     fn visit_semi_nl(&mut self, node: &mut Option<SemiNl>) {
-        *node = self.try_parse::<SemiNl>().map(|b| *b);
+        *node = self.try_parse::<SemiNl>();
     }
     fn visit_time(&mut self, node: &mut Option<KeywordTime>) {
-        *node = self.try_parse::<KeywordTime>().map(|b| *b);
+        *node = self.try_parse::<KeywordTime>();
     }
     fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
-        *node = self.try_parse::<TokenBackground>().map(|b| *b);
+        *node = self.try_parse::<TokenBackground>();
     }
 }
 
@@ -3597,7 +3597,7 @@ impl<'s> Populator<'s> {
                 if contents.is_empty() {
                     contents.reserve(16);
                 }
-                contents.push(*node);
+                contents.push(node);
             } else if exhaust_stream && self.peek_type(0) != ParseTokenType::terminate {
                 // We aren't allowed to stop. Produce an error and keep going.
                 self.consume_excess_token_generating_error()
@@ -3653,7 +3653,7 @@ impl<'s> Populator<'s> {
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            StatementVariant::DecoratedStatement(*embedded)
+            StatementVariant::DecoratedStatement(embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -3661,7 +3661,7 @@ impl<'s> Populator<'s> {
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
-            let embedded = self.allocate_visit::<BraceStatement>();
+            let embedded = self.allocate_boxed_visit::<BraceStatement>();
             return StatementVariant::BraceStatement(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
@@ -3734,22 +3734,22 @@ impl<'s> Populator<'s> {
 
         match self.peek_token(0).keyword {
             ParseKeyword::kw_not | ParseKeyword::kw_exclam => {
-                let embedded = self.allocate_visit::<NotStatement>();
+                let embedded = self.allocate_boxed_visit::<NotStatement>();
                 StatementVariant::NotStatement(embedded)
             }
             ParseKeyword::kw_for
             | ParseKeyword::kw_while
             | ParseKeyword::kw_function
             | ParseKeyword::kw_begin => {
-                let embedded = self.allocate_visit::<BlockStatement>();
+                let embedded = self.allocate_boxed_visit::<BlockStatement>();
                 StatementVariant::BlockStatement(embedded)
             }
             ParseKeyword::kw_if => {
-                let embedded = self.allocate_visit::<IfStatement>();
+                let embedded = self.allocate_boxed_visit::<IfStatement>();
                 StatementVariant::IfStatement(embedded)
             }
             ParseKeyword::kw_switch => {
-                let embedded = self.allocate_visit::<SwitchStatement>();
+                let embedded = self.allocate_boxed_visit::<SwitchStatement>();
                 StatementVariant::SwitchStatement(embedded)
             }
             ParseKeyword::kw_end => {
@@ -3776,19 +3776,19 @@ impl<'s> Populator<'s> {
         match self.peek_token(0).keyword {
             ParseKeyword::kw_for => {
                 let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeaderVariant::ForHeader(*embedded)
+                BlockStatementHeaderVariant::ForHeader(embedded)
             }
             ParseKeyword::kw_while => {
                 let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeaderVariant::WhileHeader(*embedded)
+                BlockStatementHeaderVariant::WhileHeader(embedded)
             }
             ParseKeyword::kw_function => {
                 let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeaderVariant::FunctionHeader(*embedded)
+                BlockStatementHeaderVariant::FunctionHeader(embedded)
             }
             ParseKeyword::kw_begin => {
                 let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeaderVariant::BeginHeader(*embedded)
+                BlockStatementHeaderVariant::BeginHeader(embedded)
             }
             _ => {
                 internal_error!(
@@ -3800,7 +3800,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<Box<T>> {
+    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<T> {
         if !T::can_be_parsed(self) {
             return None;
         }
@@ -3822,10 +3822,17 @@ impl<'s> Populator<'s> {
         result
     }
 
-    // Given a node type, allocate it, invoke its default constructor,
+    // Given a node type, allocate it, invoking its default constructor,
     // and then visit it as a field.
-    // Return the resulting Node pointer. It is never null.
-    fn allocate_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
+    // Return the resulting Node.
+    fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
+        let mut result = T::default();
+        self.visit_mut(&mut result);
+        result
+    }
+
+    // Like allocate_visit, but returns the value as a Box.
+    fn allocate_boxed_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
         let mut result = Box::<T>::default();
         let _ = self.visit_mut(&mut *result);
         result

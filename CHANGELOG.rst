@@ -1,3 +1,16 @@
+fish 4.0.2 (released March ??, 2025)
+====================================
+
+This release of fish includes the following improvements compared to fish 4.0.1:
+
+- Key combinations using the super (Windows/command) key can now actually be bound using the :kbd:`super-` prefix (:issue:`11217`).
+- A crash involving backspace characters was fixed (:issue:`11280`).
+- Fish 4.0.0 switched completions to be quoted instead of backslash-escaped,
+  now it only does so if the completion is unambiguous to make continuing the token easier (:issue:`11271`).
+- The warning when the terminfo database couldn't be found has been downgraded to a log message.
+  This is because fish will fall back to what xterm-256color would do,
+  which in the majority of cases would just work (:issue:`11277`, :issue:`11290`).
+
 fish 4.0.1 (released March 12, 2025)
 ====================================
 

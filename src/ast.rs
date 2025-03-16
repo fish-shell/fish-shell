@@ -98,7 +98,7 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 
 /// Node is the base trait of all AST nodes.
 pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
-    /// The parent node, or null if this is root.
+    /// The parent node, or None if this is root.
     fn parent(&self) -> Option<&dyn Node>;
 
     /// The type of this node.
@@ -2520,6 +2520,8 @@ pub struct Extras {
 pub struct Ast {
     // The top node.
     // Its type depends on what was requested to parse.
+    // Note Node parent pointers are implemented via raw pointers,
+    // so we must enforce pointer stability.
     top: Box<dyn NodeMut>,
     /// Whether any errors were encountered during parsing.
     any_error: bool,
@@ -4017,6 +4019,8 @@ fn parse_from_top(
     if top_type == Type::job_list {
         // Set all parent nodes.
         // It turns out to be more convenient to do this after the parse phase.
+        // Note: parent nodes are implemented as raw pointers! This means that the contents Ast must not
+        // change or move after construction.
         ast.top_mut()
             .as_mut_job_list()
             .as_mut()

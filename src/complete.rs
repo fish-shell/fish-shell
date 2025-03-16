@@ -1171,10 +1171,13 @@ impl<'ctx> Completer<'ctx> {
                 if !abbr.is_regex() {
                     possible_comp.push(Completion::from_completion(abbr.key.clone()));
                     if let Some(ref description) = abbr.description {
-                        let desc = sprintf!(*ABBR_WITH_DESCRIPTION, abbr.replacement.clone(), description);
+                        let desc = sprintf!(
+                            *ABBR_WITH_DESCRIPTION,
+                            abbr.replacement.clone(),
+                            description
+                        );
                         descs.insert(abbr.key.clone(), desc);
-                    }
-                    else {
+                    } else {
                         descs.insert(abbr.key.clone(), abbr.replacement.clone());
                     }
                 }

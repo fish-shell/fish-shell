@@ -471,7 +471,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             ArgType::OptionalArgument,
             SET_CURSOR_SHORT,
         ),
-        wopt(L!("description"), ArgType::OptionalArgument,'d'),
+        wopt(L!("description"), ArgType::OptionalArgument, 'd'),
         wopt(L!("function"), ArgType::RequiredArgument, 'f'),
         wopt(L!("rename"), ArgType::NoArgument, RENAME_SHORT),
         wopt(L!("erase"), ArgType::NoArgument, 'e'),

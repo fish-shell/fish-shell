@@ -92,6 +92,14 @@ fn parse_cmd_opts(
                 // A positional argument we got because we use RETURN_IN_ORDER.
                 let woptarg = w.woptarg.unwrap().to_owned();
                 if handling_named_arguments {
+                    if is_read_only(&woptarg) {
+                        streams.err.append(wgettext_fmt!(
+                            "%ls: variable '%ls' is read-only\n",
+                            cmd,
+                            woptarg
+                        ));
+                        return STATUS_INVALID_ARGS;
+                    }
                     opts.named_arguments.push(woptarg);
                 } else {
                     streams.err.append(wgettext_fmt!(

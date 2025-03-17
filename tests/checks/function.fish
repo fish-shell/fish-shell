@@ -186,6 +186,11 @@ function foo --argument-names status; end
 echo status $status
 # CHECK: status 2
 
+function foo --argument-names foo status; end
+# CHECKERR: {{.*}}function.fish (line {{\d+}}): function: variable 'status' is read-only
+# CHECKERR: function foo --argument-names foo status; end
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+
 functions -q foo
 echo exists $status
 # CHECK: exists 1

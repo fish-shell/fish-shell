@@ -6516,17 +6516,16 @@ impl<'a> Reader<'a> {
 
             let full = tok + &common_prefix[..];
             let truncated = &full[full.len() - PREFIX_MAX_LEN..];
-            let parts: Vec<&wstr> = truncated.split('/').collect();
-            if parts.len() < 2 {
+            let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
+            if i == 0 {
                 // No path separators were found in the common prefix, so we can't collapse
                 // any further
                 prefix.push_utfstr(&truncated);
             } else {
                 // Discard any parent directories and include whats left
-                let last_part = parts.last().expect("parts is non-empty");
                 prefix.push('/');
-                prefix.push_utfstr(last_part);
-            }
+                prefix.push_utfstr(last_component);
+            };
         }
 
         // Update the pager data.

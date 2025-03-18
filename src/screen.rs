@@ -1680,8 +1680,8 @@ fn is_screen_name_escape_seq(code: &wstr) -> Option<usize> {
 
 /// Operating System Command (OSC) escape codes, used by iTerm2 and others:
 /// ESC followed by ], terminated by either BEL or escape + backslash.
-/// See https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
-/// and https://iterm2.com/documentation-escape-codes.html .
+/// See <https://invisible-island.net/xterm/ctlseqs/ctlseqs.html>
+/// and <https://iterm2.com/documentation-escape-codes.html>.
 fn is_osc_escape_seq(code: &wstr) -> Option<usize> {
     if code.char_at(1) == ']' {
         // Start at 2 to skip over <esc>].
@@ -1698,7 +1698,7 @@ fn is_osc_escape_seq(code: &wstr) -> Option<usize> {
     None
 }
 
-/// Generic VT100 three byte sequence: CSI followed by something in the range @ through _.
+/// Generic VT100 three byte sequence: `CSI` followed by something in the range @ through _.
 fn is_three_byte_escape_seq(code: &wstr) -> Option<usize> {
     if code.char_at(1) == '[' && (code.char_at(2) >= '@' && code.char_at(2) <= '_') {
         return Some(3);
@@ -1706,7 +1706,7 @@ fn is_three_byte_escape_seq(code: &wstr) -> Option<usize> {
     None
 }
 
-/// Generic VT100 two byte sequence: <esc> followed by something in the range @ through _.
+/// Generic VT100 two byte sequence: `<esc>` followed by something in the range @ through _.
 fn is_two_byte_escape_seq(code: &wstr) -> Option<usize> {
     if code.char_at(1) >= '@' && code.char_at(1) <= '_' {
         return Some(2);
@@ -1714,8 +1714,8 @@ fn is_two_byte_escape_seq(code: &wstr) -> Option<usize> {
     None
 }
 
-/// Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in
-/// the range [@,_], followed by one character in that range.
+/// Generic VT100 CSI-style sequence. `<esc>`, followed by zero or more ASCII characters NOT in
+/// the range `[@,_],` followed by one character in that range.
 /// This will also catch color sequences.
 fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
     if code.char_at(1) != '[' {

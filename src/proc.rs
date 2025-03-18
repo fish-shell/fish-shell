@@ -582,13 +582,13 @@ impl AtomicPid {
 /// represents it. Shellscript functions, builtins and blocks of code may all need to spawn an
 /// external process that handles the piping and redirecting of IO for them.
 ///
-/// If the process is of type process_type_t::external or process_type_t::exec, argv is the argument
-/// array and actual_cmd is the absolute path of the command to execute.
+/// If the process is of type [`ProcessType::external`] or [`ProcessType::exec`], `argv` is the argument
+/// array and `actual_cmd` is the absolute path of the command to execute.
 ///
-/// If the process is of type process_type_t::builtin, argv is the argument vector, and argv[0] is
+/// If the process is of type [`ProcessType::builtin`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the builtin command.
 ///
-/// If the process is of type process_type_t::function, argv is the argument vector, and argv[0] is
+/// If the process is of type [`ProcessType::function`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the shellscript function.
 #[derive(Default)]
 pub struct Process {
@@ -693,17 +693,17 @@ impl Process {
         assert!(old.is_none(), "Process::set_pid() called more than once!");
     }
 
-    /// Sets argv.
+    /// Sets `argv`.
     pub fn set_argv(&mut self, argv: Vec<WString>) {
         self.argv = argv;
     }
 
-    /// Returns argv.
+    /// Returns `argv`.
     pub fn argv(&self) -> &Vec<WString> {
         &self.argv
     }
 
-    /// Returns argv[0].
+    /// Returns `argv[0]`.
     pub fn argv0(&self) -> Option<&wstr> {
         self.argv.get(0).map(|s| s.as_utfstr())
     }

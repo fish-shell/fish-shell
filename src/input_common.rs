@@ -678,7 +678,7 @@ pub trait InputEventQueuer {
         }
     }
 
-    /// Function used by [`input_readch`] to read bytes from stdin until enough bytes have been read to
+    /// Function used by [`readch`](Self::readch) to read bytes from stdin until enough bytes have been read to
     /// convert them to a wchar_t. Conversion is done using `mbrtowc`. If a character has previously
     /// been read and then 'unread', that character is returned.
     ///

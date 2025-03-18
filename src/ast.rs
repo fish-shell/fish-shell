@@ -1582,7 +1582,7 @@ impl ConcreteNodeMut for IfStatement {
 #[derive(Default, Debug)]
 pub struct CaseItem {
     parent: Option<*const dyn Node>,
-    /// case <arguments> ; body
+    /// case \<arguments\> ; body
     pub kw_case: KeywordCase,
     pub arguments: ArgumentList,
     pub semi_nl: SemiNl,
@@ -1615,7 +1615,7 @@ impl CheckParse for CaseItem {
 #[derive(Default, Debug)]
 pub struct SwitchStatement {
     parent: Option<*const dyn Node>,
-    /// switch <argument> ; body ; end args_redirs
+    /// switch \<argument\> ; body ; end args_redirs
     pub kw_switch: KeywordSwitch,
     pub argument: Argument,
     pub semi_nl: SemiNl,

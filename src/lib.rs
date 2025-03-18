@@ -3,6 +3,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(unknown_lints)]
 #![allow(unstable_name_collisions)]
+#![allow(rustdoc::private_intra_doc_links)]
 #![allow(clippy::assigning_clones)]
 #![allow(clippy::bool_assert_comparison)]
 #![allow(clippy::collapsible_if)]

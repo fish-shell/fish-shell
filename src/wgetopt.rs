@@ -89,7 +89,7 @@ pub const fn wopt(name: &wstr, arg_type: ArgType, val: char) -> WOption<'_> {
     }
 }
 
-/// Used internally by [Wgetopter::find_matching_long_opt]. See there for further
+/// Used internally by [WGetopter::find_matching_long_opt]. See there for further
 /// details.
 #[derive(Default)]
 enum LongOptMatch<'a> {
@@ -100,7 +100,7 @@ enum LongOptMatch<'a> {
     NoMatch,
 }
 
-/// Used internally by [Wgetopter::next_argv]. See there for further details.
+/// Used internally by [WGetopter::next_argv]. See there for further details.
 enum NextArgv {
     Finished,
     UnpermutedNonOption,

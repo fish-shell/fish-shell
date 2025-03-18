@@ -1069,7 +1069,8 @@ pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 /// MS Windows tty devices do not currently have either a read or write timestamp - those respective
 /// fields of `struct stat` are always set to the current time, which means we can't rely on them.
 /// In this case, we assume no external program has written to the terminal behind our back, making
-/// the multiline prompt usable. See #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
+/// the multiline prompt usable. See [#2859](https://github.com/fish-shell/fish-shell/issues/2859)
+/// and <https://github.com/Microsoft/BashOnWindows/issues/545>
 pub fn has_working_tty_timestamps() -> bool {
     if cfg!(target_os = "windows") {
         false
@@ -1523,7 +1524,7 @@ pub enum WSL {
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 ///
-/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+/// See <https://github.com/Microsoft/WSL/issues/423> and [Microsoft/WSL#2997](https://github.com/Microsoft/WSL/issues/2997)
 #[inline(always)]
 #[cfg(not(target_os = "linux"))]
 pub fn is_windows_subsystem_for_linux(_: WSL) -> bool {
@@ -1533,7 +1534,7 @@ pub fn is_windows_subsystem_for_linux(_: WSL) -> bool {
 /// Determines if we are running under Microsoft's Windows Subsystem for Linux to work around
 /// some known limitations and/or bugs.
 ///
-/// See https://github.com/Microsoft/WSL/issues/423 and Microsoft/WSL#2997
+/// See <https://github.com/Microsoft/WSL/issues/423> and [Microsoft/WSL#2997](https://github.com/Microsoft/WSL/issues/2997)
 #[cfg(target_os = "linux")]
 pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
     use std::sync::OnceLock;
@@ -1935,7 +1936,7 @@ pub fn is_console_session() -> bool {
     })
 }
 
-/// Asserts that a slice is alphabetically sorted by a [`&wstr`] `name` field.
+/// Asserts that a slice is alphabetically sorted by a <code>&[wstr]</code> `name` field.
 ///
 /// Mainly useful for static asserts/const eval.
 ///

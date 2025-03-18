@@ -1246,7 +1246,7 @@ impl HistoryImpl {
     }
 
     /// Let indexes be a list of one-based indexes into the history, matching the interpretation of
-    /// $history. That is, $history[1] is the most recently executed command. Values less than one
+    /// `$history`. That is, `$history[1]` is the most recently executed command. Values less than one
     /// are skipped. Return a mapping from index to history item text.
     fn items_at_indexes(
         &mut self,

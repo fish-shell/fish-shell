@@ -71,7 +71,7 @@ pub struct JobGroup {
     wants_term: bool,
     /// Whether we are in the foreground, meaning the user is waiting for this job to complete.
     pub is_foreground: RelaxedAtomicBool,
-    /// The pgid leading our group. This is only ever set if [`job_control`](Self::JobControl) is
+    /// The pgid leading our group. This is only ever set if [`job_control`](Self::job_control) is
     /// true. We ensure the value (when set) is always non-negative and non-zero.
     pgid: AtomicPid,
     /// The original command which produced this job tree.

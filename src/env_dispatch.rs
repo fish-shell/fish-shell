@@ -151,7 +151,7 @@ fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
     }
 }
 
-/// Update the value of [`FISH_EMOJI_WIDTH`].
+/// Update the value of [`FISH_EMOJI_WIDTH`](crate::fallback::FISH_EMOJI_WIDTH).
 fn guess_emoji_width(vars: &EnvStack) {
     use crate::fallback::FISH_EMOJI_WIDTH;
 

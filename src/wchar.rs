@@ -35,7 +35,7 @@ pub use L;
 /// as a UTF-32 character, printing them would result in several characters instead of one UTF-8
 /// character.
 ///
-/// See https://github.com/fish-shell/fish-shell/issues/1894.
+/// See <https://github.com/fish-shell/fish-shell/issues/1894>.
 pub fn encode_byte_to_char(byte: u8) -> char {
     char::from_u32(u32::from(ENCODE_DIRECT_BASE) + u32::from(byte))
         .expect("private-use codepoint should be valid char")

@@ -403,7 +403,7 @@ impl Environment for EnvScoped {
     }
 }
 
-/// Necessary for Arc<EnvStack> to be sync.
+/// Necessary for [`Arc<EnvStack>`] to be sync.
 /// Safety: again, the global lock.
 unsafe impl Send for EnvStack {}
 

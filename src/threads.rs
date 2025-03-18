@@ -553,7 +553,7 @@ pub struct Debounce {
 /// The data shared between [`Debounce`] instances.
 struct DebounceData {
     /// The (one or none) next enqueued request, overwritten each time a new call to
-    /// [`perform()`](Self::perform) is made.
+    /// [`Debounce::perform()`] is made.
     next_req: Option<WorkItem>,
     /// The non-zero token of the current non-abandoned thread or `None` if no thread is running.
     active_token: Option<NonZeroU64>,
@@ -609,9 +609,9 @@ impl Debounce {
         self.perform_with_completion(handler, |_ctx, _result| ())
     }
 
-    /// Enqueue `handler` to be performed on a background thread with [`Completion`] `completion`
-    /// to be performed on the main thread. If a function is already enqueued, this overwrites it
-    /// and that function will not be executed.
+    /// Enqueue `handler` to be performed on a background thread with `completion` to be performed
+    /// on the main thread. If a function is already enqueued, this overwrites it and that function
+    /// will not be executed.
     ///
     /// If the function executes within the optional timeout then `completion` will be invoked on
     /// the main thread with the result of the evaluated `handler`.

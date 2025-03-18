@@ -401,7 +401,7 @@ pub fn split_string_tok<'val>(
 }
 
 /// Joins strings with a separator.
-/// This supports both &[&wstr] and &[&WString].
+/// This supports both <code>&[&[wstr]]</code> and <code>&[&[WString]]</code>
 pub fn join_strings<S: AsRef<wstr>>(strs: &[S], sep: char) -> WString {
     if strs.is_empty() {
         return WString::new();

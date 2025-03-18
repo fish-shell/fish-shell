@@ -187,7 +187,7 @@ pub struct FdMonitorItem {
 
 impl FdMonitorItem {
     /// Invoke this item's callback because the fd is readable.
-    /// Returns the [`ItemAction`] to indicate whether the item should be removed from the [`FdMonitor`] set.
+    /// If the given fd is closed, it will be removed from the [`FdMonitor`] set.
     fn service(&mut self) {
         (self.callback)(&mut self.fd)
     }

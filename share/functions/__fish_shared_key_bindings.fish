@@ -120,7 +120,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv alt-enter "commandline -i \n" expand-abbr
         bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
         bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " "'
-        bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
+        $legacy_bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " "'
         # Shift-space behaves like space because it's easy to mistype.
         bind --preset $argv shift-space 'commandline -i " "' expand-abbr
 

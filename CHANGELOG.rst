@@ -4,6 +4,7 @@ fish 4.0.2 (released March ??, 2025)
 This release of fish includes the following improvements compared to fish 4.0.1:
 
 - Key combinations using the super (Windows/command) key can now actually be bound using the :kbd:`super-` prefix (:issue:`11217`).
+- :kbd:`delete` in Vi mode works again if numlock is active (:issue:`11303`).
 - A crash involving backspace characters was fixed (:issue:`11280`).
 - Fish 4.0.0 switched completions to be quoted instead of backslash-escaped,
   now it only does so if the completion is unambiguous to make continuing the token easier (:issue:`11271`).

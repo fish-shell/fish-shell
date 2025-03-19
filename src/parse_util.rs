@@ -1545,10 +1545,10 @@ fn detect_errors_in_backgrounded_job(
         if let Some(next) = jlist.get(index + 1) {
             if let Some(deco) = &next.decorator {
                 assert!(
-                    [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&deco.keyword()),
+                    [ParseKeyword::And, ParseKeyword::Or].contains(&deco.keyword()),
                     "Unexpected decorator keyword"
                 );
-                let deco_name = if deco.keyword() == ParseKeyword::kw_and {
+                let deco_name = if deco.keyword() == ParseKeyword::And {
                     L!("and")
                 } else {
                     L!("or")

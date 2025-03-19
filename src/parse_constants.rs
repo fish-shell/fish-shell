@@ -84,27 +84,27 @@ pub enum ParseTokenType {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ParseKeyword {
-    // 'none' is not a keyword, it is a sentinel indicating nothing.
-    none,
-
-    kw_and,
-    kw_begin,
-    kw_builtin,
-    kw_case,
-    kw_command,
-    kw_else,
-    kw_end,
-    kw_exclam,
-    kw_exec,
-    kw_for,
-    kw_function,
-    kw_if,
-    kw_in,
-    kw_not,
-    kw_or,
-    kw_switch,
-    kw_time,
-    kw_while,
+    // 'None' is not a keyword, it is a sentinel indicating nothing.
+    // Note it proves convenient to keep this as a value rather than using Option.
+    None,
+    And,
+    Begin,
+    Builtin,
+    Case,
+    Command,
+    Else,
+    End,
+    Exclam,
+    Exec,
+    For,
+    Function,
+    If,
+    In,
+    Not,
+    Or,
+    Switch,
+    Time,
+    While,
 }
 
 // Statement decorations like 'command' or 'exec'.
@@ -224,7 +224,7 @@ impl ParseTokenType {
 
 impl Default for ParseKeyword {
     fn default() -> Self {
-        ParseKeyword::none
+        ParseKeyword::None
     }
 }
 
@@ -232,24 +232,24 @@ impl ParseKeyword {
     /// Return the keyword as a string.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_and => L!("and"),
-            ParseKeyword::kw_begin => L!("begin"),
-            ParseKeyword::kw_builtin => L!("builtin"),
-            ParseKeyword::kw_case => L!("case"),
-            ParseKeyword::kw_command => L!("command"),
-            ParseKeyword::kw_else => L!("else"),
-            ParseKeyword::kw_end => L!("end"),
-            ParseKeyword::kw_exclam => L!("!"),
-            ParseKeyword::kw_exec => L!("exec"),
-            ParseKeyword::kw_for => L!("for"),
-            ParseKeyword::kw_function => L!("function"),
-            ParseKeyword::kw_if => L!("if"),
-            ParseKeyword::kw_in => L!("in"),
-            ParseKeyword::kw_not => L!("not"),
-            ParseKeyword::kw_or => L!("or"),
-            ParseKeyword::kw_switch => L!("switch"),
-            ParseKeyword::kw_time => L!("time"),
-            ParseKeyword::kw_while => L!("while"),
+            ParseKeyword::And => L!("and"),
+            ParseKeyword::Begin => L!("begin"),
+            ParseKeyword::Builtin => L!("builtin"),
+            ParseKeyword::Case => L!("case"),
+            ParseKeyword::Command => L!("command"),
+            ParseKeyword::Else => L!("else"),
+            ParseKeyword::End => L!("end"),
+            ParseKeyword::Exclam => L!("!"),
+            ParseKeyword::Exec => L!("exec"),
+            ParseKeyword::For => L!("for"),
+            ParseKeyword::Function => L!("function"),
+            ParseKeyword::If => L!("if"),
+            ParseKeyword::In => L!("in"),
+            ParseKeyword::Not => L!("not"),
+            ParseKeyword::Or => L!("or"),
+            ParseKeyword::Switch => L!("switch"),
+            ParseKeyword::Time => L!("time"),
+            ParseKeyword::While => L!("while"),
             _ => L!("unknown_keyword"),
         }
     }
@@ -264,25 +264,25 @@ impl fish_printf::ToArg<'static> for ParseKeyword {
 impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
         match s {
-            _ if s == "!" => ParseKeyword::kw_exclam,
-            _ if s == "and" => ParseKeyword::kw_and,
-            _ if s == "begin" => ParseKeyword::kw_begin,
-            _ if s == "builtin" => ParseKeyword::kw_builtin,
-            _ if s == "case" => ParseKeyword::kw_case,
-            _ if s == "command" => ParseKeyword::kw_command,
-            _ if s == "else" => ParseKeyword::kw_else,
-            _ if s == "end" => ParseKeyword::kw_end,
-            _ if s == "exec" => ParseKeyword::kw_exec,
-            _ if s == "for" => ParseKeyword::kw_for,
-            _ if s == "function" => ParseKeyword::kw_function,
-            _ if s == "if" => ParseKeyword::kw_if,
-            _ if s == "in" => ParseKeyword::kw_in,
-            _ if s == "not" => ParseKeyword::kw_not,
-            _ if s == "or" => ParseKeyword::kw_or,
-            _ if s == "switch" => ParseKeyword::kw_switch,
-            _ if s == "time" => ParseKeyword::kw_time,
-            _ if s == "while" => ParseKeyword::kw_while,
-            _ => ParseKeyword::none,
+            _ if s == "!" => ParseKeyword::Exclam,
+            _ if s == "and" => ParseKeyword::And,
+            _ if s == "begin" => ParseKeyword::Begin,
+            _ if s == "builtin" => ParseKeyword::Builtin,
+            _ if s == "case" => ParseKeyword::Case,
+            _ if s == "command" => ParseKeyword::Command,
+            _ if s == "else" => ParseKeyword::Else,
+            _ if s == "end" => ParseKeyword::End,
+            _ if s == "exec" => ParseKeyword::Exec,
+            _ if s == "for" => ParseKeyword::For,
+            _ if s == "function" => ParseKeyword::Function,
+            _ if s == "if" => ParseKeyword::If,
+            _ if s == "in" => ParseKeyword::In,
+            _ if s == "not" => ParseKeyword::Not,
+            _ if s == "or" => ParseKeyword::Or,
+            _ if s == "switch" => ParseKeyword::Switch,
+            _ if s == "time" => ParseKeyword::Time,
+            _ if s == "while" => ParseKeyword::While,
+            _ => ParseKeyword::None,
         }
     }
 }
@@ -423,7 +423,7 @@ pub fn token_type_user_presentable_description(
     type_: ParseTokenType,
     keyword: ParseKeyword,
 ) -> WString {
-    if keyword != ParseKeyword::none {
+    if keyword != ParseKeyword::None {
         return sprintf!("keyword: '%ls'", keyword.to_wstr());
     }
     match type_ {

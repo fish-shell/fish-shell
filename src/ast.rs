@@ -1267,7 +1267,7 @@ impl CheckParse for JobConjunction {
             || (token.typ == ParseTokenType::string
                 && !matches!(
                     token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
+                    ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
                 ))
     }
 }
@@ -1504,8 +1504,8 @@ impl ConcreteNodeMut for ElseifClause {
 }
 impl CheckParse for ElseifClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_else
-            && pop.peek_token(1).keyword == ParseKeyword::kw_if
+        pop.peek_token(0).keyword == ParseKeyword::Else
+            && pop.peek_token(1).keyword == ParseKeyword::If
     }
 }
 
@@ -1548,7 +1548,7 @@ impl ConcreteNodeMut for ElseClause {
 }
 impl CheckParse for ElseClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_else
+        pop.peek_token(0).keyword == ParseKeyword::Else
     }
 }
 
@@ -1615,7 +1615,7 @@ impl ConcreteNodeMut for CaseItem {
 }
 impl CheckParse for CaseItem {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_case
+        pop.peek_token(0).keyword == ParseKeyword::Case
     }
 }
 
@@ -1814,7 +1814,7 @@ impl ConcreteNodeMut for AndorJob {
 impl CheckParse for AndorJob {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+        if !matches!(keyword, ParseKeyword::And | ParseKeyword::Or) {
             return false;
         }
         // Check that the argument to and/or is a string that's not help. Otherwise
@@ -2021,27 +2021,27 @@ define_token_node!(TokenLeftBrace, left_brace);
 define_token_node!(TokenRightBrace, right_brace);
 define_token_node!(TokenRedirection, redirection);
 
-define_keyword_node!(DecoratedStatementDecorator, kw_command, kw_builtin, kw_exec);
-define_keyword_node!(JobConjunctionDecorator, kw_and, kw_or);
-define_keyword_node!(KeywordBegin, kw_begin);
-define_keyword_node!(KeywordCase, kw_case);
-define_keyword_node!(KeywordElse, kw_else);
-define_keyword_node!(KeywordEnd, kw_end);
-define_keyword_node!(KeywordFor, kw_for);
-define_keyword_node!(KeywordFunction, kw_function);
-define_keyword_node!(KeywordIf, kw_if);
-define_keyword_node!(KeywordIn, kw_in);
-define_keyword_node!(KeywordNot, kw_not, kw_exclam);
-define_keyword_node!(KeywordSwitch, kw_switch);
-define_keyword_node!(KeywordTime, kw_time);
-define_keyword_node!(KeywordWhile, kw_while);
+define_keyword_node!(DecoratedStatementDecorator, Command, Builtin, Exec);
+define_keyword_node!(JobConjunctionDecorator, And, Or);
+define_keyword_node!(KeywordBegin, Begin);
+define_keyword_node!(KeywordCase, Case);
+define_keyword_node!(KeywordElse, Else);
+define_keyword_node!(KeywordEnd, End);
+define_keyword_node!(KeywordFor, For);
+define_keyword_node!(KeywordFunction, Function);
+define_keyword_node!(KeywordIf, If);
+define_keyword_node!(KeywordIn, In);
+define_keyword_node!(KeywordNot, Not, Exclam);
+define_keyword_node!(KeywordSwitch, Switch);
+define_keyword_node!(KeywordTime, Time);
+define_keyword_node!(KeywordWhile, While);
 
 impl CheckParse for JobConjunctionDecorator {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // This is for a job conjunction like `and stuff`
         // But if it's `and --help` then we treat it as an ordinary command.
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+        if !matches!(keyword, ParseKeyword::And | ParseKeyword::Or) {
             return false;
         }
         !pop.peek_token(1).is_help_argument
@@ -2057,7 +2057,7 @@ impl CheckParse for DecoratedStatementDecorator {
         let keyword = pop.peek_token(0).keyword;
         if !matches!(
             keyword,
-            ParseKeyword::kw_command | ParseKeyword::kw_builtin | ParseKeyword::kw_exec
+            ParseKeyword::Command | ParseKeyword::Builtin | ParseKeyword::Exec
         ) {
             return false;
         }
@@ -2070,7 +2070,7 @@ impl CheckParse for KeywordTime {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Time keyword is only the time builtin if the next argument doesn't have a dash.
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_time) {
+        if !matches!(keyword, ParseKeyword::Time) {
             return false;
         }
         !pop.peek_token(1).is_dash_prefix_string()
@@ -2085,9 +2085,9 @@ impl DecoratedStatement {
         };
         let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
-            ParseKeyword::kw_command => StatementDecoration::command,
-            ParseKeyword::kw_builtin => StatementDecoration::builtin,
-            ParseKeyword::kw_exec => StatementDecoration::exec,
+            ParseKeyword::Command => StatementDecoration::command,
+            ParseKeyword::Builtin => StatementDecoration::builtin,
+            ParseKeyword::Exec => StatementDecoration::exec,
             _ => panic!("Unexpected keyword in statement decoration"),
         }
     }
@@ -2614,7 +2614,7 @@ impl Ast {
                         WString::from_str("<error>")
                     }
                     _ => {
-                        token_type_user_presentable_description(n.token_type(), ParseKeyword::none)
+                        token_type_user_presentable_description(n.token_type(), ParseKeyword::None)
                     }
                 };
                 result += &desc[..];
@@ -3064,7 +3064,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             if next_token.typ == ParseTokenType::string
                 && matches!(
                     next_token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_else | ParseKeyword::kw_end
+                    ParseKeyword::Case | ParseKeyword::Else | ParseKeyword::End
                 )
             {
                 self.consume_excess_token_generating_error();
@@ -3168,7 +3168,7 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
         if !res.is_empty() {
             res += L!(" or ");
         }
-        res += &token_type_user_presentable_description(*typ, ParseKeyword::none)[..];
+        res += &token_type_user_presentable_description(*typ, ParseKeyword::None)[..];
     }
     res
 }
@@ -3394,7 +3394,7 @@ impl<'s> Populator<'s> {
                 tok,
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_type_user_presentable_description(typ, ParseKeyword::none),
+                token_type_user_presentable_description(typ, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return SourceRange::new(0, 0);
@@ -3419,7 +3419,7 @@ impl<'s> Populator<'s> {
                 tok,
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::none),
+                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return;
@@ -3430,7 +3430,7 @@ impl<'s> Populator<'s> {
             ParseTokenType::string => {
                 // There are three keywords which end a job list.
                 match tok.keyword {
-                    ParseKeyword::kw_case => {
+                    ParseKeyword::Case => {
                         parse_error!(
                             self,
                             tok,
@@ -3438,7 +3438,7 @@ impl<'s> Populator<'s> {
                             "'case' builtin not inside of switch block"
                         );
                     }
-                    ParseKeyword::kw_end => {
+                    ParseKeyword::End => {
                         parse_error!(
                             self,
                             tok,
@@ -3446,7 +3446,7 @@ impl<'s> Populator<'s> {
                             "'end' outside of a block"
                         );
                     }
-                    ParseKeyword::kw_else => {
+                    ParseKeyword::Else => {
                         parse_error!(
                             self,
                             tok,
@@ -3648,7 +3648,7 @@ impl<'s> Populator<'s> {
                     "Expected %s, but found %ls",
                     token_type_user_presentable_description(
                         ParseTokenType::end,
-                        ParseKeyword::none
+                        ParseKeyword::None
                     ),
                     slf.peek_token(0).user_presentable_description()
                 );
@@ -3706,11 +3706,11 @@ impl<'s> Populator<'s> {
             // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
-                ParseKeyword::kw_begin,
-                ParseKeyword::kw_function,
-                ParseKeyword::kw_if,
-                ParseKeyword::kw_switch,
-                ParseKeyword::kw_while,
+                ParseKeyword::Begin,
+                ParseKeyword::Function,
+                ParseKeyword::If,
+                ParseKeyword::Switch,
+                ParseKeyword::While,
             ];
             if if help_only_kws.contains(&self.peek_token(0).keyword) {
                 self.peek_token(1).is_help_argument
@@ -3722,8 +3722,8 @@ impl<'s> Populator<'s> {
 
             // Likewise if the next token doesn't look like an argument at all. This corresponds to
             // e.g. a "naked if".
-            let naked_invocation_invokes_help = ![ParseKeyword::kw_begin, ParseKeyword::kw_end]
-                .contains(&self.peek_token(0).keyword);
+            let naked_invocation_invokes_help =
+                ![ParseKeyword::Begin, ParseKeyword::End].contains(&self.peek_token(0).keyword);
             if naked_invocation_invokes_help
                 && [ParseTokenType::end, ParseTokenType::terminate]
                     .contains(&self.peek_token(1).typ)
@@ -3733,26 +3733,26 @@ impl<'s> Populator<'s> {
         }
 
         match self.peek_token(0).keyword {
-            ParseKeyword::kw_not | ParseKeyword::kw_exclam => {
+            ParseKeyword::Not | ParseKeyword::Exclam => {
                 let embedded = self.allocate_boxed_visit::<NotStatement>();
                 StatementVariant::NotStatement(embedded)
             }
-            ParseKeyword::kw_for
-            | ParseKeyword::kw_while
-            | ParseKeyword::kw_function
-            | ParseKeyword::kw_begin => {
+            ParseKeyword::For
+            | ParseKeyword::While
+            | ParseKeyword::Function
+            | ParseKeyword::Begin => {
                 let embedded = self.allocate_boxed_visit::<BlockStatement>();
                 StatementVariant::BlockStatement(embedded)
             }
-            ParseKeyword::kw_if => {
+            ParseKeyword::If => {
                 let embedded = self.allocate_boxed_visit::<IfStatement>();
                 StatementVariant::IfStatement(embedded)
             }
-            ParseKeyword::kw_switch => {
+            ParseKeyword::Switch => {
                 let embedded = self.allocate_boxed_visit::<SwitchStatement>();
                 StatementVariant::SwitchStatement(embedded)
             }
-            ParseKeyword::kw_end => {
+            ParseKeyword::End => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
@@ -3774,19 +3774,19 @@ impl<'s> Populator<'s> {
     /// This must never return null.
     fn allocate_populate_block_header(&mut self) -> BlockStatementHeaderVariant {
         match self.peek_token(0).keyword {
-            ParseKeyword::kw_for => {
+            ParseKeyword::For => {
                 let embedded = self.allocate_visit::<ForHeader>();
                 BlockStatementHeaderVariant::ForHeader(embedded)
             }
-            ParseKeyword::kw_while => {
+            ParseKeyword::While => {
                 let embedded = self.allocate_visit::<WhileHeader>();
                 BlockStatementHeaderVariant::WhileHeader(embedded)
             }
-            ParseKeyword::kw_function => {
+            ParseKeyword::Function => {
                 let embedded = self.allocate_visit::<FunctionHeader>();
                 BlockStatementHeaderVariant::FunctionHeader(embedded)
             }
-            ParseKeyword::kw_begin => {
+            ParseKeyword::Begin => {
                 let embedded = self.allocate_visit::<BeginHeader>();
                 BlockStatementHeaderVariant::BeginHeader(embedded)
             }
@@ -3863,7 +3863,7 @@ impl<'s> Populator<'s> {
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
         // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        if [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&self.peek_token(1).keyword) {
+        if [ParseKeyword::And, ParseKeyword::Or].contains(&self.peek_token(1).keyword) {
             parse_error!(
                 self,
                 self.peek_token(1),
@@ -3931,7 +3931,7 @@ impl<'s> Populator<'s> {
 
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::kw_end] {
+            if keyword.allowed_keywords() == [ParseKeyword::End] {
                 return VisitResult::Break(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
@@ -4121,7 +4121,7 @@ pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     Cow::Owned(unescape_string(token, UnescapeStringStyle::default()).unwrap_or_default())
 }
 
-/// Given a token, returns the keyword it matches, or ParseKeyword::none.
+/// Given a token, returns the keyword it matches, or ParseKeyword::None.
 fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     ParseKeyword::from(&unescape_keyword(tok, token)[..])
 }

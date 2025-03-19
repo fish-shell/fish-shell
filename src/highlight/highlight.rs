@@ -844,25 +844,25 @@ impl<'s> Highlighter<'s> {
     fn visit_keyword(&mut self, node: &dyn Keyword) {
         let mut role = HighlightRole::normal;
         match node.keyword() {
-            ParseKeyword::kw_begin
-            | ParseKeyword::kw_builtin
-            | ParseKeyword::kw_case
-            | ParseKeyword::kw_command
-            | ParseKeyword::kw_else
-            | ParseKeyword::kw_end
-            | ParseKeyword::kw_exec
-            | ParseKeyword::kw_for
-            | ParseKeyword::kw_function
-            | ParseKeyword::kw_if
-            | ParseKeyword::kw_in
-            | ParseKeyword::kw_switch
-            | ParseKeyword::kw_while => role = HighlightRole::keyword,
-            ParseKeyword::kw_and
-            | ParseKeyword::kw_or
-            | ParseKeyword::kw_not
-            | ParseKeyword::kw_exclam
-            | ParseKeyword::kw_time => role = HighlightRole::operat,
-            ParseKeyword::none => (),
+            ParseKeyword::Begin
+            | ParseKeyword::Builtin
+            | ParseKeyword::Case
+            | ParseKeyword::Command
+            | ParseKeyword::Else
+            | ParseKeyword::End
+            | ParseKeyword::Exec
+            | ParseKeyword::For
+            | ParseKeyword::Function
+            | ParseKeyword::If
+            | ParseKeyword::In
+            | ParseKeyword::Switch
+            | ParseKeyword::While => role = HighlightRole::keyword,
+            ParseKeyword::And
+            | ParseKeyword::Or
+            | ParseKeyword::Not
+            | ParseKeyword::Exclam
+            | ParseKeyword::Time => role = HighlightRole::operat,
+            ParseKeyword::None => (),
         };
         self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
     }

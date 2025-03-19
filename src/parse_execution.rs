@@ -1725,11 +1725,11 @@ impl<'a> ExecutionContext<'a> {
         if let Some(deco) = &jc.decorator {
             let last_status = ctx.parser().get_last_status();
             match deco.keyword() {
-                ParseKeyword::kw_and => {
+                ParseKeyword::And => {
                     // AND. Skip if the last job failed.
                     skip = last_status != 0;
                 }
-                ParseKeyword::kw_or => {
+                ParseKeyword::Or => {
                     // OR. Skip if the last job succeeded.
                     skip = last_status == 0;
                 }

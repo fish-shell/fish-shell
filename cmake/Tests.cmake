@@ -40,7 +40,6 @@ set(SKIP_RETURN_CODE 125)
 # The top-level test target is "fish_run_tests".
 add_custom_target(fish_run_tests
   COMMAND env CTEST_PARALLEL_LEVEL=${CTEST_PARALLEL_LEVEL} FISH_FORCE_COLOR=1
-          FISH_SOURCE_DIR=${CMAKE_SOURCE_DIR}
           ${CMAKE_CTEST_COMMAND} --force-new-ctest-process # --verbose
           --output-on-failure --progress
   DEPENDS fish fish_indent fish_key_reader fish_test_helper

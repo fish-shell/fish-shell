@@ -1,3 +1,5 @@
+use std::sync::MutexGuard;
+
 use crate::common::{
     escape_string, str2wcstring, unescape_string, wcs2string, EscapeFlags, EscapeStringStyle,
     UnescapeStringStyle, ENCODE_DIRECT_BASE, ENCODE_DIRECT_END,
@@ -10,21 +12,21 @@ use rand::{Rng, RngCore};
 
 /// wcs2string is locale-dependent, so ensure we have a multibyte locale
 /// before using it in a test.
-fn setlocale() {
-    let _guard = LOCALE_LOCK.lock().unwrap();
+fn setlocale() -> MutexGuard<'static, ()> {
+    let guard = LOCALE_LOCK.lock().unwrap();
 
     #[rustfmt::skip]
     const UTF8_LOCALES: &[&str] = &[
         "C.UTF-8", "en_US.UTF-8", "en_GB.UTF-8", "de_DE.UTF-8", "C.utf8", "UTF-8",
     ];
     if crate::libc::MB_CUR_MAX() > 1 {
-        return;
+        return guard;
     }
     for locale in UTF8_LOCALES {
         let locale = std::ffi::CString::new(locale.to_owned()).unwrap();
         unsafe { libc::setlocale(libc::LC_CTYPE, locale.as_ptr()) };
         if crate::libc::MB_CUR_MAX() > 1 {
-            return;
+            return guard;
         }
     }
     panic!("No UTF-8 locale found");
@@ -100,7 +102,7 @@ fn test_escape_var() {
 }
 
 fn escape_test(escape_style: EscapeStringStyle, unescape_style: UnescapeStringStyle) {
-    setlocale();
+    let _locale_guard = setlocale();
     let seed: u128 = 92348567983274852905629743984572;
     let mut rng = get_seeded_rng(seed);
 
@@ -174,7 +176,7 @@ fn str2hex(input: &[u8]) -> String {
 /// string comes back through double conversion.
 #[test]
 fn test_convert() {
-    setlocale();
+    let _locale_guard = setlocale();
     let seed = get_rng_seed();
     let mut rng = get_seeded_rng(seed);
     let mut origin = Vec::new();

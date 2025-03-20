@@ -177,6 +177,16 @@ impl RgbColor {
         self.flags.set(Flags::REVERSE, reverse)
     }
 
+    pub fn is_grayscale(&self) -> bool {
+        match self.typ {
+            Type::None => true,
+            Type::Named { idx } => [0, 7, 8, 15, 16].contains(&idx) || (232..=255).contains(&idx),
+            Type::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
+            Type::Normal => true,
+            Type::Reset => true,
+        }
+    }
+
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     pub fn to_name_index(self) -> u8 {
         // TODO: This should look for the nearest color.

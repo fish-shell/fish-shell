@@ -1566,13 +1566,11 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_term24bit
 
-   If this is set to 1, fish will assume the terminal understands 24-bit RGB color sequences, and won't translate them to the 256 or 16 color palette.
-   This is often detected automatically.
+   If this is set to 0, fish will not output 24-bit RGB color sequences but translate them to the 256 or 16 color palette.
 
 .. envvar:: fish_term256
 
-   If this is set to 1, fish will assume the terminal understands 256 colors, and won't translate matching colors down to the 16 color palette.
-   This is usually autodetected.
+   If this is set to 0, fish will not output 256 colors, but translate matching colors down to the 16 color palette.
 
 .. envvar:: fish_ambiguous_width
 
@@ -1724,12 +1722,6 @@ Fish also provides additional information through the values of certain environm
 .. envvar:: status_generation
 
    the "generation" count of ``$status``. This will be incremented only when the previous command produced an explicit status. (For example, background jobs will not increment this).
-
-.. ENVVAR:: TERM
-
-   the type of the current terminal. When fish tries to determine how the terminal works - how many colors it supports, what sequences it sends for keys and other things - it looks at this variable and the corresponding information in the terminfo database (see ``man terminfo``).
-
-   Note: Typically this should not be changed as the terminal sets it to the correct value.
 
 .. ENVVAR:: USER
 

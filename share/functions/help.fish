@@ -147,6 +147,8 @@ function help --description 'Show help for the fish shell'
             set fish_help_page "tutorial.html"
         case releasenotes
             set fish_help_page relnotes.html
+        case terminal-compatiblity
+            set fish_help_page terminal-compatibility.html
         case completions
             set fish_help_page completions.html
         case commands

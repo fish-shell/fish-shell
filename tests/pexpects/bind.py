@@ -11,7 +11,7 @@ import sys
 if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 
-sp = SpawnedProc()
+sp = SpawnedProc(term_var="dumb") # dumb terminal is historical behavior for this test
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
     sp.sendline,

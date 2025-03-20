@@ -144,7 +144,8 @@ class SpawnedProc(object):
     """
 
     def __init__(
-        self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(), **kwargs
+        self, name="fish", timeout=TIMEOUT_SECS, env=os.environ.copy(),
+        term_var: None | str = None, **kwargs
     ):
         """Construct from a name, timeout, and environment.
 
@@ -165,6 +166,8 @@ class SpawnedProc(object):
         # But not if there are args, in which case it probably switches spawning method?
         if "args" not in kwargs:
             exe_path = shlex.quote(exe_path)
+        if term_var is not None:
+            env["TERM"] = term_var
         self.colorize = sys.stdout.isatty() or env.get("FISH_FORCE_COLOR", "0") == "1"
         self.messages = []
         self.start_time = None

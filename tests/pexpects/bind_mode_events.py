@@ -8,7 +8,7 @@ import platform
 if "CI" in os.environ and platform.system() in ["Darwin", "FreeBSD"]:
     sys.exit(127)
 
-sp = SpawnedProc()
+sp = SpawnedProc(term_var="dumb") # dumb terminal is historical behavior for this test
 send, sendline, sleep, expect_prompt = sp.send, sp.sendline, sp.sleep, sp.expect_prompt
 expect_prompt()
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from pexpect_helper import SpawnedProc
+import os
 
-sp = SpawnedProc(timeout=10)
+sp = SpawnedProc(timeout=10, term_var="dumb") # dumb terminal is historical behavior for this test
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,
     sp.sendline,

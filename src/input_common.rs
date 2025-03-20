@@ -14,6 +14,15 @@ use crate::key::{
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
+use crate::terminal_command::{
+    Capability, APPLICATION_KEYPAD_MODE, DECRST_BRACKETED_PASTE, DECRST_FOCUS_REPORTING,
+    DECSET_BRACKETED_PASTE, DECSET_FOCUS_REPORTING,
+    KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS_DISABLE,
+    KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS_ENABLE, KITTY_KEYBOARD_SUPPORTED,
+    MODIFY_OTHER_KEYS_DISABLE, MODIFY_OTHER_KEYS_ENABLE, NO_APPLICATION_KEYPAD_MODE,
+    QUERY_KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS, SCROLL_FORWARD_SEQUENCE_DESCS,
+    SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_NAME, SYNCHRONIZED_OUTPUT_SUPPORTED,
+};
 use crate::threads::{iothread_port, is_main_thread};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
@@ -24,7 +33,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -579,27 +588,11 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 static BRACKETED_PASTE: AtomicBool = AtomicBool::new(false);
 
-pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-#[repr(u8)]
-pub(crate) enum Capability {
-    Unknown,
-    Supported,
-    NotSupported,
-}
-pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
-
-pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-pub(crate) static CURSOR_POSITION_REPORTING_SUPPORTED: RelaxedAtomicBool =
-    RelaxedAtomicBool::new(false);
-
-pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
+pub fn query_kitty_progressive_enhancements() -> &'static [u8] {
     if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
         return b"";
     }
-    b"\x1b[?u"
+    QUERY_KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS
 }
 
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -654,9 +647,9 @@ pub fn terminal_protocols_enable_ifn() {
     });
     if !BRACKETED_PASTE.load(Ordering::Relaxed) {
         BRACKETED_PASTE.store(true, Ordering::Release);
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004h");
+        let _ = write_loop(&STDOUT_FILENO, DECSET_BRACKETED_PASTE);
         if IS_TMUX.load() {
-            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes()); // focus reporting
+            let _ = write_loop(&STDOUT_FILENO, DECSET_FOCUS_REPORTING); // focus reporting
         }
         did_write.store(true);
     }
@@ -670,10 +663,13 @@ pub fn terminal_protocols_enable_ifn() {
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
     FLOG!(term_protocols, "Enabling extended keys");
     if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;1m"); // XTerm's modifyOtherKeys
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b="); // set application keypad mode, so the keypad keys send unique codes
+        let _ = write_loop(&STDOUT_FILENO, MODIFY_OTHER_KEYS_ENABLE); // XTerm's modifyOtherKeys
+        let _ = write_loop(&STDOUT_FILENO, APPLICATION_KEYPAD_MODE); // set application keypad mode, so the keypad keys send unique codes
     } else {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=5u"); // kitty progressive enhancements
+        let _ = write_loop(
+            &STDOUT_FILENO,
+            KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS_ENABLE,
+        );
     }
     did_write.store(true);
 }
@@ -688,9 +684,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
         })
     });
     if BRACKETED_PASTE.load(Ordering::Acquire) {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004l");
+        let _ = write_loop(&STDOUT_FILENO, DECRST_BRACKETED_PASTE);
         if IS_TMUX.load() {
-            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
+            let _ = write_loop(&STDOUT_FILENO, DECRST_FOCUS_REPORTING);
         }
         BRACKETED_PASTE.store(false, Ordering::Release);
         did_write.store(true);
@@ -702,10 +698,13 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Acquire);
     assert_ne!(kitty_keyboard_supported, Capability::Unknown as _);
     if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;0m"); // XTerm's modifyOtherKeys
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b>"); // application keypad mode
+        let _ = write_loop(&STDOUT_FILENO, MODIFY_OTHER_KEYS_DISABLE); // XTerm's modifyOtherKeys
+        let _ = write_loop(&STDOUT_FILENO, NO_APPLICATION_KEYPAD_MODE);
     } else {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=0u"); // kitty progressive enhancements
+        let _ = write_loop(
+            &STDOUT_FILENO,
+            KITTY_KEYBOARD_PROGRESSIVE_ENHANCEMENTS_DISABLE,
+        );
     }
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);
     did_write.store(true);
@@ -1266,7 +1265,6 @@ pub trait InputEventQueuer {
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
                 let wait_guard = self.blocking_wait();
                 let Some(BlockingWait::CursorPosition(wait)) = &*wait_guard else {
-                    CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
                     return None;
                 };
                 let continuation = match wait {
@@ -1405,13 +1403,9 @@ pub trait InputEventQueuer {
         // fish recognizes but does not actually support mouse reporting. We never turn it on, and
         // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
         // it off before exiting. We turn it off here to avoid wasting resources.
-        //
-        // Since this is only called when we detect an incoming mouse reporting payload, we know the
-        // terminal emulator supports mouse reporting, so no terminfo checks.
         FLOG!(reader, "Disabling mouse tracking");
 
         // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
-        // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
         self.push_front(CharEvent::Implicit(ImplicitEvent::DisableMouseTracking));
     }
 
@@ -1538,13 +1532,11 @@ pub trait InputEventQueuer {
                 str2wcstring(&value)
             )
         );
-        if key == b"indn" && matches!(&value[..], b"\x1b[%p1%dS" | b"\\E[%p1%dS") {
+        if key == SCROLL_FORWARD_TERMINFO_NAME.as_bytes()
+            && SCROLL_FORWARD_SEQUENCE_DESCS.contains(&&value[..])
+        {
             SCROLL_FORWARD_SUPPORTED.store(true);
             FLOG!(reader, "Scroll forward is supported");
-        }
-        if key == b"cuu" && matches!(&value[..], b"\x1b[%p1%dA" | b"\\E[%p1%dA") {
-            CURSOR_UP_SUPPORTED.store(true);
-            FLOG!(reader, "Cursor up is supported");
         }
         return None;
     }

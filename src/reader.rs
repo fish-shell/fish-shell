@@ -690,7 +690,7 @@ fn read_i(parser: &Parser) {
         data.update_buff_pos(EditableLineTag::Commandline, None);
         // OSC 133 "Command start"
         write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
+            &mut BufferedOuputter::new(Outputter::stdoutput()),
             "\x1b]133;C;cmdline_url={}\x07",
             escape_string(&command, EscapeStringStyle::Url),
         )
@@ -708,7 +708,7 @@ fn read_i(parser: &Parser) {
 
         // OSC 133 "Command finished"
         write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
+            &mut BufferedOuputter::new(Outputter::stdoutput()),
             "\x1b]133;D;{}\x07",
             parser.get_last_status()
         )

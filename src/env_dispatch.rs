@@ -305,6 +305,7 @@ fn handle_locale_change(vars: &EnvStack) {
 fn handle_term_change(vars: &EnvStack) {
     guess_emoji_width(vars);
     init_terminal(vars);
+    reader_schedule_prompt_repaint();
 }
 
 fn handle_fish_use_posix_spawn_change(vars: &EnvStack) {

@@ -42,6 +42,16 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
+pub(crate) trait Output {
+    fn write_bytes(&mut self, buf: &[u8]);
+}
+
+impl Output for Vec<u8> {
+    fn write_bytes(&mut self, buf: &[u8]) {
+        self.extend_from_slice(buf);
+    }
+}
+
 fn index_for_color(c: RgbColor) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
@@ -65,14 +75,13 @@ fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u
             if term.max_colors == Some(8) && idx > 8 {
                 idx -= 8;
             }
-            write!(
+            write_to_output!(
                 outp,
                 "\x1B[{}m",
                 (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
-            )
-            .expect("Writing to in-memory buffer should never fail");
+            );
         } else {
-            write!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
+            write_to_output!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx);
         }
     }
 }
@@ -183,15 +192,14 @@ impl Outputter {
         // Foreground: ^[38;2;<r>;<g>;<b>m
         // Background: ^[48;2;<r>;<g>;<b>m
         let rgb = color.to_color24();
-        write!(
+        write_to_output!(
             self,
             "\x1B[{};2;{};{};{}m",
             if is_fg { 38 } else { 48 },
             rgb.r,
             rgb.g,
             rgb.b
-        )
-        .expect("Outputter::write should never fail");
+        );
         true
     }
 
@@ -423,6 +431,13 @@ impl Write for Outputter {
     }
 }
 
+impl Output for Outputter {
+    fn write_bytes(&mut self, buf: &[u8]) {
+        self.contents.extend_from_slice(buf);
+        self.maybe_flush();
+    }
+}
+
 impl Outputter {
     /// Emit a terminfo string, like tputs.
     /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
@@ -472,17 +487,9 @@ impl<'a> Drop for BufferedOuputter<'a> {
     }
 }
 
-impl<'a> Write for BufferedOuputter<'a> {
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.0
-            .write(buf)
-            .expect("Writing to in-memory buffer should never fail");
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> Result<()> {
-        self.0.flush().unwrap();
-        Ok(())
+impl<'a> Output for BufferedOuputter<'a> {
+    fn write_bytes(&mut self, buf: &[u8]) {
+        self.0.write_bytes(buf);
     }
 }
 

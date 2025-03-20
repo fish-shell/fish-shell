@@ -106,6 +106,7 @@ use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
 use crate::output::parse_color_maybe_none;
 use crate::output::BufferedOuputter;
+use crate::output::Output;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -689,12 +690,11 @@ fn read_i(parser: &Parser) {
         data.clear(EditableLineTag::Commandline);
         data.update_buff_pos(EditableLineTag::Commandline, None);
         // OSC 133 "Command start"
-        write!(
+        write_to_output!(
             &mut BufferedOuputter::new(Outputter::stdoutput()),
             "\x1b]133;C;cmdline_url={}\x07",
             escape_string(&command, EscapeStringStyle::Url),
-        )
-        .unwrap();
+        );
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();
@@ -707,12 +707,11 @@ fn read_i(parser: &Parser) {
         parser.libdata_mut().exit_current_script = false;
 
         // OSC 133 "Command finished"
-        write!(
+        write_to_output!(
             &mut BufferedOuputter::new(Outputter::stdoutput()),
             "\x1b]133;D;{}\x07",
             parser.get_last_status()
-        )
-        .unwrap();
+        );
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();
@@ -1451,7 +1450,7 @@ impl ReaderData {
             assert!(wait_guard.is_none());
             *wait_guard = Some(BlockingWait::CursorPosition(cursor_position_wait));
         }
-        let _ = out.write_all(b"\x1b[6n");
+        out.write_bytes(b"\x1b[6n");
         self.save_screen_state();
     }
 
@@ -2580,7 +2579,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn xtgettcap(out: &mut impl Write, cap: &str) {
+fn xtgettcap(out: &mut impl Output, cap: &str) {
     FLOG!(
         reader,
         format!(
@@ -2589,16 +2588,16 @@ fn xtgettcap(out: &mut impl Write, cap: &str) {
             format!("\x1bP+q{}\x1b\\", DisplayAsHex(cap))
         )
     );
-    let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
+    write_to_output!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
 }
 
-fn query_capabilities_via_dcs(out: &mut impl std::io::Write) {
-    let _ = out.write_all(b"\x1b[?2026h"); // begin synchronized update
-    let _ = out.write_all(b"\x1b[?1049h"); // enable alternative screen buffer
-    xtgettcap(out.by_ref(), "indn");
-    xtgettcap(out.by_ref(), "cuu");
-    let _ = out.write_all(b"\x1b[?1049l"); // disable alternative screen buffer
-    let _ = out.write_all(b"\x1b[?2026l"); // end synchronized update
+fn query_capabilities_via_dcs(out: &mut impl Output) {
+    out.write_bytes(b"\x1b[?2026h"); // begin synchronized update
+    out.write_bytes(b"\x1b[?1049h"); // enable alternative screen buffer
+    xtgettcap(out, "indn");
+    xtgettcap(out, "cuu");
+    out.write_bytes(b"\x1b[?1049l"); // disable alternative screen buffer
+    out.write_bytes(b"\x1b[?2026l"); // end synchronized update
 }
 
 impl<'a> Reader<'a> {

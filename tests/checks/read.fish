@@ -1,6 +1,4 @@
 # RUN: fish=%fish %fish %s
-# Set term again explicitly to ensure behavior.
-set -gx TERM xterm
 # Read with no vars is not an error
 read
 

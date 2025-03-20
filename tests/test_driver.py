@@ -72,8 +72,8 @@ def makeenv(script_path, home, test_helper_path):
         "XDG_DATA_DIRS",
         "LANGUAGE",
         "COLORTERM",
-        "KONSOLE_PROFILE_NAME",
         "KONSOLE_VERSION",
+        "TERM", # Erase this since we still respect TERM=dumb etc.
         "TERM_PROGRAM",
         "TERM_PROGRAM_VERSION",
         "VTE_VERSION",
@@ -95,7 +95,6 @@ def makeenv(script_path, home, test_helper_path):
             "XDG_RUNTIME_DIR": xdg_runtime,
             "XDG_CACHE_HOME": xdg_cache,
             "fish_test_helper": home + "/fish_test_helper",
-            "TERM": "xterm",
             "LANG": "C",
             "LC_CTYPE": "en_US.UTF-8",
         }

@@ -1,8 +1,3 @@
-//! A wrapper around the terminfo library to expose the functionality that fish needs.
-//! Note that this is, on the whole, extremely little, and in practice terminfo
-//! barely matters anymore. Even the few terminals in use that don't use "xterm-256color"
-//! do not differ much.
-
 use crate::common::ToCString;
 use crate::FLOGF;
 use std::env;
@@ -44,7 +39,6 @@ pub struct Term {
     pub set_a_background: Option<CString>,
     pub set_background: Option<CString>,
     pub exit_attribute_mode: Option<CString>,
-    pub set_title: Option<CString>,
     pub clear_screen: Option<CString>,
     pub cursor_up: Option<CString>,
     pub cursor_down: Option<CString>,
@@ -83,7 +77,6 @@ impl Term {
             set_a_background: get_str_cap(&db, "AB"),
             set_background: get_str_cap(&db, "Sb"),
             exit_attribute_mode: get_str_cap(&db, "me"),
-            set_title: get_str_cap(&db, "ts"),
             clear_screen: get_str_cap(&db, "cl"),
             cursor_up: get_str_cap(&db, "up"),
             cursor_down: get_str_cap(&db, "do"),
@@ -108,14 +101,8 @@ impl Term {
 /// Initializes our database from $TERM.
 /// Returns a reference to the newly initialized [`Term`] singleton on success or `None` if this failed.
 ///
-/// The `configure` parameter may be set to a callback that takes an `&mut Term` reference to
-/// override any capabilities before the `Term` is permanently made immutable.
-///
 /// Any existing references from `terminal::term()` will be invalidated by this call!
-pub fn setup<F>(configure: F) -> Option<Arc<Term>>
-where
-    F: Fn(&mut Term),
-{
+pub fn setup() {
     let mut global_term = TERM.lock().expect("Mutex poisoned!");
 
     let res = terminfo::Database::from_env().or_else(|x| {
@@ -144,59 +131,12 @@ where
     // Safely store the new Term instance or replace the old one. We have the lock so it's safe to
     // drop the old TERM value and have its refcount decremented - no one will be cloning it.
     if let Ok(result) = res {
-        // Create a new `Term` instance, prepopulate the capabilities we care about, and allow the
-        // caller to override any as needed.
-        let mut term = Term::new(result);
-        (configure)(&mut term);
-
-        let term = Arc::new(term);
+        // Create a new `Term` instance, prepopulate the capabilities we care about.
+        let term = Arc::new(Term::new(result));
         *global_term = Some(term.clone());
-        Some(term)
     } else {
         *global_term = None;
-        None
     }
-}
-
-pub fn setup_fallback_term() -> Arc<Term> {
-    let mut global_term = TERM.lock().expect("Mutex poisoned!");
-    // These values extracted from xterm-256color from ncurses 6.4
-    let term = Term {
-        enter_bold_mode: Some(CString::new("\x1b[1m").unwrap()),
-        enter_italics_mode: Some(CString::new("\x1b[3m").unwrap()),
-        exit_italics_mode: Some(CString::new("\x1b[23m").unwrap()),
-        enter_dim_mode: Some(CString::new("\x1b[2m").unwrap()),
-        enter_underline_mode: Some(CString::new("\x1b[4m").unwrap()),
-        exit_underline_mode: Some(CString::new("\x1b[24m").unwrap()),
-        enter_reverse_mode: Some(CString::new("\x1b[7m").unwrap()),
-        enter_standout_mode: Some(CString::new("\x1b[7m").unwrap()),
-        set_a_foreground: Some(
-            CString::new("\x1b[%?%p1%{8}%<%t3%p1%d%e%p1%{16}%<%t9%p1%{8}%-%d%e38;5;%p1%d%;m")
-                .unwrap(),
-        ),
-        set_a_background: Some(
-            CString::new("\x1b[%?%p1%{8}%<%t4%p1%d%e%p1%{16}%<%t10%p1%{8}%-%d%e48;5;%p1%d%;m")
-                .unwrap(),
-        ),
-        exit_attribute_mode: Some(CString::new("\x1b(B\x1b[m").unwrap()),
-        clear_screen: Some(CString::new("\x1b[H\x1b[2J").unwrap()),
-        cursor_up: Some(CString::new("\x1b[A").unwrap()),
-        cursor_down: Some(CString::new("\n").unwrap()),
-        cursor_left: Some(CString::new("\x08").unwrap()),
-        cursor_right: Some(CString::new("\x1b[C").unwrap()),
-        parm_left_cursor: Some(CString::new("\x1b[%p1%dD").unwrap()),
-        parm_right_cursor: Some(CString::new("\x1b[%p1%dC").unwrap()),
-        clr_eol: Some(CString::new("\x1b[K").unwrap()),
-        clr_eos: Some(CString::new("\x1b[J").unwrap()),
-        max_colors: Some(256),
-        init_tabs: Some(8),
-        eat_newline_glitch: true,
-        auto_right_margin: true,
-        ..Default::default()
-    };
-    let term = Arc::new(term);
-    *global_term = Some(term.clone());
-    term
 }
 
 /// Return a nonempty String capability from termcap, or None if missing or empty.

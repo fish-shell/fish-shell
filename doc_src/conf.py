@@ -195,6 +195,7 @@ man_pages = [
     ("language", "fish-language", "", [author], 1),
     ("interactive", "fish-interactive", "", [author], 1),
     ("relnotes", "fish-releasenotes", "", [author], 1),
+    ("terminal-compatibility", "fish-terminal-compatibility", "", [author], 1),
     ("completions", "fish-completions", "", [author], 1),
     ("prompt", "fish-prompt-tutorial", "", [author], 1),
     (

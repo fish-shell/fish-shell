@@ -340,6 +340,14 @@ This also means that a few things are unsupportable:
 - Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
 - Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
 
+.. _faq-terminal-compatibility:
+
+fish does not work in a specific terminal
+-----------------------------------------
+
+The terminal might not meet all of :doc:`fish's requirements <terminal-compatibility>`.
+Please report this to your terminal's and to fish's issue tracker.
+
 .. _faq-uninstalling:
 
 Uninstalling fish

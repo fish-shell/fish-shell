@@ -1,21 +1,20 @@
-use crate::common::ToCString;
 use crate::complete::complete_invalidate_path;
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::flog::FLOG;
-use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
+use crate::output::use_terminfo;
 use crate::output::ColorSupport;
-use crate::proc::is_interactive_session;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
 };
-use crate::screen::screen_set_midnight_commander_hack;
-use crate::screen::LAYOUT_CACHE_SHARED;
-use crate::terminal::{self, Term};
+use crate::screen::{
+    screen_set_midnight_commander_hack, IS_DUMB, LAYOUT_CACHE_SHARED, ONLY_GRAYSCALE,
+};
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
+use crate::{function, terminal};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
@@ -305,6 +304,7 @@ fn handle_locale_change(vars: &EnvStack) {
 fn handle_term_change(vars: &EnvStack) {
     guess_emoji_width(vars);
     init_terminal(vars);
+    read_terminfo_database(vars);
     reader_schedule_prompt_repaint();
 }
 
@@ -376,121 +376,35 @@ fn run_inits(vars: &EnvStack) {
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
 fn update_fish_color_support(vars: &EnvStack) {
-    // Detect or infer term256 support. If fish_term256 is set, we respect it. Otherwise, infer it
-    // from $TERM or use terminfo.
+    let is_xterm_16color = vars
+        .get_unless_empty(L!("TERM"))
+        .is_some_and(|term| term.as_list()[0] == "xterm-16color");
 
-    let term = vars
-        .get(L!("TERM"))
-        .map(|v| v.as_string())
-        .unwrap_or_else(WString::new);
-    let max_colors = terminal::term().max_colors;
-    let mut supports_256color = false;
-    let mut supports_24bit = false;
-
-    if let Some(fish_term256) = vars.get(L!("fish_term256")).map(|v| v.as_string()) {
-        // $fish_term256
-        supports_256color = crate::wcstringutil::bool_from_string(&fish_term256);
+    let supports_256color = vars.get(L!("fish_term256")).map_or(!is_xterm_16color, |v| {
+        let ok = crate::wcstringutil::bool_from_string(&v.as_string());
         FLOG!(
             term_support,
             "256-color support determined by $fish_term256:",
-            supports_256color
+            ok
         );
-    } else if term.find(L!("256color")).is_some() {
-        // TERM contains "256color": 256 colors explicitly supported.
-        supports_256color = true;
-        FLOG!(term_support, "256-color support enabled for TERM", term);
-    } else if term.find(L!("xterm")).is_some() {
-        // Assume that all "xterm" terminals can handle 256
-        supports_256color = true;
-        FLOG!(term_support, "256-color support enabled for TERM", term);
-    }
-    // See if terminfo happens to identify 256 colors
-    else if let Some(max_colors) = max_colors {
-        supports_256color = max_colors >= 256;
-        FLOG!(
-            term_support,
-            "256-color support:",
-            max_colors,
-            "per termcap/terminfo entry for",
-            term
-        );
-    }
+        ok
+    });
 
-    if let Some(fish_term24bit) = vars.get(L!("fish_term24bit")).map(|v| v.as_string()) {
-        // $fish_term24bit
-        supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
+    let supports_24bit = !is_xterm_16color
+        && vars.get(L!("STY")).is_none() // GNU screen
+        && (!cfg!(apple) || {
+            vars.get(L!("TERM_PROGRAM"))
+                .map_or(true, |v| v.as_string() != L!("Apple_Terminal"))
+        });
+    let supports_24bit = vars.get(L!("fish_term24bit")).map_or(supports_24bit, |v| {
+        let ok = crate::wcstringutil::bool_from_string(&v.as_string());
         FLOG!(
             term_support,
             "$fish_term24bit preference: 24-bit color",
-            if supports_24bit {
-                "enabled"
-            } else {
-                "disabled"
-            }
+            if ok { "enabled" } else { "disabled" }
         );
-    } else if vars.get(L!("STY")).is_some() || term.starts_with(L!("eterm")) {
-        // Screen and emacs' ansi-term swallow true-color sequences, so we ignore them unless
-        // force-enabled.
-        supports_24bit = false;
-        FLOG!(
-            term_support,
-            "True-color support: disabled for eterm/screen"
-        );
-    } else if max_colors.unwrap_or(0) > 32767 {
-        // $TERM wins, xterm-direct reports 32767 colors and we assume that's the minimum as xterm
-        // is weird when it comes to color.
-        supports_24bit = true;
-        FLOG!(
-            term_support,
-            "True-color support: enabled per termcap/terminfo for",
-            term,
-            "with",
-            max_colors.unwrap(),
-            "colors"
-        );
-    } else if let Some(ct) = vars.get(L!("COLORTERM")).map(|v| v.as_string()) {
-        // If someone sets $COLORTERM, that's the sort of color they want.
-        if ct == "truecolor" || ct == "24bit" {
-            supports_24bit = true;
-        }
-        FLOG!(
-            term_support,
-            "True-color support",
-            if supports_24bit {
-                "enabled"
-            } else {
-                "disabled"
-            },
-            "per $COLORTERM",
-            ct
-        );
-    } else if vars.get(L!("KONSOLE_VERSION")).is_some()
-        || vars.get(L!("KONSOLE_PROFILE_NAME")).is_some()
-    {
-        // All Konsole versions that use $KONSOLE_VERSION are new enough to support this, so no
-        // check is needed.
-        supports_24bit = true;
-        FLOG!(term_support, "True-color support: enabled for Konsole");
-    } else if let Some(it) = vars.get(L!("ITERM_SESSION_ID")).map(|v| v.as_string()) {
-        // Supporting versions of iTerm include a colon here.
-        // We assume that if this is iTerm it can't also be st, so having this check inside is okay.
-        if !it.contains(':') {
-            supports_24bit = true;
-            FLOG!(term_support, "True-color support: enabled for iTerm");
-        }
-    } else if term.starts_with("st-") {
-        supports_24bit = true;
-        FLOG!(term_support, "True-color support: enabling for st");
-    } else if let Some(vte) = vars.get(L!("VTE_VERSION")).map(|v| v.as_string()) {
-        if fish_wcstoi(&vte).unwrap_or(0) > 3600 {
-            supports_24bit = true;
-            FLOG!(
-                term_support,
-                "True-color support: enabled for VTE version",
-                vte
-            );
-        }
-    }
+        ok
+    });
 
     let mut color_support = ColorSupport::default();
     color_support.set(ColorSupport::TERM_256COLOR, supports_256color);
@@ -498,49 +412,30 @@ fn update_fish_color_support(vars: &EnvStack) {
     crate::output::set_color_support(color_support);
 }
 
-/// Apply any platform- or environment-specific hacks to our terminfo [`Term`] instance.
-fn apply_term_hacks(vars: &EnvStack, term: &mut Term) {
-    if cfg!(apple) {
-        // Hack in missing italics and dim capabilities omitted from macOS xterm-256color terminfo.
-        // Improves the user experience under Terminal.app and iTerm.
-        let term_prog = vars
-            .get(L!("TERM_PROGRAM"))
-            .map(|v| v.as_string())
-            .unwrap_or(WString::new());
-        if term_prog == "Apple_Terminal" || term_prog == "iTerm.app" {
-            if let Some(term_val) = vars.get(L!("TERM")).map(|v| v.as_string()) {
-                if term_val == "xterm-256color" {
-                    const SITM_ESC: &[u8] = b"\x1B[3m";
-                    const RITM_ESC: &[u8] = b"\x1B[23m";
-                    const DIM_ESC: &[u8] = b"\x1B[2m";
+// Initialize the terminal subsystem
+fn init_terminal(vars: &EnvStack) {
+    let term = vars.get(L!("TERM"));
+    let term = term
+        .as_ref()
+        .and_then(|v| v.as_list().get(0))
+        .map(|v| v.as_utfstr())
+        .unwrap_or(L!(""));
 
-                    if term.enter_italics_mode.is_none() {
-                        term.enter_italics_mode = Some(SITM_ESC.to_cstring());
-                    }
-                    if term.exit_italics_mode.is_none() {
-                        term.exit_italics_mode = Some(RITM_ESC.to_cstring());
-                    }
-                    if term.enter_dim_mode.is_none() {
-                        term.enter_dim_mode = Some(DIM_ESC.to_cstring());
-                    }
-                }
-            }
-        }
-    }
-}
+    IS_DUMB.store(term == "dumb");
+    ONLY_GRAYSCALE.store(term == "ansi-m" || term == "linux-m" || term == "xterm-mono");
 
-/// Apply any platform- or environment-specific hacks that don't involve a `Term` instance.
-fn apply_non_term_hacks(vars: &EnvStack) {
-    // Midnight Commander tries to extract the last line of the prompt, and does so in a way that is
-    // broken if you do '\r' after it like we normally do.
-    // See https://midnight-commander.org/ticket/4258.
     if vars.get(L!("MC_SID")).is_some() {
         screen_set_midnight_commander_hack();
     }
+
+    update_fish_color_support(vars);
 }
 
-// Initialize the terminal subsystem
-fn init_terminal(vars: &EnvStack) {
+pub fn read_terminfo_database(vars: &EnvStack) {
+    if !use_terminfo() {
+        return;
+    }
+
     // The current process' environment needs to be modified because the terminfo crate will
     // read these variables
     for var_name in CURSES_VARIABLES {
@@ -556,29 +451,8 @@ fn init_terminal(vars: &EnvStack) {
         }
     }
 
-    if terminal::setup(|term| apply_term_hacks(vars, term)).is_none() {
-        if is_interactive_session() {
-            let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
-            if let Some(term) = term {
-                FLOG!(
-                    term_support,
-                    wgettext_fmt!("Could not set up terminal for $TERM '%ls'. Falling back to hardcoded xterm-256color values", term)
-                );
-            } else {
-                FLOG!(
-                    term_support,
-                    wgettext!("Could not set up terminal because $TERM is unset. Falling back to hardcoded xterm-256color values")
-                );
-            }
-        }
+    terminal::setup();
 
-        terminal::setup_fallback_term();
-    }
-
-    // Configure hacks that apply regardless of whether we successfully init
-    apply_non_term_hacks(vars);
-
-    update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.
     LAYOUT_CACHE_SHARED.lock().unwrap().clear();
 }

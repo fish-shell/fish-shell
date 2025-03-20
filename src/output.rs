@@ -1,16 +1,23 @@
 // Generic output functions.
-use crate::color::{self, RgbColor};
-use crate::common::{self, wcs2string_appending};
+use crate::color::{self, Color24, RgbColor};
+use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
 use crate::env::EnvVar;
-use crate::terminal::{tparm1, Term};
+use crate::future_feature_flags::{self, FeatureFlag};
+use crate::global_safety::RelaxedAtomicBool;
+use crate::output::TerminalCommand::{
+    EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
+    EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+};
+use crate::screen::{is_dumb, only_grayscale};
+use crate::terminal::{tparm1, Term, TERM};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
 use std::cell::{RefCell, RefMut};
-use std::ffi::CStr;
-use std::io::{Result, Write};
+use std::ffi::CString;
 use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
+use std::os::unix::ffi::OsStrExt;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 bitflags! {
@@ -24,6 +31,247 @@ bitflags! {
 /// Whether term256 and term24bit are supported.
 static COLOR_SUPPORT: AtomicU8 = AtomicU8::new(0);
 
+pub fn get_color_support() -> ColorSupport {
+    let val = COLOR_SUPPORT.load(Ordering::Relaxed);
+    ColorSupport::from_bits_truncate(val)
+}
+
+pub fn set_color_support(val: ColorSupport) {
+    COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
+}
+
+#[derive(Clone)]
+pub(crate) enum TerminalCommand<'a> {
+    // Text attributes
+    ExitAttributeMode,
+    EnterBoldMode,
+    EnterDimMode,
+    EnterItalicsMode,
+    EnterUnderlineMode,
+    EnterReverseMode,
+    EnterStandoutMode,
+    ExitItalicsMode,
+    ExitUnderlineMode,
+
+    // Screen clearing
+    ClearScreen,
+    ClearToEndOfLine,
+    ClearToEndOfScreen,
+
+    // Colors
+    PaletteColor(bool, u8),
+    RgbColor(bool, u8, u8, u8),
+
+    // Cursor Movement
+    CursorUp,
+    CursorDown,
+    CursorLeft,
+    CursorRight,
+    CursorMove(CardinalDirection, usize),
+
+    // Commands related to querying (used for backwards-incompatible features).
+    QueryPrimaryDeviceAttribute,
+    QueryXtversion,
+    QueryXtgettcap(&'static str),
+
+    DecsetAlternateScreenBuffer,
+    DecrstAlternateScreenBuffer,
+    DecsetSynchronizedUpdate,
+    DecrstSynchronizedUpdate,
+
+    QuerySynchronizedOutput,
+
+    // Keyboard protocols
+    KittyKeyboardProgressiveEnhancementsEnable,
+    KittyKeyboardProgressiveEnhancementsDisable,
+    QueryKittyKeyboardProgressiveEnhancements,
+
+    ModifyOtherKeysEnable,
+    ModifyOtherKeysDisable,
+
+    ApplicationKeypadModeEnable,
+    ApplicationKeypadModeDisable,
+
+    // OSC sequences
+    //
+    // Note that OSC 7 and OSC 52 are written from fish script, and OSC 8 is written in our
+    // man pages (via "man_show_urls").
+    Osc0WindowTitle(&'a [WString]),
+    Osc133CommandStart(&'a wstr),
+    Osc133PromptStart,
+    Osc133CommandFinished(libc::c_int),
+
+    // Other terminal features
+    QueryCursorPosition,
+    ScrollForward(usize),
+
+    DecsetShowCursor,
+    DecrstMouseTracking,
+    DecsetFocusReporting,
+    DecrstFocusReporting,
+    DecsetBracketedPaste,
+    DecrstBracketedPaste,
+}
+
+pub(crate) trait Output {
+    fn write_bytes(&mut self, buf: &[u8]);
+
+    fn by_ref(&mut self) -> &mut Self
+    where
+        Self: Sized,
+    {
+        self
+    }
+
+    fn write_command(&mut self, cmd: TerminalCommand<'_>) -> bool
+    where
+        Self: Sized,
+    {
+        use TerminalCommand::*;
+        if is_dumb() {
+            assert!(!matches!(cmd, CursorDown));
+            return false;
+        }
+        let ti = maybe_terminfo;
+        fn write(out: &mut impl Output, sequence: &'static [u8]) -> bool {
+            out.write_bytes(sequence);
+            true
+        }
+        match cmd {
+            ExitAttributeMode => ti(self, b"\x1b[m", |t| &t.exit_attribute_mode),
+            EnterBoldMode => ti(self, b"\x1b[1m", |t| &t.enter_bold_mode),
+            EnterDimMode => ti(self, b"\x1b[2m", |t| &t.enter_dim_mode),
+            EnterItalicsMode => ti(self, b"\x1b[3m", |t| &t.enter_italics_mode),
+            EnterUnderlineMode => ti(self, b"\x1b[4m", |t| &t.enter_underline_mode),
+            EnterReverseMode => ti(self, b"\x1b[7m", |t| &t.enter_reverse_mode),
+            EnterStandoutMode => ti(self, b"\x1b[23m", |t| &t.enter_standout_mode),
+            ExitItalicsMode => ti(self, b"\x1b[24m", |t| &t.exit_italics_mode),
+            ExitUnderlineMode => ti(self, b"\x1b[m", |t| &t.exit_underline_mode),
+            ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
+            ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
+            ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
+            PaletteColor(is_foreground, idx) => palette_color(self, is_foreground, idx),
+            RgbColor(is_foreground, r, g, b) => rgb_color(self, is_foreground, r, g, b),
+            CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
+            CursorDown => ti(self, b"\n", |term| &term.cursor_down),
+            CursorLeft => ti(self, b"\x08", |term| &term.cursor_left),
+            CursorRight => ti(self, b"\x1b[C", |term| &term.cursor_right),
+            CursorMove(direction, steps) => cursor_move(self, direction, steps),
+            QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
+            QueryXtversion => write(self, b"\x1b[>0q"),
+            QueryXtgettcap(cap) => query_xtgettcap(self, cap),
+            DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
+            DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
+            DecsetSynchronizedUpdate => write(self, b"\x1b[?2026h"),
+            DecrstSynchronizedUpdate => write(self, b"\x1b[?2026l"),
+            QuerySynchronizedOutput => write(self, b"\x1b[?2026$p"),
+            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
+            KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
+            QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
+            ModifyOtherKeysEnable => write(self, b"\x1b[>4;1m"),
+            ModifyOtherKeysDisable => write(self, b"\x1b[>4;0m"),
+            ApplicationKeypadModeEnable => write(self, b"\x1b="),
+            ApplicationKeypadModeDisable => write(self, b"\x1b>"),
+            Osc0WindowTitle(title) => osc_0_window_title(self, title),
+            Osc133PromptStart => write(self, OSC_133_PROMPT_START),
+            Osc133CommandStart(command) => osc_133_command_start(self, command),
+            Osc133CommandFinished(s) => osc_133_command_finished(self, s),
+            QueryCursorPosition => write(self, b"\x1b[6n"),
+            ScrollForward(lines) => scroll_forward(self, lines),
+            DecsetShowCursor => write(self, b"\x1b[?25h"),
+            DecrstMouseTracking => write(self, b"\x1b[?1000l"),
+            DecsetFocusReporting => write(self, b"\x1b[?1004h"),
+            DecrstFocusReporting => write(self, b"\x1b[?1004l"),
+            DecsetBracketedPaste => write(self, b"\x1b[?2004h"),
+            DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
+        }
+    }
+}
+
+impl Output for Vec<u8> {
+    fn write_bytes(&mut self, buf: &[u8]) {
+        self.extend_from_slice(buf);
+    }
+}
+
+fn maybe_terminfo(
+    out: &mut impl Output,
+    sequence: &'static [u8],
+    terminfo: fn(&Term) -> &Option<CString>,
+) -> bool {
+    if use_terminfo() {
+        let term = crate::terminal::term();
+        let Some(sequence) = (terminfo)(&term) else {
+            return false;
+        };
+        out.write_bytes(sequence.to_bytes());
+    } else {
+        out.write_bytes(sequence);
+    }
+    true
+}
+
+#[repr(u8)]
+pub(crate) enum Capability {
+    Unknown,
+    Supported,
+    NotSupported,
+}
+
+pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+
+pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
+
+pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+pub(crate) fn use_terminfo() -> bool {
+    !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
+}
+
+fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
+    if only_grayscale()
+        && !(RgbColor {
+            typ: color::Type::Named { idx },
+            flags: color::Flags::DEFAULT,
+        })
+        .is_grayscale()
+    {
+        return false;
+    }
+    if use_terminfo() {
+        let term = crate::terminal::term();
+        let Some(command) = (if foreground {
+            term.set_a_foreground
+                .as_ref()
+                .or(term.set_foreground.as_ref())
+        } else {
+            term.set_a_background
+                .as_ref()
+                .or(term.set_background.as_ref())
+        }) else {
+            return false;
+        };
+        if term_supports_color_natively(&term, idx) {
+            let Some(sequence) = tparm1(command, idx.into()) else {
+                return false;
+            };
+            out.write_bytes(sequence.as_bytes());
+            return true;
+        }
+        if term.max_colors == Some(8) && idx > 8 {
+            idx -= 8;
+        }
+    }
+    let bg = if foreground { 0 } else { 10 };
+    match idx {
+        0..=7 => write_to_output!(out, "\x1b[{}m", 30 + bg + idx),
+        8..=15 => write_to_output!(out, "\x1b[{}m", 90 + bg + (idx - 8)),
+        _ => write_to_output!(out, "\x1b[{};5;{}m", 38 + bg, idx),
+    };
+    true
+}
+
 /// Returns true if we think tparm can handle outputting a color index.
 fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     #[allow(clippy::int_plus_one)]
@@ -34,23 +282,116 @@ fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     }
 }
 
-pub fn get_color_support() -> ColorSupport {
-    let val = COLOR_SUPPORT.load(Ordering::Relaxed);
-    ColorSupport::from_bits_truncate(val)
+fn rgb_color(out: &mut impl Output, foreground: bool, r: u8, g: u8, b: u8) -> bool {
+    // Foreground: ^[38;2;<r>;<g>;<b>m
+    // Background: ^[48;2;<r>;<g>;<b>m
+    write_to_output!(
+        out,
+        "\x1b[{};2;{};{};{}m",
+        if foreground { 38 } else { 48 },
+        r,
+        g,
+        b
+    );
+    true
 }
 
-pub fn set_color_support(val: ColorSupport) {
-    COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
+#[derive(Clone)]
+pub(crate) enum CardinalDirection {
+    Up,
+    Left,
+    Right,
 }
 
-pub(crate) trait Output {
-    fn write_bytes(&mut self, buf: &[u8]);
-}
-
-impl Output for Vec<u8> {
-    fn write_bytes(&mut self, buf: &[u8]) {
-        self.extend_from_slice(buf);
+fn cursor_move(out: &mut impl Output, direction: CardinalDirection, steps: usize) -> bool {
+    if use_terminfo() {
+        let term = crate::terminal::term();
+        if let Some(command) = match direction {
+            CardinalDirection::Up => None, // Historical
+            CardinalDirection::Left => term.parm_left_cursor.as_ref(),
+            CardinalDirection::Right => term.parm_right_cursor.as_ref(),
+        } {
+            if let Some(sequence) = tparm1(command, i32::try_from(steps).unwrap()) {
+                out.write_bytes(sequence.as_bytes());
+                return true;
+            }
+        } else if let Some(command) = match direction {
+            CardinalDirection::Up => term.cursor_up.as_ref(),
+            CardinalDirection::Left => term.cursor_left.as_ref(),
+            CardinalDirection::Right => term.cursor_right.as_ref(),
+        } {
+            for _i in 0..steps {
+                out.write_bytes(command.as_bytes());
+            }
+            return true;
+        }
+        return false;
     }
+    write_to_output!(
+        out,
+        "\x1b[{steps}{}",
+        match direction {
+            CardinalDirection::Up => 'A',
+            CardinalDirection::Left => 'D',
+            CardinalDirection::Right => 'C',
+        }
+    );
+    true
+}
+
+fn query_xtgettcap(out: &mut impl Output, cap: &str) -> bool {
+    write_to_output!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
+    true
+}
+
+struct DisplayAsHex<'a>(&'a str);
+
+impl<'a> std::fmt::Display for DisplayAsHex<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for byte in self.0.bytes() {
+            write!(f, "{:x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
+fn query_kitty_progressive_enhancements(out: &mut impl Output) -> bool {
+    if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
+        return false;
+    }
+    out.write_bytes(b"\x1b[?u");
+    true
+}
+
+fn osc_0_window_title(out: &mut impl Output, title: &[WString]) -> bool {
+    out.write_bytes(b"\x1b]0;");
+    for title_line in title {
+        out.write_bytes(&wcs2string(title_line));
+    }
+    out.write_bytes(b"\x07"); // BEL
+    true
+}
+
+const OSC_133_PROMPT_START: &[u8] = b"\x1b]133;A;click_events=1\x07";
+
+fn osc_133_command_start(out: &mut impl Output, command: &wstr) -> bool {
+    write_to_output!(
+        out,
+        "\x1b]133;C;cmdline_url={}\x07",
+        escape_string(command, EscapeStringStyle::Url),
+    );
+    true
+}
+
+fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> bool {
+    write_to_output!(out, "\x1b]133;D;{}\x07", exit_status);
+    true
+}
+
+fn scroll_forward(out: &mut impl Output, lines: usize) -> bool {
+    assert!(SCROLL_FORWARD_SUPPORTED.load());
+    write_to_output!(out, "\x1b[{}S", lines);
+    true
 }
 
 fn index_for_color(c: RgbColor) -> u8 {
@@ -60,55 +401,12 @@ fn index_for_color(c: RgbColor) -> u8 {
     c.to_term256_index()
 }
 
-fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
-    if term_supports_color_natively(term, idx) {
-        // Use tparm to emit color escape.
-        outp.tputs_if_some(&tparm1(todo, idx.into()));
-    } else {
-        // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        if idx < 16 {
-            // this allows the non-bright color to happen instead of no color working at all when a
-            // bright is attempted when only colors 0-7 are supported.
-            //
-            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
-            // with what we do here, will make the brights actually work for virtual consoles/ancient
-            // emulators.
-            if term.max_colors == Some(8) && idx > 8 {
-                idx -= 8;
-            }
-            write_to_output!(
-                outp,
-                "\x1B[{}m",
-                (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
-            );
-        } else {
-            write_to_output!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx);
-        }
-    }
+fn write_foreground_color(outp: &mut Outputter, idx: u8) -> bool {
+    outp.write_command(TerminalCommand::PaletteColor(true, idx))
 }
 
-fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = &term.set_a_foreground {
-        write_color_escape(outp, term, cap, idx, true);
-        true
-    } else if let Some(cap) = &term.set_foreground {
-        write_color_escape(outp, term, cap, idx, true);
-        true
-    } else {
-        false
-    }
-}
-
-fn write_background_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = &term.set_a_background {
-        write_color_escape(outp, term, cap, idx, false);
-        true
-    } else if let Some(cap) = &term.set_background {
-        write_color_escape(outp, term, cap, idx, false);
-        true
-    } else {
-        false
-    }
+fn write_background_color(outp: &mut Outputter, idx: u8) -> bool {
+    outp.write_command(TerminalCommand::PaletteColor(false, idx))
 }
 
 pub struct Outputter {
@@ -174,70 +472,44 @@ impl Outputter {
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
     pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
-        let term = crate::terminal::term();
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);
             if is_fg {
-                return write_foreground_color(self, idx, &term);
+                return write_foreground_color(self, idx);
             } else {
-                return write_background_color(self, idx, &term);
+                return write_background_color(self, idx);
             };
         }
 
-        // 24 bit! No tparm here, just ANSI escape sequences.
-        // Foreground: ^[38;2;<r>;<g>;<b>m
-        // Background: ^[48;2;<r>;<g>;<b>m
-        let rgb = color.to_color24();
-        write_to_output!(
-            self,
-            "\x1B[{};2;{};{};{}m",
-            if is_fg { 38 } else { 48 },
-            rgb.r,
-            rgb.g,
-            rgb.b
-        );
-        true
+        if only_grayscale() && color.is_grayscale() {
+            return false;
+        }
+
+        // 24 bit!
+        let Color24 { r, g, b } = color.to_color24();
+        self.write_command(TerminalCommand::RgbColor(is_fg, r, g, b))
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
     /// as the previous, nothing will be written. Negative values for set_color will also be ignored.
-    /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
+    /// Since the command this function emits can potentially cause the screen to flicker, the
     /// function takes care to write as little as possible.
     ///
     /// Possible values for colors are RgbColor colors or special values like RgbColor::NORMAL
     ///
-    /// In order to set the color to normal, three terminfo strings may have to be written.
+    /// In order to set the color to normal, three commands may have to be written.
     ///
-    /// - First a string to set the color, such as set_a_foreground. This is needed because otherwise
+    /// - First a command to set the color, such as set_a_foreground. This is needed because otherwise
     /// the previous strings colors might be removed as well.
     ///
-    /// - After that we write the exit_attribute_mode string to reset all color attributes.
+    /// - After that we write the exit_attribute_mode command to reset all color attributes.
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
     #[allow(clippy::if_same_then_else)]
     pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
-        // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
-        // just give up...
-        let term = crate::terminal::term();
-        let Term {
-            enter_bold_mode,
-            enter_underline_mode,
-            exit_underline_mode,
-            enter_italics_mode,
-            exit_italics_mode,
-            enter_dim_mode,
-            enter_reverse_mode,
-            enter_standout_mode,
-            exit_attribute_mode,
-            ..
-        } = &*term;
-        let Some(exit_attribute_mode) = exit_attribute_mode else {
-            return;
-        };
-
         const normal: RgbColor = RgbColor::NORMAL;
         let mut bg_set = false;
         let mut last_bg_set = false;
@@ -256,8 +528,8 @@ impl Outputter {
             self.reset_modes();
             // If we exit attribute mode, we must first set a color, or previously colored text might
             // lose its color. Terminals are weird...
-            write_foreground_color(self, 0, &term);
-            self.tputs(exit_attribute_mode);
+            write_foreground_color(self, 0);
+            self.write_command(ExitAttributeMode);
             return;
         }
         if (self.was_bold && !is_bold)
@@ -265,7 +537,7 @@ impl Outputter {
             || (self.was_reverse && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            self.tputs(exit_attribute_mode);
+            self.write_command(ExitAttributeMode);
             self.last_color = normal;
             self.last_color2 = normal;
             self.reset_modes();
@@ -288,27 +560,25 @@ impl Outputter {
             }
         }
 
-        if let Some(enter_bold_mode) = &enter_bold_mode {
-            if bg_set && !last_bg_set {
-                // Background color changed and is set, so we enter bold mode to make reading easier.
-                // This means bold mode is _always_ on when the background color is set.
-                self.tputs(enter_bold_mode);
-            }
-            if !bg_set && last_bg_set {
-                // Background color changed and is no longer set, so we exit bold mode.
-                self.tputs(exit_attribute_mode);
-                self.reset_modes();
-                // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-                if write_foreground_color(self, 0, &term) {
-                    self.last_color = RgbColor::BLACK;
-                }
+        if bg_set && !last_bg_set {
+            // Background color changed and is set, so we enter bold mode to make reading easier.
+            // This means bold mode is _always_ on when the background color is set.
+            self.write_command(EnterBoldMode);
+        }
+        if !bg_set && last_bg_set {
+            // Background color changed and is no longer set, so we exit bold mode.
+            self.write_command(ExitAttributeMode);
+            self.reset_modes();
+            // We don't know if exit_attribute_mode resets colors, so we set it to something known.
+            if write_foreground_color(self, 0) {
+                self.last_color = RgbColor::BLACK;
             }
         }
 
         if self.last_color != fg {
             if fg.is_normal() {
-                write_foreground_color(self, 0, &term);
-                self.tputs(exit_attribute_mode);
+                write_foreground_color(self, 0);
+                self.write_command(ExitAttributeMode);
 
                 self.last_color2 = RgbColor::NORMAL;
                 self.reset_modes();
@@ -320,9 +590,9 @@ impl Outputter {
 
         if self.last_color2 != bg {
             if bg.is_normal() {
-                write_background_color(self, 0, &term);
+                write_background_color(self, 0);
 
-                self.tputs(exit_attribute_mode);
+                self.write_command(ExitAttributeMode);
                 if !self.last_color.is_normal() {
                     self.write_color(self.last_color, true /* foreground */);
                 }
@@ -335,32 +605,29 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.was_bold && !bg_set && self.tputs_if_some(enter_bold_mode) {
+        if is_bold && !self.was_bold && !bg_set && self.write_command(EnterBoldMode) {
             self.was_bold = is_bold;
         }
 
-        if !self.was_underline && is_underline && self.tputs_if_some(enter_underline_mode) {
+        if !self.was_underline && is_underline && self.write_command(EnterUnderlineMode) {
             self.was_underline = is_underline;
-        } else if self.was_underline && !is_underline && self.tputs_if_some(exit_underline_mode) {
+        } else if self.was_underline && !is_underline && self.write_command(ExitUnderlineMode) {
             self.was_underline = is_underline;
         }
 
-        if self.was_italics && !is_italics && self.tputs_if_some(exit_italics_mode) {
+        if self.was_italics && !is_italics && self.write_command(ExitItalicsMode) {
             self.was_italics = is_italics;
-        } else if !self.was_italics && is_italics && self.tputs_if_some(enter_italics_mode) {
+        } else if !self.was_italics && is_italics && self.write_command(EnterItalicsMode) {
             self.was_italics = is_italics;
         }
 
-        if is_dim && !self.was_dim && self.tputs_if_some(enter_dim_mode) {
+        if is_dim && !self.was_dim && self.write_command(EnterDimMode) {
             self.was_dim = is_dim;
         }
-        // N.B. there is no exit_dim_mode in terminfo, it's handled by exit_attribute_mode above.
+        // N.B. there is no exit_dim_mode, it's handled by exit_attribute_mode above.
 
         if is_reverse && !self.was_reverse {
-            // Some terms do not have a reverse mode set, so standout mode is a fallback.
-            if self.tputs_if_some(enter_reverse_mode) {
-                self.was_reverse = is_reverse;
-            } else if self.tputs_if_some(enter_standout_mode) {
+            if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
                 self.was_reverse = is_reverse;
             }
         }
@@ -411,21 +678,6 @@ impl Outputter {
     }
 }
 
-/// Outputter implements Write, so it may be used as the receiver of the write! macro.
-/// Only ASCII data should be written this way: do NOT assume that the receiver is UTF-8.
-impl Write for Outputter {
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.contents.extend_from_slice(buf);
-        self.maybe_flush();
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> Result<()> {
-        self.flush_to(self.fd);
-        Ok(())
-    }
-}
-
 impl Output for Outputter {
     fn write_bytes(&mut self, buf: &[u8]) {
         self.contents.extend_from_slice(buf);
@@ -434,29 +686,6 @@ impl Output for Outputter {
 }
 
 impl Outputter {
-    /// Emit a terminfo string, like tputs.
-    /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
-    pub fn tputs(&mut self, str: &CStr) {
-        self.tputs_bytes(str.to_bytes());
-    }
-
-    pub fn tputs_bytes(&mut self, str: &[u8]) {
-        self.begin_buffering();
-        let _ = self.write_all(str);
-        self.end_buffering();
-    }
-
-    /// Convenience cover over tputs, in recognition of the fact that our Term has Optional fields.
-    /// If `str` is Some, write it with tputs and return true. Otherwise, return false.
-    pub fn tputs_if_some(&mut self, str: &Option<impl AsRef<CStr>>) -> bool {
-        if let Some(str) = str {
-            self.tputs(str.as_ref());
-            true
-        } else {
-            false
-        }
-    }
-
     /// Access the outputter for stdout.
     /// This should only be used from the main thread.
     pub fn stdoutput() -> &'static RefCell<Outputter> {

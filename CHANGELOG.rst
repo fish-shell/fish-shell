@@ -10,6 +10,7 @@ Deprecations and removed features
 ---------------------------------
 - Tokens like ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
+- fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
 
 Scripting improvements
 ----------------------
@@ -19,7 +20,7 @@ Interactive improvements
 - Autosuggestions are now also provided in multi-line command lines. Like `ctrl-r`, autosuggestions operate only on the current line.
 - Autosuggestions used to not suggest multi-line commandlines from history; now autosuggestions include individual lines from multi-line command lines.
 - The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
-- Left mouse click now can select pager items.
+- Left mouse click (as requested by `click_events <terminal-compatibility.html#click-events>`__) can now select pager items.
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any ``$`` prefix.
 
@@ -31,8 +32,8 @@ New or improved bindings
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
-  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities,
-  and on the terminal supporting Synchronized Output (which is used by fish to detect features).
+  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` terminfo capability,
+  and on the terminal supporting Synchronized Output (which is currently used by fish to detect features).
   If any is missing, the binding falls back to ``clear-screen``.
 - Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
   If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
@@ -42,6 +43,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists required and optional terminal control sequences used by fish.
 
 Other improvements
 ------------------

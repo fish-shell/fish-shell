@@ -38,7 +38,7 @@ The following options are available:
     Displays the current :program:`fish` version and then exits.
 
 **--ansi**
-    Colorizes the output using ANSI escape sequences, appropriate for the current :envvar:`TERM`, using the colors defined in the environment (such as :envvar:`fish_color_command`).
+    Colorizes the output using ANSI escape sequences using the colors defined in the environment (such as :envvar:`fish_color_command`).
 
 **--html**
     Outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as ``fish_color_command``.

@@ -27,6 +27,9 @@ pub enum FeatureFlag {
 
     /// Remove `test`'s one and zero arg mode (make `test -n` return false etc)
     test_require_arg,
+
+    /// Do not look up $TERM in terminfo database.
+    ignore_terminfo,
 }
 
 struct Features {
@@ -107,6 +110,14 @@ pub const METADATA: &[FeatureMetadata] = &[
         default_value: false,
         read_only: false,
     },
+    FeatureMetadata {
+        flag: FeatureFlag::ignore_terminfo,
+        name: L!("ignore-terminfo"),
+        groups: L!("4.1"),
+        description: L!("do not look up $TERM in terminfo database"),
+        default_value: true,
+        read_only: false,
+    },
 ];
 
 thread_local!(
@@ -168,6 +179,7 @@ impl Features {
                 AtomicBool::new(METADATA[3].default_value),
                 AtomicBool::new(METADATA[4].default_value),
                 AtomicBool::new(METADATA[5].default_value),
+                AtomicBool::new(METADATA[6].default_value),
             ],
         }
     }

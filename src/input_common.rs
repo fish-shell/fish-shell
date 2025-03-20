@@ -1,8 +1,6 @@
-use libc::STDOUT_FILENO;
-
 use crate::common::{
     fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked, shell_modes,
-    str2wcstring, write_loop, ScopeGuard, WSL,
+    str2wcstring, ScopeGuard, WSL,
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
@@ -12,6 +10,16 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
     function_key, shift, Key, Modifiers, ViewportPosition,
+};
+use crate::output::TerminalCommand::{
+    ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
+    DecrstFocusReporting, DecsetBracketedPaste, DecsetFocusReporting,
+    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
+    ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+};
+use crate::output::{
+    Capability, Output, Outputter, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED,
+    SCROLL_FORWARD_TERMINFO_CODE, SYNCHRONIZED_OUTPUT_SUPPORTED,
 };
 use crate::reader::{reader_current_data, reader_test_and_clear_interrupted};
 use crate::threads::{iothread_port, is_main_thread};
@@ -24,7 +32,7 @@ use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
@@ -579,26 +587,6 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
 static TERMINAL_PROTOCOLS: AtomicBool = AtomicBool::new(false);
 static BRACKETED_PASTE: AtomicBool = AtomicBool::new(false);
 
-pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static CURSOR_UP_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-#[repr(u8)]
-pub(crate) enum Capability {
-    Unknown,
-    Supported,
-    NotSupported,
-}
-pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
-
-pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
-    if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
-        return b"";
-    }
-    b"\x1b[?u"
-}
-
 static IS_TMUX: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) static IN_MIDNIGHT_COMMANDER: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -649,11 +637,12 @@ pub fn terminal_protocols_enable_ifn() {
             reader_current_data().map(|data| data.save_screen_state());
         }
     });
+    let mut out = Outputter::stdoutput().borrow_mut();
     if !BRACKETED_PASTE.load(Ordering::Relaxed) {
         BRACKETED_PASTE.store(true, Ordering::Release);
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004h");
+        out.write_command(DecsetBracketedPaste);
         if IS_TMUX.load() {
-            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004h".as_bytes()); // focus reporting
+            out.write_command(DecsetFocusReporting);
         }
         did_write.store(true);
     }
@@ -667,10 +656,10 @@ pub fn terminal_protocols_enable_ifn() {
     TERMINAL_PROTOCOLS.store(true, Ordering::Release);
     FLOG!(term_protocols, "Enabling extended keys");
     if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;1m"); // XTerm's modifyOtherKeys
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b="); // set application keypad mode, so the keypad keys send unique codes
+        out.write_command(ModifyOtherKeysEnable); // XTerm's modifyOtherKeys
+        out.write_command(ApplicationKeypadModeEnable); // set application keypad mode, so the keypad keys send unique codes
     } else {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=5u"); // kitty progressive enhancements
+        out.write_command(KittyKeyboardProgressiveEnhancementsEnable);
     }
     did_write.store(true);
 }
@@ -684,10 +673,11 @@ pub(crate) fn terminal_protocols_disable_ifn() {
             }
         })
     });
+    let mut out = Outputter::stdoutput().borrow_mut();
     if BRACKETED_PASTE.load(Ordering::Acquire) {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[?2004l");
+        out.write_command(DecrstBracketedPaste);
         if IS_TMUX.load() {
-            let _ = write_loop(&STDOUT_FILENO, "\x1b[?1004l".as_bytes());
+            out.write_command(DecrstFocusReporting);
         }
         BRACKETED_PASTE.store(false, Ordering::Release);
         did_write.store(true);
@@ -699,10 +689,10 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     let kitty_keyboard_supported = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Acquire);
     assert_ne!(kitty_keyboard_supported, Capability::Unknown as _);
     if kitty_keyboard_supported == Capability::NotSupported as _ || ITERM_NO_KITTY_KEYBOARD.load() {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[>4;0m"); // XTerm's modifyOtherKeys
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b>"); // application keypad mode
+        out.write_command(ModifyOtherKeysDisable);
+        out.write_command(ApplicationKeypadModeDisable);
     } else {
-        let _ = write_loop(&STDOUT_FILENO, b"\x1b[=0u"); // kitty progressive enhancements
+        out.write_command(KittyKeyboardProgressiveEnhancementsDisable);
     }
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);
     did_write.store(true);
@@ -1401,13 +1391,9 @@ pub trait InputEventQueuer {
         // fish recognizes but does not actually support mouse reporting. We never turn it on, and
         // it's only ever enabled if a program we spawned enabled it and crashed or forgot to turn
         // it off before exiting. We turn it off here to avoid wasting resources.
-        //
-        // Since this is only called when we detect an incoming mouse reporting payload, we know the
-        // terminal emulator supports mouse reporting, so no terminfo checks.
         FLOG!(reader, "Disabling mouse tracking");
 
         // We shouldn't directly manipulate stdout from here, so we ask the reader to do it.
-        // writembs(outputter_t::stdoutput(), "\x1B[?1000l");
         self.push_front(CharEvent::Implicit(ImplicitEvent::DisableMouseTracking));
     }
 
@@ -1534,13 +1520,9 @@ pub trait InputEventQueuer {
                 str2wcstring(&value)
             )
         );
-        if key == b"indn" {
+        if key == SCROLL_FORWARD_TERMINFO_CODE.as_bytes() {
             SCROLL_FORWARD_SUPPORTED.store(true);
             FLOG!(reader, "Scroll forward is supported");
-        }
-        if key == b"cuu" {
-            CURSOR_UP_SUPPORTED.store(true);
-            FLOG!(reader, "Cursor up is supported");
         }
         return None;
     }

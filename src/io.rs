@@ -6,6 +6,7 @@ use crate::fds::{
 };
 use crate::flog::{should_flog, FLOG, FLOGF};
 use crate::nix::isatty;
+use crate::output::Output;
 use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
@@ -738,6 +739,13 @@ impl OutputStream {
             }
         }
         true
+    }
+}
+
+impl Output for OutputStream {
+    fn write_bytes(&mut self, command_part: &[u8]) {
+        // TODO Retry on interrupt.
+        self.append(str2wcstring(command_part));
     }
 }
 

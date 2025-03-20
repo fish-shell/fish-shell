@@ -1,6 +1,7 @@
 use crate::common::ScopeGuard;
 use crate::env::EnvMode;
 use crate::future_feature_flags::{self, FeatureFlag};
+use crate::highlight::HighlightColorResolver;
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::{
@@ -656,6 +657,60 @@ fn test_highlighting() {
         (">", fg(HighlightRole::error)),
         ("echo", fg(HighlightRole::error)),
     );
+}
+
+/// Tests that trailing spaces after a command don't inherit the underline formatting of the
+/// command.
+#[test]
+#[serial]
+fn test_trailing_spaces_after_command() {
+    let _cleanup = test_init();
+    let parser = TestParser::new();
+    let vars = parser.vars();
+
+    // First, set up fish_color_command to include underline
+    vars.set_one(
+        L!("fish_color_command"),
+        EnvMode::LOCAL,
+        L!("--underline").to_owned(),
+    );
+
+    // Prepare a command with trailing spaces for highlighting
+    let text = L!("echo   ").to_owned(); // Command 'echo' followed by 3 spaces
+    let mut colors = vec![];
+    highlight_shell(
+        &text,
+        &mut colors,
+        &OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
+        true, /* io_ok */
+        Some(text.len()),
+    );
+
+    // Verify we have the right number of colors
+    assert_eq!(colors.len(), text.len());
+
+    // Create a resolver to check actual RGB colors with their attributes
+    let mut resolver = HighlightColorResolver::new();
+
+    // Check that 'echo' is underlined
+    for i in 0..4 {
+        let rgb = resolver.resolve_spec(&colors[i], false, vars);
+        assert!(
+            rgb.is_underline(),
+            "Character at position {} of 'echo' should be underlined",
+            i
+        );
+    }
+
+    // Check that trailing spaces are NOT underlined
+    for i in 4..text.len() {
+        let rgb = resolver.resolve_spec(&colors[i], false, vars);
+        assert!(
+            !rgb.is_underline(),
+            "Trailing space at position {} should NOT be underlined",
+            i
+        );
+    }
 }
 
 pub use super::file_tester::{FileTester, IsErr, IsFile};

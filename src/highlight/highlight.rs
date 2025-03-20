@@ -760,11 +760,10 @@ impl<'s> Highlighter<'s> {
         let source_range = node.source_range();
         let cmd_str = self.get_source(source_range);
 
-        let arg_start = source_range.start();
         color_string_internal(
             cmd_str,
             HighlightSpec::with_fg(HighlightRole::command),
-            &mut self.color_array[arg_start..],
+            &mut self.color_array[source_range.as_usize()],
         );
     }
     // Color a node as if it were an argument.
@@ -780,13 +779,13 @@ impl<'s> Highlighter<'s> {
             color_string_internal(
                 arg_str,
                 HighlightSpec::with_fg(HighlightRole::option),
-                &mut self.color_array[arg_start..],
+                &mut self.color_array[source_range.as_usize()],
             );
         } else {
             color_string_internal(
                 arg_str,
                 HighlightSpec::with_fg(HighlightRole::param),
-                &mut self.color_array[arg_start..],
+                &mut self.color_array[source_range.as_usize()],
             );
         }
 

@@ -81,7 +81,6 @@ pub enum ParseTokenType {
     comment,
 }
 
-#[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ParseKeyword {
     // 'None' is not a keyword, it is a sentinel indicating nothing.
@@ -263,25 +262,27 @@ impl fish_printf::ToArg<'static> for ParseKeyword {
 
 impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
-        match s {
-            _ if s == "!" => ParseKeyword::Exclam,
-            _ if s == "and" => ParseKeyword::And,
-            _ if s == "begin" => ParseKeyword::Begin,
-            _ if s == "builtin" => ParseKeyword::Builtin,
-            _ if s == "case" => ParseKeyword::Case,
-            _ if s == "command" => ParseKeyword::Command,
-            _ if s == "else" => ParseKeyword::Else,
-            _ if s == "end" => ParseKeyword::End,
-            _ if s == "exec" => ParseKeyword::Exec,
-            _ if s == "for" => ParseKeyword::For,
-            _ if s == "function" => ParseKeyword::Function,
-            _ if s == "if" => ParseKeyword::If,
-            _ if s == "in" => ParseKeyword::In,
-            _ if s == "not" => ParseKeyword::Not,
-            _ if s == "or" => ParseKeyword::Or,
-            _ if s == "switch" => ParseKeyword::Switch,
-            _ if s == "time" => ParseKeyword::Time,
-            _ if s == "while" => ParseKeyword::While,
+        // Note this is called in hot loops.
+        let c0 = s.as_char_slice().get(0).copied().unwrap_or('\0');
+        match c0 {
+            '!' if s == L!("!") => ParseKeyword::Exclam,
+            'a' if s == L!("and") => ParseKeyword::And,
+            'b' if s == L!("begin") => ParseKeyword::Begin,
+            'b' if s == L!("builtin") => ParseKeyword::Builtin,
+            'c' if s == L!("case") => ParseKeyword::Case,
+            'c' if s == L!("command") => ParseKeyword::Command,
+            'e' if s == L!("else") => ParseKeyword::Else,
+            'e' if s == L!("end") => ParseKeyword::End,
+            'e' if s == L!("exec") => ParseKeyword::Exec,
+            'f' if s == L!("for") => ParseKeyword::For,
+            'f' if s == L!("function") => ParseKeyword::Function,
+            'i' if s == L!("if") => ParseKeyword::If,
+            'i' if s == L!("in") => ParseKeyword::In,
+            'n' if s == L!("not") => ParseKeyword::Not,
+            'o' if s == L!("or") => ParseKeyword::Or,
+            's' if s == L!("switch") => ParseKeyword::Switch,
+            't' if s == L!("time") => ParseKeyword::Time,
+            'w' if s == L!("while") => ParseKeyword::While,
             _ => ParseKeyword::None,
         }
     }

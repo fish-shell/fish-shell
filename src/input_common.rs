@@ -592,9 +592,6 @@ pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability:
 
 pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
-pub(crate) static CURSOR_POSITION_REPORTING_SUPPORTED: RelaxedAtomicBool =
-    RelaxedAtomicBool::new(false);
-
 pub fn kitty_progressive_enhancements_query() -> &'static [u8] {
     if std::env::var_os("TERM").is_some_and(|term| term.as_os_str().as_bytes() == b"st-256color") {
         return b"";
@@ -1266,7 +1263,6 @@ pub trait InputEventQueuer {
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
                 let wait_guard = self.blocking_wait();
                 let Some(BlockingWait::CursorPosition(wait)) = &*wait_guard else {
-                    CURSOR_POSITION_REPORTING_SUPPORTED.store(true);
                     return None;
                 };
                 let continuation = match wait {

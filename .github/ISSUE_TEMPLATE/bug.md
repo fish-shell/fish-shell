@@ -1,3 +1,11 @@
+---
+name: "Bug Report"
+about: "Simple template for bug reports"
+title: ""
+labels: []
+assignees: []
+---
+
 <!--
 Please tell us which fish version you are using by executing the following:
 

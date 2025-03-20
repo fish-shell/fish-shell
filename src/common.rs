@@ -10,6 +10,7 @@ use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
 use crate::libc::MB_CUR_MAX;
+use crate::output::Output;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
@@ -1375,6 +1376,38 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
         }
     }
     Ok(())
+}
+
+// Output writes always succeed; this adapter allows us to use it in a write-like macro.
+struct OutputWriteAdapter<'a, T: Output>(&'a mut T);
+
+impl<'a, T: Output> std::fmt::Write for OutputWriteAdapter<'a, T> {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        self.0.write_bytes(s.as_bytes());
+        Ok(())
+    }
+}
+
+impl<'a, T: Output> std::io::Write for OutputWriteAdapter<'a, T> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0.write_bytes(buf);
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+pub(crate) fn do_write_to_output(writer: &mut impl Output, args: std::fmt::Arguments<'_>) {
+    let mut adapter = OutputWriteAdapter(writer);
+    std::fmt::write(&mut adapter, args).unwrap()
+}
+
+#[macro_export]
+macro_rules! write_to_output {
+    ($out:expr, $($arg:tt)*) => {{
+        $crate::common::do_write_to_output($out, format_args!($($arg)*));
+    }};
 }
 
 /// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in

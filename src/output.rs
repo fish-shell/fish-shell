@@ -42,6 +42,15 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
+pub trait InfallibleWrite: std::io::Write + Sized {
+    fn infallible_write(&mut self, buf: &[u8]) {
+        let n = (self as &mut dyn std::io::Write).write(buf).unwrap();
+        assert!(n == buf.len());
+    }
+}
+
+impl InfallibleWrite for Vec<u8> {}
+
 fn index_for_color(c: RgbColor) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
@@ -65,14 +74,13 @@ fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u
             if term.max_colors == Some(8) && idx > 8 {
                 idx -= 8;
             }
-            write!(
+            infallible_write!(
                 outp,
                 "\x1B[{}m",
                 (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
-            )
-            .expect("Writing to in-memory buffer should never fail");
+            );
         } else {
-            write!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
+            infallible_write!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx);
         }
     }
 }
@@ -183,15 +191,14 @@ impl Outputter {
         // Foreground: ^[38;2;<r>;<g>;<b>m
         // Background: ^[48;2;<r>;<g>;<b>m
         let rgb = color.to_color24();
-        write!(
+        infallible_write!(
             self,
             "\x1B[{};2;{};{};{}m",
             if is_fg { 38 } else { 48 },
             rgb.r,
             rgb.g,
             rgb.b
-        )
-        .expect("Outputter::write should never fail");
+        );
         true
     }
 
@@ -423,6 +430,8 @@ impl Write for Outputter {
     }
 }
 
+impl InfallibleWrite for Outputter {}
+
 impl Outputter {
     /// Emit a terminfo string, like tputs.
     /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
@@ -474,9 +483,7 @@ impl<'a> Drop for BufferedOuputter<'a> {
 
 impl<'a> Write for BufferedOuputter<'a> {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.0
-            .write(buf)
-            .expect("Writing to in-memory buffer should never fail");
+        self.0.infallible_write(buf);
         Ok(buf.len())
     }
 
@@ -485,6 +492,7 @@ impl<'a> Write for BufferedOuputter<'a> {
         Ok(())
     }
 }
+impl<'a> InfallibleWrite for BufferedOuputter<'a> {}
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.

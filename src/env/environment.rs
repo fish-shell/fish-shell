@@ -318,7 +318,7 @@ impl EnvStack {
         assert!(self.can_push_pop, "push/pop not allowed on global stack");
         let popped = self.lock().pop();
         if self.dispatches_var_changes {
-            // TODO: we would like to coalesce locale / curses changes, so that we only re-initialize
+            // TODO: we would like to coalesce locale changes, so that we only re-initialize
             // once.
             for key in popped {
                 env_dispatch_var_change(&key, self);

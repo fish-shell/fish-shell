@@ -174,5 +174,6 @@ Other help pages
    prompt
    design
    relnotes
+   terminal-compatibility
    contributing
    license

@@ -18,17 +18,21 @@ use crate::{
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
     input_common::{
-        kitty_progressive_enhancements_query, terminal_protocol_hacks,
-        terminal_protocols_enable_ifn, Capability, CharEvent, ImplicitEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent, KITTY_KEYBOARD_SUPPORTED,
+        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
+        InputEventQueue, InputEventQueuer, KeyEvent,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, reader_init, QUERY_PRIMARY_DEVICE_ATTRIBUTE},
+    reader::{check_exit_loop_maybe_warning, reader_init},
     signal::signal_set_handlers,
+    terminal::{
+        Capability, Output,
+        TerminalCommand::{QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute},
+        KITTY_KEYBOARD_SUPPORTED,
+    },
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
@@ -151,12 +155,11 @@ fn setup_and_process_keys(
     // in fish-proper this is done once a command is run.
     unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
     terminal_protocol_hacks();
+
     streams
         .out
-        .append(str2wcstring(kitty_progressive_enhancements_query()));
-    streams
-        .out
-        .append(str2wcstring(QUERY_PRIMARY_DEVICE_ATTRIBUTE));
+        .write_command(QueryKittyKeyboardProgressiveEnhancements);
+    streams.out.write_command(QueryPrimaryDeviceAttribute);
 
     if continuous_mode {
         streams.err.append(L!("\n"));

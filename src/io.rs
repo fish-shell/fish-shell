@@ -10,6 +10,7 @@ use crate::path::path_apply_working_directory;
 use crate::proc::JobGroupRef;
 use crate::redirection::{RedirectionMode, RedirectionSpecList};
 use crate::signal::SigChecker;
+use crate::terminal::Output;
 use crate::topic_monitor::Topic;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
@@ -738,6 +739,13 @@ impl OutputStream {
             }
         }
         true
+    }
+}
+
+impl Output for OutputStream {
+    fn write_bytes(&mut self, command_part: &[u8]) {
+        // TODO Retry on interrupt.
+        self.append(str2wcstring(command_part));
     }
 }
 

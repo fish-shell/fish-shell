@@ -8,13 +8,11 @@
 //! of text around to handle text insertion.
 
 use crate::editable_line::line_at_cursor;
-use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
 use crate::FLOG;
 use std::cell::RefCell;
 use std::collections::LinkedList;
-use std::ffi::{CStr, CString};
 use std::io::Write;
 use std::ops::Range;
 use std::sync::atomic::AtomicU32;
@@ -34,8 +32,11 @@ use crate::flog::FLOGF;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightSpec};
-use crate::output::{BufferedOutputter, Output, Outputter};
-use crate::terminal::{term, tparm1};
+use crate::terminal::TerminalCommand::{
+    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
+    CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollForward,
+};
+use crate::terminal::{use_terminfo, BufferedOutputter, CardinalDirection, Output, Outputter};
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
@@ -584,13 +585,10 @@ impl Screen {
             return;
         }
         let mut out = BufferedOutputter::new(self.outp);
-        let lines_to_scroll = i32::try_from(lines_to_scroll).unwrap();
         // Scroll down.
-        assert!(SCROLL_FORWARD_SUPPORTED.load());
-        out.write_bytes(format!("\x1b[{}S", lines_to_scroll).as_bytes());
-        assert!(CURSOR_UP_SUPPORTED.load());
+        out.write_command(ScrollForward(lines_to_scroll));
         // Reposition cursor.
-        out.write_bytes(format!("\x1b[{}A", lines_to_scroll).as_bytes());
+        out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
     }
 
     fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
@@ -666,47 +664,55 @@ impl Screen {
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.rs.
         let non_space_width = get_omitted_newline_width();
-        let term = term();
         // We do `>` rather than `>=` because the code below might require one extra space.
         if screen_width > non_space_width {
-            let mut justgrey = true;
-            let add = |abandon_line_string: &mut WString, s: Option<CString>| {
-                let Some(s) = s else {
-                    return false;
+            if use_terminfo() {
+                use crate::terminal::tparm1;
+                use std::ffi::CString;
+                let term = crate::terminal::term();
+                let mut justgrey = true;
+                let add = |abandon_line_string: &mut WString, s: Option<CString>| {
+                    let Some(s) = s else {
+                        return false;
+                    };
+                    abandon_line_string.push_utfstr(&str2wcstring(s.as_bytes()));
+                    true
                 };
-                abandon_line_string.push_utfstr(&str2wcstring(s.as_bytes()));
-                true
-            };
-            if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
-                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
-                    // Use dim if they have it, so the color will be based on their actual normal
-                    // color and the background of the terminal.
-                    justgrey = false;
-                }
-            }
-            if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
-                let max_colors = term.max_colors.unwrap_or_default();
-                if max_colors >= 238 {
-                    // draw the string in a particular grey
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
-                } else if max_colors >= 9 {
-                    // bright black (the ninth color, looks grey)
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
-                } else if max_colors >= 2 {
-                    if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
-                        // we might still get that color by setting black and going bold for bright
-                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
+                if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
+                    if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
+                        // Use dim if they have it, so the color will be based on their actual normal
+                        // color and the background of the terminal.
+                        justgrey = false;
                     }
                 }
+                if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
+                    let max_colors = term.max_colors.unwrap_or_default();
+                    if max_colors >= 238 {
+                        // draw the string in a particular grey
+                        add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
+                    } else if max_colors >= 9 {
+                        // bright black (the ninth color, looks grey)
+                        add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
+                    } else if max_colors >= 2 {
+                        if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
+                            // we might still get that color by setting black and going bold for bright
+                            add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
+                            add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
+                        }
+                    }
+                }
+            } else {
+                let mut tmp = Vec::<u8>::new();
+                tmp.write_command(EnterDimMode);
+                abandon_line_string.push_utfstr(&str2wcstring(&tmp));
             }
 
             abandon_line_string.push_utfstr(&get_omitted_newline_str());
 
-            if let Some(exit_attribute_mode) = term.exit_attribute_mode.as_ref() {
-                // normal text ANSI escape sequence
-                add(&mut abandon_line_string, Some(exit_attribute_mode.clone()));
-            }
+            // normal text ANSI escape sequence
+            let mut tmp = Vec::<u8>::new();
+            tmp.write_command(ExitAttributeMode);
+            abandon_line_string.push_utfstr(&str2wcstring(&tmp));
 
             for _ in 0..screen_width - non_space_width {
                 abandon_line_string.push(' ');
@@ -727,9 +733,9 @@ impl Screen {
         // line above your prompt. This doesn't make a difference in normal usage, but copying and
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
-        if let Some(clr_eol) = term.clr_eol.as_ref() {
-            abandon_line_string.push_utfstr(&str2wcstring(clr_eol.as_bytes()));
-        }
+        let mut tmp = Vec::<u8>::new();
+        tmp.write_command(ClearToEndOfLine);
+        abandon_line_string.push_utfstr(&str2wcstring(&tmp));
 
         let narrow_abandon_line_string = wcs2string(&abandon_line_string);
         let _ = write_loop(&STDOUT_FILENO, &narrow_abandon_line_string);
@@ -896,29 +902,31 @@ impl Screen {
         let y_steps =
             isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
-        let term = term();
-
         let s = if y_steps < 0 {
-            term.cursor_up.as_ref()
+            Some(CursorUp)
         } else if y_steps > 0 {
-            let s = term.cursor_down.as_ref();
-            if (shell_modes().c_oflag & ONLCR) != 0 && s.is_some_and(|s| s.as_bytes() == b"\n") {
+            if (shell_modes().c_oflag & ONLCR) != 0
+                && (!use_terminfo()
+                    || crate::terminal::term()
+                        .cursor_down
+                        .as_ref()
+                        .is_some_and(|cud| cud.as_bytes() == b"\n"))
+            {
                 // See GitHub issue #4505.
                 // Most consoles use a simple newline as the cursor down escape.
                 // If ONLCR is enabled (which it normally is) this will of course
                 // also move the cursor to the beginning of the line.
-                // We could do:
-                // if (std::strcmp(cursor_up, "\x1B[A") == 0) str = "\x1B[B";
-                // else ... but that doesn't work for unknown reasons.
                 self.actual.cursor.x = 0;
             }
-            s
+            Some(CursorDown)
         } else {
             None
         };
 
-        for _ in 0..y_steps.abs_diff(0) {
-            self.outp.borrow_mut().tputs_if_some(&s);
+        if let Some(s) = s {
+            for _ in 0..y_steps.abs_diff(0) {
+                self.outp.borrow_mut().write_command(s.clone());
+            }
         }
 
         let mut x_steps =
@@ -928,25 +936,27 @@ impl Screen {
             x_steps = 0;
         }
 
-        let (s, multi_str) = if x_steps < 0 {
-            (term.cursor_left.as_ref(), term.parm_left_cursor.as_ref())
-        } else {
-            (term.cursor_right.as_ref(), term.parm_right_cursor.as_ref())
-        };
-
-        // Use the bulk ('multi') output for cursor movement if it is supported.
-        // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-        if multi_str.is_some() && x_steps.abs_diff(0) > 1 {
-            let multi_param = tparm1(
-                multi_str.as_ref().unwrap(),
-                i32::try_from(x_steps.abs_diff(0)).unwrap(),
-            );
-            self.outp.borrow_mut().tputs_if_some(&multi_param);
-        } else {
-            for _ in 0..x_steps.abs_diff(0) {
-                self.outp.borrow_mut().tputs_if_some(&s);
+        // Note that bulk output is a way to avoid some visual glitches in iTerm (issue #1448).
+        let mut outp = BufferedOutputter::new(self.outp);
+        match x_steps {
+            0 => (),
+            -1 => {
+                outp.write_command(CursorLeft);
             }
-        }
+            1 => {
+                outp.write_command(CursorRight);
+            }
+            _ => {
+                outp.write_command(CursorMove(
+                    if x_steps < 0 {
+                        CardinalDirection::Left
+                    } else {
+                        CardinalDirection::Right
+                    },
+                    x_steps.abs_diff(0),
+                ));
+            }
+        };
 
         self.actual.cursor.x = new_x;
         self.actual.cursor.y = new_y;
@@ -956,7 +966,7 @@ impl Screen {
     fn write_char(&mut self, c: char, width: usize) {
         self.actual.cursor.x = self.actual.cursor.x.wrapping_add(width);
         self.outp.borrow_mut().writech(c);
-        if Some(self.actual.cursor.x) == self.actual.screen_width && allow_soft_wrap() {
+        if Some(self.actual.cursor.x) == self.actual.screen_width {
             self.soft_wrap_location = Some(Cursor {
                 x: 0,
                 y: self.actual.cursor.y + 1,
@@ -970,17 +980,8 @@ impl Screen {
         }
     }
 
-    /// Send the specified string through tputs and append the output to the screen's outputter.
-    fn write_mbs(&mut self, s: &CStr) {
-        self.outp.borrow_mut().tputs(s);
-    }
-
-    fn write_mbs_if_some(&mut self, s: &Option<impl AsRef<CStr>>) -> bool {
-        self.outp.borrow_mut().tputs_if_some(s)
-    }
-
-    pub(crate) fn write_bytes(&mut self, s: &[u8]) {
-        self.outp.borrow_mut().tputs_bytes(s);
+    pub(crate) fn write_command(&mut self, command: TerminalCommand) {
+        self.outp.borrow_mut().write_command(command);
     }
 
     /// Convert a wide string to a multibyte string and append it to the buffer.
@@ -1081,12 +1082,10 @@ impl Screen {
             need_clear_screen = true;
         }
 
-        let term = term();
-
         // Output the left prompt if it has changed.
         if self.scrolled() && !is_final_rendering {
             self.r#move(0, 0);
-            self.write_mbs_if_some(&term.clr_eol.as_ref());
+            self.write_command(ClearToEndOfLine);
             self.actual_left_prompt = None;
             self.actual.cursor.x = 0;
         } else if self
@@ -1098,10 +1097,9 @@ impl Screen {
         {
             self.r#move(0, 0);
             let mut start = 0;
-            let osc_133_prompt_start =
-                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;click_events=1\x07");
+            let mark_prompt_start = |zelf: &mut Screen| zelf.write_command(Osc133PromptStart);
             if left_prompt_layout.line_breaks.is_empty() {
-                osc_133_prompt_start(self);
+                mark_prompt_start(self);
             }
             if self
                 .actual_left_prompt
@@ -1110,9 +1108,9 @@ impl Screen {
                 || (self.scrolled() && is_final_rendering)
             {
                 for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
-                    self.write_mbs_if_some(&term.clr_eol);
+                    self.write_command(ClearToEndOfLine);
                     if i == 0 {
-                        osc_133_prompt_start(self);
+                        mark_prompt_start(self);
                     }
                     self.write_str(&left_prompt[start..=line_break]);
                     start = line_break + 1;
@@ -1147,7 +1145,6 @@ impl Screen {
             // Don't issue clr_eos if we think the cursor will end up in the last column - see #6951.
             let should_clear_screen_this_line = need_clear_screen
                 && i + 1 == self.desired.line_count()
-                && term.clr_eos.is_some()
                 && !(self.desired.cursor.x == 0
                     && self.desired.cursor.y == self.desired.line_count());
 
@@ -1162,17 +1159,14 @@ impl Screen {
             };
             let mut skip_prefix = shared_prefix;
             if shared_prefix < o_line(self, i).indentation {
-                if o_line(self, i).indentation > s_line(self, i).indentation
-                    && !has_cleared_screen
-                    && term.clr_eol.is_some()
-                    && term.clr_eos.is_some()
+                if o_line(self, i).indentation > s_line(self, i).indentation && !has_cleared_screen
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(0, i);
-                    self.write_mbs_if_some(if should_clear_screen_this_line {
-                        &term.clr_eos
+                    self.write_command(if should_clear_screen_this_line {
+                        ClearToEndOfScreen
                     } else {
-                        &term.clr_eol
+                        ClearToEndOfLine
                     });
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;
@@ -1228,7 +1222,7 @@ impl Screen {
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);
-                    self.write_mbs_if_some(&term.clr_eos.as_ref());
+                    self.write_command(ClearToEndOfScreen);
                     has_cleared_screen = true;
                 }
                 if done {
@@ -1271,9 +1265,9 @@ impl Screen {
             // This means that we switch background correctly on the next,
             // including our weird implicit bolding.
             set_color(self, HighlightSpec::new());
-            if let (true, Some(clr_eol)) = (clear_remainder, term.clr_eol.as_ref()) {
+            if clear_remainder {
                 self.r#move(current_width, i);
-                self.write_mbs(clr_eol);
+                self.write_command(ClearToEndOfLine);
             }
 
             // Output any rprompt if this is the first line.
@@ -1310,13 +1304,11 @@ impl Screen {
         }
 
         // Clear remaining lines (if any) if we haven't cleared the screen.
-        if let (false, true, Some(clr_eol)) =
-            (has_cleared_screen, need_clear_screen, term.clr_eol.as_ref())
-        {
+        if !has_cleared_screen && need_clear_screen {
             set_color(self, HighlightSpec::new());
             for i in self.desired.line_count()..lines_with_stuff {
                 self.r#move(0, i);
-                self.write_mbs(clr_eol);
+                self.write_command(ClearToEndOfLine);
             }
         }
 
@@ -1342,7 +1334,7 @@ pub fn mtime_stdout_stderr() -> (Option<SystemTime>, Option<SystemTime>) {
 pub fn screen_force_clear_to_end() {
     Outputter::stdoutput()
         .borrow_mut()
-        .tputs_if_some(&term().clr_eos);
+        .write_command(ClearToEndOfScreen);
 }
 
 /// Information about the layout of a prompt.
@@ -1382,6 +1374,7 @@ pub struct LayoutCache {
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
 // Note this is deliberately exported so that init_terminal can clear it.
+// TODO un-export this once we remove the terminfo option.
 pub static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
 
 impl LayoutCache {
@@ -1547,13 +1540,13 @@ impl LayoutCache {
 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
 /// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
-/// the escape sequence based on querying terminfo and other heuristics.
+/// the escape sequence.
 pub fn escape_code_length(code: &wstr) -> Option<usize> {
     if code.char_at(0) != '\x1B' {
         return None;
     }
 
-    is_visual_escape_seq(code)
+    is_terminfo_escape_seq(code)
         .or_else(|| is_screen_name_escape_seq(code))
         .or_else(|| is_osc_escape_seq(code))
         .or_else(|| is_three_byte_escape_seq(code))
@@ -1561,16 +1554,11 @@ pub fn escape_code_length(code: &wstr) -> Option<usize> {
         .or_else(|| is_two_byte_escape_seq(code))
 }
 
-pub fn screen_clear() -> WString {
-    term()
-        .clear_screen
-        .as_ref()
-        .map(|clear_screen| str2wcstring(clear_screen.as_bytes()))
-        .unwrap_or_default()
-}
-
 static MIDNIGHT_COMMANDER_HACK: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
+/// Midnight Commander tries to extract the last line of the prompt, and does so in a way that is
+/// broken if you do '\r' after it like we normally do.
+/// See https://midnight-commander.org/ticket/4258.
 pub fn screen_set_midnight_commander_hack() {
     MIDNIGHT_COMMANDER_HACK.store(true)
 }
@@ -1595,16 +1583,19 @@ fn try_sequence(seq: &[u8], s: &wstr) -> usize {
 
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 fn next_tab_stop(current_line_width: usize) -> usize {
-    // Assume tab stops every 8 characters if undefined.
-    let tab_width = term().init_tabs.unwrap_or(8);
+    // Assume tab stops every 8 characters.
+    let tab_width = if use_terminfo() {
+        crate::terminal::term().init_tabs.unwrap_or(8)
+    } else {
+        8
+    };
     ((current_line_width / tab_width) + 1) * tab_width
 }
 
 /// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
 /// physical line on a wrapped logical line; instead we just output it.
 fn allow_soft_wrap() -> bool {
-    // Should we be looking at eat_newline_glitch as well?
-    term().auto_right_margin
+    !use_terminfo() || crate::terminal::term().auto_right_margin
 }
 
 /// Does this look like the escape sequence for setting a screen name?
@@ -1721,8 +1712,11 @@ fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
 
 /// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
 /// displayed other than the color.
-fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
-    let term = term();
+fn is_terminfo_escape_seq(code: &wstr) -> Option<usize> {
+    if !use_terminfo() {
+        return None;
+    }
+    let term = crate::terminal::term();
     let esc2 = [
         &term.enter_bold_mode,
         &term.exit_attribute_mode,
@@ -1895,13 +1889,23 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
     idx
 }
 
+pub(crate) static IS_DUMB: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static ONLY_GRAYSCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 /// Returns true if we are using a dumb terminal.
 pub(crate) fn is_dumb() -> bool {
-    let term = term();
-    term.cursor_up.is_none()
-        || term.cursor_down.is_none()
-        || term.cursor_left.is_none()
-        || term.cursor_right.is_none()
+    if use_terminfo() {
+        let term = crate::terminal::term();
+        return term.cursor_up.is_none()
+            || term.cursor_down.is_none()
+            || term.cursor_left.is_none()
+            || term.cursor_right.is_none();
+    }
+    IS_DUMB.load()
+}
+
+pub(crate) fn only_grayscale() -> bool {
+    ONLY_GRAYSCALE.load()
 }
 
 // Exposed for testing.

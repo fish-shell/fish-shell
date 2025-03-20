@@ -12,7 +12,7 @@ Please tell us which fish version you are using by executing the following:
   fish --version
   echo $version
 
-Please tell us which operating system and terminal you are using. The output of `uname -a` and `echo $TERM` may be helpful in this regard although other commands might be relevant in your specific situation.
+Please tell us which operating system (output of `uname`) and terminal you are using.
 
 Please tell us if you tried fish without third-party customizations by executing this command and whether it affected the behavior you are reporting:
 

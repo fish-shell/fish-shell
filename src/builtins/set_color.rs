@@ -3,13 +3,15 @@
 use super::prelude::*;
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
-use crate::output::{self, Outputter};
-use crate::terminal::{self, term, Term};
+use crate::terminal::TerminalCommand::{
+    EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
+    EnterUnderlineMode, ExitAttributeMode,
+};
+use crate::terminal::{best_color, get_color_support, Output, Outputter};
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(
     outp: &mut Outputter,
-    term: &Term,
     bold: bool,
     underline: bool,
     italics: bool,
@@ -17,40 +19,30 @@ fn print_modifiers(
     reverse: bool,
     bg: RgbColor,
 ) {
-    let Term {
-        enter_bold_mode,
-        enter_underline_mode,
-        enter_italics_mode,
-        enter_dim_mode,
-        enter_reverse_mode,
-        enter_standout_mode,
-        exit_attribute_mode,
-        ..
-    } = term;
     if bold {
-        outp.tputs_if_some(enter_bold_mode);
+        outp.write_command(EnterBoldMode);
     }
 
     if underline {
-        outp.tputs_if_some(enter_underline_mode);
+        outp.write_command(EnterUnderlineMode);
     }
 
     if italics {
-        outp.tputs_if_some(enter_italics_mode);
+        outp.write_command(EnterItalicsMode);
     }
 
     if dim {
-        outp.tputs_if_some(enter_dim_mode);
+        outp.write_command(EnterDimMode);
     }
 
     #[allow(clippy::collapsible_if)]
     if reverse {
-        if !outp.tputs_if_some(enter_reverse_mode) {
-            outp.tputs_if_some(enter_standout_mode);
+        if !outp.write_command(EnterReverseMode) {
+            outp.write_command(EnterStandoutMode);
         }
     }
     if !bg.is_none() && bg.is_normal() {
-        outp.tputs_if_some(exit_attribute_mode);
+        outp.write_command(ExitAttributeMode);
     }
 }
 
@@ -65,7 +57,7 @@ fn print_colors(
     reverse: bool,
     bg: RgbColor,
 ) {
-    let outp = &mut output::Outputter::new_buffering();
+    let outp = &mut Outputter::new_buffering();
 
     // Rebind args to named_colors if there are no args.
     let named_colors;
@@ -76,19 +68,9 @@ fn print_colors(
         &named_colors
     };
 
-    let term = terminal::term();
     for color_name in args {
         if streams.out_is_terminal() {
-            print_modifiers(
-                outp,
-                term.as_ref(),
-                bold,
-                underline,
-                italics,
-                dim,
-                reverse,
-                bg,
-            );
+            print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
             let color = RgbColor::from_wstr(color_name).unwrap_or(RgbColor::NONE);
             outp.set_color(color, RgbColor::NONE);
             if !bg.is_none() {
@@ -99,7 +81,7 @@ fn print_colors(
         if !bg.is_none() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            outp.tputs_if_some(&term.exit_attribute_mode);
+            outp.write_command(ExitAttributeMode);
         }
         outp.writech('\n');
     } // conveniently, 'normal' is always the last color so we don't need to reset here
@@ -217,25 +199,18 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground
     // color, we'll get none(); if we have at least one we expect not-none.
-    let fg = output::best_color(&fgcolors, output::get_color_support());
+    let fg = best_color(&fgcolors, get_color_support());
     assert!(fgcolors.is_empty() || !fg.is_none());
 
-    // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
-    // just give up...
-    let term = term();
-    let Some(exit_attribute_mode) = &term.exit_attribute_mode else {
-        return Err(STATUS_CMD_ERROR);
-    };
-
-    let outp = &mut output::Outputter::new_buffering();
-    print_modifiers(outp, &term, bold, underline, italics, dim, reverse, bg);
+    let outp = &mut Outputter::new_buffering();
+    print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
     if bgcolor.is_some() && bg.is_normal() {
-        outp.tputs(exit_attribute_mode);
+        outp.write_command(ExitAttributeMode);
     }
 
     if !fg.is_none() {
         if fg.is_normal() || fg.is_reset() {
-            outp.tputs(exit_attribute_mode);
+            outp.write_command(ExitAttributeMode);
         } else if !outp.write_color(fg, true /* is_fg */) {
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:

@@ -27,7 +27,7 @@ function fish_clipboard_copy
 
     # Copy with OSC 52; useful if we are running in an SSH session or in
     # a container.
-    if type -q base64
+    if type -q base64 && [ "$TERM" != dumb ]
         if not isatty stdout
             echo "fish_clipboard_copy: stdout is not a terminal" >&2
             return 1

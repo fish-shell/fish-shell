@@ -6,7 +6,7 @@ use crate::terminal::{self, tparm1, Term};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::ffi::CStr;
 use std::io::{Result, Write};
 use std::os::fd::RawFd;
@@ -456,10 +456,11 @@ impl Outputter {
     }
 }
 
-pub struct BufferedOuputter<'a>(&'a mut Outputter);
+pub struct BufferedOuputter<'a>(RefMut<'a, Outputter>);
 
 impl<'a> BufferedOuputter<'a> {
-    pub fn new(outputter: &'a mut Outputter) -> Self {
+    pub fn new(outputter: &'a RefCell<Outputter>) -> Self {
+        let mut outputter = outputter.borrow_mut();
         outputter.begin_buffering();
         Self(outputter)
     }

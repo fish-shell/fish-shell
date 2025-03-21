@@ -18,6 +18,7 @@ function __fish_print_pacman_packages
                 return
             end
         end
+        __fish_cache_put $cache_file
         # prints: <package name>	Package
         pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
         return 0

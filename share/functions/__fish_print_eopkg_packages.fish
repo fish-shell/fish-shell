@@ -21,6 +21,7 @@ function __fish_print_eopkg_packages
             end
         end
 
+        __fish_cache_put $cache_file
         # Remove package version information from output and pipe into cache file
         eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
         return 0
@@ -35,6 +36,7 @@ function __fish_print_eopkg_packages
             end
         end
 
+        __fish_cache_put $cache_file
         # Remove package version information from output and pipe into cache file
         eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &
         return 0

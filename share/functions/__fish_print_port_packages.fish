@@ -15,6 +15,7 @@ function __fish_print_port_packages
         end
     end
 
+    __fish_cache_put $cache_file
     # Remove trailing whitespace and pipe into cache file
     printf "all\ncurrent\nactive\ninactive\ninstalled\nuninstalled\noutdated" >$cache_file
     port echo all | awk '{$1=$1};1' >>$cache_file &

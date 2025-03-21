@@ -70,6 +70,7 @@ function __fish_print_flatpak_packages
             return
         end
     end
+    __fish_cache_put $cache_file
     __fish_flatpak remote-ls --columns=application,name >$cache_file &
     return 0
 end

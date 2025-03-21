@@ -20,6 +20,7 @@ function __fish_print_rpm_packages
             end
         end
 
+        __fish_cache_put $cache_file
         # Remove package version information from output and pipe into cache file
         /usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\tPackage/" >$cache_file &
         return
@@ -40,6 +41,7 @@ function __fish_print_rpm_packages
         end
 
         # Remove package version information from output and pipe into cache file
+        __fish_cache_put $cache_file
         rpm -qa | sed -e 's/-[^-]*-[^-]*$/\t'Package'/' >$cache_file &
         return
     end

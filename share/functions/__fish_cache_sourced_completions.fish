@@ -31,9 +31,11 @@ function __fish_cache_sourced_completions
     #
     # That means we'll rerun if the command was up- or downgraded.
     if path is -vrf -- $stampfile $compfile || test "$cmtime" -ne "$mtime" 2>/dev/null
+        __fish_cache_put $compfile
         $argv >$compfile
         # If the command exited unsuccessfully, we assume it didn't work.
         or return 2
+        __fish_cache_put $stampfile
         echo -- $mtime >$stampfile
     end
 

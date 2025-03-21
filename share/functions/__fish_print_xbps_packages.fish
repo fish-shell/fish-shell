@@ -18,6 +18,7 @@ function __fish_print_xbps_packages
                 return
             end
         end
+        __fish_cache_put $cache_file
         # prints: <package name>	Package
         xbps-query -Rs "" | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' | tee $cache_file
         return 0

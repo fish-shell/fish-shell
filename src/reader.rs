@@ -4586,19 +4586,21 @@ impl<'a> Reader<'a> {
                 // Historic compatibility hack.
                 // If the left prompt function is deleted, then use a default prompt instead of
                 // producing an error.
-                let prompt_cmd = if self.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
-                    && !function::exists(&self.conf.left_prompt_cmd, self.parser)
+                let prompt_cmd = if self.conf.left_prompt_cmd != LEFT_PROMPT_FUNCTION_NAME
+                    || function::exists(&self.conf.left_prompt_cmd, self.parser)
                 {
-                    DEFAULT_PROMPT
-                } else {
                     &self.conf.left_prompt_cmd
+                } else {
+                    DEFAULT_PROMPT
                 };
 
                 self.left_prompt_buff = join_strings(&self.exec_prompt_cmd(prompt_cmd), '\n');
             }
 
+            // Don't execute the right prompt if it is undefined fish_right_prompt
             if !self.conf.right_prompt_cmd.is_empty()
-                && function::exists(&self.conf.right_prompt_cmd, self.parser)
+                && (self.conf.right_prompt_cmd != RIGHT_PROMPT_FUNCTION_NAME
+                    || function::exists(&self.conf.right_prompt_cmd, self.parser))
             {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 self.right_prompt_buff =

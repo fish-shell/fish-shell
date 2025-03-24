@@ -20,6 +20,8 @@ function __iwctl_filter -w iwctl
 
     if set -ql _flag_all_columns
         for line in (string match "  *" -- $results[5..] | string sub -s (math $leading_ws + 1))
+            set -l column_widths $column_widths
+            set column_widths[1] (math $column_widths[1] - (string length -V $line) + (string length $line))
             for column_width in $column_widths
                 printf %s\t (string sub -l $column_width -- $line | string trim -r)
                 set line (string sub -s (math $column_width + 1) -- $line)
@@ -29,7 +31,9 @@ function __iwctl_filter -w iwctl
     else if set -q column_widths[1]
         # only take lines starting with `  `, i.e., no `No devices ...`
         # then take the first column as substring
-        string match "  *" $results[5..] | string sub -s (math $leading_ws + 1) -l $column_widths[1] | string trim -r
+        for line in (string match "  *" -- $results[5..] | string sub -s (math $leading_ws + 1))
+            string sub -l (math $column_widths[1] - (string length -V $line) + (string length $line)) $line | string trim -r
+        end
     end
 end
 

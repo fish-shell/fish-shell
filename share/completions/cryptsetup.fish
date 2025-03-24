@@ -94,3 +94,6 @@ complete -c cryptsetup -l veracrypt-query-pim -d "Query Personal Iteration Multi
 complete -c cryptsetup -l verbose -s v -d "Shows more detailed error messages"
 complete -c cryptsetup -l verify-passphrase -s y -d "Verifies the passphrase by asking for it twice"
 complete -c cryptsetup -l version -s V -d "Print package version"
+
+# subcommands
+complete -c cryptsetup -n "__fish_seen_subcommand_from close status resize" -f -r -a "(path basename /dev/mapper/* | string match -v control)"

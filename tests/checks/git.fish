@@ -51,6 +51,10 @@ complete -C'git frobnicate --onto '
 #CHECK: onto1
 #CHECK: onto2
 
+complete -C'git frobnicate graft --onto '
+#CHECK: onto1
+#CHECK: onto2
+
 complete -C'git ' | grep '^add'\t
 # (note: actual tab character in the check here)
 #CHECK: add	Add file contents to the staging area

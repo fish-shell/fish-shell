@@ -30,7 +30,7 @@ functions -D f2
 # function that could be autoloaded but isn't currently loaded.
 set x (functions -D vared)
 if test (count $x) -ne 1
-    or not string match -rq '.*/share(/fish)?/functions/vared\.fish' "$x"
+    or not string match -rq '.*functions/vared\.fish' "$x"
     echo "Unexpected output for 'functions -D vared': $x" >&2
 end
 
@@ -39,7 +39,7 @@ end
 # function that was autoloaded.
 set x (functions -v -D vared)
 if test (count $x) -ne 5
-    or not string match -rq '.*/share(/fish)?/functions/vared\.fish' $x[1]
+    or not string match -rq '.*functions/vared\.fish' $x[1]
     or test $x[2] != autoloaded
     or test $x[3] != 6
     or test $x[4] != scope-shadowing

@@ -37,7 +37,7 @@ type sh
 # The exact definition and description here depends on the system, so we'll ignore the actual code.
 type realpath | grep -v "^  *"
 # CHECK: realpath is a function with definition
-# CHECK: # Defined in {{.*}}/functions/realpath.fish @ line {{\d+}}
+# CHECK: # Defined in {{.*}}functions/realpath.fish @ line {{\d+}}
 # CHECK: function realpath --description {{.+}}
 # CHECK: end
 

@@ -1070,7 +1070,7 @@ pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 /// In this case, we assume no external program has written to the terminal behind our back, making
 /// the multiline prompt usable. See #2859 and https://github.com/Microsoft/BashOnWindows/issues/545
 pub fn has_working_tty_timestamps() -> bool {
-    if cfg!(target_os = "windows") {
+    if cfg!(any(target_os = "windows", target_os = "cygwin")) {
         false
     } else if cfg!(target_os = "linux") {
         !is_windows_subsystem_for_linux(WSL::V1)

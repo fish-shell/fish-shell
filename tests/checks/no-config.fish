@@ -11,6 +11,5 @@ set -S foo
 # CHECK: $foo: set in global scope, unexported, with 1 elements
 # CHECK: $foo[1]: |bar|
 
-set -S fish_function_path fish_complete_path
-# CHECK: $fish_function_path: set in global scope, unexported, with 1 elements
-# CHECK: $fish_function_path[1]: |{{.*}}|
+set -q fish_function_path[2]
+and echo fish_function_path has two elements

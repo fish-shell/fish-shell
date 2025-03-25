@@ -113,3 +113,7 @@ print("\n".join(data.get("dependencies", []))); print("\n".join(data.get("devDep
         end
     end
 end
+
+function __fish_npm_helper
+    # dummy function to allow sourcing this file
+end

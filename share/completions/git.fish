@@ -893,6 +893,15 @@ function __fish_git_is_rebasing
     test -e (__fish_git rev-parse --absolute-git-dir)/rebase-merge
 end
 
+function __fish_git_filters
+    printf "%s\n" \
+        blob:none\t"omits all blobs" \
+        blob:limit=\t"omits blobs by size" \
+        object:type={tag,commit,tree,blob}\t"omit object which are not of the requested type" \
+        sparse:oid=\t"omit blobs not required for a sparse checkout" \
+        tree:\t"omits all blobs and trees"
+end
+
 # general options
 complete git -f -l help -s h -d 'Display manual of a Git command'
 complete git -f -n __fish_git_needs_command -l version -s v -d 'display git version'
@@ -1027,6 +1036,7 @@ complete -f -c git -n '__fish_git_using_command fetch' -l unshallow -d 'Convert 
 complete -f -c git -n '__fish_git_using_command fetch' -l refetch -d 'Re-fetch without negotiating common commits'
 complete -f -c git -n '__fish_git_using_command fetch' -l negotiation-tip -d 'Only report commits reachable from these tips' -kxa '(__fish_git_commits; __fish_git_branches)'
 complete -f -c git -n '__fish_git_using_command fetch' -l negotiate-only -d "Don't fetch, only show commits in common with the server"
+complete -f -c git -n '__fish_git_using_command fetch' -l filter -ra '(__fish_git_filters)' -d 'Request a subset of objects from server'
 
 # TODO other options
 
@@ -1343,6 +1353,7 @@ complete -f -c git -n '__fish_git_using_command clone' -s o -l origin -d 'Use a 
 complete -f -c git -n '__fish_git_using_command clone' -s b -l branch -d 'Use a specific branch instead of the one used by the cloned repository'
 complete -f -c git -n '__fish_git_using_command clone' -l depth -d 'Truncate the history to a specified number of revisions'
 complete -f -c git -n '__fish_git_using_command clone' -l recursive -d 'Initialize all submodules within the cloned repository'
+complete -f -c git -n '__fish_git_using_command clone' -l filter -ra '(__fish_git_filters)' -d 'Partial clone by requesting a subset of objects from server'
 
 ### commit
 complete -c git -n __fish_git_needs_command -a commit -d 'Record changes to the repository'
@@ -1591,6 +1602,7 @@ complete -c git -n '__fish_git_using_command log rev-list' -l bisect
 complete -c git -n '__fish_git_using_command log rev-list' -l stdin -d 'Read commits from stdin'
 complete -c git -n '__fish_git_using_command log rev-list' -l cherry-mark -d 'Mark equivalent commits with = and inequivalent with +'
 complete -c git -n '__fish_git_using_command log rev-list' -l cherry-pick -d 'Omit equivalent commits'
+complete -f -c git -n '__fish_git_using_command rev-list' -l filter -ra '(__fish_git_filters)' -d 'Omits objects from the list of printed objects'
 complete -c git -n '__fish_git_using_command log' -l left-only
 complete -c git -n '__fish_git_using_command log' -l right-only
 complete -c git -n '__fish_git_using_command log' -l cherry
@@ -2274,6 +2286,7 @@ complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subco
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -s N -l no-fetch -d "Don't fetch new objects from the remote"
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l remote -d "Instead of using superproject's SHA-1, use the state of the submodule's remote-tracking branch"
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l force -d "Discard local changes when switching to a different commit & always run checkout"
+complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from update' -l filter -ra '(__fish_git_filters)' -d 'Request a subset of objects from server'
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
 complete -f -c git -n '__fish_git_using_command submodule' -n '__fish_seen_subcommand_from deinit' -l all -d "Remove all submodules"

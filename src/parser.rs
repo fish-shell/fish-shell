@@ -276,6 +276,9 @@ pub struct LibraryData {
     /// Whether we are currently interactive.
     pub is_interactive: bool,
 
+    /// Whether the command line is closed for modification from fish script.
+    pub readonly_commandline: bool,
+
     /// Whether to suppress fish_trace output. This occurs in the prompt, event handlers, and key
     /// bindings.
     pub suppress_fish_trace: bool,

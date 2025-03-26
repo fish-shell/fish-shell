@@ -234,7 +234,11 @@ fn read_interactive(
 
     // Keep in-memory history only.
     reader_push(parser, L!(""), conf);
-    commandline_set_buffer(Some(commandline.to_owned()), None);
+    let _modifiable_commandline = scoped_push_replacer(
+        |new_value| std::mem::replace(&mut parser.libdata_mut().readonly_commandline, new_value),
+        false,
+    );
+    commandline_set_buffer(parser, Some(commandline.to_owned()), None);
 
     let mline = {
         let _interactive = scoped_push_replacer(

@@ -60,6 +60,7 @@ enum TokenMode {
 /// \param buff the original command line buffer
 /// \param cursor_pos the position of the cursor in the command line
 fn replace_part(
+    parser: &Parser,
     range: Range<usize>,
     insert: &wstr,
     insert_mode: AppendMode,
@@ -94,9 +95,9 @@ fn replace_part(
 
     out.push_utfstr(&buff[range.end..]);
     if search_field_mode {
-        commandline_set_search_field(out, Some(out_pos));
+        commandline_set_search_field(parser, out, Some(out_pos));
     } else {
-        commandline_set_buffer(Some(out), Some(out_pos));
+        commandline_set_buffer(parser, Some(out), Some(out_pos));
     }
 }
 
@@ -547,7 +548,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                 }
                 line_offset + new_coord
             };
-            commandline_set_buffer(None, Some(new_pos));
+            commandline_set_buffer(parser, None, Some(new_pos));
         } else {
             streams.out.append(sprintf!(
                 "%d\n",
@@ -709,7 +710,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     .saturating_add_signed(isize::try_from(new_pos).unwrap()),
                 current_buffer.len(),
             );
-            commandline_set_buffer(None, Some(new_pos));
+            commandline_set_buffer(parser, None, Some(new_pos));
         } else {
             streams
                 .out
@@ -731,6 +732,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         );
     } else if positional_args == 1 {
         replace_part(
+            parser,
             range,
             args[w.wopt_index],
             append_mode,
@@ -741,6 +743,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else {
         let sb = join_strings(&w.argv[w.wopt_index..], '\n');
         replace_part(
+            parser,
             range,
             &sb,
             append_mode,

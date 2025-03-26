@@ -234,7 +234,12 @@ fn read_interactive(
 
     // Keep in-memory history only.
     reader_push(parser, L!(""), conf);
-    commandline_set_buffer(Some(commandline.to_owned()), None);
+    let _modifiable_commandline = parser.scope().readonly_commandline.then(|| {
+        parser.push_scope(|s| {
+            s.readonly_commandline = false;
+        })
+    });
+    commandline_set_buffer(parser, Some(commandline.to_owned()), None);
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);

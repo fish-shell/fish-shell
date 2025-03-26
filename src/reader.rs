@@ -983,6 +983,9 @@ pub fn reader_schedule_prompt_repaint() {
 }
 
 pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
+    if parser.scope().readonly_commandline {
+        return;
+    }
     if let Some(data) = current_data() {
         let mut data = Reader { parser, data };
         let CharEvent::Readline(readline_cmd_evt) = &ch else {
@@ -1062,7 +1065,10 @@ pub fn commandline_get_state(sync: bool) -> CommandlineState {
 
 /// Set the command line text and position. This may be called on a background thread; the reader
 /// will pick it up when it is done executing.
-pub fn commandline_set_buffer(text: Option<WString>, cursor_pos: Option<usize>) {
+pub fn commandline_set_buffer(parser: &Parser, text: Option<WString>, cursor_pos: Option<usize>) {
+    if parser.scope().readonly_commandline {
+        return;
+    }
     {
         let mut state = commandline_state_snapshot();
         if let Some(text) = text {
@@ -1073,7 +1079,10 @@ pub fn commandline_set_buffer(text: Option<WString>, cursor_pos: Option<usize>) 
     current_data().map(|data| data.apply_commandline_state_changes());
 }
 
-pub fn commandline_set_search_field(text: WString, cursor_pos: Option<usize>) {
+pub fn commandline_set_search_field(parser: &Parser, text: WString, cursor_pos: Option<usize>) {
+    if parser.scope().readonly_commandline {
+        return;
+    }
     {
         let mut state = commandline_state_snapshot();
         assert!(state.search_field.is_some());
@@ -5321,7 +5330,10 @@ fn expand_replacer(
     let mut cmd = escape(&repl.replacement);
     cmd.push(' ');
     cmd.push_utfstr(&escape(token));
-    let _not_interactive = parser.push_scope(|s| s.is_interactive = false);
+    let _not_interactive = parser.push_scope(|s| {
+        s.is_interactive = false;
+        s.readonly_commandline = true;
+    });
 
     let mut outputs = vec![];
     if exec_subshell(

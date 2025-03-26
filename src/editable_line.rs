@@ -41,7 +41,11 @@ impl Edit {
 /// Currently exposed for testing only.
 pub fn apply_edit(target: &mut WString, colors: &mut Vec<HighlightSpec>, edit: &Edit) {
     let range = &edit.range;
-    target.replace_range(range.clone(), &edit.replacement);
+    if target.is_empty() {
+        *target = edit.replacement.clone();
+    } else {
+        target.replace_range(range.clone(), &edit.replacement);
+    }
 
     // Now do the same to highlighting.
     let last_color = edit
@@ -50,10 +54,16 @@ pub fn apply_edit(target: &mut WString, colors: &mut Vec<HighlightSpec>, edit: &
         .checked_sub(1)
         .map(|i| colors[i])
         .unwrap_or_default();
-    colors.splice(
-        range.clone(),
-        std::iter::repeat(last_color).take(edit.replacement.len()),
-    );
+    if colors.is_empty() {
+        *colors = std::iter::repeat(last_color)
+            .take(edit.replacement.len())
+            .collect();
+    } else {
+        colors.splice(
+            range.clone(),
+            std::iter::repeat(last_color).take(edit.replacement.len()),
+        );
+    }
 }
 
 /// The history of all edits to some command line.
@@ -185,7 +195,11 @@ impl EditableLine {
                 .truncate(self.undo_history.edits_applied);
         }
         edit.cursor_position_before_edit = self.pending_position.take().unwrap_or(self.position());
-        edit.old = self.text[range.clone()].to_owned();
+        edit.old = if self.text.is_empty() {
+            L!("").to_owned()
+        } else {
+            self.text[range.clone()].to_owned()
+        };
         apply_edit(&mut self.text, &mut self.colors, &edit);
         self.set_position(cursor_position_after_edit(&edit));
         assert_eq!(
@@ -204,7 +218,7 @@ impl EditableLine {
         let mut last_group_id = None;
         let position_before_undo = self.position();
         let end = self.undo_history.edits_applied;
-        while self.undo_history.edits_applied != 0 {
+        while !self.undo_history.edits.is_empty() && self.undo_history.edits_applied != 0 {
             let edit = &self.undo_history.edits[self.undo_history.edits_applied - 1];
             if did_undo
                 && edit

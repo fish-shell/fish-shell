@@ -184,3 +184,8 @@ sendline(r"""abbr fruit --command={git,hg,svn,} banana""")
 expect_prompt()
 sendline(r"""fruit foo""")
 expect_prompt("I am a banana")
+
+# (don't add the literal string "bar" here or the expect_prompt will match it - so we add some no-op quotes)
+sendline(r"""function replace; commandline -r ""; echo echo b''ar; end; abbr foo --function replace""")
+sendline("foo")
+expect_prompt("bar")

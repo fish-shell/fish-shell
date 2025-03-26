@@ -1798,6 +1798,8 @@ complete -f -c git -n '__fish_git_using_command merge' -l rerere-autoupdate -d '
 complete -f -c git -n '__fish_git_using_command merge' -l no-rerere-autoupdate -d 'Do not use previous conflict resolutions'
 complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
 complete -f -c git -n '__fish_git_using_command merge' -l continue -d 'Conclude current conflict resolution process'
+complete -f -c git -n '__fish_git_using_command merge' -l autostash -d 'Before starting merge, stash local changes, and apply stash when done'
+complete -f -c git -n '__fish_git_using_command merge' -l no-autostash -d 'Do not stash local changes before starting merge'
 
 ### merge-base
 complete -f -c git -n __fish_git_needs_command -a merge-base -d 'Find a common ancestor for a merge'

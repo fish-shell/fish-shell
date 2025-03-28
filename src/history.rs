@@ -152,19 +152,18 @@ const MAX_SAVE_TRIES: usize = 1024;
 
 pub const VACUUM_FREQUENCY: usize = 25;
 
-/// If the size of `buffer` is at least `min_size`, output the contents `buffer` to `fd`,
-/// and clear the string.
-fn flush_to_file(buffer: &mut Vec<u8>, file: &mut File, min_size: usize) -> std::io::Result<()> {
-    if buffer.is_empty() || buffer.len() < min_size {
-        return Ok(());
-    }
-
+/// Output the contents `buffer` to `file` and clear the `buffer`.
+fn drain_buffer_into_file_no_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
     file.write_all(buffer)?;
     buffer.clear();
-    // Ensure that the file content is actually written to persistent storage.
-    // This might be unnecessary.
-    // It is used to help eliminate possible causes for
-    // https://github.com/fish-shell/fish-shell/issues/10300
+    Ok(())
+}
+
+/// Output the contents `buffer` to `file` and clear the `buffer`.
+/// Flush the file and sync it to ensure that the updates actually reach the file system.
+fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
+    drain_buffer_into_file_no_flush(buffer, file)?;
+    file.flush()?;
     file.sync_all()
 }
 
@@ -578,10 +577,10 @@ impl HistoryImpl {
             usize::min(self.first_unwritten_new_item_index, self.new_items.len());
     }
 
-    /// Given the fd of an existing history file, write a new history file to `dst_fd`.
+    /// Given an existing history file, write a new history file to `dst`.
     /// Returns false on error, true on success
     fn rewrite_to_temporary_file(&self, existing_file: Option<&mut File>, dst: &mut File) -> bool {
-        // We are reading FROM existing_fd and writing TO dst_fd
+        // We are reading FROM existing_file and writing TO dst
 
         // Make an LRU cache to save only the last N elements.
         let mut lru = LruCache::new(HISTORY_SAVE_MAX);
@@ -640,9 +639,16 @@ impl HistoryImpl {
         let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in items {
             append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_file(&mut buffer, dst, HISTORY_OUTPUT_BUFFER_SIZE) {
+            if buffer.len() >= HISTORY_OUTPUT_BUFFER_SIZE {
+                if let Err(e) = drain_buffer_into_file_no_flush(&mut buffer, dst) {
+                    err = Some(e);
+                    break;
+                }
+            }
+        }
+        if err.is_none() {
+            if let Err(e) = drain_buffer_into_file_and_flush(&mut buffer, dst) {
                 err = Some(e);
-                break;
             }
         }
         if let Some(err) = err {
@@ -654,7 +660,7 @@ impl HistoryImpl {
 
             false
         } else {
-            flush_to_file(&mut buffer, dst, 0).is_ok()
+            true
         }
     }
 
@@ -818,6 +824,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by appending to the file.
+    // TODO: return error information
     fn save_internal_via_appending(&mut self) -> bool {
         FLOGF!(
             history,
@@ -834,6 +841,7 @@ impl HistoryImpl {
 
         // Get the path to the real history file.
         let Some(history_path) = history_filename(&self.name, L!("")) else {
+            // TODO: Why have a successful return here?
             return true;
         };
 
@@ -901,17 +909,18 @@ impl HistoryImpl {
                 let item = &self.new_items[self.first_unwritten_new_item_index];
                 if item.should_write_to_disk() {
                     append_history_item_to_buffer(item, &mut buffer);
-                    res = flush_to_file(&mut buffer, &mut history_file, HISTORY_OUTPUT_BUFFER_SIZE);
+                    // Ensure that each item is written individually and makes it to storage.
+                    // This is done to keep `self.first_unwritten_new_item_index` consistent with
+                    // the file system.
+                    // Flushing and syncing each iteration adds overhead,
+                    // but hopefully there are not that many items to write when appending.
+                    res = drain_buffer_into_file_and_flush(&mut buffer, &mut history_file);
                     if res.is_err() {
                         break;
                     }
                 }
                 // We wrote or skipped this item, hooray.
                 self.first_unwritten_new_item_index += 1;
-            }
-
-            if res.is_ok() {
-                res = flush_to_file(&mut buffer, &mut history_file, 0);
             }
 
             // Since we just modified the file, update our history_file_id to match its current state

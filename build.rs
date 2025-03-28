@@ -49,6 +49,7 @@ fn main() {
         build_man(&targetman);
     }
     rsconf::rebuild_if_path_changed("src/libc.c");
+    rsconf::rebuild_if_path_changed("src/");
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)

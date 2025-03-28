@@ -13,7 +13,7 @@ Use the :doc:`set <cmds/set>` command::
     set -x key value # typically set -gx key value
     set -e key
 
-Since fish 3.1 you can set an environment variable for just one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
+Since fish 3.1 you can set an environment variable for one command using the ``key=value some command`` syntax, like in other shells.  The two lines below behave identically - unlike other shells, fish will output ``value`` both times::
 
     key=value echo $key
     begin; set -lx key value; echo $key; end
@@ -162,11 +162,11 @@ Why doesn't history substitution ("!$" etc.) work?
 --------------------------------------------------
 Because history substitution is an awkward interface that was invented before interactive line editing was even possible. Instead of adding this pseudo-syntax, fish opts for nice history searching and recall features.  Switching requires a small change of habits: if you want to modify an old line/word, first recall it, then edit.
 
-As a special case, most of the time history substitution is used as ``sudo !!``. In that case just press :kbd:`alt-s`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
+As a special case, most of the time history substitution is used as ``sudo !!``. In that case press :kbd:`alt-s`, and it will recall your last commandline with ``sudo`` prefixed (or toggle a ``sudo`` prefix on the current commandline if there is anything).
 
 In general, fish's history recall works like this:
 
-- Like other shells, the Up arrow, ``up`` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would just hit the up-arrow.
+- Like other shells, the Up arrow, ``up`` recalls whole lines, starting from the last executed line. So instead of typing ``!!``, you would hit the up-arrow.
 
 - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will filter the recalled lines to ones that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. If you want to see more context, you can press ``ctrl-r`` to open the history in the pager.
 
@@ -174,7 +174,7 @@ In general, fish's history recall works like this:
 
 See :ref:`documentation <editor>` for more details about line editing in fish.
 
-That being said, you can use :ref:`abbreviations` to implement history substitution. Here's just ``!!``::
+That being said, you can use :ref:`abbreviations` to implement history substitution. Here's ``!!`` only::
 
   function last_history_item; echo $history[1]; end
   abbr -a !! --position anywhere --function last_history_item
@@ -232,7 +232,7 @@ Use the ``$status`` variable. This replaces the ``$?`` variable used in other sh
     end
 
 
-If you are just interested in success or failure, you can run the command directly as the if-condition::
+If you are only interested in success or failure, you can run the command directly as the if-condition::
 
     if somecommand
         echo "Command succeeded"
@@ -330,7 +330,7 @@ This is more important to fish than other shells because features like syntax hi
 
 Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
 
-- It is possible the character is simply too new for your system to know - in this case you need to refrain from using it.
+- It is possible the character is too new for your system to know - in this case you need to refrain from using it.
 - Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
 - The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
 - The character is an emoji and the host system only supports Unicode 8, while you are running the terminal on a system that uses Unicode >= 9. In this case set $fish_emoji_width to 2.
@@ -346,7 +346,7 @@ Uninstalling fish
 -----------------
 If you want to uninstall fish, first make sure fish is not set as your shell. Run ``chsh -s /bin/bash`` if you are not sure.
 
-If you installed it with a package manager, just use that package manager's uninstall function. If you built fish yourself, assuming you installed it to /usr/local, do this::
+If you installed it with a package manager, use that package manager's uninstall function. If you built fish yourself, assuming you installed it to /usr/local, do this::
 
     rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
     rm /usr/local/share/man/man1/fish*.1

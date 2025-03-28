@@ -203,7 +203,7 @@ Parentheses and the ``-o`` and ``-a`` operators can be combined to produce more 
     end
 
 
-Numerical comparisons will simply fail if one of the operands is not a number:
+Numerical comparisons will fail if one of the operands is not a number:
 
 ::
 

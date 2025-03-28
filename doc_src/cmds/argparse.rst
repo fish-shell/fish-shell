@@ -20,7 +20,7 @@ Each option specification (``OPTION_SPEC``) is written in the :ref:`domain speci
 
 Each option that is seen in the ARG list will result in variables named ``_flag_X``, where **X** is the short flag letter and the long flag name (if they are defined). For example a **--help** option could cause argparse to define one variable called ``_flag_h`` and another called ``_flag_help``.
 
-The variables will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it just is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag variable will not be set.
+The variables will be set with local scope (i.e., as if the script had done ``set -l _flag_X``). If the flag is a boolean (that is, it is passed or not, it doesn't have a value) the values are the short and long flags seen. If the option is not a boolean the values will be zero or more values corresponding to the values collected when the ARG list is processed. If the flag was not seen the flag variable will not be set.
 
 Options
 -------
@@ -165,7 +165,7 @@ This isn't specific to argparse but common to all things using ``getopt(3)`` (if
 Flag Value Validation
 ---------------------
 
-Sometimes you need to validate the option values. For example, that it is a valid integer within a specific range, or an ip address, or something entirely different. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary fish script. To do so simply append an ``!`` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
+Sometimes you need to validate the option values. For example, that it is a valid integer within a specific range, or an ip address, or something entirely different. You can always do this after ``argparse`` returns but you can also request that ``argparse`` perform the validation by executing arbitrary fish script. To do so append an ``!`` (exclamation-mark) then the fish script to be run. When that code is executed three vars will be defined:
 
 - ``_argparse_cmd`` will be set to the value of the value of the ``argparse --name`` value.
 
@@ -177,7 +177,7 @@ These variables are passed to the function as local exported variables.
 
 The script should write any error messages to stdout, not stderr. It should return a status of zero if the flag value is valid otherwise a non-zero status to indicate it is invalid.
 
-Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--max`` flag. Let's say your command accepts a ``-m`` or ``--max`` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: ``m/max=!_validate_int --min 0 --max 5``. The default if you just call ``_validate_int`` without those flags is to simply check that the value is a valid integer with no limits on the min or max value allowed.
+Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--max`` flag. Let's say your command accepts a ``-m`` or ``--max`` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: ``m/max=!_validate_int --min 0 --max 5``. The default if you call ``_validate_int`` without those flags is to check that the value is a valid integer with no limits on the min or max value allowed.
 
 Here are some examples of flag validations::
 
@@ -234,7 +234,7 @@ A simple use::
         return 0
     end
 
-This just wants one option - ``-h`` / ``--help``. Any other option is an error. If it is given it prints help and exits.
+This supports one option - ``-h`` / ``--help``. Any other option is an error. If it is given it prints help and exits.
 
 How :doc:`fish_add_path` parses its args::
 

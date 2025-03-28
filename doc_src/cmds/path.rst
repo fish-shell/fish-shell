@@ -346,7 +346,7 @@ Examples
     path change-extension [-z | --null-in] [-Z | --null-out] \
         [-q | --quiet] EXTENSION [PATH ...]
 
-``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is simply added.
+``path change-extension`` returns the given paths, with their extension changed to the given new extension. The extension is the part after (and including) the last ".", unless that "." followed a "/" or the basename is "." or "..", in which case there is no previous extension and the new one is added.
 
 If the extension is empty, any previous extension is stripped, along with the ".". This is, of course, the inverse of ``path extension``.
 

@@ -257,7 +257,7 @@ This is important when any redirections reference other file descriptors with th
 
 Consider this helper function::
 
-  # Just make a function that prints something to stdout and stderr
+  # Make a function that prints something to stdout and stderr
   function print
       echo out
       echo err >&2
@@ -281,7 +281,7 @@ Now let's see a few cases::
 Job control
 -----------
 
-When you start a job in fish, fish itself will pause, and give control of the terminal to the program just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an ``&`` (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
+When you start a job in fish, fish itself will pause, and give control of the terminal to the program it just started. Sometimes, you want to continue using the commandline, and have the job run in the background. To create a background job, append an ``&`` (ampersand) to your command. This will tell fish to run the job in the background. Background jobs are very useful when running programs that have a graphical user interface.
 
 Example::
 
@@ -314,7 +314,7 @@ For example, here's a simple function to list directories::
       ls -l $argv
   end
 
-The first line tells fish to define a function by the name of ``ll``, so it can be used by simply writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. :ref:`$argv <variables-argv>` is a :ref:`list variable <variables-lists>`, which always contains all arguments sent to the function. In the example above, these are simply passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
+The first line tells fish to define a function by the name of ``ll``, so it can be used by writing ``ll`` on the commandline. The second line tells fish that the command ``ls -l $argv`` should be called when ``ll`` is invoked. :ref:`$argv <variables-argv>` is a :ref:`list variable <variables-lists>`, which always contains all arguments sent to the function. In the example above, these are passed on to the ``ls`` command. The ``end`` on the third line ends the definition.
 
 Calling this as ``ll /tmp/`` will end up running ``ls -l /tmp/``, which will list the contents of /tmp.
 
@@ -408,7 +408,7 @@ This is useful to explain what and why you are doing something::
       command ls --color=auto $argv
   end
 
-There are no multiline comments. If you want to make a comment span multiple lines, simply start each line with a ``#``.
+There are no multiline comments. If you want to make a comment span multiple lines, start each line with a ``#``.
 
 Comments can also appear after a line like so::
 
@@ -436,7 +436,7 @@ Like other shells, but unlike typical programming languages you might know, the 
 
 This uses the :doc:`test <cmds/test>` command to see if the file /etc/os-release exists. If it does, it runs ``cat``, which prints it on the screen.
 
-Unlike other shells, the condition command just ends after the first job, there is no ``then`` here. Combiners like ``and`` and ``or`` extend the condition.
+Unlike other shells, the condition command ends after the first job, there is no ``then`` here. Combiners like ``and`` and ``or`` extend the condition.
 
 A more complicated example with a :ref:`command substitution <expand-command-substitution>`::
 
@@ -460,7 +460,7 @@ Because ``test`` can be used for many different tests, it is important to quote 
 
 The :doc:`not <cmds/not>` keyword can be used to invert the status::
 
-  # Just see if the file contains the string "fish" anywhere.
+  # Check if the file contains the string "fish" anywhere.
   # This executes the `grep` command, which searches for a string,
   # and if it finds it returns a status of 0.
   # The `not` then turns 0 into 1 or anything else into 0.
@@ -530,7 +530,7 @@ Or you can have a case where it is necessary to stop early::
 
 If this went on after seeing that the command "foo" doesn't exist, it would try to run ``foo`` and error because it wasn't found!
 
-Combiners really just execute step-by-step, so it isn't recommended to build longer chains of them because they might do something you don't want. Consider::
+Combiners execute step-by-step, so it isn't recommended to build longer chains of them because they might do something you don't want. Consider::
 
   test -e /etc/my.config
   or echo "OH NO WE NEED A CONFIG FILE"
@@ -567,7 +567,7 @@ will print "Still running" once a second. You can abort it with ctrl-c.
       echo file: $file
   end
 
-will print each file in the current directory. The part after the ``in`` is just a list of arguments, so you can use any :ref:`expansions <expand>` there::
+will print each file in the current directory. The part after the ``in`` is a list of arguments, so you can use any :ref:`expansions <expand>` there::
 
   set moreanimals bird fox
   for animal in {cat,}fish dog $moreanimals
@@ -620,7 +620,7 @@ When a parameter includes an :ref:`unquoted <quotes>` ``*`` star (or "asterisk")
 
 - ``**`` matches any number of characters (including zero), and also descends into subdirectories. If ``**`` is a segment by itself, that segment may match zero times, for compatibility with other shells.
 
-- ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will just be an ordinary character.
+- ``?`` can match any single character except ``/``. This is deprecated and can be disabled via the ``qmark-noglob`` :ref:`feature flag<featureflags>`, so ``?`` will be an ordinary character.
 
 Wildcard matches are sorted case insensitively. When sorting matches containing numbers, they are naturally sorted, so that the strings '1' '5' and '12' would be sorted like 1, 5, 12.
 
@@ -658,7 +658,7 @@ Variable expansion
 
 One of the most important expansions in fish is the "variable expansion". This is the replacing of a dollar sign (``$``) followed by a variable name with the _value_ of that variable.
 
-In the simplest case, this is just something like::
+A simple example::
 
     echo $HOME
 
@@ -859,13 +859,13 @@ Examples::
     # Set ``$data`` to the contents of data, splitting on NUL-bytes.
     set data (cat data | string split0)
 
-Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually just pass it via a pipe, like::
+Sometimes you want to pass the output of a command to another command that only accepts files. If it's just one file, you can usually pass it via a pipe, like::
 
     grep fish myanimallist1 | wc -l
 
 but if you need multiple or the command doesn't read from standard input, "process substitution" is useful. Other shells allow this via ``foo <(bar) <(baz)``, and fish uses the :doc:`psub <cmds/psub>` command::
 
-    # Compare just the lines containing "fish" in two files:
+    # Compare only the lines containing "fish" in two files:
     diff -u (grep fish myanimallist1 | psub) (grep fish myanimallist2 | psub)
 
 This creates a temporary file, stores the output of the command in that file and prints the filename, so it is given to the outer command.
@@ -909,7 +909,7 @@ If there is no "," or variable expansion between the curly braces, they will not
 If after expansion there is nothing between the braces, the argument will be removed (see :ref:`the Combining Lists <cartesian-product>` section)::
 
     > echo foo-{$undefinedvar}
-    # Output is an empty line, just like a bare `echo`.
+    # Output is an empty line, like a bare `echo`.
 
 If there is nothing between a brace and a comma or two commas, it's interpreted as an empty element::
 
@@ -1326,7 +1326,7 @@ To see universal variables in action, start two fish sessions side by side, and 
 
 :ref:`Universal variables <variables-universal>` are stored in the file ``.config/fish/fish_variables``. Do not edit this file directly, as your edits may be overwritten. Edit the variables through fish scripts or by using fish interactively instead.
 
-Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, simply set them once at the command line.
+Do not append to universal variables in :ref:`config.fish <configuration>`, because these variables will then get longer with each new shell instance. Instead, set them once at the command line.
 
 .. _variables-export:
 
@@ -1369,7 +1369,7 @@ To access one element of a list, use the index of the element inside of square b
 
    echo $PATH[3]
 
-List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, just no argument at all).
+List indices start at 1 in fish, not 0 like in other languages. This is because it requires less subtracting of 1 and many common Unix tools like ``seq`` work better with it (``seq 5`` prints 1 to 5, not 0 to 5). An invalid index is silently ignored resulting in no value (not even an empty string, no argument at all).
 
 If you don't use any brackets, all the elements of the list will be passed to the command as separate items. This means you can iterate over a list with ``for``::
 
@@ -1379,7 +1379,7 @@ If you don't use any brackets, all the elements of the list will be passed to th
 
 This goes over every directory in :envvar:`PATH` separately and prints a line saying it is in the path.
 
-To create a variable ``smurf``, containing the items ``blue`` and ``small``, simply write::
+To create a variable ``smurf``, containing the items ``blue`` and ``small``, write::
 
     set smurf blue small
 
@@ -1441,7 +1441,7 @@ Lists can be inspected with the :doc:`count <cmds/count>` or the :doc:`contains 
     > contains -i blue $smurf
     1
 
-A nice thing about lists is that they are passed to commands one element as one argument, so once you've set your list, you can just pass it::
+A nice thing about lists is that they are passed to commands one element as one argument, so once you've set your list, you can pass it::
 
   set -l grep_args -r "my string"
   grep $grep_args . # will run the same as `grep -r "my string"` .
@@ -1715,7 +1715,7 @@ Fish also provides additional information through the values of certain environm
 
 .. ENVVAR:: SHLVL
 
-   the level of nesting of shells. Fish increments this in interactive shells, otherwise it simply passes it along.
+   the level of nesting of shells. Fish increments this in interactive shells, otherwise it only passes it along.
 
 .. envvar:: status
 
@@ -1954,7 +1954,7 @@ Let's make up an example. This function will :ref:`glob <expand-wildcard>` the f
         printf '%s\n' $files
     end
 
-If you run this as ``show_files /``, it will most likely ask you until you press Y/y or N/n. If you run this as ``show_files / | cat``, it will print the files without asking. If you run this as ``show_files .``, it might just print something without asking because there are fewer than five files.
+If you run this as ``show_files /``, it will most likely ask you until you press Y/y or N/n. If you run this as ``show_files / | cat``, it will print the files without asking. If you run this as ``show_files .``, it might print something without asking because there are fewer than five files.
 
 .. _identifiers:
 
@@ -2027,7 +2027,7 @@ You can see the current list of features via ``status features``::
 
 Here is what they mean:
 
-- ``stderr-nocaret`` was introduced in fish 3.0 and cannot be turned off since fish 3.5. It can still be tested for compatibility, but a ``no-stderr-nocaret`` value will simply be ignored. The flag made ``^`` an ordinary character instead of denoting an stderr redirection. Use ``2>`` instead.
+- ``stderr-nocaret`` was introduced in fish 3.0 and cannot be turned off since fish 3.5. It can still be tested for compatibility, but a ``no-stderr-nocaret`` value will be ignored. The flag made ``^`` an ordinary character instead of denoting an stderr redirection. Use ``2>`` instead.
 - ``qmark-noglob`` was also introduced in fish 3.0 (and made the default in 4.0). It makes ``?`` an ordinary character instead of a single-character glob. Use a ``*`` instead (which will match multiple characters) or find other ways to match files like ``find``.
 - ``regex-easyesc`` was introduced in 3.1 (and made the default in 3.5). It makes it so the replacement expression in ``string replace -r`` does one fewer round of escaping. Before, to escape a backslash you would have to use ``string replace -ra '([ab])' '\\\\\\\\$1'``. After, just ``'\\\\$1'`` is enough. Check your ``string replace`` calls if you use this anywhere.
 - ``ampersand-nobg-in-token`` was introduced in fish 3.4 (and made the default in 3.5). It makes it so a ``&`` i no longer interpreted as the backgrounding operator in the middle of a token, so dealing with URLs becomes easier. Either put spaces or a semicolon after the ``&``. This is recommended formatting anyway, and ``fish_indent`` will have done it for you already.
@@ -2116,9 +2116,9 @@ For more information on how to define new event handlers, see the documentation 
 Debugging fish scripts
 ----------------------
 
-Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, simply type :doc:`exit <cmds/exit>` or :kbd:`ctrl-d`.
+Fish includes basic built-in debugging facilities that allow you to stop execution of a script at an arbitrary point. When this happens you are presented with an interactive prompt where you can execute any fish command to inspect or change state (there are no debug commands as such). For example, you can check or change the value of any variables using :doc:`printf <cmds/printf>` and :doc:`set <cmds/set>`. As another example, you can run :doc:`status print-stack-trace <cmds/status>` to see how the current breakpoint was reached. To resume normal execution of the script, type :doc:`exit <cmds/exit>` or :kbd:`ctrl-d`.
 
-To start a debug session simply insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
+To start a debug session insert the :doc:`builtin command <cmds/breakpoint>` ``breakpoint`` at the point in a function or script where you wish to gain control, then run the function or script. Also, the default action of the ``TRAP`` signal is to call this builtin, meaning a running script can be actively debugged by sending it the ``TRAP`` signal (``kill -s TRAP <PID>``). There is limited support for interactively setting or modifying breakpoints from this debug prompt: it is possible to insert new breakpoints in (or remove old ones from) other functions by using the ``funced`` function to edit the definition of a function, but it is not possible to add or remove a breakpoint from the function/script currently loaded and being executed.
 
 Another way to debug script issues is to set the :envvar:`fish_trace` variable, e.g. ``fish_trace=1 fish_prompt`` to see which commands fish executes when running the :doc:`fish_prompt <cmds/fish_prompt>` function.
 

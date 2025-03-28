@@ -192,7 +192,7 @@ Note that both of these are bashisms, and most things can easily be expressed wi
 
   source (command | psub)
 
-just use::
+Use::
 
   command | source
 
@@ -246,7 +246,7 @@ is mostly the same as
   foo
   EOF
 
-Just like with heredocs, the command has to be prepared to read from stdin. Sometimes this requires special options to be used, often giving a filename of ``-`` turns it on.
+Like with heredocs, the command has to be prepared to read from stdin. Sometimes this requires special options to be used, often giving a filename of ``-`` turns it on.
 
 For example::
 
@@ -266,7 +266,7 @@ and could be written in other shells as
   rxvt-unicode
   EOF
   
-So heredocs really are just minor syntactical sugar that introduces a lot of special rules, which is why fish doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
+So heredocs really are minor syntactical sugar that introduces a lot of special rules, which is why fish doesn't have them. Pipes are a core concept, and are simpler and compose nicer.
 
 .. [#] For example, the "EOF" is just a convention, the terminator can be an arbitrary string, something like "THISISTHEEND" also works. And using ``<<-`` trims leading *tab* characters (but not other whitespace), so you can indent the lines, but only with tabs. Substitutions (variables, commands) are done on the heredoc by default, but not if the terminator is quoted: ``cat << "EOF"``.
 
@@ -326,7 +326,7 @@ and a rough fish equivalent::
 This shows a few differences:
 
 - Fish provides :doc:`set_color <cmds/set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
-- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is simply a function. To achieve the effect of ``\h``, fish provides helper functions like :doc:`prompt_hostname <cmds/prompt_hostname>`, which prints a shortened version of the hostname.
+- Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is a function. To achieve the effect of ``\h``, fish provides helper functions like :doc:`prompt_hostname <cmds/prompt_hostname>`, which prints a shortened version of the hostname.
 - Fish offers other helper functions for adding things to the prompt, like :doc:`fish_vcs_prompt <cmds/fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :doc:`prompt_pwd <cmds/prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
 
 The default prompt is reasonably full-featured and its code can be read via ``type fish_prompt``.
@@ -417,7 +417,7 @@ This includes things like:
         baz &
     done
 
-Fish does not currently have subshells. You will have to find a different solution. The isolation can usually be achieved by just scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can use ``fish -c 'your code here'`` to do so explicitly.
+Fish does not currently have subshells. You will have to find a different solution. The isolation can usually be achieved by scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can use ``fish -c 'your code here'`` to do so explicitly.
 
 ``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in fish::
 
@@ -427,7 +427,7 @@ Fish does not currently have subshells. You will have to find a different soluti
     # becomes
     begin; foo; bar; end | baz
 
-The pipe will simply be run in the same process, so ``while read`` loops can set variables outside::
+The pipe will be run in the same process, so ``while read`` loops can set variables outside::
 
     foo | while read bar
         set -g VAR VAL

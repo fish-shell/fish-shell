@@ -25,7 +25,7 @@ Autosuggestions
 
 fish suggests commands as you type, based on :ref:`command history <history-search>`, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the ``fish_color_autosuggestion`` variable).
 
-To accept the autosuggestion (replacing the command line contents), press :kbd:`right` (``→``) or :kbd:`ctrl-f`. To accept the first suggested word, press :kbd:`alt-right` (``→``) or :kbd:`alt-f`. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
+To accept the autosuggestion (replacing the command line contents), press :kbd:`right` (``→``) or :kbd:`ctrl-f`. To accept the first suggested word, press :kbd:`alt-right` (``→``) or :kbd:`alt-f`. If the autosuggestion is not what you want, ignore it: it won't execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
@@ -38,7 +38,7 @@ If you don't like autosuggestions, you can disable them by setting ``$fish_autos
 Tab Completion
 --------------
 
-Tab completion is a time saving feature of any modern shell. When you type :kbd:`tab`, fish tries to guess the rest of the word under the cursor. If it finds just one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
+Tab completion is a time saving feature of any modern shell. When you type :kbd:`tab`, fish tries to guess the rest of the word under the cursor. If it finds exactly one possibility, it inserts it. If it finds more, it inserts the longest unambiguous part and then opens a menu (the "pager") that you can navigate to find what you're looking for.
 
 The pager can be navigated with the arrow keys, :kbd:`pageup` / :kbd:`pagedown`, :kbd:`tab` or :kbd:`shift-tab`. Pressing :kbd:`ctrl-s` (the ``pager-toggle-search`` binding - :kbd:`/` in vi mode) opens up a search menu that you can use to filter the list.
 
@@ -56,7 +56,7 @@ It also provides a large number of program specific scripted completions. Most o
 
 You can also write your own completions or install some you got from someone else. For that, see :ref:`Writing your own completions <completion-own>`.
 
-Completion scripts are loaded on demand, just like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
+Completion scripts are loaded on demand, like :ref:`functions are <syntax-function-autoloading>`. The difference is the ``$fish_complete_path`` :ref:`list <variables-lists>` is used instead of ``$fish_function_path``. Typically you can drop new completions in ~/.config/fish/completions/name-of-command.fish and fish will find them automatically.
 
 .. _color:
 
@@ -554,7 +554,7 @@ In addition to the standard bindings listed here, you can also define your own w
 
 Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
 
-If you change your mind on a binding and want to go back to fish's default, you can simply erase it again::
+If you change your mind on a binding and want to go back to fish's default, you can erase it again::
 
   bind --erase ctrl-c
 
@@ -606,7 +606,7 @@ Copy and paste (Kill Ring)
 Fish uses an Emacs-style kill ring for copy and paste functionality. For example, use :kbd:`ctrl-k` (`kill-line`) to cut from the current cursor position to the end of the line. The string that is cut (a.k.a. killed in emacs-ese) is inserted into a list of kills, called the kill ring. To paste the latest value from the kill ring (emacs calls this "yanking") use :kbd:`ctrl-y` (the ``yank`` input function). After pasting, use :kbd:`alt-y` (``yank-pop``) to rotate to the previous kill.
 
 Copy and paste from outside are also supported, both via the :kbd:`ctrl-x` / :kbd:`ctrl-v` bindings (the ``fish_clipboard_copy`` and ``fish_clipboard_paste`` functions [#]_) and via the terminal's paste function, for which fish enables "Bracketed Paste Mode", so it can tell a paste from manually entered text.
-In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token simply by closing the quote after.
+In addition, when pasting inside single quotes, pasted single quotes and backslashes are automatically escaped so that the result can be used as a single token by closing the quote after.
 Kill ring entries are stored in ``fish_killring`` variable.
 
 The commands ``begin-selection`` and ``end-selection`` (unbound by default; used for selection in vi visual mode) control text selection together with cursor movement commands that extend the current selection.
@@ -636,7 +636,7 @@ Searchable command history
 
 After a command has been executed, it is remembered in the history list. Any duplicate history items are automatically removed. By pressing the up and down keys, you can search forwards and backwards in the history. If the current command line is not empty when starting a history search, only the commands containing the string entered into the command line are shown.
 
-By pressing :kbd:`alt-up` (``↑``) and :kbd:`alt-down` (``↓``), a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements just like it would be before execution, and the history is searched for an element matching that under the cursor.
+By pressing :kbd:`alt-up` (``↑``) and :kbd:`alt-down` (``↓``), a history search is also performed, but instead of searching for a complete commandline, each commandline is broken into separate elements like it would be before execution, and the history is searched for an element matching that under the cursor.
 
 For more complicated searches, you can press :kbd:`ctrl-r` to open a pager that allows you to search the history. It shows a limited number of entries in one page, press :kbd:`ctrl-r` [#]_ again to move to the next page and :kbd:`ctrl-s` [#]_ to move to the previous page. You can change the text to refine your search.
 

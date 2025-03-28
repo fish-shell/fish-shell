@@ -644,7 +644,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
             str2wcstring(paths.sysconf.as_os_str().as_bytes()),
         );
 
-        if !cfg!(feature = "installable") {
+        if !cfg!(feature = "embed-data") {
             vars.set_one(
                 FISH_HELPDIR_VAR,
                 EnvMode::GLOBAL,

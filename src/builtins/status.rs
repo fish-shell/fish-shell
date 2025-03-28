@@ -317,10 +317,10 @@ fn parse_cmd_opts(
     return Ok(SUCCESS);
 }
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
 #[folder = "target/man/man1"]
 #[prefix = "man/man1/"]
@@ -456,7 +456,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "installable")]
+            #[cfg(feature = "embed-data")]
             {
                 let arg = crate::common::wcs2string(args[0]);
                 let arg = std::str::from_utf8(&arg).unwrap();
@@ -472,7 +472,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            #[cfg(not(feature = "installable"))]
+            #[cfg(not(feature = "embed-data"))]
             {
                 streams.err.append(wgettext_fmt!(
                     "%ls: fish was not built with embedded files",
@@ -492,7 +492,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 ));
                 return Err(STATUS_INVALID_ARGS);
             }
-            #[cfg(feature = "installable")]
+            #[cfg(feature = "embed-data")]
             {
                 let mut have_file = false;
                 let arg = crate::common::wcs2string(args.get(0).unwrap_or(&L!("")));
@@ -518,7 +518,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            #[cfg(not(feature = "installable"))]
+            #[cfg(not(feature = "embed-data"))]
             {
                 streams.err.append(wgettext_fmt!(
                     "%ls: fish was not built with embedded files",
@@ -567,8 +567,8 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     let features: &[&str] = &[
                         #[cfg(gettext)]
                         "gettext",
-                        #[cfg(feature = "installable")]
-                        "installable",
+                        #[cfg(feature = "embed-data")]
+                        "embed-data",
                         #[cfg(target_feature = "crt-static")]
                         "crt-static",
                     ];

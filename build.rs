@@ -44,12 +44,12 @@ fn main() {
     let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
     let targetman = cman.as_path().join("target").join("man");
 
-    #[cfg(feature = "installable")]
+    #[cfg(feature = "embed-data")]
     #[cfg(not(clippy))]
     {
         build_man(&targetman);
     }
-    #[cfg(any(not(feature = "installable"), clippy))]
+    #[cfg(any(not(feature = "embed-data"), clippy))]
     {
         let sec1dir = targetman.join("man1");
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
@@ -378,7 +378,7 @@ fn get_version(src_dir: &Path) -> String {
     get_git_hash().expect("Could not get a version. Either set $FISH_BUILD_VERSION or install git.")
 }
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 // disable clippy because otherwise it would panic without sphinx
 #[cfg(not(clippy))]
 fn build_man(build_dir: &Path) {

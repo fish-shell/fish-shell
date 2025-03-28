@@ -63,7 +63,7 @@ use fish::{
     wchar::prelude::*,
     wutil::waccess,
 };
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
@@ -80,7 +80,7 @@ const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
 #[folder = "share/"]
 struct Asset;
@@ -185,9 +185,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     // If we picked ~/.local/share/fish as our data path,
                     // we would install there and erase history.
                     // So let's isolate us a bit more.
-                    #[cfg(feature = "installable")]
+                    #[cfg(feature = "embed-data")]
                     data: base_path.join("share/fish/install"),
-                    #[cfg(not(feature = "installable"))]
+                    #[cfg(not(feature = "embed-data"))]
                     data: base_path.join("share/fish"),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
@@ -200,9 +200,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 );
                 let base_path = exec_path.parent().unwrap();
                 paths = ConfigPaths {
-                    #[cfg(feature = "installable")]
+                    #[cfg(feature = "embed-data")]
                     data: base_path.join("share/install"),
-                    #[cfg(not(feature = "installable"))]
+                    #[cfg(not(feature = "embed-data"))]
                     data: base_path.join("share"),
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
@@ -222,7 +222,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
     if !done {
         // Fall back to what got compiled in.
-        let data = if cfg!(feature = "installable") {
+        let data = if cfg!(feature = "embed-data") {
             let Some(home) = fish::env::get_home() else {
                 FLOG!(
                     error,
@@ -236,7 +236,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         } else {
             Path::new(DATA_DIR).join(DATA_DIR_SUBDIR)
         };
-        let bin = if cfg!(feature = "installable") {
+        let bin = if cfg!(feature = "embed-data") {
             exec_path.parent().map(|x| x.to_path_buf())
         } else {
             Some(PathBuf::from(BIN_DIR))
@@ -300,7 +300,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    #[cfg(feature = "installable")]
+    #[cfg(feature = "embed-data")]
     {
         let emfile = Asset::get("config.fish").expect("Embedded file not found");
         let src = str2wcstring(&emfile.data);
@@ -312,7 +312,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
             eprintf!("%ls", msg);
         }
     }
-    #[cfg(not(feature = "installable"))]
+    #[cfg(not(feature = "embed-data"))]
     {
         let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
         if !source_config_in_directory(parser, &datapath) {

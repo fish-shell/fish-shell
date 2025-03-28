@@ -91,9 +91,9 @@ name = "fish_key_reader"
 path = "src/bin/fish_key_reader.rs"
 
 [features]
-default = ["installable"]
+default = ["embed-data"]
 benchmark = []
-installable = ["dep:rust-embed"]
+embed-data = ["dep:rust-embed"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

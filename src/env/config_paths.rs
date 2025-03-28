@@ -64,9 +64,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
-                #[cfg(feature = "installable")]
+                #[cfg(feature = "embed-data")]
                 let data_dir = base_path.join("share/fish/install");
-                #[cfg(not(feature = "installable"))]
+                #[cfg(not(feature = "embed-data"))]
                 let data_dir = base_path.join("share/fish");
                 paths = ConfigPaths {
                     // One obvious path is ~/.local (with fish in ~/.local/bin/).
@@ -85,9 +85,9 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     "'fish' not in a 'bin/', trying paths relative to source tree"
                 );
                 let base_path = exec_path.parent().unwrap();
-                #[cfg(feature = "installable")]
+                #[cfg(feature = "embed-data")]
                 let data_dir = base_path.join("share/install");
-                #[cfg(not(feature = "installable"))]
+                #[cfg(not(feature = "embed-data"))]
                 let data_dir = base_path.join("share");
                 paths = ConfigPaths {
                     data: data_dir.clone(),
@@ -110,7 +110,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
     if !done {
         // Fall back to what got compiled in.
-        let data = if cfg!(feature = "installable") {
+        let data = if cfg!(feature = "embed-data") {
             let Some(home) = crate::env::get_home() else {
                 FLOG!(
                     error,
@@ -124,7 +124,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         } else {
             PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR)
         };
-        let bin = if cfg!(feature = "installable") {
+        let bin = if cfg!(feature = "embed-data") {
             exec_path.parent().map(|x| x.to_path_buf())
         } else {
             Some(PathBuf::from(BIN_DIR))

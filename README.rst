@@ -167,16 +167,16 @@ In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), f
 - WITH_GETTEXT=ON|OFF - whether to build with gettext support for translations.
 - extra_functionsdir, extra_completionsdir and extra_confdir - to compile in an additional directory to be searched for functions, completions and configuration snippets
 
-Building fish as self-installable (experimental)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Building fish with embedded data (experimental)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also build fish as a self-installing binary.
+You can also build fish with the data files embedded.
 
 This will include all the datafiles like the included functions or web configuration tool in the main ``fish`` binary.
 
-On the first interactive run, and whenever it notices they are out of date, it will extract the datafiles to ~/.local/share/fish/install/ (currently, subject to change). You can do this manually by running ``fish --install``.
+Fish will then read these right from its own binary, and print them out when needed. Some files, like the webconfig tool and the manpage completion generator, will be extracted to a temporary directory on-demand. You can list the files with ``status list-files`` and print one with ``status get-file path/to/file`` (e.g. ``status get-file functions/fish_prompt.fish`` to get the default prompt).
 
-To install fish as self-installable, just use ``cargo``, like::
+To install fish with embedded files, just use ``cargo``, like::
 
    cargo install --path /path/to/fish # if you have a git clone
    cargo install --git https://github.com/fish-shell/fish-shell --tag 4.0.0 # to build from git with a specific version

@@ -1,6 +1,6 @@
 //! The classes responsible for autoloading functions and completions.
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 use crate::common::wcs2string;
 use crate::common::{escape, ScopeGuard};
 use crate::env::Environment;
@@ -11,7 +11,7 @@ use crate::tests::prelude::*;
 use crate::wchar::{wstr, WString, L};
 use crate::wutil::{file_id_for_path, FileId, INVALID_FILE_ID};
 use lru::LruCache;
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroUsize;
@@ -41,23 +41,23 @@ pub struct Autoload {
     cache: Box<AutoloadFileCache>,
 }
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
 #[folder = "share/"]
 pub struct Asset;
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 pub fn has_asset(cmd: &str) -> bool {
     Asset::get(cmd).is_some()
 }
 
-#[cfg(not(feature = "installable"))]
+#[cfg(not(feature = "embed-data"))]
 pub fn has_asset(_cmd: &str) -> bool {
     false
 }
 
 pub enum AutoloadPath {
-    #[cfg(feature = "installable")]
+    #[cfg(feature = "embed-data")]
     Embedded(String),
     Path(WString),
 }
@@ -135,7 +135,7 @@ impl Autoload {
         #[cfg(test)]
         return None;
 
-        #[cfg(feature = "installable")]
+        #[cfg(feature = "embed-data")]
         {
             let narrow = wcs2string(cmd);
             let cmdstr = std::str::from_utf8(&narrow).ok()?;
@@ -177,7 +177,7 @@ impl Autoload {
                 let script_source = L!("source ").to_owned() + &escape(p)[..];
                 parser.eval(&script_source, &IoChain::new());
             }
-            #[cfg(feature = "installable")]
+            #[cfg(feature = "embed-data")]
             AutoloadPath::Embedded(name) => {
                 use crate::common::str2wcstring;
                 use std::sync::Arc;

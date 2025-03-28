@@ -63,7 +63,7 @@ use fish::{
     wchar::prelude::*,
     wutil::waccess,
 };
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
@@ -74,7 +74,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::{env, ops::ControlFlow};
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 #[derive(RustEmbed)]
 #[folder = "share/"]
 struct Asset;
@@ -172,7 +172,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
 fn read_init(parser: &Parser, paths: &ConfigPaths) {
-    #[cfg(feature = "installable")]
+    #[cfg(feature = "embed-data")]
     {
         let emfile = Asset::get("config.fish").expect("Embedded file not found");
         let src = str2wcstring(&emfile.data);
@@ -184,7 +184,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
             eprintf!("%ls", msg);
         }
     }
-    #[cfg(not(feature = "installable"))]
+    #[cfg(not(feature = "embed-data"))]
     {
         let datapath = str2wcstring(paths.data.as_os_str().as_bytes());
         if !source_config_in_directory(parser, &datapath) {

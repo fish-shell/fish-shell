@@ -3,6 +3,11 @@
 # TODO: POSIX patch
 #
 
+
+# No effect on POSIX systems that don't use O_BINARY/O_TEXT
+uname -s | string match -q CYGWIN\*
+and complete -c patch -l binary -d "Read & write data in binary mode"
+
 complete -c patch -s b -l backup -d "Back up the original contents of each file"
 complete -c patch -l backup-if-mismatch -d "Back up files if patch doesn't match exactly"
 complete -c patch -l no-backup-if-mismatch -d "Don't back up for mismatching patches"
@@ -38,7 +43,3 @@ complete -c patch -s x -l debug -x -d "Set internal debugging flags"
 complete -c patch -s Y -l basename-prefix -x -d "Prepend PREFIX to backup file basenames"
 complete -c patch -s z -l suffix -x -d "Append SUFFIX to backup file name"
 complete -c patch -s Z -l set-utc -d "Set times of patched files assuming diff uses UTC"
-
-# No effect on POSIX systems that don't use O_BINARY/O_TEXT
-uname -s | string match -q CYGWIN\*
-and complete -c patch -l binary -d "Read & write data in binary mode"

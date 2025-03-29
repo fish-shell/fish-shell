@@ -1,6 +1,7 @@
 # gitk - The Git repository browser
 
-source $__fish_data_dir/completions/git.fish
+# for __fish_git_ranges and __fish_git_refs
+complete -C"git " >/dev/null
 
 complete -c gitk -n 'not contains -- -- (commandline -xpc)' -l all -d 'Show all refs (branches, tags, etc.)'
 complete -c gitk -n 'not contains -- -- (commandline -xpc)' -l since=YYYY-MM-DD -x -d 'Show commits more recent that a specific date'

@@ -4,6 +4,7 @@
 
 pub mod flog_safe;
 pub mod postfork;
+#[cfg(FISH_USE_POSIX_SPAWN)]
 pub mod spawn;
 use crate::proc::Job;
 use libc::{SIGINT, SIGQUIT};

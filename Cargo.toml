@@ -71,6 +71,9 @@ serial_test = { version = "3", default-features = false }
 cc = "1.0.94"
 rsconf = "0.2.2"
 
+[target.'cfg(windows)'.build-dependencies]
+unix_path = "1.0.1"
+
 [lib]
 crate-type = ["rlib"]
 path = "src/lib.rs"

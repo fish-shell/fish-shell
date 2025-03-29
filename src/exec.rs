@@ -12,6 +12,7 @@ use crate::common::{
     ScopeGuard,
 };
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
+#[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::env_dispatch::use_posix_spawn;
 use crate::fds::make_fd_blocking;
 use crate::fds::{make_autoclose_pipes, open_cloexec, PIPE_ERROR};
@@ -34,10 +35,12 @@ use crate::null_terminated_array::{
     null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,
 };
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
+#[cfg(FISH_USE_POSIX_SPAWN)]
+use crate::proc::Pid;
 use crate::proc::{
     hup_jobs, is_interactive_session, jobs_requiring_warning_on_exit, no_exec,
-    print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, Pid, ProcStatus, Process,
-    ProcessType, TtyTransfer,
+    print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
+    TtyTransfer,
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
@@ -447,6 +450,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
 // To avoid the race between the caller calling tcsetpgrp() and the client checking the
 // foreground process group, we don't use posix_spawn if we're going to foreground the process. (If
 // we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
+#[cfg(FISH_USE_POSIX_SPAWN)]
 fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     // Is it globally disabled?
     if !use_posix_spawn() {

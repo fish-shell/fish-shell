@@ -40,7 +40,7 @@ use fish::{
     },
     env::{
         environment::{env_init, EnvStack, Environment},
-        ConfigPaths, EnvMode, Statuses,
+        ConfigPaths, EnvMode, Statuses, CONFIG_PATHS,
     },
     eprintf,
     event::{self, Event},
@@ -76,16 +76,10 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::{env, ops::ControlFlow};
 
-const DOC_DIR: &str = env!("DOCDIR");
-const DATA_DIR: &str = env!("DATADIR");
-const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
-const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-const BIN_DIR: &str = env!("BINDIR");
-
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
-fn install(confirm: bool, dir: PathBuf) -> bool {
+fn install(confirm: bool, dir: &PathBuf) -> bool {
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -185,7 +179,7 @@ fn install(confirm: bool, dir: PathBuf) -> bool {
 }
 
 #[cfg(clippy)]
-fn install(_confirm: bool, _dir: PathBuf) -> bool {
+fn install(_confirm: bool, _dir: &PathBuf) -> bool {
     unreachable!()
 }
 
@@ -248,128 +242,6 @@ fn print_rusage_self() {
     eprintln!("     total time: {total_time} ms");
     eprintln!("        max rss: {rss_kb} kb");
     eprintln!("        signals: {signals}");
-}
-
-fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
-    // PORTING: why is this not just an associated method on ConfigPaths?
-
-    let mut paths = ConfigPaths::default();
-    let mut done = false;
-    let exec_path = get_executable_path(argv0.as_ref());
-    if let Ok(exec_path) = exec_path.canonicalize() {
-        FLOG!(
-            config,
-            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, argv0.as_ref())
-        );
-        // TODO: we should determine program_name from argv0 somewhere in this file
-
-        // Detect if we're running right out of the CMAKE build directory
-        if exec_path.starts_with(env!("CARGO_MANIFEST_DIR")) {
-            let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-            FLOG!(
-                config,
-                "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
-                manifest_dir.display()
-            );
-            done = true;
-            paths = ConfigPaths {
-                data: manifest_dir.join("share"),
-                sysconf: manifest_dir.join("etc"),
-                doc: manifest_dir.join("user_doc/html"),
-                bin: Some(exec_path.parent().unwrap().to_owned()),
-            }
-        }
-
-        if !done {
-            // The next check is that we are in a relocatable directory tree
-            if exec_path.ends_with("bin/fish") {
-                let base_path = exec_path.parent().unwrap().parent().unwrap();
-                paths = ConfigPaths {
-                    // One obvious path is ~/.local (with fish in ~/.local/bin/).
-                    // If we picked ~/.local/share/fish as our data path,
-                    // we would install there and erase history.
-                    // So let's isolate us a bit more.
-                    #[cfg(feature = "installable")]
-                    data: base_path.join("share/fish/install"),
-                    #[cfg(not(feature = "installable"))]
-                    data: base_path.join("share/fish"),
-                    sysconf: base_path.join("etc/fish"),
-                    doc: base_path.join("share/doc/fish"),
-                    bin: Some(base_path.join("bin")),
-                }
-            } else if exec_path.ends_with("fish") {
-                FLOG!(
-                    config,
-                    "'fish' not in a 'bin/', trying paths relative to source tree"
-                );
-                let base_path = exec_path.parent().unwrap();
-                paths = ConfigPaths {
-                    #[cfg(feature = "installable")]
-                    data: base_path.join("share/install"),
-                    #[cfg(not(feature = "installable"))]
-                    data: base_path.join("share"),
-                    sysconf: base_path.join("etc"),
-                    doc: base_path.join("user_doc/html"),
-                    bin: Some(base_path.to_path_buf()),
-                }
-            }
-
-            if paths.data.exists() && paths.sysconf.exists() {
-                // The docs dir may not exist; in that case fall back to the compiled in path.
-                if !paths.doc.exists() {
-                    paths.doc = PathBuf::from(DOC_DIR);
-                }
-                done = true;
-            }
-        }
-    }
-
-    if !done {
-        // Fall back to what got compiled in.
-        let data = if cfg!(feature = "installable") {
-            let Some(home) = fish::env::get_home() else {
-                FLOG!(
-                    error,
-                    "Cannot find home directory and will refuse to read configuration.\n",
-                    "Consider installing into a directory tree with `fish --install=PATH`."
-                );
-                return paths;
-            };
-
-            PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR)
-        } else {
-            Path::new(DATA_DIR).join(DATA_DIR_SUBDIR)
-        };
-        let bin = if cfg!(feature = "installable") {
-            exec_path.parent().map(|x| x.to_path_buf())
-        } else {
-            Some(PathBuf::from(BIN_DIR))
-        };
-
-        FLOG!(config, "Using compiled in paths:");
-        paths = ConfigPaths {
-            data,
-            sysconf: Path::new(SYSCONF_DIR).join("fish"),
-            doc: DOC_DIR.into(),
-            bin,
-        }
-    }
-
-    FLOGF!(
-        config,
-        "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
-        %ls\npaths.doc: %ls\npaths.bin: %ls",
-        paths.data.display().to_string(),
-        paths.sysconf.display().to_string(),
-        paths.doc.display().to_string(),
-        paths
-            .bin
-            .clone()
-            .map(|x| x.display().to_string())
-            .unwrap_or("|not found|".to_string()),
-    );
-
-    paths
 }
 
 // Source the file config.fish in the given directory.
@@ -449,7 +321,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
                 );
             }
 
-            install(true, PathBuf::from(wcs2osstring(&datapath)));
+            install(true, &PathBuf::from(wcs2osstring(&datapath)));
             // We try to go on if installation failed (or was rejected) here
             // If the assets are missing, we will trigger a later error,
             // if they are outdated, things will probably (tm) work somewhat.
@@ -579,7 +451,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                     // path/etc/fish is sysconf????
                     use std::fs;
                     let dir = PathBuf::from(wcs2osstring(path));
-                    if install(true, dir.join("share/fish/install")) {
+                    if install(true, &dir.join("share/fish/install")) {
                         for sub in &["share/fish/install", "etc/fish", "bin"] {
                             let p = dir.join(sub);
                             let Ok(_) = fs::create_dir_all(p.clone()) else {
@@ -612,14 +484,12 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                         }
                     }
                 } else {
-                    let paths = Some(determine_config_directory_paths(OsString::from_vec(
-                        wcs2string(&args[0]),
-                    )));
+                    let paths = Some(&*CONFIG_PATHS);
                     let Some(paths) = paths else {
                         FLOG!(error, "Cannot find config paths");
                         std::process::exit(1);
                     };
-                    install(true, paths.data);
+                    install(true, &paths.data);
                 }
             }
             'l' => opts.is_login = true,
@@ -812,13 +682,12 @@ fn throwing_main() -> i32 {
         save_term_foreground_process_group();
     }
 
+    let mut paths: Option<&ConfigPaths> = None;
     // If we're not executing, there's no need to find the config.
-    let paths: Option<ConfigPaths> = if !opts.no_exec {
-        let paths = Some(determine_config_directory_paths(OsString::from_vec(
-            wcs2string(&args[0]),
-        )));
+    if !opts.no_exec {
+        paths = Some(&*CONFIG_PATHS);
         env_init(
-            paths.as_ref(),
+            paths,
             /* do uvars */ !opts.no_config,
             /* default paths */ opts.no_config,
         );

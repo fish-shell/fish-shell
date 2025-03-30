@@ -27,7 +27,11 @@ The following options are available:
     A description of what the function does, suitable as a completion description.
 
 **-w** *WRAPPED_COMMAND* or **--wraps** *WRAPPED_COMMAND*
-    Inherit completions from the given *WRAPPED_COMMAND*. See the documentation for :doc:`complete <complete>` for more information.
+    Inherit completions from the given *WRAPPED_COMMAND*.
+    This is used to say that this function completes like that command,
+    for example if you're creating an alias.
+    See the documentation for :doc:`complete <complete>` for more information.
+    If the wrapped command is the same as the function name, this will be ignored.
 
 **-e** *EVENT_NAME* or **--on-event** *EVENT_NAME*
     Run this function when the specified named event is emitted. Fish internally generates named events, for example, when showing the prompt. Custom events can be emitted using the :doc:`emit <emit>` command.

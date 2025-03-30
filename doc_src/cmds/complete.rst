@@ -63,7 +63,9 @@ The following options are available:
     Add a description for this completion, to be shown in the completion pager.
 
 **-w** or **--wraps** *WRAPPED_COMMAND*
-    Causes the specified command to inherit completions from *WRAPPED_COMMAND* (see below for details).
+    Causes the specified command to inherit completions from *WRAPPED_COMMAND*.
+    This is used for "this command completes like that other command" kinds of relationships.
+    See below for details.
 
 **-n** or **--condition** *CONDITION*
     This completion should only be used if the *CONDITION* (a shell command) returns 0. This makes it possible to specify completions that should only be used in some cases. If multiple conditions are specified, fish will try them in the order they are specified until one fails or all succeeded.

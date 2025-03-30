@@ -1,9 +1,5 @@
-# Trying to build using the resolved toolchain causes all kinds of weird errors
-# Just let rustup do its job
-set(Rust_RESOLVE_RUSTUP_TOOLCHAINS Off)
-
 include(FindRust)
-find_package(Rust 1.70 REQUIRED)
+find_package(Rust REQUIRED)
 
 set(FISH_RUST_BUILD_DIR "${CMAKE_BINARY_DIR}/cargo/build")
 
@@ -38,11 +34,6 @@ if(FISH_CRATE_FEATURES)
     list(PREPEND FEATURES_ARG "--features")
 endif()
 
-get_property(
-    RUSTC_EXECUTABLE
-    TARGET Rust::Rustc PROPERTY IMPORTED_LOCATION
-)
-
 # Tell Cargo where our build directory is so it can find Cargo.toml.
 set(VARS_FOR_CARGO
     "FISH_BUILD_DIR=${CMAKE_BINARY_DIR}"
@@ -57,7 +48,7 @@ set(VARS_FOR_CARGO
     "BINDIR=${CMAKE_INSTALL_FULL_BINDIR}"
     "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
     "CARGO_TARGET_DIR=${FISH_RUST_BUILD_DIR}"
-    "CARGO_BUILD_RUSTC=${RUSTC_EXECUTABLE}"
+    "CARGO_BUILD_RUSTC=${Rust_COMPILER}"
     "${FISH_PCRE2_BUILDFLAG}"
     "RUSTFLAGS=$ENV{RUSTFLAGS} ${rust_debugflags}"
 )

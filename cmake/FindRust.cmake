@@ -65,8 +65,8 @@ if(NOT Rust_CARGO_TARGET_CACHED)
   endif()
 
   if(CMAKE_CROSSCOMPILING)
-    message(WARNING "CMake is in cross-compiling mode, but the cargo target-triple could not be inferred."
-      "Falling back to the default host target. Please consider manually setting `Rust_CARGO_TARGET`."
+    message(FATAL_ERROR "CMake is in cross-compiling mode."
+      "Manually set `Rust_CARGO_TARGET`."
     )
   endif()
   set(Rust_CARGO_TARGET_CACHED "${Rust_DEFAULT_HOST_TARGET}" CACHE STRING "Target triple")

@@ -20,7 +20,7 @@ use crate::{
     input_common::{
         kitty_progressive_enhancements_query, terminal_protocol_hacks,
         terminal_protocols_enable_ifn, Capability, CharEvent, ImplicitEvent, InputEventQueue,
-        InputEventQueuer, KITTY_KEYBOARD_SUPPORTED,
+        InputEventQueuer, KeyEvent, KITTY_KEYBOARD_SUPPORTED,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -38,7 +38,7 @@ use crate::{
 use super::prelude::*;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<Key>, key: Key) -> bool {
+fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<KeyEvent>, key: KeyEvent) -> bool {
     recent_keys.push(key);
 
     for evt in [VINTR, VEOF] {
@@ -46,7 +46,12 @@ fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<Key>, key: Key) ->
         let cc = Key::from_single_byte(modes.c_cc[evt]);
 
         if key == cc {
-            if recent_keys.iter().rev().nth(1) == Some(&cc) {
+            if recent_keys
+                .iter()
+                .rev()
+                .nth(1)
+                .is_some_and(|&prev| prev == cc)
+            {
                 return true;
             }
             streams.err.append(wgettext_fmt!(

@@ -549,6 +549,7 @@ impl Screen {
                 .map_or(1, |p| calc_prompt_lines(p));
             self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
             self.actual_left_prompt = None;
+            self.need_clear_screen = true;
         }
         self.actual.resize(0);
         self.need_clear_lines = true;

@@ -159,6 +159,9 @@ CMake Build options
 
 In addition to the normal CMake build options (like ``CMAKE_INSTALL_PREFIX``), fish's CMake build has some other options available to customize it.
 
+- Rust_COMPILER=path - the path to rustc. If not set, cmake will check $PATH and ~/.cargo/bin
+- Rust_CARGO=path - the path to cargo. If not set, cmake will check $PATH and ~/.cargo/bin
+- Rust_CARGO_TARGET=target - the target to pass to cargo. Set this for cross-compilation.
 - BUILD_DOCS=ON|OFF - whether to build the documentation. This is automatically set to OFF when Sphinx isn't installed.
 - INSTALL_DOCS=ON|OFF - whether to install the docs. This is automatically set to on when BUILD_DOCS is or prebuilt documentation is available (like when building in-tree from a tarball).
 - FISH_USE_SYSTEM_PCRE2=ON|OFF - whether to use an installed pcre2. This is normally autodetected.

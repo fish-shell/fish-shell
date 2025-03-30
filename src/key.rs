@@ -91,39 +91,33 @@ pub struct Key {
 }
 
 impl Key {
-    pub(crate) fn from_raw(codepoint: char) -> Self {
+    pub(crate) const fn new(modifiers: Modifiers, codepoint: char) -> Self {
         Self {
-            modifiers: Modifiers::default(),
+            modifiers,
             codepoint,
         }
+    }
+    pub(crate) fn from_raw(codepoint: char) -> Self {
+        Self::new(Modifiers::default(), codepoint)
     }
 }
 
 pub(crate) const fn ctrl(codepoint: char) -> Key {
     let mut modifiers = Modifiers::new();
     modifiers.ctrl = true;
-    Key {
-        modifiers,
-        codepoint,
-    }
+    Key::new(modifiers, codepoint)
 }
 
 pub(crate) const fn alt(codepoint: char) -> Key {
     let mut modifiers = Modifiers::new();
     modifiers.alt = true;
-    Key {
-        modifiers,
-        codepoint,
-    }
+    Key::new(modifiers, codepoint)
 }
 
 pub(crate) const fn shift(codepoint: char) -> Key {
     let mut modifiers = Modifiers::new();
     modifiers.shift = true;
-    Key {
-        modifiers,
-        codepoint,
-    }
+    Key::new(modifiers, codepoint)
 }
 
 impl Key {
@@ -140,10 +134,7 @@ impl Key {
 pub fn canonicalize_control_char(c: u8) -> Option<Key> {
     let codepoint = canonicalize_keyed_control_char(char::from(c));
     if u32::from(codepoint) > 255 {
-        return Some(Key {
-            modifiers: Modifiers::default(),
-            codepoint,
-        });
+        return Some(Key::from_raw(codepoint));
     }
 
     if c < 32 {
@@ -294,10 +285,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                 .find_map(|(codepoint, name)| (name == key_name).then_some(*codepoint))
                 .or_else(|| (key_name.len() == 1).then(|| key_name.as_char_slice()[0]));
             let key = if let Some(codepoint) = codepoint {
-                canonicalize_key(Key {
-                    modifiers,
-                    codepoint,
-                })?
+                canonicalize_key(Key::new(modifiers, codepoint))?
             } else if codepoint.is_none() && key_name.starts_with('f') && key_name.len() <= 3 {
                 let num = key_name.strip_prefix('f').unwrap();
                 let codepoint = match fish_wcstoul(num) {
@@ -312,10 +300,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                         ));
                     }
                 };
-                Key {
-                    modifiers,
-                    codepoint,
-                }
+                Key::new(modifiers, codepoint)
             } else {
                 return Err(wgettext_fmt!(
                     "cannot parse key '%s'",

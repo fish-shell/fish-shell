@@ -71,9 +71,20 @@ impl Modifiers {
             sup: false,
         }
     }
+    #[cfg(test)]
+    pub(crate) const CTRL: Self = {
+        let mut m = Self::new();
+        m.ctrl = true;
+        m
+    };
     pub(crate) const ALT: Self = {
         let mut m = Self::new();
         m.alt = true;
+        m
+    };
+    pub const SHIFT: Self = {
+        let mut m = Self::new();
+        m.shift = true;
         m
     };
     pub(crate) fn is_some(&self) -> bool {
@@ -201,19 +212,6 @@ pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {
                 ));
             }
             key.modifiers.ctrl = true;
-        }
-    }
-    if key.modifiers.shift {
-        if key.codepoint.is_ascii_lowercase() {
-            // Shift + ASCII letters is just the uppercase letter.
-            key.modifiers.shift = false;
-            key.codepoint = key.codepoint.to_ascii_uppercase();
-        } else if !fish_is_pua(key.codepoint) {
-            // Shift + any other printable character is not allowed.
-            return Err(wgettext_fmt!(
-                "Shift modifier is only supported on special keys and lowercase ASCII, not '%s'",
-                key,
-            ));
         }
     }
     Ok(key)

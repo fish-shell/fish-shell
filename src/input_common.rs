@@ -142,11 +142,22 @@ pub enum ReadlineCmd {
 #[derive(Clone, Copy, Debug)]
 pub struct KeyEvent {
     pub key: Key,
+    pub shifted_codepoint: char,
 }
 
 impl KeyEvent {
     pub(crate) fn new(modifiers: Modifiers, codepoint: char) -> Self {
         Self::from(Key::new(modifiers, codepoint))
+    }
+    pub(crate) fn with_shifted_codepoint(
+        modifiers: Modifiers,
+        codepoint: char,
+        shifted_codepoint: Option<char>,
+    ) -> Self {
+        Self {
+            key: Key::new(modifiers, codepoint),
+            shifted_codepoint: shifted_codepoint.unwrap_or_default(),
+        }
     }
     pub(crate) fn from_raw(codepoint: char) -> Self {
         Self::from(Key::from_raw(codepoint))
@@ -158,7 +169,10 @@ impl KeyEvent {
 
 impl From<Key> for KeyEvent {
     fn from(key: Key) -> Self {
-        Self { key }
+        Self {
+            key,
+            shifted_codepoint: '\0',
+        }
     }
 }
 
@@ -175,10 +189,87 @@ impl std::ops::DerefMut for KeyEvent {
     }
 }
 
+fn apply_shift(mut key: Key, do_ascii: bool, shifted_codepoint: char) -> Option<Key> {
+    if !key.modifiers.shift {
+        return Some(key);
+    }
+    if shifted_codepoint != '\0' {
+        key.codepoint = shifted_codepoint;
+    } else if do_ascii && key.codepoint.is_ascii_lowercase() {
+        // For backwards compatibility, we convert the "bind shift-a" notation to "bind A".
+        // This enables us to match "A" events which are the legacy encoding for keys that
+        // generate text -- until we request kitty's "Report all keys as escape codes".
+        // We do not currently convert non-ASCII key notation such as "bind shift-ä".
+        key.codepoint = key.codepoint.to_ascii_uppercase();
+    } else {
+        return None;
+    };
+    key.modifiers.shift = false;
+    Some(key)
+}
+
 impl PartialEq<Key> for KeyEvent {
     fn eq(&self, key: &Key) -> bool {
-        &self.key == key
+        if &self.key == key {
+            return true;
+        }
+
+        let Some(shifted_evt) = apply_shift(self.key, false, self.shifted_codepoint) else {
+            return false;
+        };
+        let Some(shifted_key) = apply_shift(*key, true, '\0') else {
+            return false;
+        };
+        shifted_evt == shifted_key
     }
+}
+
+#[test]
+fn test_key_event_eq() {
+    let none = Modifiers::default();
+    let shift = Modifiers::SHIFT;
+    let ctrl = Modifiers::CTRL;
+    let ctrl_shift = Modifiers {
+        ctrl: true,
+        shift: true,
+        ..Default::default()
+    };
+
+    assert_eq!(KeyEvent::new(none, 'a'), Key::new(none, 'a'));
+    assert_ne!(KeyEvent::new(none, 'a'), Key::new(none, 'A'));
+    assert_eq!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'));
+    assert_ne!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'));
+    assert_ne!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'));
+    // For historical reasons we canonicalize notation for ASCII keys like "shift-a" to "A",
+    // but not "shift-a" events - those should send a shifted key.
+    assert_eq!(KeyEvent::new(none, 'A'), Key::new(shift, 'a'));
+    assert_ne!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'));
+    assert_eq!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'));
+    assert_ne!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'));
+
+    // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
+    // the shifted key in the canonical notation, because the unshifted one may depend on the
+    // keyboard layout.
+    let ctrl_shift_equals = KeyEvent::with_shifted_codepoint(ctrl_shift, '=', Some('+'));
+    assert_eq!(ctrl_shift_equals, Key::new(ctrl_shift, '='));
+    assert_eq!(ctrl_shift_equals, Key::new(ctrl, '+')); // canonical notation
+    assert_ne!(ctrl_shift_equals, Key::new(ctrl_shift, '+'));
+    assert_ne!(ctrl_shift_equals, Key::new(ctrl, '='));
+
+    // A event like capslock-shift-ä may or may not include a shifted codepoint.
+    //
+    // Without a shifted codepoint, we cannot easily match ctrl-Ä.
+    let caps_ctrl_shift_ä = KeyEvent::new(ctrl_shift, 'ä');
+    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä')); // canonical notation
+    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'));
+    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä')); // can't match without shifted key
+    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'));
+    // With a shifted codepoint, we can match the alternative notation too.
+    let caps_ctrl_shift_ä = KeyEvent::with_shifted_codepoint(ctrl_shift, 'ä', Some('Ä'));
+    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä')); // canonical notation
+    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'));
+    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä')); // matched via shifted key
+    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'));
 }
 
 /// Represents an event on the character input stream.
@@ -599,13 +690,15 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     TERMINAL_PROTOCOLS.store(false, Ordering::Release);
 }
 
-fn parse_mask(mask: u32) -> Modifiers {
-    Modifiers {
+fn parse_mask(mask: u32) -> (Modifiers, bool) {
+    let modifiers = Modifiers {
         ctrl: (mask & 4) != 0,
         alt: (mask & 2) != 0,
         shift: (mask & 1) != 0,
         sup: (mask & 8) != 0,
-    }
+    };
+    let caps_lock = (mask & 64) != 0;
+    (modifiers, caps_lock)
 }
 
 // A data type used by the input machinery.
@@ -878,16 +971,35 @@ pub trait InputEventQueuer {
             return None;
         }
 
-        let masked_key = |mut codepoint, shifted_codepoint| {
+        let masked_key = |codepoint: char, shifted_codepoint: Option<char>| {
             let mask = params[1][0].saturating_sub(1);
-            let mut modifiers = parse_mask(mask);
-            if let Some(shifted_codepoint) = shifted_codepoint {
-                if shifted_codepoint != '\0' && modifiers.shift {
-                    modifiers.shift = false;
-                    codepoint = shifted_codepoint;
-                }
+            let (mut modifiers, caps_lock) = parse_mask(mask);
+
+            // An event like "capslock-shift-=" should have a shifted codepoint ("+") to enable
+            // fish to match "bind +".
+            //
+            // With letters that are affected by capslock, capslock and shift cancel each
+            // other out ("capslock-shift-ä"), unless there is another modifier to imply that
+            // capslock should be ignored.
+            //
+            // So if shift is the only modifier, we should consume it, but not if the event is
+            // something like "capslock-shift-delete" because delete is not affected by capslock.
+            //
+            // Normally, we could consume shift by translating to the shifted key.
+            // While capslock is on however, we don't get a shifted key, see
+            // https://github.com/kovidgoyal/kitty/issues/8493.
+            //
+            // Do it by trying to find out ourselves whether the key is affected by capslock.
+            //
+            // Alternatively, we could relax our exact matching semantics, and make "bind ä"
+            // match the "shift-ä" event, as suggested in the kitty issue.
+            if caps_lock
+                && modifiers == Modifiers::SHIFT
+                && !codepoint.to_uppercase().eq(Some(codepoint).into_iter())
+            {
+                modifiers.shift = false;
             }
-            KeyEvent::new(modifiers, codepoint)
+            KeyEvent::with_shifted_codepoint(modifiers, codepoint, shifted_codepoint)
         };
 
         let key = match c {
@@ -1075,7 +1187,7 @@ pub trait InputEventQueuer {
             raw_mask = raw_mask * 10 + u32::from(code - b'0');
             code = self.try_readb(buffer).unwrap_or(0xff);
         }
-        let modifiers = parse_mask(raw_mask.saturating_sub(1));
+        let (modifiers, _caps_lock) = parse_mask(raw_mask.saturating_sub(1));
         #[rustfmt::skip]
         let key = match code {
             b' ' => KeyEvent::new(modifiers, key::Space),

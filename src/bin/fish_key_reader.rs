@@ -21,7 +21,7 @@ use fish::{
     input::input_terminfo_get_name,
     input_common::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer,
+        InputEventQueuer, KeyEvent,
     },
     key::{char_to_symbol, Key},
     panic::panic_handler,
@@ -37,15 +37,20 @@ use fish::{
 };
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-fn should_exit(recent_keys: &mut Vec<Key>, key: Key) -> bool {
-    recent_keys.push(key);
+fn should_exit(recent_keys: &mut Vec<KeyEvent>, key_evt: KeyEvent) -> bool {
+    recent_keys.push(key_evt);
 
     for evt in [VINTR, VEOF] {
         let modes = shell_modes();
         let cc = Key::from_single_byte(modes.c_cc[evt]);
 
-        if key == cc {
-            if recent_keys.iter().rev().nth(1) == Some(&cc) {
+        if key_evt == cc {
+            if recent_keys
+                .iter()
+                .rev()
+                .nth(1)
+                .is_some_and(|&prev| prev == cc)
+            {
                 return true;
             }
             eprintf!(

@@ -4,7 +4,8 @@ use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
 use crate::input_common::{
-    CharEvent, CharInputStyle, InputData, InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, InputData, InputEventQueuer, KeyEvent, ReadlineCmd,
+    R_END_INPUT_FUNCTIONS,
 };
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
@@ -429,7 +430,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         if reader_reading_interrupted(self) != 0 {
             let vintr = shell_modes().c_cc[libc::VINTR];
             if vintr != 0 {
-                self.push_front(CharEvent::from_key(Key::from_single_byte(vintr)));
+                self.push_front(CharEvent::from_key(KeyEvent::from_single_byte(vintr)));
             }
             return;
         }

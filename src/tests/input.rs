@@ -1,6 +1,6 @@
 use crate::env::EnvStack;
 use crate::input::{EventQueuePeeker, InputMappingSet, KeyNameStyle, DEFAULT_BIND_MODE};
-use crate::input_common::{CharEvent, InputData, InputEventQueuer};
+use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
 use crate::key::Key;
 use crate::wchar::prelude::*;
 use std::rc::Rc;
@@ -52,8 +52,10 @@ fn test_input() {
     );
 
     // Push the desired binding to the queue.
-    for c in desired_binding {
-        input.input_data.queue_char(CharEvent::from_key(c));
+    for key in desired_binding {
+        input
+            .input_data
+            .queue_char(CharEvent::from_key(KeyEvent::from(key)));
     }
 
     let mut peeker = EventQueuePeeker::new(&mut input);

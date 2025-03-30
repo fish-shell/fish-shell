@@ -580,10 +580,10 @@ pub(crate) fn terminal_protocols_disable_ifn() {
 
 fn parse_mask(mask: u32) -> Modifiers {
     Modifiers {
-        sup: (mask & 8) != 0,
         ctrl: (mask & 4) != 0,
         alt: (mask & 2) != 0,
         shift: (mask & 1) != 0,
+        sup: (mask & 8) != 0,
     }
 }
 

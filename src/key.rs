@@ -77,10 +77,10 @@ impl Modifiers {
         m
     };
     pub(crate) fn is_some(&self) -> bool {
-        self.ctrl || self.alt || self.shift
+        *self != Self::new()
     }
     pub(crate) fn is_none(&self) -> bool {
-        !self.is_some()
+        *self == Self::new()
     }
 }
 

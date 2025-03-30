@@ -3,6 +3,7 @@ use std::ffi::CString;
 use std::sync::Mutex;
 
 use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
+use crate::env::CONFIG_PATHS;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
@@ -48,7 +49,9 @@ use internal::*;
 // Really init wgettext.
 fn wgettext_really_init() {
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    let localedir = CString::new(env!("LOCALEDIR")).unwrap();
+    // This contains `datadir`; which when replaced to make the binary relocatable,
+    // causes null bytes at the end of the string.
+    let localedir = CString::new(CONFIG_PATHS.locale.display().to_string()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }

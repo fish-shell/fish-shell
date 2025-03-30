@@ -34,6 +34,8 @@ New or improved bindings
   This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities,
   and on the terminal supporting Synchronized Output (which is used by fish to detect features).
   If any is missing, the binding falls back to ``clear-screen``.
+- Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
+  If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
 
 Completions
 ^^^^^^^^^^^

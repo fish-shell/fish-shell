@@ -163,4 +163,19 @@ bind \n 2>&1
 bind _\cx_\ci_\ei_\\_\'_ 'echo foo'
 # CHECKERR: bind: cannot parse key '_\cx_\t_\ei_\\_'_'
 
+bind A
+# CHECKERR: bind: No binding found for key 'A'
+
+bind shift-a
+# CHECKERR: bind: No binding found for key 'shift-a'
+
+bind shift-A
+# CHECKERR: bind: No binding found for key 'shift-A'
+
+bind ctrl-shift-a
+# CHECKERR: bind: No binding found for key 'ctrl-shift-a'
+
+bind ctrl-shift-ä
+# CHECKERR: bind: No binding found for key 'ctrl-shift-ä'
+
 exit 0

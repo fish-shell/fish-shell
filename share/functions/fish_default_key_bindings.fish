@@ -44,7 +44,7 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv ctrl-/ undo
     bind --preset $argv ctrl-_ undo # XTerm idiosyncracy, can get rid of this once we go full CSI u
     bind --preset $argv ctrl-z undo
-    bind --preset $argv ctrl-Z redo
+    bind --preset $argv ctrl-shift-z redo
     bind --preset $argv alt-/ redo
     bind --preset $argv alt-t transpose-words
     bind --preset $argv alt-u upcase-word

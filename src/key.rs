@@ -204,7 +204,7 @@ pub(crate) fn canonicalize_key(mut key: Key) -> Result<Key, WString> {
         }
     }
     if key.modifiers.shift {
-        if key.codepoint.is_ascii_alphabetic() {
+        if key.codepoint.is_ascii_lowercase() {
             // Shift + ASCII letters is just the uppercase letter.
             key.modifiers.shift = false;
             key.codepoint = key.codepoint.to_ascii_uppercase();

@@ -7,7 +7,7 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::{ops::ControlFlow, os::unix::prelude::OsStrExt, sync::atomic::Ordering};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 
@@ -20,7 +20,8 @@ use crate::{
     input::input_terminfo_get_name,
     input_common::{
         kitty_progressive_enhancements_query, terminal_protocol_hacks,
-        terminal_protocols_enable_ifn, CharEvent, InputEventQueue, InputEventQueuer,
+        terminal_protocols_enable_ifn, Capability, CharEvent, ImplicitEvent, InputEventQueue,
+        InputEventQueuer, KITTY_KEYBOARD_SUPPORTED,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -96,10 +97,18 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         terminal_protocols_enable_ifn();
-        let evt = queue.readch();
 
-        let CharEvent::Key(kevt) = evt else {
-            continue;
+        let kevt = match queue.readch() {
+            CharEvent::Key(kevt) => kevt,
+            CharEvent::Readline(_) | CharEvent::Command(_) => continue,
+            CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute) => {
+                if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _ {
+                    KITTY_KEYBOARD_SUPPORTED
+                        .store(Capability::NotSupported as _, Ordering::Release);
+                }
+                continue;
+            }
+            CharEvent::Implicit(_) => continue,
         };
         let c = kevt.key.codepoint;
         if verbose {

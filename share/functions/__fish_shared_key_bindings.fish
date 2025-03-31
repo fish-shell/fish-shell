@@ -1,5 +1,4 @@
 function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mode"
-    set -l legacy_bind bind
     # These are some bindings that are supposed to be shared between vi mode and default mode.
     # They are supposed to be unrelated to text-editing (or movement).
     # This takes $argv so the vi-bindings can pass the mode they are valid in.
@@ -17,8 +16,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     # Left/Right arrow
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
-    $legacy_bind --preset $argv -k right forward-char
-    $legacy_bind --preset $argv -k left backward-char
 
     # Ctrl-left/right - these also work in vim.
     if test (__fish_uname) = Darwin
@@ -31,8 +28,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind --preset $argv pageup beginning-of-history
     bind --preset $argv pagedown end-of-history
-    $legacy_bind --preset $argv -k ppage beginning-of-history
-    $legacy_bind --preset $argv -k npage end-of-history
 
     # Interaction with the system clipboard.
     bind --preset $argv ctrl-x fish_clipboard_copy
@@ -45,19 +40,13 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv ctrl-s pager-toggle-search
     # shift-tab does a tab complete followed by a search.
     bind --preset $argv shift-tab complete-and-search
-    $legacy_bind --preset $argv -k btab complete-and-search
     bind --preset $argv shift-delete history-delete or backward-delete-char
-    $legacy_bind --preset $argv -k sdc history-delete or backward-delete-char
 
     bind --preset $argv down down-or-search
-    $legacy_bind --preset $argv -k down down-or-search
     bind --preset $argv up up-or-search
-    $legacy_bind --preset $argv -k up up-or-search
 
     bind --preset $argv shift-right forward-bigword
     bind --preset $argv shift-left backward-bigword
-    $legacy_bind --preset $argv -k sright forward-bigword
-    $legacy_bind --preset $argv -k sleft backward-bigword
 
     set -l alt_right_aliases alt-right \e\[1\;9C # iTerm2 < 3.5.12
     set -l alt_left_aliases alt-left \e\[1\;9D # iTerm2 < 3.5.12
@@ -79,8 +68,8 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     bind --preset $argv alt-up history-token-search-backward
     bind --preset $argv alt-down history-token-search-forward
-    $legacy_bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2 < 3.5.12
-    $legacy_bind --preset $argv \e\[1\;9B history-token-search-forward # iTerm2 < 3.5.12
+    bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2 < 3.5.12
+    bind --preset $argv \e\[1\;9B history-token-search-forward # iTerm2 < 3.5.12
     # Bash compatibility
     # https://github.com/fish-shell/fish-shell/issues/89
     bind --preset $argv alt-. history-token-search-backward
@@ -103,7 +92,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
 
     # Allow reading manpages by pressing f1 (many GUI applications) or Alt+h (like in zsh).
     bind --preset $argv f1 __fish_man_page
-    $legacy_bind --preset $argv -k f1 __fish_man_page
     bind --preset $argv alt-h __fish_man_page
 
     # This will make sure the output of the current command is paged using the default pager when
@@ -139,7 +127,6 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
         bind --preset $argv alt-enter "commandline -i \n $maybe_search_field" expand-abbr
         bind --preset $argv ")" self-insert expand-abbr # Closing a command substitution.
         bind --preset $argv ctrl-space 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
-        $legacy_bind --preset $argv -k nul 'test -n "$(commandline)" && commandline -i " " '$maybe_search_field
         # Shift-space behaves like space because it's easy to mistype.
         bind --preset $argv shift-space 'commandline -i " " '$maybe_search_field expand-abbr
 

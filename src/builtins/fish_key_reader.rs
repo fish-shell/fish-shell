@@ -17,7 +17,6 @@ use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
-    input::input_terminfo_get_name,
     input_common::{
         kitty_progressive_enhancements_query, terminal_protocol_hacks,
         terminal_protocols_enable_ifn, Capability, CharEvent, ImplicitEvent, InputEventQueue,
@@ -69,30 +68,11 @@ fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<Key>, key: Key) ->
     tail.clone().eq("exit".chars()) || tail.eq("quit".chars())
 }
 
-/// Return the name if the recent sequence of characters matches a known terminfo sequence.
-fn sequence_name(recent_chars: &mut Vec<u8>, c: char) -> Option<WString> {
-    if c >= '\u{80}' {
-        // Terminfo sequences are always ASCII.
-        recent_chars.clear();
-        return None;
-    }
-
-    let c = c as u8;
-    recent_chars.push(c);
-    while recent_chars.len() > 8 {
-        recent_chars.remove(0);
-    }
-
-    // The entire sequence needs to match the sequence, or else we would output substrings.
-    input_terminfo_get_name(&str2wcstring(recent_chars))
-}
-
 /// Process the characters we receive as the user presses keys.
 fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> BuiltinResult {
     let mut first_char_seen = false;
     let mut queue = InputEventQueue::new(STDIN_FILENO);
-    let mut recent_chars1 = vec![];
-    let mut recent_chars2 = vec![];
+    let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
@@ -110,7 +90,6 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             }
             CharEvent::Implicit(_) => continue,
         };
-        let c = kevt.key.codepoint;
         if verbose {
             streams.out.append(L!("# decoded from: "));
             for byte in kevt.seq.chars() {
@@ -121,13 +100,8 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
         streams
             .out
             .append(sprintf!("bind %s 'do something'\n", kevt.key));
-        if let Some(name) = sequence_name(&mut recent_chars1, c) {
-            streams
-                .out
-                .append(sprintf!("bind -k %ls 'do something'\n", name));
-        }
 
-        if continuous_mode && should_exit(streams, &mut recent_chars2, kevt.key) {
+        if continuous_mode && should_exit(streams, &mut recent_chars, kevt.key) {
             streams.err.appendln("\nExiting at your request.");
             break;
         }

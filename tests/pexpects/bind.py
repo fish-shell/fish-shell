@@ -319,7 +319,7 @@ expect_str(" banana\r")
 expect_prompt("foonanana banana")
 
 # Ensure that nul can be bound properly (#3189).
-send("bind -k nul 'echo nul seen'\r")
+send("bind ctrl-space 'echo nul seen'\r")
 expect_prompt()
 send("\0" * 3)
 # We need to sleep briefly before emitting a newline, because when we execute the

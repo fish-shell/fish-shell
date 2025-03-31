@@ -5,6 +5,7 @@ use crate::flog::FLOG;
 // Polyfill for Option::is_none_or(), stabilized in 1.82.0
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
+use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
     BlockingWait, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData,
     InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
@@ -17,11 +18,9 @@ use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
 };
 use crate::signal::signal_clear_cancel;
-use crate::terminal;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
-use once_cell::sync::{Lazy, OnceCell};
-use std::ffi::CString;
+use once_cell::sync::Lazy;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
     Mutex, MutexGuard,
@@ -43,7 +42,6 @@ pub struct InputMappingName {
 pub enum KeyNameStyle {
     Plain,
     RawEscapeSequence,
-    Terminfo(WString),
 }
 
 /// Struct representing a keybinding. Returned by input_get_mappings.
@@ -59,7 +57,7 @@ pub struct InputMapping {
     mode: WString,
     /// New mode that should be switched to after command evaluation, or None to leave the mode unchanged.
     sets_mode: Option<WString>,
-    /// Perhaps this binding was created using a raw escape sequence or terminfo.
+    /// Perhaps this binding was created using a raw escape sequence.
     key_name_style: KeyNameStyle,
 }
 
@@ -92,16 +90,6 @@ impl InputMapping {
     fn is_generic(&self) -> bool {
         self.seq.is_empty()
     }
-}
-
-/// A struct representing the mapping from a terminfo key name to a terminfo character sequence.
-#[derive(Debug)]
-struct TerminfoMapping {
-    // name of key
-    name: &'static wstr,
-
-    // character sequence generated on keypress, or none if there was no mapping.
-    seq: Option<Box<[u8]>>,
 }
 
 /// Input function metadata. This list should be kept in sync with the key code list in
@@ -259,9 +247,6 @@ pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
     INPUT_MAPPINGS.lock().unwrap()
 }
 
-/// Terminfo map list.
-static TERMINFO_MAPPINGS: OnceCell<Box<[TerminfoMapping]>> = OnceCell::new();
-
 /// Return the current bind mode.
 fn input_get_bind_mode(vars: &dyn Environment) -> WString {
     if let Some(mode) = vars.get(FISH_BIND_MODE_VAR) {
@@ -348,10 +333,11 @@ impl InputMappingSet {
 /// initializations for our input subsystem.
 pub fn init_input() {
     assert_is_main_thread();
-    if TERMINFO_MAPPINGS.get().is_some() {
+
+    static DONE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+    if DONE.swap(true) {
         return;
     }
-    TERMINFO_MAPPINGS.set(create_input_terminfo()).unwrap();
 
     let mut input_mapping = input_mappings();
 
@@ -1020,124 +1006,6 @@ impl InputMappingSet {
         }
         false
     }
-}
-
-/// Create a list of terminfo mappings.
-fn create_input_terminfo() -> Box<[TerminfoMapping]> {
-    let Some(term) = terminal::term() else {
-        // loading terminfo failed so we can't reference any key definitions.
-        return Box::new([]);
-    };
-
-    // Helper to convert an Option<CString> to an Option<Box<[u8]>>.
-    // The nul-terminator is NOT included.
-    fn opt_cstr_to_bytes(opt: &Option<CString>) -> Option<Box<[u8]>> {
-        opt.clone().map(|s| s.into_bytes().into())
-    }
-
-    macro_rules! terminfo_add {
-        ($key:ident) => {
-            TerminfoMapping {
-                name: &L!(stringify!($key))[4..],
-                seq: opt_cstr_to_bytes(&term.$key),
-            }
-        };
-    }
-    #[rustfmt::skip]
-    return Box::new([
-        terminfo_add!(key_a1), terminfo_add!(key_a3), terminfo_add!(key_b2),
-        terminfo_add!(key_backspace), terminfo_add!(key_beg), terminfo_add!(key_btab),
-        terminfo_add!(key_c1), terminfo_add!(key_c3), terminfo_add!(key_cancel),
-        terminfo_add!(key_catab), terminfo_add!(key_clear), terminfo_add!(key_close),
-        terminfo_add!(key_command), terminfo_add!(key_copy), terminfo_add!(key_create),
-        terminfo_add!(key_ctab), terminfo_add!(key_dc), terminfo_add!(key_dl), terminfo_add!(key_down),
-        terminfo_add!(key_eic), terminfo_add!(key_end), terminfo_add!(key_enter),
-        terminfo_add!(key_eol), terminfo_add!(key_eos), terminfo_add!(key_exit), terminfo_add!(key_f0),
-        terminfo_add!(key_f1), terminfo_add!(key_f2), terminfo_add!(key_f3), terminfo_add!(key_f4),
-        terminfo_add!(key_f5), terminfo_add!(key_f6), terminfo_add!(key_f7), terminfo_add!(key_f8),
-        terminfo_add!(key_f9), terminfo_add!(key_f10), terminfo_add!(key_f11), terminfo_add!(key_f12),
-        terminfo_add!(key_find), terminfo_add!(key_help), terminfo_add!(key_home),
-        terminfo_add!(key_ic), terminfo_add!(key_il), terminfo_add!(key_left), terminfo_add!(key_ll),
-        terminfo_add!(key_mark), terminfo_add!(key_message), terminfo_add!(key_move),
-        terminfo_add!(key_next), terminfo_add!(key_npage), terminfo_add!(key_open),
-        terminfo_add!(key_options), terminfo_add!(key_ppage), terminfo_add!(key_previous),
-        terminfo_add!(key_print), terminfo_add!(key_redo), terminfo_add!(key_reference),
-        terminfo_add!(key_refresh), terminfo_add!(key_replace), terminfo_add!(key_restart),
-        terminfo_add!(key_resume), terminfo_add!(key_right), terminfo_add!(key_save),
-        terminfo_add!(key_sbeg), terminfo_add!(key_scancel), terminfo_add!(key_scommand),
-        terminfo_add!(key_scopy), terminfo_add!(key_screate), terminfo_add!(key_sdc),
-        terminfo_add!(key_sdl), terminfo_add!(key_select), terminfo_add!(key_send),
-        terminfo_add!(key_seol), terminfo_add!(key_sexit), terminfo_add!(key_sf),
-        terminfo_add!(key_sfind), terminfo_add!(key_shelp), terminfo_add!(key_shome),
-        terminfo_add!(key_sic), terminfo_add!(key_sleft), terminfo_add!(key_smessage),
-        terminfo_add!(key_smove), terminfo_add!(key_snext), terminfo_add!(key_soptions),
-        terminfo_add!(key_sprevious), terminfo_add!(key_sprint), terminfo_add!(key_sr),
-        terminfo_add!(key_sredo), terminfo_add!(key_sreplace), terminfo_add!(key_sright),
-        terminfo_add!(key_srsume), terminfo_add!(key_ssave), terminfo_add!(key_ssuspend),
-        terminfo_add!(key_stab), terminfo_add!(key_sundo), terminfo_add!(key_suspend),
-        terminfo_add!(key_undo), terminfo_add!(key_up),
-
-        // We introduce our own name for the string containing only the nul character - see
-        // #3189. This can typically be generated via control-space.
-        TerminfoMapping { name: NUL_MAPPING_NAME, seq: Some(Box::new([0])) },
-    ]);
-}
-
-/// Possible errors from from input_terminfo_get_sequence.
-pub enum GetSequenceError {
-    /// The mapping was not found.
-    NotFound,
-    /// The terminfo variable does not have a value.
-    NoSeq,
-}
-
-/// Return the sequence for the terminfo variable of the specified name.
-///
-/// If no terminfo variable of the specified name could be found, return false and set errno to
-/// ENOENT. If the terminfo variable does not have a value, return false and set errno to EILSEQ.
-pub fn input_terminfo_get_sequence(name: &wstr) -> Result<WString, GetSequenceError> {
-    let mappings = TERMINFO_MAPPINGS
-        .get()
-        .expect("TERMINFO_MAPPINGS not initialized");
-    for m in mappings.iter() {
-        if name == m.name {
-            // Found the mapping.
-            return if let Some(seq) = &m.seq {
-                Ok(str2wcstring(seq))
-            } else {
-                Err(GetSequenceError::NoSeq)
-            };
-        }
-    }
-    Err(GetSequenceError::NotFound)
-}
-
-/// Return the name of the terminfo variable with the specified sequence.
-pub fn input_terminfo_get_name(seq: &wstr) -> Option<WString> {
-    let mappings = TERMINFO_MAPPINGS
-        .get()
-        .expect("TERMINFO_MAPPINGS not initialized");
-    for m in mappings.iter() {
-        if m.seq.is_some() && seq == str2wcstring(m.seq.as_ref().unwrap()) {
-            return Some(m.name.to_owned());
-        }
-    }
-    None
-}
-
-/// Return a list of all known terminfo names.
-pub fn input_terminfo_get_names(skip_null: bool) -> Vec<WString> {
-    let mappings = TERMINFO_MAPPINGS
-        .get()
-        .expect("TERMINFO_MAPPINGS not initialized");
-    let mut result = Vec::with_capacity(mappings.len());
-    for m in mappings.iter() {
-        if skip_null && m.seq.is_none() {
-            continue;
-        }
-        result.push(m.name.to_owned());
-    }
-    result
 }
 
 /// Returns a list of all existing input function names.

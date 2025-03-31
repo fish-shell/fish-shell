@@ -5,11 +5,10 @@ use crate::common::{
     escape, escape_string, str2wcstring, valid_var_name, EscapeFlags, EscapeStringStyle,
 };
 use crate::highlight::{colorize, highlight_shell};
-use crate::input::{
-    input_function_get_names, input_mappings, input_terminfo_get_names,
-    input_terminfo_get_sequence, GetSequenceError, InputMappingSet, KeyNameStyle,
+use crate::input::{input_function_get_names, input_mappings, InputMappingSet, KeyNameStyle};
+use crate::key::{
+    self, char_to_symbol, function_key, parse_keys, Key, Modifiers, KEY_NAMES, MAX_FUNCTION_KEY,
 };
-use crate::key::{self, canonicalize_raw_escapes, char_to_symbol, parse_keys, Key, Modifiers};
 use crate::nix::isatty;
 use std::sync::MutexGuard;
 
@@ -26,7 +25,6 @@ struct Options {
     list_modes: bool,
     print_help: bool,
     silent: bool,
-    use_terminfo: bool,
     have_user: bool,
     user: bool,
     have_preset: bool,
@@ -44,7 +42,6 @@ impl Options {
             list_modes: false,
             print_help: false,
             silent: false,
-            use_terminfo: false,
             have_user: false,
             user: false,
             have_preset: false,
@@ -144,11 +141,6 @@ impl BuiltinBind {
                     }
                 }
             }
-            KeyNameStyle::Terminfo(tname) => {
-                // Note that we show -k here because we have an input key name.
-                out.push_str("-k ");
-                out.push_utfstr(&tname);
-            }
         }
 
         // Now show the list of commands.
@@ -203,13 +195,16 @@ impl BuiltinBind {
         }
     }
 
-    /// Print terminfo key binding names to string buffer used for standard output.
-    ///
-    /// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
-    /// are defined for this terminal are printed.
-    fn key_names(&self, all: bool, streams: &mut IoStreams) {
-        let names = input_terminfo_get_names(!all);
-        for name in names {
+    /// Print all named keys to the string buffer used for standard output.
+    fn key_names(&self, streams: &mut IoStreams) {
+        let function_keys: Vec<_> = (1..=MAX_FUNCTION_KEY)
+            .map(|i| WString::from(Key::from_raw(function_key(i))))
+            .collect();
+        for name in KEY_NAMES
+            .iter()
+            .map(|(_encoding, name)| *name)
+            .chain(function_keys.iter().map(|s| s.as_utfstr()))
+        {
             streams.out.appendln(name);
         }
     }
@@ -219,31 +214,6 @@ impl BuiltinBind {
         let names = input_function_get_names();
         for name in names {
             streams.out.appendln(name);
-        }
-    }
-
-    /// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
-    fn get_terminfo_sequence(&self, seq: &wstr, streams: &mut IoStreams) -> Option<WString> {
-        match input_terminfo_get_sequence(seq) {
-            Ok(tseq) => Some(tseq),
-            Err(err) if !self.opts.silent => {
-                let eseq =
-                    escape_string(seq, EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES));
-                match err {
-                    GetSequenceError::NotFound => streams.err.append(wgettext_fmt!(
-                        "%ls: No key with name '%ls' found\n",
-                        "bind",
-                        eseq
-                    )),
-                    GetSequenceError::NoSeq => streams.err.append(wgettext_fmt!(
-                        "%ls: Key with name '%ls' does not have any mapping\n",
-                        "bind",
-                        eseq
-                    )),
-                };
-                None
-            }
-            Err(_) => None,
         }
     }
 
@@ -262,9 +232,7 @@ impl BuiltinBind {
         let Some(key_seq) = self.compute_seq(streams, seq) else {
             return true;
         };
-        let key_name_style = if self.opts.use_terminfo {
-            KeyNameStyle::Terminfo(seq.to_owned())
-        } else if is_raw_escape_sequence {
+        let key_name_style = if is_raw_escape_sequence {
             KeyNameStyle::RawEscapeSequence
         } else {
             KeyNameStyle::Plain
@@ -275,21 +243,11 @@ impl BuiltinBind {
     }
 
     fn compute_seq(&self, streams: &mut IoStreams, seq: &wstr) -> Option<Vec<Key>> {
-        if self.opts.use_terminfo {
-            let Some(tinfo_seq) = self.get_terminfo_sequence(seq, streams) else {
-                // get_terminfo_sequence already printed the error.
-                return None;
-            };
-            Some(canonicalize_raw_escapes(
-                tinfo_seq.chars().map(Key::from_single_char).collect(),
-            ))
-        } else {
-            match parse_keys(seq) {
-                Ok(keys) => Some(keys),
-                Err(err) => {
-                    streams.err.append(sprintf!("bind: %s\n", err));
-                    None
-                }
+        match parse_keys(seq) {
+            Ok(keys) => Some(keys),
+            Err(err) => {
+                streams.err.append(sprintf!("bind: %s\n", err));
+                None
             }
         }
     }
@@ -385,13 +343,7 @@ impl BuiltinBind {
                     EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES),
                 );
                 if !self.opts.silent {
-                    if self.opts.use_terminfo {
-                        streams.err.append(wgettext_fmt!(
-                            "%ls: No binding found for key '%ls'\n",
-                            cmd,
-                            eseq
-                        ));
-                    } else if seq.len() == 1 {
+                    if seq.len() == 1 {
                         streams.err.append(wgettext_fmt!(
                             "%ls: No binding found for key '%ls'\n",
                             cmd,
@@ -473,7 +425,13 @@ fn parse_cmd_opts(
             'e' => opts.mode = BIND_ERASE,
             'f' => opts.mode = BIND_FUNCTION_NAMES,
             'h' => opts.print_help = true,
-            'k' => opts.use_terminfo = true,
+            'k' => {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: the -k/--key key name style is no longer supported. See `bind --key-names` for the new style\n",
+                    cmd,
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
             'K' => opts.mode = BIND_KEY_NAMES,
             'L' => {
                 opts.list_modes = true;
@@ -583,7 +541,7 @@ impl BuiltinBind {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
-            BIND_KEY_NAMES => self.key_names(self.opts.all, streams),
+            BIND_KEY_NAMES => self.key_names(streams),
             BIND_FUNCTION_NAMES => self.function_names(streams),
             _ => {
                 streams

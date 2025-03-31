@@ -141,6 +141,9 @@ bind tab
 bind ctrl-\b
 # CHECKERR: bind: Cannot add control modifier to control character 'ctrl-h'
 
+bind -k nul 'echo foo'
+# CHECKERR: bind: the -k/--key key name style is no longer supported. See `bind --key-names` for the new style
+
 # Either Return or ctrl-m.
 bind \r
 # CHECK: bind --preset enter execute

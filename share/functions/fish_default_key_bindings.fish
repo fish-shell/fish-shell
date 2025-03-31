@@ -1,5 +1,4 @@
 function fish_default_key_bindings -d "emacs-like key binds"
-    set -l legacy_bind bind
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help"
@@ -25,17 +24,13 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
-    $legacy_bind --preset $argv -k right forward-char
-    $legacy_bind --preset $argv -k left backward-char
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
     bind --preset $argv shift-backspace backward-delete-char
 
     bind --preset $argv home beginning-of-line
-    $legacy_bind --preset $argv -k home beginning-of-line
     bind --preset $argv end end-of-line
-    $legacy_bind --preset $argv -k end end-of-line
 
     bind --preset $argv ctrl-a beginning-of-line
     bind --preset $argv ctrl-e end-of-line
@@ -79,6 +74,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:
-            $legacy_bind --preset $argv \e\x20ep fish_clipboard_paste
+            bind --preset $argv \e\x20ep fish_clipboard_paste
     end
 end

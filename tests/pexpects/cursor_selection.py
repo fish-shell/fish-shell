@@ -14,7 +14,7 @@ left, right = "\x02", "\x06"  # Ctrl-B, Ctrl-F
 # Additional keys to start selecting and dump the current selection
 select, dump = "\x00", "!"  # Ctrl-Space, "!"
 
-sendline("bind -k nul begin-selection")
+sendline("bind ctrl-space begin-selection")
 expect_prompt()
 sendline("bind ! 'echo -n \"<$(commandline --current-selection)>\"'")
 expect_prompt()

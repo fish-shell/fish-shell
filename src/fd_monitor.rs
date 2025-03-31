@@ -389,12 +389,7 @@ impl BackgroundFdMonitor {
             drop(data);
             let ret =
                 fds.check_readable(timeout.map(Timeout::Duration).unwrap_or(Timeout::Forever));
-            // Cygwin reports ret < 0 && errno == 0 as success.
-            let err = errno().0;
-            if ret < 0
-                && !matches!(err, libc::EINTR | libc::EBADF)
-                && !(cfg!(target_os = "cygwin") && err == 0)
-            {
+            if ret < 0 && !matches!(errno().0, libc::EINTR | libc::EBADF) {
                 // Surprising error
                 perror("select");
             }

@@ -5,7 +5,7 @@ use crate::{
     fallback::fish_wcwidth,
     reader::TERMINAL_MODE_ON_STARTUP,
     wchar::{decode_byte_from_char, prelude::*},
-    wutil::{fish_is_pua, fish_wcstoi},
+    wutil::{fish_is_pua, fish_wcstoul},
 };
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
@@ -25,9 +25,10 @@ pub(crate) const Tab: char = '\u{F50D}';
 pub(crate) const Space: char = '\u{F50E}';
 pub(crate) const Menu: char = '\u{F50F}';
 pub(crate) const PrintScreen: char = '\u{F510}';
+pub(crate) const MAX_FUNCTION_KEY: u32 = 12;
 pub(crate) fn function_key(n: u32) -> char {
-    assert!((1..=12).contains(&n));
-    char::from_u32(u32::from('\u{F5FF}') - 12 + (n - 1)).unwrap()
+    assert!((1..=MAX_FUNCTION_KEY).contains(&n));
+    char::from_u32(u32::from('\u{F5FF}') - MAX_FUNCTION_KEY + (n - 1)).unwrap()
 }
 pub(crate) const Invalid: char = '\u{F5FF}';
 
@@ -299,11 +300,14 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                 })?
             } else if codepoint.is_none() && key_name.starts_with('f') && key_name.len() <= 3 {
                 let num = key_name.strip_prefix('f').unwrap();
-                let codepoint = match fish_wcstoi(num) {
-                    Ok(n) if (1..=12).contains(&n) => function_key(u32::try_from(n).unwrap()),
+                let codepoint = match fish_wcstoul(num) {
+                    Ok(n) if (1..=u64::from(MAX_FUNCTION_KEY)).contains(&n) => {
+                        function_key(u32::try_from(n).unwrap())
+                    }
                     _ => {
                         return Err(wgettext_fmt!(
-                            "only f1 through f12 are supported, not 'f%s'",
+                            "only f1 through f%d are supported, not 'f%s'",
+                            MAX_FUNCTION_KEY,
                             num,
                         ));
                     }
@@ -394,7 +398,7 @@ impl From<Key> for WString {
             .iter()
             .find_map(|&(codepoint, name)| (codepoint == key.codepoint).then(|| name.to_owned()))
             .or_else(|| {
-                (function_key(1)..=function_key(12))
+                (function_key(1)..=function_key(MAX_FUNCTION_KEY))
                     .contains(&key.codepoint)
                     .then(|| {
                         sprintf!(

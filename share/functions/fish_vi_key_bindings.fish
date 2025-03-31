@@ -1,5 +1,4 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
-    set -l legacy_bind bind
     if contains -- -h $argv
         or contains -- --help $argv
         echo "Sorry but this function doesn't support -h or --help" >&2
@@ -110,13 +109,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
     # Vi/Vim doesn't support these keys in insert mode but that seems silly so we do so anyway.
     bind -s --preset -M insert home beginning-of-line
-    $legacy_bind -s --preset -M insert -k home beginning-of-line
     bind -s --preset -M default home beginning-of-line
-    $legacy_bind -s --preset -M default -k home beginning-of-line
     bind -s --preset -M insert end end-of-line
-    $legacy_bind -s --preset -M insert -k end end-of-line
     bind -s --preset -M default end end-of-line
-    $legacy_bind -s --preset -M default -k end end-of-line
 
     # Vi moves the cursor back if, after deleting, it is at EOL.
     # To emulate that, move forward, then backward, which will be a NOP
@@ -124,16 +119,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M default x delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
     bind -s --preset -M default X backward-delete-char
     bind -s --preset -M insert delete delete-char forward-single-char backward-char
-    $legacy_bind -s --preset -M insert -k dc delete-char forward-single-char backward-char
     bind -s --preset -M default delete delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
-    $legacy_bind -s --preset -M default -k dc delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -s --preset -M insert backspace backward-delete-char
     bind -s --preset -M insert shift-backspace backward-delete-char
-    $legacy_bind -s --preset -M insert -k backspace backward-delete-char
     bind -s --preset -M default backspace backward-char
-    $legacy_bind -s --preset -M default -k backspace backward-char
     bind -s --preset -M insert ctrl-h backward-delete-char
     bind -s --preset -M default ctrl-h backward-char
 
@@ -282,7 +273,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # but this binding just move cursor backward, not delete the changes
     bind -s --preset -M replace backspace backward-char
     bind -s --preset -M replace shift-backspace backward-char
-    $legacy_bind -s --preset -M replace -k backspace backward-char
 
     #
     # visual mode

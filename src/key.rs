@@ -6,7 +6,7 @@ use crate::{
     flog::FloggableDebug,
     reader::TERMINAL_MODE_ON_STARTUP,
     wchar::{decode_byte_from_char, prelude::*},
-    wutil::{fish_is_pua, fish_wcstoi},
+    wutil::{fish_is_pua, fish_wcstoul},
 };
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
@@ -33,7 +33,7 @@ pub(crate) fn function_key(n: u32) -> char {
 }
 pub(crate) const Invalid: char = '\u{F5FF}';
 
-const KEY_NAMES: &[(char, &wstr)] = &[
+pub(crate) const KEY_NAMES: &[(char, &wstr)] = &[
     ('-', L!("minus")),
     (',', L!("comma")),
     (Backspace, L!("backspace")),

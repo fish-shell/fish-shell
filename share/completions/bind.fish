@@ -70,10 +70,7 @@ function __fish_bind_complete
         printf '%salt-\tAlt modifier…\n' $prefix
         printf '%sa-\tAlt modifier…\n' $prefix
         printf '%sshift-\tShift modifier…\n' $prefix
-        set -l key_names minus comma backspace delete escape \
-            enter up down left right pageup pagedown home end insert tab \
-            space menu printscreen f(seq 12)
-        printf '%s\tNamed key\n' $prefix$key_names
+        printf '%s\tNamed key\n' $prefix(bind --key-names)
     end
 end
 complete -c bind -k -a '(__fish_bind_complete)' -f

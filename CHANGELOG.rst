@@ -9,6 +9,7 @@ Notable improvements and fixes
 Deprecations and removed features
 ---------------------------------
 - Tokens like `{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
+- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
 
 Scripting improvements
 ----------------------

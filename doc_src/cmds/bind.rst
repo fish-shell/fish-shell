@@ -11,6 +11,7 @@ Synopsis
     bind [(-M | --mode) MODE] [--preset] [--user] [KEYS]
     bind [-a | --all] [--preset] [--user]
     bind (-f | --function-names)
+    bind (-K | --key-names)
     bind (-L | --list-modes)
     bind (-e | --erase) [(-M | --mode) MODE] [--preset] [--user] [-a | --all] | KEYS ...
 
@@ -72,6 +73,9 @@ The following options are available:
 **-f** or **--function-names**
     Display a list of available input functions
 
+-**-K** or **--key-names**
+    Display a list of available named keys such as ``backspace``.
+
 **-L** or **--list-modes**
     Display a list of defined bind modes
 
@@ -101,12 +105,6 @@ The following options are available:
 
 **-s** or **--silent**
     Silences some of the error messages, including for unknown key names and unbound sequences.
-
-**-k KEY_NAME** or **--key KEY_NAME**
-    This looks up KEY_NAME in terminfo and binds that sequence instead of a key that fish would decode.
-    To view a list of the terminfo keys fish knows about, use ``bind --key-names`` or ``bind -K``.
-    This is deprecated and provided for compatibility with older fish versions. You should bind the keys directly.
-    Instead of ``bind -k sright`` use ``bind shift-right``, instead of ``bind -k nul`` use ``bind ctrl-space`` and so on.
 
 **-h** or **--help**
     Displays help about using this command.

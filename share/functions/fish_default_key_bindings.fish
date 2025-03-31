@@ -81,7 +81,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
             # the major effect is that several keys do not work as intended.
             # This is a workaround, there will be additions in he future.
             $legacy_bind --preset $argv \e\[P delete-char
-            $legacy_bind --preset $argv \e\[Z up-line
         case xterm-256color
             # Microsoft's conemu uses xterm-256color plus
             # the following to tell a console to paste:

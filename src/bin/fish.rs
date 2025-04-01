@@ -35,8 +35,8 @@ use fish::{
         },
     },
     common::{
-        escape, get_executable_path, save_term_foreground_process_group, str2wcstring, wcs2string,
-        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME,
+        escape, save_term_foreground_process_group, str2wcstring, wcs2string, PACKAGE_NAME,
+        PROFILING_ACTIVE, PROGRAM_NAME,
     },
     env::{
         environment::{env_init, EnvStack, Environment},
@@ -70,7 +70,9 @@ use fish::{
 use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(feature = "installable")]
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -179,7 +181,7 @@ fn install(confirm: bool, dir: &PathBuf) -> bool {
 }
 
 #[cfg(clippy)]
-fn install(_confirm: bool, _dir: &PathBuf) -> bool {
+fn install(_confirm: bool, _dir: &std::path::PathBuf) -> bool {
     unreachable!()
 }
 
@@ -462,6 +464,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
 
                         // Copy ourselves there.
                         let argv0 = OsString::from_vec(wcs2string(&args[0]));
+                        use fish::common::get_executable_path;
                         let exec_path =
                             get_executable_path(<OsString as AsRef<Path>>::as_ref(&argv0));
                         let binpath = dir.join("bin/fish");

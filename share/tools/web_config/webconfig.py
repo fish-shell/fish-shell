@@ -1127,7 +1127,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             # If we don't have "bind", a sequence and a mapping,
             # it's not a valid binding.
-            if len(comps) < 3:
+            if len(comps) != 3:
                 continue
 
             # Store the "--preset" value for later
@@ -1139,7 +1139,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 preset = False
                 comps = line.split(" ", 3)[1:]
             # Check again if we removed the level.
-            if len(comps) < 3:
+            if len(comps) != 3:
                 continue
 
             if comps[1] == "-k":

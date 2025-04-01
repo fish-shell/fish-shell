@@ -1072,7 +1072,7 @@ pub static PROGRAM_NAME: OnceCell<&'static wstr> = OnceCell::new();
 /// the multiline prompt usable. See [#2859](https://github.com/fish-shell/fish-shell/issues/2859)
 /// and <https://github.com/Microsoft/BashOnWindows/issues/545>
 pub fn has_working_tty_timestamps() -> bool {
-    if cfg!(any(target_os = "windows", target_os = "cygwin")) {
+    if cfg!(any(target_os = "windows", cygwin)) {
         false
     } else if cfg!(target_os = "linux") {
         !is_windows_subsystem_for_linux(WSL::V1)

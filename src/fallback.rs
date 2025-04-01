@@ -32,7 +32,7 @@ pub static FISH_EMOJI_WIDTH: AtomicIsize = AtomicIsize::new(1);
 static WC_LOOKUP_TABLE: Lazy<WcLookupTable> = Lazy::new(WcLookupTable::new);
 
 /// A safe wrapper around the system `wcwidth()` function
-#[cfg(not(target_os = "cygwin"))]
+#[cfg(not(cygwin))]
 pub fn wcwidth(c: char) -> isize {
     extern "C" {
         pub fn wcwidth(c: libc::wchar_t) -> libc::c_int;
@@ -49,7 +49,7 @@ pub fn fish_wcwidth(c: char) -> isize {
     // The system version of wcwidth should accurately reflect the ability to represent characters
     // in the console session, but knows nothing about the capabilities of other terminal emulators
     // or ttys. Use it from the start only if we are logged in to the physical console.
-    #[cfg(not(target_os = "cygwin"))]
+    #[cfg(not(cygwin))]
     if crate::common::is_console_session() {
         return wcwidth(c);
     }
@@ -75,12 +75,12 @@ pub fn fish_wcwidth(c: char) -> isize {
     let width = WC_LOOKUP_TABLE.classify(c);
     match width {
         WcWidth::NonCharacter | WcWidth::NonPrint | WcWidth::Combining | WcWidth::Unassigned => {
-            #[cfg(not(target_os = "cygwin"))]
+            #[cfg(not(cygwin))]
             {
                 // Fall back to system wcwidth in this case.
                 wcwidth(c)
             }
-            #[cfg(target_os = "cygwin")]
+            #[cfg(cygwin)]
             {
                 // No system wcwidth for UTF-32 on cygwin.
                 0

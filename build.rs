@@ -90,6 +90,7 @@ fn detect_cfgs(target: &mut Target) {
         ),
         ("apple", &detect_apple),
         ("bsd", &detect_bsd),
+        ("cygwin", &detect_cygwin),
         ("gettext", &have_gettext),
         ("small_main_stack", &has_small_stack),
         // See if libc supports the thread-safe localeconv_l(3) alternative to localeconv(3).
@@ -126,6 +127,11 @@ fn detect_cfgs(target: &mut Target) {
 
 fn detect_apple(_: &Target) -> Result<bool, Box<dyn Error>> {
     Ok(cfg!(any(target_os = "ios", target_os = "macos")))
+}
+
+#[allow(unexpected_cfgs)]
+fn detect_cygwin(_: &Target) -> Result<bool, Box<dyn Error>> {
+    Ok(cfg!(target_os = "cygwin"))
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with

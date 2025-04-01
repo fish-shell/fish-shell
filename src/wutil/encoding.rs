@@ -1,7 +1,7 @@
 extern "C" {
-    #[cfg_attr(target_os = "cygwin", link_name = "c32rtomb")]
+    #[cfg_attr(cygwin, link_name = "c32rtomb")]
     pub fn wcrtomb(s: *mut libc::c_char, wc: u32, ps: *mut mbstate_t) -> usize;
-    #[cfg_attr(target_os = "cygwin", link_name = "mbrtoc32")]
+    #[cfg_attr(cygwin, link_name = "mbrtoc32")]
     pub fn mbrtowc(pwc: *mut u32, s: *const libc::c_char, n: usize, p: *mut mbstate_t) -> usize;
 }
 

@@ -663,7 +663,8 @@ macro_rules! define_list_node {
         impl Acceptor for $name {
             #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-                accept_list_visitor!(Self, accept, visit, self, visitor, reversed, $contents);
+                let _ =
+                    accept_list_visitor!(Self, accept, visit, self, visitor, reversed, $contents);
             }
         }
         impl AcceptorMut for $name {
@@ -3819,7 +3820,7 @@ impl<'s> Populator<'s> {
     // Return the resulting Node pointer. It is never null.
     fn allocate_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
         let mut result = Box::<T>::default();
-        self.visit_mut(&mut *result);
+        let _ = self.visit_mut(&mut *result);
         result
     }
 

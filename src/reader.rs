@@ -1008,7 +1008,7 @@ pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
             data.rls = Some(ReadlineLoopState::new());
         }
         data.save_screen_state();
-        data.handle_char_event(Some(ch));
+        let _ = data.handle_char_event(Some(ch));
     }
 }
 

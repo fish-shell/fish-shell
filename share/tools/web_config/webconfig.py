@@ -780,169 +780,6 @@ class FishBinding:
         }
 
 
-class BindingParser:
-    """Class to parse codes for bind command"""
-
-    # TODO: What does snext and sprevious mean ?
-    readable_keys = {
-        "dc": "Delete",
-        "npage": "Page Up",
-        "ppage": "Page Down",
-        "sdc": "Shift Delete",
-        "shome": "Shift Home",
-        "left": "Left Arrow",
-        "right": "Right Arrow",
-        "up": "Up Arrow",
-        "down": "Down Arrow",
-        "sleft": "Shift Left",
-        "sright": "Shift Right",
-        "btab": "Shift Tab",
-    }
-
-    def set_buffer(self, buffer):
-        """Sets code to parse"""
-
-        self.buffer = buffer or b""
-        self.index = 0
-
-    def get_char(self):
-        """Gets next character from buffer"""
-        if self.index >= len(self.buffer):
-            return "\0"
-        c = self.buffer[self.index]
-        self.index += 1
-        return c
-
-    def unget_char(self):
-        """Goes back by one character for parsing"""
-
-        self.index -= 1
-
-    def end(self):
-        """Returns true if reached end of buffer"""
-
-        return self.index >= len(self.buffer)
-
-    def parse_control_sequence(self):
-        """Parses terminal specifiec control sequences"""
-
-        result = ""
-        c = self.get_char()
-
-        # \e0 is used to denote start of control sequence
-        if c == "O":
-            c = self.get_char()
-
-        # \[1\; is start of control sequence
-        if c == "1":
-            b = self.get_char()
-            c = self.get_char()
-            if b == "\\" and c == "~":
-                result += "Home"
-            elif c == ";":
-                c = self.get_char()
-
-        # 3 is Alt
-        if c == "3":
-            result += "ALT - "
-            c = self.get_char()
-
-        # \[4\~ is End
-        if c == "4":
-            b = self.get_char()
-            c = self.get_char()
-            if b == "\\" and c == "~":
-                result += "End"
-
-        # 5 is Ctrl
-        if c == "5":
-            result += "CTRL - "
-            c = self.get_char()
-
-        # 9 is Alt
-        if c == "9":
-            result += "ALT - "
-            c = self.get_char()
-
-        if c == "A":
-            result += "Up Arrow"
-        elif c == "B":
-            result += "Down Arrow"
-        elif c == "C":
-            result += "Right Arrow"
-        elif c == "D":
-            result += "Left Arrow"
-        elif c == "F":
-            result += "End"
-        elif c == "H":
-            result += "Home"
-
-        return result
-
-    def get_readable_binding(self):
-        """Gets a readable representation of binding"""
-
-        try:
-            result = BindingParser.readable_keys[self.buffer.lower()]
-        except KeyError:
-            result = self.parse_binding()
-
-        return result
-
-    def parse_binding(self):
-        readable_command = ""
-        result = ""
-        alt = ctrl = False
-
-        while not self.end():
-            c = self.get_char()
-
-            if c == "\\":
-                c = self.get_char()
-                if c == "e":
-                    d = self.get_char()
-                    if d == "O":
-                        self.unget_char()
-                        result += self.parse_control_sequence()
-                    elif d == "\\":
-                        if self.get_char() == "[":
-                            result += self.parse_control_sequence()
-                        else:
-                            self.unget_char()
-                            self.unget_char()
-                            alt = True
-                    elif d == "\0":
-                        result += "ESC"
-                    else:
-                        alt = True
-                        self.unget_char()
-                elif c == "c":
-                    ctrl = True
-                elif c == "n":
-                    result += "Enter"
-                elif c == "t":
-                    result += "Tab"
-                elif c == "b":
-                    result += "Backspace"
-                elif c.isalpha():
-                    result += "\\" + c
-                else:
-                    result += c
-            elif c == "\x7f":
-                result += "Backspace"
-            else:
-                result += c
-        if ctrl:
-            readable_command += "CTRL - "
-        if alt:
-            readable_command += "ALT - "
-
-        if result == "":
-            return "unknown-control-sequence"
-
-        return readable_command + result
-
-
 class FishConfigTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
 
@@ -1120,7 +957,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Put all the bindings into a list
         bindings = []
         command_to_binding = {}
-        binding_parser = BindingParser()
 
         for line in out.split("\n"):
             comps = line.split(" ", 2)
@@ -1142,23 +978,17 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if len(comps) != 3:
                 continue
 
-            if comps[1] == "-k":
-                key_name, command = comps[2].split(" ", 1)
-                binding_parser.set_buffer(key_name.capitalize())
-            else:
-                key_name = None
-                command = comps[2]
-                binding_parser.set_buffer(comps[1])
+            key = comps[1]
+            command = comps[2]
 
             if command in bindings_blacklist:
                 continue
 
-            readable_binding = binding_parser.get_readable_binding()
             if command in command_to_binding:
                 fish_binding = command_to_binding[command]
-                fish_binding.add_binding(line, readable_binding)
+                fish_binding.add_binding(line, key)
             else:
-                fish_binding = FishBinding(command, line, readable_binding)
+                fish_binding = FishBinding(command, line, key)
                 bindings.append(fish_binding)
                 command_to_binding[command] = fish_binding
 

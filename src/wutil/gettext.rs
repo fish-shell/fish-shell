@@ -48,10 +48,13 @@ use internal::*;
 
 // Really init wgettext.
 fn wgettext_really_init() {
+    let Some(ref localepath) = CONFIG_PATHS.locale else {
+        return;
+    };
     let package_name = CString::new(PACKAGE_NAME).unwrap();
     // This contains `datadir`; which when replaced to make the binary relocatable,
     // causes null bytes at the end of the string.
-    let localedir = CString::new(CONFIG_PATHS.locale.display().to_string()).unwrap();
+    let localedir = CString::new(localepath.display().to_string()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }

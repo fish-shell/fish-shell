@@ -50,11 +50,11 @@ impl From<EnvMode> for u16 {
 /// env_init.
 #[derive(Default)]
 pub struct ConfigPaths {
-    pub data: PathBuf,        // e.g., /usr/local/share
-    pub sysconf: PathBuf,     // e.g., /usr/local/etc
-    pub doc: PathBuf,         // e.g., /usr/local/share/doc/fish
-    pub bin: Option<PathBuf>, // e.g., /usr/local/bin
-    pub locale: PathBuf,      // e.g., /usr/local/share/locale
+    pub data: Option<PathBuf>,   // e.g., /usr/local/share
+    pub sysconf: PathBuf,        // e.g., /usr/local/etc
+    pub doc: PathBuf,            // e.g., /usr/local/share/doc/fish
+    pub bin: Option<PathBuf>,    // e.g., /usr/local/bin
+    pub locale: Option<PathBuf>, // e.g., /usr/local/share/locale
 }
 
 /// A collection of status and pipestatus.

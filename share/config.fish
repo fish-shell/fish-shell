@@ -35,7 +35,7 @@ end
 set -l __extra_completionsdir
 set -l __extra_functionsdir
 set -l __extra_confdir
-if test -f $__fish_data_dir/__fish_build_paths.fish
+if path is -f -- $__fish_data_dir/__fish_build_paths.fish
     source $__fish_data_dir/__fish_build_paths.fish
 end
 

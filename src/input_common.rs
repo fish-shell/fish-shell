@@ -377,7 +377,7 @@ fn readb(in_fd: RawFd, blocking: bool) -> ReadbResult {
                 return ReadbResult::Eof;
             }
             let c = arr[0];
-            FLOG!(reader, "Read byte", char_to_symbol(char::from(c)));
+            FLOG!(reader, "Read byte", char_to_symbol(char::from(c), true));
             // The common path is to return a u8.
             return ReadbResult::Byte(c);
         }
@@ -1646,7 +1646,7 @@ impl<'a> std::fmt::Display for DisplayBytes<'a> {
             if i != 0 {
                 write!(f, " ")?;
             }
-            write!(f, "{}", char_to_symbol(char::from(c)))?;
+            write!(f, "{}", char_to_symbol(char::from(c), i == 0))?;
         }
         Ok(())
     }

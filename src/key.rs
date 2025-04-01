@@ -416,7 +416,8 @@ impl From<Key> for WString {
                         )
                     })
             });
-        let mut res = name.unwrap_or_else(|| char_to_symbol(key.codepoint));
+        let mut res =
+            name.unwrap_or_else(|| char_to_symbol(key.codepoint, key.modifiers.is_none()));
 
         if key.modifiers.shift {
             res.insert_utfstr(0, L!("shift-"));
@@ -453,12 +454,12 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
-fn must_escape(c: char) -> bool {
-    "~[]()<>{}*\\?$#;&|'\"".contains(c)
+fn must_escape(is_first_in_token: bool, c: char) -> bool {
+    "[]()<>{}*\\$;&|'\"".contains(c) || (is_first_in_token && "~#".contains(c))
 }
 
-fn ascii_printable_to_symbol(buf: &mut WString, c: char) {
-    if must_escape(c) {
+fn ascii_printable_to_symbol(buf: &mut WString, is_first_in_token: bool, c: char) {
+    if must_escape(is_first_in_token, c) {
         sprintf!(=> buf, "\\%c", c);
     } else {
         sprintf!(=> buf, "%c", c);
@@ -466,14 +467,14 @@ fn ascii_printable_to_symbol(buf: &mut WString, c: char) {
 }
 
 /// Convert a wide-char to a symbol that can be used in our output.
-pub fn char_to_symbol(c: char) -> WString {
+pub fn char_to_symbol(c: char, is_first_in_token: bool) -> WString {
     let mut buff = WString::new();
     let buf = &mut buff;
     if c <= ' ' || c == '\x7F' {
         ctrl_to_symbol(buf, c);
     } else if c < '\u{80}' {
         // ASCII characters that are not control characters
-        ascii_printable_to_symbol(buf, c);
+        ascii_printable_to_symbol(buf, is_first_in_token, c);
     } else if let Some(byte) = decode_byte_from_char(c) {
         sprintf!(=> buf, "\\x%02x", byte);
     } else if ('\u{e000}'..='\u{f8ff}').contains(&c) {

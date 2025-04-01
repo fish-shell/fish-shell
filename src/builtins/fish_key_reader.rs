@@ -92,8 +92,8 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));
-            for byte in kevt.seq.chars() {
-                streams.out.append(char_to_symbol(byte));
+            for (i, byte) in kevt.seq.chars().enumerate() {
+                streams.out.append(char_to_symbol(byte, i == 0));
             }
             streams.out.append(L!("\n"));
         }

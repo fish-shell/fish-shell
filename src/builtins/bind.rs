@@ -127,17 +127,20 @@ impl BuiltinBind {
                 }
             }
             KeyNameStyle::RawEscapeSequence => {
-                for key in seq {
+                for (i, key) in seq.iter().enumerate() {
                     if key.modifiers == Modifiers::ALT {
-                        out.push_utfstr(&char_to_symbol('\x1b'));
-                        out.push_utfstr(&char_to_symbol(if key.codepoint == key::Escape {
-                            '\x1b'
-                        } else {
-                            key.codepoint
-                        }));
+                        out.push_utfstr(&char_to_symbol('\x1b', i == 0));
+                        out.push_utfstr(&char_to_symbol(
+                            if key.codepoint == key::Escape {
+                                '\x1b'
+                            } else {
+                                key.codepoint
+                            },
+                            false,
+                        ));
                     } else {
                         assert!(key.modifiers.is_none());
-                        out.push_utfstr(&char_to_symbol(key.codepoint));
+                        out.push_utfstr(&char_to_symbol(key.codepoint, i == 0));
                     }
                 }
             }

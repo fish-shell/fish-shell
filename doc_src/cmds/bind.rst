@@ -42,9 +42,11 @@ They are:
 - ``f1`` through ``f12``.
 - ``home``,
 - ``insert``,
+- ``menu``,
 - ``minus`` (``-``),
 - ``pageup``,
 - ``pagedown``,
+- ``printscreen``,
 - ``space`` and
 - ``tab``,
 

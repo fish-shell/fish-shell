@@ -81,7 +81,7 @@ use std::{env, ops::ControlFlow};
 #[cfg(feature = "installable")]
 // Disable for clippy because otherwise it would require sphinx
 #[cfg(not(clippy))]
-fn install(confirm: bool, dir: &PathBuf) -> bool {
+fn install(confirm: bool, dir: &Path) -> bool {
     use rust_embed::RustEmbed;
 
     #[derive(RustEmbed)]
@@ -181,7 +181,7 @@ fn install(confirm: bool, dir: &PathBuf) -> bool {
 }
 
 #[cfg(clippy)]
-fn install(_confirm: bool, _dir: &std::path::PathBuf) -> bool {
+fn install(_confirm: bool, _dir: &Path) -> bool {
     unreachable!()
 }
 

@@ -18,17 +18,20 @@ function fish_prompt --description 'Write out the prompt'
         set suffix '#'
     end
 
-    # Write pipestatus
-    # If the status was carried over (if no command is issued or if `set` leaves the status untouched), don't bold it.
-    set -l bold_flag --bold
-    set -q __fish_prompt_status_generation; or set -g __fish_prompt_status_generation $status_generation
-    if test $__fish_prompt_status_generation = $status_generation
-        set bold_flag
+    # Write pipestatus if prompt is transient or transient prompt is disabled.
+    set -l prompt_status
+    if ! contains -- --final-rendering $argv
+        # If the status was carried over (if no command is issued or if `set` leaves the status untouched), don't bold it.
+        set -l bold_flag --bold
+        set -q __fish_prompt_status_generation; or set -g __fish_prompt_status_generation $status_generation
+        if test $__fish_prompt_status_generation = $status_generation
+            set bold_flag
+        end
+        set __fish_prompt_status_generation $status_generation
+        set -l status_color (set_color $fish_color_status)
+        set -l statusb_color (set_color $bold_flag $fish_color_status)
+        set prompt_status (__fish_print_pipestatus "[" "]" "|" "$status_color" "$statusb_color" $last_pipestatus)
     end
-    set __fish_prompt_status_generation $status_generation
-    set -l status_color (set_color $fish_color_status)
-    set -l statusb_color (set_color $bold_flag $fish_color_status)
-    set -l prompt_status (__fish_print_pipestatus "[" "]" "|" "$status_color" "$statusb_color" $last_pipestatus)
 
     echo -n -s (prompt_login)' ' (set_color $color_cwd) (prompt_pwd) $normal (fish_vcs_prompt) $normal " "$prompt_status $suffix " "
 end

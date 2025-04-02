@@ -2,7 +2,7 @@ set -l commands autoupdate clean gc init-templatedir install install-hooks migra
 set -l hook_stages commit merge-commit prepare-commit-msg commit-msg post-commit manual post-checkout push post-merge post-rewrite
 set -l hook_types pre-commit pre-merge-commit pre-push prepare-commit-msg commit-msg post-commit post-checkout post-merge post-rewrite
 
-functions -q __fish_git || source $__fish_data_dir/completions/git.fish
+functions -q __fish_git || complete -C"git " &>/dev/null
 
 function __fish_pre_commit_config_print -a key
     set -l config (__fish_git rev-parse --show-toplevel 2>/dev/null)/.pre-commit-config.yaml

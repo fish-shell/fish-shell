@@ -1,6 +1,6 @@
 # tig - text-mode interface for Git
 
-not functions -q __fish_git && source $__fish_data_dir/completions/git.fish
+functions -q __fish_git || complete -C"git " &>/dev/null
 
 set -l subcommands log show reflog blame grep refs statsh status
 complete -c tig -n "not contains -- -- (commandline -xpc) && not __fish_seen_subcommand_from $subcommands" -xa 'show\t"Open diff view using the given git-show(1) options"

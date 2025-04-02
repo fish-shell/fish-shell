@@ -1,4 +1,4 @@
-type --quiet __fish_vim_tags || source (status dirname)/vim.fish
+complete -C"vim " &>/dev/null
 
 # Options shared with vim, copied from vim.fish
 complete -c nvim -s c -r -d 'Execute Ex command after the first file has been read'

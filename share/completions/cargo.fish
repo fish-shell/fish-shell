@@ -55,7 +55,7 @@ complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'
 complete -c cargo -n __fish_use_subcommand -l color -d 'Coloring: auto, always, never'
 complete -c cargo -n __fish_use_subcommand -l config -d 'Override a configuration value (unstable)'
-complete -c cargo -n __fish_use_subcommand -s Z -d 'Unstable (nightly-only) flags to Cargo, see \'cargo -Z help\' for details'
+complete -c cargo -n __fish_use_subcommand -s Z -d 'Unstable (nightly-only) flags to Cargo, see \'cargo -Z help\' for details' -xa '(cargo -Z help | string replace -rf \'^\s*-Z (\S+)\s+(.*)\' \'$1\t$2\')'
 complete -c cargo -n __fish_use_subcommand -s V -l version -d 'Print version info and exit'
 complete -c cargo -n __fish_use_subcommand -l list -d 'List installed commands'
 complete -c cargo -n __fish_use_subcommand -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'

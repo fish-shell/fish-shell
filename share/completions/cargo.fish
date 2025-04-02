@@ -3,9 +3,6 @@
 ## --- WRITTEN MANUALLY ---
 set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
 
-# Append user-installed extensions (e.g. cargo-foo, invokable as `cargo foo`) to the list of subcommands (à la git)
-set -la __fish_cargo_subcommands (complete -C'cargo-' | string replace -rf '^cargo-(\w+).*' '$1')
-
 complete -c cargo -f -c cargo -n __fish_use_subcommand -a "$__fish_cargo_subcommands"
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"
 
@@ -52,27 +49,6 @@ function __fish_cargo_packages
 end
 complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
     -xa "(__fish_cargo_packages)"
-
-# Look up crates.io crates matching the single argument provided to this function
-function __fish_cargo_search
-    if test (string length -- "$argv[1]") -le 2
-        # Don't waste time searching for strings with too many results to realistically
-        # provide a meaningful completion within our results limit.
-        return
-    end
-
-    # This doesn't do a prefix search, so bump up the limit a tiny bit to try and
-    # get enough results to show something.
-    cargo search --color never --quiet --limit 20 -- $argv[1] 2>/dev/null |
-        # Filter out placeholders and "... and xxx more crates"
-        string match -rvi '^\.\.\.|= "0.0.0"|# .*(reserved|yanked)' |
-        # Remove the version number and map the description
-        string replace -rf '^([^ ]+).*# (.*)' '$1\t$2'
-end
-
-# Complete possible crate names by search the crates.io index
-complete -c cargo -n '__fish_seen_subcommand_from add install' -n '__fish_is_nth_token 2' \
-    -a "(__fish_cargo_search (commandline -ct))"
 
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
 # Manually massaged to improve some descriptions

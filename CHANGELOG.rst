@@ -11,6 +11,11 @@ This release of fish includes the following improvements compared to fish 4.0.1:
 - The warning when the terminfo database couldn't be found has been downgraded to a log message.
   This is because fish will fall back to what xterm-256color would do,
   which in the majority of cases would just work (:issue:`11277`, :issue:`11290`).
+- The cargo completions have been sped up, especially by no longer looking up crates online (:issue:`11347`).
+- The hg prompt no longer errors if $PWD includes a newline (:issue:`11348`).
+- Super-modified keys are no longer inserted
+- Various additions to completions, including git (:issue:`11322`, :issue:`11323`), btrfs (:issue:`11320`), cryptsetup (:issue:`11315`), systemd-analyze (:issue:`11314`),
+  wl-randr (:issue:`11301`), jj (:issue:`11046`)
 
 fish 4.0.1 (released March 12, 2025)
 ====================================

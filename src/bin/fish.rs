@@ -128,7 +128,7 @@ fn install(confirm: bool, dir: &Path) -> bool {
     }
 
     // Remove the install directory first, to clean out any removed files.
-    if let Err(err) = fs::remove_dir_all(dir.clone()) {
+    if let Err(err) = fs::remove_dir_all(dir) {
         if err.kind() != ErrorKind::NotFound {
             eprintln!("Removing '{}' failed: {}", dir.display(), err);
             return false;

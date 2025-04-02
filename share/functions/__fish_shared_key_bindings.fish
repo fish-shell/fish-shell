@@ -51,14 +51,14 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     set -l alt_right_aliases alt-right \e\[1\;9C # iTerm2 < 3.5.12
     set -l alt_left_aliases alt-left \e\[1\;9D # iTerm2 < 3.5.12
     if test (__fish_uname) = Darwin
-        for alt_right in $alt_left_aliases
+        for alt_right in $alt_right_aliases
             bind --preset $argv $alt_right nextd-or-forward-word
         end
         for alt_left in $alt_left_aliases
             bind --preset $argv $alt_left prevd-or-backward-word
         end
     else
-        for alt_right in $alt_left_aliases
+        for alt_right in $alt_right_aliases
             bind --preset $argv $alt_right nextd-or-forward-token
         end
         for alt_left in $alt_left_aliases

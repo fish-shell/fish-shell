@@ -105,7 +105,7 @@ use crate::nix::{getpgrp, getpid, isatty};
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
 use crate::output::parse_color_maybe_none;
-use crate::output::BufferedOuputter;
+use crate::output::BufferedOutputter;
 use crate::output::Output;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
@@ -691,7 +691,7 @@ fn read_i(parser: &Parser) {
         data.update_buff_pos(EditableLineTag::Commandline, None);
         // OSC 133 "Command start"
         write_to_output!(
-            &mut BufferedOuputter::new(Outputter::stdoutput()),
+            &mut BufferedOutputter::new(Outputter::stdoutput()),
             "\x1b]133;C;cmdline_url={}\x07",
             escape_string(&command, EscapeStringStyle::Url),
         );
@@ -708,7 +708,7 @@ fn read_i(parser: &Parser) {
 
         // OSC 133 "Command finished"
         write_to_output!(
-            &mut BufferedOuputter::new(Outputter::stdoutput()),
+            &mut BufferedOutputter::new(Outputter::stdoutput()),
             "\x1b]133;D;{}\x07",
             parser.get_last_status()
         );

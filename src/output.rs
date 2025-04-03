@@ -471,9 +471,9 @@ impl Outputter {
     }
 }
 
-pub struct BufferedOuputter<'a>(RefMut<'a, Outputter>);
+pub struct BufferedOutputter<'a>(RefMut<'a, Outputter>);
 
-impl<'a> BufferedOuputter<'a> {
+impl<'a> BufferedOutputter<'a> {
     pub fn new(outputter: &'a RefCell<Outputter>) -> Self {
         let mut outputter = outputter.borrow_mut();
         outputter.begin_buffering();
@@ -481,13 +481,13 @@ impl<'a> BufferedOuputter<'a> {
     }
 }
 
-impl<'a> Drop for BufferedOuputter<'a> {
+impl<'a> Drop for BufferedOutputter<'a> {
     fn drop(&mut self) {
         self.0.end_buffering();
     }
 }
 
-impl<'a> Output for BufferedOuputter<'a> {
+impl<'a> Output for BufferedOutputter<'a> {
     fn write_bytes(&mut self, buf: &[u8]) {
         self.0.write_bytes(buf);
     }

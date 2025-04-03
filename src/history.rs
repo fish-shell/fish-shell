@@ -179,12 +179,15 @@ impl TimeProfiler {
 impl Drop for TimeProfiler {
     fn drop(&mut self) {
         if let Ok(duration) = self.start.elapsed() {
+            let ns_per_ms = 1_000_000;
+            let ms = duration.as_millis();
+            let ns = duration.as_nanos() - (ms * ns_per_ms);
             FLOGF!(
                 profile_history,
                 "%s: %d.%06d ms",
                 self.what,
-                duration.as_millis() as u64, // todo!("remove cast")
-                (duration.as_nanos() / 1000) as u64  // todo!("remove cast")
+                ms as u64, // todo!("remove cast")
+                ns as u32
             )
         } else {
             FLOGF!(profile_history, "%s: ??? ms", self.what)

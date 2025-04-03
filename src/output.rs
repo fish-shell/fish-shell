@@ -465,9 +465,9 @@ impl Outputter {
     }
 }
 
-pub struct BufferedOuputter<'a>(RefMut<'a, Outputter>);
+pub struct BufferedOutputter<'a>(RefMut<'a, Outputter>);
 
-impl<'a> BufferedOuputter<'a> {
+impl<'a> BufferedOutputter<'a> {
     pub fn new(outputter: &'a RefCell<Outputter>) -> Self {
         let mut outputter = outputter.borrow_mut();
         outputter.begin_buffering();
@@ -475,13 +475,13 @@ impl<'a> BufferedOuputter<'a> {
     }
 }
 
-impl<'a> Drop for BufferedOuputter<'a> {
+impl<'a> Drop for BufferedOutputter<'a> {
     fn drop(&mut self) {
         self.0.end_buffering();
     }
 }
 
-impl<'a> Write for BufferedOuputter<'a> {
+impl<'a> Write for BufferedOutputter<'a> {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
         self.0.infallible_write(buf);
         Ok(buf.len())
@@ -492,7 +492,7 @@ impl<'a> Write for BufferedOuputter<'a> {
         Ok(())
     }
 }
-impl<'a> InfallibleWrite for BufferedOuputter<'a> {}
+impl<'a> InfallibleWrite for BufferedOutputter<'a> {}
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.

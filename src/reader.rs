@@ -311,6 +311,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to reexecute prompt function before final rendering.
+    pub transient_prompt: bool,
+
     /// Whether to expand abbreviations.
     pub expand_abbrev_ok: bool,
 
@@ -657,12 +660,13 @@ fn read_i(parser: &Parser) {
     assert_is_main_thread();
     parser.assert_can_execute();
     let mut conf = ReaderConfig::default();
+    conf.event = L!("fish_prompt");
     conf.complete_ok = true;
     conf.highlight_ok = true;
     conf.syntax_check_ok = true;
-    conf.autosuggest_ok = check_autosuggestion_enabled(parser.vars());
     conf.expand_abbrev_ok = true;
-    conf.event = L!("fish_prompt");
+    conf.autosuggest_ok = check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true);
+    conf.transient_prompt = check_bool_var(parser.vars(), L!("fish_transient_prompt"), false);
 
     if parser.is_breakpoint() && function::exists(DEBUG_PROMPT_FUNCTION_NAME, parser) {
         conf.left_prompt_cmd = DEBUG_PROMPT_FUNCTION_NAME.to_owned();
@@ -946,25 +950,32 @@ pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
     }
 }
 
-fn check_autosuggestion_enabled(vars: &dyn Environment) -> bool {
-    vars.get(L!("fish_autosuggestion_enabled"))
+fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
+    vars.get(name)
         .map(|v| v.as_string())
         .map(|v| v != L!("0"))
-        .unwrap_or(true)
+        .unwrap_or(default)
 }
 
 /// Enable or disable autosuggestions based on the associated variable.
 pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
-    let Some(data) = current_data() else {
-        return;
-    };
-    let enable = check_autosuggestion_enabled(vars);
-    if data.conf.autosuggest_ok != enable {
-        data.conf.autosuggest_ok = enable;
-        data.force_exec_prompt_and_repaint = true;
-        data.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+    if let Some(data) = current_data() {
+        let enable = check_bool_var(vars, L!("fish_autosuggestion_enabled"), true);
+        if data.conf.autosuggest_ok != enable {
+            data.conf.autosuggest_ok = enable;
+            data.force_exec_prompt_and_repaint = true;
+            data.input_data
+                .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+        }
+    }
+}
+
+/// Enable or disable transient prompt based on the associated variable.
+pub fn reader_set_transient_prompt(vars: &dyn Environment) {
+    // We don't need to _change_ if we're not initialized yet.
+    if let Some(data) = current_data() {
+        data.conf.transient_prompt = check_bool_var(vars, L!("fish_transient_prompt"), false);
     }
 }
 
@@ -2235,7 +2246,7 @@ impl<'a> Reader<'a> {
         if !self.conf.event.is_empty() {
             event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
         }
-        self.exec_prompt();
+        self.exec_prompt(true, false);
 
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
@@ -2244,6 +2255,10 @@ impl<'a> Reader<'a> {
             if self.handle_char_event(None).is_break() {
                 break;
             }
+        }
+
+        if self.conf.transient_prompt {
+            self.exec_prompt(true, true);
         }
 
         // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
@@ -2753,7 +2768,7 @@ impl<'a> Reader<'a> {
                     // This can happen e.g. if a variable triggers a repaint,
                     // and the variable is set inside the prompt (#7324).
                     // builtin commandline will refuse to enqueue these.
-                    self.exec_mode_prompt();
+                    self.exec_prompt(false, false);
                     if !self.mode_prompt_buff.is_empty() {
                         if self.is_repaint_needed(None) {
                             self.screen.reset_line(/*repaint_prompt=*/ true);
@@ -2764,7 +2779,7 @@ impl<'a> Reader<'a> {
                     }
                     // Else we repaint as normal.
                 }
-                self.exec_prompt();
+                self.exec_prompt(true, false);
                 self.screen.reset_line(/*repaint_prompt=*/ true);
                 self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
@@ -3869,7 +3884,7 @@ impl<'a> Reader<'a> {
             self.screen.reset_line(/*repaint_prompt=*/ true);
             self.layout_and_repaint(L!("readline"));
         }
-        self.exec_prompt();
+        self.exec_prompt(true, false);
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));
         self.force_exec_prompt_and_repaint = false;
@@ -4553,78 +4568,73 @@ pub fn reader_write_title(
 }
 
 impl<'a> Reader<'a> {
-    fn exec_mode_prompt(&mut self) {
-        self.mode_prompt_buff.clear();
-        if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
-            let mut mode_indicator_list = vec![];
+    fn exec_prompt_cmd(&self, prompt_cmd: &wstr, final_prompt: bool) -> Vec<WString> {
+        let mut output = vec![];
+        if final_prompt && function::exists(prompt_cmd, self.parser) {
             let _ = exec_subshell(
-                MODE_PROMPT_FUNCTION_NAME,
+                &(prompt_cmd.to_owned() + L!(" --final-rendering")),
                 self.parser,
-                Some(&mut mode_indicator_list),
+                Some(&mut output),
                 false,
             );
-            // We do not support multiple lines in the mode indicator, so just concatenate all of
-            // them.
-            for i in mode_indicator_list {
-                self.mode_prompt_buff.push_utfstr(&i);
-            }
-        }
+        } else {
+            let _ = exec_subshell(prompt_cmd, self.parser, Some(&mut output), false);
+        };
+        output
     }
 
-    /// Reexecute the prompt command. The output is inserted into prompt_buff.
-    fn exec_prompt(&mut self) {
-        // Clear existing prompts.
-        self.left_prompt_buff.clear();
-        self.right_prompt_buff.clear();
-
+    /// Execute prompt commands based on the provided arguments. The output is inserted into prompt_buff.
+    fn exec_prompt(&mut self, full_prompt: bool, final_prompt: bool) {
         // Suppress fish_trace while in the prompt.
         let _suppress_trace = self.parser.push_scope(|s| s.suppress_fish_trace = true);
+
+        // Prompts must be run non-interactively.
+        let _noninteractive = self.parser.push_scope(|s| s.is_interactive = false);
 
         // Update the termsize now.
         // This allows prompts to react to $COLUMNS.
         self.update_termsize();
 
-        // If we have any prompts, they must be run non-interactively.
-        if !self.conf.left_prompt_cmd.is_empty() || !self.conf.right_prompt_cmd.is_empty() {
-            let _noninteractive = self.parser.push_scope(|s| s.is_interactive = false);
-            self.exec_mode_prompt();
+        self.mode_prompt_buff.clear();
+        if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
+            // We do not support multiline mode indicators, so just concatenate all of them.
+            self.mode_prompt_buff =
+                WString::from_iter(self.exec_prompt_cmd(MODE_PROMPT_FUNCTION_NAME, final_prompt));
+        }
+
+        if full_prompt {
+            self.left_prompt_buff.clear();
+            self.right_prompt_buff.clear();
 
             if !self.conf.left_prompt_cmd.is_empty() {
-                // Status is ignored.
-                let mut prompt_list = vec![];
                 // Historic compatibility hack.
                 // If the left prompt function is deleted, then use a default prompt instead of
                 // producing an error.
-                let left_prompt_deleted = self.conf.left_prompt_cmd == LEFT_PROMPT_FUNCTION_NAME
-                    && !function::exists(&self.conf.left_prompt_cmd, self.parser);
-                let _ = exec_subshell(
-                    if left_prompt_deleted {
-                        DEFAULT_PROMPT
-                    } else {
-                        &self.conf.left_prompt_cmd
-                    },
-                    self.parser,
-                    Some(&mut prompt_list),
-                    /*apply_exit_status=*/ false,
-                );
-                self.left_prompt_buff = join_strings(&prompt_list, '\n');
+                let prompt_cmd = if self.conf.left_prompt_cmd != LEFT_PROMPT_FUNCTION_NAME
+                    || function::exists(&self.conf.left_prompt_cmd, self.parser)
+                {
+                    &self.conf.left_prompt_cmd
+                } else {
+                    DEFAULT_PROMPT
+                };
+
+                self.left_prompt_buff =
+                    join_strings(&self.exec_prompt_cmd(prompt_cmd, final_prompt), '\n');
+
+                if final_prompt {
+                    self.screen.reset_line(true)
+                }
             }
 
-            if !self.conf.right_prompt_cmd.is_empty() {
-                if function::exists(&self.conf.right_prompt_cmd, self.parser) {
-                    // Status is ignored.
-                    let mut prompt_list = vec![];
-                    let _ = exec_subshell(
-                        &self.conf.right_prompt_cmd,
-                        self.parser,
-                        Some(&mut prompt_list),
-                        /*apply_exit_status=*/ false,
-                    );
-                    // Right prompt does not support multiple lines, so just concatenate all of them.
-                    for i in prompt_list {
-                        self.right_prompt_buff.push_utfstr(&i);
-                    }
-                }
+            // Don't execute the right prompt if it is undefined fish_right_prompt
+            if !self.conf.right_prompt_cmd.is_empty()
+                && (self.conf.right_prompt_cmd != RIGHT_PROMPT_FUNCTION_NAME
+                    || function::exists(&self.conf.right_prompt_cmd, self.parser))
+            {
+                // Right prompt does not support multiple lines, so just concatenate all of them.
+                self.right_prompt_buff = WString::from_iter(
+                    self.exec_prompt_cmd(&self.conf.right_prompt_cmd, final_prompt),
+                );
             }
         }
 

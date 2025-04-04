@@ -217,6 +217,8 @@ This prompt is determined by running the :doc:`fish_prompt <cmds/fish_prompt>` a
 The output of the former is displayed on the left and the latter's output on the right side of the terminal.
 For :ref:`vi mode <vi-mode>`, the output of :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` will be prepended on the left.
 
+If ``fish_transient_prompt`` is set to 1, fish will redraw the prompt with a ``--final-rendering`` argument before running a commandline, allowing you to change it before pushing it to the scrollback.
+
 Fish ships with a few prompts which you can see with :doc:`fish_config <cmds/fish_config>`. If you run just ``fish_config`` it will open a web interface [#]_ where you'll be shown the prompts and can pick which one you want. ``fish_config prompt show`` will show you the prompts right in your terminal.
 
 For example ``fish_config prompt choose disco`` will temporarily select the "disco" prompt. If you like it and decide to keep it, run ``fish_config prompt save``.

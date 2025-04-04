@@ -52,11 +52,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             );
             done = true;
             paths = ConfigPaths {
-                data: manifest_dir.join("share"),
+                data: Some(manifest_dir.join("share")),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: manifest_dir.join("share/locale"),
+                locale: Some(manifest_dir.join("share/locale")),
             }
         }
 
@@ -64,20 +64,20 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
-                #[cfg(feature = "installable")]
+                #[cfg(feature = "embed-data")]
                 let data_dir = base_path.join("share/fish/install");
-                #[cfg(not(feature = "installable"))]
+                #[cfg(not(feature = "embed-data"))]
                 let data_dir = base_path.join("share/fish");
                 paths = ConfigPaths {
                     // One obvious path is ~/.local (with fish in ~/.local/bin/).
                     // If we picked ~/.local/share/fish as our data path,
                     // we would install there and erase history.
                     // So let's isolate us a bit more.
-                    data: data_dir.clone(),
+                    data: Some(data_dir.clone()),
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
                     bin: Some(base_path.join("bin")),
-                    locale: data_dir.join("locale"),
+                    locale: Some(data_dir.join("locale")),
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -85,20 +85,20 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     "'fish' not in a 'bin/', trying paths relative to source tree"
                 );
                 let base_path = exec_path.parent().unwrap();
-                #[cfg(feature = "installable")]
+                #[cfg(feature = "embed-data")]
                 let data_dir = base_path.join("share/install");
-                #[cfg(not(feature = "installable"))]
+                #[cfg(not(feature = "embed-data"))]
                 let data_dir = base_path.join("share");
                 paths = ConfigPaths {
-                    data: data_dir.clone(),
+                    data: Some(data_dir.clone()),
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
                     bin: Some(base_path.to_path_buf()),
-                    locale: data_dir.join("locale"),
+                    locale: Some(data_dir.join("locale")),
                 }
             }
 
-            if paths.data.exists() && paths.sysconf.exists() {
+            if paths.data.clone().is_some_and(|x| x.exists()) && paths.sysconf.exists() {
                 // The docs dir may not exist; in that case fall back to the compiled in path.
                 if !paths.doc.exists() {
                     paths.doc = PathBuf::from(DOC_DIR);
@@ -110,21 +110,12 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
 
     if !done {
         // Fall back to what got compiled in.
-        let data = if cfg!(feature = "installable") {
-            let Some(home) = crate::env::get_home() else {
-                FLOG!(
-                    error,
-                    "Cannot find home directory and will refuse to read configuration.\n",
-                    "Consider installing into a directory tree with `fish --install=PATH`."
-                );
-                return paths;
-            };
-
-            PathBuf::from(home).join(DATA_DIR).join(DATA_DIR_SUBDIR)
+        let data = if cfg!(feature = "embed-data") {
+            None
         } else {
-            PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR)
+            Some(PathBuf::from(DATA_DIR).join(DATA_DIR_SUBDIR))
         };
-        let bin = if cfg!(feature = "installable") {
+        let bin = if cfg!(feature = "embed-data") {
             exec_path.parent().map(|x| x.to_path_buf())
         } else {
             Some(PathBuf::from(BIN_DIR))
@@ -136,7 +127,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
-            locale: data.join("share"),
+            locale: data.map(|x| x.join("share")),
         }
     }
 
@@ -144,7 +135,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         config,
         "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
         %ls\npaths.doc: %ls\npaths.bin: %ls",
-        paths.data.display().to_string(),
+        paths
+            .data
+            .clone()
+            .map(|x| x.display().to_string())
+            .unwrap_or("|not found|".to_string()),
         paths.sysconf.display().to_string(),
         paths.doc.display().to_string(),
         paths

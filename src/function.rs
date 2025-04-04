@@ -112,7 +112,7 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {
     parser.assert_can_execute();
-    let mut path_to_autoload: Option<WString> = None;
+    let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
     {
@@ -239,7 +239,17 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
     let mut funcset = FUNCTION_SET.lock().unwrap();
     // Check if we either have the function, or it could be autoloaded.
     let tombstoned = funcset.autoload_tombstones.contains(cmd);
-    funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd))
+    if funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd)) {
+        return true;
+    }
+
+    let narrow = crate::common::wcs2string(cmd);
+    if let Ok(cmdstr) = std::str::from_utf8(&narrow) {
+        let cmd = "functions/".to_owned() + cmdstr + ".fish";
+        crate::autoload::has_asset(&cmd)
+    } else {
+        false
+    }
 }
 
 /// Remove the function with the specified name.
@@ -327,6 +337,21 @@ pub fn get_names(get_hidden: bool, vars: &dyn Environment) -> Vec<WString> {
         }
         names.insert(name.clone());
     }
+
+    #[cfg(feature = "embed-data")]
+    for name in crate::autoload::Asset::iter() {
+        let Some(bname) = name.strip_prefix("functions/") else {
+            continue;
+        };
+        if !get_hidden && (bname.is_empty() || bname.starts_with('_')) {
+            continue;
+        };
+        let Some(fname) = bname.strip_suffix(".fish") else {
+            continue;
+        };
+        names.insert(fname.into());
+    }
+
     names.into_iter().collect()
 }
 

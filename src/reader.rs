@@ -111,16 +111,14 @@ use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
 use crate::parse_constants::SourceRange;
 use crate::parse_constants::{ParseTreeFlags, ParserTestErrorBits};
-use crate::parse_tree::ParsedSource;
 use crate::parse_util::parse_util_process_extent;
 use crate::parse_util::MaybeParentheses;
 use crate::parse_util::SPACES_PER_INDENT;
 use crate::parse_util::{
     parse_util_cmdsubst_extent, parse_util_compute_indents, parse_util_contains_wildcards,
-    parse_util_detect_errors, parse_util_detect_errors_in_ast, parse_util_escape_string_with_quote,
-    parse_util_escape_wildcards, parse_util_get_line_from_offset, parse_util_get_offset,
-    parse_util_get_offset_from_line, parse_util_lineno, parse_util_locate_cmdsubst_range,
-    parse_util_token_extent,
+    parse_util_detect_errors, parse_util_escape_string_with_quote, parse_util_escape_wildcards,
+    parse_util_get_line_from_offset, parse_util_get_offset, parse_util_get_offset_from_line,
+    parse_util_lineno, parse_util_locate_cmdsubst_range, parse_util_token_extent,
 };
 use crate::parser::{BlockType, EvalRes, Parser};
 use crate::proc::{
@@ -817,25 +815,13 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
         s.remove(0);
     }
 
-    // Parse into an ast and detect errors.
-    let mut errors = vec![];
-    let ast = Ast::parse(&s, ParseTreeFlags::empty(), Some(&mut errors));
-    let mut errored = ast.errored();
-    if !errored {
-        errored = parse_util_detect_errors_in_ast(&ast, &s, Some(&mut errors)).is_err();
+    match parser.eval_wstr(s, io, None, BlockType::top) {
+        Ok(_) => Ok(()),
+        Err(msg) => {
+            eprintf!("%ls", msg);
+            Err(STATUS_CMD_ERROR)
+        }
     }
-    if errored {
-        let sb = parser.get_backtrace(&s, &errors);
-        eprintf!("%ls", sb);
-        return Err(STATUS_CMD_ERROR);
-    }
-
-    // Construct a parsed source ref.
-    // Be careful to transfer ownership, this could be a very large string.
-    let ps = Arc::new(ParsedSource::new(s, ast));
-    parser.eval_parsed_source(&ps, io, None, BlockType::top);
-
-    Ok(())
 }
 
 /// Initialize the reader.

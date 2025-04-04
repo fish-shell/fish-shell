@@ -41,14 +41,27 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    #[cfg(feature = "installable")]
+    let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let targetman = cman.as_path().join("target").join("man");
+
+    #[cfg(feature = "embed-data")]
     #[cfg(not(clippy))]
     {
-        let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
-        let targetman = cman.as_path().join("target").join("man");
         build_man(&targetman);
     }
+    #[cfg(any(not(feature = "embed-data"), clippy))]
+    {
+        let sec1dir = targetman.join("man1");
+        let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
+    }
+
     rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
+
+    // These are necessary if built with embedded functions,
+    // but technically only in release builds (because debug builds read from the filesystem).
+    #[cfg(feature = "embed-data")]
+    rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
+
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)
@@ -376,7 +389,7 @@ fn get_version(src_dir: &Path) -> String {
     get_git_hash().expect("Could not get a version. Either set $FISH_BUILD_VERSION or install git.")
 }
 
-#[cfg(feature = "installable")]
+#[cfg(feature = "embed-data")]
 // disable clippy because otherwise it would panic without sphinx
 #[cfg(not(clippy))]
 fn build_man(build_dir: &Path) {

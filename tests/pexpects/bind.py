@@ -353,7 +353,7 @@ send("\x1b")
 expect_str("foo")
 send("\x1b[A")
 expect_str("bind escape 'echo foo'")
-sendline("")
+sendline("bind --erase escape")
 expect_prompt()
 
 send("    a b c d\x01")  # ctrl-a, move back to the beginning of the line
@@ -404,6 +404,11 @@ sendline("commandline -f self-insert")
 expect_prompt()
 sendline("commandline -f and")
 expect_prompt()
+
+sendline("bind ctrl-g 'sleep 1' history-pager")
+expect_prompt()
+send("\x07")  # ctrl-g
+send("\x1b[27u")  # escape, to close pager
 
 # Check that the builtin version of `exit` works
 # (for obvious reasons this MUST BE LAST)

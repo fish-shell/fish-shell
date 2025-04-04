@@ -5271,7 +5271,9 @@ impl ReaderData {
                 return; // Stale request.
             }
             let history_size = zelf.history.size();
-            let history_pager = zelf.history_pager.as_mut().unwrap();
+            let Some(history_pager) = zelf.history_pager.as_mut() else {
+                return; // Pager has been closed.
+            };
             assert!(result.range.start < result.range.end);
             *history_pager = result.range;
             zelf.pager.extra_progress_text =

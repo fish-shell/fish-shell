@@ -36,7 +36,7 @@ use std::{
     num::NonZeroUsize,
     ops::ControlFlow,
     os::{
-        fd::{AsFd, AsRawFd, RawFd},
+        fd::{AsFd, AsRawFd},
         unix::fs::MetadataExt,
     },
     sync::{Arc, Mutex, MutexGuard},
@@ -52,7 +52,7 @@ use rand::Rng;
 use crate::{
     ast::{Ast, Node},
     common::{
-        str2wcstring, unescape_string, valid_var_name, wcs2zstring, write_loop, CancelChecker,
+        str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
         UnescapeStringStyle,
     },
     env::{EnvMode, EnvStack, Environment},
@@ -152,16 +152,19 @@ const MAX_SAVE_TRIES: usize = 1024;
 
 pub const VACUUM_FREQUENCY: usize = 25;
 
-/// If the size of `buffer` is at least `min_size`, output the contents `buffer` to `fd`,
-/// and clear the string.
-fn flush_to_fd(buffer: &mut Vec<u8>, fd: RawFd, min_size: usize) -> std::io::Result<()> {
-    if buffer.is_empty() || buffer.len() < min_size {
-        return Ok(());
-    }
-
-    write_loop(&fd, buffer)?;
+/// Output the contents `buffer` to `file` and clear the `buffer`.
+fn drain_buffer_into_file_no_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
+    file.write_all(buffer)?;
     buffer.clear();
-    return Ok(());
+    Ok(())
+}
+
+/// Output the contents `buffer` to `file` and clear the `buffer`.
+/// Flush the file and sync it to ensure that the updates actually reach the file system.
+fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
+    drain_buffer_into_file_no_flush(buffer, file)?;
+    file.flush()?;
+    file.sync_all()
 }
 
 struct TimeProfiler {
@@ -571,10 +574,10 @@ impl HistoryImpl {
             usize::min(self.first_unwritten_new_item_index, self.new_items.len());
     }
 
-    /// Given the fd of an existing history file, write a new history file to `dst_fd`.
+    /// Given an existing history file, write a new history file to `dst`.
     /// Returns false on error, true on success
     fn rewrite_to_temporary_file(&self, existing_file: Option<&mut File>, dst: &mut File) -> bool {
-        // We are reading FROM existing_fd and writing TO dst_fd
+        // We are reading FROM existing_file and writing TO dst
 
         // Make an LRU cache to save only the last N elements.
         let mut lru = LruCache::new(HISTORY_SAVE_MAX);
@@ -633,9 +636,16 @@ impl HistoryImpl {
         let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in items {
             append_history_item_to_buffer(&item, &mut buffer);
-            if let Err(e) = flush_to_fd(&mut buffer, dst.as_raw_fd(), HISTORY_OUTPUT_BUFFER_SIZE) {
+            if buffer.len() >= HISTORY_OUTPUT_BUFFER_SIZE {
+                if let Err(e) = drain_buffer_into_file_no_flush(&mut buffer, dst) {
+                    err = Some(e);
+                    break;
+                }
+            }
+        }
+        if err.is_none() {
+            if let Err(e) = drain_buffer_into_file_and_flush(&mut buffer, dst) {
                 err = Some(e);
-                break;
             }
         }
         if let Some(err) = err {
@@ -647,7 +657,7 @@ impl HistoryImpl {
 
             false
         } else {
-            flush_to_fd(&mut buffer, dst.as_raw_fd(), 0).is_ok()
+            true
         }
     }
 
@@ -811,7 +821,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by appending to the file.
-    fn save_internal_via_appending(&mut self) -> bool {
+    fn save_internal_via_appending(&mut self) -> std::io::Result<()> {
         FLOGF!(
             history,
             "Saving %lu items via appending",
@@ -820,30 +830,34 @@ impl HistoryImpl {
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
 
-        let mut ok = false;
-
         // If the file is different (someone vacuumed it) then we need to update our mmap.
         let mut file_changed = false;
 
         // Get the path to the real history file.
         let Some(history_path) = history_filename(&self.name, L!("")) else {
-            return true;
+            // No history should be saved if fish_history is set to the empty string,
+            // so nothing needs to be done here.
+            return Ok(());
         };
 
         // We are going to open the file, lock it, append to it, and then close it
         // After locking it, we need to stat the file at the path; if there is a new file there, it
         // means the file was replaced and we have to try again.
         // Limit our max tries so we don't do this forever.
-        let mut history_file = None;
-        for _i in 0..MAX_SAVE_TRIES {
-            let Ok(mut file) = wopen_cloexec(
+        let mut num_attempts = 0;
+        let mut history_file = loop {
+            if num_attempts == MAX_SAVE_TRIES {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Number of unsuccessful attempts to open history file exceeds maximum.",
+                ));
+            }
+            // Return immediately if an error occurs here.
+            let mut file = wopen_cloexec(
                 &history_path,
                 OFlag::O_WRONLY | OFlag::O_APPEND,
                 Mode::empty(),
-            ) else {
-                // can't open, we're hosed
-                break;
-            };
+            )?;
 
             // Exclusive lock on the entire file. This is released when we close the file (below). This
             // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
@@ -860,75 +874,68 @@ impl HistoryImpl {
                 if file_id != self.history_file_id {
                     file_changed = true;
                 }
-                history_file = Some(file);
-                break;
+                break file;
             }
-        }
+            num_attempts += 1;
+        };
 
-        if let Some(history_file) = history_file {
-            // We (hopefully successfully) took the exclusive lock. Append to the file.
-            // Note that this is sketchy for a few reasons:
-            //   - Another shell may have appended its own items with a later timestamp, so our file may
-            // no longer be sorted by timestamp.
-            //   - Another shell may have appended the same items, so our file may now contain
-            // duplicates.
-            //
-            // We cannot modify any previous parts of our file, because other instances may be reading
-            // those portions. We can only append.
-            //
-            // Originally we always rewrote the file on saving, which avoided both of these problems.
-            // However, appending allows us to save history after every command, which is nice!
-            //
-            // Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't
-            // have duplicates, although we don't yet sort by timestamp (the timestamp isn't really used
-            // for much anyways).
+        // We (hopefully successfully) took the exclusive lock. Append to the file.
+        // Note that this is sketchy for a few reasons:
+        //   - Another shell may have appended its own items with a later timestamp, so our file may
+        // no longer be sorted by timestamp.
+        //   - Another shell may have appended the same items, so our file may now contain
+        // duplicates.
+        //
+        // We cannot modify any previous parts of our file, because other instances may be reading
+        // those portions. We can only append.
+        //
+        // Originally we always rewrote the file on saving, which avoided both of these problems.
+        // However, appending allows us to save history after every command, which is nice!
+        //
+        // Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't
+        // have duplicates, although we don't yet sort by timestamp (the timestamp isn't really used
+        // for much anyways).
 
-            // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
-            // write even a pending item - pending items are ignored by history within the command
-            // itself, but should still be written to the file.
-            // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
-            let mut res = Ok(());
-            // Use a small buffer size for appending, we usually only have 1 item
-            let mut buffer = Vec::new();
-            while self.first_unwritten_new_item_index < self.new_items.len() {
-                let item = &self.new_items[self.first_unwritten_new_item_index];
-                if item.should_write_to_disk() {
-                    append_history_item_to_buffer(item, &mut buffer);
-                    res = flush_to_fd(
-                        &mut buffer,
-                        history_file.as_raw_fd(),
-                        HISTORY_OUTPUT_BUFFER_SIZE,
-                    );
-                    if res.is_err() {
-                        break;
-                    }
+        // So far so good. Write all items at or after first_unwritten_new_item_index. Note that we
+        // write even a pending item - pending items are ignored by history within the command
+        // itself, but should still be written to the file.
+        // TODO: consider filling the buffer ahead of time, so we can just lock, splat, and unlock?
+        let mut res = Ok(());
+        // Use a small buffer size for appending, we usually only have 1 item
+        let mut buffer = Vec::new();
+        while self.first_unwritten_new_item_index < self.new_items.len() {
+            let item = &self.new_items[self.first_unwritten_new_item_index];
+            if item.should_write_to_disk() {
+                append_history_item_to_buffer(item, &mut buffer);
+                // Ensure that each item is written individually and makes it to storage.
+                // This is done to keep `self.first_unwritten_new_item_index` consistent with
+                // the file system.
+                // Flushing and syncing each iteration adds overhead,
+                // but hopefully there are not that many items to write when appending.
+                res = drain_buffer_into_file_and_flush(&mut buffer, &mut history_file);
+                if res.is_err() {
+                    break;
                 }
-                // We wrote or skipped this item, hooray.
-                self.first_unwritten_new_item_index += 1;
             }
-
-            if res.is_ok() {
-                res = flush_to_fd(&mut buffer, history_file.as_raw_fd(), 0);
-            }
-
-            // Since we just modified the file, update our history_file_id to match its current state
-            // Otherwise we'll think the file has been changed by someone else the next time we go to
-            // write.
-            // We don't update the mapping since we only appended to the file, and everything we
-            // appended remains in our new_items
-            self.history_file_id = file_id_for_fd(history_file.as_fd());
-
-            ok = res.is_ok();
-
-            drop(history_file);
+            // We wrote or skipped this item, hooray.
+            self.first_unwritten_new_item_index += 1;
         }
+
+        // Since we just modified the file, update our history_file_id to match its current state
+        // Otherwise we'll think the file has been changed by someone else the next time we go to
+        // write.
+        // We don't update the mapping since we only appended to the file, and everything we
+        // appended remains in our new_items
+        self.history_file_id = file_id_for_fd(history_file.as_fd());
+
+        drop(history_file);
 
         // If someone has replaced the file, forget our file state.
         if file_changed {
             self.clear_file_state();
         }
 
-        ok
+        res
     }
 
     /// Saves history.
@@ -955,9 +962,10 @@ impl HistoryImpl {
         let mut ok = false;
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
-            ok = self.save_internal_via_appending();
-            if !ok {
-                FLOG!(history, "Appending failed");
+            if let Err(e) = self.save_internal_via_appending() {
+                FLOG!(history, "Appending failed", e);
+            } else {
+                ok = true;
             }
         }
         if !ok {

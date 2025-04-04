@@ -2,13 +2,7 @@ function isolated-tmux-start
     set -l tmpdir (mktemp -d)
     cd $tmpdir
 
-    begin
-        echo 'set -g mode-keys emacs'
-        # macOS lacks the tmux-256color terminfo, use screen-256color instead.
-        if test (uname) = Darwin
-            echo 'set -g default-terminal "screen-256color"'
-        end
-    end >./.tmux.conf
+    echo 'set -g mode-keys emacs' >.tmux.conf
 
     function isolated-tmux --inherit-variable tmpdir
         # tmux can't handle session sockets in paths that are too long, and macOS has a very long

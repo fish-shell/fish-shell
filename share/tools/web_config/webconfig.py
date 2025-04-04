@@ -44,6 +44,10 @@ except ImportError:
     import simplejson as json
 
 
+ENTER_BOLD_MODE = "\x1b[1m"
+EXIT_ATTRIBUTE_MODE = "\x1b[m"
+ENTER_UNDERLINE_MODE = "\x1b[4m"
+
 # Disable CLI web browsers
 term = os.environ.pop("TERM", None)
 # This import must be done with an empty $TERM, otherwise a command-line browser may be started
@@ -567,48 +571,6 @@ def html_color_for_ansi_color_index(val):
         return arr[val]
 
 
-# Function to return special ANSI escapes like exit_attribute_mode
-g_special_escapes_dict = None
-
-
-def get_special_ansi_escapes():
-    global g_special_escapes_dict
-    if g_special_escapes_dict is None:
-        try:
-            import curses
-
-            g_special_escapes_dict = {}
-            curses.setupterm()
-
-            # Helper function to get a value for a tparm
-            def get_tparm(key):
-                val = None
-                key = curses.tigetstr(key)
-                if key:
-                    val = curses.tparm(key)
-                if val:
-                    val = val.decode("utf-8")
-                # Use an empty string instead of None.
-                return "" if val is None else val
-
-            # Just a few for now
-            g_special_escapes_dict["exit_attribute_mode"] = get_tparm("sgr0")
-            g_special_escapes_dict["bold"] = get_tparm("bold")
-            g_special_escapes_dict["underline"] = get_tparm("smul")
-        except ImportError:
-            print("WARNING: The python curses module is missing.")
-            print("WARNING: Falling back to xterm-256color settings.")
-            print("WARNING: Rebuild python with curses headers!")
-
-            g_special_escapes_dict = {
-                "exit_attribute_mode": "\x1b(B\x1b[m",
-                "bold": "\x1b[1m",
-                "underline": "\x1b[4m",
-            }
-
-    return g_special_escapes_dict
-
-
 # Given a known ANSI escape sequence, convert it to HTML and append to the list
 # Returns whether we have an open <span>
 
@@ -653,8 +615,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         return True  # span now open
 
     # Try special escapes
-    special_escapes = get_special_ansi_escapes()
-    if full_val == special_escapes["exit_attribute_mode"]:
+    if full_val == EXIT_ATTRIBUTE_MODE:
         close_span()
         return False
 
@@ -1533,16 +1494,15 @@ fileurl = "file://" + f.name
 if is_windows():
     fileurl = fileurl.replace("\\", "/")
 
-esc = get_special_ansi_escapes()
 print(
     "Web config started at %s%s%s"
-    % (esc["underline"], fileurl, esc["exit_attribute_mode"])
+    % (ENTER_UNDERLINE_MODE, fileurl, EXIT_ATTRIBUTE_MODE)
 )
 print(
     "If that doesn't work, try opening %s%s%s"
-    % (esc["underline"], url, esc["exit_attribute_mode"])
+    % (ENTER_UNDERLINE_MODE, url, EXIT_ATTRIBUTE_MODE)
 )
-print("%sHit ENTER to stop.%s" % (esc["bold"], esc["exit_attribute_mode"]))
+print("%sHit ENTER to stop.%s" % (ENTER_BOLD_MODE, EXIT_ATTRIBUTE_MODE))
 
 
 def runThing():

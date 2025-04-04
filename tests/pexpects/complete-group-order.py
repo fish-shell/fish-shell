@@ -36,9 +36,6 @@ expect_prompt()
 sendline('complete -c fooc -fa "kilo juliett lima"')
 expect_prompt()
 
-sendline("set TERM xterm")
-expect_prompt()
-
 # Generate completions
 send("fooc \t")
 

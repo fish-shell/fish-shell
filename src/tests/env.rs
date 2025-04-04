@@ -92,7 +92,7 @@ fn test_timezone_env_vars() {
 fn test_env_vars() {
     let _cleanup = test_init();
     test_timezone_env_vars();
-    // TODO: Add tests for the locale and ncurses vars.
+    // TODO: Add tests for the locale vars.
 
     let v1 = EnvVar::new(L!("abc").to_owned(), EnvVarFlags::EXPORT);
     let v2 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::EXPORT);

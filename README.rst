@@ -87,8 +87,6 @@ Dependencies
 
 Running fish requires:
 
--  A terminfo database, typically from curses or ncurses (preinstalled on most \*nix systems) - this needs to be the directory tree format, not the "hashed" database.
-   If this is unavailable, fish uses an included xterm-256color definition.
 -  some common \*nix system utilities (currently ``mktemp``), in
    addition to the basic POSIX utilities (``cat``, ``cut``, ``dirname``,
    ``file``, ``ls``, ``mkdir``, ``mkfifo``, ``rm``, ``sort``, ``tee``, ``tr``,

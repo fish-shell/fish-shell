@@ -10,6 +10,7 @@ Deprecations and removed features
 ---------------------------------
 - Tokens like `{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
+- fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
 
 Scripting improvements
 ----------------------
@@ -31,8 +32,8 @@ New or improved bindings
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
-  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` and ``cuu`` terminfo capabilities,
-  and on the terminal supporting Synchronized Output (which is used by fish to detect features).
+  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` terminfo capability,
+  and on the terminal supporting Synchronized Output (which is currently used by fish to detect features).
   If any is missing, the binding falls back to ``clear-screen``.
 - Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
   If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
@@ -42,6 +43,7 @@ Completions
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``man fish-terminal-compatibility`` documents required and optional terminal features used by fish.
 
 Other improvements
 ------------------
@@ -51,6 +53,7 @@ Other improvements
 For distributors
 ----------------
 - ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space.
+- ``terminfo`` or ``ncurses`` are no longer a dependency (:issue:`11344`).
 
 --------------
 

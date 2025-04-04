@@ -1,14 +1,19 @@
 // Generic output functions.
-use crate::color::{self, RgbColor};
+use crate::color::{self, Color24, RgbColor};
 use crate::common::{self, wcs2string_appending};
 use crate::env::EnvVar;
-use crate::terminal::{self, tparm1, Term};
+use crate::screen::{is_dumb, only_grayscale};
+use crate::terminal_command::{
+    palette_color, rgb_color, ENTER_BOLD_MODE, ENTER_DIM_MODE, ENTER_ITALICS_MODE,
+    ENTER_REVERSE_MODE, ENTER_UNDERLINE_MODE, EXIT_ATTRIBUTE_MODE, EXIT_ITALICS_MODE,
+    EXIT_UNDERLINE_MODE,
+};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
-use std::cell::RefCell;
-use std::ffi::CStr;
+use std::cell::{RefCell, RefMut};
 use std::io::{Result, Write};
+use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU8, Ordering};
 
@@ -23,16 +28,6 @@ bitflags! {
 /// Whether term256 and term24bit are supported.
 static COLOR_SUPPORT: AtomicU8 = AtomicU8::new(0);
 
-/// Returns true if we think tparm can handle outputting a color index.
-fn term_supports_color_natively(term: &Term, c: u8) -> bool {
-    #[allow(clippy::int_plus_one)]
-    if let Some(max_colors) = term.max_colors {
-        max_colors >= usize::from(c) + 1
-    } else {
-        false
-    }
-}
-
 pub fn get_color_support() -> ColorSupport {
     let val = COLOR_SUPPORT.load(Ordering::Relaxed);
     ColorSupport::from_bits_truncate(val)
@@ -42,6 +37,15 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
+pub trait InfallibleWrite: std::io::Write + Sized {
+    fn infallible_write(&mut self, buf: &[u8]) {
+        let n = (self as &mut dyn std::io::Write).write(buf).unwrap();
+        assert!(n == buf.len());
+    }
+}
+
+impl InfallibleWrite for Vec<u8> {}
+
 fn index_for_color(c: RgbColor) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
@@ -49,56 +53,29 @@ fn index_for_color(c: RgbColor) -> u8 {
     c.to_term256_index()
 }
 
-fn write_color_escape(outp: &mut Outputter, term: &Term, todo: &CStr, mut idx: u8, is_fg: bool) {
-    if term_supports_color_natively(term, idx) {
-        // Use tparm to emit color escape.
-        outp.tputs_if_some(&tparm1(todo, idx.into()));
-    } else {
-        // We are attempting to bypass the term here. Generate the ANSI escape sequence ourself.
-        if idx < 16 {
-            // this allows the non-bright color to happen instead of no color working at all when a
-            // bright is attempted when only colors 0-7 are supported.
-            //
-            // TODO: enter bold mode in builtin_set_color in the same circumstance- doing that combined
-            // with what we do here, will make the brights actually work for virtual consoles/ancient
-            // emulators.
-            if term.max_colors == Some(8) && idx > 8 {
-                idx -= 8;
-            }
-            write!(
-                outp,
-                "\x1B[{}m",
-                (if idx > 7 { 82 } else { 30 }) + i32::from(idx) + ((i32::from(!is_fg)) * 10)
-            )
-            .expect("Writing to in-memory buffer should never fail");
-        } else {
-            write!(outp, "\x1B[{};5;{}m", if is_fg { 38 } else { 48 }, idx).unwrap();
-        }
+fn write_color(outp: &mut Outputter, foreground: bool, idx: u8) -> bool {
+    if is_dumb() {
+        return false;
     }
+    if only_grayscale()
+        && !(RgbColor {
+            typ: color::Type::Named { idx },
+            flags: color::Flags::DEFAULT,
+        })
+        .is_grayscale()
+    {
+        return false;
+    }
+    palette_color(outp, foreground, idx);
+    true
 }
 
-fn write_foreground_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = &term.set_a_foreground {
-        write_color_escape(outp, term, cap, idx, true);
-        true
-    } else if let Some(cap) = &term.set_foreground {
-        write_color_escape(outp, term, cap, idx, true);
-        true
-    } else {
-        false
-    }
+fn write_foreground_color(outp: &mut Outputter, idx: u8) -> bool {
+    write_color(outp, true, idx)
 }
 
-fn write_background_color(outp: &mut Outputter, idx: u8, term: &Term) -> bool {
-    if let Some(cap) = &term.set_a_background {
-        write_color_escape(outp, term, cap, idx, false);
-        true
-    } else if let Some(cap) = &term.set_background {
-        write_color_escape(outp, term, cap, idx, false);
-        true
-    } else {
-        false
-    }
+fn write_background_color(outp: &mut Outputter, idx: u8) -> bool {
+    write_color(outp, false, idx)
 }
 
 pub struct Outputter {
@@ -155,59 +132,63 @@ impl Outputter {
         self.was_reverse = false;
     }
 
+    fn can_flush(&self) -> bool {
+        self.fd >= 0 && self.buffer_count == 0
+    }
+
     fn maybe_flush(&mut self) {
-        if self.fd >= 0 && self.buffer_count == 0 {
+        if self.can_flush() {
             self.flush_to(self.fd);
         }
+    }
+
+    /// Add to the buffer. Assumes we are either in a buffering state, or not backed by a file
+    /// at all.
+    pub fn extend(&mut self, str: &[u8]) {
+        assert!(!self.can_flush());
+        self.infallible_write(str);
     }
 
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
     pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
-        let Some(term) = terminal::term() else {
-            return false;
-        };
-        let term: &Term = &term;
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);
             if is_fg {
-                return write_foreground_color(self, idx, term);
+                return write_foreground_color(self, idx);
             } else {
-                return write_background_color(self, idx, term);
+                return write_background_color(self, idx);
             };
         }
 
-        // 24 bit! No tparm here, just ANSI escape sequences.
-        // Foreground: ^[38;2;<r>;<g>;<b>m
-        // Background: ^[48;2;<r>;<g>;<b>m
-        let rgb = color.to_color24();
-        write!(
-            self,
-            "\x1B[{};2;{};{};{}m",
-            if is_fg { 38 } else { 48 },
-            rgb.r,
-            rgb.g,
-            rgb.b
-        )
-        .expect("Outputter::write should never fail");
+        if is_dumb() {
+            return false;
+        }
+        if only_grayscale() && color.is_grayscale() {
+            return false;
+        }
+
+        // 24 bit!
+        let Color24 { r, g, b } = color.to_color24();
+        rgb_color(self, is_fg, r, g, b);
         true
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
     /// as the previous, nothing will be written. Negative values for set_color will also be ignored.
-    /// Since the terminfo string this function emits can potentially cause the screen to flicker, the
+    /// Since the command this function emits can potentially cause the screen to flicker, the
     /// function takes care to write as little as possible.
     ///
     /// Possible values for colors are RgbColor colors or special values like RgbColor::NORMAL
     ///
-    /// In order to set the color to normal, three terminfo strings may have to be written.
+    /// In order to set the color to normal, three commands may have to be written.
     ///
-    /// - First a string to set the color, such as set_a_foreground. This is needed because otherwise
+    /// - First a command to set the color, such as set_a_foreground. This is needed because otherwise
     /// the previous strings colors might be removed as well.
     ///
-    /// - After that we write the exit_attribute_mode string to reset all color attributes.
+    /// - After that we write the exit_attribute_mode command to reset all color attributes.
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
@@ -215,25 +196,9 @@ impl Outputter {
     pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
         // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
         // just give up...
-        let Some(term) = terminal::term() else {
+        if is_dumb() {
             return;
-        };
-        let term: &Term = &term;
-        let Term {
-            enter_bold_mode,
-            enter_underline_mode,
-            exit_underline_mode,
-            enter_italics_mode,
-            exit_italics_mode,
-            enter_dim_mode,
-            enter_reverse_mode,
-            enter_standout_mode,
-            exit_attribute_mode,
-            ..
-        } = term;
-        let Some(exit_attribute_mode) = exit_attribute_mode else {
-            return;
-        };
+        }
 
         const normal: RgbColor = RgbColor::NORMAL;
         let mut bg_set = false;
@@ -253,8 +218,8 @@ impl Outputter {
             self.reset_modes();
             // If we exit attribute mode, we must first set a color, or previously colored text might
             // lose its color. Terminals are weird...
-            write_foreground_color(self, 0, term);
-            self.tputs(exit_attribute_mode);
+            write_foreground_color(self, 0);
+            self.infallible_write(EXIT_ATTRIBUTE_MODE);
             return;
         }
         if (self.was_bold && !is_bold)
@@ -262,7 +227,7 @@ impl Outputter {
             || (self.was_reverse && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            self.tputs(exit_attribute_mode);
+            self.infallible_write(EXIT_ATTRIBUTE_MODE);
             self.last_color = normal;
             self.last_color2 = normal;
             self.reset_modes();
@@ -285,27 +250,25 @@ impl Outputter {
             }
         }
 
-        if let Some(enter_bold_mode) = &enter_bold_mode {
-            if bg_set && !last_bg_set {
-                // Background color changed and is set, so we enter bold mode to make reading easier.
-                // This means bold mode is _always_ on when the background color is set.
-                self.tputs(enter_bold_mode);
-            }
-            if !bg_set && last_bg_set {
-                // Background color changed and is no longer set, so we exit bold mode.
-                self.tputs(exit_attribute_mode);
-                self.reset_modes();
-                // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-                if write_foreground_color(self, 0, term) {
-                    self.last_color = RgbColor::BLACK;
-                }
+        if bg_set && !last_bg_set {
+            // Background color changed and is set, so we enter bold mode to make reading easier.
+            // This means bold mode is _always_ on when the background color is set.
+            self.infallible_write(ENTER_BOLD_MODE);
+        }
+        if !bg_set && last_bg_set {
+            // Background color changed and is no longer set, so we exit bold mode.
+            self.infallible_write(EXIT_ATTRIBUTE_MODE);
+            self.reset_modes();
+            // We don't know if exit_attribute_mode resets colors, so we set it to something known.
+            if write_foreground_color(self, 0) {
+                self.last_color = RgbColor::BLACK;
             }
         }
 
         if self.last_color != fg {
             if fg.is_normal() {
-                write_foreground_color(self, 0, term);
-                self.tputs(exit_attribute_mode);
+                write_foreground_color(self, 0);
+                self.infallible_write(EXIT_ATTRIBUTE_MODE);
 
                 self.last_color2 = RgbColor::NORMAL;
                 self.reset_modes();
@@ -317,9 +280,9 @@ impl Outputter {
 
         if self.last_color2 != bg {
             if bg.is_normal() {
-                write_background_color(self, 0, term);
+                write_background_color(self, 0);
 
-                self.tputs(exit_attribute_mode);
+                self.infallible_write(EXIT_ATTRIBUTE_MODE);
                 if !self.last_color.is_normal() {
                     self.write_color(self.last_color, true /* foreground */);
                 }
@@ -332,34 +295,37 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.was_bold && !bg_set && self.tputs_if_some(enter_bold_mode) {
+        if is_bold && !self.was_bold && !bg_set {
+            self.infallible_write(ENTER_BOLD_MODE);
             self.was_bold = is_bold;
         }
 
-        if !self.was_underline && is_underline && self.tputs_if_some(enter_underline_mode) {
+        if !self.was_underline && is_underline {
+            self.infallible_write(ENTER_UNDERLINE_MODE);
             self.was_underline = is_underline;
-        } else if self.was_underline && !is_underline && self.tputs_if_some(exit_underline_mode) {
+        } else if self.was_underline && !is_underline {
+            self.infallible_write(EXIT_UNDERLINE_MODE);
             self.was_underline = is_underline;
         }
 
-        if self.was_italics && !is_italics && self.tputs_if_some(exit_italics_mode) {
+        if self.was_italics && !is_italics {
+            self.infallible_write(EXIT_ITALICS_MODE);
             self.was_italics = is_italics;
-        } else if !self.was_italics && is_italics && self.tputs_if_some(enter_italics_mode) {
+        } else if !self.was_italics && is_italics {
+            self.infallible_write(ENTER_ITALICS_MODE);
             self.was_italics = is_italics;
         }
 
-        if is_dim && !self.was_dim && self.tputs_if_some(enter_dim_mode) {
+        if is_dim && !self.was_dim {
+            self.infallible_write(ENTER_DIM_MODE);
             self.was_dim = is_dim;
         }
-        // N.B. there is no exit_dim_mode in terminfo, it's handled by exit_attribute_mode above.
+        // N.B. there is no exit_dim_mode, it's handled by exit_attribute_mode above.
 
         if is_reverse && !self.was_reverse {
             // Some terms do not have a reverse mode set, so standout mode is a fallback.
-            if self.tputs_if_some(enter_reverse_mode) {
-                self.was_reverse = is_reverse;
-            } else if self.tputs_if_some(enter_standout_mode) {
-                self.was_reverse = is_reverse;
-            }
+            self.infallible_write(ENTER_REVERSE_MODE);
+            self.was_reverse = is_reverse;
         }
     }
 
@@ -423,30 +389,9 @@ impl Write for Outputter {
     }
 }
 
+impl InfallibleWrite for Outputter {}
+
 impl Outputter {
-    /// Emit a terminfo string, like tputs.
-    /// affcnt (number of lines affected) is assumed to be 1, i.e. not applicable.
-    pub fn tputs(&mut self, str: &CStr) {
-        self.tputs_bytes(str.to_bytes());
-    }
-
-    pub fn tputs_bytes(&mut self, str: &[u8]) {
-        self.begin_buffering();
-        let _ = self.write_all(str);
-        self.end_buffering();
-    }
-
-    /// Convenience cover over tputs, in recognition of the fact that our Term has Optional fields.
-    /// If `str` is Some, write it with tputs and return true. Otherwise, return false.
-    pub fn tputs_if_some(&mut self, str: &Option<impl AsRef<CStr>>) -> bool {
-        if let Some(str) = str {
-            self.tputs(str.as_ref());
-            true
-        } else {
-            false
-        }
-    }
-
     /// Access the outputter for stdout.
     /// This should only be used from the main thread.
     pub fn stdoutput() -> &'static RefCell<Outputter> {
@@ -456,26 +401,39 @@ impl Outputter {
     }
 }
 
-pub struct BufferedOuputter<'a>(&'a mut Outputter);
+pub struct BufferedOutputter<'a>(RefMut<'a, Outputter>);
 
-impl<'a> BufferedOuputter<'a> {
-    pub fn new(outputter: &'a mut Outputter) -> Self {
+impl<'a> BufferedOutputter<'a> {
+    pub fn new(outputter: &'a RefCell<Outputter>) -> Self {
+        let mut outputter = outputter.borrow_mut();
         outputter.begin_buffering();
         Self(outputter)
     }
 }
 
-impl<'a> Drop for BufferedOuputter<'a> {
+impl<'a> Drop for BufferedOutputter<'a> {
     fn drop(&mut self) {
         self.0.end_buffering();
     }
 }
 
-impl<'a> Write for BufferedOuputter<'a> {
+impl Deref for BufferedOutputter<'_> {
+    type Target = Outputter;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BufferedOutputter<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<'a> Write for BufferedOutputter<'a> {
     fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.0
-            .write(buf)
-            .expect("Writing to in-memory buffer should never fail");
+        self.0.infallible_write(buf);
         Ok(buf.len())
     }
 
@@ -484,6 +442,7 @@ impl<'a> Write for BufferedOuputter<'a> {
         Ok(())
     }
 }
+impl<'a> InfallibleWrite for BufferedOutputter<'a> {}
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.

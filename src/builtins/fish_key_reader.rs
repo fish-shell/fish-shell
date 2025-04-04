@@ -18,17 +18,18 @@ use crate::{
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
     input_common::{
-        kitty_progressive_enhancements_query, terminal_protocol_hacks,
-        terminal_protocols_enable_ifn, Capability, CharEvent, ImplicitEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent, KITTY_KEYBOARD_SUPPORTED,
+        query_kitty_progressive_enhancements, terminal_protocol_hacks,
+        terminal_protocols_enable_ifn, CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer,
+        KeyEvent,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, reader_init, QUERY_PRIMARY_DEVICE_ATTRIBUTE},
+    reader::{check_exit_loop_maybe_warning, reader_init},
     signal::signal_set_handlers,
+    terminal_command::{Capability, KITTY_KEYBOARD_SUPPORTED, QUERY_PRIMARY_DEVICE_ATTRIBUTE},
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
@@ -153,7 +154,7 @@ fn setup_and_process_keys(
     terminal_protocol_hacks();
     streams
         .out
-        .append(str2wcstring(kitty_progressive_enhancements_query()));
+        .append(str2wcstring(query_kitty_progressive_enhancements()));
     streams
         .out
         .append(str2wcstring(QUERY_PRIMARY_DEVICE_ATTRIBUTE));

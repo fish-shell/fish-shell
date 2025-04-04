@@ -324,6 +324,7 @@ The same applies for example when you start ``tmux`` in config.fish without guar
 
 I'm getting weird graphical glitches (a staircase effect, ghost characters, cursor in the wrong position,...)?
 --------------------------------------------------------------------------------------------------------------
+
 In a terminal, the application running inside it and the terminal itself need to agree on the width of characters in order to handle cursor movement.
 
 This is more important to fish than other shells because features like syntax highlighting and autosuggestions are implemented by moving the cursor.
@@ -339,6 +340,14 @@ This also means that a few things are unsupportable:
 
 - Non-monospace fonts - there is *no way* for fish to figure out what width a specific character has as it has no influence on the terminal's font rendering.
 - Different widths for multiple ambiguous width characters - there is no way for fish to know which width you assign to each character.
+
+.. _faq-terminal-compatibility:
+
+fish breaks in some terminals (but works in others)
+------------------------------------------------------
+
+Some terminals might not meet all of :doc:`fish's requirements <terminal-compatibility>`.
+Please report this to your terminal's and to fish's issue tracker.
 
 .. _faq-uninstalling:
 

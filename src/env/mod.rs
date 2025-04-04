@@ -6,10 +6,7 @@ pub use config_paths::CONFIG_PATHS;
 
 use crate::common::ToCString;
 pub use environment::*;
-use std::sync::{
-    atomic::{AtomicBool, AtomicUsize},
-    Mutex,
-};
+use std::sync::{atomic::AtomicUsize, Mutex};
 pub use var::*;
 
 /// Limit `read` to 1 GiB (bytes, not wide chars) by default. This can be overridden with the
@@ -19,9 +16,6 @@ pub const DEFAULT_READ_BYTE_LIMIT: usize = 1024 * 1024 * 1024;
 /// The actual `read` limit in effect, defaulting to [`DEFAULT_READ_BYTE_LIMIT`] but overridable
 /// with `$fish_read_limit`.
 pub static READ_BYTE_LIMIT: AtomicUsize = AtomicUsize::new(DEFAULT_READ_BYTE_LIMIT);
-
-/// Does the terminal have the "eat new line" glitch.
-pub static TERM_HAS_XN: AtomicBool = AtomicBool::new(false);
 
 static SETENV_LOCK: Mutex<()> = Mutex::new(());
 

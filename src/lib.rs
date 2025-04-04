@@ -84,7 +84,7 @@ pub mod reader_history_search;
 pub mod redirection;
 pub mod screen;
 pub mod signal;
-pub mod terminal;
+pub mod terminal_command;
 pub mod termsize;
 pub mod threads;
 pub mod timer;

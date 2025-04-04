@@ -10,6 +10,7 @@ use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key;
 use crate::libc::MB_CUR_MAX;
+use crate::output::InfallibleWrite;
 use crate::parse_util::parse_util_escape_string_with_quote;
 use crate::termsize::Termsize;
 use crate::wchar::{decode_byte_from_char, encode_byte_to_char, prelude::*};
@@ -1375,6 +1376,16 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
         }
     }
     Ok(())
+}
+
+pub(crate) fn assert_infallible_write(_out: &impl InfallibleWrite) {}
+
+#[macro_export]
+macro_rules! infallible_write {
+    ($out:expr, $($arg:tt)*) => {{
+        $crate::common::assert_infallible_write($out);
+        write!($out, $($arg)*).unwrap()
+    }};
 }
 
 /// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in

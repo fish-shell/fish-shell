@@ -8,16 +8,19 @@
 //! of text around to handle text insertion.
 
 use crate::editable_line::line_at_cursor;
-use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::key::ViewportPosition;
 use crate::pager::{PageRendering, Pager, PAGER_MIN_HEIGHT};
+use crate::terminal_command::{
+    cursor_move, scroll_forward, CardinalDirection, CLEAR_TO_END_OF_LINE, CLEAR_TO_END_OF_SCREEN,
+    CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP, ENTER_DIM_MODE, EXIT_ATTRIBUTE_MODE,
+    OSC_133_PROMPT_START,
+};
 use crate::FLOG;
 use std::cell::RefCell;
 use std::collections::LinkedList;
-use std::ffi::{CStr, CString};
 use std::io::Write;
 use std::ops::Range;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
@@ -25,18 +28,16 @@ use libc::{ONLCR, STDERR_FILENO, STDOUT_FILENO};
 
 use crate::common::{
     get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
-    has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop, ScopeGuard,
-    ScopeGuarding,
+    has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop,
 };
-use crate::env::{Environment, TERM_HAS_XN};
+use crate::env::Environment;
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightSpec};
-use crate::output::Outputter;
-use crate::terminal::{term, tparm1};
+use crate::output::{BufferedOutputter, InfallibleWrite, Outputter};
 use crate::termsize::{termsize_last, Termsize};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
@@ -517,12 +518,16 @@ impl Screen {
 
         self.scrolled = scrolled_cursor.scroll_amount != 0;
 
-        self.update(
-            vars,
-            &layout.left_prompt,
-            &layout.right_prompt,
-            is_final_rendering,
-        );
+        self.with_buffered_output(|zelf| {
+            zelf.update(
+                vars,
+                &layout.left_prompt,
+                &layout.right_prompt,
+                is_final_rendering,
+            )
+        });
+        self.outp.borrow_mut().begin_buffering();
+        self.outp.borrow_mut().end_buffering();
         self.save_status();
     }
 
@@ -580,15 +585,11 @@ impl Screen {
         if lines_to_scroll == 0 {
             return;
         }
-        let zelf = self.scoped_buffer();
-        let mut out = zelf.outp.borrow_mut();
-        let lines_to_scroll = i32::try_from(lines_to_scroll).unwrap();
+        let mut out = BufferedOutputter::new(self.outp);
         // Scroll down.
-        assert!(SCROLL_FORWARD_SUPPORTED.load());
-        out.tputs_bytes(format!("\x1b[{}S", lines_to_scroll).as_bytes());
-        assert!(CURSOR_UP_SUPPORTED.load());
+        scroll_forward(&mut out, lines_to_scroll);
         // Reposition cursor.
-        out.tputs_bytes(format!("\x1b[{}A", lines_to_scroll).as_bytes());
+        cursor_move(&mut out, CardinalDirection::Up, lines_to_scroll);
     }
 
     fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
@@ -664,60 +665,16 @@ impl Screen {
         // Don't need to check for fish_wcwidth errors; this is done when setting up
         // omitted_newline_char in common.rs.
         let non_space_width = get_omitted_newline_width();
-        let term = term();
-        let term = term.as_ref();
         // We do `>` rather than `>=` because the code below might require one extra space.
         if screen_width > non_space_width {
-            let mut justgrey = true;
-            let add = |abandon_line_string: &mut WString, s: Option<CString>| {
-                let Some(s) = s else {
-                    return false;
-                };
-                abandon_line_string.push_utfstr(&str2wcstring(s.as_bytes()));
-                true
-            };
-            if let Some(enter_dim_mode) = term.and_then(|term| term.enter_dim_mode.as_ref()) {
-                if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
-                    // Use dim if they have it, so the color will be based on their actual normal
-                    // color and the background of the terminal.
-                    justgrey = false;
-                }
-            }
-            if let (true, Some(set_a_foreground)) = (
-                justgrey,
-                term.and_then(|term| term.set_a_foreground.as_ref()),
-            ) {
-                let max_colors = term.unwrap().max_colors.unwrap_or_default();
-                if max_colors >= 238 {
-                    // draw the string in a particular grey
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
-                } else if max_colors >= 9 {
-                    // bright black (the ninth color, looks grey)
-                    add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
-                } else if max_colors >= 2 {
-                    if let Some(enter_bold_mode) = term.unwrap().enter_bold_mode.as_ref() {
-                        // we might still get that color by setting black and going bold for bright
-                        add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
-                        add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
-                    }
-                }
-            }
+            abandon_line_string.push_utfstr(&str2wcstring(ENTER_DIM_MODE));
 
             abandon_line_string.push_utfstr(&get_omitted_newline_str());
 
-            if let Some(exit_attribute_mode) =
-                term.and_then(|term| term.exit_attribute_mode.as_ref())
-            {
-                // normal text ANSI escape sequence
-                add(&mut abandon_line_string, Some(exit_attribute_mode.clone()));
-            }
+            // normal text ANSI escape sequence
+            abandon_line_string.push_utfstr(&str2wcstring(EXIT_ATTRIBUTE_MODE));
 
-            let newline_glitch_width = if TERM_HAS_XN.load(Ordering::Relaxed) {
-                0
-            } else {
-                1
-            };
-            for _ in 0..screen_width - non_space_width - newline_glitch_width {
+            for _ in 0..screen_width - non_space_width {
                 abandon_line_string.push(' ');
             }
         }
@@ -737,9 +694,7 @@ impl Screen {
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
         if !is_dumb() {
-            if let Some(clr_eol) = term.unwrap().clr_eol.as_ref() {
-                abandon_line_string.push_utfstr(&str2wcstring(clr_eol.as_bytes()));
-            }
+            abandon_line_string.push_utfstr(&str2wcstring(CLEAR_TO_END_OF_LINE));
         }
 
         let narrow_abandon_line_string = wcs2string(&abandon_line_string);
@@ -881,123 +836,103 @@ impl Screen {
         if self.actual.cursor.x == new_x && self.actual.cursor.y == new_y {
             return;
         }
+        self.with_buffered_output(|zelf| zelf.do_move(new_x, new_y));
+    }
 
-        let mut zelf = self.scoped_buffer();
-
+    fn do_move(&mut self, new_x: usize, new_y: usize) {
         // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We
         // don't know! We can fix it up though.
-        if zelf
+        if self
             .actual
             .screen_width
-            .is_some_and(|sw| zelf.actual.cursor.x == sw)
+            .is_some_and(|sw| self.actual.cursor.x == sw)
         {
             // Either issue a cr to go back to the beginning of this line, or a nl to go to the
             // beginning of the next one, depending on what we think is more efficient.
-            if new_y <= zelf.actual.cursor.y {
-                zelf.outp.borrow_mut().push(b'\r');
+            if new_y <= self.actual.cursor.y {
+                self.outp.borrow_mut().push(b'\r');
             } else {
-                zelf.outp.borrow_mut().push(b'\n');
-                zelf.actual.cursor.y += 1;
+                self.outp.borrow_mut().push(b'\n');
+                self.actual.cursor.y += 1;
             }
             // Either way we're not in the first column.
-            zelf.actual.cursor.x = 0;
+            self.actual.cursor.x = 0;
         }
 
         let y_steps =
-            isize::try_from(new_y).unwrap() - isize::try_from(zelf.actual.cursor.y).unwrap();
+            isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
-        let Some(term) = term() else {
+        if is_dumb() {
             return;
-        };
-        let term = term.as_ref();
+        }
 
         let s = if y_steps < 0 {
-            term.cursor_up.as_ref()
+            CURSOR_UP
         } else if y_steps > 0 {
-            let s = term.cursor_down.as_ref();
-            if (shell_modes().c_oflag & ONLCR) != 0 && s.is_some_and(|s| s.as_bytes() == b"\n") {
+            if (shell_modes().c_oflag & ONLCR) != 0 {
                 // See GitHub issue #4505.
                 // Most consoles use a simple newline as the cursor down escape.
                 // If ONLCR is enabled (which it normally is) this will of course
                 // also move the cursor to the beginning of the line.
-                // We could do:
-                // if (std::strcmp(cursor_up, "\x1B[A") == 0) str = "\x1B[B";
-                // else ... but that doesn't work for unknown reasons.
-                zelf.actual.cursor.x = 0;
+                self.actual.cursor.x = 0;
             }
-            s
+            CURSOR_DOWN
         } else {
-            None
+            b""
         };
 
         for _ in 0..y_steps.abs_diff(0) {
-            zelf.outp.borrow_mut().tputs_if_some(&s);
+            self.outp.borrow_mut().infallible_write(s);
         }
 
         let mut x_steps =
-            isize::try_from(new_x).unwrap() - isize::try_from(zelf.actual.cursor.x).unwrap();
+            isize::try_from(new_x).unwrap() - isize::try_from(self.actual.cursor.x).unwrap();
         if x_steps != 0 && new_x == 0 {
-            zelf.outp.borrow_mut().push(b'\r');
+            self.outp.borrow_mut().push(b'\r');
             x_steps = 0;
         }
 
-        let (s, multi_str) = if x_steps < 0 {
-            (term.cursor_left.as_ref(), term.parm_left_cursor.as_ref())
-        } else {
-            (term.cursor_right.as_ref(), term.parm_right_cursor.as_ref())
+        self.actual.cursor.x = new_x;
+        self.actual.cursor.y = new_y;
+
+        // Note that bulk output is a way to avoid some visual glitches in iTerm (issue #1448).
+        let mut outp = BufferedOutputter::new(self.outp);
+        match x_steps {
+            0 => (),
+            -1 => outp.infallible_write(CURSOR_LEFT),
+            1 => outp.infallible_write(CURSOR_RIGHT),
+            _ => cursor_move(
+                &mut outp,
+                if x_steps < 0 {
+                    CardinalDirection::Left
+                } else {
+                    CardinalDirection::Right
+                },
+                x_steps.abs_diff(0),
+            ),
         };
-
-        // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
-        // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-        let use_multi = multi_str.is_some_and(|ms| !ms.as_bytes().is_empty())
-            && x_steps.abs_diff(0) * s.map_or(0, |s| s.as_bytes().len())
-                > multi_str.unwrap().as_bytes().len();
-        if use_multi {
-            let multi_param = tparm1(
-                multi_str.as_ref().unwrap(),
-                i32::try_from(x_steps.abs_diff(0)).unwrap(),
-            );
-            zelf.outp.borrow_mut().tputs_if_some(&multi_param);
-        } else {
-            for _ in 0..x_steps.abs_diff(0) {
-                zelf.outp.borrow_mut().tputs_if_some(&s);
-            }
-        }
-
-        zelf.actual.cursor.x = new_x;
-        zelf.actual.cursor.y = new_y;
     }
 
     /// Convert a wide character to a multibyte string and append it to the buffer.
     fn write_char(&mut self, c: char, width: usize) {
-        let mut zelf = self.scoped_buffer();
-        zelf.actual.cursor.x = zelf.actual.cursor.x.wrapping_add(width);
-        zelf.outp.borrow_mut().writech(c);
-        if Some(zelf.actual.cursor.x) == zelf.actual.screen_width && allow_soft_wrap() {
-            zelf.soft_wrap_location = Some(Cursor {
+        self.actual.cursor.x = self.actual.cursor.x.wrapping_add(width);
+        self.outp.borrow_mut().writech(c);
+        if Some(self.actual.cursor.x) == self.actual.screen_width {
+            self.soft_wrap_location = Some(Cursor {
                 x: 0,
-                y: zelf.actual.cursor.y + 1,
+                y: self.actual.cursor.y + 1,
             });
 
             // Note that our cursor position may be a lie: Apple Terminal makes the right cursor stick
             // to the margin, while Ubuntu makes it "go off the end" (but still doesn't wrap). We rely
             // on s_move to fix this up.
         } else {
-            zelf.soft_wrap_location = None;
+            self.soft_wrap_location = None;
         }
     }
 
-    /// Send the specified string through tputs and append the output to the screen's outputter.
-    fn write_mbs(&mut self, s: &CStr) {
-        self.outp.borrow_mut().tputs(s);
-    }
-
-    fn write_mbs_if_some(&mut self, s: &Option<impl AsRef<CStr>>) -> bool {
-        self.outp.borrow_mut().tputs_if_some(s)
-    }
-
     pub(crate) fn write_bytes(&mut self, s: &[u8]) {
-        self.outp.borrow_mut().tputs_bytes(s);
+        self.outp.borrow_mut().infallible_write(s);
     }
 
     /// Convert a wide string to a multibyte string and append it to the buffer.
@@ -1027,18 +962,16 @@ impl Screen {
     }
 
     fn should_wrap(&self, i: usize) -> bool {
-        allow_soft_wrap()
-            && self.desired.line(i).is_soft_wrapped
+        self.desired.line(i).is_soft_wrapped
             && i + 1 < self.desired.line_count()
             && !(i + 1 < self.actual.line_count()
                 && line_shared_prefix(self.actual.line(i + 1), self.desired.line(i + 1)) > 0)
     }
 
-    fn scoped_buffer(&mut self) -> impl ScopeGuarding<Target = &mut Screen> {
+    fn with_buffered_output(&mut self, f: impl FnOnce(&mut Self)) {
         self.outp.borrow_mut().begin_buffering();
-        ScopeGuard::new(self, |zelf| {
-            zelf.outp.borrow_mut().end_buffering();
-        })
+        (f)(self);
+        self.outp.borrow_mut().end_buffering();
     }
 
     /// Update the screen to match the desired output.
@@ -1058,7 +991,6 @@ impl Screen {
         };
 
         let mut cached_layouts = LAYOUT_CACHE_SHARED.lock().unwrap();
-        let mut zelf = self.scoped_buffer();
 
         // Determine size of left and right prompt. Note these have already been truncated.
         let left_prompt_layout = cached_layouts.calc_prompt_layout(left_prompt, None, usize::MAX);
@@ -1068,83 +1000,79 @@ impl Screen {
             .last_line_width;
 
         // Figure out how many following lines we need to clear (probably 0).
-        let actual_lines_before_reset = zelf.actual_lines_before_reset;
-        zelf.actual_lines_before_reset = 0;
+        let actual_lines_before_reset = self.actual_lines_before_reset;
+        self.actual_lines_before_reset = 0;
 
-        let mut need_clear_lines = zelf.need_clear_lines;
-        let mut need_clear_screen = zelf.need_clear_screen;
+        let mut need_clear_lines = self.need_clear_lines;
+        let mut need_clear_screen = self.need_clear_screen;
         let mut has_cleared_screen = false;
 
-        let screen_width = zelf.desired.screen_width;
+        let screen_width = self.desired.screen_width;
 
-        if zelf.actual.screen_width != screen_width {
+        if self.actual.screen_width != screen_width {
             // Ensure we don't issue a clear screen for the very first output, to avoid issue #402.
-            if zelf.actual.screen_width.is_some_and(|sw| sw > 0) {
+            if self.actual.screen_width.is_some_and(|sw| sw > 0) {
                 need_clear_screen = true;
-                zelf.r#move(0, 0);
-                zelf.reset_line(false);
+                self.r#move(0, 0);
+                self.reset_line(false);
 
-                need_clear_lines |= zelf.need_clear_lines;
-                need_clear_screen |= zelf.need_clear_screen;
+                need_clear_lines |= self.need_clear_lines;
+                need_clear_screen |= self.need_clear_screen;
             }
-            zelf.actual.screen_width = screen_width;
+            self.actual.screen_width = screen_width;
         }
 
-        zelf.need_clear_lines = false;
-        zelf.need_clear_screen = false;
+        self.need_clear_lines = false;
+        self.need_clear_screen = false;
 
         // Determine how many lines have stuff on them; we need to clear lines with stuff that we don't
         // want.
-        let lines_with_stuff = std::cmp::max(actual_lines_before_reset, zelf.actual.line_count());
-        if zelf.desired.line_count() < lines_with_stuff {
+        let lines_with_stuff = std::cmp::max(actual_lines_before_reset, self.actual.line_count());
+        if self.desired.line_count() < lines_with_stuff {
             need_clear_screen = true;
         }
 
-        let term = term();
-        let term = term.as_ref();
-
         // Output the left prompt if it has changed.
-        if zelf.scrolled() && !is_final_rendering {
-            zelf.r#move(0, 0);
-            zelf.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
-            zelf.actual_left_prompt = None;
-            zelf.actual.cursor.x = 0;
-        } else if zelf
+        if self.scrolled() && !is_final_rendering {
+            self.r#move(0, 0);
+            self.write_bytes(CLEAR_TO_END_OF_LINE);
+            self.actual_left_prompt = None;
+            self.actual.cursor.x = 0;
+        } else if self
             .actual_left_prompt
             .as_ref()
             .is_none_or(|p| p != left_prompt)
-            || (zelf.scrolled() && is_final_rendering)
-            || Some(left_prompt_width) == screen_width && zelf.should_wrap(0)
+            || (self.scrolled() && is_final_rendering)
+            || Some(left_prompt_width) == screen_width && self.should_wrap(0)
         {
-            zelf.r#move(0, 0);
+            self.r#move(0, 0);
             let mut start = 0;
-            let osc_133_prompt_start =
-                |zelf: &mut Screen| zelf.write_bytes(b"\x1b]133;A;click_events=1\x07");
+            let mark_prompt_start = |zelf: &mut Screen| zelf.write_bytes(OSC_133_PROMPT_START);
             if left_prompt_layout.line_breaks.is_empty() {
-                osc_133_prompt_start(&mut zelf);
+                mark_prompt_start(self);
             }
-            if zelf
+            if self
                 .actual_left_prompt
                 .as_ref()
                 .is_none_or(|p| p != left_prompt)
-                || (zelf.scrolled() && is_final_rendering)
+                || (self.scrolled() && is_final_rendering)
             {
                 for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
-                    zelf.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                    self.write_bytes(CLEAR_TO_END_OF_LINE);
                     if i == 0 {
-                        osc_133_prompt_start(&mut zelf);
+                        mark_prompt_start(self);
                     }
-                    zelf.write_str(&left_prompt[start..=line_break]);
+                    self.write_str(&left_prompt[start..=line_break]);
                     start = line_break + 1;
                 }
             } else {
                 start = left_prompt_layout.line_breaks.last().map_or(0, |lb| lb + 1);
             }
-            zelf.write_str(&left_prompt[start..]);
-            zelf.actual_left_prompt = Some(left_prompt.to_owned());
-            zelf.actual.cursor.x = left_prompt_width;
-            if Some(left_prompt_width) == screen_width && zelf.should_wrap(0) {
-                zelf.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
+            self.write_str(&left_prompt[start..]);
+            self.actual_left_prompt = Some(left_prompt.to_owned());
+            self.actual.cursor.x = left_prompt_width;
+            if Some(left_prompt_width) == screen_width && self.should_wrap(0) {
+                self.soft_wrap_location = Some(Cursor { x: 0, y: 1 });
             }
         }
 
@@ -1156,9 +1084,9 @@ impl Screen {
         }
 
         // Output all lines.
-        for i in 0..zelf.desired.line_count() {
-            zelf.actual.create_line(i);
-            let is_first_line = i == 0 && !zelf.scrolled();
+        for i in 0..self.desired.line_count() {
+            self.actual.create_line(i);
+            let is_first_line = i == 0 && !self.scrolled();
             let start_pos = if is_first_line { left_prompt_width } else { 0 };
             let mut current_width = 0;
             let mut has_cleared_line = false;
@@ -1166,38 +1094,35 @@ impl Screen {
             // If this is the last line, maybe we should clear the screen.
             // Don't issue clr_eos if we think the cursor will end up in the last column - see #6951.
             let should_clear_screen_this_line = need_clear_screen
-                && i + 1 == zelf.desired.line_count()
-                && term.is_some_and(|term| term.clr_eos.is_some())
-                && !(zelf.desired.cursor.x == 0
-                    && zelf.desired.cursor.y == zelf.desired.line_count());
+                && i + 1 == self.desired.line_count()
+                && !(self.desired.cursor.x == 0
+                    && self.desired.cursor.y == self.desired.line_count());
 
             // skip_remaining is how many columns are unchanged on this line.
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let shared_prefix = if zelf.scrolled() {
+            let shared_prefix = if self.scrolled() {
                 0
             } else {
-                line_shared_prefix(o_line(&zelf, i), s_line(&zelf, i))
+                line_shared_prefix(o_line(&self, i), s_line(&self, i))
             };
             let mut skip_prefix = shared_prefix;
-            if shared_prefix < o_line(&zelf, i).indentation {
-                if o_line(&zelf, i).indentation > s_line(&zelf, i).indentation
+            if shared_prefix < o_line(&self, i).indentation {
+                if o_line(&self, i).indentation > s_line(&self, i).indentation
                     && !has_cleared_screen
-                    && term.is_some_and(|term| term.clr_eol.is_some() && term.clr_eos.is_some())
                 {
-                    set_color(&mut zelf, HighlightSpec::new());
-                    zelf.r#move(0, i);
-                    let term = term.unwrap();
-                    zelf.write_mbs_if_some(if should_clear_screen_this_line {
-                        &term.clr_eos
+                    set_color(self, HighlightSpec::new());
+                    self.r#move(0, i);
+                    self.write_bytes(if should_clear_screen_this_line {
+                        CLEAR_TO_END_OF_SCREEN
                     } else {
-                        &term.clr_eol
+                        CLEAR_TO_END_OF_LINE
                     });
                     has_cleared_screen = should_clear_screen_this_line;
                     has_cleared_line = true;
                 }
-                skip_prefix = o_line(&zelf, i).indentation;
+                skip_prefix = o_line(&self, i).indentation;
             }
 
             // Compute how much we should skip. At a minimum we skip over the prompt. But also skip
@@ -1207,14 +1132,14 @@ impl Screen {
                 let skip_width = if shared_prefix < skip_prefix {
                     skip_prefix
                 } else {
-                    o_line(&zelf, i).wcswidth_min_0(shared_prefix)
+                    o_line(&self, i).wcswidth_min_0(shared_prefix)
                 };
                 if skip_width > skip_remaining {
                     skip_remaining = skip_width;
                 }
             }
 
-            if !should_clear_screen_this_line && zelf.should_wrap(i) {
+            if !should_clear_screen_this_line && self.should_wrap(i) {
                 // If we're soft wrapped, and if we're going to change the first character of the next
                 // line, don't skip over the last two characters so that we maintain soft-wrapping.
                 skip_remaining = skip_remaining.min(screen_width.unwrap() - 2);
@@ -1225,8 +1150,8 @@ impl Screen {
 
             // Skip over skip_remaining width worth of characters.
             let mut j = 0;
-            while j < o_line(&zelf, i).len() {
-                let width = wcwidth_rendered_min_0(o_line(&zelf, i).char_at(j));
+            while j < o_line(&self, i).len() {
+                let width = wcwidth_rendered_min_0(o_line(&self, i).char_at(j));
                 if current_width + width > skip_remaining {
                     break;
                 }
@@ -1236,7 +1161,7 @@ impl Screen {
 
             // Now actually output stuff.
             loop {
-                let done = j >= o_line(&zelf, i).len();
+                let done = j >= o_line(&self, i).len();
                 // Clear the screen if we have not done so yet.
                 // If we are about to output into the last column, clear the screen first. If we clear
                 // the screen after we output into the last column, it can erase the last character due
@@ -1246,22 +1171,22 @@ impl Screen {
                     && !has_cleared_screen
                     && (done || Some(j + 1) == screen_width)
                 {
-                    set_color(&mut zelf, HighlightSpec::new());
-                    zelf.r#move(current_width, i);
-                    zelf.write_mbs_if_some(&term.and_then(|term| term.clr_eos.as_ref()));
+                    set_color(self, HighlightSpec::new());
+                    self.r#move(current_width, i);
+                    self.write_bytes(CLEAR_TO_END_OF_SCREEN);
                     has_cleared_screen = true;
                 }
                 if done {
                     break;
                 }
 
-                zelf.handle_soft_wrap(current_width, i);
-                zelf.r#move(current_width, i);
-                let color = o_line(&zelf, i).color_at(j);
-                set_color(&mut zelf, color);
-                let ch = o_line(&zelf, i).char_at(j);
+                self.handle_soft_wrap(current_width, i);
+                self.r#move(current_width, i);
+                let color = o_line(&self, i).color_at(j);
+                set_color(self, color);
+                let ch = o_line(&self, i).char_at(j);
                 let width = wcwidth_rendered_min_0(ch);
-                zelf.write_char(ch, width);
+                self.with_buffered_output(|zelf| zelf.write_char(ch, width));
                 current_width += width;
                 j += 1;
             }
@@ -1275,14 +1200,14 @@ impl Screen {
                 clear_remainder = false;
             } else if need_clear_lines && screen_width.is_some_and(|sw| current_width < sw) {
                 clear_remainder = true;
-            } else if right_prompt_width < zelf.last_right_prompt_width {
+            } else if right_prompt_width < self.last_right_prompt_width {
                 clear_remainder = true;
             } else {
                 // This wcswidth shows up strong in the profile.
                 // Only do it if the previous line could conceivably be wider.
                 // That means if it is a prefix of the current one we can skip it.
-                if s_line(&zelf, i).text.len() != shared_prefix {
-                    let prev_width = s_line(&zelf, i).wcswidth_min_0(usize::MAX);
+                if s_line(&self, i).text.len() != shared_prefix {
+                    let prev_width = s_line(&self, i).wcswidth_min_0(usize::MAX);
                     clear_remainder = prev_width > current_width;
                 }
             }
@@ -1290,23 +1215,21 @@ impl Screen {
             // We unset the color even if we don't clear the line.
             // This means that we switch background correctly on the next,
             // including our weird implicit bolding.
-            set_color(&mut zelf, HighlightSpec::new());
-            if let (true, Some(clr_eol)) =
-                (clear_remainder, term.and_then(|term| term.clr_eol.as_ref()))
-            {
-                zelf.r#move(current_width, i);
-                zelf.write_mbs(clr_eol);
+            set_color(self, HighlightSpec::new());
+            if clear_remainder {
+                self.r#move(current_width, i);
+                self.write_bytes(CLEAR_TO_END_OF_LINE);
             }
 
             // Output any rprompt if this is the first line.
             if is_first_line && right_prompt_width > 0 {
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
-                zelf.r#move(0, 0);
-                zelf.r#move(screen_width.unwrap() - right_prompt_width, i);
-                set_color(&mut zelf, HighlightSpec::new());
-                zelf.write_str(right_prompt);
-                zelf.actual.cursor.x += right_prompt_width;
+                self.r#move(0, 0);
+                self.r#move(screen_width.unwrap() - right_prompt_width, i);
+                set_color(self, HighlightSpec::new());
+                self.write_str(right_prompt);
+                self.actual.cursor.x += right_prompt_width;
 
                 // We output in the last column. Some terms (Linux) push the cursor further right, past
                 // the window. Others make it "stick." Since we don't really know which is which, issue
@@ -1316,10 +1239,10 @@ impl Screen {
                 // wrapped. If so, then a cr will go to the beginning of the following line! So instead
                 // issue a bunch of "move left" commands to get back onto the line, and then jump to the
                 // front of it.
-                let Cursor { x, y } = zelf.actual.cursor;
-                zelf.r#move(x - right_prompt_width, y);
-                zelf.write_str(L!("\r"));
-                zelf.actual.cursor.x = 0;
+                let Cursor { x, y } = self.actual.cursor;
+                self.r#move(x - right_prompt_width, y);
+                self.write_str(L!("\r"));
+                self.actual.cursor.x = 0;
             }
         }
 
@@ -1328,30 +1251,26 @@ impl Screen {
         // Don't do it when running in midnight_commander because of
         // https://midnight-commander.org/ticket/4258.
         if !MIDNIGHT_COMMANDER_HACK.load() {
-            zelf.r#move(0, 0);
+            self.r#move(0, 0);
         }
 
         // Clear remaining lines (if any) if we haven't cleared the screen.
-        if let (false, true, Some(clr_eol)) = (
-            has_cleared_screen,
-            need_clear_screen,
-            term.and_then(|term| term.clr_eol.as_ref()),
-        ) {
-            set_color(&mut zelf, HighlightSpec::new());
-            for i in zelf.desired.line_count()..lines_with_stuff {
-                zelf.r#move(0, i);
-                zelf.write_mbs(clr_eol);
+        if !has_cleared_screen && need_clear_screen {
+            set_color(self, HighlightSpec::new());
+            for i in self.desired.line_count()..lines_with_stuff {
+                self.r#move(0, i);
+                self.write_bytes(CLEAR_TO_END_OF_LINE);
             }
         }
 
-        let Cursor { x, y } = zelf.desired.cursor;
-        zelf.r#move(x, y);
-        set_color(&mut zelf, HighlightSpec::new());
+        let Cursor { x, y } = self.desired.cursor;
+        self.r#move(x, y);
+        set_color(self, HighlightSpec::new());
 
         // We have now synced our actual screen against our desired screen. Note that this is a big
         // assignment!
-        zelf.actual = zelf.desired.clone();
-        zelf.last_right_prompt_width = right_prompt_width;
+        self.actual = self.desired.clone();
+        self.last_right_prompt_width = right_prompt_width;
     }
 }
 
@@ -1366,7 +1285,7 @@ pub fn mtime_stdout_stderr() -> (Option<SystemTime>, Option<SystemTime>) {
 pub fn screen_force_clear_to_end() {
     Outputter::stdoutput()
         .borrow_mut()
-        .tputs_if_some(&term().unwrap().clr_eos);
+        .infallible_write(CLEAR_TO_END_OF_SCREEN);
 }
 
 /// Information about the layout of a prompt.
@@ -1405,8 +1324,7 @@ pub struct LayoutCache {
 }
 
 // Singleton of the cached escape sequences seen in prompts and similar strings.
-// Note this is deliberately exported so that init_terminal can clear it.
-pub static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
+static LAYOUT_CACHE_SHARED: Mutex<LayoutCache> = Mutex::new(LayoutCache::new());
 
 impl LayoutCache {
     pub const fn new() -> Self {
@@ -1571,31 +1489,24 @@ impl LayoutCache {
 
 /// Returns the number of characters in the escape code starting at 'code'. We only handle sequences
 /// that begin with \x1B. If it doesn't we return zero. We also return zero if we don't recognize
-/// the escape sequence based on querying terminfo and other heuristics.
+/// the escape sequence.
 pub fn escape_code_length(code: &wstr) -> Option<usize> {
     if code.char_at(0) != '\x1B' {
         return None;
     }
 
-    is_visual_escape_seq(code)
-        .or_else(|| is_screen_name_escape_seq(code))
+    is_screen_name_escape_seq(code)
         .or_else(|| is_osc_escape_seq(code))
         .or_else(|| is_three_byte_escape_seq(code))
         .or_else(|| is_csi_style_escape_seq(code))
         .or_else(|| is_two_byte_escape_seq(code))
 }
 
-pub fn screen_clear() -> WString {
-    term()
-        .unwrap()
-        .clear_screen
-        .as_ref()
-        .map(|clear_screen| str2wcstring(clear_screen.as_bytes()))
-        .unwrap_or_default()
-}
-
 static MIDNIGHT_COMMANDER_HACK: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
+/// Midnight Commander tries to extract the last line of the prompt, and does so in a way that is
+/// broken if you do '\r' after it like we normally do.
+/// See https://midnight-commander.org/ticket/4258.
 pub fn screen_set_midnight_commander_hack() {
     MIDNIGHT_COMMANDER_HACK.store(true)
 }
@@ -1603,33 +1514,11 @@ pub fn screen_set_midnight_commander_hack() {
 /// The number of characters to indent new blocks.
 const INDENT_STEP: usize = 4;
 
-/// Tests if the specified narrow character sequence is present at the specified position of the
-/// specified wide character string. All of \c seq must match, but str may be longer than seq.
-fn try_sequence(seq: &[u8], s: &wstr) -> usize {
-    let mut i = 0;
-    loop {
-        if i == seq.len() {
-            return i;
-        }
-        if char::from(seq[i]) != s.char_at(i) {
-            return 0;
-        }
-        i += 1;
-    }
-}
-
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 fn next_tab_stop(current_line_width: usize) -> usize {
-    // Assume tab stops every 8 characters if undefined.
-    let tab_width = term().unwrap().init_tabs.unwrap_or(8);
+    // Assume tab stops every 8 characters.
+    let tab_width = 8;
     ((current_line_width / tab_width) + 1) * tab_width
-}
-
-/// Whether we permit soft wrapping. If so, in some cases we don't explicitly move to the second
-/// physical line on a wrapped logical line; instead we just output it.
-fn allow_soft_wrap() -> bool {
-    // Should we be looking at eat_newline_glitch as well?
-    term().unwrap().auto_right_margin
 }
 
 /// Does this look like the escape sequence for setting a screen name?
@@ -1742,43 +1631,6 @@ fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
     }
     // cursor now indexes just beyond the end of the sequence (or at the terminating zero).
     Some(cursor)
-}
-
-/// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
-/// displayed other than the color.
-fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
-    let term = term()?;
-    let esc2 = [
-        &term.enter_bold_mode,
-        &term.exit_attribute_mode,
-        &term.enter_underline_mode,
-        &term.exit_underline_mode,
-        &term.enter_standout_mode,
-        &term.exit_standout_mode,
-        &term.enter_blink_mode,
-        &term.enter_protected_mode,
-        &term.enter_italics_mode,
-        &term.exit_italics_mode,
-        &term.enter_reverse_mode,
-        &term.enter_shadow_mode,
-        &term.exit_shadow_mode,
-        &term.enter_secure_mode,
-        &term.enter_dim_mode,
-        &term.enter_alt_charset_mode,
-        &term.exit_alt_charset_mode,
-    ];
-
-    for p in &esc2 {
-        let Some(p) = p else { continue };
-        // Test both padded and unpadded version, just to be safe. Most versions of fish_tparm don't
-        // actually seem to do anything these days.
-        let esc_seq_len = try_sequence(p.as_bytes(), code);
-        if esc_seq_len != 0 {
-            return Some(esc_seq_len);
-        }
-    }
-
-    None
 }
 
 /// Return whether `c` ends a measuring run.
@@ -1928,14 +1780,16 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
     idx
 }
 
+pub(crate) static IS_DUMB: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+pub(crate) static ONLY_GRAYSCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 /// Returns true if we are using a dumb terminal.
 pub(crate) fn is_dumb() -> bool {
-    term().is_none_or(|term| {
-        term.cursor_up.is_none()
-            || term.cursor_down.is_none()
-            || term.cursor_left.is_none()
-            || term.cursor_right.is_none()
-    })
+    IS_DUMB.load()
+}
+
+pub(crate) fn only_grayscale() -> bool {
+    ONLY_GRAYSCALE.load()
 }
 
 // Exposed for testing.

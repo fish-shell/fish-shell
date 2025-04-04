@@ -30,11 +30,6 @@ BuildRequires: glibc-langpack-en
 %endif
 BuildRequires: python3 procps
 
-%if 0%{?suse_version}
-Requires:      terminfo-base
-%else
-Requires:      ncurses-base
-%endif
 Requires:      file
 Requires:      python3
 Requires:      man

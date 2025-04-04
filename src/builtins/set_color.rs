@@ -4,12 +4,15 @@ use super::prelude::*;
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
 use crate::output::{self, Outputter};
-use crate::terminal::{self, Term};
+use crate::screen::is_dumb;
+use crate::terminal_command::{
+    ENTER_BOLD_MODE, ENTER_DIM_MODE, ENTER_ITALICS_MODE, ENTER_REVERSE_MODE, ENTER_UNDERLINE_MODE,
+    EXIT_ATTRIBUTE_MODE,
+};
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(
     outp: &mut Outputter,
-    term: &Term,
     bold: bool,
     underline: bool,
     italics: bool,
@@ -17,40 +20,28 @@ fn print_modifiers(
     reverse: bool,
     bg: RgbColor,
 ) {
-    let Term {
-        enter_bold_mode,
-        enter_underline_mode,
-        enter_italics_mode,
-        enter_dim_mode,
-        enter_reverse_mode,
-        enter_standout_mode,
-        exit_attribute_mode,
-        ..
-    } = term;
     if bold {
-        outp.tputs_if_some(enter_bold_mode);
+        outp.extend(ENTER_BOLD_MODE);
     }
 
     if underline {
-        outp.tputs_if_some(enter_underline_mode);
+        outp.extend(ENTER_UNDERLINE_MODE);
     }
 
     if italics {
-        outp.tputs_if_some(enter_italics_mode);
+        outp.extend(ENTER_ITALICS_MODE);
     }
 
     if dim {
-        outp.tputs_if_some(enter_dim_mode);
+        outp.extend(ENTER_DIM_MODE);
     }
 
     #[allow(clippy::collapsible_if)]
     if reverse {
-        if !outp.tputs_if_some(enter_reverse_mode) {
-            outp.tputs_if_some(enter_standout_mode);
-        }
+        outp.extend(ENTER_REVERSE_MODE);
     }
     if !bg.is_none() && bg.is_normal() {
-        outp.tputs_if_some(exit_attribute_mode);
+        outp.extend(EXIT_ATTRIBUTE_MODE);
     }
 }
 
@@ -76,11 +67,10 @@ fn print_colors(
         &named_colors
     };
 
-    let term = terminal::term();
     for color_name in args {
         if streams.out_is_terminal() {
-            if let Some(term) = term.as_ref() {
-                print_modifiers(outp, term, bold, underline, italics, dim, reverse, bg);
+            if !is_dumb() {
+                print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
             }
             let color = RgbColor::from_wstr(color_name).unwrap_or(RgbColor::NONE);
             outp.set_color(color, RgbColor::NONE);
@@ -92,8 +82,8 @@ fn print_colors(
         if !bg.is_none() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            if let Some(term) = term.as_ref() {
-                outp.tputs_if_some(&term.exit_attribute_mode);
+            if !is_dumb() {
+                outp.extend(EXIT_ATTRIBUTE_MODE);
             }
         }
         outp.writech('\n');
@@ -217,22 +207,19 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    let Some(term) = terminal::term() else {
+    if is_dumb() {
         return Err(STATUS_CMD_ERROR);
-    };
-    let Some(exit_attribute_mode) = &term.exit_attribute_mode else {
-        return Err(STATUS_CMD_ERROR);
-    };
+    }
 
     let outp = &mut output::Outputter::new_buffering();
-    print_modifiers(outp, &term, bold, underline, italics, dim, reverse, bg);
+    print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
     if bgcolor.is_some() && bg.is_normal() {
-        outp.tputs(exit_attribute_mode);
+        outp.extend(EXIT_ATTRIBUTE_MODE);
     }
 
     if !fg.is_none() {
         if fg.is_normal() || fg.is_reset() {
-            outp.tputs(exit_attribute_mode);
+            outp.extend(EXIT_ATTRIBUTE_MODE);
         } else if !outp.write_color(fg, true /* is_fg */) {
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:

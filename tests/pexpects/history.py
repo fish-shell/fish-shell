@@ -17,7 +17,7 @@ import os
 env = os.environ.copy()
 env["PAGER"] = "cat"
 
-sp = SpawnedProc(env=env)
+sp = SpawnedProc(env=env, term_var="dumb") # dumb terminal is historical behavior for this test
 
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
     sp.send,

@@ -55,8 +55,6 @@ fish-printf = { path = "./printf", features = ["widestring"] }
 # minimum supported version to 10.12.
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 widestring = "1.1.0"
-# We need 0.9.0 specifically for some crash fixes.
-terminfo = "0.9.0"
 rust-embed = { version = "8.2.0", optional = true }
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]

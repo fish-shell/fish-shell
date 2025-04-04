@@ -51,8 +51,8 @@ use crate::color::RgbColor;
 use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    redirect_tty_output, shell_modes, str2wcstring, wcs2string, write_loop, EscapeFlags,
-    EscapeStringStyle, ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
+    redirect_tty_output, shell_modes, str2wcstring, write_loop, EscapeFlags, EscapeStringStyle,
+    ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -79,24 +79,20 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::kitty_progressive_enhancements_query;
+use crate::input_common::query_kitty_progressive_enhancements;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::unblock_input;
 use crate::input_common::BlockingWait;
-use crate::input_common::Capability;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::Queried;
 use crate::input_common::IN_DVTM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
-use crate::input_common::KITTY_KEYBOARD_SUPPORTED;
-use crate::input_common::SYNCHRONIZED_OUTPUT_SUPPORTED;
 use crate::input_common::{
     terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
     ReadlineCmd,
 };
-use crate::input_common::{CURSOR_UP_SUPPORTED, SCROLL_FORWARD_SUPPORTED};
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
 use crate::kill::{kill_add, kill_replace, kill_yank, kill_yank_rotate};
@@ -105,7 +101,8 @@ use crate::nix::{getpgrp, getpid, isatty};
 use crate::operation_context::{get_bg_context, OperationContext};
 use crate::output::parse_color;
 use crate::output::parse_color_maybe_none;
-use crate::output::BufferedOuputter;
+use crate::output::BufferedOutputter;
+use crate::output::InfallibleWrite;
 use crate::output::Outputter;
 use crate::pager::{PageRendering, Pager, SelectionMotion};
 use crate::panic::AT_EXIT;
@@ -129,10 +126,19 @@ use crate::proc::{
 };
 use crate::reader_history_search::{smartcase_flags, ReaderHistorySearch, SearchMode};
 use crate::screen::is_dumb;
-use crate::screen::{screen_clear, screen_force_clear_to_end, CharOffset, Screen};
+use crate::screen::{screen_force_clear_to_end, CharOffset, Screen};
+use crate::should_flog;
 use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
     signal_set_handlers_once,
+};
+use crate::terminal_command::{
+    osc_0_window_title, osc_133_command_finished, osc_133_command_start, query_xtgettcap,
+    Capability, CLEAR_SCREEN, DECRST_ALTERNATE_SCREEN_BUFFER, DECRST_MOUSE_TRACKING,
+    DECRST_SYNCHRONIZED_UPDATE, DECSET_ALTERNATE_SCREEN_BUFFER, DECSET_SHOW_CURSOR,
+    DECSET_SYNCHRONIZED_UPDATE, KITTY_KEYBOARD_SUPPORTED, QUERY_CURSOR_POSITION,
+    QUERY_PRIMARY_DEVICE_ATTRIBUTE, QUERY_SYNCHRONIZED_OUTPUT, QUERY_XTVERSION,
+    SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_NAME, SYNCHRONIZED_OUTPUT_SUPPORTED,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::threads::{
@@ -688,13 +694,10 @@ fn read_i(parser: &Parser) {
 
         data.clear(EditableLineTag::Commandline);
         data.update_buff_pos(EditableLineTag::Commandline, None);
-        // OSC 133 "Command start"
-        write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
-            "\x1b]133;C;cmdline_url={}\x07",
-            escape_string(&command, EscapeStringStyle::Url),
-        )
-        .unwrap();
+        osc_133_command_start(
+            &mut BufferedOutputter::new(Outputter::stdoutput()),
+            &command,
+        );
         event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
         let eval_res = reader_run_command(parser, &command);
         signal_clear_cancel();
@@ -706,19 +709,16 @@ fn read_i(parser: &Parser) {
         data.exit_loop_requested |= parser.libdata().exit_current_script;
         parser.libdata_mut().exit_current_script = false;
 
-        // OSC 133 "Command finished"
-        write!(
-            BufferedOuputter::new(&mut Outputter::stdoutput().borrow_mut()),
-            "\x1b]133;D;{}\x07",
-            parser.get_last_status()
-        )
-        .unwrap();
+        osc_133_command_finished(
+            &mut BufferedOutputter::new(Outputter::stdoutput()),
+            parser.get_last_status(),
+        );
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();
 
         // Make cursor visible. Every even vaguely used terminal agrees on this sequence.
-        data.screen.write_bytes(b"\x1b[?25h");
+        data.screen.write_bytes(DECSET_SHOW_CURSOR);
 
         let already_warned = data.did_warn_for_bg_jobs;
         if check_exit_loop_maybe_warning(Some(&mut data)) {
@@ -1451,7 +1451,7 @@ impl ReaderData {
             assert!(wait_guard.is_none());
             *wait_guard = Some(BlockingWait::CursorPosition(cursor_position_wait));
         }
-        let _ = out.write_all(b"\x1b[6n");
+        out.infallible_write(QUERY_CURSOR_POSITION);
         self.save_screen_state();
     }
 
@@ -2150,8 +2150,6 @@ impl ReaderData {
     }
 }
 
-pub const QUERY_PRIMARY_DEVICE_ATTRIBUTE: &[u8] = b"\x1b[0c";
-
 impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
@@ -2206,13 +2204,13 @@ impl<'a> Reader<'a> {
                 let mut out = Outputter::stdoutput().borrow_mut();
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
-                let _ = out.write_all(kitty_progressive_enhancements_query());
+                out.infallible_write(query_kitty_progressive_enhancements());
                 // Query for cursor position reporting support.
                 self.request_cursor_position(&mut out, None);
                 // Query for synchronized output support.
-                let _ = out.write_all(b"\x1b[?2026$p");
-                let _ = out.write_all(b"\x1b[>0q"); // XTVERSION
-                let _ = out.write_all(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
+                out.infallible_write(QUERY_SYNCHRONIZED_OUTPUT);
+                out.infallible_write(QUERY_XTVERSION);
+                out.infallible_write(QUERY_PRIMARY_DEVICE_ATTRIBUTE);
                 out.end_buffering();
             }
         }
@@ -2528,7 +2526,7 @@ impl<'a> Reader<'a> {
                 ImplicitEvent::DisableMouseTracking => {
                     Outputter::stdoutput()
                         .borrow_mut()
-                        .write_wstr(L!("\x1B[?1000l"));
+                        .infallible_write(DECRST_MOUSE_TRACKING);
                     self.save_screen_state();
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
@@ -2580,25 +2578,24 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn xtgettcap(out: &mut impl Write, cap: &str) {
-    FLOG!(
-        reader,
-        format!(
-            "Sending XTGETTCAP request for {}: {:?}",
-            cap,
-            format!("\x1bP+q{}\x1b\\", DisplayAsHex(cap))
-        )
-    );
-    let _ = write!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
+fn send_xtgettcap_query(out: &mut impl InfallibleWrite, cap: &str) {
+    if should_flog!(reader) {
+        let mut tmp = Vec::<u8>::new();
+        query_xtgettcap(&mut tmp, cap);
+        FLOG!(
+            reader,
+            format!("Sending XTGETTCAP request for {}: {:?}", cap, tmp)
+        );
+    }
+    query_xtgettcap(out, cap);
 }
 
-fn query_capabilities_via_dcs(out: &mut impl std::io::Write) {
-    let _ = out.write_all(b"\x1b[?2026h"); // begin synchronized update
-    let _ = out.write_all(b"\x1b[?1049h"); // enable alternative screen buffer
-    xtgettcap(out.by_ref(), "indn");
-    xtgettcap(out.by_ref(), "cuu");
-    let _ = out.write_all(b"\x1b[?1049l"); // disable alternative screen buffer
-    let _ = out.write_all(b"\x1b[?2026l"); // end synchronized update
+fn query_capabilities_via_dcs(out: &mut impl InfallibleWrite) {
+    let _ = out.write_all(DECSET_SYNCHRONIZED_UPDATE); // begin synchronized update
+    let _ = out.write_all(DECSET_ALTERNATE_SCREEN_BUFFER); // enable alternative screen buffer
+    send_xtgettcap_query(out.by_ref(), SCROLL_FORWARD_TERMINFO_NAME);
+    let _ = out.write_all(DECRST_ALTERNATE_SCREEN_BUFFER); // disable alternative screen buffer
+    let _ = out.write_all(DECRST_SYNCHRONIZED_UPDATE); // end synchronized update
 }
 
 impl<'a> Reader<'a> {
@@ -3826,7 +3823,7 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                if !SCROLL_FORWARD_SUPPORTED.load() || !CURSOR_UP_SUPPORTED.load() {
+                if !SCROLL_FORWARD_SUPPORTED.load() {
                     return;
                 }
                 let wait_guard = self.blocking_wait();
@@ -3858,17 +3855,29 @@ impl<'a> Reader<'a> {
 
     fn clear_screen_and_repaint(&mut self) {
         self.parser.libdata_mut().is_repaint = true;
-        let clear = screen_clear();
-        if !clear.is_empty() {
-            // Clear the screen if we can.
-            // This is subtle: We first clear, draw the old prompt,
-            // and *then* reexecute the prompt and overdraw it.
-            // This removes the flicker,
-            // while keeping the prompt up-to-date.
-            Outputter::stdoutput().borrow_mut().write_wstr(&clear);
-            self.screen.reset_line(/*repaint_prompt=*/ true);
-            self.layout_and_repaint(L!("readline"));
-        }
+
+        // Clear the screen.
+        // This is subtle: We first clear, draw the old prompt,
+        // and *then* reexecute the prompt and overdraw it.
+        // This removes the flicker,
+        // while keeping the prompt up-to-date.
+        Outputter::stdoutput()
+            .borrow_mut()
+            .infallible_write(CLEAR_SCREEN);
+        self.screen.reset_line(/*repaint_prompt=*/ true);
+        self.layout_and_repaint(L!("readline"));
+
+        // Clear the screen.
+        // This is subtle: We first clear, draw the old prompt,
+        // and *then* reexecute the prompt and overdraw it.
+        // This removes the flicker,
+        // while keeping the prompt up-to-date.
+        Outputter::stdoutput()
+            .borrow_mut()
+            .infallible_write(CLEAR_SCREEN);
+        self.screen.reset_line(/*repaint_prompt=*/ true);
+        self.layout_and_repaint(L!("readline"));
+
         self.exec_prompt();
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));
@@ -4460,17 +4469,6 @@ fn reader_interactive_init(parser: &Parser) {
     terminal_protocol_hacks();
 }
 
-struct DisplayAsHex<'a>(&'a str);
-
-impl<'a> std::fmt::Display for DisplayAsHex<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for byte in self.0.bytes() {
-            write!(f, "{:x}", byte)?;
-        }
-        Ok(())
-    }
-}
-
 /// Destroy data for interactive use.
 fn reader_interactive_destroy() {
     Outputter::stdoutput()
@@ -4533,22 +4531,16 @@ pub fn reader_write_title(
         Some(&mut lst),
         /*apply_exit_status=*/ false,
     );
+
+    let mut out = BufferedOutputter::new(Outputter::stdoutput());
     if !lst.is_empty() {
-        let mut title_line = L!("\x1B]0;").to_owned();
-        for val in &lst {
-            title_line.push_utfstr(val);
-        }
-        title_line.push_str("\x07"); // BEL
-        let narrow = wcs2string(&title_line);
-        let _ = write_loop(&STDOUT_FILENO, &narrow);
+        osc_0_window_title(&mut out, &lst);
     }
 
-    Outputter::stdoutput()
-        .borrow_mut()
-        .set_color(RgbColor::RESET, RgbColor::RESET);
+    out.set_color(RgbColor::RESET, RgbColor::RESET);
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
-        let _ = write_loop(&STDOUT_FILENO, b"\r");
+        out.infallible_write(b"\r");
     }
 }
 

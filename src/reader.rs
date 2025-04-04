@@ -4831,7 +4831,9 @@ impl ReaderData {
             if search_term != zelf.pager.search_field_line.text() {
                 return; // Stale request.
             }
-            let history_pager = zelf.history_pager.as_mut().unwrap();
+            let Some(history_pager) = zelf.history_pager.as_mut() else {
+                return; // Pager has been closed.
+            };
             history_pager.direction = direction;
             match direction {
                 SearchDirection::Forward => {

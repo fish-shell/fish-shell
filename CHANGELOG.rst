@@ -14,6 +14,7 @@ This release of fish includes the following improvements compared to fish 4.0.1:
 - The cargo completions have been sped up, especially by no longer looking up crates online (:issue:`11347`).
 - The hg prompt no longer errors if $PWD includes a newline (:issue:`11348`).
 - Super-modified keys are no longer inserted
+- A crash when closing the ``ctrl-r`` search has been fixed.
 - Various additions to completions, including git (:issue:`11322`, :issue:`11323`), btrfs (:issue:`11320`), cryptsetup (:issue:`11315`), systemd-analyze (:issue:`11314`),
   wl-randr (:issue:`11301`), jj (:issue:`11046`)
 

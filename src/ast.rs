@@ -98,9 +98,6 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 
 /// Node is the base trait of all AST nodes.
 pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
-    /// The parent node, or None if this is root.
-    fn parent(&self) -> Option<&dyn Node>;
-
     /// The type of this node.
     fn typ(&self) -> Type;
 
@@ -509,9 +506,6 @@ macro_rules! implement_node {
             fn typ(&self) -> Type {
                 Type::$type
             }
-            fn parent(&self) -> Option<&dyn Node> {
-                self.parent.map(|p| unsafe { &*p })
-            }
             fn category(&self) -> Category {
                 Category::$category
             }
@@ -557,10 +551,6 @@ macro_rules! implement_leaf {
                 visitor.did_visit_fields_of(self, VisitResult::Continue(()));
             }
         }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {}
-        }
     };
 }
 
@@ -569,7 +559,6 @@ macro_rules! define_keyword_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
@@ -610,7 +599,6 @@ macro_rules! define_token_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
         }
@@ -664,7 +652,6 @@ macro_rules! define_list_node {
     ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
             list_contents: Box<[$contents]>,
         }
         implement_node!($name, list, $type);
@@ -710,15 +697,6 @@ macro_rules! define_list_node {
                     Self, accept_mut, visit_mut, self, visitor, reversed, $contents
                 );
                 visitor.did_visit_fields_of(self, flow);
-            }
-        }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {
-                for i in 0..self.count() {
-                    self[i].parent = Some(self);
-                    self[i].set_parents();
-                }
             }
         }
     };
@@ -809,14 +787,6 @@ macro_rules! implement_acceptor_for_branch {
                                 reversed,
                                 ( $( $field_name: $field_type, )* ));
                 visitor.did_visit_fields_of(self, flow);
-            }
-        }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {
-                $(
-                    set_parent_of_field!(self, $field_name, $field_type);
-                )*
             }
         }
     }
@@ -1017,108 +987,10 @@ macro_rules! visit_result {
     };
 }
 
-macro_rules! set_parent_of_field {
-    (
-        $self:ident,
-        $field_name:ident,
-        (variant<$field_type:ident>)
-    ) => {
-        set_parent_of_union_field!($self, $field_name, $field_type);
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        (Option<$field_type:ident>)
-    ) => {
-        if $self.$field_name.is_some() {
-            $self.$field_name.as_mut().unwrap().parent = Some($self);
-            $self.$field_name.as_mut().unwrap().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        $field_type:tt
-    ) => {
-        $self.$field_name.parent = Some($self);
-        $self.$field_name.set_parents();
-    };
-}
-
-macro_rules! set_parent_of_union_field {
-    (
-        $self:ident,
-        $field_name:ident,
-        ArgumentOrRedirectionVariant
-    ) => {
-        if matches!($self.$field_name, ArgumentOrRedirectionVariant::Argument(_)) {
-            $self.$field_name.as_mut_argument().parent = Some($self);
-            $self.$field_name.as_mut_argument().set_parents();
-        } else {
-            $self.$field_name.as_mut_redirection().parent = Some($self);
-            $self.$field_name.as_mut_redirection().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        StatementVariant
-    ) => {
-        if matches!($self.$field_name, StatementVariant::NotStatement(_)) {
-            $self.$field_name.as_mut_not_statement().parent = Some($self);
-            $self.$field_name.as_mut_not_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::BlockStatement(_)) {
-            $self.$field_name.as_mut_block_statement().parent = Some($self);
-            $self.$field_name.as_mut_block_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::BraceStatement(_)) {
-            $self.$field_name.as_mut_brace_statement().parent = Some($self);
-            $self.$field_name.as_mut_brace_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::IfStatement(_)) {
-            $self.$field_name.as_mut_if_statement().parent = Some($self);
-            $self.$field_name.as_mut_if_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::SwitchStatement(_)) {
-            $self.$field_name.as_mut_switch_statement().parent = Some($self);
-            $self.$field_name.as_mut_switch_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::DecoratedStatement(_)) {
-            $self.$field_name.as_mut_decorated_statement().parent = Some($self);
-            $self.$field_name.as_mut_decorated_statement().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        BlockStatementHeaderVariant
-    ) => {
-        if matches!($self.$field_name, BlockStatementHeaderVariant::ForHeader(_)) {
-            $self.$field_name.as_mut_for_header().parent = Some($self);
-            $self.$field_name.as_mut_for_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::WhileHeader(_)
-        ) {
-            $self.$field_name.as_mut_while_header().parent = Some($self);
-            $self.$field_name.as_mut_while_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::FunctionHeader(_)
-        ) {
-            $self.$field_name.as_mut_function_header().parent = Some($self);
-            $self.$field_name.as_mut_function_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::BeginHeader(_)
-        ) {
-            $self.$field_name.as_mut_begin_header().parent = Some($self);
-            $self.$field_name.as_mut_begin_header().set_parents();
-        }
-    };
-}
-
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
 /// Note that pipes are not redirections.
 #[derive(Default, Debug)]
 pub struct Redirection {
-    parent: Option<*const dyn Node>,
     pub oper: TokenRedirection,
     pub target: String_,
 }
@@ -1159,7 +1031,6 @@ impl ConcreteNodeMut for VariableAssignmentList {
 /// An argument or redirection holds either an argument or redirection.
 #[derive(Default, Debug)]
 pub struct ArgumentOrRedirection {
-    parent: Option<*const dyn Node>,
     pub contents: ArgumentOrRedirectionVariant,
 }
 implement_node!(ArgumentOrRedirection, branch, argument_or_redirection);
@@ -1203,7 +1074,6 @@ impl ConcreteNodeMut for ArgumentOrRedirectionList {
 /// A statement is a normal command, or an if / while / etc
 #[derive(Default, Debug)]
 pub struct Statement {
-    parent: Option<*const dyn Node>,
     pub contents: StatementVariant,
 }
 implement_node!(Statement, branch, statement);
@@ -1223,7 +1093,6 @@ impl ConcreteNodeMut for Statement {
 /// like if statements, where we require a command).
 #[derive(Default, Debug)]
 pub struct JobPipeline {
-    parent: Option<*const dyn Node>,
     /// Maybe the time keyword.
     pub time: Option<KeywordTime>,
     /// A (possibly empty) list of variable assignments.
@@ -1258,7 +1127,6 @@ impl ConcreteNodeMut for JobPipeline {
 /// A job_conjunction is a job followed by a && or || continuations.
 #[derive(Default, Debug)]
 pub struct JobConjunction {
-    parent: Option<*const dyn Node>,
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
     /// The job itself.
@@ -1303,7 +1171,6 @@ impl CheckParse for JobConjunction {
 
 #[derive(Default, Debug)]
 pub struct ForHeader {
-    parent: Option<*const dyn Node>,
     /// 'for'
     pub kw_for: KeywordFor,
     /// var_name
@@ -1337,7 +1204,6 @@ impl ConcreteNodeMut for ForHeader {
 
 #[derive(Default, Debug)]
 pub struct WhileHeader {
-    parent: Option<*const dyn Node>,
     /// 'while'
     pub kw_while: KeywordWhile,
     pub condition: JobConjunction,
@@ -1363,7 +1229,6 @@ impl ConcreteNodeMut for WhileHeader {
 
 #[derive(Default, Debug)]
 pub struct FunctionHeader {
-    parent: Option<*const dyn Node>,
     pub kw_function: KeywordFunction,
     /// functions require at least one argument.
     pub first_arg: Argument,
@@ -1391,7 +1256,6 @@ impl ConcreteNodeMut for FunctionHeader {
 
 #[derive(Default, Debug)]
 pub struct BeginHeader {
-    parent: Option<*const dyn Node>,
     pub kw_begin: KeywordBegin,
     /// Note that 'begin' does NOT require a semi or nl afterwards.
     /// This is valid: begin echo hi; end
@@ -1416,7 +1280,6 @@ impl ConcreteNodeMut for BeginHeader {
 
 #[derive(Default, Debug)]
 pub struct BlockStatement {
-    parent: Option<*const dyn Node>,
     /// A header like for, while, etc.
     pub header: BlockStatementHeaderVariant,
     /// List of jobs in this block.
@@ -1447,7 +1310,6 @@ impl ConcreteNodeMut for BlockStatement {
 
 #[derive(Default, Debug)]
 pub struct BraceStatement {
-    parent: Option<*const dyn Node>,
     /// The opening brace, in command position.
     pub left_brace: TokenLeftBrace,
     /// List of jobs in this block.
@@ -1478,7 +1340,6 @@ impl ConcreteNodeMut for BraceStatement {
 
 #[derive(Default, Debug)]
 pub struct IfClause {
-    parent: Option<*const dyn Node>,
     /// The 'if' keyword.
     pub kw_if: KeywordIf,
     /// The 'if' condition.
@@ -1509,7 +1370,6 @@ impl ConcreteNodeMut for IfClause {
 
 #[derive(Default, Debug)]
 pub struct ElseifClause {
-    parent: Option<*const dyn Node>,
     /// The 'else' keyword.
     pub kw_else: KeywordElse,
     /// The 'if' clause following it.
@@ -1552,7 +1412,6 @@ impl ConcreteNodeMut for ElseifClauseList {
 
 #[derive(Default, Debug)]
 pub struct ElseClause {
-    parent: Option<*const dyn Node>,
     /// else ; body
     pub kw_else: KeywordElse,
     pub semi_nl: Option<SemiNl>,
@@ -1583,7 +1442,6 @@ impl CheckParse for ElseClause {
 
 #[derive(Default, Debug)]
 pub struct IfStatement {
-    parent: Option<*const dyn Node>,
     /// if part
     pub if_clause: IfClause,
     /// else if list
@@ -1617,7 +1475,6 @@ impl ConcreteNodeMut for IfStatement {
 
 #[derive(Default, Debug)]
 pub struct CaseItem {
-    parent: Option<*const dyn Node>,
     /// case \<arguments\> ; body
     pub kw_case: KeywordCase,
     pub arguments: ArgumentList,
@@ -1650,7 +1507,6 @@ impl CheckParse for CaseItem {
 
 #[derive(Default, Debug)]
 pub struct SwitchStatement {
-    parent: Option<*const dyn Node>,
     /// switch \<argument\> ; body ; end args_redirs
     pub kw_switch: KeywordSwitch,
     pub argument: Argument,
@@ -1684,7 +1540,6 @@ impl ConcreteNodeMut for SwitchStatement {
 /// "builtin" or "command" or "exec"
 #[derive(Default, Debug)]
 pub struct DecoratedStatement {
-    parent: Option<*const dyn Node>,
     /// An optional decoration (command, builtin, exec, etc).
     pub opt_decoration: Option<DecoratedStatementDecorator>,
     /// Command to run.
@@ -1713,7 +1568,6 @@ impl ConcreteNodeMut for DecoratedStatement {
 /// A not statement like `not true` or `! true`
 #[derive(Default, Debug)]
 pub struct NotStatement {
-    parent: Option<*const dyn Node>,
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
     pub time: Option<KeywordTime>,
@@ -1741,7 +1595,6 @@ impl ConcreteNodeMut for NotStatement {
 
 #[derive(Default, Debug)]
 pub struct JobContinuation {
-    parent: Option<*const dyn Node>,
     pub pipe: TokenPipe,
     pub newlines: MaybeNewlines,
     pub variables: VariableAssignmentList,
@@ -1785,7 +1638,6 @@ impl ConcreteNodeMut for JobContinuationList {
 
 #[derive(Default, Debug)]
 pub struct JobConjunctionContinuation {
-    parent: Option<*const dyn Node>,
     /// The && or || token.
     pub conjunction: TokenConjunction,
     pub newlines: MaybeNewlines,
@@ -1825,7 +1677,6 @@ impl CheckParse for JobConjunctionContinuation {
 /// instances of this.
 #[derive(Default, Debug)]
 pub struct AndorJob {
-    parent: Option<*const dyn Node>,
     pub job: JobConjunction,
 }
 implement_node!(AndorJob, branch, andor_job);
@@ -1873,7 +1724,6 @@ impl ConcreteNodeMut for AndorJobList {
 /// In practice the tok_ends are ignored by fish code so we do not bother to store them.
 #[derive(Default, Debug)]
 pub struct FreestandingArgumentList {
-    parent: Option<*const dyn Node>,
     pub arguments: ArgumentList,
 }
 implement_node!(FreestandingArgumentList, branch, freestanding_argument_list);
@@ -1947,7 +1797,6 @@ impl ConcreteNodeMut for CaseItemList {
 /// A variable_assignment contains a source range like FOO=bar.
 #[derive(Default, Debug)]
 pub struct VariableAssignment {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(VariableAssignment, leaf, variable_assignment);
@@ -1988,7 +1837,6 @@ impl CheckParse for VariableAssignment {
 /// Zero or more newlines.
 #[derive(Default, Debug)]
 pub struct MaybeNewlines {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(MaybeNewlines, leaf, maybe_newlines);
@@ -2014,7 +1862,6 @@ impl ConcreteNodeMut for MaybeNewlines {
 /// This is a separate type because it is sometimes useful to find all arguments.
 #[derive(Default, Debug)]
 pub struct Argument {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(Argument, leaf, argument);
@@ -2658,9 +2505,6 @@ impl Ast {
     /// Return the top node. This has the type requested in the 'parse' method.
     pub fn top(&self) -> &dyn Node {
         self.top.as_node()
-    }
-    fn top_mut(&mut self) -> &mut dyn NodeMut {
-        &mut *self.top
     }
     /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {
@@ -4104,25 +3948,6 @@ fn parse_from_top(
         semis: pops.semis,
         errors: pops.errors,
     };
-
-    if top_type == Type::job_list {
-        // Set all parent nodes.
-        // It turns out to be more convenient to do this after the parse phase.
-        // Note: parent nodes are implemented as raw pointers! This means that the contents Ast must not
-        // change or move after construction.
-        ast.top_mut()
-            .as_mut_job_list()
-            .as_mut()
-            .unwrap()
-            .set_parents();
-    } else {
-        ast.top_mut()
-            .as_mut_freestanding_argument_list()
-            .as_mut()
-            .unwrap()
-            .set_parents();
-    }
-
     ast
 }
 

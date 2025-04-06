@@ -18,7 +18,6 @@ use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
 use crate::signal::{signal_set_handlers_once, Signal};
-use crate::terminal::term;
 use crate::threads::MainThread;
 use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
@@ -1214,7 +1213,7 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8)
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// Return whether text was printed to stdout.
-pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
+pub fn job_reap(parser: &Parser, interactive: bool) -> bool {
     parser.assert_can_execute();
 
     // Early out for the common case that there are no jobs.
@@ -1223,7 +1222,7 @@ pub fn job_reap(parser: &Parser, allow_interactive: bool) -> bool {
     }
 
     process_mark_finished_children(parser, false /* not block_ok */);
-    process_clean_after_marking(parser, allow_interactive)
+    process_clean_after_marking(parser, interactive)
 }
 
 /// Return the list of background jobs which we should warn the user about, if the user attempts to
@@ -1774,7 +1773,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// Return whether something was printed.
-fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool {
+fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
     parser.assert_can_execute();
 
     // This function may fire an event handler, we do not want to call ourselves recursively (to
@@ -1784,10 +1783,6 @@ fn process_clean_after_marking(parser: &Parser, allow_interactive: bool) -> bool
     }
 
     let _cleaning = parser.push_scope(|s| s.is_cleaning_procs = true);
-
-    // This may be invoked in an exit handler, after the TERM has been torn down
-    // Don't try to print in that case (#3222)
-    let interactive = allow_interactive && term().is_some();
 
     // Remove all disowned jobs.
     remove_disowned_jobs(&mut parser.jobs_mut());

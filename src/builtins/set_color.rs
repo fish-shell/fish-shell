@@ -4,7 +4,7 @@ use super::prelude::*;
 use crate::color::RgbColor;
 use crate::common::str2wcstring;
 use crate::output::{self, Outputter};
-use crate::terminal::{self, Term};
+use crate::terminal::{self, term, Term};
 
 #[allow(clippy::too_many_arguments)]
 fn print_modifiers(
@@ -79,9 +79,16 @@ fn print_colors(
     let term = terminal::term();
     for color_name in args {
         if streams.out_is_terminal() {
-            if let Some(term) = term.as_ref() {
-                print_modifiers(outp, term, bold, underline, italics, dim, reverse, bg);
-            }
+            print_modifiers(
+                outp,
+                term.as_ref(),
+                bold,
+                underline,
+                italics,
+                dim,
+                reverse,
+                bg,
+            );
             let color = RgbColor::from_wstr(color_name).unwrap_or(RgbColor::NONE);
             outp.set_color(color, RgbColor::NONE);
             if !bg.is_none() {
@@ -92,9 +99,7 @@ fn print_colors(
         if !bg.is_none() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            if let Some(term) = term.as_ref() {
-                outp.tputs_if_some(&term.exit_attribute_mode);
-            }
+            outp.tputs_if_some(&term.exit_attribute_mode);
         }
         outp.writech('\n');
     } // conveniently, 'normal' is always the last color so we don't need to reset here
@@ -217,9 +222,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
     // just give up...
-    let Some(term) = terminal::term() else {
-        return Err(STATUS_CMD_ERROR);
-    };
+    let term = term();
     let Some(exit_attribute_mode) = &term.exit_attribute_mode else {
         return Err(STATUS_CMD_ERROR);
     };

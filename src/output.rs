@@ -2,7 +2,7 @@
 use crate::color::{self, RgbColor};
 use crate::common::{self, wcs2string_appending};
 use crate::env::EnvVar;
-use crate::terminal::{self, tparm1, Term};
+use crate::terminal::{tparm1, Term};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use bitflags::bitflags;
@@ -173,18 +173,15 @@ impl Outputter {
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
     pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
-        let Some(term) = terminal::term() else {
-            return false;
-        };
-        let term: &Term = &term;
+        let term = crate::terminal::term();
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);
             if is_fg {
-                return write_foreground_color(self, idx, term);
+                return write_foreground_color(self, idx, &term);
             } else {
-                return write_background_color(self, idx, term);
+                return write_background_color(self, idx, &term);
             };
         }
 
@@ -223,10 +220,7 @@ impl Outputter {
     pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
         // Test if we have at least basic support for setting fonts, colors and related bits - otherwise
         // just give up...
-        let Some(term) = terminal::term() else {
-            return;
-        };
-        let term: &Term = &term;
+        let term = crate::terminal::term();
         let Term {
             enter_bold_mode,
             enter_underline_mode,
@@ -238,7 +232,7 @@ impl Outputter {
             enter_standout_mode,
             exit_attribute_mode,
             ..
-        } = term;
+        } = &*term;
         let Some(exit_attribute_mode) = exit_attribute_mode else {
             return;
         };
@@ -261,7 +255,7 @@ impl Outputter {
             self.reset_modes();
             // If we exit attribute mode, we must first set a color, or previously colored text might
             // lose its color. Terminals are weird...
-            write_foreground_color(self, 0, term);
+            write_foreground_color(self, 0, &term);
             self.tputs(exit_attribute_mode);
             return;
         }
@@ -304,7 +298,7 @@ impl Outputter {
                 self.tputs(exit_attribute_mode);
                 self.reset_modes();
                 // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-                if write_foreground_color(self, 0, term) {
+                if write_foreground_color(self, 0, &term) {
                     self.last_color = RgbColor::BLACK;
                 }
             }
@@ -312,7 +306,7 @@ impl Outputter {
 
         if self.last_color != fg {
             if fg.is_normal() {
-                write_foreground_color(self, 0, term);
+                write_foreground_color(self, 0, &term);
                 self.tputs(exit_attribute_mode);
 
                 self.last_color2 = RgbColor::NORMAL;
@@ -325,7 +319,7 @@ impl Outputter {
 
         if self.last_color2 != bg {
             if bg.is_normal() {
-                write_background_color(self, 0, term);
+                write_background_color(self, 0, &term);
 
                 self.tputs(exit_attribute_mode);
                 if !self.last_color.is_normal() {

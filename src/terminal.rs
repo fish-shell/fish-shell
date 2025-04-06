@@ -13,10 +13,6 @@ use std::sync::Mutex;
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].
 ///
-/// It isn't guaranteed that fish will ever be able to successfully call `setup()`, so this must
-/// remain an `Option` instead of returning `Term` by default and just panicking if [`term()`] was
-/// called before `setup()`.
-///
 /// We can't just use an [`AtomicPtr<Arc<Term>>`](std::sync::atomic::AtomicPtr) here because there's a race condition when the old Arc
 /// gets dropped - we would obtain the current (non-null) value of `TERM` in [`term()`] but there's
 /// no guarantee that a simultaneous call to [`setup()`] won't result in this refcount being
@@ -26,11 +22,8 @@ pub static TERM: Mutex<Option<Arc<Term>>> = Mutex::new(None);
 
 /// Returns a reference to the global [`Term`] singleton or `None` if not preceded by a successful
 /// call to [`terminal::setup()`](setup).
-pub fn term() -> Option<Arc<Term>> {
-    TERM.lock()
-        .expect("Mutex poisoned!")
-        .as_ref()
-        .map(Arc::clone)
+pub fn term() -> Arc<Term> {
+    Arc::clone(TERM.lock().expect("Mutex poisoned!").as_ref().unwrap())
 }
 
 /// The safe wrapper around terminfo functionality, initialized by a successful call to [`setup()`]

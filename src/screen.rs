@@ -667,7 +667,6 @@ impl Screen {
         // omitted_newline_char in common.rs.
         let non_space_width = get_omitted_newline_width();
         let term = term();
-        let term = term.as_ref();
         // We do `>` rather than `>=` because the code below might require one extra space.
         if screen_width > non_space_width {
             let mut justgrey = true;
@@ -678,18 +677,15 @@ impl Screen {
                 abandon_line_string.push_utfstr(&str2wcstring(s.as_bytes()));
                 true
             };
-            if let Some(enter_dim_mode) = term.and_then(|term| term.enter_dim_mode.as_ref()) {
+            if let Some(enter_dim_mode) = term.enter_dim_mode.as_ref() {
                 if add(&mut abandon_line_string, Some(enter_dim_mode.clone())) {
                     // Use dim if they have it, so the color will be based on their actual normal
                     // color and the background of the terminal.
                     justgrey = false;
                 }
             }
-            if let (true, Some(set_a_foreground)) = (
-                justgrey,
-                term.and_then(|term| term.set_a_foreground.as_ref()),
-            ) {
-                let max_colors = term.unwrap().max_colors.unwrap_or_default();
+            if let (true, Some(set_a_foreground)) = (justgrey, term.set_a_foreground.as_ref()) {
+                let max_colors = term.max_colors.unwrap_or_default();
                 if max_colors >= 238 {
                     // draw the string in a particular grey
                     add(&mut abandon_line_string, tparm1(set_a_foreground, 237));
@@ -697,7 +693,7 @@ impl Screen {
                     // bright black (the ninth color, looks grey)
                     add(&mut abandon_line_string, tparm1(set_a_foreground, 8));
                 } else if max_colors >= 2 {
-                    if let Some(enter_bold_mode) = term.unwrap().enter_bold_mode.as_ref() {
+                    if let Some(enter_bold_mode) = term.enter_bold_mode.as_ref() {
                         // we might still get that color by setting black and going bold for bright
                         add(&mut abandon_line_string, Some(enter_bold_mode.clone()));
                         add(&mut abandon_line_string, tparm1(set_a_foreground, 0));
@@ -707,9 +703,7 @@ impl Screen {
 
             abandon_line_string.push_utfstr(&get_omitted_newline_str());
 
-            if let Some(exit_attribute_mode) =
-                term.and_then(|term| term.exit_attribute_mode.as_ref())
-            {
+            if let Some(exit_attribute_mode) = term.exit_attribute_mode.as_ref() {
                 // normal text ANSI escape sequence
                 add(&mut abandon_line_string, Some(exit_attribute_mode.clone()));
             }
@@ -739,7 +733,7 @@ impl Screen {
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
         if !is_dumb() {
-            if let Some(clr_eol) = term.unwrap().clr_eol.as_ref() {
+            if let Some(clr_eol) = term.clr_eol.as_ref() {
                 abandon_line_string.push_utfstr(&str2wcstring(clr_eol.as_bytes()));
             }
         }
@@ -909,10 +903,7 @@ impl Screen {
         let y_steps =
             isize::try_from(new_y).unwrap() - isize::try_from(self.actual.cursor.y).unwrap();
 
-        let Some(term) = term() else {
-            return;
-        };
-        let term = term.as_ref();
+        let term = term();
 
         let s = if y_steps < 0 {
             term.cursor_up.as_ref()
@@ -1101,12 +1092,11 @@ impl Screen {
         }
 
         let term = term();
-        let term = term.as_ref();
 
         // Output the left prompt if it has changed.
         if self.scrolled() && !is_final_rendering {
             self.r#move(0, 0);
-            self.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+            self.write_mbs_if_some(&term.clr_eol.as_ref());
             self.actual_left_prompt = None;
             self.actual.cursor.x = 0;
         } else if self
@@ -1130,7 +1120,7 @@ impl Screen {
                 || (self.scrolled() && is_final_rendering)
             {
                 for (i, &line_break) in left_prompt_layout.line_breaks.iter().enumerate() {
-                    self.write_mbs_if_some(&term.and_then(|term| term.clr_eol.as_ref()));
+                    self.write_mbs_if_some(&term.clr_eol);
                     if i == 0 {
                         osc_133_prompt_start(self);
                     }
@@ -1167,7 +1157,7 @@ impl Screen {
             // Don't issue clr_eos if we think the cursor will end up in the last column - see #6951.
             let should_clear_screen_this_line = need_clear_screen
                 && i + 1 == self.desired.line_count()
-                && term.is_some_and(|term| term.clr_eos.is_some())
+                && term.clr_eos.is_some()
                 && !(self.desired.cursor.x == 0
                     && self.desired.cursor.y == self.desired.line_count());
 
@@ -1184,11 +1174,11 @@ impl Screen {
             if shared_prefix < o_line(self, i).indentation {
                 if o_line(self, i).indentation > s_line(self, i).indentation
                     && !has_cleared_screen
-                    && term.is_some_and(|term| term.clr_eol.is_some() && term.clr_eos.is_some())
+                    && term.clr_eol.is_some()
+                    && term.clr_eos.is_some()
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(0, i);
-                    let term = term.unwrap();
                     self.write_mbs_if_some(if should_clear_screen_this_line {
                         &term.clr_eos
                     } else {
@@ -1248,7 +1238,7 @@ impl Screen {
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);
-                    self.write_mbs_if_some(&term.and_then(|term| term.clr_eos.as_ref()));
+                    self.write_mbs_if_some(&term.clr_eos.as_ref());
                     has_cleared_screen = true;
                 }
                 if done {
@@ -1291,9 +1281,7 @@ impl Screen {
             // This means that we switch background correctly on the next,
             // including our weird implicit bolding.
             set_color(self, HighlightSpec::new());
-            if let (true, Some(clr_eol)) =
-                (clear_remainder, term.and_then(|term| term.clr_eol.as_ref()))
-            {
+            if let (true, Some(clr_eol)) = (clear_remainder, term.clr_eol.as_ref()) {
                 self.r#move(current_width, i);
                 self.write_mbs(clr_eol);
             }
@@ -1332,11 +1320,9 @@ impl Screen {
         }
 
         // Clear remaining lines (if any) if we haven't cleared the screen.
-        if let (false, true, Some(clr_eol)) = (
-            has_cleared_screen,
-            need_clear_screen,
-            term.and_then(|term| term.clr_eol.as_ref()),
-        ) {
+        if let (false, true, Some(clr_eol)) =
+            (has_cleared_screen, need_clear_screen, term.clr_eol.as_ref())
+        {
             set_color(self, HighlightSpec::new());
             for i in self.desired.line_count()..lines_with_stuff {
                 self.r#move(0, i);
@@ -1366,7 +1352,7 @@ pub fn mtime_stdout_stderr() -> (Option<SystemTime>, Option<SystemTime>) {
 pub fn screen_force_clear_to_end() {
     Outputter::stdoutput()
         .borrow_mut()
-        .tputs_if_some(&term().unwrap().clr_eos);
+        .tputs_if_some(&term().clr_eos);
 }
 
 /// Information about the layout of a prompt.
@@ -1587,7 +1573,6 @@ pub fn escape_code_length(code: &wstr) -> Option<usize> {
 
 pub fn screen_clear() -> WString {
     term()
-        .unwrap()
         .clear_screen
         .as_ref()
         .map(|clear_screen| str2wcstring(clear_screen.as_bytes()))
@@ -1621,7 +1606,7 @@ fn try_sequence(seq: &[u8], s: &wstr) -> usize {
 /// Returns the number of columns left until the next tab stop, given the current cursor position.
 fn next_tab_stop(current_line_width: usize) -> usize {
     // Assume tab stops every 8 characters if undefined.
-    let tab_width = term().unwrap().init_tabs.unwrap_or(8);
+    let tab_width = term().init_tabs.unwrap_or(8);
     ((current_line_width / tab_width) + 1) * tab_width
 }
 
@@ -1629,7 +1614,7 @@ fn next_tab_stop(current_line_width: usize) -> usize {
 /// physical line on a wrapped logical line; instead we just output it.
 fn allow_soft_wrap() -> bool {
     // Should we be looking at eat_newline_glitch as well?
-    term().unwrap().auto_right_margin
+    term().auto_right_margin
 }
 
 /// Does this look like the escape sequence for setting a screen name?
@@ -1747,7 +1732,7 @@ fn is_csi_style_escape_seq(code: &wstr) -> Option<usize> {
 /// Detect whether the escape sequence sets one of the terminal attributes that affects how text is
 /// displayed other than the color.
 fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
-    let term = term()?;
+    let term = term();
     let esc2 = [
         &term.enter_bold_mode,
         &term.exit_attribute_mode,
@@ -1930,12 +1915,11 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
 
 /// Returns true if we are using a dumb terminal.
 pub(crate) fn is_dumb() -> bool {
-    term().is_none_or(|term| {
-        term.cursor_up.is_none()
-            || term.cursor_down.is_none()
-            || term.cursor_left.is_none()
-            || term.cursor_right.is_none()
-    })
+    let term = term();
+    term.cursor_up.is_none()
+        || term.cursor_down.is_none()
+        || term.cursor_left.is_none()
+        || term.cursor_right.is_none()
 }
 
 // Exposed for testing.

@@ -382,7 +382,7 @@ fn update_fish_color_support(vars: &EnvStack) {
         .get(L!("TERM"))
         .map(|v| v.as_string())
         .unwrap_or_else(WString::new);
-    let max_colors = terminal::term().and_then(|term| term.max_colors);
+    let max_colors = terminal::term().max_colors;
     let mut supports_256color = false;
     let mut supports_24bit = false;
 
@@ -578,9 +578,7 @@ fn init_terminal(vars: &EnvStack) {
     apply_non_term_hacks(vars);
 
     // Store some global variables that reflect the term's capabilities
-    if let Some(term) = terminal::term() {
-        TERM_HAS_XN.store(term.eat_newline_glitch, Ordering::Relaxed);
-    }
+    TERM_HAS_XN.store(terminal::term().eat_newline_glitch, Ordering::Relaxed);
 
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.

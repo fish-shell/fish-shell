@@ -8,7 +8,7 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- Tokens like `{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
+- Tokens like ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
 
 Scripting improvements
@@ -26,7 +26,7 @@ Interactive improvements
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^
 - On non-macOS systems, :kbd:`alt-left`, :kbd:`alt-right`, :kbd:`alt-backspace`, :kbd:`alt-delete` no longer operate on punctuation-delimited words but on whole arguments, possibly including special characters like ``/`` and quoted spaces.
-  On macOS, the same corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
+  On macOS, the corresponding :kbd:`ctrl-` prefixed keys operate on whole arguments.
   Word operations are still available via the other respective modifier, same as in the browser.
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.

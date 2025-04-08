@@ -1,4 +1,4 @@
-# resolvectl (systemd 250)
+# resolvectl (systemd 256)
 
 function __resolvectl_interfaces
     resolvectl status | string replace -fr '^Link\s+\d+\s+\((.*)\)$' '$1'
@@ -17,16 +17,16 @@ function __resolvectl_classes
 end
 
 function __resolvectl_commands
-    printf "%b\n" "query\tResolve domain names or IP addresses" \
-        "query\tResolve domain names, IPv4 and IPv6 addresses" \
+    printf "%b\n" \
+        "query\tResolve domain names or IP addresses" \
         "service\tResolve service records" \
         "openpgp\tQuery PGP keys for email" \
         "tlsa\tQuery TLS public keys" \
         "status\tShow current DNS settings" \
         "statistics\tShow resolver statistics" \
         "reset-statistics\tReset statistics counters" \
-        "flush-caches\tFlush DNS RR caches" \
-        "reset-server-features\tFlushe all feature level information" \
+        "flush-caches\tFlush all local DNS caches" \
+        "reset-server-features\tForget learnt DNS server feature levels" \
         "monitor\tMonitor DNS queries" \
         "show-cache\tShow cache contents" \
         "show-server-state\tShow server state" \
@@ -35,10 +35,10 @@ function __resolvectl_commands
         "default-route\tSet per-interface default route flag" \
         "llmnr\tSet per-interface LLMNR settings" \
         "mdns\tSet per-interface MulticastDNS settings" \
-        "dnssec\tSet per-interface DNSSEC settings" \
         "dnsovertls\tSet per-interface DNS-over-TLS settings" \
-        "nta\tSet per-interface DNSSEC NTA domains" \
-        "revert\tRevert the per-interface DNS configuration" \
+        "dnssec\tSet per-interface DNSSEC mode" \
+        "nta\tSet per-interface DNSSEC NTA" \
+        "revert\tRevert per-interface DNS configuration" \
         "log-level\tSet the log-level"
 end
 
@@ -64,12 +64,16 @@ complete -c resolvectl -l cname -xa "true false" -d "Follow CNAME redirects"
 complete -c resolvectl -l validate -xa "true false" -d "Allow DNSSEC validation"
 complete -c resolvectl -l synthesize -xa "true false" -d "Allow synthetic response"
 complete -c resolvectl -l cache -xa "true false" -d "Allow response from cache"
+complete -c resolvectl -l stale-data -xa "true false" -d "Allow response from cache with stale data"
+complete -c resolvectl -l relax-single-label -xa "true false" -d "Allow single label lookups to go upstream"
 complete -c resolvectl -l zone -xa "true false" -d "Allow response from locally registered mDNS/LLMNR records"
 complete -c resolvectl -l trust-anchor -xa "true false" -d "Use local trust anchors"
 complete -c resolvectl -l network -xa "true false" -d "Allow response from network"
 complete -c resolvectl -l search -xa "true false" -d "Use search domains for single-label names"
 complete -c resolvectl -l raw -xa "payload packet" -d "Dump answer as binary data"
 complete -c resolvectl -l legend -xa "true false" -d "Print headers and meta info"
+complete -c resolvectl -l json -xa "short pretty off" -d "Output as JSON in specified mode"
+complete -c resolvectl -s j -d "Output as JSON"
 complete -c resolvectl -l help -s h -d "Show help"
 complete -c resolvectl -l version -d "Show version"
 complete -c resolvectl -l no-pager -d "Do not pipe output into a pager"

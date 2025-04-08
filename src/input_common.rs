@@ -1534,11 +1534,11 @@ pub trait InputEventQueuer {
                 str2wcstring(&value)
             )
         );
-        if key == b"indn" && matches!(&value[..], b"\x1b[%p1%dS" | b"\\E[%p1%dS") {
+        if key == b"indn" {
             SCROLL_FORWARD_SUPPORTED.store(true);
             FLOG!(reader, "Scroll forward is supported");
         }
-        if key == b"cuu" && matches!(&value[..], b"\x1b[%p1%dA" | b"\\E[%p1%dA") {
+        if key == b"cuu" {
             CURSOR_UP_SUPPORTED.store(true);
             FLOG!(reader, "Cursor up is supported");
         }

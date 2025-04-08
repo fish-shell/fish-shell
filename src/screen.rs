@@ -1734,18 +1734,10 @@ fn is_visual_escape_seq(code: &wstr) -> Option<usize> {
         &term.enter_underline_mode,
         &term.exit_underline_mode,
         &term.enter_standout_mode,
-        &term.exit_standout_mode,
-        &term.enter_blink_mode,
-        &term.enter_protected_mode,
         &term.enter_italics_mode,
         &term.exit_italics_mode,
         &term.enter_reverse_mode,
-        &term.enter_shadow_mode,
-        &term.exit_shadow_mode,
-        &term.enter_secure_mode,
         &term.enter_dim_mode,
-        &term.enter_alt_charset_mode,
-        &term.exit_alt_charset_mode,
     ];
 
     for p in &esc2 {

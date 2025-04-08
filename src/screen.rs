@@ -17,7 +17,7 @@ use std::collections::LinkedList;
 use std::ffi::{CStr, CString};
 use std::io::Write;
 use std::ops::Range;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
@@ -27,7 +27,7 @@ use crate::common::{
     get_ellipsis_char, get_omitted_newline_str, get_omitted_newline_width,
     has_working_tty_timestamps, shell_modes, str2wcstring, wcs2string, write_loop,
 };
-use crate::env::{Environment, TERM_HAS_XN};
+use crate::env::Environment;
 use crate::fallback::fish_wcwidth;
 use crate::flog::FLOGF;
 #[allow(unused_imports)]
@@ -708,12 +708,7 @@ impl Screen {
                 add(&mut abandon_line_string, Some(exit_attribute_mode.clone()));
             }
 
-            let newline_glitch_width = if TERM_HAS_XN.load(Ordering::Relaxed) {
-                0
-            } else {
-                1
-            };
-            for _ in 0..screen_width - non_space_width - newline_glitch_width {
+            for _ in 0..screen_width - non_space_width {
                 abandon_line_string.push(' ');
             }
         }

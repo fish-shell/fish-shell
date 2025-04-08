@@ -1,7 +1,7 @@
 use crate::common::ToCString;
 use crate::complete::complete_invalidate_path;
 use crate::env::{setenv_lock, unsetenv_lock, EnvMode, EnvStack, Environment};
-use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT, TERM_HAS_XN};
+use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::flog::FLOG;
 use crate::function;
 use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
@@ -577,9 +577,6 @@ fn init_terminal(vars: &EnvStack) {
 
     // Configure hacks that apply regardless of whether we successfully init
     apply_non_term_hacks(vars);
-
-    // Store some global variables that reflect the term's capabilities
-    TERM_HAS_XN.store(terminal::term().eat_newline_glitch, Ordering::Relaxed);
 
     update_fish_color_support(vars);
     // Invalidate the cached escape sequences since they may no longer be valid.

@@ -4535,6 +4535,7 @@ pub fn reader_write_title(
         Some(&mut lst),
         /*apply_exit_status=*/ false,
     );
+    let mut out = BufferedOutputter::new(Outputter::stdoutput());
     if !lst.is_empty() {
         let mut title_line = L!("\x1B]0;").to_owned();
         for val in &lst {
@@ -4542,15 +4543,13 @@ pub fn reader_write_title(
         }
         title_line.push_str("\x07"); // BEL
         let narrow = wcs2string(&title_line);
-        let _ = write_loop(&STDOUT_FILENO, &narrow);
+        out.write_bytes(&narrow);
     }
 
-    Outputter::stdoutput()
-        .borrow_mut()
-        .set_color(RgbColor::RESET, RgbColor::RESET);
+    out.set_color(RgbColor::RESET, RgbColor::RESET);
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
-        let _ = write_loop(&STDOUT_FILENO, b"\r");
+        out.write_bytes(b"\r");
     }
 }
 

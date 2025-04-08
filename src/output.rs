@@ -9,6 +9,7 @@ use bitflags::bitflags;
 use std::cell::{RefCell, RefMut};
 use std::ffi::CStr;
 use std::io::{Result, Write};
+use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;
 use std::sync::atomic::{AtomicU8, Ordering};
 
@@ -478,6 +479,20 @@ impl<'a> BufferedOutputter<'a> {
 impl<'a> Drop for BufferedOutputter<'a> {
     fn drop(&mut self) {
         self.0.end_buffering();
+    }
+}
+
+impl Deref for BufferedOutputter<'_> {
+    type Target = Outputter;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BufferedOutputter<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

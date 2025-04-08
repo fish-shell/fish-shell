@@ -28,7 +28,6 @@ pub fn term() -> Arc<Term> {
 
 /// The safe wrapper around terminfo functionality, initialized by a successful call to [`setup()`]
 /// and obtained thereafter by calls to [`term()`].
-#[allow(dead_code)]
 #[derive(Default)]
 pub struct Term {
     // String capabilities. Any Some value is confirmed non-empty.
@@ -40,14 +39,6 @@ pub struct Term {
     pub exit_underline_mode: Option<CString>,
     pub enter_reverse_mode: Option<CString>,
     pub enter_standout_mode: Option<CString>,
-    pub exit_standout_mode: Option<CString>,
-    pub enter_blink_mode: Option<CString>,
-    pub enter_protected_mode: Option<CString>,
-    pub enter_shadow_mode: Option<CString>,
-    pub exit_shadow_mode: Option<CString>,
-    pub enter_secure_mode: Option<CString>,
-    pub enter_alt_charset_mode: Option<CString>,
-    pub exit_alt_charset_mode: Option<CString>,
     pub set_a_foreground: Option<CString>,
     pub set_foreground: Option<CString>,
     pub set_a_background: Option<CString>,
@@ -87,14 +78,6 @@ impl Term {
             exit_underline_mode: get_str_cap(&db, "ue"),
             enter_reverse_mode: get_str_cap(&db, "mr"),
             enter_standout_mode: get_str_cap(&db, "so"),
-            exit_standout_mode: get_str_cap(&db, "se"),
-            enter_blink_mode: get_str_cap(&db, "mb"),
-            enter_protected_mode: get_str_cap(&db, "mp"),
-            enter_shadow_mode: get_str_cap(&db, "ZM"),
-            exit_shadow_mode: get_str_cap(&db, "ZU"),
-            enter_secure_mode: get_str_cap(&db, "mk"),
-            enter_alt_charset_mode: get_str_cap(&db, "as"),
-            exit_alt_charset_mode: get_str_cap(&db, "ae"),
             set_a_foreground: get_str_cap(&db, "AF"),
             set_foreground: get_str_cap(&db, "Sf"),
             set_a_background: get_str_cap(&db, "AB"),
@@ -187,11 +170,6 @@ pub fn setup_fallback_term() -> Arc<Term> {
         exit_underline_mode: Some(CString::new("\x1b[24m").unwrap()),
         enter_reverse_mode: Some(CString::new("\x1b[7m").unwrap()),
         enter_standout_mode: Some(CString::new("\x1b[7m").unwrap()),
-        exit_standout_mode: Some(CString::new("\x1b[27m").unwrap()),
-        enter_blink_mode: Some(CString::new("\x1b[5m").unwrap()),
-        enter_secure_mode: Some(CString::new("\x1b[8m").unwrap()),
-        enter_alt_charset_mode: Some(CString::new("\x1b(0").unwrap()),
-        exit_alt_charset_mode: Some(CString::new("\x1b(B").unwrap()),
         set_a_foreground: Some(
             CString::new("\x1b[%?%p1%{8}%<%t3%p1%d%e%p1%{16}%<%t9%p1%{8}%-%d%e38;5;%p1%d%;m")
                 .unwrap(),

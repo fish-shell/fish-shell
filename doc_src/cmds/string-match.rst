@@ -52,13 +52,13 @@ Match Glob Examples
 
 ::
 
-    >_ string match '?' a
+    >_ string match 'a' a
     a
 
     >_ string match 'a*b' axxb
     axxb
 
-    >_ string match -i 'a??B' Axxb
+    >_ string match -i 'a*B' Axxb
     Axxb
 
     >_ string match -- '-*' -h foo --version bar
@@ -67,7 +67,7 @@ Match Glob Examples
     -h
     --version
 
-    >_ echo 'ok?' | string match '*\?'
+    >_ echo 'ok?' | string match '*?'
     ok?
 
     # Note that only the second STRING will match here.
@@ -79,7 +79,7 @@ Match Glob Examples
     foo
     foo2
 
-    >_ string match 'foo?' 'foo1' 'foo' 'foo2'
+    >_ string match 'foo*' 'foo1' 'foo' 'foo2'
     foo1
     foo2
 

@@ -122,30 +122,22 @@ impl Term {
     }
 }
 
-/// Initializes our database with the provided `$TERM` value `term` (or None).
+/// Initializes our database from $TERM.
 /// Returns a reference to the newly initialized [`Term`] singleton on success or `None` if this failed.
 ///
 /// The `configure` parameter may be set to a callback that takes an `&mut Term` reference to
 /// override any capabilities before the `Term` is permanently made immutable.
 ///
 /// Any existing references from `terminal::term()` will be invalidated by this call!
-pub fn setup<F>(term: Option<&str>, configure: F) -> Option<Arc<Term>>
+pub fn setup<F>(configure: F) -> Option<Arc<Term>>
 where
     F: Fn(&mut Term),
 {
     let mut global_term = TERM.lock().expect("Mutex poisoned!");
 
-    let res = if let Some(term) = term {
-        terminfo::Database::from_name(term)
-    } else {
-        // For historical reasons getting "None" means to get it from the environment.
-        terminfo::Database::from_env()
-    }
-    .or_else(|x| {
+    let res = terminfo::Database::from_env().or_else(|x| {
         // Try some more paths
-        let t = if let Some(term) = term {
-            term.to_string()
-        } else if let Ok(name) = env::var("TERM") {
+        let t = if let Ok(name) = env::var("TERM") {
             name
         } else {
             return Err(x);

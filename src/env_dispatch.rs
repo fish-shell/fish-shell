@@ -555,7 +555,7 @@ fn init_terminal(vars: &EnvStack) {
         }
     }
 
-    if terminal::setup(None, |term| apply_term_hacks(vars, term)).is_none() {
+    if terminal::setup(|term| apply_term_hacks(vars, term)).is_none() {
         if is_interactive_session() {
             let term = vars.get_unless_empty(L!("TERM")).map(|v| v.as_string());
             if let Some(term) = term {

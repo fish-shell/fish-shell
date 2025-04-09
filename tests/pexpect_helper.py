@@ -30,21 +30,27 @@ TIMEOUT_SECS = 5
 UNEXPECTED_SUCCESS = object()
 
 # When rendering fish's output, remove the control sequences that modify terminal state,
-# to avoid confusing the calling terminal. No need to replace things like colors and cursor
-# movement that are harmless and/or will not leak anyway.
+# to avoid confusing the calling terminal.
 SANITIZE_FOR_PRINTING_RE = re.compile(
     r"""
-          \x1b\[\?1004[hl]
-        | \x1b\[\?2004[hl]
-        | \x1b\[>4;[10]m
-        | \x1b\[=5u
-        | \x1b\[=0u
+        # Filter CSI commands except for colors and cursor movement.
+        (?!\x1b\[\d*m)
+        (?!\x1b\[K)
+        (?!\x1b\[\d*[ABCD])
+        \x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]
+        # OSC
+        | \x1b\].*?\x07
+        # DCS
+        | \x1bP.*?\x1b\\
+        # application keypad mode
         | \x1b=
         | \x1b>
-        | \x1b\].*?\x07
     """,
     re.VERBOSE,
 )
+
+assert SANITIZE_FOR_PRINTING_RE.sub("", "\x1b[>4;1m") == ""
+assert SANITIZE_FOR_PRINTING_RE.sub("", "\x1b[31m") == "\x1b[31m"
 
 
 def get_prompt_re(counter):

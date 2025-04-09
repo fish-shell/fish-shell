@@ -34,17 +34,18 @@ UNEXPECTED_SUCCESS = object()
 # movement that are harmless and/or will not leak anyway.
 SANITIZE_FOR_PRINTING_RE = re.compile(
     r"""
-          \x1b\[\?1004[hl]
-        | \x1b\[\?2004[hl]
-        | \x1b\[>4;[10]m
-        | \x1b\[=5u
-        | \x1b\[=0u
-        | \x1b=
-        | \x1b>
+        (?!\x1b\[\d*m)
+        (?!\x1b\[K)
+        (?!\x1b\[\d*[ABCD])
+        \x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]
         | \x1b\].*?\x07
+        | \x1bP.*?\x1b\\
     """,
     re.VERBOSE,
 )
+
+assert SANITIZE_FOR_PRINTING_RE.sub("", "\x1b[>4;1m") == ""
+assert SANITIZE_FOR_PRINTING_RE.sub("", "\x1b[31m") == "\x1b[31m"
 
 
 def get_prompt_re(counter):

@@ -727,10 +727,8 @@ impl Screen {
         // line above your prompt. This doesn't make a difference in normal usage, but copying and
         // pasting your terminal log becomes a pain. This commit clears that line, making it an
         // actual empty line.
-        if !is_dumb() {
-            if let Some(clr_eol) = term.clr_eol.as_ref() {
-                abandon_line_string.push_utfstr(&str2wcstring(clr_eol.as_bytes()));
-            }
+        if let Some(clr_eol) = term.clr_eol.as_ref() {
+            abandon_line_string.push_utfstr(&str2wcstring(clr_eol.as_bytes()));
         }
 
         let narrow_abandon_line_string = wcs2string(&abandon_line_string);

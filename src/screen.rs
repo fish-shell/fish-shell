@@ -934,12 +934,9 @@ impl Screen {
             (term.cursor_right.as_ref(), term.parm_right_cursor.as_ref())
         };
 
-        // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
+        // Use the bulk ('multi') output for cursor movement if it is supported.
         // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-        let use_multi = multi_str.is_some_and(|ms| !ms.as_bytes().is_empty())
-            && x_steps.abs_diff(0) * s.map_or(0, |s| s.as_bytes().len())
-                > multi_str.unwrap().as_bytes().len();
-        if use_multi {
+        if multi_str.is_some() && x_steps.abs_diff(0) > 1 {
             let multi_param = tparm1(
                 multi_str.as_ref().unwrap(),
                 i32::try_from(x_steps.abs_diff(0)).unwrap(),

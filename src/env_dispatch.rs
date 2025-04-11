@@ -382,6 +382,7 @@ fn update_fish_color_support(vars: &EnvStack) {
 
     let term = vars.get_unless_empty(L!("TERM"));
     let term = term.as_ref().map_or(L!(""), |term| &term.as_list()[0]);
+    let is_xterm_16color = term == "xterm-16color";
 
     let supports_256color = if let Some(fish_term256) = vars.get(L!("fish_term256")) {
         let ok = crate::wcstringutil::bool_from_string(&fish_term256.as_string());
@@ -392,10 +393,10 @@ fn update_fish_color_support(vars: &EnvStack) {
         );
         ok
     } else {
-        term != "xterm-16color"
+        !is_xterm_16color
     };
 
-    let mut supports_24bit = false;
+    let supports_24bit;
     if let Some(fish_term24bit) = vars.get(L!("fish_term24bit")).map(|v| v.as_string()) {
         // $fish_term24bit
         supports_24bit = crate::wcstringutil::bool_from_string(&fish_term24bit);
@@ -408,19 +409,14 @@ fn update_fish_color_support(vars: &EnvStack) {
                 "disabled"
             }
         );
-    } else if vars.get(L!("STY")).is_some() || term.starts_with(L!("eterm")) {
-        // Screen and emacs' ansi-term swallow true-color sequences, so we ignore them unless
-        // force-enabled.
+    } else if vars.get(L!("STY")).is_some() {
+        // Screen requires "truecolor on" to enable true-color sequences, so we ignore them
+        // unless force-enabled.
         supports_24bit = false;
-        FLOG!(
-            term_support,
-            "True-color support: disabled for eterm/screen"
-        );
+        FLOG!(term_support, "True-color support: disabled for screen");
     } else if let Some(ct) = vars.get(L!("COLORTERM")).map(|v| v.as_string()) {
         // If someone sets $COLORTERM, that's the sort of color they want.
-        if ct == "truecolor" || ct == "24bit" {
-            supports_24bit = true;
-        }
+        supports_24bit = ct == "truecolor" || ct == "24bit";
         FLOG!(
             term_support,
             "True-color support",
@@ -432,32 +428,20 @@ fn update_fish_color_support(vars: &EnvStack) {
             "per $COLORTERM",
             ct
         );
-    } else if vars.get(L!("KONSOLE_VERSION")).is_some()
-        || vars.get(L!("KONSOLE_PROFILE_NAME")).is_some()
-    {
-        // All Konsole versions that use $KONSOLE_VERSION are new enough to support this, so no
-        // check is needed.
-        supports_24bit = true;
-        FLOG!(term_support, "True-color support: enabled for Konsole");
-    } else if let Some(it) = vars.get(L!("ITERM_SESSION_ID")).map(|v| v.as_string()) {
-        // Supporting versions of iTerm include a colon here.
-        // We assume that if this is iTerm it can't also be st, so having this check inside is okay.
-        if !it.contains(':') {
-            supports_24bit = true;
-            FLOG!(term_support, "True-color support: enabled for iTerm");
-        }
-    } else if term.starts_with("st-") {
-        supports_24bit = true;
-        FLOG!(term_support, "True-color support: enabling for st");
-    } else if let Some(vte) = vars.get(L!("VTE_VERSION")).map(|v| v.as_string()) {
-        if fish_wcstoi(&vte).unwrap_or(0) > 3600 {
-            supports_24bit = true;
-            FLOG!(
-                term_support,
-                "True-color support: enabled for VTE version",
-                vte
-            );
-        }
+    } else {
+        supports_24bit = !is_xterm_16color
+            && !vars
+                .get_unless_empty(L!("TERM_PROGRAM"))
+                .is_some_and(|term| term.as_list()[0] == "Apple_Terminal");
+        FLOG!(
+            term_support,
+            "True-color support",
+            if supports_24bit {
+                "enabled"
+            } else {
+                "disabled"
+            },
+        );
     }
 
     let mut color_support = ColorSupport::default();

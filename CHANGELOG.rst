@@ -26,6 +26,11 @@ Deprecations and removed features
     set -Ua fish_features no-ignore-terminfo
 
 - The `--install` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new `status list-files` and `status get-file` subcommands, but it should no longer be necessary. (:issue:`11143`)
+- RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if the terminal does not advertise support via ``COLORTERM``.
+  - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or ``set COLORTERM 0``.
+    - To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
+  - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
+    If that doesn't work, use ``set fish_term24bit 0``.
 
 Scripting improvements
 ----------------------

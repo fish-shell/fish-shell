@@ -22,7 +22,13 @@ Valid colors include:
 
 The *br*- (as in 'bright') forms are full-brightness variants of the 8 standard-brightness colors on many terminals. **brblack** has higher brightness than **black** - towards gray.
 
-An RGB value with three or six hex digits, such as A0FF33 or f2f can be used. Fish will choose the closest supported color. A three digit value is equivalent to specifying each digit twice; e.g., ``set_color 2BC`` is the same as ``set_color 22BBCC``. Hexadecimal RGB values can be in lower or uppercase. Depending on the capabilities of your terminal (and the level of support ``set_color`` has for it) the actual color may be approximated by a nearby matching reserved color.
+An RGB value with three or six hex digits, such as A0FF33 or f2f can be used.
+A three digit value is equivalent to specifying each digit twice; e.g., ``set_color 2BC`` is the same as ``set_color 22BBCC``.
+Hexadecimal RGB values can be in lower or uppercase.
+
+If :envvar:`fish_term24bit` is set to 0, fish will translate RGB values to the nearest color on the 256-color palette.
+If :envvar:`fish_term256` is also set to 0, fish will translate them to the 16-color palette instead.
+Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 
 A second color may be given as a desired fallback color. e.g. ``set_color 124212 brblue`` will instruct set_color to use *brblue* if a terminal is not capable of the exact shade of grey desired. This is very useful when an 8 or 16 color terminal might otherwise not use a color.
 
@@ -72,17 +78,3 @@ Examples
     set_color blue; echo "Violets are blue"
     set_color 62A; echo "Eggplants are dark purple"
     set_color normal; echo "Normal is nice" # Resets the background too
-
-
-Terminal Capability Detection
------------------------------
-
-Fish uses some heuristics to determine what colors a terminal supports to avoid sending sequences that it won't understand.
-
-In particular it will:
-
-- Enable 24-bit ("true-color") even if the $TERM entry only reports 256 colors. This includes modern xterm, VTE-based terminals like Gnome Terminal, Konsole and iTerm2.
-
-To force true-color support on or off, set :envvar:`fish_term24bit` to "1" for on and 0 for off - ``set -g fish_term24bit 1``.
-
-Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.

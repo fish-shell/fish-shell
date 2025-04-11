@@ -1566,12 +1566,12 @@ You can change the settings of fish by changing the values of certain variables.
 
 .. envvar:: fish_term24bit
 
-   If this is set to 1, fish will assume the terminal understands 24-bit RGB color sequences, and won't translate them to the 256 or 16 color palette.
-   This is often detected automatically.
+   If this is set to 0, fish will not output 24-bit RGB true-color sequences but the nearest color on the 256 color palette (or the 16 color palette, if :envvar:`fish_term256` is 0).
 
 .. envvar:: fish_term256
 
-   If this is set to 0, fish will not output 256 colors, but translate colors down to the 16 color palette.
+   If this is set to 0 and :envvar:`fish_term24bit` is 0, translate RGB colors down to the 16 color palette.
+   Also, if this is set to 0, :doc:`set_color <cmds/set_color>`/` commands such as ``set_color ff0000 red`` will prefer the named color.
 
 .. envvar:: fish_ambiguous_width
 

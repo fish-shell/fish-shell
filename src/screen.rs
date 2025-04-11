@@ -525,8 +525,6 @@ impl Screen {
                 is_final_rendering,
             )
         });
-        self.outp.borrow_mut().begin_buffering();
-        self.outp.borrow_mut().end_buffering();
         self.save_status();
     }
 

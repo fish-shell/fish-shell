@@ -53,6 +53,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         }
 
         table.add(L!("TZ"), handle_tz_change);
+        table.add_anon(L!("COLORTERM"), handle_fish_term_change);
         table.add_anon(L!("fish_term256"), handle_fish_term_change);
         table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
         table.add_anon(L!("fish_escape_delay_ms"), update_wait_on_escape_ms);

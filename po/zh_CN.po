@@ -20,11 +20,11 @@ msgstr "%ls: 设置在 %ls 范围, %ls,%ls 包含 %d 元素"
 
 #: src/parse_util.rs:1585
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status 作为命令无效 。 见`帮助条件' "
+msgstr "$status 作为命令无效,见`帮助条件' "
 
 #: src/complete.rs:66:static ABBR_DESC
 msgid "Abbreviation: %ls"
-msgstr "缩写:%ls"
+msgstr "缩写: %ls"
 
 #: src/builtins/string/split.rs:172
 msgid "--allow-empty is only valid with --fields"
@@ -40,7 +40,7 @@ msgstr "路径变量"
 
 #: src/builtins/test.rs:812
 msgid "Argument is not a number: '%ls'"
-msgstr "参数不是数字 :% ls"
+msgstr "参数不是数字 :%ls"
 
 #: src/expand.rs:674
 msgid "array indices start at 1, not 0."
@@ -48,7 +48,7 @@ msgstr "数组指数起始时间为 1,而不是 0."
 
 #: src/proc.rs:1195
 msgid "A second attempt to exit will terminate them.\n"
-msgstr "第二次尝试退出将终止它们。\ n"
+msgstr "第二次尝试退出将终止它们。\n"
 
 #: src/builtins/shared.rs:480
 msgid "Block of code to run conditionally"
@@ -64,7 +64,7 @@ msgstr "内建历史只删除支持 -- exact\n"
 
 #: src/builtins/realpath.rs:102
 msgid "builtin %ls: Invalid arg: %ls\n"
-msgstr "内建的 %ls : 无效的参数:% ls\n"
+msgstr "内建的 %ls : 无效的参数:%ls\n"
 
 #: src/builtins/realpath.rs:93
 msgid "builtin %ls: %ls: %s\n"
@@ -96,7 +96,7 @@ msgstr "运行交互式会话时不能使用不执行模式"
 
 #: src/ast.rs:3227
 msgid "'case' builtin not inside of switch block"
-msgstr "“ case” 不在切换块内"
+msgstr "' case' 不在切换块内"
 
 #: src/builtins/shared.rs:481
 msgid "Change working directory"
@@ -104,7 +104,7 @@ msgstr "改变工作目录（当前目录）"
 
 #: src/builtins/shared.rs:523
 msgid "Check if a thing is a thing"
-msgstr "看看有没有东西是什么东西"
+msgstr "检查事物是否是其本身"
 
 #: src/env_dispatch.rs:663
 msgid "Check that this terminal type is supported on this system."
@@ -132,7 +132,7 @@ msgstr "命令不能执行文件"
 
 #: src/expand.rs:1347
 msgid "command substitutions not allowed in command position. Try var=(your-cmd) /n $var ..."
-msgstr "命令替换 。 尝试 var=(你的-cmd)/n $var..."
+msgstr "命令替换,尝试 var=(你的-cmd)/n $var..."
 
 #: src/complete.rs:623
 msgid "completion reached maximum recursion depth, possible cycle?"
@@ -152,11 +152,11 @@ msgstr ",交互复制"
 
 #: src/builtins/functions.rs:384
 msgid ", copied via `source`"
-msgstr ",通过“来源”复制 `(a). `"
+msgstr ",通过'来源'复制 "
 
 #: src/env/environment.rs:264
 msgid "Could not determine current working directory. Is your locale set correctly?"
-msgstr "无法确定当前工作目录 。 你的地盘设置正确吗?"
+msgstr "无法确定当前工作目录,你的地盘设置正确吗?"
 
 #: src/env_dispatch.rs:534
 msgid "Could not get any terminfo database, falling back to hardcoded xterm-256color values"
@@ -176,7 +176,7 @@ msgstr "无法设置终端 ."
 
 #: src/parser.rs:948
 msgid "Could not write profiling information to file '%s': %s"
-msgstr "无法将配置信息写入文件“%s”:%s"
+msgstr "无法将配置信息写入文件'%s':%s"
 
 #: src/builtins/shared.rs:487
 msgid "Count the number of arguments"
@@ -204,7 +204,7 @@ msgstr "互动定义"
 
 #: src/builtins/functions.rs:369
 msgid "Defined via `source`"
-msgstr "通过`源'定义 `(a). `"
+msgstr "通过`源'定义 "
 
 #: src/wutil/mod.rs:145
 msgid "directory"
@@ -260,7 +260,7 @@ msgstr "错误\n"
 
 #: src/bin/fish.rs:671
 msgid "Error reading script file '%s':"
-msgstr "读取脚本文件 “%s”出错 :"
+msgstr "读取脚本文件 '%s'出错 :"
 
 #: src/history.rs:755
 msgid "Error when renaming history file: %s"
@@ -385,7 +385,7 @@ msgstr "处理路径"
 
 #: src/builtins/printf.rs:236
 msgid "Hint: a leading '0' without an 'x' indicates an octal number"
-msgstr "提示:没有“ x” 的“ 0” 表示八进制数字"
+msgstr "提示:没有' x' 的' 0' 表示八进制数字"
 
 #: src/builtins/shared.rs:501
 msgid "History of commands executed by user"
@@ -393,7 +393,7 @@ msgstr "用户执行的历史命令"
 
 #: src/history.rs:1960
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
-msgstr "历史会话 ID “% ls ” 不是有效的可变名称 。 倒转到"ls"."
+msgstr "历史会话 ID '%ls ' 不是有效的可变名称,倒转到"ls"."
 
 #: src/complete.rs:60:static COMPLETE_USER_DESC
 msgid "Home for %ls"
@@ -409,7 +409,7 @@ msgstr "在命令替换中\n"
 
 #: src/parse_util.rs:1282
 msgid "Incomplete escape sequence '%ls'"
-msgstr "不完全的逃生序列 “% ls ”"
+msgstr "不完全的逃生序列 '%ls '"
 
 #: src/parser.rs:1176
 msgid "in event handler: %ls\n"
@@ -417,11 +417,11 @@ msgstr "事件处理器:%ls\n"
 
 #: src/parser.rs:1136
 msgid "in function '%ls'"
-msgstr "函数 “% ls” 中  '"
+msgstr "函数 '%ls' 中  '"
 
 #: src/builtins/test.rs:807
 msgid "Integer %lld in '%ls' followed by non-digit"
-msgstr "整数 %lld 在“%ls”中,然后是非数字"
+msgstr "整数 %lld 在'%ls'中,然后是非数字"
 
 #: src/expand.rs:992
 msgid "Invalid arguments"
@@ -433,7 +433,7 @@ msgstr "打印尚未支持的无效代码点f"
 
 #: src/builtins/printf.rs:470
 msgid "invalid field width: %ls"
-msgstr "无效的字段宽度 :% ls"
+msgstr "无效的字段宽度 :%ls"
 
 #: src/expand.rs:678
 msgid "Invalid index value"
@@ -445,23 +445,23 @@ msgstr "无效的输入/输出重定向"
 
 #: src/builtins/test.rs:822
 msgid "Invalid number: %ls"
-msgstr "无效的数字 :% ls"
+msgstr "无效的数字 :%ls"
 
 #: src/builtins/printf.rs:502
 msgid "invalid precision: %ls"
-msgstr "无效的精度 :% ls"
+msgstr "无效的精度 :%ls"
 
 #: src/parse_execution.rs:1488
 msgid "Invalid redirection: %ls"
-msgstr "无效的重定向 :% ls"
+msgstr "无效的重定向 :%ls"
 
 #: src/parse_execution.rs:1513
 msgid "Invalid redirection target: %ls"
-msgstr "无效的重定向目标 :% ls"
+msgstr "无效的重定向目标 :%ls"
 
 #: src/parse_util.rs:1291
 msgid "Invalid token '%ls'"
-msgstr "无效的符号 “% ls ”  '"
+msgstr "无效的符号 '%ls '  '"
 
 #: src/builtins/string/match.rs:90
 msgid "--invert and --groups-only are mutually exclusive"
@@ -469,7 +469,7 @@ msgstr "--倒转和 -- 组是相互排斥的"
 
 #: src/tokenizer.rs:169
 msgid "|& is not valid. In fish, use &| to pipe both stdout and stderr."
-msgstr "QQ 无效 。 在fish中,用" "来管活口和活口."
+msgstr "QQ 无效,在fish中,用" "来管活口和活口."
 
 #: src/builtins/status.rs:352
 msgid "Job control: %ls\n"
@@ -509,7 +509,7 @@ msgstr "% s: 选项 spec必须至少有一个短或长的旗帜\n"
 
 #: src/builtins/read.rs:142
 msgid "%ls: Argument '%ls' is out of range\n"
-msgstr "% ls: 参数 “% ls” 已超出范围\ n"
+msgstr "%ls: 参数 '%ls' 已超出范围\n"
 
 #: src/builtins/function.rs:143
 msgid "%ls: calling job for event handler not found"
@@ -529,7 +529,7 @@ msgstr "% s: 无法指定多种正则图案\n"
 
 #: src/builtins/abbr.rs:516
 msgid "%ls: Cannot specify multiple set-cursor options\n"
-msgstr "% ls: 无法指定多个设置校正选项\n"
+msgstr "%ls: 无法指定多个设置校正选项\n"
 
 #: src/builtins/block.rs:93
 msgid "%ls: Can not specify scope when removing block\n"
@@ -537,30 +537,30 @@ msgstr "%ls：当移除区块时不能指定作用域\n"
 
 #: src/builtins/set.rs:926
 msgid "%ls: Cannot use --append or --prepend when assigning to a slice"
-msgstr "% ls: 指定切片时无法使用 -- append 或 -- prepend"
+msgstr "%ls: 指定切片时无法使用 -- append 或 -- prepend"
 
 #: src/builtins/history.rs:332
 msgid "%ls: can't merge history in private mode\n"
 msgstr "%ls: 无法在私有模式中合并历史"
 
 msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
-msgstr "%ls：不能将任务 %d, “%ls” 带到前台，因为它不受到任务控制\n"
+msgstr "%ls：不能将任务 %d, '%ls' 带到前台，因为它不受到任务控制\n"
 
 #: src/builtins/bg.rs:20
 msgid "%ls: Can't put job %s, '%ls' to background because it is not under job control\n"
-msgstr "%ls: 无法将任务 %s, “%ls” 放到背景,因为它不在任务控制范围之内\n"
+msgstr "%ls: 无法将任务 %s, '%ls' 放到背景,因为它不在任务控制范围之内\n"
 
 #: src/builtins/shared.rs:924
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "% ls: 命令在交互式提示时无效\ n"
+msgstr "%ls: 命令在交互式提示时无效\n"
 
 #: src/builtins/wait.rs:193
 msgid "%ls: Could not find a job with process id '%d'\n"
-msgstr "% s: 无法找到进程 id “% d”\n 的工作"
+msgstr "% s: 无法找到进程 id '% d'\n 的工作"
 
 #: src/builtins/wait.rs:202
 msgid "%ls: Could not find child processes with the name '%ls'\n"
-msgstr "% s: 无法找到名为 “%ls”\n的子进程"
+msgstr "% s: 无法找到名为 '%ls'\n的子进程"
 
 #: src/builtins/cd.rs:45
 msgid "%ls: Could not find home directory\n"
@@ -568,11 +568,11 @@ msgstr "%ls：找不到home目录\n"
 
 #: src/builtins/bg.rs:111
 msgid "%ls: Could not find job '%d'\n"
-msgstr "%ls: 找不到工作 “%d”\n"
+msgstr "%ls: 找不到工作 '%d'\n"
 
 #: src/builtins/type.rs:211
 msgid "%ls: Could not find '%ls'\n"
-msgstr "%ls: 找不到 “% ls”\n"
+msgstr "%ls: 找不到 '%ls'\n"
 
 #: src/builtins/status.rs:538
 msgid "%ls: Could not get executable path: '%s'\n"
@@ -580,11 +580,11 @@ msgstr "%ls: 无法获取可执行路径: '%s'\n"
 
 #: src/builtins/set.rs:911
 msgid "%ls: Did you mean `set %ls %ls`?"
-msgstr "%ls: 您是否指“ set %ls %ls” ?"
+msgstr "%ls: 您是否指' set %ls %ls' ?"
 
 #: src/builtins/cd.rs:54
 msgid "%ls: Empty directory '%ls' does not exist\n"
-msgstr "% ls: 空目录 “% ls” 不存在\ n"
+msgstr "%ls: 空目录 '%ls' 不存在\n"
 
 #: src/builtins/random.rs:140
 msgid "%ls: END must be greater than START\n"
@@ -592,19 +592,19 @@ msgstr "%ls: 结束必须大于START\n"
 
 #: src/builtins/source.rs:61
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
-msgstr "%ls：读取源文件“%ls”时遇到错误：\n"
+msgstr "%ls：读取源文件'%ls'时遇到错误：\n"
 
 #: src/builtins/source.rs:119
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls：读取文件 “%ls” 时发生错误\n"
+msgstr "%ls：读取文件 '%ls' 时发生错误\n"
 
 #: src/builtins/argparse.rs:182
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr "%ls: 独家旗帜 “% ls” 无效\ n"
+msgstr "%ls: 独家旗帜 '%ls' 无效\n"
 
 #: src/builtins/argparse.rs:164
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr "% ls: 独家旗帜字符串 “% ls” 无效\ n"
+msgstr "%ls: 独家旗帜字符串 '%ls' 无效\n"
 
 #: src/builtins/printf.rs:223
 msgid "%ls: expected a numeric value"
@@ -616,19 +616,19 @@ msgstr "%ls：应恰好有一个函数名\n"
 
 #: src/builtins/functions.rs:302
 msgid "%ls: Expected exactly two names (current function name, and new function name)\n"
-msgstr "% ls: 预期确切有两个名称( 当前函数名称, 和新函数名称)\ n"
+msgstr "%ls: 预期确切有两个名称( 当前函数名称, 和新函数名称)\n"
 
 #: src/builtins/functions.rs:262
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
-msgstr "% ls: 预期通用的 QQ 变量 QQ 信号 QQ 退出 -- handlers type\n"
+msgstr "%ls: 预期通用的 | 变量 | 信号 | 退出 | job-id for -- handlers type\n"
 
 #: src/builtins/functions.rs:333
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: 函数 “% ls” 已经存在 。 无法创建复制 “% ls”\n"
+msgstr "%ls: 函数 '%ls' 已经存在,无法创建复制 '%ls'\n"
 
 #: src/builtins/functions.rs:172
 msgid "%ls: Function '%ls' does not exist\n"
-msgstr "%ls：函数 “%ls” 不存在\n"
+msgstr "%ls：函数 '%ls' 不存在\n"
 
 #: src/builtins/function.rs:227
 msgid "%ls: function name required"
@@ -640,15 +640,15 @@ msgstr "%ls: --函数选项需要 --add\n"
 
 #: src/builtins/functions.rs:323
 msgid "%ls: Illegal function name '%ls'\n"
-msgstr "%ls：函数名 “%ls” 非法\n"
+msgstr "%ls：函数名 '%ls' 非法\n"
 
 #: src/builtins/argparse.rs:281
 msgid "%ls: Implicit int flag '%lc' already defined\n"
-msgstr "%ls: 隐含的标志 “% lc” 已经定义\n"
+msgstr "%ls: 隐含的标志 '% lc' 已经定义\n"
 
 #: src/builtins/argparse.rs:207
 msgid "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"
-msgstr "% s: 隐含的短旗 “% lc” 不允许像 “% lc”\n 这样的修改符"
+msgstr "% s: 隐含的短旗 '% lc' 不允许像 '% lc'\n 这样的修改符"
 
 #: src/builtins/printf.rs:529
 msgid "%.*ls: invalid conversion specification"
@@ -656,23 +656,23 @@ msgstr "%. *ls: 无效的转换规格"
 
 #: src/builtins/string/repeat.rs:25
 msgid "%ls: Invalid count value '%ls'\n"
-msgstr "% s: 无效的计数值 “% s”\n"
+msgstr "% s: 无效的计数值 '% s'\n"
 
 #: src/builtins/string/sub.rs:40
 msgid "%ls: Invalid end value '%ls'\n"
-msgstr "%ls: 无效的端值 “% ls”\n"
+msgstr "%ls: 无效的端值 '%ls'\n"
 
 #: src/builtins/string.rs:175
 msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
-msgstr "% ls: 模式中的无效脱逃序列 \"
+msgstr "%ls: 模式中的无效脱逃序列 \"
 
 #: src/builtins/string/escape.rs:24
 msgid "%ls: Invalid escape style '%ls'\n"
-msgstr "%ls: 无效的逃脱样式 “% ls”\n"
+msgstr "%ls: 无效的逃脱样式 '%ls'\n"
 
 #: src/builtins/string/split.rs:133
 msgid "%ls: Invalid fields value '%ls'\n"
-msgstr "% s: 无效的字段值 “% ls”\n"
+msgstr "% s: 无效的字段值 '%ls'\n"
 
 #: src/builtins/abbr.rs:357
 msgid "%ls: Invalid function name: %ls\n"
@@ -680,23 +680,23 @@ msgstr "%ls: 无效的函数名:% s\n"
 
 #: src/builtins/set.rs:368
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls：开始于 “%ls” 的索引非法\n"
+msgstr "%ls：开始于 '%ls' 的索引非法\n"
 
 #: src/builtins/status.rs:254
 msgid "%ls: Invalid job control mode '%ls'\n"
-msgstr "%ls: 无效的工作控制模式 “% ls”\n"
+msgstr "%ls: 无效的工作控制模式 '%ls'\n"
 
 #: src/builtins/string/sub.rs:27
 msgid "%ls: Invalid length value '%ls'\n"
-msgstr "% s: 无效的长度值 “% s”\n"
+msgstr "% s: 无效的长度值 '% s'\n"
 
 #: src/builtins/status.rs:218
 msgid "%ls: Invalid level value '%ls'\n"
-msgstr "% s: 无效的级别值 “% ls”\n"
+msgstr "% s: 无效的级别值 '%ls'\n"
 
 #: src/builtins/ulimit.rs:330
 msgid "%ls: Invalid limit '%ls'\n"
-msgstr "%ls: 无效的限制 “% ls”\n"
+msgstr "%ls: 无效的限制 '%ls'\n"
 
 #: src/builtins/argparse.rs:517
 msgid "%ls: Invalid --max-args value '%ls'\n"
@@ -704,35 +704,35 @@ msgstr "%ls: 无效的 --max- args 值 '%ls'\n"
 
 #: src/builtins/string/shorten.rs:53
 msgid "%ls: Invalid max value '%ls'\n"
-msgstr "% s: 无效的最大值 “% s”\n"
+msgstr "% s: 无效的最大值 '% s'\n"
 
 #: src/builtins/argparse.rs:503
 msgid "%ls: Invalid --min-args value '%ls'\n"
-msgstr "%ls: 无效的 -- min- args 值 “% ls”\ n"
+msgstr "%ls: 无效的 -- min- args 值 '%ls'\n"
 
 #: src/builtins/string/pad.rs:44
 msgid "%ls: Invalid padding character of width zero '%ls'\n"
-msgstr "% ls: 宽度为零 '% ls'\n 的无效的补丁字符"
+msgstr "%ls: 宽度为零 '%ls'\n 的无效的补丁字符"
 
 #: src/builtins/path.rs:278
 msgid "%ls: Invalid permission '%ls'\n"
-msgstr "%ls: 无效的权限 “% ls”\n"
+msgstr "%ls: 无效的权限 '%ls'\n"
 
 #: src/builtins/abbr.rs:493
 msgid "%ls: Invalid position '%ls'\n"
-msgstr "%ls: 无效的位置 “% ls”\n"
+msgstr "%ls: 无效的位置 '%ls'\n"
 
 #: src/builtins/string/split.rs:130
 msgid "%ls: Invalid range value for field '%ls'\n"
-msgstr "%ls: 字段 “% ls” 的范围值无效"
+msgstr "%ls: 字段 '%ls' 的范围值无效"
 
 #: src/builtins/path.rs:680
 msgid "%ls: Invalid sort key '%ls'\n"
-msgstr "%ls: 无效的密钥排序 “% ls”\n"
+msgstr "%ls: 无效的密钥排序 '%ls'\n"
 
 #: src/builtins/string/sub.rs:33
 msgid "%ls: Invalid start value '%ls'\n"
-msgstr "% s: 无效的起始值 “% ls”\n"
+msgstr "% s: 无效的起始值 '%ls'\n"
 
 #: src/builtins/bind.rs:559
 msgid "%ls: Invalid state\n"
@@ -740,19 +740,19 @@ msgstr "%ls：非法状态\n"
 
 #: src/builtins/string/unescape.rs:26
 msgid "%ls: Invalid style value '%ls'\n"
-msgstr "%ls: 无效的样式值 “% ls”\n"
+msgstr "%ls: 无效的样式值 '%ls'\n"
 
 #: src/builtins/complete.rs:322
 msgid "%ls: Invalid token '%ls'\n"
-msgstr "%ls: 无效的符号 “% ls”\n"
+msgstr "%ls: 无效的符号 '%ls'\n"
 
 #: src/builtins/path.rs:266
 msgid "%ls: Invalid type '%ls'\n"
-msgstr "%ls: 无效类型 “% ls”\n"
+msgstr "%ls: 无效类型 '%ls'\n"
 
 #: src/builtins/string/pad.rs:56
 msgid "%ls: Invalid width value '%ls'\n"
-msgstr "%ls: 无效的宽度值 “% ls”\n"
+msgstr "%ls: 无效的宽度值 '%ls'\n"
 
 #: src/builtins/type.rs:166
 msgid "%ls is a builtin\n"
@@ -760,7 +760,7 @@ msgstr "%ls 是一个内建的\n"
 
 #: src/builtins/type.rs:123
 msgid "%ls is a function"
-msgstr "% ls 是函数"
+msgstr "%ls 是函数"
 
 #: src/builtins/type.rs:194
 msgid "%ls is %ls\n"
@@ -768,7 +768,7 @@ msgstr "%ls 是%ls\n"
 
 #: src/builtins/disown.rs:31
 msgid "%ls: job %d ('%ls') was stopped and has been signalled to continue.\n"
-msgstr "%ls: 任务 %d ('% ls') 已停止并指示要继续 。\ n"
+msgstr "%ls: 任务 %d ('%ls') 已停止并指示要继续 。\n"
 
 #: src/builtins/contains.rs:76
 msgid "%ls: Key not specified\n"
@@ -776,7 +776,7 @@ msgstr "%ls：没有指定键\n"
 
 #: src/builtins/bind.rs:209
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
-msgstr "%ls：名为 “%ls” 的键没有任何映射\n"
+msgstr "%ls：名为 '%ls' 的键没有任何映射\n"
 
 #: src/parser.rs:657
 msgid "%ls (line %d): "
@@ -788,11 +788,11 @@ msgstr "%ls(行为%lu) :"
 
 #: src/builtins/argparse.rs:400
 msgid "%ls: Long flag '%ls' already defined\n"
-msgstr "%ls: 长旗 “% ls” 已经定义了\n"
+msgstr "%ls: 长旗 '%ls' 已经定义了\n"
 
 #: src/builtins/complete.rs:354
 msgid "%ls: -l requires a non-empty string\n"
-msgstr "% ls: -我需要一个非空字符串\n"
+msgstr "%ls: -我需要一个非空字符串\n"
 
 #: src/builtins/abbr.rs:242
 msgid "%ls %ls: Abbreviation %ls already exists, cannot rename %ls\n"
@@ -800,7 +800,7 @@ msgstr "%ls %ls (%ls) : 缩略语 %ls 已经存在, 无法重命名 %ls\n"
 
 #: src/builtins/abbr.rs:223
 msgid "%ls %ls: Abbreviation '%ls' cannot have spaces in the word\n"
-msgstr "%ls %ls (%ls) : 缩写 “% ls” 无法在单词中设置空格\n"
+msgstr "%ls %ls (%ls) : 缩写 '%ls' 无法在单词中设置空格\n"
 
 #: src/builtins/read.rs:527
 msgid "%ls: %ls: cannot overwrite read-only variable"
@@ -808,7 +808,7 @@ msgstr "%ls :%ls: 无法覆盖只读变量"
 
 #: src/builtins/function.rs:241
 msgid "%ls: %ls: cannot use reserved keyword as function name"
-msgstr "% ls :% ls: 无法将保留的关键字作为函数名"
+msgstr "%ls :%ls: 无法将保留的关键字作为函数名"
 
 #: src/builtins/complete.rs:473
 msgid "%ls: %ls: contains a syntax error\n"
@@ -828,39 +828,39 @@ msgstr "%ls:%ls:无效整数\n"
 
 #: src/builtins/function.rs:156
 msgid "%ls: %ls: invalid process id"
-msgstr "% ls:% ls: 无效进程 id"
+msgstr "%ls:%ls: 无效进程 id"
 
 #: src/builtins/cd.rs:146
 msgid "%ls: '%ls' is a broken symbolic link to '%ls'\n"
-msgstr "% ls: “% ls” 是一个与 “% ls”\n 的符号链接断开"
+msgstr "%ls: '%ls' 是一个与 '%ls'\n 的符号链接断开"
 
 #: src/builtins/cd.rs:140
 msgid "%ls: '%ls' is not a directory\n"
-msgstr "%ls：“%ls” 不是一个目录\n"
+msgstr "%ls：'%ls' 不是一个目录\n"
 
 #: src/builtins/source.rs:86
 msgid "%ls: '%ls' is not a file\n"
-msgstr "%ls：“%ls” 不是一个文件\n"
+msgstr "%ls：'%ls' 不是一个文件\n"
 
 #: src/builtins/fg.rs:65
 msgid "%ls: '%ls' is not a job\n"
-msgstr "%ls：“%ls” 不是一个任务\n"
+msgstr "%ls：'%ls' 不是一个任务\n"
 
 #: src/builtins/jobs.rs:200
 msgid "%ls: '%ls' is not a valid job id\n"
-msgstr "%ls: “%ls”不是一个有效的工作 id\n"
+msgstr "%ls: '%ls'不是一个有效的工作 id\n"
 
 #: src/builtins/bg.rs:89
 msgid "%ls: '%ls' is not a valid job specifier\n"
-msgstr "%ls: “%ls”不是一个有效的任务指定符\n"
+msgstr "%ls: '%ls'不是一个有效的任务指定符\n"
 
 #: src/builtins/wait.rs:185
 msgid "%ls: '%ls' is not a valid process id\n"
-msgstr "%ls: “%ls”不是一个有效的进程 id\n"
+msgstr "%ls: '%ls'不是一个有效的进程 id\n"
 
 #: src/builtins/argparse.rs:142
 msgid "%ls: %ls %ls: options cannot be used together\n"
-msgstr "% ls :% ls: 选项无法一起使用@ info 无"
+msgstr "%ls :%ls: 选项无法一起使用@ info 无"
 
 #: src/builtins/abbr.rs:327
 msgid "%ls: %*ls\n"
@@ -888,7 +888,7 @@ msgstr "%ls %ls (%ls) : 需要两个参数\n"
 
 #: src/builtins/history.rs:113
 msgid "%ls: %ls: subcommand takes no options\n"
-msgstr "% ls:% ls: 子命令没有选项\n"
+msgstr "%ls:%ls: 子命令没有选项\n"
 
 #: src/builtins/abbr.rs:180
 msgid "%ls %ls: Unexpected argument -- '%ls'\n"
@@ -912,11 +912,11 @@ msgstr "%ls: 新限制不能为空字符串\n"
 
 #: src/builtins/bind.rs:359
 msgid "%ls: No binding found for key '%ls'\n"
-msgstr "%ls: 找不到密钥 “% ls”\n 的绑定"
+msgstr "%ls: 找不到密钥 '%ls'\n 的绑定"
 
 #: src/builtins/bind.rs:365
 msgid "%ls: No binding found for sequence '%ls'\n"
-msgstr "%ls: 找不到序列 “% ls” 绑定"
+msgstr "%ls: 找不到序列 '%ls' 绑定"
 
 #: src/builtins/block.rs:102
 msgid "%ls: No blocks defined\n"
@@ -924,7 +924,7 @@ msgstr "%ls：没有定义区块\n"
 
 #: src/builtins/bind.rs:204
 msgid "%ls: No key with name '%ls' found\n"
-msgstr "%ls：关键字 “%ls” 未找到\n"
+msgstr "%ls：关键字 '%ls' 未找到\n"
 
 #: src/builtins/fg.rs:92
 msgid "%ls: No suitable job: %d\n"
@@ -952,15 +952,15 @@ msgstr "%ls: -o 需要一个非空字符串\n"
 
 #: src/builtins/string/pad.rs:36
 msgid "%ls: Padding should be a character '%ls'\n"
-msgstr "%ls: 铺设应为字符 “% ls”\n"
+msgstr "%ls: 铺设应为字符 '%ls'\n"
 
 #: src/builtins/cd.rs:165
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr "%ls：拒绝访问：“%ls”\n"
+msgstr "%ls：拒绝访问：'%ls'\n"
 
 #: src/builtins/abbr.rs:66
 msgid "%ls: --position option requires --add\n"
-msgstr "% ls: -- 位置选项需要 --add\n"
+msgstr "%ls: -- 位置选项需要 --add\n"
 
 #: src/builtins/random.rs:148
 msgid "%ls: range contains only one possible value\n"
@@ -976,7 +976,7 @@ msgstr "%ls: --regex 选项需要 --add\n"
 
 #: src/builtins/abbr.rs:317
 msgid "%ls: Regular expression compile error: %ls\n"
-msgstr "% ls: 正则表达式编译出错:% ls\n"
+msgstr "%ls: 正则表达式编译出错:%ls\n"
 
 #: src/builtins/string/replace.rs:87
 msgid "%ls: Regular expression substitute error: %ls\n"
@@ -984,7 +984,7 @@ msgstr "%ls: 正则表达式替代错误:%ls\n"
 
 #: src/builtins/ulimit.rs:275
 msgid "%ls: Resource limit not available on this operating system\n"
-msgstr "% ls: 此操作系统没有可用的资源限制\ n"
+msgstr "%ls: 此操作系统没有可用的资源限制\n"
 
 #: src/builtins/abbr.rs:98
 msgid "%ls: --set-cursor argument cannot be empty\n"
@@ -992,19 +992,19 @@ msgstr "%ls: -- set- cursor 参数不能为空\n"
 
 #: src/builtins/abbr.rs:86
 msgid "%ls: --set-cursor option requires --add\n"
-msgstr "% ls: -- set- cursor 选项需要 --add\n"
+msgstr "%ls: -- set- cursor 选项需要 --add\n"
 
 #: src/builtins/set.rs:714
 msgid "%ls: `set --show` does not allow slices with the var names\n"
-msgstr "%ls: “ set-show” 不允许带有 var 名称的切片"
+msgstr "%ls: ' set-show' 不允许带有 var 名称的切片"
 
 #: src/builtins/argparse.rs:249
 msgid "%ls: Short flag '%lc' already defined\n"
-msgstr "% s: 已经定义了短旗 “% lc”\n"
+msgstr "% s: 已经定义了短旗 '% lc'\n"
 
 #: src/builtins/argparse.rs:373
 msgid "%ls: Short flag '%lc' invalid, must be alphanum or '#'\n"
-msgstr "%ls: 短旗 “% lc” 无效, 必须是alphanum 或“ #”\n"
+msgstr "%ls: 短旗 '% lc' 无效, 必须是alphanum 或' #'\n"
 
 #: src/builtins/complete.rs:344
 msgid "%ls: -s requires a non-empty string\n"
@@ -1012,7 +1012,7 @@ msgstr "%ls: -s 需要一个非空字符串\n"
 
 #: src/builtins/complete.rs:374
 msgid "%ls: -S requires a non-empty string\n"
-msgstr "% ls: - S 需要非空字符串\n"
+msgstr "%ls: - S 需要非空字符串\n"
 
 #: src/builtins/source.rs:43
 msgid "%ls: stdin is closed\n"
@@ -1024,7 +1024,7 @@ msgstr "%ls: STEP 必须是正整数\n"
 
 #: src/builtins/cd.rs:69
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls：目录 “%ls” 不存在\n"
+msgstr "%ls：目录 '%ls' 不存在\n"
 
 #: src/builtins/jobs.rs:260
 msgid "%ls: There are no jobs\n"
@@ -1036,7 +1036,7 @@ msgstr "%ls：没有匹配的任务\n"
 
 #: src/builtins/set.rs:332
 msgid "%ls: The variable '%ls' does not exist\n"
-msgstr "% ls: 变量 “% ls” 不存在\ n"
+msgstr "%ls: 变量 '%ls' 不存在\n"
 
 #: src/builtins/shared.rs:51:pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS
 msgid "%ls: too many arguments\n"
@@ -1052,38 +1052,38 @@ msgstr "%ls: 太多只限长的选项\n"
 
 #: src/builtins/set.rs:311
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
-msgstr "%ls：试图改变只读变量 “%ls” 的值\n"
+msgstr "%ls：试图改变只读变量 '%ls' 的值\n"
 
 #: src/builtins/set.rs:325
 msgid "%ls: Tried to modify the special variable '%ls' to an invalid value\n"
-msgstr "% ls: 尝试将特殊变量 “% ls” 修改为无效值\ n"
+msgstr "%ls: 尝试将特殊变量 '%ls' 修改为无效值\n"
 
 #: src/builtins/set.rs:318
 msgid "%ls: Tried to modify the special variable '%ls' with the wrong scope\n"
-msgstr "% ls: 尝试用错误的范围修改特殊变量 “% ls”\ n"
+msgstr "%ls: 尝试用错误的范围修改特殊变量 '%ls'\n"
 
 #: src/builtins/set_color.rs:178
 msgid "%ls: Unknown color '%ls'\n"
-msgstr "%ls: 未知颜色 “%ls”\n"
+msgstr "%ls: 未知颜色 '%ls'\n"
 
 #: src/builtins/cd.rs:173
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
-msgstr "%ls：定位目录“%ls”时发生未知错误\n"
+msgstr "%ls：定位目录'%ls'时发生未知错误\n"
 
 #: src/builtins/commandline.rs:323
 msgid "%ls: Unknown input function '%ls'"
-msgstr "%ls: 未知的输入函数 “% ls”"
+msgstr "%ls: 未知的输入函数 '%ls'"
 
 #: src/builtins/function.rs:109
 msgid "%ls: Unknown signal '%ls'"
 msgstr "%ls: 未知信号 '%ls'  '"
 
 msgid "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
-msgstr "%ls: 对-i的用法 -- silent 已贬值。 请使用 - s 或 -- silent 代替。\ n"
+msgstr "%ls: 对-i的用法 -- silent 已贬值。 请使用 - s 或 -- silent 代替。\n"
 
 #: src/builtins/printf.rs:227
 msgid "%ls: value not completely converted (can't convert '%ls')"
-msgstr "%ls: 数值未完全转换( 无法转换 “% ls ” )"
+msgstr "%ls: 数值未完全转换( 无法转换 '%ls ' )"
 
 #: src/bin/fish_key_reader.rs:332
 msgid "%ls, version %s\n"
@@ -1091,7 +1091,7 @@ msgstr "%ls, 版本 %s\n"
 
 #: src/builtins/abbr.rs:539
 msgid "%ls: Warning: Option '%ls' was removed and is now ignored"
-msgstr "% ls: 警告: 选项 “% ls” 已被删除, 现在被忽略"
+msgstr "%ls: 警告: 选项 '%ls' 已被删除, 现在被忽略"
 
 #: src/builtins/ulimit.rs:46
 msgid "%lu\n"
@@ -1255,11 +1255,11 @@ msgstr "从工作列表中删除任务"
 
 #: src/parse_execution.rs:1532
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr "请求重定向到 “% ls ” , 这不是一个有效的文件描述符"
+msgstr "请求重定向到 '%ls ' , 这不是一个有效的文件描述符"
 
 #: src/builtins/test.rs:820
 msgid "Result too large: %ls"
-msgstr "结果太大 :% ls"
+msgstr "结果太大 :%ls"
 
 #: src/builtins/shared.rs:496
 msgid "Return an unsuccessful result"
@@ -1307,7 +1307,7 @@ msgstr "在指定列表中搜索一个特定的字符串"
 
 #: src/builtins/bg.rs:32
 msgid "Send job %s '%ls' to background\n"
-msgstr "将任务“%ls”发送到背景\n"
+msgstr "将任务'%ls'发送到背景\n"
 
 #: src/builtins/shared.rs:474
 msgid "Send job to background"
@@ -1407,7 +1407,7 @@ msgstr "[:最后的论点必须是  '"
 
 #: src/proc.rs:1187
 msgid "There are still jobs active:\n"
-msgstr "仍然有活动的工作 :\ n"
+msgstr "仍然有活动的工作 :\n"
 
 #: src/builtins/status.rs:341
 msgid "This is a login shell\n"
@@ -1443,15 +1443,15 @@ msgstr "翻译字符串"
 
 #: src/builtins/shared.rs:620
 msgid "(Type 'help %ls' for related documentation)\n"
-msgstr "(帮助% ls 的相关文档)\ n"
+msgstr "(帮助%ls 的相关文档)\n"
 
 #: src/builtins/ulimit.rs:126
 msgid "ulimit: Permission denied when changing resource of type '%ls'\n"
-msgstr "ulimit: 更改类型 “% ls”\n 的资源时被拒绝的权限"
+msgstr "ulimit: 更改类型 '%ls'\n 的资源时被拒绝的权限"
 
 #: src/env_universal_common.rs:520
 msgid "Unable to create temporary file '%ls': %s"
-msgstr "无法创建临时文件 “% ls ”:%s"
+msgstr "无法创建临时文件 '%ls ':%s"
 
 #: src/expand.rs:971
 msgid "Unable to evaluate string substitution"
@@ -1459,7 +1459,7 @@ msgstr "无法评价字符串替换"
 
 #: src/path.rs:152
 msgid "Unable to locate %ls directory derived from $%ls: '%ls'."
-msgstr "无法定位来自 $ls 的 %ls 目录 :% ls ."
+msgstr "无法定位来自 $ls 的 %ls 目录 :%ls ."
 
 #: src/path.rs:138
 msgid "Unable to locate the %ls directory."
@@ -1475,11 +1475,11 @@ msgstr "无法读取输入文件:%s"
 
 #: src/env_universal_common.rs:570
 msgid "Unable to rename file from '%ls' to '%ls': %s"
-msgstr "无法将文件从 “% ls” 重命名为 “% ls ”:%s"
+msgstr "无法将文件从 '%ls' 重命名为 '%ls ':%s"
 
 #: src/env_universal_common.rs:551
 msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "无法写入通用变量文件 “% ls ”:%s"
+msgstr "无法写入通用变量文件 '%ls ':%s"
 
 #: src/tokenizer.rs:175
 msgid "Unexpected '[' at this location"
@@ -1511,7 +1511,7 @@ msgstr "未预料到的'}' 用于未打开的牙套扩展"
 
 #: src/tokenizer.rs:172
 msgid "Unexpected ')' for unopened parenthesis"
-msgstr "未打开的括号“ ” "
+msgstr "未打开的括号' ' "
 
 #: src/tokenizer.rs:187
 msgid "Unexpected ')' found, expecting '}'"
@@ -1519,7 +1519,7 @@ msgstr "发现出乎意料的''', 期待'}  '"
 
 #: src/tokenizer.rs:184
 msgid "Unexpected '}' found, expecting ')'"
-msgstr "发现出乎意料的“ } ”  '"
+msgstr "发现出乎意料的' } '  '"
 
 #: src/tinyexpr.rs:107
 msgid "Unexpected token"
@@ -1547,14 +1547,14 @@ msgstr "未知的命令 :"
 
 #: src/parse_execution.rs:348
 msgid "Unknown command. A component of '%ls' is not a directory."
-msgstr "未知的命令 。 %ls 的组件不是一个目录 ."
+msgstr "未知的命令,%ls 的组件不是一个目录 ."
 
 msgid "Unknown command. A component of '%ls' is not a directory. Check your $PATH."
-msgstr "未知的命令 。 %ls 的组件不是一个目录 。 检查你的$PATH."
+msgstr "未知的命令,%ls 的组件不是一个目录,检查你的$PATH."
 
 #: src/parse_execution.rs:359
 msgid "Unknown command. '%ls' exists but is not an executable file."
-msgstr "未知的命令 。 “% ls” 已经存在, 但不是一个可执行的文件 ."
+msgstr "未知的命令,'%ls' 已经存在, 但不是一个可执行的文件 ."
 
 #: src/expand.rs:1003
 msgid "Unknown error while evaluating command substitution"
@@ -1566,7 +1566,7 @@ msgstr "未知函数"
 
 #: src/exec.rs:1007
 msgid "Unknown function '%ls'"
-msgstr "未知函数 “% ls ”  '"
+msgstr "未知函数 '%ls '  '"
 
 #: src/reader.rs:1850
 msgid "Unknown key binding 0x%X"
@@ -1582,7 +1582,7 @@ msgstr "未匹配的通配符"
 
 #: src/proc.rs:1199
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
-msgstr "使用“ 取消 PID ” 从列表中删除任务而不终止它们 。\ n"
+msgstr "使用' 取消 PID ' 从列表中删除任务而不终止它们 。\n"
 
 #: src/env_dispatch.rs:523
 msgid "Using fallback terminal type"
@@ -1598,7 +1598,7 @@ msgstr "等待背景进程完成"
 
 #: src/parser.rs:1156
 msgid " with arguments '%ls'"
-msgstr "参数 “% ls ”"
+msgstr "参数 '%ls '"
 
 #: src/builtins/type.rs:124
 msgid " with definition"
@@ -1613,7 +1613,7 @@ msgstr "fish:%ls: 缺少 man page\n 文件可能无法安装。 \n 帮助 %ls �
 
 #: src/builtins/shared.rs:36
 msgid "%ls: scope can be only one of: universal function global local\n"
-msgstr "% ls: 范围只能是: 通用函数全局本地\n"
+msgstr "%ls: 范围只能是: 通用函数全局本地\n"
 
 #: src/builtins/shared.rs:39:pub const BUILTIN_ERR_EXPUNEXP
 msgid "%ls: cannot both export and unexport\n"
@@ -1621,7 +1621,7 @@ msgstr "%ls: 无法同时导出和解出\n"
 
 #: src/builtins/shared.rs:42:pub const BUILTIN_ERR_PATHUNPATH
 msgid "%ls: cannot both path and unpath\n"
-msgstr "% ls: 无法同时路径和不路径"
+msgstr "%ls: 无法同时路径和不路径"
 
 #: src/builtins/shared.rs:45:pub const BUILTIN_ERR_UNKNOWN
 msgid "%ls: %ls: unknown option\n"
@@ -1629,7 +1629,7 @@ msgstr "%ls:%ls:未知选项\n"
 
 #: src/builtins/shared.rs:48:pub const BUILTIN_ERR_BIND_MODE
 msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
-msgstr "%ls:%ls:无效模式名. 参见“ 帮助标识符 +n"
+msgstr "%ls:%ls:无效模式名. 参见' 帮助标识符 +n"
 
 #: src/builtins/shared.rs:57:pub const BUILTIN_ERR_MISSING_SUBCMD
 msgid "%ls: missing subcommand\n"
@@ -1641,7 +1641,7 @@ msgstr "%ls:%ls:无效的子命令\n"
 
 #: src/builtins/shared.rs:68:pub const BUILTIN_ERR_VARNAME
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
-msgstr "%ls:%ls:无效的可变名称. 参见“ 帮助标识符 +n"
+msgstr "%ls:%ls:无效的可变名称. 参见' 帮助标识符 +n"
 
 #: src/builtins/shared.rs:71:pub const BUILTIN_ERR_COMBO
 msgid "%ls: invalid option combination\n"
@@ -1649,11 +1649,11 @@ msgstr "%ls: 选项组合无效\n"
 
 #: src/builtins/shared.rs:76:pub const FG_MSG
 msgid "Send job %d (%ls) to foreground\n"
-msgstr "将任务 %d (% ls) 发送给前景"
+msgstr "将任务 %d (%ls) 发送给前景"
 
 #: src/builtins/argparse.rs:12:const BUILTIN_ERR_INVALID_OPT_SPEC
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "% ls: 在字符 “% lc”\n 时无效的选项 spec% ls"
+msgstr "%ls: 在字符 '% lc'\n 时无效的选项 spec%ls"
 
 #: src/builtins/set.rs:23:const MISMATCHED_ARGS
 msgid "%ls: given %d indexes but %d values\n"
@@ -1661,7 +1661,7 @@ msgstr "%ls: 给定的 %d 索引但 %d 值\n"
 
 #: src/builtins/set.rs:25
 msgid "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
-msgstr "% ls: 成功设置通用 “% ls ” ; 但是这个名称的全局显示它为正n"
+msgstr "%ls: 成功设置通用 '%ls ' ; 但是这个名称的全局显示它为正n"
 
 #: src/fds.rs:16:pub const PIPE_ERROR
 msgid "An error occurred while setting up pipe"
@@ -1673,15 +1673,15 @@ msgstr "搜索 :"
 
 #: src/parse_constants.rs:452
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
-msgstr "函数 “% ls” 立即调用它, 会导致无限循环 ."
+msgstr "函数 '%ls' 立即调用它, 会导致无限循环 ."
 
 #: src/parse_constants.rs:456
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
-msgstr "呼叫堆栈限制已经超过 。 你有一个意外的无限循环?"
+msgstr "呼叫堆栈限制已经超过,你有一个意外的无限循环?"
 
 #: src/parse_constants.rs:459:pub const UNKNOWN_BUILTIN_ERR_MSG
 msgid "Unknown builtin '%ls'"
-msgstr "未知的内置命令 “%ls”"
+msgstr "未知的内置命令 '%ls'"
 
 #: src/parse_constants.rs:462:pub const FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG
 msgid "Unable to expand variable name '%ls'"
@@ -1689,11 +1689,11 @@ msgstr "无法扩展可变名称 '%ls'  '"
 
 #: src/parse_constants.rs:465:pub const ILLEGAL_FD_ERR_MSG
 msgid "Illegal file descriptor in redirection '%ls'"
-msgstr "重定向 “% ls” 中的非法文件描述符  '"
+msgstr "重定向 '%ls' 中的非法文件描述符  '"
 
 #: src/parse_constants.rs:468:pub const WILDCARD_ERR_MSG
 msgid "No matches for wildcard '%ls'. See `help wildcards-globbing`."
-msgstr "不匹配通配符 “% ls ” 。 见`帮助通配符-取出'."
+msgstr "不匹配通配符 '%ls ',见`帮助通配符-取出'."
 
 #: src/parse_constants.rs:471:pub const INVALID_BREAK_ERR_MSG
 msgid "'break' while not inside of loop"
@@ -1701,11 +1701,11 @@ msgstr "不在圈内时"破""
 
 #: src/parse_constants.rs:474:pub const INVALID_CONTINUE_ERR_MSG
 msgid "'continue' while not inside of loop"
-msgstr "“ 继续” 而不在循环内"
+msgstr "' 继续' 而不在循环内"
 
 #: src/parse_constants.rs:477:pub const INVALID_PIPELINE_CMD_ERR_MSG
 msgid "The '%ls' command can not be used in a pipeline"
-msgstr "无法在管道中使用 “% ls” 命令"
+msgstr "无法在管道中使用 '%ls' 命令"
 
 #: src/parse_constants.rs:493:pub const ERROR_NOT_STATUS
 msgid "$? is not the exit status. In fish, please use $status."
@@ -1717,11 +1717,11 @@ msgstr "美元不是皮条客。 在fish中,请使用$fish_pid."
 
 #: src/parse_constants.rs:499:pub const ERROR_NOT_ARGV_COUNT
 msgid "$# is not supported. In fish, please use 'count $argv'."
-msgstr "$# 不支持 。 在fish中,请使用"计算出$argv"."
+msgstr "$# 不支持,在fish中,请使用"计算出$argv"."
 
 #: src/parse_constants.rs:502:pub const ERROR_NOT_ARGV_AT
 msgid "$@ is not supported. In fish, please use $argv."
-msgstr "$@ 不支持 。 在fish上,请使用$argv."
+msgstr "$@ 不支持,在fish上,请使用$argv."
 
 #: src/parse_constants.rs:505:pub const ERROR_NOT_ARGV_STAR
 msgid "$* is not supported. In fish, please use $argv."
@@ -1733,19 +1733,19 @@ msgstr "期望在此 $ 之后有一个可变名称 ."
 
 #: src/parse_constants.rs:512
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
-msgstr "不支持使用"=". 在fish类中,请使用“ set %ls %ls ” ."
+msgstr "不支持使用"=". 在fish类中,请使用' set %ls %ls ' ."
 
 #: src/parse_constants.rs:516
 msgid "'time' is not supported for background jobs. Consider using 'command time'."
-msgstr "“ 时间” 不支持背景任务 。 考虑使用命令时间 ."
+msgstr "' 时间' 不支持背景任务,考虑使用命令时间 ."
 
 #: src/parse_constants.rs:520
 msgid "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; "end'"
-msgstr "组合命令不支持“{...}”。 请使用' begin;..;"
+msgstr "组合命令不支持'{...}'。 请使用' begin;..;"
 
 #: src/parse_util.rs:1814
 msgid "The '%ls' command can not be used immediately after a backgrounded job"
-msgstr "在背景工作之后无法立即使用 “% s” 命令"
+msgstr "在背景工作之后无法立即使用 '% s' 命令"
 
 #: src/parse_util.rs:1818
 msgid "Backgrounded commands can not be used as conditionals"
@@ -1792,15 +1792,15 @@ msgstr "无法格式化帮助; 未找到解析器"
 
 #: share/functions/_validate_int.fish:1
 msgid "%s: Value '%s' for flag '%s' is not an integer\\n"
-msgstr "%s: 标记“%s”的值不是整数\\n"
+msgstr "%s: 标记'%s'的值不是整数\\n"
 
 #: share/functions/_validate_int.fish:2
 msgid "%s: Value '%s' for flag '%s' less than min allowed of '%s'\\n"
-msgstr "%s: 标记“%s”的值“%s”小于允许的分钟“%s”\\n"
+msgstr "%s: 标记'%s'的值'%s'小于允许的分钟'%s'\\n"
 
 #: share/functions/_validate_int.fish:3
 msgid "%s: Value '%s' for flag '%s' greater than max allowed of '%s'\\n"
-msgstr "%s: 标记“%s”的值大于允许的“%s”\\n的最大值"
+msgstr "%s: 标记'%s'的值大于允许的'%s'\\n的最大值"
 
 #: share/functions/alias.fish:1
 msgid "%s: name cannot be empty\\n"
@@ -1820,7 +1820,7 @@ msgstr "cdh: 预期为零或一个参数"
 
 #: share/functions/cdh.fish:2
 msgid "No previous directories to select. You have to cd at least once."
-msgstr "无前一个目录可选择 。 你至少得接受一次检查."
+msgstr "无前一个目录可选择,你至少得接受一次检查."
 
 #: share/functions/cdh.fish:3
 msgid "This should not happen. Have you changed the cd function?"
@@ -1933,7 +1933,7 @@ msgstr "已取消的函数编辑"
 
 #: share/functions/funced.fish:8
 msgid "Warning: the file containing this function has not been saved. Changes may "be lost when fish is closed."
-msgstr "警告: 包含此函数的文件没有保存 。 变动可能"
+msgstr "警告: 包含此函数的文件没有保存,变动可能"
 
 #: share/functions/funced.fish:9
 msgid "Save function to %s? [Y/n]"
@@ -1949,7 +1949,7 @@ msgstr "保存到原始位置失败; 保存到用户配置 ."
 
 #: share/functions/funced.fish:13
 msgid "Saving to user configuration failed. Changes may be lost when fish is closed."
-msgstr "保存到用户配置失败 。 fish类关闭后可能会失去变化."
+msgstr "保存到用户配置失败,fish类关闭后可能会失去变化."
 
 #: share/functions/funced.fish:14
 msgid "Run funcsave %s to save this function to the configuration directory."
@@ -1977,11 +1977,11 @@ msgstr "%s: 找不到网页浏览器.\\\n"
 
 #: share/functions/help.fish:3
 msgid "%s: no fish help topic '%s', try 'man %s'\\n"
-msgstr "%s:没有fish帮助话题“%s”,尝试“man %s”\\n"
+msgstr "%s:没有fish帮助话题'%s',尝试'man %s'\\n"
 
 #: share/functions/help.fish:4
 msgid "help: Help is being displayed in your default browser.\\n"
-msgstr "帮助 : 帮助正在您的默认浏览器中显示 。\\ n"
+msgstr "帮助 : 帮助正在您的默认浏览器中显示 。\\n"
 
 #: share/functions/help.fish:5
 msgid "help: Help is being displayed in %s.\\n"
@@ -1993,7 +1993,7 @@ msgstr "% s:% s: 子命令不需要选项\\n"
 
 #: share/functions/history.fish:2
 msgid "%ls: %ls: expected %d arguments; got %d\\n"
-msgstr "% ls:% ls: 期望的 %d 参数; 获得 %d\\n"
+msgstr "%ls:%ls: 期望的 %d 参数; 获得 %d\\n"
 
 #: share/functions/history.fish:3 share/functions/history.fish:4
 msgid "Ignoring invalid history entry ID \"%s\"\\n"
@@ -2001,11 +2001,11 @@ msgstr "忽略无效历史条目 ID\"
 
 #: share/functions/history.fish:5
 msgid "If you enter 'yes' your entire interactive command history will be erased\\n"
-msgstr "如果您输入“ 是” , 您的整个交互命令历史将被去除\\\n"
+msgstr "如果您输入' 是' , 您的整个交互命令历史将被去除\\\n"
 
 #: share/functions/history.fish:6
 msgid "Command history cleared!\\n"
-msgstr "命令历史清除 !\\\ n"
+msgstr "命令历史清除 !\\\n"
 
 #: share/functions/history.fish:7
 msgid "You did not say 'yes' so I will not clear your command history\\n"
@@ -2025,7 +2025,7 @@ msgstr "%s:要跳过的位置数必须是非负整数\\\n"
 
 #: share/functions/open.fish:2
 msgid "No open utility found. Try installing \"xdg-open\" or \"xdg-utils\"."
-msgstr "未找到打开的工具 。 尝试安装 \"
+msgstr "未找到打开的工具,尝试安装 \"
 
 #: share/functions/popd.fish:1
 msgid "%s: Directory stack is empty…\\n"
@@ -3128,7 +3128,7 @@ msgstr "设定要保存的旋转日志数, 默认为 4"
 
 #: share/completions/adb.fish:88
 msgid " If the signature <id> for logging to file changes, then clear the "associated files and continue"
-msgstr "如果用于日志的签名“ id” 文件更改, 那么清除"
+msgstr "如果用于日志的签名' id' 文件更改, 那么清除"
 
 #: share/completions/adb.fish:89
 msgid "Get the size of the ring buffers within logd"
@@ -3423,7 +3423,7 @@ msgstr "对信件使用 syslog"
 
 #: share/completions/alsactl.fish:28
 msgid "Set the process priority (see 'man nice')"
-msgstr "设置进程优先级( 见“ 人不错 ” )"
+msgstr "设置进程优先级( 见' 人不错 ' )"
 
 #: share/completions/alsactl.fish:29
 msgid "Set the process scheduling policy to idle (SCHED_IDLE)"
@@ -4322,7 +4322,7 @@ msgstr "模块参数"
 
 #: share/completions/ansible.fish:3
 msgid "Run asynchronously, failing after X seconds"
-msgstr "同步运行, 失败 。 X 秒数"
+msgstr "同步运行, 失败,X 秒数"
 
 #: share/completions/ansible.fish:12
 msgid "Module name to execute (default=command)"
@@ -4500,7 +4500,7 @@ msgstr "继续, 即使要输出二进制数据"
 
 #: share/completions/apk.fish:9
 msgid "Continue even if 'world' cannot be satisfied"
-msgstr "即使不能满足“ 世界” 继续"
+msgstr "即使不能满足' 世界' 继续"
 
 #: share/completions/apk.fish:10
 msgid "Continue even if packages may be lost on reboot"
@@ -5411,7 +5411,7 @@ msgstr "为已安装的软件包重建模块缓存"
 
 #: share/completions/apm.fish:61
 msgid "Search for Atom packages/themes in the atom.io registry"
-msgstr "在原子中搜索原子包/主题 。 io 登记册"
+msgstr "在原子中搜索原子包/主题,io 登记册"
 
 #: share/completions/apm.fish:62
 msgid "Output matching packages as JSON array"
@@ -6451,7 +6451,7 @@ msgstr "将包从缓存移动到本地镜像"
 
 #: share/completions/apt-move.fish:8
 msgid "Alias for 'move delete packages'"
-msgstr "用于“ 删除”软件包的异名  '"
+msgstr "用于' 删除'软件包的异名  '"
 
 #: share/completions/apt-move.fish:9
 msgid "Alias for 'update'"
@@ -6828,7 +6828,7 @@ msgstr "测试能力命令是否应该有包作为可能的完成"
 
 #: share/completions/aptitude.fish:3
 msgid "Display a brief help message. Identical to the help action"
-msgstr "显示简短的帮助信息 。 与帮助行动相同"
+msgstr "显示简短的帮助信息,与帮助行动相同"
 
 #: share/completions/aptitude.fish:4
 msgid "Remove any cached packages which can no longer be downloaded"
@@ -7484,7 +7484,7 @@ msgstr "基于优先级、创建或修改的任务,"
 
 #: share/completions/arc.fish:127
 msgid "A wrapper on 'git branch' or 'hg bookmark"
-msgstr "在“ git 分支” 或“ hg 书签” 上的包装符"
+msgstr "在' git 分支' 或' hg 书签' 上的包装符"
 
 #: share/completions/arc.fish:128 share/completions/arc.fish:140
 msgid "Specify the output format"
@@ -8082,7 +8082,7 @@ msgstr "支持伪指数登记册"
 
 #: share/completions/as.fish:64
 msgid "Don't require '%' prefix for registers"
-msgstr "注册时不需要“%” 前缀"
+msgstr "注册时不需要'%' 前缀"
 
 #: share/completions/as.fish:65
 msgid "Support old (<= 2.8.1) versions of gcc"
@@ -9786,7 +9786,7 @@ msgstr "指定应用程序模板"
 
 #: share/completions/blender.fish:80
 msgid "Do not read startup.blend"
-msgstr "不读取启动 。 混合"
+msgstr "不读取启动,混合"
 
 #: share/completions/blender.fish:81
 msgid "Enable event simulation"
@@ -10692,7 +10692,7 @@ msgstr "忽略大小写( 只有- path- regex)"
 
 #: share/completions/btrfs.fish:48
 msgid "Send an incremental stream from <parent> to <subvol>"
-msgstr "向“ subvol” 发送递增流"
+msgstr "向' subvol' 发送递增流"
 
 #: share/completions/btrfs.fish:49
 msgid "Use this snapshot as a clone source for an incremental send"
@@ -10728,7 +10728,7 @@ msgstr "在流中收到 < end cmd> 标记后终止"
 
 #: share/completions/btrfs.fish:58
 msgid "Confine the process to <mount> using chroot"
-msgstr "使用 chroot 关闭进程以“ 挂载 ”"
+msgstr "使用 chroot 关闭进程以' 挂载 '"
 
 #: share/completions/btrfs.fish:59
 msgid "Terminate when NUMBER errors occur"
@@ -11868,7 +11868,7 @@ msgstr "创建没有工作树的分支"
 
 #: share/completions/bzr.fish:11
 msgid "Never change revnos or the existing log. Append revisions to it only"
-msgstr "永远不要更改 revnos 或现有日志 。 仅附上订正数"
+msgstr "永远不要更改 revnos 或现有日志,仅附上订正数"
 
 #: share/completions/bzr.fish:12
 msgid "Make a copy of another branch"
@@ -12391,7 +12391,7 @@ msgstr "覆盖配置值( 不稳定 )"
 #: share/completions/cargo.fish:712 share/completions/cargo.fish:722
 #: share/completions/cargo.fish:736 share/completions/cargo.fish:747
 msgid "Unstable (nightly-only) flags to Cargo, see 'cargo -Z help' for details"
-msgstr "无法稳定( 仅夜间) 标记为 Cargo, 详情请参见“ 货物- Z 帮助 ”"
+msgstr "无法稳定( 仅夜间) 标记为 Cargo, 详情请参见' 货物- Z 帮助 '"
 
 #: share/completions/cargo.fish:6 share/completions/ldapsearch.fish:2
 #: share/completions/light.fish:2 share/completions/rpm-ostree.fish:3
@@ -13588,7 +13588,7 @@ msgstr "逃逸标签"
 
 #: share/completions/cat.fish:9
 msgid "Escape unprintables except '\\n' and \\t"
-msgstr "除“\\n” 和“\ t” 外的不可打印文件"
+msgstr "除'\\n' 和'\ t' 外的不可打印文件"
 
 #: share/completions/cat.fish:12
 msgid "Specify # of non-blank lines"
@@ -13982,7 +13982,7 @@ msgstr "停止应用程序"
 
 #: share/completions/cf.fish:17
 msgid "Stop all instances of the app, then start them again. This causes downtime."
-msgstr "停止应用程序的所有实例, 然后重新开始 。 这导致停机时间."
+msgstr "停止应用程序的所有实例, 然后重新开始,这导致停机时间."
 
 #: share/completions/cf.fish:18
 msgid "Recreate the app's executable artifact using the latest pushed app files and "the latest environment (variables, service bindings, buildpack, stack, etc.)"
@@ -15370,7 +15370,7 @@ msgstr "输出当前版本"
 
 #: share/completions/clasp.fish:2
 msgid "path to an auth file or a folder with a '.clasprc.json' file."
-msgstr "路径为“.clasprc.json”文件的认证文件或文件夹."
+msgstr "路径为'.clasprc.json'文件的认证文件或文件夹."
 
 #: share/completions/clasp.fish:3
 msgid "path to an ignore file or a folder with a '.claspignore' file."
@@ -15378,7 +15378,7 @@ msgstr "路径."
 
 #: share/completions/clasp.fish:4
 msgid "path to a project file or to a folder with a '.clasp.json' file."
-msgstr "路径到工程文件或带有“.clasp.json”文件的文件夹."
+msgstr "路径到工程文件或带有'.clasp.json'文件的文件夹."
 
 #: share/completions/clasp.fish:5
 msgid "Display some debugging info upon exit."
@@ -15487,7 +15487,7 @@ msgstr "强制地覆盖了远程显示."
 
 #: share/completions/clasp.fish:34
 msgid "Watches for local file changes. Pushes when a non-ignored file changes."
-msgstr "监视本地文件更改 。 当一个非被忽略的文件更改时按下 ."
+msgstr "监视本地文件更改,当一个非被忽略的文件更改时按下 ."
 
 #: share/completions/clasp.fish:35
 msgid "Show status in JSON form"
@@ -16445,7 +16445,7 @@ msgstr "从要求或要求-dev中删除软件包"
 
 #: share/completions/composer.fish:27
 msgid "Adds required packages to your composer.json and installs them"
-msgstr "向您的作曲家添加所需的软件包 。 Json和安装它们"
+msgstr "向您的作曲家添加所需的软件包,Json和安装它们"
 
 #: share/completions/composer.fish:28
 msgid "Run the scripts defined in composer.json."
@@ -16498,7 +16498,7 @@ msgstr "将归档写入此目录"
 
 #: share/completions/composer.fish:40
 msgid "Write the archive with the given file name. Note that the format will be "appended."
-msgstr "用给定的文件名写入归档 。 注意格式将是"
+msgstr "用给定的文件名写入归档,注意格式将是"
 
 #: share/completions/composer.fish:41
 msgid "Ignore filters when saving package"
@@ -16742,11 +16742,11 @@ msgstr "当有已过时的软件包时返回非零退出代码"
 
 #: share/completions/composer.fish:110 share/completions/composer.fish:164
 msgid "Show only packages that have minor SemVer-compatible updates. Use with the --"outdated option."
-msgstr "仅显示有小的 SemVer 兼容更新的软件包 。 与.."
+msgstr "仅显示有小的 SemVer 兼容更新的软件包,与.."
 
 #: share/completions/composer.fish:112 share/completions/composer.fish:163
 msgid "Ignore specified package(s). Use it with the --outdated option if you don't "want to be informed about new versions of some packages."
-msgstr "忽略指定的软件包 。 使用它与 - 过时选项, 如果你不使用"
+msgstr "忽略指定的软件包,使用它与 - 过时选项, 如果你不使用"
 
 #: share/completions/composer.fish:115
 msgid "Removes a package from the require-dev section."
@@ -16806,7 +16806,7 @@ msgstr "恢复到旧作曲家的安装"
 
 #: share/completions/composer.fish:146
 msgid "Delete old backups during an update. This makes the current version of "composer the only backup available after the update"
-msgstr "更新时删除旧备份 。 这使得当前版本"
+msgstr "更新时删除旧备份,这使得当前版本"
 
 #: share/completions/composer.fish:148
 msgid "Prompt user for a key update"
@@ -17152,7 +17152,7 @@ msgstr "指定文件中的缓存测试结果"
 
 #: share/completions/configure.fish:5
 msgid "Cache test results in file config.cache"
-msgstr "文件配置中的缓存测试结果 。 缓存"
+msgstr "文件配置中的缓存测试结果,缓存"
 
 #: share/completions/configure.fish:6
 msgid "Do not create output files"
@@ -17391,7 +17391,7 @@ msgstr "适应性模糊的像素; 边缘附近的还原效果[地 "
 
 #: share/completions/convert.fish:83 share/completions/mogrify.fish:86
 msgid "Adaptively resize image using 'mesh' interpolation [geometry]"
-msgstr "使用“ mesh” 插值调整图像大小 [几何]"
+msgstr "使用' mesh' 插值调整图像大小 [几何]"
 
 #: share/completions/convert.fish:84 share/completions/mogrify.fish:87
 #: share/completions/montage.fish:71
@@ -17892,7 +17892,7 @@ msgstr "新州长."
 
 #: share/completions/cpupower.fish:26
 msgid "specific frequency to be set. Requires userspace governor to be available "and loaded."
-msgstr "指定要设定的频率 。 需要用户空间管理员可用"
+msgstr "指定要设定的频率,需要用户空间管理员可用"
 
 #: share/completions/cpupower.fish:27
 msgid "modify all hardware-related CPUs at the same time"
@@ -18024,7 +18024,7 @@ msgstr "不创建虚拟界面"
 
 #: share/completions/create_ap.fish:22
 msgid "Do not run 'haveged' automatically when needed"
-msgstr "需要时不要自动运行“ hasged ”"
+msgstr "需要时不要自动运行' hasged '"
 
 #: share/completions/create_ap.fish:23
 msgid "Fix NetworkManager showing interface as unmanaged"
@@ -19074,11 +19074,11 @@ msgstr "(DNS)通过"接口"发送已发送的 DNS 请求"
 
 #: share/completions/curl.fish:34
 msgid "(DNS) Bind to <ip-address> when making IPv4 DNS requests"
-msgstr "(DNS) 绑入“ ip- 地址” 制作 IPv4 DNS 请求时"
+msgstr "(DNS) 绑入' ip- 地址' 制作 IPv4 DNS 请求时"
 
 #: share/completions/curl.fish:35
 msgid "(DNS) Bind to <ip-address> when making IPv6 DNS requests"
-msgstr "(DNS) 绑入“ ip- 地址” 当生成 IPv6 DNS 请求时"
+msgstr "(DNS) 绑入' ip- 地址' 当生成 IPv6 DNS 请求时"
 
 #: share/completions/curl.fish:36
 msgid "Set the list of DNS servers to use"
@@ -19886,7 +19886,7 @@ msgstr "输出字符范围"
 
 #: share/completions/cut.fish:14
 msgid "Delimiter instead of \\t to use"
-msgstr "分隔符而不是“\ t” 用于"
+msgstr "分隔符而不是'\ t' 用于"
 
 #: share/completions/cut.fish:17
 msgid "Supress lines without delimiter"
@@ -19934,7 +19934,7 @@ msgstr "CVS版本和版权."
 
 #: share/completions/cvs.fish:10
 msgid "Use 'tmpdir' for temporary files."
-msgstr "对临时文件使用“ tmpdir ” ."
+msgstr "对临时文件使用' tmpdir ' ."
 
 #: share/completions/cvs.fish:11
 msgid "Use 'editor' for editing log information."
@@ -20046,7 +20046,7 @@ msgstr "显示最后一个修改模块行的位置"
 
 #: share/completions/cvs.fish:39
 msgid "Create 'patch' format diffs between releases"
-msgstr "在发布之间创建“ patch” 格式 diffs"
+msgstr "在发布之间创建' patch' 格式 diffs"
 
 #: share/completions/cvs.fish:40
 msgid "Indicate that a Module is no longer in use"
@@ -20257,7 +20257,7 @@ msgstr "如-c,但包含模块状态."
 
 #: share/completions/cvs.fish:90
 msgid "Check out revision or tag. (implies -P) (is sticky)"
-msgstr "检查校正或标签 。 (缩写-P)(是粘的)"
+msgstr "检查校正或标签,(缩写-P)(是粘的)"
 
 #: share/completions/cvs.fish:91
 msgid "Check out revisions as of date. (implies -P) (is sticky)"
@@ -20269,7 +20269,7 @@ msgstr "检查为 dir 而不是模块名称 ."
 
 #: share/completions/cvs.fish:93 share/completions/cvs.fish:280
 msgid "Use RCS kopt -k option on checkout. (is sticky)"
-msgstr "退出时使用 RCS kopt - k 选项 。 (粘着)"
+msgstr "退出时使用 RCS kopt - k 选项,(粘着)"
 
 #: share/completions/cvs.fish:94 share/completions/cvs.fish:283
 msgid "Merge in changes made between current revision and rev."
@@ -20465,7 +20465,7 @@ msgstr "检查由他人编辑的 < file> , 如果找到则中止 ."
 
 #: share/completions/cvs.fish:145
 msgid "Allow edit if <file>s are edited by others (default)."
-msgstr "如果“ 文件” 由他人编辑( 默认) , 允许编辑 ."
+msgstr "如果' 文件' 由他人编辑( 默认) , 允许编辑 ."
 
 #: share/completions/cvs.fish:146 share/completions/cvs.fish:223
 #: share/completions/cvs.fish:258
@@ -21447,11 +21447,11 @@ msgstr "将 Dart 编译为内核快照 ."
 
 #: share/completions/dart.fish:23
 msgid "The project template to use. [console-simple (default), console-full, "package-simple, server-shelf, web-simple]"
-msgstr "要使用的项目模板 。 [控制台-简单(默认),控制台-全,"
+msgstr "要使用的项目模板,[控制台-简单(默认),控制台-全,"
 
 #: share/completions/dart.fish:24 share/completions/dart.fish:25
 msgid "Whether to run 'pub get' after the project has been created. (defaults to on)"
-msgstr "项目创建后是否运行“ pub get” 。 (默认继续)"
+msgstr "项目创建后是否运行' pub get',(默认继续)"
 
 #: share/completions/dart.fish:26
 msgid "Force project generation, even if the target directory already exists."
@@ -21511,7 +21511,7 @@ msgstr "在指定的端口运行预览服务器"
 
 #: share/completions/dart.fish:41
 msgid "Run the subcommand in the directory<dir>.(defaults to \".\")"
-msgstr "在目录< dir> 中运行子命令 。 (默认为 \)"
+msgstr "在目录< dir> 中运行子命令,(默认为 \)"
 
 #: share/completions/dart.fish:42
 msgid "Add a dependency to pubspec.yaml."
@@ -23792,7 +23792,7 @@ msgstr "从 SHELL 或 /etc/ passwd 执行shell"
 
 #: share/completions/doas.fish:6
 msgid "Execute the command as user. The default is root."
-msgstr "执行命令为用户 。 默认为根."
+msgstr "执行命令为用户,默认为根."
 
 #: share/completions/dolphin.fish:3 share/completions/konsole.fish:4
 msgid "Show Qt specific options and exit"
@@ -23885,7 +23885,7 @@ msgstr "运行 MSBuild 命令"
 
 #: share/completions/dotnet.fish:20
 msgid "Create a new .NET project"
-msgstr "创建新 。 NET 项目"
+msgstr "创建新,NET 项目"
 
 #: share/completions/dotnet.fish:21
 msgid "Run additional NuGet commands"
@@ -24552,7 +24552,7 @@ msgstr "存储软件包的目标框架"
 
 #: share/completions/dotnet.fish:250
 msgid "Specify the .NET SDK version"
-msgstr "请指定 。 NET SDK 版本"
+msgstr "请指定,NET SDK 版本"
 
 #: share/completions/dotnet.fish:251
 msgid "Target runtime to store packages"
@@ -25435,7 +25435,7 @@ msgstr "通过 rsync * 到 * 给定的 CLIENT 同步"
 
 #: share/completions/eix-sync.fish:5
 msgid "Do not touch the database and omit the hooks after update-eix. (Implies -R)"
-msgstr "更新后不要碰数据库并略去钩子 。 (Implies -R) (英语)"
+msgstr "更新后不要碰数据库并略去钩子,(Implies -R) (英语)"
 
 #: share/completions/eix-sync.fish:6
 msgid "Update database only and show differences"
@@ -25996,7 +25996,7 @@ msgstr "限制同步到指定的子模块"
 
 #: share/completions/emerge.fish:1
 msgid "Add a terminal bell character ('\\a') to all interactive prompts"
-msgstr "在所有交互式提示中添加终端铃声字符(“\\a”)"
+msgstr "在所有交互式提示中添加终端铃声字符('\\a')"
 
 #: share/completions/emerge.fish:2
 msgid "Prompt the user before peforming the merge"
@@ -26012,7 +26012,7 @@ msgstr "只构建 二进制 pkg"
 
 #: share/completions/emerge.fish:5
 msgid "Show changelog of pkg. Use with --pretend"
-msgstr "显示 pkg 的更改日志 。 以 -- pretend 使用"
+msgstr "显示 pkg 的更改日志,以 -- pretend 使用"
 
 #: share/completions/emerge.fish:6
 msgid "Colorized output"
@@ -26020,7 +26020,7 @@ msgstr "彩色输出"
 
 #: share/completions/emerge.fish:7
 msgid "Align output. Use with --pretend"
-msgstr "对齐输出 。 以 -- pretend 使用"
+msgstr "对齐输出,以 -- pretend 使用"
 
 #: share/completions/emerge.fish:8
 msgid "Run in debug mode"
@@ -26044,7 +26044,7 @@ msgstr "与 -- fetch 相同并抓取所有潜在文件"
 
 #: share/completions/emerge.fish:13
 msgid "Download infos from each binary pkg. Implies -k"
-msgstr "从每个二进制 pkg 下载信息 。 符号 - k"
+msgstr "从每个二进制 pkg 下载信息,符号 - k"
 
 #: share/completions/emerge.fish:14
 msgid "As -g but don't use local infos"
@@ -26092,7 +26092,7 @@ msgstr "使用压缩输出"
 
 #: share/completions/emerge.fish:25
 msgid "Remove first pkg in resume list. Use with --resume"
-msgstr "删除恢复列表中的第一个 pkg 。 使用 -- resume( 重现)"
+msgstr "删除恢复列表中的第一个 pkg,使用 -- resume( 重现)"
 
 #: share/completions/emerge.fish:26
 msgid "Show the dependency tree"
@@ -26232,7 +26232,7 @@ msgstr "提供替代路径"
 
 #: share/completions/env.fish:9
 msgid "Split argument into args on ' '"
-msgstr "将参数拆分为“ ”"
+msgstr "将参数拆分为' '"
 
 #: share/completions/env.fish:11
 msgid "Verbose output on processing"
@@ -27399,7 +27399,7 @@ msgstr "重启设备"
 
 #: share/completions/fastboot.fish:13
 msgid "Flash all partitions from an update.zip package"
-msgstr "从更新中闪出所有分区 。 zip 软件包"
+msgstr "从更新中闪出所有分区,zip 软件包"
 
 #: share/completions/fastboot.fish:14
 msgid "Erase a flash partition"
@@ -31990,7 +31990,7 @@ msgstr "没有匹配时立即退出"
 
 #: share/completions/fzf.fish:51
 msgid "Filter mode. Do not start interactive finder"
-msgstr "过滤模式 。 不启动交互式查找器"
+msgstr "过滤模式,不启动交互式查找器"
 
 #: share/completions/fzf.fish:52
 msgid "Print query as the first line"
@@ -32111,7 +32111,7 @@ msgstr "没有"
 
 #: share/completions/gcc.fish:20
 msgid "Don’t recognize built-in functions without __builtin_ prefix"
-msgstr "无法识别内置功能 。 前缀"
+msgstr "无法识别内置功能,前缀"
 
 #: share/completions/gcc.fish:21
 msgid "Don’t recognize built-in functions that do not begin with __builtin_ as "prefix"
@@ -32639,7 +32639,7 @@ msgstr "如果返回结构或结合的任何功能被定义或称为:"
 
 #: share/completions/gcc.fish:155
 msgid "Do not warn if an unexpected \"__attribute__\" is used, such as unrecognized "attributes, function attributes applied to variables, etc"
-msgstr "如果有意外, 请不要警告 。 @ info"
+msgstr "如果有意外, 请不要警告,@ info"
 
 #: share/completions/gcc.fish:156
 msgid "(C only) Warn if a function is declared or defined without specifying the "argument types"
@@ -36319,7 +36319,7 @@ msgstr "列出所有选项,并作简要说明"
 
 #: share/completions/gdb.fish:2
 msgid "Read symbol table from <file>"
-msgstr "从“ 文件” 读取符号表"
+msgstr "从' 文件' 读取符号表"
 
 #: share/completions/gdb.fish:3
 msgid "Enable writing into executable and core files"
@@ -36331,7 +36331,7 @@ msgstr "设定可执行文件"
 
 #: share/completions/gdb.fish:5
 msgid "Read symbol table from <file> and execute it"
-msgstr "从“ 文件” 读取符号表并执行"
+msgstr "从' 文件' 读取符号表并执行"
 
 #: share/completions/gdb.fish:6
 msgid "Use <file> as a core dump to examine"
@@ -36494,7 +36494,7 @@ msgstr "显示 RubyGems 环境信息"
 
 #: share/completions/gem.fish:10
 msgid "Provide help on the 'gem' command"
-msgstr "为“ gem” 命令提供帮助"
+msgstr "为' gem' 命令提供帮助"
 
 #: share/completions/gem.fish:11
 msgid "Install a gem into the local repository"
@@ -36598,7 +36598,7 @@ msgstr "校验 Gem 文件与内部校验和"
 
 #: share/completions/gem.fish:36
 msgid "Report 'unmanaged' or rogue files in the gem repository"
-msgstr "在 gem 仓库中报告“ 未管理” 或无赖文件"
+msgstr "在 gem 仓库中报告' 未管理' 或无赖文件"
 
 #: share/completions/gem.fish:37
 msgid "Run unit tests for gem"
@@ -39195,7 +39195,7 @@ msgstr "添加标准的 Git 排除"
 
 #: share/completions/git.fish:515
 msgid "If any <file> does not appear in the index, treat this as an error"
-msgstr "如果索引中没有“ 文件” , 则将此视为错误"
+msgstr "如果索引中没有' 文件' , 则将此视为错误"
 
 #: share/completions/git.fish:516
 msgid "Identifies the file status"
@@ -39227,7 +39227,7 @@ msgstr "在描述文件的每行后, 添加更多关于文件缓存条目的数�
 
 #: share/completions/git.fish:523
 msgid "Show <eolinfo> and <eolattr> of files"
-msgstr "显示文件的“ eolinfo” 和“ eolattr ”"
+msgstr "显示文件的' eolinfo' 和' eolattr '"
 
 #: share/completions/git.fish:524
 msgid "Extracts patch and authorship from an e-mail"
@@ -39945,11 +39945,11 @@ msgstr "不向 stderr 报告进度"
 
 #: share/completions/git.fish:752
 msgid "Same as --merge, but specify 'merge' as the conflicting hunk style (default)"
-msgstr "与 -- commerce 相同, 但指定“ commerce” 为相冲突的 hunk 样式( 默认)"
+msgstr "与 -- commerce 相同, 但指定' commerce' 为相冲突的 hunk 样式( 默认)"
 
 #: share/completions/git.fish:753
 msgid "Same as --merge, but specify 'diff3' as the conflicting hunk style"
-msgstr "与 -- commerce 相同, 但指定“ diff3 ” 为相冲突的 hunk 样式"
+msgstr "与 -- commerce 相同, 但指定' diff3 ' 为相冲突的 hunk 样式"
 
 #: share/completions/git.fish:754
 msgid "Parse revision names or give repo information"
@@ -40273,7 +40273,7 @@ msgstr "禁止离职"
 
 #: share/completions/git.fish:845
 msgid "Mark <commit-ish> as \"upstream\" from the new branch"
-msgstr "将“ 承诺- ” 标为 "
+msgstr "将' 承诺- ' 标为 "
 
 #: share/completions/git.fish:846
 msgid "Don't mark <commit-ish> as \"upstream\" from the new branch"
@@ -40397,11 +40397,11 @@ msgstr "花更多时间创建较小的 diffs"
 
 #: share/completions/git.fish:877
 msgid "Generate diff with the 'patience' algorithm"
-msgstr "以“ patience” 算法生成 diff"
+msgstr "以' patience' 算法生成 diff"
 
 #: share/completions/git.fish:878
 msgid "Generate diff with the 'histogram' algorithm"
-msgstr "以“ 图像” 算法生成 diff"
+msgstr "以' 图像' 算法生成 diff"
 
 #: share/completions/git.fish:879
 msgid "Print all commits to stdout in mbox format"
@@ -40882,7 +40882,7 @@ msgstr "值为指定类型"
 
 #: share/completions/git.fish:1034
 msgid "Value is 'true' or 'false'"
-msgstr "值为“ true” 或“ false ”  '"
+msgstr "值为' true' 或' false '  '"
 
 #: share/completions/git.fish:1035
 msgid "Value is a decimal number"
@@ -42508,7 +42508,7 @@ msgstr "指定图案"
 
 #: share/completions/grep.fish:14
 msgid "Read pattern list from file. Skip files whose base name matches list"
-msgstr "从文件读取图案列表 。 跳过基本名称匹配列表的文件"
+msgstr "从文件读取图案列表,跳过基本名称匹配列表的文件"
 
 #: share/completions/grep.fish:15
 msgid "Exclude matching directories from recursive searches"
@@ -42776,7 +42776,7 @@ msgstr "检查给定的文件是否是 ARM EFI 文件"
 
 #: share/completions/grub-file.fish:26
 msgid "Check if given file is hiberfil.sys in hibernated state"
-msgstr "检查给定的文件是否为冬眠 。 处于休眠状态"
+msgstr "检查给定的文件是否为冬眠,处于休眠状态"
 
 #: share/completions/grub-file.fish:27
 msgid "Check if given file is x86_64 XNU (Mac OS X kernel)"
@@ -43017,7 +43017,7 @@ msgstr "变相模式. 更多信息输出"
 
 #: share/completions/grunt.fish:10
 msgid "Print the grunt version. Combine with --verbose for more info"
-msgstr "打印 grunt 版本 。 与 -- 动词组合以获取更多信息"
+msgstr "打印 grunt 版本,与 -- 动词组合以获取更多信息"
 
 #: share/completions/grunt.fish:11
 msgid "Output shell auto-completion rules."
@@ -43300,7 +43300,7 @@ msgstr "使用反向视频"
 
 #: share/completions/gvim.fish:6
 msgid "Run vim on <display>"
-msgstr "在“ 播放” 上运行 vim"
+msgstr "在' 播放' 上运行 vim"
 
 #: share/completions/gvim.fish:7
 msgid "Set role for identifying the window in X11"
@@ -45866,7 +45866,7 @@ msgstr "在网页中显示的名称( 默认: 工作目录)"
 
 #: share/completions/hg.fish:564
 msgid "name of the hgweb config file (see 'hg help hgweb')"
-msgstr "hgweb 配置文件的名称( 见“ hg help hgweb ”)"
+msgstr "hgweb 配置文件的名称( 见' hg help hgweb ')"
 
 #: share/completions/hg.fish:565
 msgid "name of file to write process ID to"
@@ -46177,12 +46177,12 @@ msgid "Include only unmarked postings/txns"
 msgstr "只包含未加标记的张贴/txns"
 
 #: share/completions/hledger.fish:18
-msgid "Include only pending (“!”) postings/txns"
-msgstr "仅包括待发(“!”)"
+msgid "Include only pending ('!') postings/txns"
+msgstr "仅包括待发('!')"
 
 #: share/completions/hledger.fish:19
-msgid "Include only cleared (“*”) postings/txns"
-msgstr "仅包括已清除的(“*”)张贴/txns"
+msgid "Include only cleared ('*') postings/txns"
+msgstr "仅包括已清除的('*')张贴/txns"
 
 #: share/completions/hledger.fish:20
 msgid "Include only non-virtual postings"
@@ -47448,7 +47448,7 @@ msgstr "对 diff 使用背景颜色而不是前景颜色"
 
 #: share/completions/icdiff.fish:8
 msgid "Override file label. Use twice for both files"
-msgstr "覆盖文件标签 。 对两个文件使用两次"
+msgstr "覆盖文件标签,对两个文件使用两次"
 
 #: share/completions/icdiff.fish:9
 msgid "Show line numbers"
@@ -47926,7 +47926,7 @@ msgstr "产出更详细资料"
 
 #: share/completions/ip.fish:7
 msgid "Specify maximum number of loops for 'ip addr flush'"
-msgstr "指定“ ip 添加器” 冲出的最大环数  '"
+msgstr "指定' ip 添加器' 冲出的最大环数  '"
 
 #: share/completions/ip.fish:8
 msgid "The protocol family to use"
@@ -48206,11 +48206,11 @@ msgstr "不要显示结果"
 
 #: share/completions/irb.fish:12
 msgid "Use 'inspect' for output"
-msgstr "使用“ 检查” 输出"
+msgstr "使用' 检查' 输出"
 
 #: share/completions/irb.fish:13
 msgid "Don't use 'inspect' for output"
-msgstr "输出时不要使用“ 检查 ”"
+msgstr "输出时不要使用' 检查 '"
 
 #: share/completions/irb.fish:14
 msgid "Use Readline extension module"
@@ -49177,7 +49177,7 @@ msgstr "快捷键 -- -- min-len=N (韩语) --max-len=N (韩语)"
 
 #: share/completions/john.fish:67
 msgid "use custom character instead of ':' in input and pot files"
-msgstr "在输入和 pot 文件中使用自定义字符代替 “: ”"
+msgstr "在输入和 pot 文件中使用自定义字符代替 ': '"
 
 #: share/completions/john.fish:68
 msgid "use custom file instead of john.conf or john.ini"
@@ -50323,7 +50323,7 @@ msgstr "杀人前交互请求确认"
 
 #: share/completions/killall.fish:5
 msgid "Kill only processes the specified user owns. Command names are optional"
-msgstr "仅杀死指定的用户拥有的处理 。 命令名称是可选的"
+msgstr "仅杀死指定的用户拥有的处理,命令名称是可选的"
 
 #: share/completions/killall.fish:6
 msgid "Wait for all killed processes to die"
@@ -51597,7 +51597,7 @@ msgstr "载入默认密钥映射"
 
 #: share/completions/loadkeys.fish:6
 msgid "Output a 'defkeymap.c'"
-msgstr "输出“ defkeymap.c”"
+msgstr "输出' defkeymap.c'"
 
 #: share/completions/loadkeys.fish:7
 msgid "Only search and parse keymap"
@@ -52980,7 +52980,7 @@ msgstr "未缓冲输出, 忽略中断"
 
 #: share/completions/m4.fish:5
 msgid "Force a 'm4_' prefix to all builtins"
-msgstr "强制所有内建的“ m4_ ” 前缀"
+msgstr "强制所有内建的' m4_ ' 前缀"
 
 #: share/completions/m4.fish:6
 msgid "Suppress some warnings for builtins"
@@ -53000,7 +53000,7 @@ msgstr "附加方向以包含路径"
 
 #: share/completions/m4.fish:10
 msgid "Generate '#line NUM \"FILE\"' lines"
-msgstr "生成“ #行 NUM \"
+msgstr "生成' #行 NUM \"
 
 #: share/completions/m4.fish:11
 msgid "Undefine NAME"
@@ -53601,7 +53601,7 @@ msgstr "只下载和取出文件"
 
 #: share/completions/makepkg.fish:18
 msgid "Use alternative <buildscript>"
-msgstr "使用替代的“ buildingscript”"
+msgstr "使用替代的' buildingscript'"
 
 #: share/completions/makepkg.fish:19
 msgid "Remove installed deps after build"
@@ -53829,7 +53829,7 @@ msgstr "指定要日志输出的文件。 默认 ~/. local/ share/ mariner/ mari
 
 #: share/completions/mariner.fish:15
 msgid "Path to config file. Default ~/.config/mariner/config.yaml"
-msgstr "配置文件路径 。 默认 ~/. config/mariner/ config.yaml"
+msgstr "配置文件路径,默认 ~/. config/mariner/ config.yaml"
 
 #: share/completions/mariner.fish:16
 msgid "Show the configuration"
@@ -53857,7 +53857,7 @@ msgstr "仅包含法律内容的搜索跟踪器"
 
 #: share/completions/mariner.fish:22
 msgid "Limit the number of results shown. Default is 50"
-msgstr "限制显示的结果数量 。 默认为 50"
+msgstr "限制显示的结果数量,默认为 50"
 
 #: share/completions/mariner.fish:23
 msgid "Sort results by newest"
@@ -55020,7 +55020,7 @@ msgstr "列出外部依赖性"
 
 #: share/completions/meson.fish:107
 msgid "Scan for dependencies used in the meson.build file"
-msgstr "扫描元件中使用的依赖性 。 构建文件"
+msgstr "扫描元件中使用的依赖性,构建文件"
 
 #: share/completions/meson.fish:108
 msgid "List all installed files and directories"
@@ -55741,7 +55741,7 @@ msgstr "打印凤凰版"
 
 #: share/completions/mix.fish:86
 msgid "The path to your compiled assets directory. Defaults to priv/static"
-msgstr "您编译的资产目录的路径 。 priv/ static 默认值"
+msgstr "您编译的资产目录的路径,priv/ static 默认值"
 
 #: share/completions/mix.fish:87
 msgid "Maximum age (in seconds) for assets"
@@ -56015,7 +56015,7 @@ msgstr "提供特定的 MkDocs 配置"
 
 #: share/completions/mkdocs.fish:8 share/completions/mkdocs.fish:23
 msgid "Enable strict mode. This will cause MkDocs to abort the build on any warnings"
-msgstr "启用严格模式 。 这将导致 MkDocs 中止任何警告的构建"
+msgstr "启用严格模式,这将导致 MkDocs 中止任何警告的构建"
 
 #: share/completions/mkdocs.fish:9 share/completions/mkdocs.fish:24
 msgid "The theme to use when building your documentation"
@@ -56684,11 +56684,11 @@ msgstr "切换控件"
 
 #: share/completions/modinfo.fish:1
 msgid "Print only 'author'"
-msgstr "只打印“ 作者 ”  '"
+msgstr "只打印' 作者 '  '"
 
 #: share/completions/modinfo.fish:2
 msgid "Print only 'description'"
-msgstr "只打印“ 描述  '"
+msgstr "只打印' 描述  '"
 
 #: share/completions/modinfo.fish:3
 msgid "Print only 'license'"
@@ -56696,11 +56696,11 @@ msgstr "只打印许可证  '"
 
 #: share/completions/modinfo.fish:4
 msgid "Print only 'parm'"
-msgstr "只打印“ parm ”  '"
+msgstr "只打印' parm '  '"
 
 #: share/completions/modinfo.fish:5
 msgid "Print only 'filename'"
-msgstr "只打印“ 文件名 ”  '"
+msgstr "只打印' 文件名 '  '"
 
 #: share/completions/modinfo.fish:6
 msgid "Use \\0 instead of \\n"
@@ -56896,7 +56896,7 @@ msgstr "将所有方法编译为集合"
 
 #: share/completions/monodis.fish:3
 msgid "Use 'mscorlib' as the assembly name for non-corlib assemblies"
-msgstr "使用“ mscorlib” 作为非 Corlib 组件的组装名称"
+msgstr "使用' mscorlib' 作为非 Corlib 组件的组装名称"
 
 #: share/completions/monodis.fish:4
 msgid "Show tokens for disassembled methods"
@@ -57040,7 +57040,7 @@ msgstr "渲染指定组装中的所有类型"
 
 #: share/completions/monop.fish:3
 msgid "Searches through all known assemblies for types containing 'class'"
-msgstr "在所有已知组件中搜索包含“ 类” 的类型"
+msgstr "在所有已知组件中搜索包含' 类' 的类型"
 
 #: share/completions/monop.fish:4
 msgid "Print a list of the referenced assemblies for an assembly."
@@ -58801,7 +58801,7 @@ msgstr "如果源代码中存在 PMD 违规, 则失败 ."
 
 #: share/completions/mvn.fish:137
 msgid "Creates a report for PMD's CPD tool. See http://pmd.sourceforge.net/cpd.html "for more detail."
-msgstr "为 PMD 的 PDD 工具创建报告 。 见 http://pmd.sourceforge.net/cpd.html 页面存档备份,存于互联网档案馆"
+msgstr "为 PMD 的 PDD 工具创建报告,见 http://pmd.sourceforge.net/cpd.html 页面存档备份,存于互联网档案馆"
 
 #: share/completions/mvn.fish:138
 msgid "Fail the build if there were any CPD violations in the source code."
@@ -58962,7 +58962,7 @@ msgstr "组合应用程序捆绑或分发"
 
 #: share/completions/mvn.fish:178
 msgid "Like assembly:attached, but ignore the <formats/> section"
-msgstr "如组装:附着,但忽略了“格式/” 节"
+msgstr "如组装:附着,但忽略了'格式/' 节"
 
 #: share/completions/mvn.fish:180
 msgid "Display help information on maven-assembly-plugin"
@@ -59322,7 +59322,7 @@ msgstr "获取工程文件列表 ."
 
 #: share/completions/mvn.fish:270
 msgid "Dump changelog contents to console. It is mainly used to test maven-scm-"api's changelog command."
-msgstr "丢弃更改日志内容到控制台 。 它主要用来测试maven -scm.."
+msgstr "丢弃更改日志内容到控制台,它主要用来测试maven -scm.."
 
 #: share/completions/mvn.fish:271
 msgid "Display help information on maven-scm-plugin"
@@ -59718,7 +59718,7 @@ msgstr "执行 HQL 查询语句"
 
 #: share/completions/mvn.fish:369
 msgid "Goal for 'cglib' or 'javassist' instrumentation."
-msgstr "“ cglib” 或“ javasidance” 仪器的入球 ."
+msgstr "' cglib' 或' javasidance' 仪器的入球 ."
 
 #: share/completions/mvn.fish:370
 msgid "'AntRun' wrapper."
@@ -59726,7 +59726,7 @@ msgstr ""蚁跑"包装."
 
 #: share/completions/mvn.fish:371
 msgid "'hbmtemplate' generic exporter that can be controlled by a user provided "template or class."
-msgstr "由用户控制的“ hbmtemplate” 通用出口商"
+msgstr "由用户控制的' hbmtemplate' 通用出口商"
 
 #: share/completions/mvn.fish:372
 msgid "'hbm2cfgxml' generates a hibernate.cfg.xml"
@@ -59946,7 +59946,7 @@ msgstr "从反应堆创建 NetBeans 模块集群"
 
 #: share/completions/mvn.fish:427
 msgid "Create the NetBeans module clusters/application for the 'nbm-application' "packaging projects"
-msgstr "为“ nbm- 应用程序” 创建 NetBeans 模块集群/ 应用程序"
+msgstr "为' nbm- 应用程序' 创建 NetBeans 模块集群/ 应用程序"
 
 #: share/completions/mvn.fish:428
 msgid "Display help information on nbm-maven-plugin"
@@ -59958,7 +59958,7 @@ msgstr "生成目标 NetBeans模块系统特定列表条目,部分"
 
 #: share/completions/mvn.fish:430
 msgid "Create the NetBeans module artifact (nbm file), part of 'nbm' lifecycle/"packaging."
-msgstr "创建 NetBeans 模块文物 (nbm 文件), “ nbm” 生命周期的一部分/"
+msgstr "创建 NetBeans 模块文物 (nbm 文件), ' nbm' 生命周期的一部分/"
 
 #: share/completions/mvn.fish:431
 msgid "Run NetBeans IDE with additional custom module clusters, to be used in "conjunction with nbm:cluster"
@@ -59974,7 +59974,7 @@ msgstr "在由 nbm 组成的集群中创建一个独立的应用程序 -"
 
 #: share/completions/mvn.fish:434
 msgid "Create webstartable binaries for a 'nbm-application'."
-msgstr "为“ nbm- 应用程序” 创建网络启动二进制 ."
+msgstr "为' nbm- 应用程序' 创建网络启动二进制 ."
 
 #: share/completions/mvn.fish:435
 msgid "Generate a report from the Clirr output."
@@ -60826,7 +60826,7 @@ msgstr "创建或更新应用程序版本 ."
 
 #: share/completions/mvn.fish:658
 msgid "Maven project version is dot based, e.g '1.9.15' , whereas appengine-web.xml "is dash based, e.g"
-msgstr "Maven 项目版本基于点, 如 “ 1. 9. 15 ” , 而 appengine- web.xml"
+msgstr "Maven 项目版本基于点, 如 ' 1. 9. 15 ' , 而 appengine- web.xml"
 
 #: share/completions/mvn.fish:659
 msgid "Configure the specified backend."
@@ -62217,7 +62217,7 @@ msgstr "配置文件的路径; 如果多个, 将合并它们"
 
 #: share/completions/ngrok.fish:12
 msgid "path to log file, 'stdout', 'stderr' or 'false'"
-msgstr "日志文件、 “stdout” 、 “stderr” 或“ false” 的路径  '"
+msgstr "日志文件、 'stdout' 、 'stderr' 或' false' 的路径  '"
 
 #: share/completions/ngrok.fish:13
 msgid "log record format: 'term', 'logfmt', 'json'"
@@ -62249,7 +62249,7 @@ msgstr "收听 http, https 或 兼收并收: 真/假/兼收并收"
 
 #: share/completions/ngrok.fish:20
 msgid "set Host header; if 'rewrite' use local address hostname"
-msgstr "设定 主机头; 如果“ 重写” 使用本地地址主机名"
+msgstr "设定 主机头; 如果' 重写' 使用本地地址主机名"
 
 #: share/completions/ngrok.fish:21
 msgid "enable/disable http introspection"
@@ -62881,7 +62881,7 @@ msgstr "设定 XSL 样式表以转换 XML 输出"
 
 #: share/completions/nmap.fish:103
 msgid "Load stylesheet from Nmap.Org"
-msgstr "从 Nmap 载入样式表 。 奥尔格"
+msgstr "从 Nmap 载入样式表,奥尔格"
 
 #: share/completions/nmap.fish:104
 msgid "Omit XSL stylesheet declaration from XML"
@@ -63721,7 +63721,7 @@ msgstr "构建没有 SSL 支持的节点.js"
 
 #: share/completions/nodeenv.fish:8
 msgid "Enable debug build of Node.js"
-msgstr "启用节点调试构建 。 编"
+msgstr "启用节点调试构建,编"
 
 #: share/completions/nodeenv.fish:9
 msgid "Enable profiling of Node.js"
@@ -63753,7 +63753,7 @@ msgstr "列出可用的节点.js版本"
 
 #: share/completions/nodeenv.fish:18
 msgid "Install npm packages from file without Node.js"
-msgstr "从没有节点的文件安装 npm 包 。 编"
+msgstr "从没有节点的文件安装 npm 包,编"
 
 #: share/completions/nodeenv.fish:19
 msgid "Build without installing npm into the new virtual environment"
@@ -64295,7 +64295,7 @@ msgstr "管理注册钩"
 
 #: share/completions/npm.fish:196 share/completions/npm.fish:246
 msgid "Create a package.json file"
-msgstr "创建软件包 。 json 文件"
+msgstr "创建软件包,json 文件"
 
 #: share/completions/npm.fish:197 share/completions/npm.fish:251
 msgid "Install a package"
@@ -66216,7 +66216,7 @@ msgstr "打印版本编号"
 
 #: share/completions/oggenc.fish:4
 msgid "Raw mode. Input files are read directly as PCM data"
-msgstr "原始模式 。 输入文件作为PCM数据直接读取"
+msgstr "原始模式,输入文件作为PCM数据直接读取"
 
 #: share/completions/oggenc.fish:5
 msgid "Set bits/sample for raw input. Default is 16"
@@ -66544,7 +66544,7 @@ msgstr "返回列表包中定义的所有变量列表。 [见"
 
 #: share/completions/opam.fish:37
 msgid "Substitute variables in the given files. The strings %{var}% are replaced by "the value of the variable var [see manpage]"
-msgstr "替换给定文件中的变量 。 字符串被替换为"
+msgstr "替换给定文件中的变量,字符串被替换为"
 
 #: share/completions/opam.fish:38
 msgid "returns include options."
@@ -66972,7 +66972,7 @@ msgstr "指定列表目录."
 
 #: share/completions/optimus-manager.fish:1
 msgid "Set the GPU mode to MODE. You need to log out then log in to apply the change"
-msgstr "设置 GPU 模式为 MODE 。 您需要登录然后登录以应用更改"
+msgstr "设置 GPU 模式为 MODE,您需要登录然后登录以应用更改"
 
 #: share/completions/optimus-manager.fish:2
 msgid "Set a path to a temporary configuration file to use for the next reboot ONLY"
@@ -67152,7 +67152,7 @@ msgstr "列出当前用户的所有更改列表"
 
 #: share/completions/p4.fish:9
 msgid "Lists all *pending* changelists. If 'default' argument is provided, default "changelist will also be listed"
-msgstr "列出所有 * 待 更改列表 。 如果提供了“ 默认” 参数, 默认"
+msgstr "列出所有 * 待 更改列表,如果提供了' 默认' 参数, 默认"
 
 #: share/completions/p4.fish:10
 msgid "Lists all changelists with *shelved* files"
@@ -67391,7 +67391,7 @@ msgstr "导出 < keys > 为 stdout"
 
 #: share/completions/pacman-key.fish:5
 msgid "Present a menu on specified <keys>"
-msgstr "在指定的“ keys” 上显示菜单"
+msgstr "在指定的' keys' 上显示菜单"
 
 #: share/completions/pacman-key.fish:6
 msgid "List a fingerprint for each specified <key>"
@@ -67419,7 +67419,7 @@ msgstr "初始化密钥环"
 
 #: share/completions/pacman-key.fish:12
 msgid "Use the specified <keyserver>"
-msgstr "使用指定的“ keyserver ”"
+msgstr "使用指定的' keyserver '"
 
 #: share/completions/pacman-key.fish:13
 msgid "Lists all or specified <keys> from the keyring"
@@ -67431,7 +67431,7 @@ msgstr "与 -- list- keys 相同, 但有签名"
 
 #: share/completions/pacman-key.fish:15
 msgid "Locally sign the given <key>"
-msgstr "本地签名给定的“ key ”"
+msgstr "本地签名给定的' key '"
 
 #: share/completions/pacman-key.fish:16
 msgid "Equivalent to --recv-keys in GnuPG"
@@ -67768,7 +67768,7 @@ msgstr "不要更改文件; 只打印会发生什么"
 
 #: share/completions/patch.fish:9
 msgid "Interpret patch as an 'ed' script"
-msgstr "将补丁解释为“ ed” 脚本"
+msgstr "将补丁解释为' ed' 脚本"
 
 #: share/completions/patch.fish:10
 msgid "Remove output files empty after patching"
@@ -67780,7 +67780,7 @@ msgstr "如-t,但忽略了坏的-Prereq补丁,假设未反转"
 
 #: share/completions/patch.fish:12
 msgid "Number of LINES for inexact 'fuzzy' matching"
-msgstr "不精确的“ fuzzy” 匹配的 LINES 数量"
+msgstr "不精确的' fuzzy' 匹配的 LINES 数量"
 
 #: share/completions/patch.fish:13
 msgid "Get files from RCS etc. if positive; ask if negative"
@@ -68715,7 +68715,7 @@ msgstr "以 XML 格式列出可用的测试"
 
 #: share/completions/phpunit.fish:25
 msgid "Only search for test in files with specified suffix(es). Default: Test.php,."phpt"
-msgstr "只搜索带有指定后缀的文件中的测试 。 默认: test.php,."
+msgstr "只搜索带有指定后缀的文件中的测试,默认: test.php,."
 
 #: share/completions/phpunit.fish:26
 msgid "Do not report tests that do not test anything"
@@ -70029,7 +70029,7 @@ msgstr "导致 pppd(8) 重新谈判压缩"
 
 #: share/completions/poff.fish:5
 msgid "Stops all running ppp connections. If the argument isp-name is given it will "be ignored"
-msgstr "停止所有运行中的 ppp 连接 。 如果给出了参数 isp 名称, 它将会"
+msgstr "停止所有运行中的 ppp 连接,如果给出了参数 isp 名称, 它将会"
 
 #: share/completions/poff.fish:6
 msgid "Displays help information"
@@ -70346,7 +70346,7 @@ msgstr "读取和处理命令文件"
 
 #: share/completions/portmaster.fish:1
 msgid "run 'make config' for all ports (overrides -G)."
-msgstr "为所有端口运行“ make config” (覆盖- G)."
+msgstr "为所有端口运行' make config' (覆盖- G)."
 
 #: share/completions/portmaster.fish:2
 msgid "prevents 'make clean' from being run before building."
@@ -70354,7 +70354,7 @@ msgstr "防止"干净"在建设前被运行."
 
 #: share/completions/portmaster.fish:3
 msgid "prevents 'make config'."
-msgstr "防止“ make config” ."
+msgstr "防止' make config' ."
 
 #: share/completions/portmaster.fish:4
 msgid "hide details of the port build and install in a log file."
@@ -70986,7 +70986,7 @@ msgstr "长格式"
 
 #: share/completions/ps.fish:12
 msgid "Show threads. With LWP/NLWP"
-msgstr "显示线程 。 与LWP/NLWP合作"
+msgstr "显示线程,与LWP/NLWP合作"
 
 #: share/completions/ps.fish:13
 msgid "Add column for security data"
@@ -71010,7 +71010,7 @@ msgstr "按会话 ID 选择"
 
 #: share/completions/ps.fish:18
 msgid "Show threads. With SPID"
-msgstr "显示线程 。 使用 SPID 软件"
+msgstr "显示线程,使用 SPID 软件"
 
 #: share/completions/ps.fish:19 share/completions/ps.fish:61
 msgid "Select by user"
@@ -71262,7 +71262,7 @@ msgstr "打开扩展的表格输出"
 
 #: share/completions/psql.fish:26
 msgid "Set field separator (default: '|')"
-msgstr "设置字段分隔符( 默认为 “% ” )"
+msgstr "设置字段分隔符( 默认为 '% ' )"
 
 #: share/completions/psql.fish:27
 msgid "Set record separator (default: newline)"
@@ -71849,7 +71849,7 @@ msgstr "包含一个额外的文件"
 
 #: share/completions/qjs.fish:7
 msgid "make 'std' and 'os' available to the loaded script"
-msgstr "将“ std” 和“ os” 提供给已载入的脚本"
+msgstr "将' std' 和' os' 提供给已载入的脚本"
 
 #: share/completions/qjs.fish:8
 msgid "enable the bignum extensions (BigFloat, BigDecimal)"
@@ -72161,7 +72161,7 @@ msgstr "显示 GnuPG 的各种内部配置参数"
 #: share/completions/qubes-gpg-client.fish:39
 #: share/functions/__fish_complete_gpg.fish:244
 msgid "Changes the behaviour of some commands. This is like --dry-run but different"
-msgstr "更改一些命令的行为 。 这就像 -- 干跑但不同"
+msgstr "更改一些命令的行为,这就像 -- 干跑但不同"
 
 #: share/completions/qubes-gpg-client.fish:41
 #: share/functions/__fish_complete_gpg.fish:41
@@ -72422,7 +72422,7 @@ msgstr "从 STDIN 读取程序源, 或如果 TTY 启动 REPL"
 
 #: share/completions/rakudo.fish:2
 msgid "Check syntax only. Runs BEGIN and CHECK blocks"
-msgstr "只检查语法 。 运行 BEGIN 和 CHECK 块"
+msgstr "只检查语法,运行 BEGIN 和 CHECK 块"
 
 #: share/completions/rakudo.fish:3
 msgid "Extract documentation and print it as text"
@@ -72474,11 +72474,11 @@ msgstr "指定 REPL 模式"
 
 #: share/completions/rakudo.fish:18
 msgid "Write profile information to a file. Extension controls format"
-msgstr "将配置信息写入文件 。 扩展控制格式"
+msgstr "将配置信息写入文件,扩展控制格式"
 
 #: share/completions/rakudo.fish:19
 msgid "Write compile-time profile information to a file. Extension controls format"
-msgstr "将编译时间描述文件信息写入文件 。 扩展控制格式"
+msgstr "将编译时间描述文件信息写入文件,扩展控制格式"
 
 #: share/completions/rakudo.fish:20
 msgid "Choose the type of profile to generate"
@@ -72486,7 +72486,7 @@ msgstr "选择要生成的配置类型"
 
 #: share/completions/rakudo.fish:21
 msgid "Write profile information for the given compilation stage to a file. Use --"profile-compile to set name and format"
-msgstr "将指定编译阶段的配置信息写入文件 。 使用 -- --"
+msgstr "将指定编译阶段的配置信息写入文件,使用 -- --"
 
 #: share/completions/rakudo.fish:22
 msgid "Listen for incoming debugger connections"
@@ -73063,7 +73063,7 @@ msgstr "路径不需要组件"
 
 #: share/completions/realpath.fish:3
 msgid "resolve '..' components before symlinks"
-msgstr "解析“.” 组件后再链接"
+msgstr "解析'.' 组件后再链接"
 
 #: share/completions/realpath.fish:4
 msgid "resolve symlinks as encountered (default)"
@@ -76267,7 +76267,7 @@ msgstr "每个缩进级别需要使用多少个空格"
 
 #: share/completions/sass-convert.fish:9
 msgid "Output the old-style ':prop val' property syntax"
-msgstr "输出旧式的 “:prop val” 属性语法"
+msgstr "输出旧式的 ':prop val' 属性语法"
 
 #: share/completions/sass-convert.fish:10 share/completions/sass.fish:13
 #: share/completions/scss.fish:14
@@ -76600,7 +76600,7 @@ msgstr "将此 ICC 配置文件输入 TIFF 文件"
 
 #: share/completions/scanimage.fish:20
 msgid "Working in batch mode, FORMAT is 'out%d.pnm' or 'out%d.tif' by default "depending on --format"
-msgstr "以批量模式工作, 默认情况下, FORMAT 是 “% d. pnm ” 或“ out% d. tif ”"
+msgstr "以批量模式工作, 默认情况下, FORMAT 是 '% d. pnm ' 或' out% d. tif '"
 
 #: share/completions/scanimage.fish:21
 msgid "Page number to start naming files with"
@@ -77080,7 +77080,7 @@ msgstr "使用最小的 IO 缓冲"
 
 #: share/completions/sed.fish:10
 msgid "Delay opening files until a command containing the related 'w' function is "applied"
-msgstr "将打开文件延后到包含相关 “ w” 函数的命令"
+msgstr "将打开文件延后到包含相关 ' w' 函数的命令"
 
 #: share/completions/seq.fish:1 share/completions/seq.fish:6
 msgid "Use printf style floating-point FORMAT"
@@ -77867,7 +77867,7 @@ msgstr "使用工具 api 创建记录"
 
 #: share/completions/sfdx.fish:170
 msgid "(required) the <fieldName>=<value> pairs you’re creating"
-msgstr "(需要) 您正在创建的“ fieldName-% value” 配对"
+msgstr "(需要) 您正在创建的' fieldName-% value' 配对"
 
 #: share/completions/sfdx.fish:174 share/completions/sfdx.fish:184
 #: share/completions/sfdx.fish:194 share/completions/sfdx.fish:204
@@ -77887,7 +77887,7 @@ msgstr "您删除的记录的标识"
 #: share/completions/sfdx.fish:180 share/completions/sfdx.fish:190
 #: share/completions/sfdx.fish:200
 msgid "a list of <fieldName>=<value> pairs to search for"
-msgstr "要搜索的“ field” Name- value > 成对的列表"
+msgstr "要搜索的' field' Name- value > 成对的列表"
 
 #: share/completions/sfdx.fish:185
 msgid "view a record"
@@ -78072,7 +78072,7 @@ msgstr "[默认:最新]闪电测试服务的发布版本"
 
 #: share/completions/sfdx.fish:293
 msgid "[default: full] type of unmanaged package. 'full' option contains both "jasmine and mocha, plus examples"
-msgstr "[默认:完整]类型的未管理软件包. “ 完全” 选项包含"
+msgstr "[默认:完整]类型的未管理软件包. ' 完全' 选项包含"
 
 #: share/completions/sfdx.fish:295
 msgid "[default: 2 minutes] number of minutes to wait for installation status"
@@ -78237,7 +78237,7 @@ msgstr "用于检索的目标 API 版本( 默认 46. 0)"
 
 #: share/completions/sfdx.fish:369
 msgid "source dir to use instead of the default package dir in sfdx-project.json"
-msgstr "sfdx- project 中要使用的源目录, 而不是默认的包目录 。 贾森"
+msgstr "sfdx- project 中要使用的源目录, 而不是默认的包目录,贾森"
 
 #: share/completions/sfdx.fish:370
 msgid "file path of manifest of components to retrieve"
@@ -79024,7 +79024,7 @@ msgstr "Npm如果退出,则验证相关的数字签名."
 
 #: share/completions/sfdx.fish:850
 msgid "(required) Specify the npm name. This can include a tag/version"
-msgstr "(必须) 指定 npm 名称 。 这可以包括标签/版本"
+msgstr "(必须) 指定 npm 名称,这可以包括标签/版本"
 
 #: share/completions/sfdx.fish:851
 msgid "The registry name. the behavior is the same as npm."
@@ -79616,11 +79616,11 @@ msgstr "只使用单一连接. 模拟典型文件传输"
 
 #: share/completions/speedtest-cli.fish:5
 msgid "Display values in bytes. Ignored by JSON or CSV output"
-msgstr "在字节中显示值 。 被 JSON 或 CSV 输出忽略"
+msgstr "在字节中显示值,被 JSON 或 CSV 输出忽略"
 
 #: share/completions/speedtest-cli.fish:6
 msgid "Generate a URL to the speedtest.net share results image"
-msgstr "生成一个 URL 到速度测试 。 净共享结果图像"
+msgstr "生成一个 URL 到速度测试,净共享结果图像"
 
 #: share/completions/speedtest-cli.fish:7
 msgid "Suppress verbose output"
@@ -79644,7 +79644,7 @@ msgstr "只以 JSON 格式显示基本信息( 位/ s)"
 
 #: share/completions/speedtest-cli.fish:12
 msgid "Display a list of speedtest.net servers sorted by distance"
-msgstr "显示一个速度测试列表 。 按距离排序的净服务器"
+msgstr "显示一个速度测试列表,按距离排序的净服务器"
 
 #: share/completions/speedtest-cli.fish:13
 msgid "Specify a server ID to test against"
@@ -79809,7 +79809,7 @@ msgstr "不要寻找一个信任。 键"
 
 #: share/completions/sphinx-build.fish:11
 msgid "Override a setting in conf.py"
-msgstr "覆盖 conf 中的设置 。 键"
+msgstr "覆盖 conf 中的设置,键"
 
 #: share/completions/sphinx-build.fish:12
 msgid "Pass a value into HTML templates"
@@ -81192,7 +81192,7 @@ msgstr "删除工作复制文件或目录上的冲突 ."
 
 #: share/completions/svn.fish:32
 msgid "Remove 'conflicted' state on working copy files or directories."
-msgstr "删除工作副本文件或目录中的“ 冲突” 状态 ."
+msgstr "删除工作副本文件或目录中的' 冲突' 状态 ."
 
 #: share/completions/svn.fish:33
 msgid "Restore pristine working copy file (undo most local edits)."
@@ -81420,7 +81420,7 @@ msgstr "执行模式: 简单、复杂和非trx( 非交易) (默认) :"
 
 #: share/completions/sysbench.fish:35
 msgid "Read-only mode. No UPDATE, DELETE or INSERT queries will be performed. "(default: off)"
-msgstr "仅读模式 。 不进行最新、DEELETE或INSERT查询."
+msgstr "仅读模式,不进行最新、DEELETE或INSERT查询."
 
 #: share/completions/sysbench.fish:36
 msgid "Range size for range queries (default: 100)"
@@ -81484,11 +81484,11 @@ msgstr "随机数的分布类型( 默认: 特殊)"
 
 #: share/completions/sysbench.fish:51
 msgid "Percentage of values to be treated as 'special'(default: 1)"
-msgstr "作为“ special” 处理的值的百分比( 默认值 ): 第1条"
+msgstr "作为' special' 处理的值的百分比( 默认值 ): 第1条"
 
 #: share/completions/sysbench.fish:52
 msgid "Percentage of cases when 'special' values are generated (default: 75)"
-msgstr "生成“ 特殊” 值的案件百分比( 默认值: 75)"
+msgstr "生成' 特殊' 值的案件百分比( 默认值: 75)"
 
 #: share/completions/sysbench.fish:53
 msgid "Use \"Prepared Statements\" API if supported, otherwise - use clientside "statements: disable, auto (default: auto)"
@@ -81524,7 +81524,7 @@ msgstr "要使用的测试表类型"
 
 #: share/completions/sysbench.fish:61
 msgid "Use SSL connections. (default: no)"
-msgstr "使用 SSL 连接 。 (默认:否)"
+msgstr "使用 SSL 连接,(默认:否)"
 
 #: share/completions/sysbench.fish:62
 msgid "MAX_ROWS option for MyISAM tables (required for big tables) (default: "1000000)"
@@ -83926,7 +83926,7 @@ msgstr "指定要使用的服务器套接字的名称"
 
 #: share/completions/tmux.fish:14
 msgid "Full path to server socket. If set, -L is ignored."
-msgstr "服务器套接字的完整路径 。 如果设定, - L 会被忽略 ."
+msgstr "服务器套接字的完整路径,如果设定, - L 会被忽略 ."
 
 #: share/completions/tmux.fish:15
 msgid "attach to existing session"
@@ -84732,7 +84732,7 @@ msgstr "显示所有定义的环境列表"
 
 #: share/completions/tox.fish:9
 msgid "Config file name or directory with 'tox.ini' file"
-msgstr "用 “ tox.ini” 文件配置文件名或目录"
+msgstr "用 ' tox.ini' 文件配置文件名或目录"
 
 #: share/completions/tox.fish:10
 msgid "Work against specified environments"
@@ -84768,7 +84768,7 @@ msgstr "使用指定的软件包安装到 venv, 而不是创建"
 
 #: share/completions/tox.fish:18
 msgid "Install package in the venv using 'setup.py develop' via 'pip -e .'"
-msgstr "在 venv 中使用“ setup.py 开发” 通过“ pip -e ” 安装软件包 。  '"
+msgstr "在 venv 中使用' setup.py 开发' 通过' pip -e ' 安装软件包, '"
 
 #: share/completions/tox.fish:19
 msgid "Set indexserver url"
@@ -85792,7 +85792,7 @@ msgstr "按格式<f>打印和格式的时间"
 
 #: share/completions/tree.fish:32
 msgid "Appends '/', '=', '*', '@', '|' or '>' as per ls -F"
-msgstr "附加 “ / ” 、 “ ” 、 “ ” 、 “ * ” 、 “ ” 、 “ ” 或 “ “' ” , 如 is - F"
+msgstr "附加 ' / ' 、 ' ' 、 ' ' 、 ' * ' 、 ' ' 、 ' ' 或 ' '' ' , 如 is - F"
 
 #: share/completions/tree.fish:33
 msgid "Print inode number of each file"
@@ -85999,8 +85999,8 @@ msgid "Initializes a TypeScript project and creates a tsconfig.json file"
 msgstr "初始化 TypeScript 项目并创建 tsconfig.json 文件"
 
 #: share/completions/tsc.fish:31
-msgid "Transpile each file as a separate module (similar to “ts.transpileModule”)"
-msgstr "将每个文件作为单独的模块(类似于“ ts.transpileModule”)"
+msgid "Transpile each file as a separate module (similar to 'ts.transpileModule')"
+msgstr "将每个文件作为单独的模块(类似于' ts.transpileModule')"
 
 #: share/completions/tsc.fish:32
 msgid "Support JSX in .tsx files: \"react\", \"preserve\", \"react-native\""
@@ -86748,7 +86748,7 @@ msgstr "强制卸载(如果是无法到达的NFS系统)"
 
 #: share/completions/umount.fish:13
 msgid "Lazy unmount (unmount a 'busy' filesystem)"
-msgstr "懒惰卸载( 卸载“ busy” 文件系统)"
+msgstr "懒惰卸载( 卸载' busy' 文件系统)"
 
 #: share/completions/umount.fish:14
 msgid "Recursively unmount a target with all its children"
@@ -87151,11 +87151,11 @@ msgstr "带有出口USB设备的机器"
 
 #: share/completions/usbip.fish:12
 msgid "Busid of the device on <host>"
-msgstr "设备在“ host” 上的模糊"
+msgstr "设备在' host' 上的模糊"
 
 #: share/completions/usbip.fish:13
 msgid "Id of the virtual UDB on <host>"
-msgstr "虚拟 UDB 在“ host” 上的 ID"
+msgstr "虚拟 UDB 在' host' 上的 ID"
 
 #: share/completions/usbip.fish:14
 msgid "Vhci_hcd port the device is on"
@@ -87167,7 +87167,7 @@ msgstr "可解析列表格式"
 
 #: share/completions/usbip.fish:16
 msgid "List the exportable USB devices on <host>"
-msgstr "在“ host” 上列出可导出 USB 设备"
+msgstr "在' host' 上列出可导出 USB 设备"
 
 #: share/completions/usbip.fish:17
 msgid "List the local USB devices"
@@ -87179,7 +87179,7 @@ msgstr "列出绑定在 usbip-vudc 的本地 USB 设备"
 
 #: share/completions/usbip.fish:19
 msgid "Bind usbip-host.ko to device on <busid>"
-msgstr "将 usbip- host.ko 连接到“ busid” 上"
+msgstr "将 usbip- host.ko 连接到' busid' 上"
 
 #: share/completions/usbip.fish:20
 msgid "Unbind usbip-host.ko to device on <busid>"
@@ -87603,7 +87603,7 @@ msgstr "为相同的输入输出相同的组件"
 
 #: share/completions/vbc.fish:14
 msgid "Sets the compiler to target the .NET Compact Framework"
-msgstr "设置编译器以锁定 。 NET 契约框架"
+msgstr "设置编译器以锁定,NET 契约框架"
 
 #: share/completions/vbc.fish:15
 msgid "Specifies an output file"
@@ -89881,7 +89881,7 @@ msgstr "总是显示接口的名称和MAC"
 
 #: share/completions/virsh.fish:506
 msgid "Address source: 'lease' or 'agent'"
-msgstr "地址来源: “ 租赁” 或“ 代理人 ”  '"
+msgstr "地址来源: ' 租赁' 或' 代理人 '  '"
 
 #: share/completions/virsh.fish:507
 msgid "List all domain virtual interfaces"
@@ -90442,7 +90442,7 @@ msgstr "从设备驱动器中分离节点设备"
 
 #: share/completions/virsh.fish:665
 msgid "Pci device assignment backend driver (e.g. 'vfio' or 'kvm')"
-msgstr "Pci 设备指派后端驱动程序( 如 “ vfio ” 或 “ kvm ” )"
+msgstr "Pci 设备指派后端驱动程序( 如 ' vfio ' 或 ' kvm ' )"
 
 #: share/completions/virsh.fish:666
 msgid "Node device details in XML"
@@ -92116,7 +92116,7 @@ msgstr "保存会话 cookie"
 
 #: share/completions/wget.fish:53
 msgid "Ignore 'Content-Length' header"
-msgstr "忽略“ Content- Length” 页眉"
+msgstr "忽略' Content- Length' 页眉"
 
 #: share/completions/wget.fish:54
 msgid "Define an additional-header to be passed to the HTTP servers"
@@ -92865,7 +92865,7 @@ msgstr "获得相机"
 
 #: share/completions/wpa_cli.fish:34
 msgid "request STAKey negotiation with <addr>"
-msgstr "请与“addr”进行STAKey谈判"
+msgstr "请与'addr'进行STAKey谈判"
 
 #: share/completions/wpa_cli.fish:35
 msgid "set ap_scan parameter"
@@ -92929,7 +92929,7 @@ msgstr "从 WSL 路径翻译为 Windows 路径"
 
 #: share/completions/wslpath.fish:4
 msgid "translate from a WSL path to a Windows path, with '/' instead of ''"
-msgstr "将 WSL 路径翻译为 Windows 路径, 以 “/” 代替“ ”  '"
+msgstr "将 WSL 路径翻译为 Windows 路径, 以 '/' 代替' '  '"
 
 #: share/completions/wvdial.fish:1
 msgid "Complete wvdial peers"
@@ -93013,7 +93013,7 @@ msgstr "启用显示为 stderr 的额外调试 ."
 
 #: share/completions/xbps-alternatives.fish:3
 msgid "Alternative group name to match.  To be used with the set mode."
-msgstr "备选组名相匹配 。 用于设定模式."
+msgstr "备选组名相匹配,用于设定模式."
 
 #: share/completions/xbps-alternatives.fish:4
 #: share/completions/xbps-checkvers.fish:5 share/completions/xbps-dgraph.fish:4
@@ -93132,7 +93132,7 @@ msgstr "软件包维护者名称和/或电子邮件联系人"
 
 #: share/completions/xbps-create.fish:12
 msgid "The package name/version tuple, e. g: 'foo-1. 0_1'"
-msgstr "软件包名称/版本 tuple, 例如 : “ foo-1. 0_ 1 ”"
+msgstr "软件包名称/版本 tuple, 例如 : ' foo-1. 0_ 1 '"
 
 #: share/completions/xbps-create.fish:13
 msgid "Virtual packages this package provides, separated by whitespace"
@@ -93229,7 +93229,7 @@ msgstr "设置不同的目标架构, 用于交叉编译 ."
 
 #: share/completions/xbps-fbulk.fish:2
 msgid "Set number of parallel builds running at the same time.  By default set to 1."
-msgstr "设置并行建筑同时运行的数量 。 默认设置为 1 ."
+msgstr "设置并行建筑同时运行的数量,默认设置为 1 ."
 
 #: share/completions/xbps-fetch.fish:1
 msgid "Enables debug messages on stderr."
@@ -93386,7 +93386,7 @@ msgstr "显示 PKG 的软件包文件"
 
 #: share/completions/xbps-query.fish:24
 msgid "Show the required dependencies for PKG.  Only direct dependencies are shown"
-msgstr "显示 PKG 所需的依赖性 。 只显示直接依赖关系"
+msgstr "显示 PKG 所需的依赖性,只显示直接依赖关系"
 
 #: share/completions/xbps-query.fish:25 share/completions/xbps-query.fish:26
 msgid "Show the reverse dependencies for PKG"
@@ -93462,7 +93462,7 @@ msgstr "签署寄存器的人的姓名和电子邮件"
 
 #: share/completions/xbps-rindex.fish:8
 msgid "Path to the private RSA key to sign the repository. Defaults to ~/.ssh/id_rsa"
-msgstr "用于签名寄存器的私有 RSA 密钥的路径 。 默认为~/.ssh/id_rsa"
+msgstr "用于签名寄存器的私有 RSA 密钥的路径,默认为~/.ssh/id_rsa"
 
 #: share/completions/xbps-rindex.fish:9
 msgid "Register the binary package into the local repository"
@@ -94425,7 +94425,7 @@ msgstr "从 XML 配置文件添加应用程序定义"
 
 #: share/completions/xsp.fish:10
 msgid "Use this instance by mod_mono to create ASP.NET applications on demand"
-msgstr "使用 mod_mono 创建 ASP 实例 。 应请求的 NET 应用程序"
+msgstr "使用 mod_mono 创建 ASP 实例,应请求的 NET 应用程序"
 
 #: share/completions/xsp.fish:11
 msgid "Do not protect hidden files/directories from being accessed by clients"
@@ -94777,7 +94777,7 @@ msgstr "设置字符类"
 
 #: share/completions/xterm.fish:57
 msgid "Set the cjkWidth resource to 'true'"
-msgstr "将 cjkWidth 资源设置为“ true ”"
+msgstr "将 cjkWidth 资源设置为' true '"
 
 #: share/completions/xterm.fish:58
 msgid "Disable recognition of ANSI color-change escape sequences"
@@ -97724,7 +97724,7 @@ msgstr "如果 N > 0 显示短暂的进展"
 
 #: share/completions/zpaq.fish:21
 msgid "Show top N sorted by size. -1: show frag IDs"
-msgstr "按大小显示上 N 排序 。 -1 显示破烂的ID"
+msgstr "按大小显示上 N 排序,-1 显示破烂的ID"
 
 #: share/completions/zpaq.fish:22
 msgid "Verify but do not write files"
@@ -98903,7 +98903,7 @@ msgstr "即使它取代了其他已安装软件包的文件,也要安装"
 #: share/completions/zypper.fish:200 share/completions/zypper.fish:240
 #: share/completions/zypper.fish:265 share/completions/zypper.fish:352
 msgid "Automatically say 'yes' to third party license confirmation prompt"
-msgstr "自动对第三方许可确认快速表示“ 是 ”"
+msgstr "自动对第三方许可确认快速表示' 是 '"
 
 #: share/completions/zypper.fish:201 share/completions/zypper.fish:218
 #: share/completions/zypper.fish:225 share/completions/zypper.fish:229
@@ -99661,11 +99661,11 @@ msgstr "启用插入文件的指示"
 
 #: share/functions/__fish_complete_docutils.fish:54
 msgid "Disable the 'raw' directives"
-msgstr "禁用“ raw” 指令"
+msgstr "禁用' raw' 指令"
 
 #: share/functions/__fish_complete_docutils.fish:55
 msgid "Enable the 'raw' directives"
-msgstr "启用“ raw” 指令"
+msgstr "启用' raw' 指令"
 
 #: share/functions/__fish_complete_docutils.fish:56
 msgid "Token name set for Pygments"
@@ -99677,7 +99677,7 @@ msgstr "更改直引号"
 
 #: share/functions/__fish_complete_docutils.fish:58
 msgid "'smart quotes' for the language"
-msgstr "语言的“ 智能引号 ”"
+msgstr "语言的' 智能引号 '"
 
 #: share/functions/__fish_complete_docutils.fish:59
 msgid "Inline markup at word level"
@@ -99860,7 +99860,7 @@ msgstr "指定超链接的颜色"
 
 #: share/functions/__fish_complete_docutils.fish:110
 msgid "Additional options to the 'hyperref' package"
-msgstr "“ hyperref” 软件包的其他选项"
+msgstr "' hyperref' 软件包的其他选项"
 
 #: share/functions/__fish_complete_docutils.fish:111
 msgid "Enable compound enumerators"
@@ -99888,7 +99888,7 @@ msgstr "指定字形块的嵌入"
 
 #: share/functions/__fish_complete_docutils.fish:117
 msgid "Use 'verbatim' for literal-blocks"
-msgstr "用“ verbatim ” 表示字形块"
+msgstr "用' verbatim ' 表示字形块"
 
 #: share/functions/__fish_complete_docutils.fish:118
 msgid "Table style"
@@ -100287,11 +100287,11 @@ msgstr "修改某些其他命令以接受多个文件进行处理"
 
 #: share/functions/__fish_complete_gpg.fish:72
 msgid "Identical to '--multifile --verify'"
-msgstr "与“--多文件”相同 核实  '"
+msgstr "与'--多文件'相同 核实  '"
 
 #: share/functions/__fish_complete_gpg.fish:73
 msgid "Identical to '--multifile --encrypt'"
-msgstr "与“--多文件”相同 -- 加密  '"
+msgstr "与'--多文件'相同 -- 加密  '"
 
 #: share/functions/__fish_complete_gpg.fish:74
 msgid "Identical to --multifile --decrypt"
@@ -100582,11 +100582,11 @@ msgstr "使用指定的字符串作为存储在信件内的文件名"
 
 #: share/functions/__fish_complete_gpg.fish:185
 msgid "Set the 'for your eyes only' flag in the message"
-msgstr "在信件中设置“ 只为你的眼睛” 标记"
+msgstr "在信件中设置' 只为你的眼睛' 标记"
 
 #: share/functions/__fish_complete_gpg.fish:186
 msgid "Clear the 'for your eyes only' flag in the message"
-msgstr "清除消息中的“ 只为你的眼睛” 旗帜"
+msgstr "清除消息中的' 只为你的眼睛' 旗帜"
 
 #: share/functions/__fish_complete_gpg.fish:187
 msgid "Number of completely trusted users to introduce a new key signer (defaults "to 1)"
@@ -101142,7 +101142,7 @@ msgstr "仅列出父进程 ID 的匹配进程"
 
 #: share/functions/__fish_complete_pgrep.fish:9
 msgid "Only match processes whose controlling terminal is listed.  The terminal "name should  be  specified without the \"/dev/\" prefix"
-msgstr "只匹配控制终端的流程 。 终点站"
+msgstr "只匹配控制终端的流程,终点站"
 
 #: share/functions/__fish_complete_pgrep.fish:10
 msgid "Only  match  processes  whose  effective  user ID is listed"
@@ -101474,7 +101474,7 @@ msgstr "使用用户默认的调试器对当前命令加插"
 
 #: share/functions/__fish_prepend_sudo.fish:1
 msgid " DEPRECATED: use fish_commandline_prepend instead. Prepend 'sudo ' to the "beginning of the current commandline"
-msgstr "弃:取而代之用fish_命令行_准备. 将“ sudo” 放在"
+msgstr "弃:取而代之用fish_命令行_准备. 将' sudo' 放在"
 
 #: share/functions/__fish_preview_current_file.fish:1
 msgid "Open the file at the cursor in a pager"
@@ -101830,7 +101830,7 @@ msgstr "快捷的 CWD 短片"
 
 #: share/functions/psub.fish:1
 msgid "Read from stdin into a file and output the filename. Remove the file when "the command that called psub exits."
-msgstr "从 stdin 读入文件并输出文件名 。 删除文件的时间"
+msgstr "从 stdin 读入文件并输出文件名,删除文件的时间"
 
 #: share/functions/pushd.fish:1
 msgid "Push directory to stack"
@@ -101888,19 +101888,19 @@ msgstr "编辑可变值"
 #~ msgid ""
 #~ "%ls: Can't put job %d, '%ls' to background because it is not under job "
 #~ "control\n"
-#~ msgstr "%ls：不能将任务 %d, “%ls” 置于后台，因为它不受到任务控制\n"
+#~ msgstr "%ls：不能将任务 %d, '%ls' 置于后台，因为它不受到任务控制\n"
 
 #, c-format
 #~ msgid "Send job %d '%ls' to background\n"
-#~ msgstr "将任务 %d “%ls” 置于后台\n"
+#~ msgstr "将任务 %d '%ls' 置于后台\n"
 
 #, c-format
 #~ msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
-#~ msgstr "%ls：在尝试绑定名为 “%ls” 的键时发生未知错误\n"
+#~ msgstr "%ls：在尝试绑定名为 '%ls' 的键时发生未知错误\n"
 
 #, c-format
 #~ msgid "%ls: '%ls' is a rotten symlink\n"
-#~ msgstr "%ls：“%ls” 是一个损坏的符号链接\n"
+#~ msgstr "%ls：'%ls' 是一个损坏的符号链接\n"
 
 #, c-format
 #~ msgid "%ls: Could not set PWD variable\n"
@@ -101911,7 +101911,7 @@ msgstr "编辑可变值"
 #~ "%ls: Type 'help %ls' for related documentation\n"
 #~ "\n"
 #~ msgstr ""
-#~ "%ls: 键入 “help %ls” 以获取相关的文档\n"
+#~ "%ls: 键入 'help %ls' 以获取相关的文档\n"
 #~ "\n"
 
 #~ msgid "Execute command if previous command suceeded"
@@ -101939,11 +101939,11 @@ msgstr "编辑可变值"
 
 #, c-format
 #~ msgid "%ls: Unknown job '%ls'\n"
-#~ msgstr "%ls：未知的任务 “%ls”\n"
+#~ msgstr "%ls：未知的任务 '%ls'\n"
 
 #, c-format
 #~ msgid "%ls: Argument '%ls' must be an integer\n"
-#~ msgstr "%ls：参数 “%ls” 必须是整数\n"
+#~ msgstr "%ls：参数 '%ls' 必须是整数\n"
 
 #, c-format
 #~ msgid "%ls: Invalid combination of options\n"
@@ -101959,7 +101959,7 @@ msgstr "编辑可变值"
 
 #, c-format
 #~ msgid "Send job %d, '%ls' to foreground\n"
-#~ msgstr "将任务 %d，“%ls” 发送到前台\n"
+#~ msgstr "将任务 %d，'%ls' 发送到前台\n"
 
 #~ msgid "%ls: --array option requires a single variable name.\n"
 #~ msgstr ""
@@ -101977,10 +101977,10 @@ msgstr "编辑可变值"
 #~ msgstr "%ls：应有函数名\n"
 
 #~ msgid "string: Unknown subcommand '%ls'\n"
-#~ msgstr "%ls：未知的任务 “%ls”\n"
+#~ msgstr "%ls：未知的任务 '%ls'\n"
 
 #~ msgid "terminal_give_to_job(): Could not send job %d ('%ls') to foreground"
-#~ msgstr "将任务 %d，“%ls” 发送到前台"
+#~ msgstr "将任务 %d，'%ls' 发送到前台"
 
 #~ msgid "%s: Expected function name\\n"
 #~ msgstr "%s：应有函数名\\n"

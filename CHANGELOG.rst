@@ -4,13 +4,28 @@ fish 4.1.0 (released ???)
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
-- When tab completion results are truncated, any common directory name is omitted.
+- When tab completion results are truncated, any common directory name is omitted. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
+  the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once.
+- The self-installing configuration introduced in fish 4.0 has been changed.
+  Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
+  That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
+  As before this is the default when building via `cargo`, and disabled when building via `cmake`, and for packagers we continue to recommend cmake.
+
+  Note: When fish is built like this, the `$__fish_data_dir` variable will be empty because that directory no longer has meaning. If you need to load files from there,
+  use `status get-file` or find alternatives (like loading completions for "foo" via `complete -C"foo "`).
+
+  We're considering making data embedding mandatory in future releases because it has a few advantages even for installation from a package (like making file conflicts with other packages impossible). (:issue:`11143`)
 
 Deprecations and removed features
 ---------------------------------
 - Tokens like ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
+  For the time being, this can be turned off with the "no-ignore-terminfo" feature flag::
+
+    set -Ua fish_features no-ignore-terminfo
+
+- The `--install` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new `status list-files` and `status get-file` subcommands, but it should no longer be necessary. (:issue:`11143`)
 
 Scripting improvements
 ----------------------

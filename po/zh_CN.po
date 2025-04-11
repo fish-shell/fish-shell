@@ -393,7 +393,7 @@ msgstr "用户执行的历史命令"
 
 #: src/history.rs:1960
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
-msgstr "历史会话 ID '%ls ' 不是有效的可变名称,倒转到"ls"."
+msgstr "历史会话 ID '%ls' 不是有效的可变名称,倒转到'%ls'."
 
 #: src/complete.rs:60:static COMPLETE_USER_DESC
 msgid "Home for %ls"
@@ -664,7 +664,7 @@ msgstr "%ls: 无效的端值 '%ls'\n"
 
 #: src/builtins/string.rs:175
 msgid "%ls: Invalid escape sequence in pattern \"%ls\"\n"
-msgstr "%ls: 模式中的无效脱逃序列 \"
+msgstr "%ls: 模式中的无效脱逃序列  \"%ls\"\n"
 
 #: src/builtins/string/escape.rs:24
 msgid "%ls: Invalid escape style '%ls'\n"
@@ -1467,7 +1467,7 @@ msgstr "无法找到 %ls 目录 ."
 
 #: src/env_universal_common.rs:465
 msgid "Unable to open universal variable file '%s': %s"
-msgstr "无法打开通用变量文件"%s": %s"
+msgstr "无法打开通用变量文件'%s': %s"
 
 #: src/reader.rs:673
 msgid "Unable to read input file: %s"
@@ -1697,11 +1697,11 @@ msgstr "不匹配通配符 '%ls ',见`帮助通配符-取出'."
 
 #: src/parse_constants.rs:471:pub const INVALID_BREAK_ERR_MSG
 msgid "'break' while not inside of loop"
-msgstr "不在圈内时"破""
+msgstr "不在循环内‘break’"
 
 #: src/parse_constants.rs:474:pub const INVALID_CONTINUE_ERR_MSG
 msgid "'continue' while not inside of loop"
-msgstr "' 继续' 而不在循环内"
+msgstr "不在循环内'continue'"
 
 #: src/parse_constants.rs:477:pub const INVALID_PIPELINE_CMD_ERR_MSG
 msgid "The '%ls' command can not be used in a pipeline"
@@ -1717,7 +1717,7 @@ msgstr "美元不是皮条客。 在fish中,请使用$fish_pid."
 
 #: src/parse_constants.rs:499:pub const ERROR_NOT_ARGV_COUNT
 msgid "$# is not supported. In fish, please use 'count $argv'."
-msgstr "$# 不支持,在fish中,请使用"计算出$argv"."
+msgstr "$# 不支持,在fish中,请使用‘count $argv'."
 
 #: src/parse_constants.rs:502:pub const ERROR_NOT_ARGV_AT
 msgid "$@ is not supported. In fish, please use $argv."
@@ -1733,15 +1733,15 @@ msgstr "期望在此 $ 之后有一个可变名称 ."
 
 #: src/parse_constants.rs:512
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
-msgstr "不支持使用"=". 在fish类中,请使用' set %ls %ls ' ."
+msgstr "不支持使用'='. 在fish类中,请使用'set %ls %ls'."
 
 #: src/parse_constants.rs:516
 msgid "'time' is not supported for background jobs. Consider using 'command time'."
 msgstr "' 时间' 不支持背景任务,考虑使用命令时间 ."
 
 #: src/parse_constants.rs:520
-msgid "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; "end'"
-msgstr "组合命令不支持'{...}'。 请使用' begin;..;"
+msgid "'{ ... }' is not supported for grouping commands. Please use 'begin; ...; end'"
+msgstr "组合命令不支持'{...}'。 请使用'begin; ...; end'"
 
 #: src/parse_util.rs:1814
 msgid "The '%ls' command can not be used immediately after a backgrounded job"
@@ -1753,11 +1753,11 @@ msgstr "背景命令不能用作条件"
 
 #: src/parse_util.rs:1821:const END_ARG_ERR_MSG
 msgid "'end' does not take arguments. Did you forget a ';'?"
-msgstr ""结束"不会引起争论。 你忘了一个";"吗?"
+msgstr "'end'没有携带参数。 你忘了一个';'吗?"
 
 #: src/parse_util.rs:1825
 msgid "The 'time' command may only be at the beginning of a pipeline"
-msgstr ""时间"命令可能只在管道开始的时候"
+msgstr "'时间'命令可能只在管道开始的时候"
 
 #: src/print_help.rs:7:const HELP_ERR
 msgid "Could not show help message"
@@ -1836,7 +1836,7 @@ msgstr "通过字母或编号选择目录 :"
 
 #: share/functions/cdh.fish:6
 msgid "Error: expected a number between 1 and %d or letter in that range, got \"%s\""
-msgstr "错误: 需要数字在 1 到 %d 之间, 或该范围内的字母, 获得 \"
+msgstr "错误: 需要数字在 1 到 %d 之间, 或该范围内的字母, 获得 \"%s\""
 
 #: share/functions/edit_command_buffer.fish:1
 msgid "Ignoring the output of your editor since its exit status was non-zero"
@@ -1920,24 +1920,24 @@ msgid "Editor exited but the function was not modified"
 msgstr "编辑器退出了, 但功能没有被修改"
 
 #: share/functions/funced.fish:5
-msgid "If the editor is still running, check if it waits for completion, maybe a '--"wait' option?"
-msgstr "如果编辑器还在运行, 检查它是否等待完成, 也许是一个.."
+msgid "If the editor is still running, check if it waits for completion, maybe a '--wait' option?"
+msgstr "如果编辑器还在运行, 检查它是否等待完成, 也许是一个'--wait' 选项"
 
 #: share/functions/funced.fish:6
 msgid "Edit the file again? [Y/n]"
-msgstr "再次编辑文件吗 ? [年/n]"
+msgstr "再次编辑文件吗 ? [Y/n]"
 
 #: share/functions/funced.fish:7
 msgid "Cancelled function editing"
 msgstr "已取消的函数编辑"
 
 #: share/functions/funced.fish:8
-msgid "Warning: the file containing this function has not been saved. Changes may "be lost when fish is closed."
-msgstr "警告: 包含此函数的文件没有保存,变动可能"
+msgid "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed."
+msgstr "警告: 包含此函数的文件没有保存,fish关闭后变动可能丢失"
 
 #: share/functions/funced.fish:9
 msgid "Save function to %s? [Y/n]"
-msgstr "将函数保存到 %s 吗 ? [年/n]"
+msgstr "将函数保存到 %s 吗 ? [Y/n]"
 
 #: share/functions/funced.fish:10 share/functions/funced.fish:12
 msgid "Function saved to %s"
@@ -1969,7 +1969,7 @@ msgstr "%s: 删除 %s\\n"
 
 #: share/functions/funcsave.fish:5
 msgid "%s: Unknown function '%s'\\n"
-msgstr "%s:未知函数"%s"\\n"
+msgstr "%s:未知函数'%s'\\n"
 
 #: share/functions/help.fish:1
 msgid "%s: Could not find a web browser.\\n"
@@ -2057,7 +2057,7 @@ msgstr "%s:变量名称必须包含字母数字字符\\\n"
 
 #: share/functions/umask.fish:1 share/functions/umask.fish:2
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%s:无效的掩码"%s"\\n"
+msgstr "%s:无效的掩码'%s'\\n"
 
 #: share/functions/vared.fish:1
 msgid "%s: Unknown option %s\\n"

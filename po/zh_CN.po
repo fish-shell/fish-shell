@@ -1996,24 +1996,24 @@ msgid "%ls: %ls: expected %d arguments; got %d\\n"
 msgstr "%ls:%ls: 期望的 %d 参数; 获得 %d\\n"
 
 #: share/functions/history.fish:3 share/functions/history.fish:4
-msgid "Ignoring invalid history entry ID \"%s\"\\n"
-msgstr "忽略无效历史条目 ID\"
+msgid "Ignoring invalid history entry ID \"%s\"\n"
+msgstr "忽略无效历史条目 ID \"%s\"\n"
 
 #: share/functions/history.fish:5
-msgid "If you enter 'yes' your entire interactive command history will be erased\\n"
-msgstr "如果您输入' 是' , 您的整个交互命令历史将被去除\\\n"
+msgid "If you enter 'yes' your entire interactive command history will be erased\n"
+msgstr "如果您输入'是' , 您的整个交互命令历史将被去除 \n"
 
 #: share/functions/history.fish:6
 msgid "Command history cleared!\\n"
-msgstr "命令历史清除 !\\\n"
+msgstr "命令历史清除 !\n"
 
 #: share/functions/history.fish:7
 msgid "You did not say 'yes' so I will not clear your command history\\n"
-msgstr "你没有说"是" 所以我不会澄清你的命令历史\\\n"
+msgstr "你没有说'是' 所以我不会澄清你的命令历史\n"
 
 #: share/functions/history.fish:8
 msgid "Command history for session cleared!\\n"
-msgstr "命令历史已清除 !\\\n"
+msgstr "命令历史已清除 !\n"
 
 #: share/functions/isatty.fish:1
 msgid "%s: Too many arguments"
@@ -2021,11 +2021,11 @@ msgstr "%s: 参数过多"
 
 #: share/functions/nextd.fish:1 share/functions/prevd.fish:1
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
-msgstr "%s:要跳过的位置数必须是非负整数\\\n"
+msgstr "%s:要跳过的位置数必须是非负整数\\n"
 
 #: share/functions/open.fish:2
 msgid "No open utility found. Try installing \"xdg-open\" or \"xdg-utils\"."
-msgstr "未找到打开的工具,尝试安装 \"
+msgstr "未找到打开的工具,尝试安装 \"xdg-open\" or \"xdg-utils\"."
 
 #: share/functions/popd.fish:1
 msgid "%s: Directory stack is empty…\\n"
@@ -2064,12 +2064,12 @@ msgid "%s: Unknown option %s\\n"
 msgstr "%s:未知选项 %s\\n"
 
 #: share/functions/vared.fish:2
-msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element "of %s\\n"
-msgstr "%s: %s是一个数组变量。 使用 % svared %s %s [n] %s 编辑 n:th 元素"
+msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
+msgstr "%s: %s是一个数组变量。 使用 %svared %s %s [n] %s 编辑 n:th 元素 %s \n"
 
 #: share/functions/vared.fish:3
-msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "VARIABLE\\n"
-msgstr "%s: 需要完全一个参数, 获得 %s.\\\n\n 简表:\\n\t%s"
+msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+msgstr "%s: 需要完全一个参数, 获得 %s.\\n\\nSynopsis:\\n\\t%svared%s 变量 \n"
 
 #: share/completions/7z.fish:1
 msgid "Show information about supported formats"
@@ -3127,8 +3127,8 @@ msgid "Sets number of rotated logs to keep, default 4"
 msgstr "设定要保存的旋转日志数, 默认为 4"
 
 #: share/completions/adb.fish:88
-msgid " If the signature <id> for logging to file changes, then clear the "associated files and continue"
-msgstr "如果用于日志的签名' id' 文件更改, 那么清除"
+msgid " If the signature <id> for logging to file changes, then clear the associated files and continue"
+msgstr "如果用于日志的签名 <id> 文件更改, 那么清除关联的文件并继续"
 
 #: share/completions/adb.fish:89
 msgid "Get the size of the ring buffers within logd"
@@ -3163,8 +3163,8 @@ msgid "Quit after print <count> lines"
 msgstr "打印出 < counts > 行后退出"
 
 #: share/completions/adb.fish:97
-msgid "Print all message even if they do not matches, requires --regex and --max-"count"
-msgstr "打印所有信件, 即使它们不匹配, 需要 -- regex 和 -- max -"
+msgid "Print all message even if they do not matches, requires --regex and --max-count"
+msgstr "打印所有消息, 即使它们不匹配, 需要 --regex and --max-count"
 
 #: share/completions/adb.fish:98
 msgid "Only display log messages from UIDs present in the comma separate list <uids>"
@@ -3419,7 +3419,7 @@ msgstr "在背景中运行任务"
 
 #: share/completions/alsactl.fish:27
 msgid "Use syslog for messages"
-msgstr "对信件使用 syslog"
+msgstr "对消息使用 syslog"
 
 #: share/completions/alsactl.fish:28
 msgid "Set the process priority (see 'man nice')"
@@ -3710,12 +3710,12 @@ msgstr "调整图像大小时选择过滤器 [type]"
 #: share/completions/identify.fish:10 share/completions/import.fish:19
 #: share/completions/montage.fish:27
 msgid "Output formatted image characteristics [\"string\"]"
-msgstr "输出格式化图像特性 [\]"
+msgstr "输出格式化图像特性 [\"string\"]"
 
 #: share/completions/animate.fish:17 share/completions/display.fish:72
 #: share/completions/montage.fish:28
 msgid "Level of gamma correction [value]"
-msgstr "伽玛校正水平[值]"
+msgstr "伽玛校正水平[value]"
 
 #: share/completions/animate.fish:18 share/completions/display.fish:20
 msgid "Preferred size and location of the Image window [geometry]"
@@ -5776,7 +5776,7 @@ msgstr "使用 < command > 构建"
 
 #: share/completions/apt-build.fish:21
 msgid "Apply <file> patch"
-msgstr "应用"文件"补丁"
+msgstr "应用 <file> 补丁"
 
 #: share/completions/apt-build.fish:22
 msgid "Prefix to strip on patch"
@@ -6427,7 +6427,7 @@ msgstr "生成主文件"
 
 #: share/completions/apt-move.fish:2
 msgid "Alias for 'get'"
-msgstr "别名"得到"  '"
+msgstr "别名 'get'"
 
 #: share/completions/apt-move.fish:3
 msgid "Move packages to local tree"
@@ -6455,7 +6455,7 @@ msgstr "用于' 删除'软件包的异名  '"
 
 #: share/completions/apt-move.fish:9
 msgid "Alias for 'update'"
-msgstr "别名"更新"  '"
+msgstr "别名 'update'"
 
 #: share/completions/apt-move.fish:10
 msgid "Download package missing from mirror"
@@ -7588,7 +7588,7 @@ msgstr "不运行林特"
 
 #: share/completions/arc.fish:154
 msgid "Use the specified message when updating a revision"
-msgstr "更新修订时使用指定的信件"
+msgstr "更新修订时使用指定的消息"
 
 #: share/completions/arc.fish:155
 msgid "Create or update a revision without requesting a code review"
@@ -7688,7 +7688,7 @@ msgstr "跳过工作副本中未跟踪文件的检查"
 
 #: share/completions/arc.fish:183
 msgid "Display only new lint messages"
-msgstr "只显示新提示信件"
+msgstr "只显示新提示消息"
 
 #: share/completions/arc.fish:185
 msgid "Create or update a libphutil library"
@@ -7872,7 +7872,7 @@ msgstr "不要压缩 DWARF 调试部分"
 
 #: share/completions/as.fish:12
 msgid "Produce assembler debugging messages"
-msgstr "生产装配器调试信件"
+msgstr "生产装配器调试消息"
 
 #: share/completions/as.fish:13
 msgid "Remap debug information"
@@ -9181,8 +9181,8 @@ msgid "Specify the pathname of the file progfile containing an awk program"
 msgstr "指定包含 awk 程序的文件 progfile 的路径名"
 
 #: share/completions/awk.fish:3
-msgid "Ensure that the assignment argument is in the same form as an assignment "operand"
-msgstr "确保转让理由与转让形式相同"
+msgid "Ensure that the assignment argument is in the same form as an assignment operand"
+msgstr "确保赋值参数与赋值操作数的形式相同"
 
 #: share/completions/badblocks.fish:1
 msgid "Block-size Specify the size of blocks in bytes"
@@ -9654,7 +9654,7 @@ msgstr "启用事件系统的调试消息"
 
 #: share/completions/blender.fish:47
 msgid "Enable debug messages from FFmpeg library"
-msgstr "启用从 FFmpeg 库调试信件"
+msgstr "启用从 FFmpeg 库调试消息"
 
 #: share/completions/blender.fish:48
 msgid "Enable debug messages for event handling"
@@ -10712,7 +10712,7 @@ msgstr "启用动词输出到 stderr"
 
 #: share/completions/btrfs.fish:53 share/completions/btrfs.fish:55
 msgid "Suppress all messages, except errors"
-msgstr "除出错外, 禁止所有信件"
+msgstr "除出错外, 禁止所有消息"
 
 #: share/completions/btrfs.fish:54
 msgid "Increase verbosity about performed actions"
@@ -12104,7 +12104,7 @@ msgstr "检查与当前目录相关的分支"
 
 #: share/completions/bzr.fish:71
 msgid "Show usage message and options"
-msgstr "显示使用信件和选项"
+msgstr "显示使用消息和选项"
 
 #: share/completions/bzr.fish:73
 msgid "Only displays errors and warnings"
@@ -12660,7 +12660,7 @@ msgstr "从索引中删除一个被推取的箱子"
 
 #: share/completions/cargo.fish:47
 msgid "Prints this message or the help of the given subcommand(s)"
-msgstr "打印此信件或给定子命令的帮助"
+msgstr "打印此消息或给定子命令的帮助"
 
 #: share/completions/cargo.fish:48
 msgid "Benchmark only the specified binary"
@@ -14920,7 +14920,7 @@ msgstr "指定默认选择"
 
 #: share/completions/choice.fish:6
 msgid "Specify a message"
-msgstr "指定信件"
+msgstr "指定消息"
 
 #: share/completions/choose.fish:1
 msgid "Choose fields by character number"
@@ -16934,7 +16934,7 @@ msgstr "不输出任何消息 ."
 
 #: share/completions/composer.fish:200
 msgid "Increase the verbosity of messages: 1 for normal output (-v), 2 for more "verbose output (-vv) and 3 for debug (-vvv)."
-msgstr "增加信件的动词性:1个用于正常输出(-v),2个用于更多"
+msgstr "增加消息的动词性:1个用于正常输出(-v),2个用于更多"
 
 #: share/completions/composer.fish:201
 msgid "Display composer's application version."
@@ -18048,7 +18048,7 @@ msgstr "保存守护进程 PID 到文件"
 
 #: share/completions/create_ap.fish:28
 msgid "Save daemon messages to file"
-msgstr "保存守护进程信件到文件"
+msgstr "保存守护进程消息到文件"
 
 #: share/completions/create_ap.fish:29
 msgid "Send stop command to an already running create_ap"
@@ -19358,7 +19358,7 @@ msgstr "禁用输出流的缓冲"
 
 #: share/completions/curl.fish:104
 msgid "Disable use of keepalive messages on the TCP connection"
-msgstr "禁用 TCP 连接上的保存信件"
+msgstr "禁用 TCP 连接上的保存消息"
 
 #: share/completions/curl.fish:105
 msgid "(HTTPS) Disable NPN TLS extension"
@@ -20918,7 +20918,7 @@ msgstr "以逗号分隔的要复制的元数据列表( 如果存在)"
 
 #: share/completions/cwebp.fish:39
 msgid "Condense printed messages"
-msgstr "加密打印信件"
+msgstr "加密打印消息"
 
 #: share/completions/cwebp.fish:40
 msgid "Don't print anything"
@@ -21072,7 +21072,7 @@ msgstr "为64位 Cygwin 构建"
 
 #: share/completions/cygport.fish:3
 msgid "Enable debugging messages"
-msgstr "启用调试信件"
+msgstr "启用调试消息"
 
 #: share/completions/cygport.fish:4
 msgid "Cygport file"
@@ -22102,11 +22102,11 @@ msgstr "即使在 dhcpcd 退出时仍保持配置"
 
 #: share/completions/dhcpcd.fish:23
 msgid "Request given address in DHCP DISCOVER message"
-msgstr "DHCP DISCOVER 信件中请求的地址"
+msgstr "DHCP DISCOVER 消息中请求的地址"
 
 #: share/completions/dhcpcd.fish:24
 msgid "Request given address in DHCP INFORM message"
-msgstr "DHCP INFORM 信件中的请求地址"
+msgstr "DHCP INFORM 消息中的请求地址"
 
 #: share/completions/dhcpcd.fish:25
 msgid "Perform DHCPv6 Information Request"
@@ -22208,7 +22208,7 @@ msgstr "打印 pidfile dhcpcd 将用来 stdout"
 
 #: share/completions/dhcpcd.fish:48
 msgid "Requires the option to be present in all DHCP messages"
-msgstr "要求在所有 DHCP 信件中显示选项"
+msgstr "要求在所有 DHCP 消息中显示选项"
 
 #: share/completions/dhcpcd.fish:49
 msgid "Only warnings and errors will be displayed"
@@ -24970,7 +24970,7 @@ msgstr "打印关于文件转录到 stderr 的额外统计"
 
 #: share/completions/dua.fish:14
 msgid "Print help message or the help of the given subcommand(s)"
-msgstr "打印帮助信件或给定子命令的帮助"
+msgstr "打印帮助消息或给定子命令的帮助"
 
 #: share/completions/dua.fish:15 share/completions/dua.fish:16
 msgid "Launch the terminal user interface"
@@ -26607,7 +26607,7 @@ msgstr "显示 ethtool 版本"
 
 #: share/completions/ethtool.fish:3
 msgid "Turns on debugging messages"
-msgstr "打开调试信件"
+msgstr "打开调试消息"
 
 #: share/completions/ethtool.fish:4 share/completions/ip.fish:24
 msgid "Output results in JSON"
@@ -28697,7 +28697,7 @@ msgstr "所有警告都会致命"
 
 #: share/completions/firefox.fish:4 share/completions/setxkbmap.fish:2
 msgid "Print this message"
-msgstr "打印此信件"
+msgstr "打印此消息"
 
 #: share/completions/firefox.fish:5
 msgid "Print Firefox version"
@@ -29798,7 +29798,7 @@ msgstr "在指定动词级别启用调试"
 
 #: share/completions/fish_indent.fish:9
 msgid "Specify how many stack frames to display in debug messages"
-msgstr "指定调试信件中要显示的堆栈框架"
+msgstr "指定调试消息中要显示的堆栈框架"
 
 #: share/completions/fish_indent.fish:10
 msgid "Dump information about parsed statements to stderr"
@@ -32347,7 +32347,7 @@ msgstr "(Obj-C),检查实例变量是否为非三角的 C++ 对象"
 
 #: share/completions/gcc.fish:80
 msgid "Allow fast jumps to the message dispatcher"
-msgstr "允许快速跳转到信件发送器"
+msgstr "允许快速跳转到消息发送器"
 
 #: share/completions/gcc.fish:81
 msgid "(Obj-C) Enable syntactic support for structured exception handling"
@@ -36827,7 +36827,7 @@ msgstr "丢弃积分"
 #: share/completions/gendarme.fish:10 share/completions/mono.fish:25
 #: share/completions/xsp.fish:19
 msgid "Show more messages"
-msgstr "显示更多信件"
+msgstr "显示更多消息"
 
 #: share/completions/gimp.fish:2
 msgid "show help with advanced options"
@@ -37848,7 +37848,7 @@ msgstr "在编码中重新编码承诺日志消息"
 
 #: share/completions/git.fish:163
 msgid "Perform a tab expansion in the log message"
-msgstr "在日志信件中执行标签扩展"
+msgstr "在日志消息中执行标签扩展"
 
 #: share/completions/git.fish:164
 msgid "Do not perform a tab expansion in the log message"
@@ -38073,7 +38073,7 @@ msgstr "将补丁失败标记为已解决"
 
 #: share/completions/git.fish:221
 msgid "Message to print after patch failure"
-msgstr "补丁失败后要打印的信件"
+msgstr "补丁失败后要打印的消息"
 
 #: share/completions/git.fish:222
 msgid "Abort patch operation and restore branch"
@@ -38085,7 +38085,7 @@ msgstr "不恢复分支中止"
 
 #: share/completions/git.fish:224
 msgid "Show message at which patch failures occured"
-msgstr "显示发生补丁失败的信件"
+msgstr "显示发生补丁失败的消息"
 
 #: share/completions/git.fish:225 share/completions/git.fish:968
 msgid "Checkout and switch to a branch"
@@ -39023,7 +39023,7 @@ msgstr "限制对匹配给定模式的反日志条目的承诺"
 
 #: share/completions/git.fish:471
 msgid "Limit commits with message that match given pattern"
-msgstr "限制以匹配给定模式的信件进行承诺"
+msgstr "限制以匹配给定模式的消息进行承诺"
 
 #: share/completions/git.fish:472
 msgid "Limit commits to ones that match all given --grep"
@@ -39031,7 +39031,7 @@ msgstr "限制对匹配所有给定的 -- grep 的输入"
 
 #: share/completions/git.fish:473
 msgid "Limit commits to ones with message that don't match --grep"
-msgstr "限制对不匹配 -- grep 信件的输入"
+msgstr "限制对不匹配 -- grep 消息的输入"
 
 #: share/completions/git.fish:474
 msgid "Case insensitive match"
@@ -39247,7 +39247,7 @@ msgstr "重编码到给定字符集"
 
 #: share/completions/git.fish:530
 msgid "Copy message id to the end of commit message"
-msgstr "将信件 ID 复制到承诺信件的结尾"
+msgstr "将消息 ID 复制到承诺消息的结尾"
 
 #: share/completions/git.fish:531
 msgid "Remove everything above scissor line"
@@ -39263,11 +39263,11 @@ msgstr "mbox 拆分器"
 
 #: share/completions/git.fish:535
 msgid "Directory to place individual messages"
-msgstr "放置单个信件的目录"
+msgstr "放置单个消息的目录"
 
 #: share/completions/git.fish:536
 msgid "Treat files not starting with From line as single mail message"
-msgstr "将不以行开头的文件作为单个邮件信件处理"
+msgstr "将不以行开头的文件作为单个邮件消息处理"
 
 #: share/completions/git.fish:537
 msgid "File name prefix digit precision"
@@ -39339,7 +39339,7 @@ msgstr "编辑自动生成的合并消息"
 
 #: share/completions/git.fish:555 share/completions/git.fish:641
 msgid "Don't edit auto-generated merge message"
-msgstr "不要编辑自动生成的合并信件"
+msgstr "不要编辑自动生成的合并消息"
 
 #: share/completions/git.fish:556 share/completions/git.fish:642
 msgid "Don't generate a merge commit if merge is fast-forward"
@@ -39359,7 +39359,7 @@ msgstr "GPG 签名合并承诺"
 
 #: share/completions/git.fish:560 share/completions/git.fish:646
 msgid "Populate the log message with one-line descriptions"
-msgstr "用一行描述插入日志信件"
+msgstr "用一行描述插入日志消息"
 
 #: share/completions/git.fish:561 share/completions/git.fish:647
 msgid "Don't populate the log message with one-line descriptions"
@@ -39933,7 +39933,7 @@ msgstr "强制检查出参考文献"
 
 #: share/completions/git.fish:749
 msgid "Suppress messages"
-msgstr "禁用信件"
+msgstr "禁用消息"
 
 #: share/completions/git.fish:750
 msgid "Report progress status to stderr (default)"
@@ -40986,15 +40986,15 @@ msgstr "答复地址"
 
 #: share/completions/git.fish:1060
 msgid "Reply in thread to given Message-ID"
-msgstr "在线索中回复给定的信件ID"
+msgstr "在线索中回复给定的消息ID"
 
 #: share/completions/git.fish:1061
 msgid "Encoding for non-ASCII messages"
-msgstr "非 ASCII 信件的编码"
+msgstr "非 ASCII 消息的编码"
 
 #: share/completions/git.fish:1062
 msgid "Encoding for the compose message"
-msgstr "撰写信件的编码"
+msgstr "撰写消息的编码"
 
 #: share/completions/git.fish:1063
 msgid "Encoding for transferring over SMTP"
@@ -41022,7 +41022,7 @@ msgstr "SMTP 调试输出"
 
 #: share/completions/git.fish:1069
 msgid "Reconnect after sending this many messages"
-msgstr "发送这么多信件后重新连接"
+msgstr "发送这么多消息后重新连接"
 
 #: share/completions/git.fish:1070
 msgid "Seconds to wait before reconnecting"
@@ -41078,19 +41078,19 @@ msgstr "不要在 Cc 中添加已签名的拖车"
 
 #: share/completions/git.fish:1083
 msgid "Copy Cc: list from first message to the others"
-msgstr "复制 Cc: 从第一个信件列表到其它信件"
+msgstr "复制 Cc: 从第一个消息列表到其它消息"
 
 #: share/completions/git.fish:1084
 msgid "Do not copy Cc: list from first message"
-msgstr "不复制 Cc: 的第一个信件列表"
+msgstr "不复制 Cc: 的第一个消息列表"
 
 #: share/completions/git.fish:1085
 msgid "Copy To: list from first message to the others"
-msgstr "复制到: 从第一个信件列表到其它信件"
+msgstr "复制到: 从第一个消息列表到其它消息"
 
 #: share/completions/git.fish:1086
 msgid "Do not copy To: list from first message"
-msgstr "不复制到: 从第一个信件列表"
+msgstr "不复制到: 从第一个消息列表"
 
 #: share/completions/git.fish:1087
 msgid "Do not cc the From: address"
@@ -43500,7 +43500,7 @@ msgstr "禁用日志文件"
 
 #: share/completions/hashcat.fish:49
 msgid "Load only message pairs from hccapx matching X"
-msgstr "只载入匹配 X 的 hccapx 信件对"
+msgstr "只载入匹配 X 的 hccapx 消息对"
 
 #: share/completions/hashcat.fish:50
 msgid "The BF size range to replace AP's nonce last bytes"
@@ -44749,7 +44749,7 @@ msgstr "修改到备份"
 #: share/completions/hg.fish:471 share/completions/hg.fish:498
 #: share/completions/hg.fish:580 share/completions/hg.fish:619
 msgid "invoke editor on commit messages"
-msgstr "在承诺信件上引用编辑器"
+msgstr "在承诺消息上引用编辑器"
 
 #: share/completions/hg.fish:58 share/completions/hg.fish:227
 #: share/completions/hg.fish:339 share/completions/hg.fish:502
@@ -45103,7 +45103,7 @@ msgstr "为单个补丁发送介绍邮件"
 
 #: share/completions/hg.fish:175
 msgid "send patches as inline message text (default)"
-msgstr "将补丁作为内置信件文本发送( 默认)"
+msgstr "将补丁作为内置消息文本发送( 默认)"
 
 #: share/completions/hg.fish:176
 msgid "send patches as attachments"
@@ -45127,7 +45127,7 @@ msgstr "发送前请求确认"
 
 #: share/completions/hg.fish:181
 msgid "add diffstat output to messages"
-msgstr "向信件添加 diffstat 输出"
+msgstr "向消息添加 diffstat 输出"
 
 #: share/completions/hg.fish:182
 msgid "use the given date as the sending date"
@@ -45143,11 +45143,11 @@ msgstr "发送者的电子邮件地址"
 
 #: share/completions/hg.fish:185
 msgid "print messages that would be sent"
-msgstr "发送的打印信件"
+msgstr "发送的打印消息"
 
 #: share/completions/hg.fish:186
 msgid "write messages to mbox file instead of sending them"
-msgstr "将信件写入 mbox 文件而不是发送"
+msgstr "将消息写入 mbox 文件而不是发送"
 
 #: share/completions/hg.fish:187
 msgid "email addresses replies should be sent to"
@@ -45922,7 +45922,7 @@ msgstr "列表当前书架"
 
 #: share/completions/hg.fish:582
 msgid "use text as shelve message"
-msgstr "将文本作为信件保存"
+msgstr "将文本作为消息保存"
 
 #: share/completions/hg.fish:583
 msgid "use the given name for the shelved commit"
@@ -48711,7 +48711,7 @@ msgstr "打印您的游戏配置后退出"
 
 #: share/completions/jest.fish:55
 msgid "Prevent tests from printing messages through the console"
-msgstr "防止测试通过控制台打印信件"
+msgstr "防止测试通过控制台打印消息"
 
 #: share/completions/jest.fish:56
 msgid "Snapshot serializer modules Jest should use for snapshot testing"
@@ -49381,7 +49381,7 @@ msgstr "不要显示主机名字段"
 
 #: share/completions/journalctl.fish:31
 msgid "Augment log lines with explanation texts from the message catalog"
-msgstr "带有信件目录中解释文本的增强日志行"
+msgstr "带有消息目录中解释文本的增强日志行"
 
 #: share/completions/journalctl.fish:32
 msgid "Show a list of boot numbers, their IDs and timestamps"
@@ -49397,7 +49397,7 @@ msgstr "打印所有日记条目中使用的所有字段名称"
 
 #: share/completions/journalctl.fish:35
 msgid "Update the message catalog index"
-msgstr "更新信件目录索引"
+msgstr "更新消息目录索引"
 
 #: share/completions/journalctl.fish:36
 msgid "Write all unwritten journal data and sync journals"
@@ -49425,11 +49425,11 @@ msgstr "输出要包含的字段列表"
 
 #: share/completions/journalctl.fish:42
 msgid "Show messages for specified syslog identifier"
-msgstr "为指定的 syslog 标识符显示信件"
+msgstr "为指定的 syslog 标识符显示消息"
 
 #: share/completions/journalctl.fish:43
 msgid "Show messages for the specified user session unit"
-msgstr "为指定的用户会话单元显示信件"
+msgstr "为指定的用户会话单元显示消息"
 
 #: share/completions/journalctl.fish:44
 msgid "Filter output by syslog facility"
@@ -49457,7 +49457,7 @@ msgstr "在最后一个条目后显示光标"
 
 #: share/completions/journalctl.fish:50
 msgid "Show messages from service of current user"
-msgstr "从当前用户的服务中显示信件"
+msgstr "从当前用户的服务中显示消息"
 
 #: share/completions/journalctl.fish:51
 msgid "Show messages from system services and the kernel"
@@ -49493,11 +49493,11 @@ msgstr "只保留日记文件的INT 数量"
 
 #: share/completions/journalctl.fish:59
 msgid "Show message catalog entries as a table"
-msgstr "将信件目录项显示为表格"
+msgstr "将消息目录项显示为表格"
 
 #: share/completions/journalctl.fish:60
 msgid "Show message catalog entries"
-msgstr "显示信件目录条目"
+msgstr "显示消息目录条目"
 
 #: share/completions/jq.fish:1
 msgid "Output jq version"
@@ -50536,7 +50536,7 @@ msgstr "需要时使用 bibtex , 但仅在 bib 文件存在时使用"
 
 #: share/completions/latexmk.fish:4
 msgid "Print message across the page when converting to postscript"
-msgstr "转换到邮戳时在页面上打印信件"
+msgstr "转换到邮戳时在页面上打印消息"
 
 #: share/completions/latexmk.fish:5
 msgid "Set contrast or intensity of banner"
@@ -51493,7 +51493,7 @@ msgstr "使用配置文件"
 
 #: share/completions/lightdm.fish:3
 msgid "Print debugging messages"
-msgstr "打印调试信件"
+msgstr "打印调试消息"
 
 #: share/completions/lightdm.fish:4
 msgid "Skip things requiring root access"
@@ -54070,7 +54070,7 @@ msgstr "配置特殊占位符"
 
 #: share/completions/md5sum.fish:1
 msgid "Compute and check message digest"
-msgstr "计算和检查信件摘要"
+msgstr "计算和检查消息摘要"
 
 #: share/completions/md5sum.fish:2
 msgid "Read in binary mode"
@@ -55986,7 +55986,7 @@ msgstr "根据需要制作父目录"
 
 #: share/completions/mkdir.fish:4 share/completions/mkdir.fish:8
 msgid "Print a message for each created directory"
-msgstr "为每个创建的目录打印信件"
+msgstr "为每个创建的目录打印消息"
 
 #: share/completions/mkdir.fish:9
 msgid "Set SELinux security context of each created directory to the default type"
@@ -56123,7 +56123,7 @@ msgstr "从给定文件读取错误块列表"
 
 #: share/completions/mkdosfs.fish:13
 msgid "Specify file containing non bootable message"
-msgstr "指定包含不可启动信件的文件"
+msgstr "指定包含不可启动消息的文件"
 
 #: share/completions/mkdosfs.fish:14
 msgid "Specify media type"
@@ -56332,7 +56332,7 @@ msgstr "在指定字符集中输出消息"
 
 #: share/completions/mkvextract.fish:17
 msgid "Redirect all messages into a file"
-msgstr "将所有信件重定向到文件中"
+msgstr "将所有消息重定向到文件中"
 
 #: share/completions/mkvextract.fish:18
 msgid "Turn on debugging for a specific feature"
@@ -57441,7 +57441,7 @@ msgstr "在指定频道中等待至少一个消息"
 
 #: share/completions/mpc.fish:54
 msgid "Subscribe to specified channel and continuously receive messages"
-msgstr "订阅到指定的频道并持续接收信件"
+msgstr "订阅到指定的频道并持续接收消息"
 
 #: share/completions/mpc.fish:55
 msgid "Wait until an event occurs"
@@ -58204,7 +58204,7 @@ msgstr "给定别名的扩展版本传递给 stdout"
 
 #: share/completions/mutt.fish:15
 msgid "Attach a file to your message using MIME"
-msgstr "使用 MIME 在信件中附加一个文件"
+msgstr "使用 MIME 在消息中附加一个文件"
 
 #: share/completions/mutt.fish:18
 msgid "Run command after processing of initialization files"
@@ -58220,11 +58220,11 @@ msgstr "指定要读取的初始化文件~/. muttrc"
 
 #: share/completions/mutt.fish:21
 msgid "Specify a draft file containing header and body for the message"
-msgstr "指定包含信件头和正文的文件草稿"
+msgstr "指定包含消息头和正文的文件草稿"
 
 #: share/completions/mutt.fish:22
 msgid "Specify a file to include into the body of a message"
-msgstr "指定要包含在信件正文中的文件"
+msgstr "指定要包含在消息正文中的文件"
 
 #: share/completions/mutt.fish:23
 msgid "Specify a default mailbox type"
@@ -58236,7 +58236,7 @@ msgstr "查询配置变量值"
 
 #: share/completions/mutt.fish:25
 msgid "Specify the subject of the message"
-msgstr "指定信件的主题"
+msgstr "指定消息的主题"
 
 #: share/completions/mv.fish:1 share/completions/mv.fish:2
 msgid "Backup each existing destination file"
@@ -59690,7 +59690,7 @@ msgstr "生成 Async 接口的目标 ."
 
 #: share/completions/mvn.fish:362
 msgid "Creates I18N interfaces for constants and messages files."
-msgstr "为常数和信件文件创建 I18N 接口."
+msgstr "为常数和消息文件创建 I18N 接口."
 
 #: share/completions/mvn.fish:363
 msgid "Runs the project in the GWT (Classic or Super) Dev Mode for development."
@@ -68032,7 +68032,7 @@ msgstr "设置输出目录"
 
 #: share/completions/pbget.fish:6
 msgid "Display this message"
-msgstr "显示此信件"
+msgstr "显示此消息"
 
 #: share/completions/pbget.fish:7
 msgid "Search for upgradable packages"
@@ -68116,7 +68116,7 @@ msgstr "指定 PDF 的用户密码"
 
 #: share/completions/pdftotext.fish:19 share/completions/xpdf.fish:28
 msgid "Don't print any messages or errors"
-msgstr "不要打印任何信件或错误"
+msgstr "不要打印任何消息或错误"
 
 #: share/completions/pdftotext.fish:20
 msgid "Print copyright and version"
@@ -71226,7 +71226,7 @@ msgstr "将查询结果发送到文件( 或 QQpipe)"
 
 #: share/completions/psql.fish:17
 msgid "Run quietly (no messages, only query output)"
-msgstr "悄悄运行( 没有信件, 只有查询输出)"
+msgstr "悄悄运行( 没有消息, 只有查询输出)"
 
 #: share/completions/psql.fish:18
 msgid "Single-step mode (confirm each query)"
@@ -72063,7 +72063,7 @@ msgstr "批量模式"
 #: share/completions/qubes-gpg-client.fish:19
 #: share/functions/__fish_complete_gpg.fish:193
 msgid "Use specified message digest algorithm when signing a key"
-msgstr "签名密钥时使用指定信件摘要算法"
+msgstr "签名密钥时使用指定消息摘要算法"
 
 #: share/completions/qubes-gpg-client.fish:20
 #: share/functions/__fish_complete_gpg.fish:163
@@ -72099,7 +72099,7 @@ msgstr "使用指定的压缩算法"
 #: share/completions/qubes-gpg-client.fish:26
 #: share/functions/__fish_complete_gpg.fish:191
 msgid "Use specified message digest algorithm"
-msgstr "使用指定信件摘要算法"
+msgstr "使用指定消息摘要算法"
 
 #: share/completions/qubes-gpg-client.fish:27
 #: share/functions/__fish_complete_gpg.fish:197
@@ -72354,7 +72354,7 @@ msgstr "导入外部补丁"
 
 #: share/completions/quilt.fish:18
 msgid "Create mail messages from patches in the series file, stores/sends them"
-msgstr "从序列文件中的补丁创建邮件信件, 保存/发送"
+msgstr "从序列文件中的补丁创建邮件消息, 保存/发送"
 
 #: share/completions/quilt.fish:19
 msgid "Creates new patch with the given name, inserts it after topmost patch"
@@ -76628,7 +76628,7 @@ msgstr "只接受使用 md5 的授权请求"
 
 #: share/completions/scanimage.fish:27
 msgid "Print progress messages"
-msgstr "打印进度信件"
+msgstr "打印进度消息"
 
 #: share/completions/scanimage.fish:28
 msgid "Only set options, don't actually scan"
@@ -79153,7 +79153,7 @@ msgstr "签名指定的消息"
 
 #: share/completions/signify.fish:4
 msgid "Verify a signed message and sig"
-msgstr "验证已签名的信件和 sig"
+msgstr "验证已签名的消息和 sig"
 
 #: share/completions/smerge.fish:2
 msgid "Open new window only if app is running"
@@ -79169,7 +79169,7 @@ msgstr "在沙盒环境中发射"
 
 #: share/completions/smerge.fish:5
 msgid "Show help (this message) and exit"
-msgstr "显示帮助( 此信件) 并退出"
+msgstr "显示帮助( 此消息) 并退出"
 
 #: share/completions/smerge.fish:7
 msgid "Search for commits in the current repository"
@@ -79302,7 +79302,7 @@ msgstr "从已解密的输入文档中提取特定的密钥或分支"
 
 #: share/completions/sops.fish:18
 msgid "Ignore Message Authentication Code during decryption"
-msgstr "忽略信件认证 解密时的代码"
+msgstr "忽略消息认证 解密时的代码"
 
 #: share/completions/sops.fish:19 share/completions/sops.fish:69
 #: share/completions/sops.fish:75
@@ -81260,23 +81260,23 @@ msgstr "打开附有文件的构成窗口"
 
 #: share/completions/sylpheed.fish:7
 msgid "Receive new messages"
-msgstr "接收新信件"
+msgstr "接收新消息"
 
 #: share/completions/sylpheed.fish:8
 msgid "Receive new messages of all accounts"
-msgstr "收到所有账户的新信件"
+msgstr "收到所有账户的新消息"
 
 #: share/completions/sylpheed.fish:9
 msgid "Send all queued messages"
-msgstr "发送所有已排队的信件"
+msgstr "发送所有已排队的消息"
 
 #: share/completions/sylpheed.fish:10
 msgid "Show the total number of messages for folder"
-msgstr "显示文件夹信件总数"
+msgstr "显示文件夹消息总数"
 
 #: share/completions/sylpheed.fish:11
 msgid "Show the total number of messages for each folder"
-msgstr "显示每个文件夹的信件总数"
+msgstr "显示每个文件夹的消息总数"
 
 #: share/completions/sylpheed.fish:12
 msgid "Specify directory with configuration files"
@@ -84840,7 +84840,7 @@ msgstr "所有字母和数字"
 
 #: share/completions/tr.fish:8
 msgid "all letters"
-msgstr "所有信件"
+msgstr "所有消息"
 
 #: share/completions/tr.fish:9
 msgid "all horizontal whitespace"
@@ -86656,7 +86656,7 @@ msgstr "打开文件描述符的最大数量"
 
 #: share/completions/ulimit.fish:13
 msgid "Maximum bytes in POSIX message queues"
-msgstr "POSIX 信件队列中的最大字节"
+msgstr "POSIX 消息队列中的最大字节"
 
 #: share/completions/ulimit.fish:14
 msgid "Maximum realtime scheduling priority"
@@ -86920,7 +86920,7 @@ msgstr "提取带有完整路径的文件"
 
 #: share/completions/unzip.fish:1
 msgid "extract files to pipe, no messages"
-msgstr "提取文件到管道, 没有信件"
+msgstr "提取文件到管道, 没有消息"
 
 #: share/completions/unzip.fish:2
 msgid "freshen existing files, create none"
@@ -88292,7 +88292,7 @@ msgstr "设置保存间隔( 秒)"
 
 #: share/completions/virsh.fish:6
 msgid "Set number of possible missed keepalive messages"
-msgstr "设定可能丢失的保存信件数量"
+msgstr "设定可能丢失的保存消息数量"
 
 #: share/completions/virsh.fish:7
 msgid "Output logging to file"
@@ -91948,11 +91948,11 @@ msgstr "执行命令, 如 . wgetrc 的一部分"
 
 #: share/completions/wget.fish:5
 msgid "Log all messages to logfile"
-msgstr "记录所有信件到日志文件"
+msgstr "记录所有消息到日志文件"
 
 #: share/completions/wget.fish:6
 msgid "Append all messages to logfile"
-msgstr "添加所有信件到日志文件"
+msgstr "添加所有消息到日志文件"
 
 #: share/completions/wget.fish:7
 msgid "Turn on debug output"
@@ -93306,7 +93306,7 @@ msgstr "进行全系统升级( 被搁置的软件包除外)"
 
 #: share/completions/xbps-install.fish:18 share/completions/xbps-query.fish:13
 msgid "Enables verbose messages"
-msgstr "启用动词信件"
+msgstr "启用动词消息"
 
 #: share/completions/xbps-install.fish:19
 msgid "Assume yes to all questions and avoid interactive questions"
@@ -93647,7 +93647,7 @@ msgstr "输入文件编码( Python, TCl, Glade 除外)"
 
 #: share/completions/xgettext.fish:9
 msgid "Join messages with existing file"
-msgstr "将信件与已有文件合并"
+msgstr "将消息与已有文件合并"
 
 #: share/completions/xgettext.fish:10
 msgid "Entries from FILE"
@@ -95353,7 +95353,7 @@ msgstr "别把退出状态设为2"
 
 #: share/completions/xz.fish:32
 msgid "Print messages in a machine-parsable format"
-msgstr "以机器解析格式打印信件"
+msgstr "以机器解析格式打印消息"
 
 #: share/completions/xz.fish:33
 msgid "Display memory informations (physical, usage limits)"
@@ -100376,11 +100376,11 @@ msgstr "在密钥环中创建签名缓存"
 
 #: share/functions/__fish_complete_gpg.fish:108
 msgid "Print message digest of specified algorithm for all given files or stdin"
-msgstr "为所有给定文件或 stdin 打印指定算法的信件摘要"
+msgstr "为所有给定文件或 stdin 打印指定算法的消息摘要"
 
 #: share/functions/__fish_complete_gpg.fish:109
 msgid "Print message digest of all algorithms for all given files or stdin"
-msgstr "打印所有给定文件或 stdin 的全部算法信件摘要"
+msgstr "打印所有给定文件或 stdin 的全部算法消息摘要"
 
 #: share/functions/__fish_complete_gpg.fish:110
 msgid "Emit specified number of random bytes of the given quality level"
@@ -100578,11 +100578,11 @@ msgstr "使用指定的 URL 作为数据签名的首选密钥服务器"
 
 #: share/functions/__fish_complete_gpg.fish:184
 msgid "Use specified string as the filename which is stored inside messages"
-msgstr "使用指定的字符串作为存储在信件内的文件名"
+msgstr "使用指定的字符串作为存储在消息内的文件名"
 
 #: share/functions/__fish_complete_gpg.fish:185
 msgid "Set the 'for your eyes only' flag in the message"
-msgstr "在信件中设置' 只为你的眼睛' 标记"
+msgstr "在消息中设置' 只为你的眼睛' 标记"
 
 #: share/functions/__fish_complete_gpg.fish:186
 msgid "Clear the 'for your eyes only' flag in the message"
@@ -100744,7 +100744,7 @@ msgstr "过期时不要提示"
 
 #: share/functions/__fish_complete_gpg.fish:250
 msgid "Don't look at the key ID as stored in the message but try all secret keys in "turn to find the right decryption key"
-msgstr "不要看存储在信件里的密钥ID, 但尝试所有密钥"
+msgstr "不要看存储在消息里的密钥ID, 但尝试所有密钥"
 
 #: share/functions/__fish_complete_gpg.fish:251
 msgid "Enable a mode in which filenames of the form -&n, where n is a non-negative "decimal number, refer to the file descriptor n and not to a file with that "name"

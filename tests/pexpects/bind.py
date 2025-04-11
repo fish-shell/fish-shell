@@ -30,6 +30,21 @@ expect_prompt(increment=False)
 send("\f")
 expect_prompt(increment=False)
 
+# Test that kill-selection after selection is cleared doesn't crash
+sendline("bind ctrl-space begin-selection")
+expect_prompt()
+sendline("bind ctrl-w kill-selection end-selection")
+expect_prompt()
+send("echo 123")
+# Send Ctrl-Space using CSI u encoding
+send("\x1b[32;5u")
+# Send Ctrl-C to clear the command line
+send("\x1b[99;5u")
+# Send Ctrl-W which used to crash
+send("\x1b[119;5u")
+sendline("bind --erase ctrl-space ctrl-w")
+expect_prompt()
+
 # Fish should start in default-mode (i.e., emacs) bindings. The default escape
 # timeout is 30ms.
 #

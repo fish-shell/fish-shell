@@ -4067,8 +4067,11 @@ impl ReaderData {
 
     fn get_selection(&self) -> Option<Range<usize>> {
         let selection = self.selection?;
-        let start = selection.start;
+        let start = std::cmp::min(selection.start, self.command_line.len());
         let end = std::cmp::min(selection.stop, self.command_line.len());
+        if start == end {
+            return None;
+        }
         Some(start..end)
     }
 

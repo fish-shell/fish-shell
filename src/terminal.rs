@@ -61,7 +61,7 @@ pub(crate) enum TerminalCommand<'a> {
 
     // Colors
     SelectPaletteColor(/*is_foreground=*/ bool, u8),
-    SelectRgbColor(/*is_foreground=*/ bool, u8, u8, u8),
+    SelectRgbColor(/*is_foreground=*/ bool, Color24),
 
     // Cursor Movement
     CursorUp,
@@ -152,7 +152,7 @@ pub(crate) trait Output {
             ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
             SelectPaletteColor(is_foreground, idx) => palette_color(self, is_foreground, idx),
-            SelectRgbColor(is_foreground, r, g, b) => rgb_color(self, is_foreground, r, g, b),
+            SelectRgbColor(is_foreground, rgb) => rgb_color(self, is_foreground, rgb),
             CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
             CursorDown => ti(self, b"\n", |term| &term.cursor_down),
             CursorLeft => ti(self, b"\x08", |term| &term.cursor_left),
@@ -283,16 +283,16 @@ fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     }
 }
 
-fn rgb_color(out: &mut impl Output, foreground: bool, r: u8, g: u8, b: u8) -> bool {
+fn rgb_color(out: &mut impl Output, foreground: bool, rgb: Color24) -> bool {
     // Foreground: ^[38;2;<r>;<g>;<b>m
     // Background: ^[48;2;<r>;<g>;<b>m
     write_to_output!(
         out,
         "\x1b[{};2;{};{};{}m",
         if foreground { 38 } else { 48 },
-        r,
-        g,
-        b
+        rgb.r,
+        rgb.g,
+        rgb.b
     );
     true
 }
@@ -489,8 +489,7 @@ impl Outputter {
         }
 
         // 24 bit!
-        let Color24 { r, g, b } = color.to_color24();
-        self.write_command(TerminalCommand::SelectRgbColor(is_fg, r, g, b))
+        self.write_command(TerminalCommand::SelectRgbColor(is_fg, color.to_color24()))
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same

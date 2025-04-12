@@ -1,5 +1,7 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, is_same_node, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
+use crate::ast::{
+    self, is_same_node, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token, Traversal,
+};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -1185,7 +1187,8 @@ pub fn parse_util_detect_errors_in_ast(
     // Verify return only within a function.
     // Verify no variable expansions.
 
-    for node in ast::Traversal::new(ast.top()) {
+    let mut traversal = ast::Traversal::new(ast.top());
+    while let Some(node) = traversal.next() {
         if let Some(jc) = node.as_job_continuation() {
             // Somewhat clumsy way of checking for a statement without source in a pipeline.
             // See if our pipe has source but our statement does not.
@@ -1214,23 +1217,28 @@ pub fn parse_util_detect_errors_in_ast(
             // while foo & ; end
             // If it's not a background job, nothing to do.
             if job.bg.is_some() {
-                errored |= detect_errors_in_backgrounded_job(job, &mut out_errors);
+                errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
             }
         } else if let Some(stmt) = node.as_decorated_statement() {
-            errored |= detect_errors_in_decorated_statement(buff_src, stmt, &mut out_errors);
+            errored |=
+                detect_errors_in_decorated_statement(buff_src, &traversal, stmt, &mut out_errors);
         } else if let Some(block) = node.as_block_statement() {
             // If our 'end' had no source, we are unsourced.
             if !block.end.has_source() {
                 has_unclosed_block = true;
             }
-            errored |=
-                detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
+            errored |= detect_errors_in_block_redirection_list(
+                node,
+                &block.args_or_redirs,
+                &mut out_errors,
+            );
         } else if let Some(brace_statement) = node.as_brace_statement() {
             // If our closing brace had no source, we are unsourced.
             if !brace_statement.right_brace.has_source() {
                 has_unclosed_block = true;
             }
             errored |= detect_errors_in_block_redirection_list(
+                node,
                 &brace_statement.args_or_redirs,
                 &mut out_errors,
             );
@@ -1240,14 +1248,17 @@ pub fn parse_util_detect_errors_in_ast(
                 has_unclosed_block = true;
             }
             errored |=
-                detect_errors_in_block_redirection_list(&ifs.args_or_redirs, &mut out_errors);
+                detect_errors_in_block_redirection_list(node, &ifs.args_or_redirs, &mut out_errors);
         } else if let Some(switchs) = node.as_switch_statement() {
             // If our 'end' had no source, we are unsourced.
             if !switchs.end.has_source() {
                 has_unclosed_block = true;
             }
-            errored |=
-                detect_errors_in_block_redirection_list(&switchs.args_or_redirs, &mut out_errors);
+            errored |= detect_errors_in_block_redirection_list(
+                node,
+                &switchs.args_or_redirs,
+                &mut out_errors,
+            );
         }
     }
 
@@ -1505,8 +1516,9 @@ fn detect_errors_in_job_conjunction(
     false
 }
 
-/// Given that the job given by node should be backgrounded, return true if we detect any errors.
+/// Given that the job should be backgrounded, return true if we detect any errors.
 fn detect_errors_in_backgrounded_job(
+    traversal: &Traversal,
     job: &ast::JobPipeline,
     parse_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
@@ -1520,20 +1532,19 @@ fn detect_errors_in_backgrounded_job(
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    let Some(job_conj) = job.parent().unwrap().as_job_conjunction() else {
+    let Some(job_conj) = traversal.parent(job).as_job_conjunction() else {
         return false;
     };
 
-    if job_conj.parent().unwrap().as_if_clause().is_some()
-        || job_conj.parent().unwrap().as_while_header().is_some()
-    {
+    let job_conj_parent = traversal.parent(job_conj);
+    if job_conj_parent.as_if_clause().is_some() || job_conj_parent.as_while_header().is_some() {
         errored = append_syntax_error!(
             parse_errors,
             source_range.start(),
             source_range.length(),
             BACKGROUND_IN_CONDITIONAL_ERROR_MSG
         );
-    } else if let Some(jlist) = job_conj.parent().unwrap().as_job_list() {
+    } else if let Some(jlist) = job_conj_parent.as_job_list() {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Find the index of ourselves in the job list.
         let index = jlist
@@ -1567,9 +1578,10 @@ fn detect_errors_in_backgrounded_job(
 }
 
 /// Given a source buffer `buff_src` and decorated statement `dst` within it, return true if there
-/// is an error and false if not. `storage` may be used to reduce allocations.
+/// is an error and false if not.
 fn detect_errors_in_decorated_statement(
     buff_src: &wstr,
+    traversal: &ast::Traversal,
     dst: &ast::DecoratedStatement,
     parse_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
@@ -1586,17 +1598,13 @@ fn detect_errors_in_decorated_statement(
     }
 
     // Get the statement we are part of.
-    let st = dst.parent().unwrap().as_statement().unwrap();
+    let st = traversal.parent(dst).as_statement().unwrap();
 
     // Walk up to the job.
-    let mut job = None;
-    let mut cursor = dst.parent();
-    while job.is_none() {
-        let c = cursor.expect("Reached root without finding a job");
-        job = c.as_job_pipeline();
-        cursor = c.parent();
-    }
-    let job = job.expect("Should have found the job");
+    let job = traversal
+        .parent_nodes()
+        .find_map(|n| n.as_job_pipeline())
+        .expect("Should have found the job");
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
@@ -1700,30 +1708,31 @@ fn detect_errors_in_decorated_statement(
         }
 
         // Check that we don't break or continue from outside a loop.
-        if !errored && [L!("break"), L!("continue")].contains(&&command[..]) && !first_arg_is_help {
+        if !errored && (command == "break" || command == "continue") && !first_arg_is_help {
             // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
             // stop the search; we can't break an outer loop from inside a function.
             // This is a little funny because we can't tell if it's a 'for' or 'while'
             // loop from the ancestor alone; we need the header. That is, we hit a
             // block_statement, and have to check its header.
             let mut found_loop = false;
-            let mut ancestor: Option<&dyn Node> = Some(dst);
-            while let Some(anc) = ancestor {
-                if let Some(block) = anc.as_block_statement() {
-                    if [ast::Type::for_header, ast::Type::while_header]
-                        .contains(&block.header.typ())
-                    {
+            for block in traversal
+                .parent_nodes()
+                .filter_map(|anc| anc.as_block_statement())
+            {
+                match block.header.typ() {
+                    ast::Type::for_header | ast::Type::while_header => {
                         // This is a loop header, so we can break or continue.
                         found_loop = true;
                         break;
-                    } else if block.header.typ() == ast::Type::function_header {
+                    }
+                    ast::Type::function_header => {
                         // This is a function header, so we cannot break or
                         // continue. We stop our search here.
                         found_loop = false;
                         break;
                     }
+                    _ => {}
                 }
-                ancestor = anc.parent();
             }
 
             if !found_loop {
@@ -1779,34 +1788,23 @@ fn detect_errors_in_decorated_statement(
     errored
 }
 
-// Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
-// there are no arguments in the list.
+// Given we have a trailing ArgumentOrRedirectionList, like `begin; end > /dev/null`, verify that
+// there are no arguments in the list. The parent of the list is provided.
 fn detect_errors_in_block_redirection_list(
+    parent: &dyn Node,
     args_or_redirs: &ast::ArgumentOrRedirectionList,
     out_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
     let Some(first_arg) = get_first_arg(args_or_redirs) else {
         return false;
     };
-    if args_or_redirs
-        .parent()
-        .unwrap()
-        .as_brace_statement()
-        .is_some()
-    {
-        return append_syntax_error!(
-            out_errors,
-            first_arg.source_range().start(),
-            first_arg.source_range().length(),
-            RIGHT_BRACE_ARG_ERR_MSG
-        );
+    let r = first_arg.source_range();
+    if parent.as_brace_statement().is_some() {
+        append_syntax_error!(out_errors, r.start(), r.length(), RIGHT_BRACE_ARG_ERR_MSG);
+    } else {
+        append_syntax_error!(out_errors, r.start(), r.length(), END_ARG_ERR_MSG);
     }
-    append_syntax_error!(
-        out_errors,
-        first_arg.source_range().start(),
-        first_arg.source_range().length(),
-        END_ARG_ERR_MSG
-    )
+    true
 }
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors

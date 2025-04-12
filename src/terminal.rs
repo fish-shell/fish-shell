@@ -1,11 +1,12 @@
 // Generic output functions.
-use crate::color::{self, Color, Color24};
+use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
 use crate::env::EnvVar;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
+use crate::text_face::{TextFace, TextStyling};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
@@ -231,13 +232,7 @@ pub(crate) fn use_terminfo() -> bool {
 }
 
 fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
-    if only_grayscale()
-        && !(Color {
-            typ: color::Type::Named { idx },
-            flags: color::Flags::DEFAULT,
-        })
-        .is_grayscale()
-    {
+    if only_grayscale() && !(Color::Named { idx }).is_grayscale() {
         return false;
     }
     if use_terminfo() {
@@ -441,8 +436,8 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last_fg: Color::NORMAL,
-            last_bg: Color::NORMAL,
+            last_fg: Color::Normal,
+            last_bg: Color::Normal,
             was_bold: false,
             was_underline: false,
             was_italics: false,
@@ -492,7 +487,8 @@ impl Outputter {
         self.write_command(TerminalCommand::SelectRgbColor(is_fg, color.to_color24()))
     }
 
-    pub(crate) fn reset_color(&mut self, weird_workaround: bool) {
+    /// Unconditionally resets colors and text style.
+    pub(crate) fn reset_text_face(&mut self, weird_workaround: bool) {
         if weird_workaround {
             // If we exit attribute mode, we must first set a color, or previously colored text might
             // lose its color. Terminals are weird...
@@ -500,8 +496,8 @@ impl Outputter {
         }
         use TerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
-        self.last_fg = Color::NORMAL;
-        self.last_bg = Color::NORMAL;
+        self.last_fg = Color::Normal;
+        self.last_bg = Color::Normal;
         self.reset_modes();
     }
 
@@ -522,17 +518,18 @@ impl Outputter {
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
     #[allow(clippy::if_same_then_else)]
-    pub fn set_color(&mut self, mut fg: Color, bg: Color) {
+    pub(crate) fn set_text_face(&mut self, face: TextFace) {
+        let TextFace { mut fg, bg, .. } = face;
         let mut bg_set = false;
         let mut last_bg_set = false;
-        let is_bold = fg.is_bold() || bg.is_bold();
-        let is_underline = fg.is_underline() || bg.is_underline();
-        let is_italics = fg.is_italics() || bg.is_italics();
-        let is_dim = fg.is_dim() || bg.is_dim();
-        let is_reverse = fg.is_reverse() || bg.is_reverse();
+        let is_bold = face.is_bold();
+        let is_underline = face.is_underline();
+        let is_italics = face.is_italics();
+        let is_dim = face.is_dim();
+        let is_reverse = face.is_reverse();
 
         if fg.is_reset() || bg.is_reset() {
-            self.reset_color(true);
+            self.reset_text_face(true);
             return;
         }
         use TerminalCommand::{
@@ -544,7 +541,7 @@ impl Outputter {
             || (self.was_reverse && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            self.reset_color(false);
+            self.reset_text_face(false);
         }
         if !self.last_bg.is_special() {
             // Background was set.
@@ -571,7 +568,7 @@ impl Outputter {
         }
         if !bg_set && last_bg_set {
             // Background color changed and is no longer set, so we exit bold mode.
-            self.reset_color(false);
+            self.reset_text_face(false);
         }
 
         if !fg.is_none() && self.last_fg != fg {
@@ -579,7 +576,7 @@ impl Outputter {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
-                self.last_bg = Color::NORMAL;
+                self.last_bg = Color::Normal;
                 self.reset_modes();
             } else {
                 assert!(!fg.is_special());
@@ -735,11 +732,11 @@ impl<'a> Output for BufferedOutputter<'a> {
 /// RgbColor::NONE if empty.
 pub fn best_color(candidates: &[Color], support: ColorSupport) -> Color {
     if candidates.is_empty() {
-        return Color::NONE;
+        return Color::None;
     }
 
-    let mut first_rgb = Color::NONE;
-    let mut first_named = Color::NONE;
+    let mut first_rgb = Color::None;
+    let mut first_named = Color::None;
     for color in candidates {
         if first_rgb.is_none() && color.is_rgb() {
             first_rgb = *color;
@@ -763,24 +760,8 @@ pub fn best_color(candidates: &[Color], support: ColorSupport) -> Color {
     result
 }
 
-/// Return the internal color code representing the specified color.
-/// TODO: This code should be refactored to enable sharing with builtin_set_color.
-///       In particular, the argument parsing still isn't fully capable.
-pub fn parse_color(var: &EnvVar, is_background: bool) -> Color {
-    let mut result = parse_color_maybe_none(var, is_background);
-    if result.is_none() {
-        result.typ = color::Type::Normal;
-    }
-    result
-}
-
-pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
-    let mut is_bold = false;
-    let mut is_underline = false;
-    let mut is_italics = false;
-    let mut is_dim = false;
-    let mut is_reverse = false;
-
+pub fn parse_text_face(var: &EnvVar, is_background: bool) -> (Color, TextStyling) {
+    let mut style = TextStyling::empty();
     let mut candidates: Vec<Color> = Vec::new();
 
     let prefix = L!("--background=");
@@ -802,7 +783,7 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
                 next_is_background = true;
             } else if next == "--reverse" || next == "-r" {
                 // Reverse should be meaningful in either context
-                is_reverse = true;
+                style |= TextStyling::REVERSE;
             } else if next.starts_with("-b") {
                 // Look for something like "-bred".
                 // Yes, that length is hardcoded.
@@ -810,15 +791,15 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
             }
         } else {
             if next == "--bold" || next == "-o" {
-                is_bold = true;
+                style |= TextStyling::BOLD;
             } else if next == "--underline" || next == "-u" {
-                is_underline = true;
+                style |= TextStyling::UNDERLINE;
             } else if next == "--italics" || next == "-i" {
-                is_italics = true;
+                style |= TextStyling::ITALICS;
             } else if next == "--dim" || next == "-d" {
-                is_dim = true;
+                style |= TextStyling::DIM;
             } else if next == "--reverse" || next == "-r" {
-                is_reverse = true;
+                style |= TextStyling::REVERSE;
             } else {
                 color_name = Some(next.as_utfstr());
             }
@@ -829,13 +810,8 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
         }
     }
 
-    let mut result = best_color(&candidates, get_color_support());
-    result.set_bold(is_bold);
-    result.set_underline(is_underline);
-    result.set_italics(is_italics);
-    result.set_dim(is_dim);
-    result.set_reverse(is_reverse);
-    result
+    let color = best_color(&candidates, get_color_support());
+    (color, style)
 }
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].

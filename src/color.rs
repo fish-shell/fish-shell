@@ -1,4 +1,3 @@
-use bitflags::bitflags;
 use std::cmp::Ordering;
 
 use crate::wchar::prelude::*;
@@ -22,8 +21,9 @@ impl Color24 {
     }
 }
 
+/// A type that represents a color.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Type {
+pub enum Color {
     // TODO: remove this? Users should probably use `Option<RgbColor>` instead
     None,
     Named { idx: u8 },
@@ -32,55 +32,12 @@ pub enum Type {
     Reset,
 }
 
-bitflags! {
-    #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-    pub struct Flags: u8 {
-        const DEFAULT = 0;
-        const BOLD = 1<<0;
-        const UNDERLINE = 1<<1;
-        const ITALICS = 1<<2;
-        const DIM = 1<<3;
-        const REVERSE = 1<<4;
-    }
-}
-
-/// A type that represents a color.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Color {
-    pub typ: Type,
-    pub flags: Flags,
-}
-
 impl Color {
     /// The color white
-    pub const WHITE: Self = Self {
-        typ: Type::Named { idx: 7 },
-        flags: Flags::DEFAULT,
-    };
+    pub const WHITE: Self = Self::Named { idx: 7 };
 
     /// The color black
-    pub const BLACK: Self = Self {
-        typ: Type::Named { idx: 0 },
-        flags: Flags::DEFAULT,
-    };
-
-    /// The reset special color.
-    pub const RESET: Self = Self {
-        typ: Type::Reset,
-        flags: Flags::DEFAULT,
-    };
-
-    /// The normal special color.
-    pub const NORMAL: Self = Self {
-        typ: Type::Normal,
-        flags: Flags::DEFAULT,
-    };
-
-    /// The none special color.
-    pub const NONE: Self = Self {
-        typ: Type::None,
-        flags: Flags::DEFAULT,
-    };
+    pub const BLACK: Self = Self::Named { idx: 0 };
 
     /// Parse a color from a string.
     pub fn from_wstr(s: &wstr) -> Option<Self> {
@@ -91,35 +48,32 @@ impl Color {
 
     /// Create an RGB color.
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        Self {
-            typ: Type::Rgb(Color24 { r, g, b }),
-            flags: Flags::DEFAULT,
-        }
+        Self::Rgb(Color24 { r, g, b })
     }
 
     /// Returns whether the color is the normal special color.
     pub const fn is_normal(self) -> bool {
-        matches!(self.typ, Type::Normal)
+        matches!(self, Self::Normal)
     }
 
     /// Returns whether the color is the reset special color.
     pub const fn is_reset(self) -> bool {
-        matches!(self.typ, Type::Reset)
+        matches!(self, Self::Reset)
     }
 
     /// Returns whether the color is the none special color.
     pub const fn is_none(self) -> bool {
-        matches!(self.typ, Type::None)
+        matches!(self, Self::None)
     }
 
     /// Returns whether the color is a named color (like "magenta").
     pub const fn is_named(self) -> bool {
-        matches!(self.typ, Type::Named { .. })
+        matches!(self, Self::Named { .. })
     }
 
     /// Returns whether the color is specified via RGB components.
     pub const fn is_rgb(self) -> bool {
-        matches!(self.typ, Type::Rgb(_))
+        matches!(self, Self::Rgb(_))
     }
 
     /// Returns whether the color is special, that is, not rgb or named.
@@ -127,73 +81,23 @@ impl Color {
         !self.is_named() && !self.is_rgb()
     }
 
-    /// Returns whether the color is bold.
-    pub const fn is_bold(self) -> bool {
-        self.flags.contains(Flags::BOLD)
-    }
-
-    /// Set whether the color is bold.
-    pub fn set_bold(&mut self, bold: bool) {
-        self.flags.set(Flags::BOLD, bold)
-    }
-
-    /// Returns whether the color is underlined.
-    pub const fn is_underline(self) -> bool {
-        self.flags.contains(Flags::UNDERLINE)
-    }
-
-    /// Set whether the color is underline.
-    pub fn set_underline(&mut self, underline: bool) {
-        self.flags.set(Flags::UNDERLINE, underline)
-    }
-
-    /// Returns whether the color is italics.
-    pub const fn is_italics(self) -> bool {
-        self.flags.contains(Flags::ITALICS)
-    }
-
-    /// Set whether the color is italics.
-    pub fn set_italics(&mut self, italics: bool) {
-        self.flags.set(Flags::ITALICS, italics)
-    }
-
-    /// Returns whether the color is dim.
-    pub const fn is_dim(self) -> bool {
-        self.flags.contains(Flags::DIM)
-    }
-
-    /// Set whether the color is dim.
-    pub fn set_dim(&mut self, dim: bool) {
-        self.flags.set(Flags::DIM, dim)
-    }
-
-    /// Returns whether the color is reverse.
-    pub const fn is_reverse(self) -> bool {
-        self.flags.contains(Flags::REVERSE)
-    }
-
-    /// Set whether the color is reverse.
-    pub fn set_reverse(&mut self, reverse: bool) {
-        self.flags.set(Flags::REVERSE, reverse)
-    }
-
     pub fn is_grayscale(&self) -> bool {
-        match self.typ {
-            Type::None => true,
-            Type::Named { idx } => [0, 7, 8, 15, 16].contains(&idx) || (232..=255).contains(&idx),
-            Type::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
-            Type::Normal => true,
-            Type::Reset => true,
+        match self {
+            Self::None => true,
+            Self::Named { idx } => [0, 7, 8, 15, 16].contains(idx) || (232..=255).contains(idx),
+            Self::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
+            Self::Normal => true,
+            Self::Reset => true,
         }
     }
 
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     pub fn to_name_index(self) -> u8 {
         // TODO: This should look for the nearest color.
-        match self.typ {
-            Type::Named { idx } => idx,
-            Type::Rgb(c) => term16_color_for_rgb(c),
-            Type::None | Type::Normal | Type::Reset => {
+        match self {
+            Self::Named { idx } => idx,
+            Self::Rgb(c) => term16_color_for_rgb(c),
+            Self::None | Self::Normal | Self::Reset => {
                 panic!("to_name_index() called on Color that's not named or RGB")
             }
         }
@@ -201,7 +105,7 @@ impl Color {
 
     /// Returns the term256 index for the given color. Requires that the color be RGB.
     pub fn to_term256_index(self) -> u8 {
-        let Type::Rgb(c) = self.typ else {
+        let Self::Rgb(c) = self else {
             panic!("Tried to get term256 index of non-RGB color");
         };
 
@@ -210,7 +114,7 @@ impl Color {
 
     /// Returns the 24 bit color for the given color. Requires that the color be RGB.
     pub const fn to_color24(self) -> Color24 {
-        let Type::Rgb(c) = self.typ else {
+        let Self::Rgb(c) = self else {
             panic!("Tried to get color24 of non-RGB color");
         };
 
@@ -238,20 +142,13 @@ impl Color {
 
     /// Try parsing a special color name like "normal".
     fn try_parse_special(special: &wstr) -> Option<Self> {
-        // TODO: this is a very hot function, may need optimization by e.g. comparing length first,
-        // depending on how well inlining of `simple_icase_compare` works
-        let typ = if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
-            Type::Normal
+        if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
+            Some(Self::Normal)
         } else if simple_icase_compare(special, L!("reset")) == Ordering::Equal {
-            Type::Reset
+            Some(Self::Reset)
         } else {
-            return None;
-        };
-
-        Some(Self {
-            typ,
-            flags: Flags::default(),
-        })
+            None
+        }
     }
 
     /// Try parsing an rgb color like "#F0A030".
@@ -302,11 +199,8 @@ impl Color {
             .binary_search_by(|c| simple_icase_compare(c.name, name))
             .ok()?;
 
-        Some(Self {
-            typ: Type::Named {
-                idx: NAMED_COLORS[i].idx,
-            },
-            flags: Flags::default(),
+        Some(Self::Named {
+            idx: NAMED_COLORS[i].idx,
         })
     }
 }
@@ -436,7 +330,7 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::color::{Color, Color24, Flags, Type};
+    use crate::color::{Color, Color24};
     use crate::wchar::prelude::*;
 
     #[test]
@@ -466,10 +360,7 @@ mod tests {
     #[test]
     fn test_term16_color_for_rgb() {
         for c in 0..=u8::MAX {
-            let color = Color {
-                typ: Type::Rgb(Color24 { r: c, g: c, b: c }),
-                flags: Flags::DEFAULT,
-            };
+            let color = Color::Rgb(Color24 { r: c, g: c, b: c });
             let _ = color.to_name_index();
         }
     }

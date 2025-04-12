@@ -260,10 +260,12 @@ function __fish_complete_ip
         case address
             # We're still _on_ the second word, which is the subcommand
             if not set -q cmd[3]
-                printf '%s\t%s\n' add "Add new protocol address" \
+                printf '%s\t%s\n' \
+                    add "Add new protocol address" \
                     delete "Delete protocol address" \
                     show "Look at protocol addresses" \
-                    flush "Flush protocol addresses"
+                    flush "Flush protocol addresses" \
+                    help "Display help"
             else
                 switch $cmd[2]
                     # Change and replace are undocumented (apart from mentions in the BNF)
@@ -339,7 +341,8 @@ function __fish_complete_ip
             end
         case link
             if not set -q cmd[3]
-                printf '%s\t%s\n' add "Add virtual link" \
+                printf '%s\t%s\n' \
+                    add "Add virtual link" \
                     delete "Delete virtual link" \
                     set "Change device attributes" \
                     show "Display device attributes" \
@@ -430,18 +433,20 @@ function __fish_complete_ip
                         end
                     case show
                     case help
+                        __fish_ip_types
                 end
             end
         case neighbour
             if not set -q cmd[3]
-                printf '%s\t%s\n' help "Show help" \
+                printf '%s\t%s\n' \
                     add "Add new neighbour entry" \
                     delete "Delete neighbour entry" \
                     change "Change neighbour entry" \
                     replace "Add or change neighbour entry" \
                     show "List neighbour entries" \
                     flush "Flush neighbour entries" \
-                    get "Lookup neighbour entry"
+                    get "Lookup neighbour entry" \
+                    help "Display help"
             else
                 switch $cmd[2]
                     case add del delete change replace
@@ -505,7 +510,8 @@ function __fish_complete_ip
                     get "Get a single route" \
                     save "Save routing table to stdout" \
                     showdump "Show saved routing table from stdin" \
-                    restore "Restore routing table from stdin"
+                    restore "Restore routing table from stdin" \
+                    help "Display help"
             else
                 # TODO: switch on $cmd[2] and complete subcommand specific arguments
                 # for now just complete most useful arguments for the last token
@@ -524,7 +530,8 @@ function __fish_complete_ip
                     flush "Flush rules" \
                     show "List rules" \
                     save "Save rules to stdout" \
-                    restore "Restore rules from stdin"
+                    restore "Restore rules from stdin" \
+                    help "Display help"
             else
                 # TODO: switch on $cmd[2] and complete subcommand specific arguments
                 # for now just complete most useful arguments for the last token
@@ -577,6 +584,27 @@ function __fish_complete_ip
                         if not set -q cmd[4]
                             __fish_complete_pids
                         end
+                end
+            end
+        case tuntap
+            if not set -q cmd[3]
+                printf '%s\t%s\n' \
+                    add "Add a new tun or tap device" \
+                    del "Delete a tun or tap device" \
+                    show "Show tun and tap devices" \
+                    help "Display help"
+            else
+                switch $cmd[-2]
+                    case dev
+                        __fish_ip_device
+                    case mode
+                        printf '%s\n' tun tap
+                    case user
+                        __fish_complete_users
+                    case group
+                        __fish_complete_groups
+                    case '*'
+                        printf '%s\n' dev mode user group one_queue pi vnet_hdr multi_queue name
                 end
             end
     end

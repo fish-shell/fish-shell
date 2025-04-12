@@ -174,7 +174,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         // for --print-colors. Because it's not interesting in terms of display,
         // just skip it.
         if bgcolor.is_some() && bg.is_special() {
-            bg = Color::from_wstr(L!("")).unwrap_or(Color::NONE);
+            bg = Color::NONE;
         }
         let args = &argv[wopt_index..argc];
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);

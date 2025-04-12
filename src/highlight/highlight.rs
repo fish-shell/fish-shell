@@ -11,7 +11,7 @@ use crate::common::{
     valid_var_name, valid_var_name_char, ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::complete_wrap_map;
-use crate::env::Environment;
+use crate::env::{EnvVar, Environment};
 use crate::expand::{
     expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR,
 };
@@ -27,7 +27,8 @@ use crate::parse_util::{
     parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
-use crate::terminal::{parse_color, Outputter};
+use crate::terminal::{parse_text_face, Outputter};
+use crate::text_face::{TextFace, TextStyling};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -71,12 +72,14 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
     for (i, c) in text.chars().enumerate() {
         let color = colors[i];
         if color != last_color {
-            outp.set_color(rv.resolve_spec(&color, false, vars), Color::NORMAL);
+            let mut face = rv.resolve_spec(&color, vars);
+            face.bg = Color::Normal; // Historical behavior.
+            outp.set_text_face(face);
             last_color = color;
         }
         outp.writech(c);
     }
-    outp.set_color(Color::NORMAL, Color::NORMAL);
+    outp.set_text_face(TextFace::default());
     outp.contents().to_owned()
 }
 
@@ -107,8 +110,7 @@ pub fn highlight_shell(
 /// one screen redraw.
 #[derive(Default)]
 pub struct HighlightColorResolver {
-    fg_cache: HashMap<HighlightSpec, Color>,
-    bg_cache: HashMap<HighlightSpec, Color>,
+    cache: HashMap<HighlightSpec, TextFace>,
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -119,86 +121,92 @@ impl HighlightColorResolver {
         Default::default()
     }
     /// Return an RGB color for a given highlight spec.
-    pub fn resolve_spec(
+    pub(crate) fn resolve_spec(
         &mut self,
         highlight: &HighlightSpec,
-        is_background: bool,
         vars: &dyn Environment,
-    ) -> Color {
-        let cache = if is_background {
-            &mut self.bg_cache
-        } else {
-            &mut self.fg_cache
-        };
-        match cache.entry(*highlight) {
+    ) -> TextFace {
+        match self.cache.entry(*highlight) {
             Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
-                let color = Self::resolve_spec_uncached(highlight, is_background, vars);
-                e.insert(color);
-                color
+                let face = Self::resolve_spec_uncached(highlight, vars);
+                e.insert(face);
+                face
             }
         }
     }
-    pub fn resolve_spec_uncached(
+    pub(crate) fn resolve_spec_uncached(
         highlight: &HighlightSpec,
-        is_background: bool,
         vars: &dyn Environment,
-    ) -> Color {
-        let mut result = Color::NORMAL;
-        let role = if is_background {
-            highlight.background
-        } else {
-            highlight.foreground
+    ) -> TextFace {
+        let resolve_role = |role| {
+            vars.get_unless_empty(get_highlight_var_name(role))
+                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
+                .or_else(|| vars.get(get_highlight_var_name(HighlightRole::normal)))
         };
-
-        let var = vars
-            .get_unless_empty(get_highlight_var_name(role))
-            .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-            .or_else(|| vars.get(get_highlight_var_name(HighlightRole::normal)));
-        if let Some(var) = var {
-            result = parse_color(&var, is_background);
-        }
+        let fg_var = resolve_role(highlight.foreground);
+        let bg_var = resolve_role(highlight.background);
+        let mut result = parse_text_face_for_highlight(fg_var.as_ref(), bg_var.as_ref());
 
         // Handle modifiers.
-        if !is_background && highlight.valid_path {
-            if let Some(var2) = vars.get(L!("fish_color_valid_path")) {
-                let result2 = parse_color(&var2, is_background);
-                if result.is_normal() {
-                    result = result2;
-                } else if !result2.is_normal() {
-                    // Valid path has an actual color, use it and merge the modifiers.
-                    let mut rescol = result2;
-                    rescol.set_bold(result.is_bold() || result2.is_bold());
-                    rescol.set_underline(result.is_underline() || result2.is_underline());
-                    rescol.set_italics(result.is_italics() || result2.is_italics());
-                    rescol.set_dim(result.is_dim() || result2.is_dim());
-                    rescol.set_reverse(result.is_reverse() || result2.is_reverse());
-                    result = rescol;
-                } else {
-                    if result2.is_bold() {
-                        result.set_bold(true)
-                    };
-                    if result2.is_underline() {
-                        result.set_underline(true)
-                    };
-                    if result2.is_italics() {
-                        result.set_italics(true)
-                    };
-                    if result2.is_dim() {
-                        result.set_dim(true)
-                    };
-                    if result2.is_reverse() {
-                        result.set_reverse(true)
-                    };
+        if highlight.valid_path {
+            if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
+                // Historical behavior is to not apply background.
+                let valid_path_face = parse_text_face_for_highlight(Some(&valid_path_var), None);
+                // Apply the foreground, except if it's normal. The intention here is likely
+                // to only override foreground if the valid path color has an explicit foreground.
+                if !valid_path_face.fg.is_normal() {
+                    result.fg = valid_path_face.fg;
+                }
+                if valid_path_face.is_bold() {
+                    result.set_bold(true);
+                }
+                if valid_path_face.is_underline() {
+                    result.set_underline(true);
+                }
+                if valid_path_face.is_italics() {
+                    result.set_italics(true);
+                }
+                if valid_path_face.is_dim() {
+                    result.set_dim(true);
+                }
+                if valid_path_face.is_reverse() {
+                    result.set_reverse(true);
                 }
             }
         }
 
-        if !is_background && highlight.force_underline {
+        if highlight.force_underline {
             result.set_underline(true);
         }
 
         result
+    }
+}
+
+/// Return the internal color code representing the specified color.
+/// TODO: This code should be refactored to enable sharing with builtin_set_color.
+///       In particular, the argument parsing still isn't fully capable.
+pub(crate) fn parse_text_face_for_highlight(
+    fg_var: Option<&EnvVar>,
+    bg_var: Option<&EnvVar>,
+) -> TextFace {
+    let parse_var = |maybe_var: Option<&EnvVar>, is_background| {
+        let Some(var) = maybe_var else {
+            return (Color::Normal, TextStyling::empty());
+        };
+        let (mut color, style) = parse_text_face(var, is_background);
+        if color.is_none() {
+            color = Color::Normal;
+        }
+        (color, style)
+    };
+    let (fg, fg_style) = parse_var(fg_var, false);
+    let (bg, bg_style) = parse_var(bg_var, true);
+    TextFace {
+        fg,
+        bg,
+        style: fg_style | bg_style,
     }
 }
 
@@ -1276,7 +1284,7 @@ pub enum HighlightRole {
     pager_selected_description,
 }
 
-/// Simply value type describing how a character should be highlighted..
+/// Simple value type describing how a character should be highlighted.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct HighlightSpec {
     pub foreground: HighlightRole,

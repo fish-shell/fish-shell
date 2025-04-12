@@ -1038,9 +1038,9 @@ impl Screen {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
         let mut set_color = |zelf: &mut Self, c| {
-            let fg = color_resolver.resolve_spec(&c, false, vars);
-            let bg = color_resolver.resolve_spec(&c, true, vars);
-            zelf.outp.borrow_mut().set_color(fg, bg);
+            zelf.outp
+                .borrow_mut()
+                .set_text_face(color_resolver.resolve_spec(&c, vars));
         };
 
         let mut cached_layouts = LAYOUT_CACHE_SHARED.lock().unwrap();

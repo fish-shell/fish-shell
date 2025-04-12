@@ -695,9 +695,9 @@ fn test_trailing_spaces_after_command() {
 
     // Check that 'echo' is underlined
     for i in 0..4 {
-        let rgb = resolver.resolve_spec(&colors[i], false, vars);
+        let face = resolver.resolve_spec(&colors[i], vars);
         assert!(
-            rgb.is_underline(),
+            face.is_underline(),
             "Character at position {} of 'echo' should be underlined",
             i
         );
@@ -705,9 +705,9 @@ fn test_trailing_spaces_after_command() {
 
     // Check that trailing spaces are NOT underlined
     for i in 4..text.len() {
-        let rgb = resolver.resolve_spec(&colors[i], false, vars);
+        let face = resolver.resolve_spec(&colors[i], vars);
         assert!(
-            !rgb.is_underline(),
+            !face.is_underline(),
             "Trailing space at position {} should NOT be underlined",
             i
         );

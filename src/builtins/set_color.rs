@@ -3,60 +3,11 @@
 use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
-use crate::terminal::TerminalCommand::{
-    EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
-    EnterUnderlineMode, ExitAttributeMode,
-};
+use crate::terminal::TerminalCommand::ExitAttributeMode;
 use crate::terminal::{best_color, get_color_support, Output, Outputter};
+use crate::text_face::{TextFace, TextStyling};
 
-#[allow(clippy::too_many_arguments)]
-fn print_modifiers(
-    outp: &mut Outputter,
-    bold: bool,
-    underline: bool,
-    italics: bool,
-    dim: bool,
-    reverse: bool,
-    bg: Color,
-) {
-    if bold {
-        outp.write_command(EnterBoldMode);
-    }
-
-    if underline {
-        outp.write_command(EnterUnderlineMode);
-    }
-
-    if italics {
-        outp.write_command(EnterItalicsMode);
-    }
-
-    if dim {
-        outp.write_command(EnterDimMode);
-    }
-
-    #[allow(clippy::collapsible_if)]
-    if reverse {
-        if !outp.write_command(EnterReverseMode) {
-            outp.write_command(EnterStandoutMode);
-        }
-    }
-    if !bg.is_none() && bg.is_normal() {
-        outp.write_command(ExitAttributeMode);
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-fn print_colors(
-    streams: &mut IoStreams,
-    args: &[&wstr],
-    bold: bool,
-    underline: bool,
-    italics: bool,
-    dim: bool,
-    reverse: bool,
-    bg: Color,
-) {
+fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg: Color) {
     let outp = &mut Outputter::new_buffering();
 
     // Rebind args to named_colors if there are no args.
@@ -70,18 +21,14 @@ fn print_colors(
 
     for color_name in args {
         if streams.out_is_terminal() {
-            print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
-            let color = Color::from_wstr(color_name).unwrap_or(Color::NONE);
-            outp.set_color(color, Color::NONE);
-            if !bg.is_none() {
-                outp.write_color(bg, false /* not is_fg */);
-            }
+            let fg = Color::from_wstr(color_name).unwrap_or(Color::None);
+            outp.set_text_face(TextFace::new(fg, bg, style));
         }
         outp.write_wstr(color_name);
         if streams.out_is_terminal() && !bg.is_none() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            outp.write_command(ExitAttributeMode);
+            outp.reset_text_face(false);
         }
         outp.writech('\n');
     } // conveniently, 'normal' is always the last color so we don't need to reset here
@@ -114,11 +61,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     let mut bgcolor = None;
-    let mut bold = false;
-    let mut underline = false;
-    let mut italics = false;
-    let mut dim = false;
-    let mut reverse = false;
+    let mut style = TextStyling::empty();
     let mut print = false;
 
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
@@ -132,11 +75,11 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 builtin_print_help(parser, streams, argv[0]);
                 return Ok(SUCCESS);
             }
-            'o' => bold = true,
-            'i' => italics = true,
-            'd' => dim = true,
-            'r' => reverse = true,
-            'u' => underline = true,
+            'o' => style |= TextStyling::BOLD,
+            'i' => style |= TextStyling::ITALICS,
+            'd' => style |= TextStyling::DIM,
+            'r' => style |= TextStyling::REVERSE,
+            'u' => style |= TextStyling::UNDERLINE,
             'c' => print = true,
             ':' => {
                 // We don't error here because "-b" is the only option that requires an argument,
@@ -159,7 +102,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // We want to reclaim argv so grab wopt_index now.
     let mut wopt_index = w.wopt_index;
 
-    let mut bg = Color::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(Color::NONE);
+    let mut bg = bgcolor.and_then(Color::from_wstr).unwrap_or(Color::None);
     if bgcolor.is_some() && bg.is_none() {
         streams.err.append(wgettext_fmt!(
             "%ls: Unknown color '%ls'\n",
@@ -174,17 +117,17 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         // for --print-colors. Because it's not interesting in terms of display,
         // just skip it.
         if bgcolor.is_some() && bg.is_special() {
-            bg = Color::NONE;
+            bg = Color::None;
         }
         let args = &argv[wopt_index..argc];
-        print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
+        print_colors(streams, args, style, bg);
         return Ok(SUCCESS);
     }
 
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
     while wopt_index < argc {
-        let fg = Color::from_wstr(argv[wopt_index]).unwrap_or(Color::NONE);
+        let fg = Color::from_wstr(argv[wopt_index]).unwrap_or(Color::None);
         if fg.is_none() {
             streams.err.append(wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
@@ -203,7 +146,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     assert!(fgcolors.is_empty() || !fg.is_none());
 
     let outp = &mut Outputter::new_buffering();
-    print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
+    outp.set_text_face(TextFace::new(Color::None, Color::None, style));
     if bgcolor.is_some() && bg.is_normal() {
         outp.write_command(ExitAttributeMode);
     }
@@ -215,7 +158,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:
             //  $ echo (set_color foo)bar
-            outp.set_color(Color::RESET, Color::NONE);
+            outp.reset_text_face(true);
         }
     }
     if bgcolor.is_some() && !bg.is_normal() && !bg.is_reset() {

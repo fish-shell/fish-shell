@@ -46,7 +46,6 @@ use crate::ast::{is_same_node, Ast, Category};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
-use crate::color::Color;
 use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
@@ -71,7 +70,8 @@ use crate::flog::{FLOG, FLOGF};
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{
-    autosuggest_validate_from_history, highlight_shell, HighlightRole, HighlightSpec,
+    autosuggest_validate_from_history, highlight_shell, parse_text_face_for_highlight,
+    HighlightRole, HighlightSpec,
 };
 use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
@@ -123,8 +123,7 @@ use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
     signal_set_handlers_once,
 };
-use crate::terminal::parse_color;
-use crate::terminal::parse_color_maybe_none;
+use crate::terminal::parse_text_face;
 use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
@@ -144,6 +143,7 @@ use crate::terminal::{
     SYNCHRONIZED_OUTPUT_SUPPORTED,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
+use crate::text_face::TextFace;
 use crate::threads::{
     assert_is_background_thread, assert_is_main_thread, iothread_service_main_with_timeout,
     Debounce,
@@ -1660,7 +1660,10 @@ impl<'a> Reader<'a> {
             let explicit_foreground = self
                 .vars()
                 .get_unless_empty(L!("fish_color_search_match"))
-                .is_some_and(|var| !parse_color_maybe_none(&var, false).is_none());
+                .is_some_and(|var| {
+                    let (color, _flags) = parse_text_face(&var, false);
+                    !color.is_none()
+                });
 
             for color in &mut colors[range] {
                 if explicit_foreground {
@@ -2290,9 +2293,7 @@ impl<'a> Reader<'a> {
                 }
                 perror("tcsetattr"); // return to previous mode
             }
-            Outputter::stdoutput()
-                .borrow_mut()
-                .set_color(Color::RESET, Color::RESET);
+            Outputter::stdoutput().borrow_mut().reset_text_face(true);
         }
         let result = self
             .rls()
@@ -2694,13 +2695,13 @@ impl<'a> Reader<'a> {
 
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
-                        outp.set_color(
-                            parse_color(&fish_color_cancel, false),
-                            parse_color(&fish_color_cancel, true),
-                        );
+                        outp.set_text_face(parse_text_face_for_highlight(
+                            Some(&fish_color_cancel),
+                            Some(&fish_color_cancel),
+                        ));
                     }
                     outp.write_wstr(L!("^C"));
-                    outp.set_color(Color::RESET, Color::RESET);
+                    outp.reset_text_face(true);
 
                     // We print a newline last so the prompt_sp hack doesn't get us.
                     outp.push(b'\n');
@@ -4464,9 +4465,7 @@ fn reader_interactive_init(parser: &Parser) {
 
 /// Destroy data for interactive use.
 fn reader_interactive_destroy() {
-    Outputter::stdoutput()
-        .borrow_mut()
-        .set_color(Color::RESET, Color::RESET);
+    Outputter::stdoutput().borrow_mut().reset_text_face(true);
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.
@@ -4530,7 +4529,7 @@ pub fn reader_write_title(
         out.write_command(Osc0WindowTitle(&lst));
     }
 
-    out.set_color(Color::RESET, Color::RESET);
+    out.reset_text_face(true);
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
         out.write_bytes(b"\r");
@@ -5659,7 +5658,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     reader_write_title(cmd, parser, true);
     Outputter::stdoutput()
         .borrow_mut()
-        .set_color(Color::NORMAL, Color::NORMAL);
+        .set_text_face(TextFace::default());
     term_donate(false);
 
     let time_before = Instant::now();

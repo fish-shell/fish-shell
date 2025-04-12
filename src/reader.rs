@@ -4540,16 +4540,12 @@ pub fn reader_write_title(
 impl<'a> Reader<'a> {
     fn exec_prompt_cmd(&self, prompt_cmd: &wstr, final_prompt: bool) -> Vec<WString> {
         let mut output = vec![];
-        if final_prompt && function::exists(prompt_cmd, self.parser) {
-            let _ = exec_subshell(
-                &(prompt_cmd.to_owned() + L!(" --final-rendering")),
-                self.parser,
-                Some(&mut output),
-                false,
-            );
+        let prompt_cmd = if final_prompt && function::exists(prompt_cmd, self.parser) {
+            Cow::Owned(prompt_cmd.to_owned() + L!(" --final-rendering"))
         } else {
-            let _ = exec_subshell(prompt_cmd, self.parser, Some(&mut output), false);
+            Cow::Borrowed(prompt_cmd)
         };
+        let _ = exec_subshell(&prompt_cmd, self.parser, Some(&mut output), false);
         output
     }
 

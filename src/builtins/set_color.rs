@@ -78,7 +78,7 @@ fn print_colors(
             }
         }
         outp.write_wstr(color_name);
-        if !bg.is_none() {
+        if streams.out_is_terminal() && !bg.is_none() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
             outp.write_command(ExitAttributeMode);

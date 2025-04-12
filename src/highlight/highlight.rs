@@ -6,7 +6,7 @@ use crate::ast::{
     VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::color::RgbColor;
+use crate::color::Color;
 use crate::common::{
     valid_var_name, valid_var_name_char, ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
@@ -71,12 +71,12 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
     for (i, c) in text.chars().enumerate() {
         let color = colors[i];
         if color != last_color {
-            outp.set_color(rv.resolve_spec(&color, false, vars), RgbColor::NORMAL);
+            outp.set_color(rv.resolve_spec(&color, false, vars), Color::NORMAL);
             last_color = color;
         }
         outp.writech(c);
     }
-    outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL);
+    outp.set_color(Color::NORMAL, Color::NORMAL);
     outp.contents().to_owned()
 }
 
@@ -107,8 +107,8 @@ pub fn highlight_shell(
 /// one screen redraw.
 #[derive(Default)]
 pub struct HighlightColorResolver {
-    fg_cache: HashMap<HighlightSpec, RgbColor>,
-    bg_cache: HashMap<HighlightSpec, RgbColor>,
+    fg_cache: HashMap<HighlightSpec, Color>,
+    bg_cache: HashMap<HighlightSpec, Color>,
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -124,7 +124,7 @@ impl HighlightColorResolver {
         highlight: &HighlightSpec,
         is_background: bool,
         vars: &dyn Environment,
-    ) -> RgbColor {
+    ) -> Color {
         let cache = if is_background {
             &mut self.bg_cache
         } else {
@@ -143,8 +143,8 @@ impl HighlightColorResolver {
         highlight: &HighlightSpec,
         is_background: bool,
         vars: &dyn Environment,
-    ) -> RgbColor {
-        let mut result = RgbColor::NORMAL;
+    ) -> Color {
+        let mut result = Color::NORMAL;
         let role = if is_background {
             highlight.background
         } else {

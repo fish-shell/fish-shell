@@ -46,12 +46,12 @@ bitflags! {
 
 /// A type that represents a color.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct RgbColor {
+pub struct Color {
     pub typ: Type,
     pub flags: Flags,
 }
 
-impl RgbColor {
+impl Color {
     /// The color white
     pub const WHITE: Self = Self {
         typ: Type::Named { idx: 7 },
@@ -293,7 +293,7 @@ impl RgbColor {
         } else {
             return None;
         };
-        Some(RgbColor::from_rgb(r, g, b))
+        Some(Color::from_rgb(r, g, b))
     }
 
     /// Try parsing an explicit color name like "magenta".
@@ -436,37 +436,37 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::color::{Color24, Flags, RgbColor, Type};
+    use crate::color::{Color, Color24, Flags, Type};
     use crate::wchar::prelude::*;
 
     #[test]
     fn parse() {
-        assert!(RgbColor::from_wstr(L!("#FF00A0")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("FF00A0")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("#F30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("F30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("f30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("#FF30a5")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("3f30")).is_none());
-        assert!(RgbColor::from_wstr(L!("##f30")).is_none());
-        assert!(RgbColor::from_wstr(L!("magenta")).unwrap().is_named());
-        assert!(RgbColor::from_wstr(L!("MaGeNTa")).unwrap().is_named());
-        assert!(RgbColor::from_wstr(L!("mooganta")).is_none());
+        assert!(Color::from_wstr(L!("#FF00A0")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("FF00A0")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("#F30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("F30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("f30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("#FF30a5")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("3f30")).is_none());
+        assert!(Color::from_wstr(L!("##f30")).is_none());
+        assert!(Color::from_wstr(L!("magenta")).unwrap().is_named());
+        assert!(Color::from_wstr(L!("MaGeNTa")).unwrap().is_named());
+        assert!(Color::from_wstr(L!("mooganta")).is_none());
     }
 
     #[test]
     fn parse_rgb() {
-        assert!(RgbColor::from_wstr(L!("##FF00A0")).is_none());
-        assert!(RgbColor::from_wstr(L!("#FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr(L!("FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr(L!("FAF")) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));
+        assert!(Color::from_wstr(L!("##FF00A0")).is_none());
+        assert!(Color::from_wstr(L!("#FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(Color::from_wstr(L!("FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(Color::from_wstr(L!("FAF")) == Some(Color::from_rgb(0xff, 0xaa, 0xff)));
     }
 
     // Regression test for multiplicative overflow in convert_color.
     #[test]
     fn test_term16_color_for_rgb() {
         for c in 0..=u8::MAX {
-            let color = RgbColor {
+            let color = Color {
                 typ: Type::Rgb(Color24 { r: c, g: c, b: c }),
                 flags: Flags::DEFAULT,
             };
@@ -477,52 +477,52 @@ mod tests {
     #[test]
     fn parse_short_hex_with_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("#F3A")),
-            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+            Color::try_parse_rgb(L!("#F3A")),
+            Some(Color::from_rgb(0xFF, 0x33, 0xAA))
         );
     }
 
     #[test]
     fn parse_long_hex_with_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("#F3A035")),
-            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+            Color::try_parse_rgb(L!("#F3A035")),
+            Some(Color::from_rgb(0xF3, 0xA0, 0x35))
         );
     }
 
     #[test]
     fn parse_short_hex_without_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("F3A")),
-            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+            Color::try_parse_rgb(L!("F3A")),
+            Some(Color::from_rgb(0xFF, 0x33, 0xAA))
         );
     }
 
     #[test]
     fn parse_long_hex_without_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("F3A035")),
-            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+            Color::try_parse_rgb(L!("F3A035")),
+            Some(Color::from_rgb(0xF3, 0xA0, 0x35))
         );
     }
 
     #[test]
     fn invalid_hex_length() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("#F3A03")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3A0")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#F3A03")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3A0")), None);
     }
 
     #[test]
     fn invalid_hex_character() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("#GFA")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3G035")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#GFA")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3G035")), None);
     }
 
     #[test]
     fn invalid_hash_combinations() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("##F3A")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("###F3A035")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3A#")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("#F#3A")), None);
+        assert_eq!(Color::try_parse_rgb(L!("##F3A")), None);
+        assert_eq!(Color::try_parse_rgb(L!("###F3A035")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3A#")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#F#3A")), None);
     }
 }

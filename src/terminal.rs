@@ -1,5 +1,5 @@
 // Generic output functions.
-use crate::color::{self, Color24, RgbColor};
+use crate::color::{self, Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
 use crate::env::EnvVar;
@@ -232,7 +232,7 @@ pub(crate) fn use_terminfo() -> bool {
 
 fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
     if only_grayscale()
-        && !(RgbColor {
+        && !(Color {
             typ: color::Type::Named { idx },
             flags: color::Flags::DEFAULT,
         })
@@ -395,7 +395,7 @@ fn scroll_forward(out: &mut impl Output, lines: usize) -> bool {
     true
 }
 
-fn index_for_color(c: RgbColor) -> u8 {
+fn index_for_color(c: Color) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
     }
@@ -421,10 +421,10 @@ pub struct Outputter {
     fd: RawFd,
 
     /// Foreground.
-    last_color: RgbColor,
+    last_color: Color,
 
     /// Background.
-    last_color2: RgbColor,
+    last_color2: Color,
 
     was_bold: bool,
     was_underline: bool,
@@ -441,8 +441,8 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last_color: RgbColor::NORMAL,
-            last_color2: RgbColor::NORMAL,
+            last_color: Color::NORMAL,
+            last_color2: Color::NORMAL,
             was_bold: false,
             was_underline: false,
             was_italics: false,
@@ -472,7 +472,7 @@ impl Outputter {
 
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
-    pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
+    pub fn write_color(&mut self, color: Color, is_fg: bool) -> bool {
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
@@ -510,8 +510,8 @@ impl Outputter {
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
     #[allow(clippy::if_same_then_else)]
-    pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
-        const normal: RgbColor = RgbColor::NORMAL;
+    pub fn set_color(&mut self, mut fg: Color, mut bg: Color) {
+        const normal: Color = Color::NORMAL;
         let mut bg_set = false;
         let mut last_bg_set = false;
         let is_bold = fg.is_bold() || bg.is_bold();
@@ -557,10 +557,10 @@ impl Outputter {
             // Background is set.
             bg_set = true;
             if fg == bg {
-                fg = if bg == RgbColor::WHITE {
-                    RgbColor::BLACK
+                fg = if bg == Color::WHITE {
+                    Color::BLACK
                 } else {
-                    RgbColor::WHITE
+                    Color::WHITE
                 };
             }
         }
@@ -576,7 +576,7 @@ impl Outputter {
             self.reset_modes();
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
             if write_foreground_color(self, 0) {
-                self.last_color = RgbColor::BLACK;
+                self.last_color = Color::BLACK;
             }
         }
 
@@ -585,7 +585,7 @@ impl Outputter {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
-                self.last_color2 = RgbColor::NORMAL;
+                self.last_color2 = Color::NORMAL;
                 self.reset_modes();
             } else if !fg.is_special() {
                 self.write_color(fg, true /* foreground */);
@@ -738,13 +738,13 @@ impl<'a> Output for BufferedOutputter<'a> {
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
-pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
+pub fn best_color(candidates: &[Color], support: ColorSupport) -> Color {
     if candidates.is_empty() {
-        return RgbColor::NONE;
+        return Color::NONE;
     }
 
-    let mut first_rgb = RgbColor::NONE;
-    let mut first_named = RgbColor::NONE;
+    let mut first_rgb = Color::NONE;
+    let mut first_named = Color::NONE;
     for color in candidates {
         if first_rgb.is_none() && color.is_rgb() {
             first_rgb = *color;
@@ -771,7 +771,7 @@ pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
 /// Return the internal color code representing the specified color.
 /// TODO: This code should be refactored to enable sharing with builtin_set_color.
 ///       In particular, the argument parsing still isn't fully capable.
-pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
+pub fn parse_color(var: &EnvVar, is_background: bool) -> Color {
     let mut result = parse_color_maybe_none(var, is_background);
     if result.is_none() {
         result.typ = color::Type::Normal;
@@ -779,14 +779,14 @@ pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
     result
 }
 
-pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> RgbColor {
+pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
     let mut is_bold = false;
     let mut is_underline = false;
     let mut is_italics = false;
     let mut is_dim = false;
     let mut is_reverse = false;
 
-    let mut candidates: Vec<RgbColor> = Vec::new();
+    let mut candidates: Vec<Color> = Vec::new();
 
     let prefix = L!("--background=");
 
@@ -831,7 +831,7 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> RgbColor {
         }
 
         if !color_name.is_empty() {
-            let color: Option<RgbColor> = RgbColor::from_wstr(&color_name);
+            let color: Option<Color> = Color::from_wstr(&color_name);
             if let Some(color) = color {
                 candidates.push(color);
             }

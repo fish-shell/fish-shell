@@ -46,7 +46,7 @@ use crate::ast::{is_same_node, Ast, Category};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
-use crate::color::RgbColor;
+use crate::color::Color;
 use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
@@ -2292,7 +2292,7 @@ impl<'a> Reader<'a> {
             }
             Outputter::stdoutput()
                 .borrow_mut()
-                .set_color(RgbColor::RESET, RgbColor::RESET);
+                .set_color(Color::RESET, Color::RESET);
         }
         let result = self
             .rls()
@@ -2700,7 +2700,7 @@ impl<'a> Reader<'a> {
                         );
                     }
                     outp.write_wstr(L!("^C"));
-                    outp.set_color(RgbColor::RESET, RgbColor::RESET);
+                    outp.set_color(Color::RESET, Color::RESET);
 
                     // We print a newline last so the prompt_sp hack doesn't get us.
                     outp.push(b'\n');
@@ -4466,7 +4466,7 @@ fn reader_interactive_init(parser: &Parser) {
 fn reader_interactive_destroy() {
     Outputter::stdoutput()
         .borrow_mut()
-        .set_color(RgbColor::RESET, RgbColor::RESET);
+        .set_color(Color::RESET, Color::RESET);
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.
@@ -4530,7 +4530,7 @@ pub fn reader_write_title(
         out.write_command(Osc0WindowTitle(&lst));
     }
 
-    out.set_color(RgbColor::RESET, RgbColor::RESET);
+    out.set_color(Color::RESET, Color::RESET);
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
         out.write_bytes(b"\r");
@@ -5659,7 +5659,7 @@ fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
     reader_write_title(cmd, parser, true);
     Outputter::stdoutput()
         .borrow_mut()
-        .set_color(RgbColor::NORMAL, RgbColor::NORMAL);
+        .set_color(Color::NORMAL, Color::NORMAL);
     term_donate(false);
 
     let time_before = Instant::now();

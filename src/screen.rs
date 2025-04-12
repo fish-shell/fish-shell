@@ -1637,7 +1637,7 @@ fn is_screen_name_escape_seq(code: &wstr) -> Option<usize> {
                 continue;
             }
         }
-        escape_sequence_end = screen_name_end + screen_name_end_sentinel.len();
+        escape_sequence_end = screen_name_end.saturating_add(screen_name_end_sentinel.len());
         break;
     }
     Some(escape_sequence_end)

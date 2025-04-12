@@ -249,6 +249,21 @@ fn test_prompt_truncation() {
 }
 
 #[test]
+#[serial]
+fn test_screen_name_escape_seq_overflow() {
+    let _cleanup = test_init();
+    let mut large_escape_seq = WString::from_str("\x1Bk");
+
+    for _ in 0..10000 {
+        large_escape_seq.push('x');
+    }
+    large_escape_seq.push_str("\x1B\\");
+
+    let escape_length = crate::screen::escape_code_length(&large_escape_seq);
+    assert!(escape_length.is_some());
+}
+
+#[test]
 fn test_compute_layout() {
     macro_rules! validate {
         (

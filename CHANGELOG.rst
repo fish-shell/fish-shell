@@ -22,14 +22,15 @@ Deprecations and removed features
 - Tokens like ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
 - Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
-  For the time being, this can be turned off with the "no-ignore-terminfo" feature flag::
+  For the time being, this can be turned off via the "ignore-terminfo" feature flag::
 
     set -Ua fish_features no-ignore-terminfo
 
 - The `--install` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new `status list-files` and `status get-file` subcommands, but it should no longer be necessary. (:issue:`11143`)
 - RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if the terminal does not advertise support via ``COLORTERM``.
+
   - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or ``set COLORTERM 0``.
-    - To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
+    To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
   - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
     If that doesn't work, use ``set fish_term24bit 0``.
 

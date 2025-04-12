@@ -1,7 +1,7 @@
 // Implementation of the set_color builtin.
 
 use super::prelude::*;
-use crate::color::RgbColor;
+use crate::color::Color;
 use crate::common::str2wcstring;
 use crate::terminal::TerminalCommand::{
     EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
@@ -17,7 +17,7 @@ fn print_modifiers(
     italics: bool,
     dim: bool,
     reverse: bool,
-    bg: RgbColor,
+    bg: Color,
 ) {
     if bold {
         outp.write_command(EnterBoldMode);
@@ -55,7 +55,7 @@ fn print_colors(
     italics: bool,
     dim: bool,
     reverse: bool,
-    bg: RgbColor,
+    bg: Color,
 ) {
     let outp = &mut Outputter::new_buffering();
 
@@ -64,15 +64,15 @@ fn print_colors(
     let args = if !args.is_empty() {
         args
     } else {
-        named_colors = RgbColor::named_color_names();
+        named_colors = Color::named_color_names();
         &named_colors
     };
 
     for color_name in args {
         if streams.out_is_terminal() {
             print_modifiers(outp, bold, underline, italics, dim, reverse, bg);
-            let color = RgbColor::from_wstr(color_name).unwrap_or(RgbColor::NONE);
-            outp.set_color(color, RgbColor::NONE);
+            let color = Color::from_wstr(color_name).unwrap_or(Color::NONE);
+            outp.set_color(color, Color::NONE);
             if !bg.is_none() {
                 outp.write_color(bg, false /* not is_fg */);
             }
@@ -159,7 +159,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // We want to reclaim argv so grab wopt_index now.
     let mut wopt_index = w.wopt_index;
 
-    let mut bg = RgbColor::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(RgbColor::NONE);
+    let mut bg = Color::from_wstr(bgcolor.unwrap_or(L!(""))).unwrap_or(Color::NONE);
     if bgcolor.is_some() && bg.is_none() {
         streams.err.append(wgettext_fmt!(
             "%ls: Unknown color '%ls'\n",
@@ -174,7 +174,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         // for --print-colors. Because it's not interesting in terms of display,
         // just skip it.
         if bgcolor.is_some() && bg.is_special() {
-            bg = RgbColor::from_wstr(L!("")).unwrap_or(RgbColor::NONE);
+            bg = Color::from_wstr(L!("")).unwrap_or(Color::NONE);
         }
         let args = &argv[wopt_index..argc];
         print_colors(streams, args, bold, underline, italics, dim, reverse, bg);
@@ -184,7 +184,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
     while wopt_index < argc {
-        let fg = RgbColor::from_wstr(argv[wopt_index]).unwrap_or(RgbColor::NONE);
+        let fg = Color::from_wstr(argv[wopt_index]).unwrap_or(Color::NONE);
         if fg.is_none() {
             streams.err.append(wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
@@ -215,7 +215,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:
             //  $ echo (set_color foo)bar
-            outp.set_color(RgbColor::RESET, RgbColor::NONE);
+            outp.set_color(Color::RESET, Color::NONE);
         }
     }
     if bgcolor.is_some() && !bg.is_normal() && !bg.is_reset() {

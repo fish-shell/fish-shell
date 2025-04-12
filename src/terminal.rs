@@ -790,17 +790,16 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
     let prefix = L!("--background=");
 
     let mut next_is_background = false;
-    let mut color_name = WString::new();
     for next in var.as_list() {
-        color_name.clear();
+        let mut color_name = None;
         #[allow(clippy::collapsible_else_if)]
         if is_background {
-            if color_name.is_empty() && next_is_background {
-                color_name = next.to_owned();
+            if next_is_background {
+                color_name = Some(next.as_utfstr());
                 next_is_background = false;
             } else if next.starts_with(prefix) {
                 // Look for something like "--background=red".
-                color_name = next.slice_from(prefix.char_count()).to_owned();
+                color_name = Some(next.slice_from(prefix.char_count()));
             } else if next == "--background" || next == "-b" {
                 // Without argument attached the next token is the color
                 // - if it's another option it's an error.
@@ -811,7 +810,7 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
             } else if next.starts_with("-b") {
                 // Look for something like "-bred".
                 // Yes, that length is hardcoded.
-                color_name = next.slice_from(2).to_owned();
+                color_name = Some(next.slice_from(2));
             }
         } else {
             if next == "--bold" || next == "-o" {
@@ -825,15 +824,12 @@ pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> Color {
             } else if next == "--reverse" || next == "-r" {
                 is_reverse = true;
             } else {
-                color_name = next.clone();
+                color_name = Some(next.as_utfstr());
             }
         }
 
-        if !color_name.is_empty() {
-            let color: Option<Color> = Color::from_wstr(&color_name);
-            if let Some(color) = color {
-                candidates.push(color);
-            }
+        if let Some(color) = color_name.and_then(Color::from_wstr) {
+            candidates.push(color);
         }
     }
 

@@ -20,6 +20,8 @@ Description
 
 Multiple lines are not supported in ``fish_right_prompt``.
 
+If :envvar:`fish_transient_prompt` is set to 1, ``fish_right_prompt --final-rendering`` is run before executing the commandline.
+
 
 Example
 -------

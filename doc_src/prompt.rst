@@ -153,10 +153,12 @@ And it looks like:
 
 after we run ``false`` (which returns 1).
 
+.. _transient-prompt:
+
 Transient prompt
 ----------------
 
-To enable transient prompt functionality, set the ``fish_transient_prompt`` variable to 1::
+To enable transient prompt functionality, set the :envvar:`fish_transient_prompt` variable to 1::
 
   set -g fish_transient_prompt 1
 
@@ -181,7 +183,7 @@ So you can use it to declutter your old prompts. For example if you want to see 
       string join '' -- (set_color green) $pwd (set_color normal) $stat '>'
   end
 
-Now this would print:
+Now running two commands in the same directory could result in this screen:
 
 .. role:: green
 .. role:: red

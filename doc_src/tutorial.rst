@@ -649,31 +649,10 @@ This prompt would look like:
     :purple:`02/06/13`
     :red:`/home/tutorial >` _
 
-You can make your prompt transient by setting ``fish_transient_prompt`` to 1. That means fish will redraw the prompt before running a commandline, so you can change it then. Usually this is used to trim it down to declutter your terminal's scrollback history. When it runs the prompt again, it will pass a ``--final-rendering`` argument, so check for this to distinguish::
 
-    function fish_prompt
-        if contains -- --final-rendering $argv
-            set_color F00
-            echo '$' (set_color normal)
-        else
-            set_color purple
-            date "+%m/%d/%y"
-            set_color F00
-            echo (pwd) '>' (set_color normal)
-        end
-    end
+See also :doc:`Writing your own prompt <prompt>`.
 
-
-This would look like:
-
-.. parsed-literal::
-    :class: highlight
-
-    :red:`$` command
-    :purple:`02/06/13`
-    :red:`/home/tutorial >` _
-
-You can choose among some sample prompts by running ``fish_config`` for a web UI or ``fish_config prompt`` for a simpler version inside your terminal.
+You can choose among sample prompts by running ``fish_config`` for a web UI or ``fish_config prompt`` for a simpler version inside your terminal.
 
 $PATH
 -----

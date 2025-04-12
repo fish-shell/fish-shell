@@ -3853,17 +3853,6 @@ impl<'a> Reader<'a> {
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));
 
-        // Clear the screen.
-        // This is subtle: We first clear, draw the old prompt,
-        // and *then* reexecute the prompt and overdraw it.
-        // This removes the flicker,
-        // while keeping the prompt up-to-date.
-        Outputter::stdoutput()
-            .borrow_mut()
-            .write_command(ClearScreen);
-        self.screen.reset_line(/*repaint_prompt=*/ true);
-        self.layout_and_repaint(L!("readline"));
-
         self.exec_prompt();
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));

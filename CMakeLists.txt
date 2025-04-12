@@ -36,6 +36,11 @@ get_filename_component(REAL_CMAKE_SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
 add_definitions(-DCMAKE_BINARY_DIR="${REAL_CMAKE_BINARY_DIR}")
 add_definitions(-DCMAKE_SOURCE_DIR="${REAL_CMAKE_SOURCE_DIR}")
 
+set(build_types Release RelWithDebInfo Debug "")
+if(NOT "${CMAKE_BUILD_TYPE}" IN_LIST build_types)
+  message(WARNING "Unsupported build type ${CMAKE_BUILD_TYPE}. If this doesn't build, try one of Release, RelWithDebInfo or Debug")
+endif()
+
 # Define a function to build and link dependencies.
 function(CREATE_TARGET target)
   add_custom_target(

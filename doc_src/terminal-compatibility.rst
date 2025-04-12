@@ -169,6 +169,15 @@ Optional Commands
      - n/a
      - Request cursor position report.
      - VT100
+   * - ``\e[ \x20 q``
+     - Se
+     - Reset cursor style to the terminal's default. This is not used as of today but may be
+       in future.
+     - VT520
+   * - ``\e[ Ps \x20 q``
+     - Ss
+     - Set cursor style (DECSCUSR); Ps is 2, 4 or 6 for block, underscore or line shape.
+     - VT520
    * - ``\e[ Ps q``
      - n/a
      - Request terminal name and version (XTVERSION).

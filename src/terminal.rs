@@ -495,7 +495,9 @@ impl Outputter {
     /// color pair to what it should be.
     #[allow(clippy::if_same_then_else)]
     pub(crate) fn set_text_face(&mut self, face: TextFace) {
-        let TextFace { mut fg, bg, .. } = face;
+        let mut fg = face.fg;
+        let bg = face.bg;
+        let style = face.style;
         let mut bg_set = false;
         let mut last_bg_set = false;
         let is_bold = face.is_bold();
@@ -512,11 +514,11 @@ impl Outputter {
             EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
             EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
-        if (self.last.is_bold() && !is_bold)
-            || (self.last.is_dim() && !is_dim)
-            || (self.last.is_reverse() && !is_reverse)
-        {
-            // Only way to exit bold/dim/reverse mode is a reset of all attributes.
+        let non_resettable = |style| style & !(TextStyling::ITALICS | TextStyling::UNDERLINE);
+        let non_resettable_attributes_to_unset =
+            non_resettable(self.last.style).difference(non_resettable(style));
+        if !non_resettable_attributes_to_unset.is_empty() {
+            // Only way to exit non-resettable ones is a reset of all attributes.
             self.reset_text_face(false);
         }
         if !self.last.bg.is_special() {
@@ -598,7 +600,6 @@ impl Outputter {
         if is_dim && !self.last.is_dim() && self.write_command(EnterDimMode) {
             self.last.style.set(TextStyling::DIM, is_dim);
         }
-        // N.B. there is no exit_dim_mode, it's handled by exit_attribute_mode above.
 
         if is_reverse && !self.last.is_reverse() {
             if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {

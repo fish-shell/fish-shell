@@ -10,7 +10,7 @@ fish_color_comment f7ca88
 fish_color_cwd green
 fish_color_cwd_root red
 fish_color_end ba8baf
-fish_color_error ab4642
+fish_color_error ab4642 --underline=curly
 fish_color_escape 86c1b9
 fish_color_history_current --bold
 fish_color_host normal

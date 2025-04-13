@@ -10,7 +10,7 @@ fish_color_comment ffcc66
 fish_color_cwd green
 fish_color_cwd_root red
 fish_color_end cc99cc
-fish_color_error f2777a
+fish_color_error f2777a --underline=curly
 fish_color_escape 66cccc
 fish_color_history_current --bold
 fish_color_host normal

@@ -11,7 +11,7 @@ fish_color_comment 4c566a --italics
 fish_color_cwd 5e81ac
 fish_color_cwd_root bf616a
 fish_color_end 81a1c1
-fish_color_error bf616a
+fish_color_error bf616a --underline=curly
 fish_color_escape ebcb8b
 fish_color_history_current e5e9f0 --bold
 fish_color_host a3be8c

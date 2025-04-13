@@ -78,9 +78,7 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     bind --preset $argv alt-o __fish_preview_current_file
     bind --preset $argv alt-w __fish_whatis_current_token
     bind --preset $argv ctrl-l (
-        if test -z "$STY"
-            and not string match -qr -- '^(screen|screen-256color)$' $TERM
-            and __fish_xtgettcap indn
+        if not __fish_in_gnu_screen && and __fish_xtgettcap indn
             echo scrollback-push
         end
     ) clear-screen

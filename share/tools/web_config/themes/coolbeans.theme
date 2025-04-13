@@ -9,7 +9,7 @@ fish_color_comment '888'  '--italics'
 fish_color_cwd 0A0
 fish_color_cwd_root A00
 fish_color_end 009900
-fish_color_error F22
+fish_color_error F22 --underline=curly
 fish_color_escape 0AA
 fish_color_history_current 0AA
 fish_color_host normal

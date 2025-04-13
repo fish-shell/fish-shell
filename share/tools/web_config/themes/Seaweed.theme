@@ -9,7 +9,7 @@ fish_color_comment 5C9900
 fish_color_cwd green
 fish_color_cwd_root red
 fish_color_end 8EEB00
-fish_color_error 60B9CE
+fish_color_error 60B9CE --underline=curly
 fish_color_escape 00a6b2
 fish_color_history_current --bold
 fish_color_host normal

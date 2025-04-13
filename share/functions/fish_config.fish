@@ -5,7 +5,7 @@ function fish_config --description "Launch fish's web based configuration" \
     --inherit-variable theme_var_filter
 
     set -l _flag_track
-    argparse h/help track -- $argv
+    argparse h/help track yes -- $argv
     or return
 
     if set -q _flag_help
@@ -18,6 +18,10 @@ function fish_config --description "Launch fish's web based configuration" \
 
     if set -q _flag_track[1] && not { test "$cmd" = theme && test "$argv[1]" = save }
         echo >&2 fish_config: --track: unknown option
+        return 1
+    end
+    if set -q _flag_yes[1] && not { contains "$cmd" prompt theme && test "$argv[1]" = save }
+        echo >&2 fish_config: --yes: unknown option
         return 1
     end
 
@@ -152,8 +156,8 @@ function fish_config --description "Launch fish's web based configuration" \
                         functions --erase fish_right_prompt
                     end
                 case save
-                    read -P"Overwrite prompt? [y/N]" -l yesno
-                    if string match -riq 'y(es)?' -- $yesno
+                    if set -q _flag_yes[1] ||
+                            { read -P"Overwrite prompt? [y/N]" -l yesno; string match -riq 'y(es)?' -- $yesno }
                         echo Overwriting
                         # Skip the cp if unnecessary,
                         # or we'd throw an error on a stock fish.
@@ -282,8 +286,10 @@ function fish_config --description "Launch fish's web based configuration" \
                     set -l have_colors
 
                     if contains -- $cmd save
-                        read -P"Overwrite your current theme? [y/N] " -l yesno
-                        if not string match -riq 'y(es)?' -- $yesno
+                        if not set -q _flag_yes &&
+                                { read -P"Overwrite your current theme? [y/N] " -l yesno
+                                    not string match -riq 'y(es)?' -- $yesno
+                                }
                             echo Not overwriting >&2
                             return 1
                         end
@@ -362,10 +368,14 @@ function __fish_config_theme_get
     set -l dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
     set -l files $dirs/$argv[1].theme
     set -l file
+    set -l is_default_theme false
 
     for f in $files
         if test -e "$f"
             set file $f
+            if test $f = $__fish_data_dir/tools/web_config/themes/$argv[1].theme
+                set is_default_theme true
+            end
             break
         end
     end
@@ -373,6 +383,7 @@ function __fish_config_theme_get
     if not set -q file[1]
         if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
             set file tools/web_config/themes/$argv[1].theme
+            set is_default_theme true
         else
             echo "No such theme: $argv[1]" >&2
             echo "Searched directories: $dirs" >&2
@@ -380,11 +391,18 @@ function __fish_config_theme_get
         end
     end
 
-    if string match -qr '^tools/' -- $file
-        status get-file $file
-    else
-        string join \n <$file
+    set -l content (
+        if string match -qr '^tools/' -- $file
+            status get-file $file
+        else
+            string join \n <$file
+        end
+    )
+    if $is_default_theme && not __fish_in_gnu_screen && not __fish_xtgettcap Su && not __fish_in_terminal_multiplexer
+        set content (string replace -- --underline=curly "" $content)
     end
+
+    string join \n $content
 end
 
 function __fish_config_show_tracked_color_vars

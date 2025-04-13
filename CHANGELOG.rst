@@ -69,6 +69,9 @@ Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Support for curly underlines in `fish_color_*` variables and :doc:`set_color <cmds/set_color>` (:issue:`10957`).
 - Underlines can now be colored independent of text (:issue:`7619`).
+- Errors are now highlighted with curly underlines in the default themes.
+  For compatibility with terminals that interpret the curly-underline escape sequence in an unexpected way,
+  the default themes enable this only if the terminal advertises support for the ``Su`` capability via XTGETTCAP.
 - New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists required and optional terminal control sequences used by fish.
 - :doc:`status <cmds/status>` learned the ``xtgettcap`` subcommand, to query terminfo capabilities via XTGETTCAP commands.
 - :doc:`status <cmds/status>` learned the ``xtversion`` subcommand, to show the terminal's name and version (as reported by via the XTVERSION command).

@@ -6,7 +6,7 @@ fish_color_command 164CC9
 fish_color_quote 4C3499
 fish_color_redirection 248E8E
 fish_color_end 02BDBD
-fish_color_error 9177E5
+fish_color_error 9177E5 --underline=curly
 fish_color_param 4319CC
 fish_color_comment 007B7B
 fish_color_selection white --background=brblack --bold

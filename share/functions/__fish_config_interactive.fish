@@ -30,7 +30,7 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end" >$__fish_config_dir/config.fish
 
-        echo yes | fish_config theme save "fish default" --track
+        fish_config theme save "fish default" --yes --track
         set -Ue fish_color_keyword fish_color_option
     end
     if test $__fish_initialized -lt 3800 && test "$fish_color_search_match[1]" = bryellow

@@ -17,3 +17,14 @@ string escape (set_color --bold red --background=normal)
 # CHECK: \e\[m
 string escape (set_color --bold red --background=blue)
 # CHECK: \e\[1m\e\[31m\e\[44m
+
+string escape (set_color --underline=curly)
+# CHECK: \e\[4:3m
+string escape (set_color -ucurly)
+# CHECK: \e\[4:3m
+string escape (set_color -u)
+# CHECK: \e\[4m
+set_color --underline=asdf
+# CHECKERR: set_color: invalid underline style: asdf
+set_color -ushort
+# CHECKERR: set_color: invalid underline style: short

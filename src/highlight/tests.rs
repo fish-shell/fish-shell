@@ -3,6 +3,7 @@ use crate::env::EnvMode;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::highlight::HighlightColorResolver;
 use crate::tests::prelude::*;
+use crate::text_face::UnderlineStyle;
 use crate::wchar::prelude::*;
 use crate::{
     env::EnvStack,
@@ -696,8 +697,9 @@ fn test_trailing_spaces_after_command() {
     // Check that 'echo' is underlined
     for i in 0..4 {
         let face = resolver.resolve_spec(&colors[i], vars);
-        assert!(
-            face.style.is_underline(),
+        assert_eq!(
+            face.style.underline_style(),
+            Some(UnderlineStyle::Single),
             "Character at position {} of 'echo' should be underlined",
             i
         );
@@ -706,8 +708,9 @@ fn test_trailing_spaces_after_command() {
     // Check that trailing spaces are NOT underlined
     for i in 4..text.len() {
         let face = resolver.resolve_spec(&colors[i], vars);
-        assert!(
-            !face.style.is_underline(),
+        assert_eq!(
+            face.style.underline_style(),
+            None,
             "Trailing space at position {} should NOT be underlined",
             i
         );

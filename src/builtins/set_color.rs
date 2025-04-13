@@ -66,6 +66,14 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             // and we don't error for missing colors.
             return Err(STATUS_INVALID_ARGS);
         }
+        TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(arg) => {
+            streams.err.append(wgettext_fmt!(
+                "%ls: invalid underline style: %ls\n",
+                argv[0],
+                arg
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
         TextFaceArgsAndOptionsResult::UnknownOption(unknown_option_index) => {
             builtin_unknown_option(
                 parser,

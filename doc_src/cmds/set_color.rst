@@ -52,8 +52,8 @@ The following options are available:
 **-r** or **--reverse**
     Sets reverse mode.
 
-**-u** or **--underline**
-    Sets underlined mode.
+**-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
+    Set the underline mode; supported styles are **single** (default) and **curly**.
 
 **-h** or **--help**
     Displays help about using this command.

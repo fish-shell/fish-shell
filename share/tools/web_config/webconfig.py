@@ -240,7 +240,11 @@ def parse_color(color_str):
         if comp == "--bold" or comp == "-o":
             bold = True
         elif comp == "--underline" or comp == "-u":
-            underline = True
+            underline = "single"
+        elif comp.startswith("--underline="):
+            underline = comp.stripprefix("--underline=")
+        elif comp.startswith("-u"): # Multiple short options like "-rbcurly" are not yet supported.
+            underline = comp.stripprefix("-u")
         elif comp == "--italics" or comp == "-i":
             italics = True
         elif comp == "--dim" or comp == "-d":
@@ -295,8 +299,8 @@ def unparse_color(col):
         ret += col["color"]
     if col["bold"]:
         ret += " --bold"
-    if col["underline"]:
-        ret += " --underline"
+    if col["underline"] is not None:
+        ret += " --underline=" + col["underline"]
     if col["italics"]:
         ret += " --italics"
     if col["dim"]:

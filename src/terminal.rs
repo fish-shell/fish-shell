@@ -5,7 +5,7 @@ use crate::common::{self, escape_string, wcs2string, wcs2string_appending, Escap
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{TextFace, TextStyling};
+use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
@@ -53,6 +53,7 @@ pub(crate) enum TerminalCommand<'a> {
     EnterStandoutMode,
     ExitItalicsMode,
     ExitUnderlineMode,
+    EnterCurlyUnderlineMode,
 
     // Screen clearing
     ClearScreen,
@@ -148,6 +149,7 @@ pub(crate) trait Output {
             EnterStandoutMode => ti(self, b"\x1b[7m", |t| &t.enter_standout_mode),
             ExitItalicsMode => ti(self, b"\x1b[23m", |t| &t.exit_italics_mode),
             ExitUnderlineMode => ti(self, b"\x1b[24m", |t| &t.exit_underline_mode),
+            EnterCurlyUnderlineMode => write(self, b"\x1b[4:3m"),
             ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
             ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
@@ -497,18 +499,19 @@ impl Outputter {
         let mut last_bg_set = false;
 
         use TerminalCommand::{
-            EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
-            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+            EnterBoldMode, EnterCurlyUnderlineMode, EnterDimMode, EnterItalicsMode,
+            EnterReverseMode, EnterStandoutMode, EnterUnderlineMode, ExitAttributeMode,
+            ExitItalicsMode, ExitUnderlineMode,
         };
 
         // Removes all styles that are individually resettable.
         let non_resettable = |mut style: TextStyling| {
             style.italics = false;
-            style.underline = false;
+            style.underline_style = None;
             style
         };
         let non_resettable_attributes_to_unset =
-            non_resettable(self.last.style).difference(non_resettable(style));
+            non_resettable(self.last.style).difference_prefer_empty(non_resettable(style));
         if !non_resettable_attributes_to_unset.is_empty() {
             // Only way to exit non-resettable ones is a reset of all attributes.
             self.reset_text_face();
@@ -577,11 +580,22 @@ impl Outputter {
             self.last.style.bold = true;
         }
 
-        let was_underline = self.last.style.is_underline();
-        if !style.is_underline() && was_underline && self.write_command(ExitUnderlineMode) {
-            self.last.style.underline = false;
-        } else if style.is_underline() && !was_underline && self.write_command(EnterUnderlineMode) {
-            self.last.style.underline = true;
+        if style.underline_style != self.last.style.underline_style {
+            match style.underline_style {
+                None => {
+                    if self.write_command(ExitUnderlineMode) {
+                        self.last.style.underline_style = None;
+                    }
+                }
+                Some(underline) => {
+                    if self.write_command(match underline {
+                        UnderlineStyle::Single => EnterUnderlineMode,
+                        UnderlineStyle::Curly => EnterCurlyUnderlineMode,
+                    }) {
+                        self.last.style.underline_style = Some(underline);
+                    }
+                }
+            }
         }
 
         let was_italics = self.last.style.is_italics();

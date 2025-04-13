@@ -3,10 +3,34 @@ use crate::terminal::{best_color, get_color_support};
 use crate::wchar::prelude::*;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 
+trait StyleSet {
+    fn union_prefer_right(self, other: Self) -> Self;
+    fn difference_prefer_empty(self, other: Self) -> Self;
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) enum UnderlineStyle {
+    Single,
+    Curly,
+}
+
+impl StyleSet for Option<UnderlineStyle> {
+    fn union_prefer_right(self, other: Self) -> Self {
+        other.or(self)
+    }
+
+    fn difference_prefer_empty(self, other: Self) -> Self {
+        if other.is_some() {
+            return None;
+        }
+        self
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
-    pub(crate) underline: bool,
+    pub(crate) underline_style: Option<UnderlineStyle>,
     pub(crate) italics: bool,
     pub(crate) dim: bool,
     pub(crate) reverse: bool,
@@ -16,7 +40,7 @@ impl TextStyling {
     pub(crate) const fn default() -> Self {
         Self {
             bold: false,
-            underline: false,
+            underline_style: None,
             italics: false,
             dim: false,
             reverse: false,
@@ -25,19 +49,23 @@ impl TextStyling {
     pub(crate) fn is_empty(&self) -> bool {
         *self == Self::default()
     }
-    pub(crate) fn union(self, other: Self) -> Self {
+    pub(crate) fn union_prefer_right(self, other: Self) -> Self {
         Self {
             bold: self.is_bold() || other.is_bold(),
-            underline: self.is_underline() || other.is_underline(),
+            underline_style: self
+                .underline_style
+                .union_prefer_right(other.underline_style),
             italics: self.is_italics() || other.is_italics(),
             dim: self.is_dim() || other.is_dim(),
             reverse: self.is_reverse() || other.is_reverse(),
         }
     }
-    pub(crate) fn difference(self, other: Self) -> Self {
+    pub(crate) fn difference_prefer_empty(self, other: Self) -> Self {
         Self {
             bold: self.is_bold() && !other.is_bold(),
-            underline: self.is_underline() && !other.is_underline(),
+            underline_style: self
+                .underline_style
+                .difference_prefer_empty(other.underline_style),
             italics: self.is_italics() && !other.is_italics(),
             dim: self.is_dim() && !other.is_dim(),
             reverse: self.is_reverse() && !other.is_reverse(),
@@ -49,14 +77,14 @@ impl TextStyling {
         self.bold
     }
 
-    /// Returns whether the text face is underlined.
-    pub const fn is_underline(self) -> bool {
-        self.underline
+    #[cfg(test)]
+    pub const fn underline_style(self) -> Option<UnderlineStyle> {
+        self.underline_style
     }
 
-    /// Set whether the text face is underline.
-    pub fn inject_underline(&mut self, underline: bool) {
-        self.underline = underline;
+    /// Set the given underline style.
+    pub fn inject_underline(&mut self, underline: UnderlineStyle) {
+        self.underline_style = Some(underline);
     }
 
     /// Returns whether the text face is italics.
@@ -116,6 +144,7 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
         TextFaceArgsAndOptionsResult::Ok(parsed_text_faces) => parsed_text_faces,
         TextFaceArgsAndOptionsResult::PrintHelp
         | TextFaceArgsAndOptionsResult::InvalidArgs
+        | TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(_)
         | TextFaceArgsAndOptionsResult::UnknownOption(_) => unreachable!(),
     };
     assert!(!print_color_mode);
@@ -142,6 +171,7 @@ pub(crate) enum TextFaceArgsAndOptionsResult<'a> {
     Ok(TextFaceArgsAndOptions<'a>),
     PrintHelp,
     InvalidArgs,
+    InvalidUnderlineStyle(&'a wstr),
     UnknownOption(usize),
 }
 
@@ -150,12 +180,12 @@ pub(crate) fn parse_text_face_and_options<'a>(
     is_builtin: bool,
 ) -> TextFaceArgsAndOptionsResult<'a> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
-    let short_options = L!(":b:oidruch");
+    let short_options = L!(":b:oidru::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
         wopt(L!("bold"), ArgType::NoArgument, 'o'),
-        wopt(L!("underline"), ArgType::NoArgument, 'u'),
+        wopt(L!("underline"), ArgType::OptionalArgument, 'u'),
         wopt(L!("italics"), ArgType::NoArgument, 'i'),
         wopt(L!("dim"), ArgType::NoArgument, 'd'),
         wopt(L!("reverse"), ArgType::NoArgument, 'r'),
@@ -184,7 +214,16 @@ pub(crate) fn parse_text_face_and_options<'a>(
             'i' => style.italics = true,
             'd' => style.dim = true,
             'r' => style.reverse = true,
-            'u' => style.underline = true,
+            'u' => {
+                let arg = w.woptarg.unwrap_or(L!("single"));
+                if arg == "single" {
+                    style.underline_style = Some(UnderlineStyle::Single);
+                } else if arg == "curly" {
+                    style.underline_style = Some(UnderlineStyle::Curly);
+                } else if is_builtin {
+                    return TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(arg);
+                }
+            }
             'c' => print_color_mode = true,
             ':' => {
                 if is_builtin {

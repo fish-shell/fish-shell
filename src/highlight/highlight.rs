@@ -28,7 +28,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{parse_text_face, TextFace};
+use crate::text_face::{parse_text_face, TextFace, UnderlineStyle};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -168,12 +168,12 @@ impl HighlightColorResolver {
                 if !valid_path_face.fg.is_normal() {
                     face.fg = valid_path_face.fg;
                 }
-                face.style = face.style.union(valid_path_face.style);
+                face.style = face.style.union_prefer_right(valid_path_face.style);
             }
         }
 
         if highlight.force_underline {
-            face.style.inject_underline(true);
+            face.style.inject_underline(UnderlineStyle::Single);
         }
 
         face

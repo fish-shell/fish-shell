@@ -120,6 +120,10 @@ Optional Commands
      - smul
      - Enter underline mode.
      -
+   * - ``\e[4:3m``
+     - Su
+     - Enter curly underline mode.
+     - kitty
    * - ``\e[7m``
      - rev
      - Enter reverse video mode (swap foreground and background colors).

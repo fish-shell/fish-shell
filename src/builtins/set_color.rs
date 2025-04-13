@@ -112,6 +112,10 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     let mut outp = Outputter::new_buffering();
     outp.set_text_face(TextFace::new(Color::None, Color::None, style));
+
+    // Here's some automagic behavior: if either of foreground or background are "normal",
+    // reset all colors/attributes. Same if foreground is "reset" (undocumented).
+    // Note that either overwrite the attributes printed above! For "normal", this is probably wrong?
     if bg.is_normal() {
         outp.reset_text_face(false);
     }

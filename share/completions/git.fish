@@ -96,7 +96,9 @@ function __fish_git_refs
 end
 
 function __fish_git_remotes
-    __fish_git remote 2>/dev/null
+    # Example of output parsed:
+    # "remote.upstream.url git@github.com:fish-shell/fish-shell.git" -> "upstream\tgit@github.com:fish-shell/fish-shell.git"
+    __fish_git config --get-regexp 'remote\.[a-z]+\.url' | string replace -rf 'remote\.(.*)\.url (.*)' '$1\t$2'
 end
 
 function __fish_git_files

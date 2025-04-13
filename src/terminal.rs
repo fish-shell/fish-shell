@@ -579,20 +579,21 @@ impl Outputter {
             }
         }
 
-        if self.last_fg != fg {
+        if !fg.is_none() && self.last_fg != fg {
             if fg.is_normal() {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
                 self.last_bg = Color::NORMAL;
                 self.reset_modes();
-            } else if !fg.is_special() {
+            } else {
+                assert!(!fg.is_special());
                 self.write_color(fg, true /* foreground */);
             }
+            self.last_fg = fg;
         }
-        self.last_fg = fg;
 
-        if self.last_bg != bg {
+        if !bg.is_none() && self.last_bg != bg {
             if bg.is_normal() {
                 write_background_color(self, 0);
 
@@ -601,11 +602,11 @@ impl Outputter {
                     self.write_color(self.last_fg, true /* foreground */);
                 }
                 self.reset_modes();
-                self.last_bg = bg;
-            } else if !bg.is_special() {
+            } else {
+                assert!(!bg.is_special());
                 self.write_color(bg, false /* not foreground */);
-                self.last_bg = bg;
             }
+            self.last_bg = bg;
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.

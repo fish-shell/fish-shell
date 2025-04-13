@@ -185,8 +185,6 @@ impl HighlightColorResolver {
 }
 
 /// Return the internal color code representing the specified color.
-/// TODO: This code should be refactored to enable sharing with builtin_set_color.
-///       In particular, the argument parsing still isn't fully capable.
 pub(crate) fn parse_text_face_for_highlight(
     fg_var: Option<&EnvVar>,
     bg_var: Option<&EnvVar>,
@@ -195,10 +193,8 @@ pub(crate) fn parse_text_face_for_highlight(
         let Some(var) = maybe_var else {
             return (Color::Normal, TextStyling::empty());
         };
-        let (mut color, style) = parse_text_face(var.as_list(), is_background);
-        if color.is_none() {
-            color = Color::Normal;
-        }
+        let (color, style) = parse_text_face(var.as_list(), is_background);
+        let color = color.unwrap_or(Color::Normal);
         (color, style)
     };
     let (fg, fg_style) = parse_var(fg_var, false);

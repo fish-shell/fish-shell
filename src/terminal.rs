@@ -729,34 +729,30 @@ impl<'a> Output for BufferedOutputter<'a> {
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
-pub fn best_color(candidates: &[Color], support: ColorSupport) -> Color {
-    if candidates.is_empty() {
-        return Color::None;
-    }
-
-    let mut first_rgb = Color::None;
-    let mut first_named = Color::None;
+pub fn best_color(candidates: impl Iterator<Item = Color>, support: ColorSupport) -> Option<Color> {
+    let mut first = None;
+    let mut first_rgb = None;
+    let mut first_named = None;
     for color in candidates {
+        if first.is_none() {
+            first = Some(color);
+        }
         if first_rgb.is_none() && color.is_rgb() {
-            first_rgb = *color;
+            first_rgb = Some(color);
         }
         if first_named.is_none() && color.is_named() {
-            first_named = *color;
+            first_named = Some(color);
         }
     }
 
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
-    let mut result;
     let has_term256 = support.contains(ColorSupport::TERM_256COLOR);
-    if (!first_rgb.is_none() && has_term256) || first_named.is_none() {
-        result = first_rgb;
+    (if (first_rgb.is_some() && has_term256) || first_named.is_none() {
+        first_rgb
     } else {
-        result = first_named;
-    }
-    if result.is_none() {
-        result = candidates[0];
-    }
-    result
+        first_named
+    })
+    .or(first)
 }
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].

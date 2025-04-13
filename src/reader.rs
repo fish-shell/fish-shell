@@ -4588,7 +4588,7 @@ impl<'a> Reader<'a> {
                     join_strings(&self.exec_prompt_cmd(prompt_cmd, final_prompt), '\n');
 
                 if final_prompt {
-                    self.screen.reset_line(true)
+                    self.screen.multiline_prompt_hack();
                 }
             }
 

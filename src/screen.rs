@@ -528,6 +528,18 @@ impl Screen {
         self.save_status();
     }
 
+    pub fn multiline_prompt_hack(&mut self) {
+        // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
+        // by lying to ourselves and claiming that we're really below what we consider "line 0"
+        // (which is the last line of the prompt). This will cause us to move up to try to get back
+        // to line 0, but really we're getting back to the initial line of the prompt.
+        let prompt_line_count = self
+            .actual_left_prompt
+            .as_ref()
+            .map_or(1, |p| calc_prompt_lines(p));
+        self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
+    }
+
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// optionally repainting the prompt as well.
     /// This function assumes that the current line is still valid.
@@ -539,15 +551,7 @@ impl Screen {
             std::cmp::max(self.actual_lines_before_reset, self.actual.line_count());
 
         if repaint_prompt {
-            // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
-            // by lying to ourselves and claiming that we're really below what we consider "line 0"
-            // (which is the last line of the prompt). This will cause us to move up to try to get back
-            // to line 0, but really we're getting back to the initial line of the prompt.
-            let prompt_line_count = self
-                .actual_left_prompt
-                .as_ref()
-                .map_or(1, |p| calc_prompt_lines(p));
-            self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
+            self.multiline_prompt_hack();
             self.actual_left_prompt = None;
             self.need_clear_screen = true;
         }

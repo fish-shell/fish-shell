@@ -124,6 +124,7 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument
 complete -c set -n '__fish_set_is_color true false' -x -a '(set_color --print-colors)' -d 'text color'
 complete -c set -n '__fish_set_is_color false true' -a '--background=(set_color --print-colors)'
 complete -c set -n '__fish_set_is_color true false' -a --bold -x
+complete -c set -n '__fish_set_is_color true false' -a --curly-underline -x
 complete -c set -n '__fish_set_is_color true false' -a --dim -x
 complete -c set -n '__fish_set_is_color true false' -a --italics -x
 complete -c set -n '__fish_set_is_color true true' -a --reverse -x

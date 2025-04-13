@@ -227,7 +227,12 @@ def parse_color(color_str):
     comps = color_str.split(" ")
     color = ""
     background_color = ""
-    bold, underline, italics, dim, reverse = False, False, False, False, False
+    bold = False
+    underline = False
+    italics = False
+    dim = False
+    reverse = False
+    curly_underline = False
     for comp in comps:
         # Remove quotes
         comp = comp.strip("'\" ")
@@ -241,6 +246,8 @@ def parse_color(color_str):
             dim = True
         elif comp == "--reverse" or comp == "-r":
             reverse = True
+        elif comp == "--curly-underline":
+            curly_underline = True
         elif comp.startswith("--background"):
             # Background color
             c = comp[len("--background=") :]
@@ -292,6 +299,8 @@ def unparse_color(col):
         ret += " --dim"
     if col["reverse"]:
         ret += " --reverse"
+    if col["curly-underline"]:
+        ret += " --curly-underline"
     if col["background"]:
         ret += " --background=" + col["background"]
     return ret

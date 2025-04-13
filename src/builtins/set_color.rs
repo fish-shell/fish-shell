@@ -111,7 +111,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // #1323: We may have multiple foreground colors. Choose the best one.
     let fg = best_color(fgcolors.into_iter(), get_color_support());
 
-    let outp = &mut Outputter::new_buffering();
+    let mut outp = Outputter::new_buffering();
     outp.set_text_face(TextFace::new(Color::None, Color::None, style));
     if bgcolor.is_some() && bg.is_normal() {
         outp.write_command(ExitAttributeMode);

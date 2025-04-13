@@ -113,7 +113,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     let mut outp = Outputter::new_buffering();
     outp.set_text_face(TextFace::new(Color::None, Color::None, style));
-    if bgcolor.is_some() && bg.is_normal() {
+    if bg.is_normal() {
         outp.write_command(ExitAttributeMode);
     }
 

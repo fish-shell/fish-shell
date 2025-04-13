@@ -6,7 +6,7 @@ fish_color_command 009999
 fish_color_quote 5CCCCC
 fish_color_redirection BF7130
 fish_color_end FFB273
-fish_color_error FF7400
+fish_color_error FF7400 --curly-underline
 fish_color_param 33CCCC
 fish_color_comment FF9640
 fish_color_match --background=brblue

@@ -7,7 +7,7 @@ fish_color_command a1b56c
 fish_color_quote f7ca88
 fish_color_redirection d8d8d8
 fish_color_end ba8baf
-fish_color_error ab4642
+fish_color_error ab4642 --curly-underline
 fish_color_param d8d8d8
 fish_color_comment f7ca88
 fish_color_match 7cafc2

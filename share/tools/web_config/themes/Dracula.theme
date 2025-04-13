@@ -18,7 +18,7 @@ fish_color_command 8be9fd
 fish_color_quote f1fa8c
 fish_color_redirection f8f8f2
 fish_color_end ffb86c
-fish_color_error ff5555
+fish_color_error ff5555 --curly-underline
 fish_color_param bd93f9
 fish_color_comment 6272a4
 fish_color_match --background=brblue

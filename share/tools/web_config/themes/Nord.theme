@@ -9,7 +9,7 @@ fish_color_keyword 81a1c1
 fish_color_quote a3be8c
 fish_color_redirection b48ead --bold
 fish_color_end 81a1c1
-fish_color_error bf616a
+fish_color_error bf616a --curly-underline
 fish_color_param d8dee9
 fish_color_valid_path --underline
 fish_color_option 8fbcbb

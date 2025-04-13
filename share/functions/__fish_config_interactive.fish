@@ -40,7 +40,7 @@ end" >$__fish_config_dir/config.fish
         __init_uvar fish_color_param cyan
         __init_uvar fish_color_redirection cyan --bold
         __init_uvar fish_color_comment red
-        __init_uvar fish_color_error brred
+        __init_uvar fish_color_error brred --curly-underline
         __init_uvar fish_color_escape brcyan
         __init_uvar fish_color_operator brcyan
         __init_uvar fish_color_end green

@@ -8,7 +8,7 @@ fish_color_command normal
 fish_color_quote yellow
 fish_color_redirection cyan --bold
 fish_color_end green
-fish_color_error brred
+fish_color_error brred --curly-underline
 fish_color_param cyan
 fish_color_comment red
 fish_color_match --background=brblue

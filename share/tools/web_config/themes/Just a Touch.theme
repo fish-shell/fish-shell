@@ -6,7 +6,7 @@ fish_color_command F4F4F4
 fish_color_quote 666A80
 fish_color_redirection FAFAFA
 fish_color_end 969696
-fish_color_error FFA779
+fish_color_error FFA779 --curly-underline
 fish_color_param A0A0F0
 fish_color_comment B0B0B0
 fish_color_match --background=brblue

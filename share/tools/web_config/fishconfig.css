@@ -153,6 +153,7 @@ body {
 }
 .detail_function .fish_color_error {
     color: #ff0000;
+    text-decoration-style: wavy;
 }
 .detail_function .fish_color_escape {
     color: #00a6b2;

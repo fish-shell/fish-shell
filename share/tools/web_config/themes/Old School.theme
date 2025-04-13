@@ -6,7 +6,7 @@ fish_color_command 00FF00
 fish_color_quote 44FF44
 fish_color_redirection 7BFF7B
 fish_color_end FF7B7B
-fish_color_error A40000
+fish_color_error A40000 --curly-underline
 fish_color_param 30BE30
 fish_color_comment 30BE30
 fish_color_match --background=brblue

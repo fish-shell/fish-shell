@@ -1,6 +1,8 @@
 use bitflags::bitflags;
 
 use crate::color::Color;
+use crate::terminal::{best_color, get_color_support};
+use crate::wchar::prelude::*;
 
 bitflags! {
     #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
@@ -83,4 +85,58 @@ impl TextFace {
     pub fn set_reverse(&mut self, reverse: bool) {
         self.style.set(TextStyling::REVERSE, reverse)
     }
+}
+
+pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Color, TextStyling) {
+    let mut style = TextStyling::empty();
+    let mut candidates: Vec<Color> = Vec::new();
+
+    let prefix = L!("--background=");
+
+    let mut next_is_background = false;
+    for arg in arguments {
+        let mut color_name = None;
+        #[allow(clippy::collapsible_else_if)]
+        if is_background {
+            if next_is_background {
+                color_name = Some(arg.as_utfstr());
+                next_is_background = false;
+            } else if arg.starts_with(prefix) {
+                // Look for something like "--background=red".
+                color_name = Some(arg.slice_from(prefix.char_count()));
+            } else if arg == "--background" || arg == "-b" {
+                // Without argument attached the next token is the color
+                // - if it's another option it's an error.
+                next_is_background = true;
+            } else if arg == "--reverse" || arg == "-r" {
+                // Reverse should be meaningful in either context
+                style |= TextStyling::REVERSE;
+            } else if arg.starts_with("-b") {
+                // Look for something like "-bred".
+                // Yes, that length is hardcoded.
+                color_name = Some(arg.slice_from(2));
+            }
+        } else {
+            if arg == "--bold" || arg == "-o" {
+                style |= TextStyling::BOLD;
+            } else if arg == "--underline" || arg == "-u" {
+                style |= TextStyling::UNDERLINE;
+            } else if arg == "--italics" || arg == "-i" {
+                style |= TextStyling::ITALICS;
+            } else if arg == "--dim" || arg == "-d" {
+                style |= TextStyling::DIM;
+            } else if arg == "--reverse" || arg == "-r" {
+                style |= TextStyling::REVERSE;
+            } else {
+                color_name = Some(arg.as_utfstr());
+            }
+        }
+
+        if let Some(color) = color_name.and_then(Color::from_wstr) {
+            candidates.push(color);
+        }
+    }
+
+    let color = best_color(&candidates, get_color_support());
+    (color, style)
 }

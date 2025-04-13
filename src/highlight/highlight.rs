@@ -27,8 +27,8 @@ use crate::parse_util::{
     parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
-use crate::terminal::{parse_text_face, Outputter};
-use crate::text_face::{TextFace, TextStyling};
+use crate::terminal::Outputter;
+use crate::text_face::{parse_text_face, TextFace, TextStyling};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -195,7 +195,7 @@ pub(crate) fn parse_text_face_for_highlight(
         let Some(var) = maybe_var else {
             return (Color::Normal, TextStyling::empty());
         };
-        let (mut color, style) = parse_text_face(var, is_background);
+        let (mut color, style) = parse_text_face(var.as_list(), is_background);
         if color.is_none() {
             color = Color::Normal;
         }

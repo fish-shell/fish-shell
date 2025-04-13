@@ -410,7 +410,6 @@ pub trait Leaf: Node {
     fn has_source(&self) -> bool {
         self.range().is_some()
     }
-    fn leaf_as_node(&self) -> &dyn Node;
 }
 
 // A token node is a node which contains a token, which must be one of a fixed set.
@@ -512,9 +511,6 @@ macro_rules! implement_leaf {
             }
             fn range_mut(&mut self) -> &mut Option<SourceRange> {
                 &mut self.range
-            }
-            fn leaf_as_node(&self) -> &dyn Node {
-                self
             }
         }
         impl Acceptor for $name {

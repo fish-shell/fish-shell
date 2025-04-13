@@ -2,7 +2,7 @@
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, Leaf, List, Node, NodeVisitor, Redirection, Token, Type,
+    DecoratedStatement, Keyword, List, Node, NodeVisitor, Redirection, Token, Type,
     VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
@@ -864,7 +864,7 @@ impl<'s> Highlighter<'s> {
             | ParseKeyword::Time => role = HighlightRole::operat,
             ParseKeyword::None => (),
         };
-        self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(node.as_node(), HighlightSpec::with_fg(role));
     }
     fn visit_token(&mut self, tok: &dyn Token) {
         let mut role = HighlightRole::normal;
@@ -884,7 +884,7 @@ impl<'s> Highlighter<'s> {
             }
             _ => (),
         }
-        self.color_node(tok.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(tok.as_node(), HighlightSpec::with_fg(role));
     }
     // Visit an argument, perhaps knowing that our command is cd.
     fn visit_argument(&mut self, arg: &Argument, cmd_is_cd: bool, options_allowed: bool) {
@@ -943,7 +943,7 @@ impl<'s> Highlighter<'s> {
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
         if has_cmdsub(&target) {
-            self.color_as_argument(redir.target.leaf_as_node(), true);
+            self.color_as_argument(redir.target.as_node(), true);
             return;
         }
         // No command substitution, so we can highlight the target file or fd. For example,
@@ -959,7 +959,7 @@ impl<'s> Highlighter<'s> {
             self.file_tester.test_redirection_target(&target, oper.mode)
         };
         self.color_node(
-            redir.target.leaf_as_node(),
+            redir.target.as_node(),
             HighlightSpec::with_fg(if target_is_valid {
                 HighlightRole::redirection
             } else {

@@ -145,13 +145,49 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
         std::mem::size_of_val(self)
     }
 
-    // The address of the object, for comparison.
-    fn as_ptr(&self) -> *const ();
-
-    fn pointer_eq(&self, rhs: &dyn Node) -> bool {
-        std::ptr::eq(self.as_ptr(), rhs.as_ptr())
-    }
+    /// Convert to the dynamic Node type.
     fn as_node(&self) -> &dyn Node;
+}
+
+/// Return true if two nodes are the same object.
+#[inline(always)]
+pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
+    // There are two subtleties here:
+    //
+    // 1. Two &dyn Node may reference the same underlying object
+    //    with different vtables - for example if one is a &dyn Node
+    //    and the other is a &dyn NodeMut.
+    //
+    // 2. Two &dyn Node may reference different underlying objects
+    //    with the same base pointer - for example if a Node is a
+    //    the first field in another Node.
+    //
+    // Therefore we make the following assumptions, which seem sound enough:
+    //   1. If two nodes have different base pointers, they reference different objects
+    //      (though NOT true in C++).
+    //   2. If two nodes have the same base pointer and same vtable, they reference
+    //      the same object.
+    //   3. If two nodes have the same base pointer but different vtables, they are the same iff
+    //      their types are equal: a Node cannot have a Node of the same type at the same address
+    //      (unless it's a ZST, which does not apply here).
+    //
+    // Note this is performance-sensitive.
+
+    // Different base pointers => not the same.
+    let lptr = lhs as *const dyn Node as *const ();
+    let rptr = rhs as *const dyn Node as *const ();
+    if !std::ptr::eq(lptr, rptr) {
+        return false;
+    }
+
+    // Same base pointer and same vtable => same object.
+    if std::ptr::eq(lhs, rhs) {
+        return true;
+    }
+
+    // Same base pointer, but different vtables.
+    // Compare the types.
+    lhs.typ() == rhs.typ()
 }
 
 /// NodeMut is a mutable node.
@@ -490,9 +526,6 @@ macro_rules! implement_node {
                 } else {
                     Some(visitor.total)
                 }
-            }
-            fn as_ptr(&self) -> *const () {
-                (self as *const $name).cast()
             }
             fn as_node(&self) -> &dyn Node {
                 self

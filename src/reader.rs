@@ -42,7 +42,7 @@ use std::time::{Duration, Instant};
 use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{self, Ast, Category, Traversal};
+use crate::ast::{self, is_same_node, Ast, Category, Traversal};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
@@ -5357,7 +5357,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         let mut cursor = Some(node);
         while let Some(cur) = cursor {
             if let Some(stmt) = cur.as_decorated_statement() {
-                if node.pointer_eq(&stmt.command) {
+                if is_same_node(node, &stmt.command) {
                     return true;
                 }
             }

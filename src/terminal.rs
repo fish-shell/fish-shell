@@ -2,11 +2,10 @@
 use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
-use crate::env::EnvVar;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{TextFace, TextStyling};
+use crate::text_face::TextFace;
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
@@ -758,60 +757,6 @@ pub fn best_color(candidates: &[Color], support: ColorSupport) -> Color {
         result = candidates[0];
     }
     result
-}
-
-pub fn parse_text_face(var: &EnvVar, is_background: bool) -> (Color, TextStyling) {
-    let mut style = TextStyling::empty();
-    let mut candidates: Vec<Color> = Vec::new();
-
-    let prefix = L!("--background=");
-
-    let mut next_is_background = false;
-    for next in var.as_list() {
-        let mut color_name = None;
-        #[allow(clippy::collapsible_else_if)]
-        if is_background {
-            if next_is_background {
-                color_name = Some(next.as_utfstr());
-                next_is_background = false;
-            } else if next.starts_with(prefix) {
-                // Look for something like "--background=red".
-                color_name = Some(next.slice_from(prefix.char_count()));
-            } else if next == "--background" || next == "-b" {
-                // Without argument attached the next token is the color
-                // - if it's another option it's an error.
-                next_is_background = true;
-            } else if next == "--reverse" || next == "-r" {
-                // Reverse should be meaningful in either context
-                style |= TextStyling::REVERSE;
-            } else if next.starts_with("-b") {
-                // Look for something like "-bred".
-                // Yes, that length is hardcoded.
-                color_name = Some(next.slice_from(2));
-            }
-        } else {
-            if next == "--bold" || next == "-o" {
-                style |= TextStyling::BOLD;
-            } else if next == "--underline" || next == "-u" {
-                style |= TextStyling::UNDERLINE;
-            } else if next == "--italics" || next == "-i" {
-                style |= TextStyling::ITALICS;
-            } else if next == "--dim" || next == "-d" {
-                style |= TextStyling::DIM;
-            } else if next == "--reverse" || next == "-r" {
-                style |= TextStyling::REVERSE;
-            } else {
-                color_name = Some(next.as_utfstr());
-            }
-        }
-
-        if let Some(color) = color_name.and_then(Color::from_wstr) {
-            candidates.push(color);
-        }
-    }
-
-    let color = best_color(&candidates, get_color_support());
-    (color, style)
 }
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].

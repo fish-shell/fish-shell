@@ -123,7 +123,6 @@ use crate::signal::{
     signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
     signal_set_handlers_once,
 };
-use crate::terminal::parse_text_face;
 use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
@@ -143,6 +142,7 @@ use crate::terminal::{
     SYNCHRONIZED_OUTPUT_SUPPORTED,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
+use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
 use crate::threads::{
     assert_is_background_thread, assert_is_main_thread, iothread_service_main_with_timeout,
@@ -1661,7 +1661,7 @@ impl<'a> Reader<'a> {
                 .vars()
                 .get_unless_empty(L!("fish_color_search_match"))
                 .is_some_and(|var| {
-                    let (color, _flags) = parse_text_face(&var, false);
+                    let (color, _flags) = parse_text_face(var.as_list(), false);
                     !color.is_none()
                 });
 

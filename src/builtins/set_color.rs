@@ -90,18 +90,12 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         })
     };
 
-    let mut bg = Color::None;
-    if let Some(bgcolor) = bgcolor {
-        bg = parse_color(bgcolor)?;
-    }
+    let bg = match bgcolor {
+        Some(s) => parse_color(s)?,
+        None => Color::None,
+    };
 
     if print_color_mode {
-        // Hack: Explicitly setting a background of "normal" crashes
-        // for --print-colors. Because it's not interesting in terms of display,
-        // just skip it.
-        if bgcolor.is_some() && bg.is_special() {
-            bg = Color::None;
-        }
         let args = &argv[wopt_index..argc];
         print_colors(streams, args, style, bg);
         return Ok(SUCCESS);

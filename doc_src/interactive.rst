@@ -89,7 +89,13 @@ Or, to see all themes, right in your terminal::
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command.
+The modifier switches accepted by ``set_color`` like
+``--bold``,
+``--dim``,
+``--italics``,
+``--reverse`` and
+``--underline`` are also accepted.
 
 
 Example: to make errors highlighted and red, use::

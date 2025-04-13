@@ -227,7 +227,11 @@ def parse_color(color_str):
     comps = color_str.split(" ")
     color = ""
     background_color = ""
-    bold, underline, italics, dim, reverse = False, False, False, False, False
+    bold = False
+    underline = False
+    italics = False
+    dim = False
+    reverse = False
     i = 0
     while i < len(comps):
         comp = comps[i]

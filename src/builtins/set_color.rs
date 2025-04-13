@@ -127,8 +127,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
     while wopt_index < argc {
-        let fg = Color::from_wstr(argv[wopt_index]).unwrap_or(Color::None);
-        if fg.is_none() {
+        let Some(fg) = Color::from_wstr(argv[wopt_index]) else {
             streams.err.append(wgettext_fmt!(
                 "%ls: Unknown color '%ls'\n",
                 argv[0],

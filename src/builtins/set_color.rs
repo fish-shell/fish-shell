@@ -3,8 +3,7 @@
 use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
-use crate::terminal::TerminalCommand::ExitAttributeMode;
-use crate::terminal::{best_color, get_color_support, Output, Outputter};
+use crate::terminal::{best_color, get_color_support, Outputter};
 use crate::text_face::{
     parse_text_face_and_options, TextFace, TextFaceArgsAndOptions, TextFaceArgsAndOptionsResult,
     TextStyling,
@@ -114,12 +113,12 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let mut outp = Outputter::new_buffering();
     outp.set_text_face(TextFace::new(Color::None, Color::None, style));
     if bg.is_normal() {
-        outp.write_command(ExitAttributeMode);
+        outp.reset_text_face(false);
     }
 
     if let Some(fg) = fg {
         if fg.is_normal() || fg.is_reset() {
-            outp.write_command(ExitAttributeMode);
+            outp.reset_text_face(false);
         } else if !outp.write_color(fg, true /* is_fg */) {
             // We need to do *something* or the lack of any output messes up
             // when the cartesian product here would make "foo" disappear:

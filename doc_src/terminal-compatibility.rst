@@ -102,7 +102,7 @@ Optional Commands
 
    * - ``\e[m``
      - sgr0
-     - Turn off bold/dim/italic/underline/reverse attribute modes.
+     - Turn off bold/dim/italic/underline/reverse attribute modes and select default colors.
      -
    * - ``\e[1m``
      - bold

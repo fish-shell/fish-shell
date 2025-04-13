@@ -492,6 +492,19 @@ impl Outputter {
         self.write_command(TerminalCommand::SelectRgbColor(is_fg, color.to_color24()))
     }
 
+    pub(crate) fn reset_color(&mut self, weird_workaround: bool) {
+        if weird_workaround {
+            // If we exit attribute mode, we must first set a color, or previously colored text might
+            // lose its color. Terminals are weird...
+            write_foreground_color(self, 0);
+        }
+        use TerminalCommand::ExitAttributeMode;
+        self.write_command(ExitAttributeMode);
+        self.last_fg = Color::NORMAL;
+        self.last_bg = Color::NORMAL;
+        self.reset_modes();
+    }
+
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
     /// as the previous, nothing will be written. Negative values for set_color will also be ignored.
     /// Since the command this function emits can potentially cause the screen to flicker, the
@@ -509,8 +522,7 @@ impl Outputter {
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
     #[allow(clippy::if_same_then_else)]
-    pub fn set_color(&mut self, mut fg: Color, mut bg: Color) {
-        const normal: Color = Color::NORMAL;
+    pub fn set_color(&mut self, mut fg: Color, bg: Color) {
         let mut bg_set = false;
         let mut last_bg_set = false;
         let is_bold = fg.is_bold() || bg.is_bold();
@@ -520,16 +532,7 @@ impl Outputter {
         let is_reverse = fg.is_reverse() || bg.is_reverse();
 
         if fg.is_reset() || bg.is_reset() {
-            #[allow(unused_assignments)]
-            {
-                fg = normal;
-                bg = normal;
-            }
-            self.reset_modes();
-            // If we exit attribute mode, we must first set a color, or previously colored text might
-            // lose its color. Terminals are weird...
-            write_foreground_color(self, 0);
-            self.write_command(ExitAttributeMode);
+            self.reset_color(true);
             return;
         }
         use TerminalCommand::{
@@ -541,10 +544,7 @@ impl Outputter {
             || (self.was_reverse && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            self.write_command(ExitAttributeMode);
-            self.last_fg = normal;
-            self.last_bg = normal;
-            self.reset_modes();
+            self.reset_color(false);
         }
         if !self.last_bg.is_special() {
             // Background was set.
@@ -571,12 +571,7 @@ impl Outputter {
         }
         if !bg_set && last_bg_set {
             // Background color changed and is no longer set, so we exit bold mode.
-            self.write_command(ExitAttributeMode);
-            self.reset_modes();
-            // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-            if write_foreground_color(self, 0) {
-                self.last_fg = Color::BLACK;
-            }
+            self.reset_color(false);
         }
 
         if !fg.is_none() && self.last_fg != fg {

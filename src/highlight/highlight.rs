@@ -158,26 +158,12 @@ impl HighlightColorResolver {
                 if !valid_path_face.fg.is_normal() {
                     result.fg = valid_path_face.fg;
                 }
-                if valid_path_face.is_bold() {
-                    result.set_bold(true);
-                }
-                if valid_path_face.is_underline() {
-                    result.set_underline(true);
-                }
-                if valid_path_face.is_italics() {
-                    result.set_italics(true);
-                }
-                if valid_path_face.is_dim() {
-                    result.set_dim(true);
-                }
-                if valid_path_face.is_reverse() {
-                    result.set_reverse(true);
-                }
+                result.style |= valid_path_face.style;
             }
         }
 
         if highlight.force_underline {
-            result.set_underline(true);
+            result.inject_underline(true);
         }
 
         result

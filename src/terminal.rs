@@ -421,10 +421,10 @@ pub struct Outputter {
     fd: RawFd,
 
     /// Foreground.
-    last_color: Color,
+    last_fg: Color,
 
     /// Background.
-    last_color2: Color,
+    last_bg: Color,
 
     was_bold: bool,
     was_underline: bool,
@@ -441,8 +441,8 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last_color: Color::NORMAL,
-            last_color2: Color::NORMAL,
+            last_fg: Color::NORMAL,
+            last_bg: Color::NORMAL,
             was_bold: false,
             was_underline: false,
             was_italics: false,
@@ -542,11 +542,11 @@ impl Outputter {
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
             self.write_command(ExitAttributeMode);
-            self.last_color = normal;
-            self.last_color2 = normal;
+            self.last_fg = normal;
+            self.last_bg = normal;
             self.reset_modes();
         }
-        if !self.last_color2.is_special() {
+        if !self.last_bg.is_special() {
             // Background was set.
             // "Special" here refers to the special "normal", "reset" and "none" colors,
             // that really just disable the background.
@@ -575,36 +575,36 @@ impl Outputter {
             self.reset_modes();
             // We don't know if exit_attribute_mode resets colors, so we set it to something known.
             if write_foreground_color(self, 0) {
-                self.last_color = Color::BLACK;
+                self.last_fg = Color::BLACK;
             }
         }
 
-        if self.last_color != fg {
+        if self.last_fg != fg {
             if fg.is_normal() {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
-                self.last_color2 = Color::NORMAL;
+                self.last_bg = Color::NORMAL;
                 self.reset_modes();
             } else if !fg.is_special() {
                 self.write_color(fg, true /* foreground */);
             }
         }
-        self.last_color = fg;
+        self.last_fg = fg;
 
-        if self.last_color2 != bg {
+        if self.last_bg != bg {
             if bg.is_normal() {
                 write_background_color(self, 0);
 
                 self.write_command(ExitAttributeMode);
-                if !self.last_color.is_normal() {
-                    self.write_color(self.last_color, true /* foreground */);
+                if !self.last_fg.is_normal() {
+                    self.write_color(self.last_fg, true /* foreground */);
                 }
                 self.reset_modes();
-                self.last_color2 = bg;
+                self.last_bg = bg;
             } else if !bg.is_special() {
                 self.write_color(bg, false /* not foreground */);
-                self.last_color2 = bg;
+                self.last_bg = bg;
             }
         }
 

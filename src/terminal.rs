@@ -5,7 +5,7 @@ use crate::common::{self, escape_string, wcs2string, wcs2string_appending, Escap
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::TextFace;
+use crate::text_face::{TextFace, TextStyling};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
@@ -414,17 +414,10 @@ pub struct Outputter {
     /// fd to output to, or -1 for none.
     fd: RawFd,
 
-    /// Foreground.
-    last_fg: Color,
-
-    /// Background.
-    last_bg: Color,
-
-    was_bold: bool,
-    was_underline: bool,
-    was_italics: bool,
-    was_dim: bool,
-    was_reverse: bool,
+    /// Assume this corresponds to the current state of the terminal.
+    /// This assumption holds if we start from the default state. Currently, builtin set_color
+    /// should be the only exception.
+    last: TextFace,
 }
 
 impl Outputter {
@@ -435,27 +428,13 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last_fg: Color::Normal,
-            last_bg: Color::Normal,
-            was_bold: false,
-            was_underline: false,
-            was_italics: false,
-            was_dim: false,
-            was_reverse: false,
+            last: TextFace::default(),
         }
     }
 
     /// Construct an outputter which outputs to its string buffer.
     pub fn new_buffering() -> Self {
         Self::new_from_fd(-1)
-    }
-
-    fn reset_modes(&mut self) {
-        self.was_bold = false;
-        self.was_underline = false;
-        self.was_italics = false;
-        self.was_dim = false;
-        self.was_reverse = false;
     }
 
     fn maybe_flush(&mut self) {
@@ -495,9 +474,7 @@ impl Outputter {
         }
         use TerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
-        self.last_fg = Color::Normal;
-        self.last_bg = Color::Normal;
-        self.reset_modes();
+        self.last = TextFace::default();
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
@@ -535,14 +512,14 @@ impl Outputter {
             EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
             EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
-        if (self.was_bold && !is_bold)
-            || (self.was_dim && !is_dim)
-            || (self.was_reverse && !is_reverse)
+        if (self.last.is_bold() && !is_bold)
+            || (self.last.is_dim() && !is_dim)
+            || (self.last.is_reverse() && !is_reverse)
         {
             // Only way to exit bold/dim/reverse mode is a reset of all attributes.
             self.reset_text_face(false);
         }
-        if !self.last_bg.is_special() {
+        if !self.last.bg.is_special() {
             // Background was set.
             // "Special" here refers to the special "normal", "reset" and "none" colors,
             // that really just disable the background.
@@ -570,61 +547,62 @@ impl Outputter {
             self.reset_text_face(false);
         }
 
-        if !fg.is_none() && self.last_fg != fg {
+        if !fg.is_none() && self.last.fg != fg {
             if fg.is_normal() {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
-                self.last_bg = Color::Normal;
-                self.reset_modes();
+                self.last.bg = Color::Normal;
+                self.last.style = TextStyling::empty();
             } else {
                 assert!(!fg.is_special());
                 self.write_color(fg, true /* foreground */);
             }
-            self.last_fg = fg;
+            self.last.fg = fg;
         }
 
-        if !bg.is_none() && self.last_bg != bg {
+        if !bg.is_none() && self.last.bg != bg {
             if bg.is_normal() {
                 write_background_color(self, 0);
 
                 self.write_command(ExitAttributeMode);
-                if !self.last_fg.is_normal() {
-                    self.write_color(self.last_fg, true /* foreground */);
+                if !self.last.fg.is_normal() {
+                    self.write_color(self.last.fg, true /* foreground */);
                 }
-                self.reset_modes();
+                self.last.style = TextStyling::empty();
             } else {
                 assert!(!bg.is_special());
                 self.write_color(bg, false /* not foreground */);
             }
-            self.last_bg = bg;
+            self.last.bg = bg;
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.was_bold && !bg_set && self.write_command(EnterBoldMode) {
-            self.was_bold = is_bold;
+        if is_bold && !self.last.is_bold() && !bg_set && self.write_command(EnterBoldMode) {
+            self.last.style.set(TextStyling::BOLD, is_bold);
         }
 
-        if !self.was_underline && is_underline && self.write_command(EnterUnderlineMode) {
-            self.was_underline = is_underline;
-        } else if self.was_underline && !is_underline && self.write_command(ExitUnderlineMode) {
-            self.was_underline = is_underline;
+        if !self.last.is_underline() && is_underline && self.write_command(EnterUnderlineMode) {
+            self.last.style.set(TextStyling::UNDERLINE, is_underline);
+        } else if self.last.is_underline() && !is_underline && self.write_command(ExitUnderlineMode)
+        {
+            self.last.style.set(TextStyling::UNDERLINE, is_underline);
         }
 
-        if self.was_italics && !is_italics && self.write_command(ExitItalicsMode) {
-            self.was_italics = is_italics;
-        } else if !self.was_italics && is_italics && self.write_command(EnterItalicsMode) {
-            self.was_italics = is_italics;
+        if self.last.is_italics() && !is_italics && self.write_command(ExitItalicsMode) {
+            self.last.style.set(TextStyling::ITALICS, is_italics);
+        } else if !self.last.is_italics() && is_italics && self.write_command(EnterItalicsMode) {
+            self.last.style.set(TextStyling::ITALICS, is_italics);
         }
 
-        if is_dim && !self.was_dim && self.write_command(EnterDimMode) {
-            self.was_dim = is_dim;
+        if is_dim && !self.last.is_dim() && self.write_command(EnterDimMode) {
+            self.last.style.set(TextStyling::DIM, is_dim);
         }
         // N.B. there is no exit_dim_mode, it's handled by exit_attribute_mode above.
 
-        if is_reverse && !self.was_reverse {
+        if is_reverse && !self.last.is_reverse() {
             if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
-                self.was_reverse = is_reverse;
+                self.last.style.set(TextStyling::REVERSE, is_reverse);
             }
         }
     }

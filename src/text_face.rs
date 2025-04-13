@@ -3,6 +3,7 @@ use bitflags::bitflags;
 use crate::color::Color;
 use crate::terminal::{best_color, get_color_support};
 use crate::wchar::prelude::*;
+use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 
 bitflags! {
     #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
@@ -87,56 +88,113 @@ impl TextFace {
     }
 }
 
-pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Color, TextStyling) {
+pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Option<Color>, TextStyling) {
+    let mut argv: Vec<&wstr> = Some(L!(""))
+        .into_iter()
+        .chain(arguments.iter().map(|s| s.as_utfstr()))
+        .collect();
+    let TextFaceArgsAndOptions {
+        wopt_index,
+        bgcolor,
+        mut style,
+        print_color_mode,
+    } = match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
+        TextFaceArgsAndOptionsResult::Ok(parsed_text_faces) => parsed_text_faces,
+        TextFaceArgsAndOptionsResult::PrintHelp
+        | TextFaceArgsAndOptionsResult::InvalidArgs
+        | TextFaceArgsAndOptionsResult::UnknownOption(_) => unreachable!(),
+    };
+    assert!(!print_color_mode);
+    let color;
+    if is_background {
+        color = bgcolor.and_then(Color::from_wstr);
+        // We ignore styles for dedicated background roles but reverse should be meaningful in
+        // either context
+        style &= TextStyling::REVERSE;
+    } else {
+        color = best_color(
+            argv[wopt_index..]
+                .iter()
+                .filter_map(|&color| Color::from_wstr(color)),
+            get_color_support(),
+        );
+    }
+    assert!(color.map_or(true, |color| !color.is_none()));
+    (color, style)
+}
+
+pub(crate) struct TextFaceArgsAndOptions<'a> {
+    pub(crate) wopt_index: usize,
+    pub(crate) bgcolor: Option<&'a wstr>,
+    pub(crate) style: TextStyling,
+    pub(crate) print_color_mode: bool,
+}
+
+pub(crate) enum TextFaceArgsAndOptionsResult<'a> {
+    Ok(TextFaceArgsAndOptions<'a>),
+    PrintHelp,
+    InvalidArgs,
+    UnknownOption(usize),
+}
+
+pub(crate) fn parse_text_face_and_options<'a>(
+    argv: &mut [&'a wstr],
+    is_builtin: bool,
+) -> TextFaceArgsAndOptionsResult<'a> {
+    let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
+    let short_options = L!(":b:oidruch");
+    let short_options = &short_options[..short_options.len() - builtin_extra_args];
+    let long_options: &[WOption] = &[
+        wopt(L!("background"), ArgType::RequiredArgument, 'b'),
+        wopt(L!("bold"), ArgType::NoArgument, 'o'),
+        wopt(L!("underline"), ArgType::NoArgument, 'u'),
+        wopt(L!("italics"), ArgType::NoArgument, 'i'),
+        wopt(L!("dim"), ArgType::NoArgument, 'd'),
+        wopt(L!("reverse"), ArgType::NoArgument, 'r'),
+        wopt(L!("help"), ArgType::NoArgument, 'h'),
+        wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
+    ];
+    let long_options = &long_options[..long_options.len() - builtin_extra_args];
+
+    let mut bgcolor = None;
     let mut style = TextStyling::empty();
-    let mut candidates: Vec<Color> = Vec::new();
+    let mut print_color_mode = false;
 
-    let prefix = L!("--background=");
-
-    let mut next_is_background = false;
-    for arg in arguments {
-        let mut color_name = None;
-        #[allow(clippy::collapsible_else_if)]
-        if is_background {
-            if next_is_background {
-                color_name = Some(arg.as_utfstr());
-                next_is_background = false;
-            } else if arg.starts_with(prefix) {
-                // Look for something like "--background=red".
-                color_name = Some(arg.slice_from(prefix.char_count()));
-            } else if arg == "--background" || arg == "-b" {
-                // Without argument attached the next token is the color
-                // - if it's another option it's an error.
-                next_is_background = true;
-            } else if arg == "--reverse" || arg == "-r" {
-                // Reverse should be meaningful in either context
-                style |= TextStyling::REVERSE;
-            } else if arg.starts_with("-b") {
-                // Look for something like "-bred".
-                // Yes, that length is hardcoded.
-                color_name = Some(arg.slice_from(2));
+    let mut w = WGetopter::new(short_options, long_options, argv);
+    while let Some(c) = w.next_opt() {
+        match c {
+            'b' => {
+                assert!(w.woptarg.is_some(), "Arg should have been set");
+                bgcolor = w.woptarg;
             }
-        } else {
-            if arg == "--bold" || arg == "-o" {
-                style |= TextStyling::BOLD;
-            } else if arg == "--underline" || arg == "-u" {
-                style |= TextStyling::UNDERLINE;
-            } else if arg == "--italics" || arg == "-i" {
-                style |= TextStyling::ITALICS;
-            } else if arg == "--dim" || arg == "-d" {
-                style |= TextStyling::DIM;
-            } else if arg == "--reverse" || arg == "-r" {
-                style |= TextStyling::REVERSE;
-            } else {
-                color_name = Some(arg.as_utfstr());
+            'h' => {
+                if is_builtin {
+                    return TextFaceArgsAndOptionsResult::PrintHelp;
+                }
             }
-        }
-
-        if let Some(color) = color_name.and_then(Color::from_wstr) {
-            candidates.push(color);
+            'o' => style |= TextStyling::BOLD,
+            'i' => style |= TextStyling::ITALICS,
+            'd' => style |= TextStyling::DIM,
+            'r' => style |= TextStyling::REVERSE,
+            'u' => style |= TextStyling::UNDERLINE,
+            'c' => print_color_mode = true,
+            ':' => {
+                if is_builtin {
+                    return TextFaceArgsAndOptionsResult::InvalidArgs;
+                }
+            }
+            '?' => {
+                if is_builtin {
+                    return TextFaceArgsAndOptionsResult::UnknownOption(w.wopt_index - 1);
+                }
+            }
+            _ => unreachable!("unexpected retval from WGetopter"),
         }
     }
-
-    let color = best_color(&candidates, get_color_support());
-    (color, style)
+    TextFaceArgsAndOptionsResult::Ok(TextFaceArgsAndOptions {
+        wopt_index: w.wopt_index,
+        bgcolor,
+        style,
+        print_color_mode,
+    })
 }

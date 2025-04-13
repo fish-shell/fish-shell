@@ -5,7 +5,10 @@ use crate::color::Color;
 use crate::common::str2wcstring;
 use crate::terminal::TerminalCommand::ExitAttributeMode;
 use crate::terminal::{best_color, get_color_support, Output, Outputter};
-use crate::text_face::{TextFace, TextStyling};
+use crate::text_face::{
+    parse_text_face_and_options, TextFace, TextFaceArgsAndOptions, TextFaceArgsAndOptionsResult,
+    TextStyling,
+};
 
 fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg: Color) {
     let outp = &mut Outputter::new_buffering();
@@ -37,18 +40,6 @@ fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg:
     streams.out.append(str2wcstring(contents));
 }
 
-const SHORT_OPTIONS: &wstr = L!(":b:hoidrcu");
-const LONG_OPTIONS: &[WOption] = &[
-    wopt(L!("background"), ArgType::RequiredArgument, 'b'),
-    wopt(L!("help"), ArgType::NoArgument, 'h'),
-    wopt(L!("bold"), ArgType::NoArgument, 'o'),
-    wopt(L!("underline"), ArgType::NoArgument, 'u'),
-    wopt(L!("italics"), ArgType::NoArgument, 'i'),
-    wopt(L!("dim"), ArgType::NoArgument, 'd'),
-    wopt(L!("reverse"), ArgType::NoArgument, 'r'),
-    wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
-];
-
 /// set_color builtin.
 pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     // Variables used for parsing the argument list.
@@ -60,47 +51,33 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         return Err(STATUS_CMD_ERROR);
     }
 
-    let mut bgcolor = None;
-    let mut style = TextStyling::empty();
-    let mut print = false;
-
-    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
-    while let Some(c) = w.next_opt() {
-        match c {
-            'b' => {
-                assert!(w.woptarg.is_some(), "Arg should have been set");
-                bgcolor = w.woptarg;
-            }
-            'h' => {
-                builtin_print_help(parser, streams, argv[0]);
-                return Ok(SUCCESS);
-            }
-            'o' => style |= TextStyling::BOLD,
-            'i' => style |= TextStyling::ITALICS,
-            'd' => style |= TextStyling::DIM,
-            'r' => style |= TextStyling::REVERSE,
-            'u' => style |= TextStyling::UNDERLINE,
-            'c' => print = true,
-            ':' => {
-                // We don't error here because "-b" is the only option that requires an argument,
-                // and we don't error for missing colors.
-                return Err(STATUS_INVALID_ARGS);
-            }
-            '?' => {
-                builtin_unknown_option(
-                    parser,
-                    streams,
-                    L!("set_color"),
-                    argv[w.wopt_index - 1],
-                    true, /* print_hints */
-                );
-                return Err(STATUS_INVALID_ARGS);
-            }
-            _ => unreachable!("unexpected retval from WGetopter"),
+    let TextFaceArgsAndOptions {
+        mut wopt_index,
+        bgcolor,
+        style,
+        print_color_mode,
+    } = match parse_text_face_and_options(argv, /*is_builtin=*/ true) {
+        TextFaceArgsAndOptionsResult::Ok(parsed_face) => parsed_face,
+        TextFaceArgsAndOptionsResult::PrintHelp => {
+            builtin_print_help(parser, streams, argv[0]);
+            return Ok(SUCCESS);
         }
-    }
-    // We want to reclaim argv so grab wopt_index now.
-    let mut wopt_index = w.wopt_index;
+        TextFaceArgsAndOptionsResult::InvalidArgs => {
+            // We don't error here because "-b" is the only option that requires an argument,
+            // and we don't error for missing colors.
+            return Err(STATUS_INVALID_ARGS);
+        }
+        TextFaceArgsAndOptionsResult::UnknownOption(unknown_option_index) => {
+            builtin_unknown_option(
+                parser,
+                streams,
+                L!("set_color"),
+                argv[unknown_option_index],
+                true, /* print_hints */
+            );
+            return Err(STATUS_INVALID_ARGS);
+        }
+    };
 
     let mut parse_color = |color_str| {
         Color::from_wstr(color_str).ok_or_else(|| {
@@ -118,7 +95,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         bg = parse_color(bgcolor)?;
     }
 
-    if print {
+    if print_color_mode {
         // Hack: Explicitly setting a background of "normal" crashes
         // for --print-colors. Because it's not interesting in terms of display,
         // just skip it.
@@ -137,10 +114,8 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         wopt_index += 1;
     }
 
-    // #1323: We may have multiple foreground colors. Choose the best one. If we had no foreground
-    // color, we'll get none(); if we have at least one we expect not-none.
-    let fg = best_color(&fgcolors, get_color_support());
-    assert!(fgcolors.is_empty() || !fg.is_none());
+    // #1323: We may have multiple foreground colors. Choose the best one.
+    let fg = best_color(fgcolors.into_iter(), get_color_support());
 
     let outp = &mut Outputter::new_buffering();
     outp.set_text_face(TextFace::new(Color::None, Color::None, style));
@@ -148,7 +123,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         outp.write_command(ExitAttributeMode);
     }
 
-    if !fg.is_none() {
+    if let Some(fg) = fg {
         if fg.is_normal() || fg.is_reset() {
             outp.write_command(ExitAttributeMode);
         } else if !outp.write_color(fg, true /* is_fg */) {

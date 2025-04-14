@@ -550,7 +550,7 @@ impl Outputter {
             self.reset_text_face(false);
         }
 
-        if !fg.is_none() && self.last.fg != fg {
+        if !fg.is_none() && fg != self.last.fg {
             if fg.is_normal() {
                 write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
@@ -564,7 +564,7 @@ impl Outputter {
             self.last.fg = fg;
         }
 
-        if !bg.is_none() && self.last.bg != bg {
+        if !bg.is_none() && bg != self.last.bg {
             if bg.is_normal() {
                 write_background_color(self, 0);
 
@@ -590,16 +590,16 @@ impl Outputter {
         }
 
         let was_underline = self.last.style.is_underline();
-        if !was_underline && style.is_underline() && self.write_command(EnterUnderlineMode) {
-            self.last.style.underline = true;
-        } else if was_underline && !style.is_underline() && self.write_command(ExitUnderlineMode) {
+        if !style.is_underline() && was_underline && self.write_command(ExitUnderlineMode) {
             self.last.style.underline = false;
+        } else if style.is_underline() && !was_underline && self.write_command(EnterUnderlineMode) {
+            self.last.style.underline = true;
         }
 
         let was_italics = self.last.style.is_italics();
-        if was_italics && !style.is_italics() && self.write_command(ExitItalicsMode) {
+        if !style.is_italics() && was_italics && self.write_command(ExitItalicsMode) {
             self.last.style.italics = false;
-        } else if !was_italics && style.is_italics() && self.write_command(EnterItalicsMode) {
+        } else if style.is_italics() && !was_italics && self.write_command(EnterItalicsMode) {
             self.last.style.italics = true;
         }
 
@@ -607,10 +607,11 @@ impl Outputter {
             self.last.style.dim = true;
         }
 
-        if style.is_reverse() && !self.last.style.is_reverse() {
-            if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
-                self.last.style.reverse = true;
-            }
+        if style.is_reverse()
+            && !self.last.style.is_reverse()
+            && (self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode))
+        {
+            self.last.style.reverse = true;
         }
     }
 

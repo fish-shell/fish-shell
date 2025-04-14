@@ -1661,8 +1661,8 @@ impl<'a> Reader<'a> {
                 .vars()
                 .get_unless_empty(L!("fish_color_search_match"))
                 .is_some_and(|var| {
-                    let (color, _flags) = parse_text_face(var.as_list(), false);
-                    !color.is_none()
+                    let (fg, _bg, _style) = parse_text_face(var.as_list());
+                    !fg.is_none()
                 });
 
             for color in &mut colors[range] {

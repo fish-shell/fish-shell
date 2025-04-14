@@ -697,7 +697,7 @@ fn test_trailing_spaces_after_command() {
     for i in 0..4 {
         let face = resolver.resolve_spec(&colors[i], vars);
         assert!(
-            face.is_underline(),
+            face.style.is_underline(),
             "Character at position {} of 'echo' should be underlined",
             i
         );
@@ -707,7 +707,7 @@ fn test_trailing_spaces_after_command() {
     for i in 4..text.len() {
         let face = resolver.resolve_spec(&colors[i], vars);
         assert!(
-            !face.is_underline(),
+            !face.style.is_underline(),
             "Trailing space at position {} should NOT be underlined",
             i
         );

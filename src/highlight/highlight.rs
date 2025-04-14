@@ -158,12 +158,12 @@ impl HighlightColorResolver {
                 if !valid_path_face.fg.is_normal() {
                     result.fg = valid_path_face.fg;
                 }
-                result.style |= valid_path_face.style;
+                result.style = result.style.union(valid_path_face.style);
             }
         }
 
         if highlight.force_underline {
-            result.inject_underline(true);
+            result.style.inject_underline(true);
         }
 
         result
@@ -175,21 +175,24 @@ pub(crate) fn parse_text_face_for_highlight(
     fg_var: Option<&EnvVar>,
     bg_var: Option<&EnvVar>,
 ) -> TextFace {
-    let parse_var = |maybe_var: Option<&EnvVar>, is_background| {
+    let parse_var = |maybe_var: Option<&EnvVar>| {
         let Some(var) = maybe_var else {
-            return (Color::Normal, TextStyling::empty());
+            return (
+                Some(Color::Normal),
+                Some(Color::Normal),
+                TextStyling::default(),
+            );
         };
-        let (color, style) = parse_text_face(var.as_list(), is_background);
-        let color = color.unwrap_or(Color::Normal);
-        (color, style)
+        parse_text_face(var.as_list())
     };
-    let (fg, fg_style) = parse_var(fg_var, false);
-    let (bg, bg_style) = parse_var(bg_var, true);
-    TextFace {
-        fg,
-        bg,
-        style: fg_style | bg_style,
-    }
+    let (fg, _bg, mut style) = parse_var(fg_var);
+    let (_fg, bg, bg_style) = parse_var(bg_var);
+    let fg = fg.unwrap_or(Color::Normal);
+    let bg = bg.unwrap_or(Color::Normal);
+    // In case the background role is different from the foreground one, we ignore its style
+    // except for reverse mode.
+    style.reverse |= bg_style.reverse;
+    TextFace { fg, bg, style }
 }
 
 fn command_is_valid(

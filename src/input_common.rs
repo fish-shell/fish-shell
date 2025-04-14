@@ -704,19 +704,23 @@ pub trait InputEventQueuer {
                         }
                         match self.parse_codepoint(
                             &mut state,
-                            &mut key,
                             &mut seq,
-                            &buffer,
-                            i,
+                            &buffer[..i + 1],
                             &mut consumed,
-                            &mut have_escape_prefix,
                         ) {
-                            ControlFlow::Continue(codepoint_complete) => {
-                                if codepoint_complete && i + 1 == buffer.len() {
+                            ControlFlow::Continue(/*codepoint_complete=*/ false) => (),
+                            ControlFlow::Continue(/*codepoint_complete=*/ true) => {
+                                if have_escape_prefix && i != 0 {
+                                    have_escape_prefix = false;
+                                    let c = seq.as_char_slice().last().unwrap();
+                                    key = Some(Key::from(alt(*c)));
+                                }
+                                if i + 1 == buffer.len() {
                                     break true;
                                 }
                             }
                             ControlFlow::Break(()) => {
+                                self.push_front(CharEvent::from_check_exit());
                                 break false;
                             }
                         }
@@ -793,15 +797,12 @@ pub trait InputEventQueuer {
     fn parse_codepoint(
         &mut self,
         state: &mut mbstate_t,
-        out_key: &mut Option<Key>,
         out_seq: &mut WString,
         buffer: &[u8],
-        i: usize,
         consumed: &mut usize,
-        have_escape_prefix: &mut bool,
     ) -> ControlFlow<(), bool> {
         let mut res: char = '\0';
-        let read_byte = buffer[i];
+        let read_byte = *buffer.last().unwrap();
         if crate::libc::MB_CUR_MAX() == 1 {
             // single-byte locale, all values are legal
             // FIXME: this looks wrong, this falsely assumes that
@@ -823,7 +824,6 @@ pub trait InputEventQueuer {
             -1 => {
                 FLOG!(reader, "Illegal input");
                 *consumed += 1;
-                self.push_front(CharEvent::from_check_exit());
                 return ControlFlow::Break(());
             }
             -2 => {
@@ -841,16 +841,12 @@ pub trait InputEventQueuer {
         if let Some(res) = char::from_u32(codepoint) {
             // Sequence complete.
             if !fish_reserved_codepoint(res) {
-                if *have_escape_prefix && i != 0 {
-                    *have_escape_prefix = false;
-                    *out_key = Some(alt(res));
-                }
                 *consumed += 1;
                 out_seq.push(res);
                 return ControlFlow::Continue(true);
             }
         }
-        for &b in &buffer[*consumed..i] {
+        for &b in &buffer[*consumed..] {
             out_seq.push(encode_byte_to_char(b));
             *consumed += 1;
         }

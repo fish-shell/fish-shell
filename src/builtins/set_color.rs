@@ -102,14 +102,20 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // We want to reclaim argv so grab wopt_index now.
     let mut wopt_index = w.wopt_index;
 
-    let mut bg = bgcolor.and_then(Color::from_wstr).unwrap_or(Color::None);
-    if bgcolor.is_some() && bg.is_none() {
-        streams.err.append(wgettext_fmt!(
-            "%ls: Unknown color '%ls'\n",
-            argv[0],
-            bgcolor.unwrap()
-        ));
-        return Err(STATUS_INVALID_ARGS);
+    let mut parse_color = |color_str| {
+        Color::from_wstr(color_str).ok_or_else(|| {
+            streams.err.append(wgettext_fmt!(
+                "%ls: Unknown color '%ls'\n",
+                argv[0],
+                color_str
+            ));
+            STATUS_INVALID_ARGS
+        })
+    };
+
+    let mut bg = Color::None;
+    if let Some(bgcolor) = bgcolor {
+        bg = parse_color(bgcolor)?;
     }
 
     if print {
@@ -127,15 +133,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
     while wopt_index < argc {
-        let Some(fg) = Color::from_wstr(argv[wopt_index]) else {
-            streams.err.append(wgettext_fmt!(
-                "%ls: Unknown color '%ls'\n",
-                argv[0],
-                argv[wopt_index]
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        };
-        fgcolors.push(fg);
+        fgcolors.push(parse_color(argv[wopt_index])?);
         wopt_index += 1;
     }
 

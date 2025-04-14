@@ -426,3 +426,8 @@ set -S var
 echo '1  {} "{}"' | read -lat var
 echo $var
 # CHECK: 1 {} {}
+
+printf \xf9\x98\xb1\x83\x8b | read -z out_of_range_codepoint
+set -S out_of_range_codepoint
+# CHECK: $out_of_range_codepoint: set in global scope, unexported, with 1 elements
+# CHECK: $out_of_range_codepoint[1]: |\Xf9\X98\Xb1\X83\X8b|

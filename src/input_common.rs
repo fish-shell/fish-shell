@@ -28,7 +28,6 @@ use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
 use crate::wutil::fish_wcstol;
 use std::collections::VecDeque;
-use std::ops::ControlFlow;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
@@ -872,14 +871,14 @@ pub trait InputEventQueuer {
                                 _ => 0,
                             });
                         }
-                        match self.parse_codepoint(
-                            &mut state,
+                        match decode_input_byte(
                             &mut seq,
+                            &mut state,
                             &buffer[..i + 1],
                             &mut consumed,
                         ) {
-                            ControlFlow::Continue(/*codepoint_complete=*/ false) => (),
-                            ControlFlow::Continue(/*codepoint_complete=*/ true) => {
+                            DecodeState::Incomplete => (),
+                            DecodeState::Complete => {
                                 if have_escape_prefix && i != 0 {
                                     have_escape_prefix = false;
                                     let c = seq.as_char_slice().last().unwrap();
@@ -889,7 +888,7 @@ pub trait InputEventQueuer {
                                     break true;
                                 }
                             }
-                            ControlFlow::Break(()) => {
+                            DecodeState::Error => {
                                 self.push_front(CharEvent::from_check_exit());
                                 break false;
                             }
@@ -1000,59 +999,6 @@ pub trait InputEventQueuer {
                 None
             }
         }
-    }
-
-    fn parse_codepoint(
-        &mut self,
-        state: &mut mbstate_t,
-        out_seq: &mut WString,
-        buffer: &[u8],
-        consumed: &mut usize,
-    ) -> ControlFlow<(), bool> {
-        let mut res: char = '\0';
-        let read_byte = *buffer.last().unwrap();
-        if crate::libc::MB_CUR_MAX() == 1 {
-            // single-byte locale, all values are legal
-            // FIXME: this looks wrong, this falsely assumes that
-            // the single-byte locale is compatible with Unicode upper-ASCII.
-            res = read_byte.into();
-            out_seq.push(res);
-            return ControlFlow::Continue(true);
-        }
-        let mut codepoint = u32::from(res);
-        match unsafe {
-            mbrtowc(
-                std::ptr::addr_of_mut!(codepoint),
-                std::ptr::addr_of!(read_byte).cast(),
-                1,
-                state,
-            )
-        } as isize
-        {
-            -1 => {
-                FLOG!(reader, "Illegal input");
-                *consumed += 1;
-                return ControlFlow::Break(());
-            }
-            -2 => {
-                // Sequence not yet complete.
-                return ControlFlow::Continue(false);
-            }
-            _ => (),
-        }
-        if let Some(res) = char::from_u32(codepoint) {
-            // Sequence complete.
-            if !fish_reserved_codepoint(res) {
-                *consumed += 1;
-                out_seq.push(res);
-                return ControlFlow::Continue(true);
-            }
-        }
-        for &b in &buffer[*consumed..] {
-            out_seq.push(encode_byte_to_char(b));
-            *consumed += 1;
-        }
-        ControlFlow::Continue(true)
     }
 
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
@@ -1739,6 +1685,65 @@ pub trait InputEventQueuer {
     fn has_lookahead(&self) -> bool {
         !self.get_input_data().queue.is_empty()
     }
+}
+
+pub(crate) enum DecodeState {
+    Incomplete,
+    Complete,
+    Error,
+}
+
+pub(crate) fn decode_input_byte(
+    out_seq: &mut WString,
+    state: &mut mbstate_t,
+    buffer: &[u8],
+    consumed: &mut usize,
+) -> DecodeState {
+    use DecodeState::*;
+    let mut res: char = '\0';
+    let read_byte = *buffer.last().unwrap();
+    if crate::libc::MB_CUR_MAX() == 1 {
+        // single-byte locale, all values are legal
+        // FIXME: this looks wrong, this falsely assumes that
+        // the single-byte locale is compatible with Unicode upper-ASCII.
+        res = read_byte.into();
+        out_seq.push(res);
+        return Complete;
+    }
+    let mut codepoint = u32::from(res);
+    match unsafe {
+        mbrtowc(
+            std::ptr::addr_of_mut!(codepoint),
+            std::ptr::addr_of!(read_byte).cast(),
+            1,
+            state,
+        )
+    } as isize
+    {
+        -1 => {
+            FLOG!(reader, "Illegal input");
+            *consumed += 1;
+            return Error;
+        }
+        -2 => {
+            // Sequence not yet complete.
+            return Incomplete;
+        }
+        _ => (),
+    }
+    if let Some(res) = char::from_u32(codepoint) {
+        // Sequence complete.
+        if !fish_reserved_codepoint(res) {
+            *consumed += 1;
+            out_seq.push(res);
+            return Complete;
+        }
+    }
+    for &b in &buffer[*consumed..] {
+        out_seq.push(encode_byte_to_char(b));
+        *consumed += 1;
+    }
+    Complete
 }
 
 pub(crate) fn unblock_input(mut wait_guard: MutexGuard<Option<BlockingWait>>) -> bool {

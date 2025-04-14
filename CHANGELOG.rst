@@ -67,6 +67,7 @@ Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 - Support for curly underlines in `fish_color_*` variables and :doc:`set_color <cmds/set_color>` (:issue:`10957`).
 - Error highlighting includes curly underlines.
+- Underlines can now be colored independent of foreground/background color.
 - New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists required and optional terminal control sequences used by fish.
 
 Other improvements

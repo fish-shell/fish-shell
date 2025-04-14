@@ -41,6 +41,13 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
+#[derive(Clone, Copy)]
+pub(crate) enum Paintee {
+    Foreground,
+    Background,
+    Underline,
+}
+
 #[derive(Clone)]
 pub(crate) enum TerminalCommand<'a> {
     // Text attributes
@@ -61,8 +68,8 @@ pub(crate) enum TerminalCommand<'a> {
     ClearToEndOfScreen,
 
     // Colors
-    SelectPaletteColor(/*is_foreground=*/ bool, u8),
-    SelectRgbColor(/*is_foreground=*/ bool, Color24),
+    SelectPaletteColor(Paintee, u8),
+    SelectRgbColor(Paintee, Color24),
 
     // Cursor Movement
     CursorUp,
@@ -153,8 +160,8 @@ pub(crate) trait Output {
             ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
             ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
-            SelectPaletteColor(is_foreground, idx) => palette_color(self, is_foreground, idx),
-            SelectRgbColor(is_foreground, rgb) => rgb_color(self, is_foreground, rgb),
+            SelectPaletteColor(paintee, idx) => palette_color(self, paintee, idx),
+            SelectRgbColor(paintee, rgb) => rgb_color(self, paintee, rgb),
             CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
             CursorDown => ti(self, b"\n", |term| &term.cursor_down),
             CursorLeft => ti(self, b"\x08", |term| &term.cursor_left),
@@ -232,20 +239,22 @@ pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
 }
 
-fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
+fn palette_color(out: &mut impl Output, paintee: Paintee, mut idx: u8) -> bool {
     if only_grayscale() && !(Color::Named { idx }).is_grayscale() {
         return false;
     }
     if use_terminfo() {
         let term = crate::terminal::term();
-        let Some(command) = (if foreground {
-            term.set_a_foreground
+        let Some(command) = (match paintee {
+            Paintee::Foreground => term
+                .set_a_foreground
                 .as_ref()
-                .or(term.set_foreground.as_ref())
-        } else {
-            term.set_a_background
+                .or(term.set_foreground.as_ref()),
+            Paintee::Background => term
+                .set_a_background
                 .as_ref()
-                .or(term.set_background.as_ref())
+                .or(term.set_background.as_ref()),
+            Paintee::Underline => None,
         }) else {
             return false;
         };
@@ -260,11 +269,14 @@ fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
             idx -= 8;
         }
     }
-    let bg = if foreground { 0 } else { 10 };
+    let is_underline = matches!(paintee, Paintee::Underline);
+    let is_bg = matches!(paintee, Paintee::Background);
+    let bg = if is_bg { 10 } else { 0 };
+    let ul = if is_underline { 20 } else { 0 };
     match idx {
-        0..=7 => write_to_output!(out, "\x1b[{}m", 30 + bg + idx),
-        8..=15 => write_to_output!(out, "\x1b[{}m", 90 + bg + (idx - 8)),
-        _ => write_to_output!(out, "\x1b[{};5;{}m", 38 + bg, idx),
+        0..=7 if !is_underline => write_to_output!(out, "\x1b[{}m", 30 + bg + idx),
+        8..=15 if !is_underline => write_to_output!(out, "\x1b[{}m", 90 + bg + (idx - 8)),
+        _ => write_to_output!(out, "\x1b[{};5;{}m", 38 + bg + ul, idx),
     };
     true
 }
@@ -279,13 +291,18 @@ fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     }
 }
 
-fn rgb_color(out: &mut impl Output, foreground: bool, rgb: Color24) -> bool {
+fn rgb_color(out: &mut impl Output, paintee: Paintee, rgb: Color24) -> bool {
     // Foreground: ^[38;2;<r>;<g>;<b>m
     // Background: ^[48;2;<r>;<g>;<b>m
+    // Underline: ^[58;2::<r>:<g>:<b>m
     write_to_output!(
         out,
         "\x1b[{};2;{};{};{}m",
-        if foreground { 38 } else { 48 },
+        match paintee {
+            Paintee::Foreground => 38,
+            Paintee::Background => 48,
+            Paintee::Underline => 58,
+        },
         rgb.r,
         rgb.g,
         rgb.b
@@ -399,11 +416,17 @@ fn index_for_color(c: Color) -> u8 {
 }
 
 fn write_foreground_color(outp: &mut Outputter, idx: u8) -> bool {
-    outp.write_command(TerminalCommand::SelectPaletteColor(true, idx))
+    outp.write_command(TerminalCommand::SelectPaletteColor(
+        Paintee::Foreground,
+        idx,
+    ))
 }
 
 fn write_background_color(outp: &mut Outputter, idx: u8) -> bool {
-    outp.write_command(TerminalCommand::SelectPaletteColor(false, idx))
+    outp.write_command(TerminalCommand::SelectPaletteColor(
+        Paintee::Background,
+        idx,
+    ))
 }
 
 pub struct Outputter {
@@ -447,16 +470,12 @@ impl Outputter {
 
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
-    pub fn write_color(&mut self, color: Color, is_fg: bool) -> bool {
+    pub(crate) fn write_color(&mut self, paintee: Paintee, color: Color) -> bool {
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);
-            if is_fg {
-                return write_foreground_color(self, idx);
-            } else {
-                return write_background_color(self, idx);
-            };
+            return self.write_command(TerminalCommand::SelectPaletteColor(paintee, idx));
         }
 
         if only_grayscale() && color.is_grayscale() {
@@ -464,7 +483,7 @@ impl Outputter {
         }
 
         // 24 bit!
-        self.write_command(TerminalCommand::SelectRgbColor(is_fg, color.to_color24()))
+        self.write_command(TerminalCommand::SelectRgbColor(paintee, color.to_color24()))
     }
 
     /// Unconditionally resets colors and text style.
@@ -499,6 +518,7 @@ impl Outputter {
     pub(crate) fn set_text_face(&mut self, face: TextFace) {
         let mut fg = face.fg;
         let bg = face.bg;
+        let underline_color = face.underline_color;
         let style = face.style;
         let mut bg_set = false;
         let mut last_bg_set = false;
@@ -555,10 +575,11 @@ impl Outputter {
                 self.write_command(ExitAttributeMode);
 
                 self.last.bg = Color::Normal;
+                self.last.underline_color = Color::Normal;
                 self.last.style = TextStyling::default();
             } else {
                 assert!(!fg.is_special());
-                self.write_color(fg, true /* foreground */);
+                self.write_color(Paintee::Foreground, fg);
             }
             self.last.fg = fg;
         }
@@ -569,14 +590,22 @@ impl Outputter {
 
                 self.write_command(ExitAttributeMode);
                 if !self.last.fg.is_normal() {
-                    self.write_color(self.last.fg, true /* foreground */);
+                    self.write_color(Paintee::Foreground, self.last.fg);
+                }
+                if !self.last.underline_color.is_normal() && !self.last.underline_color.is_none() {
+                    self.write_color(Paintee::Underline, self.last.underline_color);
                 }
                 self.last.style = TextStyling::default();
             } else {
                 assert!(!bg.is_special());
-                self.write_color(bg, false /* not foreground */);
+                self.write_color(Paintee::Background, bg);
             }
             self.last.bg = bg;
+        }
+
+        if !underline_color.is_none() && underline_color != self.last.underline_color {
+            self.write_color(Paintee::Underline, bg);
+            self.last.underline_color = underline_color;
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.

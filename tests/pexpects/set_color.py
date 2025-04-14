@@ -89,3 +89,7 @@ sendline("set_color --print-colors ff0 red")
 expect_str("\x1b[38;2;255;255;0mff0")
 expect_str("\x1b[31mred")
 expect_prompt()
+
+sendline("set_color --underline-color red --curly-underline; echo red undercurl")
+expect_str("\x1b[4:3m" "\x1b[58;5;1m" "red undercurl")
+expect_prompt()

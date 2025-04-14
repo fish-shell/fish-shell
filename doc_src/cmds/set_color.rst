@@ -37,6 +37,9 @@ The following options are available:
 **-b** or **--background** *COLOR*
     Sets the background color.
 
+**--underline-color** *COLOR*
+    Set the underline color.
+
 **-c** or **--print-colors**
     Prints the given colors or a colored list of the 16 named colors.
 

@@ -1019,15 +1019,15 @@ pub trait InputEventQueuer {
             return ControlFlow::Continue(true);
         }
         let mut codepoint = u32::from(res);
-        let sz = unsafe {
+        match unsafe {
             mbrtowc(
                 std::ptr::addr_of_mut!(codepoint),
                 std::ptr::addr_of!(read_byte).cast(),
                 1,
                 state,
             )
-        } as isize;
-        match sz {
+        } as isize
+        {
             -1 => {
                 FLOG!(reader, "Illegal input");
                 *consumed += 1;
@@ -1037,12 +1037,6 @@ pub trait InputEventQueuer {
             -2 => {
                 // Sequence not yet complete.
                 return ControlFlow::Continue(false);
-            }
-            0 => {
-                // Actual nul char.
-                *consumed += 1;
-                out_seq.push('\0');
-                return ControlFlow::Continue(true);
             }
             _ => (),
         }

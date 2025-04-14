@@ -28,3 +28,8 @@ set_color --underline=asdf
 # CHECKERR: set_color: invalid underline style: asdf
 set_color -ushort
 # CHECKERR: set_color: invalid underline style: short
+
+string escape (set_color --underline-color=red)
+# CHECK: \e\[58:5:1m
+string escape (set_color --underline-color=normal)
+# CHECK: \e\[59m

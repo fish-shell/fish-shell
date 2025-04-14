@@ -227,6 +227,7 @@ def parse_color(color_str):
     comps = color_str.split(" ")
     color = ""
     background_color = ""
+    underline_color = ""
     bold = False
     underline = False
     italics = False
@@ -251,37 +252,41 @@ def parse_color(color_str):
             dim = True
         elif comp == "--reverse" or comp == "-r":
             reverse = True
-        elif comp.startswith("--background"):
-            # Background color
-            c = comp[len("--background=") :]
-            parsed_c = parse_one_color(c)
-            # We prefer the unparsed version - if it says "brgreen", we use brgreen,
-            # instead of 00ff00
-            if better_color(background_color, parsed_c) == parsed_c:
-                background_color = c
-        elif comp.startswith("-b"):
-            # Background color in short.
-            if comp == "-b":
-                if i + 1 == len(comps):
-                    c = ""
-                else:
-                    c = comps[i + 1]
-                    i += 1
-            else:
-                c = comp[len("-b"):]
-            parsed_c = parse_one_color(c)
-            if better_color(background_color, parsed_c) == parsed_c:
-                background_color = c
         else:
-            # Regular color
-            parsed_c = parse_one_color(comp)
-            if better_color(color, parsed_c) == parsed_c:
-                color = comp
+            def parse_opt(current_best: str, i: int, long_opt: str, short_opt: str | None) -> str:
+                if comp.startswith(long_opt):
+                    c = comp[len(long_opt) :]
+                    parsed_c = parse_one_color(c)
+                    # We prefer the unparsed version - if it says "brgreen", we use brgreen,
+                    # instead of 00ff00
+                    if better_color(current_best, parsed_c) == parsed_c:
+                        return True, c, i
+                elif short_opt is not None and comp.startswith(short_opt):
+                    if comp == short_opt:
+                        if i + 1 == len(comps):
+                            c = ""
+                        else:
+                            c = comps[i + 1]
+                            i += 1
+                    else:
+                        c = comp[len(short_opt):]
+                    parsed_c = parse_one_color(c)
+                    if better_color(current_best, parsed_c) == parsed_c:
+                        return True, c, i
+                return False, current_best, i
+            is_bg, background_color, i = parse_opt(background_color, i, "--background", "-b")
+            is_ul, underline_color, i = parse_opt(underline_color, i, "--underline-color", None)
+            if not (is_bg or is_ul):
+                # Regular color
+                parsed_c = parse_one_color(comp)
+                if better_color(color, parsed_c) == parsed_c:
+                    color = comp
         i += 1
 
     return {
         "color": color,
         "background": background_color,
+        "underline-color": underline_color,
         "bold": bold,
         "underline": underline,
         "italics": italics,
@@ -309,6 +314,8 @@ def unparse_color(col):
         ret += " --reverse"
     if col["background"]:
         ret += " --background=" + col["background"]
+    if col["underline-color"]:
+        ret += " --underline-color=" + col["underline-color"]
     return ret
 
 

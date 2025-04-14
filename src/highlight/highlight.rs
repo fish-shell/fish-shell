@@ -183,10 +183,17 @@ impl HighlightColorResolver {
 /// Return the internal color code representing the specified color.
 pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
     let face = parse_text_face(var.as_list());
-    let fg = face.fg.unwrap_or(Color::Normal);
-    let bg = face.bg.unwrap_or(Color::Normal);
+    let default = TextFace::default();
+    let fg = face.fg.unwrap_or(default.fg);
+    let bg = face.bg.unwrap_or(default.bg);
+    let underline_color = face.underline_color.unwrap_or(default.underline_color);
     let style = face.style;
-    TextFace { fg, bg, style }
+    TextFace {
+        fg,
+        bg,
+        underline_color,
+        style,
+    }
 }
 
 fn command_is_valid(

@@ -3,13 +3,20 @@
 use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
-use crate::terminal::{best_color, get_color_support, Outputter};
+use crate::terminal::TerminalCommand::DefaultUnderlineColor;
+use crate::terminal::{best_color, get_color_support, Output, Outputter, Paintable};
 use crate::text_face::{
     parse_text_face_and_options, TextFace, TextFaceArgsAndOptions, TextFaceArgsAndOptionsResult,
     TextStyling,
 };
 
-fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg: Option<Color>) {
+fn print_colors(
+    streams: &mut IoStreams,
+    args: &[&wstr],
+    style: TextStyling,
+    bg: Option<Color>,
+    underline_color: Option<Color>,
+) {
     let outp = &mut Outputter::new_buffering();
 
     // Rebind args to named_colors if there are no args.
@@ -24,7 +31,12 @@ fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg:
     for color_name in args {
         if streams.out_is_terminal() {
             let fg = Color::from_wstr(color_name).unwrap_or(Color::None);
-            outp.set_text_face(TextFace::new(fg, bg.unwrap_or(Color::None), style));
+            outp.set_text_face(TextFace::new(
+                fg,
+                bg.unwrap_or(Color::None),
+                underline_color.unwrap_or(Color::None),
+                style,
+            ));
         }
         outp.write_wstr(color_name);
         if streams.out_is_terminal() && bg.is_some() {
@@ -53,6 +65,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     let TextFaceArgsAndOptions {
         wopt_index,
         bgcolor,
+        underline_color,
         style,
         print_color_mode,
     } = match parse_text_face_and_options(argv, /*is_builtin=*/ true) {
@@ -102,9 +115,14 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         None => None,
     };
 
+    let underline_color = match underline_color {
+        Some(s) => Some(parse_color(s)?),
+        None => None,
+    };
+
     if print_color_mode {
         let args = &argv[wopt_index..argc];
-        print_colors(streams, args, style, bg);
+        print_colors(streams, args, style, bg, underline_color);
         return Ok(SUCCESS);
     }
 
@@ -139,9 +157,9 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         // - if fg and bg are equal, it makes one of them white
         // - if bg is not normal, it makes the foreground bold
         // The first one seems fine but the second one not really.
-        outp.set_text_face(TextFace::new(Color::None, Color::None, style));
+        outp.set_text_face(TextFace::new(Color::None, Color::None, Color::None, style));
         if let Some(fg) = fg {
-            if !outp.write_color(fg, true /* is_fg */) {
+            if !outp.write_color(Paintable::Foreground, fg) {
                 // We need to do *something* or the lack of any output messes up
                 // when the cartesian product here would make "foo" disappear:
                 //  $ echo (set_color foo)bar
@@ -149,7 +167,14 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             }
         }
         if let Some(bg) = bg {
-            outp.write_color(bg, false /* is_fg */);
+            outp.write_color(Paintable::Background, bg);
+        }
+        if let Some(underline_color) = underline_color {
+            if underline_color.is_normal() {
+                outp.write_command(DefaultUnderlineColor);
+            } else {
+                outp.write_color(Paintable::Underline, underline_color);
+            }
         }
     }
 

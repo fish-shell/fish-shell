@@ -144,6 +144,10 @@ Optional Commands
      - setab
      - Select background color Ps from the 256-color-palette.
      -
+   * - ``\e[58:5: Ps m`` (note: colons not semicolons)
+     - Su
+     - Select underline color Ps from the 256-color-palette.
+     - kitty
    * - ``\e[ Ps m``
      - setaf
        setab
@@ -161,6 +165,14 @@ Optional Commands
      -
      - Select background color from 24-bit RGB colors.
      -
+   * - ``\e[58:2:: Ps : Ps : Ps m`` (note: colons not semicolons)
+     - Su
+     - Select underline color from 24-bit RGB colors.
+     - kitty
+   * - ``\e[59m``
+     - Su
+     - Reset underline color (follow foreground color).
+     - kitty
    * - ``\e[ Ps S``
      - indn
      - Scroll forward Ps lines.

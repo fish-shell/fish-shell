@@ -107,6 +107,7 @@ impl TextStyling {
 pub(crate) struct TextFace {
     pub(crate) fg: Color,
     pub(crate) bg: Color,
+    pub(crate) underline_color: Color,
     pub(crate) style: TextStyling,
 }
 
@@ -115,18 +116,25 @@ impl TextFace {
         Self {
             fg: Color::Normal,
             bg: Color::Normal,
+            underline_color: Color::None,
             style: TextStyling::default(),
         }
     }
 
-    pub fn new(fg: Color, bg: Color, style: TextStyling) -> Self {
-        Self { fg, bg, style }
+    pub fn new(fg: Color, bg: Color, underline_color: Color, style: TextStyling) -> Self {
+        Self {
+            fg,
+            bg,
+            underline_color,
+            style,
+        }
     }
 }
 
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,
+    pub(crate) underline_color: Option<Color>,
     pub(crate) style: TextStyling,
 }
 
@@ -138,6 +146,7 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     let TextFaceArgsAndOptions {
         wopt_index,
         bgcolor,
+        underline_color,
         style,
         print_color_mode,
     } = match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
@@ -155,14 +164,21 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
         get_color_support(),
     );
     let bg = bgcolor.and_then(Color::from_wstr);
+    let underline_color = underline_color.and_then(Color::from_wstr);
     assert!(fg.map_or(true, |fg| !fg.is_none()));
     assert!(bg.map_or(true, |bg| !bg.is_none()));
-    SpecifiedTextFace { fg, bg, style }
+    SpecifiedTextFace {
+        fg,
+        bg,
+        underline_color,
+        style,
+    }
 }
 
 pub(crate) struct TextFaceArgsAndOptions<'a> {
     pub(crate) wopt_index: usize,
     pub(crate) bgcolor: Option<&'a wstr>,
+    pub(crate) underline_color: Option<&'a wstr>,
     pub(crate) style: TextStyling,
     pub(crate) print_color_mode: bool,
 }
@@ -184,6 +200,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
     let long_options: &[WOption] = &[
         wopt(L!("background"), ArgType::RequiredArgument, 'b'),
+        wopt(L!("underline-color"), ArgType::RequiredArgument, '\x02'),
         wopt(L!("bold"), ArgType::NoArgument, 'o'),
         wopt(L!("underline"), ArgType::OptionalArgument, 'u'),
         wopt(L!("italics"), ArgType::NoArgument, 'i'),
@@ -195,6 +212,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
     let long_options = &long_options[..long_options.len() - builtin_extra_args];
 
     let mut bgcolor = None;
+    let mut underline_color = None;
     let mut style = TextStyling::default();
     let mut print_color_mode = false;
 
@@ -204,6 +222,10 @@ pub(crate) fn parse_text_face_and_options<'a>(
             'b' => {
                 assert!(w.woptarg.is_some(), "Arg should have been set");
                 bgcolor = w.woptarg;
+            }
+            '\x02' => {
+                assert!(w.woptarg.is_some(), "Arg should have been set");
+                underline_color = w.woptarg;
             }
             'h' => {
                 if is_builtin {
@@ -241,6 +263,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
     TextFaceArgsAndOptionsResult::Ok(TextFaceArgsAndOptions {
         wopt_index: w.wopt_index,
         bgcolor,
+        underline_color,
         style,
         print_color_mode,
     })

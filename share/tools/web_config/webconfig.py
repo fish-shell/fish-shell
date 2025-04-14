@@ -228,7 +228,9 @@ def parse_color(color_str):
     color = ""
     background_color = ""
     bold, underline, italics, dim, reverse = False, False, False, False, False
-    for comp in comps:
+    i = 0
+    while i < len(comps):
+        comp = comps[i]
         # Remove quotes
         comp = comp.strip("'\" ")
         if comp == "--bold" or comp == "-o":
@@ -251,10 +253,14 @@ def parse_color(color_str):
                 background_color = c
         elif comp.startswith("-b"):
             # Background color in short.
-            skip = len("-b")
-            if comp[len("-b=")] in ["=", " "]:
-                skip += 1
-            c = comp[skip:]
+            if comp == "-b":
+                if i + 1 == len(comps):
+                    c = ""
+                else:
+                    c = comps[i + 1]
+                    i += 1
+            else:
+                c = comp[len("-b"):]
             parsed_c = parse_one_color(c)
             if better_color(background_color, parsed_c) == parsed_c:
                 background_color = c
@@ -263,6 +269,7 @@ def parse_color(color_str):
             parsed_c = parse_one_color(comp)
             if better_color(color, parsed_c) == parsed_c:
                 color = comp
+        i += 1
 
     return {
         "color": color,

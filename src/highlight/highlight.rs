@@ -28,7 +28,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{parse_text_face, SpecifiedTextFace, TextFace, TextStyling};
+use crate::text_face::{parse_text_face, TextFace};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -143,56 +143,49 @@ impl HighlightColorResolver {
             vars.get_unless_empty(get_highlight_var_name(role))
                 .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
                 .or_else(|| vars.get(get_highlight_var_name(HighlightRole::normal)))
+                .as_ref()
+                .map(parse_text_face_for_highlight)
+                .unwrap_or_else(TextFace::default)
         };
-        let fg_var = resolve_role(highlight.foreground);
-        let bg_var = resolve_role(highlight.background);
-        let mut result = parse_text_face_for_highlight(fg_var.as_ref(), bg_var.as_ref());
+        let mut face = resolve_role(highlight.foreground);
+
+        // Optimization: no need to parse again if both colors are the same.
+        if highlight.background != highlight.foreground {
+            let bg_face = resolve_role(highlight.background);
+            face.bg = bg_face.bg;
+            // In case the background role is different from the foreground one, we ignore its style
+            // except for reverse mode.
+            face.style.reverse |= bg_face.style.is_reverse();
+        }
 
         // Handle modifiers.
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(Some(&valid_path_var), None);
+                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
                 // Apply the foreground, except if it's normal. The intention here is likely
                 // to only override foreground if the valid path color has an explicit foreground.
                 if !valid_path_face.fg.is_normal() {
-                    result.fg = valid_path_face.fg;
+                    face.fg = valid_path_face.fg;
                 }
-                result.style = result.style.union(valid_path_face.style);
+                face.style = face.style.union(valid_path_face.style);
             }
         }
 
         if highlight.force_underline {
-            result.style.inject_underline(true);
+            face.style.inject_underline(true);
         }
 
-        result
+        face
     }
 }
 
 /// Return the internal color code representing the specified color.
-pub(crate) fn parse_text_face_for_highlight(
-    fg_var: Option<&EnvVar>,
-    bg_var: Option<&EnvVar>,
-) -> TextFace {
-    let parse_var = |maybe_var: Option<&EnvVar>| {
-        let Some(var) = maybe_var else {
-            return SpecifiedTextFace {
-                fg: Some(Color::Normal),
-                bg: Some(Color::Normal),
-                style: TextStyling::default(),
-            };
-        };
-        parse_text_face(var.as_list())
-    };
-    let fg_face = parse_var(fg_var);
-    let bg_face = parse_var(bg_var);
-    let fg = fg_face.fg.unwrap_or(Color::Normal);
-    let bg = bg_face.bg.unwrap_or(Color::Normal);
-    // In case the background role is different from the foreground one, we ignore its style
-    // except for reverse mode.
-    let mut style = fg_face.style;
-    style.reverse |= bg_face.style.reverse;
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+    let face = parse_text_face(var.as_list());
+    let fg = face.fg.unwrap_or(Color::Normal);
+    let bg = face.bg.unwrap_or(Color::Normal);
+    let style = face.style;
     TextFace { fg, bg, style }
 }
 

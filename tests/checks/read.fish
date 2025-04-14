@@ -400,3 +400,8 @@ echo foo | read -n -1
 # CHECKERR: echo foo | read -n -1
 # CHECKERR: ^
 # CHECKERR: (Type 'help read' for related documentation)
+
+printf \xf9\x98\xb1\x83\x8b | read -z out_of_range_codepoint
+set -S out_of_range_codepoint
+# CHECK: $out_of_range_codepoint: set in global scope, unexported, with 1 elements
+# CHECK: $out_of_range_codepoint[1]: |\Xf9\X98\Xb1\X83\X8b|

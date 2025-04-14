@@ -2692,10 +2692,7 @@ impl<'a> Reader<'a> {
 
                     let mut outp = Outputter::stdoutput().borrow_mut();
                     if let Some(fish_color_cancel) = self.vars().get(L!("fish_color_cancel")) {
-                        outp.set_text_face(parse_text_face_for_highlight(
-                            Some(&fish_color_cancel),
-                            Some(&fish_color_cancel),
-                        ));
+                        outp.set_text_face(parse_text_face_for_highlight(&fish_color_cancel));
                     }
                     outp.write_wstr(L!("^C"));
                     outp.reset_text_face(true);

@@ -252,7 +252,7 @@ def parse_color(color_str):
         elif comp.startswith("-b"):
             # Background color in short.
             skip = len("-b")
-            if comp[len("-b=")] in ["=", " "]:
+            if comp[skip] in ["=", " "]:
                 skip += 1
             c = comp[skip:]
             parsed_c = parse_one_color(c)

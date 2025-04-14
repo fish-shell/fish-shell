@@ -500,11 +500,6 @@ impl Outputter {
         let style = face.style;
         let mut bg_set = false;
         let mut last_bg_set = false;
-        let is_bold = face.is_bold();
-        let is_underline = face.is_underline();
-        let is_italics = face.is_italics();
-        let is_dim = face.is_dim();
-        let is_reverse = face.is_reverse();
 
         if fg.is_reset() || bg.is_reset() {
             self.reset_text_face(true);
@@ -514,7 +509,13 @@ impl Outputter {
             EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
             EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
-        let non_resettable = |style| style & !(TextStyling::ITALICS | TextStyling::UNDERLINE);
+
+        // Removes all styles that are individually resettable.
+        let non_resettable = |mut style: TextStyling| {
+            style.italics = false;
+            style.underline = false;
+            style
+        };
         let non_resettable_attributes_to_unset =
             non_resettable(self.last.style).difference(non_resettable(style));
         if !non_resettable_attributes_to_unset.is_empty() {
@@ -555,7 +556,7 @@ impl Outputter {
                 self.write_command(ExitAttributeMode);
 
                 self.last.bg = Color::Normal;
-                self.last.style = TextStyling::empty();
+                self.last.style = TextStyling::default();
             } else {
                 assert!(!fg.is_special());
                 self.write_color(fg, true /* foreground */);
@@ -571,7 +572,7 @@ impl Outputter {
                 if !self.last.fg.is_normal() {
                     self.write_color(self.last.fg, true /* foreground */);
                 }
-                self.last.style = TextStyling::empty();
+                self.last.style = TextStyling::default();
             } else {
                 assert!(!bg.is_special());
                 self.write_color(bg, false /* not foreground */);
@@ -580,30 +581,35 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.last.is_bold() && !bg_set && self.write_command(EnterBoldMode) {
-            self.last.style.set(TextStyling::BOLD, true);
-        }
-
-        if !self.last.is_underline() && is_underline && self.write_command(EnterUnderlineMode) {
-            self.last.style.set(TextStyling::UNDERLINE, true);
-        } else if self.last.is_underline() && !is_underline && self.write_command(ExitUnderlineMode)
+        if style.is_bold()
+            && !self.last.style.is_bold()
+            && !bg_set
+            && self.write_command(EnterBoldMode)
         {
-            self.last.style.set(TextStyling::UNDERLINE, false);
+            self.last.style.bold = true;
         }
 
-        if self.last.is_italics() && !is_italics && self.write_command(ExitItalicsMode) {
-            self.last.style.set(TextStyling::ITALICS, false);
-        } else if !self.last.is_italics() && is_italics && self.write_command(EnterItalicsMode) {
-            self.last.style.set(TextStyling::ITALICS, true);
+        let was_underline = self.last.style.is_underline();
+        if !was_underline && style.is_underline() && self.write_command(EnterUnderlineMode) {
+            self.last.style.underline = true;
+        } else if was_underline && !style.is_underline() && self.write_command(ExitUnderlineMode) {
+            self.last.style.underline = false;
         }
 
-        if is_dim && !self.last.is_dim() && self.write_command(EnterDimMode) {
-            self.last.style.set(TextStyling::DIM, true);
+        let was_italics = self.last.style.is_italics();
+        if was_italics && !style.is_italics() && self.write_command(ExitItalicsMode) {
+            self.last.style.italics = false;
+        } else if !was_italics && style.is_italics() && self.write_command(EnterItalicsMode) {
+            self.last.style.italics = true;
         }
 
-        if is_reverse && !self.last.is_reverse() {
+        if style.is_dim() && !self.last.style.is_dim() && self.write_command(EnterDimMode) {
+            self.last.style.dim = true;
+        }
+
+        if style.is_reverse() && !self.last.style.is_reverse() {
             if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
-                self.last.style.set(TextStyling::REVERSE, true);
+                self.last.style.reverse = true;
             }
         }
     }

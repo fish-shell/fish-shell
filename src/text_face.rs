@@ -1,18 +1,77 @@
-use bitflags::bitflags;
-
 use crate::color::Color;
 use crate::terminal::{best_color, get_color_support};
 use crate::wchar::prelude::*;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 
-bitflags! {
-    #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-    pub struct TextStyling: u8 {
-        const BOLD = 1<<0;
-        const UNDERLINE = 1<<1;
-        const ITALICS = 1<<2;
-        const DIM = 1<<3;
-        const REVERSE = 1<<4;
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) struct TextStyling {
+    pub(crate) bold: bool,
+    pub(crate) underline: bool,
+    pub(crate) italics: bool,
+    pub(crate) dim: bool,
+    pub(crate) reverse: bool,
+}
+
+impl TextStyling {
+    pub(crate) const fn default() -> Self {
+        Self {
+            bold: false,
+            underline: false,
+            italics: false,
+            dim: false,
+            reverse: false,
+        }
+    }
+    pub(crate) fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+    pub(crate) fn union(self, other: Self) -> Self {
+        Self {
+            bold: self.is_bold() || other.is_bold(),
+            underline: self.is_underline() || other.is_underline(),
+            italics: self.is_italics() || other.is_italics(),
+            dim: self.is_dim() || other.is_dim(),
+            reverse: self.is_reverse() || other.is_reverse(),
+        }
+    }
+    pub(crate) fn difference(self, other: Self) -> Self {
+        Self {
+            bold: self.is_bold() && !other.is_bold(),
+            underline: self.is_underline() && !other.is_underline(),
+            italics: self.is_italics() && !other.is_italics(),
+            dim: self.is_dim() && !other.is_dim(),
+            reverse: self.is_reverse() && !other.is_reverse(),
+        }
+    }
+
+    /// Returns whether the text face is bold.
+    pub const fn is_bold(self) -> bool {
+        self.bold
+    }
+
+    /// Returns whether the text face is underlined.
+    pub const fn is_underline(self) -> bool {
+        self.underline
+    }
+
+    /// Set whether the text face is underline.
+    pub fn inject_underline(&mut self, underline: bool) {
+        self.underline = underline;
+    }
+
+    /// Returns whether the text face is italics.
+    pub const fn is_italics(self) -> bool {
+        self.italics
+    }
+
+    /// Returns whether the text face is dim.
+    pub const fn is_dim(self) -> bool {
+        self.dim
+    }
+
+    /// Returns whether the text face has reverse foreground/background colors.
+    pub const fn is_reverse(self) -> bool {
+        self.reverse
     }
 }
 
@@ -28,45 +87,18 @@ impl TextFace {
         Self {
             fg: Color::Normal,
             bg: Color::Normal,
-            style: TextStyling::empty(),
+            style: TextStyling::default(),
         }
     }
 
     pub fn new(fg: Color, bg: Color, style: TextStyling) -> Self {
         Self { fg, bg, style }
     }
-    /// Returns whether the text face is bold.
-    pub const fn is_bold(self) -> bool {
-        self.style.contains(TextStyling::BOLD)
-    }
-
-    /// Returns whether the text face is underlined.
-    pub const fn is_underline(self) -> bool {
-        self.style.contains(TextStyling::UNDERLINE)
-    }
-
-    /// Set whether the text face is underline.
-    pub fn inject_underline(&mut self, underline: bool) {
-        self.style.set(TextStyling::UNDERLINE, underline)
-    }
-
-    /// Returns whether the text face is italics.
-    pub const fn is_italics(self) -> bool {
-        self.style.contains(TextStyling::ITALICS)
-    }
-
-    /// Returns whether the text face is dim.
-    pub const fn is_dim(self) -> bool {
-        self.style.contains(TextStyling::DIM)
-    }
-
-    /// Returns whether the text face has reverse foreground/background colors.
-    pub const fn is_reverse(self) -> bool {
-        self.style.contains(TextStyling::REVERSE)
-    }
 }
 
-pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Option<Color>, TextStyling) {
+pub(crate) fn parse_text_face(
+    arguments: &[WString],
+) -> (Option<Color>, Option<Color>, TextStyling) {
     let mut argv: Vec<&wstr> = Some(L!(""))
         .into_iter()
         .chain(arguments.iter().map(|s| s.as_utfstr()))
@@ -74,7 +106,7 @@ pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Option<Co
     let TextFaceArgsAndOptions {
         wopt_index,
         bgcolor,
-        mut style,
+        style,
         print_color_mode,
     } = match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
         TextFaceArgsAndOptionsResult::Ok(parsed_text_faces) => parsed_text_faces,
@@ -83,22 +115,16 @@ pub fn parse_text_face(arguments: &[WString], is_background: bool) -> (Option<Co
         | TextFaceArgsAndOptionsResult::UnknownOption(_) => unreachable!(),
     };
     assert!(!print_color_mode);
-    let color;
-    if is_background {
-        color = bgcolor.and_then(Color::from_wstr);
-        // We ignore styles for dedicated background roles but reverse should be meaningful in
-        // either context
-        style &= TextStyling::REVERSE;
-    } else {
-        color = best_color(
-            argv[wopt_index..]
-                .iter()
-                .filter_map(|&color| Color::from_wstr(color)),
-            get_color_support(),
-        );
-    }
-    assert!(color.map_or(true, |color| !color.is_none()));
-    (color, style)
+    let fg = best_color(
+        argv[wopt_index..]
+            .iter()
+            .filter_map(|&color| Color::from_wstr(color)),
+        get_color_support(),
+    );
+    let bg = bgcolor.and_then(Color::from_wstr);
+    assert!(fg.map_or(true, |fg| !fg.is_none()));
+    assert!(bg.map_or(true, |bg| !bg.is_none()));
+    (fg, bg, style)
 }
 
 pub(crate) struct TextFaceArgsAndOptions<'a> {
@@ -135,7 +161,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
     let long_options = &long_options[..long_options.len() - builtin_extra_args];
 
     let mut bgcolor = None;
-    let mut style = TextStyling::empty();
+    let mut style = TextStyling::default();
     let mut print_color_mode = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
@@ -150,11 +176,11 @@ pub(crate) fn parse_text_face_and_options<'a>(
                     return TextFaceArgsAndOptionsResult::PrintHelp;
                 }
             }
-            'o' => style |= TextStyling::BOLD,
-            'i' => style |= TextStyling::ITALICS,
-            'd' => style |= TextStyling::DIM,
-            'r' => style |= TextStyling::REVERSE,
-            'u' => style |= TextStyling::UNDERLINE,
+            'o' => style.bold = true,
+            'i' => style.italics = true,
+            'd' => style.dim = true,
+            'r' => style.reverse = true,
+            'u' => style.underline = true,
             'c' => print_color_mode = true,
             ':' => {
                 if is_builtin {

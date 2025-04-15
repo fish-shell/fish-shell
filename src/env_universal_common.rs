@@ -1,8 +1,8 @@
 #![allow(clippy::bad_bit_mask)]
 
 use crate::common::{
-    read_loop, str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, write_loop,
-    UnescapeFlags, UnescapeStringStyle,
+    read_loop, str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags,
+    UnescapeStringStyle,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::fallback::fish_mkstemp_cloexec;
@@ -13,8 +13,8 @@ use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wcstringutil::{join_strings, string_suffixes_string, LineIterator};
 use crate::wutil::{
-    file_id_for_fd, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename, wstat,
-    wunlink, FileId, INVALID_FILE_ID,
+    file_id_for_file, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename,
+    wstat, wunlink, FileId, INVALID_FILE_ID,
 };
 use errno::{errno, Errno};
 use libc::{EINTR, LOCK_EX};
@@ -23,8 +23,9 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::File;
+use std::io::Write;
 use std::mem::MaybeUninit;
-use std::os::fd::{AsFd, AsRawFd, RawFd};
+use std::os::fd::{AsRawFd, RawFd};
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -231,7 +232,7 @@ impl EnvUniversal {
         };
 
         // Read from it.
-        self.load_from_fd(&mut vars_file, callbacks);
+        self.load_from_file(&mut vars_file, callbacks);
 
         if self.ok_to_save {
             self.save(&directory)
@@ -384,16 +385,16 @@ impl EnvUniversal {
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_fd(&mut file, callbacks);
+        self.load_from_file(&mut file, callbacks);
         true
     }
 
     // Load environment variables from the opened [`File`] `file`. It must be mutable because we
     // will read from the underlying fd.
-    fn load_from_fd(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
+    fn load_from_file(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
         // Get the dev / inode.
-        let current_file = file_id_for_fd(file.as_fd());
-        if current_file == self.last_read_file {
+        let current_file_id = file_id_for_file(file);
+        if current_file_id == self.last_read_file {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
         } else {
             // Read a variables table from the file.
@@ -411,7 +412,7 @@ impl EnvUniversal {
 
             // Acquire the new variables.
             self.acquire_variables(new_vars);
-            self.last_read_file = current_file;
+            self.last_read_file = current_file_id;
         }
     }
 
@@ -472,7 +473,7 @@ impl EnvUniversal {
 
             // Hopefully we got the lock. However, it's possible the file changed out from under us
             // while we were waiting for the lock. Make sure that didn't happen.
-            if file_id_for_fd(file.as_fd()) != file_id_for_path(&self.vars_path) {
+            if file_id_for_file(&file) != file_id_for_path(&self.vars_path) {
                 // Oops, it changed! Try again.
                 drop(file);
             } else {
@@ -522,15 +523,14 @@ impl EnvUniversal {
     }
 
     /// Writes our state to the fd. path is provided only for error reporting.
-    fn write_to_fd(&mut self, fd: impl AsFd, path: &wstr) -> std::io::Result<()> {
-        let fd = fd.as_fd();
+    fn write_to_file(&mut self, file: &mut File, path: &wstr) -> std::io::Result<()> {
         let contents = Self::serialize_with_vars(&self.vars);
 
-        let res = write_loop(&fd, &contents);
+        let res = file.write_all(&contents);
         match res.as_ref() {
             Ok(()) => {
                 // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-                self.last_read_file = file_id_for_fd(fd);
+                self.last_read_file = file_id_for_file(file);
             }
             Err(err) => {
                 let error = Errno(err.raw_os_error().unwrap());
@@ -756,7 +756,8 @@ impl EnvUniversal {
 
         // Open adjacent temporary file.
         let mut private_file_path = WString::new();
-        let Ok(private_fd) = self.open_temporary_file(directory, &mut private_file_path) else {
+        let Ok(mut private_file) = self.open_temporary_file(directory, &mut private_file_path)
+        else {
             return false;
         };
         // unlink pfp upon failure. In case of success, it (already) won't exist.
@@ -766,7 +767,10 @@ impl EnvUniversal {
         let private_file_path = &delete_pfp;
 
         // Write to it.
-        if self.write_to_fd(&private_fd, private_file_path).is_err() {
+        if self
+            .write_to_file(&mut private_file, private_file_path)
+            .is_err()
+        {
             FLOG!(uvar_file, "universal log write_to_fd() failed");
             return false;
         }
@@ -775,12 +779,12 @@ impl EnvUniversal {
 
         // Ensure we maintain ownership and permissions (#2176).
         if let Ok(md) = wstat(&real_path) {
-            if unsafe { libc::fchown(private_fd.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+            if unsafe { libc::fchown(private_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                 FLOG!(uvar_file, "universal log fchown() failed");
             }
             #[allow(clippy::useless_conversion)]
             let mode: libc::mode_t = md.mode().try_into().unwrap();
-            if unsafe { libc::fchmod(private_fd.as_raw_fd(), mode) } == -1 {
+            if unsafe { libc::fchmod(private_file.as_raw_fd(), mode) } == -1 {
                 FLOG!(uvar_file, "universal log fchmod() failed");
             }
         }
@@ -803,7 +807,7 @@ impl EnvUniversal {
             times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
             if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
                 unsafe {
-                    libc::futimens(private_fd.as_raw_fd(), &times[0]);
+                    libc::futimens(private_file.as_raw_fd(), &times[0]);
                 }
             }
         }

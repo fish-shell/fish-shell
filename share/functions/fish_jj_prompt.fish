@@ -8,10 +8,7 @@ function fish_jj_prompt
         jj log 2>/dev/null --no-graph --ignore-working-copy --color=always --revisions @ \
             --template '
                 separate(" ",
-                    bookmarks,
-                    tags,
                     if(conflict, label("conflict", "×")),
-                    if(empty, label("empty", "(empty)"))
                 )
             '
     )"

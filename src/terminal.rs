@@ -501,10 +501,6 @@ impl Outputter {
         let mut bg_set = false;
         let mut last_bg_set = false;
 
-        if fg.is_reset() || bg.is_reset() {
-            self.reset_text_face(true);
-            return;
-        }
         use TerminalCommand::{
             EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
             EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,

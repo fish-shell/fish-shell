@@ -29,7 +29,6 @@ pub enum Color {
     Named { idx: u8 },
     Rgb(Color24),
     Normal,
-    Reset,
 }
 
 impl Color {
@@ -54,11 +53,6 @@ impl Color {
     /// Returns whether the color is the normal special color.
     pub const fn is_normal(self) -> bool {
         matches!(self, Self::Normal)
-    }
-
-    /// Returns whether the color is the reset special color.
-    pub const fn is_reset(self) -> bool {
-        matches!(self, Self::Reset)
     }
 
     /// Returns whether the color is the none special color.
@@ -87,7 +81,6 @@ impl Color {
             Self::Named { idx } => [0, 7, 8, 15, 16].contains(idx) || (232..=255).contains(idx),
             Self::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
             Self::Normal => true,
-            Self::Reset => true,
         }
     }
 
@@ -97,7 +90,7 @@ impl Color {
         match self {
             Self::Named { idx } => idx,
             Self::Rgb(c) => term16_color_for_rgb(c),
-            Self::None | Self::Normal | Self::Reset => {
+            Self::None | Self::Normal => {
                 panic!("to_name_index() called on Color that's not named or RGB")
             }
         }
@@ -144,8 +137,6 @@ impl Color {
     fn try_parse_special(special: &wstr) -> Option<Self> {
         if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
             Some(Self::Normal)
-        } else if simple_icase_compare(special, L!("reset")) == Ordering::Equal {
-            Some(Self::Reset)
         } else {
             None
         }

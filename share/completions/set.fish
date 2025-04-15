@@ -53,18 +53,19 @@ function __fish_complete_special_vars
         FISH_DEBUG "list of enabled debug categories" \
         FISH_DEBUG_OUTPUT "debug output path" \
         umask "current file creation mask" \
-        fish_handle_reflow "if fish should repaint prompt when the term resizes" \
-        fish_cursor_selection_mode "set to 'inclusive' if selections should include the cursor" \
-        fish_cursor_end_mode "set to 'inclusive' to disallow moving the cursor beyond the command line end" \
-        fish_emoji_width "cols wide fish assumes emoji render as" \
-        fish_key_bindings "name of function that sets binds" \
-        fish_autosuggestion_enabled "turns autosuggestions on or off" \
         fish_ambiguous_width "affects computed width of east asian chars" \
+        fish_autosuggestion_enabled "turns autosuggestions on or off" \
+        fish_cursor_end_mode "set to 'inclusive' to disallow moving the cursor beyond the command line end" \
+        fish_cursor_selection_mode "set to 'inclusive' if selections should include the cursor" \
+        fish_emoji_width "cols wide fish assumes emoji render as" \
         fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
         fish_greeting "The message to display at start (also a function)" \
+        fish_handle_reflow "if fish should repaint prompt when the term resizes" \
         fish_history "The session id to store history under" \
+        fish_key_bindings "name of function that sets binds" \
         fish_trace "Enables execution tracing (if set to non-empty value)" \
         fish_user_paths "A list of dirs to prepend to PATH"
+
 end
 
 #

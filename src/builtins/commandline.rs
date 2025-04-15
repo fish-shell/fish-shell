@@ -730,22 +730,16 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             current_cursor_pos,
             streams,
         );
-    } else if positional_args == 1 {
-        replace_part(
-            parser,
-            range,
-            args[w.wopt_index],
-            append_mode,
-            current_buffer,
-            current_cursor_pos,
-            search_field_mode,
-        );
     } else {
-        let sb = join_strings(&w.argv[w.wopt_index..], '\n');
+        let replacement = if positional_args == 1 {
+            Cow::Borrowed(args[w.wopt_index])
+        } else {
+            Cow::Owned(join_strings(&w.argv[w.wopt_index..], '\n'))
+        };
         replace_part(
             parser,
             range,
-            &sb,
+            &replacement,
             append_mode,
             current_buffer,
             current_cursor_pos,

@@ -45,9 +45,14 @@ function __fish_cargo_features
 end
 
 function __fish_cargo_packages
-    find . -name Cargo.toml | string replace -rf '.*/([^/]+)/?Cargo.toml' '$1'
+    if command -q jq
+        cargo metadata --no-deps --format-version 1 | jq -r '.packages | .[] | .name' | __fish_concat_completions
+    else if set -l python (__fish_anypython)
+        cargo metadata --no-deps --format-version 1 |
+        command $python -Sc "import sys, json"\n"print(*[x['name'] for x in json.load(sys.stdin)['packages']], sep='\n')"
+    end
 end
-complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
+complete -c cargo -n '__fish_seen_subcommand_from run test build debug check clippy' -s p -l package \
     -xa "(__fish_cargo_packages)"
 
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---

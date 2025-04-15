@@ -54,7 +54,7 @@ function __fish_complete_special_vars
         FISH_DEBUG_OUTPUT "debug output path" \
         umask "current file creation mask" \
         fish_ambiguous_width "affects computed width of east asian chars" \
-        fish_autosuggestion_enabled "turns autosuggestions on or off" \
+        fish_autosuggestion_enabled "set to 0 to turn autosuggestions off" \
         fish_cursor_end_mode "set to 'inclusive' to disallow moving the cursor beyond the command line end" \
         fish_cursor_selection_mode "set to 'inclusive' if selections should include the cursor" \
         fish_emoji_width "cols wide fish assumes emoji render as" \
@@ -63,7 +63,10 @@ function __fish_complete_special_vars
         fish_handle_reflow "if fish should repaint prompt when the term resizes" \
         fish_history "The session id to store history under" \
         fish_key_bindings "name of function that sets binds" \
+        fish_term24bit "set to 0 to use the color palette instead of true-colors" \
+        fish_term256 "set to 0 to use the 16-color palette instead of 256" \
         fish_trace "Enables execution tracing (if set to non-empty value)" \
+        fish_transient_prompt "set to 1 to re-run prompts before pushing them to scrollback" \
         fish_user_paths "A list of dirs to prepend to PATH"
 
 end

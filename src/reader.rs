@@ -1660,10 +1660,7 @@ impl<'a> Reader<'a> {
             let explicit_foreground = self
                 .vars()
                 .get_unless_empty(L!("fish_color_search_match"))
-                .is_some_and(|var| {
-                    let (fg, _bg, _style) = parse_text_face(var.as_list());
-                    !fg.is_none()
-                });
+                .is_some_and(|var| parse_text_face(var.as_list()).fg.is_some());
 
             for color in &mut colors[range] {
                 if explicit_foreground {

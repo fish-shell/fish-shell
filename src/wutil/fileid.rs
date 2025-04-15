@@ -1,8 +1,7 @@
 use crate::common::wcs2zstring;
-use crate::wutil::{fstat, wstr};
+use crate::wutil::wstr;
 use std::ffi::{CStr, OsStr};
-use std::fs::{self, Metadata};
-use std::os::fd::AsRawFd;
+use std::fs::{self, File, Metadata};
 use std::os::unix::prelude::*;
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
@@ -65,15 +64,15 @@ pub const INVALID_FILE_ID: FileId = FileId {
     mod_nanoseconds: i64::MIN,
 };
 
-/// Get a FileID corresponding to a raw file descriptor, or INVALID_FILE_ID if it fails.
-pub fn file_id_for_fd(fd: impl AsRawFd) -> FileId {
-    fstat(fd)
+/// Get a FileId corresponding to a `file`, or `INVALID_FILE_ID` if it fails.
+pub fn file_id_for_file(file: &File) -> FileId {
+    file.metadata()
         .as_ref()
         .map(FileId::from_md)
         .unwrap_or(INVALID_FILE_ID)
 }
 
-/// Get a FileID corresponding to a path, or INVALID_FILE_ID if it fails.
+/// Get a FileId corresponding to a `path`, or `INVALID_FILE_ID` if it fails.
 pub fn file_id_for_path(path: &wstr) -> FileId {
     file_id_for_path_narrow(&wcs2zstring(path))
 }

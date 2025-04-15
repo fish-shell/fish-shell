@@ -35,10 +35,7 @@ use std::{
     io::{BufRead, Read, Seek, SeekFrom, Write},
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::{
-        fd::{AsFd, AsRawFd},
-        unix::fs::MetadataExt,
-    },
+    os::{fd::AsRawFd, unix::fs::MetadataExt},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -76,8 +73,8 @@ use crate::{
     wildcard::{wildcard_match, ANY_STRING},
     wutil::fstat,
     wutil::{
-        file_id_for_fd, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId,
-        INVALID_FILE_ID,
+        file_id_for_file, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink,
+        FileId, INVALID_FILE_ID,
     },
 };
 
@@ -518,7 +515,7 @@ impl HistoryImpl {
             let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
             self.file_contents = HistoryFileContents::create(&mut file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(file.as_fd())
+                file_id_for_file(&file)
             } else {
                 INVALID_FILE_ID
             };
@@ -707,7 +704,7 @@ impl HistoryImpl {
 
             let orig_file_id = target_file_before
                 .as_ref()
-                .map(|fd| file_id_for_fd(fd.as_fd()))
+                .map(file_id_for_file)
                 .unwrap_or(INVALID_FILE_ID);
 
             // Open any target file, but do not lock it right away
@@ -870,7 +867,7 @@ impl HistoryImpl {
             unsafe {
                 Self::maybe_lock_file(&mut file, LOCK_EX);
             }
-            let file_id = file_id_for_fd(file.as_fd());
+            let file_id = file_id_for_file(&file);
             if file_id_for_path(&history_path) == file_id {
                 // File IDs match, so the file we opened is still at that path
                 // We're going to use this fd
@@ -929,7 +926,7 @@ impl HistoryImpl {
         // write.
         // We don't update the mapping since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id_for_fd(history_file.as_fd());
+        self.history_file_id = file_id_for_file(&history_file);
 
         drop(history_file);
 

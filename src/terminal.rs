@@ -501,10 +501,6 @@ impl Outputter {
         let mut bg_set = false;
         let mut last_bg_set = false;
 
-        if fg.is_reset() || bg.is_reset() {
-            self.reset_text_face(true);
-            return;
-        }
         use TerminalCommand::{
             EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
             EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
@@ -524,7 +520,7 @@ impl Outputter {
         }
         if !self.last.bg.is_special() {
             // Background was set.
-            // "Special" here refers to the special "normal", "reset" and "none" colors,
+            // "Special" here refers to the special "normal" and "none" colors,
             // that really just disable the background.
             last_bg_set = true;
         }

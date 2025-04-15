@@ -9,7 +9,7 @@ use crate::text_face::{
     TextStyling,
 };
 
-fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg: Color) {
+fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg: Option<Color>) {
     let outp = &mut Outputter::new_buffering();
 
     // Rebind args to named_colors if there are no args.
@@ -24,10 +24,10 @@ fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg:
     for color_name in args {
         if streams.out_is_terminal() {
             let fg = Color::from_wstr(color_name).unwrap_or(Color::None);
-            outp.set_text_face(TextFace::new(fg, bg, style));
+            outp.set_text_face(TextFace::new(fg, bg.unwrap_or(Color::None), style));
         }
         outp.write_wstr(color_name);
-        if streams.out_is_terminal() && !bg.is_none() {
+        if streams.out_is_terminal() && bg.is_some() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
             outp.reset_text_face(false);
@@ -51,7 +51,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     }
 
     let TextFaceArgsAndOptions {
-        mut wopt_index,
+        wopt_index,
         bgcolor,
         style,
         print_color_mode,
@@ -90,8 +90,8 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     };
 
     let bg = match bgcolor {
-        Some(s) => parse_color(s)?,
-        None => Color::None,
+        Some(s) => Some(parse_color(s)?),
+        None => None,
     };
 
     if print_color_mode {
@@ -102,36 +102,42 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Remaining arguments are foreground color.
     let mut fgcolors = Vec::new();
-    while wopt_index < argc {
-        fgcolors.push(parse_color(argv[wopt_index])?);
-        wopt_index += 1;
+    let mut is_reset = false;
+    for (i, arg) in argv.iter().skip(wopt_index).enumerate() {
+        if arg == "reset" {
+            // Historical behavior: reset only applies if it's the first argument.
+            if i == 0 {
+                is_reset = true;
+                break;
+            }
+        } else {
+            fgcolors.push(parse_color(arg)?);
+        }
     }
 
     // #1323: We may have multiple foreground colors. Choose the best one.
     let fg = best_color(fgcolors.into_iter(), get_color_support());
 
     let mut outp = Outputter::new_buffering();
-    outp.set_text_face(TextFace::new(Color::None, Color::None, style));
 
     // Here's some automagic behavior: if either of foreground or background are "normal",
     // reset all colors/attributes. Same if foreground is "reset" (undocumented).
     // Note that either overwrite the attributes printed above! For "normal", this is probably wrong?
-    if bg.is_normal() {
+    if is_reset || [fg, bg].iter().any(|c| c.is_some_and(|c| c.is_normal())) {
         outp.reset_text_face(false);
-    }
-
-    if let Some(fg) = fg {
-        if fg.is_normal() || fg.is_reset() {
-            outp.reset_text_face(false);
-        } else if !outp.write_color(fg, true /* is_fg */) {
-            // We need to do *something* or the lack of any output messes up
-            // when the cartesian product here would make "foo" disappear:
-            //  $ echo (set_color foo)bar
-            outp.reset_text_face(true);
+    } else {
+        outp.set_text_face(TextFace::new(Color::None, Color::None, style));
+        if let Some(fg) = fg {
+            if !outp.write_color(fg, true /* is_fg */) {
+                // We need to do *something* or the lack of any output messes up
+                // when the cartesian product here would make "foo" disappear:
+                //  $ echo (set_color foo)bar
+                outp.reset_text_face(true);
+            }
         }
-    }
-    if bgcolor.is_some() && !bg.is_normal() && !bg.is_reset() {
-        outp.write_color(bg, false /* is_fg */);
+        if let Some(bg) = bg {
+            outp.write_color(bg, false /* is_fg */);
+        }
     }
 
     // Output the collected string.

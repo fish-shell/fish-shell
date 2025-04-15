@@ -581,29 +581,29 @@ impl Outputter {
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
         if is_bold && !self.last.is_bold() && !bg_set && self.write_command(EnterBoldMode) {
-            self.last.style.set(TextStyling::BOLD, is_bold);
+            self.last.style.set(TextStyling::BOLD, true);
         }
 
         if !self.last.is_underline() && is_underline && self.write_command(EnterUnderlineMode) {
-            self.last.style.set(TextStyling::UNDERLINE, is_underline);
+            self.last.style.set(TextStyling::UNDERLINE, true);
         } else if self.last.is_underline() && !is_underline && self.write_command(ExitUnderlineMode)
         {
-            self.last.style.set(TextStyling::UNDERLINE, is_underline);
+            self.last.style.set(TextStyling::UNDERLINE, false);
         }
 
         if self.last.is_italics() && !is_italics && self.write_command(ExitItalicsMode) {
-            self.last.style.set(TextStyling::ITALICS, is_italics);
+            self.last.style.set(TextStyling::ITALICS, false);
         } else if !self.last.is_italics() && is_italics && self.write_command(EnterItalicsMode) {
-            self.last.style.set(TextStyling::ITALICS, is_italics);
+            self.last.style.set(TextStyling::ITALICS, true);
         }
 
         if is_dim && !self.last.is_dim() && self.write_command(EnterDimMode) {
-            self.last.style.set(TextStyling::DIM, is_dim);
+            self.last.style.set(TextStyling::DIM, true);
         }
 
         if is_reverse && !self.last.is_reverse() {
             if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
-                self.last.style.set(TextStyling::REVERSE, is_reverse);
+                self.last.style.set(TextStyling::REVERSE, true);
             }
         }
     }

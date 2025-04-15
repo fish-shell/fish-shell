@@ -663,6 +663,7 @@ fn test_highlighting() {
 /// command.
 #[test]
 #[serial]
+#[allow(clippy::needless_range_loop)]
 fn test_trailing_spaces_after_command() {
     let _cleanup = test_init();
     let parser = TestParser::new();

@@ -132,8 +132,9 @@ impl Autoload {
 
         // HACK: In cargo tests, this used to never load functions
         // It will hang for reasons unrelated to this.
-        #[cfg(test)]
-        return None;
+        if cfg!(test) {
+            return None;
+        }
 
         #[cfg(feature = "embed-data")]
         {

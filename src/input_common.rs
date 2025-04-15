@@ -873,6 +873,7 @@ pub trait InputEventQueuer {
                         }
                         match decode_input_byte(
                             &mut seq,
+                            InvalidPolicy::Error,
                             &mut state,
                             &buffer[..i + 1],
                             &mut consumed,
@@ -1693,8 +1694,15 @@ pub(crate) enum DecodeState {
     Error,
 }
 
+#[derive(Eq, PartialEq)]
+pub(crate) enum InvalidPolicy {
+    Error,
+    Passthrough,
+}
+
 pub(crate) fn decode_input_byte(
     out_seq: &mut WString,
+    invalid_policy: InvalidPolicy,
     state: &mut mbstate_t,
     buffer: &[u8],
     consumed: &mut usize,
@@ -1710,6 +1718,19 @@ pub(crate) fn decode_input_byte(
         out_seq.push(res);
         return Complete;
     }
+    let mut invalid = |out_seq: &mut WString, log_error: fn()| match invalid_policy {
+        InvalidPolicy::Error => {
+            (log_error)();
+            Error
+        }
+        InvalidPolicy::Passthrough => {
+            for &b in &buffer[*consumed..] {
+                out_seq.push(encode_byte_to_char(b));
+            }
+            *consumed = buffer.len();
+            Complete
+        }
+    };
     let mut codepoint = u32::from(res);
     match unsafe {
         mbrtowc(
@@ -1721,9 +1742,7 @@ pub(crate) fn decode_input_byte(
     } as isize
     {
         -1 => {
-            FLOG!(reader, "Illegal input");
-            *consumed += 1;
-            return Error;
+            return invalid(out_seq, || FLOG!(reader, "Illegal input encoding"));
         }
         -2 => {
             // Sequence not yet complete.
@@ -1739,11 +1758,7 @@ pub(crate) fn decode_input_byte(
             return Complete;
         }
     }
-    for &b in &buffer[*consumed..] {
-        out_seq.push(encode_byte_to_char(b));
-        *consumed += 1;
-    }
-    Complete
+    invalid(out_seq, || FLOG!(reader, "Illegal codepoint"))
 }
 
 pub(crate) fn unblock_input(mut wait_guard: MutexGuard<Option<BlockingWait>>) -> bool {

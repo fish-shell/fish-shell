@@ -14,6 +14,7 @@ use crate::env::{EnvVar, EnvVarFlags};
 use crate::input_common::decode_input_byte;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::DecodeState;
+use crate::input_common::InvalidPolicy;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
 use crate::reader::ReaderConfig;
@@ -358,16 +359,19 @@ fn read_one_char_at_a_time(
             unconsumed.push(b);
             nbytes += 1;
             let mut consumed = 0;
-            match decode_input_byte(buff, &mut state, &unconsumed, &mut consumed) {
+            match decode_input_byte(
+                buff,
+                InvalidPolicy::Passthrough,
+                &mut state,
+                &unconsumed,
+                &mut consumed,
+            ) {
                 DecodeState::Incomplete => continue,
                 DecodeState::Complete => {
                     unconsumed.clear();
                     break Some(buff.as_char_slice().last().unwrap());
                 }
-                DecodeState::Error => {
-                    state = zero_mbstate();
-                    unconsumed.clear();
-                }
+                DecodeState::Error => unreachable!(),
             }
         };
 

@@ -225,9 +225,7 @@ end
 
 # All valid targets excluding installed
 function __rustup_installable_targets
-    comm -2 -3 (__rustup_targets | psub -F) (__rustup_installed_targets | psub -F) \
-        # Ignore warnings about lists not being in sorted order, as we are aware of their contents
-        2>/dev/null
+    rustup target list | string match -rv '\(installed\)$'
 end
 
 # Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"

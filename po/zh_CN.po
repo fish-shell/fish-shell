@@ -7642,9 +7642,6 @@ msgstr "闯入不超过SIZE的稀有文件"
 msgid "Brief  Output only whether files differ."
 msgstr "仅简要输出文件是否不同 ."
 
-msgid "Brightness (default)"
-msgstr "亮度( 默认)"
-
 msgid "Bring changes from the repository into the working copy"
 msgstr ""
 
@@ -27919,6 +27916,9 @@ msgstr "获取一个域的内存统计"
 msgid "Get metadata given in range"
 msgstr "获取给定范围的元数据"
 
+msgid "Get minimum brightness"
+msgstr ""
+
 msgid "Get network connectivity state"
 msgstr ""
 
@@ -31332,9 +31332,6 @@ msgstr "Gpg 补全代码分解的内部函数"
 
 msgid "Interpolates variables into a manifest"
 msgstr "将变量输入列表"
-
-msgid "Interpret & output values in percent"
-msgstr "以%为单位解释输出值( O)"
 
 msgid "Interpret & output values in raw mode"
 msgstr "以原始模式解释输出值( O)"
@@ -36244,9 +36241,6 @@ msgstr "贝壳可用的最大虚拟内存量"
 msgid "Maximum backward scroll"
 msgstr "最大向后滚动"
 
-msgid "Maximum brightness"
-msgstr "最大亮度"
-
 msgid "Maximum bytes in POSIX message queues"
 msgstr "POSIX 信件队列中的最大字节"
 
@@ -36573,9 +36567,6 @@ msgstr ""
 
 msgid "Minimize the specified window"
 msgstr "最小化指定的窗口"
-
-msgid "Minimum cap"
-msgstr "最低上限"
 
 msgid "Minimum confidence of a problem to print it"
 msgstr "对一个问题的最小信心来打印它"
@@ -49714,8 +49705,8 @@ msgstr "恢复和重新扫描可用音卡"
 msgid "Restore as a single transaction"
 msgstr "单项交易恢复"
 
-msgid "Restore brightness"
-msgstr "恢复亮度"
+msgid "Restore brightness after saving"
+msgstr ""
 
 msgid "Restore dependencies"
 msgstr "恢复依赖关系"
@@ -52930,9 +52921,6 @@ msgstr "选择与指定的 PID 相关的所有节点"
 msgid "Selects an output to reconfigure"
 msgstr "选择要重新配置的输出"
 
-msgid "Selects controller automatically (default)"
-msgstr "自动选择控制器( 默认)"
-
 msgid "Selects how passphrases are mangled"
 msgstr "选择密码句的拼接方式"
 
@@ -54354,6 +54342,9 @@ msgstr "为α设定分数"
 
 msgid "Set min quantizer for color"
 msgstr "设置颜色的分数"
+
+msgid "Set minimum brightness"
+msgstr ""
 
 msgid "Set minimum brightness when using delta values"
 msgstr ""

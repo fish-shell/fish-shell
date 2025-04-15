@@ -7744,9 +7744,6 @@ msgstr ""
 msgid "Brief  Output only whether files differ."
 msgstr ""
 
-msgid "Brightness (default)"
-msgstr "Luminosité (par défaut)"
-
 msgid "Bring changes from the repository into the working copy"
 msgstr ""
 
@@ -28021,6 +28018,9 @@ msgstr ""
 msgid "Get metadata given in range"
 msgstr "Obtenir les métadonnées de la plage"
 
+msgid "Get minimum brightness"
+msgstr ""
+
 msgid "Get network connectivity state"
 msgstr ""
 
@@ -31434,9 +31434,6 @@ msgstr ""
 
 msgid "Interpolates variables into a manifest"
 msgstr ""
-
-msgid "Interpret & output values in percent"
-msgstr "Interpréter et afficher des pourcentages"
 
 msgid "Interpret & output values in raw mode"
 msgstr "Interpréter et afficher des valeurs brutes"
@@ -36346,9 +36343,6 @@ msgstr "Taille maximale de mémoire virtuelle allouée au shell"
 msgid "Maximum backward scroll"
 msgstr "Nombre maximal de lignes lors d’un défilement arrière"
 
-msgid "Maximum brightness"
-msgstr "Luminosité maximale"
-
 msgid "Maximum bytes in POSIX message queues"
 msgstr ""
 
@@ -36674,9 +36668,6 @@ msgid "Minimize context of patch bundle [DEFAULT]"
 msgstr ""
 
 msgid "Minimize the specified window"
-msgstr ""
-
-msgid "Minimum cap"
 msgstr ""
 
 msgid "Minimum confidence of a problem to print it"
@@ -49816,8 +49807,8 @@ msgstr "Restaurer et rescanner pour trouver les cartes son disponibles"
 msgid "Restore as a single transaction"
 msgstr ""
 
-msgid "Restore brightness"
-msgstr "Restaurer la luminosité"
+msgid "Restore brightness after saving"
+msgstr ""
 
 msgid "Restore dependencies"
 msgstr ""
@@ -53032,9 +53023,6 @@ msgstr ""
 msgid "Selects an output to reconfigure"
 msgstr "Sélectionner une sortie à reconfigurer"
 
-msgid "Selects controller automatically (default)"
-msgstr "Sélectionner le contrôleur automatiquement (par défaut)"
-
 msgid "Selects how passphrases are mangled"
 msgstr "Sélectionne la façon de modifier les phrases de passe"
 
@@ -54455,6 +54443,9 @@ msgid "Set min quantizer for alpha"
 msgstr ""
 
 msgid "Set min quantizer for color"
+msgstr ""
+
+msgid "Set minimum brightness"
 msgstr ""
 
 msgid "Set minimum brightness when using delta values"

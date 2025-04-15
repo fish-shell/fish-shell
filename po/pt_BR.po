@@ -7644,9 +7644,6 @@ msgstr ""
 msgid "Brief  Output only whether files differ."
 msgstr ""
 
-msgid "Brightness (default)"
-msgstr ""
-
 msgid "Bring changes from the repository into the working copy"
 msgstr ""
 
@@ -27931,6 +27928,9 @@ msgstr ""
 msgid "Get metadata given in range"
 msgstr ""
 
+msgid "Get minimum brightness"
+msgstr ""
+
 msgid "Get network connectivity state"
 msgstr ""
 
@@ -31343,9 +31343,6 @@ msgid "Internal function for gpg completion code deduplication"
 msgstr ""
 
 msgid "Interpolates variables into a manifest"
-msgstr ""
-
-msgid "Interpret & output values in percent"
 msgstr ""
 
 msgid "Interpret & output values in raw mode"
@@ -36262,9 +36259,6 @@ msgstr "Maximum amount of virtual memory available to the shell"
 msgid "Maximum backward scroll"
 msgstr "Maximum backward scroll"
 
-msgid "Maximum brightness"
-msgstr ""
-
 msgid "Maximum bytes in POSIX message queues"
 msgstr ""
 
@@ -36590,9 +36584,6 @@ msgid "Minimize context of patch bundle [DEFAULT]"
 msgstr ""
 
 msgid "Minimize the specified window"
-msgstr ""
-
-msgid "Minimum cap"
 msgstr ""
 
 msgid "Minimum confidence of a problem to print it"
@@ -49738,7 +49729,7 @@ msgstr ""
 msgid "Restore as a single transaction"
 msgstr ""
 
-msgid "Restore brightness"
+msgid "Restore brightness after saving"
 msgstr ""
 
 msgid "Restore dependencies"
@@ -52954,9 +52945,6 @@ msgstr ""
 msgid "Selects an output to reconfigure"
 msgstr ""
 
-msgid "Selects controller automatically (default)"
-msgstr ""
-
 msgid "Selects how passphrases are mangled"
 msgstr "Selects how passphrases are mangled"
 
@@ -54377,6 +54365,9 @@ msgid "Set min quantizer for alpha"
 msgstr ""
 
 msgid "Set min quantizer for color"
+msgstr ""
+
+msgid "Set minimum brightness"
 msgstr ""
 
 msgid "Set minimum brightness when using delta values"

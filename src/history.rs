@@ -71,7 +71,6 @@ use crate::{
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
-    wutil::fstat,
     wutil::{
         file_id_for_file, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink,
         FileId, INVALID_FILE_ID,
@@ -767,7 +766,7 @@ impl HistoryImpl {
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
                 if let Ok(target_file_after) = target_file_after.as_ref() {
-                    if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
+                    if let Ok(md) = target_file_after.metadata() {
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOG!(
                                 history_file,

@@ -96,9 +96,13 @@ impl TextFace {
     }
 }
 
-pub(crate) fn parse_text_face(
-    arguments: &[WString],
-) -> (Option<Color>, Option<Color>, TextStyling) {
+pub(crate) struct SpecifiedTextFace {
+    pub(crate) fg: Option<Color>,
+    pub(crate) bg: Option<Color>,
+    pub(crate) style: TextStyling,
+}
+
+pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     let mut argv: Vec<&wstr> = Some(L!(""))
         .into_iter()
         .chain(arguments.iter().map(|s| s.as_utfstr()))
@@ -124,7 +128,7 @@ pub(crate) fn parse_text_face(
     let bg = bgcolor.and_then(Color::from_wstr);
     assert!(fg.map_or(true, |fg| !fg.is_none()));
     assert!(bg.map_or(true, |bg| !bg.is_none()));
-    (fg, bg, style)
+    SpecifiedTextFace { fg, bg, style }
 }
 
 pub(crate) struct TextFaceArgsAndOptions<'a> {

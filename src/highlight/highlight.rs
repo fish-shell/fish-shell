@@ -28,7 +28,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{parse_text_face, TextFace, TextStyling};
+use crate::text_face::{parse_text_face, SpecifiedTextFace, TextFace, TextStyling};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -177,21 +177,22 @@ pub(crate) fn parse_text_face_for_highlight(
 ) -> TextFace {
     let parse_var = |maybe_var: Option<&EnvVar>| {
         let Some(var) = maybe_var else {
-            return (
-                Some(Color::Normal),
-                Some(Color::Normal),
-                TextStyling::default(),
-            );
+            return SpecifiedTextFace {
+                fg: Some(Color::Normal),
+                bg: Some(Color::Normal),
+                style: TextStyling::default(),
+            };
         };
         parse_text_face(var.as_list())
     };
-    let (fg, _bg, mut style) = parse_var(fg_var);
-    let (_fg, bg, bg_style) = parse_var(bg_var);
-    let fg = fg.unwrap_or(Color::Normal);
-    let bg = bg.unwrap_or(Color::Normal);
+    let fg_face = parse_var(fg_var);
+    let bg_face = parse_var(bg_var);
+    let fg = fg_face.fg.unwrap_or(Color::Normal);
+    let bg = bg_face.bg.unwrap_or(Color::Normal);
     // In case the background role is different from the foreground one, we ignore its style
     // except for reverse mode.
-    style.reverse |= bg_style.reverse;
+    let mut style = fg_face.style;
+    style.reverse |= bg_face.style.reverse;
     TextFace { fg, bg, style }
 }
 

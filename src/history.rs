@@ -41,7 +41,7 @@ use std::{
 };
 
 use bitflags::bitflags;
-use libc::{fchmod, fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::{fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -767,6 +767,7 @@ impl HistoryImpl {
                 // case right either).
                 if let Ok(target_file_after) = target_file_after.as_ref() {
                     if let Ok(md) = target_file_after.metadata() {
+                        // TODO: Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOG!(
                                 history_file,
@@ -774,15 +775,8 @@ impl HistoryImpl {
                                 errno::errno()
                             );
                         }
-                        #[allow(clippy::useless_conversion)]
-                        if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
-                            == -1
-                        {
-                            FLOG!(
-                                history_file,
-                                "Error when changing mode of history file:",
-                                errno::errno(),
-                            );
+                        if let Err(e) = tmp_file.set_permissions(md.permissions()) {
+                            FLOG!(history_file, "Error when changing mode of history file:", e);
                         }
                     }
                 }

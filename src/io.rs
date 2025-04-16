@@ -205,7 +205,7 @@ impl IoData for IoClose {
         -1
     }
     fn print(&self) {
-        eprintf!("close %d\n", self.fd)
+        eprintln!("close {}", self.fd)
     }
 }
 
@@ -231,7 +231,7 @@ impl IoData for IoFd {
         self.source_fd
     }
     fn print(&self) {
-        eprintf!("FD map %d -> %d\n", self.source_fd, self.fd)
+        eprintln!("FD map {} -> {}", self.source_fd, self.fd)
     }
 }
 
@@ -260,7 +260,7 @@ impl IoData for IoFile {
         self.file.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!("file %d -> %d\n", self.file.as_raw_fd(), self.fd)
+        eprintln!("file {} -> {}", self.file.as_raw_fd(), self.fd)
     }
 }
 
@@ -292,8 +292,8 @@ impl IoData for IoPipe {
         self.pipe_fd.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!(
-            "pipe {%d} (input: %s) -> %d\n",
+        eprintln!(
+            "pipe {{{}}} (input: {}) -> {}",
             self.source_fd(),
             if self.is_input { "yes" } else { "no" },
             self.fd
@@ -376,11 +376,7 @@ impl IoData for IoBufferfill {
         self.write_fd.as_raw_fd()
     }
     fn print(&self) {
-        eprintf!(
-            "bufferfill %d -> %d\n",
-            self.write_fd.as_raw_fd(),
-            self.fd()
-        )
+        eprintln!("bufferfill {} -> {}", self.write_fd.as_raw_fd(), self.fd())
     }
     fn as_bufferfill(&self) -> Option<&IoBufferfill> {
         Some(self)
@@ -623,20 +619,17 @@ impl IoChain {
     /// Output debugging information to stderr.
     pub fn print(&self) {
         if self.0.is_empty() {
-            eprintf!(
-                "Empty chain %s\n",
-                format!("{:p}", std::ptr::addr_of!(self))
-            );
+            eprintln!("Empty chain {:p}", std::ptr::addr_of!(self));
             return;
         }
 
-        eprintf!(
-            "Chain %s (%ld items):\n",
-            format!("{:p}", std::ptr::addr_of!(self)),
+        eprintln!(
+            "Chain {:p} ({} items):",
+            std::ptr::addr_of!(self),
             self.0.len()
         );
         for (i, io) in self.0.iter().enumerate() {
-            eprintf!("\t%lu: fd:%d, ", i, io.fd());
+            eprint!("\t{}: fd:{}, ", i, io.fd());
             io.print();
         }
     }

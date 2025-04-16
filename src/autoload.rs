@@ -189,7 +189,7 @@ impl Autoload {
                 widename.push_str(name);
                 let ret = parser.eval_file_wstr(src, Arc::new(widename), &IoChain::new(), None);
                 if let Err(msg) = ret {
-                    eprintf!("%ls", msg);
+                    eprint!("{msg}");
                 }
             }
         }

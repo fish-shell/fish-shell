@@ -34,21 +34,21 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
             if let Some(at_exit) = AT_EXIT.get() {
                 (at_exit)(false);
             }
-            eprintf!(
-                "%s crashed, please report a bug.",
-                PROGRAM_NAME.get().unwrap(),
+            eprint!(
+                "{} crashed, please report a bug.",
+                PROGRAM_NAME.get().unwrap()
             );
             if !is_main_thread() {
-                eprintf!("\n");
+                eprintln!();
                 std::thread::sleep(Duration::from_secs(1));
             } else {
-                eprintf!(" Debug PID %d or press Enter to exit\n", unsafe {
+                eprintln!(" Debug PID {} or press Enter to exit", unsafe {
                     libc::getpid()
                 });
                 let mut buf = [0_u8; 1];
                 while let Ok(n) = read_blocked(STDIN_FILENO, &mut buf) {
                     if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {
-                        eprintf!("\n");
+                        eprintln!();
                         break;
                     }
                 }

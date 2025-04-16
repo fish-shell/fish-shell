@@ -39,15 +39,7 @@ macro_rules! printf {
     }
 }
 
-#[macro_export]
-macro_rules! eprintf {
-    // Allow a `&str` or `&Utf32Str` as a format, and write to stderr.
-    ($fmt:expr $(, $arg:expr)* $(,)?) => {
-        fprintf!(libc::STDERR_FILENO, $fmt $(, $arg)*)
-    }
-}
-
-pub use {eprintf, fprintf, printf, sprintf};
+pub use {fprintf, printf, sprintf};
 
 #[cfg(test)]
 mod tests {

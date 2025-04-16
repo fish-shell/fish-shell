@@ -823,7 +823,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     match parser.eval_wstr(s, io, None, BlockType::top) {
         Ok(_) => Ok(()),
         Err(msg) => {
-            eprintf!("%ls", msg);
+            eprint!("{msg}");
             Err(STATUS_CMD_ERROR)
         }
     }
@@ -5721,7 +5721,7 @@ fn reader_shell_test(parser: &Parser, bstr: &wstr) -> Result<(), ParserTestError
         if !error_desc.ends_with('\n') {
             error_desc.push('\n');
         }
-        eprintf!("\n%s", error_desc);
+        eprint!("\n{error_desc}");
         reader_schedule_prompt_repaint();
     }
     res

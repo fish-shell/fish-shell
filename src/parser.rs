@@ -528,7 +528,7 @@ impl Parser {
         let backtrace_and_desc = self.get_backtrace(cmd, &error_list);
 
         // Print it.
-        eprintf!("%s\n", backtrace_and_desc);
+        eprintln!("{backtrace_and_desc}");
 
         // Set a valid status.
         self.set_last_statuses(Statuses::just(STATUS_ILLEGAL_CMD));

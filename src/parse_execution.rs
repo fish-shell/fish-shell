@@ -257,7 +257,7 @@ impl<'a> ExecutionContext<'a> {
 
             // Print it.
             if !should_suppress_stderr_for_tests() {
-                eprintf!("%s", backtrace_and_desc);
+                eprint!("{backtrace_and_desc}");
             }
 
             // Mark status.
@@ -1499,7 +1499,7 @@ impl<'a> ExecutionContext<'a> {
                             _ => false,
                         }
                 } {
-                    eprintf!("If you wish to use process substitution, consider the psub command, see: `help psub`\n");
+                    eprintln!("If you wish to use process substitution, consider the psub command, see: `help psub`");
                 }
                 return error_ret;
             }

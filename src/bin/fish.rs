@@ -38,10 +38,9 @@ use fish::{
         environment::{env_init, EnvStack, Environment},
         ConfigPaths, EnvMode, Statuses, CONFIG_PATHS,
     },
-    eprintf,
     event::{self, Event},
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
-    fprintf, function, future_feature_flags as features,
+    function, future_feature_flags as features,
     history::{self, start_private_mode},
     io::IoChain,
     nix::{getpid, getrusage, isatty, RUsage},
@@ -181,7 +180,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
         let ret = parser.eval_file_wstr(src, fname, &IoChain::new(), None);
         parser.libdata_mut().within_fish_init = false;
         if let Err(msg) = ret {
-            eprintf!("%ls", msg);
+            eprint!("{msg}");
         }
     }
     #[cfg(not(feature = "embed-data"))]
@@ -238,7 +237,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_in
             retval = Ok(());
         } else {
             let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
-            eprintf!("%s", backtrace);
+            eprint!("{backtrace}");
             // XXX: Why is this the return for "unknown command"?
             retval = Err(STATUS_CMD_UNKNOWN);
         }

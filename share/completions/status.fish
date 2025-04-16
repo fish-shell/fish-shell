@@ -71,5 +71,5 @@ complete -f -c status -n "__fish_seen_subcommand_from job-control" -a full -d "S
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a interactive -d "Set only interactive jobs under job control"
 complete -f -c status -n "__fish_seen_subcommand_from job-control" -a none -d "Set no jobs under job control"
 
-complete -f -c status -n "__fish_seen_subcommand_from get-file" -a '(status list-files)'
-complete -f -c status -n "__fish_seen_subcommand_from list-files" -a '(status list-files)'
+complete -f -c status -n "__fish_seen_subcommand_from get-file" -a '(status list-files 2>/dev/null)'
+complete -f -c status -n "__fish_seen_subcommand_from list-files" -a '(status list-files 2>/dev/null)'

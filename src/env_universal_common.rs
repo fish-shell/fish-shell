@@ -767,11 +767,8 @@ impl EnvUniversal {
         let private_file_path = &delete_pfp;
 
         // Write to it.
-        if self
-            .write_to_file(&mut private_file, private_file_path)
-            .is_err()
-        {
-            FLOG!(uvar_file, "universal log write_to_fd() failed");
+        if let Err(e) = self.write_to_file(&mut private_file, private_file_path) {
+            FLOG!(uvar_file, "universal log write_to_file() failed:", e);
             return false;
         }
 

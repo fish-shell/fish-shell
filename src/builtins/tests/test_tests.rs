@@ -99,6 +99,12 @@ fn test_test() {
     assert!(run_test_test(1, &["!", "15", "-ge", "10"]));
     assert!(run_test_test(0, &["!", "!", "15", "-ge", "10"]));
 
+    assert!(run_test_test(0, &[
+        "(", "-d", "/", ")",
+        "-o",
+        "(", "!", "-d", "/", ")",
+    ]));
+
     assert!(run_test_test(0, &["0", "-ne", "1", "-a", "0", "-eq", "0"]));
     assert!(run_test_test(0, &["0", "-ne", "1", "-a", "-n", "5"]));
     assert!(run_test_test(0, &["-n", "5", "-a", "10", "-gt", "5"]));

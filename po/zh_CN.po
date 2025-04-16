@@ -39,7 +39,7 @@ msgstr "数组指数起始时间为 1,而不是 0."
 
 #: src/proc.rs:1195
 msgid "A second attempt to exit will terminate them.\n"
-msgstr "第二次尝试退出将终止它们.\ n"
+msgstr "第二次尝试退出将终止它们.\n"
 
 #: src/builtins/shared.rs:480
 msgid "Block of code to run conditionally"
@@ -500,7 +500,7 @@ msgstr "%s: 选项 spec必须至少有一个短或长的旗帜\n"
 
 #: src/builtins/read.rs:142
 msgid "%ls: Argument '%ls' is out of range\n"
-msgstr "%ls: 参数 '%ls' 已超出范围\ n"
+msgstr "%ls: 参数 '%ls' 已超出范围\n"
 
 #: src/builtins/function.rs:143
 msgid "%ls: calling job for event handler not found"
@@ -543,7 +543,7 @@ msgstr "%ls: 无法将任务 %s, '%ls' 放到背景,因为它不在任务控制�
 
 #: src/builtins/shared.rs:924
 msgid "%ls: Command not valid at an interactive prompt\n"
-msgstr "%ls: 命令在交互式提示时无效\ n"
+msgstr "%ls: 命令在交互式提示时无效\n"
 
 #: src/builtins/wait.rs:193
 msgid "%ls: Could not find a job with process id '%d'\n"
@@ -575,7 +575,7 @@ msgstr "%ls: 您是否指' set %ls %ls' ?"
 
 #: src/builtins/cd.rs:54
 msgid "%ls: Empty directory '%ls' does not exist\n"
-msgstr "%ls: 空目录 '%ls' 不存在\ n"
+msgstr "%ls: 空目录 '%ls' 不存在\n"
 
 #: src/builtins/random.rs:140
 msgid "%ls: END must be greater than START\n"
@@ -591,11 +591,11 @@ msgstr "%ls：读取文件 '%ls' 时发生错误\n"
 
 #: src/builtins/argparse.rs:182
 msgid "%ls: exclusive flag '%ls' is not valid\n"
-msgstr "%ls: 独家旗帜 '%ls' 无效\ n"
+msgstr "%ls: 独家旗帜 '%ls' 无效\n"
 
 #: src/builtins/argparse.rs:164
 msgid "%ls: exclusive flag string '%ls' is not valid\n"
-msgstr "%ls: 独家旗帜字符串 '%ls' 无效\ n"
+msgstr "%ls: 独家旗帜字符串 '%ls' 无效\n"
 
 #: src/builtins/printf.rs:223
 msgid "%ls: expected a numeric value"
@@ -607,7 +607,7 @@ msgstr "%ls：应恰好有一个函数名\n"
 
 #: src/builtins/functions.rs:302
 msgid "%ls: Expected exactly two names (current function name, and new function name)\n"
-msgstr "%ls: 预期确切有两个名称( 当前函数名称, 和新函数名称)\ n"
+msgstr "%ls: 预期确切有两个名称( 当前函数名称, 和新函数名称)\n"
 
 #: src/builtins/functions.rs:262
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
@@ -699,7 +699,7 @@ msgstr "%s: 无效的最大值 '%s'\n"
 
 #: src/builtins/argparse.rs:503
 msgid "%ls: Invalid --min-args value '%ls'\n"
-msgstr "%ls: 无效的 --min- args 值 '%ls'\ n"
+msgstr "%ls: 无效的 --min- args 值 '%ls'\n"
 
 #: src/builtins/string/pad.rs:44
 msgid "%ls: Invalid padding character of width zero '%ls'\n"
@@ -759,7 +759,7 @@ msgstr "%ls 是%ls\n"
 
 #: src/builtins/disown.rs:31
 msgid "%ls: job %d ('%ls') was stopped and has been signalled to continue.\n"
-msgstr "%ls: 任务 %d ('%ls') 已停止并指示要继续 .\ n"
+msgstr "%ls: 任务 %d ('%ls') 已停止并指示要继续 .\n"
 
 #: src/builtins/contains.rs:76
 msgid "%ls: Key not specified\n"
@@ -975,7 +975,7 @@ msgstr "%ls: 正则表达式替代错误:%ls\n"
 
 #: src/builtins/ulimit.rs:275
 msgid "%ls: Resource limit not available on this operating system\n"
-msgstr "%ls: 此操作系统没有可用的资源限制\ n"
+msgstr "%ls: 此操作系统没有可用的资源限制\n"
 
 #: src/builtins/abbr.rs:98
 msgid "%ls: --set-cursor argument cannot be empty\n"
@@ -1027,7 +1027,7 @@ msgstr "%ls：没有匹配的任务\n"
 
 #: src/builtins/set.rs:332
 msgid "%ls: The variable '%ls' does not exist\n"
-msgstr "%ls: 变量 '%ls' 不存在\ n"
+msgstr "%ls: 变量 '%ls' 不存在\n"
 
 #: src/builtins/shared.rs:51:pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS
 msgid "%ls: too many arguments\n"
@@ -1047,11 +1047,11 @@ msgstr "%ls：试图改变只读变量 '%ls' 的值\n"
 
 #: src/builtins/set.rs:325
 msgid "%ls: Tried to modify the special variable '%ls' to an invalid value\n"
-msgstr "%ls: 尝试将特殊变量 '%ls' 修改为无效值\ n"
+msgstr "%ls: 尝试将特殊变量 '%ls' 修改为无效值\n"
 
 #: src/builtins/set.rs:318
 msgid "%ls: Tried to modify the special variable '%ls' with the wrong scope\n"
-msgstr "%ls: 尝试用错误的范围修改特殊变量 '%ls'\ n"
+msgstr "%ls: 尝试用错误的范围修改特殊变量 '%ls'\n"
 
 #: src/builtins/set_color.rs:178
 msgid "%ls: Unknown color '%ls'\n"
@@ -1070,7 +1070,7 @@ msgid "%ls: Unknown signal '%ls'"
 msgstr "%ls: 未知信号 '%ls'  '"
 
 msgid "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n"
-msgstr "%ls: 对-i的用法 --silent 已贬值. 请使用 - s 或 --silent 代替.\ n"
+msgstr "%ls: 对-i的用法 --silent 已贬值. 请使用 - s 或 --silent 代替.\n"
 
 #: src/builtins/printf.rs:227
 msgid "%ls: value not completely converted (can't convert '%ls')"
@@ -1398,7 +1398,7 @@ msgstr "[:最后的论点必须是  '"
 
 #: src/proc.rs:1187
 msgid "There are still jobs active:\n"
-msgstr "仍然有活动的工作 :\ n"
+msgstr "仍然有活动的工作 :\n"
 
 #: src/builtins/status.rs:341
 msgid "This is a login shell\n"
@@ -1434,7 +1434,7 @@ msgstr "翻译字符串"
 
 #: src/builtins/shared.rs:620
 msgid "(Type 'help %ls' for related documentation)\n"
-msgstr "(帮助%ls 的相关文档)\ n"
+msgstr "(帮助%ls 的相关文档)\n"
 
 #: src/builtins/ulimit.rs:126
 msgid "ulimit: Permission denied when changing resource of type '%ls'\n"
@@ -1573,7 +1573,7 @@ msgstr "未匹配的通配符"
 
 #: src/proc.rs:1199
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
-msgstr "使用' 取消 PID ' 从列表中删除任务而不终止它们 .\ n"
+msgstr "使用' 取消 PID ' 从列表中删除任务而不终止它们 .\n"
 
 #: src/env_dispatch.rs:523
 msgid "Using fallback terminal type"
@@ -13579,7 +13579,7 @@ msgstr "逃逸标签"
 
 #: share/completions/cat.fish:9
 msgid "Escape unprintables except '\\n' and \\t"
-msgstr "除'\\n' 和'\ t' 外的不可打印文件"
+msgstr "除'\\n' 和'\t' 外的不可打印文件"
 
 #: share/completions/cat.fish:12
 msgid "Specify # of non-blank lines"
@@ -15228,7 +15228,7 @@ msgstr "指定您的登录 shell"
 
 #: share/completions/chsh.fish:2
 msgid "Display help and exit\t"
-msgstr "显示帮助并退出\ t"
+msgstr "显示帮助并退出\t"
 
 #: share/completions/chsh.fish:4
 msgid "List available shells and exit"
@@ -19877,7 +19877,7 @@ msgstr "输出字符范围"
 
 #: share/completions/cut.fish:14
 msgid "Delimiter instead of \\t to use"
-msgstr "分隔符而不是'\ t' 用于"
+msgstr "分隔符而不是'\t' 用于"
 
 #: share/completions/cut.fish:17
 msgid "Supress lines without delimiter"
@@ -24856,7 +24856,7 @@ msgstr "打印缓存数据"
 
 #: share/completions/dscacheutil.fish:10
 msgid "reset cache (DNS\t)"
-msgstr "重置缓存( DNS\ t)"
+msgstr "重置缓存( DNS\t)"
 
 #: share/completions/du.fish:1
 msgid "Write size for all files"
@@ -29605,7 +29605,7 @@ msgstr "新区名 :"
 
 #: share/completions/firewall-cmd.fish:196
 msgid "Add the port to zone|policy|service|helper"
-msgstr "将端口添加到分区\\政策\ \ 服务\ 帮助"
+msgstr "将端口添加到分区\\政策\\服务\帮助"
 
 #: share/completions/firewall-cmd.fish:197
 msgid "Remove the port from zone|policy|service|helper"
@@ -29621,7 +29621,7 @@ msgstr "将协议添加到分区政策服务"
 
 #: share/completions/firewall-cmd.fish:200
 msgid "Remove the protocol from zone|policy|service"
-msgstr "从区域\\政策\ 服务中删除协议"
+msgstr "从区域\\政策\服务中删除协议"
 
 #: share/completions/firewall-cmd.fish:201
 msgid "Return whether the protocol has been added to zone|policy|service"

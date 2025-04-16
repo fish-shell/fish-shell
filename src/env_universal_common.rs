@@ -80,7 +80,7 @@ pub struct EnvUniversal {
     do_flock: bool,
 
     // File id from which we last read.
-    last_read_file: FileId,
+    last_read_file_id: FileId,
 }
 
 impl EnvUniversal {
@@ -94,7 +94,7 @@ impl EnvUniversal {
             export_generation: 1,
             ok_to_save: true,
             do_flock: true,
-            last_read_file: INVALID_FILE_ID,
+            last_read_file_id: INVALID_FILE_ID,
         }
     }
     // Get the value of the variable with the specified name.
@@ -372,8 +372,8 @@ impl EnvUniversal {
     fn load_from_path_narrow(&mut self, callbacks: &mut CallbackDataList) -> bool {
         // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
         // opening the file unnecessarily.
-        if self.last_read_file != INVALID_FILE_ID
-            && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file
+        if self.last_read_file_id != INVALID_FILE_ID
+            && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
             FLOG!(uvar_file, "universal log sync elided based on fast stat()");
             return true;
@@ -394,7 +394,7 @@ impl EnvUniversal {
     fn load_from_file(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
         // Get the dev / inode.
         let current_file_id = file_id_for_file(file);
-        if current_file_id == self.last_read_file {
+        if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
         } else {
             // Read a variables table from the file.
@@ -412,7 +412,7 @@ impl EnvUniversal {
 
             // Acquire the new variables.
             self.acquire_variables(new_vars);
-            self.last_read_file = current_file_id;
+            self.last_read_file_id = current_file_id;
         }
     }
 
@@ -530,7 +530,7 @@ impl EnvUniversal {
         match res.as_ref() {
             Ok(()) => {
                 // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-                self.last_read_file = file_id_for_file(file);
+                self.last_read_file_id = file_id_for_file(file);
             }
             Err(err) => {
                 let error = Errno(err.raw_os_error().unwrap());

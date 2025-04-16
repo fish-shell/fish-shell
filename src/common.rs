@@ -1410,27 +1410,6 @@ macro_rules! write_to_output {
     }};
 }
 
-/// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in
-/// favor of native rust read/write methods at some point.
-///
-/// Returns the number of bytes read or an IO error.
-pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
-    let fd = fd.as_raw_fd();
-    loop {
-        match nix::unistd::read(fd, buf) {
-            Ok(read) => {
-                return Ok(read);
-            }
-            Err(err) => {
-                if matches!(err, nix::Error::EAGAIN | nix::Error::EINTR) {
-                    continue;
-                }
-                return Err(std::io::Error::from(err));
-            }
-        }
-    }
-}
-
 /// Write the given paragraph of output, redoing linebreaks to fit `termsize`.
 pub fn reformat_for_screen(msg: &wstr, termsize: &Termsize) -> WString {
     let mut buff = WString::new();

@@ -1,7 +1,7 @@
 #![allow(clippy::bad_bit_mask)]
 
 use crate::common::{
-    read_loop, str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags,
+    str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags,
     UnescapeStringStyle,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
@@ -23,9 +23,9 @@ use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::mem::MaybeUninit;
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::fd::AsRawFd;
 use std::os::unix::prelude::MetadataExt;
 
 // Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
@@ -370,7 +370,7 @@ impl EnvUniversal {
     }
 
     fn load_from_path_narrow(&mut self, callbacks: &mut CallbackDataList) -> bool {
-        // Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids
+        // Check to see if the file is unchanged. We do this again in load_from_file, but this avoids
         // opening the file unnecessarily.
         if self.last_read_file_id != INVALID_FILE_ID
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
@@ -399,7 +399,7 @@ impl EnvUniversal {
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
-            let format = Self::read_message_internal(file.as_raw_fd(), &mut new_vars);
+            let format = Self::read_message_internal(file, &mut new_vars);
 
             // Hacky: if the read format is in the future, avoid overwriting the file: never try to
             // save.
@@ -726,20 +726,20 @@ impl EnvUniversal {
         }
     }
 
-    fn read_message_internal(fd: RawFd, vars: &mut VarTable) -> UvarFormat {
-        // Read everything from the fd. Put a sane limit on it.
+    fn read_message_internal(file: &File, vars: &mut VarTable) -> UvarFormat {
         let mut contents = vec![];
-        let mut buffer = [0_u8; 4096];
-        while contents.len() < MAX_READ_SIZE {
-            match read_loop(&fd, &mut buffer) {
-                Ok(0) | Err(_) => break,
-                Ok(amt) => contents.extend_from_slice(&buffer[..amt]),
-            }
+        // Read everything from the file. Put a sane limit on it.
+        // TODO: Ideally, the cast should be checked at compile time.
+        if let Err(e) = file
+            .take(u64::try_from(MAX_READ_SIZE).expect("MAX_READ_SIZE must fit into u64"))
+            .read_to_end(&mut contents)
+        {
+            FLOG!(warning, "Failed to read file:", e);
         }
 
         // Handle overlong files.
-        if contents.len() > MAX_READ_SIZE {
-            contents.truncate(MAX_READ_SIZE);
+        // We read at most `MAX_READ_SIZE` bytes due to the `take`.
+        if contents.len() == MAX_READ_SIZE {
             // Back up to a newline.
             let newline = contents.iter().rposition(|c| *c == b'\n').unwrap_or(0);
             contents.truncate(newline);

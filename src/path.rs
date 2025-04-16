@@ -464,22 +464,21 @@ pub fn path_make_canonical(path: &mut WString) {
     }
 
     // Turn runs of slashes into a single slash.
-    let mut trailing = 0;
+    let mut written = 0;
     let mut prev_was_slash = false;
-    for leading in 0..len {
-        let c = chars[leading];
+    for read in 0..chars.len() {
+        let c = chars[read];
         let is_slash = c == '/';
-        if !prev_was_slash || !is_slash {
-            // This is either the first slash in a run, or not a slash at all.
-            chars[trailing] = c;
-            trailing += 1;
+        if prev_was_slash && is_slash {
+            continue;
         }
+        // This is either the first slash in a run, or not a slash at all.
+        chars[written] = c;
+        written += 1;
         prev_was_slash = is_slash;
     }
-    assert!(trailing <= len);
-    if trailing < len {
-        path.truncate(trailing);
-    }
+    assert!(written <= len);
+    path.truncate(written);
 }
 
 /// Check if two paths are equivalent, which means to ignore runs of multiple slashes (or trailing

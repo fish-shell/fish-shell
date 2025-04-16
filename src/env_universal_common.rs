@@ -779,13 +779,12 @@ impl EnvUniversal {
 
         // Ensure we maintain ownership and permissions (#2176).
         if let Ok(md) = wstat(&real_path) {
+            // TODO: Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
             if unsafe { libc::fchown(private_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                FLOG!(uvar_file, "universal log fchown() failed");
+                FLOG!(uvar_file, "universal log fchown() failed:", errno());
             }
-            #[allow(clippy::useless_conversion)]
-            let mode: libc::mode_t = md.mode().try_into().unwrap();
-            if unsafe { libc::fchmod(private_file.as_raw_fd(), mode) } == -1 {
-                FLOG!(uvar_file, "universal log fchmod() failed");
+            if let Err(e) = private_file.set_permissions(md.permissions()) {
+                FLOG!(uvar_file, "universal log setting permissions failed:", e);
             }
         }
 

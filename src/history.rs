@@ -1346,8 +1346,6 @@ impl HistoryImpl {
     unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
 
-        let raw_fd = file.as_raw_fd();
-
         // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
         // is on a remote filesystem.
         if ABANDONED_LOCKING.load() {
@@ -1361,7 +1359,7 @@ impl HistoryImpl {
         }
 
         let start_time = SystemTime::now();
-        let retval = unsafe { flock(raw_fd, lock_type) };
+        let retval = unsafe { flock(file.as_raw_fd(), lock_type) };
         if let Ok(duration) = start_time.elapsed() {
             if duration > Duration::from_millis(250) {
                 FLOG!(

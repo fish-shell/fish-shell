@@ -26,7 +26,7 @@ use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
 
-pub use crate::wutil::printf::{fprintf, printf, sprintf};
+pub use crate::wutil::printf::{fprintf, sprintf};
 
 pub use fileid::{
     file_id_for_fd, file_id_for_path, file_id_for_path_narrow, DevInode, FileId, INVALID_FILE_ID,

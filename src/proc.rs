@@ -1240,24 +1240,24 @@ pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
 /// Print the exit warning for the given jobs, which should have been obtained via
 /// jobs_requiring_warning_on_exit().
 pub fn print_exit_warning_for_jobs(jobs: &JobList) {
-    printf!("%s", wgettext!("There are still jobs active:\n"));
-    printf!("%s", wgettext!("\n   PID  Command\n"));
+    print!("{}", wgettext!("There are still jobs active:\n"));
+    print!("{}", wgettext!("\n   PID  Command\n"));
     for j in jobs {
         // Unwrap safety: we can't have a background job that doesn't have an external process and
         // external processes always have a pid set.
-        printf!(
-            "%6d  %ls\n",
+        println!(
+            "{:>6}  {}",
             j.external_procs().next().and_then(|p| p.pid()).unwrap(),
             j.command()
         );
     }
-    printf!("\n");
-    printf!(
-        "%s",
+    println!();
+    print!(
+        "{}",
         wgettext!("A second attempt to exit will terminate them.\n"),
     );
-    printf!(
-        "%s",
+    print!(
+        "{}",
         wgettext!("Use 'disown PID' to remove jobs from the list without terminating them.\n"),
     );
     reader_schedule_prompt_repaint();

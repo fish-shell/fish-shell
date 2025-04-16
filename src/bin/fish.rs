@@ -50,7 +50,6 @@ use fish::{
     parse_util::parse_util_detect_errors_in_ast,
     parser::{BlockType, CancelBehavior, Parser},
     path::path_get_config,
-    printf,
     proc::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session, Pid,
@@ -336,8 +335,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                printf!(
-                    "%s",
+                print!(
+                    "{}",
                     wgettext_fmt!("%s, version %s\n", PACKAGE_NAME, fish::BUILD_VERSION)
                 );
                 return ControlFlow::Break(0);

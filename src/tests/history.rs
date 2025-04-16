@@ -328,7 +328,7 @@ fn test_history_races() {
             );
             for list in &expected_lines {
                 if !list.is_empty() {
-                    printf!("\tRemaining: %ls\n", list.last().unwrap())
+                    println!("\tRemaining: {}", list.last().unwrap())
                 }
             }
         }

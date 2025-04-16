@@ -31,15 +31,7 @@ macro_rules! fprintf {
     }
 }
 
-#[macro_export]
-macro_rules! printf {
-    // Allow a `&str` or `&Utf32Str` as a format, and write to stdout.
-    ($fmt:expr $(, $arg:expr)* $(,)?) => {
-        $crate::fprintf!(libc::STDOUT_FILENO, $fmt $(, $arg)*)
-    }
-}
-
-pub use {fprintf, printf, sprintf};
+pub use {fprintf, sprintf};
 
 #[cfg(test)]
 mod tests {

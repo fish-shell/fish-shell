@@ -37,8 +37,9 @@ use libc::c_int;
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
+use std::fs::File;
 use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd, OwnedFd};
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
@@ -1085,7 +1086,7 @@ impl Parser {
     pub fn emit_profiling(&self, path: &OsStr) {
         // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
         // exiting (and hence will not fork).
-        let f = match std::fs::File::create(path) {
+        let mut f = match std::fs::File::create(path) {
             Ok(f) => f,
             Err(err) => {
                 FLOG!(
@@ -1100,7 +1101,7 @@ impl Parser {
             }
         };
         fprintf!(f.as_raw_fd(), "Time\tSum\tCommand\n");
-        print_profile(&self.profile_items.borrow(), f.as_raw_fd());
+        print_profile(&self.profile_items.borrow(), &mut f);
     }
 
     pub fn get_backtrace(&self, src: &wstr, errors: &ParseErrorList) -> WString {
@@ -1224,7 +1225,7 @@ fn user_presentable_path(path: &wstr, vars: &dyn Environment) -> WString {
 }
 
 /// Print profiling information to the specified stream.
-fn print_profile(items: &[ProfileItem], out: RawFd) {
+fn print_profile(items: &[ProfileItem], out: &mut File) {
     for (idx, item) in items.iter().enumerate() {
         if item.skipped || item.cmd.is_empty() {
             continue;
@@ -1233,7 +1234,7 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
         let total_time = item.duration;
 
         // Compute the self time as the total time, minus the total time consumed by subsequent
-        // items exactly one eval level deeper.
+        // items exactly one eval level deeper.
         let mut self_time = item.duration;
         for nested_item in items[idx + 1..].iter() {
             if nested_item.skipped {
@@ -1251,6 +1252,7 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
             }
         }
 
+        let out = out.as_raw_fd();
         fprintf!(out, "%lld\t%lld\t", self_time, total_time);
         for _i in 0..item.level {
             fprintf!(out, "-");

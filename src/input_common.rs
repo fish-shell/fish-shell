@@ -18,10 +18,7 @@ use crate::terminal::TerminalCommand::{
     KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
     ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{
-    Capability, Output, Outputter, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED,
-    SCROLL_FORWARD_TERMINFO_CODE,
-};
+use crate::terminal::{Capability, Output, Outputter, KITTY_KEYBOARD_SUPPORTED, XTVERSION};
 use crate::threads::{iothread_port, is_main_thread};
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
@@ -32,6 +29,7 @@ use std::collections::VecDeque;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
+use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
@@ -327,6 +325,8 @@ pub struct KeyInputEvent {
 pub enum ImplicitEvent {
     /// end-of-file was reached.
     Eof,
+    /// Done
+    Break,
     /// An event was handled internally, or an interrupt was received. Check to see if the reader
     /// loop should exit.
     CheckExit,
@@ -758,15 +758,21 @@ impl InputData {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CursorPositionQuery {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Debug)]
+pub struct XtgettcapQuery {
+    pub terminfo_code: Vec<u8>,
+    pub result: Rc<RelaxedAtomicBool>,
+}
+
+#[derive(Debug)]
 pub enum TerminalQuery {
-    PrimaryDeviceAttribute,
+    PrimaryDeviceAttribute(Option<XtgettcapQuery>),
     CursorPositionReport(CursorPositionQuery),
 }
 
@@ -932,6 +938,8 @@ pub trait InputEventQueuer {
                             );
                             let ok = stop_query(self.blocking_query());
                             assert!(ok);
+                            // TODO only if cancellation
+                            self.push_front(CharEvent::Implicit(ImplicitEvent::Break));
                         }
                         continue;
                     }
@@ -959,10 +967,7 @@ pub trait InputEventQueuer {
         assert!(buffer.len() <= 2);
         let recursive_invocation = buffer.len() == 2;
         let Some(next) = self.try_readb(buffer) else {
-            if !self.paste_is_buffering() {
-                return Some(KeyEvent::from_raw(key::Escape));
-            }
-            return None;
+            return Some(KeyEvent::from_raw(key::Escape));
         };
         let invalid = KeyEvent::from_raw(key::Invalid);
         if recursive_invocation && next == b'\x1b' {
@@ -1223,6 +1228,7 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
+                FLOG!(reader, "Received primary device attribute response");
                 self.push_front(CharEvent::QueryResponse(
                     QueryResponseEvent::PrimaryDeviceAttribute,
                 ));
@@ -1369,13 +1375,12 @@ pub trait InputEventQueuer {
         if buffer.get(3)? != &b'|' {
             return None;
         }
+        let xtversion = str2wcstring(&buffer[4..buffer.len()]);
         FLOG!(
             reader,
-            format!(
-                "Received XTVERSION response: {}",
-                str2wcstring(&buffer[4..buffer.len()])
-            )
+            format!("Received XTVERSION response: {}", xtversion)
         );
+        XTVERSION.get_or_init(|| xtversion);
         None
     }
 
@@ -1432,9 +1437,17 @@ pub trait InputEventQueuer {
                 format!("Received XTGETTCAP response: {}", str2wcstring(&key))
             );
         }
-        if key == SCROLL_FORWARD_TERMINFO_CODE.as_bytes() {
-            SCROLL_FORWARD_SUPPORTED.store(true);
-            FLOG!(reader, "Scroll forward is supported");
+        if let Some(TerminalQuery::PrimaryDeviceAttribute(Some(tcap_query))) =
+            &*self.blocking_query()
+        {
+            if tcap_query.terminfo_code == key {
+                if tcap_query.result.swap(true) {
+                    FLOG!(
+                        reader,
+                        "Error: received multiple XTGETTCAP responses for user query"
+                    );
+                }
+            }
         }
         return None;
     }

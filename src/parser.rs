@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{terminal_protocols_disable_ifn, TerminalQuery};
+use crate::input_common::{terminal_protocols_disable_ifn, CharEvent, TerminalQuery};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -25,6 +25,7 @@ use crate::parse_constants::{
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
 use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, Pid, ProcStatus};
+use crate::reader::UserQuery;
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
 use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
@@ -37,6 +38,7 @@ use once_cell::unsync::OnceCell;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
+use std::collections::VecDeque;
 use std::ffi::{CStr, OsStr};
 use std::fs::File;
 use std::io::Write;
@@ -442,6 +444,10 @@ pub struct Parser {
     pub global_event_blocks: AtomicU64,
 
     pub blocking_query: OnceCell<RefCell<Option<TerminalQuery>>>,
+
+    pub pending_user_query: RefCell<Option<UserQuery>>,
+
+    pub pending_keys: RefCell<VecDeque<CharEvent>>,
 }
 
 impl Parser {
@@ -460,6 +466,8 @@ impl Parser {
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
             blocking_query: OnceCell::new(),
+            pending_user_query: RefCell::new(None),
+            pending_keys: RefCell::new(VecDeque::new()),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

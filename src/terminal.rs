@@ -3,13 +3,13 @@ use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
 use crate::future_feature_flags::{self, FeatureFlag};
-use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
 use bitflags::bitflags;
+use once_cell::sync::OnceCell;
 use std::cell::{RefCell, RefMut};
 use std::env;
 use std::ffi::{CStr, CString};
@@ -83,7 +83,7 @@ pub(crate) enum TerminalCommand<'a> {
     // Commands related to querying (used for backwards-incompatible features).
     QueryPrimaryDeviceAttribute,
     QueryXtversion,
-    QueryXtgettcap(&'static str),
+    QueryXtgettcap(&'a [u8]),
 
     DecsetAlternateScreenBuffer,
     DecrstAlternateScreenBuffer,
@@ -227,8 +227,7 @@ pub(crate) enum Capability {
 
 pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
 
-pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
+pub(crate) static XTVERSION: OnceCell<WString> = OnceCell::new();
 
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
@@ -349,16 +348,16 @@ fn cursor_move(out: &mut impl Output, direction: CardinalDirection, steps: usize
     true
 }
 
-fn query_xtgettcap(out: &mut impl Output, cap: &str) -> bool {
+fn query_xtgettcap(out: &mut impl Output, cap: &[u8]) -> bool {
     write_to_output!(out, "\x1bP+q{}\x1b\\", DisplayAsHex(cap));
     true
 }
 
-struct DisplayAsHex<'a>(&'a str);
+struct DisplayAsHex<'a>(&'a [u8]);
 
 impl<'a> std::fmt::Display for DisplayAsHex<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for byte in self.0.bytes() {
+        for byte in self.0 {
             write!(f, "{:x}", byte)?;
         }
         Ok(())
@@ -399,7 +398,6 @@ fn osc_133_command_finished(out: &mut impl Output, exit_status: libc::c_int) -> 
 }
 
 fn scroll_forward(out: &mut impl Output, lines: usize) -> bool {
-    assert!(SCROLL_FORWARD_SUPPORTED.load());
     write_to_output!(out, "\x1b[{}S", lines);
     true
 }

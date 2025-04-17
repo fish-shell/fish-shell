@@ -1414,17 +1414,23 @@ pub trait InputEventQueuer {
         }
         let mut buffer = buffer.splitn(2, |&c| c == b'=');
         let key = buffer.next().unwrap();
-        let value = buffer.next()?;
         let key = parse_hex(key)?;
-        let value = parse_hex(value)?;
-        FLOG!(
-            reader,
-            format!(
-                "Received XTGETTCAP response: {}={:?}",
-                str2wcstring(&key),
-                str2wcstring(&value)
-            )
-        );
+        if let Some(value) = buffer.next() {
+            let value = parse_hex(value)?;
+            FLOG!(
+                reader,
+                format!(
+                    "Received XTGETTCAP response: {}={:?}",
+                    str2wcstring(&key),
+                    str2wcstring(&value)
+                )
+            );
+        } else {
+            FLOG!(
+                reader,
+                format!("Received XTGETTCAP response: {}", str2wcstring(&key))
+            );
+        }
         if key == SCROLL_FORWARD_TERMINFO_CODE.as_bytes() {
             SCROLL_FORWARD_SUPPORTED.store(true);
             FLOG!(reader, "Scroll forward is supported");

@@ -1349,28 +1349,34 @@ pub trait InputEventQueuer {
         Some(key)
     }
 
-    fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) {
-        assert!(buffer.len() == 3);
+    fn read_until_sequence_terminator(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
+        let mut escape = false;
         loop {
-            match self.try_readb(buffer) {
-                None => return,
-                Some(b'\x1b') => break,
-                Some(_) => continue,
+            let b = self.try_readb(buffer)?;
+            if escape && b == b'\\' {
+                break;
             }
+            escape = b == b'\x1b';
         }
-        if self.try_readb(buffer) != Some(b'\\') {
-            return;
-        }
-        if buffer[3] != b'|' {
-            return;
+        buffer.pop();
+        buffer.pop();
+        Some(())
+    }
+
+    fn parse_xtversion(&mut self, buffer: &mut Vec<u8>) -> Option<()> {
+        assert_eq!(buffer, b"\x1bP>");
+        self.read_until_sequence_terminator(buffer)?;
+        if buffer.get(3)? != &b'|' {
+            return None;
         }
         FLOG!(
             reader,
             format!(
                 "Received XTVERSION response: {}",
-                str2wcstring(&buffer[4..buffer.len() - 2]),
+                str2wcstring(&buffer[4..buffer.len()])
             )
         );
+        None
     }
 
     fn parse_dcs(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
@@ -1393,12 +1399,7 @@ pub trait InputEventQueuer {
         if self.try_readb(buffer)? != b'r' {
             return None;
         }
-        while self.try_readb(buffer)? != b'\x1b' {}
-        if self.try_readb(buffer)? != b'\\' {
-            return None;
-        }
-        buffer.pop();
-        buffer.pop();
+        self.read_until_sequence_terminator(buffer)?;
         // \e P 1 r + Pn ST
         // \e P 0 r + msg ST
         let buffer = &buffer[5..];

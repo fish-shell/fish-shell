@@ -21,7 +21,7 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io;
-use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
@@ -742,6 +742,28 @@ impl OutputStream {
     }
 }
 
+impl io::Write for OutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            OutputStream::Null => Ok(buf.len()),
+            OutputStream::Fd(stream) => stream.write(buf),
+            OutputStream::String(stream) => {
+                stream.append(&str2wcstring(buf));
+                Ok(buf.len())
+            }
+            OutputStream::Buffered(stream) => stream.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            OutputStream::Null => Ok(()),
+            OutputStream::Fd(stream) => stream.flush(),
+            OutputStream::String(_) | OutputStream::Buffered(_) => Ok(()),
+        }
+    }
+}
+
 impl Output for OutputStream {
     fn write_bytes(&mut self, command_part: &[u8]) {
         // TODO Retry on interrupt.
@@ -805,6 +827,30 @@ impl FdOutputStream {
     }
 }
 
+impl io::Write for FdOutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let mut file = std::mem::ManuallyDrop::new(unsafe { File::from_raw_fd(self.fd) });
+
+        let res = file.write_all(buf);
+
+        if let Err(ref e) = res {
+            self.errored = true;
+            if e.kind() != io::ErrorKind::BrokenPipe {
+                eprintln!("write: {e:?}");
+            }
+        }
+        res.map(|_| buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        if self.flush_and_check_error() == STATUS_CMD_OK {
+            Ok(())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "unknown"))
+        }
+    }
+}
+
 /// A simple output stream which buffers into a wcstring.
 #[derive(Default)]
 pub struct StringOutputStream {
@@ -849,6 +895,24 @@ impl BufferedOutputStream {
             return STATUS_READ_TOO_MUCH;
         }
         0
+    }
+}
+
+impl io::Write for BufferedOutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        if self.buffer.append(buf, SeparationType::inferred) {
+            Ok(buf.len())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "Limit reached"))
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        if self.flush_and_check_error() == STATUS_CMD_OK {
+            Ok(())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "Read too much"))
+        }
     }
 }
 

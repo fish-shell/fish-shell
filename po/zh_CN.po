@@ -1,9 +1,18 @@
 msgid ""
-msgstr "Project-Id-Version: fish 1.21.8\nReport-Msgid-Bugs-To: \nPOT-Creation-Date: 2024-03-10 16:38+0100\nPO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\nLast-Translator: shankerwangmiao <shankerwangmiao@gmail.com>\nLanguage: zh_CN\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+msgstr ""
+"Project-Id-Version: fish 1.21.8\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-10 16:38+0100\n"
+"PO-Revision-Date: 2025-04-17 09:40+0800\n"
+"Last-Translator: DaiLuCao <caodailu@foxmail.com>\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
 #: src/builtins/set.rs:696
 msgid "$%ls: originally inherited as |%ls|\n"
-msgstr "$%ls: 原为 qqls|\n 继承"
+msgstr "$%ls: 原为 |%ls| 继承 \n"
 
 #: src/builtins/set.rs:633
 msgid "$%ls: set in %ls scope, %ls,%ls with %d elements"
@@ -59,11 +68,11 @@ msgstr "内建的 %ls : 无效的参数:%ls\n"
 
 #: src/builtins/realpath.rs:93
 msgid "builtin %ls: %ls: %s\n"
-msgstr "内建的 %ls : %ls: %s\n (韩语)"
+msgstr "内建的 %ls : %ls: %s\n"
 
 #: src/builtins/realpath.rs:120
 msgid "builtin %ls: realpath failed: %s\n"
-msgstr "已建入 %ls: realath 失败 : %s\n (韩语)"
+msgstr "内建 %ls: realpath 失败 : %s\n"
 
 #: src/builtins/type.rs:166
 msgid "builtin\n"
@@ -259,7 +268,7 @@ msgstr "重命名历史文件时出错:%s"
 
 #: src/bin/fish.rs:694
 msgid "Error while reading file %ls\n"
-msgstr "读取文件%s\n时出错"
+msgstr "读取文件%ls时出错\n"
 
 #: src/builtins/shared.rs:493
 msgid "Evaluate a string as a statement"
@@ -311,7 +320,7 @@ msgstr "需要字符串,但发现了 %ls"
 
 #: src/bin/fish_indent.rs:882
 msgid "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"
-msgstr "需要读取/写入 -w:\\n %ls -w foo.fish\n 的文件路径"
+msgstr "需要读取/写入 -w:\n\n $ %ls -w foo.fish 的文件路径\n"
 
 #: src/ast.rs:2857
 msgid "Expected %ls, but found %ls"
@@ -524,7 +533,7 @@ msgstr "%ls: 无法指定多个设置校正选项\n"
 
 #: src/builtins/block.rs:93
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "%ls：当移除区块时不能指定作用域\n"
+msgstr "%ls: 当移除区块时不能指定作用域 \n"
 
 #: src/builtins/set.rs:926
 msgid "%ls: Cannot use --append or --prepend when assigning to a slice"
@@ -532,7 +541,7 @@ msgstr "%ls: 指定切片时无法使用 --append 或 --prepend"
 
 #: src/builtins/history.rs:332
 msgid "%ls: can't merge history in private mode\n"
-msgstr "%ls: 无法在私有模式中合并历史"
+msgstr "%ls: 无法在私有模式中合并历史 \n"
 
 msgid "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n"
 msgstr "%ls：不能将任务 %d, '%ls' 带到前台，因为它不受到任务控制\n"
@@ -547,11 +556,11 @@ msgstr "%ls: 命令在交互式提示时无效\n"
 
 #: src/builtins/wait.rs:193
 msgid "%ls: Could not find a job with process id '%d'\n"
-msgstr "%s: 无法找到进程 id '%d'\n 的工作"
+msgstr "%s: 无法找到进程 id '%d' 的工作 \n"
 
 #: src/builtins/wait.rs:202
 msgid "%ls: Could not find child processes with the name '%ls'\n"
-msgstr "%s: 无法找到名为 '%ls'\n的子进程"
+msgstr "%s: 无法找到名为 '%ls' 的子进程\n"
 
 #: src/builtins/cd.rs:45
 msgid "%ls: Could not find home directory\n"
@@ -611,7 +620,7 @@ msgstr "%ls: 预期确切有两个名称( 当前函数名称, 和新函数名称
 
 #: src/builtins/functions.rs:262
 msgid "%ls: Expected generic | variable | signal | exit | job-id for --handlers-type\n"
-msgstr "%ls: 预期通用的 QQ 变量 QQ 信号 QQ 退出 --handlers type\n"
+msgstr "%ls: 预期 generic | variable | signal | exit | job-id for --handlers-type\n"
 
 #: src/builtins/functions.rs:333
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
@@ -639,7 +648,7 @@ msgstr "%ls: 隐含的标志 '%lc' 已经定义\n"
 
 #: src/builtins/argparse.rs:207
 msgid "%ls: Implicit int short flag '%lc' does not allow modifiers like '%lc'\n"
-msgstr "%s: 隐含的短旗 '%lc' 不允许像 '%lc'\n 这样的修改符"
+msgstr "%s: 隐含的短标记 '%lc' 不允许像 '%lc' 这样的修饰符\n"
 
 #: src/builtins/printf.rs:529
 msgid "%.*ls: invalid conversion specification"
@@ -703,7 +712,7 @@ msgstr "%ls: 无效的 --min- args 值 '%ls'\n"
 
 #: src/builtins/string/pad.rs:44
 msgid "%ls: Invalid padding character of width zero '%ls'\n"
-msgstr "%ls: 宽度为零 '%ls'\n 的无效的补丁字符"
+msgstr "%ls: 宽度为零 '%ls' 的无效的填充字符\n"
 
 #: src/builtins/path.rs:278
 msgid "%ls: Invalid permission '%ls'\n"
@@ -715,7 +724,7 @@ msgstr "%ls: 无效的位置 '%ls'\n"
 
 #: src/builtins/string/split.rs:130
 msgid "%ls: Invalid range value for field '%ls'\n"
-msgstr "%ls: 字段 '%ls' 的范围值无效"
+msgstr "%ls: 字段 '%ls' 的范围值无效\n"
 
 #: src/builtins/path.rs:680
 msgid "%ls: Invalid sort key '%ls'\n"
@@ -823,7 +832,7 @@ msgstr "%ls:%ls: 无效进程 id"
 
 #: src/builtins/cd.rs:146
 msgid "%ls: '%ls' is a broken symbolic link to '%ls'\n"
-msgstr "%ls: '%ls' 是一个与 '%ls'\n 的符号链接断开"
+msgstr "%ls: '%ls' 是 '%ls' 损坏的符号链接\n"
 
 #: src/builtins/cd.rs:140
 msgid "%ls: '%ls' is not a directory\n"
@@ -851,15 +860,15 @@ msgstr "%ls: '%ls'不是一个有效的进程 id\n"
 
 #: src/builtins/argparse.rs:142
 msgid "%ls: %ls %ls: options cannot be used together\n"
-msgstr "%ls :%ls: 选项无法一起使用@ info 无"
+msgstr "%ls: %ls %ls: 选项无法一起使用\n"
 
 #: src/builtins/abbr.rs:327
 msgid "%ls: %*ls\n"
-msgstr "%ls:%ls\n"
+msgstr "%ls: %*ls\n"
 
 #: src/builtins/abbr.rs:324
 msgid "%ls: %ls\n"
-msgstr "%ls:%ls\n"
+msgstr "%ls: %ls\n"
 
 #: src/builtins/abbr.rs:214
 msgid "%ls %ls: Name cannot be empty\n"
@@ -903,11 +912,11 @@ msgstr "%ls: 新限制不能为空字符串\n"
 
 #: src/builtins/bind.rs:359
 msgid "%ls: No binding found for key '%ls'\n"
-msgstr "%ls: 找不到密钥 '%ls'\n 的绑定"
+msgstr "%ls: 找不到密钥 '%ls' 的绑定\n"
 
 #: src/builtins/bind.rs:365
 msgid "%ls: No binding found for sequence '%ls'\n"
-msgstr "%ls: 找不到序列 '%ls' 绑定"
+msgstr "%ls: 找不到序列 '%ls' 绑定\n"
 
 #: src/builtins/block.rs:102
 msgid "%ls: No blocks defined\n"
@@ -959,7 +968,7 @@ msgstr "%ls: 范围只包含一个可能的值\n"
 
 #: src/builtins/pwd.rs:52
 msgid "%ls: realpath failed: %s\n"
-msgstr "%ls: realath 失败 : %s\n (韩语)"
+msgstr "%ls: realath 失败 : %s\n"
 
 #: src/builtins/abbr.rs:74
 msgid "%ls: --regex option requires --add\n"
@@ -987,7 +996,7 @@ msgstr "%ls: --set- cursor 选项需要 --add\n"
 
 #: src/builtins/set.rs:714
 msgid "%ls: `set --show` does not allow slices with the var names\n"
-msgstr "%ls: ' set-show' 不允许带有 var 名称的切片"
+msgstr "%ls: ' set-show' 不允许带有 var 名称的切片\n"
 
 #: src/builtins/argparse.rs:249
 msgid "%ls: Short flag '%lc' already defined\n"
@@ -1086,7 +1095,7 @@ msgstr "%ls: 警告: 选项 '%ls' 已被删除, 现在被忽略"
 
 #: src/builtins/ulimit.rs:46
 msgid "%lu\n"
-msgstr "%lu\n (%l\n) (%l\n)"
+msgstr "%lu\n"
 
 #: src/builtins/shared.rs:470
 msgid "Manage abbreviations"
@@ -1438,7 +1447,7 @@ msgstr "(帮助%ls 的相关文档)\n"
 
 #: src/builtins/ulimit.rs:126
 msgid "ulimit: Permission denied when changing resource of type '%ls'\n"
-msgstr "ulimit: 更改类型 '%ls'\n 的资源时被拒绝的权限"
+msgstr "ulimit: 更改类型 '%ls' 的资源时被拒绝的权限\n"
 
 #: src/env_universal_common.rs:520
 msgid "Unable to create temporary file '%ls': %s"
@@ -1612,7 +1621,7 @@ msgstr "%ls: 无法同时导出和解出\n"
 
 #: src/builtins/shared.rs:42:pub const BUILTIN_ERR_PATHUNPATH
 msgid "%ls: cannot both path and unpath\n"
-msgstr "%ls: 无法同时路径和不路径"
+msgstr "%ls: 无法同时path 和 unpath\n"
 
 #: src/builtins/shared.rs:45:pub const BUILTIN_ERR_UNKNOWN
 msgid "%ls: %ls: unknown option\n"
@@ -1620,7 +1629,7 @@ msgstr "%ls:%ls:未知选项\n"
 
 #: src/builtins/shared.rs:48:pub const BUILTIN_ERR_BIND_MODE
 msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
-msgstr "%ls:%ls:无效模式名. 参见' 帮助标识符 +n"
+msgstr "%ls: %ls:无效模式名. 参见`help identifiers`\n"
 
 #: src/builtins/shared.rs:57:pub const BUILTIN_ERR_MISSING_SUBCMD
 msgid "%ls: missing subcommand\n"
@@ -1628,11 +1637,11 @@ msgstr "%ls: 缺少子命令\n"
 
 #: src/builtins/shared.rs:58:pub const BUILTIN_ERR_INVALID_SUBCMD
 msgid "%ls: %ls: invalid subcommand\n"
-msgstr "%ls:%ls:无效的子命令\n"
+msgstr "%ls: %ls:无效的子命令\n"
 
 #: src/builtins/shared.rs:68:pub const BUILTIN_ERR_VARNAME
 msgid "%ls: %ls: invalid variable name. See `help identifiers`\n"
-msgstr "%ls:%ls:无效的可变名称. 参见' 帮助标识符 +n"
+msgstr "%ls: %ls:无效的可变名称. 参见`help identifiers`\n"
 
 #: src/builtins/shared.rs:71:pub const BUILTIN_ERR_COMBO
 msgid "%ls: invalid option combination\n"
@@ -1640,11 +1649,11 @@ msgstr "%ls: 选项组合无效\n"
 
 #: src/builtins/shared.rs:76:pub const FG_MSG
 msgid "Send job %d (%ls) to foreground\n"
-msgstr "将任务 %d (%ls) 发送给前景"
+msgstr "将任务 %d (%ls) 发送给前台\n"
 
 #: src/builtins/argparse.rs:12:const BUILTIN_ERR_INVALID_OPT_SPEC
 msgid "%ls: Invalid option spec '%ls' at char '%lc'\n"
-msgstr "%ls: 在字符 '%lc'\n 时无效的选项 spec%ls"
+msgstr "%ls: 在字符 '%lc' 无效的选项 spec %ls\n"
 
 #: src/builtins/set.rs:23:const MISMATCHED_ARGS
 msgid "%ls: given %d indexes but %d values\n"
@@ -1652,7 +1661,7 @@ msgstr "%ls: 给定的 %d 索引但 %d 值\n"
 
 #: src/builtins/set.rs:25
 msgid "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
-msgstr "%ls: 成功设置通用 '%ls ' ; 但是这个名称的全局显示它为正n"
+msgstr "%ls: 成功设置通用 '%ls ' ; 但是这个名称的全局设置覆盖它\n"
 
 #: src/fds.rs:16:pub const PIPE_ERROR
 msgid "An error occurred while setting up pipe"
@@ -2056,11 +2065,11 @@ msgstr "%s:未知选项 %s\\n"
 
 #: share/functions/vared.fish:2
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
-msgstr "%s: %s是一个数组变量. 使用 %s%s %s [n] %s编辑 %s\\n 中的 n:th 元素"
+msgstr "%s: %s是一个数组变量. 使用 %svared%s %s[n]%s 编辑 %s\\n 中的 n:th 元素"
 
 #: share/functions/vared.fish:3
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
-msgstr "%s: 需要精确的一条参数, 获得 %s.\\n\n 简表:\\n\t%s\s VARIable\\n"
+msgstr "%s: 需要精确的一条参数, 获得 %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 
 #: share/completions/7z.fish:1
 msgid "Show information about supported formats"
@@ -8414,7 +8423,7 @@ msgstr "在开发模式中运行"
 
 #: share/completions/atom.fish:2
 msgid "Keep main process in foreground"
-msgstr "将主进程保留在前景中"
+msgstr "将主进程保留在前台中"
 
 #: share/completions/atom.fish:3
 msgid "Print usage message"
@@ -20653,7 +20662,7 @@ msgstr "CVS 配置文件的路径 ."
 
 #: share/completions/cvs.fish:209
 msgid "Date [-r rev2 | -D date2] modules…"
-msgstr "日期 [-r rev2... - D date2] 模块.."
+msgstr "日期 [-r rev2 | - D date2] 模块.."
 
 #: share/completions/cvs.fish:213
 msgid "Context diffs (default)"
@@ -21865,7 +21874,7 @@ msgstr "试试租一次"
 
 #: share/completions/dhclient.fish:5
 msgid "Force dhclient to run as a foreground process"
-msgstr "强制 dh 客户端作为前景进程运行"
+msgstr "强制 dh 客户端作为前台进程运行"
 
 #: share/completions/dhclient.fish:6
 msgid "Become a daemon immediately"
@@ -26115,11 +26124,11 @@ msgstr "闲置时卸载"
 
 #: share/completions/encfs.fish:2
 msgid "Run in the foreground"
-msgstr "在前景中运行"
+msgstr "在前台中运行"
 
 #: share/completions/encfs.fish:3
 msgid "Verbose messages when run foreground"
-msgstr "运行前景时的语音信息"
+msgstr "运行前台时的语音信息"
 
 #: share/completions/encfs.fish:4
 msgid "Run in single threaded mode"
@@ -27245,7 +27254,7 @@ msgstr "在背景中启动服务器( 默认)"
 
 #: share/completions/fail2ban-client.fish:15
 msgid "Start server in foreground"
-msgstr "在前景中启动服务器"
+msgstr "在前台中启动服务器"
 
 #: share/completions/fail2ban-client.fish:16
 msgid "Convert time abbr format to secs"
@@ -29585,51 +29594,51 @@ msgstr "如果启用了恐慌模式, 返回 0, 1 否则"
 
 #: share/completions/firewall-cmd.fish:191
 msgid "Set new description for zone|policy|ipset|service|helper|icmptype"
-msgstr "设置新区域描述"
+msgstr "为 zone|policy|ipset|service|helper|icmptype 设置新描述"
 
 #: share/completions/firewall-cmd.fish:192
 msgid "Print description of zone|policy|ipset|service|helper|icmptype"
-msgstr "打印区域描述"
+msgstr "打印 zone|policy|ipset|service|helper|icmptype 描述"
 
 #: share/completions/firewall-cmd.fish:193
 msgid "Set short description for zone|policy|ipset|service|helper|icmptype"
-msgstr "设置 profile 的简短描述"
+msgstr "设置 zone|policy|ipset|service|helper|icmptype 的简短描述"
 
 #: share/completions/firewall-cmd.fish:194
 msgid "Print short description of zone|policy|ipset|service|helper|icmptype"
-msgstr "打印 profile 的简短描述"
+msgstr "打印 zone|policy|ipset|service|helper|icmptype 的简短描述"
 
 #: share/completions/firewall-cmd.fish:195
 msgid "Name for new zone|policy|ipset|service|helper|icmptype"
-msgstr "新区名 :"
+msgstr "新 zone|policy|ipset|service|helper|icmptype 的名称"
 
 #: share/completions/firewall-cmd.fish:196
 msgid "Add the port to zone|policy|service|helper"
-msgstr "将端口添加到分区\\政策\\服务\帮助"
+msgstr "将端口添加到zone|policy|service|helper"
 
 #: share/completions/firewall-cmd.fish:197
 msgid "Remove the port from zone|policy|service|helper"
-msgstr "从 profile 中去掉端口 "
+msgstr "从 zone|policy|service|helper 中去掉端口 "
 
 #: share/completions/firewall-cmd.fish:198
 msgid "Return whether the port has been added for zone|policy|service|helper"
-msgstr "返回端口是否已被添加到 profile #%service #%helper"
+msgstr "返回端口是否已被添加到 zone|policy|service|helper"
 
 #: share/completions/firewall-cmd.fish:199
 msgid "Add the protocol to zone|policy|service"
-msgstr "将协议添加到分区政策服务"
+msgstr "将协议添加到zone|policy|service"
 
 #: share/completions/firewall-cmd.fish:200
 msgid "Remove the protocol from zone|policy|service"
-msgstr "从区域\\政策\服务中删除协议"
+msgstr "从zone|policy|service中删除协议"
 
 #: share/completions/firewall-cmd.fish:201
 msgid "Return whether the protocol has been added to zone|policy|service"
-msgstr "返回是否将协议添加到 zone policy 服务"
+msgstr "返回是否将协议添加到 zone|policy|service"
 
 #: share/completions/firewall-cmd.fish:202
 msgid "Add the source port to zone|policy|service"
-msgstr "将源端口添加到分区z one|policy|service"
+msgstr "将源端口添加到zone|policy|service"
 
 #: share/completions/firewall-cmd.fish:203
 msgid "Remove the source port from zone|policy|service"
@@ -29657,7 +29666,7 @@ msgstr "列出持续性service|icmptype的目的地"
 
 #: share/completions/firewall-cmd.fish:209
 msgid "Inet family"
-msgstr "伊网家庭"
+msgstr "Inet家族"
 
 #: share/completions/fish.fish:1
 msgid "Run specified command instead of interactive session"
@@ -29881,11 +29890,11 @@ msgstr "在成功编码/解码后删除"
 
 #: share/completions/flac.fish:14
 msgid "Skip the given initial samples for each input {#|mm:ss.ss}"
-msgstr "跳过每个输入的初始样本 {mm: ss.s}"
+msgstr "跳过每个输入的初始样本 {#|mm:ss.ss}"
 
 #: share/completions/flac.fish:15
 msgid "Stop at the given sample for each input file {#|[+|-]mm:ss.ss}"
-msgstr "停止于每个输入文件的给定样本QQ[+|--]mm:s.s}"
+msgstr "停止于每个输入文件的给定样本 {#|[+|-]mm:ss.ss}"
 
 #: share/completions/flac.fish:16
 msgid "Use Ogg as transport layer"
@@ -29941,7 +29950,7 @@ msgstr "从文件读取标签"
 
 #: share/completions/flac.fish:29
 msgid "Add seek point(s) {#|X|#x|#s}"
-msgstr "添加搜索点 {}"
+msgstr "添加搜索点 {#|X|#x|#s}"
 
 #: share/completions/flac.fish:30
 msgid "Write a PADDING block of length #"
@@ -32166,7 +32175,7 @@ msgstr "关闭所有访问检查"
 
 #: share/completions/gcc.fish:36
 msgid "Check \"operator new\" returns non-null before modifying allocated storage"
-msgstr "在对动态分配的内存进行任何修改之前，确保检查\"operator new\"是否已成功返回非空\"
+msgstr "在对动态分配的内存进行任何修改之前，确保检查\"operator new\"是否已成功返回非空"
 
 #: share/completions/gcc.fish:37
 msgid "Put uninitialized global variables into the common segment, as C does"
@@ -34917,7 +34926,7 @@ msgstr "生成 CPU32 的输出"
 
 #: share/completions/gcc.fish:874
 msgid "Generate output for a 520X \"coldfire\" family cpu"
-msgstr "生成一个 520X \"coldfire\" cpu族 的输出 \"
+msgstr "生成一个 520X \"coldfire\" cpu族 的输出 "
 
 #: share/completions/gcc.fish:875
 msgid "Generate output for a 68040, without using any of the new instructions"
@@ -35290,11 +35299,11 @@ msgstr "使产生剩余部分的分数结果与分数相同"
 
 #: share/completions/gcc.fish:1007
 msgid "Prepend a : to all global symbols, so the assembly code can be used with the \"PREFIX\" assembly directive"
-msgstr "在所有全局符号前添加冒号:，以便汇编代码可以与 "PREFIX" 汇编指令配合使用"
+msgstr "在所有全局符号前添加冒号 : , 以便汇编代码可以与 \"PREFIX\" 汇编指令配合使用"
 
 #: share/completions/gcc.fish:1008
 msgid "Do not prepend a : to all global symbols, so the assembly code can be used with the \"PREFIX\" assembly directive"
-msgstr "不要在所有全局符号前添加冒号:，以便汇编代码可以与 "PREFIX" 汇编指令配合使用"
+msgstr "不要在所有全局符号前添加冒号 : , 以便汇编代码可以与 \"PREFIX\" 汇编指令配合使用"
 
 #: share/completions/gcc.fish:1009
 msgid "Generate an executable in the ELF format, rather than the default mmo format used by the mmix simulator"
@@ -35658,19 +35667,19 @@ msgstr "以特定扩展扩展扩展当前 ABI, 或删除此扩展"
 
 #: share/completions/gcc.fish:1143
 msgid "=spe Extend the current ABI with SPE ABI extensions"
-msgstr "=spe (帮助) 以 SPE ABI 扩展当前 ABI"
+msgstr "=spe  以 SPE ABI 扩展当前 ABI"
 
 #: share/completions/gcc.fish:1144 share/completions/gcc.fish:1145
 msgid "Disable Booke SPE ABI extensions for the current ABI"
-msgstr "禁用帐簿 当前 ABI 的 SPE ABI 扩展"
+msgstr "禁用当前ABI环境下Booke SPE功能扩展"
 
 #: share/completions/gcc.fish:1146
 msgid "=ibmlongdouble Change the current ABI to use IBM extended precision long double"
-msgstr "双双双双 更改当前 ABI 以使用 IBM 扩展精度长双倍"
+msgstr "ibmlongdoubl 更改当前 ABI 以使用 IBM 扩展精度长双精度数型"
 
 #: share/completions/gcc.fish:1147
 msgid "=ieeelongdouble Change the current ABI to use IEEE extended precision long double"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}我看见了 更改当前 ABI 以使用 IEEE 扩展精度长双倍"
+msgstr "ieeelongdouble：将当前的 ABI 改为使用IEEE扩展精度长双精度数型"
 
 #: share/completions/gcc.fish:1148
 msgid "On System V.4 and embedded PowerPC assume that all calls to variable argument functions are properly prototyped"
@@ -44447,7 +44456,7 @@ msgstr "获取备份的秘密但可公开访问的 URL"
 
 #: share/completions/heroku.fish:79 share/completions/heroku.fish:80
 msgid "resize dynos to the given size (DYNO1=1X|2X|PX)"
-msgstr "将 dynos 大小调整为给定大小( DYNO1=1X|2X|PX)"
+msgstr "将 dynos 大小调整为给定大小(DYNO1=1X|2X|PX)"
 
 #: share/completions/heroku.fish:81 share/completions/heroku.fish:82
 msgid "restart an app dyno"
@@ -52183,7 +52192,7 @@ msgstr "列表目录而非内容"
 
 #: share/completions/ls.fish:15
 msgid "Append filetype indicator (*/=>@|)"
-msgstr "附加文件类型指标 (*/%)"
+msgstr "附加文件类型指标(*/=>@|)"
 
 #: share/completions/ls.fish:18
 msgid "Print inode number of files"
@@ -52355,7 +52364,7 @@ msgstr "显示隐藏条目"
 
 #: share/completions/ls.fish:69
 msgid "Append indicators. dir/ exec* link@ socket= fifo| whiteout%"
-msgstr "附录指标. dir/ exec * 链接@ socket=fifo| 白出%"
+msgstr "附录指标. dir/ exec* link@ socket= fifo| whiteout%"
 
 #: share/completions/ls.fish:70
 msgid "Append directory indicators"
@@ -52979,7 +52988,7 @@ msgstr "禁止内建内容的一些警告"
 
 #: share/completions/m4.fish:7
 msgid "Warn if macro definition matches REGEXP, default $\\({[^}]*}\\|[0-9][0-9]+\\)"
-msgstr "如果宏定义与REGEXP相匹配, 警告默认为$\\({}} {}}{}}}{[0-9][ 0-9]}}\}"
+msgstr "如果宏定义与REGEXP相匹配,警告,默认为 $\\({[^}]*}\\|[0-9][0-9]+\\)"
 
 #: share/completions/m4.fish:8
 msgid "Define NAME as having VALUE, or empty"
@@ -56435,7 +56444,7 @@ msgstr "设置测试大小写超时, 以毫秒计 [2000]"
 
 #: share/completions/mocha.fish:19
 msgid "specify user-interface (bdd|tdd|qunit|exports)"
-msgstr "指定用户界面( bdd- tdd- qunit- exports)"
+msgstr "指定用户界面(bdd|tdd|qunit|exports)"
 
 #: share/completions/mocha.fish:20
 msgid "watch files for changes"
@@ -62820,7 +62829,7 @@ msgstr "XML 输出"
 
 #: share/completions/nmap.fish:90
 msgid "ScRipT KIdd|3 oUTpuT"
-msgstr "ScRipT Kidd|3 欧特普特"
+msgstr "ScRipT KIdd|3 oUTpuT"
 
 #: share/completions/nmap.fish:91
 msgid "grepable output"
@@ -63803,7 +63812,7 @@ msgstr "用于脚本的外壳"
 #: share/completions/npm.fish:345 share/completions/npm.fish:361
 #: share/completions/npm.fish:436
 msgid "Run all build scripts in the foreground"
-msgstr "在前景中运行全部构建脚本"
+msgstr "在前台中运行全部构建脚本"
 
 #: share/completions/npm.fish:6 share/completions/npm.fish:172
 msgid "Set access level on published packages"
@@ -71213,7 +71222,7 @@ msgstr "禁用增强的命令行编辑( 已读行)"
 
 #: share/completions/psql.fish:16
 msgid "Send query results to file (or |pipe)"
-msgstr "将查询结果发送到文件( 或 QQpipe)"
+msgstr "将查询结果发送到文件( 或 |pipe)"
 
 #: share/completions/psql.fish:17
 msgid "Run quietly (no messages, only query output)"
@@ -71253,7 +71262,7 @@ msgstr "打开扩展的表格输出"
 
 #: share/completions/psql.fish:26
 msgid "Set field separator (default: '|')"
-msgstr "设置字段分隔符( 默认为 '%' )"
+msgstr "设置字段分隔符( 默认为 '|' )"
 
 #: share/completions/psql.fish:27
 msgid "Set record separator (default: newline)"
@@ -73896,7 +73905,7 @@ msgstr "允许替换软件包/文件"
 #: share/completions/rpm-ostree.fish:262 share/completions/rpm-ostree.fish:270
 #: share/completions/rpm-ostree.fish:284 share/completions/rpm-ostree.fish:295
 msgid "=SYSROOT Use system root"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}我的宝贝 使用系统根"
+msgstr "SYSROOT 使用系统root"
 
 #: share/completions/rpm-ostree.fish:30 share/completions/rpm-ostree.fish:37
 #: share/completions/rpm-ostree.fish:151 share/completions/rpm-ostree.fish:160
@@ -74059,7 +74068,7 @@ msgstr "红色 OSTree 基础修订版"
 
 #: share/completions/rpm-ostree.fish:69 share/completions/rpm-ostree.fish:88
 msgid "=CACHEDIR Cached state dir"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}你觉得呢? 缓存状态目录"
+msgstr "CACHEDIR 缓存状态目录"
 
 #: share/completions/rpm-ostree.fish:70
 msgid "=ROOTFS Path to existing rootfs"
@@ -74123,11 +74132,11 @@ msgstr "假设缓存存在, 不更新"
 
 #: share/completions/rpm-ostree.fish:89 share/completions/rpm-ostree.fish:109
 msgid "Dry-run but download & import RPMs"
-msgstr "干运行但下载和导入 RPM"
+msgstr "Dry-run但下载和导入 RPM"
 
 #: share/completions/rpm-ostree.fish:90 share/completions/rpm-ostree.fish:110
 msgid "Dry-run but download RPMs; need --cachedir"
-msgstr "干跑但下载 RPM; 需要 --cachedir"
+msgstr "Dry-run但下载 RPM; 需要 --cachedir"
 
 #: share/completions/rpm-ostree.fish:91 share/completions/rpm-ostree.fish:111
 msgid "=PROXY HTTP proxy"
@@ -74143,15 +74152,15 @@ msgstr "扩展包含并打印树状文件"
 
 #: share/completions/rpm-ostree.fish:94 share/completions/rpm-ostree.fish:114
 msgid "=FILE Update FILE's mod time if new commit"
-msgstr "页:1 如果新任务更新 FILE 的模式时间"
+msgstr "FILE 如果有新commit更新 FILE 的修改时间"
 
 #: share/completions/rpm-ostree.fish:95 share/completions/rpm-ostree.fish:115
 msgid "=COMMIT for change detection"
-msgstr "=COMMIT用于检测变化"
+msgstr "=COMMIT 用于检测变化"
 
 #: share/completions/rpm-ostree.fish:96 share/completions/rpm-ostree.fish:116
 msgid "=DIGEST Use input hash for change detect"
-msgstr "数字 使用输入散列来检测变化"
+msgstr "DIGEST 使用输入散列来检测变化"
 
 #: share/completions/rpm-ostree.fish:97 share/completions/rpm-ostree.fish:117
 msgid "=VERSION for auto version numbering"
@@ -74159,43 +74168,43 @@ msgstr "=VERSION 用于自动版本编号"
 
 #: share/completions/rpm-ostree.fish:98 share/completions/rpm-ostree.fish:118
 msgid "=WORKDIR Working directory"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}你应该知道 工作目录"
+msgstr "WORKDIR 工作目录"
 
 #: share/completions/rpm-ostree.fish:99 share/completions/rpm-ostree.fish:119
 msgid "=FILE Write lockfile to FILE"
-msgstr "页:1 将锁文件写入 FILE"
+msgstr "FILE 将锁文件写入 FILE"
 
 #: share/completions/rpm-ostree.fish:100 share/completions/rpm-ostree.fish:120
 msgid "=FILE Read lockfile from FILE"
-msgstr "页:1 从 FILE 读取锁文件"
+msgstr "FILE 从 FILE 读取锁文件"
 
 #: share/completions/rpm-ostree.fish:101 share/completions/rpm-ostree.fish:121
 msgid "Only allow installing locked packages with --ex-lockfile"
-msgstr "只允许安装带有 --ex-lock文件的锁定包"
+msgstr "只允许安装带有 --ex-lockfile 的锁定包"
 
 #: share/completions/rpm-ostree.fish:104
 msgid "=REPO Path to OSTree repos"
-msgstr "页:1 OSTree 重置路径"
+msgstr "Repo：指定 OSTree 仓库的路径"
 
 #: share/completions/rpm-ostree.fish:108
 msgid "=CACHEDIR Specify cached state dir"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}你觉得呢? 指定缓存状态目录"
+msgstr "CACHEDIR: 指定缓存状态目录"
 
 #: share/completions/rpm-ostree.fish:122
 msgid "=KEY=VALUE Append key=value to metadata"
-msgstr "=KEY=评价 将密钥附加到元数据中"
+msgstr "=KEY=VALUE 将key=value附加到元数据中"
 
 #: share/completions/rpm-ostree.fish:123
 msgid "=JSON Append JSON to OSTree commit"
-msgstr "JSON 将JSON 附加到OSTREE上"
+msgstr "JSON 将JSON 附加到 OSTree commit上"
 
 #: share/completions/rpm-ostree.fish:124
 msgid "=FILE Write commitid to FILE, not ref"
-msgstr "页:1 向 FILE 写入承诺文件, 不参考"
+msgstr "FILE 向 FILE 写入commitid, 不参考"
 
 #: share/completions/rpm-ostree.fish:125
 msgid "=FILE Write compose run info json to FILE"
-msgstr "页:1 向 FILE 写入编曲运行信息json"
+msgstr "FILE 向 FILE 写入compose运行信息json"
 
 #: share/completions/rpm-ostree.fish:126
 msgid "Always Commit without a parent"
@@ -74385,7 +74394,7 @@ msgstr "=KEY=评价 附加内核参数"
 
 #: share/completions/rpm-ostree.fish:191
 msgid "=KEY=VALUE=NEWVALUE Replace kernel argument"
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}=KEY=VALUE=NEWVALUE {\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}你觉得呢? 替换内核参数"
+msgstr "KEY=VALUE=NEWVALUE 替换内核参数"
 
 #: share/completions/rpm-ostree.fish:192
 msgid "=KEY=VALUE Delete kernel argument pair"
@@ -74453,7 +74462,7 @@ msgstr "重置所有活动覆盖"
 
 #: share/completions/rpm-ostree.fish:226
 msgid "=SYSROOT Use system root "
-msgstr "{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}我的宝贝 使用系统根"
+msgstr "SYSROOT 使用系统root"
 
 #: share/completions/rpm-ostree.fish:231
 msgid "=BRANCH Rebase to branch BRANCH"
@@ -75062,7 +75071,7 @@ msgstr "PEP 的主 URL 前缀"
 
 #: share/completions/rsync.fish:1
 msgid "Print info|help FLAGS from help output"
-msgstr "从帮助输出打印信息- 帮助 FLAGS"
+msgstr "从帮助输出中查找并列出与info和help命令相关的FLAGS参数"
 
 #: share/completions/rsync.fish:3
 msgid "Fine-grained informational verbosity"
@@ -77667,7 +77676,7 @@ msgstr "创建顶端触发器"
 
 #: share/completions/sfdx.fish:82
 msgid "[default: before insert] events that fire the trigger (before insert|before update|before delete|after insert|after update|after delete|after undelete)"
-msgstr "[默认:插入前] 点出触发器的事件(在删除前插入+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+msgstr "[默认:插入前] 触发器的事件((before insert|before update|before delete|after insert|after update|after delete|after undelete)"
 
 #: share/completions/sfdx.fish:83
 msgid "(required) name of the generated Apex trigger"
@@ -78733,7 +78742,7 @@ msgstr "列出指定类别的所有对象"
 
 #: share/completions/sfdx.fish:663
 msgid "(required) the type of objects to list (all|custom|standard)"
-msgstr "(需要)要列出的对象类型(all qxcustom qq标准)"
+msgstr "(需要)要列出的对象类型(all|custom|standard)"
 
 #: share/completions/sfdx.fish:668
 msgid "sync your project with your orgs"
@@ -79079,19 +79088,19 @@ msgstr "SSH2 子系统或 sftp 服务器的路径"
 
 #: share/completions/shortcuts.fish:1
 msgid "#Run a shortcut."
-msgstr "#跑出一条捷径."
+msgstr "#执行一个快捷方式."
 
 #: share/completions/shortcuts.fish:2
 msgid "#List your shortcuts."
-msgstr "{\fn方正粗倩简体\fs12\an8\1cHFFFF00\b0}走捷径."
+msgstr "#列出你快捷方式"
 
 #: share/completions/shortcuts.fish:3
 msgid "#View a shortcut in Shortcuts."
-msgstr "#通过快捷键查看快捷键."
+msgstr "#查看所有快捷方式中的一个."
 
 #: share/completions/shortcuts.fish:4
 msgid "#Sign a shortcut file."
-msgstr "#签一个快捷键文件."
+msgstr "#签一个快捷方式文件."
 
 #: share/completions/shortcuts.fish:5
 msgid "#Show subcommand help information."
@@ -79107,11 +79116,11 @@ msgstr "# 如果适用, 在哪里写入快捷键输出 ."
 
 #: share/completions/shortcuts.fish:8
 msgid "#What type to output data in, in Universal Type Identifier format."
-msgstr "{\fn方正粗倩简体\fs12\an8\1cHFFFF00\b0} 以通用类型标识符格式输出数据的类型 ."
+msgstr "#以通用类型标识符格式输出数据是什么类型"
 
 #: share/completions/shortcuts.fish:9
 msgid "#The folder to list."
-msgstr "# 要列出的文件夹 ."
+msgstr "#要列出的文件夹 ."
 
 #: share/completions/shortcuts.fish:10
 msgid "#List folders instead of shortcuts."
@@ -79123,11 +79132,11 @@ msgstr "#签名模式."
 
 #: share/completions/shortcuts.fish:12
 msgid "#The shortcut file to sign."
-msgstr "#要签名的快捷文件."
+msgstr "#要签名的快捷方式文件."
 
 #: share/completions/shortcuts.fish:13
 msgid "#Output path for the signed shortcut file."
-msgstr "# 已签名快捷键文件的输出路径 ."
+msgstr "# 已签名快捷方式文件的输出路径 ."
 
 #: share/completions/signify.fish:1
 msgid "Verify a signed checksum list"
@@ -80226,7 +80235,7 @@ msgstr "启用调试"
 
 #: share/completions/sshfs.fish:4
 msgid "Foreground operation"
-msgstr "前景行动"
+msgstr "前台行动"
 
 #: share/completions/sshfs.fish:5
 msgid "Disable multi-threaded operation"
@@ -81571,19 +81580,19 @@ msgstr "只应用匹配模式的设置"
 
 #: share/completions/sysctl.fish:12 share/completions/sysctl.fish:15
 msgid "    #Alias of -a"
-msgstr "{\fn方正粗倩简体\fs12\an8\1cHFFFF00\b0}亚历山大"
+msgstr "-a的别名"
 
 #: share/completions/sysctl.fish:13
 msgid "    #Alias of -h"
-msgstr "{\fn方正粗倩简体\fs12\an8\1cHFFFF00\b0}阿丽亚"
+msgstr "-h的别名"
 
 #: share/completions/sysctl.fish:14
 msgid "    #Alias of -p"
-msgstr "爱丽丝 -p"
+msgstr "-p的别名"
 
 #: share/completions/sysctl.fish:16 share/completions/sysctl.fish:17
 msgid "    #Does nothing, exists for BSD compatibility"
-msgstr "# 为 BSD 兼容性而不存在"
+msgstr "#无实际功能，仅为BSD兼容"
 
 #: share/completions/sysctl.fish:18
 msgid "Display help text and exit."
@@ -83629,7 +83638,7 @@ msgstr "只显示带有值的属性"
 
 #: share/completions/timeout.fish:1
 msgid "Run COMMAND in the foreground"
-msgstr "在前景中运行指挥"
+msgstr "在前台中运行指挥"
 
 #: share/completions/timeout.fish:2
 msgid "Send a KILL signal after DURATION"
@@ -85783,7 +85792,7 @@ msgstr "按格式<f>打印和格式的时间"
 
 #: share/completions/tree.fish:32
 msgid "Appends '/', '=', '*', '@', '|' or '>' as per ls -F"
-msgstr "附加 ' / ' 、 ' ' 、 ' ' 、 ' * ' 、 ' ' 、 ' ' 或 ' '' ' , 如 is - F"
+msgstr "附加 '/', '=', '*', '@', '|' or '>' as per ls -F"
 
 #: share/completions/tree.fish:33
 msgid "Print inode number of each file"
@@ -88118,7 +88127,7 @@ msgstr "开始于前景模式"
 
 #: share/completions/vim.fish:29
 msgid "Start in Farsi mode"
-msgstr "以波斯语模式开始"
+msgstr "以Farsi模式开始"
 
 #: share/completions/vim.fish:30
 msgid "Start in GUI mode"
@@ -96074,7 +96083,7 @@ msgstr "配置文件路径 ."
 
 #: share/completions/zabbix_server.fish:2
 msgid "Run Zabbix server in foreground."
-msgstr "在前景中运行 Zabbix 服务器 ."
+msgstr "在前台中运行 Zabbix 服务器 ."
 
 #: share/completions/zabbix_server.fish:3
 msgid "Display this help message."

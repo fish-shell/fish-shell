@@ -20,7 +20,7 @@ msgstr "%ls: 设置在 %ls 范围, %ls,%ls 包含 %d 元素"
 
 #: src/parse_util.rs:1585
 msgid "$status is not valid as a command. See `help conditions`"
-msgstr "$status 作为命令无效 . 见`帮助条件' `(a). `"
+msgstr "$status 作为命令无效 . 见`help conditions`"
 
 #: src/complete.rs:66:static ABBR_DESC
 msgid "Abbreviation: %ls"
@@ -28,7 +28,7 @@ msgstr "缩写:%ls"
 
 #: src/builtins/string/split.rs:172
 msgid "--allow-empty is only valid with --fields"
-msgstr "--alllow-freey 只对 --fields 有效"
+msgstr "--allow-empty 只对 --fields 有效"
 
 #: src/proc.rs:1392
 msgid "Always"
@@ -40,7 +40,7 @@ msgstr "路径变量"
 
 #: src/builtins/test.rs:812
 msgid "Argument is not a number: '%ls'"
-msgstr "参数不是数字 :%ls"
+msgstr "参数不是数字 : '%ls'"
 
 #: src/expand.rs:674
 msgid "array indices start at 1, not 0."
@@ -56,7 +56,7 @@ msgstr "有条件运行的代码块"
 
 #: src/builtins/history.rs:302
 msgid "builtin history delete --exact requires --case-sensitive\n"
-msgstr "已建历史删除 --精确要求 --对大小写敏感\n"
+msgstr "内建历史删除 --exact 需要 --case-sensitive\n"
 
 #: src/builtins/history.rs:297
 msgid "builtin history delete only supports --exact\n"
@@ -92,23 +92,23 @@ msgstr "无法使用 stdin (fd 0) 作为管道输出"
 
 #: src/bin/fish.rs:537
 msgid "Can not use the no-execute mode when running an interactive session"
-msgstr "运行交互式会话时不能使用不执行模式"
+msgstr "运行交互式会话时不能使用 no-execute模式"
 
 #: src/ast.rs:3227
 msgid "'case' builtin not inside of switch block"
-msgstr "' case' 不在切换块内"
+msgstr "'case' 不在switch代码块内"
 
 #: src/builtins/shared.rs:481
 msgid "Change working directory"
-msgstr "改变工作目录(当前目录)"
+msgstr "改变工作目录"
 
 #: src/builtins/shared.rs:523
 msgid "Check if a thing is a thing"
-msgstr "看看有没有东西是什么东西"
+msgstr "检查某事是否是其自身"
 
 #: src/env_dispatch.rs:663
 msgid "Check that this terminal type is supported on this system."
-msgstr "检查此系统是否支持此终端类型 ."
+msgstr "检查此系统是否支持此终端类型."
 
 #: src/fish_test_helper.cpp:211:struct fth_command_t {
 msgid "command"
@@ -128,15 +128,15 @@ msgstr "命令名称无效"
 
 #: src/expand.rs:983
 msgid "Command not executable"
-msgstr "命令不能执行文件"
+msgstr "命令不是可执行的"
 
 #: src/expand.rs:1347
 msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "命令替换 . 试用 var= (你的-cmd) $var..."
+msgstr "在命令位置进行命令替换不被允许. 试着使用 var=(your-cmd) $var ..."
 
 #: src/complete.rs:623
 msgid "completion reached maximum recursion depth, possible cycle?"
-msgstr "完成时达到最大复发深度,可能的周期?"
+msgstr "达到了最大的递归深度，可能存在循环?"
 
 #: src/builtins/shared.rs:519
 msgid "Conditionally run blocks of code"
@@ -144,7 +144,7 @@ msgstr "有条件运行代码块"
 
 #: src/builtins/functions.rs:388
 msgid ", copied in %ls @ line %d"
-msgstr ",复制到 %ls @ 第%d行"
+msgstr ",复制到 %ls @ line %d"
 
 #: src/builtins/functions.rs:393
 msgid ", copied interactively"
@@ -152,15 +152,15 @@ msgstr ",交互复制"
 
 #: src/builtins/functions.rs:384
 msgid ", copied via `source`"
-msgstr ",通过'来源'复制 `(a). `"
+msgstr ",通过`source`复制"
 
 #: src/env/environment.rs:264
 msgid "Could not determine current working directory. Is your locale set correctly?"
-msgstr "无法确定当前工作目录 . 你的地盘设置正确吗?"
+msgstr "无法确定当前工作目录 . 你的本地设置正确吗?"
 
 #: src/env_dispatch.rs:534
 msgid "Could not get any terminfo database, falling back to hardcoded xterm-256color values"
-msgstr "无法获得任何术语info数据库, 返回到已硬编码的 xterm-256color 值"
+msgstr "由于无法获取任何terminfo数据库，已回退至硬编码的xterm-256color设置"
 
 #: src/reader.rs:3294
 msgid "Could not set terminal mode for new job"
@@ -180,7 +180,7 @@ msgstr "无法将配置信息写入文件'%s':%s"
 
 #: src/builtins/shared.rs:487
 msgid "Count the number of arguments"
-msgstr "参数的个数的计数"
+msgstr "计算参数个数"
 
 #: src/builtins/jobs.rs:69
 msgid "CPU\t"
@@ -196,15 +196,15 @@ msgstr "定义一个新函数"
 
 #: src/builtins/functions.rs:373
 msgid "Defined in %ls @ line %d"
-msgstr "定义于 %ls @ 第%d行"
+msgstr "定义于 %ls @ line %d"
 
 #: src/builtins/functions.rs:378
 msgid "Defined interactively"
-msgstr "互动定义"
+msgstr "定义交互"
 
 #: src/builtins/functions.rs:369
 msgid "Defined via `source`"
-msgstr "通过`源'定义 `(a). `"
+msgstr "通过`source`定义"
 
 #: src/wutil/mod.rs:145
 msgid "directory"
@@ -224,7 +224,7 @@ msgstr "编辑命令相关的补全"
 
 #: src/ast.rs:3219
 msgid "'else' builtin not inside of if block"
-msgstr "'else' 建在不在内 如果块"
+msgstr "'else' 不在 if 代码块内"
 
 #: src/builtins/shared.rs:491
 msgid "Emit an event"
@@ -240,19 +240,19 @@ msgstr "结束一个命令块"
 
 #: src/builtins/string/sub.rs:61
 msgid "--end and --length are mutually exclusive"
-msgstr "--端和 --长是相互排斥的"
+msgstr "--end 和 --length 是相互排斥的"
 
 #: src/ast.rs:3211
 msgid "'end' outside of a block"
-msgstr "在街区外结束"
+msgstr "'end' 在代码块外"
 
 #: src/builtins/string/match.rs:99
 msgid "--entire and --groups-only are mutually exclusive"
-msgstr "完全和 --组别是相互排斥的"
+msgstr "--entire 和 --groups-only 是相互排斥的"
 
 #: src/builtins/string/match.rs:81
 msgid "--entire and --index are mutually exclusive"
-msgstr "实体和索引相互排斥"
+msgstr "--entire 和 --index 是相互排斥的"
 
 #: src/builtins/ulimit.rs:37
 msgid "error\n"
@@ -268,31 +268,31 @@ msgstr "重命名历史文件时出错:%s"
 
 #: src/bin/fish.rs:694
 msgid "Error while reading file %ls\n"
-msgstr "读取文件%ls时出错\n"
+msgstr "读取文件 %ls 时出错\n"
 
 #: src/builtins/shared.rs:493
 msgid "Evaluate a string as a statement"
-msgstr "将字符串评价为语句"
+msgstr "将此字符串视为一条程序语句进行执行"
 
 #: src/builtins/shared.rs:490
 msgid "Evaluate block if condition is false"
-msgstr "条件为假时对区块求值"
+msgstr "条件为假时执行代码块"
 
 #: src/builtins/shared.rs:502
 msgid "Evaluate block if condition is true"
-msgstr "条件为真时对区块求值"
+msgstr "条件为真时执行代码块"
 
 #: src/builtins/shared.rs:466
 msgid "Evaluate contents of file"
-msgstr "对文件内容求值"
+msgstr "执行目录里的文件"
 
 #: src/builtins/shared.rs:504
 msgid "Evaluate math expressions"
-msgstr "评价数学表达式"
+msgstr "执行数学表达式"
 
 #: src/builtins/shared.rs:506
 msgid "Execute command if previous command failed"
-msgstr "如果前一条命令失败执行命令"
+msgstr "如果前一条命令失败则执行命令"
 
 #: src/builtins/shared.rs:495
 msgid "Exit the shell"
@@ -308,23 +308,23 @@ msgstr "扩展产生了太多的结果"
 
 #: src/ast.rs:3538
 msgid "Expected a command, but found %ls"
-msgstr "需要命令,但发现了 %ls"
+msgstr "预期是一个命令,但发现了 %ls"
 
 #: src/ast.rs:3246
 msgid "Expected a string, but found a redirection"
-msgstr "期待字符串, 但找到方向"
+msgstr "预期是字符串, 但找到redirection"
 
 #: src/ast.rs:3258
 msgid "Expected a string, but found %ls"
-msgstr "需要字符串,但发现了 %ls"
+msgstr "预期是字符串,但发现了 %ls"
 
 #: src/bin/fish_indent.rs:882
 msgid "Expected file path to read/write for -w:\n\n $ %ls -w foo.fish\n"
-msgstr "需要读取/写入 -w:\n\n $ %ls -w foo.fish 的文件路径\n"
+msgstr "预期 读取/写入 -w:\n\n $ %ls -w foo.fish 文件的文件路径\n"
 
 #: src/ast.rs:2857
 msgid "Expected %ls, but found %ls"
-msgstr "需要%ls,但找到%ls"
+msgstr "预期 %ls,但找到 %ls"
 
 #: src/flog.rs:110
 msgid "exported"
@@ -332,11 +332,11 @@ msgstr "导出"
 
 #: src/tinyexpr.rs:113
 msgid "Expression is bogus"
-msgstr "表达式是假的"
+msgstr "表达式存在问题"
 
 #: src/reader.rs:3455
 msgid "Failed to assign shell to its own process group"
-msgstr "指定 shell 到自己的进程组失败"
+msgstr "无法将shell分配到它自己的进程组"
 
 #: src/reader.rs:3477
 msgid "Failed to set startup terminal mode!"

@@ -126,6 +126,11 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     if is_reset || [fg, bg].iter().any(|c| c.is_some_and(|c| c.is_normal())) {
         outp.reset_text_face();
     } else {
+        // Historically we have not used set_text_face() for colors here.
+        // Doing so would add two magic behaviors:
+        // - if fg and bg are equal, it makes one of them white
+        // - if bg is not normal, it makes the foreground bold
+        // The first one seems fine but the second one not really.
         outp.set_text_face(TextFace::new(Color::None, Color::None, style));
         if let Some(fg) = fg {
             if !outp.write_color(fg, true /* is_fg */) {

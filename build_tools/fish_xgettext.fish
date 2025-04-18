@@ -30,7 +30,7 @@ for str in $strs
     # grep -P needed for string escape to be compatible (PCRE-style),
     # -H gives the filename, -n the line number.
     # If you want to run this on non-GNU grep: Don't.
-    echo "#:" (grep -PHn -r -- (string escape --style=regex -- $str) src/ |
+    echo "#:" (grep -PHn -r -- \"(string escape --style=regex -- $str)\" src/ |
     head -n1 | string replace -r ':\s.*' '')
     echo "msgid \"$str\""
     echo 'msgstr ""'

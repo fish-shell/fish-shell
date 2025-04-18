@@ -128,14 +128,11 @@ use crate::signal::{
 use crate::terminal::BufferedOutputter;
 use crate::terminal::Output;
 use crate::terminal::Outputter;
-use crate::terminal::TerminalCommand::DecrstAlternateScreenBuffer;
-use crate::terminal::TerminalCommand::DecrstMouseTracking;
-use crate::terminal::TerminalCommand::DecsetAlternateScreenBuffer;
-use crate::terminal::TerminalCommand::DecsetShowCursor;
-use crate::terminal::TerminalCommand::QueryCursorPosition;
 use crate::terminal::TerminalCommand::{
-    ClearScreen, Osc0WindowTitle, Osc133CommandStart, QueryKittyKeyboardProgressiveEnhancements,
-    QueryPrimaryDeviceAttribute, QueryXtgettcap, QueryXtversion,
+    ClearScreen, DecrstAlternateScreenBuffer, DecrstMouseTracking, DecsetAlternateScreenBuffer,
+    DecsetShowCursor, Osc0WindowTitle, Osc133CommandFinished, Osc133CommandStart,
+    QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
+    QueryXtgettcap, QueryXtversion,
 };
 use crate::terminal::{
     Capability, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE,
@@ -732,9 +729,8 @@ fn read_i(parser: &Parser) {
         data.exit_loop_requested |= parser.libdata().exit_current_script;
         parser.libdata_mut().exit_current_script = false;
 
-        BufferedOutputter::new(Outputter::stdoutput()).write_command(
-            crate::terminal::TerminalCommand::Osc133CommandFinished(parser.get_last_status()),
-        );
+        BufferedOutputter::new(Outputter::stdoutput())
+            .write_command(Osc133CommandFinished(parser.get_last_status()));
         event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
         data.history.resolve_pending();

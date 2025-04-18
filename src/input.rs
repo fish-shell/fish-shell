@@ -450,9 +450,6 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn is_blocked(&self) -> bool {
-        self.blocking_wait().is_some()
-    }
     fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
         self.data.blocking_wait()
     }

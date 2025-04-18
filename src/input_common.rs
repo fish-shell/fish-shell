@@ -1633,7 +1633,7 @@ pub trait InputEventQueuer {
         NO_WAIT.lock().unwrap()
     }
     fn is_blocked(&self) -> bool {
-        false
+        self.blocking_wait().is_some()
     }
 
     fn on_mouse_left_click(&mut self, _position: ViewportPosition) {}

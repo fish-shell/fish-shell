@@ -451,7 +451,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
     }
 
     fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
-        self.data.blocking_wait()
+        Reader::blocking_wait(self)
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {

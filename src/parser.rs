@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::terminal_protocols_disable_ifn;
+use crate::input_common::{terminal_protocols_disable_ifn, BlockingWait, Queried};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -44,7 +44,7 @@ use std::os::fd::OwnedFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub enum BlockData {
     Function {
@@ -439,6 +439,8 @@ pub struct Parser {
 
     /// Global event blocks.
     pub global_event_blocks: AtomicU64,
+
+    pub blocking_wait: Mutex<Option<BlockingWait>>,
 }
 
 impl Parser {
@@ -456,6 +458,7 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
+            blocking_wait: Mutex::new(Some(BlockingWait::Startup(Queried::NotYet))),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

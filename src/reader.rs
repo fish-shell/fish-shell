@@ -83,7 +83,6 @@ use crate::input_common::unblock_input;
 use crate::input_common::BlockingWait;
 use crate::input_common::CursorPositionWait;
 use crate::input_common::ImplicitEvent;
-use crate::input_common::InputEventQueuer;
 use crate::input_common::Queried;
 use crate::input_common::IN_DVTM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
@@ -542,8 +541,6 @@ pub struct ReaderData {
 
     /// The representation of the current screen contents.
     screen: Screen,
-
-    pub blocking_wait: Rc<Mutex<Option<BlockingWait>>>,
 
     /// Data associated with input events.
     /// This is made public so that InputEventQueuer can be implemented on us.
@@ -1179,10 +1176,6 @@ fn reader_received_sighup() -> bool {
 
 impl ReaderData {
     fn new(history: Arc<History>, conf: ReaderConfig) -> Pin<Box<Self>> {
-        let blocking_wait = reader_current_data().map_or_else(
-            || Rc::new(Mutex::new(Some(BlockingWait::Startup(Queried::NotYet)))),
-            |parent| parent.blocking_wait.clone(),
-        );
         let input_data = InputData::new(conf.inputfd);
         Pin::new(Box::new(Self {
             canary: Rc::new(()),
@@ -1200,7 +1193,6 @@ impl ReaderData {
             last_flash: Default::default(),
             flash_autosuggestion: false,
             screen: Screen::new(),
-            blocking_wait,
             input_data,
             queued_repaint: false,
             history,
@@ -1225,10 +1217,6 @@ impl ReaderData {
             in_flight_autosuggest_request: Default::default(),
             rls: None,
         }))
-    }
-
-    pub(crate) fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
-        self.blocking_wait.lock().unwrap()
     }
 
     // We repaint our prompt if fstat reports the tty as having changed.
@@ -1436,15 +1424,6 @@ impl ReaderData {
         true
     }
 
-    pub fn request_cursor_position(&mut self, out: &mut Outputter, wait: CursorPositionWait) {
-        let mut wait_guard = self.blocking_wait();
-        assert!(wait_guard.is_none());
-        *wait_guard = Some(BlockingWait::CursorPosition(wait));
-        out.write_command(QueryCursorPosition);
-        drop(wait_guard);
-        self.save_screen_state();
-    }
-
     pub fn mouse_left_click(&mut self, cursor: ViewportPosition, click_position: ViewportPosition) {
         FLOG!(
             reader,
@@ -1518,6 +1497,19 @@ pub fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
+    pub(crate) fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
+        self.parser.blocking_wait.lock().unwrap()
+    }
+
+    pub fn request_cursor_position(&mut self, out: &mut Outputter, wait: CursorPositionWait) {
+        let mut wait_guard = self.blocking_wait();
+        assert!(wait_guard.is_none());
+        *wait_guard = Some(BlockingWait::CursorPosition(wait));
+        out.write_command(QueryCursorPosition);
+        drop(wait_guard);
+        self.save_screen_state();
+    }
+
     /// Return true if the command line has changed and repainting is needed. If `colors` is not
     /// null, then also return true if the colors have changed.
     fn is_repaint_needed(&self, mcolors: Option<&[HighlightSpec]>) -> bool {

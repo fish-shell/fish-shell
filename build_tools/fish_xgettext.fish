@@ -39,8 +39,28 @@ end >messages.pot
 function extract_fish_script_messages --argument-names name regex;
     mkdir -p $tmpdir/$name/share/completions $tmpdir/$name/share/functions
     for f in share/config.fish share/completions/*.fish share/functions/*.fish
-        string replace --filter --regex $regex '$1' <$f | string unescape \
-            | string replace --all '"' '\\"' | string replace -r '(.*)' 'N_ "$1"' >$tmpdir/$name/$f
+        # Extract messages from fish script.
+        # This is done by creating a file which has the message strings in the same lines as the
+        # oritinal, in the form:
+        # N_ "message"
+        # All other lines will be empty.
+        # Multiple messages on a single line are not supported.
+
+        # Start by transforming the matching lines according to $explicit_regex and adding 'N_ ' as
+        # a prefix.
+        # Then, replace all lines without this prefix by empty lines.
+        # These lines are kept to ensure that the correct line number makes it into the pot file.
+        # Replacing irrelevant lines by empty lines must happen before unescaping, because otherwise
+        # multi-line commands (lines ending on \) would get merged, changing the line count.
+        # Double quotes are escaped, and finally unescaped double quotes are added around the string.
+        # The result will be a file consisting of empty lines and potentially some lines prefixed with
+        # 'N_ ', followed by a double-quoted string.
+        string replace --regex $regex 'N_ $1' <$f |
+            sed '/^N_ / !{s/^.*$//}' |
+            string unescape |
+            string replace --all '"' '\\"' |
+            string replace --regex '^N_ (.*)$' 'N_ "$1"' \
+            >$tmpdir/$name/$f
     end
 end
 

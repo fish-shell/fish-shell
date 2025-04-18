@@ -1798,8 +1798,8 @@ pub struct InputEventQueue {
 }
 
 impl InputEventQueue {
-    pub fn new(in_fd: RawFd) -> InputEventQueue {
-        InputEventQueue {
+    pub fn new(in_fd: RawFd) -> Self {
+        Self {
             data: InputData::new(in_fd),
         }
     }

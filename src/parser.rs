@@ -3,8 +3,8 @@
 use crate::ast::{self, Ast, List, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
-    escape_string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding,
-    ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
+    escape_string, wcs2string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef,
+    ScopeGuarding, ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
@@ -38,8 +38,9 @@ use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
 use std::fs::File;
+use std::io::Write;
 use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd, OwnedFd};
+use std::os::fd::OwnedFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
@@ -1100,7 +1101,6 @@ impl Parser {
                 return;
             }
         };
-        fprintf!(f.as_raw_fd(), "Time\tSum\tCommand\n");
         print_profile(&self.profile_items.borrow(), &mut f);
     }
 
@@ -1226,6 +1226,14 @@ fn user_presentable_path(path: &wstr, vars: &dyn Environment) -> WString {
 
 /// Print profiling information to the specified stream.
 fn print_profile(items: &[ProfileItem], out: &mut File) {
+    let col_width = 10;
+    let _ = out.write_all(
+        format!(
+            "{:^col_width$} {:^col_width$} Command\n",
+            "Time (μs)", "Sum (μs)",
+        )
+        .as_bytes(),
+    );
     for (idx, item) in items.iter().enumerate() {
         if item.skipped || item.cmd.is_empty() {
             continue;
@@ -1252,13 +1260,16 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
             }
         }
 
-        let out = out.as_raw_fd();
-        fprintf!(out, "%lld\t%lld\t", self_time, total_time);
-        for _i in 0..item.level {
-            fprintf!(out, "-");
-        }
-
-        fprintf!(out, "> %ls\n", item.cmd);
+        let level = item.level.unsigned_abs().saturating_add(1);
+        let _ = out.write_all(
+            format!(
+                "{:>col_width$} {:>col_width$} {:->level$} ",
+                self_time, total_time, '>'
+            )
+            .as_bytes(),
+        );
+        let _ = out.write_all(&wcs2string(&item.cmd));
+        let _ = out.write_all(b"\n");
     }
 }
 

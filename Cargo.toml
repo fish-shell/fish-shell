@@ -107,3 +107,9 @@ rust.unstable_name_collisions = "allow"
 clippy.manual_range_contains = "allow"
 clippy.needless_return = "allow"
 clippy.needless_lifetimes = "allow"
+
+# We do not want to use the e?print(ln)?! macros.
+# These lints flag their use.
+# In the future, they might change to flag other methods of printing.
+clippy.print_stdout = "deny"
+clippy.print_stderr = "deny"

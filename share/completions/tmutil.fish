@@ -2,7 +2,7 @@
 
 function __destination_ids
     for line in $(tmutil destinationinfo)
-        if test -n "$(string match '*===*' $line)"
+        if string match -q '*===*' -- $line
             # New section so clear out variables
             set -f name ''
             set -f ID ''
@@ -10,19 +10,19 @@ function __destination_ids
             continue
         end
 
-        if test -n "$(string match -r '^Name' $line)"
+        if string match -q -r '^Name' -- $line
             # Got the destination name
             set -f name "$(string match -r -g '^Name\s+:\s+(.*)$' $line | string trim)"
             continue
         end
 
-        if test -n "$(string match -r '^Kind' $line)"
+        if string match -q -r '^Kind' -- $line
             # Got the destination name
             set -f kind "$(string match -r -g '^Kind\s+:\s+(\w+)' $line | string trim)"
             continue
         end
 
-        if test -n "$(string match -r '^ID' $line)"
+        if string match -q -r '^ID' -- $line
             # Got the destination ID
             set -f ID "$(string match -r -g '^ID\s+:\s+(.*)$' $line | string trim)"
             echo "$ID\t'$name $kind'"

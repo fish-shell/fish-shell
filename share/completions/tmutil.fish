@@ -5,7 +5,6 @@ function __destination_ids
         if string match -q '*===*' -- $line
             # New section so clear out variables
             set -f name ''
-            set -f ID ''
             set -f kind ''
             continue
         end

@@ -97,7 +97,7 @@ complete -c tmutil -f -n __fish_use_subcommand -a localsnapshot -d 'Create new l
 complete -c tmutil -f -n __fish_use_subcommand -a machinedirectory -d 'Print the path to the current machine directory'
 
 complete -c tmutil -f -n __fish_use_subcommand -a removedestination -d 'Removes a backup destination'
-complete -c tmutil -f -n '__fish_seen_subcommand_from removedestination' -d "$(__destination_ids)"
+complete -c tmutil -f -n '__fish_seen_subcommand_from removedestination' -a "$(__destination_ids)"
 
 complete -c tmutil -f -n __fish_use_subcommand -a removeexclusion -d 'Remove an exclusion'
 complete -c tmutil -f -n '__fish_seen_subcommand_from removeexclusion' -s v -d 'Volume exclusion'

@@ -30,13 +30,12 @@ function __destination_ids
     end
 end
 
-complete -c tmutil -f
-complete -c tmutil -n '__fish_seen_subcommand_from status' -f
 complete -c tmutil -n __fish_use_subcommand -a status -d 'Display Time Machine status'
+complete -c tmutil -f -n '__fish_seen_subcommand_from status'
 
-complete -c tmutil -F -n __fish_use_subcommand -a addexclusion -d 'Add an exclusion not to back up a file'
-complete -c tmutil -F -n '__fish_seen_subcommand_from addexclusion' -s v -d 'Volume exclusion'
-complete -c tmutil -F -n '__fish_seen_subcommand_from addexclusion' -s p -d 'Path exclusion'
+complete -c tmutil -f -n __fish_use_subcommand -a addexclusion -d 'Add an exclusion not to back up a file'
+complete -c tmutil -r -n '__fish_seen_subcommand_from addexclusion' -s v -d 'Volume exclusion'
+complete -c tmutil -r -n '__fish_seen_subcommand_from addexclusion' -s p -d 'Path exclusion'
 
 complete -c tmutil -r -n __fish_use_subcommand -a associatedisk -d 'Bind a snapshot volume directory to the specified local disk'
 
@@ -62,7 +61,7 @@ complete -c tmutil -f -n '__fish_seen_subcommand_from compare' -s U -d 'Ignore l
 
 complete -c tmutil -r -n __fish_use_subcommand -a delete -d 'Delete one or more snapshots'
 complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s d -d 'Backup mount point'
-complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s t -d 'Timestamp'
+complete -c tmutil -r -f -n '__fish_seen_subcommand_from delete' -s t -d 'Timestamp'
 complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s p -d 'Path'
 
 complete -c tmutil -r -n __fish_use_subcommand -a deletelocalsnapshots -d 'Delete all local Time Machine snapshots for the specified date (formatted YYYY-MM-DD-HHMMSS)'
@@ -81,9 +80,9 @@ complete -c tmutil -f -n __fish_use_subcommand -a enablelocal -d 'Turn on local 
 
 complete -c tmutil -r -n __fish_use_subcommand -a inheritbackup -d 'Claim a machine directory or sparsebundle for use by the current machine'
 
-complete -c tmutil -F -n __fish_use_subcommand -a isexcluded -d 'Determine if a file, directory, or volume are excluded from backups'
+complete -c tmutil -r -n __fish_use_subcommand -a isexcluded -d 'Determine if a file, directory, or volume are excluded from backups'
 
-complete -c tmutil -r -n __fish_use_subcommand -a latestbackup -d 'Print the path to the latest snapshot'
+complete -c tmutil -f -n __fish_use_subcommand -a latestbackup -d 'Print the path to the latest snapshot'
 
 complete -c tmutil -f -n __fish_use_subcommand -a listlocalsnapshotdates -d 'List the creation dates of all local Time Machine snapshots'
 
@@ -133,3 +132,4 @@ complete -c tmutil -f -n '__fish_seen_subcommand_from setquota' -r -a '$(__desti
 complete -c tmutil -f -n '__fish_seen_subcommand_from destinationinfo isexcluded compare status' -s X -d 'Print as XML'
 complete -c tmutil -f -n '__fish_seen_subcommand_from latestbackup listbackups' -s m -d 'Destination volume to list backups from'
 complete -c tmutil -f -n '__fish_seen_subcommand_from latestbackup listbackups' -s t -d 'Attempt to mount the backups and list their mounted paths'
+complete -c tmutil -f -n '__fish_seen_subcommand_from latestbackup listbackups' -s d -d 'Backup mount point'

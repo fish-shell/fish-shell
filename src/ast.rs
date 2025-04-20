@@ -2672,8 +2672,9 @@ impl Ast {
     pub fn dump(&self, orig: &wstr) -> WString {
         let mut result = WString::new();
 
-        for node in self.walk() {
-            let depth = get_depth(node);
+        let mut traversal = self.walk();
+        while let Some(node) = traversal.next() {
+            let depth = traversal.parent_nodes().count() - 1;
             // dot-| padding
             result += &str::repeat("! ", depth)[..];
 
@@ -2718,17 +2719,6 @@ impl Ast {
         }
         result
     }
-}
-
-// Return the depth of a node, i.e. number of parent links.
-fn get_depth(node: &dyn Node) -> usize {
-    let mut result = 0;
-    let mut cursor = node;
-    while let Some(parent) = cursor.parent() {
-        result += 1;
-        cursor = parent;
-    }
-    result
 }
 
 struct SourceRangeVisitor {

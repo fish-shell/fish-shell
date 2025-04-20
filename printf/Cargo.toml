@@ -9,3 +9,4 @@ license = "MIT"
 [dependencies]
 libc = "0.2.155"
 widestring = { version = "1.0.2", optional = true }
+bstr = { version = "1.10", optional = true }

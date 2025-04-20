@@ -137,6 +137,7 @@ dependencies = [
 name = "fish-printf"
 version = "0.2.1"
 dependencies = [
+ "bstr",
  "libc",
  "widestring",
 ]

@@ -8,8 +8,7 @@ use crate::builtins::shared::{
     STATUS_READ_TOO_MUCH,
 };
 use crate::common::{
-    exit_without_destructors, str2wcstring, truncate_at_nul, wcs2string, wcs2zstring, write_loop,
-    ScopeGuard,
+    exit_without_destructors, str2wcstring, truncate_at_nul, wcs2zstring, write_loop, ScopeGuard,
 };
 use crate::env::{EnvMode, EnvStack, Environment, Statuses, READ_BYTE_LIMIT};
 #[cfg(FISH_USE_POSIX_SPAWN)]
@@ -27,7 +26,7 @@ use crate::fork_exec::spawn::PosixSpawner;
 use crate::function::{self, FunctionProperties};
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
-    IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
+    IoStreams, OutputStream, SeparatedBuffer,
 };
 use crate::libc::_PATH_BSHELL;
 use crate::nix::isatty;
@@ -780,7 +779,7 @@ fn create_output_stream_for_builtin(
         IoMode::pipe => {
             // Output is to a pipe. We may need to buffer.
             if piped_output_needs_buffering {
-                OutputStream::String(StringOutputStream::new())
+                OutputStream::BString(Default::default())
             } else {
                 OutputStream::Fd(FdOutputStream::new(io.source_fd()))
             }
@@ -788,7 +787,7 @@ fn create_output_stream_for_builtin(
         IoMode::fd => {
             // This is a case like 'echo foo >&5'
             // It's uncommon and unclear what should happen.
-            OutputStream::String(StringOutputStream::new())
+            OutputStream::BString(Default::default())
         }
     }
 }
@@ -806,8 +805,8 @@ fn handle_builtin_output(
     assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
 
     // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
-    let outbuff = wcs2string(out.contents());
-    let errbuff = wcs2string(err.contents());
+    let outbuff = out.contents().to_vec();
+    let errbuff = err.contents().to_vec();
 
     // Some historical behavior.
     if !outbuff.is_empty() {

@@ -11,8 +11,8 @@ use crate::builtins::shared::{
     STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    escape, should_suppress_stderr_for_tests, truncate_at_nul, valid_var_name, ScopeGuard,
-    ScopeGuarding, ScopedRefCell,
+    escape, should_suppress_stderr_for_tests, str2wcstring, truncate_at_nul, valid_var_name,
+    ScopeGuard, ScopeGuarding, ScopedRefCell,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, Statuses};
@@ -23,7 +23,7 @@ use crate::expand::{
 };
 use crate::flog::FLOG;
 use crate::function;
-use crate::io::{IoChain, IoStreams, OutputStream, StringOutputStream};
+use crate::io::{IoChain, IoStreams, OutputStream};
 use crate::job_group::JobGroup;
 use crate::operation_context::OperationContext;
 use crate::parse_constants::{
@@ -1301,7 +1301,7 @@ impl<'a> ExecutionContext<'a> {
 
         trace_if_enabled_with_args(ctx.parser(), L!("function"), &arguments);
         let mut outs = OutputStream::Null;
-        let mut errs = OutputStream::String(StringOutputStream::new());
+        let mut errs = OutputStream::BString(Default::default());
         let io_chain = IoChain::new();
         let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
         let mut shim_arguments: Vec<&wstr> = arguments
@@ -1321,7 +1321,7 @@ impl<'a> ExecutionContext<'a> {
         ctx.parser().libdata_mut().status_count += 1;
         ctx.parser().set_last_statuses(Statuses::just(err_code));
 
-        let errtext = errs.contents();
+        let errtext = str2wcstring(errs.contents());
         if !errtext.is_empty() {
             report_error!(self, ctx, err_code, header, "%ls", errtext);
         }

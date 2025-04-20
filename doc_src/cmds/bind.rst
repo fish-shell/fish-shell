@@ -73,7 +73,7 @@ The following options are available:
 **-f** or **--function-names**
     Display a list of available input functions
 
--**-K** or **--key-names**
+**-K** or **--key-names**
     Display a list of available named keys such as ``backspace``.
 
 **-L** or **--list-modes**

@@ -827,7 +827,10 @@ pub fn apply_indents(src: &wstr, indents: &[i32]) -> WString {
 // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
 // visiting its children.
 struct IndentVisitor<'a> {
-    // companion: Pin<&'a mut indent_visitor_t>,
+    // The parent node of the node we are currently visiting, or None if we are the root.
+    parent: Option<&'a dyn ast::Node>,
+
+    // companion: Pin<&'a mut IndentVisitor>,
     // The one-past-the-last index of the most recently encountered leaf node.
     // We use this to populate the indents even if there's no tokens in the range.
     last_leaf_end: usize,
@@ -851,9 +854,11 @@ struct IndentVisitor<'a> {
     // List of locations of escaped newline characters.
     line_continuations: Vec<usize>,
 }
+
 impl<'a> IndentVisitor<'a> {
     fn new(src: &'a wstr, indents: &'a mut Vec<i32>, initial_indent: i32) -> Self {
         Self {
+            parent: None,
             last_leaf_end: 0,
             last_indent: initial_indent - 1,
             unclosed: false,
@@ -974,6 +979,7 @@ impl<'a> IndentVisitor<'a> {
         }
     }
 }
+
 impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
     fn visit(&mut self, node: &'a dyn Node) {
@@ -989,13 +995,14 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
 
             // Increment indents for conditions in headers (#1665).
             Type::job_conjunction => {
-                if [Type::while_header, Type::if_clause].contains(&node.parent().unwrap().typ()) {
+                let typ = self.parent.unwrap().typ();
+                if matches!(typ, Type::if_clause | Type::while_header) {
                     inc = 1;
                     dec = 1;
                 }
             }
 
-            // Increment indents for job_continuation_t if it contains a newline.
+            // Increment indents for JobContinuation if it contains a newline.
             // This is a bit of a hack - it indents cases like:
             //    cmd1 |
             //    ....cmd2
@@ -1038,12 +1045,12 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 // To address this, if we see that the switch statement was not closed, do not
                 // decrement the indent afterwards.
                 inc = 1;
-                let switchs = node.parent().unwrap().as_switch_statement().unwrap();
+                let switchs = self.parent.unwrap().as_switch_statement().unwrap();
                 dec = if switchs.end.has_source() { 1 } else { 0 };
             }
             Type::token_base => {
                 let token_type = node.as_token().unwrap().token_type();
-                let parent_type = node.parent().unwrap().typ();
+                let parent_type = self.parent.unwrap().typ();
                 if parent_type == Type::begin_header && token_type == ParseTokenType::end {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
@@ -1093,7 +1100,9 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             self.last_indent = self.indent;
         }
 
+        let saved = self.parent.replace(node);
         node.accept(self, false);
+        self.parent = saved;
         self.indent -= dec;
     }
 }

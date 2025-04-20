@@ -2012,18 +2012,6 @@ impl ArgumentOrRedirectionVariant {
             ArgumentOrRedirectionVariant::Redirection(node) => node,
         }
     }
-    fn as_mut_argument(&mut self) -> &mut Argument {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_redirection(&mut self) -> &mut Redirection {
-        match self {
-            ArgumentOrRedirectionVariant::Redirection(redirection) => redirection,
-            _ => panic!(),
-        }
-    }
 }
 
 impl ArgumentOrRedirection {
@@ -2134,30 +2122,6 @@ impl BlockStatementHeaderVariant {
             BlockStatementHeaderVariant::BeginHeader(node) => node,
         }
     }
-    fn as_mut_for_header(&mut self) -> &mut ForHeader {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_while_header(&mut self) -> &mut WhileHeader {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_function_header(&mut self) -> &mut FunctionHeader {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_begin_header(&mut self) -> &mut BeginHeader {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
-            _ => panic!(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -2258,42 +2222,6 @@ impl StatementVariant {
             StatementVariant::IfStatement(node) => &**node,
             StatementVariant::SwitchStatement(node) => &**node,
             StatementVariant::DecoratedStatement(node) => node,
-        }
-    }
-    fn as_mut_not_statement(&mut self) -> &mut NotStatement {
-        match self {
-            StatementVariant::NotStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_block_statement(&mut self) -> &mut BlockStatement {
-        match self {
-            StatementVariant::BlockStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_brace_statement(&mut self) -> &mut BraceStatement {
-        match self {
-            StatementVariant::BraceStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_if_statement(&mut self) -> &mut IfStatement {
-        match self {
-            StatementVariant::IfStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_switch_statement(&mut self) -> &mut SwitchStatement {
-        match self {
-            StatementVariant::SwitchStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_decorated_statement(&mut self) -> &mut DecoratedStatement {
-        match self {
-            StatementVariant::DecoratedStatement(node) => node,
-            _ => panic!(),
         }
     }
 }

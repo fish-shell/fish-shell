@@ -78,6 +78,26 @@ For distributors
 
 --------------
 
+fish 4.0.2 (released April 20, 2025)
+====================================
+
+This release of fish fixes a number of issues identified in fish 4.0.1:
+
+- Completions are quoted, rather than backslash-escaped, only if the completion is unambiguous. Continuing to edit the token is therefore easier (:issue:`11271`). This changes the behavior introduced in 4.0.0 where all completions were quoted.
+- The warning when the terminfo database can't be found has been downgraded to a log message. fish will act as if the terminal behaves like xterm-256color, which is correct for the vast majority of cases (:issue:`11277`, :issue:`11290`).
+- Key combinations using the super (Windows/command) key can now (actually) be bound using the :kbd:`super-` prefix (:issue:`11217`). This was listed in the release notes for 4.0.1 but did not work correctly.
+- :doc:`function <cmds/function>` is stricter about argument parsing, rather than allowing additional parameters to be silently ignored (:issue:`11295`).
+- Using parentheses in the :doc:`test <cmds/test>` builtin works correctly, following a regression in 4.0.0 where they were not recognized (:issue:`11387`). 
+- :kbd:`delete` in Vi mode when Num Lock is active will work correctly (:issue:`11303`).
+- Abbreviations cannot alter the command-line contents, preventing a crash (:issue:`11324`).
+- Improvements to various completions, including new completions for ``wl-randr`` (:issue:`11301`), performance improvements for ``cargo`` completions by avoiding network requests (:issue:`11347`), and other improvements for  ``btrfs`` (:issue:`11320`), ``cryptsetup`` (:issue:`11315`), ``git`` (:issue:`11319`, :issue:`11322`, :issue:`11323`), ``jj`` (:issue:`11046`), and ``systemd-analyze`` (:issue:`11314`).
+- The Mercurial (``hg``) prompt can handle working directories that contain an embedded newline, rather than producing errors (:issue:`11348`).
+- A number of crashes have been fixed. Triggers include prompts containing backspace characters (:issue:`11280`), history pager search (:issue:`11355`), invalid UTF-8 in :doc:`read <cmds/read>` (:issue:`11383`), and the ``kill-selection`` binding (:issue:`11367`).
+- A race condition in the test suite has been fixed (:issue:`11254`), and a test for fish versioning relaxed to support downstream distributors' modifications (:issue:`11173`).
+- Small improvements to the documentation (:issue:`11264`, :issue:`11329`, :issue:`11361`).
+
+--------------
+
 fish 4.0.1 (released March 12, 2025)
 ====================================
 

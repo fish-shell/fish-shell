@@ -246,7 +246,6 @@ impl Autoload {
     /// Like resolve_autoload(), but accepts the paths directly.
     /// This is exposed for testing.
     fn resolve_command_impl(&mut self, cmd: &wstr, paths: &[WString]) -> AutoloadResult {
-        use AutoloadResult;
         // Are we currently in the process of autoloading this?
         if self.current_autoloading.contains(cmd) {
             return AutoloadResult::Pending;

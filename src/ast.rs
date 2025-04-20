@@ -2496,35 +2496,99 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
     }
 }
 
+// An entry in the traversal stack. We retain nodes after visiting them, so that we can reconstruct the parent path
+// as the list of visited nodes remaining on the stack. Once we've visited a node twice, then it's popped, as that
+// means all of its children have been visited (or skipped).
+enum TraversalEntry<'a> {
+    NeedsVisit(&'a dyn Node),
+    Visited(&'a dyn Node),
+}
+
 // A way to visit nodes iteratively.
 // This is pre-order. Each node is visited before its children.
 // Example:
 //    let tv = Traversal::new(start);
 //    while let Some(node) = tv.next() {...}
 pub struct Traversal<'a> {
-    stack: Vec<&'a dyn Node>,
+    stack: Vec<TraversalEntry<'a>>,
 }
 
 impl<'a> Traversal<'a> {
     // Construct starting with a node
     pub fn new(n: &'a dyn Node) -> Self {
-        Self { stack: vec![n] }
+        Self {
+            stack: vec![TraversalEntry::NeedsVisit(n)],
+        }
+    }
+
+    // Return an iterator over the parent nodes - those which have been visited but not yet popped.
+    // Parents are returned in reverse order (immediate parent, grandparent, etc).
+    // The most recently visited node is first; that is first parent node will be the node most recently
+    // returned by next();
+    pub fn parent_nodes(&self) -> impl Iterator<Item = &'a dyn Node> + '_ {
+        self.stack.iter().rev().filter_map(|entry| match entry {
+            TraversalEntry::Visited(node) => Some(*node),
+            _ => None,
+        })
+    }
+
+    // Return the parent node of the given node, asserting it is on the stack
+    // (i.e. we are processing it or one of its children, transitively).
+    // Note this does NOT return parents of nodes that have not yet been yielded by the iterator;
+    // for example `traversal.parent(&current.child)` will panic because `current.child` has not been
+    // yielded yet.
+    pub fn parent(&self, node: &dyn Node) -> &'a dyn Node {
+        let mut iter = self.parent_nodes();
+        while let Some(n) = iter.next() {
+            if is_same_node(node, n) {
+                return iter.next().expect("Node is root and has no parent");
+            }
+        }
+        panic!("Node {:?} has either been popped off of the stack or not yet visited. Cannot find parent.", node.describe());
+    }
+
+    // Skip the children of the last visited node, which must be passed
+    // as a sanity check. This node must be the last visited node on the stack.
+    // For convenience, also remove the (visited) node itself.
+    pub fn skip_children(&mut self, node: &dyn Node) {
+        for idx in (0..self.stack.len()).rev() {
+            if let TraversalEntry::Visited(n) = self.stack[idx] {
+                assert!(
+                    is_same_node(node, n),
+                    "Passed node is not the last visited node"
+                );
+                self.stack.truncate(idx);
+                return;
+            }
+        }
+        panic!("Passed node is not on the stack");
     }
 }
 
 impl<'a> Iterator for Traversal<'a> {
     type Item = &'a dyn Node;
+    // Return the next node.
     fn next(&mut self) -> Option<&'a dyn Node> {
-        let node = self.stack.pop()?;
-        // We want to visit in reverse order so the first child ends up on top of the stack.
+        let node = loop {
+            match self.stack.pop()? {
+                TraversalEntry::NeedsVisit(n) => {
+                    // Leave a marker for the node we just visited.
+                    self.stack.push(TraversalEntry::Visited(n));
+                    break n;
+                }
+                TraversalEntry::Visited(_) => {}
+            }
+        };
+        // Append this node's children to our stack.
         node.accept(self, true /* reverse */);
         Some(node)
     }
 }
 
 impl<'a, 'v: 'a> NodeVisitor<'v> for Traversal<'a> {
+    // Record that a child of a node needs to be visited.
     fn visit(&mut self, node: &'a dyn Node) {
-        self.stack.push(node)
+        self.stack.push(TraversalEntry::NeedsVisit(node));
     }
 }
 

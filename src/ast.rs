@@ -2394,17 +2394,6 @@ pub struct Ast {
     pub extras: Extras,
 }
 
-#[allow(clippy::derivable_impls)] // false positive
-impl Default for Ast {
-    fn default() -> Ast {
-        Self {
-            top: Box::<String_>::default(),
-            any_error: false,
-            extras: Extras::default(),
-        }
-    }
-}
-
 impl Ast {
     /// Construct an ast by parsing `src` as a job list.
     /// The ast attempts to produce `type` as the result.
@@ -3658,21 +3647,6 @@ impl<'s> Populator<'s> {
         Some(self.allocate_visit())
     }
 
-    /// Given a node type, allocate it and invoke its default constructor.
-    /// Return the resulting Node
-    fn allocate<T: NodeMut + Default>(&self) -> Box<T> {
-        let result = Box::<T>::default();
-        FLOGF!(
-            ast_construction,
-            "%*smake %ls %ls",
-            self.spaces(),
-            "",
-            ast_type_to_string(result.typ()),
-            format!("{result:p}")
-        );
-        result
-    }
-
     // Given a node type, allocate it, invoking its default constructor,
     // and then visit it as a field.
     // Return the resulting Node.
@@ -3845,34 +3819,36 @@ fn parse_from_top(
     out_errors: Option<&mut ParseErrorList>,
     top_type: Type,
 ) -> Ast {
-    assert!(
-        [Type::job_list, Type::freestanding_argument_list].contains(&top_type),
-        "Invalid top type"
-    );
-
-    let mut ast = Ast::default();
-
     let mut pops = Populator::new(src, flags, top_type, out_errors);
-    if top_type == Type::job_list {
-        let mut list = pops.allocate::<JobList>();
-        pops.populate_list(&mut *list, true /* exhaust_stream */);
-        ast.top = list;
-    } else {
-        let mut list = pops.allocate::<FreestandingArgumentList>();
-        pops.populate_list(&mut list.arguments, true /* exhaust_stream */);
-        ast.top = list;
-    }
+    let top: Box<dyn Node> = match top_type {
+        Type::job_list => {
+            let mut list: Box<JobList> = Box::default();
+            pops.populate_list(&mut *list, true);
+            list
+        }
+        Type::freestanding_argument_list => {
+            let mut list = Box::<FreestandingArgumentList>::default();
+            pops.populate_list(&mut list.arguments, true);
+            list
+        }
+        _ => panic!("Invalid top type"),
+    };
 
     // Chomp trailing extras, etc.
     pops.chomp_extras(Type::job_list);
 
-    ast.any_error = pops.any_error;
-    ast.extras = Extras {
+    let any_error = pops.any_error;
+    let extras = Extras {
         comments: pops.tokens.comment_ranges,
         semis: pops.semis,
         errors: pops.errors,
     };
-    ast
+
+    Ast {
+        top,
+        any_error,
+        extras,
+    }
 }
 
 /// Return tokenizer flags corresponding to parse tree flags.

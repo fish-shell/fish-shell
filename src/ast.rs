@@ -2387,8 +2387,6 @@ pub struct Extras {
 pub struct Ast {
     // The top node.
     // Its type depends on what was requested to parse.
-    // Note Node parent pointers are implemented via raw pointers,
-    // so we must enforce pointer stability.
     top: Box<dyn Node>,
     /// Whether any errors were encountered during parsing.
     any_error: bool,

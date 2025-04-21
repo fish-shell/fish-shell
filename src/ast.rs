@@ -2389,7 +2389,7 @@ pub struct Ast {
     // Its type depends on what was requested to parse.
     // Note Node parent pointers are implemented via raw pointers,
     // so we must enforce pointer stability.
-    top: Box<dyn NodeMut>,
+    top: Box<dyn Node>,
     /// Whether any errors were encountered during parsing.
     any_error: bool,
     /// Extra fields.
@@ -2432,7 +2432,7 @@ impl Ast {
     }
     /// Return the top node. This has the type requested in the 'parse' method.
     pub fn top(&self) -> &dyn Node {
-        self.top.as_node()
+        &*self.top
     }
     /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {

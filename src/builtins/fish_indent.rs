@@ -48,17 +48,20 @@ use crate::wutil::fish_iswalnum;
 /// certain runs, weight line breaks, have a cost model, etc.
 struct PrettyPrinter<'source, 'ast> {
     /// The parsed ast.
-    ast: Ast,
+    ast: &'ast Ast,
 
     state: PrettyPrinterState<'source, 'ast>,
 }
 
 struct PrettyPrinterState<'source, 'ast> {
-    /// Original source.
+    // Original source.
     source: &'source wstr,
 
-    /// The indents of our string.
-    /// This has the same length as 'source' and describes the indentation level.
+    // The traversal of the ast.
+    traversal: Traversal<'ast>,
+
+    // The indents of our string.
+    // This has the same length as 'source' and describes the indentation level.
     indents: Vec<i32>,
 
     /// The prettifier output.
@@ -85,6 +88,60 @@ struct PrettyPrinterState<'source, 'ast> {
     errors: Option<&'ast SourceRangeList>,
 }
 
+#[derive(Copy, Clone, Default, Debug)]
+struct AstSizeMetrics {
+    /// The total number of nodes.
+    node_count: usize,
+    /// The number of branches, leaves, and lists, tokens, and keywords.
+    /// Note tokens and keywords are also counted as leaves.
+    branch_count: usize,
+    leaf_count: usize,
+    list_count: usize,
+    token_count: usize,
+    keyword_count: usize,
+    // An estimate of the total allocated size of the ast in bytes.
+    memory_size: usize,
+}
+
+impl std::fmt::Display for AstSizeMetrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "AstSizeMetrics:")?;
+        writeln!(f, "  nodes: {}", self.node_count)?;
+        writeln!(f, "  branches: {}", self.branch_count)?;
+        writeln!(f, "  leaves: {}", self.leaf_count)?;
+        writeln!(f, "  lists: {}", self.list_count)?;
+        writeln!(f, "  tokens: {}", self.token_count)?;
+        writeln!(f, "  keywords: {}", self.keyword_count)?;
+
+        let memsize = self.memory_size;
+        let (val, unit) = if memsize >= 1024 * 1024 {
+            (memsize as f64 / (1024.0 * 1024.0), "MB")
+        } else {
+            (memsize as f64 / 1024.0, "KB")
+        };
+        writeln!(f, "  memory: {} bytes ({:.2} {})", memsize, val, unit)
+    }
+}
+
+impl<'a> NodeVisitor<'a> for AstSizeMetrics {
+    fn visit(&mut self, node: &'a dyn Node) {
+        self.node_count += 1;
+        self.memory_size += node.self_memory_size();
+        match node.category() {
+            Category::branch => self.branch_count += 1,
+            Category::leaf => self.leaf_count += 1,
+            Category::list => self.list_count += 1,
+        }
+        if node.as_token().is_some() {
+            self.token_count += 1;
+        }
+        if node.as_keyword().is_some() {
+            self.keyword_count += 1;
+        }
+        node.accept(self, false);
+    }
+}
+
 /// Flags we support.
 #[derive(Copy, Clone, Default)]
 struct GapFlags {
@@ -105,11 +162,13 @@ struct GapFlags {
 }
 
 impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
-    fn new(source: &'source wstr, do_indent: bool) -> Self {
+    fn new(source: &'source wstr, ast: &'ast Ast, do_indent: bool) -> Self {
+        let traversal = Traversal::new(ast.top());
         let mut zelf = Self {
-            ast: Ast::parse(source, parse_flags(), None),
+            ast,
             state: PrettyPrinterState {
                 source,
+                traversal,
                 indents: if do_indent
                 /* Whether to indent, or just insert spaces. */
                 {
@@ -135,10 +194,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
     }
 
     // Entry point. Prettify our source code and return it.
-    fn prettify(&'ast mut self) -> WString {
+    fn prettify(&mut self) -> WString {
         self.state.output.clear();
         self.state.errors = Some(&self.ast.extras.errors);
-        self.state.visit(self.ast.top());
+        self.state.prettify_traversal();
 
         // Trailing gap text.
         self.state.emit_gap_text_before(
@@ -340,13 +399,13 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                     ParseTokenType::string => {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
-                        let p = node.parent().unwrap();
+                        let p = self.traversal.parent(node);
                         if p.typ() != Type::decorated_statement {
                             return result;
                         }
-                        let p = p.parent().unwrap();
+                        let p = self.traversal.parent(p);
                         assert_eq!(p.typ(), Type::statement);
-                        let p = p.parent().unwrap();
+                        let p = self.traversal.parent(p);
                         if let Some(job) = p.as_job_pipeline() {
                             if !job.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
@@ -672,8 +731,8 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     fn is_multi_line_brace(&self, node: &dyn ast::Token) -> bool {
-        node.parent()
-            .unwrap()
+        self.traversal
+            .parent(node.as_node())
             .as_brace_statement()
             .is_some_and(|brace_statement| {
                 self.multi_line_brace_statement_locations
@@ -750,9 +809,59 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         self.emit_gap_text(gap_range, flags);
     }
 
-    fn visit_begin_header(&mut self) {
+    fn visit_begin_header(&mut self, node: &ast::BeginHeader) {
+        self.emit_node_text(&node.kw_begin);
+        if let Some(semi_nl) = &node.semi_nl {
+            self.visit_semi_nl(semi_nl);
+        }
+        // 'begin' does not require a newline after it, but we insert one.
         if !self.at_line_start() {
             self.emit_newline();
+        }
+    }
+
+    // Prettify our ast traversal, populating the output.
+    fn prettify_traversal(&mut self) {
+        while let Some(node) = self.traversal.next() {
+            // Leaf nodes we just visit their text.
+            if node.as_keyword().is_some() {
+                self.emit_node_text(node);
+                continue;
+            }
+            if let Some(token) = node.as_token() {
+                match token.token_type() {
+                    ParseTokenType::end => self.visit_semi_nl(token),
+                    ParseTokenType::left_brace => self.visit_left_brace(token),
+                    ParseTokenType::right_brace => self.visit_right_brace(token),
+                    _ => self.emit_node_text(node),
+                }
+                continue;
+            }
+            match node.typ() {
+                Type::argument | Type::variable_assignment => {
+                    self.emit_node_text(node);
+                    self.traversal.skip_children(node);
+                }
+                Type::redirection => {
+                    self.visit_redirection(node.as_redirection().unwrap());
+                    self.traversal.skip_children(node);
+                }
+                Type::maybe_newlines => {
+                    self.visit_maybe_newlines(node.as_maybe_newlines().unwrap());
+                    self.traversal.skip_children(node);
+                }
+                Type::begin_header => {
+                    self.visit_begin_header(node.as_begin_header().unwrap());
+                    self.traversal.skip_children(node);
+                }
+                _ => {
+                    // For branch and list nodes, default is to visit their children.
+                    if [Category::branch, Category::list].contains(&node.category()) {
+                        continue;
+                    }
+                    panic!("unexpected node type");
+                }
+            }
         }
     }
 }
@@ -763,50 +872,6 @@ fn parse_flags() -> ParseTreeFlags {
         | ParseTreeFlags::INCLUDE_COMMENTS
         | ParseTreeFlags::LEAVE_UNTERMINATED
         | ParseTreeFlags::SHOW_BLANK_LINES
-}
-
-impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
-    // Default implementation is to just visit children.
-    fn visit(&mut self, node: &'_ dyn Node) {
-        // Leaf nodes we just visit their text.
-        if node.as_keyword().is_some() {
-            self.emit_node_text(node);
-            return;
-        }
-        if let Some(token) = node.as_token() {
-            match token.token_type() {
-                ParseTokenType::end => self.visit_semi_nl(token),
-                ParseTokenType::left_brace => self.visit_left_brace(token),
-                ParseTokenType::right_brace => self.visit_right_brace(token),
-                _ => self.emit_node_text(node),
-            }
-            return;
-        }
-        match node.typ() {
-            Type::argument | Type::variable_assignment => {
-                self.emit_node_text(node);
-            }
-            Type::redirection => {
-                self.visit_redirection(node.as_redirection().unwrap());
-            }
-            Type::maybe_newlines => {
-                self.visit_maybe_newlines(node.as_maybe_newlines().unwrap());
-            }
-            Type::begin_header => {
-                // 'begin' does not require a newline after it, but we insert one.
-                node.accept(self, false);
-                self.visit_begin_header();
-            }
-            _ => {
-                // For branch and list nodes, default is to visit their children.
-                if [Category::branch, Category::list].contains(&node.category()) {
-                    node.accept(self, false);
-                    return;
-                }
-                panic!("unexpected node type");
-            }
-        }
-    }
 }
 
 /// Return whether a character at a given index is escaped.
@@ -1190,8 +1255,14 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
         );
         let ast_dump = ast.dump(src);
         streams.err.appendln(ast_dump);
+
+        // Output metrics too.
+        let mut metrics = AstSizeMetrics::default();
+        metrics.visit(ast.top());
+        streams.err.appendln(format!("{}", metrics));
     }
-    let mut printer = PrettyPrinter::new(src, do_indent);
+    let ast = Ast::parse(src, parse_flags(), None);
+    let mut printer = PrettyPrinter::new(src, &ast, do_indent);
     printer.prettify()
 }
 

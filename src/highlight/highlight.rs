@@ -2,7 +2,7 @@
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, Leaf, List, Node, NodeVisitor, Redirection, Token, Type,
+    DecoratedStatement, Keyword, List, Node, NodeVisitor, Redirection, Token, Type,
     VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
@@ -844,27 +844,27 @@ impl<'s> Highlighter<'s> {
     fn visit_keyword(&mut self, node: &dyn Keyword) {
         let mut role = HighlightRole::normal;
         match node.keyword() {
-            ParseKeyword::kw_begin
-            | ParseKeyword::kw_builtin
-            | ParseKeyword::kw_case
-            | ParseKeyword::kw_command
-            | ParseKeyword::kw_else
-            | ParseKeyword::kw_end
-            | ParseKeyword::kw_exec
-            | ParseKeyword::kw_for
-            | ParseKeyword::kw_function
-            | ParseKeyword::kw_if
-            | ParseKeyword::kw_in
-            | ParseKeyword::kw_switch
-            | ParseKeyword::kw_while => role = HighlightRole::keyword,
-            ParseKeyword::kw_and
-            | ParseKeyword::kw_or
-            | ParseKeyword::kw_not
-            | ParseKeyword::kw_exclam
-            | ParseKeyword::kw_time => role = HighlightRole::operat,
-            ParseKeyword::none => (),
+            ParseKeyword::Begin
+            | ParseKeyword::Builtin
+            | ParseKeyword::Case
+            | ParseKeyword::Command
+            | ParseKeyword::Else
+            | ParseKeyword::End
+            | ParseKeyword::Exec
+            | ParseKeyword::For
+            | ParseKeyword::Function
+            | ParseKeyword::If
+            | ParseKeyword::In
+            | ParseKeyword::Switch
+            | ParseKeyword::While => role = HighlightRole::keyword,
+            ParseKeyword::And
+            | ParseKeyword::Or
+            | ParseKeyword::Not
+            | ParseKeyword::Exclam
+            | ParseKeyword::Time => role = HighlightRole::operat,
+            ParseKeyword::None => (),
         };
-        self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(node.as_node(), HighlightSpec::with_fg(role));
     }
     fn visit_token(&mut self, tok: &dyn Token) {
         let mut role = HighlightRole::normal;
@@ -884,11 +884,11 @@ impl<'s> Highlighter<'s> {
             }
             _ => (),
         }
-        self.color_node(tok.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(tok.as_node(), HighlightSpec::with_fg(role));
     }
     // Visit an argument, perhaps knowing that our command is cd.
     fn visit_argument(&mut self, arg: &Argument, cmd_is_cd: bool, options_allowed: bool) {
-        self.color_as_argument(arg.as_node(), options_allowed);
+        self.color_as_argument(arg, options_allowed);
         if !self.io_still_ok() {
             return;
         }
@@ -912,7 +912,7 @@ impl<'s> Highlighter<'s> {
                     self.color_array[i].valid_path = true;
                 }
             }
-            Err(..) => self.color_node(arg.as_node(), HighlightSpec::with_fg(HighlightRole::error)),
+            Err(..) => self.color_node(arg, HighlightSpec::with_fg(HighlightRole::error)),
         }
     }
 
@@ -926,10 +926,7 @@ impl<'s> Highlighter<'s> {
         // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
         // If so, color the whole thing invalid and stop.
         if !oper.is_valid() {
-            self.color_node(
-                redir.as_node(),
-                HighlightSpec::with_fg(HighlightRole::error),
-            );
+            self.color_node(redir, HighlightSpec::with_fg(HighlightRole::error));
             return;
         }
 
@@ -943,7 +940,7 @@ impl<'s> Highlighter<'s> {
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
         if has_cmdsub(&target) {
-            self.color_as_argument(redir.target.leaf_as_node(), true);
+            self.color_as_argument(&redir.target, true);
             return;
         }
         // No command substitution, so we can highlight the target file or fd. For example,
@@ -959,7 +956,7 @@ impl<'s> Highlighter<'s> {
             self.file_tester.test_redirection_target(&target, oper.mode)
         };
         self.color_node(
-            redir.target.leaf_as_node(),
+            &redir.target,
             HighlightSpec::with_fg(if target_is_valid {
                 HighlightRole::redirection
             } else {

@@ -71,6 +71,7 @@ Other improvements
 ------------------
 - ``fish_indent`` and ``fish_key_reader`` are now available as builtins, and if fish is called with that name it will act like the given tool (as a multi-call binary).
   This allows truly distributing fish as a single file. (:issue:`10876`)
+- ``fish_indent --dump-parse-tree`` now emits simple metrics about the tree including its memory consumption.
 
 For distributors
 ----------------

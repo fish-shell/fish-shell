@@ -1,4 +1,6 @@
 mod abbrs;
+mod ast;
+mod ast_bench;
 mod common;
 mod complete;
 mod debounce;

@@ -42,7 +42,7 @@ use std::time::{Duration, Instant};
 use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{self, Ast, Category, Traversal};
+use crate::ast::{is_same_node, Ast, Category};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
@@ -5352,22 +5352,9 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         | ParseTreeFlags::LEAVE_UNTERMINATED;
     let ast = Ast::parse(s, ast_flags, None);
 
-    // Helper to check if a node is the command portion of a decorated statement.
-    let is_command = |node: &dyn ast::Node| {
-        let mut cursor = Some(node);
-        while let Some(cur) = cursor {
-            if let Some(stmt) = cur.as_decorated_statement() {
-                if node.pointer_eq(&stmt.command) {
-                    return true;
-                }
-            }
-            cursor = cur.parent();
-        }
-        false
-    };
-
     let mut result = vec![];
-    for node in Traversal::new(ast.top()) {
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
         // We are only interested in leaf nodes with source.
         if node.category() != Category::leaf {
             continue;
@@ -5404,10 +5391,12 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
 
         if !has_cmd_subs {
             // Common case of no command substitutions in this leaf node.
-            result.push(PositionedToken {
-                range,
-                is_cmd: is_command(node),
-            })
+            // Check if a node is the command portion of a decorated statement.
+            let is_cmd = traversal
+                .parent(node)
+                .as_decorated_statement()
+                .is_some_and(|stmt| is_same_node(node, &stmt.command));
+            result.push(PositionedToken { range, is_cmd })
         }
     }
 

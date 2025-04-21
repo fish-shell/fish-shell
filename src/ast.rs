@@ -98,9 +98,6 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 
 /// Node is the base trait of all AST nodes.
 pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
-    /// The parent node, or null if this is root.
-    fn parent(&self) -> Option<&dyn Node>;
-
     /// The type of this node.
     fn typ(&self) -> Type;
 
@@ -139,13 +136,55 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
         self.try_source(orig).unwrap_or_default()
     }
 
-    // The address of the object, for comparison.
-    fn as_ptr(&self) -> *const ();
-
-    fn pointer_eq(&self, rhs: &dyn Node) -> bool {
-        std::ptr::eq(self.as_ptr(), rhs.as_ptr())
+    /// The raw byte size of this node, excluding children.
+    /// This also excludes the allocations stored in lists.
+    fn self_memory_size(&self) -> usize {
+        std::mem::size_of_val(self)
     }
+
+    /// Convert to the dynamic Node type.
     fn as_node(&self) -> &dyn Node;
+}
+
+/// Return true if two nodes are the same object.
+#[inline(always)]
+pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
+    // There are two subtleties here:
+    //
+    // 1. Two &dyn Node may reference the same underlying object
+    //    with different vtables - for example if one is a &dyn Node
+    //    and the other is a &dyn NodeMut.
+    //
+    // 2. Two &dyn Node may reference different underlying objects
+    //    with the same base pointer - for example if a Node is a
+    //    the first field in another Node.
+    //
+    // Therefore we make the following assumptions, which seem sound enough:
+    //   1. If two nodes have different base pointers, they reference different objects
+    //      (though NOT true in C++).
+    //   2. If two nodes have the same base pointer and same vtable, they reference
+    //      the same object.
+    //   3. If two nodes have the same base pointer but different vtables, they are the same iff
+    //      their types are equal: a Node cannot have a Node of the same type at the same address
+    //      (unless it's a ZST, which does not apply here).
+    //
+    // Note this is performance-sensitive.
+
+    // Different base pointers => not the same.
+    let lptr = lhs as *const dyn Node as *const ();
+    let rptr = rhs as *const dyn Node as *const ();
+    if !std::ptr::eq(lptr, rptr) {
+        return false;
+    }
+
+    // Same base pointer and same vtable => same object.
+    if std::ptr::eq(lhs, rhs) {
+        return true;
+    }
+
+    // Same base pointer, but different vtables.
+    // Compare the types.
+    lhs.typ() == rhs.typ()
 }
 
 /// NodeMut is a mutable node.
@@ -404,7 +443,6 @@ pub trait Leaf: Node {
     fn has_source(&self) -> bool {
         self.range().is_some()
     }
-    fn leaf_as_node(&self) -> &dyn Node;
 }
 
 // A token node is a node which contains a token, which must be one of a fixed set.
@@ -432,8 +470,8 @@ pub trait Keyword: Leaf {
 // A simple variable-sized array, possibly empty.
 pub trait List: Node {
     type ContentsNode: Node + Default;
-    fn contents(&self) -> &[Box<Self::ContentsNode>];
-    fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>>;
+    fn contents(&self) -> &[Self::ContentsNode];
+    fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]>;
     /// Return our count.
     fn count(&self) -> usize {
         self.contents().len()
@@ -443,11 +481,11 @@ pub trait List: Node {
         self.contents().is_empty()
     }
     /// Iteration support.
-    fn iter(&self) -> std::slice::Iter<Box<Self::ContentsNode>> {
+    fn iter(&self) -> std::slice::Iter<Self::ContentsNode> {
         self.contents().iter()
     }
     fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
-        self.contents().get(index).map(|b| &**b)
+        self.contents().get(index)
     }
 }
 
@@ -468,9 +506,6 @@ macro_rules! implement_node {
             fn typ(&self) -> Type {
                 Type::$type
             }
-            fn parent(&self) -> Option<&dyn Node> {
-                self.parent.map(|p| unsafe { &*p })
-            }
             fn category(&self) -> Category {
                 Category::$category
             }
@@ -485,9 +520,6 @@ macro_rules! implement_node {
                 } else {
                     Some(visitor.total)
                 }
-            }
-            fn as_ptr(&self) -> *const () {
-                (self as *const $name).cast()
             }
             fn as_node(&self) -> &dyn Node {
                 self
@@ -507,9 +539,6 @@ macro_rules! implement_leaf {
             fn range_mut(&mut self) -> &mut Option<SourceRange> {
                 &mut self.range
             }
-            fn leaf_as_node(&self) -> &dyn Node {
-                self
-            }
         }
         impl Acceptor for $name {
             #[allow(unused_variables)]
@@ -522,10 +551,6 @@ macro_rules! implement_leaf {
                 visitor.did_visit_fields_of(self, VisitResult::Continue(()));
             }
         }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {}
-        }
     };
 }
 
@@ -534,7 +559,6 @@ macro_rules! define_keyword_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
@@ -575,7 +599,6 @@ macro_rules! define_token_node {
     ( $name:ident, $($allowed:ident),* $(,)? ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
         }
@@ -629,22 +652,21 @@ macro_rules! define_list_node {
     ) => {
         #[derive(Default, Debug)]
         pub struct $name {
-            parent: Option<*const dyn Node>,
-            list_contents: Vec<Box<$contents>>,
+            list_contents: Box<[$contents]>,
         }
         implement_node!($name, list, $type);
         impl List for $name {
             type ContentsNode = $contents;
-            fn contents(&self) -> &[Box<Self::ContentsNode>] {
+            fn contents(&self) -> &[Self::ContentsNode] {
                 &self.list_contents
             }
-            fn contents_mut(&mut self) -> &mut Vec<Box<Self::ContentsNode>> {
+            fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]> {
                 &mut self.list_contents
             }
         }
         impl<'a> IntoIterator for &'a $name {
-            type Item = &'a Box<$contents>;
-            type IntoIter = std::slice::Iter<'a, Box<$contents>>;
+            type Item = &'a $contents;
+            type IntoIter = std::slice::Iter<'a, $contents>;
             fn into_iter(self) -> Self::IntoIter {
                 self.contents().into_iter()
             }
@@ -652,12 +674,12 @@ macro_rules! define_list_node {
         impl Index<usize> for $name {
             type Output = <$name as List>::ContentsNode;
             fn index(&self, index: usize) -> &Self::Output {
-                &*self.contents()[index]
+                &self.contents()[index]
             }
         }
         impl IndexMut<usize> for $name {
             fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut *self.contents_mut()[index]
+                &mut self.contents_mut()[index]
             }
         }
         impl Acceptor for $name {
@@ -675,15 +697,6 @@ macro_rules! define_list_node {
                     Self, accept_mut, visit_mut, self, visitor, reversed, $contents
                 );
                 visitor.did_visit_fields_of(self, flow);
-            }
-        }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {
-                for i in 0..self.count() {
-                    self[i].parent = Some(self);
-                    self[i].set_parents();
-                }
             }
         }
     };
@@ -774,14 +787,6 @@ macro_rules! implement_acceptor_for_branch {
                                 reversed,
                                 ( $( $field_name: $field_type, )* ));
                 visitor.did_visit_fields_of(self, flow);
-            }
-        }
-        impl $name {
-            /// Set the parent fields of all nodes in the tree rooted at `self`.
-            fn set_parents(&mut self) {
-                $(
-                    set_parent_of_field!(self, $field_name, $field_type);
-                )*
             }
         }
     }
@@ -982,108 +987,10 @@ macro_rules! visit_result {
     };
 }
 
-macro_rules! set_parent_of_field {
-    (
-        $self:ident,
-        $field_name:ident,
-        (variant<$field_type:ident>)
-    ) => {
-        set_parent_of_union_field!($self, $field_name, $field_type);
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        (Option<$field_type:ident>)
-    ) => {
-        if $self.$field_name.is_some() {
-            $self.$field_name.as_mut().unwrap().parent = Some($self);
-            $self.$field_name.as_mut().unwrap().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        $field_type:tt
-    ) => {
-        $self.$field_name.parent = Some($self);
-        $self.$field_name.set_parents();
-    };
-}
-
-macro_rules! set_parent_of_union_field {
-    (
-        $self:ident,
-        $field_name:ident,
-        ArgumentOrRedirectionVariant
-    ) => {
-        if matches!($self.$field_name, ArgumentOrRedirectionVariant::Argument(_)) {
-            $self.$field_name.as_mut_argument().parent = Some($self);
-            $self.$field_name.as_mut_argument().set_parents();
-        } else {
-            $self.$field_name.as_mut_redirection().parent = Some($self);
-            $self.$field_name.as_mut_redirection().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        StatementVariant
-    ) => {
-        if matches!($self.$field_name, StatementVariant::NotStatement(_)) {
-            $self.$field_name.as_mut_not_statement().parent = Some($self);
-            $self.$field_name.as_mut_not_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::BlockStatement(_)) {
-            $self.$field_name.as_mut_block_statement().parent = Some($self);
-            $self.$field_name.as_mut_block_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::BraceStatement(_)) {
-            $self.$field_name.as_mut_brace_statement().parent = Some($self);
-            $self.$field_name.as_mut_brace_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::IfStatement(_)) {
-            $self.$field_name.as_mut_if_statement().parent = Some($self);
-            $self.$field_name.as_mut_if_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::SwitchStatement(_)) {
-            $self.$field_name.as_mut_switch_statement().parent = Some($self);
-            $self.$field_name.as_mut_switch_statement().set_parents();
-        } else if matches!($self.$field_name, StatementVariant::DecoratedStatement(_)) {
-            $self.$field_name.as_mut_decorated_statement().parent = Some($self);
-            $self.$field_name.as_mut_decorated_statement().set_parents();
-        }
-    };
-    (
-        $self:ident,
-        $field_name:ident,
-        BlockStatementHeaderVariant
-    ) => {
-        if matches!($self.$field_name, BlockStatementHeaderVariant::ForHeader(_)) {
-            $self.$field_name.as_mut_for_header().parent = Some($self);
-            $self.$field_name.as_mut_for_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::WhileHeader(_)
-        ) {
-            $self.$field_name.as_mut_while_header().parent = Some($self);
-            $self.$field_name.as_mut_while_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::FunctionHeader(_)
-        ) {
-            $self.$field_name.as_mut_function_header().parent = Some($self);
-            $self.$field_name.as_mut_function_header().set_parents();
-        } else if matches!(
-            $self.$field_name,
-            BlockStatementHeaderVariant::BeginHeader(_)
-        ) {
-            $self.$field_name.as_mut_begin_header().parent = Some($self);
-            $self.$field_name.as_mut_begin_header().set_parents();
-        }
-    };
-}
-
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
 /// Note that pipes are not redirections.
 #[derive(Default, Debug)]
 pub struct Redirection {
-    parent: Option<*const dyn Node>,
     pub oper: TokenRedirection,
     pub target: String_,
 }
@@ -1124,7 +1031,6 @@ impl ConcreteNodeMut for VariableAssignmentList {
 /// An argument or redirection holds either an argument or redirection.
 #[derive(Default, Debug)]
 pub struct ArgumentOrRedirection {
-    parent: Option<*const dyn Node>,
     pub contents: ArgumentOrRedirectionVariant,
 }
 implement_node!(ArgumentOrRedirection, branch, argument_or_redirection);
@@ -1168,7 +1074,6 @@ impl ConcreteNodeMut for ArgumentOrRedirectionList {
 /// A statement is a normal command, or an if / while / etc
 #[derive(Default, Debug)]
 pub struct Statement {
-    parent: Option<*const dyn Node>,
     pub contents: StatementVariant,
 }
 implement_node!(Statement, branch, statement);
@@ -1188,7 +1093,6 @@ impl ConcreteNodeMut for Statement {
 /// like if statements, where we require a command).
 #[derive(Default, Debug)]
 pub struct JobPipeline {
-    parent: Option<*const dyn Node>,
     /// Maybe the time keyword.
     pub time: Option<KeywordTime>,
     /// A (possibly empty) list of variable assignments.
@@ -1223,7 +1127,6 @@ impl ConcreteNodeMut for JobPipeline {
 /// A job_conjunction is a job followed by a && or || continuations.
 #[derive(Default, Debug)]
 pub struct JobConjunction {
-    parent: Option<*const dyn Node>,
     /// The job conjunction decorator.
     pub decorator: Option<JobConjunctionDecorator>,
     /// The job itself.
@@ -1261,14 +1164,13 @@ impl CheckParse for JobConjunction {
             || (token.typ == ParseTokenType::string
                 && !matches!(
                     token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_end | ParseKeyword::kw_else
+                    ParseKeyword::Case | ParseKeyword::End | ParseKeyword::Else
                 ))
     }
 }
 
 #[derive(Default, Debug)]
 pub struct ForHeader {
-    parent: Option<*const dyn Node>,
     /// 'for'
     pub kw_for: KeywordFor,
     /// var_name
@@ -1302,7 +1204,6 @@ impl ConcreteNodeMut for ForHeader {
 
 #[derive(Default, Debug)]
 pub struct WhileHeader {
-    parent: Option<*const dyn Node>,
     /// 'while'
     pub kw_while: KeywordWhile,
     pub condition: JobConjunction,
@@ -1328,7 +1229,6 @@ impl ConcreteNodeMut for WhileHeader {
 
 #[derive(Default, Debug)]
 pub struct FunctionHeader {
-    parent: Option<*const dyn Node>,
     pub kw_function: KeywordFunction,
     /// functions require at least one argument.
     pub first_arg: Argument,
@@ -1356,7 +1256,6 @@ impl ConcreteNodeMut for FunctionHeader {
 
 #[derive(Default, Debug)]
 pub struct BeginHeader {
-    parent: Option<*const dyn Node>,
     pub kw_begin: KeywordBegin,
     /// Note that 'begin' does NOT require a semi or nl afterwards.
     /// This is valid: begin echo hi; end
@@ -1381,7 +1280,6 @@ impl ConcreteNodeMut for BeginHeader {
 
 #[derive(Default, Debug)]
 pub struct BlockStatement {
-    parent: Option<*const dyn Node>,
     /// A header like for, while, etc.
     pub header: BlockStatementHeaderVariant,
     /// List of jobs in this block.
@@ -1412,7 +1310,6 @@ impl ConcreteNodeMut for BlockStatement {
 
 #[derive(Default, Debug)]
 pub struct BraceStatement {
-    parent: Option<*const dyn Node>,
     /// The opening brace, in command position.
     pub left_brace: TokenLeftBrace,
     /// List of jobs in this block.
@@ -1443,7 +1340,6 @@ impl ConcreteNodeMut for BraceStatement {
 
 #[derive(Default, Debug)]
 pub struct IfClause {
-    parent: Option<*const dyn Node>,
     /// The 'if' keyword.
     pub kw_if: KeywordIf,
     /// The 'if' condition.
@@ -1474,7 +1370,6 @@ impl ConcreteNodeMut for IfClause {
 
 #[derive(Default, Debug)]
 pub struct ElseifClause {
-    parent: Option<*const dyn Node>,
     /// The 'else' keyword.
     pub kw_else: KeywordElse,
     /// The 'if' clause following it.
@@ -1498,8 +1393,8 @@ impl ConcreteNodeMut for ElseifClause {
 }
 impl CheckParse for ElseifClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_else
-            && pop.peek_token(1).keyword == ParseKeyword::kw_if
+        pop.peek_token(0).keyword == ParseKeyword::Else
+            && pop.peek_token(1).keyword == ParseKeyword::If
     }
 }
 
@@ -1517,7 +1412,6 @@ impl ConcreteNodeMut for ElseifClauseList {
 
 #[derive(Default, Debug)]
 pub struct ElseClause {
-    parent: Option<*const dyn Node>,
     /// else ; body
     pub kw_else: KeywordElse,
     pub semi_nl: Option<SemiNl>,
@@ -1542,13 +1436,12 @@ impl ConcreteNodeMut for ElseClause {
 }
 impl CheckParse for ElseClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_else
+        pop.peek_token(0).keyword == ParseKeyword::Else
     }
 }
 
 #[derive(Default, Debug)]
 pub struct IfStatement {
-    parent: Option<*const dyn Node>,
     /// if part
     pub if_clause: IfClause,
     /// else if list
@@ -1582,7 +1475,6 @@ impl ConcreteNodeMut for IfStatement {
 
 #[derive(Default, Debug)]
 pub struct CaseItem {
-    parent: Option<*const dyn Node>,
     /// case \<arguments\> ; body
     pub kw_case: KeywordCase,
     pub arguments: ArgumentList,
@@ -1609,13 +1501,12 @@ impl ConcreteNodeMut for CaseItem {
 }
 impl CheckParse for CaseItem {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
-        pop.peek_token(0).keyword == ParseKeyword::kw_case
+        pop.peek_token(0).keyword == ParseKeyword::Case
     }
 }
 
 #[derive(Default, Debug)]
 pub struct SwitchStatement {
-    parent: Option<*const dyn Node>,
     /// switch \<argument\> ; body ; end args_redirs
     pub kw_switch: KeywordSwitch,
     pub argument: Argument,
@@ -1649,7 +1540,6 @@ impl ConcreteNodeMut for SwitchStatement {
 /// "builtin" or "command" or "exec"
 #[derive(Default, Debug)]
 pub struct DecoratedStatement {
-    parent: Option<*const dyn Node>,
     /// An optional decoration (command, builtin, exec, etc).
     pub opt_decoration: Option<DecoratedStatementDecorator>,
     /// Command to run.
@@ -1678,7 +1568,6 @@ impl ConcreteNodeMut for DecoratedStatement {
 /// A not statement like `not true` or `! true`
 #[derive(Default, Debug)]
 pub struct NotStatement {
-    parent: Option<*const dyn Node>,
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
     pub time: Option<KeywordTime>,
@@ -1706,7 +1595,6 @@ impl ConcreteNodeMut for NotStatement {
 
 #[derive(Default, Debug)]
 pub struct JobContinuation {
-    parent: Option<*const dyn Node>,
     pub pipe: TokenPipe,
     pub newlines: MaybeNewlines,
     pub variables: VariableAssignmentList,
@@ -1750,7 +1638,6 @@ impl ConcreteNodeMut for JobContinuationList {
 
 #[derive(Default, Debug)]
 pub struct JobConjunctionContinuation {
-    parent: Option<*const dyn Node>,
     /// The && or || token.
     pub conjunction: TokenConjunction,
     pub newlines: MaybeNewlines,
@@ -1790,7 +1677,6 @@ impl CheckParse for JobConjunctionContinuation {
 /// instances of this.
 #[derive(Default, Debug)]
 pub struct AndorJob {
-    parent: Option<*const dyn Node>,
     pub job: JobConjunction,
 }
 implement_node!(AndorJob, branch, andor_job);
@@ -1808,7 +1694,7 @@ impl ConcreteNodeMut for AndorJob {
 impl CheckParse for AndorJob {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+        if !matches!(keyword, ParseKeyword::And | ParseKeyword::Or) {
             return false;
         }
         // Check that the argument to and/or is a string that's not help. Otherwise
@@ -1838,7 +1724,6 @@ impl ConcreteNodeMut for AndorJobList {
 /// In practice the tok_ends are ignored by fish code so we do not bother to store them.
 #[derive(Default, Debug)]
 pub struct FreestandingArgumentList {
-    parent: Option<*const dyn Node>,
     pub arguments: ArgumentList,
 }
 implement_node!(FreestandingArgumentList, branch, freestanding_argument_list);
@@ -1912,7 +1797,6 @@ impl ConcreteNodeMut for CaseItemList {
 /// A variable_assignment contains a source range like FOO=bar.
 #[derive(Default, Debug)]
 pub struct VariableAssignment {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(VariableAssignment, leaf, variable_assignment);
@@ -1953,7 +1837,6 @@ impl CheckParse for VariableAssignment {
 /// Zero or more newlines.
 #[derive(Default, Debug)]
 pub struct MaybeNewlines {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(MaybeNewlines, leaf, maybe_newlines);
@@ -1979,7 +1862,6 @@ impl ConcreteNodeMut for MaybeNewlines {
 /// This is a separate type because it is sometimes useful to find all arguments.
 #[derive(Default, Debug)]
 pub struct Argument {
-    parent: Option<*const dyn Node>,
     range: Option<SourceRange>,
 }
 implement_node!(Argument, leaf, argument);
@@ -2015,27 +1897,27 @@ define_token_node!(TokenLeftBrace, left_brace);
 define_token_node!(TokenRightBrace, right_brace);
 define_token_node!(TokenRedirection, redirection);
 
-define_keyword_node!(DecoratedStatementDecorator, kw_command, kw_builtin, kw_exec);
-define_keyword_node!(JobConjunctionDecorator, kw_and, kw_or);
-define_keyword_node!(KeywordBegin, kw_begin);
-define_keyword_node!(KeywordCase, kw_case);
-define_keyword_node!(KeywordElse, kw_else);
-define_keyword_node!(KeywordEnd, kw_end);
-define_keyword_node!(KeywordFor, kw_for);
-define_keyword_node!(KeywordFunction, kw_function);
-define_keyword_node!(KeywordIf, kw_if);
-define_keyword_node!(KeywordIn, kw_in);
-define_keyword_node!(KeywordNot, kw_not, kw_exclam);
-define_keyword_node!(KeywordSwitch, kw_switch);
-define_keyword_node!(KeywordTime, kw_time);
-define_keyword_node!(KeywordWhile, kw_while);
+define_keyword_node!(DecoratedStatementDecorator, Command, Builtin, Exec);
+define_keyword_node!(JobConjunctionDecorator, And, Or);
+define_keyword_node!(KeywordBegin, Begin);
+define_keyword_node!(KeywordCase, Case);
+define_keyword_node!(KeywordElse, Else);
+define_keyword_node!(KeywordEnd, End);
+define_keyword_node!(KeywordFor, For);
+define_keyword_node!(KeywordFunction, Function);
+define_keyword_node!(KeywordIf, If);
+define_keyword_node!(KeywordIn, In);
+define_keyword_node!(KeywordNot, Not, Exclam);
+define_keyword_node!(KeywordSwitch, Switch);
+define_keyword_node!(KeywordTime, Time);
+define_keyword_node!(KeywordWhile, While);
 
 impl CheckParse for JobConjunctionDecorator {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // This is for a job conjunction like `and stuff`
         // But if it's `and --help` then we treat it as an ordinary command.
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_and | ParseKeyword::kw_or) {
+        if !matches!(keyword, ParseKeyword::And | ParseKeyword::Or) {
             return false;
         }
         !pop.peek_token(1).is_help_argument
@@ -2051,7 +1933,7 @@ impl CheckParse for DecoratedStatementDecorator {
         let keyword = pop.peek_token(0).keyword;
         if !matches!(
             keyword,
-            ParseKeyword::kw_command | ParseKeyword::kw_builtin | ParseKeyword::kw_exec
+            ParseKeyword::Command | ParseKeyword::Builtin | ParseKeyword::Exec
         ) {
             return false;
         }
@@ -2064,7 +1946,7 @@ impl CheckParse for KeywordTime {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Time keyword is only the time builtin if the next argument doesn't have a dash.
         let keyword = pop.peek_token(0).keyword;
-        if !matches!(keyword, ParseKeyword::kw_time) {
+        if !matches!(keyword, ParseKeyword::Time) {
             return false;
         }
         !pop.peek_token(1).is_dash_prefix_string()
@@ -2079,9 +1961,9 @@ impl DecoratedStatement {
         };
         let decorator: &dyn Keyword = decorator;
         match decorator.keyword() {
-            ParseKeyword::kw_command => StatementDecoration::command,
-            ParseKeyword::kw_builtin => StatementDecoration::builtin,
-            ParseKeyword::kw_exec => StatementDecoration::exec,
+            ParseKeyword::Command => StatementDecoration::command,
+            ParseKeyword::Builtin => StatementDecoration::builtin,
+            ParseKeyword::Exec => StatementDecoration::exec,
             _ => panic!("Unexpected keyword in statement decoration"),
         }
     }
@@ -2128,18 +2010,6 @@ impl ArgumentOrRedirectionVariant {
         match self {
             ArgumentOrRedirectionVariant::Argument(node) => node,
             ArgumentOrRedirectionVariant::Redirection(node) => node,
-        }
-    }
-    fn as_mut_argument(&mut self) -> &mut Argument {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_redirection(&mut self) -> &mut Redirection {
-        match self {
-            ArgumentOrRedirectionVariant::Redirection(redirection) => redirection,
-            _ => panic!(),
         }
     }
 }
@@ -2252,30 +2122,6 @@ impl BlockStatementHeaderVariant {
             BlockStatementHeaderVariant::BeginHeader(node) => node,
         }
     }
-    fn as_mut_for_header(&mut self) -> &mut ForHeader {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_while_header(&mut self) -> &mut WhileHeader {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_function_header(&mut self) -> &mut FunctionHeader {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_begin_header(&mut self) -> &mut BeginHeader {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
-            _ => panic!(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -2378,42 +2224,6 @@ impl StatementVariant {
             StatementVariant::DecoratedStatement(node) => node,
         }
     }
-    fn as_mut_not_statement(&mut self) -> &mut NotStatement {
-        match self {
-            StatementVariant::NotStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_block_statement(&mut self) -> &mut BlockStatement {
-        match self {
-            StatementVariant::BlockStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_brace_statement(&mut self) -> &mut BraceStatement {
-        match self {
-            StatementVariant::BraceStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_if_statement(&mut self) -> &mut IfStatement {
-        match self {
-            StatementVariant::IfStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_switch_statement(&mut self) -> &mut SwitchStatement {
-        match self {
-            StatementVariant::SwitchStatement(node) => node,
-            _ => panic!(),
-        }
-    }
-    fn as_mut_decorated_statement(&mut self) -> &mut DecoratedStatement {
-        match self {
-            StatementVariant::DecoratedStatement(node) => node,
-            _ => panic!(),
-        }
-    }
 }
 
 /// Return a string literal name for an ast type.
@@ -2461,35 +2271,99 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
     }
 }
 
+// An entry in the traversal stack. We retain nodes after visiting them, so that we can reconstruct the parent path
+// as the list of visited nodes remaining on the stack. Once we've visited a node twice, then it's popped, as that
+// means all of its children have been visited (or skipped).
+enum TraversalEntry<'a> {
+    NeedsVisit(&'a dyn Node),
+    Visited(&'a dyn Node),
+}
+
 // A way to visit nodes iteratively.
 // This is pre-order. Each node is visited before its children.
 // Example:
 //    let tv = Traversal::new(start);
 //    while let Some(node) = tv.next() {...}
 pub struct Traversal<'a> {
-    stack: Vec<&'a dyn Node>,
+    stack: Vec<TraversalEntry<'a>>,
 }
 
 impl<'a> Traversal<'a> {
     // Construct starting with a node
     pub fn new(n: &'a dyn Node) -> Self {
-        Self { stack: vec![n] }
+        Self {
+            stack: vec![TraversalEntry::NeedsVisit(n)],
+        }
+    }
+
+    // Return an iterator over the parent nodes - those which have been visited but not yet popped.
+    // Parents are returned in reverse order (immediate parent, grandparent, etc).
+    // The most recently visited node is first; that is first parent node will be the node most recently
+    // returned by next();
+    pub fn parent_nodes(&self) -> impl Iterator<Item = &'a dyn Node> + '_ {
+        self.stack.iter().rev().filter_map(|entry| match entry {
+            TraversalEntry::Visited(node) => Some(*node),
+            _ => None,
+        })
+    }
+
+    // Return the parent node of the given node, asserting it is on the stack
+    // (i.e. we are processing it or one of its children, transitively).
+    // Note this does NOT return parents of nodes that have not yet been yielded by the iterator;
+    // for example `traversal.parent(&current.child)` will panic because `current.child` has not been
+    // yielded yet.
+    pub fn parent(&self, node: &dyn Node) -> &'a dyn Node {
+        let mut iter = self.parent_nodes();
+        while let Some(n) = iter.next() {
+            if is_same_node(node, n) {
+                return iter.next().expect("Node is root and has no parent");
+            }
+        }
+        panic!("Node {:?} has either been popped off of the stack or not yet visited. Cannot find parent.", node.describe());
+    }
+
+    // Skip the children of the last visited node, which must be passed
+    // as a sanity check. This node must be the last visited node on the stack.
+    // For convenience, also remove the (visited) node itself.
+    pub fn skip_children(&mut self, node: &dyn Node) {
+        for idx in (0..self.stack.len()).rev() {
+            if let TraversalEntry::Visited(n) = self.stack[idx] {
+                assert!(
+                    is_same_node(node, n),
+                    "Passed node is not the last visited node"
+                );
+                self.stack.truncate(idx);
+                return;
+            }
+        }
+        panic!("Passed node is not on the stack");
     }
 }
 
 impl<'a> Iterator for Traversal<'a> {
     type Item = &'a dyn Node;
+    // Return the next node.
     fn next(&mut self) -> Option<&'a dyn Node> {
-        let node = self.stack.pop()?;
-        // We want to visit in reverse order so the first child ends up on top of the stack.
+        let node = loop {
+            match self.stack.pop()? {
+                TraversalEntry::NeedsVisit(n) => {
+                    // Leave a marker for the node we just visited.
+                    self.stack.push(TraversalEntry::Visited(n));
+                    break n;
+                }
+                TraversalEntry::Visited(_) => {}
+            }
+        };
+        // Append this node's children to our stack.
         node.accept(self, true /* reverse */);
         Some(node)
     }
 }
 
 impl<'a, 'v: 'a> NodeVisitor<'v> for Traversal<'a> {
+    // Record that a child of a node needs to be visited.
     fn visit(&mut self, node: &'a dyn Node) {
-        self.stack.push(node)
+        self.stack.push(TraversalEntry::NeedsVisit(node));
     }
 }
 
@@ -2513,6 +2387,8 @@ pub struct Extras {
 pub struct Ast {
     // The top node.
     // Its type depends on what was requested to parse.
+    // Note Node parent pointers are implemented via raw pointers,
+    // so we must enforce pointer stability.
     top: Box<dyn NodeMut>,
     /// Whether any errors were encountered during parsing.
     any_error: bool,
@@ -2558,9 +2434,6 @@ impl Ast {
     pub fn top(&self) -> &dyn Node {
         self.top.as_node()
     }
-    fn top_mut(&mut self) -> &mut dyn NodeMut {
-        &mut *self.top
-    }
     /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {
         self.any_error
@@ -2571,8 +2444,9 @@ impl Ast {
     pub fn dump(&self, orig: &wstr) -> WString {
         let mut result = WString::new();
 
-        for node in self.walk() {
-            let depth = get_depth(node);
+        let mut traversal = self.walk();
+        while let Some(node) = traversal.next() {
+            let depth = traversal.parent_nodes().count() - 1;
             // dot-| padding
             result += &str::repeat("! ", depth)[..];
 
@@ -2606,7 +2480,7 @@ impl Ast {
                         WString::from_str("<error>")
                     }
                     _ => {
-                        token_type_user_presentable_description(n.token_type(), ParseKeyword::none)
+                        token_type_user_presentable_description(n.token_type(), ParseKeyword::None)
                     }
                 };
                 result += &desc[..];
@@ -2617,17 +2491,6 @@ impl Ast {
         }
         result
     }
-}
-
-// Return the depth of a node, i.e. number of parent links.
-fn get_depth(node: &dyn Node) -> usize {
-    let mut result = 0;
-    let mut cursor = node;
-    while let Some(parent) = cursor.parent() {
-        result += 1;
-        cursor = parent;
-    }
-    result
 }
 
 struct SourceRangeVisitor {
@@ -3056,7 +2919,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             if next_token.typ == ParseTokenType::string
                 && matches!(
                     next_token.keyword,
-                    ParseKeyword::kw_case | ParseKeyword::kw_else | ParseKeyword::kw_end
+                    ParseKeyword::Case | ParseKeyword::Else | ParseKeyword::End
                 )
             {
                 self.consume_excess_token_generating_error();
@@ -3087,9 +2950,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         node: &mut ArgumentOrRedirectionVariant,
     ) -> VisitResult {
         if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirectionVariant::Argument(*arg);
+            *node = ArgumentOrRedirectionVariant::Argument(arg);
         } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirectionVariant::Redirection(*redir);
+            *node = ArgumentOrRedirectionVariant::Redirection(redir);
         } else {
             internal_error!(
                 self,
@@ -3115,22 +2978,22 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         &mut self,
         node: &mut Option<DecoratedStatementDecorator>,
     ) {
-        *node = self.try_parse::<DecoratedStatementDecorator>().map(|b| *b);
+        *node = self.try_parse::<DecoratedStatementDecorator>();
     }
     fn visit_job_conjunction_decorator(&mut self, node: &mut Option<JobConjunctionDecorator>) {
-        *node = self.try_parse::<JobConjunctionDecorator>().map(|b| *b);
+        *node = self.try_parse::<JobConjunctionDecorator>();
     }
     fn visit_else_clause(&mut self, node: &mut Option<ElseClause>) {
-        *node = self.try_parse::<ElseClause>().map(|b| *b);
+        *node = self.try_parse::<ElseClause>();
     }
     fn visit_semi_nl(&mut self, node: &mut Option<SemiNl>) {
-        *node = self.try_parse::<SemiNl>().map(|b| *b);
+        *node = self.try_parse::<SemiNl>();
     }
     fn visit_time(&mut self, node: &mut Option<KeywordTime>) {
-        *node = self.try_parse::<KeywordTime>().map(|b| *b);
+        *node = self.try_parse::<KeywordTime>();
     }
     fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
-        *node = self.try_parse::<TokenBackground>().map(|b| *b);
+        *node = self.try_parse::<TokenBackground>();
     }
 }
 
@@ -3160,7 +3023,7 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
         if !res.is_empty() {
             res += L!(" or ");
         }
-        res += &token_type_user_presentable_description(*typ, ParseKeyword::none)[..];
+        res += &token_type_user_presentable_description(*typ, ParseKeyword::None)[..];
     }
     res
 }
@@ -3386,7 +3249,7 @@ impl<'s> Populator<'s> {
                 tok,
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_type_user_presentable_description(typ, ParseKeyword::none),
+                token_type_user_presentable_description(typ, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return SourceRange::new(0, 0);
@@ -3411,7 +3274,7 @@ impl<'s> Populator<'s> {
                 tok,
                 ParseErrorCode::generic,
                 "Expected %ls, but found %ls",
-                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::none),
+                token_type_user_presentable_description(ParseTokenType::string, ParseKeyword::None),
                 tok.user_presentable_description()
             );
             return;
@@ -3422,7 +3285,7 @@ impl<'s> Populator<'s> {
             ParseTokenType::string => {
                 // There are three keywords which end a job list.
                 match tok.keyword {
-                    ParseKeyword::kw_case => {
+                    ParseKeyword::Case => {
                         parse_error!(
                             self,
                             tok,
@@ -3430,7 +3293,7 @@ impl<'s> Populator<'s> {
                             "'case' builtin not inside of switch block"
                         );
                     }
-                    ParseKeyword::kw_end => {
+                    ParseKeyword::End => {
                         parse_error!(
                             self,
                             tok,
@@ -3438,7 +3301,7 @@ impl<'s> Populator<'s> {
                             "'end' outside of a block"
                         );
                     }
-                    ParseKeyword::kw_else => {
+                    ParseKeyword::Else => {
                         parse_error!(
                             self,
                             tok,
@@ -3541,7 +3404,6 @@ impl<'s> Populator<'s> {
         }
 
         // We're going to populate a vector with our nodes.
-        // Later on we will copy this to the heap with a single allocation.
         let mut contents = vec![];
 
         loop {
@@ -3608,7 +3470,7 @@ impl<'s> Populator<'s> {
                 "Contents size out of bounds"
             );
             assert!(list.contents().is_empty(), "List should still be empty");
-            *list.contents_mut() = contents;
+            *list.contents_mut() = contents.into_boxed_slice();
         }
 
         FLOGF!(
@@ -3641,12 +3503,12 @@ impl<'s> Populator<'s> {
                     "Expected %s, but found %ls",
                     token_type_user_presentable_description(
                         ParseTokenType::end,
-                        ParseKeyword::none
+                        ParseKeyword::None
                     ),
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            StatementVariant::DecoratedStatement(*embedded)
+            StatementVariant::DecoratedStatement(embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -3654,7 +3516,7 @@ impl<'s> Populator<'s> {
             // Construct a decorated statement, which will be unsourced.
             self.allocate_visit::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
-            let embedded = self.allocate_visit::<BraceStatement>();
+            let embedded = self.allocate_boxed_visit::<BraceStatement>();
             return StatementVariant::BraceStatement(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
@@ -3699,11 +3561,11 @@ impl<'s> Populator<'s> {
             // If we are one of these, then look for specifically help arguments. Otherwise, if the next token
             // looks like an option (starts with a dash), then parse it as a decorated statement.
             let help_only_kws = [
-                ParseKeyword::kw_begin,
-                ParseKeyword::kw_function,
-                ParseKeyword::kw_if,
-                ParseKeyword::kw_switch,
-                ParseKeyword::kw_while,
+                ParseKeyword::Begin,
+                ParseKeyword::Function,
+                ParseKeyword::If,
+                ParseKeyword::Switch,
+                ParseKeyword::While,
             ];
             if if help_only_kws.contains(&self.peek_token(0).keyword) {
                 self.peek_token(1).is_help_argument
@@ -3715,8 +3577,8 @@ impl<'s> Populator<'s> {
 
             // Likewise if the next token doesn't look like an argument at all. This corresponds to
             // e.g. a "naked if".
-            let naked_invocation_invokes_help = ![ParseKeyword::kw_begin, ParseKeyword::kw_end]
-                .contains(&self.peek_token(0).keyword);
+            let naked_invocation_invokes_help =
+                ![ParseKeyword::Begin, ParseKeyword::End].contains(&self.peek_token(0).keyword);
             if naked_invocation_invokes_help
                 && [ParseTokenType::end, ParseTokenType::terminate]
                     .contains(&self.peek_token(1).typ)
@@ -3726,26 +3588,26 @@ impl<'s> Populator<'s> {
         }
 
         match self.peek_token(0).keyword {
-            ParseKeyword::kw_not | ParseKeyword::kw_exclam => {
-                let embedded = self.allocate_visit::<NotStatement>();
+            ParseKeyword::Not | ParseKeyword::Exclam => {
+                let embedded = self.allocate_boxed_visit::<NotStatement>();
                 StatementVariant::NotStatement(embedded)
             }
-            ParseKeyword::kw_for
-            | ParseKeyword::kw_while
-            | ParseKeyword::kw_function
-            | ParseKeyword::kw_begin => {
-                let embedded = self.allocate_visit::<BlockStatement>();
+            ParseKeyword::For
+            | ParseKeyword::While
+            | ParseKeyword::Function
+            | ParseKeyword::Begin => {
+                let embedded = self.allocate_boxed_visit::<BlockStatement>();
                 StatementVariant::BlockStatement(embedded)
             }
-            ParseKeyword::kw_if => {
-                let embedded = self.allocate_visit::<IfStatement>();
+            ParseKeyword::If => {
+                let embedded = self.allocate_boxed_visit::<IfStatement>();
                 StatementVariant::IfStatement(embedded)
             }
-            ParseKeyword::kw_switch => {
-                let embedded = self.allocate_visit::<SwitchStatement>();
+            ParseKeyword::Switch => {
+                let embedded = self.allocate_boxed_visit::<SwitchStatement>();
                 StatementVariant::SwitchStatement(embedded)
             }
-            ParseKeyword::kw_end => {
+            ParseKeyword::End => {
                 // 'end' is forbidden as a command.
                 // For example, `if end` or `while end` will produce this error.
                 // We still have to descend into the decorated statement because
@@ -3767,21 +3629,21 @@ impl<'s> Populator<'s> {
     /// This must never return null.
     fn allocate_populate_block_header(&mut self) -> BlockStatementHeaderVariant {
         match self.peek_token(0).keyword {
-            ParseKeyword::kw_for => {
+            ParseKeyword::For => {
                 let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeaderVariant::ForHeader(*embedded)
+                BlockStatementHeaderVariant::ForHeader(embedded)
             }
-            ParseKeyword::kw_while => {
+            ParseKeyword::While => {
                 let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeaderVariant::WhileHeader(*embedded)
+                BlockStatementHeaderVariant::WhileHeader(embedded)
             }
-            ParseKeyword::kw_function => {
+            ParseKeyword::Function => {
                 let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeaderVariant::FunctionHeader(*embedded)
+                BlockStatementHeaderVariant::FunctionHeader(embedded)
             }
-            ParseKeyword::kw_begin => {
+            ParseKeyword::Begin => {
                 let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeaderVariant::BeginHeader(*embedded)
+                BlockStatementHeaderVariant::BeginHeader(embedded)
             }
             _ => {
                 internal_error!(
@@ -3793,7 +3655,7 @@ impl<'s> Populator<'s> {
         }
     }
 
-    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<Box<T>> {
+    fn try_parse<T: NodeMut + Default + CheckParse>(&mut self) -> Option<T> {
         if !T::can_be_parsed(self) {
             return None;
         }
@@ -3815,10 +3677,17 @@ impl<'s> Populator<'s> {
         result
     }
 
-    // Given a node type, allocate it, invoke its default constructor,
+    // Given a node type, allocate it, invoking its default constructor,
     // and then visit it as a field.
-    // Return the resulting Node pointer. It is never null.
-    fn allocate_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
+    // Return the resulting Node.
+    fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
+        let mut result = T::default();
+        self.visit_mut(&mut result);
+        result
+    }
+
+    // Like allocate_visit, but returns the value as a Box.
+    fn allocate_boxed_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
         let mut result = Box::<T>::default();
         let _ = self.visit_mut(&mut *result);
         result
@@ -3849,7 +3718,7 @@ impl<'s> Populator<'s> {
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
         // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        if [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&self.peek_token(1).keyword) {
+        if [ParseKeyword::And, ParseKeyword::Or].contains(&self.peek_token(1).keyword) {
             parse_error!(
                 self,
                 self.peek_token(1),
@@ -3917,7 +3786,7 @@ impl<'s> Populator<'s> {
 
             // Special error reporting for keyword_t<kw_end>.
             let allowed_keywords = keyword.allowed_keywords();
-            if keyword.allowed_keywords() == [ParseKeyword::kw_end] {
+            if keyword.allowed_keywords() == [ParseKeyword::End] {
                 return VisitResult::Break(MissingEndError {
                     allowed_keywords,
                     token: *self.peek_token(0),
@@ -4007,23 +3876,6 @@ fn parse_from_top(
         semis: pops.semis,
         errors: pops.errors,
     };
-
-    if top_type == Type::job_list {
-        // Set all parent nodes.
-        // It turns out to be more convenient to do this after the parse phase.
-        ast.top_mut()
-            .as_mut_job_list()
-            .as_mut()
-            .unwrap()
-            .set_parents();
-    } else {
-        ast.top_mut()
-            .as_mut_freestanding_argument_list()
-            .as_mut()
-            .unwrap()
-            .set_parents();
-    }
-
     ast
 }
 
@@ -4105,7 +3957,7 @@ pub(crate) fn unescape_keyword(tok: TokenType, token: &wstr) -> Cow<'_, wstr> {
     Cow::Owned(unescape_string(token, UnescapeStringStyle::default()).unwrap_or_default())
 }
 
-/// Given a token, returns the keyword it matches, or ParseKeyword::none.
+/// Given a token, returns the keyword it matches, or ParseKeyword::None.
 fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
     ParseKeyword::from(&unescape_keyword(tok, token)[..])
 }

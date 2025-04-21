@@ -1,10 +1,10 @@
-use crate::ast::{self, Ast, JobPipeline, List, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, JobPipeline, List, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
-    ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
+    ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
 use crate::parse_tree::{parse_source, LineCounter};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
@@ -817,4 +817,167 @@ fn test_line_counter_empty() {
     assert_eq!(line_counter.line_offset_of_character_at_offset(0), 0);
     assert_eq!(line_counter.line_offset_of_node(), None);
     assert_eq!(line_counter.source_offset_of_node(), None);
+}
+
+// Helper for testing a simple ast traversal.
+// The ast is always for the command 'true;'.
+struct TrueSemiAstTester<'a> {
+    // The AST we are testing.
+    ast: &'a Ast,
+
+    // Expected parent-child relationships, in the order we expect to encounter them.
+    parent_child: Box<[(&'a dyn Node, &'a dyn Node)]>,
+}
+
+impl<'a> TrueSemiAstTester<'a> {
+    const TRUE_SEMI: &'static wstr = L!("true;");
+    fn new(ast: &'a Ast) -> Self {
+        let job_list = ast.top().as_job_list().expect("Expected job_list");
+        let job_conjunction = &job_list[0];
+        let job_pipeline = &job_conjunction.job;
+        let variable_assignment_list = &job_pipeline.variables;
+        let statement = &job_pipeline.statement;
+
+        let decorated_statement = statement
+            .contents
+            .as_decorated_statement()
+            .expect("Expected decorated_statement");
+        let command = &decorated_statement.command;
+        let args_or_redirs = &decorated_statement.args_or_redirs;
+        let job_continuation = &job_pipeline.continuation;
+        let job_conjunction_continuation = &job_conjunction.continuations;
+        let semi_nl = job_conjunction.semi_nl.as_ref().expect("Expected semi_nl");
+
+        // Helpful parent-child map, such that the children are in the order that we expect to encounter them
+        // in the AST.
+        let parent_child: &[(&'a dyn Node, &'a dyn Node)] = &[
+            (job_list, job_conjunction),
+            (job_conjunction, job_pipeline),
+            (job_pipeline, variable_assignment_list),
+            (job_pipeline, statement),
+            (statement, decorated_statement),
+            (decorated_statement, command),
+            (decorated_statement, args_or_redirs),
+            (job_pipeline, job_continuation),
+            (job_conjunction, job_conjunction_continuation),
+            (job_conjunction, semi_nl),
+        ];
+        Self {
+            ast,
+            parent_child: Box::from(parent_child),
+        }
+    }
+
+    // Expected nodes, in-order.
+    fn expected_nodes(&self) -> Vec<&'a dyn Node> {
+        let mut expected: Vec<&dyn Node> = vec![self.ast.top()];
+        expected.extend(self.parent_child.iter().map(|&(_p, c)| c));
+        expected
+    }
+
+    // Helper function to construct the parent list of a given node, such at the first entry is
+    // the node itself, and the last entry is the root node.
+    fn get_parents<'s>(&'s self, node: &'a dyn Node) -> impl Iterator<Item = &'a dyn Node> + 's {
+        let mut next = Some(node);
+        std::iter::from_fn(move || {
+            let out = next?;
+            next = self
+                .parent_child
+                .iter()
+                .find_map(|&(p, c)| is_same_node(c, out).then_some(p));
+            Some(out)
+        })
+    }
+}
+
+#[test]
+fn test_ast() {
+    // Light testing of the AST and traversals.
+    let ast = Ast::parse(TrueSemiAstTester::TRUE_SEMI, ParseTreeFlags::empty(), None);
+    let tester = TrueSemiAstTester::new(&ast);
+    assert!(ast.top().as_job_list().is_some(), "Expected job_list");
+
+    // Walk the AST and collect all nodes.
+    // See is_same_node comments for why we can't use assert_eq! here.
+    let found = ast.walk().collect::<Vec<_>>();
+    let expected = tester.expected_nodes();
+    assert_eq!(found.len(), expected.len());
+    for idx in 0..found.len() {
+        assert!(is_same_node(found[idx], expected[idx]));
+    }
+
+    // Walk and check parents.
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        let expected_parents = tester.get_parents(node).collect::<Vec<_>>();
+        let found_parents = traversal.parent_nodes().collect::<Vec<_>>();
+        assert_eq!(found_parents.len(), expected_parents.len());
+        for idx in 0..found_parents.len() {
+            assert!(is_same_node(found_parents[idx], expected_parents[idx]));
+        }
+    }
+
+    // Find the decorated statement.
+    let decorated_statement = ast
+        .walk()
+        .find(|n| n.typ() == ast::Type::decorated_statement)
+        .expect("Expected decorated statement");
+
+    // Test the skip feature. Don't descend into the decorated_statement.
+    let expected_skip: Vec<&dyn Node> = expected
+        .iter()
+        .copied()
+        .filter(|&n| {
+            // Discard nodes who have the decorated_statement as a parent,
+            // excepting the decorated_statement itself.
+            tester
+                .get_parents(n)
+                .skip(1)
+                .all(|p| !is_same_node(p, decorated_statement))
+        })
+        .collect();
+
+    let mut found = vec![];
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        if is_same_node(node, decorated_statement) {
+            traversal.skip_children(node);
+        }
+        found.push(node);
+    }
+    assert_eq!(found.len(), expected_skip.len());
+    for idx in 0..found.len() {
+        assert!(is_same_node(found[idx], expected_skip[idx]));
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_traversal_skip_children_panics() {
+    // Test that we panic if we try to skip children of a node that is not the current node.
+    let ast = Ast::parse(L!("true;"), ParseTreeFlags::empty(), None);
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        if node.typ() == ast::Type::decorated_statement {
+            // Should panic as we can only skip the current node.
+            traversal.skip_children(ast.top());
+        }
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_traversal_parent_panics() {
+    // Can only get the parent of nodes still on the stack.
+    let ast = Ast::parse(L!("true;"), ParseTreeFlags::empty(), None);
+    let mut traversal = ast.walk();
+    let mut decorated_statement = None;
+    while let Some(node) = traversal.next() {
+        if node.as_decorated_statement().is_some() {
+            decorated_statement = Some(node);
+        } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::end) {
+            // should panic as the decorated_statement is not on the stack.
+            let _ = traversal.parent(decorated_statement.unwrap());
+        }
+    }
 }

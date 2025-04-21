@@ -611,7 +611,7 @@ impl<'a> ExecutionContext<'a> {
         }
         *block = Some(ctx.parser().push_block(Block::variable_assignment_block()));
         for variable_assignment in variable_assignment_list {
-            let source = self.node_source(&**variable_assignment);
+            let source = self.node_source(variable_assignment);
             let equals_pos = variable_assignment_equals_pos(source).unwrap();
             let variable_name = &source[..equals_pos];
             let expression = &source[equals_pos + 1..];
@@ -1347,7 +1347,7 @@ impl<'a> ExecutionContext<'a> {
     fn get_argument_nodes(args: &ast::ArgumentList) -> AstArgsList<'_> {
         let mut result = AstArgsList::new();
         for arg in args {
-            result.push(&**arg);
+            result.push(arg);
         }
         result
     }
@@ -1725,11 +1725,11 @@ impl<'a> ExecutionContext<'a> {
         if let Some(deco) = &jc.decorator {
             let last_status = ctx.parser().get_last_status();
             match deco.keyword() {
-                ParseKeyword::kw_and => {
+                ParseKeyword::And => {
                     // AND. Skip if the last job failed.
                     skip = last_status != 0;
                 }
-                ParseKeyword::kw_or => {
+                ParseKeyword::Or => {
                     // OR. Skip if the last job succeeded.
                     skip = last_status == 0;
                 }

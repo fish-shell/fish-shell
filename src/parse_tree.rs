@@ -39,7 +39,7 @@ impl ParseToken {
     pub fn new(typ: ParseTokenType) -> Self {
         ParseToken {
             typ,
-            keyword: ParseKeyword::none,
+            keyword: ParseKeyword::None,
             has_dash_prefix: false,
             is_help_argument: false,
             is_newline: false,
@@ -73,7 +73,7 @@ impl ParseToken {
     /// Returns a string description of the given parse token.
     pub fn describe(&self) -> WString {
         let mut result = self.typ.to_wstr().to_owned();
-        if self.keyword != ParseKeyword::none {
+        if self.keyword != ParseKeyword::None {
             sprintf!(=> &mut result, " <%ls>", self.keyword.to_wstr())
         }
         result

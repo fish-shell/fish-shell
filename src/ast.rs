@@ -119,7 +119,18 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
 
     /// Return the source range for this node, or none if unsourced.
     /// This may return none if the parse was incomplete or had an error.
-    fn try_source_range(&self) -> Option<SourceRange>;
+    fn try_source_range(&self) -> Option<SourceRange> {
+        let mut visitor = SourceRangeVisitor {
+            total: SourceRange::new(0, 0),
+            any_unsourced: false,
+        };
+        visitor.visit(self.as_node());
+        if visitor.any_unsourced {
+            None
+        } else {
+            Some(visitor.total)
+        }
+    }
 
     /// Return the source range for this node, or an empty range {0, 0} if unsourced.
     fn source_range(&self) -> SourceRange {
@@ -508,18 +519,6 @@ macro_rules! implement_node {
             }
             fn category(&self) -> Category {
                 Category::$category
-            }
-            fn try_source_range(&self) -> Option<SourceRange> {
-                let mut visitor = SourceRangeVisitor {
-                    total: SourceRange::new(0, 0),
-                    any_unsourced: false,
-                };
-                visitor.visit(self);
-                if visitor.any_unsourced {
-                    None
-                } else {
-                    Some(visitor.total)
-                }
             }
             fn as_node(&self) -> &dyn Node {
                 self

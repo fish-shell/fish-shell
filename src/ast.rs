@@ -202,6 +202,7 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
 
 /// NodeMut is a mutable node.
 trait NodeMut: Node + AcceptorMut + ConcreteNodeMut {}
+impl<T> NodeMut for T where T: Node + AcceptorMut + ConcreteNodeMut {}
 
 pub trait ConcreteNode {
     // Cast to any sub-trait.
@@ -522,7 +523,6 @@ macro_rules! implement_node {
                 self
             }
         }
-        impl NodeMut for $name {}
     };
 }
 

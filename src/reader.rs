@@ -2290,7 +2290,7 @@ impl<'a> Reader<'a> {
                 }
                 perror("tcsetattr"); // return to previous mode
             }
-            Outputter::stdoutput().borrow_mut().reset_text_face(true);
+            Outputter::stdoutput().borrow_mut().reset_text_face();
         }
         let result = self
             .rls()
@@ -2695,7 +2695,7 @@ impl<'a> Reader<'a> {
                         outp.set_text_face(parse_text_face_for_highlight(&fish_color_cancel));
                     }
                     outp.write_wstr(L!("^C"));
-                    outp.reset_text_face(true);
+                    outp.reset_text_face();
 
                     // We print a newline last so the prompt_sp hack doesn't get us.
                     outp.push(b'\n');
@@ -4459,7 +4459,7 @@ fn reader_interactive_init(parser: &Parser) {
 
 /// Destroy data for interactive use.
 fn reader_interactive_destroy() {
-    Outputter::stdoutput().borrow_mut().reset_text_face(true);
+    Outputter::stdoutput().borrow_mut().reset_text_face();
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.
@@ -4523,7 +4523,7 @@ pub fn reader_write_title(
         out.write_command(Osc0WindowTitle(&lst));
     }
 
-    out.reset_text_face(true);
+    out.reset_text_face();
     if reset_cursor_position && !lst.is_empty() {
         // Put the cursor back at the beginning of the line (issue #2453).
         out.write_bytes(b"\r");

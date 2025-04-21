@@ -466,12 +466,7 @@ impl Outputter {
     }
 
     /// Unconditionally resets colors and text style.
-    pub(crate) fn reset_text_face(&mut self, weird_workaround: bool) {
-        if weird_workaround {
-            // If we exit attribute mode, we must first set a color, or previously colored text might
-            // lose its color. Terminals are weird...
-            write_foreground_color(self, 0);
-        }
+    pub(crate) fn reset_text_face(&mut self) {
         use TerminalCommand::ExitAttributeMode;
         self.write_command(ExitAttributeMode);
         self.last = TextFace::default();
@@ -516,7 +511,7 @@ impl Outputter {
             non_resettable(self.last.style).difference(non_resettable(style));
         if !non_resettable_attributes_to_unset.is_empty() {
             // Only way to exit non-resettable ones is a reset of all attributes.
-            self.reset_text_face(false);
+            self.reset_text_face();
         }
         if !self.last.bg.is_special() {
             // Background was set.
@@ -543,12 +538,11 @@ impl Outputter {
         }
         if !bg_set && last_bg_set {
             // Background color changed and is no longer set, so we exit bold mode.
-            self.reset_text_face(false);
+            self.reset_text_face();
         }
 
         if !fg.is_none() && fg != self.last.fg {
             if fg.is_normal() {
-                write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
                 self.last.bg = Color::Normal;
@@ -562,8 +556,6 @@ impl Outputter {
 
         if !bg.is_none() && bg != self.last.bg {
             if bg.is_normal() {
-                write_background_color(self, 0);
-
                 self.write_command(ExitAttributeMode);
                 if !self.last.fg.is_normal() {
                     self.write_color(self.last.fg, true /* foreground */);

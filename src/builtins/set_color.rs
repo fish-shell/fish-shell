@@ -30,7 +30,7 @@ fn print_colors(streams: &mut IoStreams, args: &[&wstr], style: TextStyling, bg:
         if streams.out_is_terminal() && bg.is_some() {
             // If we have a background, stop it after the color
             // or it goes to the end of the line and looks ugly.
-            outp.reset_text_face(false);
+            outp.reset_text_face();
         }
         outp.writech('\n');
     } // conveniently, 'normal' is always the last color so we don't need to reset here
@@ -124,7 +124,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // reset all colors/attributes. Same if foreground is "reset" (undocumented).
     // Note that either overwrite the attributes printed above! For "normal", this is probably wrong?
     if is_reset || [fg, bg].iter().any(|c| c.is_some_and(|c| c.is_normal())) {
-        outp.reset_text_face(false);
+        outp.reset_text_face();
     } else {
         outp.set_text_face(TextFace::new(Color::None, Color::None, style));
         if let Some(fg) = fg {
@@ -132,7 +132,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 // We need to do *something* or the lack of any output messes up
                 // when the cartesian product here would make "foo" disappear:
                 //  $ echo (set_color foo)bar
-                outp.reset_text_face(true);
+                outp.reset_text_face();
             }
         }
         if let Some(bg) = bg {

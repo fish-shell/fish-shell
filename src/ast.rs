@@ -97,7 +97,7 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 }
 
 /// Node is the base trait of all AST nodes.
-pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
+pub trait Node: Acceptor + ConcreteNode + AsNode + std::fmt::Debug {
     /// The type of this node.
     fn typ(&self) -> Type;
 
@@ -154,9 +154,17 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn self_memory_size(&self) -> usize {
         std::mem::size_of_val(self)
     }
+}
 
-    /// Convert to the dynamic Node type.
+// Convert to the dynamic Node type.
+pub trait AsNode {
     fn as_node(&self) -> &dyn Node;
+}
+
+impl<T: Node + Sized> AsNode for T {
+    fn as_node(&self) -> &dyn Node {
+        self
+    }
 }
 
 /// Return true if two nodes are the same object.
@@ -518,9 +526,6 @@ macro_rules! implement_node {
         impl Node for $name {
             fn typ(&self) -> Type {
                 Type::$type
-            }
-            fn as_node(&self) -> &dyn Node {
-                self
             }
         }
     };

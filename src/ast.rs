@@ -102,7 +102,9 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn typ(&self) -> Type;
 
     /// The category of this node.
-    fn category(&self) -> Category;
+    fn category(&self) -> Category {
+        self.typ().category()
+    }
 
     /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
@@ -510,15 +512,11 @@ trait CheckParse {
 macro_rules! implement_node {
     (
         $name:ident,
-        $category:ident,
         $type:ident $(,)?
     ) => {
         impl Node for $name {
             fn typ(&self) -> Type {
                 Type::$type
-            }
-            fn category(&self) -> Category {
-                Category::$category
             }
             fn as_node(&self) -> &dyn Node {
                 self
@@ -561,7 +559,7 @@ macro_rules! define_keyword_node {
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
-        implement_node!($name, leaf, keyword_base);
+        implement_node!($name, keyword_base);
         implement_leaf!($name);
         impl ConcreteNode for $name {
             fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -601,7 +599,7 @@ macro_rules! define_token_node {
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
         }
-        implement_node!($name, leaf, token_base);
+        implement_node!($name, token_base);
         implement_leaf!($name);
         impl ConcreteNode for $name {
             fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -653,7 +651,7 @@ macro_rules! define_list_node {
         pub struct $name {
             list_contents: Box<[$contents]>,
         }
-        implement_node!($name, list, $type);
+        implement_node!($name, $type);
         impl List for $name {
             type ContentsNode = $contents;
             fn contents(&self) -> &[Self::ContentsNode] {
@@ -993,7 +991,7 @@ pub struct Redirection {
     pub oper: TokenRedirection,
     pub target: String_,
 }
-implement_node!(Redirection, branch, redirection);
+implement_node!(Redirection, redirection);
 implement_acceptor_for_branch!(Redirection, (oper: TokenRedirection), (target: String_));
 impl ConcreteNode for Redirection {
     fn as_redirection(&self) -> Option<&Redirection> {
@@ -1032,7 +1030,7 @@ impl ConcreteNodeMut for VariableAssignmentList {
 pub struct ArgumentOrRedirection {
     pub contents: ArgumentOrRedirectionVariant,
 }
-implement_node!(ArgumentOrRedirection, branch, argument_or_redirection);
+implement_node!(ArgumentOrRedirection, argument_or_redirection);
 implement_acceptor_for_branch!(
     ArgumentOrRedirection,
     (contents: (variant<ArgumentOrRedirectionVariant>))
@@ -1075,7 +1073,7 @@ impl ConcreteNodeMut for ArgumentOrRedirectionList {
 pub struct Statement {
     pub contents: StatementVariant,
 }
-implement_node!(Statement, branch, statement);
+implement_node!(Statement, statement);
 implement_acceptor_for_branch!(Statement, (contents: (variant<StatementVariant>)));
 impl ConcreteNode for Statement {
     fn as_statement(&self) -> Option<&Statement> {
@@ -1103,7 +1101,7 @@ pub struct JobPipeline {
     /// Maybe backgrounded.
     pub bg: Option<TokenBackground>,
 }
-implement_node!(JobPipeline, branch, job_pipeline);
+implement_node!(JobPipeline, job_pipeline);
 implement_acceptor_for_branch!(
     JobPipeline,
     (time: (Option<KeywordTime>)),
@@ -1137,7 +1135,7 @@ pub struct JobConjunction {
     /// only fail to be present if we ran out of tokens.
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(JobConjunction, branch, job_conjunction);
+implement_node!(JobConjunction, job_conjunction);
 implement_acceptor_for_branch!(
     JobConjunction,
     (decorator: (Option<JobConjunctionDecorator>)),
@@ -1181,7 +1179,7 @@ pub struct ForHeader {
     /// newline or semicolon
     pub semi_nl: SemiNl,
 }
-implement_node!(ForHeader, branch, for_header);
+implement_node!(ForHeader, for_header);
 implement_acceptor_for_branch!(
     ForHeader,
     (kw_for: (KeywordFor)),
@@ -1208,7 +1206,7 @@ pub struct WhileHeader {
     pub condition: JobConjunction,
     pub andor_tail: AndorJobList,
 }
-implement_node!(WhileHeader, branch, while_header);
+implement_node!(WhileHeader, while_header);
 implement_acceptor_for_branch!(
     WhileHeader,
     (kw_while: (KeywordWhile)),
@@ -1234,7 +1232,7 @@ pub struct FunctionHeader {
     pub args: ArgumentList,
     pub semi_nl: SemiNl,
 }
-implement_node!(FunctionHeader, branch, function_header);
+implement_node!(FunctionHeader, function_header);
 implement_acceptor_for_branch!(
     FunctionHeader,
     (kw_function: (KeywordFunction)),
@@ -1260,7 +1258,7 @@ pub struct BeginHeader {
     /// This is valid: begin echo hi; end
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(BeginHeader, branch, begin_header);
+implement_node!(BeginHeader, begin_header);
 implement_acceptor_for_branch!(
     BeginHeader,
     (kw_begin: (KeywordBegin)),
@@ -1288,7 +1286,7 @@ pub struct BlockStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BlockStatement, branch, block_statement);
+implement_node!(BlockStatement, block_statement);
 implement_acceptor_for_branch!(
     BlockStatement,
     (header: (variant<BlockStatementHeaderVariant>)),
@@ -1318,7 +1316,7 @@ pub struct BraceStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BraceStatement, branch, brace_statement);
+implement_node!(BraceStatement, brace_statement);
 implement_acceptor_for_branch!(
     BraceStatement,
     (left_brace: (TokenLeftBrace)),
@@ -1348,7 +1346,7 @@ pub struct IfClause {
     /// The body to execute if the condition is true.
     pub body: JobList,
 }
-implement_node!(IfClause, branch, if_clause);
+implement_node!(IfClause, if_clause);
 implement_acceptor_for_branch!(
     IfClause,
     (kw_if: (KeywordIf)),
@@ -1374,7 +1372,7 @@ pub struct ElseifClause {
     /// The 'if' clause following it.
     pub if_clause: IfClause,
 }
-implement_node!(ElseifClause, branch, elseif_clause);
+implement_node!(ElseifClause, elseif_clause);
 implement_acceptor_for_branch!(
     ElseifClause,
     (kw_else: (KeywordElse)),
@@ -1416,7 +1414,7 @@ pub struct ElseClause {
     pub semi_nl: Option<SemiNl>,
     pub body: JobList,
 }
-implement_node!(ElseClause, branch, else_clause);
+implement_node!(ElseClause, else_clause);
 implement_acceptor_for_branch!(
     ElseClause,
     (kw_else: (KeywordElse)),
@@ -1452,7 +1450,7 @@ pub struct IfStatement {
     /// block args / redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(IfStatement, branch, if_statement);
+implement_node!(IfStatement, if_statement);
 implement_acceptor_for_branch!(
     IfStatement,
     (if_clause: (IfClause)),
@@ -1480,7 +1478,7 @@ pub struct CaseItem {
     pub semi_nl: SemiNl,
     pub body: JobList,
 }
-implement_node!(CaseItem, branch, case_item);
+implement_node!(CaseItem, case_item);
 implement_acceptor_for_branch!(
     CaseItem,
     (kw_case: (KeywordCase)),
@@ -1514,7 +1512,7 @@ pub struct SwitchStatement {
     pub end: KeywordEnd,
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(SwitchStatement, branch, switch_statement);
+implement_node!(SwitchStatement, switch_statement);
 implement_acceptor_for_branch!(
     SwitchStatement,
     (kw_switch: (KeywordSwitch)),
@@ -1546,7 +1544,7 @@ pub struct DecoratedStatement {
     /// Args and redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(DecoratedStatement, branch, decorated_statement);
+implement_node!(DecoratedStatement, decorated_statement);
 implement_acceptor_for_branch!(
     DecoratedStatement,
     (opt_decoration: (Option<DecoratedStatementDecorator>)),
@@ -1573,7 +1571,7 @@ pub struct NotStatement {
     pub variables: VariableAssignmentList,
     pub contents: Statement,
 }
-implement_node!(NotStatement, branch, not_statement);
+implement_node!(NotStatement, not_statement);
 implement_acceptor_for_branch!(
     NotStatement,
     (kw: (KeywordNot)),
@@ -1599,7 +1597,7 @@ pub struct JobContinuation {
     pub variables: VariableAssignmentList,
     pub statement: Statement,
 }
-implement_node!(JobContinuation, branch, job_continuation);
+implement_node!(JobContinuation, job_continuation);
 implement_acceptor_for_branch!(
     JobContinuation,
     (pipe: (TokenPipe)),
@@ -1643,11 +1641,7 @@ pub struct JobConjunctionContinuation {
     /// The job itself.
     pub job: JobPipeline,
 }
-implement_node!(
-    JobConjunctionContinuation,
-    branch,
-    job_conjunction_continuation
-);
+implement_node!(JobConjunctionContinuation, job_conjunction_continuation);
 implement_acceptor_for_branch!(
     JobConjunctionContinuation,
     (conjunction: (TokenConjunction)),
@@ -1678,7 +1672,7 @@ impl CheckParse for JobConjunctionContinuation {
 pub struct AndorJob {
     pub job: JobConjunction,
 }
-implement_node!(AndorJob, branch, andor_job);
+implement_node!(AndorJob, andor_job);
 implement_acceptor_for_branch!(AndorJob, (job: (JobConjunction)));
 impl ConcreteNode for AndorJob {
     fn as_andor_job(&self) -> Option<&AndorJob> {
@@ -1725,7 +1719,7 @@ impl ConcreteNodeMut for AndorJobList {
 pub struct FreestandingArgumentList {
     pub arguments: ArgumentList,
 }
-implement_node!(FreestandingArgumentList, branch, freestanding_argument_list);
+implement_node!(FreestandingArgumentList, freestanding_argument_list);
 implement_acceptor_for_branch!(FreestandingArgumentList, (arguments: (ArgumentList)));
 impl ConcreteNode for FreestandingArgumentList {
     fn as_freestanding_argument_list(&self) -> Option<&FreestandingArgumentList> {
@@ -1798,7 +1792,7 @@ impl ConcreteNodeMut for CaseItemList {
 pub struct VariableAssignment {
     range: Option<SourceRange>,
 }
-implement_node!(VariableAssignment, leaf, variable_assignment);
+implement_node!(VariableAssignment, variable_assignment);
 implement_leaf!(VariableAssignment);
 impl ConcreteNode for VariableAssignment {
     fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -1838,7 +1832,7 @@ impl CheckParse for VariableAssignment {
 pub struct MaybeNewlines {
     range: Option<SourceRange>,
 }
-implement_node!(MaybeNewlines, leaf, maybe_newlines);
+implement_node!(MaybeNewlines, maybe_newlines);
 implement_leaf!(MaybeNewlines);
 impl ConcreteNode for MaybeNewlines {
     fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -1863,7 +1857,7 @@ impl ConcreteNodeMut for MaybeNewlines {
 pub struct Argument {
     range: Option<SourceRange>,
 }
-implement_node!(Argument, leaf, argument);
+implement_node!(Argument, argument);
 implement_leaf!(Argument);
 impl ConcreteNode for Argument {
     fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -3990,4 +3984,51 @@ pub enum Type {
     argument,
     argument_list,
     job_list,
+}
+
+impl Type {
+    // Return the underlying category of this type.
+    pub fn category(self) -> Category {
+        match self {
+            Type::token_base => Category::leaf,
+            Type::keyword_base => Category::leaf,
+            Type::redirection => Category::branch,
+            Type::variable_assignment => Category::leaf,
+            Type::variable_assignment_list => Category::list,
+            Type::argument_or_redirection => Category::branch,
+            Type::argument_or_redirection_list => Category::list,
+            Type::statement => Category::branch,
+            Type::job_pipeline => Category::branch,
+            Type::job_conjunction => Category::branch,
+            Type::for_header => Category::branch,
+            Type::while_header => Category::branch,
+            Type::function_header => Category::branch,
+            Type::begin_header => Category::branch,
+            Type::block_statement => Category::branch,
+            Type::brace_statement => Category::branch,
+            Type::if_clause => Category::branch,
+            Type::elseif_clause => Category::branch,
+            Type::elseif_clause_list => Category::list,
+            Type::else_clause => Category::branch,
+            Type::if_statement => Category::branch,
+            Type::case_item => Category::branch,
+            Type::switch_statement => Category::branch,
+            Type::decorated_statement => Category::branch,
+            Type::not_statement => Category::branch,
+            Type::job_continuation => Category::branch,
+            Type::job_continuation_list => Category::list,
+            Type::job_conjunction_continuation => Category::branch,
+            Type::andor_job => Category::branch,
+            Type::andor_job_list => Category::list,
+            Type::freestanding_argument_list => Category::branch, // not a typo, wraps a list
+            Type::token_conjunction => Category::leaf,
+            Type::job_conjunction_continuation_list => Category::list,
+            Type::maybe_newlines => Category::leaf,
+            Type::token_pipe => Category::leaf,
+            Type::case_item_list => Category::list,
+            Type::argument => Category::leaf,
+            Type::argument_list => Category::list,
+            Type::job_list => Category::list,
+        }
+    }
 }

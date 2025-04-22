@@ -150,14 +150,6 @@ enum BuiltinEnum {
     Byte(BuiltinByteCmd),
 }
 
-const fn wide(f: BuiltinCmd) -> BuiltinEnum {
-    BuiltinEnum::Wide(f)
-}
-
-const fn byte(f: BuiltinByteCmd) -> BuiltinEnum {
-    BuiltinEnum::Byte(f)
-}
-
 /// Data structure to describe a builtin.
 struct BuiltinData {
     // Name of the builtin.
@@ -172,259 +164,259 @@ struct BuiltinData {
 const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
         name: L!("!"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("."),
-        func: wide(source::source),
+        func: BuiltinEnum::Wide(source::source),
     },
     BuiltinData {
         name: L!(":"),
-        func: byte(builtin_true),
+        func: BuiltinEnum::Byte(builtin_true),
     },
     BuiltinData {
         name: L!("["), // ]
-        func: wide(test::test),
+        func: BuiltinEnum::Wide(test::test),
     },
     BuiltinData {
         name: L!("_"),
-        func: wide(builtin_gettext),
+        func: BuiltinEnum::Wide(builtin_gettext),
     },
     BuiltinData {
         name: L!("abbr"),
-        func: wide(abbr::abbr),
+        func: BuiltinEnum::Wide(abbr::abbr),
     },
     BuiltinData {
         name: L!("and"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("argparse"),
-        func: wide(argparse::argparse),
+        func: BuiltinEnum::Wide(argparse::argparse),
     },
     BuiltinData {
         name: L!("begin"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("bg"),
-        func: wide(bg::bg),
+        func: BuiltinEnum::Wide(bg::bg),
     },
     BuiltinData {
         name: L!("bind"),
-        func: wide(bind::bind),
+        func: BuiltinEnum::Wide(bind::bind),
     },
     BuiltinData {
         name: L!("block"),
-        func: wide(block::block),
+        func: BuiltinEnum::Wide(block::block),
     },
     BuiltinData {
         name: L!("break"),
-        func: wide(builtin_break_continue),
+        func: BuiltinEnum::Wide(builtin_break_continue),
     },
     BuiltinData {
         name: L!("breakpoint"),
-        func: wide(builtin_breakpoint),
+        func: BuiltinEnum::Wide(builtin_breakpoint),
     },
     BuiltinData {
         name: L!("builtin"),
-        func: wide(builtin::builtin),
+        func: BuiltinEnum::Wide(builtin::builtin),
     },
     BuiltinData {
         name: L!("case"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("cd"),
-        func: wide(cd::cd),
+        func: BuiltinEnum::Wide(cd::cd),
     },
     BuiltinData {
         name: L!("command"),
-        func: wide(command::command),
+        func: BuiltinEnum::Wide(command::command),
     },
     BuiltinData {
         name: L!("commandline"),
-        func: wide(commandline::commandline),
+        func: BuiltinEnum::Wide(commandline::commandline),
     },
     BuiltinData {
         name: L!("complete"),
-        func: wide(complete::complete),
+        func: BuiltinEnum::Wide(complete::complete),
     },
     BuiltinData {
         name: L!("contains"),
-        func: wide(contains::contains),
+        func: BuiltinEnum::Wide(contains::contains),
     },
     BuiltinData {
         name: L!("continue"),
-        func: wide(builtin_break_continue),
+        func: BuiltinEnum::Wide(builtin_break_continue),
     },
     BuiltinData {
         name: L!("count"),
-        func: wide(count::count),
+        func: BuiltinEnum::Wide(count::count),
     },
     BuiltinData {
         name: L!("disown"),
-        func: wide(disown::disown),
+        func: BuiltinEnum::Wide(disown::disown),
     },
     BuiltinData {
         name: L!("echo"),
-        func: wide(echo::echo),
+        func: BuiltinEnum::Wide(echo::echo),
     },
     BuiltinData {
         name: L!("else"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("emit"),
-        func: wide(emit::emit),
+        func: BuiltinEnum::Wide(emit::emit),
     },
     BuiltinData {
         name: L!("end"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("eval"),
-        func: wide(eval::eval),
+        func: BuiltinEnum::Wide(eval::eval),
     },
     BuiltinData {
         name: L!("exec"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("exit"),
-        func: wide(exit::exit),
+        func: BuiltinEnum::Wide(exit::exit),
     },
     BuiltinData {
         name: L!("false"),
-        func: byte(builtin_false),
+        func: BuiltinEnum::Byte(builtin_false),
     },
     BuiltinData {
         name: L!("fg"),
-        func: wide(fg::fg),
+        func: BuiltinEnum::Wide(fg::fg),
     },
     BuiltinData {
         name: L!("fish_indent"),
-        func: wide(fish_indent::fish_indent),
+        func: BuiltinEnum::Wide(fish_indent::fish_indent),
     },
     BuiltinData {
         name: L!("fish_key_reader"),
-        func: wide(fish_key_reader::fish_key_reader),
+        func: BuiltinEnum::Wide(fish_key_reader::fish_key_reader),
     },
     BuiltinData {
         name: L!("for"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("function"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("functions"),
-        func: wide(functions::functions),
+        func: BuiltinEnum::Wide(functions::functions),
     },
     BuiltinData {
         name: L!("history"),
-        func: wide(history::history),
+        func: BuiltinEnum::Wide(history::history),
     },
     BuiltinData {
         name: L!("if"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("jobs"),
-        func: wide(jobs::jobs),
+        func: BuiltinEnum::Wide(jobs::jobs),
     },
     BuiltinData {
         name: L!("math"),
-        func: wide(math::math),
+        func: BuiltinEnum::Wide(math::math),
     },
     BuiltinData {
         name: L!("not"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("or"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("path"),
-        func: wide(path::path),
+        func: BuiltinEnum::Wide(path::path),
     },
     BuiltinData {
         name: L!("printf"),
-        func: wide(printf::printf),
+        func: BuiltinEnum::Wide(printf::printf),
     },
     BuiltinData {
         name: L!("pwd"),
-        func: wide(pwd::pwd),
+        func: BuiltinEnum::Wide(pwd::pwd),
     },
     BuiltinData {
         name: L!("random"),
-        func: wide(random::random),
+        func: BuiltinEnum::Wide(random::random),
     },
     BuiltinData {
         name: L!("read"),
-        func: wide(read::read),
+        func: BuiltinEnum::Wide(read::read),
     },
     BuiltinData {
         name: L!("realpath"),
-        func: wide(realpath::realpath),
+        func: BuiltinEnum::Wide(realpath::realpath),
     },
     BuiltinData {
         name: L!("return"),
-        func: wide(r#return::r#return),
+        func: BuiltinEnum::Wide(r#return::r#return),
     },
     BuiltinData {
         name: L!("set"),
-        func: wide(set::set),
+        func: BuiltinEnum::Wide(set::set),
     },
     BuiltinData {
         name: L!("set_color"),
-        func: wide(set_color::set_color),
+        func: BuiltinEnum::Wide(set_color::set_color),
     },
     BuiltinData {
         name: L!("source"),
-        func: wide(source::source),
+        func: BuiltinEnum::Wide(source::source),
     },
     BuiltinData {
         name: L!("status"),
-        func: wide(status::status),
+        func: BuiltinEnum::Wide(status::status),
     },
     BuiltinData {
         name: L!("string"),
-        func: wide(string::string),
+        func: BuiltinEnum::Wide(string::string),
     },
     BuiltinData {
         name: L!("switch"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("test"),
-        func: wide(test::test),
+        func: BuiltinEnum::Wide(test::test),
     },
     BuiltinData {
         name: L!("time"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("true"),
-        func: byte(builtin_true),
+        func: BuiltinEnum::Byte(builtin_true),
     },
     BuiltinData {
         name: L!("type"),
-        func: wide(r#type::r#type),
+        func: BuiltinEnum::Wide(r#type::r#type),
     },
     BuiltinData {
         name: L!("ulimit"),
-        func: wide(ulimit::ulimit),
+        func: BuiltinEnum::Wide(ulimit::ulimit),
     },
     BuiltinData {
         name: L!("wait"),
-        func: wide(wait::wait),
+        func: BuiltinEnum::Wide(wait::wait),
     },
     BuiltinData {
         name: L!("while"),
-        func: wide(builtin_generic),
+        func: BuiltinEnum::Wide(builtin_generic),
     },
 ];
 assert_sorted_by_name!(BUILTIN_DATAS);
@@ -434,7 +426,6 @@ impl Named for BuiltinData {
         self.name
     }
 }
-
 fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
     get_by_sorted_name(name, BUILTIN_DATAS)
 }

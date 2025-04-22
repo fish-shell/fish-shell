@@ -733,7 +733,7 @@ fn test_cancellation() {
     reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
-    println!("Testing Ctrl-C cancellation. If this hangs, that's a bug!");
+    printf!("Testing Ctrl-C cancellation. If this hangs, that's a bug!\n");
 
     // Enable fish's signal handling here.
     signal_set_handlers(true);

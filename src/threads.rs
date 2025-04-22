@@ -206,7 +206,7 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
             true
         }
         Err(e) => {
-            eprintln!("rust thread spawn failure: {e}");
+            eprintf!("rust thread spawn failure: %s\n", e);
             false
         }
     };

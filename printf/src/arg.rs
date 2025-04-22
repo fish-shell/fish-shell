@@ -139,6 +139,12 @@ impl<'a> ToArg<'a> for &'a WString {
     }
 }
 
+impl<'a> ToArg<'a> for &'a std::io::Error {
+    fn to_arg(self) -> Arg<'a> {
+        Arg::String(self.to_string())
+    }
+}
+
 impl<'a> ToArg<'a> for f32 {
     fn to_arg(self) -> Arg<'a> {
         Arg::Float(self.into())

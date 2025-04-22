@@ -18,7 +18,7 @@ fn test_pthread() {
     let made = spawn(move || {
         ctx2.val.fetch_add(2, Ordering::Release);
         ctx2.condvar.notify_one();
-        println!("condvar signalled");
+        printf!("condvar signalled\n");
     });
     assert!(made);
 
@@ -26,9 +26,9 @@ fn test_pthread() {
     let (_lock, timeout) = ctx
         .condvar
         .wait_timeout_while(lock, Duration::from_secs(5), |()| {
-            println!("looping with lock held");
+            printf!("looping with lock held\n");
             if ctx.val.load(Ordering::Acquire) != 5 {
-                println!("test_pthread: value did not yet reach goal");
+                printf!("test_pthread: value did not yet reach goal\n");
                 return true;
             }
             false

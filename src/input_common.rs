@@ -547,10 +547,10 @@ pub fn update_wait_on_escape_ms(vars: &EnvStack) {
             WAIT_ON_ESCAPE_MS.store(val.try_into().unwrap(), Ordering::Relaxed);
         }
         _ => {
-            eprintln!(
+            eprintf!(
                 concat!(
-                    "ignoring fish_escape_delay_ms: value '{}' ",
-                    "is not an integer or is < 10 or >= 5000 ms"
+                    "ignoring fish_escape_delay_ms: value '%ls' ",
+                    "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 fish_escape_delay_ms
             )
@@ -572,10 +572,10 @@ pub fn update_wait_on_sequence_key_ms(vars: &EnvStack) {
             WAIT_ON_SEQUENCE_KEY_MS.store(val.try_into().unwrap(), Ordering::Relaxed);
         }
         _ => {
-            eprintln!(
+            eprintf!(
                 concat!(
-                    "ignoring fish_sequence_key_delay_ms: value '{}' ",
-                    "is not an integer or is < 10 or >= 5000 ms"
+                    "ignoring fish_sequence_key_delay_ms: value '%ls' ",
+                    "is not an integer or is < 10 or >= 5000 ms\n"
                 ),
                 sequence_key_time_ms
             )

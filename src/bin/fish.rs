@@ -132,12 +132,12 @@ fn print_rusage_self() {
     let total_time = user_time + sys_time;
     let signals = rs.ru_nsignals;
 
-    eprintln!("  rusage self:");
-    eprintln!("      user time: {sys_time} ms");
-    eprintln!("       sys time: {user_time} ms");
-    eprintln!("     total time: {total_time} ms");
-    eprintln!("        max rss: {rss_kb} kb");
-    eprintln!("        signals: {signals}");
+    eprintf!("  rusage self:\n");
+    eprintf!("      user time: %s ms\n", sys_time.to_string());
+    eprintf!("       sys time: %s ms\n", user_time.to_string());
+    eprintf!("     total time: %s ms\n", total_time.to_string());
+    eprintf!("        max rss: %s kb\n", rss_kb.to_string());
+    eprintf!("        signals: %s\n", signals.to_string());
 }
 
 // Source the file config.fish in the given directory.
@@ -293,7 +293,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 activate_flog_categories_by_pattern(w.woptarg.unwrap());
                 for cat in flog::categories::all_categories() {
                     if cat.enabled.load(Ordering::Relaxed) {
-                        println!("Debug enabled for category: {}", cat.name);
+                        printf!("Debug enabled for category: %ls\n", cat.name);
                     }
                 }
             }
@@ -320,9 +320,8 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 name_width += 2;
                 for cat in cats.iter() {
                     let desc = wgettext_str(cat.description);
-                    // https://doc.rust-lang.org/std/fmt/#syntax
                     // this is left-justified
-                    println!("{:<width$} {}", cat.name, desc, width = name_width);
+                    printf!("%-*ls %ls\n", name_width, cat.name, desc);
                 }
                 return ControlFlow::Break(0);
             }
@@ -348,15 +347,15 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 // Either remove it or make it work with FLOG.
             }
             '?' => {
-                eprintln!(
-                    "{}",
+                eprintf!(
+                    "%ls\n",
                     wgettext_fmt!(BUILTIN_ERR_UNKNOWN, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
             }
             ':' => {
-                eprintln!(
-                    "{}",
+                eprintf!(
+                    "%ls\n",
                     wgettext_fmt!(BUILTIN_ERR_MISSING, "fish", args[w.wopt_index - 1])
                 );
                 return ControlFlow::Break(1);
@@ -454,9 +453,10 @@ fn throwing_main() -> i32 {
                 set_flog_file_fd(dbg_file.into_raw_fd());
             }
             Err(e) => {
-                // TODO: should not be debug-print
-                eprintln!("Could not open file {:?}", debug_path);
-                eprintln!("{}", e);
+                let debug_path_string = format!("{debug_path:?}");
+                // TODO: should be translated
+                eprintf!("Could not open file %s\n", debug_path_string);
+                eprintf!("%s\n", e);
                 return 1;
             }
         };
@@ -606,7 +606,7 @@ fn throwing_main() -> i32 {
                     wgettext!("Error reading script file '%s':"),
                     path.to_string_lossy()
                 );
-                eprintln!("{}", e);
+                eprintf!("%s\n", e);
             }
             Ok(f) => {
                 let list = &args[my_optind..];

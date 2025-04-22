@@ -225,7 +225,7 @@ fn apply_one_wildcard(wc_esc: &wstr, sense: bool) {
         }
     }
     if !match_found {
-        eprintln!("Failed to match debug category: {wc_esc}");
+        eprintf!("Failed to match debug category: %ls\n", wc_esc);
     }
 }
 

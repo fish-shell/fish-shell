@@ -788,11 +788,10 @@ Some more examples::
   # Output is 1 2 3
 
   echo $$var[2][3]
-  # $var[1] is listtwo, third element of that is 6, output is 6
+  # $var[2] is listtwo, third element of that is 6, output is 6
 
   echo $$var[..][2]
-  # The second element of every variable, so output is
-  # 2 5
+  # The second element of every variable, so output is 2 5
 
 Variables as command
 ''''''''''''''''''''

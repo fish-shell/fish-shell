@@ -764,7 +764,7 @@ macro_rules! implement_acceptor_for_branch {
         impl Acceptor for $name {
             #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool){
-                visitor_accept_field!(
+                let _ = visitor_accept_field!(
                     Self,
                     accept,
                     visit,
@@ -3682,7 +3682,7 @@ impl<'s> Populator<'s> {
     // Return the resulting Node.
     fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
         let mut result = T::default();
-        self.visit_mut(&mut result);
+        let _ = self.visit_mut(&mut result);
         result
     }
 

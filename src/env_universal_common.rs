@@ -776,7 +776,7 @@ impl EnvUniversal {
 
         // Ensure we maintain ownership and permissions (#2176).
         if let Ok(md) = wstat(&real_path) {
-            // TODO: Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
+            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
             if unsafe { libc::fchown(private_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                 FLOG!(uvar_file, "universal log fchown() failed:", errno());
             }

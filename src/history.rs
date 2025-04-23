@@ -767,7 +767,7 @@ impl HistoryImpl {
                 // case right either).
                 if let Ok(target_file_after) = target_file_after.as_ref() {
                     if let Ok(md) = target_file_after.metadata() {
-                        // TODO: Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
+                        // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOG!(
                                 history_file,

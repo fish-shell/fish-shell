@@ -70,6 +70,7 @@ pub(crate) enum TerminalCommand<'a> {
     // Colors
     SelectPaletteColor(Paintable, u8),
     SelectRgbColor(Paintable, Color24),
+    DefaultBackgroundColor,
     DefaultUnderlineColor,
 
     // Cursor Movement
@@ -163,6 +164,7 @@ pub(crate) trait Output {
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
             SelectPaletteColor(paintable, idx) => palette_color(self, paintable, idx),
             SelectRgbColor(paintable, rgb) => rgb_color(self, paintable, rgb),
+            DefaultBackgroundColor => write(self, b"\x1b[49m"),
             DefaultUnderlineColor => write(self, b"\x1b[59m"),
             CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
             CursorDown => ti(self, b"\n", |term| &term.cursor_down),
@@ -511,9 +513,9 @@ impl Outputter {
         let mut last_bg_set = false;
 
         use TerminalCommand::{
-            DefaultUnderlineColor, EnterBoldMode, EnterCurlyUnderlineMode, EnterDimMode,
-            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterUnderlineMode,
-            ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterCurlyUnderlineMode,
+            EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
+            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
 
         // Removes all styles that are individually resettable.
@@ -572,14 +574,7 @@ impl Outputter {
 
         if !bg.is_none() && bg != self.last.bg {
             if bg.is_normal() {
-                self.write_command(ExitAttributeMode);
-                if !self.last.fg.is_normal() {
-                    self.write_color(Paintable::Foreground, self.last.fg);
-                }
-                if !self.last.underline_color.is_normal() && !self.last.underline_color.is_none() {
-                    self.write_color(Paintable::Underline, self.last.underline_color);
-                }
-                self.last.style = TextStyling::default();
+                self.write_command(DefaultBackgroundColor);
             } else {
                 assert!(!bg.is_special());
                 self.write_color(Paintable::Background, bg);

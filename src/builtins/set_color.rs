@@ -150,30 +150,32 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
     // reset all colors/attributes. Same if foreground is "reset" (undocumented).
     if is_reset || [fg, bg].iter().any(|c| c.is_some_and(|c| c.is_normal())) {
         outp.reset_text_face();
-    } else {
-        // Historically we have not used set_text_face() for colors here.
-        // Doing so would add two magic behaviors:
-        // - if fg and bg are equal, it makes one of them white
-        // - if bg is not normal, it makes the foreground bold
-        // The first one seems fine but the second one not really.
-        outp.set_text_face(TextFace::new(Color::None, Color::None, Color::None, style));
-        if let Some(fg) = fg {
-            if !outp.write_color(Paintable::Foreground, fg) {
-                // We need to do *something* or the lack of any output messes up
-                // when the cartesian product here would make "foo" disappear:
-                //  $ echo (set_color foo)bar
-                outp.reset_text_face();
-            }
+    }
+
+    // Historically we have not used set_text_face() for colors here.
+    // Doing so would add two magic behaviors:
+    // - if fg and bg are equal, it makes one of them white
+    // - if bg is not normal, it makes the foreground bold
+    // The first one seems fine but the second one not really.
+    outp.set_text_face(TextFace::new(Color::None, Color::None, Color::None, style));
+    if let Some(fg) = fg {
+        if !fg.is_normal() && !outp.write_color(Paintable::Foreground, fg) {
+            // We need to do *something* or the lack of any output messes up
+            // when the cartesian product here would make "foo" disappear:
+            //  $ echo (set_color foo)bar
+            outp.reset_text_face();
         }
-        if let Some(bg) = bg {
+    }
+    if let Some(bg) = bg {
+        if !bg.is_normal() {
             outp.write_color(Paintable::Background, bg);
         }
-        if let Some(underline_color) = underline_color {
-            if underline_color.is_normal() {
-                outp.write_command(DefaultUnderlineColor);
-            } else {
-                outp.write_color(Paintable::Underline, underline_color);
-            }
+    }
+    if let Some(underline_color) = underline_color {
+        if underline_color.is_normal() {
+            outp.write_command(DefaultUnderlineColor);
+        } else {
+            outp.write_color(Paintable::Underline, underline_color);
         }
     }
 

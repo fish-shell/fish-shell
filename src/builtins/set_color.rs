@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
-use crate::terminal::TerminalCommand::DefaultUnderlineColor;
+use crate::terminal::TerminalCommand::{DefaultBackgroundColor, DefaultUnderlineColor};
 use crate::terminal::{Output, Outputter, Paintable};
 use crate::text_face::{
     self, parse_text_face_and_options, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling,
@@ -121,7 +121,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
 
     // Here's some automagic behavior: if either of foreground or background are "normal",
     // reset all colors/attributes. Same if foreground is "reset" (undocumented).
-    if is_reset || [fg, bg].iter().any(|c| c.is_some_and(|c| c.is_normal())) {
+    if is_reset || fg.is_some_and(|fg| fg.is_normal()) {
         outp.reset_text_face();
     }
 
@@ -140,7 +140,9 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         }
     }
     if let Some(bg) = bg {
-        if !bg.is_normal() {
+        if bg.is_normal() {
+            outp.write_command(DefaultBackgroundColor);
+        } else {
             outp.write_color(Paintable::Background, bg);
         }
     }

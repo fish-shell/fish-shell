@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # Helper to notarize an .app.zip or .pkg file.
 
@@ -13,7 +13,7 @@ for INPUT in "$@"; do
     echo "Processing $INPUT"
     test -f "$INPUT" || die "Not a file: $INPUT"
     ext="${INPUT##*.}"
-    (test "$ext" = "zip" || test "$ext" = "pkg") || die "Unrecognized extension: $ext"
+    { test "$ext" = "zip" || test "$ext" = "pkg"; } || die "Unrecognized extension: $ext"
 
     xcrun notarytool submit "$INPUT" --keychain-profile AC_PASSWORD --wait
 
@@ -21,9 +21,7 @@ for INPUT in "$@"; do
         TMPDIR=$(mktemp -d)
         echo "Extracting to $TMPDIR"
         unzip -q "$INPUT" -d "$TMPDIR"
-        # Force glob expansion.
-        STAPLE_TARGET="$TMPDIR"/*
-        STAPLE_TARGET=$(echo $STAPLE_TARGET)
+        STAPLE_TARGET=$(echo "$TMPDIR"/*)
     else
         STAPLE_TARGET="$INPUT"
     fi
@@ -35,7 +33,7 @@ for INPUT in "$@"; do
         INPUT_FULL=$(realpath "$INPUT")
         rm -f "$INPUT"
         cd "$(dirname "$STAPLE_TARGET")"
-        zip -r -q "$INPUT_FULL" $(basename "$STAPLE_TARGET")
+        zip -r -q "$INPUT_FULL" "$(basename "$STAPLE_TARGET")"
     fi
     echo "Processed $INPUT"
 

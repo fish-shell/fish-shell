@@ -12,7 +12,7 @@ usage() {
   echo "  -p <PASSWORD>                 Password for the .p12 files (necessary to access the certificates)"
   echo "  -e <entitlements file>        (Optional) Path to an entitlements XML file"
   echo "  -n                            Enables notarization. This will fail if code signing is not also enabled."
-  echo "  -j <API_KEY.JSON>             Path to JSON file generated with `rcodesign encode-app-store-connect-api-key` (required for notarization)"
+  echo "  -j <API_KEY.JSON>             Path to JSON file generated with \`rcodesign encode-app-store-connect-api-key\` (required for notarization)"
   echo
   exit 1
 }
@@ -45,7 +45,7 @@ while getopts "sf:i:p:e:nj:" opt; do
   esac
 done
 
-if [ -n "$SIGN" ] && ([ -z "$P12_APP_FILE" ] || [-z "$P12_INSTALL_FILE"] || [ -z "$P12_PASSWORD" ]); then
+if [ -n "$SIGN" ] && { [ -z "$P12_APP_FILE" ] || [ -z "$P12_INSTALL_FILE" ] || [ -z "$P12_PASSWORD" ]; }; then
   usage
 fi
 
@@ -103,7 +103,7 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
 
 # Fatten them up.
 for FILE in "$PKGDIR"/root/usr/local/bin/*; do
-    X86_FILE="$PKGDIR/build_x86_64/$(basename $FILE)"
+    X86_FILE="$PKGDIR/build_x86_64/$(basename "$FILE")"
     rcodesign macho-universal-create --output "$FILE" "$FILE" "$X86_FILE"
     chmod 755 "$FILE"
 done
@@ -145,7 +145,7 @@ fi
 # Make the app's /usr/local/bin binaries universal. Note fish.app/Contents/MacOS/fish already is, courtesy of CMake.
 cd "$PKGDIR/build_arm64"
 for FILE in fish.app/Contents/Resources/base/usr/local/bin/*; do
-    X86_FILE="$PKGDIR/build_x86_64/fish.app/Contents/Resources/base/usr/local/bin/$(basename $FILE)"
+    X86_FILE="$PKGDIR/build_x86_64/fish.app/Contents/Resources/base/usr/local/bin/$(basename "$FILE")"
     rcodesign macho-universal-create --output "$FILE" "$FILE" "$X86_FILE"
 
     # macho-universal-create screws up the permissions.

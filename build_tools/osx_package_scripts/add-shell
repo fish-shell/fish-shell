@@ -4,12 +4,12 @@
 
 if test $# -eq 0
 then
-	echo usage: $0 shellname [shellname ...]
+	echo "usage: $0 shellname [shellname ...]"
 	exit 1
 fi
 
-scriptname=`basename "$0"`
-if [[ $UID -ne 0 ]]; then
+scriptname=$(basename "$0")
+if [ "$(id -u)" -ne 0 ]; then
      echo "${scriptname} must be run as root"
      exit 1
 fi
@@ -20,6 +20,7 @@ tmpfile=${file}.tmp
 
 set -o noclobber
 
+# shellcheck disable=SC2064
 trap "rm -f $tmpfile" EXIT
 
 if ! cat $file > $tmpfile
@@ -32,15 +33,13 @@ EOF
 fi
 
 # Append a newline if it doesn't exist
-if [ "$(tail -c1 "$tmpfile"; echo x)" != $'\nx' ]; then
-    echo "" >> "$tmpfile"
-fi
+[ -z "$(tail -c1 "$tmpfile")" ] || echo "" >> "$tmpfile"
 
 for i
 do
         if ! grep -q "^${i}$" "$tmpfile"
         then
-                echo $i >> "$tmpfile"
+                echo "$i" >> "$tmpfile"
         fi
 done
 

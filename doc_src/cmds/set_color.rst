@@ -30,7 +30,8 @@ If :envvar:`fish_term24bit` is set to 0, fish will translate RGB values to the n
 If :envvar:`fish_term256` is also set to 0, fish will translate them to the 16-color palette instead.
 Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 
-A second color may be given as a desired fallback color. e.g. ``set_color 124212 brblue`` will instruct set_color to use *brblue* if a terminal is not capable of the exact shade of grey desired. This is very useful when an 8 or 16 color terminal might otherwise not use a color.
+If multiple colors are specified, fish prefers the first RGB one.
+However if :envvar:`fish_term256` is set to 0, fish prefers the first named color.
 
 The following options are available:
 

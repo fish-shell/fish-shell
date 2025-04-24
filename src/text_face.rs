@@ -221,9 +221,15 @@ pub(crate) fn parse_text_face_and_options<'a>(
         match c {
             'b' => {
                 assert!(w.woptarg.is_some(), "Arg should have been set");
+                if !is_builtin && bgcolor.is_some() {
+                    continue;
+                }
                 bgcolor = w.woptarg;
             }
             '\x02' => {
+                if !is_builtin && underline_color.is_some() {
+                    continue;
+                }
                 assert!(w.woptarg.is_some(), "Arg should have been set");
                 underline_color = w.woptarg;
             }

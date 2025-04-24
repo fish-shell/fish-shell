@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from pexpect_helper import SpawnedProc
+from pexpect_helper import SpawnedProc, control
 
 sp = SpawnedProc()
 send, sendline, sleep, expect_prompt, expect_re, expect_str = (
@@ -78,3 +78,15 @@ sendline("echo bar")
 expect_re("\n.*bar")
 sendline("echo fo\t")
 expect_re("foooo")
+
+# Custom completions that access the command line.
+sendline("complete -e :; complete : -a '(echo (commandline -ct)-completed)'")
+send(": abcd" + control("b") * 2 + "\t")
+expect_str(": abcd-completed")
+send(control("u"))
+# Another one.
+sendline("mkdir -p foo/bar; touch foo/bar/baz.fish")
+send("source foo/b/baz.fish")
+send(control("b") * 9 + "\t")
+expect_str("source foo/bar/baz.fish")
+send(control("u"))

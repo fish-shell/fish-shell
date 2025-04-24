@@ -1953,19 +1953,16 @@ impl<'ctx> Completer<'ctx> {
         // Perhaps set a transient commandline so that custom completions
         // builtin_commandline will refer to the wrapped command. But not if
         // we're doing autosuggestions.
-        let mut _remove_transient = None;
-        let wants_transient =
-            (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
-        if wants_transient {
+        let _remove_transient = (!is_autosuggest).then(|| {
             let parser = self.ctx.parser();
             let saved_transient = parser
                 .libdata_mut()
                 .transient_commandline
                 .replace(cmdline.to_owned());
-            _remove_transient = Some(ScopeGuard::new((), move |_| {
+            ScopeGuard::new((), move |_| {
                 parser.libdata_mut().transient_commandline = saved_transient;
-            }));
-        }
+            })
+        });
 
         // Maybe apply variable assignments.
         let _restore_vars = self.apply_var_assignments(ad.var_assignments);

@@ -119,7 +119,13 @@ impl Autoload {
                         FLOGF!(autoload, "Embedded: %ls", cmd);
                     }
                     AutoloadPath::Path(path) => {
-                        FLOGF!(autoload, "Loading from path with var: %ls", path)
+                        FLOGF!(
+                            autoload,
+                            "Loading %ls from var %ls from path %ls",
+                            cmd,
+                            self.env_var_name,
+                            path
+                        )
                     }
                 }
                 Some(path)

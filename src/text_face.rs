@@ -27,7 +27,7 @@ impl StyleSet for Option<UnderlineStyle> {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
     pub(crate) underline_style: Option<UnderlineStyle>,
@@ -131,6 +131,7 @@ impl TextFace {
     }
 }
 
+#[derive(Default)]
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,
@@ -143,58 +144,38 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
         .into_iter()
         .chain(arguments.iter().map(|s| s.as_utfstr()))
         .collect();
-    let TextFaceArgsAndOptions {
-        wopt_index,
-        bgcolor,
-        underline_color,
-        style,
-        print_color_mode,
-    } = match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
-        TextFaceArgsAndOptionsResult::Ok(parsed_text_faces) => parsed_text_faces,
-        TextFaceArgsAndOptionsResult::PrintHelp
-        | TextFaceArgsAndOptionsResult::MissingOptArg
-        | TextFaceArgsAndOptionsResult::UnknownUnderlineStyle(_)
-        | TextFaceArgsAndOptionsResult::UnknownOption(_) => unreachable!(),
-    };
-    assert!(!print_color_mode);
-    let fg = best_color(
-        argv[wopt_index..]
-            .iter()
-            .filter_map(|&color| Color::from_wstr(color)),
-        get_color_support(),
-    );
-    let bg = bgcolor.and_then(Color::from_wstr);
-    let underline_color = underline_color.and_then(Color::from_wstr);
-    assert!(fg.map_or(true, |fg| !fg.is_none()));
-    assert!(bg.map_or(true, |bg| !bg.is_none()));
-    SpecifiedTextFace {
-        fg,
-        bg,
-        underline_color,
-        style,
+    use ParsedArgs::*;
+    match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
+        Ok(SetFace(specified_face)) => specified_face,
+        Ok(ResetFace) | Ok(PrintColors(_)) | Ok(PrintHelp) | Err(_) => unreachable!(),
     }
 }
 
-pub(crate) struct TextFaceArgsAndOptions<'a> {
-    pub(crate) wopt_index: usize,
-    pub(crate) bgcolor: Option<&'a wstr>,
-    pub(crate) underline_color: Option<&'a wstr>,
+pub(crate) struct PrintColorsArgs<'argarray, 'args> {
+    pub(crate) fg_args: &'argarray [&'args wstr],
+    pub(crate) bg: Option<Color>,
+    pub(crate) underline_color: Option<Color>,
     pub(crate) style: TextStyling,
-    pub(crate) print_color_mode: bool,
 }
 
-pub(crate) enum TextFaceArgsAndOptionsResult<'a> {
-    Ok(TextFaceArgsAndOptions<'a>),
+pub(crate) enum ParsedArgs<'argarray, 'args> {
+    SetFace(SpecifiedTextFace),
+    ResetFace,
     PrintHelp,
+    PrintColors(PrintColorsArgs<'argarray, 'args>),
+}
+
+pub(crate) enum ParseError<'args> {
     MissingOptArg,
-    UnknownUnderlineStyle(&'a wstr),
+    UnknownColor(&'args wstr),
+    UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
 }
 
-pub(crate) fn parse_text_face_and_options<'a>(
-    argv: &mut [&'a wstr],
+pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
+    argv: &'argarray mut [&'args wstr],
     is_builtin: bool,
-) -> TextFaceArgsAndOptionsResult<'a> {
+) -> Result<ParsedArgs<'argarray, 'args>, ParseError<'args>> {
     let builtin_extra_args = if is_builtin { 0 } else { "hc".len() };
     let short_options = L!(":b:oidru::ch");
     let short_options = &short_options[..short_options.len() - builtin_extra_args];
@@ -211,38 +192,48 @@ pub(crate) fn parse_text_face_and_options<'a>(
     ];
     let long_options = &long_options[..long_options.len() - builtin_extra_args];
 
-    let mut bgcolor = None;
-    let mut underline_color = None;
-    let mut style = TextStyling::default();
+    use ParseError::*;
+    use ParsedArgs::*;
+
+    let parse_color = |color_str| match Color::from_wstr(color_str) {
+        color @ Some(_) => Ok(color),
+        None => {
+            if is_builtin {
+                Err(UnknownColor(color_str))
+            } else {
+                Ok(None)
+            }
+        }
+    };
+
+    let mut face = SpecifiedTextFace::default();
     let mut print_color_mode = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
         match c {
             'b' => {
-                assert!(w.woptarg.is_some(), "Arg should have been set");
-                bgcolor = w.woptarg;
+                face.bg = parse_color(w.woptarg.unwrap())?;
             }
             '\x02' => {
-                assert!(w.woptarg.is_some(), "Arg should have been set");
-                underline_color = w.woptarg;
+                face.underline_color = parse_color(w.woptarg.unwrap())?;
             }
             'h' => {
                 assert!(is_builtin);
-                return TextFaceArgsAndOptionsResult::PrintHelp;
+                return Ok(PrintHelp);
             }
-            'o' => style.bold = true,
-            'i' => style.italics = true,
-            'd' => style.dim = true,
-            'r' => style.reverse = true,
+            'o' => face.style.bold = true,
+            'i' => face.style.italics = true,
+            'd' => face.style.dim = true,
+            'r' => face.style.reverse = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
                 if arg == "single" {
-                    style.underline_style = Some(UnderlineStyle::Single);
+                    face.style.underline_style = Some(UnderlineStyle::Single);
                 } else if arg == "curly" {
-                    style.underline_style = Some(UnderlineStyle::Curly);
+                    face.style.underline_style = Some(UnderlineStyle::Curly);
                 } else if is_builtin {
-                    return TextFaceArgsAndOptionsResult::UnknownUnderlineStyle(arg);
+                    return Err(UnknownUnderlineStyle(arg));
                 }
             }
             'c' => {
@@ -251,22 +242,44 @@ pub(crate) fn parse_text_face_and_options<'a>(
             }
             ':' => {
                 if is_builtin {
-                    return TextFaceArgsAndOptionsResult::MissingOptArg;
+                    return Err(MissingOptArg);
                 }
             }
             '?' => {
                 if is_builtin {
-                    return TextFaceArgsAndOptionsResult::UnknownOption(w.wopt_index - 1);
+                    return Err(UnknownOption(w.wopt_index - 1));
                 }
             }
             _ => unreachable!("unexpected retval from WGetopter"),
         }
     }
-    TextFaceArgsAndOptionsResult::Ok(TextFaceArgsAndOptions {
-        wopt_index: w.wopt_index,
-        bgcolor,
-        underline_color,
-        style,
-        print_color_mode,
-    })
+
+    let fg_args = &w.argv[w.wopt_index..];
+
+    if print_color_mode {
+        return Ok(PrintColors(PrintColorsArgs {
+            fg_args,
+            bg: face.bg,
+            underline_color: face.underline_color,
+            style: face.style,
+        }));
+    }
+
+    // Historical behavior: reset only applies if it's the first argument.
+    if is_builtin && fg_args.get(0).is_some_and(|fg| fg == "reset") {
+        return Ok(ResetFace);
+    }
+
+    let mut fg_colors = Vec::with_capacity(fg_args.len());
+    for fg in fg_args {
+        if is_builtin && fg == "reset" {
+            continue;
+        }
+        if let Some(fg) = parse_color(fg)? {
+            fg_colors.push(fg);
+        }
+    }
+    // #1323: We may have multiple foreground colors. Choose the best one.
+    face.fg = best_color(fg_colors.into_iter(), get_color_support());
+    Ok(SetFace(face))
 }

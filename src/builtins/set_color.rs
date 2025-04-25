@@ -4,10 +4,9 @@ use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
 use crate::terminal::TerminalCommand::DefaultUnderlineColor;
-use crate::terminal::{best_color, get_color_support, Output, Outputter, Paintable};
+use crate::terminal::{Output, Outputter, Paintable};
 use crate::text_face::{
-    parse_text_face_and_options, TextFace, TextFaceArgsAndOptions, TextFaceArgsAndOptionsResult,
-    TextStyling,
+    self, parse_text_face_and_options, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling,
 };
 
 fn print_colors(
@@ -62,89 +61,63 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         return Err(STATUS_CMD_ERROR);
     }
 
-    let TextFaceArgsAndOptions {
-        wopt_index,
-        bgcolor,
-        underline_color,
-        style,
-        print_color_mode,
-    } = match parse_text_face_and_options(argv, /*is_builtin=*/ true) {
-        TextFaceArgsAndOptionsResult::Ok(parsed_face) => parsed_face,
-        TextFaceArgsAndOptionsResult::PrintHelp => {
-            builtin_print_help(parser, streams, argv[0]);
-            return Ok(SUCCESS);
-        }
-        TextFaceArgsAndOptionsResult::MissingOptArg => {
-            // We don't error here because "-b" is the only option that requires an argument,
-            // and we don't error for missing colors.
-            return Err(STATUS_INVALID_ARGS);
-        }
-        TextFaceArgsAndOptionsResult::UnknownUnderlineStyle(arg) => {
-            streams.err.append(wgettext_fmt!(
-                "%ls: invalid underline style: %ls\n",
-                argv[0],
-                arg
-            ));
-            return Err(STATUS_INVALID_ARGS);
-        }
-        TextFaceArgsAndOptionsResult::UnknownOption(unknown_option_index) => {
-            builtin_unknown_option(
-                parser,
-                streams,
-                L!("set_color"),
-                argv[unknown_option_index],
-                true, /* print_hints */
-            );
-            return Err(STATUS_INVALID_ARGS);
-        }
-    };
-
-    let mut parse_color = |color_str| {
-        Color::from_wstr(color_str).ok_or_else(|| {
-            streams.err.append(wgettext_fmt!(
-                "%ls: Unknown color '%ls'\n",
-                argv[0],
-                color_str
-            ));
-            STATUS_INVALID_ARGS
-        })
-    };
-
-    let bg = match bgcolor {
-        Some(s) => Some(parse_color(s)?),
-        None => None,
-    };
-
-    let underline_color = match underline_color {
-        Some(s) => Some(parse_color(s)?),
-        None => None,
-    };
-
-    if print_color_mode {
-        let args = &argv[wopt_index..argc];
-        print_colors(streams, args, style, bg, underline_color);
-        return Ok(SUCCESS);
-    }
-
-    // Remaining arguments are foreground color.
-    let mut fgcolors = Vec::new();
-    let mut is_reset = false;
-    for (i, arg) in argv.iter().skip(wopt_index).enumerate() {
-        if arg == "reset" {
-            // Historical behavior: reset only applies if it's the first argument.
-            if i == 0 {
-                is_reset = true;
-                break;
+    use text_face::ParseError::*;
+    use text_face::ParsedArgs::*;
+    let (specified_face, is_reset) =
+        match parse_text_face_and_options(argv, /*is_builtin=*/ true) {
+            Ok(SetFace(face)) => (face, false),
+            Ok(ResetFace) => (SpecifiedTextFace::default(), true),
+            Ok(PrintColors(PrintColorsArgs {
+                fg_args,
+                bg,
+                underline_color,
+                style,
+            })) => {
+                print_colors(streams, fg_args, style, bg, underline_color);
+                return Ok(SUCCESS);
             }
-        } else {
-            fgcolors.push(parse_color(arg)?);
-        }
-    }
-
-    // #1323: We may have multiple foreground colors. Choose the best one.
-    let fg = best_color(fgcolors.into_iter(), get_color_support());
+            Ok(PrintHelp) => {
+                builtin_print_help(parser, streams, argv[0]);
+                return Ok(SUCCESS);
+            }
+            Err(MissingOptArg) => {
+                // Either "--background" or "--underline-color" are missing an argument.
+                // Don't print an error, for consistency with "set_color".
+                // In future we change both to actually print an error.
+                return Err(STATUS_INVALID_ARGS);
+            }
+            Err(UnknownColor(arg)) => {
+                streams
+                    .err
+                    .append(wgettext_fmt!("%ls: Unknown color '%ls'\n", argv[0], arg));
+                return Err(STATUS_INVALID_ARGS);
+            }
+            Err(UnknownUnderlineStyle(arg)) => {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: invalid underline style: %ls\n",
+                    argv[0],
+                    arg
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
+            Err(UnknownOption(unknown_option_index)) => {
+                builtin_unknown_option(
+                    parser,
+                    streams,
+                    L!("set_color"),
+                    argv[unknown_option_index],
+                    true, /* print_hints */
+                );
+                return Err(STATUS_INVALID_ARGS);
+            }
+        };
 
     let mut outp = Outputter::new_buffering();
+
+    let fg = specified_face.fg;
+    let bg = specified_face.bg;
+    let underline_color = specified_face.underline_color;
+    let style = specified_face.style;
 
     // Here's some automagic behavior: if either of foreground or background are "normal",
     // reset all colors/attributes. Same if foreground is "reset" (undocumented).

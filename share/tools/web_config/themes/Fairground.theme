@@ -11,7 +11,7 @@ fish_color_param 225E79
 fish_color_comment FFE100
 fish_color_match --background=brblue
 fish_color_selection white --bold --background=brblack
-fish_color_search_match bryellow --background=brblack
+fish_color_search_match white --background=brblack
 fish_color_history_current --bold
 fish_color_operator 00a6b2
 fish_color_escape 00a6b2

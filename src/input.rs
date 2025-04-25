@@ -7,8 +7,8 @@ use crate::flog::FLOG;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
-    BlockingWait, CharEvent, CharInputStyle, CursorPositionWait, ImplicitEvent, InputData,
-    InputEventQueuer, ReadlineCmd, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, InputEventQueuer,
+    ReadlineCmd, TerminalQuery, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
@@ -451,15 +451,15 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>> {
-        Reader::blocking_wait(self)
+    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
+        Reader::blocking_query(self)
     }
 
     fn on_mouse_left_click(&mut self, position: ViewportPosition) {
         FLOG!(reader, "Mouse left click", position);
         self.request_cursor_position(
             &mut Outputter::stdoutput().borrow_mut(),
-            CursorPositionWait::MouseLeft(position),
+            CursorPositionQuery::MouseLeft(position),
         );
     }
 }

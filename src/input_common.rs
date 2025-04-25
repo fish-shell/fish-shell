@@ -755,7 +755,7 @@ impl InputData {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum CursorPositionWait {
+pub enum CursorPositionQuery {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
 }
@@ -767,9 +767,9 @@ pub enum Queried {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum BlockingWait {
-    Startup(Queried),
-    CursorPosition(CursorPositionWait),
+pub enum TerminalQuery {
+    PrimaryDeviceAttribute(Queried),
+    CursorPositionReport(CursorPositionQuery),
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -777,7 +777,7 @@ pub enum BlockingWait {
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        if self.is_blocked() {
+        if self.is_blocked_querying() {
             match self.get_input_data().queue.front()? {
                 CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
                     return None; // No code execution while blocked.
@@ -909,7 +909,7 @@ pub trait InputEventQueuer {
                             Some(seq.chars().skip(1).map(CharEvent::from_char)),
                         )
                     };
-                    if self.is_blocked() {
+                    if self.is_blocked_querying() {
                         FLOG!(
                             reader,
                             "Still blocked on response from terminal, deferring key event",
@@ -928,7 +928,7 @@ pub trait InputEventQueuer {
                                 reader,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
-                            let ok = unblock_input(self.blocking_wait());
+                            let ok = stop_query(self.blocking_query());
                             assert!(ok);
                         }
                         continue;
@@ -1131,15 +1131,15 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                let wait_guard = self.blocking_wait();
-                let Some(wait) = &*wait_guard else {
-                    drop(wait_guard);
+                let query = self.blocking_query();
+                let Some(query) = &*query else {
+                    drop(query);
                     self.on_mouse_left_click(position);
                     return None;
                 };
-                match wait {
-                    BlockingWait::Startup(_) => {}
-                    BlockingWait::CursorPosition(_) => {
+                match query {
+                    TerminalQuery::PrimaryDeviceAttribute(_) => {}
+                    TerminalQuery::CursorPositionReport(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                                 reader,
@@ -1180,22 +1180,23 @@ pub trait InputEventQueuer {
                     return invalid_sequence(buffer);
                 };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let wait_guard = self.blocking_wait();
-                let Some(BlockingWait::CursorPosition(wait)) = &*wait_guard else {
+                let query = self.blocking_query();
+                use TerminalQuery::CursorPositionReport;
+                let Some(CursorPositionReport(cursor_pos_query)) = &*query else {
                     return None;
                 };
-                let continuation = match wait {
-                    CursorPositionWait::MouseLeft(click_position) => {
+                let continuation = match cursor_pos_query {
+                    CursorPositionQuery::MouseLeft(click_position) => {
                         ImplicitEvent::MouseLeftClickContinuation(
                             ViewportPosition { x, y },
                             *click_position,
                         )
                     }
-                    CursorPositionWait::ScrollbackPush => {
+                    CursorPositionQuery::ScrollbackPush => {
                         ImplicitEvent::ScrollbackPushContinuation(y)
                     }
                 };
-                drop(wait_guard);
+                drop(query);
                 self.push_front(CharEvent::Implicit(continuation));
                 return None;
             }
@@ -1628,9 +1629,9 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>>;
-    fn is_blocked(&self) -> bool {
-        self.blocking_wait().is_some()
+    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>>;
+    fn is_blocked_querying(&self) -> bool {
+        self.blocking_query().is_some()
     }
 
     fn on_mouse_left_click(&mut self, _position: ViewportPosition) {}
@@ -1646,7 +1647,7 @@ pub trait InputEventQueuer {
         let vintr = shell_modes().c_cc[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
-            if unblock_input(self.blocking_wait()) {
+            if stop_query(self.blocking_query()) {
                 FLOG!(
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
@@ -1750,12 +1751,8 @@ pub(crate) fn decode_input_byte(
     invalid(out_seq, || FLOG!(reader, "Illegal codepoint"))
 }
 
-pub(crate) fn unblock_input(mut wait_guard: RefMut<'_, Option<BlockingWait>>) -> bool {
-    if wait_guard.is_none() {
-        return false;
-    }
-    *wait_guard = None;
-    true
+pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {
+    query.take().is_some()
 }
 
 fn invalid_sequence(buffer: &[u8]) -> Option<KeyEvent> {
@@ -1784,14 +1781,14 @@ impl<'a> std::fmt::Display for DisplayBytes<'a> {
 /// A simple, concrete implementation of InputEventQueuer.
 pub struct InputEventQueue {
     data: InputData,
-    blocking_wait: RefCell<Option<BlockingWait>>,
+    blocking_query: RefCell<Option<TerminalQuery>>,
 }
 
 impl InputEventQueue {
     pub fn new(in_fd: RawFd) -> Self {
         Self {
             data: InputData::new(in_fd),
-            blocking_wait: RefCell::new(None),
+            blocking_query: RefCell::new(None),
         }
     }
 }
@@ -1810,8 +1807,8 @@ impl InputEventQueuer for InputEventQueue {
             self.enqueue_interrupt_key();
         }
     }
-    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>> {
-        self.blocking_wait.borrow_mut()
+    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
+        self.blocking_query.borrow_mut()
     }
 }
 

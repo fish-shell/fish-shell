@@ -23,6 +23,7 @@ use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::cell::RefMut;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -79,12 +80,12 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
+use crate::input_common::stop_query;
 use crate::input_common::terminal_protocols_disable_ifn;
-use crate::input_common::unblock_input;
-use crate::input_common::BlockingWait;
-use crate::input_common::CursorPositionWait;
+use crate::input_common::CursorPositionQuery;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::Queried;
+use crate::input_common::TerminalQuery;
 use crate::input_common::IN_DVTM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::{
@@ -234,6 +235,31 @@ fn redirect_tty_after_sighup() {
     if !TTY_REDIRECTED.swap(true) {
         redirect_tty_output(false);
     }
+}
+
+pub(crate) fn initial_query(
+    blocking_query: &RefCell<Option<TerminalQuery>>,
+    out: &mut impl Output,
+    vars: Option<&dyn Environment>,
+) {
+    if *blocking_query.borrow() != Some(TerminalQuery::PrimaryDeviceAttribute(Queried::NotYet)) {
+        return;
+    }
+    *blocking_query.borrow_mut() = {
+        let query = if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
+            None
+        } else {
+            // Query for kitty keyboard protocol support.
+            out.write_command(QueryKittyKeyboardProgressiveEnhancements);
+            out.write_command(QueryXtversion);
+            if let Some(vars) = vars {
+                query_capabilities_via_dcs(out.by_ref(), vars);
+            }
+            out.write_command(QueryPrimaryDeviceAttribute);
+            Some(TerminalQuery::PrimaryDeviceAttribute(Queried::Yes))
+        };
+        query
+    };
 }
 
 /// The stack of current interactive reading contexts.
@@ -1498,16 +1524,16 @@ pub fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub(crate) fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>> {
-        self.parser.blocking_wait.borrow_mut()
+    pub(crate) fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
+        self.parser.blocking_query.borrow_mut()
     }
 
-    pub fn request_cursor_position(&mut self, out: &mut Outputter, wait: CursorPositionWait) {
-        let mut wait_guard = self.blocking_wait();
-        assert!(wait_guard.is_none());
-        *wait_guard = Some(BlockingWait::CursorPosition(wait));
+    pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
+        let mut query = self.blocking_query();
+        assert!(query.is_none());
+        *query = Some(TerminalQuery::CursorPositionReport(q));
         out.write_command(QueryCursorPosition);
-        drop(wait_guard);
+        drop(query);
         self.save_screen_state();
     }
 
@@ -2179,21 +2205,11 @@ impl<'a> Reader<'a> {
             }
         }
 
-        if *self.blocking_wait() == Some(BlockingWait::Startup(Queried::NotYet)) {
-            if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
-                *self.blocking_wait() = None;
-            } else {
-                *self.blocking_wait() = Some(BlockingWait::Startup(Queried::Yes));
-                let mut out = Outputter::stdoutput().borrow_mut();
-                out.begin_buffering();
-                // Query for kitty keyboard protocol support.
-                out.write_command(QueryKittyKeyboardProgressiveEnhancements);
-                out.write_command(QueryXtversion);
-                query_capabilities_via_dcs(out.by_ref(), self.parser.vars());
-                out.write_command(QueryPrimaryDeviceAttribute);
-                out.end_buffering();
-            }
-        }
+        initial_query(
+            &self.parser.blocking_query,
+            &mut BufferedOutputter::new(Outputter::stdoutput()),
+            Some(self.parser.vars()),
+        );
 
         // HACK: Don't abandon line for the first prompt, because
         // if we're started with the terminal it might not have settled,
@@ -2511,35 +2527,25 @@ impl<'a> Reader<'a> {
                     self.save_screen_state();
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
-                    let wait_guard = self.blocking_wait();
-                    let Some(wait) = &*wait_guard else {
+                    let query = self.blocking_query();
+                    if !matches!(*query, Some(TerminalQuery::PrimaryDeviceAttribute(_))) {
                         // Rogue reply.
                         return ControlFlow::Continue(());
-                    };
-                    let BlockingWait::Startup(stage) = wait else {
-                        // Rogue reply.
-                        return ControlFlow::Continue(());
-                    };
-                    match stage {
-                        Queried::NotYet => panic!(),
-                        Queried::Yes => {
-                            if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
-                                == Capability::Unknown as _
-                            {
-                                KITTY_KEYBOARD_SUPPORTED
-                                    .store(Capability::NotSupported as _, Ordering::Release);
-                            }
-                        }
                     }
-                    unblock_input(wait_guard);
+                    if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _
+                    {
+                        KITTY_KEYBOARD_SUPPORTED
+                            .store(Capability::NotSupported as _, Ordering::Release);
+                    }
+                    stop_query(query);
                 }
                 ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
                     self.mouse_left_click(cursor, click_position);
-                    unblock_input(self.blocking_wait());
+                    stop_query(self.blocking_query());
                 }
                 ImplicitEvent::ScrollbackPushContinuation(cursor_y) => {
                     self.screen.push_to_scrollback(cursor_y);
-                    unblock_input(self.blocking_wait());
+                    stop_query(self.blocking_query());
                 }
             },
         }
@@ -3798,18 +3804,18 @@ impl<'a> Reader<'a> {
                 if !SCROLL_FORWARD_SUPPORTED.load() {
                     return;
                 }
-                let wait_guard = self.blocking_wait();
-                let Some(wait) = &*wait_guard else {
-                    drop(wait_guard);
+                let query = self.blocking_query();
+                let Some(query) = &*query else {
+                    drop(query);
                     self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
-                        CursorPositionWait::ScrollbackPush,
+                        CursorPositionQuery::ScrollbackPush,
                     );
                     return;
                 };
-                match wait {
-                    BlockingWait::Startup(_) => panic!(),
-                    BlockingWait::CursorPosition(_) => {
+                match query {
+                    TerminalQuery::PrimaryDeviceAttribute(_) => panic!(),
+                    TerminalQuery::CursorPositionReport(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                             reader,

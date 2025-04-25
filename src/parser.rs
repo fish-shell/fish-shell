@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{terminal_protocols_disable_ifn, BlockingWait, Queried};
+use crate::input_common::{terminal_protocols_disable_ifn, Queried, TerminalQuery};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -440,7 +440,7 @@ pub struct Parser {
     /// Global event blocks.
     pub global_event_blocks: AtomicU64,
 
-    pub blocking_wait: RefCell<Option<BlockingWait>>,
+    pub blocking_query: RefCell<Option<TerminalQuery>>,
 }
 
 impl Parser {
@@ -458,7 +458,9 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
-            blocking_wait: RefCell::new(Some(BlockingWait::Startup(Queried::NotYet))),
+            blocking_query: RefCell::new(Some(TerminalQuery::PrimaryDeviceAttribute(
+                Queried::NotYet,
+            ))),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

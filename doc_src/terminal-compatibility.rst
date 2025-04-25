@@ -234,14 +234,6 @@ Optional Commands
      -
      - Disable bracketed paste.
      - XTerm
-   * - ``\e[?2026h``
-     -
-     - Begin synchronized output.
-     - contour
-   * - ``\e[?2026l``
-     -
-     - End synchronized output.
-     - contour
    * - ``\e]0; Pt \x07``
      - ts
      - Set window title (OSC 0).

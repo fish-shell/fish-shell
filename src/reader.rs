@@ -128,18 +128,15 @@ use crate::terminal::Output;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::DecrstAlternateScreenBuffer;
 use crate::terminal::TerminalCommand::DecrstMouseTracking;
-use crate::terminal::TerminalCommand::DecrstSynchronizedUpdate;
 use crate::terminal::TerminalCommand::DecsetAlternateScreenBuffer;
 use crate::terminal::TerminalCommand::DecsetShowCursor;
-use crate::terminal::TerminalCommand::DecsetSynchronizedUpdate;
 use crate::terminal::TerminalCommand::QueryCursorPosition;
 use crate::terminal::TerminalCommand::{
     ClearScreen, Osc0WindowTitle, Osc133CommandStart, QueryKittyKeyboardProgressiveEnhancements,
-    QueryPrimaryDeviceAttribute, QuerySynchronizedOutput, QueryXtgettcap, QueryXtversion,
+    QueryPrimaryDeviceAttribute, QueryXtgettcap, QueryXtversion,
 };
 use crate::terminal::{
     Capability, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE,
-    SYNCHRONIZED_OUTPUT_SUPPORTED,
 };
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
@@ -2198,16 +2195,15 @@ impl<'a> Reader<'a> {
             if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
                 *self.blocking_wait() = None;
             } else {
-                *self.blocking_wait() = Some(BlockingWait::Startup(Queried::Once));
+                *self.blocking_wait() = Some(BlockingWait::Startup(Queried::Yes));
                 let mut out = Outputter::stdoutput().borrow_mut();
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
                 out.write_command(QueryKittyKeyboardProgressiveEnhancements);
                 // Query for cursor position reporting support.
                 self.request_cursor_position(&mut out, None);
-                // Query for synchronized output support.
-                out.write_command(QuerySynchronizedOutput);
                 out.write_command(QueryXtversion);
+                query_capabilities_via_dcs(out.by_ref(), self.parser.vars());
                 out.write_command(QueryPrimaryDeviceAttribute);
                 out.end_buffering();
             }
@@ -2529,7 +2525,7 @@ impl<'a> Reader<'a> {
                     self.save_screen_state();
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
-                    let mut wait_guard = self.blocking_wait();
+                    let wait_guard = self.blocking_wait();
                     let Some(wait) = &*wait_guard else {
                         // Rogue reply.
                         return ControlFlow::Continue(());
@@ -2540,26 +2536,14 @@ impl<'a> Reader<'a> {
                     };
                     match stage {
                         Queried::NotYet => panic!(),
-                        Queried::Once => {
+                        Queried::Yes => {
                             if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
                                 == Capability::Unknown as _
                             {
                                 KITTY_KEYBOARD_SUPPORTED
                                     .store(Capability::NotSupported as _, Ordering::Release);
                             }
-                            if SYNCHRONIZED_OUTPUT_SUPPORTED.load() {
-                                let mut out = Outputter::stdoutput().borrow_mut();
-                                out.begin_buffering();
-                                query_capabilities_via_dcs(out.by_ref());
-                                out.write_command(QueryPrimaryDeviceAttribute);
-                                out.end_buffering();
-                                *wait_guard = Some(BlockingWait::Startup(Queried::Twice));
-                                drop(wait_guard);
-                                self.save_screen_state();
-                                return ControlFlow::Continue(());
-                            }
                         }
-                        Queried::Twice => (),
                     }
                     unblock_input(wait_guard);
                 }
@@ -2589,12 +2573,18 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
     out.write_command(QueryXtgettcap(cap));
 }
 
-fn query_capabilities_via_dcs(out: &mut impl Output) {
-    out.write_command(DecsetSynchronizedUpdate); // begin synchronized update
+fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
+    if vars.get_unless_empty(L!("STY")).is_some()
+        || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
+            let term = &term.as_list()[0];
+            term == "screen" || term == "screen-256color"
+        })
+    {
+        return;
+    }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
     send_xtgettcap_query(out, SCROLL_FORWARD_TERMINFO_CODE);
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
-    out.write_command(DecrstSynchronizedUpdate); // end synchronized update
 }
 
 impl<'a> Reader<'a> {

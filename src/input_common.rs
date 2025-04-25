@@ -20,7 +20,7 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::terminal::{
     Capability, Output, Outputter, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED,
-    SCROLL_FORWARD_TERMINFO_CODE, SYNCHRONIZED_OUTPUT_SUPPORTED,
+    SCROLL_FORWARD_TERMINFO_CODE,
 };
 use crate::threads::{iothread_port, is_main_thread};
 use crate::universal_notifier::default_notifier;
@@ -763,8 +763,7 @@ pub enum CursorPositionWait {
 #[derive(Eq, PartialEq)]
 pub enum Queried {
     NotYet,
-    Once,
-    Twice,
+    Yes,
 }
 
 #[derive(Eq, PartialEq)]
@@ -1078,14 +1077,7 @@ pub trait InputEventQueuer {
         let key = match c {
             b'$' => {
                 if next_char(self) == b'y' {
-                    if private_mode == Some(b'?') {
-                        // DECRPM
-                        if params[0][0] == 2026 && matches!(params[1][0], 1 | 2) {
-                            FLOG!(reader, "Synchronized output is supported");
-                            SYNCHRONIZED_OUTPUT_SUPPORTED.store(true);
-                        }
-                    }
-                    // DECRQM
+                    // DECRPM/DECRQM
                     return None;
                 }
                 match params[0][0] {

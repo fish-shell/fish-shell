@@ -87,10 +87,6 @@ pub(crate) enum TerminalCommand<'a> {
 
     DecsetAlternateScreenBuffer,
     DecrstAlternateScreenBuffer,
-    DecsetSynchronizedUpdate,
-    DecrstSynchronizedUpdate,
-
-    QuerySynchronizedOutput,
 
     // Keyboard protocols
     KittyKeyboardProgressiveEnhancementsEnable,
@@ -176,9 +172,6 @@ pub(crate) trait Output {
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),
             DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
             DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
-            DecsetSynchronizedUpdate => write(self, b"\x1b[?2026h"),
-            DecrstSynchronizedUpdate => write(self, b"\x1b[?2026l"),
-            QuerySynchronizedOutput => write(self, b"\x1b[?2026$p"),
             KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
             KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
             QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
@@ -236,8 +229,6 @@ pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability:
 
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
-
-pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()

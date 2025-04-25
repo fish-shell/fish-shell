@@ -19,8 +19,8 @@ use crate::{
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
     env::env_init,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
-        InputEventQueue, InputEventQueuer, KeyEvent, TerminalQuery,
+        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
+        InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
@@ -86,15 +86,15 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
 
         let kevt = match queue.readch() {
             CharEvent::Key(kevt) => kevt,
-            CharEvent::Readline(_) | CharEvent::Command(_) => continue,
-            CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute) => {
+            CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
+            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
                 if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _ {
                     KITTY_KEYBOARD_SUPPORTED
                         .store(Capability::NotSupported as _, Ordering::Release);
                 }
                 continue;
             }
-            CharEvent::Implicit(_) => continue,
+            CharEvent::QueryResponse(_) => continue,
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));

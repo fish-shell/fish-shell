@@ -336,6 +336,10 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Request to disable mouse tracking.
     DisableMouseTracking,
+}
+
+#[derive(Debug, Clone)]
+pub enum QueryResponseEvent {
     /// Primary DA response.
     PrimaryDeviceAttribute,
     /// Handle mouse left click.
@@ -357,6 +361,8 @@ pub enum CharEvent {
 
     /// Any event that has no user-visible representation.
     Implicit(ImplicitEvent),
+
+    QueryResponse(QueryResponseEvent),
 }
 impl FloggableDebug for CharEvent {}
 
@@ -776,7 +782,7 @@ pub trait InputEventQueuer {
                 CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
                     return None; // No code execution while blocked.
                 }
-                CharEvent::Implicit(_) => (),
+                CharEvent::Implicit(_) | CharEvent::QueryResponse(_) => (),
             }
         }
         self.get_input_data_mut().queue.pop_front()
@@ -1181,17 +1187,17 @@ pub trait InputEventQueuer {
                 };
                 let continuation = match cursor_pos_query {
                     CursorPositionQuery::MouseLeft(click_position) => {
-                        ImplicitEvent::MouseLeftClickContinuation(
+                        QueryResponseEvent::MouseLeftClickContinuation(
                             ViewportPosition { x, y },
                             *click_position,
                         )
                     }
                     CursorPositionQuery::ScrollbackPush => {
-                        ImplicitEvent::ScrollbackPushContinuation(y)
+                        QueryResponseEvent::ScrollbackPushContinuation(y)
                     }
                 };
                 drop(query);
-                self.push_front(CharEvent::Implicit(continuation));
+                self.push_front(CharEvent::QueryResponse(continuation));
                 return None;
             }
             b'S' => masked_key(function_key(4), None),
@@ -1244,7 +1250,9 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
-                self.push_front(CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute));
+                self.push_front(CharEvent::QueryResponse(
+                    QueryResponseEvent::PrimaryDeviceAttribute,
+                ));
                 return None;
             }
             b'u' => {

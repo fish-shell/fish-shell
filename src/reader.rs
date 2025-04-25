@@ -85,6 +85,7 @@ use crate::input_common::stop_query;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::CursorPositionQuery;
 use crate::input_common::ImplicitEvent;
+use crate::input_common::QueryResponseEvent;
 use crate::input_common::TerminalQuery;
 use crate::input_common::IN_DVTM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
@@ -2523,28 +2524,31 @@ impl<'a> Reader<'a> {
                         .write_command(DecrstMouseTracking);
                     self.save_screen_state();
                 }
-                ImplicitEvent::PrimaryDeviceAttribute => {
-                    let query = self.blocking_query();
-                    if *query != Some(TerminalQuery::PrimaryDeviceAttribute) {
-                        // Rogue reply.
-                        return ControlFlow::Continue(());
-                    }
-                    if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _
-                    {
-                        KITTY_KEYBOARD_SUPPORTED
-                            .store(Capability::NotSupported as _, Ordering::Release);
-                    }
-                    stop_query(query);
-                }
-                ImplicitEvent::MouseLeftClickContinuation(cursor, click_position) => {
-                    self.mouse_left_click(cursor, click_position);
-                    stop_query(self.blocking_query());
-                }
-                ImplicitEvent::ScrollbackPushContinuation(cursor_y) => {
-                    self.screen.push_to_scrollback(cursor_y);
-                    stop_query(self.blocking_query());
-                }
             },
+            CharEvent::QueryResponse(query_response) => {
+                match query_response {
+                    QueryResponseEvent::PrimaryDeviceAttribute => {
+                        if *self.blocking_query() != Some(TerminalQuery::PrimaryDeviceAttribute) {
+                            // Rogue reply.
+                            return ControlFlow::Continue(());
+                        }
+                        if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
+                            == Capability::Unknown as _
+                        {
+                            KITTY_KEYBOARD_SUPPORTED
+                                .store(Capability::NotSupported as _, Ordering::Release);
+                        }
+                    }
+                    QueryResponseEvent::MouseLeftClickContinuation(cursor, click_position) => {
+                        self.mouse_left_click(cursor, click_position);
+                    }
+                    QueryResponseEvent::ScrollbackPushContinuation(cursor_y) => {
+                        self.screen.push_to_scrollback(cursor_y);
+                    }
+                }
+                let ok = stop_query(self.blocking_query());
+                assert!(ok);
+            }
         }
         ControlFlow::Continue(())
     }

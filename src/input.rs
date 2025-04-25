@@ -792,7 +792,7 @@ impl<'a> Reader<'a> {
                     self.push_front(evt);
                     self.mapping_execute_matching_or_generic();
                 }
-                CharEvent::Implicit(_) => {
+                CharEvent::Implicit(_) | CharEvent::QueryResponse(_) => {
                     return evt;
                 }
             }

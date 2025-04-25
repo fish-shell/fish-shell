@@ -228,9 +228,8 @@ pub(crate) fn parse_text_face_and_options<'a>(
                 underline_color = w.woptarg;
             }
             'h' => {
-                if is_builtin {
-                    return TextFaceArgsAndOptionsResult::PrintHelp;
-                }
+                assert!(is_builtin);
+                return TextFaceArgsAndOptionsResult::PrintHelp;
             }
             'o' => style.bold = true,
             'i' => style.italics = true,
@@ -246,7 +245,10 @@ pub(crate) fn parse_text_face_and_options<'a>(
                     return TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(arg);
                 }
             }
-            'c' => print_color_mode = true,
+            'c' => {
+                assert!(is_builtin);
+                print_color_mode = true;
+            }
             ':' => {
                 if is_builtin {
                     return TextFaceArgsAndOptionsResult::InvalidArgs;

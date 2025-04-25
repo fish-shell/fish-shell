@@ -152,8 +152,8 @@ pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
     } = match parse_text_face_and_options(&mut argv, /*is_builtin=*/ false) {
         TextFaceArgsAndOptionsResult::Ok(parsed_text_faces) => parsed_text_faces,
         TextFaceArgsAndOptionsResult::PrintHelp
-        | TextFaceArgsAndOptionsResult::InvalidArgs
-        | TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(_)
+        | TextFaceArgsAndOptionsResult::MissingOptArg
+        | TextFaceArgsAndOptionsResult::UnknownUnderlineStyle(_)
         | TextFaceArgsAndOptionsResult::UnknownOption(_) => unreachable!(),
     };
     assert!(!print_color_mode);
@@ -186,8 +186,8 @@ pub(crate) struct TextFaceArgsAndOptions<'a> {
 pub(crate) enum TextFaceArgsAndOptionsResult<'a> {
     Ok(TextFaceArgsAndOptions<'a>),
     PrintHelp,
-    InvalidArgs,
-    InvalidUnderlineStyle(&'a wstr),
+    MissingOptArg,
+    UnknownUnderlineStyle(&'a wstr),
     UnknownOption(usize),
 }
 
@@ -242,7 +242,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
                 } else if arg == "curly" {
                     style.underline_style = Some(UnderlineStyle::Curly);
                 } else if is_builtin {
-                    return TextFaceArgsAndOptionsResult::InvalidUnderlineStyle(arg);
+                    return TextFaceArgsAndOptionsResult::UnknownUnderlineStyle(arg);
                 }
             }
             'c' => {
@@ -251,7 +251,7 @@ pub(crate) fn parse_text_face_and_options<'a>(
             }
             ':' => {
                 if is_builtin {
-                    return TextFaceArgsAndOptionsResult::InvalidArgs;
+                    return TextFaceArgsAndOptionsResult::MissingOptArg;
                 }
             }
             '?' => {

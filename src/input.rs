@@ -461,7 +461,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         FLOG!(reader, "Mouse left click", position);
         self.request_cursor_position(
             &mut Outputter::stdoutput().borrow_mut(),
-            Some(CursorPositionWait::MouseLeft(position)),
+            CursorPositionWait::MouseLeft(position),
         );
     }
 }

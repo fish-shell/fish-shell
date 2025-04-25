@@ -1436,17 +1436,12 @@ impl ReaderData {
         true
     }
 
-    pub fn request_cursor_position(
-        &mut self,
-        out: &mut Outputter,
-        wait: Option<CursorPositionWait>,
-    ) {
-        if let Some(cursor_position_wait) = wait {
-            let mut wait_guard = self.blocking_wait();
-            assert!(wait_guard.is_none());
-            *wait_guard = Some(BlockingWait::CursorPosition(cursor_position_wait));
-        }
+    pub fn request_cursor_position(&mut self, out: &mut Outputter, wait: CursorPositionWait) {
+        let mut wait_guard = self.blocking_wait();
+        assert!(wait_guard.is_none());
+        *wait_guard = Some(BlockingWait::CursorPosition(wait));
         out.write_command(QueryCursorPosition);
+        drop(wait_guard);
         self.save_screen_state();
     }
 
@@ -2200,8 +2195,6 @@ impl<'a> Reader<'a> {
                 out.begin_buffering();
                 // Query for kitty keyboard protocol support.
                 out.write_command(QueryKittyKeyboardProgressiveEnhancements);
-                // Query for cursor position reporting support.
-                self.request_cursor_position(&mut out, None);
                 out.write_command(QueryXtversion);
                 query_capabilities_via_dcs(out.by_ref(), self.parser.vars());
                 out.write_command(QueryPrimaryDeviceAttribute);
@@ -3817,7 +3810,7 @@ impl<'a> Reader<'a> {
                     drop(wait_guard);
                     self.request_cursor_position(
                         &mut Outputter::stdoutput().borrow_mut(),
-                        Some(CursorPositionWait::ScrollbackPush),
+                        CursorPositionWait::ScrollbackPush,
                     );
                     return;
                 };

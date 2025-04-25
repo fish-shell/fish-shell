@@ -1,5 +1,5 @@
 use crate::color::Color;
-use crate::terminal::{best_color, get_color_support};
+use crate::terminal::{self, get_color_support};
 use crate::wchar::prelude::*;
 use crate::wgetopt::{wopt, ArgType, WGetopter, WOption};
 
@@ -206,32 +206,38 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         }
     };
 
-    let mut face = SpecifiedTextFace::default();
+    let mut bg_colors = vec![];
+    let mut underline_colors = vec![];
+    let mut style = TextStyling::default();
     let mut print_color_mode = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
         match c {
             'b' => {
-                face.bg = parse_color(w.woptarg.unwrap())?;
+                if let Some(bg) = parse_color(w.woptarg.unwrap())? {
+                    bg_colors.push(bg);
+                }
             }
             '\x02' => {
-                face.underline_color = parse_color(w.woptarg.unwrap())?;
+                if let Some(underline_color) = parse_color(w.woptarg.unwrap())? {
+                    underline_colors.push(underline_color);
+                }
             }
             'h' => {
                 assert!(is_builtin);
                 return Ok(PrintHelp);
             }
-            'o' => face.style.bold = true,
-            'i' => face.style.italics = true,
-            'd' => face.style.dim = true,
-            'r' => face.style.reverse = true,
+            'o' => style.bold = true,
+            'i' => style.italics = true,
+            'd' => style.dim = true,
+            'r' => style.reverse = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
                 if arg == "single" {
-                    face.style.underline_style = Some(UnderlineStyle::Single);
+                    style.underline_style = Some(UnderlineStyle::Single);
                 } else if arg == "curly" {
-                    face.style.underline_style = Some(UnderlineStyle::Curly);
+                    style.underline_style = Some(UnderlineStyle::Curly);
                 } else if is_builtin {
                     return Err(UnknownUnderlineStyle(arg));
                 }
@@ -256,12 +262,18 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
 
     let fg_args = &w.argv[w.wopt_index..];
 
+    let best_color =
+        |colors: Vec<Color>| terminal::best_color(colors.into_iter(), get_color_support());
+
+    let bg = best_color(bg_colors);
+    let underline_color = best_color(underline_colors);
+
     if print_color_mode {
         return Ok(PrintColors(PrintColorsArgs {
             fg_args,
-            bg: face.bg,
-            underline_color: face.underline_color,
-            style: face.style,
+            bg,
+            underline_color,
+            style,
         }));
     }
 
@@ -280,6 +292,11 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         }
     }
     // #1323: We may have multiple foreground colors. Choose the best one.
-    face.fg = best_color(fg_colors.into_iter(), get_color_support());
-    Ok(SetFace(face))
+    let fg = best_color(fg_colors);
+    Ok(SetFace(SpecifiedTextFace {
+        fg,
+        bg,
+        underline_color,
+        style,
+    }))
 }

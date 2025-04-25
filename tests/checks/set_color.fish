@@ -18,6 +18,13 @@ string escape (set_color --bold red --background=normal)
 string escape (set_color --bold red --background=blue)
 # CHECK: \e\[1m\e\[31m\e\[44m
 
+string escape (set_color --background=f00 --background=green --background=00f)
+# CHECK: \e\[48\;2\;255\;0\;0m
+string escape (set_color --background=green)
+# CHECK: \e\[42m
+fish_term256=0 string escape (set_color --background=f00 --background=green --background=00f)
+# CHECK: \e\[42m
+
 string escape (set_color --underline=curly)
 # CHECK: \e\[4:3m
 string escape (set_color -ucurly)

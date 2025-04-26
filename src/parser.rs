@@ -1,6 +1,6 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{self, Ast, List, Node};
+use crate::ast::{self, Ast, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     escape_string, wcs2string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef,

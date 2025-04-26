@@ -25,7 +25,8 @@ use crate::tokenizer::{
 };
 use crate::wchar::prelude::*;
 use std::borrow::Cow;
-use std::ops::{ControlFlow, Index, IndexMut};
+use std::convert::AsMut;
+use std::ops::{ControlFlow, Deref};
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -486,28 +487,6 @@ pub trait Keyword: Leaf {
     }
 }
 
-// A simple variable-sized array, possibly empty.
-pub trait List: Node {
-    type ContentsNode: Node + Default;
-    fn contents(&self) -> &[Self::ContentsNode];
-    fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]>;
-    /// Return our count.
-    fn count(&self) -> usize {
-        self.contents().len()
-    }
-    /// Return whether we are empty.
-    fn is_empty(&self) -> bool {
-        self.contents().is_empty()
-    }
-    /// Iteration support.
-    fn iter(&self) -> std::slice::Iter<Self::ContentsNode> {
-        self.contents().iter()
-    }
-    fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
-        self.contents().get(index)
-    }
-}
-
 /// This is for optional values and for lists.
 trait CheckParse {
     /// A true return means we should descend into the production, false means stop.
@@ -642,7 +621,7 @@ macro_rules! define_token_node {
     }
 }
 
-/// Define a node that implements the list trait.
+/// Define a list node.
 macro_rules! define_list_node {
     (
         $name:ident,
@@ -650,94 +629,48 @@ macro_rules! define_list_node {
         $contents:ident
     ) => {
         #[derive(Default, Debug)]
-        pub struct $name {
-            list_contents: Box<[$contents]>,
-        }
+        pub struct $name(Box<[$contents]>);
+
         implement_node!($name, $type);
-        impl List for $name {
-            type ContentsNode = $contents;
-            fn contents(&self) -> &[Self::ContentsNode] {
-                &self.list_contents
-            }
-            fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]> {
-                &mut self.list_contents
+
+        impl Deref for $name {
+            type Target = Box<[$contents]>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
             }
         }
+
         impl<'a> IntoIterator for &'a $name {
             type Item = &'a $contents;
             type IntoIter = std::slice::Iter<'a, $contents>;
+
             fn into_iter(self) -> Self::IntoIter {
-                self.contents().into_iter()
+                self.0.iter()
             }
         }
-        impl Index<usize> for $name {
-            type Output = <$name as List>::ContentsNode;
-            fn index(&self, index: usize) -> &Self::Output {
-                &self.contents()[index]
+
+        impl AsMut<Box<[$contents]>> for $name {
+            fn as_mut(&mut self) -> &mut Box<[$contents]> {
+                &mut self.0
             }
         }
-        impl IndexMut<usize> for $name {
-            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut self.contents_mut()[index]
-            }
-        }
+
         impl Acceptor for $name {
-            #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-                let _ = accept_list_visitor!(Self, accept, visit, self, visitor, $contents);
+                self.iter().for_each(|item| visitor.visit(item));
             }
         }
+
         impl AcceptorMut for $name {
-            #[allow(unused_variables)]
             fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
                 visitor.will_visit_fields_of(self);
-                let flow =
-                    accept_list_visitor!(Self, accept_mut, visit_mut, self, visitor, $contents);
+                let flow = self
+                    .0
+                    .iter_mut()
+                    .try_for_each(|item| visitor.visit_mut(item));
                 visitor.did_visit_fields_of(self, flow);
             }
         }
-    };
-}
-
-macro_rules! accept_list_visitor {
-    (
-        $Self:ident,
-        $accept:ident,
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        $list_element:ident
-    ) => {
-        loop {
-            let mut result = VisitResult::Continue(());
-            // list types pretend their child nodes are direct embeddings.
-            // This isn't used during AST construction because we need to construct the list.
-            for i in 0..$self.count() {
-                result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
-                if result.is_break() {
-                    break;
-                }
-            }
-            break result;
-        }
-    };
-}
-
-macro_rules! accept_list_visitor_impl {
-    (
-        $self:ident,
-        $visitor:ident,
-        visit,
-        $child:expr) => {{
-        $visitor.visit(&$child);
-        VisitResult::Continue(())
-    }};
-    (
-        $self:ident,
-        $visitor:ident,
-        visit_mut,
-        $child:expr) => {
-        $visitor.visit_mut(&mut $child)
     };
 }
 
@@ -2734,41 +2667,31 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 // This field is an embedding of an array of (pointers to) ContentsNode.
                 // Parse as many as we can.
                 match node.typ() {
-                    Type::andor_job_list => self.populate_list::<AndorJobList>(
-                        node.as_mut_andor_job_list().unwrap(),
-                        false,
-                    ),
-                    Type::argument_list => self
-                        .populate_list::<ArgumentList>(node.as_mut_argument_list().unwrap(), false),
-                    Type::argument_or_redirection_list => self
-                        .populate_list::<ArgumentOrRedirectionList>(
-                            node.as_mut_argument_or_redirection_list().unwrap(),
-                            false,
-                        ),
-                    Type::case_item_list => self.populate_list::<CaseItemList>(
-                        node.as_mut_case_item_list().unwrap(),
-                        false,
-                    ),
-                    Type::elseif_clause_list => self.populate_list::<ElseifClauseList>(
-                        node.as_mut_elseif_clause_list().unwrap(),
-                        false,
-                    ),
-                    Type::job_conjunction_continuation_list => self
-                        .populate_list::<JobConjunctionContinuationList>(
-                            node.as_mut_job_conjunction_continuation_list().unwrap(),
-                            false,
-                        ),
-                    Type::job_continuation_list => self.populate_list::<JobContinuationList>(
-                        node.as_mut_job_continuation_list().unwrap(),
-                        false,
-                    ),
-                    Type::job_list => {
-                        self.populate_list::<JobList>(node.as_mut_job_list().unwrap(), false)
+                    Type::andor_job_list => {
+                        self.populate_list(node.as_mut_andor_job_list().unwrap(), false)
                     }
-                    Type::variable_assignment_list => self.populate_list::<VariableAssignmentList>(
-                        node.as_mut_variable_assignment_list().unwrap(),
+                    Type::argument_list => {
+                        self.populate_list(node.as_mut_argument_list().unwrap(), false)
+                    }
+                    Type::argument_or_redirection_list => self
+                        .populate_list(node.as_mut_argument_or_redirection_list().unwrap(), false),
+                    Type::case_item_list => {
+                        self.populate_list(node.as_mut_case_item_list().unwrap(), false)
+                    }
+                    Type::elseif_clause_list => {
+                        self.populate_list(node.as_mut_elseif_clause_list().unwrap(), false)
+                    }
+                    Type::job_conjunction_continuation_list => self.populate_list(
+                        node.as_mut_job_conjunction_continuation_list().unwrap(),
                         false,
                     ),
+                    Type::job_continuation_list => {
+                        self.populate_list(node.as_mut_job_continuation_list().unwrap(), false)
+                    }
+                    Type::job_list => self.populate_list(node.as_mut_job_list().unwrap(), false),
+                    Type::variable_assignment_list => {
+                        self.populate_list(node.as_mut_variable_assignment_list().unwrap(), false)
+                    }
                     _ => (),
                 }
             }
@@ -3309,11 +3232,14 @@ impl<'s> Populator<'s> {
     /// Given that we are a list of type ListNodeType, whose contents type is ContentsNode,
     /// populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn populate_list<ListType: List>(&mut self, list: &mut ListType, exhaust_stream: bool)
+    fn populate_list<ContentsType, ListType>(&mut self, list: &mut ListType, exhaust_stream: bool)
     where
-        <ListType as List>::ContentsNode: NodeMut + CheckParse,
+        ContentsType: NodeMut + CheckParse + Default,
+        ListType: Node + AsMut<Box<[ContentsType]>>,
     {
-        assert!(list.contents().is_empty(), "List is not initially empty");
+        let typ = list.typ();
+        let list = list.as_mut();
+        assert!(list.is_empty(), "List is not initially empty");
 
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
@@ -3327,9 +3253,9 @@ impl<'s> Populator<'s> {
                 "%*sunwinding %ls",
                 self.spaces(),
                 "",
-                ast_type_to_string(list.typ())
+                ast_type_to_string(typ)
             );
-            assert!(list.contents().is_empty(), "Should be an empty list");
+            assert!(list.is_empty(), "Should be an empty list");
             return;
         }
 
@@ -3340,7 +3266,7 @@ impl<'s> Populator<'s> {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
             if self.unwinding {
-                if !self.list_type_stops_unwind(list.typ()) {
+                if !self.list_type_stops_unwind(typ) {
                     break;
                 }
                 // We are going to stop unwinding.
@@ -3372,10 +3298,10 @@ impl<'s> Populator<'s> {
             }
 
             // Chomp semis and newlines.
-            self.chomp_extras(list.typ());
+            self.chomp_extras(typ);
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<ListType::ContentsNode>() {
+            if let Some(node) = self.try_parse::<ContentsType>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -3399,8 +3325,8 @@ impl<'s> Populator<'s> {
                 contents.len() <= u32::MAX.try_into().unwrap(),
                 "Contents size out of bounds"
             );
-            assert!(list.contents().is_empty(), "List should still be empty");
-            *list.contents_mut() = contents.into_boxed_slice();
+            assert!(list.is_empty(), "List should still be empty");
+            *list = contents.into_boxed_slice();
         }
 
         FLOGF!(
@@ -3408,8 +3334,8 @@ impl<'s> Populator<'s> {
             "%*s%ls size: %lu",
             self.spaces(),
             "",
-            ast_type_to_string(list.typ()),
-            list.count()
+            ast_type_to_string(typ),
+            list.len()
         );
     }
 

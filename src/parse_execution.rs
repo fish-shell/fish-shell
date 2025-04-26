@@ -1,8 +1,8 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, List, Node,
-    StatementVariant, Token,
+    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, Node, StatementVariant,
+    Token,
 };
 use crate::builtins;
 use crate::builtins::shared::{

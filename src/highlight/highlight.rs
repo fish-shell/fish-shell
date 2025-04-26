@@ -2,8 +2,7 @@
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, List, Node, NodeVisitor, Redirection, Token, Type,
-    VariableAssignment,
+    DecoratedStatement, Keyword, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;

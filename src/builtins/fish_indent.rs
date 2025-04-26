@@ -15,9 +15,7 @@ use crate::panic::panic_handler;
 use libc::LC_ALL;
 
 use super::prelude::*;
-use crate::ast::{
-    self, Ast, Category, Leaf, List, Node, NodeVisitor, SourceRangeList, Traversal, Type,
-};
+use crate::ast::{self, Ast, Category, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -279,10 +277,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             }
 
             // If there is no and-or tail then we always use a newline.
-            if andors.count() > 0 {
+            if !andors.is_empty() {
                 condition.map(&mut mark_semi_from_input);
                 // Mark all but last of the andor list.
-                for andor in andors.iter().take(andors.count() - 1) {
+                for andor in andors.iter().take(andors.len() - 1) {
                     mark_semi_from_input(andor.job.semi_nl.as_ref().unwrap());
                 }
             }

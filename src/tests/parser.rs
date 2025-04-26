@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Ast, JobPipeline, List, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, JobPipeline, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;

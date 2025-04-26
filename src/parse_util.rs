@@ -1,7 +1,5 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{
-    self, is_same_node, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token, Traversal,
-};
+use crate::ast::{self, is_same_node, Ast, Keyword, Leaf, Node, NodeVisitor, Token, Traversal};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,

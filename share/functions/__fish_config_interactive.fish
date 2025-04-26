@@ -30,54 +30,11 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end" >$__fish_config_dir/config.fish
 
-        # Regular syntax highlighting colors
-        # NOTE: These should only use named colors
-        # to give us the maximum chance they are
-        # visible in whatever terminal setup.
-        #
-        __init_uvar fish_color_normal normal
-        __init_uvar fish_color_command normal
-        __init_uvar fish_color_param cyan
-        __init_uvar fish_color_redirection cyan --bold
-        __init_uvar fish_color_comment red
-        __init_uvar fish_color_error brred
-        __init_uvar fish_color_escape brcyan
-        __init_uvar fish_color_operator brcyan
-        __init_uvar fish_color_end green
-        __init_uvar fish_color_quote yellow
-        __init_uvar fish_color_autosuggestion brblack
-        __init_uvar fish_color_user brgreen
-        __init_uvar fish_color_host normal
-        __init_uvar fish_color_host_remote yellow
-        __init_uvar fish_color_valid_path --underline
-        __init_uvar fish_color_status red
-
-        __init_uvar fish_color_cwd green
-        __init_uvar fish_color_cwd_root red
-
-        # Background color for selections
-        __init_uvar fish_color_selection white --bold --background=brblack
-
-        __init_uvar fish_color_cancel -r
-
-        # Pager colors
-        __init_uvar fish_pager_color_prefix normal --bold --underline
-        __init_uvar fish_pager_color_completion normal
-        __init_uvar fish_pager_color_description yellow -i
-        __init_uvar fish_pager_color_progress brwhite --background=cyan
-        __init_uvar fish_pager_color_selected_background -r
-
-        #
-        # Directory history colors
-        #
-        __init_uvar fish_color_history_current --bold
+        echo yes | fish_config theme save "fish default"
+        set -Ue fish_color_keyword fish_color_option
     end
-    if test $__fish_initialized -lt 3800
-        # Background color for search matches
-        __init_uvar fish_color_search_match white --background=brblack
-        if test "$fish_color_search_match[1]" = bryellow
-            set --universal fish_color_search_match[1] white
-        end
+    if test $__fish_initialized -lt 3800 && test "$fish_color_search_match[1]" = bryellow
+        set --universal fish_color_search_match[1] white
     end
 
     #

@@ -333,9 +333,6 @@ pub trait ConcreteNode {
 #[allow(unused)]
 trait ConcreteNodeMut {
     // Cast to any sub-trait.
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        None
-    }
     fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
         None
     }
@@ -551,9 +548,6 @@ macro_rules! define_keyword_node {
             }
         }
         impl ConcreteNodeMut for $name {
-            fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-                Some(self)
-            }
             fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
                 Some(self)
             }
@@ -591,9 +585,6 @@ macro_rules! define_token_node {
             }
         }
         impl ConcreteNodeMut for $name {
-            fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-                Some(self)
-            }
             fn as_mut_token(&mut self) -> Option<&mut dyn Token> {
                 Some(self)
             }
@@ -1801,9 +1792,6 @@ impl ConcreteNode for MaybeNewlines {
     }
 }
 impl ConcreteNodeMut for MaybeNewlines {
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        Some(self)
-    }
     fn as_mut_maybe_newlines(&mut self) -> Option<&mut MaybeNewlines> {
         Some(self)
     }
@@ -1826,9 +1814,6 @@ impl ConcreteNode for Argument {
     }
 }
 impl ConcreteNodeMut for Argument {
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        Some(self)
-    }
     fn as_mut_argument(&mut self) -> Option<&mut Argument> {
         Some(self)
     }

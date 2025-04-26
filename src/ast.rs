@@ -63,10 +63,7 @@ trait NodeVisitorMut {
     fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult;
     fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult);
 
-    fn visit_argument_or_redirection(
-        &mut self,
-        _node: &mut ArgumentOrRedirectionVariant,
-    ) -> VisitResult;
+    fn visit_argument_or_redirection(&mut self, _node: &mut ArgumentOrRedirection) -> VisitResult;
     fn visit_block_statement_header(
         &mut self,
         _node: &mut BlockStatementHeaderVariant,
@@ -925,9 +922,6 @@ macro_rules! visit_variant_field {
 }
 
 macro_rules! visit_variant_field_mut {
-    (ArgumentOrRedirectionVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_argument_or_redirection(&mut $field)
-    };
     (BlockStatementHeaderVariant, $visitor:ident, $field:expr) => {
         $visitor.visit_block_statement_header(&mut $field)
     };
@@ -1030,16 +1024,64 @@ impl ConcreteNodeMut for VariableAssignmentList {
     }
 }
 
-/// An argument or redirection holds either an argument or redirection.
-#[derive(Default, Debug)]
-pub struct ArgumentOrRedirection {
-    pub contents: ArgumentOrRedirectionVariant,
+#[derive(Debug)]
+pub enum ArgumentOrRedirection {
+    Argument(Argument),
+    Redirection(Redirection),
 }
+
+impl Default for ArgumentOrRedirection {
+    fn default() -> Self {
+        Self::Argument(Argument::default())
+    }
+}
+
+impl Acceptor for ArgumentOrRedirection {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, _reversed: bool) {
+        match self {
+            Self::Argument(child) => visitor.visit(child),
+            Self::Redirection(child) => visitor.visit(child),
+        };
+    }
+}
+impl AcceptorMut for ArgumentOrRedirection {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, _reversed: bool) {
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_argument_or_redirection(self);
+        visitor.did_visit_fields_of(self, flow);
+    }
+}
+
+impl ArgumentOrRedirection {
+    /// Return whether this represents an argument.
+    pub fn is_argument(&self) -> bool {
+        matches!(self, Self::Argument(_))
+    }
+
+    /// Return whether this represents a redirection
+    pub fn is_redirection(&self) -> bool {
+        matches!(self, Self::Redirection(_))
+    }
+
+    /// Return this as an argument, assuming it wraps one.
+    pub fn argument(&self) -> &Argument {
+        match self {
+            Self::Argument(arg) => arg,
+            _ => panic!("Is not an argument"),
+        }
+    }
+
+    /// Return this as a redirection, assuming it wraps one.
+    pub fn redirection(&self) -> &Redirection {
+        match self {
+            Self::Redirection(redir) => redir,
+            _ => panic!("Is not a redirection"),
+        }
+    }
+}
+
 implement_node!(ArgumentOrRedirection, argument_or_redirection);
-implement_acceptor_for_branch!(
-    ArgumentOrRedirection,
-    (contents: (variant<ArgumentOrRedirectionVariant>))
-);
+
 impl ConcreteNode for ArgumentOrRedirection {
     fn as_argument_or_redirection(&self) -> Option<&ArgumentOrRedirection> {
         Some(self)
@@ -1968,79 +2010,6 @@ impl DecoratedStatement {
 }
 
 #[derive(Debug)]
-pub enum ArgumentOrRedirectionVariant {
-    Argument(Argument),
-    Redirection(Redirection),
-}
-
-impl Default for ArgumentOrRedirectionVariant {
-    fn default() -> Self {
-        ArgumentOrRedirectionVariant::Argument(Argument::default())
-    }
-}
-
-impl Acceptor for ArgumentOrRedirectionVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(child) => child.accept(visitor, reversed),
-            ArgumentOrRedirectionVariant::Redirection(child) => child.accept(visitor, reversed),
-        }
-    }
-}
-impl AcceptorMut for ArgumentOrRedirectionVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(child) => child.accept_mut(visitor, reversed),
-            ArgumentOrRedirectionVariant::Redirection(child) => child.accept_mut(visitor, reversed),
-        }
-    }
-}
-
-impl ArgumentOrRedirectionVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(node) => node,
-            ArgumentOrRedirectionVariant::Redirection(node) => node,
-        }
-    }
-}
-
-impl ArgumentOrRedirection {
-    /// Return whether this represents an argument.
-    pub fn is_argument(&self) -> bool {
-        matches!(self.contents, ArgumentOrRedirectionVariant::Argument(_))
-    }
-
-    /// Return whether this represents a redirection
-    pub fn is_redirection(&self) -> bool {
-        matches!(self.contents, ArgumentOrRedirectionVariant::Redirection(_))
-    }
-
-    /// Return this as an argument, assuming it wraps one.
-    pub fn argument(&self) -> &Argument {
-        match self.contents {
-            ArgumentOrRedirectionVariant::Argument(ref arg) => arg,
-            _ => panic!("Is not an argument"),
-        }
-    }
-
-    /// Return this as an argument, assuming it wraps one.
-    pub fn redirection(&self) -> &Redirection {
-        match self.contents {
-            ArgumentOrRedirectionVariant::Redirection(ref arg) => arg,
-            _ => panic!("Is not a redirection"),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub enum BlockStatementHeaderVariant {
     None,
     ForHeader(ForHeader),
@@ -2928,16 +2897,11 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         }
     }
 
-    // We currently only have a handful of union pointer types.
-    // Handle them directly.
-    fn visit_argument_or_redirection(
-        &mut self,
-        node: &mut ArgumentOrRedirectionVariant,
-    ) -> VisitResult {
+    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) -> VisitResult {
         if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirectionVariant::Argument(arg);
+            *node = ArgumentOrRedirection::Argument(arg);
         } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirectionVariant::Redirection(redir);
+            *node = ArgumentOrRedirection::Redirection(redir);
         } else {
             internal_error!(
                 self,

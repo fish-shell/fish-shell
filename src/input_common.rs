@@ -778,11 +778,15 @@ pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
         if self.is_blocked_querying() {
+            use ImplicitEvent::*;
             match self.get_input_data().queue.front()? {
-                CharEvent::Key(_) | CharEvent::Readline(_) | CharEvent::Command(_) => {
+                CharEvent::QueryResponse(_) | CharEvent::Implicit(CheckExit | Eof) => {}
+                CharEvent::Key(_)
+                | CharEvent::Readline(_)
+                | CharEvent::Command(_)
+                | CharEvent::Implicit(_) => {
                     return None; // No code execution while blocked.
                 }
-                CharEvent::Implicit(_) | CharEvent::QueryResponse(_) => (),
             }
         }
         self.get_input_data_mut().queue.pop_front()

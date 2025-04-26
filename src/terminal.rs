@@ -508,7 +508,6 @@ impl Outputter {
     pub(crate) fn set_text_face_no_magic(&mut self, face: TextFace) {
         self.set_text_face_internal(face, false)
     }
-    #[allow(clippy::if_same_then_else)]
     fn set_text_face_internal(&mut self, face: TextFace, salvage_unreadable: bool) {
         let mut fg = face.fg;
         let bg = face.bg;

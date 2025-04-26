@@ -2539,11 +2539,21 @@ impl<'a> Reader<'a> {
                                 .store(Capability::NotSupported as _, Ordering::Release);
                         }
                     }
-                    QueryResponseEvent::MouseLeftClickContinuation(cursor, click_position) => {
-                        self.mouse_left_click(cursor, click_position);
-                    }
-                    QueryResponseEvent::ScrollbackPushContinuation(cursor_y) => {
-                        self.screen.push_to_scrollback(cursor_y);
+                    QueryResponseEvent::CursorPositionReport(cursor_pos) => {
+                        let cursor_pos_query = match &*self.blocking_query() {
+                            Some(TerminalQuery::CursorPositionReport(cursor_pos_query)) => {
+                                cursor_pos_query.clone()
+                            }
+                            _ => return ControlFlow::Continue(()), // Rogue reply.
+                        };
+                        match cursor_pos_query {
+                            CursorPositionQuery::MouseLeft(click_position) => {
+                                self.mouse_left_click(cursor_pos, click_position);
+                            }
+                            CursorPositionQuery::ScrollbackPush => {
+                                self.screen.push_to_scrollback(cursor_pos.y);
+                            }
+                        }
                     }
                 }
                 let ok = stop_query(self.blocking_query());

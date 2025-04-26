@@ -340,12 +340,8 @@ pub enum ImplicitEvent {
 
 #[derive(Debug, Clone)]
 pub enum QueryResponseEvent {
-    /// Primary DA response.
     PrimaryDeviceAttribute,
-    /// Handle mouse left click.
-    MouseLeftClickContinuation(ViewportPosition, ViewportPosition),
-    /// Push prompt to top.
-    ScrollbackPushContinuation(usize),
+    CursorPositionReport(ViewportPosition),
 }
 
 #[derive(Debug, Clone)]
@@ -760,7 +756,7 @@ impl InputData {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum CursorPositionQuery {
     MouseLeft(ViewportPosition),
     ScrollbackPush,
@@ -1184,24 +1180,10 @@ pub trait InputEventQueuer {
                     return invalid_sequence(buffer);
                 };
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
-                let query = self.blocking_query();
-                use TerminalQuery::CursorPositionReport;
-                let Some(CursorPositionReport(cursor_pos_query)) = &*query else {
-                    return None;
-                };
-                let continuation = match cursor_pos_query {
-                    CursorPositionQuery::MouseLeft(click_position) => {
-                        QueryResponseEvent::MouseLeftClickContinuation(
-                            ViewportPosition { x, y },
-                            *click_position,
-                        )
-                    }
-                    CursorPositionQuery::ScrollbackPush => {
-                        QueryResponseEvent::ScrollbackPushContinuation(y)
-                    }
-                };
-                drop(query);
-                self.push_front(CharEvent::QueryResponse(continuation));
+                let cursor_pos = ViewportPosition { x, y };
+                self.push_front(CharEvent::QueryResponse(
+                    QueryResponseEvent::CursorPositionReport(cursor_pos),
+                ));
                 return None;
             }
             b'S' => masked_key(function_key(4), None),

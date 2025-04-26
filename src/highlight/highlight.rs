@@ -28,7 +28,7 @@ use crate::parse_util::{
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
 use crate::terminal::Outputter;
-use crate::text_face::{parse_text_face, TextFace, UnderlineStyle};
+use crate::text_face::{parse_text_face, SpecifiedTextFace, TextFace, UnderlineStyle};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -140,12 +140,16 @@ impl HighlightColorResolver {
         vars: &dyn Environment,
     ) -> TextFace {
         let resolve_role = |role| {
-            vars.get_unless_empty(get_highlight_var_name(role))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
-                .as_ref()
-                .map(parse_text_face_for_highlight)
-                .unwrap_or_else(TextFace::default)
+            for role in [role, get_fallback(role), HighlightRole::normal] {
+                if let Some(face) = vars
+                    .get_unless_empty(get_highlight_var_name(role))
+                    .as_ref()
+                    .and_then(parse_text_face_for_highlight)
+                {
+                    return face;
+                }
+            }
+            TextFace::default()
         };
         let mut face = resolve_role(highlight.foreground);
 
@@ -162,7 +166,8 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
+                let valid_path_face =
+                    parse_text_face_for_highlight(&valid_path_var).unwrap_or_default();
                 // Apply the foreground, except if it's normal. The intention here is likely
                 // to only override foreground if the valid path color has an explicit foreground.
                 if !valid_path_face.fg.is_normal() {
@@ -181,19 +186,21 @@ impl HighlightColorResolver {
 }
 
 /// Return the internal color code representing the specified color.
-pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     let face = parse_text_face(var.as_list());
-    let default = TextFace::default();
-    let fg = face.fg.unwrap_or(default.fg);
-    let bg = face.bg.unwrap_or(default.bg);
-    let underline_color = face.underline_color.unwrap_or(default.underline_color);
-    let style = face.style;
-    TextFace {
-        fg,
-        bg,
-        underline_color,
-        style,
-    }
+    (face != SpecifiedTextFace::default()).then(|| {
+        let default = TextFace::default();
+        let fg = face.fg.unwrap_or(default.fg);
+        let bg = face.bg.unwrap_or(default.bg);
+        let underline_color = face.underline_color.unwrap_or(default.underline_color);
+        let style = face.style.unwrap_or_default();
+        TextFace {
+            fg,
+            bg,
+            underline_color,
+            style,
+        }
+    })
 }
 
 fn command_is_valid(

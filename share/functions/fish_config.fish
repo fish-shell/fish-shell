@@ -1,5 +1,11 @@
-function fish_config --description "Launch fish's web based configuration"
-    argparse h/help -- $argv
+# Variables a theme is allowed to set
+set -l theme_var_filter '^fish_(?:pager_)?color.*$'
+
+function fish_config --description "Launch fish's web based configuration" \
+    --inherit-variable theme_var_filter
+
+    set -l _flag_track
+    argparse h/help track -- $argv
     or return
 
     if set -q _flag_help
@@ -9,6 +15,11 @@ function fish_config --description "Launch fish's web based configuration"
 
     set -l cmd $argv[1]
     set -e argv[1]
+
+    if set -q _flag_track[1] && not { test "$cmd" = theme && test "$argv[1]" = save }
+        echo >&2 fish_config: --track: unknown option
+        return 1
+    end
 
     set -q cmd[1]
     or set cmd browse
@@ -64,9 +75,6 @@ function fish_config --description "Launch fish's web based configuration"
         echo No such subcommand: $cmd >&2
         return 1
     end
-
-    # Variables a theme is allowed to set
-    set -l theme_var_filter '^fish_(?:pager_)?color.*$'
 
     switch $cmd
         case prompt
@@ -292,34 +300,7 @@ function fish_config --description "Launch fish's web based configuration"
                     # If we are choosing a theme or saving from a named theme, load the theme now.
                     # Otherwise, we'll persist the currently loaded/themed variables (in case of `theme save`).
                     if set -q argv[1]
-                        set -l files $dirs/$argv[1].theme
-                        set -l file
-
-                        for f in $files
-                            if test -e "$f"
-                                set file $f
-                                break
-                            end
-                        end
-
-                        if not set -q file[1]
-                            if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
-                                set file tools/web_config/themes/$argv[1].theme
-                            else
-                                echo "No such theme: $argv[1]" >&2
-                                echo "Searched directories: $dirs" >&2
-                                return 1
-                            end
-                        end
-
-                        set -l content
-                        if string match -qr '^tools/' -- $file
-                            set content (status get-file $file)
-                        else
-                            read -z content < $file
-                        end
-
-                        printf %s\n $content | while read -lat toks
+                        __fish_config_theme_get $argv[1] | while read -lat toks
                             # The whitelist allows only color variables.
                             # Not the specific list, but something named *like* a color variable.
                             # This also takes care of empty lines and comment lines.
@@ -331,7 +312,7 @@ function fish_config --description "Launch fish's web based configuration"
                             if test x"$scope" = x-U; and set -qg $toks[1]
                                 set -eg $toks[1]
                             end
-                            set $scope $toks
+                            set $scope $toks $_flag_track=$argv[1]
                             set -a have_colors $toks[1]
                         end
 
@@ -343,7 +324,7 @@ function fish_config --description "Launch fish's web based configuration"
                             # Erase conflicting global variables so we don't get a warning and
                             # so changes are observed immediately.
                             set -eg $c
-                            set $scope $c
+                            set $scope $c $_flag_track=$argv[1]
                         end
                     else
                         # We're persisting whatever current colors are loaded (maybe in the global scope)
@@ -365,6 +346,8 @@ function fish_config --description "Launch fish's web based configuration"
                     # If we've made it this far, we've either found a theme file or persisted the current
                     # state (if any). In all cases we haven't failed, so return 0.
                     return 0
+                case update
+                    __fish_config_theme_update $argv
                 case dump
                     # Write the current theme in .theme format, to stdout.
                     set -L | string match -r $theme_var_filter
@@ -372,5 +355,90 @@ function fish_config --description "Launch fish's web based configuration"
                     echo "No such command: $cmd" >&2
                     return 1
             end
+    end
+end
+
+function __fish_config_theme_get
+    set -l dirs $__fish_config_dir/themes $__fish_data_dir/tools/web_config/themes
+    set -l files $dirs/$argv[1].theme
+    set -l file
+
+    for f in $files
+        if test -e "$f"
+            set file $f
+            break
+        end
+    end
+
+    if not set -q file[1]
+        if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
+            set file tools/web_config/themes/$argv[1].theme
+        else
+            echo "No such theme: $argv[1]" >&2
+            echo "Searched directories: $dirs" >&2
+            return 1
+        end
+    end
+
+    if string match -qr '^tools/' -- $file
+        status get-file $file
+    else
+        string join \n <$file
+    end
+end
+
+function __fish_config_show_tracked_color_vars
+    set -l color_var $argv[1]
+    set -l _flag_track
+    argparse --ignore-unknown track= -- _set_color $argv[2..]
+    or return $status
+    if not set -q _flag_track[1]
+        return
+    end
+    if set -q _flag_track[2]
+        echo >&2 "fish_config: $color_var: --track option can only be specified once"
+        exit 1
+    end
+    if test (printf %s $_flag_track | count) -ne 0
+        echo >&2 "fish_config: $color_var: error: tracking theme name must not contain newlines"
+        exit 1
+    end
+    printf %s\n $color_var $_flag_track
+end
+
+function __fish_config_theme_update --inherit-variable theme_var_filter
+    if set -q argv[1]
+        echo "fish_config: too many arguments" >&2
+        return 1
+    end
+    set -l themes
+
+    set -l tracking_variables (
+            set --universal --long |
+            string match -r '^fish_(?:pager_)?color.*$' |
+            string replace -r '.*' '__fish_config_show_tracked_color_vars $0' |
+            source
+    )
+    or return $status
+    string join \n $tracking_variables |
+        while read --line _colorvar theme
+            if not contains -- $theme $themes
+                set -a themes $theme
+            end
+        end
+
+    for theme in $themes
+        set -l colorvars
+        string join \n $tracking_variables |
+            while read --line color_var t
+                if test $t = $theme
+                    set -a colorvars $color_var
+                end
+            end
+        set -l theme_escaped (string escape -- $theme)
+        __fish_config_theme_get $theme |
+            string match -r -- "^(?:$(string join '|' $colorvars))\b .*" |
+            string replace -r '.*' "set -U \$0 --track=$theme_escaped" |
+            source
     end
 end

@@ -9,7 +9,6 @@ fish_color_end FF4C00
 fish_color_error FFDD73
 fish_color_param FFC000
 fish_color_comment A63100
-fish_color_match --background=brblue
 fish_color_selection white --bold --background=brblack
 fish_color_search_match white --background=brblack
 fish_color_history_current --bold

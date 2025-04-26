@@ -10,7 +10,6 @@ fish_color_end ED9366
 fish_color_error F51818
 fish_color_param 575F66
 fish_color_comment ABB0B6
-fish_color_match F07171
 fish_color_selection --background=FF9940
 fish_color_search_match --background=FF9940
 fish_color_history_current --bold

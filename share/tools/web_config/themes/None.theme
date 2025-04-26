@@ -13,7 +13,6 @@ fish_color_escape
 fish_color_history_current
 fish_color_host normal
 fish_color_keyword
-fish_color_match
 fish_color_normal normal
 fish_color_operator
 fish_color_option

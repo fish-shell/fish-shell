@@ -25,7 +25,6 @@ fish_color_host a3be8c
 fish_color_host_remote ebcb8b
 fish_color_status bf616a
 fish_color_cancel --reverse
-fish_color_match --background=brblue
 fish_color_search_match --bold --background=434c5e
 fish_color_history_current e5e9f0 --bold
 

@@ -13,7 +13,6 @@ fish_color_escape 0AA
 fish_color_history_current 0AA
 fish_color_host normal
 fish_color_keyword 00Afb8
-fish_color_match 0AA
 fish_color_normal B2B2B2
 fish_color_operator 0AA
 fish_color_param ccccff

@@ -9,7 +9,6 @@ fish_color_end FFB273
 fish_color_error FF7400
 fish_color_param 33CCCC
 fish_color_comment FF9640
-fish_color_match --background=brblue
 fish_color_selection white --bold --background=brblack
 fish_color_search_match white --background=brblack
 fish_color_history_current --bold

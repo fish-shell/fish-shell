@@ -10,7 +10,6 @@ fish_color_end b294bb
 fish_color_error cc6666
 fish_color_param 81a2be
 fish_color_comment f0c674
-fish_color_match --background=brblue
 fish_color_selection white --bold --background=brblack
 fish_color_search_match white --background=brblack
 fish_color_history_current --bold

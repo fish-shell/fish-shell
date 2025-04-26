@@ -10,7 +10,6 @@ fish_color_end 268bd2
 fish_color_error dc322f
 fish_color_param 839496
 fish_color_comment 586e75
-fish_color_match --background=brblue
 fish_color_selection white --bold --background=brblack
 fish_color_search_match bryellow --background=black
 fish_color_history_current --bold

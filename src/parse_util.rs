@@ -1113,7 +1113,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         }
 
         let saved = self.parent.replace(node);
-        node.accept(self, false);
+        node.accept(self);
         self.parent = saved;
         self.indent -= dec;
     }

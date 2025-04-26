@@ -138,7 +138,7 @@ impl<'a> NodeVisitor<'a> for AstSizeMetrics {
         if node.as_keyword().is_some() {
             self.keyword_count += 1;
         }
-        node.accept(self, false);
+        node.accept(self);
     }
 }
 

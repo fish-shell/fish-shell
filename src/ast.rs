@@ -39,13 +39,13 @@ pub trait NodeVisitor<'a> {
 }
 
 pub trait Acceptor {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool);
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
 }
 
 impl<T: Acceptor> Acceptor for Option<T> {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         if let Some(node) = self {
-            node.accept(visitor, reversed)
+            node.accept(visitor)
         }
     }
 }
@@ -82,13 +82,13 @@ trait NodeVisitorMut {
 }
 
 trait AcceptorMut {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool);
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut);
 }
 
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
         if let Some(node) = self {
-            node.accept_mut(visitor, reversed)
+            node.accept_mut(visitor)
         }
     }
 }
@@ -541,11 +541,11 @@ macro_rules! implement_leaf {
         }
         impl Acceptor for $name {
             #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {}
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {}
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
                 visitor.will_visit_fields_of(self);
                 visitor.did_visit_fields_of(self, VisitResult::Continue(()));
             }
@@ -683,18 +683,16 @@ macro_rules! define_list_node {
         }
         impl Acceptor for $name {
             #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-                let _ =
-                    accept_list_visitor!(Self, accept, visit, self, visitor, reversed, $contents);
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+                let _ = accept_list_visitor!(Self, accept, visit, self, visitor, $contents);
             }
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
                 visitor.will_visit_fields_of(self);
-                let flow = accept_list_visitor!(
-                    Self, accept_mut, visit_mut, self, visitor, reversed, $contents
-                );
+                let flow =
+                    accept_list_visitor!(Self, accept_mut, visit_mut, self, visitor, $contents);
                 visitor.did_visit_fields_of(self, flow);
             }
         }
@@ -708,26 +706,16 @@ macro_rules! accept_list_visitor {
         $visit:ident,
         $self:ident,
         $visitor:ident,
-        $reversed:ident,
         $list_element:ident
     ) => {
         loop {
             let mut result = VisitResult::Continue(());
             // list types pretend their child nodes are direct embeddings.
             // This isn't used during AST construction because we need to construct the list.
-            if $reversed {
-                for i in (0..$self.count()).rev() {
-                    result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
-                    if result.is_break() {
-                        break;
-                    }
-                }
-            } else {
-                for i in 0..$self.count() {
-                    result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
-                    if result.is_break() {
-                        break;
-                    }
+            for i in 0..$self.count() {
+                result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
+                if result.is_break() {
+                    break;
                 }
             }
             break result;
@@ -762,20 +750,19 @@ macro_rules! implement_acceptor_for_branch {
     ) => {
         impl Acceptor for $name {
             #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool){
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
                 let _ = visitor_accept_field!(
                     Self,
                     accept,
                     visit,
                     self,
                     visitor,
-                    reversed,
                     ( $( $field_name: $field_type, )* ) );
             }
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
                 visitor.will_visit_fields_of(self);
                 let flow = visitor_accept_field!(
                                 Self,
@@ -783,7 +770,6 @@ macro_rules! implement_acceptor_for_branch {
                                 visit_mut,
                                 self,
                                 visitor,
-                                reversed,
                                 ( $( $field_name: $field_type, )* ));
                 visitor.did_visit_fields_of(self, flow);
             }
@@ -799,11 +785,10 @@ macro_rules! visitor_accept_field {
         $visit:ident,
         $self:ident,
         $visitor:ident,
-        $reversed:ident,
         $fields:tt
     ) => {
         loop {
-            visitor_accept_field_impl!($visit, $self, $visitor, $reversed, $fields);
+            visitor_accept_field_impl!($visit, $self, $visitor, $fields);
             break VisitResult::Continue(());
         }
     };
@@ -816,7 +801,6 @@ macro_rules! visitor_accept_field_impl {
         $visit:ident,
         $self:ident,
         $visitor:ident,
-        $reversed:ident,
         ()
     ) => {};
     // Visit the first or last field and then the rest.
@@ -824,21 +808,15 @@ macro_rules! visitor_accept_field_impl {
         $visit:ident,
         $self:ident,
         $visitor:ident,
-        $reversed:ident,
         (
             $field_name:ident: $field_type:tt,
             $( $field_names:ident: $field_types:tt, )*
         )
     ) => {
-        if !$reversed {
-            visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
-        }
+        visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
         visitor_accept_field_impl!(
-            $visit, $self, $visitor, $reversed,
+            $visit, $self, $visitor,
             ( $( $field_names: $field_types, )* ));
-        if $reversed {
-            visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
-        }
     }
 }
 
@@ -1037,7 +1015,7 @@ impl Default for ArgumentOrRedirection {
 }
 
 impl Acceptor for ArgumentOrRedirection {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, _reversed: bool) {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         match self {
             Self::Argument(child) => visitor.visit(child),
             Self::Redirection(child) => visitor.visit(child),
@@ -1045,7 +1023,7 @@ impl Acceptor for ArgumentOrRedirection {
     }
 }
 impl AcceptorMut for ArgumentOrRedirection {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, _reversed: bool) {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
         visitor.will_visit_fields_of(self);
         let flow = visitor.visit_argument_or_redirection(self);
         visitor.did_visit_fields_of(self, flow);
@@ -2025,24 +2003,24 @@ impl Default for BlockStatementHeaderVariant {
 }
 
 impl Acceptor for BlockStatementHeaderVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         match self {
             BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor, reversed),
+            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor),
+            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor),
+            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor),
+            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor),
         }
     }
 }
 impl AcceptorMut for BlockStatementHeaderVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
         match self {
             BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor, reversed),
+            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor),
+            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor),
+            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor),
+            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor),
         }
     }
 }
@@ -2109,28 +2087,28 @@ impl Default for StatementVariant {
 }
 
 impl Acceptor for StatementVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::BlockStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::BraceStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::IfStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::SwitchStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::DecoratedStatement(node) => node.accept(visitor, reversed),
+            StatementVariant::NotStatement(node) => node.accept(visitor),
+            StatementVariant::BlockStatement(node) => node.accept(visitor),
+            StatementVariant::BraceStatement(node) => node.accept(visitor),
+            StatementVariant::IfStatement(node) => node.accept(visitor),
+            StatementVariant::SwitchStatement(node) => node.accept(visitor),
+            StatementVariant::DecoratedStatement(node) => node.accept(visitor),
         }
     }
 }
 impl AcceptorMut for StatementVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
         match self {
             StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::BlockStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::BraceStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::IfStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::SwitchStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor, reversed),
+            StatementVariant::NotStatement(node) => node.accept_mut(visitor),
+            StatementVariant::BlockStatement(node) => node.accept_mut(visitor),
+            StatementVariant::BraceStatement(node) => node.accept_mut(visitor),
+            StatementVariant::IfStatement(node) => node.accept_mut(visitor),
+            StatementVariant::SwitchStatement(node) => node.accept_mut(visitor),
+            StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor),
         }
     }
 }
@@ -2321,8 +2299,11 @@ impl<'a> Iterator for Traversal<'a> {
                 TraversalEntry::Visited(_) => {}
             }
         };
-        // Append this node's children to our stack.
-        node.accept(self, true /* reverse */);
+        // Append this node's children to our stack, and then reverse the order of the children
+        // so that the last item on the stack is the first child.
+        let before = self.stack.len();
+        node.accept(self);
+        self.stack[before..].reverse();
         Some(node)
     }
 }
@@ -2474,7 +2455,7 @@ impl<'a> NodeVisitor<'a> for SourceRangeVisitor {
             },
             _ => {
                 // Other node types recurse.
-                node.accept(self, false);
+                node.accept(self);
             }
         }
     }
@@ -2746,7 +2727,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             // Visit branch nodes by just calling accept() to visit their fields.
             Category::branch => {
                 // This field is a direct embedding of an AST value.
-                node.accept_mut(self, false);
+                node.accept_mut(self);
                 return VisitResult::Continue(());
             }
             Category::list => {
@@ -3659,7 +3640,7 @@ impl<'s> Populator<'s> {
                 self.peek_token(1).keyword
             );
         }
-        node.accept_mut(self, false);
+        node.accept_mut(self);
     }
 
     // Overload for token fields.

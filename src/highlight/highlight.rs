@@ -832,7 +832,7 @@ impl<'s> Highlighter<'s> {
 
     // Visit the children of a node.
     fn visit_children(&mut self, node: &dyn Node) {
-        node.accept(self, false);
+        node.accept(self);
     }
     // AST visitor implementations.
     fn visit_keyword(&mut self, node: &dyn Keyword) {

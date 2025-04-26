@@ -7,17 +7,15 @@ use crate::flog::FLOG;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
-    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, InputEventQueuer,
-    ReadlineCmd, TerminalQuery, R_END_INPUT_FUNCTIONS,
+    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, ReadlineCmd,
+    TerminalQuery, R_END_INPUT_FUNCTIONS,
 };
-use crate::key::ViewportPosition;
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
 use crate::reader::{
     reader_reading_interrupted, reader_reset_interrupted, reader_schedule_prompt_repaint, Reader,
 };
 use crate::signal::signal_clear_cancel;
-use crate::terminal::Outputter;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
@@ -453,14 +451,6 @@ impl<'a> InputEventQueuer for Reader<'a> {
 
     fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
         Reader::blocking_query(self)
-    }
-
-    fn on_mouse_left_click(&mut self, position: ViewportPosition) {
-        FLOG!(reader, "Mouse left click", position);
-        self.request_cursor_position(
-            &mut Outputter::stdoutput().borrow_mut(),
-            CursorPositionQuery::MouseLeft(position),
-        );
     }
 }
 

@@ -2524,6 +2524,13 @@ impl<'a> Reader<'a> {
                         .write_command(DecrstMouseTracking);
                     self.save_screen_state();
                 }
+                ImplicitEvent::MouseLeft(position) => {
+                    FLOG!(reader, "Mouse left click", position);
+                    self.request_cursor_position(
+                        &mut Outputter::stdoutput().borrow_mut(),
+                        CursorPositionQuery::MouseLeft(position),
+                    );
+                }
             },
             CharEvent::QueryResponse(query_response) => {
                 match query_response {

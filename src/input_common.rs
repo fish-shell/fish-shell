@@ -336,6 +336,8 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Request to disable mouse tracking.
     DisableMouseTracking,
+    /// Mouse left click.
+    MouseLeft(ViewportPosition),
 }
 
 #[derive(Debug, Clone)]
@@ -1131,22 +1133,7 @@ pub trait InputEventQueuer {
                 if code != 0 || c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                let query = self.blocking_query();
-                let Some(query) = &*query else {
-                    drop(query);
-                    self.on_mouse_left_click(position);
-                    return None;
-                };
-                match query {
-                    TerminalQuery::PrimaryDeviceAttribute => {}
-                    TerminalQuery::CursorPositionReport(_) => {
-                        // TODO: re-queue it I guess.
-                        FLOG!(
-                                reader,
-                                "Ignoring mouse left click received while still waiting for Cursor Position Report"
-                            );
-                    }
-                }
+                self.push_front(CharEvent::Implicit(ImplicitEvent::MouseLeft(position)));
                 return None;
             }
             b't' => {
@@ -1621,8 +1608,6 @@ pub trait InputEventQueuer {
     fn is_blocked_querying(&self) -> bool {
         self.blocking_query().is_some()
     }
-
-    fn on_mouse_left_click(&mut self, _position: ViewportPosition) {}
 
     /// Override point for when we are about to (potentially) block in select(). The default does
     /// nothing.

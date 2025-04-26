@@ -21,8 +21,8 @@ fish_color_end ffb86c
 fish_color_error ff5555
 fish_color_param bd93f9
 fish_color_comment 6272a4
-fish_color_selection --background=44475a
-fish_color_search_match --background=44475a
+fish_color_selection --background=44475a --bold
+fish_color_search_match --background=44475a --bold
 fish_color_history_current --bold
 fish_color_operator 50fa7b
 fish_color_escape ff79c6

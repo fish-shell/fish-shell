@@ -10,8 +10,8 @@ fish_color_end F29E74
 fish_color_error FF3333
 fish_color_param CBCCC6
 fish_color_comment 5C6773
-fish_color_selection --background=FFCC66
-fish_color_search_match --background=FFCC66
+fish_color_selection --background=FFCC66 --bold
+fish_color_search_match --background=FFCC66 --bold
 fish_color_history_current --bold
 fish_color_operator FFCC66
 fish_color_escape 95E6CB
@@ -25,7 +25,7 @@ fish_color_cancel -r
 fish_pager_color_completion normal
 fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
-fish_pager_color_progress brwhite --background=cyan
+fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background --background=FFCC66
 fish_color_option CBCCC6
 fish_color_keyword 5CCFE6

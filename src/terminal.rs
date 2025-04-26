@@ -500,8 +500,6 @@ impl Outputter {
         let bg = face.bg;
         let underline_color = face.underline_color;
         let style = face.style;
-        let mut bg_set = false;
-        let mut last_bg_set = false;
 
         use TerminalCommand::{
             DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterCurlyUnderlineMode,
@@ -521,32 +519,12 @@ impl Outputter {
             // Only way to exit non-resettable ones is a reset of all attributes.
             self.reset_text_face();
         }
-        if !self.last.bg.is_special() {
-            // Background was set.
-            // "Special" here refers to the special "normal" and "none" colors,
-            // that really just disable the background.
-            last_bg_set = true;
-        }
-        if !bg.is_special() {
-            // Background is set.
-            bg_set = true;
-            if fg == bg {
-                fg = if bg == Color::WHITE {
-                    Color::BLACK
-                } else {
-                    Color::WHITE
-                };
-            }
-        }
-
-        if bg_set && !last_bg_set {
-            // Background color changed and is set, so we enter bold mode to make reading easier.
-            // This means bold mode is _always_ on when the background color is set.
-            self.write_command(EnterBoldMode);
-        }
-        if !bg_set && last_bg_set {
-            // Background color changed and is no longer set, so we exit bold mode.
-            self.reset_text_face();
+        if !bg.is_special() && fg == bg {
+            fg = if bg == Color::WHITE {
+                Color::BLACK
+            } else {
+                Color::WHITE
+            };
         }
 
         if !fg.is_none() && fg != self.last.fg {
@@ -583,11 +561,7 @@ impl Outputter {
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if style.is_bold()
-            && !self.last.style.is_bold()
-            && !bg_set
-            && self.write_command(EnterBoldMode)
-        {
+        if style.is_bold() && !self.last.style.is_bold() && self.write_command(EnterBoldMode) {
             self.last.style.bold = true;
         }
 

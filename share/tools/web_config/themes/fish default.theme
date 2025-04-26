@@ -11,8 +11,8 @@ fish_color_end green
 fish_color_error brred
 fish_color_param cyan
 fish_color_comment red
-fish_color_search_match white --background=brblack
-fish_color_selection white --bold --background=brblack
+fish_color_search_match white --background=brblack --bold
+fish_color_selection white --background=brblack --bold
 fish_color_history_current --bold
 fish_color_operator brcyan
 fish_color_escape brcyan
@@ -26,7 +26,7 @@ fish_color_host normal
 fish_pager_color_description yellow -i
 fish_color_cancel -r
 fish_pager_color_prefix normal --bold --underline
-fish_pager_color_progress brwhite --background=cyan
+fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background -r
 fish_color_option cyan
 fish_color_keyword normal

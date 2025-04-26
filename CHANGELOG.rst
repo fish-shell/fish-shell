@@ -34,6 +34,8 @@ Deprecations and removed features
     To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
   - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
     If that doesn't work, use ``set fish_term24bit 0``.
+- ``set_color --background=COLOR`` no longer implicitly activates bold mode.
+  To mitigate this change on existing installations that use a default theme, update your theme with ``fish_config theme choose`` or ``fish_config theme save``.
 
 Scripting improvements
 ----------------------

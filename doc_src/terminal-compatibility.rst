@@ -211,7 +211,7 @@ Optional Commands
      - Disable mouse reporting.
      - XTerm
    * - ``\e[?1004h``
-     - f/a
+     - n/a
      - Enable focus reporting.
      -
    * - ``\e[?1004l``

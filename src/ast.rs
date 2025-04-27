@@ -303,13 +303,6 @@ pub trait NodeSubTraits {
     fn as_token(&self) -> Option<&dyn Token> {
         None
     }
-
-    fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
-        None
-    }
-    fn as_mut_token(&mut self) -> Option<&mut dyn Token> {
-        None
-    }
 }
 
 // Support casting to this type.
@@ -880,9 +873,6 @@ macro_rules! define_keyword_node {
             fn as_keyword(&self) -> Option<&dyn Keyword> {
                 Some(self)
             }
-            fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
-                Some(self)
-            }
         }
         impl Node for $name {
             fn typ(&self) -> Type {
@@ -931,9 +921,6 @@ macro_rules! define_token_node {
                 Some(self)
             }
             fn as_token(&self) -> Option<&dyn Token> {
-                Some(self)
-            }
-            fn as_mut_token(&mut self) -> Option<&mut dyn Token> {
                 Some(self)
             }
         }
@@ -2641,74 +2628,54 @@ struct Populator<'a> {
 
 impl<'s> NodeVisitorMut for Populator<'s> {
     fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult {
-        match node.typ() {
-            Type::argument => {
-                self.visit_argument(node.as_mut_argument().unwrap());
-                return VisitResult::Continue(());
+        use KindMut as KM;
+        match node.kind_mut() {
+            // Leaves
+            KM::Argument(node) => self.visit_argument(node),
+            KM::VariableAssignment(node) => self.visit_variable_assignment(node),
+            KM::JobContinuation(node) => self.visit_job_continuation(node),
+            KM::Token(node) => self.visit_token(node),
+            KM::Keyword(node) => {
+                return self.visit_keyword(node);
             }
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_mut_variable_assignment().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::job_continuation => {
-                self.visit_job_continuation(node.as_mut_job_continuation().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::token_base => {
-                self.visit_token(node.as_mut_token().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::keyword_base => {
-                return self.visit_keyword(node.as_mut_keyword().unwrap());
-            }
-            Type::maybe_newlines => {
-                self.visit_maybe_newlines(node.as_mut_maybe_newlines().unwrap());
-                return VisitResult::Continue(());
-            }
+            KM::MaybeNewlines(node) => self.visit_maybe_newlines(node),
 
-            _ => (),
-        }
+            // Branches
+            KM::Redirection(node) => node.accept_mut(self),
+            KM::ArgumentOrRedirection(node) => node.accept_mut(self),
+            KM::Statement(node) => node.accept_mut(self),
+            KM::JobPipeline(node) => node.accept_mut(self),
+            KM::JobConjunction(node) => node.accept_mut(self),
+            KM::ForHeader(node) => node.accept_mut(self),
+            KM::WhileHeader(node) => node.accept_mut(self),
+            KM::FunctionHeader(node) => node.accept_mut(self),
+            KM::BeginHeader(node) => node.accept_mut(self),
+            KM::BlockStatement(node) => node.accept_mut(self),
+            KM::BraceStatement(node) => node.accept_mut(self),
+            KM::IfClause(node) => node.accept_mut(self),
+            KM::ElseifClause(node) => node.accept_mut(self),
+            KM::ElseClause(node) => node.accept_mut(self),
+            KM::IfStatement(node) => node.accept_mut(self),
+            KM::CaseItem(node) => node.accept_mut(self),
+            KM::SwitchStatement(node) => node.accept_mut(self),
+            KM::DecoratedStatement(node) => node.accept_mut(self),
+            KM::NotStatement(node) => node.accept_mut(self),
+            KM::JobConjunctionContinuation(node) => node.accept_mut(self),
+            KM::AndorJob(node) => node.accept_mut(self),
 
-        match node.category() {
-            Category::leaf => {}
-            // Visit branch nodes by just calling accept() to visit their fields.
-            Category::branch => {
-                // This field is a direct embedding of an AST value.
-                node.accept_mut(self);
-                return VisitResult::Continue(());
-            }
-            Category::list => {
-                // This field is an embedding of an array of (pointers to) ContentsNode.
-                // Parse as many as we can.
-                match node.typ() {
-                    Type::andor_job_list => {
-                        self.populate_list(node.as_mut_andor_job_list().unwrap(), false)
-                    }
-                    Type::argument_list => {
-                        self.populate_list(node.as_mut_argument_list().unwrap(), false)
-                    }
-                    Type::argument_or_redirection_list => self
-                        .populate_list(node.as_mut_argument_or_redirection_list().unwrap(), false),
-                    Type::case_item_list => {
-                        self.populate_list(node.as_mut_case_item_list().unwrap(), false)
-                    }
-                    Type::elseif_clause_list => {
-                        self.populate_list(node.as_mut_elseif_clause_list().unwrap(), false)
-                    }
-                    Type::job_conjunction_continuation_list => self.populate_list(
-                        node.as_mut_job_conjunction_continuation_list().unwrap(),
-                        false,
-                    ),
-                    Type::job_continuation_list => {
-                        self.populate_list(node.as_mut_job_continuation_list().unwrap(), false)
-                    }
-                    Type::job_list => self.populate_list(node.as_mut_job_list().unwrap(), false),
-                    Type::variable_assignment_list => {
-                        self.populate_list(node.as_mut_variable_assignment_list().unwrap(), false)
-                    }
-                    _ => (),
-                }
-            }
+            // Lists
+            KM::VariableAssignmentList(node) => self.populate_list(node, false),
+            KM::ArgumentOrRedirectionList(node) => self.populate_list(node, false),
+            KM::ElseifClauseList(node) => self.populate_list(node, false),
+            KM::JobContinuationList(node) => self.populate_list(node, false),
+            KM::AndorJobList(node) => self.populate_list(node, false),
+            KM::JobConjunctionContinuationList(node) => self.populate_list(node, false),
+            KM::CaseItemList(node) => self.populate_list(node, false),
+            KM::ArgumentList(node) => self.populate_list(node, false),
+            KM::JobList(node) => self.populate_list(node, false),
+
+            // Weird top-level case, not actually a list.
+            KM::FreestandingArgumentList(node) => node.accept_mut(self),
         }
         VisitResult::Continue(())
     }

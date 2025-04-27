@@ -1045,12 +1045,12 @@ end
 string shorten -m6 (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten | string escape
 # Renders like "strin…" in colors
 # Note that red sequence that we still pass on because it's width 0.
-# CHECK: \e\[34ms\e\[31mt\e\[1m\e\[97mrin\e\[31m…
+# CHECK: \e\[34ms\e\[31mt\e\[97m\e\[1mrin\e\[31m…
 
 # See that colors aren't counted in ellipsis
 string shorten -c (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g -m 8 abcdefghijklmno | string escape
 # Renders like "abstring" in colors
-# CHECK: ab\e\[34ms\e\[31mt\e\[1m\e\[97mrin\e\[31mg
+# CHECK: ab\e\[34ms\e\[31mt\e\[97m\e\[1mrin\e\[31mg
 
 set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
 for i in (seq 1 (string length -V -- $str))

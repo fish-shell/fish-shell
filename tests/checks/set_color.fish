@@ -14,9 +14,9 @@ string escape (set_color --background=reset)
 # CHECKERR: set_color: Unknown color 'reset'
 
 string escape (set_color --bold red --background=normal)
-# CHECK: \e\[1m\e\[31m\e\[49m
+# CHECK: \e\[31m\e\[49m\e\[1m
 string escape (set_color --bold red --background=blue)
-# CHECK: \e\[1m\e\[31m\e\[44m
+# CHECK: \e\[31m\e\[44m\e\[1m
 
 string escape (set_color --background=f00 --background=green --background=00f)
 # CHECK: \e\[48\;2\;255\;0\;0m

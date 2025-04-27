@@ -3,8 +3,8 @@
 use super::prelude::*;
 use crate::color::Color;
 use crate::common::str2wcstring;
-use crate::terminal::TerminalCommand::{DefaultBackgroundColor, DefaultUnderlineColor};
-use crate::terminal::{Output, Outputter, Paintable};
+use crate::screen::is_dumb;
+use crate::terminal::{use_terminfo, Outputter};
 use crate::text_face::{
     self, parse_text_face_and_options, PrintColorsArgs, SpecifiedTextFace, TextFace, TextStyling,
 };
@@ -112,46 +112,27 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
             }
         };
 
-    let mut outp = Outputter::new_buffering();
+    let mut outp = Outputter::new_buffering_no_assume_normal();
 
-    let fg = specified_face.fg;
-    let bg = specified_face.bg;
-    let underline_color = specified_face.underline_color;
-    let style = specified_face.style;
-
-    // Here's some automagic behavior: if either of foreground or background are "normal",
-    // reset all colors/attributes. Same if foreground is "reset" (undocumented).
-    if is_reset || fg.is_some_and(|fg| fg.is_normal()) {
+    // Note that for historical reasons "set_color normal" reset all colors/attributes. So does
+    // "set_color reset" (undocumented).
+    if is_reset {
         outp.reset_text_face();
     }
 
-    // Historically we have not used set_text_face() for colors here.
-    // Doing so would add two magic behaviors:
-    // - if fg and bg are equal, it makes one of them white
-    // - if bg is not normal, it makes the foreground bold
-    // The first one seems fine but the second one not really.
-    outp.set_text_face(TextFace::new(Color::None, Color::None, Color::None, style));
-    if let Some(fg) = fg {
-        if !fg.is_normal() && !outp.write_color(Paintable::Foreground, fg) {
-            // We need to do *something* or the lack of any output messes up
-            // when the cartesian product here would make "foo" disappear:
-            //  $ echo (set_color foo)bar
-            outp.reset_text_face();
-        }
-    }
-    if let Some(bg) = bg {
-        if bg.is_normal() {
-            outp.write_command(DefaultBackgroundColor);
-        } else {
-            outp.write_color(Paintable::Background, bg);
-        }
-    }
-    if let Some(underline_color) = underline_color {
-        if underline_color.is_normal() {
-            outp.write_command(DefaultUnderlineColor);
-        } else {
-            outp.write_color(Paintable::Underline, underline_color);
-        }
+    outp.set_text_face_no_magic(TextFace::new(
+        specified_face.fg.unwrap_or(Color::None),
+        specified_face.bg.unwrap_or(Color::None),
+        specified_face.underline_color.unwrap_or(Color::None),
+        specified_face.style,
+    ));
+
+    if specified_face.fg.is_some() && outp.contents().is_empty() {
+        assert!(is_dumb() || use_terminfo());
+        // We need to do *something* or the lack of any output messes up
+        // when the cartesian product here would make "foo" disappear:
+        //  $ echo (set_color foo)bar
+        outp.reset_text_face();
     }
 
     // Output the collected string.

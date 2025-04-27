@@ -444,6 +444,14 @@ impl Outputter {
         Self::new_from_fd(-1)
     }
 
+    pub fn new_buffering_no_assume_normal() -> Self {
+        let mut zelf = Self::new_buffering();
+        zelf.last.fg = Color::None;
+        zelf.last.bg = Color::None;
+        assert_eq!(zelf.last.underline_color, Color::None);
+        zelf
+    }
+
     fn maybe_flush(&mut self) {
         if self.fd >= 0 && self.buffer_count == 0 {
             self.flush_to(self.fd);
@@ -494,8 +502,14 @@ impl Outputter {
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
-    #[allow(clippy::if_same_then_else)]
     pub(crate) fn set_text_face(&mut self, face: TextFace) {
+        self.set_text_face_internal(face, true)
+    }
+    pub(crate) fn set_text_face_no_magic(&mut self, face: TextFace) {
+        self.set_text_face_internal(face, false)
+    }
+    #[allow(clippy::if_same_then_else)]
+    fn set_text_face_internal(&mut self, face: TextFace, salvage_unreadable: bool) {
         let mut fg = face.fg;
         let bg = face.bg;
         let underline_color = face.underline_color;
@@ -519,12 +533,14 @@ impl Outputter {
             // Only way to exit non-resettable ones is a reset of all attributes.
             self.reset_text_face();
         }
-        if !bg.is_special() && fg == bg {
-            fg = if bg == Color::WHITE {
-                Color::BLACK
-            } else {
-                Color::WHITE
-            };
+        if salvage_unreadable {
+            if !bg.is_special() && fg == bg {
+                fg = if bg == Color::WHITE {
+                    Color::BLACK
+                } else {
+                    Color::WHITE
+                };
+            }
         }
 
         if !fg.is_none() && fg != self.last.fg {

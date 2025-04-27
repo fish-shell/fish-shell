@@ -1738,13 +1738,13 @@ fn detect_errors_in_decorated_statement(
                 .parent_nodes()
                 .filter_map(|anc| anc.as_block_statement())
             {
-                match block.header.typ() {
-                    ast::Type::for_header | ast::Type::while_header => {
+                match block.header {
+                    ast::BlockStatementHeader::For(_) | ast::BlockStatementHeader::While(_) => {
                         // This is a loop header, so we can break or continue.
                         found_loop = true;
                         break;
                     }
-                    ast::Type::function_header => {
+                    ast::BlockStatementHeader::Function(_) => {
                         // This is a function header, so we cannot break or
                         // continue. We stop our search here.
                         found_loop = false;

@@ -65,10 +65,7 @@ trait NodeVisitorMut {
     fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult);
 
     fn visit_argument_or_redirection(&mut self, _node: &mut ArgumentOrRedirection) -> VisitResult;
-    fn visit_block_statement_header(
-        &mut self,
-        _node: &mut BlockStatementHeaderVariant,
-    ) -> VisitResult;
+    fn visit_block_statement_header(&mut self, _node: &mut BlockStatementHeader) -> VisitResult;
     fn visit_statement(&mut self, _node: &mut Statement) -> VisitResult;
 
     fn visit_decorated_statement_decorator(
@@ -218,6 +215,7 @@ pub enum Kind<'a> {
     Statement(&'a Statement),
     JobPipeline(&'a JobPipeline),
     JobConjunction(&'a JobConjunction),
+    BlockStatementHeader(&'a BlockStatementHeader),
     ForHeader(&'a ForHeader),
     WhileHeader(&'a WhileHeader),
     FunctionHeader(&'a FunctionHeader),
@@ -258,6 +256,7 @@ pub enum KindMut<'a> {
     Statement(&'a mut Statement),
     JobPipeline(&'a mut JobPipeline),
     JobConjunction(&'a mut JobConjunction),
+    BlockStatementHeader(&'a mut BlockStatementHeader),
     ForHeader(&'a mut ForHeader),
     WhileHeader(&'a mut WhileHeader),
     FunctionHeader(&'a mut FunctionHeader),
@@ -889,14 +888,6 @@ macro_rules! visit_1_field_impl {
     (
         $visit:ident,
         $field:expr,
-        (variant<$field_type:ident>),
-        $visitor:ident
-    ) => {
-        visit_variant_field!($visit, $field_type, $field, $visitor)
-    };
-    (
-        $visit:ident,
-        $field:expr,
         (Option<$field_type:ident>),
         $visitor:ident
     ) => {
@@ -918,31 +909,6 @@ macro_rules! apply_borrow {
     };
     ( visit_mut, $expr:expr ) => {
         &mut $expr
-    };
-}
-
-macro_rules! visit_variant_field {
-    (
-        visit,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        $visitor.visit($field.embedded_node().as_node())
-    };
-    (
-        visit_mut,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        visit_variant_field_mut!($field_type, $visitor, $field)
-    };
-}
-
-macro_rules! visit_variant_field_mut {
-    (BlockStatementHeaderVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_block_statement_header(&mut $field)
     };
 }
 
@@ -1288,7 +1254,7 @@ implement_acceptor_for_branch!(
 #[derive(Default, Debug)]
 pub struct BlockStatement {
     /// A header like for, while, etc.
-    pub header: BlockStatementHeaderVariant,
+    pub header: BlockStatementHeader,
     /// List of jobs in this block.
     pub jobs: JobList,
     /// The 'end' node.
@@ -1300,7 +1266,7 @@ implement_node!(BlockStatement, block_statement);
 impl NodeSubTraits for BlockStatement {}
 implement_acceptor_for_branch!(
     BlockStatement,
-    (header: (variant<BlockStatementHeaderVariant>)),
+    (header: (BlockStatementHeader)),
     (jobs: (JobList)),
     (end: (KeywordEnd)),
     (args_or_redirs: (ArgumentOrRedirectionList)),
@@ -1745,84 +1711,42 @@ impl DecoratedStatement {
 }
 
 #[derive(Debug)]
-pub enum BlockStatementHeaderVariant {
-    None,
-    ForHeader(ForHeader),
-    WhileHeader(WhileHeader),
-    FunctionHeader(FunctionHeader),
-    BeginHeader(BeginHeader),
+pub enum BlockStatementHeader {
+    Begin(BeginHeader),
+    For(ForHeader),
+    While(WhileHeader),
+    Function(FunctionHeader),
 }
+implement_node!(BlockStatementHeader, block_statement_header);
+impl NodeSubTraits for BlockStatementHeader {}
 
-impl Default for BlockStatementHeaderVariant {
+impl Default for BlockStatementHeader {
     fn default() -> Self {
-        BlockStatementHeaderVariant::None
+        Self::Begin(BeginHeader::default())
     }
 }
 
-impl Acceptor for BlockStatementHeaderVariant {
+impl BlockStatementHeader {
+    pub fn embedded_node(&self) -> &dyn Node {
+        match self {
+            Self::Begin(child) => child,
+            Self::For(child) => child,
+            Self::While(child) => child,
+            Self::Function(child) => child,
+        }
+    }
+}
+
+impl Acceptor for BlockStatementHeader {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor),
-        }
+        visitor.visit(self.embedded_node());
     }
 }
-impl AcceptorMut for BlockStatementHeaderVariant {
+impl AcceptorMut for BlockStatementHeader {
     fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor),
-        }
-    }
-}
-
-impl BlockStatementHeaderVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    pub fn as_for_header(&self) -> Option<&ForHeader> {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_while_header(&self) -> Option<&WhileHeader> {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_function_header(&self) -> Option<&FunctionHeader> {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_begin_header(&self) -> Option<&BeginHeader> {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
-        }
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_block_statement_header(self);
+        visitor.did_visit_fields_of(self, flow);
     }
 }
 
@@ -1839,6 +1763,7 @@ pub fn ast_type_to_string(t: Type) -> &'static wstr {
         Type::statement => L!("statement"),
         Type::job_pipeline => L!("job_pipeline"),
         Type::job_conjunction => L!("job_conjunction"),
+        Type::block_statement_header => L!("block_statement_header"),
         Type::for_header => L!("for_header"),
         Type::while_header => L!("while_header"),
         Type::function_header => L!("function_header"),
@@ -2362,6 +2287,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             KM::Statement(node) => node.accept_mut(self),
             KM::JobPipeline(node) => node.accept_mut(self),
             KM::JobConjunction(node) => node.accept_mut(self),
+            KM::BlockStatementHeader(node) => node.accept_mut(self),
             KM::ForHeader(node) => node.accept_mut(self),
             KM::WhileHeader(node) => node.accept_mut(self),
             KM::FunctionHeader(node) => node.accept_mut(self),
@@ -2434,36 +2360,29 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         // We believe the node is some sort of block statement. Attempt to find a source range
         // for the block's keyword (for, if, etc) and a user-presentable description. This
         // is used to provide better error messages. Note at this point the parse tree is
-        // incomplete; in particular parent nodes are not set.
-        let mut cursor = node;
+        // incomplete.
+        let mut cursor = node.as_node();
         let header = loop {
-            match cursor.typ() {
-                Type::block_statement => {
-                    cursor = cursor.as_block_statement().unwrap().header.embedded_node();
+            match cursor.kind() {
+                Kind::BlockStatement(node) => cursor = &node.header,
+                Kind::BlockStatementHeader(node) => cursor = node.embedded_node(),
+                Kind::ForHeader(node) => {
+                    break Some((node.kw_for.range.unwrap(), L!("for loop")));
                 }
-                Type::for_header => {
-                    let n = cursor.as_for_header().unwrap();
-                    break Some((n.kw_for.range.unwrap(), L!("for loop")));
+                Kind::WhileHeader(node) => {
+                    break Some((node.kw_while.range.unwrap(), L!("while loop")));
                 }
-                Type::while_header => {
-                    let n = cursor.as_while_header().unwrap();
-                    break Some((n.kw_while.range.unwrap(), L!("while loop")));
+                Kind::FunctionHeader(node) => {
+                    break Some((node.kw_function.range.unwrap(), L!("function definition")));
                 }
-                Type::function_header => {
-                    let n = cursor.as_function_header().unwrap();
-                    break Some((n.kw_function.range.unwrap(), L!("function definition")));
+                Kind::BeginHeader(node) => {
+                    break Some((node.kw_begin.range.unwrap(), L!("begin")));
                 }
-                Type::begin_header => {
-                    let n = cursor.as_begin_header().unwrap();
-                    break Some((n.kw_begin.range.unwrap(), L!("begin")));
+                Kind::IfStatement(node) => {
+                    break Some((node.if_clause.kw_if.range.unwrap(), L!("if statement")));
                 }
-                Type::if_statement => {
-                    let n = cursor.as_if_statement().unwrap();
-                    break Some((n.if_clause.kw_if.range.unwrap(), L!("if statement")));
-                }
-                Type::switch_statement => {
-                    let n = cursor.as_switch_statement().unwrap();
-                    break Some((n.kw_switch.range.unwrap(), L!("switch statement")));
+                Kind::SwitchStatement(node) => {
+                    break Some((node.kw_switch.range.unwrap(), L!("switch statement")));
                 }
                 _ => break None,
             }
@@ -2512,10 +2431,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         }
         VisitResult::Continue(())
     }
-    fn visit_block_statement_header(
-        &mut self,
-        node: &mut BlockStatementHeaderVariant,
-    ) -> VisitResult {
+    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) -> VisitResult {
         *node = self.allocate_populate_block_header();
         VisitResult::Continue(())
     }
@@ -3177,23 +3093,23 @@ impl<'s> Populator<'s> {
 
     /// Allocate and populate a block statement header.
     /// This must never return null.
-    fn allocate_populate_block_header(&mut self) -> BlockStatementHeaderVariant {
+    fn allocate_populate_block_header(&mut self) -> BlockStatementHeader {
         match self.peek_token(0).keyword {
             ParseKeyword::For => {
                 let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeaderVariant::ForHeader(embedded)
+                BlockStatementHeader::For(embedded)
             }
             ParseKeyword::While => {
                 let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeaderVariant::WhileHeader(embedded)
+                BlockStatementHeader::While(embedded)
             }
             ParseKeyword::Function => {
                 let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeaderVariant::FunctionHeader(embedded)
+                BlockStatementHeader::Function(embedded)
             }
             ParseKeyword::Begin => {
                 let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeaderVariant::BeginHeader(embedded)
+                BlockStatementHeader::Begin(embedded)
             }
             _ => {
                 internal_error!(
@@ -3520,6 +3436,7 @@ pub enum Type {
     statement,
     job_pipeline,
     job_conjunction,
+    block_statement_header,
     for_header,
     while_header,
     function_header,

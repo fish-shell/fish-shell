@@ -1,8 +1,8 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
+    self, Argument, Ast, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+    Keyword, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;
@@ -1043,15 +1043,14 @@ impl<'s> Highlighter<'s> {
     }
     fn visit_block_statement(&mut self, block: &BlockStatement) {
         match &block.header {
-            BlockStatementHeaderVariant::None => panic!(),
-            BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::FunctionHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::BeginHeader(node) => self.visit(node),
+            BlockStatementHeader::For(node) => self.visit(node),
+            BlockStatementHeader::While(node) => self.visit(node),
+            BlockStatementHeader::Function(node) => self.visit(node),
+            BlockStatementHeader::Begin(node) => self.visit(node),
         }
         self.visit(&block.args_or_redirs);
         let pending_variables_count = self.pending_variables.len();
-        if let Some(fh) = block.header.as_for_header() {
+        if let BlockStatementHeader::For(fh) = &block.header {
             let var_name = fh.var_name.source(self.buff);
             self.pending_variables.push(var_name);
         }

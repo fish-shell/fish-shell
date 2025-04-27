@@ -1,7 +1,7 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, Node, Statement, Token,
+    self, unescape_keyword, BlockStatementHeader, Keyword, Leaf, Node, Statement, Token,
 };
 use crate::builtins;
 use crate::builtins::shared::{
@@ -857,17 +857,12 @@ impl<'a> ExecutionContext<'a> {
         let bh = &statement.header;
         let contents = &statement.jobs;
         match bh {
-            BlockStatementHeaderVariant::ForHeader(fh) => self.run_for_statement(ctx, fh, contents),
-            BlockStatementHeaderVariant::WhileHeader(wh) => {
+            BlockStatementHeader::For(fh) => self.run_for_statement(ctx, fh, contents),
+            BlockStatementHeader::While(wh) => {
                 self.run_while_statement(ctx, wh, contents, associated_block)
             }
-            BlockStatementHeaderVariant::FunctionHeader(fh) => {
-                self.run_function_statement(ctx, statement, fh)
-            }
-            BlockStatementHeaderVariant::BeginHeader(_bh) => {
-                self.run_begin_statement(ctx, contents)
-            }
-            BlockStatementHeaderVariant::None => panic!(),
+            BlockStatementHeader::Function(fh) => self.run_function_statement(ctx, statement, fh),
+            BlockStatementHeader::Begin(_bh) => self.run_begin_statement(ctx, contents),
         }
     }
 
@@ -1926,19 +1921,10 @@ fn profiling_cmd_name_for_redirectable_block(
         Statement::Block(block_statement) => {
             let block_header = &block_statement.header;
             match block_header {
-                BlockStatementHeaderVariant::ForHeader(for_header) => {
-                    for_header.semi_nl.source_range().start()
-                }
-                BlockStatementHeaderVariant::WhileHeader(while_header) => {
-                    while_header.condition.source_range().start()
-                }
-                BlockStatementHeaderVariant::FunctionHeader(function_header) => {
-                    function_header.semi_nl.source_range().start()
-                }
-                BlockStatementHeaderVariant::BeginHeader(begin_header) => {
-                    begin_header.kw_begin.source_range().start()
-                }
-                BlockStatementHeaderVariant::None => panic!("Unexpected block header type"),
+                BlockStatementHeader::For(node) => node.semi_nl.source_range().start(),
+                BlockStatementHeader::While(node) => node.condition.source_range().start(),
+                BlockStatementHeader::Function(node) => node.semi_nl.source_range().start(),
+                BlockStatementHeader::Begin(node) => node.kw_begin.source_range().start(),
             }
         }
         Statement::Brace(brace_statement) => brace_statement.left_brace.source_range().start(),

@@ -993,22 +993,19 @@ impl<'a> IndentVisitor<'a> {
 impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
     fn visit(&mut self, node: &'a dyn Node) {
-        let mut inc = 0;
-        let mut dec = 0;
-        use ast::Type;
-        match node.typ() {
-            Type::job_list | Type::andor_job_list => {
+        let mut inc_dec = (0, 0);
+        use ast::Kind;
+        match node.kind() {
+            Kind::JobList(_) | Kind::AndorJobList(_) => {
                 // Job lists are never unwound.
-                inc = 1;
-                dec = 1;
+                inc_dec = (1, 1);
             }
 
             // Increment indents for conditions in headers (#1665).
-            Type::job_conjunction => {
-                let typ = self.parent.unwrap().typ();
-                if matches!(typ, Type::if_clause | Type::while_header) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobConjunction(_node) => {
+                let parent_kind = self.parent.unwrap().kind();
+                if matches!(parent_kind, Kind::IfClause(_) | Kind::WhileHeader(_)) {
+                    inc_dec = (1, 1);
                 }
             }
 
@@ -1021,22 +1018,20 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Type::job_continuation => {
-                if self.has_newline(&node.as_job_continuation().unwrap().newlines) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobContinuation(node) => {
+                if self.has_newline(&node.newlines) {
+                    inc_dec = (1, 1);
                 }
             }
 
             // Likewise for && and ||.
-            Type::job_conjunction_continuation => {
-                if self.has_newline(&node.as_job_conjunction_continuation().unwrap().newlines) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobConjunctionContinuation(node) => {
+                if self.has_newline(&node.newlines) {
+                    inc_dec = (1, 1);
                 }
             }
 
-            Type::case_item_list => {
+            Kind::CaseItemList(_) => {
                 // Here's a hack. Consider:
                 // switch abc
                 //    cas
@@ -1054,37 +1049,35 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 // And so we will think that the 'cas' job is at the same level as the switch.
                 // To address this, if we see that the switch statement was not closed, do not
                 // decrement the indent afterwards.
-                inc = 1;
-                let switchs = self.parent.unwrap().as_switch_statement().unwrap();
-                dec = if switchs.end.has_source() { 1 } else { 0 };
+                let Kind::SwitchStatement(switchs) = self.parent.unwrap().kind() else {
+                    panic!("Expected switch statement");
+                };
+                let dec = if switchs.end.has_source() { 1 } else { 0 };
+                inc_dec = (1, dec);
             }
-            Type::token_base => {
-                let token_type = node.as_token().unwrap().token_type();
-                let parent_type = self.parent.unwrap().typ();
-                if parent_type == Type::begin_header && token_type == ParseTokenType::end {
+
+            Kind::Token(node) => {
+                let token_type = node.token_type();
+                let parent_kind = self.parent.unwrap().kind();
+                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::end
+                {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
                     if node.source(self.src) == "\n" {
-                        inc = 1;
-                        dec = 1;
+                        inc_dec = (1, 1);
                     }
                 }
-                // if token_type == ParseTokenType::right_brace && parent_type == Type::brace_statement
-                // {
-                //     inc = 1;
-                //     dec = 1;
-                // }
             }
-            _ => (),
-        }
 
+            _ => {}
+        }
         let range = node.source_range();
         if range.length() > 0 && node.as_leaf().is_some() {
             self.record_line_continuations_until(range.start());
             self.indents[self.last_leaf_end..range.start()].fill(self.last_indent);
         }
 
-        self.indent += inc;
+        self.indent += inc_dec.0;
 
         // If we increased the indentation, apply it to the remainder of the string, even if the
         // list is empty. For example (where _ represents the cursor):
@@ -1093,7 +1086,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         //       _
         //
         // we want to indent the newline.
-        if inc != 0 {
+        if inc_dec.0 != 0 {
             self.last_indent = self.indent;
         }
 
@@ -1113,7 +1106,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         let saved = self.parent.replace(node);
         node.accept(self);
         self.parent = saved;
-        self.indent -= dec;
+        self.indent -= inc_dec.1;
     }
 }
 

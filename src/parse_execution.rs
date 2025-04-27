@@ -139,13 +139,9 @@ impl<'a> ExecutionContext<'a> {
         node: &'a dyn Node,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        match node.typ() {
-            ast::Type::statement => {
-                self.eval_statement(ctx, node.as_statement().unwrap(), associated_block)
-            }
-            ast::Type::job_list => {
-                self.eval_job_list(ctx, node.as_job_list().unwrap(), associated_block.unwrap())
-            }
+        match node.kind() {
+            ast::Kind::Statement(node) => self.eval_statement(ctx, node, associated_block),
+            ast::Kind::JobList(node) => self.eval_job_list(ctx, node, associated_block.unwrap()),
             _ => unreachable!(),
         }
     }

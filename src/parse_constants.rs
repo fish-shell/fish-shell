@@ -38,24 +38,15 @@ bitflags! {
 }
 
 /// A range of source code.
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct SourceRange {
     pub start: u32,
     pub length: u32,
 }
 
-impl Default for SourceRange {
-    fn default() -> Self {
-        SourceRange {
-            start: 0,
-            length: 0,
-        }
-    }
-}
-
 impl SourceRange {
-    pub fn as_usize(&self) -> std::ops::Range<usize> {
-        (*self).into()
+    pub fn as_usize(self) -> std::ops::Range<usize> {
+        self.into()
     }
 }
 
@@ -156,20 +147,20 @@ impl SourceRange {
             length: length.try_into().unwrap(),
         }
     }
-    pub fn start(&self) -> usize {
+    pub fn start(self) -> usize {
         self.start.try_into().unwrap()
     }
-    pub fn length(&self) -> usize {
+    pub fn length(self) -> usize {
         self.length.try_into().unwrap()
     }
-    pub fn end(&self) -> usize {
+    pub fn end(self) -> usize {
         self.start
             .checked_add(self.length)
             .expect("Overflow")
             .try_into()
             .unwrap()
     }
-    pub fn combine(&self, other: Self) -> Self {
+    pub fn combine(self, other: Self) -> Self {
         let start = std::cmp::min(self.start, other.start);
         SourceRange {
             start,
@@ -182,7 +173,7 @@ impl SourceRange {
     }
 
     // Return true if a location is in this range, including one-past-the-end.
-    pub fn contains_inclusive(&self, loc: usize) -> bool {
+    pub fn contains_inclusive(self, loc: usize) -> bool {
         self.start() <= loc && loc - self.start() <= self.length()
     }
 }

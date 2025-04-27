@@ -134,7 +134,7 @@ pub trait Node: Acceptor + ConcreteNode + AsNode + std::fmt::Debug {
 
     /// Return the source range for this node, or an empty range {0, 0} if unsourced.
     fn source_range(&self) -> SourceRange {
-        self.try_source_range().unwrap_or(SourceRange::new(0, 0))
+        self.try_source_range().unwrap_or_default()
     }
 
     /// Return the source code for this node, or none if unsourced.
@@ -2156,26 +2156,21 @@ struct SourceRangeVisitor {
 
 impl<'a> NodeVisitor<'a> for SourceRangeVisitor {
     fn visit(&mut self, node: &'a dyn Node) {
-        match node.category() {
-            Category::leaf => match node.as_leaf().unwrap().range() {
-                None => self.any_unsourced = true,
-                // Union with our range.
-                Some(range) if range.length > 0 => {
-                    if self.total.length == 0 {
-                        self.total = range;
-                    } else {
-                        let end =
-                            (self.total.start + self.total.length).max(range.start + range.length);
-                        self.total.start = self.total.start.min(range.start);
-                        self.total.length = end - self.total.start;
-                    }
-                }
-                _ => (),
-            },
-            _ => {
-                // Other node types recurse.
-                node.accept(self);
+        // Recurse for non-leaves.
+        let Some(leaf) = node.as_leaf() else {
+            node.accept(self);
+            return;
+        };
+        if let Some(range) = leaf.range() {
+            if range.length == 0 {
+                // pass
+            } else if self.total.length == 0 {
+                self.total = range;
+            } else {
+                self.total = self.total.combine(range);
             }
+        } else {
+            self.any_unsourced = true;
         }
     }
 }

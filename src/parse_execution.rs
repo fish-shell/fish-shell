@@ -173,9 +173,7 @@ impl<'a> ExecutionContext<'a> {
             StatementVariant::SwitchStatement(switchstat) => {
                 self.run_switch_statement(ctx, switchstat)
             }
-            StatementVariant::DecoratedStatement(_)
-            | StatementVariant::NotStatement(_)
-            | StatementVariant::None => panic!(),
+            StatementVariant::DecoratedStatement(_) | StatementVariant::NotStatement(_) => panic!(),
         }
     }
 
@@ -571,7 +569,6 @@ impl<'a> ExecutionContext<'a> {
                 // not block statements
                 false
             }
-            StatementVariant::None => panic!(),
         }
     }
 
@@ -692,7 +689,6 @@ impl<'a> ExecutionContext<'a> {
             StatementVariant::DecoratedStatement(decorated_statement) => {
                 self.populate_plain_process(ctx, proc, decorated_statement)
             }
-            StatementVariant::None => panic!(),
         }
     }
 
@@ -1614,9 +1610,9 @@ impl<'a> ExecutionContext<'a> {
                     }
                     // Other types should be impossible due to the
                     // specific_statement_type_is_redirectable_block check.
-                    StatementVariant::NotStatement(_)
-                    | StatementVariant::DecoratedStatement(_)
-                    | StatementVariant::None => panic!(),
+                    StatementVariant::NotStatement(_) | StatementVariant::DecoratedStatement(_) => {
+                        panic!()
+                    }
                 };
             }
 

@@ -1785,7 +1785,6 @@ impl BlockStatementHeaderVariant {
 
 #[derive(Debug)]
 pub enum StatementVariant {
-    None,
     NotStatement(Box<NotStatement>),
     BlockStatement(Box<BlockStatement>),
     BraceStatement(Box<BraceStatement>),
@@ -1796,14 +1795,13 @@ pub enum StatementVariant {
 
 impl Default for StatementVariant {
     fn default() -> Self {
-        StatementVariant::None
+        StatementVariant::DecoratedStatement(DecoratedStatement::default())
     }
 }
 
 impl Acceptor for StatementVariant {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept(visitor),
             StatementVariant::BlockStatement(node) => node.accept(visitor),
             StatementVariant::BraceStatement(node) => node.accept(visitor),
@@ -1816,7 +1814,6 @@ impl Acceptor for StatementVariant {
 impl AcceptorMut for StatementVariant {
     fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
         match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => node.accept_mut(visitor),
             StatementVariant::BlockStatement(node) => node.accept_mut(visitor),
             StatementVariant::BraceStatement(node) => node.accept_mut(visitor),
@@ -1874,7 +1871,6 @@ impl StatementVariant {
 
     fn embedded_node(&self) -> &dyn NodeMut {
         match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
             StatementVariant::NotStatement(node) => &**node,
             StatementVariant::BlockStatement(node) => &**node,
             StatementVariant::BraceStatement(node) => &**node,

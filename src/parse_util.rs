@@ -995,7 +995,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     fn visit(&mut self, node: &'a dyn Node) {
         let mut inc = 0;
         let mut dec = 0;
-        use ast::{Category, Type};
+        use ast::Type;
         match node.typ() {
             Type::job_list | Type::andor_job_list => {
                 // Job lists are never unwound.
@@ -1079,7 +1079,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         }
 
         let range = node.source_range();
-        if range.length() > 0 && node.category() == Category::leaf {
+        if range.length() > 0 && node.as_leaf().is_some() {
             self.record_line_continuations_until(range.start());
             self.indents[self.last_leaf_end..range.start()].fill(self.last_indent);
         }
@@ -1098,7 +1098,7 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         }
 
         // If this is a leaf node, apply the current indentation.
-        if node.category() == Category::leaf && range.length() != 0 {
+        if node.as_leaf().is_some() && range.length() != 0 {
             let leading_spaces = self.src[..range.start()]
                 .chars()
                 .rev()

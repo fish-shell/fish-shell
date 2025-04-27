@@ -99,11 +99,6 @@ pub trait Node: Acceptor + ConcreteNode + AsNode + std::fmt::Debug {
     /// The type of this node.
     fn typ(&self) -> Type;
 
-    /// The category of this node.
-    fn category(&self) -> Category {
-        self.typ().category()
-    }
-
     /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
         let mut res = ast_type_to_string(self.typ()).to_owned();
@@ -3574,13 +3569,6 @@ fn test_ast_parse() {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Category {
-    branch,
-    leaf,
-    list,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Type {
     token_base,
     keyword_base,
@@ -3621,51 +3609,4 @@ pub enum Type {
     argument,
     argument_list,
     job_list,
-}
-
-impl Type {
-    // Return the underlying category of this type.
-    pub fn category(self) -> Category {
-        match self {
-            Type::token_base => Category::leaf,
-            Type::keyword_base => Category::leaf,
-            Type::redirection => Category::branch,
-            Type::variable_assignment => Category::leaf,
-            Type::variable_assignment_list => Category::list,
-            Type::argument_or_redirection => Category::branch,
-            Type::argument_or_redirection_list => Category::list,
-            Type::statement => Category::branch,
-            Type::job_pipeline => Category::branch,
-            Type::job_conjunction => Category::branch,
-            Type::for_header => Category::branch,
-            Type::while_header => Category::branch,
-            Type::function_header => Category::branch,
-            Type::begin_header => Category::branch,
-            Type::block_statement => Category::branch,
-            Type::brace_statement => Category::branch,
-            Type::if_clause => Category::branch,
-            Type::elseif_clause => Category::branch,
-            Type::elseif_clause_list => Category::list,
-            Type::else_clause => Category::branch,
-            Type::if_statement => Category::branch,
-            Type::case_item => Category::branch,
-            Type::switch_statement => Category::branch,
-            Type::decorated_statement => Category::branch,
-            Type::not_statement => Category::branch,
-            Type::job_continuation => Category::branch,
-            Type::job_continuation_list => Category::list,
-            Type::job_conjunction_continuation => Category::branch,
-            Type::andor_job => Category::branch,
-            Type::andor_job_list => Category::list,
-            Type::freestanding_argument_list => Category::branch, // not a typo, wraps a list
-            Type::token_conjunction => Category::leaf,
-            Type::job_conjunction_continuation_list => Category::list,
-            Type::maybe_newlines => Category::leaf,
-            Type::token_pipe => Category::leaf,
-            Type::case_item_list => Category::list,
-            Type::argument => Category::leaf,
-            Type::argument_list => Category::list,
-            Type::job_list => Category::list,
-        }
-    }
 }

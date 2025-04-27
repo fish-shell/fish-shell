@@ -15,7 +15,7 @@ use crate::panic::panic_handler;
 use libc::LC_ALL;
 
 use super::prelude::*;
-use crate::ast::{self, Ast, Category, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
+use crate::ast::{self, Ast, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -94,7 +94,6 @@ struct AstSizeMetrics {
     /// Note tokens and keywords are also counted as leaves.
     branch_count: usize,
     leaf_count: usize,
-    list_count: usize,
     token_count: usize,
     keyword_count: usize,
     // An estimate of the total allocated size of the ast in bytes.
@@ -107,7 +106,6 @@ impl std::fmt::Display for AstSizeMetrics {
         writeln!(f, "  nodes: {}", self.node_count)?;
         writeln!(f, "  branches: {}", self.branch_count)?;
         writeln!(f, "  leaves: {}", self.leaf_count)?;
-        writeln!(f, "  lists: {}", self.list_count)?;
         writeln!(f, "  tokens: {}", self.token_count)?;
         writeln!(f, "  keywords: {}", self.keyword_count)?;
 
@@ -125,10 +123,10 @@ impl<'a> NodeVisitor<'a> for AstSizeMetrics {
     fn visit(&mut self, node: &'a dyn Node) {
         self.node_count += 1;
         self.memory_size += node.self_memory_size();
-        match node.category() {
-            Category::branch => self.branch_count += 1,
-            Category::leaf => self.leaf_count += 1,
-            Category::list => self.list_count += 1,
+        if node.as_leaf().is_some() {
+            self.leaf_count += 1;
+        } else {
+            self.branch_count += 1; // treating lists as branches
         }
         if node.as_token().is_some() {
             self.token_count += 1;
@@ -220,7 +218,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         // Collect the token ranges into a list.
         let mut tok_ranges = vec![];
         for node in Traversal::new(self.ast.top()) {
-            if node.category() == Category::leaf {
+            if let Some(node) = node.as_leaf() {
                 let r = node.source_range();
                 if r.length() > 0 {
                     tok_ranges.push(r);
@@ -820,6 +818,7 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
     // Prettify our ast traversal, populating the output.
     fn prettify_traversal(&mut self) {
+        use ast::Kind;
         while let Some(node) = self.traversal.next() {
             // Leaf nodes we just visit their text.
             if node.as_keyword().is_some() {
@@ -835,29 +834,30 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                 }
                 continue;
             }
-            match node.typ() {
-                Type::argument | Type::variable_assignment => {
+
+            match node.kind() {
+                Kind::Argument(_) | Kind::VariableAssignment(_) => {
                     self.emit_node_text(node);
                     self.traversal.skip_children(node);
                 }
-                Type::redirection => {
-                    self.visit_redirection(node.as_redirection().unwrap());
+                Kind::Redirection(node) => {
+                    self.visit_redirection(node);
                     self.traversal.skip_children(node);
                 }
-                Type::maybe_newlines => {
-                    self.visit_maybe_newlines(node.as_maybe_newlines().unwrap());
+                Kind::MaybeNewlines(node) => {
+                    self.visit_maybe_newlines(node);
                     self.traversal.skip_children(node);
                 }
-                Type::begin_header => {
-                    self.visit_begin_header(node.as_begin_header().unwrap());
+                Kind::BeginHeader(node) => {
+                    self.visit_begin_header(node);
                     self.traversal.skip_children(node);
                 }
                 _ => {
-                    // For branch and list nodes, default is to visit their children.
-                    if [Category::branch, Category::list].contains(&node.category()) {
-                        continue;
-                    }
-                    panic!("unexpected node type");
+                    // Default is to visit children. We expect all leaves to have been handled above.
+                    assert!(
+                        node.as_leaf().is_none(),
+                        "Should have handled all leaf nodes"
+                    );
                 }
             }
         }

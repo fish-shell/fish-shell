@@ -45,7 +45,7 @@ use std::time::{Duration, Instant};
 use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{is_same_node, Ast, Category};
+use crate::ast::{is_same_node, Ast};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
@@ -5345,9 +5345,9 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
     let mut traversal = ast.walk();
     while let Some(node) = traversal.next() {
         // We are only interested in leaf nodes with source.
-        if node.category() != Category::leaf {
+        if node.as_leaf().is_none() {
             continue;
-        }
+        };
         let range = node.source_range();
         if range.length() == 0 {
             continue;

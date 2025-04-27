@@ -742,7 +742,15 @@ impl<'a> Reader<'a> {
                         self.insert_front(seq);
                         // Issue #1595: ensure we only insert characters, not readline functions. The
                         // common case is that this will be empty.
-                        let mut res = self.read_characters_no_readline();
+                        let mut res = self.read_character_matching(|evt| {
+                            use CharEvent::*;
+                            use ImplicitEvent::*;
+                            match evt {
+                                Key(_) => true,
+                                Implicit(Eof | CheckExit) => true,
+                                Readline(_) | Command(_) | Implicit(_) | QueryResponse(_) => false,
+                            }
+                        });
 
                         // Hackish: mark the input style.
                         if readline_event.cmd == ReadlineCmd::SelfInsertNotFirst {
@@ -820,22 +828,18 @@ impl<'a> Reader<'a> {
         peeker.consume();
     }
 
-    /// Helper function. Picks through the queue of incoming characters until we get to one that's not a
-    /// readline function.
-    fn read_characters_no_readline(&mut self) -> CharEvent {
+    /// Pick through the queue of incoming characters until we get to one that matches.
+    fn read_character_matching(&mut self, predicate: impl Fn(&CharEvent) -> bool) -> CharEvent {
         let mut saved_events = std::mem::take(&mut self.get_input_data_mut().event_storage);
         assert!(saved_events.is_empty(), "event_storage should be empty");
 
-        let evt_to_return: CharEvent;
-        loop {
+        let evt_to_return: CharEvent = loop {
             let evt = self.readch();
-            if evt.is_readline_or_command() {
-                saved_events.push(evt);
-            } else {
-                evt_to_return = evt;
-                break;
+            if (predicate)(&evt) {
+                break evt;
             }
-        }
+            saved_events.push(evt);
+        };
 
         // Restore any readline functions
         self.insert_front(saved_events.drain(..));

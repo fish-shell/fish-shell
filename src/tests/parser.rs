@@ -839,7 +839,6 @@ impl<'a> TrueSemiAstTester<'a> {
         let statement = &job_pipeline.statement;
 
         let decorated_statement = statement
-            .contents
             .as_decorated_statement()
             .expect("Expected decorated_statement");
         let command = &decorated_statement.command;

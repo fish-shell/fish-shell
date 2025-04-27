@@ -279,7 +279,7 @@ fn autosuggest_parse_command(
 
     // Find the first statement.
     let jc = ast.top().as_job_list().unwrap().get(0)?;
-    let first_statement = jc.job.statement.contents.as_decorated_statement()?;
+    let first_statement = jc.job.statement.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
         let mut arg = WString::new();

@@ -69,7 +69,7 @@ trait NodeVisitorMut {
         &mut self,
         _node: &mut BlockStatementHeaderVariant,
     ) -> VisitResult;
-    fn visit_statement(&mut self, _node: &mut StatementVariant) -> VisitResult;
+    fn visit_statement(&mut self, _node: &mut Statement) -> VisitResult;
 
     fn visit_decorated_statement_decorator(
         &mut self,
@@ -944,9 +944,6 @@ macro_rules! visit_variant_field_mut {
     (BlockStatementHeaderVariant, $visitor:ident, $field:expr) => {
         $visitor.visit_block_statement_header(&mut $field)
     };
-    (StatementVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_statement(&mut $field)
-    };
 }
 
 macro_rules! visit_optional_field {
@@ -1098,13 +1095,59 @@ define_list_node!(
 );
 
 /// A statement is a normal command, or an if / while / etc
-#[derive(Default, Debug)]
-pub struct Statement {
-    pub contents: StatementVariant,
+#[derive(Debug)]
+pub enum Statement {
+    Decorated(DecoratedStatement),
+    Not(Box<NotStatement>),
+    Block(Box<BlockStatement>),
+    Brace(Box<BraceStatement>),
+    If(Box<IfStatement>),
+    Switch(Box<SwitchStatement>),
 }
 implement_node!(Statement, statement);
 impl NodeSubTraits for Statement {}
-implement_acceptor_for_branch!(Statement, (contents: (variant<StatementVariant>)));
+
+impl Default for Statement {
+    fn default() -> Self {
+        Self::Decorated(DecoratedStatement::default())
+    }
+}
+
+impl Statement {
+    // Convenience function to get this statement as a decorated statement, if it is one.
+    pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
+        match self {
+            Self::Decorated(child) => Some(child),
+            _ => None,
+        }
+    }
+
+    // Return the node embedded in this statement.
+    fn embedded_node(&self) -> &dyn Node {
+        match self {
+            Self::Not(child) => &**child,
+            Self::Block(child) => &**child,
+            Self::Brace(child) => &**child,
+            Self::If(child) => &**child,
+            Self::Switch(child) => &**child,
+            Self::Decorated(child) => child,
+        }
+    }
+}
+
+impl Acceptor for Statement {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        visitor.visit(self.embedded_node());
+    }
+}
+
+impl AcceptorMut for Statement {
+    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_statement(self);
+        visitor.did_visit_fields_of(self, flow);
+    }
+}
 
 /// A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases
 /// like if statements, where we require a command).
@@ -1582,7 +1625,7 @@ impl CheckParse for VariableAssignment {
             ParseTokenType::terminate => pop.allow_incomplete(),
             // We have e.g. `a= >` which is an error.
             // Note that we do not produce an error here. Instead we return false
-            // so this the token will be seen by allocate_populate_statement_contents.
+            // so this the token will be seen by allocate_populate_statement.
             _ => false,
         }
     }
@@ -1779,104 +1822,6 @@ impl BlockStatementHeaderVariant {
             BlockStatementHeaderVariant::WhileHeader(node) => node,
             BlockStatementHeaderVariant::FunctionHeader(node) => node,
             BlockStatementHeaderVariant::BeginHeader(node) => node,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum StatementVariant {
-    NotStatement(Box<NotStatement>),
-    BlockStatement(Box<BlockStatement>),
-    BraceStatement(Box<BraceStatement>),
-    IfStatement(Box<IfStatement>),
-    SwitchStatement(Box<SwitchStatement>),
-    DecoratedStatement(DecoratedStatement),
-}
-
-impl Default for StatementVariant {
-    fn default() -> Self {
-        StatementVariant::DecoratedStatement(DecoratedStatement::default())
-    }
-}
-
-impl Acceptor for StatementVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
-        match self {
-            StatementVariant::NotStatement(node) => node.accept(visitor),
-            StatementVariant::BlockStatement(node) => node.accept(visitor),
-            StatementVariant::BraceStatement(node) => node.accept(visitor),
-            StatementVariant::IfStatement(node) => node.accept(visitor),
-            StatementVariant::SwitchStatement(node) => node.accept(visitor),
-            StatementVariant::DecoratedStatement(node) => node.accept(visitor),
-        }
-    }
-}
-impl AcceptorMut for StatementVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
-        match self {
-            StatementVariant::NotStatement(node) => node.accept_mut(visitor),
-            StatementVariant::BlockStatement(node) => node.accept_mut(visitor),
-            StatementVariant::BraceStatement(node) => node.accept_mut(visitor),
-            StatementVariant::IfStatement(node) => node.accept_mut(visitor),
-            StatementVariant::SwitchStatement(node) => node.accept_mut(visitor),
-            StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor),
-        }
-    }
-}
-
-impl StatementVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    pub fn as_not_statement(&self) -> Option<&NotStatement> {
-        match self {
-            StatementVariant::NotStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_block_statement(&self) -> Option<&BlockStatement> {
-        match self {
-            StatementVariant::BlockStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_brace_statement(&self) -> Option<&BraceStatement> {
-        match self {
-            StatementVariant::BraceStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_if_statement(&self) -> Option<&IfStatement> {
-        match self {
-            StatementVariant::IfStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_switch_statement(&self) -> Option<&SwitchStatement> {
-        match self {
-            StatementVariant::SwitchStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
-        match self {
-            StatementVariant::DecoratedStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            StatementVariant::NotStatement(node) => &**node,
-            StatementVariant::BlockStatement(node) => &**node,
-            StatementVariant::BraceStatement(node) => &**node,
-            StatementVariant::IfStatement(node) => &**node,
-            StatementVariant::SwitchStatement(node) => &**node,
-            StatementVariant::DecoratedStatement(node) => node,
         }
     }
 }
@@ -2574,8 +2519,8 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         *node = self.allocate_populate_block_header();
         VisitResult::Continue(())
     }
-    fn visit_statement(&mut self, node: &mut StatementVariant) -> VisitResult {
-        *node = self.allocate_populate_statement_contents();
+    fn visit_statement(&mut self, node: &mut Statement) -> VisitResult {
+        *node = self.allocate_populate_statement();
         VisitResult::Continue(())
     }
 
@@ -3091,17 +3036,16 @@ impl<'s> Populator<'s> {
         );
     }
 
-    /// Allocate and populate a statement contents pointer.
-    /// This must never return null.
-    fn allocate_populate_statement_contents(&mut self) -> StatementVariant {
+    /// Allocate and populate a statement.
+    fn allocate_populate_statement(&mut self) -> Statement {
         // In case we get a parse error, we still need to return something non-null. Use a
         // decorated statement; all of its leaf nodes will end up unsourced.
-        fn got_error(slf: &mut Populator<'_>) -> StatementVariant {
+        fn got_error(slf: &mut Populator<'_>) -> Statement {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
-        fn new_decorated_statement(slf: &mut Populator<'_>) -> StatementVariant {
+        fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
             if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
                 parse_error!(
@@ -3116,7 +3060,7 @@ impl<'s> Populator<'s> {
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            StatementVariant::DecoratedStatement(embedded)
+            Statement::Decorated(embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -3125,7 +3069,7 @@ impl<'s> Populator<'s> {
             self.allocate_visit::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
             let embedded = self.allocate_boxed_visit::<BraceStatement>();
-            return StatementVariant::BraceStatement(embedded);
+            return Statement::Brace(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -3196,22 +3140,22 @@ impl<'s> Populator<'s> {
         match self.peek_token(0).keyword {
             ParseKeyword::Not | ParseKeyword::Exclam => {
                 let embedded = self.allocate_boxed_visit::<NotStatement>();
-                StatementVariant::NotStatement(embedded)
+                Statement::Not(embedded)
             }
             ParseKeyword::For
             | ParseKeyword::While
             | ParseKeyword::Function
             | ParseKeyword::Begin => {
                 let embedded = self.allocate_boxed_visit::<BlockStatement>();
-                StatementVariant::BlockStatement(embedded)
+                Statement::Block(embedded)
             }
             ParseKeyword::If => {
                 let embedded = self.allocate_boxed_visit::<IfStatement>();
-                StatementVariant::IfStatement(embedded)
+                Statement::If(embedded)
             }
             ParseKeyword::Switch => {
                 let embedded = self.allocate_boxed_visit::<SwitchStatement>();
-                StatementVariant::SwitchStatement(embedded)
+                Statement::Switch(embedded)
             }
             ParseKeyword::End => {
                 // 'end' is forbidden as a command.

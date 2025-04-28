@@ -10,6 +10,7 @@
 use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt, sync::atomic::Ordering};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
+use once_cell::unsync::OnceCell;
 
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
@@ -19,7 +20,7 @@ use crate::{
     env::env_init,
     input_common::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
-        InputEventQueue, InputEventQueuer, KeyEvent, Queried, TerminalQuery,
+        InputEventQueue, InputEventQueuer, KeyEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
@@ -151,8 +152,7 @@ fn setup_and_process_keys(
     // in fish-proper this is done once a command is run.
     unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
     terminal_protocol_hacks();
-    let blocking_query: RefCell<Option<TerminalQuery>> =
-        RefCell::new(Some(TerminalQuery::PrimaryDeviceAttribute(Queried::NotYet)));
+    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
     initial_query(&blocking_query, streams.out, None);
 
     if continuous_mode {

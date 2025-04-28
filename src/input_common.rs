@@ -761,14 +761,8 @@ pub enum CursorPositionQuery {
 }
 
 #[derive(Eq, PartialEq)]
-pub enum Queried {
-    NotYet,
-    Yes,
-}
-
-#[derive(Eq, PartialEq)]
 pub enum TerminalQuery {
-    PrimaryDeviceAttribute(Queried),
+    PrimaryDeviceAttribute,
     CursorPositionReport(CursorPositionQuery),
 }
 
@@ -1138,7 +1132,7 @@ pub trait InputEventQueuer {
                     return None;
                 };
                 match query {
-                    TerminalQuery::PrimaryDeviceAttribute(_) => {}
+                    TerminalQuery::PrimaryDeviceAttribute => {}
                     TerminalQuery::CursorPositionReport(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(

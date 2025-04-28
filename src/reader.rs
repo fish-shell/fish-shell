@@ -20,6 +20,7 @@ use libc::{
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
+use once_cell::unsync::OnceCell;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::borrow::Cow;
@@ -84,7 +85,6 @@ use crate::input_common::stop_query;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::CursorPositionQuery;
 use crate::input_common::ImplicitEvent;
-use crate::input_common::Queried;
 use crate::input_common::TerminalQuery;
 use crate::input_common::IN_DVTM;
 use crate::input_common::IN_MIDNIGHT_COMMANDER;
@@ -238,14 +238,11 @@ fn redirect_tty_after_sighup() {
 }
 
 pub(crate) fn initial_query(
-    blocking_query: &RefCell<Option<TerminalQuery>>,
+    blocking_query: &OnceCell<RefCell<Option<TerminalQuery>>>,
     out: &mut impl Output,
     vars: Option<&dyn Environment>,
 ) {
-    if *blocking_query.borrow() != Some(TerminalQuery::PrimaryDeviceAttribute(Queried::NotYet)) {
-        return;
-    }
-    *blocking_query.borrow_mut() = {
+    blocking_query.get_or_init(|| {
         let query = if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
             None
         } else {
@@ -256,10 +253,10 @@ pub(crate) fn initial_query(
                 query_capabilities_via_dcs(out.by_ref(), vars);
             }
             out.write_command(QueryPrimaryDeviceAttribute);
-            Some(TerminalQuery::PrimaryDeviceAttribute(Queried::Yes))
+            Some(TerminalQuery::PrimaryDeviceAttribute)
         };
-        query
-    };
+        RefCell::new(query)
+    });
 }
 
 /// The stack of current interactive reading contexts.
@@ -1525,7 +1522,7 @@ pub fn combine_command_and_autosuggestion(
 
 impl<'a> Reader<'a> {
     pub(crate) fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.parser.blocking_query.borrow_mut()
+        self.parser.blocking_query.get().unwrap().borrow_mut()
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
@@ -2528,7 +2525,7 @@ impl<'a> Reader<'a> {
                 }
                 ImplicitEvent::PrimaryDeviceAttribute => {
                     let query = self.blocking_query();
-                    if !matches!(*query, Some(TerminalQuery::PrimaryDeviceAttribute(_))) {
+                    if *query != Some(TerminalQuery::PrimaryDeviceAttribute) {
                         // Rogue reply.
                         return ControlFlow::Continue(());
                     }
@@ -3814,7 +3811,7 @@ impl<'a> Reader<'a> {
                     return;
                 };
                 match query {
-                    TerminalQuery::PrimaryDeviceAttribute(_) => panic!(),
+                    TerminalQuery::PrimaryDeviceAttribute => panic!(),
                     TerminalQuery::CursorPositionReport(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(

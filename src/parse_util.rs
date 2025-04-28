@@ -1,5 +1,7 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, is_same_node, Ast, Keyword, Leaf, Node, NodeVisitor, Token, Traversal};
+use crate::ast::{
+    self, is_same_node, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal,
+};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -1201,76 +1203,95 @@ pub fn parse_util_detect_errors_in_ast(
 
     let mut traversal = ast::Traversal::new(ast.top());
     while let Some(node) = traversal.next() {
-        if let Some(jc) = node.as_job_continuation() {
-            // Somewhat clumsy way of checking for a statement without source in a pipeline.
-            // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
-                has_unclosed_pipe = true;
+        match node.kind() {
+            Kind::JobContinuation(jc) => {
+                // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                // See if our pipe has source but our statement does not.
+                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                    has_unclosed_pipe = true;
+                }
             }
-        } else if let Some(job_conjunction) = node.as_job_conjunction() {
-            errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
-        } else if let Some(jcc) = node.as_job_conjunction_continuation() {
-            // Somewhat clumsy way of checking for a job without source in a conjunction.
-            // See if our conjunction operator (&& or ||) has source but our job does not.
-            if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
-                has_unclosed_conjunction = true;
+            Kind::JobConjunction(job_conjunction) => {
+                errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
-        } else if let Some(arg) = node.as_argument() {
-            let arg_src = arg.source(buff_src);
-            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
-                .err()
-                .unwrap_or_default();
-        } else if let Some(job) = node.as_job_pipeline() {
-            // Disallow background in the following cases:
-            //
-            // foo & ; and bar
-            // foo & ; or bar
-            // if foo & ; end
-            // while foo & ; end
-            // If it's not a background job, nothing to do.
-            if job.bg.is_some() {
-                errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
+            Kind::JobConjunctionContinuation(jcc) => {
+                // Somewhat clumsy way of checking for a job without source in a conjunction.
+                // See if our conjunction operator (&& or ||) has source but our job does not.
+                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                    has_unclosed_conjunction = true;
+                }
             }
-        } else if let Some(stmt) = node.as_decorated_statement() {
-            errored |=
-                detect_errors_in_decorated_statement(buff_src, &traversal, stmt, &mut out_errors);
-        } else if let Some(block) = node.as_block_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !block.end.has_source() {
-                has_unclosed_block = true;
+            Kind::Argument(arg) => {
+                let arg_src = arg.source(buff_src);
+                res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                    .err()
+                    .unwrap_or_default();
             }
-            errored |= detect_errors_in_block_redirection_list(
-                node,
-                &block.args_or_redirs,
-                &mut out_errors,
-            );
-        } else if let Some(brace_statement) = node.as_brace_statement() {
-            // If our closing brace had no source, we are unsourced.
-            if !brace_statement.right_brace.has_source() {
-                has_unclosed_block = true;
+            Kind::JobPipeline(job) => {
+                // Disallow background in the following cases:
+                //
+                // foo & ; and bar
+                // foo & ; or bar
+                // if foo & ; end
+                // while foo & ; end
+                // If it's not a background job, nothing to do.
+                if job.bg.is_some() {
+                    errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
+                }
             }
-            errored |= detect_errors_in_block_redirection_list(
-                node,
-                &brace_statement.args_or_redirs,
-                &mut out_errors,
-            );
-        } else if let Some(ifs) = node.as_if_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !ifs.end.has_source() {
-                has_unclosed_block = true;
+            Kind::DecoratedStatement(stmt) => {
+                errored |= detect_errors_in_decorated_statement(
+                    buff_src,
+                    &traversal,
+                    stmt,
+                    &mut out_errors,
+                );
             }
-            errored |=
-                detect_errors_in_block_redirection_list(node, &ifs.args_or_redirs, &mut out_errors);
-        } else if let Some(switchs) = node.as_switch_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !switchs.end.has_source() {
-                has_unclosed_block = true;
+            Kind::BlockStatement(block) => {
+                // If our 'end' had no source, we are unsourced.
+                if !block.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &block.args_or_redirs,
+                    &mut out_errors,
+                );
             }
-            errored |= detect_errors_in_block_redirection_list(
-                node,
-                &switchs.args_or_redirs,
-                &mut out_errors,
-            );
+            Kind::BraceStatement(brace_statement) => {
+                // If our closing brace had no source, we are unsourced.
+                if !brace_statement.right_brace.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &brace_statement.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            Kind::IfStatement(ifs) => {
+                // If our 'end' had no source, we are unsourced.
+                if !ifs.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &ifs.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            Kind::SwitchStatement(switchs) => {
+                // If our 'end' had no source, we are unsourced.
+                if !switchs.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &switchs.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            _ => {}
         }
     }
 

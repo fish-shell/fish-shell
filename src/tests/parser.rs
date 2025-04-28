@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Ast, JobPipeline, Kind, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
@@ -35,7 +35,10 @@ fn test_parser() {
         if ast.errored() {
             return Err(ParserTestErrorBits::ERROR);
         }
-        let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+        let Kind::FreestandingArgumentList(args) = ast.top().kind() else {
+            panic!("Expected free standing argument list");
+        };
+        let args = &args.arguments;
         let first_arg = args.get(0).expect("Failed to parse an argument");
         let mut errors = None;
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
@@ -424,7 +427,7 @@ fn test_new_parser_ll2() {
         // Get the statement. Should only have one.
         let mut statement = None;
         for n in Traversal::new(ast.top()) {
-            if let Some(tmp) = n.as_decorated_statement() {
+            if let Kind::DecoratedStatement(tmp) = n.kind() {
                 assert!(
                     statement.is_none(),
                     "More than one decorated statement found in '{}'",
@@ -786,7 +789,7 @@ fn test_line_counter() {
         assert_eq!(line_offset, expected);
     }
 
-    let pipelines: Vec<_> = ps.ast.walk().filter_map(|n| n.as_job_pipeline()).collect();
+    let pipelines: Vec<_> = ps.ast.walk().filter_map(ast::JobPipeline::cast).collect();
     assert_eq!(pipelines.len(), 3);
     let src_offsets = [0, 0, 2];
     assert_eq!(line_counter.source_offset_of_node(), None);
@@ -832,7 +835,7 @@ struct TrueSemiAstTester<'a> {
 impl<'a> TrueSemiAstTester<'a> {
     const TRUE_SEMI: &'static wstr = L!("true;");
     fn new(ast: &'a Ast) -> Self {
-        let job_list = ast.top().as_job_list().expect("Expected job_list");
+        let job_list: &JobList = ast.top().cast().unwrap();
         let job_conjunction = &job_list[0];
         let job_pipeline = &job_conjunction.job;
         let variable_assignment_list = &job_pipeline.variables;
@@ -894,7 +897,7 @@ fn test_ast() {
     // Light testing of the AST and traversals.
     let ast = Ast::parse(TrueSemiAstTester::TRUE_SEMI, ParseTreeFlags::empty(), None);
     let tester = TrueSemiAstTester::new(&ast);
-    assert!(ast.top().as_job_list().is_some(), "Expected job_list");
+    assert!(ast.top().cast::<JobList>().is_some(), "Expected job_list");
 
     // Walk the AST and collect all nodes.
     // See is_same_node comments for why we can't use assert_eq! here.

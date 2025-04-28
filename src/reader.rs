@@ -45,7 +45,7 @@ use std::time::{Duration, Instant};
 use errno::{errno, Errno};
 
 use crate::abbrs::abbrs_match;
-use crate::ast::{is_same_node, Ast};
+use crate::ast::{is_same_node, Ast, Kind};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
@@ -5381,10 +5381,10 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
         if !has_cmd_subs {
             // Common case of no command substitutions in this leaf node.
             // Check if a node is the command portion of a decorated statement.
-            let is_cmd = traversal
-                .parent(node)
-                .as_decorated_statement()
-                .is_some_and(|stmt| is_same_node(node, &stmt.command));
+            let mut is_cmd = false;
+            if let Kind::DecoratedStatement(stmt) = traversal.parent(node).kind() {
+                is_cmd = is_same_node(node, &stmt.command);
+            }
             result.push(PositionedToken { range, is_cmd })
         }
     }

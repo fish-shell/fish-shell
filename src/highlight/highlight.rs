@@ -278,7 +278,10 @@ fn autosuggest_parse_command(
     );
 
     // Find the first statement.
-    let jc = ast.top().as_job_list().unwrap().get(0)?;
+    let Kind::JobList(job_list) = ast.top().kind() else {
+        panic!("Expected job list");
+    };
+    let jc = job_list.get(0)?;
     let first_statement = jc.job.statement.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {

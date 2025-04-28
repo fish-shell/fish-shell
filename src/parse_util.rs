@@ -1335,7 +1335,8 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+    let arg_list: &ast::FreestandingArgumentList = ast.top().cast().unwrap();
+    let args = &arg_list.arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
         if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
@@ -1565,19 +1566,22 @@ fn detect_errors_in_backgrounded_job(
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    let Some(job_conj) = traversal.parent(job).as_job_conjunction() else {
+    let Kind::JobConjunction(job_conj) = traversal.parent(job).kind() else {
         return false;
     };
 
     let job_conj_parent = traversal.parent(job_conj);
-    if job_conj_parent.as_if_clause().is_some() || job_conj_parent.as_while_header().is_some() {
+    if matches!(
+        job_conj_parent.kind(),
+        Kind::IfClause(_) | Kind::WhileHeader(_)
+    ) {
         errored = append_syntax_error!(
             parse_errors,
             source_range.start(),
             source_range.length(),
             BACKGROUND_IN_CONDITIONAL_ERROR_MSG
         );
-    } else if let Some(jlist) = job_conj_parent.as_job_list() {
+    } else if let Kind::JobList(jlist) = job_conj_parent.kind() {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Find the index of ourselves in the job list.
         let index = jlist
@@ -1631,13 +1635,18 @@ fn detect_errors_in_decorated_statement(
     }
 
     // Get the statement we are part of.
-    let st = traversal.parent(dst).as_statement().unwrap();
+    let Kind::Statement(st) = traversal.parent(dst).kind() else {
+        panic!();
+    };
 
     // Walk up to the job.
     let job = traversal
         .parent_nodes()
-        .find_map(|n| n.as_job_pipeline())
-        .expect("Should have found the job");
+        .find_map(|n| match n.kind() {
+            Kind::JobPipeline(job) => Some(job),
+            _ => None,
+        })
+        .expect("should have found the job");
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
@@ -1748,10 +1757,10 @@ fn detect_errors_in_decorated_statement(
             // loop from the ancestor alone; we need the header. That is, we hit a
             // block_statement, and have to check its header.
             let mut found_loop = false;
-            for block in traversal
-                .parent_nodes()
-                .filter_map(|anc| anc.as_block_statement())
-            {
+            for block in traversal.parent_nodes().filter_map(|anc| match anc.kind() {
+                Kind::BlockStatement(block) => Some(block),
+                _ => None,
+            }) {
                 match block.header {
                     ast::BlockStatementHeader::For(_) | ast::BlockStatementHeader::While(_) => {
                         // This is a loop header, so we can break or continue.
@@ -1832,7 +1841,7 @@ fn detect_errors_in_block_redirection_list(
         return false;
     };
     let r = first_arg.source_range();
-    if parent.as_brace_statement().is_some() {
+    if let Kind::BraceStatement(_) = parent.kind() {
         append_syntax_error!(out_errors, r.start(), r.length(), RIGHT_BRACE_ARG_ERR_MSG);
     } else {
         append_syntax_error!(out_errors, r.start(), r.length(), END_ARG_ERR_MSG);

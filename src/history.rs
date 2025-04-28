@@ -47,7 +47,7 @@ use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
 
 use crate::{
-    ast::{Ast, Node},
+    ast::{Ast, Kind, Node},
     common::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
         UnescapeStringStyle,
@@ -1585,12 +1585,12 @@ impl History {
 
         let mut potential_paths = Vec::new();
         for node in ast.walk() {
-            if let Some(arg) = node.as_argument() {
+            if let Kind::Argument(arg) = node.kind() {
                 let potential_path = arg.source(s);
                 if string_could_be_path(potential_path) {
                     potential_paths.push(potential_path.to_owned());
                 }
-            } else if let Some(stmt) = node.as_decorated_statement() {
+            } else if let Kind::DecoratedStatement(stmt) = node.kind() {
                 // Hack hack hack - if the command is likely to trigger an exit, then don't do
                 // background file detection, because we won't be able to write it to our history file
                 // before we exit.

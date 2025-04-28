@@ -351,7 +351,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             .collect();
         let mut next_newline = 0;
         for node in Traversal::new(self.ast.top()) {
-            let Some(brace_statement) = node.as_brace_statement() else {
+            let Kind::BraceStatement(brace_statement) = node.kind() else {
                 continue;
             };
             while next_newline != newline_offsets.len()
@@ -402,15 +402,15 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                         let p = self.traversal.parent(p);
                         assert_eq!(p.typ(), Type::statement);
                         let p = self.traversal.parent(p);
-                        if let Some(job) = p.as_job_pipeline() {
+                        if let Kind::JobPipeline(job) = p.kind() {
                             if !job.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
-                        } else if let Some(job_cnt) = p.as_job_continuation() {
+                        } else if let Kind::JobContinuation(job_cnt) = p.kind() {
                             if !job_cnt.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
-                        } else if let Some(not_stmt) = p.as_not_statement() {
+                        } else if let Kind::NotStatement(not_stmt) = p.kind() {
                             if !not_stmt.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
@@ -727,14 +727,12 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     fn is_multi_line_brace(&self, node: &dyn ast::Token) -> bool {
-        self.traversal
-            .parent(node.as_node())
-            .as_brace_statement()
-            .is_some_and(|brace_statement| {
-                self.multi_line_brace_statement_locations
-                    .binary_search(&brace_statement.source_range().start())
-                    .is_ok()
-            })
+        let Kind::BraceStatement(brace) = self.traversal.parent(node.as_node()).kind() else {
+            return false;
+        };
+        self.multi_line_brace_statement_locations
+            .binary_search(&brace.source_range().start())
+            .is_ok()
     }
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();

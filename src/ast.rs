@@ -1965,7 +1965,7 @@ impl Ast {
             // dot-| padding
             result += &str::repeat("! ", depth)[..];
 
-            if let Some(n) = node.as_argument() {
+            if let Kind::Argument(n) = node.kind() {
                 result += "argument";
                 if let Some(argsrc) = n.try_source(orig) {
                     sprintf!(=> &mut result, ": '%ls'", argsrc);

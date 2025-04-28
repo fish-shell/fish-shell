@@ -27,12 +27,12 @@ use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
 use crate::wutil::fish_wcstol;
+use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 // The range of key codes for inputrc-style keyboard functions.
@@ -1628,10 +1628,7 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
-        static NO_WAIT: Mutex<Option<BlockingWait>> = Mutex::new(None);
-        NO_WAIT.lock().unwrap()
-    }
+    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>>;
     fn is_blocked(&self) -> bool {
         self.blocking_wait().is_some()
     }
@@ -1753,7 +1750,7 @@ pub(crate) fn decode_input_byte(
     invalid(out_seq, || FLOG!(reader, "Illegal codepoint"))
 }
 
-pub(crate) fn unblock_input(mut wait_guard: MutexGuard<Option<BlockingWait>>) -> bool {
+pub(crate) fn unblock_input(mut wait_guard: RefMut<'_, Option<BlockingWait>>) -> bool {
     if wait_guard.is_none() {
         return false;
     }
@@ -1787,12 +1784,14 @@ impl<'a> std::fmt::Display for DisplayBytes<'a> {
 /// A simple, concrete implementation of InputEventQueuer.
 pub struct InputEventQueue {
     data: InputData,
+    blocking_wait: RefCell<Option<BlockingWait>>,
 }
 
 impl InputEventQueue {
     pub fn new(in_fd: RawFd) -> Self {
         Self {
             data: InputData::new(in_fd),
+            blocking_wait: RefCell::new(None),
         }
     }
 }
@@ -1810,6 +1809,9 @@ impl InputEventQueuer for InputEventQueue {
         if reader_test_and_clear_interrupted() != 0 {
             self.enqueue_interrupt_key();
         }
+    }
+    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>> {
+        self.blocking_wait.borrow_mut()
     }
 }
 

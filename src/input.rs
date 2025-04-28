@@ -21,6 +21,7 @@ use crate::terminal::Outputter;
 use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
+use std::cell::RefMut;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
     Mutex, MutexGuard,
@@ -450,7 +451,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         )));
     }
 
-    fn blocking_wait(&self) -> MutexGuard<Option<BlockingWait>> {
+    fn blocking_wait(&self) -> RefMut<'_, Option<BlockingWait>> {
         Reader::blocking_wait(self)
     }
 

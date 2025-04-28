@@ -44,7 +44,7 @@ use std::os::fd::OwnedFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 pub enum BlockData {
     Function {
@@ -440,7 +440,7 @@ pub struct Parser {
     /// Global event blocks.
     pub global_event_blocks: AtomicU64,
 
-    pub blocking_wait: Mutex<Option<BlockingWait>>,
+    pub blocking_wait: RefCell<Option<BlockingWait>>,
 }
 
 impl Parser {
@@ -458,7 +458,7 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
-            blocking_wait: Mutex::new(Some(BlockingWait::Startup(Queried::NotYet))),
+            blocking_wait: RefCell::new(Some(BlockingWait::Startup(Queried::NotYet))),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {

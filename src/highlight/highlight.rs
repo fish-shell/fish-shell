@@ -2,7 +2,7 @@
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
     self, Argument, Ast, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
-    Keyword, Node, NodeVisitor, Redirection, Token, Type, VariableAssignment,
+    Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;
@@ -1112,17 +1112,13 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
             self.visit_token(token);
             return;
         }
-        match node.typ() {
-            Type::argument => self.visit_argument(node.as_argument().unwrap(), false, true),
-            Type::redirection => self.visit_redirection(node.as_redirection().unwrap()),
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_variable_assignment().unwrap())
-            }
-            Type::decorated_statement => {
-                self.visit_decorated_statement(node.as_decorated_statement().unwrap())
-            }
-            Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
-            Type::brace_statement => self.visit_brace_statement(node.as_brace_statement().unwrap()),
+        match node.kind() {
+            Kind::Argument(node) => self.visit_argument(node, false, true),
+            Kind::Redirection(node) => self.visit_redirection(node),
+            Kind::VariableAssignment(node) => self.visit_variable_assignment(node),
+            Kind::DecoratedStatement(node) => self.visit_decorated_statement(node),
+            Kind::BlockStatement(node) => self.visit_block_statement(node),
+            Kind::BraceStatement(node) => self.visit_brace_statement(node),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }

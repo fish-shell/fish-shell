@@ -15,7 +15,7 @@ use crate::panic::panic_handler;
 use libc::LC_ALL;
 
 use super::prelude::*;
-use crate::ast::{self, Ast, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
+use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -264,10 +264,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             // See if we have a condition and an andor_job_list.
             let condition;
             let andors;
-            if let Some(ifc) = node.as_if_clause() {
+            if let Kind::IfClause(ifc) = node.kind() {
                 condition = ifc.condition.semi_nl.as_ref();
                 andors = &ifc.andor_tail;
-            } else if let Some(wc) = node.as_while_header() {
+            } else if let Kind::WhileHeader(wc) = node.kind() {
                 condition = wc.condition.semi_nl.as_ref();
                 andors = &wc.andor_tail;
             } else {
@@ -286,7 +286,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
 
         // `{ x; y; }` gets semis if the input uses semis and it spans only one line.
         for node in Traversal::new(self.ast.top()) {
-            let Some(brace_statement) = node.as_brace_statement() else {
+            let Kind::BraceStatement(brace_statement) = node.kind() else {
                 continue;
             };
             if self
@@ -303,7 +303,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
 
         // `x ; and y` gets semis if it has them already, and they are on the same line.
         for node in Traversal::new(self.ast.top()) {
-            let Some(job_list) = node.as_job_list() else {
+            let Kind::JobList(job_list) = node.kind() else {
                 continue;
             };
             let mut prev_job_semi_nl = None;

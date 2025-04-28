@@ -1,4 +1,4 @@
-use crate::ast::{self, is_same_node, Ast, JobPipeline, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, JobPipeline, Kind, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
@@ -972,7 +972,7 @@ fn test_traversal_parent_panics() {
     let mut traversal = ast.walk();
     let mut decorated_statement = None;
     while let Some(node) = traversal.next() {
-        if node.as_decorated_statement().is_some() {
+        if let Kind::DecoratedStatement(_) = node.kind() {
             decorated_statement = Some(node);
         } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::end) {
             // should panic as the decorated_statement is not on the stack.

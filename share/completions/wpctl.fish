@@ -1,5 +1,9 @@
 set -l commands status get-volume inspect set-default set-volume set-mute set-profile clear-default
 
+if wpctl settings &> /dev/null;
+    set --append commands settings
+end
+
 function __wpctl_get_nodes -a section -a type
     set -l havesection
     set -l havetype
@@ -38,6 +42,10 @@ function __wpctl_command_shape
     end
 end
 
+function __wpctl_get_settings
+    wpctl settings | string match --regex --groups-only -- '- Name: (.*)'
+end
+
 complete -c wpctl -f
 
 complete -c wpctl -s h -l help -d "Show help options"
@@ -48,6 +56,9 @@ complete -c wpctl -n "__fish_seen_subcommand_from inspect" -s a -l associated -d
 complete -c wpctl -n "__fish_seen_subcommand_from set-volume" -s p -l pid -d "Selects all nodes associated to the given PID"
 complete -c wpctl -n "__fish_seen_subcommand_from set-volume" -s l -l limit -d "Limit volume to below this value"
 complete -c wpctl -n "__fish_seen_subcommand_from set-mute" -s p -l pid -d "Selects all nodes associated to the given PID"
+complete -c wpctl -n "__fish_seen_subcommand_from settings" -s d -l delete -d "Deletes the saved setting value"
+complete -c wpctl -n "__fish_seen_subcommand_from settings" -s s -l save -d "Saves the setting value"
+complete -c wpctl -n "__fish_seen_subcommand_from settings" -s r -l reset -d "Resets the saved setting to its default value"
 
 complete -c wpctl -n __wpctl_command_shape -a "$commands"
 complete -c wpctl -n '__wpctl_command_shape "*"' -n "__fish_seen_subcommand_from get-volume inspect set-volume set-mute set-profile" -a "@DEFAULT_AUDIO_SOURCE@" -d "Default Microphone"
@@ -56,3 +67,4 @@ complete -c wpctl -n '__wpctl_command_shape "*"' -n "__fish_seen_subcommand_from
 complete -c wpctl -n '__wpctl_command_shape "*"' -n "__fish_seen_subcommand_from get-volume inspect set-volume set-mute set-profile" -a "(__wpctl_get_nodes Audio Sources) (__wpctl_get_nodes Audio Sinks)"
 complete -c wpctl -n '__wpctl_command_shape "*"' -n "__fish_seen_subcommand_from inspect set-profile" -a "(__wpctl_get_nodes Audio Sources) (__wpctl_get_nodes Audio Sinks) (__wpctl_get_nodes Video Source)"
 complete -c wpctl -n '__wpctl_command_shape set-mute "*"' -a "0 1 toggle"
+complete -c wpctl -n '__wpctl_command_shape settings' -a "(__wpctl_get_settings)"

@@ -772,6 +772,10 @@ impl FdOutputStream {
         }
     }
 
+    pub fn as_raw_fd(&self) -> RawFd {
+        self.fd
+    }
+
     fn append(&mut self, s: &wstr) -> bool {
         if self.errored {
             return false;

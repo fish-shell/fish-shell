@@ -33,6 +33,8 @@ Synopsis
     status buildinfo
     status get-file FILE
     status list-files [PATH]
+    status xtgettcap TERMINFO-CAPABILITY
+    status xtversion
 
 Description
 -----------
@@ -116,6 +118,13 @@ The following operations (subcommands) are available:
 **list-files** *FILE*
     This lists the files embedded in the fish binary at compile time. Only files where the path starts with the optional *FILE* argument are shown.
     Returns 0 if something was printed, 1 otherwise.
+
+**xtgettcap** *TERMINFO-CAPABILITY*
+    Query the terminal for a terminfo capability via XTGETTCAP.
+    Returns 0 if the capability is present and 1 otherwise.
+
+**xtversion**
+    Show the terminal name and version (XTVERSION).
 
 Notes
 -----

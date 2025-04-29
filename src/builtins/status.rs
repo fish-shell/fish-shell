@@ -1,5 +1,3 @@
-use std::os::unix::prelude::*;
-
 use super::prelude::*;
 use crate::common::{get_executable_path, str2wcstring, PROGRAM_NAME};
 use crate::future_feature_flags::{self as features, feature_test};
@@ -11,6 +9,9 @@ use crate::wutil::{waccess, wbasename, wdirname, wrealpath, Error};
 use libc::F_OK;
 use nix::errno::Errno;
 use nix::NixPath;
+use std::os::unix::ffi::OsStrExt;
+
+mod query;
 
 macro_rules! str_enum {
     ($name:ident, $(($val:ident, $str:expr)),* $(,)?) => {
@@ -37,7 +38,7 @@ macro_rules! str_enum {
 
 use StatusCmd::*;
 #[derive(Clone, Copy)]
-enum StatusCmd {
+pub(in crate::builtins::status) enum StatusCmd {
     STATUS_CURRENT_CMD = 1,
     STATUS_BASENAME,
     STATUS_DIRNAME,
@@ -62,6 +63,8 @@ enum StatusCmd {
     STATUS_BUILDINFO,
     STATUS_GET_FILE,
     STATUS_LIST_FILES,
+    STATUS_XTGETTCAP,
+    STATUS_XTVERSION,
 }
 
 str_enum!(
@@ -96,6 +99,8 @@ str_enum!(
     (STATUS_STACK_TRACE, "print-stack-trace"),
     (STATUS_STACK_TRACE, "stack-trace"),
     (STATUS_TEST_FEATURE, "test-feature"),
+    (STATUS_XTGETTCAP, "xtgettcap"),
+    (STATUS_XTVERSION, "xtversion"),
 );
 
 /// Values that may be returned from the test-feature option to status.
@@ -527,6 +532,12 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 return Err(STATUS_CMD_ERROR);
             }
         }
+        STATUS_XTGETTCAP => {
+            return query::status_xtgettcap(parser, streams, cmd, args);
+        }
+        STATUS_XTVERSION => {
+            return query::status_xtversion(parser, streams, cmd, args);
+        }
         ref s => {
             if !args.is_empty() {
                 streams.err.append(wgettext_fmt!(
@@ -714,7 +725,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 | STATUS_FEATURES
                 | STATUS_TEST_FEATURE
                 | STATUS_GET_FILE
-                | STATUS_LIST_FILES => {
+                | STATUS_LIST_FILES
+                | STATUS_XTGETTCAP
+                | STATUS_XTVERSION => {
                     unreachable!("")
                 }
             }

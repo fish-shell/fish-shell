@@ -28,6 +28,7 @@ use crate::wutil;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
 use libc::SEEK_CUR;
+use std::num::NonZeroUsize;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
@@ -219,12 +220,14 @@ fn read_interactive(
     conf.complete_ok = shell;
     conf.highlight_ok = shell;
     conf.syntax_check_ok = shell;
+    conf.prompt_ok = true;
 
     // No autosuggestions or abbreviations in builtin_read.
     conf.autosuggest_ok = false;
     conf.expand_abbrev_ok = false;
 
     conf.exit_on_interrupt = true;
+    conf.in_builtin_read = true;
     conf.in_silent_mode = silent;
 
     conf.left_prompt_cmd = prompt.to_owned();
@@ -244,7 +247,7 @@ fn read_interactive(
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
-        reader_readline(parser, nchars)
+        reader_readline(parser, NonZeroUsize::try_from(nchars).ok())
     };
     terminal_protocols_disable_ifn();
     if let Some(line) = mline {

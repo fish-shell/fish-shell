@@ -1,7 +1,10 @@
 #RUN: %fish %s
 
 mkdir $__fish_config_dir/themes
-echo >$__fish_config_dir/themes/foo.theme 'fish_color_normal cyan'
+echo >$__fish_config_dir/themes/foo.theme '
+fish_color_normal cyan
+fish_color_error brred --underline=curly
+'
 
 set -g fish_pager_color_secondary_background custom-value
 fish_config theme choose foo
@@ -11,6 +14,14 @@ set -S fish_color_normal
 # CHECK: $fish_color_normal[1]: |cyan|
 set -S fish_pager_color_secondary_background
 # CHECK: $fish_pager_color_secondary_background: set in global scope, unexported, with 0 elements
+
+# Not a default theme, so we allow --underline=curly even if we don't run inside a terminal that
+# advertises support via XTGETTCAP.
+set -S fish_color_error
+# CHECK: $fish_color_error: set in global scope, unexported, with 2 elements
+# CHECK: $fish_color_error[1]: |brred|
+# CHECK: $fish_color_error[2]: |--underline=curly|
+
 
 function change-theme
     echo >$__fish_config_dir/themes/fake-default.theme 'fish_color_command' $argv

@@ -85,6 +85,7 @@ use crate::input_common::stop_query;
 use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::CursorPositionQuery;
 use crate::input_common::ImplicitEvent;
+use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponseEvent;
 use crate::input_common::TerminalQuery;
 use crate::input_common::IN_DVTM;
@@ -134,9 +135,7 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{
-    Capability, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE,
-};
+use crate::terminal::{Capability, KITTY_KEYBOARD_SUPPORTED};
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
@@ -238,23 +237,23 @@ fn redirect_tty_after_sighup() {
 pub(crate) fn initial_query(
     blocking_query: &OnceCell<RefCell<Option<TerminalQuery>>>,
     out: &mut impl Output,
-    vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
-        let query = if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
-            None
-        } else {
+        let query = querying_allowed().then(|| {
             // Query for kitty keyboard protocol support.
             out.write_command(QueryKittyKeyboardProgressiveEnhancements);
             out.write_command(QueryXtversion);
-            if let Some(vars) = vars {
-                query_capabilities_via_dcs(out.by_ref(), vars);
-            }
             out.write_command(QueryPrimaryDeviceAttribute);
-            Some(TerminalQuery::PrimaryDeviceAttribute)
-        };
+            TerminalQuery::PrimaryDeviceAttribute(None)
+        });
         RefCell::new(query)
     });
+}
+
+pub(crate) type UserQuery = Box<dyn FnOnce(&mut Option<TerminalQuery>) -> ControlFlow<()>>;
+
+pub(crate) fn querying_allowed() -> bool {
+    !(is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load())
 }
 
 /// The stack of current interactive reading contexts.
@@ -273,7 +272,7 @@ pub fn reader_in_interactive_read() -> bool {
     reader_data_stack()
         .iter()
         .rev()
-        .any(|reader| reader.conf.exit_on_interrupt)
+        .any(|reader| reader.conf.in_builtin_read)
 }
 
 /// Access the top level reader data.
@@ -338,6 +337,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to show a prompt.
+    pub prompt_ok: bool,
+
     /// Whether to reexecute prompt function before final rendering.
     pub transient_prompt: bool,
 
@@ -346,6 +348,9 @@ pub struct ReaderConfig {
 
     /// Whether to exit on interrupt (^C).
     pub exit_on_interrupt: bool,
+
+    /// Whether we are in builtin read.
+    pub in_builtin_read: bool,
 
     /// If set, do not show what is typed.
     pub in_silent_mode: bool,
@@ -691,6 +696,7 @@ fn read_i(parser: &Parser) {
     conf.syntax_check_ok = true;
     conf.expand_abbrev_ok = true;
     conf.autosuggest_ok = check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true);
+    conf.prompt_ok = true;
     conf.transient_prompt = check_bool_var(parser.vars(), L!("fish_transient_prompt"), false);
 
     if parser.is_breakpoint() && function::exists(DEBUG_PROMPT_FUNCTION_NAME, parser) {
@@ -882,6 +888,8 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
             term_donate(/*quiet=*/ true);
         }
     }
+
+    terminal_protocol_hacks();
 }
 
 pub fn reader_deinit(in_signal_handler: bool, restore_foreground_pgroup: bool) {
@@ -1061,8 +1069,7 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(parser: &Parser, nchars: usize) -> Option<WString> {
-    let nchars = NonZeroUsize::try_from(nchars).ok();
+pub fn reader_readline(parser: &Parser, nchars: Option<NonZeroUsize>) -> Option<WString> {
     let data = current_data().unwrap();
     let mut reader = Reader { parser, data };
     reader.readline(nchars)
@@ -2202,73 +2209,77 @@ impl<'a> Reader<'a> {
         initial_query(
             &self.parser.blocking_query,
             &mut BufferedOutputter::new(Outputter::stdoutput()),
-            Some(self.parser.vars()),
         );
 
-        // HACK: Don't abandon line for the first prompt, because
-        // if we're started with the terminal it might not have settled,
-        // so the width is quite likely to be in flight.
-        //
-        // This means that `printf %s foo; fish` will overwrite the `foo`,
-        // but that's a smaller problem than having the omitted newline char
-        // appear constantly.
-        //
-        // I can't see a good way around this.
-        if !self.first_prompt {
-            self.screen
-                .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+        if self.conf.prompt_ok {
+            // HACK: Don't abandon line for the first prompt, because
+            // if we're started with the terminal it might not have settled,
+            // so the width is quite likely to be in flight.
+            //
+            // This means that `printf %s foo; fish` will overwrite the `foo`,
+            // but that's a smaller problem than having the omitted newline char
+            // appear constantly.
+            //
+            // I can't see a good way around this.
+            if !self.first_prompt {
+                self.screen
+                    .reset_abandoning_line(usize::try_from(termsize_last().width).unwrap());
+            }
+            self.first_prompt = false;
+
+            if !self.conf.event.is_empty() {
+                event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
+            }
+            self.exec_prompt(true, false);
+
+            // Start out as initially dirty.
+            self.force_exec_prompt_and_repaint = true;
         }
-        self.first_prompt = false;
 
-        if !self.conf.event.is_empty() {
-            event::fire_generic(self.parser, self.conf.event.to_owned(), vec![]);
-        }
-        self.exec_prompt(true, false);
-
-        // Start out as initially dirty.
-        self.force_exec_prompt_and_repaint = true;
-
+        self.insert_front(self.parser.pending_keys.take());
         while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
             if self.handle_char_event(None).is_break() {
                 break;
             }
         }
 
-        if self.conf.transient_prompt {
-            self.exec_prompt(true, true);
-        }
+        if self.conf.prompt_ok {
+            if self.conf.transient_prompt {
+                self.exec_prompt(true, true);
+            }
 
-        // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
-        // user presses enter.
-        if self.is_repaint_needed(None)
-            || self.screen.scrolled()
-            || self.conf.inputfd != STDIN_FILENO
-        {
-            self.layout_and_repaint_before_execution();
-        }
+            // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
+            // user presses enter.
+            if self.is_repaint_needed(None)
+                || self.screen.scrolled()
+                || self.conf.inputfd != STDIN_FILENO
+            {
+                self.layout_and_repaint_before_execution();
+            }
 
-        // Finish syntax highlighting (but do not wait forever).
-        if self.rls().finished {
-            self.finish_highlighting_before_exec();
-        }
+            // Finish syntax highlighting (but do not wait forever).
+            if self.rls().finished {
+                self.finish_highlighting_before_exec();
+            }
 
-        // Emit a newline so that the output is on the line after the command.
-        // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
-        if !self.screen.cursor_is_wrapped_to_own_line() {
-            let _ = write_to_fd(b"\n", STDOUT_FILENO);
-        }
+            // Emit a newline so that the output is on the line after the command.
+            // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
+            if !self.screen.cursor_is_wrapped_to_own_line() {
+                let _ = write_to_fd(b"\n", STDOUT_FILENO);
+            }
 
-        // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
-        // For now, just reset it to the beginning of the line.
-        if self.conf.inputfd != STDIN_FILENO {
-            let _ = write_loop(&STDOUT_FILENO, b"\r");
-        }
+            // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
+            // For now, just reset it to the beginning of the line.
+            if self.conf.inputfd != STDIN_FILENO {
+                let _ = write_loop(&STDOUT_FILENO, b"\r");
+            }
 
-        // Ensure we have no pager contents when we exit.
-        if !self.pager.is_empty() {
-            // Clear to end of screen to erase the pager contents.
-            screen_force_clear_to_end();
-            self.clear_pager();
+            // Ensure we have no pager contents when we exit.
+            if !self.pager.is_empty() {
+                // Clear to end of screen to erase the pager contents.
+                screen_force_clear_to_end();
+                self.clear_pager();
+            }
         }
 
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
@@ -2430,10 +2441,12 @@ impl<'a> Reader<'a> {
         });
 
         // If we ran `exit` anywhere, exit.
-        self.exit_loop_requested =
-            self.exit_loop_requested || self.parser.libdata().exit_current_script;
+        self.exit_loop_requested |= self.parser.libdata().exit_current_script;
         self.parser.libdata_mut().exit_current_script = false;
         if self.exit_loop_requested {
+            if !self.conf.prompt_ok {
+                return ControlFlow::Break(());
+            }
             return ControlFlow::Continue(());
         }
 
@@ -2507,6 +2520,7 @@ impl<'a> Reader<'a> {
                 ImplicitEvent::Eof => {
                     reader_sighup();
                 }
+                ImplicitEvent::Break => return ControlFlow::Break(()),
                 ImplicitEvent::CheckExit => (),
                 ImplicitEvent::FocusIn => {
                     event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
@@ -2531,15 +2545,30 @@ impl<'a> Reader<'a> {
             CharEvent::QueryResponse(query_response) => {
                 match query_response {
                     QueryResponseEvent::PrimaryDeviceAttribute => {
-                        if *self.blocking_query() != Some(TerminalQuery::PrimaryDeviceAttribute) {
+                        let mut query = self.blocking_query();
+                        let Some(TerminalQuery::PrimaryDeviceAttribute(tcap_query)) = &*query
+                        else {
                             // Rogue reply.
                             return ControlFlow::Continue(());
-                        }
+                        };
                         if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
                             == Capability::Unknown as _
                         {
                             KITTY_KEYBOARD_SUPPORTED
                                 .store(Capability::NotSupported as _, Ordering::Release);
+                        }
+                        assert!(
+                            tcap_query.is_none()
+                                || self.parser.pending_user_query.borrow().is_none()
+                        );
+                        if tcap_query.is_some() {
+                            stop_query(query);
+                            // TODO hack
+                            return ControlFlow::Break(());
+                        }
+                        if let Some(queued_query) = self.parser.pending_user_query.take() {
+                            // TODO hack
+                            return (queued_query)(&mut query);
                         }
                     }
                     QueryResponseEvent::CursorPositionReport(cursor_pos) => {
@@ -2567,29 +2596,22 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
+pub(crate) fn query_xtgettcap(out: &mut impl Output, cap: &[u8]) {
+    let command = QueryXtgettcap(cap);
     if should_flog!(reader) {
         let mut tmp = Vec::<u8>::new();
-        tmp.write_command(QueryXtgettcap(cap));
+        tmp.write_command(command.clone());
         FLOG!(
             reader,
-            format!("Sending XTGETTCAP request for {}: {:?}", cap, tmp)
+            sprintf!(
+                "Sending XTGETTCAP request for %s: %s",
+                str2wcstring(cap),
+                escape(&str2wcstring(&tmp))
+            )
         );
     }
-    out.write_command(QueryXtgettcap(cap));
-}
-
-fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
-    if vars.get_unless_empty(L!("STY")).is_some()
-        || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
-            let term = &term.as_list()[0];
-            term == "screen" || term == "screen-256color"
-        })
-    {
-        return;
-    }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
-    send_xtgettcap_query(out, SCROLL_FORWARD_TERMINFO_CODE);
+    out.write_command(command);
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
 }
 
@@ -3817,9 +3839,6 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                if !SCROLL_FORWARD_SUPPORTED.load() {
-                    return;
-                }
                 let query = self.blocking_query();
                 let Some(query) = &*query else {
                     drop(query);
@@ -3830,7 +3849,7 @@ impl<'a> Reader<'a> {
                     return;
                 };
                 match query {
-                    TerminalQuery::PrimaryDeviceAttribute => panic!(),
+                    TerminalQuery::PrimaryDeviceAttribute(_) => panic!(),
                     TerminalQuery::CursorPositionReport(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
@@ -4451,8 +4470,6 @@ fn reader_interactive_init(parser: &Parser) {
     parser
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
-
-    terminal_protocol_hacks();
 }
 
 /// Destroy data for interactive use.
@@ -4530,6 +4547,7 @@ pub fn reader_write_title(
 
 impl<'a> Reader<'a> {
     fn exec_prompt_cmd(&self, prompt_cmd: &wstr, final_prompt: bool) -> Vec<WString> {
+        assert!(self.conf.prompt_ok);
         let mut output = vec![];
         let prompt_cmd = if final_prompt && function::exists(prompt_cmd, self.parser) {
             Cow::Owned(prompt_cmd.to_owned() + L!(" --final-rendering"))
@@ -4542,6 +4560,7 @@ impl<'a> Reader<'a> {
 
     /// Execute prompt commands based on the provided arguments. The output is inserted into prompt_buff.
     fn exec_prompt(&mut self, full_prompt: bool, final_prompt: bool) {
+        assert!(self.conf.prompt_ok);
         // Suppress fish_trace while in the prompt.
         let _suppress_trace = self.parser.push_scope(|s| s.suppress_fish_trace = true);
 

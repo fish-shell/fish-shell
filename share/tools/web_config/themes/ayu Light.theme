@@ -10,7 +10,7 @@ fish_color_comment ABB0B6
 fish_color_cwd 399EE6
 fish_color_cwd_root red
 fish_color_end ED9366
-fish_color_error F51818
+fish_color_error F51818 --underline=curly
 fish_color_escape 4CBF99
 fish_color_history_current --bold
 fish_color_host normal

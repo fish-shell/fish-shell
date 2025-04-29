@@ -177,7 +177,9 @@ Optional Commands
      - Su
      - Reset underline color to the default (follow the foreground color).
      - kitty
-   * - ``\e[ Ps S``
+   * - .. _indn:
+
+       ``\e[ Ps S``
      - indn
      - Scroll forward Ps lines.
      -
@@ -269,6 +271,12 @@ Optional Commands
      - FinalTerm
    * - ``\eP+q Pt \e\\``
      -
-     - Request terminfo capability (XTGETTCAP). The parameter is the capability's hex-encoded terminfo code.
-       Specifically, fish asks for the ``indn`` string capability. At the time of writing string capabilities are supported by kitty and foot.
-     - XTerm, kitty, foot
+     - Request terminfo capability (XTGETTCAP).
+       The parameter is the capability's hex-encoded terminfo code.
+       To advertise a capability, the response must of the form
+       ``\eP1+q Pt \e\\`` or ``\eP1+q Pt = Pt \e\\``.
+       In either variant the first parameter must be the hex-encoded terminfo code.
+       In the second variant, fish ignores the part after the equals sign.
+
+       At startup, fish checks for the presence of the `indn <#indn>`_ string capability.
+     - XTerm, kitty, foot, wezterm, contour

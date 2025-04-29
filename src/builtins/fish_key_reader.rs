@@ -153,7 +153,7 @@ fn setup_and_process_keys(
     unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
     terminal_protocol_hacks();
     let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
-    initial_query(&blocking_query, streams.out, None);
+    initial_query(&blocking_query, streams.out);
 
     if continuous_mode {
         streams.err.append(L!("\n"));

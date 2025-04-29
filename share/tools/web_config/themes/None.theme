@@ -9,7 +9,7 @@ fish_color_comment
 fish_color_cwd normal
 fish_color_cwd_root normal
 fish_color_end
-fish_color_error
+fish_color_error --underline=curly
 fish_color_escape
 fish_color_history_current
 fish_color_host normal

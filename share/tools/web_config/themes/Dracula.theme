@@ -21,7 +21,7 @@ fish_color_comment 6272a4
 fish_color_cwd 50fa7b
 fish_color_cwd_root red
 fish_color_end ffb86c
-fish_color_error ff5555
+fish_color_error ff5555 --underline=curly
 fish_color_escape ff79c6
 fish_color_history_current --bold
 fish_color_host bd93f9

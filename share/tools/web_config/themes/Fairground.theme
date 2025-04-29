@@ -9,7 +9,7 @@ fish_color_comment FFE100
 fish_color_cwd green
 fish_color_cwd_root red
 fish_color_end 8D003B
-fish_color_error EC3B86
+fish_color_error EC3B86 --underline=curly
 fish_color_escape 00a6b2
 fish_color_history_current --bold
 fish_color_host normal

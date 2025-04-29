@@ -142,7 +142,7 @@ impl HighlightColorResolver {
         let resolve_role = |role| {
             vars.get_unless_empty(get_highlight_var_name(role))
                 .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-                .or_else(|| vars.get(get_highlight_var_name(HighlightRole::normal)))
+                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
                 .as_ref()
                 .map(parse_text_face_for_highlight)
                 .unwrap_or_else(TextFace::default)

@@ -1,6 +1,6 @@
 set -l commands status get-volume inspect set-default set-volume set-mute set-profile clear-default
 
-if wpctl settings &> /dev/null;
+if wpctl settings &>/dev/null
     set --append commands settings
 end
 
@@ -43,7 +43,15 @@ function __wpctl_command_shape
 end
 
 function __wpctl_get_settings
-    wpctl settings | string match --regex --groups-only -- '- Name: (.*)'
+    set -l wpctl_settings (wpctl settings | string collect)
+    
+    string match --regex --all --quiet '\- Name: (?<wpctl_settings_name>.*)\n  Desc: (?<wpctl_settings_desc>.*)' $wpctl_settings
+
+    for i in (seq 1 (count $wpctl_settings_name))
+        set -l name $wpctl_settings_name[$i]
+        set -l desc (string shorten --max 60 $wpctl_settings_desc[$i])
+        echo $name\t$desc
+    end
 end
 
 complete -c wpctl -f

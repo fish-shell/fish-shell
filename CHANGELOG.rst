@@ -1,6 +1,8 @@
 fish 4.1.0 (released ???)
 =========================
 
+.. ignore for 4.1: 10929 10940 10948 10955 10965 10975 10989 10990 10998 11028 11052 11055 11069 11071 11079 11092 11098 11104 11106 11110 11140 11146 11148 11150 11214 11218 11259 11288 11299 11328 11350 11373 11395 11417 11419  
+
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.

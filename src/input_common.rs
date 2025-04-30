@@ -412,8 +412,8 @@ pub enum ImplicitEvent {
 
 #[derive(Debug, Clone)]
 pub enum QueryResponseEvent {
-    PrimaryDeviceAttribute,
-    CursorPositionReport(ViewportPosition),
+    PrimaryDeviceAttributeResponse,
+    CursorPositionResponse(ViewportPosition),
 }
 
 #[derive(Debug, Clone)]
@@ -764,7 +764,7 @@ pub enum CursorPositionQuery {
 #[derive(Eq, PartialEq)]
 pub enum TerminalQuery {
     PrimaryDeviceAttribute,
-    CursorPositionReport(CursorPositionQuery),
+    CursorPosition(CursorPositionQuery),
 }
 
 /// A trait which knows how to produce a stream of input events.
@@ -1165,7 +1165,7 @@ pub trait InputEventQueuer {
                 FLOG!(reader, "Received cursor position report y:", y, "x:", x);
                 let cursor_pos = ViewportPosition { x, y };
                 self.push_front(CharEvent::QueryResponse(
-                    QueryResponseEvent::CursorPositionReport(cursor_pos),
+                    QueryResponseEvent::CursorPositionResponse(cursor_pos),
                 ));
                 return None;
             }
@@ -1218,7 +1218,7 @@ pub trait InputEventQueuer {
             },
             b'c' if private_mode == Some(b'?') => {
                 self.push_front(CharEvent::QueryResponse(
-                    QueryResponseEvent::PrimaryDeviceAttribute,
+                    QueryResponseEvent::PrimaryDeviceAttributeResponse,
                 ));
                 return None;
             }

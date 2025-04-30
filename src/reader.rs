@@ -1547,7 +1547,7 @@ impl<'a> Reader<'a> {
         }
         let mut query = self.blocking_query();
         assert!(query.is_none());
-        *query = Some(TerminalQuery::CursorPositionReport(q));
+        *query = Some(TerminalQuery::CursorPosition(q));
         out.write_command(QueryCursorPosition);
         drop(query);
         self.save_screen_state();
@@ -2566,7 +2566,7 @@ impl<'a> Reader<'a> {
             },
             CharEvent::QueryResponse(query_response) => {
                 match query_response {
-                    QueryResponseEvent::PrimaryDeviceAttribute => {
+                    QueryResponseEvent::PrimaryDeviceAttributeResponse => {
                         if *self.blocking_query() != Some(TerminalQuery::PrimaryDeviceAttribute) {
                             // Rogue reply.
                             return ControlFlow::Continue(());
@@ -2578,9 +2578,9 @@ impl<'a> Reader<'a> {
                             );
                         }
                     }
-                    QueryResponseEvent::CursorPositionReport(cursor_pos) => {
+                    QueryResponseEvent::CursorPositionResponse(cursor_pos) => {
                         let cursor_pos_query = match &*self.blocking_query() {
-                            Some(TerminalQuery::CursorPositionReport(cursor_pos_query)) => {
+                            Some(TerminalQuery::CursorPosition(cursor_pos_query)) => {
                                 cursor_pos_query.clone()
                             }
                             _ => return ControlFlow::Continue(()), // Rogue reply.
@@ -3909,7 +3909,7 @@ impl<'a> Reader<'a> {
                 };
                 match query {
                     TerminalQuery::PrimaryDeviceAttribute => panic!(),
-                    TerminalQuery::CursorPositionReport(_) => {
+                    TerminalQuery::CursorPosition(_) => {
                         // TODO: re-queue it I guess.
                         FLOG!(
                             reader,

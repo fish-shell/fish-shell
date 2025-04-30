@@ -98,7 +98,7 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
         let kevt = match queue.readch() {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
-            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
+            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttributeResponse) => {
                 if get_kitty_keyboard_capability() == Capability::Unknown {
                     set_kitty_keyboard_capability(|| {}, Capability::NotSupported);
                 }

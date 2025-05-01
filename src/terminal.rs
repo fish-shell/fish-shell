@@ -139,6 +139,16 @@ pub(crate) trait Output {
             assert!(!matches!(cmd, CursorDown));
             return false;
         }
+        if matches!(
+            cmd,
+            Osc0WindowTitle(_)
+                | Osc133CommandStart(_)
+                | Osc133PromptStart
+                | Osc133CommandFinished(_)
+                | QueryKittyKeyboardProgressiveEnhancements
+        ) {
+            return false;
+        }
         let ti = maybe_terminfo;
         fn write(out: &mut impl Output, sequence: &'static [u8]) -> bool {
             out.write_bytes(sequence);

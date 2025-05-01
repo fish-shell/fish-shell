@@ -66,9 +66,9 @@ switch
         echo banana
 end
 '
-#CHECKERR: fish: 'case' builtin not inside of switch block
-#CHECKERR:      case a
-#CHECKERR:      ^~~^
+# CHECKERR: fish: Expected a string, but found end of the statement
+# CHECKERR: switch
+# CHECKERR: ^
 
 set smurf green
 

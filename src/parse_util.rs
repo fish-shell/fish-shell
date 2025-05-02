@@ -227,13 +227,16 @@ fn parse_util_locate_cmdsub(
         inout_is_quoted: &mut Option<&mut bool>,
         paran_count: i32,
         quoted_cmdsubs: &mut Vec<i32>,
-        pos: usize,
+        mut pos: usize,
         last_dollar: &mut Option<usize>,
         quote: Quote,
     ) -> Option<usize> {
         let quote = match quote {
             Quote::Real(q) => q,
-            Quote::VirtualDouble => '"',
+            Quote::VirtualDouble => {
+                pos = pos.saturating_sub(1);
+                '"'
+            }
         };
         let q_end = quote_end(input.into(), pos, quote)?;
         // Found a valid closing quote.
@@ -266,7 +269,7 @@ fn parse_util_locate_cmdsub(
             &mut last_dollar,
             Quote::VirtualDouble,
         )
-        .unwrap_or(input.len());
+        .map_or(input.len(), |pos| pos + 1);
     }
 
     while pos < input.len() {

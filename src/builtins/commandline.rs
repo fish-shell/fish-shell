@@ -447,7 +447,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
-            "--cut-at-cursor and --tokens can not be used when setting the commandline"
+            "--cut-at-cursor and token options can not be used when setting the commandline"
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);

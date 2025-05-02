@@ -183,8 +183,13 @@ The following special input functions are available:
 ``clear-screen``
     clears the screen and redraws the prompt.
 
+.. _special-input-functions-scrollback-push:
+
 ``scrollback-push``
     pushes earlier output to the terminal scrollback, positioning the prompt at the top.
+
+    For compatibility with terminals that do not provide the ECMA-48 ``SCROLL UP`` command,
+    this command does nothing unless the terminal advertises support for that command via :ref:`XTGETTCAP <term-compat-xtgettcap>`.
 
 ``complete``
     guess the remainder of the current token

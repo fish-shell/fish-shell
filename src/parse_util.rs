@@ -637,20 +637,15 @@ pub fn parse_util_escape_wildcards(s: &wstr) -> WString {
 }
 
 /// Checks if the specified string is a help option.
-pub fn parse_util_argument_is_help(s: &wstr) -> bool {
-    [L!("-h"), L!("--help")].contains(&s)
+pub fn parse_util_argument_is_help<'a>(s: impl PartialEq<&'a str>) -> bool {
+    ["-h", "--help"].iter().any(|a| s == a)
 }
 
 /// Returns true if the specified command is a builtin that may not be used in a pipeline.
-fn parser_is_pipe_forbidden(word: &wstr) -> bool {
-    [
-        L!("exec"),
-        L!("case"),
-        L!("break"),
-        L!("return"),
-        L!("continue"),
-    ]
-    .contains(&word)
+fn parser_is_pipe_forbidden<'a>(word: impl PartialEq<&'a str>) -> bool {
+    ["exec", "case", "break", "return", "continue"]
+        .iter()
+        .any(|s| word == s)
 }
 
 // Return a pointer to the first argument node of an argument_or_redirection_list_t, or nullptr if

@@ -1,4 +1,6 @@
 use super::printf_impl::Error;
+#[cfg(feature = "bstr")]
+use bstr::{BStr, BString};
 use std::result::Result;
 #[cfg(feature = "widestring")]
 use widestring::{Utf32Str as wstr, Utf32String as WString};
@@ -172,6 +174,20 @@ impl<'a> ToArg<'a> for &'a mut usize {
 impl<'a, T> ToArg<'a> for &'a *const T {
     fn to_arg(self) -> Arg<'a> {
         Arg::UInt((*self) as usize as u64)
+    }
+}
+
+#[cfg(feature = "bstr")]
+impl<'a> ToArg<'a> for &'a BStr {
+    fn to_arg(self) -> Arg<'a> {
+        Arg::String(self.to_string())
+    }
+}
+
+#[cfg(feature = "bstr")]
+impl<'a> ToArg<'a> for &'a BString {
+    fn to_arg(self) -> Arg<'a> {
+        Arg::String(self.to_string())
     }
 }
 

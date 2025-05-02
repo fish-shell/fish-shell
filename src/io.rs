@@ -1,5 +1,5 @@
 use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::{str2wcstring, wcs2string, EMPTY_STRING};
+use crate::common::{str2wcstring, wcs2string};
 use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
 use crate::fds::{
     make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec, AutoCloseFd, PIPE_ERROR,
@@ -14,6 +14,7 @@ use crate::terminal::Output;
 use crate::topic_monitor::Topic;
 use crate::wchar::prelude::*;
 use crate::wutil::{perror, perror_io, wdirname, wstat, wwrite_to_fd};
+use bstr::{BStr, BString, ByteSlice};
 use errno::Errno;
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EPIPE, EWOULDBLOCK, STDOUT_FILENO};
 use nix::fcntl::OFlag;
@@ -21,7 +22,8 @@ use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io;
-use std::os::fd::{AsRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::io::Write;
+use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::sync::{Arc, Mutex, MutexGuard};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
@@ -648,7 +650,7 @@ pub enum OutputStream {
     /// A null output stream which ignores all writes.
     Null,
     Fd(FdOutputStream),
-    String(StringOutputStream),
+    BString(BString),
     Buffered(BufferedOutputStream),
 }
 
@@ -656,10 +658,10 @@ impl OutputStream {
     /// Return any internally buffered contents.
     /// This is only implemented for a string_output_stream; others flush data to their underlying
     /// receiver (fd, or separated buffer) immediately and so will return an empty string here.
-    pub fn contents(&self) -> &wstr {
+    pub fn contents(&self) -> &BStr {
         match self {
-            OutputStream::String(stream) => stream.contents(),
-            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => &EMPTY_STRING,
+            OutputStream::BString(stream) => stream.as_bstr(),
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => b"".as_bstr(),
         }
     }
 
@@ -669,7 +671,7 @@ impl OutputStream {
         match self {
             OutputStream::Fd(stream) => stream.flush_and_check_error(),
             OutputStream::Buffered(stream) => stream.flush_and_check_error(),
-            OutputStream::Null | OutputStream::String(_) => STATUS_CMD_OK,
+            OutputStream::Null | OutputStream::BString(_) => STATUS_CMD_OK,
         }
     }
 
@@ -679,7 +681,7 @@ impl OutputStream {
         match self {
             OutputStream::Null => true,
             OutputStream::Fd(stream) => stream.append(s),
-            OutputStream::String(stream) => stream.append(s),
+            OutputStream::BString(stream) => stream.write_all(&wcs2string(s)).is_ok(),
             OutputStream::Buffered(stream) => stream.append(s),
         }
     }
@@ -695,7 +697,7 @@ impl OutputStream {
     ) -> bool {
         match self {
             OutputStream::Buffered(stream) => stream.append_with_separation(s, typ, want_newline),
-            OutputStream::Fd(_) | OutputStream::Null | OutputStream::String(_) => {
+            OutputStream::Fd(_) | OutputStream::Null | OutputStream::BString(_) => {
                 if typ == SeparationType::explicitly && want_newline {
                     // Try calling "append" less - it might write() to an fd
                     let mut buf = s.to_owned();
@@ -739,6 +741,25 @@ impl OutputStream {
             }
         }
         true
+    }
+}
+
+impl io::Write for OutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            OutputStream::Null => Ok(buf.len()),
+            OutputStream::Fd(stream) => stream.write(buf),
+            OutputStream::BString(stream) => stream.write(buf),
+            OutputStream::Buffered(stream) => stream.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            OutputStream::Null => Ok(()),
+            OutputStream::Fd(stream) => stream.flush(),
+            OutputStream::BString(_) | OutputStream::Buffered(_) => Ok(()),
+        }
     }
 }
 
@@ -805,22 +826,27 @@ impl FdOutputStream {
     }
 }
 
-/// A simple output stream which buffers into a wcstring.
-#[derive(Default)]
-pub struct StringOutputStream {
-    contents: WString,
-}
-impl StringOutputStream {
-    pub fn new() -> Self {
-        Default::default()
+impl io::Write for FdOutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let mut file = std::mem::ManuallyDrop::new(unsafe { File::from_raw_fd(self.fd) });
+
+        let res = file.write_all(buf);
+
+        if let Err(ref e) = res {
+            self.errored = true;
+            if e.kind() != io::ErrorKind::BrokenPipe {
+                eprintln!("write: {e:?}");
+            }
+        }
+        res.map(|_| buf.len())
     }
-    fn append(&mut self, s: &wstr) -> bool {
-        self.contents.push_utfstr(s);
-        true
-    }
-    /// Return the wcstring containing the output.
-    fn contents(&self) -> &wstr {
-        &self.contents
+
+    fn flush(&mut self) -> io::Result<()> {
+        if self.flush_and_check_error() == STATUS_CMD_OK {
+            Ok(())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "unknown"))
+        }
     }
 }
 
@@ -849,6 +875,24 @@ impl BufferedOutputStream {
             return STATUS_READ_TOO_MUCH;
         }
         0
+    }
+}
+
+impl io::Write for BufferedOutputStream {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        if self.buffer.append(buf, SeparationType::inferred) {
+            Ok(buf.len())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "Limit reached"))
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        if self.flush_and_check_error() == STATUS_CMD_OK {
+            Ok(())
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "Read too much"))
+        }
     }
 }
 

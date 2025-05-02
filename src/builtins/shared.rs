@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::builtins::*;
-use crate::common::{escape, get_by_sorted_name, str2wcstring, Named};
+use crate::common::{escape, get_by_sorted_name, str2wcstring, wcs2string, Named};
 use crate::io::{IoFd, OutputStream};
 use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
 use crate::parse_util::parse_util_argument_is_help;
@@ -8,15 +8,18 @@ use crate::parser::{Block, BlockType, LoopStatus};
 use crate::proc::{no_exec, ProcStatus};
 use crate::reader::reader_read;
 use crate::wchar::L;
+use bstr::BString;
 use errno::errno;
 use libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 
+use bstr::BStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::os::fd::FromRawFd;
 use std::sync::Arc;
 
 pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
+pub type BuiltinByteCmd = fn(&Parser, &mut IoStreams, &mut [&BStr]) -> BuiltinResult;
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &wstr =
@@ -142,12 +145,17 @@ pub const STATUS_EXPAND_ERROR: c_int = 121;
 
 pub const STATUS_NO_VARIABLES_GIVEN: c_int = 255;
 
+enum BuiltinEnum {
+    Wide(BuiltinCmd),
+    Byte(BuiltinByteCmd),
+}
+
 /// Data structure to describe a builtin.
 struct BuiltinData {
     // Name of the builtin.
     name: &'static wstr,
     // Function pointer to the builtin implementation.
-    func: BuiltinCmd,
+    func: BuiltinEnum,
 }
 
 // Data about all the builtin commands in fish.
@@ -156,259 +164,259 @@ struct BuiltinData {
 const BUILTIN_DATAS: &[BuiltinData] = &[
     BuiltinData {
         name: L!("!"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("."),
-        func: source::source,
+        func: BuiltinEnum::Wide(source::source),
     },
     BuiltinData {
         name: L!(":"),
-        func: builtin_true,
+        func: BuiltinEnum::Byte(builtin_true),
     },
     BuiltinData {
         name: L!("["), // ]
-        func: test::test,
+        func: BuiltinEnum::Wide(test::test),
     },
     BuiltinData {
         name: L!("_"),
-        func: builtin_gettext,
+        func: BuiltinEnum::Wide(builtin_gettext),
     },
     BuiltinData {
         name: L!("abbr"),
-        func: abbr::abbr,
+        func: BuiltinEnum::Wide(abbr::abbr),
     },
     BuiltinData {
         name: L!("and"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("argparse"),
-        func: argparse::argparse,
+        func: BuiltinEnum::Wide(argparse::argparse),
     },
     BuiltinData {
         name: L!("begin"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("bg"),
-        func: bg::bg,
+        func: BuiltinEnum::Wide(bg::bg),
     },
     BuiltinData {
         name: L!("bind"),
-        func: bind::bind,
+        func: BuiltinEnum::Wide(bind::bind),
     },
     BuiltinData {
         name: L!("block"),
-        func: block::block,
+        func: BuiltinEnum::Wide(block::block),
     },
     BuiltinData {
         name: L!("break"),
-        func: builtin_break_continue,
+        func: BuiltinEnum::Wide(builtin_break_continue),
     },
     BuiltinData {
         name: L!("breakpoint"),
-        func: builtin_breakpoint,
+        func: BuiltinEnum::Wide(builtin_breakpoint),
     },
     BuiltinData {
         name: L!("builtin"),
-        func: builtin::builtin,
+        func: BuiltinEnum::Wide(builtin::builtin),
     },
     BuiltinData {
         name: L!("case"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("cd"),
-        func: cd::cd,
+        func: BuiltinEnum::Wide(cd::cd),
     },
     BuiltinData {
         name: L!("command"),
-        func: command::command,
+        func: BuiltinEnum::Wide(command::command),
     },
     BuiltinData {
         name: L!("commandline"),
-        func: commandline::commandline,
+        func: BuiltinEnum::Wide(commandline::commandline),
     },
     BuiltinData {
         name: L!("complete"),
-        func: complete::complete,
+        func: BuiltinEnum::Wide(complete::complete),
     },
     BuiltinData {
         name: L!("contains"),
-        func: contains::contains,
+        func: BuiltinEnum::Wide(contains::contains),
     },
     BuiltinData {
         name: L!("continue"),
-        func: builtin_break_continue,
+        func: BuiltinEnum::Wide(builtin_break_continue),
     },
     BuiltinData {
         name: L!("count"),
-        func: count::count,
+        func: BuiltinEnum::Wide(count::count),
     },
     BuiltinData {
         name: L!("disown"),
-        func: disown::disown,
+        func: BuiltinEnum::Wide(disown::disown),
     },
     BuiltinData {
         name: L!("echo"),
-        func: echo::echo,
+        func: BuiltinEnum::Wide(echo::echo),
     },
     BuiltinData {
         name: L!("else"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("emit"),
-        func: emit::emit,
+        func: BuiltinEnum::Wide(emit::emit),
     },
     BuiltinData {
         name: L!("end"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("eval"),
-        func: eval::eval,
+        func: BuiltinEnum::Wide(eval::eval),
     },
     BuiltinData {
         name: L!("exec"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("exit"),
-        func: exit::exit,
+        func: BuiltinEnum::Wide(exit::exit),
     },
     BuiltinData {
         name: L!("false"),
-        func: builtin_false,
+        func: BuiltinEnum::Byte(builtin_false),
     },
     BuiltinData {
         name: L!("fg"),
-        func: fg::fg,
+        func: BuiltinEnum::Wide(fg::fg),
     },
     BuiltinData {
         name: L!("fish_indent"),
-        func: fish_indent::fish_indent,
+        func: BuiltinEnum::Wide(fish_indent::fish_indent),
     },
     BuiltinData {
         name: L!("fish_key_reader"),
-        func: fish_key_reader::fish_key_reader,
+        func: BuiltinEnum::Wide(fish_key_reader::fish_key_reader),
     },
     BuiltinData {
         name: L!("for"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("function"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("functions"),
-        func: functions::functions,
+        func: BuiltinEnum::Wide(functions::functions),
     },
     BuiltinData {
         name: L!("history"),
-        func: history::history,
+        func: BuiltinEnum::Wide(history::history),
     },
     BuiltinData {
         name: L!("if"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("jobs"),
-        func: jobs::jobs,
+        func: BuiltinEnum::Wide(jobs::jobs),
     },
     BuiltinData {
         name: L!("math"),
-        func: math::math,
+        func: BuiltinEnum::Wide(math::math),
     },
     BuiltinData {
         name: L!("not"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("or"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("path"),
-        func: path::path,
+        func: BuiltinEnum::Wide(path::path),
     },
     BuiltinData {
         name: L!("printf"),
-        func: printf::printf,
+        func: BuiltinEnum::Wide(printf::printf),
     },
     BuiltinData {
         name: L!("pwd"),
-        func: pwd::pwd,
+        func: BuiltinEnum::Wide(pwd::pwd),
     },
     BuiltinData {
         name: L!("random"),
-        func: random::random,
+        func: BuiltinEnum::Wide(random::random),
     },
     BuiltinData {
         name: L!("read"),
-        func: read::read,
+        func: BuiltinEnum::Wide(read::read),
     },
     BuiltinData {
         name: L!("realpath"),
-        func: realpath::realpath,
+        func: BuiltinEnum::Wide(realpath::realpath),
     },
     BuiltinData {
         name: L!("return"),
-        func: r#return::r#return,
+        func: BuiltinEnum::Wide(r#return::r#return),
     },
     BuiltinData {
         name: L!("set"),
-        func: set::set,
+        func: BuiltinEnum::Wide(set::set),
     },
     BuiltinData {
         name: L!("set_color"),
-        func: set_color::set_color,
+        func: BuiltinEnum::Wide(set_color::set_color),
     },
     BuiltinData {
         name: L!("source"),
-        func: source::source,
+        func: BuiltinEnum::Wide(source::source),
     },
     BuiltinData {
         name: L!("status"),
-        func: status::status,
+        func: BuiltinEnum::Wide(status::status),
     },
     BuiltinData {
         name: L!("string"),
-        func: string::string,
+        func: BuiltinEnum::Wide(string::string),
     },
     BuiltinData {
         name: L!("switch"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("test"),
-        func: test::test,
+        func: BuiltinEnum::Wide(test::test),
     },
     BuiltinData {
         name: L!("time"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
     BuiltinData {
         name: L!("true"),
-        func: builtin_true,
+        func: BuiltinEnum::Byte(builtin_true),
     },
     BuiltinData {
         name: L!("type"),
-        func: r#type::r#type,
+        func: BuiltinEnum::Wide(r#type::r#type),
     },
     BuiltinData {
         name: L!("ulimit"),
-        func: ulimit::ulimit,
+        func: BuiltinEnum::Wide(ulimit::ulimit),
     },
     BuiltinData {
         name: L!("wait"),
-        func: wait::wait,
+        func: BuiltinEnum::Wide(wait::wait),
     },
     BuiltinData {
         name: L!("while"),
-        func: builtin_generic,
+        func: BuiltinEnum::Wide(builtin_generic),
     },
 ];
 assert_sorted_by_name!(BUILTIN_DATAS);
@@ -418,7 +426,6 @@ impl Named for BuiltinData {
         self.name
     }
 }
-
 fn builtin_lookup(name: &wstr) -> Option<&'static BuiltinData> {
     get_by_sorted_name(name, BUILTIN_DATAS)
 }
@@ -429,17 +436,10 @@ pub fn builtin_exists(name: &wstr) -> bool {
 }
 
 /// Is the command a keyword we need to special-case the handling of `-h` and `--help`.
-fn cmd_needs_help(cmd: &wstr) -> bool {
-    [
-        L!("for"),
-        L!("while"),
-        L!("function"),
-        L!("if"),
-        L!("end"),
-        L!("switch"),
-        L!("case"),
-    ]
-    .contains(&cmd)
+fn cmd_needs_help<'a>(cmd: impl PartialEq<&'a str>) -> bool {
+    ["for", "while", "function", "if", "end", "switch", "case"]
+        .iter()
+        .any(|&s| cmd == s)
 }
 
 /// Execute a builtin command
@@ -461,7 +461,16 @@ pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams)
         return ProcStatus::from_exit_code(STATUS_CMD_ERROR);
     };
 
-    let builtin_ret = (builtin.func)(parser, streams, argv);
+    let builtin_ret = match builtin.func {
+        BuiltinEnum::Wide(builtin) => builtin(parser, streams, argv),
+        BuiltinEnum::Byte(builtin) => {
+            let byte_argv_owner: Vec<BString> =
+                argv.iter().map(|s| BString::from(wcs2string(s))).collect();
+            let mut byte_argv: Vec<&BStr> = byte_argv_owner.iter().map(|s| s.as_ref()).collect();
+
+            builtin(parser, streams, &mut byte_argv)
+        }
+    };
 
     // Flush our out and error streams, and check for their errors.
     let out_ret = streams.out.flush_and_check_error();
@@ -891,6 +900,132 @@ impl<'args> Iterator for Arguments<'args, '_> {
     }
 }
 
+/// A helper type for extracting arguments from either argv or stdin.
+/// Same as Arguments, but for byte strings.
+pub struct ArgumentsByte<'args, 'iter> {
+    /// The list of arguments passed to the string builtin.
+    args: &'iter [&'args BStr],
+    /// If using argv, index of the next argument to return.
+    argidx: &'iter mut usize,
+    split_behavior: SplitBehavior,
+    /// Buffer to store what we read with the BufReader
+    /// Is only here to avoid allocating every time
+    buffer: Vec<u8>,
+    /// If not using argv, we read with a buffer
+    reader: Option<BufReader<File>>,
+}
+
+impl Drop for ArgumentsByte<'_, '_> {
+    fn drop(&mut self) {
+        if let Some(r) = self.reader.take() {
+            // we should not close stdin
+            std::mem::forget(r.into_inner());
+        }
+    }
+}
+
+impl<'args, 'iter> ArgumentsByte<'args, 'iter> {
+    pub fn new(
+        args: &'iter [&'args BStr],
+        argidx: &'iter mut usize,
+        streams: &mut IoStreams,
+        chunk_size: usize,
+    ) -> Self {
+        let reader = streams.stdin_is_directly_redirected.then(|| {
+            let stdin_fd = streams.stdin_fd;
+            assert!(stdin_fd >= 0, "should have a valid fd");
+            // safety: this should be a valid fd, and already open
+            let fd = unsafe { File::from_raw_fd(stdin_fd) };
+            BufReader::with_capacity(chunk_size, fd)
+        });
+
+        ArgumentsByte {
+            args,
+            argidx,
+            split_behavior: SplitBehavior::Newline,
+            buffer: Vec::new(),
+            reader,
+        }
+    }
+
+    pub fn with_split_behavior(mut self, split_behavior: SplitBehavior) -> Self {
+        self.split_behavior = split_behavior;
+        self
+    }
+
+    fn get_arg_stdin(&mut self) -> Option<(Cow<'args, BStr>, bool)> {
+        use SplitBehavior::*;
+        let reader = self.reader.as_mut().unwrap();
+
+        if self.split_behavior == InferNull {
+            // we must determine if the first `PATH_MAX` bytes contains a null.
+            // we intentionally do not consume the buffer here
+            // the contents will be returned again later
+            let b = reader.fill_buf().ok()?;
+            if b.contains(&b'\0') {
+                self.split_behavior = Null;
+            } else {
+                self.split_behavior = Newline;
+            }
+        }
+
+        // NOTE: C++ wrongly commented that read_blocked retries for EAGAIN
+        let num_bytes: usize = match self.split_behavior {
+            Newline => reader.read_until(b'\n', &mut self.buffer),
+            Null => reader.read_until(b'\0', &mut self.buffer),
+            Never => reader.read_to_end(&mut self.buffer),
+            _ => unreachable!(),
+        }
+        .ok()?;
+
+        // to match behaviour of earlier versions
+        if num_bytes == 0 {
+            return None;
+        }
+
+        // assert!(num_bytes == self.buffer.len());
+        let (end, want_newline) = match (&self.split_behavior, self.buffer.last()) {
+            // remove the newline — consumers do not expect it
+            (Newline, Some(b'\n')) => (num_bytes - 1, true),
+            // we are missing a trailing newline!
+            (Newline, _) => (num_bytes, false),
+            // consumers do not expect to deal with the null
+            // "want_newline" is not currently relevant for Null
+            (Null, Some(b'\0')) => (num_bytes - 1, false),
+            // we are missing a null!
+            (Null, _) => (num_bytes, false),
+            (Never, _) => (num_bytes, false),
+            _ => unreachable!(),
+        };
+
+        let retval = Some((Cow::Owned(BString::from(&self.buffer[..end])), want_newline));
+        self.buffer.clear();
+        retval
+    }
+}
+
+impl<'args> Iterator for ArgumentsByte<'args, '_> {
+    // second is want_newline
+    // If not set, we have consumed all of stdin and its last line is missing a newline character.
+    // This is an edge case -- we expect text input, which is conventionally terminated by a
+    // newline character. But if it isn't, we use this to avoid creating one out of thin air,
+    // to not corrupt input data.
+    type Item = (Cow<'args, BStr>, bool);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.reader.is_some() {
+            return self.get_arg_stdin();
+        }
+
+        if *self.argidx >= self.args.len() {
+            return None;
+        }
+        let retval = (Cow::Borrowed(self.args[*self.argidx]), true);
+        *self.argidx += 1;
+        return Some(retval);
+    }
+}
+
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
 fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
@@ -999,11 +1134,11 @@ fn builtin_breakpoint(
     BuiltinResult::from_dynamic(parser.get_last_status())
 }
 
-fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> BuiltinResult {
+fn builtin_true(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&BStr]) -> BuiltinResult {
     Ok(SUCCESS)
 }
 
-fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]) -> BuiltinResult {
+fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&BStr]) -> BuiltinResult {
     Err(STATUS_CMD_ERROR)
 }
 

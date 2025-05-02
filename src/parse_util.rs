@@ -767,7 +767,7 @@ fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    let ast = Ast::parse(
+    let ast = ast::parse(
         src,
         ParseTreeFlags::CONTINUE_AFTER_ERROR
             | ParseTreeFlags::INCLUDE_COMMENTS
@@ -996,7 +996,6 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
     fn visit(&mut self, node: &'a dyn Node) {
         let mut inc_dec = (0, 0);
-        use ast::Kind;
         match node.kind() {
             Kind::JobList(_) | Kind::AndorJobList(_) => {
                 // Job lists are never unwound.
@@ -1133,7 +1132,7 @@ pub fn parse_util_detect_errors(
 
     // Parse the input string into an ast. Some errors are detected here.
     let mut parse_errors = ParseErrorList::new();
-    let ast = Ast::parse(buff_src, parse_flags, Some(&mut parse_errors));
+    let ast = ast::parse(buff_src, parse_flags, Some(&mut parse_errors));
     if allow_incomplete {
         // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
         // successfully.
@@ -1328,14 +1327,14 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Parse the string as a freestanding argument list.
     let mut errors = ParseErrorList::new();
-    let ast = Ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
+    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
     if !errors.is_empty() {
         return get_error_text(&errors);
     }
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    let arg_list: &ast::FreestandingArgumentList = ast.top().cast().unwrap();
+    let arg_list: &ast::FreestandingArgumentList = ast.top();
     let args = &arg_list.arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);

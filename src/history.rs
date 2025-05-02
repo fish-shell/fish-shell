@@ -47,7 +47,7 @@ use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
 
 use crate::{
-    ast::{Ast, Kind, Node},
+    ast::{self, Kind, Node},
     common::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
         UnescapeStringStyle,
@@ -1496,7 +1496,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
         }
     }
 
-    if Ast::parse(line, ParseTreeFlags::empty(), None).errored() {
+    if ast::parse(line, ParseTreeFlags::empty(), None).errored() {
         return false;
     }
 
@@ -1581,7 +1581,7 @@ impl History {
 
         // Find all arguments that look like they could be file paths.
         let mut needs_sync_write = false;
-        let ast = Ast::parse(s, ParseTreeFlags::empty(), None);
+        let ast = ast::parse(s, ParseTreeFlags::empty(), None);
 
         let mut potential_paths = Vec::new();
         for node in ast.walk() {

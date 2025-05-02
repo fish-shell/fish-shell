@@ -1,7 +1,7 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+    self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
     Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
@@ -271,16 +271,14 @@ fn autosuggest_parse_command(
     buff: &wstr,
     ctx: &OperationContext<'_>,
 ) -> Option<(WString, WString)> {
-    let ast = Ast::parse(
+    let ast = ast::parse(
         buff,
         ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
         None,
     );
 
     // Find the first statement.
-    let Kind::JobList(job_list) = ast.top().kind() else {
-        panic!("Expected job list");
-    };
+    let job_list: &ast::JobList = ast.top();
     let jc = job_list.get(0)?;
     let first_statement = jc.job.statement.as_decorated_statement()?;
 
@@ -711,7 +709,7 @@ impl<'s> Highlighter<'s> {
             | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
             | ParseTreeFlags::LEAVE_UNTERMINATED
             | ParseTreeFlags::SHOW_EXTRA_SEMIS;
-        let ast = Ast::parse(self.buff, ast_flags, None);
+        let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());
         if self.ctx.check_cancel() {

@@ -1,6 +1,6 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{self, Ast, Kind, Node};
+use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
     escape_string, wcs2string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef,
@@ -556,9 +556,7 @@ impl Parser {
         block_type: BlockType,
     ) -> EvalRes {
         assert!([BlockType::top, BlockType::subst].contains(&block_type));
-        let Kind::JobList(job_list) = ps.ast.top().kind() else {
-            panic!("Expected a job list");
-        };
+        let job_list = ps.ast.top();
         if !job_list.is_empty() {
             // Execute the top job list.
             self.eval_node(ps, job_list, io, job_group, block_type)
@@ -583,7 +581,7 @@ impl Parser {
         use crate::parse_tree::ParsedSource;
         use crate::parse_util::parse_util_detect_errors_in_ast;
         let mut errors = vec![];
-        let ast = Ast::parse(&src, ParseTreeFlags::empty(), Some(&mut errors));
+        let ast = ast::parse(&src, ParseTreeFlags::empty(), Some(&mut errors));
         let mut errored = ast.errored();
         if !errored {
             errored = parse_util_detect_errors_in_ast(&ast, &src, Some(&mut errors)).is_err();
@@ -728,7 +726,7 @@ impl Parser {
         ctx: &OperationContext<'_>,
     ) -> CompletionList {
         // Parse the string as an argument list.
-        let ast = Ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), None);
+        let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), None);
         if ast.errored() {
             // Failed to parse. Here we expect to have reported any errors in test_args.
             return vec![];
@@ -736,10 +734,7 @@ impl Parser {
 
         // Get the root argument list and extract arguments from it.
         let mut result = vec![];
-        let Kind::FreestandingArgumentList(list) = ast.top().kind() else {
-            panic!("Expected a freestanding argument list");
-        };
-        for arg in &list.arguments {
+        for arg in &ast.top().arguments {
             let arg_src = arg.source(arg_list_src);
             if matches!(
                 expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).result,

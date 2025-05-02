@@ -816,7 +816,6 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
     // Prettify our ast traversal, populating the output.
     fn prettify_traversal(&mut self) {
-        use ast::Kind;
         while let Some(node) = self.traversal.next() {
             // Leaf nodes we just visit their text.
             if node.as_keyword().is_some() {
@@ -1242,7 +1241,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
 // Entry point for prettification.
 fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
     if DUMP_PARSE_TREE.load() {
-        let ast = Ast::parse(
+        let ast = ast::parse(
             src,
             ParseTreeFlags::LEAVE_UNTERMINATED
                 | ParseTreeFlags::INCLUDE_COMMENTS
@@ -1257,7 +1256,7 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
         metrics.visit(ast.top());
         streams.err.appendln(format!("{}", metrics));
     }
-    let ast = Ast::parse(src, parse_flags(), None);
+    let ast = ast::parse(src, parse_flags(), None);
     let mut printer = PrettyPrinter::new(src, &ast, do_indent);
     printer.prettify()
 }

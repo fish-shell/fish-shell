@@ -1698,43 +1698,63 @@ pub struct Extras {
     pub errors: SourceRangeList,
 }
 
+/// Parse a job list.
+pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErrorList>) -> Ast {
+    let mut pops = Populator::new(src, flags, Type::job_list, out_errors);
+    let mut list = JobList::default();
+    pops.populate_list(&mut list, true);
+    finalize_parse(pops, list)
+}
+
+/// Parse a FreestandingArgumentList.
+pub fn parse_argument_list(
+    src: &wstr,
+    flags: ParseTreeFlags,
+    out_errors: Option<&mut ParseErrorList>,
+) -> Ast<FreestandingArgumentList> {
+    let mut pops = Populator::new(src, flags, Type::freestanding_argument_list, out_errors);
+    let mut list = FreestandingArgumentList::default();
+    pops.populate_list(&mut list.arguments, true);
+    finalize_parse(pops, list)
+}
+
+// Given that we have populated some top node, add all the extras that we want and produce an Ast.
+fn finalize_parse<N: Node>(mut pops: Populator<'_>, top: N) -> Ast<N> {
+    // Chomp trailing extras, etc.
+    pops.chomp_extras(Type::job_list);
+
+    let any_error = pops.any_error;
+    let extras = Extras {
+        comments: pops.tokens.comment_ranges,
+        semis: pops.semis,
+        errors: pops.errors,
+    };
+
+    Ast {
+        top,
+        any_error,
+        extras,
+    }
+}
+
 /// The ast type itself.
-pub struct Ast {
+pub struct Ast<N: Node = JobList> {
     // The top node.
-    // Its type depends on what was requested to parse.
-    top: Box<dyn Node>,
+    top: N,
     /// Whether any errors were encountered during parsing.
     any_error: bool,
     /// Extra fields.
     pub extras: Extras,
 }
 
-impl Ast {
-    /// Construct an ast by parsing `src` as a job list.
-    /// The ast attempts to produce `type` as the result.
-    /// `type` may only be JobList or FreestandingArgumentList.
-    pub fn parse(
-        src: &wstr,
-        flags: ParseTreeFlags,
-        out_errors: Option<&mut ParseErrorList>,
-    ) -> Self {
-        parse_from_top(src, flags, out_errors, Type::job_list)
-    }
-    /// Like parse(), but constructs a freestanding_argument_list.
-    pub fn parse_argument_list(
-        src: &wstr,
-        flags: ParseTreeFlags,
-        out_errors: Option<&mut ParseErrorList>,
-    ) -> Self {
-        parse_from_top(src, flags, out_errors, Type::freestanding_argument_list)
-    }
+impl<N: Node> Ast<N> {
     /// Return a traversal, allowing iteration over the nodes.
     pub fn walk(&'_ self) -> Traversal<'_> {
-        Traversal::new(self.top.as_node())
+        Traversal::new(&self.top)
     }
     /// Return the top node. This has the type requested in the 'parse' method.
-    pub fn top(&self) -> &dyn Node {
-        &*self.top
+    pub fn top(&self) -> &N {
+        &self.top
     }
     /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {
@@ -3081,44 +3101,6 @@ enum ParserStatus {
     unwinding,
 }
 
-fn parse_from_top(
-    src: &wstr,
-    flags: ParseTreeFlags,
-    out_errors: Option<&mut ParseErrorList>,
-    top_type: Type,
-) -> Ast {
-    let mut pops = Populator::new(src, flags, top_type, out_errors);
-    let top: Box<dyn Node> = match top_type {
-        Type::job_list => {
-            let mut list: Box<JobList> = Box::default();
-            pops.populate_list(&mut *list, true);
-            list
-        }
-        Type::freestanding_argument_list => {
-            let mut list = Box::<FreestandingArgumentList>::default();
-            pops.populate_list(&mut list.arguments, true);
-            list
-        }
-        _ => panic!("Invalid top type"),
-    };
-
-    // Chomp trailing extras, etc.
-    pops.chomp_extras(Type::job_list);
-
-    let any_error = pops.any_error;
-    let extras = Extras {
-        comments: pops.tokens.comment_ranges,
-        semis: pops.semis,
-        errors: pops.errors,
-    };
-
-    Ast {
-        top,
-        any_error,
-        extras,
-    }
-}
-
 /// Return tokenizer flags corresponding to parse tree flags.
 impl From<ParseTreeFlags> for TokFlags {
     fn from(flags: ParseTreeFlags) -> Self {
@@ -3207,7 +3189,7 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
 fn test_ast_parse() {
     let _cleanup = test_init();
     let src = L!("echo");
-    let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
+    let ast = parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
 }
 

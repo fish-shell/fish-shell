@@ -1,4 +1,4 @@
-use crate::ast::{is_same_node, Ast, Node};
+use crate::ast::{self, is_same_node, Node};
 use crate::wchar::prelude::*;
 
 const FISH_FUNC: &str = r#"
@@ -30,7 +30,7 @@ end
 fn test_is_same_node() {
     // is_same_node is pretty subtle! Let's check it.
     let src = WString::from_str(FISH_FUNC);
-    let ast = Ast::parse(&src, Default::default(), None);
+    let ast = ast::parse(&src, Default::default(), None);
     assert!(!ast.errored());
     let all_nodes: Vec<&dyn Node> = ast.walk().collect();
     for i in 0..all_nodes.len() {

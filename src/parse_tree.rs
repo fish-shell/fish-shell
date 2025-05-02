@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::ast::{Ast, Node};
+use crate::ast::{self, Ast, Node};
 use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseKeyword,
@@ -187,7 +187,7 @@ pub fn parse_source(
     flags: ParseTreeFlags,
     errors: Option<&mut ParseErrorList>,
 ) -> Option<ParsedSourceRef> {
-    let ast = Ast::parse(&src, flags, errors);
+    let ast = ast::parse(&src, flags, errors);
     if ast.errored() && !flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR) {
         None
     } else {

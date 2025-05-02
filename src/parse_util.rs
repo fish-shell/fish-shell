@@ -230,7 +230,9 @@ fn parse_util_locate_cmdsub(
         quote: char,
     ) -> Option<usize> {
         let q_end = quote_end(input.into(), pos, quote)?;
+        // Found a valid closing quote.
         if input[q_end] == '$' {
+            // The closing quote is another quoted command substitution.
             *last_dollar = Some(q_end);
             quoted_cmdsubs.push(paran_count);
         }
@@ -310,21 +312,19 @@ fn parse_util_locate_cmdsub(
                 if quoted_cmdsubs.last() == Some(&paran_count) {
                     quoted_cmdsubs.pop();
                     // Quoted command substitutions temporarily close double quotes.
-                    // In "foo$(bar)baz$(qux)"
-                    // We are here ^
-                    // After the ) in a quoted command substitution, we need to act as if
-                    // there was an invisible double quote.
-                    match quote_end(input.into(), pos, '"') {
-                        Some(q_end) => {
-                            // Found a valid closing quote.
-                            // Stop at $(qux), which is another quoted command substitution.
-                            if input[q_end] == '$' {
-                                quoted_cmdsubs.push(paran_count);
-                            }
-                            pos = q_end;
-                        }
+                    // In "foo$(bar)baz$(qux)", after the ), we need to act as if there was a double quote.
+                    match process_opening_quote(
+                        input,
+                        &mut inout_is_quoted,
+                        paran_count,
+                        &mut quoted_cmdsubs,
+                        pos,
+                        &mut last_dollar,
+                        '"',
+                    ) {
+                        Some(q_end) => pos = q_end,
                         None => break,
-                    };
+                    }
                 }
             }
             is_token_begin = is_token_delimiter(c, input.get(pos + 1).copied());

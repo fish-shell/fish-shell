@@ -3579,8 +3579,7 @@ impl<'s> Populator<'s> {
             // e.g. a "naked if".
             let naked_invocation_invokes_help =
                 ![ParseKeyword::Begin, ParseKeyword::End].contains(&self.peek_token(0).keyword);
-            if naked_invocation_invokes_help
-                && [ParseTokenType::terminate].contains(&self.peek_token(1).typ)
+            if naked_invocation_invokes_help && self.peek_token(1).typ == ParseTokenType::terminate
             {
                 return new_decorated_statement(self);
             }

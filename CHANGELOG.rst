@@ -70,9 +70,11 @@ New or improved bindings
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking in the command line,
   and selecting pager items (:issue:`10932`).
-- :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
-  For compatibility with terminals that do not provide the scroll-forward command,
-  this is only enabled by default if the terminal advertises support for the ``indn`` capability via the XTGETTCAP protocol.
+- :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback,
+  via a new special input function :ref:`scrollback-push <special-input-functions-scrollback-push>`,
+  before redrawing the screen as usual.
+  For compatibility with terminals that do not provide ECMA-48's ``SCROLL UP`` command,
+  this function is only enabled if the terminal advertises support for that via `XTGETTCAP <terminal-compatibility.html#term-compat-xtgettcap>`_.
 - Vi mode has learned :kbd:`ctrl-a` (increment) and :kbd:`ctrl-x` (decrement) (:issue:`11570`).
 
 Completions

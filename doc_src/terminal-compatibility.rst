@@ -189,17 +189,31 @@ Optional Commands
      - Su
      - Reset underline color to the default (follow the foreground color).
      - kitty
-   * - ``\e[ Ps S``
+   * - .. _indn:
+
+       ``\e[ Ps S``
      - indn
-     - Scroll forward Ps lines.
-     -
+     - Scroll up Ps lines (aka ``SU`` but terminfo calls it "scroll forward")
+       This enables the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function which is used by :kbd:`ctrl-l`.
+     - ECMA-48
    * - ``\e[= Ps u``, ``\e[? Ps u``
      - n/a
      - Enable the kitty keyboard protocol.
      - kitty
-   * - ``\e[6n``
+   * - .. _cursor-position-report:
+
+       ``\e[6n``
      - n/a
      - Request cursor position report.
+       The response must be of the form ``\e[ Ps ; Ps R``
+       where the first parameter is the row number
+       and the second parameter is the column number.
+       Both start at 1.
+
+       This is required for terminals that either
+
+       - implement the OSC 133 `click_events <#osc-133>`_ feature.
+       - advertise the `indn`_ capability via `XTGETTCAP`_
      - VT100
    * - ``\e[ \x20 q``
      - Se
@@ -265,11 +279,13 @@ Optional Commands
      -
      - Copy to clipboard (OSC 52).
      - XTerm
-   * - .. _click-events:
+   * - .. _osc-133:
 
        ``\e]133;A; click_events=1\x07``
      -
      - Mark prompt start (OSC 133), with kitty's ``click_events`` extension.
+       If ``click_events`` is implemented,
+       the `cursor position reporting <#cursor-position-report>`_ feature is required.
      - FinalTerm, kitty
    * - ``\e]133;C; cmdline_url= Pt \x07``
      -
@@ -279,8 +295,17 @@ Optional Commands
      -
      - Mark command end (OSC 133);  Ps is the exit status.
      - FinalTerm
-   * - ``\eP+q Pt \e\\``
+   * - .. _xtgettcap:
+
+        ``\eP+q Pt \e\\``
      -
-     - Request terminfo capability (XTGETTCAP). The parameter is the capability's hex-encoded terminfo code.
-       Specifically, fish asks for the ``indn`` string capability. At the time of writing string capabilities are supported by kitty and foot.
-     - XTerm, kitty, foot
+     - Request terminfo capability (XTGETTCAP).
+       The parameter is the capability's hex-encoded terminfo code.
+       To advertise a capability, the response must of the form
+       ``\eP1+q Pt \e\\`` or ``\eP1+q Pt = Pt \e\\``.
+       In either variant the first parameter must be the hex-encoded terminfo code.
+       The second variant's second parameter is ignored.
+
+       Currently, fish only queries the `indn`_ string capability.
+     - XTerm (but without string capabilities), kitty;
+       also adopted by foot, wezterm, contour, ghostty

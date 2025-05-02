@@ -1,6 +1,7 @@
 [package]
 name = "fish-printf"
-edition = "2021"
+edition.workspace = true
+rust-version.workspace = true
 version = "0.2.1"
 repository = "https://github.com/fish-shell/fish-shell"
 description = "printf implementation, based on musl"
@@ -9,3 +10,6 @@ license = "MIT"
 [dependencies]
 libc = "0.2.155"
 widestring = { version = "1.0.2", optional = true }
+
+[lints]
+workspace = true

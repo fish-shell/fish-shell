@@ -99,7 +99,7 @@ embed-data = ["dep:rust-embed"]
 asan = []
 tsan = []
 
-[lints]
+[workspace.lints]
 rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"
@@ -113,3 +113,6 @@ clippy.needless_lifetimes = "allow"
 # In the future, they might change to flag other methods of printing.
 clippy.print_stdout = "deny"
 clippy.print_stderr = "deny"
+
+[lints]
+workspace = true

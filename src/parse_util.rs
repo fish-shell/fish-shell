@@ -220,6 +220,10 @@ fn parse_util_locate_cmdsub(
     let mut last_dollar = None;
     let mut paran_begin = None;
     let mut paran_end = None;
+    enum Quote {
+        Real(char),
+        VirtualDouble,
+    }
     fn process_opening_quote(
         input: &[char],
         inout_is_quoted: &mut Option<&mut bool>,
@@ -227,8 +231,12 @@ fn parse_util_locate_cmdsub(
         quoted_cmdsubs: &mut Vec<i32>,
         pos: usize,
         last_dollar: &mut Option<usize>,
-        quote: char,
+        quote: Quote,
     ) -> Option<usize> {
+        let quote = match quote {
+            Quote::Real(q) => q,
+            Quote::VirtualDouble => '"',
+        };
         let q_end = quote_end(input.into(), pos, quote)?;
         // Found a valid closing quote.
         if input[q_end] == '$' {
@@ -258,7 +266,7 @@ fn parse_util_locate_cmdsub(
             &mut quoted_cmdsubs,
             pos,
             &mut last_dollar,
-            '"',
+            Quote::VirtualDouble,
         )
         .unwrap_or(input.len());
     }
@@ -274,7 +282,7 @@ fn parse_util_locate_cmdsub(
                     &mut quoted_cmdsubs,
                     pos,
                     &mut last_dollar,
-                    c,
+                    Quote::Real(c),
                 ) {
                     Some(q_end) => pos = q_end,
                     None => break,
@@ -320,7 +328,7 @@ fn parse_util_locate_cmdsub(
                         &mut quoted_cmdsubs,
                         pos,
                         &mut last_dollar,
-                        '"',
+                        Quote::VirtualDouble,
                     ) {
                         Some(q_end) => pos = q_end,
                         None => break,

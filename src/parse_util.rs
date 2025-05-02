@@ -295,7 +295,8 @@ fn parse_util_locate_cmdsub(
             } else if c == ')' {
                 paran_count -= 1;
 
-                if paran_count == 0 && paran_end.is_none() {
+                if paran_count == 0 {
+                    assert!(paran_end.is_none());
                     paran_end = Some(pos);
                     break;
                 }

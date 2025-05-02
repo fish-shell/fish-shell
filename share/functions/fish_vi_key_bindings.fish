@@ -113,13 +113,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert end end-of-line
     bind -s --preset -M default end end-of-line
 
-    # Vi moves the cursor back if, after deleting, it is at EOL.
-    # To emulate that, move forward, then backward, which will be a NOP
-    # if there is something to move forward to.
-    bind -s --preset -M default x delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M default x delete-char
     bind -s --preset -M default X backward-delete-char
-    bind -s --preset -M insert delete delete-char forward-single-char backward-char
-    bind -s --preset -M default delete delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M insert delete delete-char
+    bind -s --preset -M default delete delete-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -s --preset -M insert backspace backward-delete-char

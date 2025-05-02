@@ -5,6 +5,8 @@ use super::locale::Locale;
 use std::fmt::{self, Write};
 use std::mem;
 use std::result::Result;
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 #[cfg(feature = "widestring")]
 use widestring::Utf32Str as wstr;
@@ -382,7 +384,7 @@ pub fn sprintf_locale(
         }
 
         // Read field width. We do not support $.
-        let width = if s.at(0) == Some('*') {
+        let desired_width = if s.at(0) == Some('*') {
             let arg_width = args.next().ok_or(Error::MissingArg)?.as_sint()?;
             s.advance_by(1);
             if arg_width < 0 {
@@ -397,7 +399,7 @@ pub fn sprintf_locale(
         };
 
         // Optionally read precision. We do not support $.
-        let mut prec: Option<usize> = if s.at(0) == Some('.') && s.at(1) == Some('*') {
+        let mut desired_precision: Option<usize> = if s.at(0) == Some('.') && s.at(1) == Some('*') {
             // "A negative precision is treated as though it were missing."
             // Here we assume the precision is always signed.
             s.advance_by(2);
@@ -410,7 +412,7 @@ pub fn sprintf_locale(
             None
         };
         // Disallow precisions larger than i32::MAX, in keeping with C.
-        if prec.unwrap_or(0) > i32::MAX as usize {
+        if desired_precision.unwrap_or(0) > i32::MAX as usize {
             return Err(Error::Overflow);
         }
 
@@ -429,7 +431,7 @@ pub fn sprintf_locale(
         // "If a precision is given with a numeric conversion (d, i, o, u, i, x, and X),
         // the 0 flag is ignored." p is included here.
         let spec_is_numeric = matches!(conv_spec, CS::d | CS::u | CS::o | CS::p | CS::x | CS::X);
-        if spec_is_numeric && prec.is_some() {
+        if spec_is_numeric && desired_precision.is_some() {
             flags.zero_pad = false;
         }
 
@@ -443,13 +445,22 @@ pub fn sprintf_locale(
             CS::e | CS::f | CS::g | CS::a | CS::E | CS::F | CS::G | CS::A => {
                 // Floating point types handle output on their own.
                 let float = arg.as_float()?;
-                let len = format_float(f, float, width, prec, flags, locale, conv_spec, buf)?;
+                let len = format_float(
+                    f,
+                    float,
+                    desired_width,
+                    desired_precision,
+                    flags,
+                    locale,
+                    conv_spec,
+                    buf,
+                )?;
                 out_len = out_len.checked_add(len).ok_or(Error::Overflow)?;
                 continue 'main;
             }
             CS::p => {
                 const PTR_HEX_DIGITS: usize = 2 * mem::size_of::<*const u8>();
-                prec = prec.map(|p| p.max(PTR_HEX_DIGITS));
+                desired_precision = desired_precision.map(|p| p.max(PTR_HEX_DIGITS));
                 let uint = arg.as_uint()?;
                 if uint != 0 {
                     prefix = "0x";
@@ -479,8 +490,8 @@ pub fn sprintf_locale(
                 if uint != 0 {
                     write!(buf, "{:o}", uint)?;
                 }
-                if flags.alt_form && prec.unwrap_or(0) <= buf.len() + 1 {
-                    prec = Some(buf.len() + 1);
+                if flags.alt_form && desired_precision.unwrap_or(0) <= buf.len() + 1 {
+                    desired_precision = Some(buf.len() + 1);
                 }
                 buf
             }
@@ -514,10 +525,38 @@ pub fn sprintf_locale(
             CS::s => {
                 // also 'S'
                 let s = arg.as_str(buf)?;
-                let p = prec.unwrap_or(s.len()).min(s.len());
-                prec = Some(p);
                 flags.zero_pad = false;
-                &s[..p]
+                match desired_precision {
+                    Some(precision) => {
+                        // from man printf(3)
+                        // "the maximum number of characters to be printed from a string"
+                        // We interpret this to mean the maximum width when printed, as defined by
+                        // Unicode grapheme cluster width.
+                        let mut byte_len = 0;
+                        let mut width = 0;
+                        let mut graphemes = s.graphemes(true);
+                        // Iteratively add single grapheme clusters as long as the fit within the
+                        // width limited by precision.
+                        while width < precision {
+                            match graphemes.next() {
+                                Some(grapheme) => {
+                                    let grapheme_width = grapheme.width();
+                                    if width + grapheme_width <= precision {
+                                        byte_len += grapheme.len();
+                                        width += grapheme_width;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                None => break,
+                            }
+                        }
+                        let p = precision.min(width);
+                        desired_precision = Some(p);
+                        &s[..byte_len]
+                    }
+                    None => s,
+                }
             }
         };
         // Numeric output should be empty iff the value is 0.
@@ -528,23 +567,26 @@ pub fn sprintf_locale(
         // Decide if we want to apply thousands grouping to the body, and compute its size.
         // Note we have already errored out if grouped is set and this is non-numeric.
         let wants_grouping = flags.grouped && locale.thousands_sep.is_some();
-        let body_len = match wants_grouping {
+        let body_width = match wants_grouping {
+            // We assume that text representing numbers is ASCII, so len == width.
             true => body.len() + locale.separator_count(body.len()),
-            false => body.len(),
+            false => body.width(),
         };
 
         // Resolve the precision.
         // In the case of a non-numeric conversion, update the precision to at least the
         // length of the string.
-        let prec = if !spec_is_numeric {
-            prec.unwrap_or(body_len)
+        let desired_precision = if !spec_is_numeric {
+            desired_precision.unwrap_or(body_width)
         } else {
-            prec.unwrap_or(1).max(body_len)
+            desired_precision.unwrap_or(1).max(body_width)
         };
 
-        let prefix_len = prefix.len();
-        let unpadded_width = prefix_len.checked_add(prec).ok_or(Error::Overflow)?;
-        let width = width.max(unpadded_width);
+        let prefix_width = prefix.width();
+        let unpadded_width = prefix_width
+            .checked_add(desired_precision)
+            .ok_or(Error::Overflow)?;
+        let width = desired_width.max(unpadded_width);
 
         // Pad on the left with spaces to the desired width?
         if !flags.left_adj && !flags.zero_pad {
@@ -560,7 +602,8 @@ pub fn sprintf_locale(
         }
 
         // Pad on the left to the given precision?
-        pad(f, '0', prec, body_len)?;
+        // TODO: why pad with 0 here?
+        pad(f, '0', desired_precision, body_width)?;
 
         // Output the actual value, perhaps with grouping.
         if wants_grouping {

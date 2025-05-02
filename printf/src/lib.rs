@@ -71,7 +71,7 @@ macro_rules! sprintf {
 /// - `args`: Iterator over the arguments to format.
 ///
 /// # Returns
-/// A `Result` which is `Ok` containing the number of characters written on success, or an `Error`.
+/// A `Result` which is `Ok` containing the width of the string written on success, or an `Error`.
 ///
 /// # Example
 ///

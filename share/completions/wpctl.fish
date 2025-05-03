@@ -43,8 +43,8 @@ function __wpctl_command_shape
 end
 
 function __wpctl_get_settings
-    set -l wpctl_settings (wpctl settings | string collect)
-    
+    set -l wpctl_settings (wpctl settings 2>/dev/null| string collect)
+
     string match --regex --all --quiet '\- Name: (?<wpctl_settings_name>.*)\n  Desc: (?<wpctl_settings_desc>.*)' $wpctl_settings
 
     for i in (seq 1 (count $wpctl_settings_name))

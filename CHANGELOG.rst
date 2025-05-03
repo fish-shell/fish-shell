@@ -66,6 +66,7 @@ New or improved bindings
 
 Completions
 ^^^^^^^^^^^
+- ``git`` completions now show the remote url as a description when completing remotes.
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

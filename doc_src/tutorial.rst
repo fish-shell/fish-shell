@@ -631,12 +631,12 @@ You can define your own prompt from the command line:
 
 Then, if you are happy with it, you can save it to disk by typing ``funcsave fish_prompt``. This saves the prompt in ``~/.config/fish/functions/fish_prompt.fish``. (Or, if you want, you can create that file manually from the start.)
 
-Multiple lines are OK. Colors can be set via :doc:`set_color <cmds/set_color>`, passing it named ANSI colors, or hex RGB values::
+Multiple lines are OK. Colors can be set via :doc:`set_color <cmds/set_color>` by passing it named ANSI colors, or hex RGB values::
 
     function fish_prompt
         set_color purple
         date "+%m/%d/%y"
-        set_color F00
+        set_color FF0000
         echo (pwd) '>' (set_color normal)
     end
 

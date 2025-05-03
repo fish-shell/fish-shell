@@ -1,6 +1,6 @@
 # completion for tmutil (macOS)
 
-function __destination_ids
+function __fish_tmutil_destination_ids
     for line in $(tmutil destinationinfo)
         if string match -q '*===*' -- $line
             # New section so clear out variables
@@ -61,8 +61,8 @@ complete -c tmutil -f -n '__fish_seen_subcommand_from compare' -s U -d 'Ignore l
 
 complete -c tmutil -r -n __fish_use_subcommand -a delete -d 'Delete one or more snapshots'
 complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s d -d 'Backup mount point'
-complete -c tmutil -r -f -n '__fish_seen_subcommand_from delete' -s t -d 'Timestamp'
-complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s p -d 'Path'
+complete -c tmutil -r -f -n '__fish_seen_subcommand_from delete' -s t -d Timestamp
+complete -c tmutil -r -n '__fish_seen_subcommand_from delete' -s p -d Path
 
 complete -c tmutil -r -n __fish_use_subcommand -a deletelocalsnapshots -d 'Delete all local Time Machine snapshots for the specified date (formatted YYYY-MM-DD-HHMMSS)'
 
@@ -95,7 +95,7 @@ complete -c tmutil -f -n __fish_use_subcommand -a localsnapshot -d 'Create new l
 complete -c tmutil -f -n __fish_use_subcommand -a machinedirectory -d 'Print the path to the current machine directory'
 
 complete -c tmutil -f -n __fish_use_subcommand -a removedestination -d 'Removes a backup destination'
-complete -c tmutil -f -n '__fish_seen_subcommand_from removedestination' -a '$(__destination_ids)'
+complete -c tmutil -f -n '__fish_seen_subcommand_from removedestination' -a '$(__fish_tmutil_destination_ids)'
 
 complete -c tmutil -f -n __fish_use_subcommand -a removeexclusion -d 'Remove an exclusion'
 complete -c tmutil -f -n '__fish_seen_subcommand_from removeexclusion' -s v -d 'Volume exclusion'
@@ -114,7 +114,7 @@ complete -c tmutil -f -n __fish_use_subcommand -a startbackup -d 'Begin a backup
 complete -c tmutil -f -n '__fish_seen_subcommand_from startbackup' -s a -l auto -d 'Automatic mode'
 complete -c tmutil -f -n '__fish_seen_subcommand_from startbackup' -s b -l block -d 'Block until finished'
 complete -c tmutil -f -n '__fish_seen_subcommand_from startbackup' -s r -l rotation -d 'Automatic rotation'
-complete -c tmutil -f -n '__fish_seen_subcommand_from startbackup' -s d -l destination -r -a '$(__destination_ids)' -d 'Backup destination'
+complete -c tmutil -f -n '__fish_seen_subcommand_from startbackup' -s d -l destination -r -a '$(__fish_tmutil_destination_ids)' -d 'Backup destination'
 
 complete -c tmutil -f -n __fish_use_subcommand -a stopbackup -d 'Cancel a backup currently in progress'
 
@@ -127,7 +127,7 @@ complete -c tmutil -r -n __fish_use_subcommand -a verifychecksums -d 'Verify sna
 complete -c tmutil -f -n __fish_use_subcommand -a version -d 'Print version'
 
 complete -c tmutil -f -n __fish_use_subcommand -a setquota -d 'Set the quota for the destination in gigabytes'
-complete -c tmutil -f -n '__fish_seen_subcommand_from setquota' -r -a '$(__destination_ids)'
+complete -c tmutil -f -n '__fish_seen_subcommand_from setquota' -r -a '$(__fish_tmutil_destination_ids)'
 
 complete -c tmutil -f -n '__fish_seen_subcommand_from destinationinfo isexcluded compare status' -s X -d 'Print as XML'
 complete -c tmutil -f -n '__fish_seen_subcommand_from latestbackup listbackups' -s m -d 'Destination volume to list backups from'

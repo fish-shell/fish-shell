@@ -2787,6 +2787,24 @@ impl<'a> Reader<'a> {
                     self.compute_and_apply_completions(c);
                 }
             }
+            rl::PagerShowSearch => {
+                if let Some(history_pager) = &self.history_pager {
+                    if history_pager.start == 0 {
+                        self.flash(0..self.command_line.len())
+                    }
+                    return;
+                }
+                if !self.pager.is_empty() {
+                    let sfs = self.pager.is_search_field_shown();
+                    self.pager.set_search_field_shown(true);
+                    self.pager.set_fully_disclosed();
+
+                    // Begin navigating if we were not searching previously.
+                    if !sfs && !self.is_navigating_pager_contents() {
+                        self.select_completion_in_direction(SelectionMotion::South, false);
+                    }
+                }
+            }
             rl::PagerToggleSearch => {
                 if let Some(history_pager) = &self.history_pager {
                     if history_pager.start == 0 {

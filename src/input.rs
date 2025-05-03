@@ -186,6 +186,7 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("kill-word"), ReadlineCmd::KillWord),
     make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWord),
     make_md(L!("or"), ReadlineCmd::FuncOr),
+    make_md(L!("pager-show-search"), ReadlineCmd::PagerShowSearch),
     make_md(L!("pager-toggle-search"), ReadlineCmd::PagerToggleSearch),
     make_md(L!("prevd-or-backward-word"), ReadlineCmd::PrevdOrBackwardWord),
     make_md(L!("redo"), ReadlineCmd::Redo),

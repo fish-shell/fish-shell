@@ -326,6 +326,9 @@ The following special input functions are available:
 ``or``
     only execute the next function if the previous did not succeed (note: only some functions report failure)
 
+``pager-show-search``
+    shows the search field if the completions pager is visible.
+
 ``pager-toggle-search``
     toggles the search field if the completions pager is visible; or if used after ``history-pager``, search forwards in time.
 

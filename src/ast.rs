@@ -634,7 +634,7 @@ define_list_node!(VariableAssignmentList, VariableAssignment);
 #[derive(Debug)]
 pub enum ArgumentOrRedirection {
     Argument(Argument),
-    Redirection(Redirection),
+    Redirection(Box<Redirection>), // Boxed because it's bigger
 }
 
 impl Default for ArgumentOrRedirection {
@@ -647,7 +647,7 @@ impl Acceptor for ArgumentOrRedirection {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         match self {
             Self::Argument(child) => visitor.visit(child),
-            Self::Redirection(child) => visitor.visit(child),
+            Self::Redirection(child) => visitor.visit(&**child),
         };
     }
 }
@@ -2641,7 +2641,7 @@ impl<'s> Populator<'s> {
         if let Some(arg) = self.try_parse::<Argument>() {
             *node = ArgumentOrRedirection::Argument(arg);
         } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirection::Redirection(redir);
+            *node = ArgumentOrRedirection::Redirection(Box::new(redir));
         } else {
             internal_error!(
                 self,

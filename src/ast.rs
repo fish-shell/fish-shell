@@ -63,30 +63,19 @@ pub struct MissingEndError {
 
 pub type VisitResult = ControlFlow<MissingEndError>;
 
-/**
- * Similar to NodeVisitor, but for mutable nodes.
- *
- * Note that this breaks out various node types into their own functions.
- */
+/// Similar to NodeVisitor, but for mutable nodes.
 trait NodeVisitorMut {
     /// will_visit (did_visit) is called before (after) a node's fields are visited.
-    fn will_visit_fields_of(&mut self, node: &mut dyn NodeMut);
-    fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult;
-    fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult);
+    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N);
+    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult;
+    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult);
 
     fn visit_argument_or_redirection(&mut self, _node: &mut ArgumentOrRedirection) -> VisitResult;
     fn visit_block_statement_header(&mut self, _node: &mut BlockStatementHeader) -> VisitResult;
     fn visit_statement(&mut self, _node: &mut Statement) -> VisitResult;
 
-    fn visit_decorated_statement_decorator(
-        &mut self,
-        _node: &mut Option<DecoratedStatementDecorator>,
-    );
-    fn visit_job_conjunction_decorator(&mut self, _node: &mut Option<JobConjunctionDecorator>);
-    fn visit_else_clause(&mut self, _node: &mut Option<ElseClause>);
-    fn visit_semi_nl(&mut self, _node: &mut Option<SemiNl>);
-    fn visit_time(&mut self, _node: &mut Option<KeywordTime>);
-    fn visit_token_background(&mut self, _node: &mut Option<TokenBackground>);
+    // Visit an optional field, perhaps populating it.
+    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult;
 }
 
 /**
@@ -95,11 +84,11 @@ trait NodeVisitorMut {
  * It generally invokes the right visit() method on each of its children.
  */
 trait AcceptorMut {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut);
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V);
 }
 
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         if let Some(node) = self {
             node.accept_mut(visitor)
         }
@@ -364,7 +353,7 @@ pub trait Keyword: Leaf {
 }
 
 /// This is for optional values and for lists.
-trait CheckParse {
+trait CheckParse: Default {
     /// A true return means we should descend into the production, false means stop.
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
 }
@@ -410,7 +399,7 @@ macro_rules! implement_leaf {
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
                 visitor.did_visit_fields_of(self, VisitResult::Continue(()));
             }
@@ -547,7 +536,7 @@ macro_rules! define_list_node {
         }
 
         impl AcceptorMut for $name {
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
                 let flow = self
                     .0
@@ -579,7 +568,7 @@ macro_rules! implement_acceptor_for_branch {
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
                 let flow = visitor_accept_field!(
                                 accept_mut,
@@ -681,30 +670,8 @@ macro_rules! visit_optional_field {
         $field:expr,
         $visitor:ident
     ) => {{
-        visit_optional_field_mut!($field_type, $field, $visitor);
-        VisitResult::Continue(())
+        $visitor.visit_optional_mut(&mut $field)
     }};
-}
-
-macro_rules! visit_optional_field_mut {
-    (DecoratedStatementDecorator, $field:expr, $visitor:ident) => {
-        $visitor.visit_decorated_statement_decorator(&mut $field);
-    };
-    (JobConjunctionDecorator, $field:expr, $visitor:ident) => {
-        $visitor.visit_job_conjunction_decorator(&mut $field);
-    };
-    (ElseClause, $field:expr, $visitor:ident) => {
-        $visitor.visit_else_clause(&mut $field);
-    };
-    (SemiNl, $field:expr, $visitor:ident) => {
-        $visitor.visit_semi_nl(&mut $field);
-    };
-    (KeywordTime, $field:expr, $visitor:ident) => {
-        $visitor.visit_time(&mut $field);
-    };
-    (TokenBackground, $field:expr, $visitor:ident) => {
-        $visitor.visit_token_background(&mut $field);
-    };
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
@@ -748,7 +715,7 @@ impl Acceptor for ArgumentOrRedirection {
     }
 }
 impl AcceptorMut for ArgumentOrRedirection {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
         let flow = visitor.visit_argument_or_redirection(self);
         visitor.did_visit_fields_of(self, flow);
@@ -842,7 +809,7 @@ impl Acceptor for Statement {
 }
 
 impl AcceptorMut for Statement {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
         let flow = visitor.visit_statement(self);
         visitor.did_visit_fields_of(self, flow);
@@ -1473,7 +1440,7 @@ impl Acceptor for BlockStatementHeader {
     }
 }
 impl AcceptorMut for BlockStatementHeader {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
         let flow = visitor.visit_block_statement_header(self);
         visitor.did_visit_fields_of(self, flow);
@@ -2023,7 +1990,7 @@ struct Populator<'a> {
 }
 
 impl<'s> NodeVisitorMut for Populator<'s> {
-    fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult {
+    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult {
         use KindMut as KM;
         match node.kind_mut() {
             // Leaves
@@ -2077,7 +2044,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         VisitResult::Continue(())
     }
 
-    fn will_visit_fields_of(&mut self, node: &mut dyn NodeMut) {
+    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
         FLOGF!(
             ast_construction,
             "%*swill_visit %ls",
@@ -2088,7 +2055,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         self.depth += 1
     }
 
-    fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult) {
+    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
         self.depth -= 1;
 
         if self.unwinding {
@@ -2195,26 +2162,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         VisitResult::Continue(())
     }
 
-    fn visit_decorated_statement_decorator(
-        &mut self,
-        node: &mut Option<DecoratedStatementDecorator>,
-    ) {
-        *node = self.try_parse::<DecoratedStatementDecorator>();
-    }
-    fn visit_job_conjunction_decorator(&mut self, node: &mut Option<JobConjunctionDecorator>) {
-        *node = self.try_parse::<JobConjunctionDecorator>();
-    }
-    fn visit_else_clause(&mut self, node: &mut Option<ElseClause>) {
-        *node = self.try_parse::<ElseClause>();
-    }
-    fn visit_semi_nl(&mut self, node: &mut Option<SemiNl>) {
-        *node = self.try_parse::<SemiNl>();
-    }
-    fn visit_time(&mut self, node: &mut Option<KeywordTime>) {
-        *node = self.try_parse::<KeywordTime>();
-    }
-    fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
-        *node = self.try_parse::<TokenBackground>();
+    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult {
+        *node = self.try_parse::<N>();
+        VisitResult::Continue(())
     }
 }
 

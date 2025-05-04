@@ -43,6 +43,7 @@ pub trait NodeVisitor<'a> {
  * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
  *
  * It generally invokes the visitor's visit() method on each of its children.
+ *
  */
 pub trait Acceptor {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
@@ -53,6 +54,34 @@ impl<T: Acceptor> Acceptor for Option<T> {
         if let Some(node) = self {
             node.accept(visitor)
         }
+    }
+}
+
+/// A helper trait to invoke the visit() or visit_mut() method on a field.
+trait VisitableField {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult;
+}
+
+impl<N: Node + NodeMut> VisitableField for N {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        visitor.visit(self);
+    }
+
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
+        visitor.visit_mut(self)
+    }
+}
+
+impl<N: Node + NodeMut + CheckParse> VisitableField for Option<N> {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        if let Some(node) = self {
+            node.do_visit(visitor);
+        }
+    }
+
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
+        visitor.visit_optional_mut(self)
     }
 }
 
@@ -69,10 +98,6 @@ trait NodeVisitorMut {
     fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N);
     fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult;
     fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult);
-
-    fn visit_argument_or_redirection(&mut self, _node: &mut ArgumentOrRedirection) -> VisitResult;
-    fn visit_block_statement_header(&mut self, _node: &mut BlockStatementHeader) -> VisitResult;
-    fn visit_statement(&mut self, _node: &mut Statement) -> VisitResult;
 
     // Visit an optional field, perhaps populating it.
     fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult;
@@ -594,7 +619,7 @@ macro_rules! visitor_accept_field {
     ) => {
         {
             $(
-                visit_1_field!(visit, ($self.$field_name), $field_type, $visitor);
+                $self.$field_name.do_visit($visitor);
             )*
         }
     };
@@ -612,7 +637,7 @@ macro_rules! visitor_accept_field {
         {
             loop {
                 $(
-                    let result = visit_1_field!(visit_mut, ($self.$field_name), $field_type, $visitor);
+                    let result = $self.$field_name.do_visit_mut($visitor);
                     if result.is_break() {
                         break result;
                     }
@@ -621,57 +646,6 @@ macro_rules! visitor_accept_field {
             }
         }
     };
-}
-
-/// Visit the given field.
-macro_rules! visit_1_field {
-    (
-        $visit:ident,
-        $field:expr,
-        (Option<$field_type:ident>),
-        $visitor:ident
-    ) => {
-        visit_optional_field!($visit, $field_type, $field, $visitor)
-    };
-    (
-        $visit:ident,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
-    ) => {
-        $visitor.$visit(apply_borrow!($visit, $field))
-    };
-}
-
-macro_rules! apply_borrow {
-    ( visit, $expr:expr ) => {
-        &$expr
-    };
-    ( visit_mut, $expr:expr ) => {
-        &mut $expr
-    };
-}
-
-macro_rules! visit_optional_field {
-    (
-        visit,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        match &$field {
-            Some(value) => $visitor.visit(&*value),
-            None => (),
-        }
-    };
-    (
-        visit_mut,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {{
-        $visitor.visit_optional_mut(&mut $field)
-    }};
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
@@ -717,7 +691,7 @@ impl Acceptor for ArgumentOrRedirection {
 impl AcceptorMut for ArgumentOrRedirection {
     fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_argument_or_redirection(self);
+        let flow = visitor.visit_mut(self);
         visitor.did_visit_fields_of(self, flow);
     }
 }
@@ -811,7 +785,7 @@ impl Acceptor for Statement {
 impl AcceptorMut for Statement {
     fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_statement(self);
+        let flow = visitor.visit_mut(self);
         visitor.did_visit_fields_of(self, flow);
     }
 }
@@ -1442,7 +1416,7 @@ impl Acceptor for BlockStatementHeader {
 impl AcceptorMut for BlockStatementHeader {
     fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         visitor.will_visit_fields_of(self);
-        let flow = visitor.visit_block_statement_header(self);
+        let flow = visitor.visit_mut(self);
         visitor.did_visit_fields_of(self, flow);
     }
 }
@@ -1998,18 +1972,17 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             KM::VariableAssignment(node) => self.visit_variable_assignment(node),
             KM::JobContinuation(node) => self.visit_job_continuation(node),
             KM::Token(node) => self.visit_token(node),
-            KM::Keyword(node) => {
-                return self.visit_keyword(node);
-            }
+            KM::Keyword(node) => return self.visit_keyword(node),
+
             KM::MaybeNewlines(node) => self.visit_maybe_newlines(node),
 
             // Branches
+            KM::ArgumentOrRedirection(node) => self.visit_argument_or_redirection(node),
+            KM::BlockStatementHeader(node) => self.visit_block_statement_header(node),
+            KM::Statement(node) => self.visit_statement(node),
             KM::Redirection(node) => node.accept_mut(self),
-            KM::ArgumentOrRedirection(node) => node.accept_mut(self),
-            KM::Statement(node) => node.accept_mut(self),
             KM::JobPipeline(node) => node.accept_mut(self),
             KM::JobConjunction(node) => node.accept_mut(self),
-            KM::BlockStatementHeader(node) => node.accept_mut(self),
             KM::ForHeader(node) => node.accept_mut(self),
             KM::WhileHeader(node) => node.accept_mut(self),
             KM::FunctionHeader(node) => node.accept_mut(self),
@@ -2137,29 +2110,6 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 error.token.user_presentable_description(),
             );
         }
-    }
-
-    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) -> VisitResult {
-        if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirection::Argument(arg);
-        } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirection::Redirection(redir);
-        } else {
-            internal_error!(
-                self,
-                visit_argument_or_redirection,
-                "Unable to parse argument or redirection"
-            );
-        }
-        VisitResult::Continue(())
-    }
-    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) -> VisitResult {
-        *node = self.allocate_populate_block_header();
-        VisitResult::Continue(())
-    }
-    fn visit_statement(&mut self, node: &mut Statement) -> VisitResult {
-        *node = self.allocate_populate_statement();
-        VisitResult::Continue(())
     }
 
     fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult {
@@ -2845,6 +2795,26 @@ impl<'s> Populator<'s> {
         result
     }
 
+    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) {
+        if let Some(arg) = self.try_parse::<Argument>() {
+            *node = ArgumentOrRedirection::Argument(arg);
+        } else if let Some(redir) = self.try_parse::<Redirection>() {
+            *node = ArgumentOrRedirection::Redirection(redir);
+        } else {
+            internal_error!(
+                self,
+                visit_argument_or_redirection,
+                "Unable to parse argument or redirection"
+            );
+        }
+    }
+    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) {
+        *node = self.allocate_populate_block_header();
+    }
+    fn visit_statement(&mut self, node: &mut Statement) {
+        *node = self.allocate_populate_statement();
+    }
+
     fn visit_argument(&mut self, arg: &mut Argument) {
         if self.unsource_leaves() {
             arg.range = None;
@@ -2870,13 +2840,14 @@ impl<'s> Populator<'s> {
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
         // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        if [ParseKeyword::And, ParseKeyword::Or].contains(&self.peek_token(1).keyword) {
+        let kw = self.peek_token(1).keyword;
+        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
             parse_error!(
                 self,
                 self.peek_token(1),
                 ParseErrorCode::andor_in_pipeline,
                 INVALID_PIPELINE_CMD_ERR_MSG,
-                self.peek_token(1).keyword
+                kw
             );
         }
         node.accept_mut(self);

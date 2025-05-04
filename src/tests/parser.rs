@@ -956,7 +956,7 @@ fn test_traversal_skip_children_panics() {
     let ast = ast::parse(L!("true;"), ParseTreeFlags::empty(), None);
     let mut traversal = ast.walk();
     while let Some(node) = traversal.next() {
-        if node.typ() == ast::Type::decorated_statement {
+        if matches!(node.kind(), ast::Kind::DecoratedStatement(_)) {
             // Should panic as we can only skip the current node.
             traversal.skip_children(ast.top());
         }

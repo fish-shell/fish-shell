@@ -15,7 +15,7 @@ use crate::panic::panic_handler;
 use libc::LC_ALL;
 
 use super::prelude::*;
-use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal, Type};
+use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -381,14 +381,14 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     // Return gap text flags for the gap text that comes *before* a given node type.
     fn gap_text_flags_before_node(&self, node: &dyn Node) -> GapFlags {
         let mut result = GapFlags::default();
-        match node.typ() {
+        match node.kind() {
             // Allow escaped newlines before leaf nodes that can be part of a long command.
-            Type::argument | Type::redirection | Type::variable_assignment => {
+            Kind::Argument(_) | Kind::Redirection(_) | Kind::VariableAssignment(_) => {
                 result.allow_escaped_newlines = true
             }
-            Type::token_base => {
+            Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.
-                match node.as_token().unwrap().token_type() {
+                match token.token_type() {
                     ParseTokenType::andand | ParseTokenType::oror | ParseTokenType::pipe => {
                         result.allow_escaped_newlines = true;
                     }
@@ -396,11 +396,11 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
                         let p = self.traversal.parent(node);
-                        if p.typ() != Type::decorated_statement {
+                        if !matches!(p.kind(), Kind::DecoratedStatement(_)) {
                             return result;
                         }
                         let p = self.traversal.parent(p);
-                        assert_eq!(p.typ(), Type::statement);
+                        assert!(matches!(p.kind(), Kind::Statement(_)));
                         let p = self.traversal.parent(p);
                         if let Kind::JobPipeline(job) = p.kind() {
                             if !job.variables.is_empty() {

@@ -92,7 +92,13 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 }
 
 /// Node is the base trait of all AST nodes.
-pub trait Node: Acceptor + ConcreteNode + AsNode + std::fmt::Debug {
+pub trait Node: Acceptor + AsNode + NodeSubTraits + std::fmt::Debug {
+    /// Return the kind of this node.
+    fn kind(&self) -> Kind;
+
+    /// Return the kind of this node, as a mutable reference.
+    fn kind_mut(&mut self) -> KindMut;
+
     /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
         let mut res = ast_kind_to_string(self.kind()).to_owned();
@@ -196,8 +202,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
 }
 
 /// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut + ConcreteNode {}
-impl<T> NodeMut for T where T: Node + AcceptorMut + ConcreteNode {}
+trait NodeMut: Node + AcceptorMut {}
+impl<T> NodeMut for T where T: Node + AcceptorMut {}
 
 /// The different kinds of nodes. Note that Token and Keyword have different subtypes.
 #[derive(Copy, Clone)]
@@ -308,11 +314,6 @@ impl<'a> dyn Node + 'a {
     }
 }
 
-pub trait ConcreteNode: NodeSubTraits {
-    fn kind(&self) -> Kind;
-    fn kind_mut(&mut self) -> KindMut;
-}
-
 /// Trait for all "leaf" nodes: nodes with no ast children.
 pub trait Leaf: Node {
     /// Returns none if this node is "unsourced." This happens if for whatever reason we are
@@ -355,10 +356,8 @@ trait CheckParse {
 
 /// Implement the node trait.
 macro_rules! implement_node {
-    (
-        $name:ident
-    ) => {
-        impl ConcreteNode for $name {
+    ( $name:ident ) => {
+        impl Node for $name {
             fn kind(&self) -> Kind {
                 Kind::$name(self)
             }
@@ -376,8 +375,6 @@ macro_rules! implement_node {
                 }
             }
         }
-
-        impl Node for $name {}
     };
 }
 
@@ -415,7 +412,7 @@ macro_rules! define_keyword_node {
             keyword: ParseKeyword,
         }
         implement_leaf!($name);
-        impl ConcreteNode for $name {
+        impl Node for $name {
             fn kind(&self) -> Kind {
                 Kind::Keyword(self)
             }
@@ -431,7 +428,6 @@ macro_rules! define_keyword_node {
                 Some(self)
             }
         }
-        impl Node for $name {}
         impl Keyword for $name {
             fn keyword(&self) -> ParseKeyword {
                 self.keyword
@@ -454,7 +450,7 @@ macro_rules! define_token_node {
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
         }
-        impl ConcreteNode for $name {
+        impl Node for $name {
             fn kind(&self) -> Kind {
                 Kind::Token(self)
             }
@@ -488,7 +484,6 @@ macro_rules! define_token_node {
                 Self::ALLOWED_TOKENS.contains(&typ)
             }
         }
-        impl Node for $name {}
         impl $name {
             const ALLOWED_TOKENS: &'static [ParseTokenType] = &[$(ParseTokenType::$allowed),*];
         }

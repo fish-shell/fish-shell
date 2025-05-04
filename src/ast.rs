@@ -93,9 +93,6 @@ impl<T: AcceptorMut> AcceptorMut for Option<T> {
 
 /// Node is the base trait of all AST nodes.
 pub trait Node: Acceptor + ConcreteNode + AsNode + std::fmt::Debug {
-    /// The type of this node.
-    fn typ(&self) -> Type;
-
     /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
         let mut res = ast_kind_to_string(self.kind()).to_owned();
@@ -359,8 +356,7 @@ trait CheckParse {
 /// Implement the node trait.
 macro_rules! implement_node {
     (
-        $name:ident,
-        $type:ident $(,)?
+        $name:ident
     ) => {
         impl ConcreteNode for $name {
             fn kind(&self) -> Kind {
@@ -381,11 +377,7 @@ macro_rules! implement_node {
             }
         }
 
-        impl Node for $name {
-            fn typ(&self) -> Type {
-                Type::$type
-            }
-        }
+        impl Node for $name {}
     };
 }
 
@@ -422,7 +414,6 @@ macro_rules! define_keyword_node {
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
-
         implement_leaf!($name);
         impl ConcreteNode for $name {
             fn kind(&self) -> Kind {
@@ -440,12 +431,7 @@ macro_rules! define_keyword_node {
                 Some(self)
             }
         }
-        impl Node for $name {
-            fn typ(&self) -> Type {
-                Type::keyword_base
-            }
-        }
-
+        impl Node for $name {}
         impl Keyword for $name {
             fn keyword(&self) -> ParseKeyword {
                 self.keyword
@@ -476,11 +462,6 @@ macro_rules! define_token_node {
                 KindMut::Token(self)
             }
         }
-        impl Node for $name {
-            fn typ(&self) -> Type {
-                Type::token_base
-            }
-        }
         implement_leaf!($name);
         impl NodeSubTraits for $name {
             fn as_leaf(&self) -> Option<&dyn Leaf> {
@@ -507,6 +488,7 @@ macro_rules! define_token_node {
                 Self::ALLOWED_TOKENS.contains(&typ)
             }
         }
+        impl Node for $name {}
         impl $name {
             const ALLOWED_TOKENS: &'static [ParseTokenType] = &[$(ParseTokenType::$allowed),*];
         }
@@ -517,13 +499,12 @@ macro_rules! define_token_node {
 macro_rules! define_list_node {
     (
         $name:ident,
-        $type:tt,
         $contents:ident
     ) => {
         #[derive(Default, Debug)]
         pub struct $name(Box<[$contents]>);
 
-        implement_node!($name, $type);
+        implement_node!($name);
 
         impl NodeSubTraits for $name {}
 
@@ -759,7 +740,7 @@ pub struct Redirection {
     pub oper: TokenRedirection,
     pub target: String_,
 }
-implement_node!(Redirection, redirection);
+implement_node!(Redirection);
 impl NodeSubTraits for Redirection {}
 implement_acceptor_for_branch!(Redirection, (oper: TokenRedirection), (target: String_));
 
@@ -769,11 +750,7 @@ impl CheckParse for Redirection {
     }
 }
 
-define_list_node!(
-    VariableAssignmentList,
-    variable_assignment_list,
-    VariableAssignment
-);
+define_list_node!(VariableAssignmentList, VariableAssignment);
 
 #[derive(Debug)]
 pub enum ArgumentOrRedirection {
@@ -832,7 +809,7 @@ impl ArgumentOrRedirection {
     }
 }
 
-implement_node!(ArgumentOrRedirection, argument_or_redirection);
+implement_node!(ArgumentOrRedirection);
 
 impl CheckParse for ArgumentOrRedirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
@@ -841,11 +818,7 @@ impl CheckParse for ArgumentOrRedirection {
     }
 }
 
-define_list_node!(
-    ArgumentOrRedirectionList,
-    argument_or_redirection_list,
-    ArgumentOrRedirection
-);
+define_list_node!(ArgumentOrRedirectionList, ArgumentOrRedirection);
 
 /// A statement is a normal command, or an if / while / etc
 #[derive(Debug)]
@@ -857,7 +830,7 @@ pub enum Statement {
     If(Box<IfStatement>),
     Switch(Box<SwitchStatement>),
 }
-implement_node!(Statement, statement);
+implement_node!(Statement);
 impl NodeSubTraits for Statement {}
 
 impl Default for Statement {
@@ -917,7 +890,7 @@ pub struct JobPipeline {
     /// Maybe backgrounded.
     pub bg: Option<TokenBackground>,
 }
-implement_node!(JobPipeline, job_pipeline);
+implement_node!(JobPipeline);
 impl NodeSubTraits for JobPipeline {}
 implement_acceptor_for_branch!(
     JobPipeline,
@@ -942,7 +915,7 @@ pub struct JobConjunction {
     /// only fail to be present if we ran out of tokens.
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(JobConjunction, job_conjunction);
+implement_node!(JobConjunction);
 impl NodeSubTraits for JobConjunction {}
 implement_acceptor_for_branch!(
     JobConjunction,
@@ -978,7 +951,7 @@ pub struct ForHeader {
     /// newline or semicolon
     pub semi_nl: SemiNl,
 }
-implement_node!(ForHeader, for_header);
+implement_node!(ForHeader);
 impl NodeSubTraits for ForHeader {}
 implement_acceptor_for_branch!(
     ForHeader,
@@ -996,7 +969,7 @@ pub struct WhileHeader {
     pub condition: JobConjunction,
     pub andor_tail: AndorJobList,
 }
-implement_node!(WhileHeader, while_header);
+implement_node!(WhileHeader);
 impl NodeSubTraits for WhileHeader {}
 implement_acceptor_for_branch!(
     WhileHeader,
@@ -1013,7 +986,7 @@ pub struct FunctionHeader {
     pub args: ArgumentList,
     pub semi_nl: SemiNl,
 }
-implement_node!(FunctionHeader, function_header);
+implement_node!(FunctionHeader);
 impl NodeSubTraits for FunctionHeader {}
 implement_acceptor_for_branch!(
     FunctionHeader,
@@ -1030,7 +1003,7 @@ pub struct BeginHeader {
     /// This is valid: begin echo hi; end
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(BeginHeader, begin_header);
+implement_node!(BeginHeader);
 impl NodeSubTraits for BeginHeader {}
 implement_acceptor_for_branch!(
     BeginHeader,
@@ -1049,7 +1022,7 @@ pub struct BlockStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BlockStatement, block_statement);
+implement_node!(BlockStatement);
 impl NodeSubTraits for BlockStatement {}
 implement_acceptor_for_branch!(
     BlockStatement,
@@ -1070,7 +1043,7 @@ pub struct BraceStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BraceStatement, brace_statement);
+implement_node!(BraceStatement);
 impl NodeSubTraits for BraceStatement {}
 implement_acceptor_for_branch!(
     BraceStatement,
@@ -1091,7 +1064,7 @@ pub struct IfClause {
     /// The body to execute if the condition is true.
     pub body: JobList,
 }
-implement_node!(IfClause, if_clause);
+implement_node!(IfClause);
 impl NodeSubTraits for IfClause {}
 implement_acceptor_for_branch!(
     IfClause,
@@ -1108,7 +1081,7 @@ pub struct ElseifClause {
     /// The 'if' clause following it.
     pub if_clause: IfClause,
 }
-implement_node!(ElseifClause, elseif_clause);
+implement_node!(ElseifClause);
 impl NodeSubTraits for ElseifClause {}
 implement_acceptor_for_branch!(
     ElseifClause,
@@ -1122,7 +1095,7 @@ impl CheckParse for ElseifClause {
     }
 }
 
-define_list_node!(ElseifClauseList, elseif_clause_list, ElseifClause);
+define_list_node!(ElseifClauseList, ElseifClause);
 
 #[derive(Default, Debug)]
 pub struct ElseClause {
@@ -1131,7 +1104,7 @@ pub struct ElseClause {
     pub semi_nl: Option<SemiNl>,
     pub body: JobList,
 }
-implement_node!(ElseClause, else_clause);
+implement_node!(ElseClause);
 impl NodeSubTraits for ElseClause {}
 implement_acceptor_for_branch!(
     ElseClause,
@@ -1158,7 +1131,7 @@ pub struct IfStatement {
     /// block args / redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(IfStatement, if_statement);
+implement_node!(IfStatement);
 impl NodeSubTraits for IfStatement {}
 implement_acceptor_for_branch!(
     IfStatement,
@@ -1177,7 +1150,7 @@ pub struct CaseItem {
     pub semi_nl: SemiNl,
     pub body: JobList,
 }
-implement_node!(CaseItem, case_item);
+implement_node!(CaseItem);
 impl NodeSubTraits for CaseItem {}
 implement_acceptor_for_branch!(
     CaseItem,
@@ -1202,7 +1175,7 @@ pub struct SwitchStatement {
     pub end: KeywordEnd,
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(SwitchStatement, switch_statement);
+implement_node!(SwitchStatement);
 impl NodeSubTraits for SwitchStatement {}
 implement_acceptor_for_branch!(
     SwitchStatement,
@@ -1225,7 +1198,7 @@ pub struct DecoratedStatement {
     /// Args and redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(DecoratedStatement, decorated_statement);
+implement_node!(DecoratedStatement);
 impl NodeSubTraits for DecoratedStatement {}
 implement_acceptor_for_branch!(
     DecoratedStatement,
@@ -1243,7 +1216,7 @@ pub struct NotStatement {
     pub variables: VariableAssignmentList,
     pub contents: Statement,
 }
-implement_node!(NotStatement, not_statement);
+implement_node!(NotStatement);
 impl NodeSubTraits for NotStatement {}
 implement_acceptor_for_branch!(
     NotStatement,
@@ -1260,7 +1233,7 @@ pub struct JobContinuation {
     pub variables: VariableAssignmentList,
     pub statement: Statement,
 }
-implement_node!(JobContinuation, job_continuation);
+implement_node!(JobContinuation);
 impl NodeSubTraits for JobContinuation {}
 implement_acceptor_for_branch!(
     JobContinuation,
@@ -1275,7 +1248,7 @@ impl CheckParse for JobContinuation {
     }
 }
 
-define_list_node!(JobContinuationList, job_continuation_list, JobContinuation);
+define_list_node!(JobContinuationList, JobContinuation);
 
 #[derive(Default, Debug)]
 pub struct JobConjunctionContinuation {
@@ -1285,7 +1258,7 @@ pub struct JobConjunctionContinuation {
     /// The job itself.
     pub job: JobPipeline,
 }
-implement_node!(JobConjunctionContinuation, job_conjunction_continuation);
+implement_node!(JobConjunctionContinuation);
 impl NodeSubTraits for JobConjunctionContinuation {}
 implement_acceptor_for_branch!(
     JobConjunctionContinuation,
@@ -1307,7 +1280,7 @@ impl CheckParse for JobConjunctionContinuation {
 pub struct AndorJob {
     pub job: JobConjunction,
 }
-implement_node!(AndorJob, andor_job);
+implement_node!(AndorJob);
 impl NodeSubTraits for AndorJob {}
 implement_acceptor_for_branch!(AndorJob, (job: (JobConjunction)));
 impl CheckParse for AndorJob {
@@ -1326,7 +1299,7 @@ impl CheckParse for AndorJob {
     }
 }
 
-define_list_node!(AndorJobList, andor_job_list, AndorJob);
+define_list_node!(AndorJobList, AndorJob);
 
 /// A freestanding_argument_list is equivalent to a normal argument list, except it may contain
 /// TOK_END (newlines, and even semicolons, for historical reasons).
@@ -1335,29 +1308,25 @@ define_list_node!(AndorJobList, andor_job_list, AndorJob);
 pub struct FreestandingArgumentList {
     pub arguments: ArgumentList,
 }
-implement_node!(FreestandingArgumentList, freestanding_argument_list);
+implement_node!(FreestandingArgumentList);
 impl NodeSubTraits for FreestandingArgumentList {}
 implement_acceptor_for_branch!(FreestandingArgumentList, (arguments: (ArgumentList)));
 
-define_list_node!(
-    JobConjunctionContinuationList,
-    job_conjunction_continuation_list,
-    JobConjunctionContinuation
-);
+define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
 
-define_list_node!(ArgumentList, argument_list, Argument);
+define_list_node!(ArgumentList, Argument);
 
 // For historical reasons, a job list is a list of job *conjunctions*. This should be fixed.
-define_list_node!(JobList, job_list, JobConjunction);
+define_list_node!(JobList, JobConjunction);
 
-define_list_node!(CaseItemList, case_item_list, CaseItem);
+define_list_node!(CaseItemList, CaseItem);
 
 /// A variable_assignment contains a source range like FOO=bar.
 #[derive(Default, Debug)]
 pub struct VariableAssignment {
     range: Option<SourceRange>,
 }
-implement_node!(VariableAssignment, variable_assignment);
+implement_node!(VariableAssignment);
 impl NodeSubTraits for VariableAssignment {
     fn as_leaf(&self) -> Option<&dyn Leaf> {
         Some(self)
@@ -1394,7 +1363,7 @@ impl NodeSubTraits for MaybeNewlines {
         Some(self)
     }
 }
-implement_node!(MaybeNewlines, maybe_newlines);
+implement_node!(MaybeNewlines);
 implement_leaf!(MaybeNewlines);
 
 /// An argument is just a node whose source range determines its contents.
@@ -1403,7 +1372,7 @@ implement_leaf!(MaybeNewlines);
 pub struct Argument {
     range: Option<SourceRange>,
 }
-implement_node!(Argument, argument);
+implement_node!(Argument);
 impl NodeSubTraits for Argument {
     fn as_leaf(&self) -> Option<&dyn Leaf> {
         Some(self)
@@ -1504,7 +1473,7 @@ pub enum BlockStatementHeader {
     While(WhileHeader),
     Function(FunctionHeader),
 }
-implement_node!(BlockStatementHeader, block_statement_header);
+implement_node!(BlockStatementHeader);
 impl NodeSubTraits for BlockStatementHeader {}
 
 impl Default for BlockStatementHeader {
@@ -3192,48 +3161,4 @@ fn test_ast_parse() {
     let src = L!("echo");
     let ast = parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Type {
-    token_base,
-    keyword_base,
-    redirection,
-    variable_assignment,
-    variable_assignment_list,
-    argument_or_redirection,
-    argument_or_redirection_list,
-    statement,
-    job_pipeline,
-    job_conjunction,
-    block_statement_header,
-    for_header,
-    while_header,
-    function_header,
-    begin_header,
-    block_statement,
-    brace_statement,
-    if_clause,
-    elseif_clause,
-    elseif_clause_list,
-    else_clause,
-    if_statement,
-    case_item,
-    switch_statement,
-    decorated_statement,
-    not_statement,
-    job_continuation,
-    job_continuation_list,
-    job_conjunction_continuation,
-    andor_job,
-    andor_job_list,
-    freestanding_argument_list,
-    token_conjunction,
-    job_conjunction_continuation_list,
-    maybe_newlines,
-    token_pipe,
-    case_item_list,
-    argument,
-    argument_list,
-    job_list,
 }

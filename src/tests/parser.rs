@@ -513,21 +513,21 @@ fn test_new_parser_ll2() {
     // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
     // not (issue #1240).
     macro_rules! check_function_help {
-        ($src:expr, $typ:expr) => {
+        ($src:expr, $kind:pat) => {
             let ast = ast::parse(L!($src), ParseTreeFlags::default(), None);
             assert!(!ast.errored());
             assert_eq!(
                 Traversal::new(ast.top())
-                    .filter(|n| n.typ() == $typ)
+                    .filter(|n| matches!(n.kind(), $kind))
                     .count(),
                 1
             );
         };
     }
-    check_function_help!("function -h", ast::Type::decorated_statement);
-    check_function_help!("function --help", ast::Type::decorated_statement);
-    check_function_help!("function --foo; end", ast::Type::function_header);
-    check_function_help!("function foo; end", ast::Type::function_header);
+    check_function_help!("function -h", ast::Kind::DecoratedStatement(_));
+    check_function_help!("function --help", ast::Kind::DecoratedStatement(_));
+    check_function_help!("function --foo; end", ast::Kind::FunctionHeader(_));
+    check_function_help!("function foo; end", ast::Kind::FunctionHeader(_));
 }
 
 #[test]
@@ -540,11 +540,11 @@ fn test_new_parser_ad_hoc() {
     let src = L!("switch foo ; case bar; case baz; end");
     let ast = ast::parse(src, ParseTreeFlags::default(), None);
     assert!(!ast.errored());
-    // Expect two case_item_lists. The bug was that we'd
+    // Expect two CaseItems. The bug was that we'd
     // try to run a command 'case'.
     assert_eq!(
         Traversal::new(ast.top())
-            .filter(|n| n.typ() == ast::Type::case_item)
+            .filter(|n| matches!(n.kind(), ast::Kind::CaseItem(_)))
             .count(),
         2
     );
@@ -918,7 +918,7 @@ fn test_ast() {
     // Find the decorated statement.
     let decorated_statement = ast
         .walk()
-        .find(|n| n.typ() == ast::Type::decorated_statement)
+        .find(|n| matches!(n.kind(), ast::Kind::DecoratedStatement(_)))
         .expect("Expected decorated statement");
 
     // Test the skip feature. Don't descend into the decorated_statement.

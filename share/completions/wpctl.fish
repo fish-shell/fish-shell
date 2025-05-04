@@ -44,10 +44,11 @@ end
 
 function __wpctl_get_settings
     set -l wpctl_settings (wpctl settings 2>/dev/null| string collect)
+    or return
 
     string match --regex --all --quiet '\- Name: (?<wpctl_settings_name>.*)\n  Desc: (?<wpctl_settings_desc>.*)' $wpctl_settings
 
-    for i in (seq 1 (count $wpctl_settings_name))
+    for i in (seq (count $wpctl_settings_name))
         set -l name $wpctl_settings_name[$i]
         set -l desc (string shorten --max 60 $wpctl_settings_desc[$i])
         echo $name\t$desc

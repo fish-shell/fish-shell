@@ -13,6 +13,7 @@ macro_rules! sprintf_check {
         $(,)? // optional trailing comma
     ) => {
         {
+            use unicode_width::UnicodeWidthStr;
             let mut target = String::new();
             let mut args = [$($arg.to_arg()),*];
             let len = $crate::printf_c_locale(
@@ -20,7 +21,7 @@ macro_rules! sprintf_check {
                 $fmt.as_ref() as &str,
                 &mut args,
             ).expect("printf failed");
-            assert!(len == target.len(), "Wrong length returned: {} vs {}", len, target.len());
+            assert_eq!(len, target.width(), "Wrong length returned");
             target
         }
     };
@@ -733,6 +734,18 @@ fn test_huge_precision_g() {
 
     sprintf_err!("%.*g", usize::MAX, f => Error::Overflow);
     sprintf_err!("%.2147483648g", f => Error::Overflow);
+}
+
+#[test]
+fn test_non_ascii() {
+    assert_fmt!("%3s", "ö" => "  ö");
+    assert_fmt!("%3s", "🇺🇳" => " 🇺🇳");
+    assert_fmt!("%.3s", "🇺🇳🇺🇳" => "🇺🇳");
+    assert_fmt!("%.3s", "a🇺🇳" => "a🇺🇳");
+    assert_fmt!("%.3s", "aa🇺🇳" => "aa");
+    assert_fmt!("%3.3s", "aa🇺🇳" => " aa");
+    assert_fmt!("%.1s", "𒈙a" => "𒈙");
+    assert_fmt!("%3.3s", "👨‍👨‍👧‍👧" => " 👨‍👨‍👧‍👧");
 }
 
 #[test]

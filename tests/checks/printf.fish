@@ -154,3 +154,21 @@ printf '%b\n' '\0057foo\0057bar\0057'
 
 printf %18446744073709551616s
 # CHECKERR: Number out of range
+
+# Test non-ASCII behavior
+printf '|%3s|\n' 'ö'
+# CHECK: |  ö|
+printf '|%3s|\n' '🇺🇳'
+#CHECK: | 🇺🇳|
+printf '|%.3s|\n' '🇺🇳🇺🇳'
+#CHECK: |🇺🇳|
+printf '|%.3s|\n' 'a🇺🇳'
+#CHECK: |a🇺🇳|
+printf '|%.3s|\n' 'aa🇺🇳'
+#CHECK: |aa|
+printf '|%3.3s|\n' 'aa🇺🇳'
+#CHECK: | aa|
+printf '|%.1s|\n' '𒈙a'
+#CHECK: |𒈙|
+printf '|%3.3s|\n' '👨‍👨‍👧‍👧'
+#CHECK: | 👨‍👨‍👧‍👧|

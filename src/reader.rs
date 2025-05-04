@@ -3945,9 +3945,9 @@ impl<'a> Reader<'a> {
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
+            let search_field = &self.data.pager.search_field_line;
             if self.history_pager.is_some() && self.pager.selected_completion_idx.is_none() {
                 let range = 0..self.command_line.len();
-                let search_field = &self.data.pager.search_field_line;
                 let offset_from_end = search_field.len() - search_field.position();
                 let mut cursor = self.command_line.position();
                 let updated = replace_line_at_cursor(
@@ -3957,6 +3957,13 @@ impl<'a> Reader<'a> {
                 );
                 self.replace_substring(EditableLineTag::Commandline, range, updated);
                 self.command_line.set_position(cursor - offset_from_end);
+            } else if self
+                .pager
+                .selected_completion(&self.data.current_page_rendering)
+                .is_none()
+            {
+                let failed_search = search_field.text().to_owned();
+                self.insert_string(EditableLineTag::Commandline, &failed_search);
             }
             self.clear_pager();
             return true;

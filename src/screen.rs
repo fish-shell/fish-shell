@@ -756,11 +756,11 @@ impl Screen {
     /// Return whether we believe the cursor is wrapped onto the last line, and that line is
     /// otherwise empty. This includes both soft and hard wrapping.
     pub fn cursor_is_wrapped_to_own_line(&self) -> bool {
-        // Note == comparison against the line count is correct: we do not create a line just for the
-        // cursor. If there is a line containing the cursor, then it means that line has contents and we
-        // should return false.
         // Don't consider dumb terminals to have wrapping for the purposes of this function.
-        self.actual.cursor.x == 0 && self.actual.cursor.y == self.actual.line_count() && !is_dumb()
+        self.actual.cursor.x == 0
+            && self.actual.cursor.y != 0
+            && self.actual.cursor.y + 1 == self.actual.line_count()
+            && !is_dumb()
     }
 
     /// Appends a character to the end of the line that the output cursor is on. This function

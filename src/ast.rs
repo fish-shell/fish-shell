@@ -577,75 +577,34 @@ macro_rules! define_list_node {
 macro_rules! implement_acceptor_for_branch {
     (
         $name:ident
-        $(, ($field_name:ident: $field_type:tt) )*
+        $(, $field_name:ident )*
         $(,)?
     ) => {
         impl Acceptor for $name {
             #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
-                let _ = visitor_accept_field!(
-                    accept,
-                    visit,
-                    self,
-                    visitor,
-                    $( $field_name: $field_type, )* );
+                $(
+                    self.$field_name.do_visit(visitor);
+                )*
             }
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
             fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
-                let flow = visitor_accept_field!(
-                                accept_mut,
-                                visit_mut,
-                                self,
-                                visitor,
-                                $( $field_name: $field_type, )* );
+                let flow = loop {
+                    $(
+                        let result = self.$field_name.do_visit_mut(visitor);
+                        if result.is_break() {
+                            break result;
+                        }
+                    )*
+                    break VisitResult::Continue(());
+                };
                 visitor.did_visit_fields_of(self, flow);
             }
         }
     }
-}
-
-/// Visit the given fields in order, returning whether the visitation succeeded.
-macro_rules! visitor_accept_field {
-    // Visit fields using NodeVisitor. This does not use ControlFlow.
-    (
-        $accept:ident,
-        visit,
-        $self:ident,
-        $visitor:ident,
-        $( $field_name:ident: $field_type:tt ),* $(,)?
-    ) => {
-        {
-            $(
-                $self.$field_name.do_visit($visitor);
-            )*
-        }
-    };
-
-    // Visit fields using NodeVisitorMut. This uses ControlFlow.
-    (
-        $accept:ident,
-        visit_mut,
-        $self:ident,
-        $visitor:ident,
-        $( $field_name:ident: $field_type:tt ),* $(,)?
-    ) => {
-        // Visit fields using NodeVisitorMut.
-        // This uses control flow.
-        {
-            loop {
-                $(
-                    let result = $self.$field_name.do_visit_mut($visitor);
-                    if result.is_break() {
-                        break result;
-                    }
-                )*
-                break VisitResult::Continue(());
-            }
-        }
-    };
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
@@ -657,7 +616,7 @@ pub struct Redirection {
 }
 implement_node!(Redirection);
 impl NodeSubTraits for Redirection {}
-implement_acceptor_for_branch!(Redirection, (oper: TokenRedirection), (target: String_));
+implement_acceptor_for_branch!(Redirection, oper, target);
 
 impl CheckParse for Redirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
@@ -807,14 +766,7 @@ pub struct JobPipeline {
 }
 implement_node!(JobPipeline);
 impl NodeSubTraits for JobPipeline {}
-implement_acceptor_for_branch!(
-    JobPipeline,
-    (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
-    (continuation: (JobContinuationList)),
-    (bg: (Option<TokenBackground>)),
-);
+implement_acceptor_for_branch!(JobPipeline, time, variables, statement, continuation, bg);
 
 /// A job_conjunction is a job followed by a && or || continuations.
 #[derive(Default, Debug)]
@@ -832,13 +784,7 @@ pub struct JobConjunction {
 }
 implement_node!(JobConjunction);
 impl NodeSubTraits for JobConjunction {}
-implement_acceptor_for_branch!(
-    JobConjunction,
-    (decorator: (Option<JobConjunctionDecorator>)),
-    (job: (JobPipeline)),
-    (continuations: (JobConjunctionContinuationList)),
-    (semi_nl: (Option<SemiNl>)),
-);
+implement_acceptor_for_branch!(JobConjunction, decorator, job, continuations, semi_nl);
 
 impl CheckParse for JobConjunction {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
@@ -868,14 +814,7 @@ pub struct ForHeader {
 }
 implement_node!(ForHeader);
 impl NodeSubTraits for ForHeader {}
-implement_acceptor_for_branch!(
-    ForHeader,
-    (kw_for: (KeywordFor)),
-    (var_name: (String_)),
-    (kw_in: (KeywordIn)),
-    (args: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-);
+implement_acceptor_for_branch!(ForHeader, kw_for, var_name, kw_in, args, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct WhileHeader {
@@ -886,12 +825,7 @@ pub struct WhileHeader {
 }
 implement_node!(WhileHeader);
 impl NodeSubTraits for WhileHeader {}
-implement_acceptor_for_branch!(
-    WhileHeader,
-    (kw_while: (KeywordWhile)),
-    (condition: (JobConjunction)),
-    (andor_tail: (AndorJobList)),
-);
+implement_acceptor_for_branch!(WhileHeader, kw_while, condition, andor_tail);
 
 #[derive(Default, Debug)]
 pub struct FunctionHeader {
@@ -903,13 +837,7 @@ pub struct FunctionHeader {
 }
 implement_node!(FunctionHeader);
 impl NodeSubTraits for FunctionHeader {}
-implement_acceptor_for_branch!(
-    FunctionHeader,
-    (kw_function: (KeywordFunction)),
-    (first_arg: (Argument)),
-    (args: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-);
+implement_acceptor_for_branch!(FunctionHeader, kw_function, first_arg, args, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct BeginHeader {
@@ -920,11 +848,7 @@ pub struct BeginHeader {
 }
 implement_node!(BeginHeader);
 impl NodeSubTraits for BeginHeader {}
-implement_acceptor_for_branch!(
-    BeginHeader,
-    (kw_begin: (KeywordBegin)),
-    (semi_nl: (Option<SemiNl>))
-);
+implement_acceptor_for_branch!(BeginHeader, kw_begin, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct BlockStatement {
@@ -939,13 +863,7 @@ pub struct BlockStatement {
 }
 implement_node!(BlockStatement);
 impl NodeSubTraits for BlockStatement {}
-implement_acceptor_for_branch!(
-    BlockStatement,
-    (header: (BlockStatementHeader)),
-    (jobs: (JobList)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
-);
+implement_acceptor_for_branch!(BlockStatement, header, jobs, end, args_or_redirs);
 
 #[derive(Default, Debug)]
 pub struct BraceStatement {
@@ -962,10 +880,10 @@ implement_node!(BraceStatement);
 impl NodeSubTraits for BraceStatement {}
 implement_acceptor_for_branch!(
     BraceStatement,
-    (left_brace: (TokenLeftBrace)),
-    (jobs: (JobList)),
-    (right_brace: (TokenRightBrace)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    left_brace,
+    jobs,
+    right_brace,
+    args_or_redirs
 );
 
 #[derive(Default, Debug)]
@@ -981,13 +899,7 @@ pub struct IfClause {
 }
 implement_node!(IfClause);
 impl NodeSubTraits for IfClause {}
-implement_acceptor_for_branch!(
-    IfClause,
-    (kw_if: (KeywordIf)),
-    (condition: (JobConjunction)),
-    (andor_tail: (AndorJobList)),
-    (body: (JobList)),
-);
+implement_acceptor_for_branch!(IfClause, kw_if, condition, andor_tail, body);
 
 #[derive(Default, Debug)]
 pub struct ElseifClause {
@@ -998,11 +910,7 @@ pub struct ElseifClause {
 }
 implement_node!(ElseifClause);
 impl NodeSubTraits for ElseifClause {}
-implement_acceptor_for_branch!(
-    ElseifClause,
-    (kw_else: (KeywordElse)),
-    (if_clause: (IfClause)),
-);
+implement_acceptor_for_branch!(ElseifClause, kw_else, if_clause);
 impl CheckParse for ElseifClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Else
@@ -1021,12 +929,7 @@ pub struct ElseClause {
 }
 implement_node!(ElseClause);
 impl NodeSubTraits for ElseClause {}
-implement_acceptor_for_branch!(
-    ElseClause,
-    (kw_else: (KeywordElse)),
-    (semi_nl: (Option<SemiNl>)),
-    (body: (JobList)),
-);
+implement_acceptor_for_branch!(ElseClause, kw_else, semi_nl, body);
 impl CheckParse for ElseClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Else
@@ -1050,11 +953,11 @@ implement_node!(IfStatement);
 impl NodeSubTraits for IfStatement {}
 implement_acceptor_for_branch!(
     IfStatement,
-    (if_clause: (IfClause)),
-    (elseif_clauses: (ElseifClauseList)),
-    (else_clause: (Option<ElseClause>)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    if_clause,
+    elseif_clauses,
+    else_clause,
+    end,
+    args_or_redirs
 );
 
 #[derive(Default, Debug)]
@@ -1067,13 +970,7 @@ pub struct CaseItem {
 }
 implement_node!(CaseItem);
 impl NodeSubTraits for CaseItem {}
-implement_acceptor_for_branch!(
-    CaseItem,
-    (kw_case: (KeywordCase)),
-    (arguments: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-    (body: (JobList)),
-);
+implement_acceptor_for_branch!(CaseItem, kw_case, arguments, semi_nl, body);
 impl CheckParse for CaseItem {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Case
@@ -1094,12 +991,12 @@ implement_node!(SwitchStatement);
 impl NodeSubTraits for SwitchStatement {}
 implement_acceptor_for_branch!(
     SwitchStatement,
-    (kw_switch: (KeywordSwitch)),
-    (argument: (Argument)),
-    (semi_nl: (SemiNl)),
-    (cases: (CaseItemList)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    kw_switch,
+    argument,
+    semi_nl,
+    cases,
+    end,
+    args_or_redirs
 );
 
 /// A decorated_statement is a command with a list of arguments_or_redirections, possibly with
@@ -1115,12 +1012,7 @@ pub struct DecoratedStatement {
 }
 implement_node!(DecoratedStatement);
 impl NodeSubTraits for DecoratedStatement {}
-implement_acceptor_for_branch!(
-    DecoratedStatement,
-    (opt_decoration: (Option<DecoratedStatementDecorator>)),
-    (command: (String_)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
-);
+implement_acceptor_for_branch!(DecoratedStatement, opt_decoration, command, args_or_redirs);
 
 /// A not statement like `not true` or `! true`
 #[derive(Default, Debug)]
@@ -1133,13 +1025,7 @@ pub struct NotStatement {
 }
 implement_node!(NotStatement);
 impl NodeSubTraits for NotStatement {}
-implement_acceptor_for_branch!(
-    NotStatement,
-    (kw: (KeywordNot)),
-    (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (contents: (Statement)),
-);
+implement_acceptor_for_branch!(NotStatement, kw, time, variables, contents);
 
 #[derive(Default, Debug)]
 pub struct JobContinuation {
@@ -1150,13 +1036,7 @@ pub struct JobContinuation {
 }
 implement_node!(JobContinuation);
 impl NodeSubTraits for JobContinuation {}
-implement_acceptor_for_branch!(
-    JobContinuation,
-    (pipe: (TokenPipe)),
-    (newlines: (MaybeNewlines)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
-);
+implement_acceptor_for_branch!(JobContinuation, pipe, newlines, variables, statement);
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::pipe
@@ -1175,12 +1055,7 @@ pub struct JobConjunctionContinuation {
 }
 implement_node!(JobConjunctionContinuation);
 impl NodeSubTraits for JobConjunctionContinuation {}
-implement_acceptor_for_branch!(
-    JobConjunctionContinuation,
-    (conjunction: (TokenConjunction)),
-    (newlines: (MaybeNewlines)),
-    (job: (JobPipeline)),
-);
+implement_acceptor_for_branch!(JobConjunctionContinuation, conjunction, newlines, job);
 impl CheckParse for JobConjunctionContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
@@ -1197,7 +1072,7 @@ pub struct AndorJob {
 }
 implement_node!(AndorJob);
 impl NodeSubTraits for AndorJob {}
-implement_acceptor_for_branch!(AndorJob, (job: (JobConjunction)));
+implement_acceptor_for_branch!(AndorJob, job);
 impl CheckParse for AndorJob {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let keyword = pop.peek_token(0).keyword;
@@ -1225,7 +1100,7 @@ pub struct FreestandingArgumentList {
 }
 implement_node!(FreestandingArgumentList);
 impl NodeSubTraits for FreestandingArgumentList {}
-implement_acceptor_for_branch!(FreestandingArgumentList, (arguments: (ArgumentList)));
+implement_acceptor_for_branch!(FreestandingArgumentList, arguments);
 
 define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
 

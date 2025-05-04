@@ -304,7 +304,7 @@ To update a translation:
   ``build_tools/fish_xgettext.fish`` from the source tree
 
 * update the existing translation by running
-  ``msgmerge --update --no-fuzzy-matching po/LANG.po messages.pot``
+  ``msgmerge --update --no-fuzzy-matching --no-wrap po/LANG.po messages.pot``
 
 The ``--no-fuzzy-matching`` is important as we have had terrible experiences with gettext's "fuzzy" translations in the past.
 

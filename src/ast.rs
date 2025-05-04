@@ -176,8 +176,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     //   2. If two nodes have the same base pointer and same vtable, they reference
     //      the same object.
     //   3. If two nodes have the same base pointer but different vtables, they are the same iff
-    //      their types are equal: a Node cannot have a Node of the same type at the same address
-    //      (unless it's a ZST, which does not apply here).
+    //      their kind discriminats are equal: a Node cannot have a Node of the same type at the
+    //      same address (unless it's a ZST, which does not apply here).
     //
     // Note this is performance-sensitive.
 
@@ -194,8 +194,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     }
 
     // Same base pointer, but different vtables.
-    // Compare the types.
-    lhs.typ() == rhs.typ()
+    // Compare the discriminants of their kinds.
+    std::mem::discriminant(&lhs.kind()) == std::mem::discriminant(&rhs.kind())
 }
 
 /// NodeMut is a mutable node.

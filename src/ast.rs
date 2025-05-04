@@ -555,12 +555,11 @@ macro_rules! implement_acceptor_for_branch {
             #[allow(unused_variables)]
             fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
                 let _ = visitor_accept_field!(
-                    Self,
                     accept,
                     visit,
                     self,
                     visitor,
-                    ( $( $field_name: $field_type, )* ) );
+                    $( $field_name: $field_type, )* );
             }
         }
         impl AcceptorMut for $name {
@@ -568,12 +567,11 @@ macro_rules! implement_acceptor_for_branch {
             fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut) {
                 visitor.will_visit_fields_of(self);
                 let flow = visitor_accept_field!(
-                                Self,
                                 accept_mut,
                                 visit_mut,
                                 self,
                                 visitor,
-                                ( $( $field_name: $field_type, )* ));
+                                $( $field_name: $field_type, )* );
                 visitor.did_visit_fields_of(self, flow);
             }
         }
@@ -583,44 +581,19 @@ macro_rules! implement_acceptor_for_branch {
 /// Visit the given fields in order, returning whether the visitation succeeded.
 macro_rules! visitor_accept_field {
     (
-        $Self:ident,
         $accept:ident,
         $visit:ident,
         $self:ident,
         $visitor:ident,
-        $fields:tt
+        $( $field_name:ident: $field_type:tt ),* $(,)?
     ) => {
         loop {
-            visitor_accept_field_impl!($visit, $self, $visitor, $fields);
+            $(
+                visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
+            )*
             break VisitResult::Continue(());
         }
     };
-}
-
-/// Visit the given fields in order, breaking if a visitation fails.
-macro_rules! visitor_accept_field_impl {
-    // Base case: no fields left to visit.
-    (
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        ()
-    ) => {};
-    // Visit the first or last field and then the rest.
-    (
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        (
-            $field_name:ident: $field_type:tt,
-            $( $field_names:ident: $field_types:tt, )*
-        )
-    ) => {
-        visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
-        visitor_accept_field_impl!(
-            $visit, $self, $visitor,
-            ( $( $field_names: $field_types, )* ));
-    }
 }
 
 /// Visit the given field, breaking on failure.

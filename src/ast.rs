@@ -39,6 +39,11 @@ pub trait NodeVisitor<'a> {
     fn visit(&mut self, node: &'a dyn Node);
 }
 
+/**
+ * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
+ *
+ * It generally invokes the visitor's visit() method on each of its children.
+ */
 pub trait Acceptor {
     fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
 }
@@ -58,6 +63,11 @@ pub struct MissingEndError {
 
 pub type VisitResult = ControlFlow<MissingEndError>;
 
+/**
+ * Similar to NodeVisitor, but for mutable nodes.
+ *
+ * Note that this breaks out various node types into their own functions.
+ */
 trait NodeVisitorMut {
     /// will_visit (did_visit) is called before (after) a node's fields are visited.
     fn will_visit_fields_of(&mut self, node: &mut dyn NodeMut);
@@ -79,6 +89,11 @@ trait NodeVisitorMut {
     fn visit_token_background(&mut self, _node: &mut Option<TokenBackground>);
 }
 
+/**
+ * A trait implemented on Nodes which can be visited by a NodeVisitorMut.
+ *
+ * It generally invokes the right visit() method on each of its children.
+ */
 trait AcceptorMut {
     fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut);
 }
@@ -580,47 +595,47 @@ macro_rules! implement_acceptor_for_branch {
 
 /// Visit the given fields in order, returning whether the visitation succeeded.
 macro_rules! visitor_accept_field {
+    // Visit fields using NodeVisitor. This does not use ControlFlow.
     (
         $accept:ident,
-        $visit:ident,
+        visit,
         $self:ident,
         $visitor:ident,
         $( $field_name:ident: $field_type:tt ),* $(,)?
     ) => {
-        loop {
+        {
             $(
-                visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
+                visit_1_field!(visit, ($self.$field_name), $field_type, $visitor);
             )*
-            break VisitResult::Continue(());
         }
     };
-}
 
-/// Visit the given field, breaking on failure.
-macro_rules! visit_1_field {
+    // Visit fields using NodeVisitorMut. This uses ControlFlow.
     (
-        visit,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
-    ) => {
-        visit_1_field_impl!(visit, $field, $field_type, $visitor);
-    };
-    (
+        $accept:ident,
         visit_mut,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
+        $self:ident,
+        $visitor:ident,
+        $( $field_name:ident: $field_type:tt ),* $(,)?
     ) => {
-        let result = visit_1_field_impl!(visit_mut, $field, $field_type, $visitor);
-        if result.is_break() {
-            break result;
+        // Visit fields using NodeVisitorMut.
+        // This uses control flow.
+        {
+            loop {
+                $(
+                    let result = visit_1_field!(visit_mut, ($self.$field_name), $field_type, $visitor);
+                    if result.is_break() {
+                        break result;
+                    }
+                )*
+                break VisitResult::Continue(());
+            }
         }
     };
 }
 
 /// Visit the given field.
-macro_rules! visit_1_field_impl {
+macro_rules! visit_1_field {
     (
         $visit:ident,
         $field:expr,
@@ -657,7 +672,7 @@ macro_rules! visit_optional_field {
     ) => {
         match &$field {
             Some(value) => $visitor.visit(&*value),
-            None => visit_result!(visit),
+            None => (),
         }
     };
     (
@@ -689,15 +704,6 @@ macro_rules! visit_optional_field_mut {
     };
     (TokenBackground, $field:expr, $visitor:ident) => {
         $visitor.visit_token_background(&mut $field);
-    };
-}
-
-macro_rules! visit_result {
-    ( visit) => {
-        ()
-    };
-    ( visit_mut ) => {
-        VisitResult::Continue(())
     };
 }
 

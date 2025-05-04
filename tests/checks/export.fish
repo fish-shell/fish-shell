@@ -1,5 +1,7 @@
 #RUN: %fish %s
 
+{
+
 false
 export FOO=bar
 echo $status
@@ -30,3 +32,5 @@ set -S MANPATH
 ## Test that it's exported properly.
 env | string match 'MANPATH*'
 # CHECK: MANPATH=/some/path:/some/other/path
+
+} | string match -v '*originally inherited*'

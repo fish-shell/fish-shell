@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::ast::{Ast, Leaf};
+use crate::ast::{self, Kind, Leaf};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::Completion;
 use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
@@ -108,7 +108,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
     }
     insert.find(L!("$ "))?; // Early return.
     let source = prefix.to_owned() + insert;
-    let ast = Ast::parse(
+    let ast = ast::parse(
         &source,
         ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS | ParseTreeFlags::LEAVE_UNTERMINATED,
         None,
@@ -116,7 +116,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
     let mut stripped = WString::new();
     let mut have = prefix.len();
     for node in ast.walk() {
-        let Some(ds) = node.as_decorated_statement() else {
+        let Kind::DecoratedStatement(ds) = node.kind() else {
             continue;
         };
         let Some(range) = ds.command.range() else {

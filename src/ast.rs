@@ -25,7 +25,8 @@ use crate::tokenizer::{
 };
 use crate::wchar::prelude::*;
 use std::borrow::Cow;
-use std::ops::{ControlFlow, Index, IndexMut};
+use std::convert::AsMut;
+use std::ops::{ControlFlow, Deref};
 
 /**
  * A NodeVisitor is something which can visit an AST node.
@@ -38,15 +39,49 @@ pub trait NodeVisitor<'a> {
     fn visit(&mut self, node: &'a dyn Node);
 }
 
+/**
+ * Acceptor is implemented on Nodes which can be visited by a NodeVisitor.
+ *
+ * It generally invokes the visitor's visit() method on each of its children.
+ *
+ */
 pub trait Acceptor {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool);
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
 }
 
 impl<T: Acceptor> Acceptor for Option<T> {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
         if let Some(node) = self {
-            node.accept(visitor, reversed)
+            node.accept(visitor)
         }
+    }
+}
+
+/// A helper trait to invoke the visit() or visit_mut() method on a field.
+trait VisitableField {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>);
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult;
+}
+
+impl<N: Node + NodeMut> VisitableField for N {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        visitor.visit(self);
+    }
+
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
+        visitor.visit_mut(self)
+    }
+}
+
+impl<N: Node + NodeMut + CheckParse> VisitableField for Option<N> {
+    fn do_visit<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        if let Some(node) = self {
+            node.do_visit(visitor);
+        }
+    }
+
+    fn do_visit_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) -> VisitResult {
+        visitor.visit_optional_mut(self)
     }
 }
 
@@ -57,56 +92,74 @@ pub struct MissingEndError {
 
 pub type VisitResult = ControlFlow<MissingEndError>;
 
+/// Similar to NodeVisitor, but for mutable nodes.
 trait NodeVisitorMut {
     /// will_visit (did_visit) is called before (after) a node's fields are visited.
-    fn will_visit_fields_of(&mut self, node: &mut dyn NodeMut);
-    fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult;
-    fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult);
+    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N);
+    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult;
+    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult);
 
-    fn visit_argument_or_redirection(
-        &mut self,
-        _node: &mut ArgumentOrRedirectionVariant,
-    ) -> VisitResult;
-    fn visit_block_statement_header(
-        &mut self,
-        _node: &mut BlockStatementHeaderVariant,
-    ) -> VisitResult;
-    fn visit_statement(&mut self, _node: &mut StatementVariant) -> VisitResult;
-
-    fn visit_decorated_statement_decorator(
-        &mut self,
-        _node: &mut Option<DecoratedStatementDecorator>,
-    );
-    fn visit_job_conjunction_decorator(&mut self, _node: &mut Option<JobConjunctionDecorator>);
-    fn visit_else_clause(&mut self, _node: &mut Option<ElseClause>);
-    fn visit_semi_nl(&mut self, _node: &mut Option<SemiNl>);
-    fn visit_time(&mut self, _node: &mut Option<KeywordTime>);
-    fn visit_token_background(&mut self, _node: &mut Option<TokenBackground>);
+    // Visit an optional field, perhaps populating it.
+    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult;
 }
 
+/**
+ * A trait implemented on Nodes which can be visited by a NodeVisitorMut.
+ *
+ * It generally invokes the right visit() method on each of its children.
+ */
 trait AcceptorMut {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool);
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V);
 }
 
 impl<T: AcceptorMut> AcceptorMut for Option<T> {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
         if let Some(node) = self {
-            node.accept_mut(visitor, reversed)
+            node.accept_mut(visitor)
         }
     }
 }
 
 /// Node is the base trait of all AST nodes.
-pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
-    /// The type of this node.
-    fn typ(&self) -> Type;
+pub trait Node: Acceptor + AsNode + std::fmt::Debug {
+    /// Return the kind of this node.
+    fn kind(&self) -> Kind;
 
-    /// The category of this node.
-    fn category(&self) -> Category;
+    /// Return the kind of this node, as a mutable reference.
+    fn kind_mut(&mut self) -> KindMut;
+
+    /// Helper to try to cast to a keyword.
+    fn as_keyword(&self) -> Option<&dyn Keyword> {
+        match self.kind() {
+            Kind::Keyword(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    /// Helper to try to cast to a token.
+    fn as_token(&self) -> Option<&dyn Token> {
+        match self.kind() {
+            Kind::Token(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    /// Helper to try to cast to a leaf.
+    /// Note this must be kept in sync with Leaf implementors.
+    fn as_leaf(&self) -> Option<&dyn Leaf> {
+        match self.kind() {
+            Kind::Token(n) => Some(Token::as_leaf(n)),
+            Kind::Keyword(n) => Some(Keyword::as_leaf(n)),
+            Kind::VariableAssignment(n) => Some(n),
+            Kind::MaybeNewlines(n) => Some(n),
+            Kind::Argument(n) => Some(n),
+            _ => None,
+        }
+    }
 
     /// Return a helpful string description of this node.
     fn describe(&self) -> WString {
-        let mut res = ast_type_to_string(self.typ()).to_owned();
+        let mut res = ast_kind_to_string(self.kind()).to_owned();
         if let Some(n) = self.as_token() {
             let token_type = n.token_type().to_wstr();
             sprintf!(=> &mut res, " '%ls'", token_type);
@@ -119,11 +172,22 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
 
     /// Return the source range for this node, or none if unsourced.
     /// This may return none if the parse was incomplete or had an error.
-    fn try_source_range(&self) -> Option<SourceRange>;
+    fn try_source_range(&self) -> Option<SourceRange> {
+        let mut visitor = SourceRangeVisitor {
+            total: SourceRange::new(0, 0),
+            any_unsourced: false,
+        };
+        visitor.visit(self.as_node());
+        if visitor.any_unsourced {
+            None
+        } else {
+            Some(visitor.total)
+        }
+    }
 
     /// Return the source range for this node, or an empty range {0, 0} if unsourced.
     fn source_range(&self) -> SourceRange {
-        self.try_source_range().unwrap_or(SourceRange::new(0, 0))
+        self.try_source_range().unwrap_or_default()
     }
 
     /// Return the source code for this node, or none if unsourced.
@@ -141,9 +205,17 @@ pub trait Node: Acceptor + ConcreteNode + std::fmt::Debug {
     fn self_memory_size(&self) -> usize {
         std::mem::size_of_val(self)
     }
+}
 
-    /// Convert to the dynamic Node type.
+// Convert to the dynamic Node type.
+pub trait AsNode {
     fn as_node(&self) -> &dyn Node;
+}
+
+impl<T: Node + Sized> AsNode for T {
+    fn as_node(&self) -> &dyn Node {
+        self
+    }
 }
 
 /// Return true if two nodes are the same object.
@@ -165,8 +237,8 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     //   2. If two nodes have the same base pointer and same vtable, they reference
     //      the same object.
     //   3. If two nodes have the same base pointer but different vtables, they are the same iff
-    //      their types are equal: a Node cannot have a Node of the same type at the same address
-    //      (unless it's a ZST, which does not apply here).
+    //      their kind discriminats are equal: a Node cannot have a Node of the same type at the
+    //      same address (unless it's a ZST, which does not apply here).
     //
     // Note this is performance-sensitive.
 
@@ -183,253 +255,107 @@ pub fn is_same_node(lhs: &dyn Node, rhs: &dyn Node) -> bool {
     }
 
     // Same base pointer, but different vtables.
-    // Compare the types.
-    lhs.typ() == rhs.typ()
+    // Compare the discriminants of their kinds.
+    std::mem::discriminant(&lhs.kind()) == std::mem::discriminant(&rhs.kind())
 }
 
 /// NodeMut is a mutable node.
-trait NodeMut: Node + AcceptorMut + ConcreteNodeMut {}
+trait NodeMut: Node + AcceptorMut {}
+impl<T> NodeMut for T where T: Node + AcceptorMut {}
 
-pub trait ConcreteNode {
-    // Cast to any sub-trait.
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        None
-    }
-    fn as_keyword(&self) -> Option<&dyn Keyword> {
-        None
-    }
-    fn as_token(&self) -> Option<&dyn Token> {
-        None
-    }
-
-    // Cast to any node type.
-    fn as_redirection(&self) -> Option<&Redirection> {
-        None
-    }
-    fn as_variable_assignment(&self) -> Option<&VariableAssignment> {
-        None
-    }
-    fn as_variable_assignment_list(&self) -> Option<&VariableAssignmentList> {
-        None
-    }
-    fn as_argument_or_redirection(&self) -> Option<&ArgumentOrRedirection> {
-        None
-    }
-    fn as_argument_or_redirection_list(&self) -> Option<&ArgumentOrRedirectionList> {
-        None
-    }
-    fn as_statement(&self) -> Option<&Statement> {
-        None
-    }
-    fn as_job_pipeline(&self) -> Option<&JobPipeline> {
-        None
-    }
-    fn as_job_conjunction(&self) -> Option<&JobConjunction> {
-        None
-    }
-    fn as_for_header(&self) -> Option<&ForHeader> {
-        None
-    }
-    fn as_while_header(&self) -> Option<&WhileHeader> {
-        None
-    }
-    fn as_function_header(&self) -> Option<&FunctionHeader> {
-        None
-    }
-    fn as_begin_header(&self) -> Option<&BeginHeader> {
-        None
-    }
-    fn as_block_statement(&self) -> Option<&BlockStatement> {
-        None
-    }
-    fn as_brace_statement(&self) -> Option<&BraceStatement> {
-        None
-    }
-    fn as_if_clause(&self) -> Option<&IfClause> {
-        None
-    }
-    fn as_elseif_clause(&self) -> Option<&ElseifClause> {
-        None
-    }
-    fn as_elseif_clause_list(&self) -> Option<&ElseifClauseList> {
-        None
-    }
-    fn as_else_clause(&self) -> Option<&ElseClause> {
-        None
-    }
-    fn as_if_statement(&self) -> Option<&IfStatement> {
-        None
-    }
-    fn as_case_item(&self) -> Option<&CaseItem> {
-        None
-    }
-    fn as_switch_statement(&self) -> Option<&SwitchStatement> {
-        None
-    }
-    fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
-        None
-    }
-    fn as_not_statement(&self) -> Option<&NotStatement> {
-        None
-    }
-    fn as_job_continuation(&self) -> Option<&JobContinuation> {
-        None
-    }
-    fn as_job_continuation_list(&self) -> Option<&JobContinuationList> {
-        None
-    }
-    fn as_job_conjunction_continuation(&self) -> Option<&JobConjunctionContinuation> {
-        None
-    }
-    fn as_andor_job(&self) -> Option<&AndorJob> {
-        None
-    }
-    fn as_andor_job_list(&self) -> Option<&AndorJobList> {
-        None
-    }
-    fn as_freestanding_argument_list(&self) -> Option<&FreestandingArgumentList> {
-        None
-    }
-    fn as_job_conjunction_continuation_list(&self) -> Option<&JobConjunctionContinuationList> {
-        None
-    }
-    fn as_maybe_newlines(&self) -> Option<&MaybeNewlines> {
-        None
-    }
-    fn as_case_item_list(&self) -> Option<&CaseItemList> {
-        None
-    }
-    fn as_argument(&self) -> Option<&Argument> {
-        None
-    }
-    fn as_argument_list(&self) -> Option<&ArgumentList> {
-        None
-    }
-    fn as_job_list(&self) -> Option<&JobList> {
-        None
-    }
+/// The different kinds of nodes. Note that Token and Keyword have different subtypes.
+#[derive(Copy, Clone)]
+pub enum Kind<'a> {
+    Redirection(&'a Redirection),
+    Token(&'a dyn Token),
+    Keyword(&'a dyn Keyword),
+    VariableAssignment(&'a VariableAssignment),
+    VariableAssignmentList(&'a VariableAssignmentList),
+    ArgumentOrRedirection(&'a ArgumentOrRedirection),
+    ArgumentOrRedirectionList(&'a ArgumentOrRedirectionList),
+    Statement(&'a Statement),
+    JobPipeline(&'a JobPipeline),
+    JobConjunction(&'a JobConjunction),
+    BlockStatementHeader(&'a BlockStatementHeader),
+    ForHeader(&'a ForHeader),
+    WhileHeader(&'a WhileHeader),
+    FunctionHeader(&'a FunctionHeader),
+    BeginHeader(&'a BeginHeader),
+    BlockStatement(&'a BlockStatement),
+    BraceStatement(&'a BraceStatement),
+    IfClause(&'a IfClause),
+    ElseifClause(&'a ElseifClause),
+    ElseifClauseList(&'a ElseifClauseList),
+    ElseClause(&'a ElseClause),
+    IfStatement(&'a IfStatement),
+    CaseItem(&'a CaseItem),
+    SwitchStatement(&'a SwitchStatement),
+    DecoratedStatement(&'a DecoratedStatement),
+    NotStatement(&'a NotStatement),
+    JobContinuation(&'a JobContinuation),
+    JobContinuationList(&'a JobContinuationList),
+    JobConjunctionContinuation(&'a JobConjunctionContinuation),
+    AndorJob(&'a AndorJob),
+    AndorJobList(&'a AndorJobList),
+    FreestandingArgumentList(&'a FreestandingArgumentList),
+    JobConjunctionContinuationList(&'a JobConjunctionContinuationList),
+    MaybeNewlines(&'a MaybeNewlines),
+    CaseItemList(&'a CaseItemList),
+    Argument(&'a Argument),
+    ArgumentList(&'a ArgumentList),
+    JobList(&'a JobList),
 }
 
-#[allow(unused)]
-trait ConcreteNodeMut {
-    // Cast to any sub-trait.
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        None
-    }
-    fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
-        None
-    }
-    fn as_mut_token(&mut self) -> Option<&mut dyn Token> {
-        None
-    }
+pub enum KindMut<'a> {
+    Redirection(&'a mut Redirection),
+    Token(&'a mut dyn Token),
+    Keyword(&'a mut dyn Keyword),
+    VariableAssignment(&'a mut VariableAssignment),
+    VariableAssignmentList(&'a mut VariableAssignmentList),
+    ArgumentOrRedirection(&'a mut ArgumentOrRedirection),
+    ArgumentOrRedirectionList(&'a mut ArgumentOrRedirectionList),
+    Statement(&'a mut Statement),
+    JobPipeline(&'a mut JobPipeline),
+    JobConjunction(&'a mut JobConjunction),
+    BlockStatementHeader(&'a mut BlockStatementHeader),
+    ForHeader(&'a mut ForHeader),
+    WhileHeader(&'a mut WhileHeader),
+    FunctionHeader(&'a mut FunctionHeader),
+    BeginHeader(&'a mut BeginHeader),
+    BlockStatement(&'a mut BlockStatement),
+    BraceStatement(&'a mut BraceStatement),
+    IfClause(&'a mut IfClause),
+    ElseifClause(&'a mut ElseifClause),
+    ElseifClauseList(&'a mut ElseifClauseList),
+    ElseClause(&'a mut ElseClause),
+    IfStatement(&'a mut IfStatement),
+    CaseItem(&'a mut CaseItem),
+    SwitchStatement(&'a mut SwitchStatement),
+    DecoratedStatement(&'a mut DecoratedStatement),
+    NotStatement(&'a mut NotStatement),
+    JobContinuation(&'a mut JobContinuation),
+    JobContinuationList(&'a mut JobContinuationList),
+    JobConjunctionContinuation(&'a mut JobConjunctionContinuation),
+    AndorJob(&'a mut AndorJob),
+    AndorJobList(&'a mut AndorJobList),
+    FreestandingArgumentList(&'a mut FreestandingArgumentList),
+    JobConjunctionContinuationList(&'a mut JobConjunctionContinuationList),
+    MaybeNewlines(&'a mut MaybeNewlines),
+    CaseItemList(&'a mut CaseItemList),
+    Argument(&'a mut Argument),
+    ArgumentList(&'a mut ArgumentList),
+    JobList(&'a mut JobList),
+}
 
-    // Cast to any node type.
-    fn as_mut_redirection(&mut self) -> Option<&mut Redirection> {
-        None
-    }
-    fn as_mut_variable_assignment(&mut self) -> Option<&mut VariableAssignment> {
-        None
-    }
-    fn as_mut_variable_assignment_list(&mut self) -> Option<&mut VariableAssignmentList> {
-        None
-    }
-    fn as_mut_argument_or_redirection(&mut self) -> Option<&mut ArgumentOrRedirection> {
-        None
-    }
-    fn as_mut_argument_or_redirection_list(&mut self) -> Option<&mut ArgumentOrRedirectionList> {
-        None
-    }
-    fn as_mut_statement(&mut self) -> Option<&mut Statement> {
-        None
-    }
-    fn as_mut_job_pipeline(&mut self) -> Option<&mut JobPipeline> {
-        None
-    }
-    fn as_mut_job_conjunction(&mut self) -> Option<&mut JobConjunction> {
-        None
-    }
-    fn as_mut_for_header(&mut self) -> Option<&mut ForHeader> {
-        None
-    }
-    fn as_mut_while_header(&mut self) -> Option<&mut WhileHeader> {
-        None
-    }
-    fn as_mut_function_header(&mut self) -> Option<&mut FunctionHeader> {
-        None
-    }
-    fn as_mut_begin_header(&mut self) -> Option<&mut BeginHeader> {
-        None
-    }
-    fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
-        None
-    }
-    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
-        None
-    }
-    fn as_mut_if_clause(&mut self) -> Option<&mut IfClause> {
-        None
-    }
-    fn as_mut_elseif_clause(&mut self) -> Option<&mut ElseifClause> {
-        None
-    }
-    fn as_mut_elseif_clause_list(&mut self) -> Option<&mut ElseifClauseList> {
-        None
-    }
-    fn as_mut_else_clause(&mut self) -> Option<&mut ElseClause> {
-        None
-    }
-    fn as_mut_if_statement(&mut self) -> Option<&mut IfStatement> {
-        None
-    }
-    fn as_mut_case_item(&mut self) -> Option<&mut CaseItem> {
-        None
-    }
-    fn as_mut_switch_statement(&mut self) -> Option<&mut SwitchStatement> {
-        None
-    }
-    fn as_mut_decorated_statement(&mut self) -> Option<&mut DecoratedStatement> {
-        None
-    }
-    fn as_mut_not_statement(&mut self) -> Option<&mut NotStatement> {
-        None
-    }
-    fn as_mut_job_continuation(&mut self) -> Option<&mut JobContinuation> {
-        None
-    }
-    fn as_mut_job_continuation_list(&mut self) -> Option<&mut JobContinuationList> {
-        None
-    }
-    fn as_mut_job_conjunction_continuation(&mut self) -> Option<&mut JobConjunctionContinuation> {
-        None
-    }
-    fn as_mut_andor_job(&mut self) -> Option<&mut AndorJob> {
-        None
-    }
-    fn as_mut_andor_job_list(&mut self) -> Option<&mut AndorJobList> {
-        None
-    }
-    fn as_mut_freestanding_argument_list(&mut self) -> Option<&mut FreestandingArgumentList> {
-        None
-    }
-    fn as_mut_job_conjunction_continuation_list(
-        &mut self,
-    ) -> Option<&mut JobConjunctionContinuationList> {
-        None
-    }
-    fn as_mut_maybe_newlines(&mut self) -> Option<&mut MaybeNewlines> {
-        None
-    }
-    fn as_mut_case_item_list(&mut self) -> Option<&mut CaseItemList> {
-        None
-    }
-    fn as_mut_argument(&mut self) -> Option<&mut Argument> {
-        None
-    }
-    fn as_mut_argument_list(&mut self) -> Option<&mut ArgumentList> {
-        None
-    }
-    fn as_mut_job_list(&mut self) -> Option<&mut JobList> {
-        None
+// Support casting to this type.
+pub trait Castable {
+    fn cast(node: &dyn Node) -> Option<&Self>;
+}
+
+impl<'a> dyn Node + 'a {
+    /// Cast to a concrete node type.
+    pub fn cast<T: Castable>(&self) -> Option<&T> {
+        T::cast(self)
     }
 }
 
@@ -455,6 +381,7 @@ pub trait Token: Leaf {
     fn allows_token(&self, token_type: ParseTokenType) -> bool {
         self.allowed_tokens().contains(&token_type)
     }
+    fn as_leaf(&self) -> &dyn Leaf;
 }
 
 /// A keyword node is a node which contains a keyword, which must be one of a fixed set.
@@ -465,67 +392,36 @@ pub trait Keyword: Leaf {
     fn allows_keyword(&self, kw: ParseKeyword) -> bool {
         self.allowed_keywords().contains(&kw)
     }
-}
-
-// A simple variable-sized array, possibly empty.
-pub trait List: Node {
-    type ContentsNode: Node + Default;
-    fn contents(&self) -> &[Self::ContentsNode];
-    fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]>;
-    /// Return our count.
-    fn count(&self) -> usize {
-        self.contents().len()
-    }
-    /// Return whether we are empty.
-    fn is_empty(&self) -> bool {
-        self.contents().is_empty()
-    }
-    /// Iteration support.
-    fn iter(&self) -> std::slice::Iter<Self::ContentsNode> {
-        self.contents().iter()
-    }
-    fn get(&self, index: usize) -> Option<&Self::ContentsNode> {
-        self.contents().get(index)
-    }
+    fn as_leaf(&self) -> &dyn Leaf;
 }
 
 /// This is for optional values and for lists.
-trait CheckParse {
+trait CheckParse: Default {
     /// A true return means we should descend into the production, false means stop.
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool;
 }
 
 /// Implement the node trait.
 macro_rules! implement_node {
-    (
-        $name:ident,
-        $category:ident,
-        $type:ident $(,)?
-    ) => {
+    ( $name:ident ) => {
         impl Node for $name {
-            fn typ(&self) -> Type {
-                Type::$type
+            fn kind(&self) -> Kind {
+                Kind::$name(self)
             }
-            fn category(&self) -> Category {
-                Category::$category
-            }
-            fn try_source_range(&self) -> Option<SourceRange> {
-                let mut visitor = SourceRangeVisitor {
-                    total: SourceRange::new(0, 0),
-                    any_unsourced: false,
-                };
-                visitor.visit(self);
-                if visitor.any_unsourced {
-                    None
-                } else {
-                    Some(visitor.total)
-                }
-            }
-            fn as_node(&self) -> &dyn Node {
-                self
+            fn kind_mut(&mut self) -> KindMut {
+                KindMut::$name(self)
             }
         }
-        impl NodeMut for $name {}
+
+        impl Castable for $name {
+            // Try casting a Node to this type.
+            fn cast(node: &dyn Node) -> Option<&Self> {
+                match node.kind() {
+                    Kind::$name(res) => Some(res),
+                    _ => None,
+                }
+            }
+        }
     };
 }
 
@@ -542,11 +438,11 @@ macro_rules! implement_leaf {
         }
         impl Acceptor for $name {
             #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {}
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {}
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
                 visitor.did_visit_fields_of(self, VisitResult::Continue(()));
             }
@@ -562,22 +458,13 @@ macro_rules! define_keyword_node {
             range: Option<SourceRange>,
             keyword: ParseKeyword,
         }
-        implement_node!($name, leaf, keyword_base);
         implement_leaf!($name);
-        impl ConcreteNode for $name {
-            fn as_leaf(&self) -> Option<&dyn Leaf> {
-                Some(self)
+        impl Node for $name {
+            fn kind(&self) -> Kind {
+                Kind::Keyword(self)
             }
-            fn as_keyword(&self) -> Option<&dyn Keyword> {
-                Some(self)
-            }
-        }
-        impl ConcreteNodeMut for $name {
-            fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-                Some(self)
-            }
-            fn as_mut_keyword(&mut self) -> Option<&mut dyn Keyword> {
-                Some(self)
+            fn kind_mut(&mut self) -> KindMut {
+                KindMut::Keyword(self)
             }
         }
         impl Keyword for $name {
@@ -589,6 +476,9 @@ macro_rules! define_keyword_node {
             }
             fn allowed_keywords(&self) -> &'static [ParseKeyword] {
                 &[$(ParseKeyword::$allowed),*]
+            }
+            fn as_leaf(&self) -> &dyn Leaf {
+                self
             }
         }
     }
@@ -602,24 +492,15 @@ macro_rules! define_token_node {
             range: Option<SourceRange>,
             parse_token_type: ParseTokenType,
         }
-        implement_node!($name, leaf, token_base);
+        impl Node for $name {
+            fn kind(&self) -> Kind {
+                Kind::Token(self)
+            }
+            fn kind_mut(&mut self) -> KindMut {
+                KindMut::Token(self)
+            }
+        }
         implement_leaf!($name);
-        impl ConcreteNode for $name {
-            fn as_leaf(&self) -> Option<&dyn Leaf> {
-                Some(self)
-            }
-            fn as_token(&self) -> Option<&dyn Token> {
-                Some(self)
-            }
-        }
-        impl ConcreteNodeMut for $name {
-            fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-                Some(self)
-            }
-            fn as_mut_token(&mut self) -> Option<&mut dyn Token> {
-                Some(self)
-            }
-        }
         impl Token for $name {
             fn token_type(&self) -> ParseTokenType {
                 self.parse_token_type
@@ -629,6 +510,9 @@ macro_rules! define_token_node {
             }
             fn allowed_tokens(&self) -> &'static [ParseTokenType] {
                 Self::ALLOWED_TOKENS
+            }
+            fn as_leaf(&self) -> &dyn Leaf {
+                self
             }
         }
         impl CheckParse for $name {
@@ -643,114 +527,55 @@ macro_rules! define_token_node {
     }
 }
 
-/// Define a node that implements the list trait.
+/// Define a list node.
 macro_rules! define_list_node {
     (
         $name:ident,
-        $type:tt,
         $contents:ident
     ) => {
         #[derive(Default, Debug)]
-        pub struct $name {
-            list_contents: Box<[$contents]>,
-        }
-        implement_node!($name, list, $type);
-        impl List for $name {
-            type ContentsNode = $contents;
-            fn contents(&self) -> &[Self::ContentsNode] {
-                &self.list_contents
-            }
-            fn contents_mut(&mut self) -> &mut Box<[Self::ContentsNode]> {
-                &mut self.list_contents
+        pub struct $name(Box<[$contents]>);
+
+        implement_node!($name);
+
+        impl Deref for $name {
+            type Target = Box<[$contents]>;
+            fn deref(&self) -> &Self::Target {
+                &self.0
             }
         }
+
         impl<'a> IntoIterator for &'a $name {
             type Item = &'a $contents;
             type IntoIter = std::slice::Iter<'a, $contents>;
+
             fn into_iter(self) -> Self::IntoIter {
-                self.contents().into_iter()
+                self.0.iter()
             }
         }
-        impl Index<usize> for $name {
-            type Output = <$name as List>::ContentsNode;
-            fn index(&self, index: usize) -> &Self::Output {
-                &self.contents()[index]
+
+        impl AsMut<Box<[$contents]>> for $name {
+            fn as_mut(&mut self) -> &mut Box<[$contents]> {
+                &mut self.0
             }
         }
-        impl IndexMut<usize> for $name {
-            fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-                &mut self.contents_mut()[index]
-            }
-        }
+
         impl Acceptor for $name {
-            #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-                let _ =
-                    accept_list_visitor!(Self, accept, visit, self, visitor, reversed, $contents);
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+                self.iter().for_each(|item| visitor.visit(item));
             }
         }
+
         impl AcceptorMut for $name {
-            #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
-                let flow = accept_list_visitor!(
-                    Self, accept_mut, visit_mut, self, visitor, reversed, $contents
-                );
+                let flow = self
+                    .0
+                    .iter_mut()
+                    .try_for_each(|item| visitor.visit_mut(item));
                 visitor.did_visit_fields_of(self, flow);
             }
         }
-    };
-}
-
-macro_rules! accept_list_visitor {
-    (
-        $Self:ident,
-        $accept:ident,
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        $reversed:ident,
-        $list_element:ident
-    ) => {
-        loop {
-            let mut result = VisitResult::Continue(());
-            // list types pretend their child nodes are direct embeddings.
-            // This isn't used during AST construction because we need to construct the list.
-            if $reversed {
-                for i in (0..$self.count()).rev() {
-                    result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
-                    if result.is_break() {
-                        break;
-                    }
-                }
-            } else {
-                for i in 0..$self.count() {
-                    result = accept_list_visitor_impl!($self, $visitor, $visit, $self[i]);
-                    if result.is_break() {
-                        break;
-                    }
-                }
-            }
-            break result;
-        }
-    };
-}
-
-macro_rules! accept_list_visitor_impl {
-    (
-        $self:ident,
-        $visitor:ident,
-        visit,
-        $child:expr) => {{
-        $visitor.visit(&$child);
-        VisitResult::Continue(())
-    }};
-    (
-        $self:ident,
-        $visitor:ident,
-        visit_mut,
-        $child:expr) => {
-        $visitor.visit_mut(&mut $child)
     };
 }
 
@@ -758,233 +583,34 @@ macro_rules! accept_list_visitor_impl {
 macro_rules! implement_acceptor_for_branch {
     (
         $name:ident
-        $(, ($field_name:ident: $field_type:tt) )*
+        $(, $field_name:ident )*
         $(,)?
     ) => {
         impl Acceptor for $name {
             #[allow(unused_variables)]
-            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool){
-                let _ = visitor_accept_field!(
-                    Self,
-                    accept,
-                    visit,
-                    self,
-                    visitor,
-                    reversed,
-                    ( $( $field_name: $field_type, )* ) );
+            fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>){
+                $(
+                    self.$field_name.do_visit(visitor);
+                )*
             }
         }
         impl AcceptorMut for $name {
             #[allow(unused_variables)]
-            fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
+            fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
                 visitor.will_visit_fields_of(self);
-                let flow = visitor_accept_field!(
-                                Self,
-                                accept_mut,
-                                visit_mut,
-                                self,
-                                visitor,
-                                reversed,
-                                ( $( $field_name: $field_type, )* ));
+                let flow = loop {
+                    $(
+                        let result = self.$field_name.do_visit_mut(visitor);
+                        if result.is_break() {
+                            break result;
+                        }
+                    )*
+                    break VisitResult::Continue(());
+                };
                 visitor.did_visit_fields_of(self, flow);
             }
         }
     }
-}
-
-/// Visit the given fields in order, returning whether the visitation succeeded.
-macro_rules! visitor_accept_field {
-    (
-        $Self:ident,
-        $accept:ident,
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        $reversed:ident,
-        $fields:tt
-    ) => {
-        loop {
-            visitor_accept_field_impl!($visit, $self, $visitor, $reversed, $fields);
-            break VisitResult::Continue(());
-        }
-    };
-}
-
-/// Visit the given fields in order, breaking if a visitation fails.
-macro_rules! visitor_accept_field_impl {
-    // Base case: no fields left to visit.
-    (
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        $reversed:ident,
-        ()
-    ) => {};
-    // Visit the first or last field and then the rest.
-    (
-        $visit:ident,
-        $self:ident,
-        $visitor:ident,
-        $reversed:ident,
-        (
-            $field_name:ident: $field_type:tt,
-            $( $field_names:ident: $field_types:tt, )*
-        )
-    ) => {
-        if !$reversed {
-            visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
-        }
-        visitor_accept_field_impl!(
-            $visit, $self, $visitor, $reversed,
-            ( $( $field_names: $field_types, )* ));
-        if $reversed {
-            visit_1_field!($visit, ($self.$field_name), $field_type, $visitor);
-        }
-    }
-}
-
-/// Visit the given field, breaking on failure.
-macro_rules! visit_1_field {
-    (
-        visit,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
-    ) => {
-        visit_1_field_impl!(visit, $field, $field_type, $visitor);
-    };
-    (
-        visit_mut,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
-    ) => {
-        let result = visit_1_field_impl!(visit_mut, $field, $field_type, $visitor);
-        if result.is_break() {
-            break result;
-        }
-    };
-}
-
-/// Visit the given field.
-macro_rules! visit_1_field_impl {
-    (
-        $visit:ident,
-        $field:expr,
-        (variant<$field_type:ident>),
-        $visitor:ident
-    ) => {
-        visit_variant_field!($visit, $field_type, $field, $visitor)
-    };
-    (
-        $visit:ident,
-        $field:expr,
-        (Option<$field_type:ident>),
-        $visitor:ident
-    ) => {
-        visit_optional_field!($visit, $field_type, $field, $visitor)
-    };
-    (
-        $visit:ident,
-        $field:expr,
-        $field_type:tt,
-        $visitor:ident
-    ) => {
-        $visitor.$visit(apply_borrow!($visit, $field))
-    };
-}
-
-macro_rules! apply_borrow {
-    ( visit, $expr:expr ) => {
-        &$expr
-    };
-    ( visit_mut, $expr:expr ) => {
-        &mut $expr
-    };
-}
-
-macro_rules! visit_variant_field {
-    (
-        visit,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        $visitor.visit($field.embedded_node().as_node())
-    };
-    (
-        visit_mut,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        visit_variant_field_mut!($field_type, $visitor, $field)
-    };
-}
-
-macro_rules! visit_variant_field_mut {
-    (ArgumentOrRedirectionVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_argument_or_redirection(&mut $field)
-    };
-    (BlockStatementHeaderVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_block_statement_header(&mut $field)
-    };
-    (StatementVariant, $visitor:ident, $field:expr) => {
-        $visitor.visit_statement(&mut $field)
-    };
-}
-
-macro_rules! visit_optional_field {
-    (
-        visit,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {
-        match &$field {
-            Some(value) => $visitor.visit(&*value),
-            None => visit_result!(visit),
-        }
-    };
-    (
-        visit_mut,
-        $field_type:ident,
-        $field:expr,
-        $visitor:ident
-    ) => {{
-        visit_optional_field_mut!($field_type, $field, $visitor);
-        VisitResult::Continue(())
-    }};
-}
-
-macro_rules! visit_optional_field_mut {
-    (DecoratedStatementDecorator, $field:expr, $visitor:ident) => {
-        $visitor.visit_decorated_statement_decorator(&mut $field);
-    };
-    (JobConjunctionDecorator, $field:expr, $visitor:ident) => {
-        $visitor.visit_job_conjunction_decorator(&mut $field);
-    };
-    (ElseClause, $field:expr, $visitor:ident) => {
-        $visitor.visit_else_clause(&mut $field);
-    };
-    (SemiNl, $field:expr, $visitor:ident) => {
-        $visitor.visit_semi_nl(&mut $field);
-    };
-    (KeywordTime, $field:expr, $visitor:ident) => {
-        $visitor.visit_time(&mut $field);
-    };
-    (TokenBackground, $field:expr, $visitor:ident) => {
-        $visitor.visit_token_background(&mut $field);
-    };
-}
-
-macro_rules! visit_result {
-    ( visit) => {
-        ()
-    };
-    ( visit_mut ) => {
-        VisitResult::Continue(())
-    };
 }
 
 /// A redirection has an operator like > or 2>, and a target like /dev/null or &1.
@@ -994,60 +620,75 @@ pub struct Redirection {
     pub oper: TokenRedirection,
     pub target: String_,
 }
-implement_node!(Redirection, branch, redirection);
-implement_acceptor_for_branch!(Redirection, (oper: TokenRedirection), (target: String_));
-impl ConcreteNode for Redirection {
-    fn as_redirection(&self) -> Option<&Redirection> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for Redirection {
-    fn as_mut_redirection(&mut self) -> Option<&mut Redirection> {
-        Some(self)
-    }
-}
+implement_node!(Redirection);
+implement_acceptor_for_branch!(Redirection, oper, target);
+
 impl CheckParse for Redirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::redirection
     }
 }
 
-define_list_node!(
-    VariableAssignmentList,
-    variable_assignment_list,
-    VariableAssignment
-);
-impl ConcreteNode for VariableAssignmentList {
-    fn as_variable_assignment_list(&self) -> Option<&VariableAssignmentList> {
-        Some(self)
-    }
+define_list_node!(VariableAssignmentList, VariableAssignment);
+
+#[derive(Debug)]
+pub enum ArgumentOrRedirection {
+    Argument(Argument),
+    Redirection(Box<Redirection>), // Boxed because it's bigger
 }
-impl ConcreteNodeMut for VariableAssignmentList {
-    fn as_mut_variable_assignment_list(&mut self) -> Option<&mut VariableAssignmentList> {
-        Some(self)
+
+impl Default for ArgumentOrRedirection {
+    fn default() -> Self {
+        Self::Argument(Argument::default())
     }
 }
 
-/// An argument or redirection holds either an argument or redirection.
-#[derive(Default, Debug)]
-pub struct ArgumentOrRedirection {
-    pub contents: ArgumentOrRedirectionVariant,
-}
-implement_node!(ArgumentOrRedirection, branch, argument_or_redirection);
-implement_acceptor_for_branch!(
-    ArgumentOrRedirection,
-    (contents: (variant<ArgumentOrRedirectionVariant>))
-);
-impl ConcreteNode for ArgumentOrRedirection {
-    fn as_argument_or_redirection(&self) -> Option<&ArgumentOrRedirection> {
-        Some(self)
+impl Acceptor for ArgumentOrRedirection {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        match self {
+            Self::Argument(child) => visitor.visit(child),
+            Self::Redirection(child) => visitor.visit(&**child),
+        };
     }
 }
-impl ConcreteNodeMut for ArgumentOrRedirection {
-    fn as_mut_argument_or_redirection(&mut self) -> Option<&mut ArgumentOrRedirection> {
-        Some(self)
+impl AcceptorMut for ArgumentOrRedirection {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_mut(self);
+        visitor.did_visit_fields_of(self, flow);
     }
 }
+
+impl ArgumentOrRedirection {
+    /// Return whether this represents an argument.
+    pub fn is_argument(&self) -> bool {
+        matches!(self, Self::Argument(_))
+    }
+
+    /// Return whether this represents a redirection
+    pub fn is_redirection(&self) -> bool {
+        matches!(self, Self::Redirection(_))
+    }
+
+    /// Return this as an argument, assuming it wraps one.
+    pub fn argument(&self) -> &Argument {
+        match self {
+            Self::Argument(arg) => arg,
+            _ => panic!("Is not an argument"),
+        }
+    }
+
+    /// Return this as a redirection, assuming it wraps one.
+    pub fn redirection(&self) -> &Redirection {
+        match self {
+            Self::Redirection(redir) => redir,
+            _ => panic!("Is not a redirection"),
+        }
+    }
+}
+
+implement_node!(ArgumentOrRedirection);
+
 impl CheckParse for ArgumentOrRedirection {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
@@ -1055,37 +696,59 @@ impl CheckParse for ArgumentOrRedirection {
     }
 }
 
-define_list_node!(
-    ArgumentOrRedirectionList,
-    argument_or_redirection_list,
-    ArgumentOrRedirection
-);
-impl ConcreteNode for ArgumentOrRedirectionList {
-    fn as_argument_or_redirection_list(&self) -> Option<&ArgumentOrRedirectionList> {
-        Some(self)
-    }
+define_list_node!(ArgumentOrRedirectionList, ArgumentOrRedirection);
+
+/// A statement is a normal command, or an if / while / etc
+#[derive(Debug)]
+pub enum Statement {
+    Decorated(DecoratedStatement),
+    Not(Box<NotStatement>),
+    Block(Box<BlockStatement>),
+    Brace(Box<BraceStatement>),
+    If(Box<IfStatement>),
+    Switch(Box<SwitchStatement>),
 }
-impl ConcreteNodeMut for ArgumentOrRedirectionList {
-    fn as_mut_argument_or_redirection_list(&mut self) -> Option<&mut ArgumentOrRedirectionList> {
-        Some(self)
+implement_node!(Statement);
+
+impl Default for Statement {
+    fn default() -> Self {
+        Self::Decorated(DecoratedStatement::default())
     }
 }
 
-/// A statement is a normal command, or an if / while / etc
-#[derive(Default, Debug)]
-pub struct Statement {
-    pub contents: StatementVariant,
-}
-implement_node!(Statement, branch, statement);
-implement_acceptor_for_branch!(Statement, (contents: (variant<StatementVariant>)));
-impl ConcreteNode for Statement {
-    fn as_statement(&self) -> Option<&Statement> {
-        Some(self)
+impl Statement {
+    // Convenience function to get this statement as a decorated statement, if it is one.
+    pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
+        match self {
+            Self::Decorated(child) => Some(child),
+            _ => None,
+        }
+    }
+
+    // Return the node embedded in this statement.
+    fn embedded_node(&self) -> &dyn Node {
+        match self {
+            Self::Not(child) => &**child,
+            Self::Block(child) => &**child,
+            Self::Brace(child) => &**child,
+            Self::If(child) => &**child,
+            Self::Switch(child) => &**child,
+            Self::Decorated(child) => child,
+        }
     }
 }
-impl ConcreteNodeMut for Statement {
-    fn as_mut_statement(&mut self) -> Option<&mut Statement> {
-        Some(self)
+
+impl Acceptor for Statement {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        visitor.visit(self.embedded_node());
+    }
+}
+
+impl AcceptorMut for Statement {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_mut(self);
+        visitor.did_visit_fields_of(self, flow);
     }
 }
 
@@ -1104,25 +767,8 @@ pub struct JobPipeline {
     /// Maybe backgrounded.
     pub bg: Option<TokenBackground>,
 }
-implement_node!(JobPipeline, branch, job_pipeline);
-implement_acceptor_for_branch!(
-    JobPipeline,
-    (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
-    (continuation: (JobContinuationList)),
-    (bg: (Option<TokenBackground>)),
-);
-impl ConcreteNode for JobPipeline {
-    fn as_job_pipeline(&self) -> Option<&JobPipeline> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobPipeline {
-    fn as_mut_job_pipeline(&mut self) -> Option<&mut JobPipeline> {
-        Some(self)
-    }
-}
+implement_node!(JobPipeline);
+implement_acceptor_for_branch!(JobPipeline, time, variables, statement, continuation, bg);
 
 /// A job_conjunction is a job followed by a && or || continuations.
 #[derive(Default, Debug)]
@@ -1138,24 +784,9 @@ pub struct JobConjunction {
     /// only fail to be present if we ran out of tokens.
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(JobConjunction, branch, job_conjunction);
-implement_acceptor_for_branch!(
-    JobConjunction,
-    (decorator: (Option<JobConjunctionDecorator>)),
-    (job: (JobPipeline)),
-    (continuations: (JobConjunctionContinuationList)),
-    (semi_nl: (Option<SemiNl>)),
-);
-impl ConcreteNode for JobConjunction {
-    fn as_job_conjunction(&self) -> Option<&JobConjunction> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobConjunction {
-    fn as_mut_job_conjunction(&mut self) -> Option<&mut JobConjunction> {
-        Some(self)
-    }
-}
+implement_node!(JobConjunction);
+implement_acceptor_for_branch!(JobConjunction, decorator, job, continuations, semi_nl);
+
 impl CheckParse for JobConjunction {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let token = pop.peek_token(0);
@@ -1182,25 +813,8 @@ pub struct ForHeader {
     /// newline or semicolon
     pub semi_nl: SemiNl,
 }
-implement_node!(ForHeader, branch, for_header);
-implement_acceptor_for_branch!(
-    ForHeader,
-    (kw_for: (KeywordFor)),
-    (var_name: (String_)),
-    (kw_in: (KeywordIn)),
-    (args: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-);
-impl ConcreteNode for ForHeader {
-    fn as_for_header(&self) -> Option<&ForHeader> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for ForHeader {
-    fn as_mut_for_header(&mut self) -> Option<&mut ForHeader> {
-        Some(self)
-    }
-}
+implement_node!(ForHeader);
+implement_acceptor_for_branch!(ForHeader, kw_for, var_name, kw_in, args, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct WhileHeader {
@@ -1209,23 +823,8 @@ pub struct WhileHeader {
     pub condition: JobConjunction,
     pub andor_tail: AndorJobList,
 }
-implement_node!(WhileHeader, branch, while_header);
-implement_acceptor_for_branch!(
-    WhileHeader,
-    (kw_while: (KeywordWhile)),
-    (condition: (JobConjunction)),
-    (andor_tail: (AndorJobList)),
-);
-impl ConcreteNode for WhileHeader {
-    fn as_while_header(&self) -> Option<&WhileHeader> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for WhileHeader {
-    fn as_mut_while_header(&mut self) -> Option<&mut WhileHeader> {
-        Some(self)
-    }
-}
+implement_node!(WhileHeader);
+implement_acceptor_for_branch!(WhileHeader, kw_while, condition, andor_tail);
 
 #[derive(Default, Debug)]
 pub struct FunctionHeader {
@@ -1235,24 +834,8 @@ pub struct FunctionHeader {
     pub args: ArgumentList,
     pub semi_nl: SemiNl,
 }
-implement_node!(FunctionHeader, branch, function_header);
-implement_acceptor_for_branch!(
-    FunctionHeader,
-    (kw_function: (KeywordFunction)),
-    (first_arg: (Argument)),
-    (args: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-);
-impl ConcreteNode for FunctionHeader {
-    fn as_function_header(&self) -> Option<&FunctionHeader> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for FunctionHeader {
-    fn as_mut_function_header(&mut self) -> Option<&mut FunctionHeader> {
-        Some(self)
-    }
-}
+implement_node!(FunctionHeader);
+implement_acceptor_for_branch!(FunctionHeader, kw_function, first_arg, args, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct BeginHeader {
@@ -1261,27 +844,13 @@ pub struct BeginHeader {
     /// This is valid: begin echo hi; end
     pub semi_nl: Option<SemiNl>,
 }
-implement_node!(BeginHeader, branch, begin_header);
-implement_acceptor_for_branch!(
-    BeginHeader,
-    (kw_begin: (KeywordBegin)),
-    (semi_nl: (Option<SemiNl>))
-);
-impl ConcreteNode for BeginHeader {
-    fn as_begin_header(&self) -> Option<&BeginHeader> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for BeginHeader {
-    fn as_mut_begin_header(&mut self) -> Option<&mut BeginHeader> {
-        Some(self)
-    }
-}
+implement_node!(BeginHeader);
+implement_acceptor_for_branch!(BeginHeader, kw_begin, semi_nl);
 
 #[derive(Default, Debug)]
 pub struct BlockStatement {
     /// A header like for, while, etc.
-    pub header: BlockStatementHeaderVariant,
+    pub header: BlockStatementHeader,
     /// List of jobs in this block.
     pub jobs: JobList,
     /// The 'end' node.
@@ -1289,24 +858,8 @@ pub struct BlockStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BlockStatement, branch, block_statement);
-implement_acceptor_for_branch!(
-    BlockStatement,
-    (header: (variant<BlockStatementHeaderVariant>)),
-    (jobs: (JobList)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
-);
-impl ConcreteNode for BlockStatement {
-    fn as_block_statement(&self) -> Option<&BlockStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for BlockStatement {
-    fn as_mut_block_statement(&mut self) -> Option<&mut BlockStatement> {
-        Some(self)
-    }
-}
+implement_node!(BlockStatement);
+implement_acceptor_for_branch!(BlockStatement, header, jobs, end, args_or_redirs);
 
 #[derive(Default, Debug)]
 pub struct BraceStatement {
@@ -1319,24 +872,14 @@ pub struct BraceStatement {
     /// Arguments and redirections associated with the block.
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(BraceStatement, branch, brace_statement);
+implement_node!(BraceStatement);
 implement_acceptor_for_branch!(
     BraceStatement,
-    (left_brace: (TokenLeftBrace)),
-    (jobs: (JobList)),
-    (right_brace: (TokenRightBrace)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    left_brace,
+    jobs,
+    right_brace,
+    args_or_redirs
 );
-impl ConcreteNode for BraceStatement {
-    fn as_brace_statement(&self) -> Option<&BraceStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for BraceStatement {
-    fn as_mut_brace_statement(&mut self) -> Option<&mut BraceStatement> {
-        Some(self)
-    }
-}
 
 #[derive(Default, Debug)]
 pub struct IfClause {
@@ -1349,24 +892,8 @@ pub struct IfClause {
     /// The body to execute if the condition is true.
     pub body: JobList,
 }
-implement_node!(IfClause, branch, if_clause);
-implement_acceptor_for_branch!(
-    IfClause,
-    (kw_if: (KeywordIf)),
-    (condition: (JobConjunction)),
-    (andor_tail: (AndorJobList)),
-    (body: (JobList)),
-);
-impl ConcreteNode for IfClause {
-    fn as_if_clause(&self) -> Option<&IfClause> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for IfClause {
-    fn as_mut_if_clause(&mut self) -> Option<&mut IfClause> {
-        Some(self)
-    }
-}
+implement_node!(IfClause);
+implement_acceptor_for_branch!(IfClause, kw_if, condition, andor_tail, body);
 
 #[derive(Default, Debug)]
 pub struct ElseifClause {
@@ -1375,22 +902,8 @@ pub struct ElseifClause {
     /// The 'if' clause following it.
     pub if_clause: IfClause,
 }
-implement_node!(ElseifClause, branch, elseif_clause);
-implement_acceptor_for_branch!(
-    ElseifClause,
-    (kw_else: (KeywordElse)),
-    (if_clause: (IfClause)),
-);
-impl ConcreteNode for ElseifClause {
-    fn as_elseif_clause(&self) -> Option<&ElseifClause> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for ElseifClause {
-    fn as_mut_elseif_clause(&mut self) -> Option<&mut ElseifClause> {
-        Some(self)
-    }
-}
+implement_node!(ElseifClause);
+implement_acceptor_for_branch!(ElseifClause, kw_else, if_clause);
 impl CheckParse for ElseifClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Else
@@ -1398,17 +911,7 @@ impl CheckParse for ElseifClause {
     }
 }
 
-define_list_node!(ElseifClauseList, elseif_clause_list, ElseifClause);
-impl ConcreteNode for ElseifClauseList {
-    fn as_elseif_clause_list(&self) -> Option<&ElseifClauseList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for ElseifClauseList {
-    fn as_mut_elseif_clause_list(&mut self) -> Option<&mut ElseifClauseList> {
-        Some(self)
-    }
-}
+define_list_node!(ElseifClauseList, ElseifClause);
 
 #[derive(Default, Debug)]
 pub struct ElseClause {
@@ -1417,23 +920,8 @@ pub struct ElseClause {
     pub semi_nl: Option<SemiNl>,
     pub body: JobList,
 }
-implement_node!(ElseClause, branch, else_clause);
-implement_acceptor_for_branch!(
-    ElseClause,
-    (kw_else: (KeywordElse)),
-    (semi_nl: (Option<SemiNl>)),
-    (body: (JobList)),
-);
-impl ConcreteNode for ElseClause {
-    fn as_else_clause(&self) -> Option<&ElseClause> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for ElseClause {
-    fn as_mut_else_clause(&mut self) -> Option<&mut ElseClause> {
-        Some(self)
-    }
-}
+implement_node!(ElseClause);
+implement_acceptor_for_branch!(ElseClause, kw_else, semi_nl, body);
 impl CheckParse for ElseClause {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Else
@@ -1453,25 +941,15 @@ pub struct IfStatement {
     /// block args / redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(IfStatement, branch, if_statement);
+implement_node!(IfStatement);
 implement_acceptor_for_branch!(
     IfStatement,
-    (if_clause: (IfClause)),
-    (elseif_clauses: (ElseifClauseList)),
-    (else_clause: (Option<ElseClause>)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    if_clause,
+    elseif_clauses,
+    else_clause,
+    end,
+    args_or_redirs
 );
-impl ConcreteNode for IfStatement {
-    fn as_if_statement(&self) -> Option<&IfStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for IfStatement {
-    fn as_mut_if_statement(&mut self) -> Option<&mut IfStatement> {
-        Some(self)
-    }
-}
 
 #[derive(Default, Debug)]
 pub struct CaseItem {
@@ -1481,24 +959,8 @@ pub struct CaseItem {
     pub semi_nl: SemiNl,
     pub body: JobList,
 }
-implement_node!(CaseItem, branch, case_item);
-implement_acceptor_for_branch!(
-    CaseItem,
-    (kw_case: (KeywordCase)),
-    (arguments: (ArgumentList)),
-    (semi_nl: (SemiNl)),
-    (body: (JobList)),
-);
-impl ConcreteNode for CaseItem {
-    fn as_case_item(&self) -> Option<&CaseItem> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for CaseItem {
-    fn as_mut_case_item(&mut self) -> Option<&mut CaseItem> {
-        Some(self)
-    }
-}
+implement_node!(CaseItem);
+implement_acceptor_for_branch!(CaseItem, kw_case, arguments, semi_nl, body);
 impl CheckParse for CaseItem {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_token(0).keyword == ParseKeyword::Case
@@ -1515,26 +977,16 @@ pub struct SwitchStatement {
     pub end: KeywordEnd,
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(SwitchStatement, branch, switch_statement);
+implement_node!(SwitchStatement);
 implement_acceptor_for_branch!(
     SwitchStatement,
-    (kw_switch: (KeywordSwitch)),
-    (argument: (Argument)),
-    (semi_nl: (SemiNl)),
-    (cases: (CaseItemList)),
-    (end: (KeywordEnd)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
+    kw_switch,
+    argument,
+    semi_nl,
+    cases,
+    end,
+    args_or_redirs
 );
-impl ConcreteNode for SwitchStatement {
-    fn as_switch_statement(&self) -> Option<&SwitchStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for SwitchStatement {
-    fn as_mut_switch_statement(&mut self) -> Option<&mut SwitchStatement> {
-        Some(self)
-    }
-}
 
 /// A decorated_statement is a command with a list of arguments_or_redirections, possibly with
 /// "builtin" or "command" or "exec"
@@ -1547,23 +999,8 @@ pub struct DecoratedStatement {
     /// Args and redirs
     pub args_or_redirs: ArgumentOrRedirectionList,
 }
-implement_node!(DecoratedStatement, branch, decorated_statement);
-implement_acceptor_for_branch!(
-    DecoratedStatement,
-    (opt_decoration: (Option<DecoratedStatementDecorator>)),
-    (command: (String_)),
-    (args_or_redirs: (ArgumentOrRedirectionList)),
-);
-impl ConcreteNode for DecoratedStatement {
-    fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for DecoratedStatement {
-    fn as_mut_decorated_statement(&mut self) -> Option<&mut DecoratedStatement> {
-        Some(self)
-    }
-}
+implement_node!(DecoratedStatement);
+implement_acceptor_for_branch!(DecoratedStatement, opt_decoration, command, args_or_redirs);
 
 /// A not statement like `not true` or `! true`
 #[derive(Default, Debug)]
@@ -1574,24 +1011,8 @@ pub struct NotStatement {
     pub variables: VariableAssignmentList,
     pub contents: Statement,
 }
-implement_node!(NotStatement, branch, not_statement);
-implement_acceptor_for_branch!(
-    NotStatement,
-    (kw: (KeywordNot)),
-    (time: (Option<KeywordTime>)),
-    (variables: (VariableAssignmentList)),
-    (contents: (Statement)),
-);
-impl ConcreteNode for NotStatement {
-    fn as_not_statement(&self) -> Option<&NotStatement> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for NotStatement {
-    fn as_mut_not_statement(&mut self) -> Option<&mut NotStatement> {
-        Some(self)
-    }
-}
+implement_node!(NotStatement);
+implement_acceptor_for_branch!(NotStatement, kw, time, variables, contents);
 
 #[derive(Default, Debug)]
 pub struct JobContinuation {
@@ -1600,41 +1021,15 @@ pub struct JobContinuation {
     pub variables: VariableAssignmentList,
     pub statement: Statement,
 }
-implement_node!(JobContinuation, branch, job_continuation);
-implement_acceptor_for_branch!(
-    JobContinuation,
-    (pipe: (TokenPipe)),
-    (newlines: (MaybeNewlines)),
-    (variables: (VariableAssignmentList)),
-    (statement: (Statement)),
-);
-impl ConcreteNode for JobContinuation {
-    fn as_job_continuation(&self) -> Option<&JobContinuation> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobContinuation {
-    fn as_mut_job_continuation(&mut self) -> Option<&mut JobContinuation> {
-        Some(self)
-    }
-}
+implement_node!(JobContinuation);
+implement_acceptor_for_branch!(JobContinuation, pipe, newlines, variables, statement);
 impl CheckParse for JobContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::pipe
     }
 }
 
-define_list_node!(JobContinuationList, job_continuation_list, JobContinuation);
-impl ConcreteNode for JobContinuationList {
-    fn as_job_continuation_list(&self) -> Option<&JobContinuationList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobContinuationList {
-    fn as_mut_job_continuation_list(&mut self) -> Option<&mut JobContinuationList> {
-        Some(self)
-    }
-}
+define_list_node!(JobContinuationList, JobContinuation);
 
 #[derive(Default, Debug)]
 pub struct JobConjunctionContinuation {
@@ -1644,27 +1039,8 @@ pub struct JobConjunctionContinuation {
     /// The job itself.
     pub job: JobPipeline,
 }
-implement_node!(
-    JobConjunctionContinuation,
-    branch,
-    job_conjunction_continuation
-);
-implement_acceptor_for_branch!(
-    JobConjunctionContinuation,
-    (conjunction: (TokenConjunction)),
-    (newlines: (MaybeNewlines)),
-    (job: (JobPipeline)),
-);
-impl ConcreteNode for JobConjunctionContinuation {
-    fn as_job_conjunction_continuation(&self) -> Option<&JobConjunctionContinuation> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobConjunctionContinuation {
-    fn as_mut_job_conjunction_continuation(&mut self) -> Option<&mut JobConjunctionContinuation> {
-        Some(self)
-    }
-}
+implement_node!(JobConjunctionContinuation);
+implement_acceptor_for_branch!(JobConjunctionContinuation, conjunction, newlines, job);
 impl CheckParse for JobConjunctionContinuation {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let typ = pop.peek_type(0);
@@ -1679,18 +1055,8 @@ impl CheckParse for JobConjunctionContinuation {
 pub struct AndorJob {
     pub job: JobConjunction,
 }
-implement_node!(AndorJob, branch, andor_job);
-implement_acceptor_for_branch!(AndorJob, (job: (JobConjunction)));
-impl ConcreteNode for AndorJob {
-    fn as_andor_job(&self) -> Option<&AndorJob> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for AndorJob {
-    fn as_mut_andor_job(&mut self) -> Option<&mut AndorJob> {
-        Some(self)
-    }
-}
+implement_node!(AndorJob);
+implement_acceptor_for_branch!(AndorJob, job);
 impl CheckParse for AndorJob {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         let keyword = pop.peek_token(0).keyword;
@@ -1707,17 +1073,7 @@ impl CheckParse for AndorJob {
     }
 }
 
-define_list_node!(AndorJobList, andor_job_list, AndorJob);
-impl ConcreteNode for AndorJobList {
-    fn as_andor_job_list(&self) -> Option<&AndorJobList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for AndorJobList {
-    fn as_mut_andor_job_list(&mut self) -> Option<&mut AndorJobList> {
-        Some(self)
-    }
-}
+define_list_node!(AndorJobList, AndorJob);
 
 /// A freestanding_argument_list is equivalent to a normal argument list, except it may contain
 /// TOK_END (newlines, and even semicolons, for historical reasons).
@@ -1726,94 +1082,25 @@ impl ConcreteNodeMut for AndorJobList {
 pub struct FreestandingArgumentList {
     pub arguments: ArgumentList,
 }
-implement_node!(FreestandingArgumentList, branch, freestanding_argument_list);
-implement_acceptor_for_branch!(FreestandingArgumentList, (arguments: (ArgumentList)));
-impl ConcreteNode for FreestandingArgumentList {
-    fn as_freestanding_argument_list(&self) -> Option<&FreestandingArgumentList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for FreestandingArgumentList {
-    fn as_mut_freestanding_argument_list(&mut self) -> Option<&mut FreestandingArgumentList> {
-        Some(self)
-    }
-}
+implement_node!(FreestandingArgumentList);
+implement_acceptor_for_branch!(FreestandingArgumentList, arguments);
 
-define_list_node!(
-    JobConjunctionContinuationList,
-    job_conjunction_continuation_list,
-    JobConjunctionContinuation
-);
-impl ConcreteNode for JobConjunctionContinuationList {
-    fn as_job_conjunction_continuation_list(&self) -> Option<&JobConjunctionContinuationList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobConjunctionContinuationList {
-    fn as_mut_job_conjunction_continuation_list(
-        &mut self,
-    ) -> Option<&mut JobConjunctionContinuationList> {
-        Some(self)
-    }
-}
+define_list_node!(JobConjunctionContinuationList, JobConjunctionContinuation);
 
-define_list_node!(ArgumentList, argument_list, Argument);
-impl ConcreteNode for ArgumentList {
-    fn as_argument_list(&self) -> Option<&ArgumentList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for ArgumentList {
-    fn as_mut_argument_list(&mut self) -> Option<&mut ArgumentList> {
-        Some(self)
-    }
-}
+define_list_node!(ArgumentList, Argument);
 
 // For historical reasons, a job list is a list of job *conjunctions*. This should be fixed.
-define_list_node!(JobList, job_list, JobConjunction);
-impl ConcreteNode for JobList {
-    fn as_job_list(&self) -> Option<&JobList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for JobList {
-    fn as_mut_job_list(&mut self) -> Option<&mut JobList> {
-        Some(self)
-    }
-}
+define_list_node!(JobList, JobConjunction);
 
-define_list_node!(CaseItemList, case_item_list, CaseItem);
-impl ConcreteNode for CaseItemList {
-    fn as_case_item_list(&self) -> Option<&CaseItemList> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for CaseItemList {
-    fn as_mut_case_item_list(&mut self) -> Option<&mut CaseItemList> {
-        Some(self)
-    }
-}
+define_list_node!(CaseItemList, CaseItem);
 
 /// A variable_assignment contains a source range like FOO=bar.
 #[derive(Default, Debug)]
 pub struct VariableAssignment {
     range: Option<SourceRange>,
 }
-implement_node!(VariableAssignment, leaf, variable_assignment);
+implement_node!(VariableAssignment);
 implement_leaf!(VariableAssignment);
-impl ConcreteNode for VariableAssignment {
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        Some(self)
-    }
-    fn as_variable_assignment(&self) -> Option<&VariableAssignment> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for VariableAssignment {
-    fn as_mut_variable_assignment(&mut self) -> Option<&mut VariableAssignment> {
-        Some(self)
-    }
-}
 impl CheckParse for VariableAssignment {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Do we have a variable assignment at all?
@@ -1828,7 +1115,7 @@ impl CheckParse for VariableAssignment {
             ParseTokenType::terminate => pop.allow_incomplete(),
             // We have e.g. `a= >` which is an error.
             // Note that we do not produce an error here. Instead we return false
-            // so this the token will be seen by allocate_populate_statement_contents.
+            // so this the token will be seen by allocate_populate_statement.
             _ => false,
         }
     }
@@ -1839,24 +1126,8 @@ impl CheckParse for VariableAssignment {
 pub struct MaybeNewlines {
     range: Option<SourceRange>,
 }
-implement_node!(MaybeNewlines, leaf, maybe_newlines);
+implement_node!(MaybeNewlines);
 implement_leaf!(MaybeNewlines);
-impl ConcreteNode for MaybeNewlines {
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        Some(self)
-    }
-    fn as_maybe_newlines(&self) -> Option<&MaybeNewlines> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for MaybeNewlines {
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        Some(self)
-    }
-    fn as_mut_maybe_newlines(&mut self) -> Option<&mut MaybeNewlines> {
-        Some(self)
-    }
-}
 
 /// An argument is just a node whose source range determines its contents.
 /// This is a separate type because it is sometimes useful to find all arguments.
@@ -1864,24 +1135,8 @@ impl ConcreteNodeMut for MaybeNewlines {
 pub struct Argument {
     range: Option<SourceRange>,
 }
-implement_node!(Argument, leaf, argument);
+implement_node!(Argument);
 implement_leaf!(Argument);
-impl ConcreteNode for Argument {
-    fn as_leaf(&self) -> Option<&dyn Leaf> {
-        Some(self)
-    }
-    fn as_argument(&self) -> Option<&Argument> {
-        Some(self)
-    }
-}
-impl ConcreteNodeMut for Argument {
-    fn as_mut_leaf(&mut self) -> Option<&mut dyn Leaf> {
-        Some(self)
-    }
-    fn as_mut_argument(&mut self) -> Option<&mut Argument> {
-        Some(self)
-    }
-}
 impl CheckParse for Argument {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         pop.peek_type(0) == ParseTokenType::string
@@ -1970,304 +1225,85 @@ impl DecoratedStatement {
 }
 
 #[derive(Debug)]
-pub enum ArgumentOrRedirectionVariant {
-    Argument(Argument),
-    Redirection(Redirection),
+pub enum BlockStatementHeader {
+    Begin(BeginHeader),
+    For(ForHeader),
+    While(WhileHeader),
+    Function(FunctionHeader),
 }
+implement_node!(BlockStatementHeader);
 
-impl Default for ArgumentOrRedirectionVariant {
+impl Default for BlockStatementHeader {
     fn default() -> Self {
-        ArgumentOrRedirectionVariant::Argument(Argument::default())
+        Self::Begin(BeginHeader::default())
     }
 }
 
-impl Acceptor for ArgumentOrRedirectionVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
+impl BlockStatementHeader {
+    pub fn embedded_node(&self) -> &dyn Node {
         match self {
-            ArgumentOrRedirectionVariant::Argument(child) => child.accept(visitor, reversed),
-            ArgumentOrRedirectionVariant::Redirection(child) => child.accept(visitor, reversed),
-        }
-    }
-}
-impl AcceptorMut for ArgumentOrRedirectionVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(child) => child.accept_mut(visitor, reversed),
-            ArgumentOrRedirectionVariant::Redirection(child) => child.accept_mut(visitor, reversed),
+            Self::Begin(child) => child,
+            Self::For(child) => child,
+            Self::While(child) => child,
+            Self::Function(child) => child,
         }
     }
 }
 
-impl ArgumentOrRedirectionVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            ArgumentOrRedirectionVariant::Argument(node) => node,
-            ArgumentOrRedirectionVariant::Redirection(node) => node,
-        }
+impl Acceptor for BlockStatementHeader {
+    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>) {
+        visitor.visit(self.embedded_node());
     }
 }
-
-impl ArgumentOrRedirection {
-    /// Return whether this represents an argument.
-    pub fn is_argument(&self) -> bool {
-        matches!(self.contents, ArgumentOrRedirectionVariant::Argument(_))
-    }
-
-    /// Return whether this represents a redirection
-    pub fn is_redirection(&self) -> bool {
-        matches!(self.contents, ArgumentOrRedirectionVariant::Redirection(_))
-    }
-
-    /// Return this as an argument, assuming it wraps one.
-    pub fn argument(&self) -> &Argument {
-        match self.contents {
-            ArgumentOrRedirectionVariant::Argument(ref arg) => arg,
-            _ => panic!("Is not an argument"),
-        }
-    }
-
-    /// Return this as an argument, assuming it wraps one.
-    pub fn redirection(&self) -> &Redirection {
-        match self.contents {
-            ArgumentOrRedirectionVariant::Redirection(ref arg) => arg,
-            _ => panic!("Is not a redirection"),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum BlockStatementHeaderVariant {
-    None,
-    ForHeader(ForHeader),
-    WhileHeader(WhileHeader),
-    FunctionHeader(FunctionHeader),
-    BeginHeader(BeginHeader),
-}
-
-impl Default for BlockStatementHeaderVariant {
-    fn default() -> Self {
-        BlockStatementHeaderVariant::None
-    }
-}
-
-impl Acceptor for BlockStatementHeaderVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept(visitor, reversed),
-        }
-    }
-}
-impl AcceptorMut for BlockStatementHeaderVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::WhileHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::FunctionHeader(node) => node.accept_mut(visitor, reversed),
-            BlockStatementHeaderVariant::BeginHeader(node) => node.accept_mut(visitor, reversed),
-        }
-    }
-}
-
-impl BlockStatementHeaderVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    pub fn as_for_header(&self) -> Option<&ForHeader> {
-        match self {
-            BlockStatementHeaderVariant::ForHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_while_header(&self) -> Option<&WhileHeader> {
-        match self {
-            BlockStatementHeaderVariant::WhileHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_function_header(&self) -> Option<&FunctionHeader> {
-        match self {
-            BlockStatementHeaderVariant::FunctionHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_begin_header(&self) -> Option<&BeginHeader> {
-        match self {
-            BlockStatementHeaderVariant::BeginHeader(node) => Some(node),
-            _ => None,
-        }
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            BlockStatementHeaderVariant::None => panic!("cannot visit null block header"),
-            BlockStatementHeaderVariant::ForHeader(node) => node,
-            BlockStatementHeaderVariant::WhileHeader(node) => node,
-            BlockStatementHeaderVariant::FunctionHeader(node) => node,
-            BlockStatementHeaderVariant::BeginHeader(node) => node,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum StatementVariant {
-    None,
-    NotStatement(Box<NotStatement>),
-    BlockStatement(Box<BlockStatement>),
-    BraceStatement(Box<BraceStatement>),
-    IfStatement(Box<IfStatement>),
-    SwitchStatement(Box<SwitchStatement>),
-    DecoratedStatement(DecoratedStatement),
-}
-
-impl Default for StatementVariant {
-    fn default() -> Self {
-        StatementVariant::None
-    }
-}
-
-impl Acceptor for StatementVariant {
-    fn accept<'a>(&'a self, visitor: &mut dyn NodeVisitor<'a>, reversed: bool) {
-        match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::BlockStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::BraceStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::IfStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::SwitchStatement(node) => node.accept(visitor, reversed),
-            StatementVariant::DecoratedStatement(node) => node.accept(visitor, reversed),
-        }
-    }
-}
-impl AcceptorMut for StatementVariant {
-    fn accept_mut(&mut self, visitor: &mut dyn NodeVisitorMut, reversed: bool) {
-        match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::BlockStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::BraceStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::IfStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::SwitchStatement(node) => node.accept_mut(visitor, reversed),
-            StatementVariant::DecoratedStatement(node) => node.accept_mut(visitor, reversed),
-        }
-    }
-}
-
-impl StatementVariant {
-    pub fn typ(&self) -> Type {
-        self.embedded_node().typ()
-    }
-    pub fn try_source_range(&self) -> Option<SourceRange> {
-        self.embedded_node().try_source_range()
-    }
-
-    pub fn as_not_statement(&self) -> Option<&NotStatement> {
-        match self {
-            StatementVariant::NotStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_block_statement(&self) -> Option<&BlockStatement> {
-        match self {
-            StatementVariant::BlockStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_brace_statement(&self) -> Option<&BraceStatement> {
-        match self {
-            StatementVariant::BraceStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_if_statement(&self) -> Option<&IfStatement> {
-        match self {
-            StatementVariant::IfStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_switch_statement(&self) -> Option<&SwitchStatement> {
-        match self {
-            StatementVariant::SwitchStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-    pub fn as_decorated_statement(&self) -> Option<&DecoratedStatement> {
-        match self {
-            StatementVariant::DecoratedStatement(node) => Some(node),
-            _ => None,
-        }
-    }
-
-    fn embedded_node(&self) -> &dyn NodeMut {
-        match self {
-            StatementVariant::None => panic!("cannot visit null statement"),
-            StatementVariant::NotStatement(node) => &**node,
-            StatementVariant::BlockStatement(node) => &**node,
-            StatementVariant::BraceStatement(node) => &**node,
-            StatementVariant::IfStatement(node) => &**node,
-            StatementVariant::SwitchStatement(node) => &**node,
-            StatementVariant::DecoratedStatement(node) => node,
-        }
+impl AcceptorMut for BlockStatementHeader {
+    fn accept_mut<V: NodeVisitorMut>(&mut self, visitor: &mut V) {
+        visitor.will_visit_fields_of(self);
+        let flow = visitor.visit_mut(self);
+        visitor.did_visit_fields_of(self, flow);
     }
 }
 
 /// Return a string literal name for an ast type.
-pub fn ast_type_to_string(t: Type) -> &'static wstr {
-    match t {
-        Type::token_base => L!("token_base"),
-        Type::keyword_base => L!("keyword_base"),
-        Type::redirection => L!("redirection"),
-        Type::variable_assignment => L!("variable_assignment"),
-        Type::variable_assignment_list => L!("variable_assignment_list"),
-        Type::argument_or_redirection => L!("argument_or_redirection"),
-        Type::argument_or_redirection_list => L!("argument_or_redirection_list"),
-        Type::statement => L!("statement"),
-        Type::job_pipeline => L!("job_pipeline"),
-        Type::job_conjunction => L!("job_conjunction"),
-        Type::for_header => L!("for_header"),
-        Type::while_header => L!("while_header"),
-        Type::function_header => L!("function_header"),
-        Type::begin_header => L!("begin_header"),
-        Type::block_statement => L!("block_statement"),
-        Type::brace_statement => L!("brace_statement"),
-        Type::if_clause => L!("if_clause"),
-        Type::elseif_clause => L!("elseif_clause"),
-        Type::elseif_clause_list => L!("elseif_clause_list"),
-        Type::else_clause => L!("else_clause"),
-        Type::if_statement => L!("if_statement"),
-        Type::case_item => L!("case_item"),
-        Type::switch_statement => L!("switch_statement"),
-        Type::decorated_statement => L!("decorated_statement"),
-        Type::not_statement => L!("not_statement"),
-        Type::job_continuation => L!("job_continuation"),
-        Type::job_continuation_list => L!("job_continuation_list"),
-        Type::job_conjunction_continuation => L!("job_conjunction_continuation"),
-        Type::andor_job => L!("andor_job"),
-        Type::andor_job_list => L!("andor_job_list"),
-        Type::freestanding_argument_list => L!("freestanding_argument_list"),
-        Type::token_conjunction => L!("token_conjunction"),
-        Type::job_conjunction_continuation_list => L!("job_conjunction_continuation_list"),
-        Type::maybe_newlines => L!("maybe_newlines"),
-        Type::token_pipe => L!("token_pipe"),
-        Type::case_item_list => L!("case_item_list"),
-        Type::argument => L!("argument"),
-        Type::argument_list => L!("argument_list"),
-        Type::job_list => L!("job_list"),
+pub fn ast_kind_to_string(k: Kind<'_>) -> &'static wstr {
+    match k {
+        Kind::Token(_) => L!("token"),
+        Kind::Keyword(_) => L!("keyword"),
+        Kind::Redirection(_) => L!("redirection"),
+        Kind::VariableAssignment(_) => L!("variable_assignment"),
+        Kind::VariableAssignmentList(_) => L!("variable_assignment_list"),
+        Kind::ArgumentOrRedirection(_) => L!("argument_or_redirection"),
+        Kind::ArgumentOrRedirectionList(_) => L!("argument_or_redirection_list"),
+        Kind::Statement(_) => L!("statement"),
+        Kind::JobPipeline(_) => L!("job_pipeline"),
+        Kind::JobConjunction(_) => L!("job_conjunction"),
+        Kind::BlockStatementHeader(_) => L!("block_statement_header"),
+        Kind::ForHeader(_) => L!("for_header"),
+        Kind::WhileHeader(_) => L!("while_header"),
+        Kind::FunctionHeader(_) => L!("function_header"),
+        Kind::BeginHeader(_) => L!("begin_header"),
+        Kind::BlockStatement(_) => L!("block_statement"),
+        Kind::BraceStatement(_) => L!("brace_statement"),
+        Kind::IfClause(_) => L!("if_clause"),
+        Kind::ElseifClause(_) => L!("elseif_clause"),
+        Kind::ElseifClauseList(_) => L!("elseif_clause_list"),
+        Kind::ElseClause(_) => L!("else_clause"),
+        Kind::IfStatement(_) => L!("if_statement"),
+        Kind::CaseItem(_) => L!("case_item"),
+        Kind::SwitchStatement(_) => L!("switch_statement"),
+        Kind::DecoratedStatement(_) => L!("decorated_statement"),
+        Kind::NotStatement(_) => L!("not_statement"),
+        Kind::JobContinuation(_) => L!("job_continuation"),
+        Kind::JobContinuationList(_) => L!("job_continuation_list"),
+        Kind::JobConjunctionContinuation(_) => L!("job_conjunction_continuation"),
+        Kind::AndorJob(_) => L!("andor_job"),
+        Kind::AndorJobList(_) => L!("andor_job_list"),
+        Kind::FreestandingArgumentList(_) => L!("freestanding_argument_list"),
+        Kind::JobConjunctionContinuationList(_) => L!("job_conjunction_continuation_list"),
+        Kind::MaybeNewlines(_) => L!("maybe_newlines"),
+        Kind::CaseItemList(_) => L!("case_item_list"),
+        Kind::Argument(_) => L!("argument"),
+        Kind::ArgumentList(_) => L!("argument_list"),
+        Kind::JobList(_) => L!("job_list"),
     }
 }
 
@@ -2354,8 +1390,11 @@ impl<'a> Iterator for Traversal<'a> {
                 TraversalEntry::Visited(_) => {}
             }
         };
-        // Append this node's children to our stack.
-        node.accept(self, true /* reverse */);
+        // Append this node's children to our stack, and then reverse the order of the children
+        // so that the last item on the stack is the first child.
+        let before = self.stack.len();
+        node.accept(self);
+        self.stack[before..].reverse();
         Some(node)
     }
 }
@@ -2383,56 +1422,69 @@ pub struct Extras {
     pub errors: SourceRangeList,
 }
 
+/// Parse a job list.
+pub fn parse(src: &wstr, flags: ParseTreeFlags, out_errors: Option<&mut ParseErrorList>) -> Ast {
+    let mut pops = Populator::new(
+        src, flags, false, /* not freestanding_arguments */
+        out_errors,
+    );
+    let mut list = JobList::default();
+    pops.populate_list(&mut list, true);
+    finalize_parse(pops, list)
+}
+
+/// Parse a FreestandingArgumentList.
+pub fn parse_argument_list(
+    src: &wstr,
+    flags: ParseTreeFlags,
+    out_errors: Option<&mut ParseErrorList>,
+) -> Ast<FreestandingArgumentList> {
+    let mut pops = Populator::new(
+        src, flags, true, /* freestanding_arguments */
+        out_errors,
+    );
+    let mut list = FreestandingArgumentList::default();
+    pops.populate_list(&mut list.arguments, true);
+    finalize_parse(pops, list)
+}
+
+// Given that we have populated some top node, add all the extras that we want and produce an Ast.
+fn finalize_parse<N: Node>(mut pops: Populator<'_>, top: N) -> Ast<N> {
+    // Chomp trailing extras, etc.
+    pops.chomp_extras(top.kind());
+
+    let any_error = pops.any_error;
+    let extras = Extras {
+        comments: pops.tokens.comment_ranges,
+        semis: pops.semis,
+        errors: pops.errors,
+    };
+
+    Ast {
+        top,
+        any_error,
+        extras,
+    }
+}
+
 /// The ast type itself.
-pub struct Ast {
+pub struct Ast<N: Node = JobList> {
     // The top node.
-    // Its type depends on what was requested to parse.
-    // Note Node parent pointers are implemented via raw pointers,
-    // so we must enforce pointer stability.
-    top: Box<dyn NodeMut>,
+    top: N,
     /// Whether any errors were encountered during parsing.
     any_error: bool,
     /// Extra fields.
     pub extras: Extras,
 }
 
-#[allow(clippy::derivable_impls)] // false positive
-impl Default for Ast {
-    fn default() -> Ast {
-        Self {
-            top: Box::<String_>::default(),
-            any_error: false,
-            extras: Extras::default(),
-        }
-    }
-}
-
-impl Ast {
-    /// Construct an ast by parsing `src` as a job list.
-    /// The ast attempts to produce `type` as the result.
-    /// `type` may only be JobList or FreestandingArgumentList.
-    pub fn parse(
-        src: &wstr,
-        flags: ParseTreeFlags,
-        out_errors: Option<&mut ParseErrorList>,
-    ) -> Self {
-        parse_from_top(src, flags, out_errors, Type::job_list)
-    }
-    /// Like parse(), but constructs a freestanding_argument_list.
-    pub fn parse_argument_list(
-        src: &wstr,
-        flags: ParseTreeFlags,
-        out_errors: Option<&mut ParseErrorList>,
-    ) -> Self {
-        parse_from_top(src, flags, out_errors, Type::freestanding_argument_list)
-    }
+impl<N: Node> Ast<N> {
     /// Return a traversal, allowing iteration over the nodes.
     pub fn walk(&'_ self) -> Traversal<'_> {
-        Traversal::new(self.top.as_node())
+        Traversal::new(&self.top)
     }
     /// Return the top node. This has the type requested in the 'parse' method.
-    pub fn top(&self) -> &dyn Node {
-        self.top.as_node()
+    pub fn top(&self) -> &N {
+        &self.top
     }
     /// Return whether any errors were encountered during parsing.
     pub fn errored(&self) -> bool {
@@ -2450,7 +1502,7 @@ impl Ast {
             // dot-| padding
             result += &str::repeat("! ", depth)[..];
 
-            if let Some(n) = node.as_argument() {
+            if let Kind::Argument(n) = node.kind() {
                 result += "argument";
                 if let Some(argsrc) = n.try_source(orig) {
                     sprintf!(=> &mut result, ": '%ls'", argsrc);
@@ -2502,26 +1554,21 @@ struct SourceRangeVisitor {
 
 impl<'a> NodeVisitor<'a> for SourceRangeVisitor {
     fn visit(&mut self, node: &'a dyn Node) {
-        match node.category() {
-            Category::leaf => match node.as_leaf().unwrap().range() {
-                None => self.any_unsourced = true,
-                // Union with our range.
-                Some(range) if range.length > 0 => {
-                    if self.total.length == 0 {
-                        self.total = range;
-                    } else {
-                        let end =
-                            (self.total.start + self.total.length).max(range.start + range.length);
-                        self.total.start = self.total.start.min(range.start);
-                        self.total.length = end - self.total.start;
-                    }
-                }
-                _ => (),
-            },
-            _ => {
-                // Other node types recurse.
-                node.accept(self, false);
+        // Recurse for non-leaves.
+        let Some(leaf) = node.as_leaf() else {
+            node.accept(self);
+            return;
+        };
+        if let Some(range) = leaf.range() {
+            if range.length == 0 {
+                // pass
+            } else if self.total.length == 0 {
+                self.total = range;
+            } else {
+                self.total = self.total.combine(range);
             }
+        } else {
+            self.any_unsourced = true;
         }
     }
 }
@@ -2740,9 +1787,10 @@ struct Populator<'a> {
     /// Stream of tokens which we consume.
     tokens: TokenStream<'a>,
 
-    /** The type which we are attempting to parse, typically job_list but may be
-    freestanding_argument_list. */
-    top_type: Type,
+    /// If set, marks that we are parsing a freestanding argument list, e.g.
+    /// as used in `complete --arguments`.
+    /// This affects whether argument lists can have semicolons.
+    freestanding_arguments: bool,
 
     /// If set, we are unwinding due to error recovery.
     unwinding: bool,
@@ -2758,90 +1806,60 @@ struct Populator<'a> {
 }
 
 impl<'s> NodeVisitorMut for Populator<'s> {
-    fn visit_mut(&mut self, node: &mut dyn NodeMut) -> VisitResult {
-        match node.typ() {
-            Type::argument => {
-                self.visit_argument(node.as_mut_argument().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_mut_variable_assignment().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::job_continuation => {
-                self.visit_job_continuation(node.as_mut_job_continuation().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::token_base => {
-                self.visit_token(node.as_mut_token().unwrap());
-                return VisitResult::Continue(());
-            }
-            Type::keyword_base => {
-                return self.visit_keyword(node.as_mut_keyword().unwrap());
-            }
-            Type::maybe_newlines => {
-                self.visit_maybe_newlines(node.as_mut_maybe_newlines().unwrap());
-                return VisitResult::Continue(());
-            }
+    fn visit_mut<N: NodeMut>(&mut self, node: &mut N) -> VisitResult {
+        use KindMut as KM;
+        match node.kind_mut() {
+            // Leaves
+            KM::Argument(node) => self.visit_argument(node),
+            KM::VariableAssignment(node) => self.visit_variable_assignment(node),
+            KM::JobContinuation(node) => self.visit_job_continuation(node),
+            KM::Token(node) => self.visit_token(node),
+            KM::Keyword(node) => return self.visit_keyword(node),
 
-            _ => (),
-        }
+            KM::MaybeNewlines(node) => self.visit_maybe_newlines(node),
 
-        match node.category() {
-            Category::leaf => {}
-            // Visit branch nodes by just calling accept() to visit their fields.
-            Category::branch => {
-                // This field is a direct embedding of an AST value.
-                node.accept_mut(self, false);
-                return VisitResult::Continue(());
-            }
-            Category::list => {
-                // This field is an embedding of an array of (pointers to) ContentsNode.
-                // Parse as many as we can.
-                match node.typ() {
-                    Type::andor_job_list => self.populate_list::<AndorJobList>(
-                        node.as_mut_andor_job_list().unwrap(),
-                        false,
-                    ),
-                    Type::argument_list => self
-                        .populate_list::<ArgumentList>(node.as_mut_argument_list().unwrap(), false),
-                    Type::argument_or_redirection_list => self
-                        .populate_list::<ArgumentOrRedirectionList>(
-                            node.as_mut_argument_or_redirection_list().unwrap(),
-                            false,
-                        ),
-                    Type::case_item_list => self.populate_list::<CaseItemList>(
-                        node.as_mut_case_item_list().unwrap(),
-                        false,
-                    ),
-                    Type::elseif_clause_list => self.populate_list::<ElseifClauseList>(
-                        node.as_mut_elseif_clause_list().unwrap(),
-                        false,
-                    ),
-                    Type::job_conjunction_continuation_list => self
-                        .populate_list::<JobConjunctionContinuationList>(
-                            node.as_mut_job_conjunction_continuation_list().unwrap(),
-                            false,
-                        ),
-                    Type::job_continuation_list => self.populate_list::<JobContinuationList>(
-                        node.as_mut_job_continuation_list().unwrap(),
-                        false,
-                    ),
-                    Type::job_list => {
-                        self.populate_list::<JobList>(node.as_mut_job_list().unwrap(), false)
-                    }
-                    Type::variable_assignment_list => self.populate_list::<VariableAssignmentList>(
-                        node.as_mut_variable_assignment_list().unwrap(),
-                        false,
-                    ),
-                    _ => (),
-                }
-            }
+            // Branches
+            KM::ArgumentOrRedirection(node) => self.visit_argument_or_redirection(node),
+            KM::BlockStatementHeader(node) => self.visit_block_statement_header(node),
+            KM::Statement(node) => self.visit_statement(node),
+            KM::Redirection(node) => node.accept_mut(self),
+            KM::JobPipeline(node) => node.accept_mut(self),
+            KM::JobConjunction(node) => node.accept_mut(self),
+            KM::ForHeader(node) => node.accept_mut(self),
+            KM::WhileHeader(node) => node.accept_mut(self),
+            KM::FunctionHeader(node) => node.accept_mut(self),
+            KM::BeginHeader(node) => node.accept_mut(self),
+            KM::BlockStatement(node) => node.accept_mut(self),
+            KM::BraceStatement(node) => node.accept_mut(self),
+            KM::IfClause(node) => node.accept_mut(self),
+            KM::ElseifClause(node) => node.accept_mut(self),
+            KM::ElseClause(node) => node.accept_mut(self),
+            KM::IfStatement(node) => node.accept_mut(self),
+            KM::CaseItem(node) => node.accept_mut(self),
+            KM::SwitchStatement(node) => node.accept_mut(self),
+            KM::DecoratedStatement(node) => node.accept_mut(self),
+            KM::NotStatement(node) => node.accept_mut(self),
+            KM::JobConjunctionContinuation(node) => node.accept_mut(self),
+            KM::AndorJob(node) => node.accept_mut(self),
+
+            // Lists
+            KM::VariableAssignmentList(node) => self.populate_list(node, false),
+            KM::ArgumentOrRedirectionList(node) => self.populate_list(node, false),
+            KM::ElseifClauseList(node) => self.populate_list(node, false),
+            KM::JobContinuationList(node) => self.populate_list(node, false),
+            KM::AndorJobList(node) => self.populate_list(node, false),
+            KM::JobConjunctionContinuationList(node) => self.populate_list(node, false),
+            KM::CaseItemList(node) => self.populate_list(node, false),
+            KM::ArgumentList(node) => self.populate_list(node, false),
+            KM::JobList(node) => self.populate_list(node, false),
+
+            // Weird top-level case, not actually a list.
+            KM::FreestandingArgumentList(node) => node.accept_mut(self),
         }
         VisitResult::Continue(())
     }
 
-    fn will_visit_fields_of(&mut self, node: &mut dyn NodeMut) {
+    fn will_visit_fields_of<N: NodeMut>(&mut self, node: &mut N) {
         FLOGF!(
             ast_construction,
             "%*swill_visit %ls",
@@ -2852,7 +1870,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         self.depth += 1
     }
 
-    fn did_visit_fields_of<'a>(&'a mut self, node: &'a dyn NodeMut, flow: VisitResult) {
+    fn did_visit_fields_of<'a, N: NodeMut>(&'a mut self, node: &'a mut N, flow: VisitResult) {
         self.depth -= 1;
 
         if self.unwinding {
@@ -2879,36 +1897,29 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         // We believe the node is some sort of block statement. Attempt to find a source range
         // for the block's keyword (for, if, etc) and a user-presentable description. This
         // is used to provide better error messages. Note at this point the parse tree is
-        // incomplete; in particular parent nodes are not set.
-        let mut cursor = node;
+        // incomplete.
+        let mut cursor = node.as_node();
         let header = loop {
-            match cursor.typ() {
-                Type::block_statement => {
-                    cursor = cursor.as_block_statement().unwrap().header.embedded_node();
+            match cursor.kind() {
+                Kind::BlockStatement(node) => cursor = &node.header,
+                Kind::BlockStatementHeader(node) => cursor = node.embedded_node(),
+                Kind::ForHeader(node) => {
+                    break Some((node.kw_for.range.unwrap(), L!("for loop")));
                 }
-                Type::for_header => {
-                    let n = cursor.as_for_header().unwrap();
-                    break Some((n.kw_for.range.unwrap(), L!("for loop")));
+                Kind::WhileHeader(node) => {
+                    break Some((node.kw_while.range.unwrap(), L!("while loop")));
                 }
-                Type::while_header => {
-                    let n = cursor.as_while_header().unwrap();
-                    break Some((n.kw_while.range.unwrap(), L!("while loop")));
+                Kind::FunctionHeader(node) => {
+                    break Some((node.kw_function.range.unwrap(), L!("function definition")));
                 }
-                Type::function_header => {
-                    let n = cursor.as_function_header().unwrap();
-                    break Some((n.kw_function.range.unwrap(), L!("function definition")));
+                Kind::BeginHeader(node) => {
+                    break Some((node.kw_begin.range.unwrap(), L!("begin")));
                 }
-                Type::begin_header => {
-                    let n = cursor.as_begin_header().unwrap();
-                    break Some((n.kw_begin.range.unwrap(), L!("begin")));
+                Kind::IfStatement(node) => {
+                    break Some((node.if_clause.kw_if.range.unwrap(), L!("if statement")));
                 }
-                Type::if_statement => {
-                    let n = cursor.as_if_statement().unwrap();
-                    break Some((n.if_clause.kw_if.range.unwrap(), L!("if statement")));
-                }
-                Type::switch_statement => {
-                    let n = cursor.as_switch_statement().unwrap();
-                    break Some((n.kw_switch.range.unwrap(), L!("switch statement")));
+                Kind::SwitchStatement(node) => {
+                    break Some((node.kw_switch.range.unwrap(), L!("switch statement")));
                 }
                 _ => break None,
             }
@@ -2943,57 +1954,9 @@ impl<'s> NodeVisitorMut for Populator<'s> {
         }
     }
 
-    // We currently only have a handful of union pointer types.
-    // Handle them directly.
-    fn visit_argument_or_redirection(
-        &mut self,
-        node: &mut ArgumentOrRedirectionVariant,
-    ) -> VisitResult {
-        if let Some(arg) = self.try_parse::<Argument>() {
-            *node = ArgumentOrRedirectionVariant::Argument(arg);
-        } else if let Some(redir) = self.try_parse::<Redirection>() {
-            *node = ArgumentOrRedirectionVariant::Redirection(redir);
-        } else {
-            internal_error!(
-                self,
-                visit_argument_or_redirection,
-                "Unable to parse argument or redirection"
-            );
-        }
+    fn visit_optional_mut<N: NodeMut + CheckParse>(&mut self, node: &mut Option<N>) -> VisitResult {
+        *node = self.try_parse::<N>();
         VisitResult::Continue(())
-    }
-    fn visit_block_statement_header(
-        &mut self,
-        node: &mut BlockStatementHeaderVariant,
-    ) -> VisitResult {
-        *node = self.allocate_populate_block_header();
-        VisitResult::Continue(())
-    }
-    fn visit_statement(&mut self, node: &mut StatementVariant) -> VisitResult {
-        *node = self.allocate_populate_statement_contents();
-        VisitResult::Continue(())
-    }
-
-    fn visit_decorated_statement_decorator(
-        &mut self,
-        node: &mut Option<DecoratedStatementDecorator>,
-    ) {
-        *node = self.try_parse::<DecoratedStatementDecorator>();
-    }
-    fn visit_job_conjunction_decorator(&mut self, node: &mut Option<JobConjunctionDecorator>) {
-        *node = self.try_parse::<JobConjunctionDecorator>();
-    }
-    fn visit_else_clause(&mut self, node: &mut Option<ElseClause>) {
-        *node = self.try_parse::<ElseClause>();
-    }
-    fn visit_semi_nl(&mut self, node: &mut Option<SemiNl>) {
-        *node = self.try_parse::<SemiNl>();
-    }
-    fn visit_time(&mut self, node: &mut Option<KeywordTime>) {
-        *node = self.try_parse::<KeywordTime>();
-    }
-    fn visit_token_background(&mut self, node: &mut Option<TokenBackground>) {
-        *node = self.try_parse::<TokenBackground>();
     }
 }
 
@@ -3029,19 +1992,21 @@ fn token_types_user_presentable_description(types: &'static [ParseTokenType]) ->
 }
 
 impl<'s> Populator<'s> {
-    /// Construct from a source, flags, top type, and out_errors, which may be null.
+    /// Construct a new Populator, parsing source with the given flags.
+    /// If freestanding_arguments is true, then we are parsing a freestanding argument list
+    /// as used in `complete --arguments`; this affects whether argument lists can have semicolons.
     fn new(
         src: &'s wstr,
         flags: ParseTreeFlags,
-        top_type: Type,
+        freestanding_arguments: bool,
         out_errors: Option<&'s mut ParseErrorList>,
     ) -> Self {
         Self {
             flags,
             semis: vec![],
             errors: vec![],
-            tokens: TokenStream::new(src, flags, top_type == Type::freestanding_argument_list),
-            top_type,
+            tokens: TokenStream::new(src, flags, freestanding_arguments),
+            freestanding_arguments,
             unwinding: false,
             any_error: false,
             depth: 0,
@@ -3080,44 +2045,43 @@ impl<'s> Populator<'s> {
         self.flags.contains(ParseTreeFlags::LEAVE_UNTERMINATED)
     }
 
-    /// Return whether a list type `type` allows arbitrary newlines in it.
-    fn list_type_chomps_newlines(&self, typ: Type) -> bool {
-        match typ {
-            Type::argument_list => {
-                // Hackish. If we are producing a freestanding argument list, then it allows
-                // semicolons, for hysterical raisins.
-                self.top_type == Type::freestanding_argument_list
+    /// Return whether a list kind allows arbitrary newlines in it.
+    fn list_kind_chomps_newlines(&self, kind: Kind) -> bool {
+        match kind {
+            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
+                self.freestanding_arguments
             }
-            Type::argument_or_redirection_list => {
+
+            Kind::ArgumentOrRedirectionList(_) => {
                 // No newlines inside arguments.
                 false
             }
-            Type::variable_assignment_list => {
+            Kind::VariableAssignmentList(_) => {
                 // No newlines inside variable assignment lists.
                 false
             }
-            Type::job_list => {
+            Kind::JobList(_) => {
                 // Like echo a \n \n echo b
                 true
             }
-            Type::case_item_list => {
+            Kind::CaseItemList(_) => {
                 // Like switch foo \n \n \n case a \n end
                 true
             }
-            Type::andor_job_list => {
+            Kind::AndorJobList(_) => {
                 // Like while true ; \n \n and true ; end
                 true
             }
-            Type::elseif_clause_list => {
+            Kind::ElseifClauseList(_) => {
                 // Like if true ; \n \n else if false; end
                 true
             }
-            Type::job_conjunction_continuation_list => {
+            Kind::JobConjunctionContinuationList(_) => {
                 // This would be like echo a && echo b \n && echo c
                 // We could conceivably support this but do not now.
                 false
             }
-            Type::job_continuation_list => {
+            Kind::JobContinuationList(_) => {
                 // This would be like echo a \n | echo b
                 // We could conceivably support this but do not now.
                 false
@@ -3125,48 +2089,48 @@ impl<'s> Populator<'s> {
             _ => {
                 internal_error!(
                     self,
-                    list_type_chomps_newlines,
+                    list_kind_chomps_newlines,
                     "Type %ls not handled",
-                    ast_type_to_string(typ)
+                    ast_kind_to_string(kind)
                 );
             }
         }
     }
 
-    /// Return whether a list type `type` allows arbitrary semicolons in it.
-    fn list_type_chomps_semis(&self, typ: Type) -> bool {
-        match typ {
-            Type::argument_list => {
+    /// Return whether a list kind allows arbitrary semicolons in it.
+    fn list_kind_chomps_semis(&self, kind: Kind) -> bool {
+        match kind {
+            Kind::ArgumentList(_) | Kind::FreestandingArgumentList(_) => {
                 // Hackish. If we are producing a freestanding argument list, then it allows
                 // semicolons, for hysterical raisins.
                 // That is, this is OK: complete -c foo -a 'x ; y ; z'
                 // But this is not: foo x ; y ; z
-                self.top_type == Type::freestanding_argument_list
+                self.freestanding_arguments
             }
 
-            Type::argument_or_redirection_list | Type::variable_assignment_list => false,
-            Type::job_list => {
+            Kind::ArgumentOrRedirectionList(_) | Kind::VariableAssignmentList(_) => false,
+            Kind::JobList(_) => {
                 // Like echo a ; ;  echo b
                 true
             }
-            Type::case_item_list => {
+            Kind::CaseItemList(_) => {
                 // Like switch foo ; ; ;  case a \n end
                 // This is historically allowed.
                 true
             }
-            Type::andor_job_list => {
+            Kind::AndorJobList(_) => {
                 // Like while true ; ; ;  and true ; end
                 true
             }
-            Type::elseif_clause_list => {
+            Kind::ElseifClauseList(_) => {
                 // Like if true ; ; ;  else if false; end
                 false
             }
-            Type::job_conjunction_continuation_list => {
+            Kind::JobConjunctionContinuationList(_) => {
                 // Like echo a ; ; && echo b. Not supported.
                 false
             }
-            Type::job_continuation_list => {
+            Kind::JobContinuationList(_) => {
                 // This would be like echo a ; | echo b
                 // Not supported.
                 // We could conceivably support this but do not now.
@@ -3175,18 +2139,18 @@ impl<'s> Populator<'s> {
             _ => {
                 internal_error!(
                     self,
-                    list_type_chomps_semis,
+                    list_kind_chomps_semis,
                     "Type %ls not handled",
-                    ast_type_to_string(typ)
+                    ast_kind_to_string(kind)
                 );
             }
         }
     }
 
-    /// Chomp extra comments, semicolons, etc. for a given list type.
-    fn chomp_extras(&mut self, typ: Type) {
-        let chomp_semis = self.list_type_chomps_semis(typ);
-        let chomp_newlines = self.list_type_chomps_newlines(typ);
+    /// Chomp extra comments, semicolons, etc. for a given list kind.
+    fn chomp_extras(&mut self, kind: Kind) {
+        let chomp_semis = self.list_kind_chomps_semis(kind);
+        let chomp_newlines = self.list_kind_chomps_newlines(kind);
         loop {
             let peek = self.tokens.peek(0);
             if chomp_newlines && peek.typ == ParseTokenType::end && peek.is_newline {
@@ -3204,10 +2168,11 @@ impl<'s> Populator<'s> {
         }
     }
 
-    /// Return whether a list type should recover from errors.s
+    /// Return whether a list kind should recover from errors.
     /// That is, whether we should stop unwinding when we encounter this type.
-    fn list_type_stops_unwind(&self, typ: Type) -> bool {
-        typ == Type::job_list && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
+    fn list_kind_stops_unwind(&self, kind: Kind) -> bool {
+        matches!(kind, Kind::JobList(_))
+            && self.flags.contains(ParseTreeFlags::CONTINUE_AFTER_ERROR)
     }
 
     /// Return a reference to a non-comment token at index `idx`.
@@ -3268,7 +2233,7 @@ impl<'s> Populator<'s> {
         // generate a generic error.
         // TODO: this is a crummy message if we get a tokenizer error, for example:
         //   complete -c foo -a "'abc"
-        if self.top_type == Type::freestanding_argument_list {
+        if self.freestanding_arguments {
             parse_error!(
                 self,
                 tok,
@@ -3280,7 +2245,6 @@ impl<'s> Populator<'s> {
             return;
         }
 
-        assert!(self.top_type == Type::job_list);
         match tok.typ {
             ParseTokenType::string => {
                 // There are three keywords which end a job list.
@@ -3379,11 +2343,12 @@ impl<'s> Populator<'s> {
     /// Given that we are a list of type ListNodeType, whose contents type is ContentsNode,
     /// populate as many elements as we can.
     /// If exhaust_stream is set, then keep going until we get parse_token_type_t::terminate.
-    fn populate_list<ListType: List>(&mut self, list: &mut ListType, exhaust_stream: bool)
+    fn populate_list<Contents, List>(&mut self, list: &mut List, exhaust_stream: bool)
     where
-        <ListType as List>::ContentsNode: NodeMut + CheckParse,
+        Contents: NodeMut + CheckParse + Default,
+        List: Node + Deref<Target = Box<[Contents]>> + AsMut<Box<[Contents]>>,
     {
-        assert!(list.contents().is_empty(), "List is not initially empty");
+        assert!(list.is_empty(), "List is not initially empty");
 
         // Do not attempt to parse a list if we are unwinding.
         if self.unwinding {
@@ -3397,9 +2362,9 @@ impl<'s> Populator<'s> {
                 "%*sunwinding %ls",
                 self.spaces(),
                 "",
-                ast_type_to_string(list.typ())
+                ast_kind_to_string(list.kind())
             );
-            assert!(list.contents().is_empty(), "Should be an empty list");
+            assert!(list.is_empty(), "Should be an empty list");
             return;
         }
 
@@ -3410,20 +2375,17 @@ impl<'s> Populator<'s> {
             // If we are unwinding, then either we recover or we break the loop, dependent on the
             // loop type.
             if self.unwinding {
-                if !self.list_type_stops_unwind(list.typ()) {
+                if !self.list_kind_stops_unwind(list.kind()) {
                     break;
                 }
                 // We are going to stop unwinding.
                 // Rather hackish. Just chomp until we get to a string or end node.
                 loop {
                     let typ = self.peek_type(0);
-                    if [
-                        ParseTokenType::string,
-                        ParseTokenType::terminate,
-                        ParseTokenType::end,
-                    ]
-                    .contains(&typ)
-                    {
+                    if matches!(
+                        typ,
+                        ParseTokenType::string | ParseTokenType::terminate | ParseTokenType::end
+                    ) {
                         break;
                     }
                     let tok = self.tokens.pop();
@@ -3442,10 +2404,10 @@ impl<'s> Populator<'s> {
             }
 
             // Chomp semis and newlines.
-            self.chomp_extras(list.typ());
+            self.chomp_extras(list.kind());
 
             // Now try parsing a node.
-            if let Some(node) = self.try_parse::<ListType::ContentsNode>() {
+            if let Some(node) = self.try_parse::<Contents>() {
                 // #7201: Minimize reallocations of contents vector
                 // Empirically, 99.97% of cases are 16 elements or fewer,
                 // with 75% being empty, so this works out best.
@@ -3469,8 +2431,8 @@ impl<'s> Populator<'s> {
                 contents.len() <= u32::MAX.try_into().unwrap(),
                 "Contents size out of bounds"
             );
-            assert!(list.contents().is_empty(), "List should still be empty");
-            *list.contents_mut() = contents.into_boxed_slice();
+            assert!(list.is_empty(), "List should still be empty");
+            *list.as_mut() = contents.into_boxed_slice();
         }
 
         FLOGF!(
@@ -3478,22 +2440,21 @@ impl<'s> Populator<'s> {
             "%*s%ls size: %lu",
             self.spaces(),
             "",
-            ast_type_to_string(list.typ()),
-            list.count()
+            ast_kind_to_string(list.kind()),
+            list.len()
         );
     }
 
-    /// Allocate and populate a statement contents pointer.
-    /// This must never return null.
-    fn allocate_populate_statement_contents(&mut self) -> StatementVariant {
+    /// Allocate and populate a statement.
+    fn allocate_populate_statement(&mut self) -> Statement {
         // In case we get a parse error, we still need to return something non-null. Use a
         // decorated statement; all of its leaf nodes will end up unsourced.
-        fn got_error(slf: &mut Populator<'_>) -> StatementVariant {
+        fn got_error(slf: &mut Populator<'_>) -> Statement {
             assert!(slf.unwinding, "Should have produced an error");
             new_decorated_statement(slf)
         }
 
-        fn new_decorated_statement(slf: &mut Populator<'_>) -> StatementVariant {
+        fn new_decorated_statement(slf: &mut Populator<'_>) -> Statement {
             let embedded = slf.allocate_visit::<DecoratedStatement>();
             if !slf.unwinding && slf.peek_token(0).typ == ParseTokenType::left_brace {
                 parse_error!(
@@ -3508,7 +2469,7 @@ impl<'s> Populator<'s> {
                     slf.peek_token(0).user_presentable_description()
                 );
             }
-            StatementVariant::DecoratedStatement(embedded)
+            Statement::Decorated(embedded)
         }
 
         if self.peek_token(0).typ == ParseTokenType::terminate && self.allow_incomplete() {
@@ -3517,7 +2478,7 @@ impl<'s> Populator<'s> {
             self.allocate_visit::<DecoratedStatement>();
         } else if self.peek_token(0).typ == ParseTokenType::left_brace {
             let embedded = self.allocate_boxed_visit::<BraceStatement>();
-            return StatementVariant::BraceStatement(embedded);
+            return Statement::Brace(embedded);
         } else if self.peek_token(0).typ != ParseTokenType::string {
             // We may be unwinding already; do not produce another error.
             // For example in `true | and`.
@@ -3588,22 +2549,22 @@ impl<'s> Populator<'s> {
         match self.peek_token(0).keyword {
             ParseKeyword::Not | ParseKeyword::Exclam => {
                 let embedded = self.allocate_boxed_visit::<NotStatement>();
-                StatementVariant::NotStatement(embedded)
+                Statement::Not(embedded)
             }
             ParseKeyword::For
             | ParseKeyword::While
             | ParseKeyword::Function
             | ParseKeyword::Begin => {
                 let embedded = self.allocate_boxed_visit::<BlockStatement>();
-                StatementVariant::BlockStatement(embedded)
+                Statement::Block(embedded)
             }
             ParseKeyword::If => {
                 let embedded = self.allocate_boxed_visit::<IfStatement>();
-                StatementVariant::IfStatement(embedded)
+                Statement::If(embedded)
             }
             ParseKeyword::Switch => {
                 let embedded = self.allocate_boxed_visit::<SwitchStatement>();
-                StatementVariant::SwitchStatement(embedded)
+                Statement::Switch(embedded)
             }
             ParseKeyword::End => {
                 // 'end' is forbidden as a command.
@@ -3625,23 +2586,23 @@ impl<'s> Populator<'s> {
 
     /// Allocate and populate a block statement header.
     /// This must never return null.
-    fn allocate_populate_block_header(&mut self) -> BlockStatementHeaderVariant {
+    fn allocate_populate_block_header(&mut self) -> BlockStatementHeader {
         match self.peek_token(0).keyword {
             ParseKeyword::For => {
                 let embedded = self.allocate_visit::<ForHeader>();
-                BlockStatementHeaderVariant::ForHeader(embedded)
+                BlockStatementHeader::For(embedded)
             }
             ParseKeyword::While => {
                 let embedded = self.allocate_visit::<WhileHeader>();
-                BlockStatementHeaderVariant::WhileHeader(embedded)
+                BlockStatementHeader::While(embedded)
             }
             ParseKeyword::Function => {
                 let embedded = self.allocate_visit::<FunctionHeader>();
-                BlockStatementHeaderVariant::FunctionHeader(embedded)
+                BlockStatementHeader::Function(embedded)
             }
             ParseKeyword::Begin => {
                 let embedded = self.allocate_visit::<BeginHeader>();
-                BlockStatementHeaderVariant::BeginHeader(embedded)
+                BlockStatementHeader::Begin(embedded)
             }
             _ => {
                 internal_error!(
@@ -3660,21 +2621,6 @@ impl<'s> Populator<'s> {
         Some(self.allocate_visit())
     }
 
-    /// Given a node type, allocate it and invoke its default constructor.
-    /// Return the resulting Node
-    fn allocate<T: NodeMut + Default>(&self) -> Box<T> {
-        let result = Box::<T>::default();
-        FLOGF!(
-            ast_construction,
-            "%*smake %ls %ls",
-            self.spaces(),
-            "",
-            ast_type_to_string(result.typ()),
-            format!("{result:p}")
-        );
-        result
-    }
-
     // Given a node type, allocate it, invoking its default constructor,
     // and then visit it as a field.
     // Return the resulting Node.
@@ -3689,6 +2635,26 @@ impl<'s> Populator<'s> {
         let mut result = Box::<T>::default();
         let _ = self.visit_mut(&mut *result);
         result
+    }
+
+    fn visit_argument_or_redirection(&mut self, node: &mut ArgumentOrRedirection) {
+        if let Some(arg) = self.try_parse::<Argument>() {
+            *node = ArgumentOrRedirection::Argument(arg);
+        } else if let Some(redir) = self.try_parse::<Redirection>() {
+            *node = ArgumentOrRedirection::Redirection(Box::new(redir));
+        } else {
+            internal_error!(
+                self,
+                visit_argument_or_redirection,
+                "Unable to parse argument or redirection"
+            );
+        }
+    }
+    fn visit_block_statement_header(&mut self, node: &mut BlockStatementHeader) {
+        *node = self.allocate_populate_block_header();
+    }
+    fn visit_statement(&mut self, node: &mut Statement) {
+        *node = self.allocate_populate_statement();
     }
 
     fn visit_argument(&mut self, arg: &mut Argument) {
@@ -3716,16 +2682,17 @@ impl<'s> Populator<'s> {
 
     fn visit_job_continuation(&mut self, node: &mut JobContinuation) {
         // Special error handling to catch 'and' and 'or' in pipelines, like `true | and false`.
-        if [ParseKeyword::And, ParseKeyword::Or].contains(&self.peek_token(1).keyword) {
+        let kw = self.peek_token(1).keyword;
+        if matches!(kw, ParseKeyword::And | ParseKeyword::Or) {
             parse_error!(
                 self,
                 self.peek_token(1),
                 ParseErrorCode::andor_in_pipeline,
                 INVALID_PIPELINE_CMD_ERR_MSG,
-                self.peek_token(1).keyword
+                kw
             );
         }
-        node.accept_mut(self, false);
+        node.accept_mut(self);
     }
 
     // Overload for token fields.
@@ -3841,42 +2808,6 @@ enum ParserStatus {
     unwinding,
 }
 
-fn parse_from_top(
-    src: &wstr,
-    flags: ParseTreeFlags,
-    out_errors: Option<&mut ParseErrorList>,
-    top_type: Type,
-) -> Ast {
-    assert!(
-        [Type::job_list, Type::freestanding_argument_list].contains(&top_type),
-        "Invalid top type"
-    );
-
-    let mut ast = Ast::default();
-
-    let mut pops = Populator::new(src, flags, top_type, out_errors);
-    if top_type == Type::job_list {
-        let mut list = pops.allocate::<JobList>();
-        pops.populate_list(&mut *list, true /* exhaust_stream */);
-        ast.top = list;
-    } else {
-        let mut list = pops.allocate::<FreestandingArgumentList>();
-        pops.populate_list(&mut list.arguments, true /* exhaust_stream */);
-        ast.top = list;
-    }
-
-    // Chomp trailing extras, etc.
-    pops.chomp_extras(Type::job_list);
-
-    ast.any_error = pops.any_error;
-    ast.extras = Extras {
-        comments: pops.tokens.comment_ranges,
-        semis: pops.semis,
-        errors: pops.errors,
-    };
-    ast
-}
-
 /// Return tokenizer flags corresponding to parse tree flags.
 impl From<ParseTreeFlags> for TokFlags {
     fn from(flags: ParseTreeFlags) -> Self {
@@ -3965,56 +2896,6 @@ fn keyword_for_token(tok: TokenType, token: &wstr) -> ParseKeyword {
 fn test_ast_parse() {
     let _cleanup = test_init();
     let src = L!("echo");
-    let ast = Ast::parse(src, ParseTreeFlags::empty(), None);
+    let ast = parse(src, ParseTreeFlags::empty(), None);
     assert!(!ast.any_error);
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Category {
-    branch,
-    leaf,
-    list,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Type {
-    token_base,
-    keyword_base,
-    redirection,
-    variable_assignment,
-    variable_assignment_list,
-    argument_or_redirection,
-    argument_or_redirection_list,
-    statement,
-    job_pipeline,
-    job_conjunction,
-    for_header,
-    while_header,
-    function_header,
-    begin_header,
-    block_statement,
-    brace_statement,
-    if_clause,
-    elseif_clause,
-    elseif_clause_list,
-    else_clause,
-    if_statement,
-    case_item,
-    switch_statement,
-    decorated_statement,
-    not_statement,
-    job_continuation,
-    job_continuation_list,
-    job_conjunction_continuation,
-    andor_job,
-    andor_job_list,
-    freestanding_argument_list,
-    token_conjunction,
-    job_conjunction_continuation_list,
-    maybe_newlines,
-    token_pipe,
-    case_item_list,
-    argument,
-    argument_list,
-    job_list,
 }

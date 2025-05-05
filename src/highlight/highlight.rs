@@ -1,9 +1,8 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, List, Node, NodeVisitor, Redirection, Token, Type,
-    VariableAssignment,
+    self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+    Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
 use crate::color::Color;
@@ -272,15 +271,16 @@ fn autosuggest_parse_command(
     buff: &wstr,
     ctx: &OperationContext<'_>,
 ) -> Option<(WString, WString)> {
-    let ast = Ast::parse(
+    let ast = ast::parse(
         buff,
         ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
         None,
     );
 
     // Find the first statement.
-    let jc = ast.top().as_job_list().unwrap().get(0)?;
-    let first_statement = jc.job.statement.contents.as_decorated_statement()?;
+    let job_list: &ast::JobList = ast.top();
+    let jc = job_list.get(0)?;
+    let first_statement = jc.job.statement.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
         let mut arg = WString::new();
@@ -709,7 +709,7 @@ impl<'s> Highlighter<'s> {
             | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
             | ParseTreeFlags::LEAVE_UNTERMINATED
             | ParseTreeFlags::SHOW_EXTRA_SEMIS;
-        let ast = Ast::parse(self.buff, ast_flags, None);
+        let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());
         if self.ctx.check_cancel() {
@@ -832,7 +832,7 @@ impl<'s> Highlighter<'s> {
 
     // Visit the children of a node.
     fn visit_children(&mut self, node: &dyn Node) {
-        node.accept(self, false);
+        node.accept(self);
     }
     // AST visitor implementations.
     fn visit_keyword(&mut self, node: &dyn Keyword) {
@@ -1044,15 +1044,14 @@ impl<'s> Highlighter<'s> {
     }
     fn visit_block_statement(&mut self, block: &BlockStatement) {
         match &block.header {
-            BlockStatementHeaderVariant::None => panic!(),
-            BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::FunctionHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::BeginHeader(node) => self.visit(node),
+            BlockStatementHeader::For(node) => self.visit(node),
+            BlockStatementHeader::While(node) => self.visit(node),
+            BlockStatementHeader::Function(node) => self.visit(node),
+            BlockStatementHeader::Begin(node) => self.visit(node),
         }
         self.visit(&block.args_or_redirs);
         let pending_variables_count = self.pending_variables.len();
-        if let Some(fh) = block.header.as_for_header() {
+        if let BlockStatementHeader::For(fh) = &block.header {
             let var_name = fh.var_name.source(self.buff);
             self.pending_variables.push(var_name);
         }
@@ -1114,17 +1113,13 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
             self.visit_token(token);
             return;
         }
-        match node.typ() {
-            Type::argument => self.visit_argument(node.as_argument().unwrap(), false, true),
-            Type::redirection => self.visit_redirection(node.as_redirection().unwrap()),
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_variable_assignment().unwrap())
-            }
-            Type::decorated_statement => {
-                self.visit_decorated_statement(node.as_decorated_statement().unwrap())
-            }
-            Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
-            Type::brace_statement => self.visit_brace_statement(node.as_brace_statement().unwrap()),
+        match node.kind() {
+            Kind::Argument(node) => self.visit_argument(node, false, true),
+            Kind::Redirection(node) => self.visit_redirection(node),
+            Kind::VariableAssignment(node) => self.visit_variable_assignment(node),
+            Kind::DecoratedStatement(node) => self.visit_decorated_statement(node),
+            Kind::BlockStatement(node) => self.visit_block_statement(node),
+            Kind::BraceStatement(node) => self.visit_brace_statement(node),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }

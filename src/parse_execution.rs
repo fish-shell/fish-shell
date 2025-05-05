@@ -1,8 +1,7 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
 use crate::ast::{
-    self, unescape_keyword, BlockStatementHeaderVariant, Keyword, Leaf, List, Node,
-    StatementVariant, Token,
+    self, unescape_keyword, BlockStatementHeader, Keyword, Leaf, Node, Statement, Token,
 };
 use crate::builtins;
 use crate::builtins::shared::{
@@ -140,13 +139,9 @@ impl<'a> ExecutionContext<'a> {
         node: &'a dyn Node,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        match node.typ() {
-            ast::Type::statement => {
-                self.eval_statement(ctx, node.as_statement().unwrap(), associated_block)
-            }
-            ast::Type::job_list => {
-                self.eval_job_list(ctx, node.as_job_list().unwrap(), associated_block.unwrap())
-            }
+        match node.kind() {
+            ast::Kind::Statement(node) => self.eval_statement(ctx, node, associated_block),
+            ast::Kind::JobList(node) => self.eval_job_list(ctx, node, associated_block.unwrap()),
             _ => unreachable!(),
         }
     }
@@ -160,22 +155,14 @@ impl<'a> ExecutionContext<'a> {
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
         // Note we only expect block-style statements here. No not statements.
-        match &statement.contents {
-            StatementVariant::BlockStatement(block) => {
-                self.run_block_statement(ctx, block, associated_block)
-            }
-            StatementVariant::BraceStatement(brace_statement) => {
+        match &statement {
+            Statement::Block(block) => self.run_block_statement(ctx, block, associated_block),
+            Statement::Brace(brace_statement) => {
                 self.run_begin_statement(ctx, &brace_statement.jobs)
             }
-            StatementVariant::IfStatement(ifstat) => {
-                self.run_if_statement(ctx, ifstat, associated_block)
-            }
-            StatementVariant::SwitchStatement(switchstat) => {
-                self.run_switch_statement(ctx, switchstat)
-            }
-            StatementVariant::DecoratedStatement(_)
-            | StatementVariant::NotStatement(_)
-            | StatementVariant::None => panic!(),
+            Statement::If(ifstat) => self.run_if_statement(ctx, ifstat, associated_block),
+            Statement::Switch(switchstat) => self.run_switch_statement(ctx, switchstat),
+            Statement::Decorated(_) | Statement::Not(_) => panic!(),
         }
     }
 
@@ -418,7 +405,7 @@ impl<'a> ExecutionContext<'a> {
         // Helper to return if a statement is infinitely recursive in this function.
         let statement_recurses = |stat: &'b ast::Statement| -> Option<&'b ast::DecoratedStatement> {
             // Ignore non-decorated statements like `if`, etc.
-            let StatementVariant::DecoratedStatement(dc) = &stat.contents else {
+            let Statement::Decorated(dc) = &stat else {
                 return None;
             };
 
@@ -560,18 +547,16 @@ impl<'a> ExecutionContext<'a> {
         let no_redirs =
             |list: &ast::ArgumentOrRedirectionList| !list.iter().any(|val| val.is_redirection());
 
-        // Check if we're a block statement with redirections. We do it this obnoxious way to preserve
-        // type safety (in case we add more specific statement types).
-        match &job.statement.contents {
-            StatementVariant::BlockStatement(stmt) => no_redirs(&stmt.args_or_redirs),
-            StatementVariant::BraceStatement(stmt) => no_redirs(&stmt.args_or_redirs),
-            StatementVariant::SwitchStatement(stmt) => no_redirs(&stmt.args_or_redirs),
-            StatementVariant::IfStatement(stmt) => no_redirs(&stmt.args_or_redirs),
-            StatementVariant::NotStatement(_) | StatementVariant::DecoratedStatement(_) => {
+        // Check if we're a block statement with redirections.
+        match &job.statement {
+            Statement::Block(stmt) => no_redirs(&stmt.args_or_redirs),
+            Statement::Brace(stmt) => no_redirs(&stmt.args_or_redirs),
+            Statement::Switch(stmt) => no_redirs(&stmt.args_or_redirs),
+            Statement::If(stmt) => no_redirs(&stmt.args_or_redirs),
+            Statement::Not(_) | Statement::Decorated(_) => {
                 // not block statements
                 false
             }
-            StatementVariant::None => panic!(),
         }
     }
 
@@ -664,9 +649,6 @@ impl<'a> ExecutionContext<'a> {
         statement: &ast::Statement,
         variable_assignments: &ast::VariableAssignmentList,
     ) -> EndExecutionReason {
-        // Get the "specific statement" which is boolean / block / if / switch / decorated.
-        let specific_statement = &statement.contents;
-
         let mut block = None;
         let result =
             self.apply_variable_assignments(ctx, Some(proc), variable_assignments, &mut block);
@@ -679,20 +661,16 @@ impl<'a> ExecutionContext<'a> {
             return result;
         }
 
-        match &specific_statement {
-            StatementVariant::NotStatement(not_statement) => {
+        match &statement {
+            Statement::Not(not_statement) => {
                 self.populate_not_process(ctx, job, proc, not_statement)
             }
-            StatementVariant::BlockStatement(_)
-            | StatementVariant::BraceStatement(_)
-            | StatementVariant::IfStatement(_)
-            | StatementVariant::SwitchStatement(_) => {
-                self.populate_block_process(ctx, proc, statement, specific_statement)
+            Statement::Block(_) | Statement::Brace(_) | Statement::If(_) | Statement::Switch(_) => {
+                self.populate_block_process(ctx, proc, statement)
             }
-            StatementVariant::DecoratedStatement(decorated_statement) => {
+            Statement::Decorated(decorated_statement) => {
                 self.populate_plain_process(ctx, proc, decorated_statement)
             }
-            StatementVariant::None => panic!(),
         }
     }
 
@@ -841,17 +819,16 @@ impl<'a> ExecutionContext<'a> {
         ctx: &OperationContext<'_>,
         proc: &mut Process,
         statement: &ast::Statement,
-        specific_statement: &ast::StatementVariant,
     ) -> EndExecutionReason {
-        // We handle block statements by creating process_type_t::block_node, that will bounce back to
+        // We handle block statements by creating ProcessType::block_node, that will bounce back to
         // us when it's time to execute them.
         // Get the argument or redirections list.
         // TODO: args_or_redirs should be available without resolving the statement type.
-        let args_or_redirs = match specific_statement {
-            StatementVariant::BlockStatement(block_statement) => &block_statement.args_or_redirs,
-            StatementVariant::BraceStatement(brace_statement) => &brace_statement.args_or_redirs,
-            StatementVariant::IfStatement(if_statement) => &if_statement.args_or_redirs,
-            StatementVariant::SwitchStatement(switch_statement) => &switch_statement.args_or_redirs,
+        let args_or_redirs = match statement {
+            Statement::Block(block_statement) => &block_statement.args_or_redirs,
+            Statement::Brace(brace_statement) => &brace_statement.args_or_redirs,
+            Statement::If(if_statement) => &if_statement.args_or_redirs,
+            Statement::Switch(switch_statement) => &switch_statement.args_or_redirs,
             _ => panic!("Unexpected block node type"),
         };
 
@@ -876,17 +853,12 @@ impl<'a> ExecutionContext<'a> {
         let bh = &statement.header;
         let contents = &statement.jobs;
         match bh {
-            BlockStatementHeaderVariant::ForHeader(fh) => self.run_for_statement(ctx, fh, contents),
-            BlockStatementHeaderVariant::WhileHeader(wh) => {
+            BlockStatementHeader::For(fh) => self.run_for_statement(ctx, fh, contents),
+            BlockStatementHeader::While(wh) => {
                 self.run_while_statement(ctx, wh, contents, associated_block)
             }
-            BlockStatementHeaderVariant::FunctionHeader(fh) => {
-                self.run_function_statement(ctx, statement, fh)
-            }
-            BlockStatementHeaderVariant::BeginHeader(_bh) => {
-                self.run_begin_statement(ctx, contents)
-            }
-            BlockStatementHeaderVariant::None => panic!(),
+            BlockStatementHeader::Function(fh) => self.run_function_statement(ctx, statement, fh),
+            BlockStatementHeader::Begin(_bh) => self.run_begin_statement(ctx, contents),
         }
     }
 
@@ -1594,29 +1566,23 @@ impl<'a> ExecutionContext<'a> {
                 }
             });
 
-            let specific_statement = &job_node.statement.contents;
-            assert!(specific_statement_type_is_redirectable_block(
-                specific_statement
-            ));
+            let statement = &job_node.statement;
+            assert!(statement_is_redirectable_block(statement));
             if result == EndExecutionReason::ok {
-                result = match &specific_statement {
-                    StatementVariant::BlockStatement(block_statement) => {
+                result = match statement {
+                    Statement::Block(block_statement) => {
                         self.run_block_statement(ctx, block_statement, associated_block)
                     }
-                    StatementVariant::BraceStatement(brace_statement) => {
+                    Statement::Brace(brace_statement) => {
                         self.run_begin_statement(ctx, &brace_statement.jobs)
                     }
-                    StatementVariant::IfStatement(ifstmt) => {
-                        self.run_if_statement(ctx, ifstmt, associated_block)
-                    }
-                    StatementVariant::SwitchStatement(switchstmt) => {
-                        self.run_switch_statement(ctx, switchstmt)
-                    }
+                    Statement::If(ifstmt) => self.run_if_statement(ctx, ifstmt, associated_block),
+                    Statement::Switch(switchstmt) => self.run_switch_statement(ctx, switchstmt),
                     // Other types should be impossible due to the
-                    // specific_statement_type_is_redirectable_block check.
-                    StatementVariant::NotStatement(_)
-                    | StatementVariant::DecoratedStatement(_)
-                    | StatementVariant::None => panic!(),
+                    // statement_is_redirectable_block check.
+                    Statement::Not(_) | Statement::Decorated(_) => {
+                        panic!()
+                    }
                 };
             }
 
@@ -1627,7 +1593,7 @@ impl<'a> ExecutionContext<'a> {
                 profile_item.duration = ProfileItem::now() - start_time;
                 profile_item.level = ctx.parser().scope().eval_level;
                 profile_item.cmd =
-                    profiling_cmd_name_for_redirectable_block(specific_statement, self.pstree());
+                    profiling_cmd_name_for_redirectable_block(statement, self.pstree());
                 profile_item.skipped = false;
             }
 
@@ -1931,56 +1897,35 @@ enum Globspec {
 }
 type AstArgsList<'a> = Vec<&'a ast::Argument>;
 
-/// These are the specific statement types that support redirections.
-fn type_is_redirectable_block(typ: ast::Type) -> bool {
-    [
-        ast::Type::block_statement,
-        ast::Type::brace_statement,
-        ast::Type::if_statement,
-        ast::Type::switch_statement,
-    ]
-    .contains(&typ)
-}
-
-fn specific_statement_type_is_redirectable_block(node: &ast::StatementVariant) -> bool {
-    type_is_redirectable_block(node.typ())
+fn statement_is_redirectable_block(node: &ast::Statement) -> bool {
+    match node {
+        Statement::Decorated(_) | Statement::Not(_) => false,
+        Statement::Block(_) | Statement::Brace(_) | Statement::If(_) | Statement::Switch(_) => true,
+    }
 }
 
 /// Get the name of a redirectable block, for profiling purposes.
 fn profiling_cmd_name_for_redirectable_block(
-    node: &ast::StatementVariant,
+    node: &ast::Statement,
     pstree: &ParsedSourceRef,
 ) -> WString {
-    assert!(specific_statement_type_is_redirectable_block(node));
+    assert!(statement_is_redirectable_block(node));
 
     let source_range = node.try_source_range().expect("No source range for block");
 
     let src_end = match node {
-        StatementVariant::BlockStatement(block_statement) => {
+        Statement::Block(block_statement) => {
             let block_header = &block_statement.header;
             match block_header {
-                BlockStatementHeaderVariant::ForHeader(for_header) => {
-                    for_header.semi_nl.source_range().start()
-                }
-                BlockStatementHeaderVariant::WhileHeader(while_header) => {
-                    while_header.condition.source_range().start()
-                }
-                BlockStatementHeaderVariant::FunctionHeader(function_header) => {
-                    function_header.semi_nl.source_range().start()
-                }
-                BlockStatementHeaderVariant::BeginHeader(begin_header) => {
-                    begin_header.kw_begin.source_range().start()
-                }
-                BlockStatementHeaderVariant::None => panic!("Unexpected block header type"),
+                BlockStatementHeader::For(node) => node.semi_nl.source_range().start(),
+                BlockStatementHeader::While(node) => node.condition.source_range().start(),
+                BlockStatementHeader::Function(node) => node.semi_nl.source_range().start(),
+                BlockStatementHeader::Begin(node) => node.kw_begin.source_range().start(),
             }
         }
-        StatementVariant::BraceStatement(brace_statement) => {
-            brace_statement.left_brace.source_range().start()
-        }
-        StatementVariant::IfStatement(ifstmt) => {
-            ifstmt.if_clause.condition.job.source_range().end()
-        }
-        StatementVariant::SwitchStatement(switchstmt) => switchstmt.semi_nl.source_range().start(),
+        Statement::Brace(brace_statement) => brace_statement.left_brace.source_range().start(),
+        Statement::If(ifstmt) => ifstmt.if_clause.condition.job.source_range().end(),
+        Statement::Switch(switchstmt) => switchstmt.semi_nl.source_range().start(),
         _ => {
             panic!("Not a redirectable block_type");
         }
@@ -2011,17 +1956,19 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
     }
 
     // Helper to return true if a node is 'not time ...' or 'not not time...' or...
-    let is_timed_not_statement = |mut stat: &ast::Statement| loop {
-        match &stat.contents {
-            StatementVariant::NotStatement(ns) => {
-                if ns.time.is_some() {
-                    return true;
+    fn is_timed_not_statement(mut stat: &ast::Statement) -> bool {
+        loop {
+            match &stat {
+                Statement::Not(ns) => {
+                    if ns.time.is_some() {
+                        return true;
+                    }
+                    stat = &ns.contents;
                 }
-                stat = &ns.contents;
+                _ => return false,
             }
-            _ => return false,
         }
-    };
+    }
 
     // Do we have a 'not time ...' anywhere in our pipeline?
     if is_timed_not_statement(&job_node.statement) {

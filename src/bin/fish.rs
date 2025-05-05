@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(clippy::uninlined_format_args)]
 
 use fish::{
-    ast::Ast,
+    ast,
     builtins::{
         fish_indent, fish_key_reader,
         shared::{
@@ -226,7 +226,7 @@ fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_in
         let cmd_wcs = str2wcstring(cmd.as_bytes());
 
         let mut errors = ParseErrorList::new();
-        let ast = Ast::parse(&cmd_wcs, ParseTreeFlags::empty(), Some(&mut errors));
+        let ast = ast::parse(&cmd_wcs, ParseTreeFlags::empty(), Some(&mut errors));
         let errored = ast.errored() || {
             parse_util_detect_errors_in_ast(&ast, &cmd_wcs, Some(&mut errors)).is_err()
         };

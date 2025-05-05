@@ -2,7 +2,7 @@
 #[cfg(feature = "benchmark")]
 mod bench {
     extern crate test;
-    use crate::ast::Ast;
+    use crate::ast;
     use crate::wchar::prelude::*;
     use test::Bencher;
 
@@ -39,7 +39,7 @@ mod bench {
         let src = generate_fish_script();
         b.bytes = (src.len() * 4) as u64; // 4 bytes per character
         b.iter(|| {
-            let _ast = Ast::parse(&src, Default::default(), None);
+            let _ast = ast::parse(&src, Default::default(), None);
         });
     }
 }

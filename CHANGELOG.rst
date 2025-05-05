@@ -48,6 +48,7 @@ Scripting improvements
 - The :doc:`psub <cmds/psub>` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
 - Builtin :doc:`argparse <cmds/argparse>` has seen many improvements, see :ref:`below <changelog-4.1-argparse>`.
 - The :doc:`string pad <cmds/string-pad>` command now has a ``-C/--center`` option.
+- The :doc:`read <cmds/read>` builtin has learned the ``--tokenize-raw`` option to tokenize without quote removal (:issue:`11084`).
 
 Interactive improvements
 ------------------------

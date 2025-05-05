@@ -811,6 +811,11 @@ msgstr ""
 msgid "%s"
 msgstr ""
 
+#
+#, c-format
+msgid "%s and %s are mutually exclusive"
+msgstr ""
+
 #, c-format
 msgid "%s, version %s"
 msgstr ""

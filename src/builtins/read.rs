@@ -19,6 +19,7 @@ use crate::reader::commandline_set_buffer;
 use crate::reader::reader_save_screen_state;
 use crate::reader::ReaderConfig;
 use crate::reader::{reader_pop, reader_push, reader_readline};
+use crate::tokenizer::Tok;
 use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::TOK_ARGUMENT_LIST;
@@ -33,6 +34,13 @@ use std::num::NonZeroUsize;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum TokenOutputMode {
+    Expanded,
+    Raw,
+    Unescaped,
+}
+
 #[derive(Default)]
 struct Options {
     print_help: bool,
@@ -44,7 +52,7 @@ struct Options {
     // If a delimiter was given. Used to distinguish between the default
     // empty string and a given empty delimiter.
     delimiter: Option<WString>,
-    tokenize: bool,
+    token_mode: Option<TokenOutputMode>, // never expanded
     shell: bool,
     array: bool,
     silent: bool,
@@ -83,9 +91,18 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("shell"), ArgType::NoArgument, 'S'),
     wopt(L!("silent"), ArgType::NoArgument, 's'),
     wopt(L!("tokenize"), ArgType::NoArgument, 't'),
+    wopt(L!("tokenize-raw"), ArgType::NoArgument, '\x01'),
     wopt(L!("unexport"), ArgType::NoArgument, 'u'),
     wopt(L!("universal"), ArgType::NoArgument, 'U'),
 ];
+
+fn tokenize_flag(token_mode: TokenOutputMode) -> &'static wstr {
+    match token_mode {
+        TokenOutputMode::Expanded => panic!(),
+        TokenOutputMode::Raw => L!("--tokenize-raw"),
+        TokenOutputMode::Unescaped => L!("--tokenize"),
+    }
+}
 
 fn parse_cmd_opts(
     args: &mut [&wstr],
@@ -166,8 +183,28 @@ fn parse_cmd_opts(
             'S' => {
                 opts.shell = true;
             }
-            't' => {
-                opts.tokenize = true;
+            't' | '\x01' => {
+                let new_mode = match opt {
+                    't' => TokenOutputMode::Unescaped,
+                    '\x01' => TokenOutputMode::Raw,
+                    _ => unreachable!(),
+                };
+                if let Some(old_mode) = opts.token_mode {
+                    if old_mode != new_mode {
+                        streams.err.append(wgettext_fmt!(
+                            BUILTIN_ERR_COMBO2,
+                            cmd,
+                            wgettext_fmt!(
+                                "%s and %s are mutually exclusive",
+                                tokenize_flag(old_mode),
+                                tokenize_flag(new_mode),
+                            )
+                        ));
+                        builtin_print_error_trailer(parser, streams.err, cmd);
+                        return Err(STATUS_INVALID_ARGS);
+                    }
+                }
+                opts.token_mode = Some(new_mode);
             }
             'U' => {
                 opts.place |= EnvMode::UNIVERSAL;
@@ -490,24 +527,34 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    if opts.tokenize && opts.delimiter.is_some() {
-        streams.err.append(wgettext_fmt!(
-            BUILTIN_ERR_COMBO2_EXCLUSIVE,
-            cmd,
-            "--delimiter",
-            "--tokenize"
-        ));
-        return Err(STATUS_INVALID_ARGS);
+    fn tokenize_flag(token_mode: TokenOutputMode) -> &'static wstr {
+        match token_mode {
+            TokenOutputMode::Expanded => panic!(),
+            TokenOutputMode::Raw => L!("--tokenize-raw"),
+            TokenOutputMode::Unescaped => L!("--tokenize"),
+        }
     }
 
-    if opts.tokenize && opts.one_line {
-        streams.err.append(wgettext_fmt!(
-            BUILTIN_ERR_COMBO2_EXCLUSIVE,
-            cmd,
-            "--line",
-            "--tokenize"
-        ));
-        return Err(STATUS_INVALID_ARGS);
+    if let Some(token_mode) = opts.token_mode {
+        if opts.delimiter.is_some() {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                cmd,
+                "--delimiter",
+                tokenize_flag(token_mode),
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
+
+        if opts.one_line {
+            streams.err.append(wgettext_fmt!(
+                BUILTIN_ERR_COMBO2_EXCLUSIVE,
+                cmd,
+                "--line",
+                tokenize_flag(token_mode),
+            ));
+            return Err(STATUS_INVALID_ARGS);
+        }
     }
 
     // Verify all variable names.
@@ -640,18 +687,28 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             return exit_res;
         }
 
-        if opts.tokenize {
+        if let Some(token_mode) = opts.token_mode {
             let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED | TOK_ARGUMENT_LIST);
+            let token_text = |tokenizer: &mut Tokenizer<'_>, token: &Tok| -> WString {
+                let mut text = Cow::Borrowed(tokenizer.text_of(token));
+                match token_mode {
+                    TokenOutputMode::Expanded => panic!(),
+                    TokenOutputMode::Raw => (),
+                    TokenOutputMode::Unescaped => {
+                        if let Some(unescaped) =
+                            unescape_string(&text, UnescapeStringStyle::default())
+                        {
+                            text = Cow::Owned(unescaped);
+                        }
+                    }
+                };
+                text.into_owned()
+            };
             if opts.array {
                 // Array mode: assign each token as a separate element of the sole var.
                 let mut tokens = vec![];
                 while let Some(t) = tok.next() {
-                    let text = tok.text_of(&t);
-                    if let Some(out) = unescape_string(text, UnescapeStringStyle::default()) {
-                        tokens.push(out);
-                    } else {
-                        tokens.push(text.to_owned());
-                    }
+                    tokens.push(token_text(&mut tok, &t));
                 }
 
                 parser.set_var_and_fire(argv[var_ptr], opts.place, tokens);
@@ -661,9 +718,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                     let Some(t) = tok.next() else {
                         break;
                     };
-                    let text = tok.text_of(&t);
-                    let out = unescape_string(text, UnescapeStringStyle::default())
-                        .unwrap_or_else(|| text.to_owned());
+                    let out = token_text(&mut tok, &t);
                     parser.set_var_and_fire(argv[var_ptr], opts.place, vec![out]);
                     var_ptr += 1;
                 }

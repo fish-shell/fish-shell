@@ -50,3 +50,7 @@ commandline --input "echo > {a,b}" --tokens-expanded
 commandline --input "echo {arg1,arg2} <in >out" --tokens-raw
 # CHECK: echo
 # CHECK: {arg1,arg2}
+# CHECK: <
+# CHECK: in
+# CHECK: >
+# CHECK: out

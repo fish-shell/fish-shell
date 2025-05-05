@@ -44,6 +44,7 @@ enum AppendMode {
     Append,
 }
 
+#[derive(Eq, PartialEq)]
 enum TokenOutputMode {
     Expanded,
     Raw,
@@ -223,13 +224,15 @@ fn write_part(
             if cut_at_cursor && token.end() >= pos {
                 break;
             }
-            let is_redirection_target = in_redirection;
-            in_redirection = token.type_ == TokenType::redirect;
-            if is_redirection_target && token.type_ == TokenType::string {
-                continue;
-            }
-            if token.type_ != TokenType::string {
-                continue;
+            if token_mode != TokenOutputMode::Raw {
+                let is_redirection_target = in_redirection;
+                in_redirection = token.type_ == TokenType::redirect;
+                if is_redirection_target && token.type_ == TokenType::string {
+                    continue;
+                }
+                if token.type_ != TokenType::string {
+                    continue;
+                }
             }
 
             let token_text = tok.text_of(&token);

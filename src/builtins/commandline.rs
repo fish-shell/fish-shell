@@ -44,7 +44,7 @@ enum AppendMode {
     Append,
 }
 
-enum TokenMode {
+enum TokenOutputMode {
     Expanded,
     Raw,
     Unescaped,
@@ -151,7 +151,7 @@ fn write_part(
     range: Range<usize>,
     range_is_single_token: bool,
     cut_at_cursor: bool,
-    token_mode: Option<TokenMode>,
+    token_mode: Option<TokenOutputMode>,
     buffer: &wstr,
     cursor_pos: usize,
     streams: &mut IoStreams,
@@ -171,7 +171,7 @@ fn write_part(
     let mut args = vec![];
     let mut add_token = |token_text: &wstr| {
         match token_mode {
-            TokenMode::Expanded => {
+            TokenOutputMode::Expanded => {
                 const COMMANDLINE_TOKENS_MAX_EXPANSION: usize = 512;
 
                 match expand_string(
@@ -199,10 +199,10 @@ fn write_part(
                     ExpandResultCode::ok => (),
                 };
             }
-            TokenMode::Raw => {
+            TokenOutputMode::Raw => {
                 args.push(Completion::from_completion(token_text.to_owned()));
             }
-            TokenMode::Unescaped => {
+            TokenOutputMode::Unescaped => {
                 let unescaped = unescape_string(
                     token_text,
                     UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
@@ -319,9 +319,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     return Err(STATUS_INVALID_ARGS);
                 }
                 token_mode = Some(match c {
-                    'x' => TokenMode::Expanded,
-                    '\x02' => TokenMode::Raw,
-                    'o' => TokenMode::Unescaped,
+                    'x' => TokenOutputMode::Expanded,
+                    '\x02' => TokenOutputMode::Raw,
+                    'o' => TokenOutputMode::Unescaped,
                     _ => unreachable!(),
                 })
             }

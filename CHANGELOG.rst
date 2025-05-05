@@ -45,9 +45,9 @@ Deprecations and removed features
 
 Scripting improvements
 ----------------------
-- The ``psub`` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
+- The :doc:`psub <cmds/psub>` command now allows combining ``--suffix`` with ``--fifo`` (:issue:`11729`).
 - Builtin :doc:`argparse <cmds/argparse>` has seen many improvements, see :ref:`below <changelog-4.1-argparse>`.
-- The ``string pad`` command now has a ``-C/--center`` option.
+- The :doc:`string pad <cmds/string-pad>` command now has a ``-C/--center`` option.
 
 Interactive improvements
 ------------------------
@@ -91,7 +91,7 @@ Other improvements
 
 For distributors
 ----------------
-- The ``fish_indent`` and ``fish_key_reader`` programs are now also available as builtins.
+- The :doc:`fish_indent <cmds/fish_indent>` and :doc:`fish_key_reader <cmds/fish_key_reader>` programs are now also available as builtins.
   If fish is invoked via e.g. a symlink with one of these names,
   it will act like the given tool (i.e. it's a multi-call binary).
   This allows truly distributing fish as a single file.

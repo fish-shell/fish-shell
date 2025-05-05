@@ -1,4 +1,5 @@
 use super::prelude::*;
+use super::read::TokenOutputMode;
 use crate::ast::{self, Kind, Leaf};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::Completion;
@@ -42,13 +43,6 @@ enum AppendMode {
     InsertSmart,
     // insert at end of current token/command/buffer
     Append,
-}
-
-#[derive(Eq, PartialEq)]
-enum TokenOutputMode {
-    Expanded,
-    Raw,
-    Unescaped,
 }
 
 /// Replace/append/insert the selection with/at/after the specified string.

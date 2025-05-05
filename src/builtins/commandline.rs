@@ -218,9 +218,15 @@ fn write_part(
         add_token(buff);
     } else {
         let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
+        let mut in_redirection = false;
         while let Some(token) = tok.next() {
             if cut_at_cursor && token.end() >= pos {
                 break;
+            }
+            let is_redirection_target = in_redirection;
+            in_redirection = token.type_ == TokenType::redirect;
+            if is_redirection_target && token.type_ == TokenType::string {
+                continue;
             }
             if token.type_ != TokenType::string {
                 continue;

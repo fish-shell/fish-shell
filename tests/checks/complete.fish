@@ -470,12 +470,14 @@ end
 complete -C 'crookshanks '
 # CHECK: +pet
 
-# Custom completion works with variable overrides.
+# Custom completion works with variable overrides and redirections.
 complete cmd_with_fancy_completion -xa '(commandline -xpc | count)'
 complete -C"a=1 b=2 cmd_with_fancy_completion "
 # CHECK: 1
 complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
 # CHECK: 2
+complete -C"cmd_with_fancy_completion </dev/null >/dev/null 2>>/dev/null >?/dev/null &>/dev/null "
+# CHECK: 1
 
 complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'

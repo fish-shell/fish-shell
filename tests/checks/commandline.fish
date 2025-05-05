@@ -32,3 +32,21 @@ commandline --insert-smart '$ echo 123' --current-token
 # CHECKERR: commandline --insert-smart '$ echo 123' --current-token
 # CHECKERR: ^
 # CHECKERR: (Type 'help commandline' for related documentation)
+
+commandline --input "echo {arg1,arg2} <in >out" --tokens-expanded
+# CHECK: echo
+# CHECK: arg1
+# CHECK: arg2
+
+commandline --input "echo <" --tokens-expanded
+# CHECK: echo
+commandline --input "echo >" --tokens-expanded
+# CHECK: echo
+commandline --input "echo > > arg" --tokens-expanded
+# CHECK: echo
+commandline --input "echo > {a,b}" --tokens-expanded
+# CHECK: echo
+
+commandline --input "echo {arg1,arg2} <in >out" --tokens-raw
+# CHECK: echo
+# CHECK: {arg1,arg2}

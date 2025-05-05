@@ -90,10 +90,7 @@ The following options change the way ``commandline`` prints the current commandl
     Perform argument expansion on the selection and print one argument per line.
     Command substitutions are not expanded but forwarded as-is.
 
-**--tokens-raw**
-    Print arguments in the selection as they appear on the command line, one per line.
-
-**-o** or **tokenize**
+**-o**, **tokenize**, **--tokens-raw**
     Deprecated; do not use.
 
 If ``commandline`` is called during a call to complete a given string using ``complete -C STRING``, ``commandline`` will consider the specified string to be the current contents of the command line.

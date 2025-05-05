@@ -423,6 +423,38 @@ set -S var
 # CHECK: $var[1]: |1|
 # CHECK: $var[2]: |}|
 
+# Raw tokens into named variables
+echo 'echo "&" a\ b &
+second line (dropped)' | read -l --tokenize-raw head tail
+set -S head tail
+# CHECK: $head: set in local scope, unexported, with 1 elements
+# CHECK: $head[1]: |echo|
+# CHECK: $tail: set in local scope, unexported, with 1 elements
+# CHECK: $tail[1]: |"&" a\\ b &|
+
+# Raw tokens into list
+echo 'echo "&" & a\ b
+second line (dropped)' | read -l --tokenize-raw -a rawlist
+set -S rawlist
+# CHECK: $rawlist: set in local scope, unexported, with 4 elements
+# CHECK: $rawlist[1]: |echo|
+# CHECK: $rawlist[2]: |"&"|
+# CHECK: $rawlist[3]: |&|
+# CHECK: $rawlist[4]: |a\\ b|
+
+echo 'echo "&" & a\ b
+second line' | read -l --tokenize-raw -a rawlist_null -z
+set -S rawlist_null
+# CHECK: $rawlist_null: set in local scope, unexported, with 8 elements
+# CHECK: $rawlist_null[1]: |echo|
+# CHECK: $rawlist_null[2]: |"&"|
+# CHECK: $rawlist_null[3]: |&|
+# CHECK: $rawlist_null[4]: |a\\ b|
+# CHECK: $rawlist_null[5]: |\n|
+# CHECK: $rawlist_null[6]: |second|
+# CHECK: $rawlist_null[7]: |line|
+# CHECK: $rawlist_null[8]: |\n|
+
 echo '1  {} "{}"' | read -lat var
 echo $var
 # CHECK: 1 {} {}

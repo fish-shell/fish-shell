@@ -83,7 +83,14 @@ The following options control how much is read and how it is stored:
 **-n** or **--nchars** *NCHARS*
     Makes ``read`` return after reading *NCHARS* characters or the end of the line, whichever comes first.
 
-**-t** -or **--tokenize**
+**-t** -or **--tokenize** or **--tokenize-raw**
+    Causes read to split the input into variables by the shell's tokenization rules.
+    This means it will honor quotes and escaping.
+    This option is of course incompatible with other options to control splitting like **--delimiter** and does not honor :envvar:`IFS` (like fish's tokenizer).
+    The **-t** -or **--tokenize** variants perform quote removal, so e.g. ``a\ b`` is stored as ``a b``.
+    However variables and command substitutions are not expanded.
+
+**--tokenize-raw**
     Causes read to split the input into variables by the shell's tokenization rules. This means it will honor quotes and escaping. This option is of course incompatible with other options to control splitting like **--delimiter** and does not honor :envvar:`IFS` (like fish's tokenizer). It saves the tokens in the manner they'd be passed to commands on the commandline, so e.g. ``a\ b`` is stored as ``a b``. Note that currently it leaves command substitutions intact along with the parentheses.
 
 **-a** or **--list**

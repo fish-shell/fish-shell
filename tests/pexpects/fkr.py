@@ -24,7 +24,7 @@ sendline("$fish_key_reader --version")
 expect_re("fish_key_reader, version .*")
 expect_prompt()
 
-sendline("exec $fish_key_reader -c -V")
+sendline("$fish_key_reader -c -V")
 
 # Do we get the expected startup prompt?
 expect_str("Press a key:")
@@ -64,5 +64,11 @@ send("\x04")
 
 # Now send a second ctrl-d. Does that terminate the process like it should?
 sleep(0.050)
-send("\x04\x04")
+send("\x04")
 expect_str("Exiting at your request.\r\n")
+expect_prompt()
+
+sendline("fish_features=no-qmark-noglob $fish_key_reader")
+send("?")
+expect_str(r"bind \? 'do something'")
+send("\x04")

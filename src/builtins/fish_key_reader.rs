@@ -17,7 +17,8 @@ use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
-    env::env_init,
+    env::{env_init, EnvStack, Environment},
+    future_feature_flags,
     input_common::{
         terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
         InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
@@ -268,6 +269,11 @@ fn throwing_main() -> i32 {
     threads::init();
     env_init(None, true, false);
     reader_init(false);
+    if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
+        for s in features_var.as_list() {
+            future_feature_flags::set_from_string(s.as_utfstr());
+        }
+    }
 
     let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));

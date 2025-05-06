@@ -723,7 +723,7 @@ complete -c cargo -n "__fish_seen_subcommand_from tree" -s v -l verbose -d 'Use 
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l offline -d 'Run without accessing the network'
-complete -c cargo -n "__fish_seen_subcommand_from uninstall" -fa '(cargo install --list | string replace -rf "(\S+) (.*):" \'$1\t$2\')'
+complete -c cargo -n "__fish_seen_subcommand_from uninstall" -fa '(__fish_cargo install --list | string replace -rf "(\S+) (.*):" \'$1\t$2\')'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -s p -l package -d 'Package to uninstall'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -l bin -d 'Only uninstall the binary NAME'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -l root -d 'Directory to uninstall packages from'

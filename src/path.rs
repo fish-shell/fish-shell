@@ -2,7 +2,7 @@
 //! for testing if a command with a given name can be found in the PATH, and various other
 //! path-related issues.
 
-use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2osstring, wcs2zstring, WSL};
+use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
@@ -307,29 +307,6 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
     if cmd.contains('/') {
         return GetPathResult::new(test_path(cmd).err(), cmd.to_owned());
     }
-
-    // WSLv1/WSLv2 tack on the entire Windows PATH to the end of the PATH environment variable, and
-    // accessing these paths from WSL binaries is pathalogically slow. We also don't expect to find
-    // any "normal" nix binaries under these paths, so we can skip them unless we are executing bins
-    // with Windows-ish names. We try to keep paths manually added to $fish_user_paths by only
-    // chopping off entries after the last "normal" PATH entry.
-    let pathsv = if is_wsl(WSL::Any) && !cmd.contains('.') {
-        let win_path_count = pathsv
-            .iter()
-            .rev()
-            .take_while(|p| {
-                let p = p.as_ref();
-                p.starts_with("/mnt/")
-                    && p.chars()
-                        .nth("/mnt/x".len())
-                        .map(|c| c == '/')
-                        .unwrap_or(false)
-            })
-            .count();
-        &pathsv[..pathsv.len() - win_path_count]
-    } else {
-        pathsv
-    };
 
     let mut best = noent_res;
     for next_path in pathsv {

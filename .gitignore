@@ -39,6 +39,7 @@ Thumbs.db
 ehthumbs.db
 
 messages.pot
+*.mo
 .directory
 .fuse_hidden*
 

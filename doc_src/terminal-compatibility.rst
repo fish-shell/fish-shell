@@ -120,9 +120,21 @@ Optional Commands
      - smul
      - Enter underline mode.
      -
+   * - ``\e[4:2m``
+     - Su
+     - Enter double underline mode.
+     - kitty
    * - ``\e[4:3m``
      - Su
      - Enter curly underline mode.
+     - kitty
+   * - ``\e[4:4m``
+     - Su
+     - Enter dotted underline mode.
+     - kitty
+   * - ``\e[4:5m``
+     - Su
+     - Enter dashed underline mode.
      - kitty
    * - ``\e[7m``
      - rev

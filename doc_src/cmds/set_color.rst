@@ -57,7 +57,7 @@ The following options are available:
     Sets reverse mode.
 
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
-    Set the underline mode; supported styles are **single** (default) and **curly**.
+    Set the underline mode; supported styles are **single** (default), **double**, **curly**, **dotted** and **dashed**.
 
 **-h** or **--help**
     Displays help about using this command.

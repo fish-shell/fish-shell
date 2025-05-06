@@ -55,12 +55,11 @@ pub(crate) enum TerminalCommand<'a> {
     EnterBoldMode,
     EnterDimMode,
     EnterItalicsMode,
-    EnterUnderlineMode,
+    EnterUnderlineMode(UnderlineStyle),
     EnterReverseMode,
     EnterStandoutMode,
     ExitItalicsMode,
     ExitUnderlineMode,
-    EnterCurlyUnderlineMode,
 
     // Screen clearing
     ClearScreen,
@@ -149,12 +148,11 @@ pub(crate) trait Output {
             EnterBoldMode => ti(self, b"\x1b[1m", |t| &t.enter_bold_mode),
             EnterDimMode => ti(self, b"\x1b[2m", |t| &t.enter_dim_mode),
             EnterItalicsMode => ti(self, b"\x1b[3m", |t| &t.enter_italics_mode),
-            EnterUnderlineMode => ti(self, b"\x1b[4m", |t| &t.enter_underline_mode),
+            EnterUnderlineMode(style) => underline_mode(self, style),
             EnterReverseMode => ti(self, b"\x1b[7m", |t| &t.enter_reverse_mode),
             EnterStandoutMode => ti(self, b"\x1b[7m", |t| &t.enter_standout_mode),
             ExitItalicsMode => ti(self, b"\x1b[23m", |t| &t.exit_italics_mode),
             ExitUnderlineMode => ti(self, b"\x1b[24m", |t| &t.exit_underline_mode),
-            EnterCurlyUnderlineMode => write(self, b"\x1b[4:3m"),
             ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
             ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
@@ -232,6 +230,19 @@ pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
 
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
+}
+
+fn underline_mode(out: &mut impl Output, style: UnderlineStyle) -> bool {
+    use UnderlineStyle as UL;
+    let style = match style {
+        UL::Single => return maybe_terminfo(out, b"\x1b[4m", |t| &t.enter_underline_mode),
+        UL::Double => 2,
+        UL::Curly => 3,
+        UL::Dotted => 4,
+        UL::Dashed => 5,
+    };
+    write_to_output!(out, "\x1b[4:{}m", style);
+    true
 }
 
 fn palette_color(out: &mut impl Output, paintable: Paintable, mut idx: u8) -> bool {
@@ -515,9 +526,9 @@ impl Outputter {
         let style = face.style;
 
         use TerminalCommand::{
-            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterCurlyUnderlineMode,
-            EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
-            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
+            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterUnderlineMode,
+            ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
 
         // Removes all styles that are individually resettable.
@@ -587,12 +598,9 @@ impl Outputter {
                         self.last.style.underline_style = None;
                     }
                 }
-                Some(underline) => {
-                    if self.write_command(match underline {
-                        UnderlineStyle::Single => EnterUnderlineMode,
-                        UnderlineStyle::Curly => EnterCurlyUnderlineMode,
-                    }) {
-                        self.last.style.underline_style = Some(underline);
+                Some(underline_style) => {
+                    if self.write_command(EnterUnderlineMode(underline_style)) {
+                        self.last.style.underline_style = Some(underline_style);
                     }
                 }
             }

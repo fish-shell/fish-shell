@@ -244,7 +244,7 @@ def parse_color(color_str):
             underline = "single"
         elif comp.startswith("--underline="):
             underline = comp.stripprefix("--underline=")
-        elif comp.startswith("-u"): # Multiple short options like "-rbcurly" are not yet supported.
+        elif comp.startswith("-u"): # Multiple short options like "-rucurly" are not yet supported.
             underline = comp.stripprefix("-u")
         elif comp == "--italics" or comp == "-i":
             italics = True

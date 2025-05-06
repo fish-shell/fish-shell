@@ -133,7 +133,7 @@ complete -c set -n '__fish_set_is_color true false' -a --dim -x
 complete -c set -n '__fish_set_is_color true false' -a --italics -x
 complete -c set -n '__fish_set_is_color true true' -a --reverse -x
 complete -c set -n '__fish_set_is_color true false' -a --underline -x
-complete -c set -n '__fish_set_is_color true false' -a --underline=curly -x
+complete -c set -n '__fish_set_is_color true false' -a--underline={double,curly,dotted,dashed} -x
 
 # Locale completions
 complete -c set -n '__fish_set_is_locale; and not __fish_seen_argument -s e -l erase' -x -a '(command -sq locale; and locale -a)' -d Locale

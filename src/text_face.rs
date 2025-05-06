@@ -11,7 +11,10 @@ trait StyleSet {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum UnderlineStyle {
     Single,
+    Double,
     Curly,
+    Dotted,
+    Dashed,
 }
 
 impl StyleSet for Option<UnderlineStyle> {
@@ -234,13 +237,21 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
             'r' => style.reverse = true,
             'u' => {
                 let arg = w.woptarg.unwrap_or(L!("single"));
-                if arg == "single" {
-                    style.underline_style = Some(UnderlineStyle::Single);
+                style.underline_style = Some(if arg == "single" {
+                    UnderlineStyle::Single
+                } else if arg == "double" {
+                    UnderlineStyle::Double
                 } else if arg == "curly" {
-                    style.underline_style = Some(UnderlineStyle::Curly);
+                    UnderlineStyle::Curly
+                } else if arg == "dotted" {
+                    UnderlineStyle::Dotted
+                } else if arg == "dashed" {
+                    UnderlineStyle::Dashed
                 } else if is_builtin {
                     return Err(UnknownUnderlineStyle(arg));
-                }
+                } else {
+                    continue;
+                });
             }
             'c' => {
                 assert!(is_builtin);

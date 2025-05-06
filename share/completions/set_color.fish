@@ -5,6 +5,6 @@ complete -c set_color -s o -l bold -d 'Make font bold'
 complete -c set_color -s i -l italics -d Italicise
 complete -c set_color -s d -l dim -d 'Dim text'
 complete -c set_color -s r -l reverse -d 'Reverse color text'
-complete -c set_color -s u -l underline -d 'Underline style' -a 'single curly'
+complete -c set_color -s u -l underline -d 'Underline style' -a 'single double curly dotted dashed'
 complete -c set_color -s h -l help -d 'Display help and exit'
 complete -c set_color -s c -l print-colors -d 'Print a list of all accepted color names'

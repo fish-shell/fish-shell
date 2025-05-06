@@ -5,7 +5,7 @@ use crate::universal_notifier::UniversalNotifier;
 use crate::wchar::prelude::*;
 use libc::{c_char, c_int};
 use std::ffi::CString;
-use std::os::fd::RawFd;
+use std::os::fd::{BorrowedFd, RawFd};
 
 extern "C" {
     fn notify_register_file_descriptor(
@@ -114,7 +114,8 @@ impl UniversalNotifier for NotifydNotifier {
         let mut read_something = false;
         let mut buff: [u8; 64] = [0; 64];
         loop {
-            let res = nix::unistd::read(self.notify_fd, &mut buff);
+            let res =
+                nix::unistd::read(unsafe { BorrowedFd::borrow_raw(self.notify_fd) }, &mut buff);
 
             if let Ok(amt_read) = res {
                 read_something |= amt_read > 0;

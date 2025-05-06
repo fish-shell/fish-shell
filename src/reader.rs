@@ -32,6 +32,7 @@ use std::io::BufReader;
 use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
+use std::os::fd::BorrowedFd;
 use std::os::fd::RawFd;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -797,7 +798,7 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     loop {
         let mut buff = [0_u8; 4096];
 
-        match nix::unistd::read(fd, &mut buff) {
+        match nix::unistd::read(unsafe { BorrowedFd::borrow_raw(fd) }, &mut buff) {
             Ok(0) => {
                 // EOF.
                 break;

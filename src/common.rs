@@ -1340,7 +1340,7 @@ fn can_be_encoded(wc: char) -> bool {
 /// Return the number of bytes read, or 0 on EOF, or an error.
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
-        let res = nix::unistd::read(fd, buf);
+        let res = nix::unistd::read(unsafe { BorrowedFd::borrow_raw(fd) }, buf);
         if let Err(nix::Error::EINTR) = res {
             continue;
         }

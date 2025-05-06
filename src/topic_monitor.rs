@@ -243,7 +243,7 @@ impl BinarySemaphore {
                         let _ = FdReadableSet::is_fd_readable(fd, Timeout::Forever);
                     }
                     let mut ignored: u8 = 0;
-                    match unistd::read(fd, std::slice::from_mut(&mut ignored)) {
+                    match unistd::read(&pipes.read, std::slice::from_mut(&mut ignored)) {
                         Ok(1) => break,
                         Ok(_) => continue,
                         // EAGAIN should only be possible if TSAN workarounds have been applied

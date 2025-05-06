@@ -61,7 +61,7 @@ impl ItemMaker {
 
     fn callback(&self, fd: &mut AutoCloseFd) {
         let mut buf = [0u8; 1024];
-        let res = nix::unistd::read(fd.as_raw_fd(), &mut buf);
+        let res = nix::unistd::read(&fd, &mut buf);
         let amt = res.expect("read error!");
         self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
         let was_closed = amt == 0;

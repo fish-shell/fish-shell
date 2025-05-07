@@ -1,4 +1,7 @@
 function __fish_systemctl --description 'Call systemctl with some options from the current commandline'
+    # We don't want to complete with ANSI color codes
+    set -lu SYSTEMD_COLORS
+
     # These options are all global - before or after subcommand/arguments.
     # There's a bunch of long-only options in here, so we need to be creative with the mandatory short version.
     set -l opts t/type= s-state= p/property= a/all

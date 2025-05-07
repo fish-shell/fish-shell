@@ -11,7 +11,7 @@ or exit 1
 
 # This is a gigantic crime.
 # xgettext still does not support rust *at all*, so we use cargo-expand to get all our wgettext invocations.
-set -l expanded (cargo expand --lib; for f in fish{,_indent,_key_reader}; cargo expand --bin $f; end)
+set -l expanded (cargo expand --lib; for f in fish fish_indent fish_key_reader; cargo expand --bin $f; end)
 
 # Extract any gettext call
 set -l strs (printf '%s\n' $expanded | grep -A1 wgettext_static_str |
@@ -28,10 +28,13 @@ set -a strs (string match -rv 'BUILD_VERSION:|PACKAGE_NAME' -- $expanded |
 # The escaping so far works out okay.
 for str in $strs
     # grep -P needed for string escape to be compatible (PCRE-style),
-    # -H gives the filename, -n the line number.
+    # -H gives the filename.
     # If you want to run this on non-GNU grep: Don't.
-    echo "#:" (grep -PHn -r -- \"(string escape --style=regex -- $str)\" src/ |
-    head -n1 | string replace -r ':\s.*' '')
+    # The sed command extracts just the filename from the matches grep finds,
+    # and prepends the '#: ' prefix, marking the line as a source refecence.
+    # sort -u just gets rid of duplicates.
+    grep -PH -r -- \"(string escape --style=regex -- $str)\" src/ |
+       sed -E 's/^([^:]*):.*$/#: \1/' | sort -u
     echo "msgid \"$str\""
     echo 'msgstr ""'
 end >messages.pot
@@ -74,7 +77,7 @@ extract_fish_script_messages implicit $implicit_regex
 set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
 extract_fish_script_messages explicit $explicit_regex
 
-xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/{ex,im}plicit/share/*/*.fish
+xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap --add-location=file -o messages.pot $tmpdir/{ex,im}plicit/share/*/*.fish
 
 # Remove the tmpdir from the location to avoid churn
 sed -i 's_^#: /.*/share/_#: share/_' messages.pot

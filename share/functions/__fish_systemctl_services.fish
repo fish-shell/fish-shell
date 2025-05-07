@@ -1,4 +1,7 @@
 function __fish_systemctl_services
+    # We don't want to complete with ANSI color codes
+    set -lu SYSTEMD_COLORS
+
     if type -q systemctl
         if __fish_contains_opt user
             systemctl --user list-unit-files --full --no-legend --no-pager --plain --type=service 2>/dev/null $argv | string split -f 1 ' '

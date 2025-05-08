@@ -15,3 +15,4 @@ complete -c abbr -f -n $__fish_abbr_add_cond -s p -l position -a 'command anywhe
 complete -c abbr -f -n $__fish_abbr_add_cond -s f -l function -d 'Treat expansion argument as a fish function' -xa '(functions)'
 complete -c abbr -f -n $__fish_abbr_add_cond -s r -l regex -d 'Match a regular expression' -x
 complete -c abbr -f -n $__fish_abbr_add_cond -l set-cursor -d 'Position the cursor at % post-expansion'
+complete -c abbr -f -n $__fish_abbr_add_cond -l description  -d 'Describe (i.e. for abbr completions)'

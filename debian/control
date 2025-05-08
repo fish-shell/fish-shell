@@ -27,7 +27,6 @@ Depends: bsdextrautils | bsdmainutils,
  gettext-base,
 # for nroff and preconv
  groff-base,
- man-db,
 # for terminal definitions
  ncurses-base,
 # for kill

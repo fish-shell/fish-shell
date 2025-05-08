@@ -31,13 +31,12 @@ BuildRequires: glibc-langpack-en
 BuildRequires: python3 procps
 
 %if 0%{?suse_version}
-Requires:      terminfo-base
+Requires:      terminfo-base groff
 %else
-Requires:      ncurses-base
+Requires:      ncurses-base groff-base
 %endif
 Requires:      file
 Requires:      python3
-Requires:      man
 Requires:      procps
 
 # Although the build scripts mangle the version number to be RPM compatible

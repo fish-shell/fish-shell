@@ -59,6 +59,12 @@ The following options are available:
 **-u** or **--underline**, or **-uSTYLE** or **--underline=STYLE**
     Set the underline mode; supported styles are **single** (default) and **curly**.
 
+**--track=THEME**
+    Ignored. Included by default in universally-scoped color variables to tell fish to update
+    them as the associated theme changes.
+    This flag can be set for all variables when loading a theme with the `--track`` option, that is
+    :doc:`fish_config theme save THEME --track <fish_config>`.
+
 **-h** or **--help**
     Displays help about using this command.
 

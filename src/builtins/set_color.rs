@@ -86,6 +86,13 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
                 // In future we change both to actually print an error.
                 return Err(STATUS_INVALID_ARGS);
             }
+            Err(MultipleTracking) => {
+                streams.err.append(wgettext_fmt!(
+                    "%ls: --track option can only be specified once\n",
+                    argv[0]
+                ));
+                return Err(STATUS_INVALID_ARGS);
+            }
             Err(UnknownColor(arg)) => {
                 streams
                     .err
@@ -124,7 +131,7 @@ pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -
         specified_face.fg.unwrap_or(Color::None),
         specified_face.bg.unwrap_or(Color::None),
         specified_face.underline_color.unwrap_or(Color::None),
-        specified_face.style,
+        specified_face.style.unwrap_or_default(),
     ));
 
     if specified_face.fg.is_some() && outp.contents().is_empty() {

@@ -134,7 +134,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
     FLOGF!(
         config,
         "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
-        %ls\npaths.doc: %ls\npaths.bin: %ls",
+        %ls\npaths.doc: %ls\npaths.bin: %ls\npaths.locale: %ls",
         paths
             .data
             .clone()
@@ -144,6 +144,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         paths.doc.display().to_string(),
         paths
             .bin
+            .clone()
+            .map(|x| x.display().to_string())
+            .unwrap_or("|not found|".to_string()),
+        paths
+            .locale
             .clone()
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),

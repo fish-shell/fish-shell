@@ -1,3 +1,10 @@
+fish 4.0.3 (released ???)
+====================================
+
+This release of fish fixes a number of issues identified in fish 4.0.2:
+
+- fish now properly inherits $PATH under Windows WSL2 (:issue:`11354`).
+
 fish 4.0.2 (released April 20, 2025)
 ====================================
 

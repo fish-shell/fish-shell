@@ -2,15 +2,19 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
+use crate::common::{str2wcstring, truncate_at_nul, PACKAGE_NAME};
 use crate::env::CONFIG_PATHS;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use errno::{errno, set_errno};
+use gettext::Catalog;
 use once_cell::sync::{Lazy, OnceCell};
+#[cfg(feature = "embed-data")]
+use rust_embed::RustEmbed;
 
 #[cfg(gettext)]
+#[cfg(not(feature = "embed-data"))]
 mod internal {
     use libc::c_char;
     use std::ffi::CStr;
@@ -29,24 +33,12 @@ mod internal {
         unsafe { textdomain(domainname.as_ptr()) }
     }
 }
-#[cfg(not(gettext))]
-mod internal {
-    use libc::c_char;
-    use std::ffi::CStr;
-    pub fn fish_gettext(msgid: &CStr) -> *const c_char {
-        msgid.as_ptr()
-    }
-    pub fn fish_bindtextdomain(_domainname: &CStr, _dirname: &CStr) -> *mut c_char {
-        std::ptr::null_mut()
-    }
-    pub fn fish_textdomain(_domainname: &CStr) -> *mut c_char {
-        std::ptr::null_mut()
-    }
-}
 
+#[cfg(not(feature = "embed-data"))]
 use internal::*;
 
 // Really init wgettext.
+#[cfg(not(feature = "embed-data"))]
 fn wgettext_really_init() {
     let Some(ref localepath) = CONFIG_PATHS.locale else {
         return;
@@ -59,6 +51,7 @@ fn wgettext_really_init() {
     fish_textdomain(&package_name);
 }
 
+#[cfg(not(feature = "embed-data"))]
 fn wgettext_init_if_necessary() {
     static INIT: OnceCell<()> = OnceCell::new();
     INIT.get_or_init(wgettext_really_init);
@@ -70,12 +63,115 @@ enum MaybeStatic<'a> {
     Local(&'a wstr),
 }
 
+#[cfg(feature = "embed-data")]
+#[derive(RustEmbed)]
+#[folder = "share/"]
+pub struct Asset;
+
+#[cfg(feature = "embed-data")]
+fn get_language_priorities() -> Vec<String> {
+    // TODO: Figure out how to use fish's interface for getting environment variables.
+    let get_nonempty_env_var = |var: &str| match std::env::var(var) {
+        Ok(var) => {
+            if var.is_empty() {
+                None
+            } else {
+                Some(var)
+            }
+        }
+        Err(_) => None,
+    };
+
+    let remove_encoding_suffix = |lang_id: &str| lang_id.split('.').next().unwrap().to_string();
+
+    let remove_region = |lang_id: &str| lang_id.split('_').next().unwrap().to_string();
+
+    // https://www.gnu.org/software/gettext/manual/gettext.html#Locale-Environment-Variables-1
+    // Colon-separated list of language identifiers, possibly with region specifiers (so either ll
+    // or ll_CC).
+    // Ignored if the locale is set to C.
+    let language_priorities = get_nonempty_env_var("LANGUAGE")
+        .map(|priorities| {
+            priorities
+                .split(':')
+                .map(&remove_encoding_suffix)
+                .collect::<Vec<String>>()
+        })
+        .unwrap_or_else(Vec::new);
+    let locale = get_nonempty_env_var("LC_ALL")
+        .or_else(|| get_nonempty_env_var("LC_MESSAGES"))
+        .or_else(|| get_nonempty_env_var("LANG"));
+    match locale {
+        Some(locale) => {
+            if locale == "C" || locale == "C.UTF-8" {
+                vec![]
+            } else {
+                // TODO: fallback to other regions of same language?
+                let locale = remove_encoding_suffix(&locale);
+                let locale_without_region = remove_region(&locale);
+                let mut priorities = vec![locale.clone()];
+                if locale != locale_without_region {
+                    priorities.push(locale_without_region);
+                }
+                for lang_id in language_priorities {
+                    priorities.push(lang_id.clone());
+                    let lang_id_without_region = remove_region(&lang_id);
+                    if lang_id != lang_id_without_region {
+                        priorities.push(lang_id_without_region);
+                    }
+                }
+                priorities
+            }
+        }
+        None => language_priorities,
+    }
+}
+
+#[cfg(feature = "embed-data")]
+fn load_catalog_for_language(lang: &str) -> Option<Catalog> {
+    let mo_file = Asset::get(&format!("locale/{lang}/LC_MESSAGES/fish.mo"))?;
+    Catalog::parse(&*mo_file.data).ok()
+}
+
+#[cfg(feature = "embed-data")]
+fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
+    let key = match text {
+        MaybeStatic::Static(s) => s,
+        MaybeStatic::Local(s) => s,
+    };
+    let key_string = key.to_string();
+
+    let language_priorities = get_language_priorities();
+
+    static MESSAGE_CATALOGS: Lazy<Mutex<HashMap<String, Catalog>>> =
+        Lazy::new(|| Mutex::new(HashMap::new()));
+    let mut catalogs = MESSAGE_CATALOGS.lock().unwrap();
+    for language in language_priorities {
+        match catalogs.get(&language) {
+            Some(catalog) => {
+                let message = catalog.gettext(&key_string).to_owned();
+                return Box::leak(str2wcstring(message.as_bytes()).into_boxed_utfstr());
+            }
+            None => {
+                if let Some(catalog) = load_catalog_for_language(&language) {
+                    let message = catalog.gettext(&key_string).to_owned();
+                    catalogs.insert(language, catalog);
+                    return Box::leak(str2wcstring(message.as_bytes()).into_boxed_utfstr());
+                }
+            }
+        };
+    }
+    Box::leak(key.to_owned().into_boxed_utfstr())
+}
+
+#[cfg(not(feature = "embed-data"))]
 /// Implementation detail for wgettext!.
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
 /// and bindtextdomain functions. This should probably be moved out of wgettext, so that wgettext
 /// will be nothing more than a wrapper around gettext, like all other functions in this file.
 fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
+    // TODO: get correct message catalog (use cached version)
     // Preserve errno across this since this is often used in printing error messages.
     let err = errno();
 
@@ -91,6 +187,7 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
         "key should not contain NUL"
     );
 
+    // TODO: reset hashmap upon language change
     // Note that because entries are immortal, we simply leak non-static keys, and all values.
     static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));

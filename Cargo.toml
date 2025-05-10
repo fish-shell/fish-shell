@@ -58,6 +58,8 @@ widestring = "1.2.0"
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
 rust-embed = { version = "8.2.0", optional = true }
+# TODO: this library seems unmaintained
+gettext = { version = "0.4.0", optional = true }
 
 [target.'cfg(not(target_has_atomic = "64"))'.dependencies]
 portable-atomic = { version = "1", default-features = false, features = [
@@ -93,7 +95,7 @@ path = "src/bin/fish_key_reader.rs"
 [features]
 default = ["embed-data"]
 benchmark = []
-embed-data = ["dep:rust-embed"]
+embed-data = ["dep:rust-embed", "dep:gettext"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 asan = []

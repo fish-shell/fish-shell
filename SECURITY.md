@@ -7,17 +7,19 @@ If you wish to report a security vulnerability privately, we appreciate your dil
 To report a security vulnerability, please provide the following information:
 
 1. **PROJECT**
-   - Include the URL of the project repository - Example: <https://github.com/fish-shell/fish-shell>
+
+    - Include the URL of the project repository - Example: <https://github.com/fish-shell/fish-shell>
 
 2. **PUBLIC**
-   - Indicate whether this vulnerability has already been publicly discussed or disclosed.
-   - If so, provide relevant links.
+
+    - Indicate whether this vulnerability has already been publicly discussed or disclosed.
+    - If so, provide relevant links.
 
 3. **DESCRIPTION**
-   - Provide a detailed description of the security vulnerability.
-   - Include as much information as possible to help us understand and address the issue.
+    - Provide a detailed description of the security vulnerability.
+    - Include as much information as possible to help us understand and address the issue.
 
-Send this information, along with any additional relevant details, to <email AT somewhere or other channel>.
+Send this information, along with any additional relevant details, to <rf@fishshell.com>.
 
 ## Confidentiality
 
@@ -25,9 +27,9 @@ We kindly ask you to keep the report confidential until a public announcement is
 
 ## Notes
 
-- Vulnerabilities will be handled on a best-effort basis.
-- You may request an advance copy of the patched release, but we cannot guarantee early access before the public release.
-- You will be notified via email simultaneously with the public announcement.
-- We will respond within a few weeks to confirm whether your report has been accepted or rejected.
+-   Vulnerabilities will be handled on a best-effort basis.
+-   You may request an advance copy of the patched release, but we cannot guarantee early access before the public release.
+-   You will be notified via email simultaneously with the public announcement.
+-   We will respond within a few weeks to confirm whether your report has been accepted or rejected.
 
 Thank you for helping to improve the security of our project!

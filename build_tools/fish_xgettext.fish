@@ -69,7 +69,7 @@ end
 
 # This regex handles descriptions for `complete` and `function` statements. These messages are not
 # particularly important to translate. Hence the "implicit" label.
-set -l implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+set -l implicit_regex '^(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
 extract_fish_script_messages implicit $implicit_regex
 
 # This regex handles explicit requests to translate a message. These are more important to translate

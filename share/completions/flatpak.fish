@@ -62,14 +62,7 @@ function __fish_print_flatpak_packages
     set -l xdg_cache_home (__fish_make_cache_dir)
     or return
     set -l cache_file $xdg_cache_home/flatpak
-    if test -f $cache_file
-        cat $cache_file
-        set -l age (path mtime -R -- $cache_file)
-        set -l max_age 250
-        if test $age -lt $max_age
-            return
-        end
-    end
+    __fish_cache_read $cache_file 250 && return
     __fish_cache_put $cache_file
     __fish_flatpak remote-ls --columns=application,name >$cache_file &
     return 0

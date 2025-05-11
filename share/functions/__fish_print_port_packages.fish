@@ -6,15 +6,7 @@ function __fish_print_port_packages
     or return
 
     set -l cache_file $xdg_cache_home/port
-    if test -f $cache_file
-        cat $cache_file
-        set -l age (path mtime -R -- $cache_file)
-        set -l max_age 250
-        if test $age -lt $max_age
-            return
-        end
-    end
-
+    __fish_cache_read $cache_file 250 && return
     __fish_cache_put $cache_file
     # Remove trailing whitespace and pipe into cache file
     printf "all\ncurrent\nactive\ninactive\ninstalled\nuninstalled\noutdated" >$cache_file

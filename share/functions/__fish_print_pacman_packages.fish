@@ -10,14 +10,7 @@ function __fish_print_pacman_packages
 
     if not set -q _flag_installed
         set -l cache_file $xdg_cache_home/pacman
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (path mtime -R -- $cache_file)
-            set -l max_age 250
-            if test $age -lt $max_age
-                return
-            end
-        end
+        __fish_cache_read $cache_file 250 && return
         __fish_cache_put $cache_file
         # prints: <package name>	Package
         pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &

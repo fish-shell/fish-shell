@@ -12,30 +12,14 @@ function __fish_print_eopkg_packages
 
     if set -q _flag_installed
         set -l cache_file $xdg_cache_home/eopkg-installed
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (path mtime -R -- $cache_file)
-            set -l max_age 500
-            if test $age -lt $max_age
-                return 0
-            end
-        end
-
+        __fish_cache_read $cache_file 500 && return
         __fish_cache_put $cache_file
         # Remove package version information from output and pipe into cache file
         eopkg list-installed -N | cut -d ' ' -f 1 >$cache_file &
         return 0
     else
         set -l cache_file $xdg_cache_home/eopkg-available
-        if test -f $cache_file
-            cat $cache_file
-            set -l age (path mtime -R -- $cache_file)
-            set -l max_age 500
-            if test $age -lt $max_age
-                return 0
-            end
-        end
-
+        __fish_cache_read $cache_file 500 && return
         __fish_cache_put $cache_file
         # Remove package version information from output and pipe into cache file
         eopkg list-available -N | cut -d ' ' -f 1 >$cache_file &

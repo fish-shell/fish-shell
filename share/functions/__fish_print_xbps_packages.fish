@@ -10,14 +10,7 @@ function __fish_print_xbps_packages
 
     if not set -q _flag_installed
         set -l cache_file $xdg_cache_home/xbps
-        if test -f $cache_file
-            set -l age (path mtime -R -- $cache_file)
-            set -l max_age 300
-            if test $age -lt $max_age
-                cat $cache_file
-                return
-            end
-        end
+        __fish_cache_read $cache_file 300 && return
         __fish_cache_put $cache_file
         # prints: <package name>	Package
         xbps-query -Rs "" | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' | tee $cache_file

@@ -39279,7 +39279,7 @@ msgstr "跳过第一个 N 数字"
 
 #: share/completions/git.fish:539
 msgid "Do not remove \\r from lines starting with \\n\\r"
-msgstr "不要从\\n\r起行去除\r"
+msgstr "不要从\\n\\r起行去除\\r"
 
 #: share/completions/git.fish:540
 msgid "Input is of mboxrd form"

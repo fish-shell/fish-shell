@@ -42,7 +42,7 @@ string escape (set_color --underline-color=normal)
 # CHECK: \e\[59m
 
 string escape (set_color --underline=double)
-# CHECK: \e\[4:3m
+# CHECK: \e\[4:2m
 string escape (set_color --underline=dotted)
 # CHECK: \e\[4:4m
 string escape (set_color --underline=dashed)

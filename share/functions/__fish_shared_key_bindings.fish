@@ -59,6 +59,9 @@ function __fish_shared_key_bindings -d "Bindings shared between emacs and vi mod
     $legacy_bind --preset $argv \e\[1\;9C nextd-or-forward-word # iTerm2 < 3.5.12
     $legacy_bind --preset $argv \e\[1\;9D prevd-or-backward-word # iTerm2 < 3.5.12
 
+    bind --preset $argv alt-b prevd-or-backward-word
+    bind --preset $argv alt-f nextd-or-forward-word
+
     bind --preset $argv alt-up history-token-search-backward
     bind --preset $argv alt-down history-token-search-forward
     $legacy_bind --preset $argv \e\[1\;9A history-token-search-backward # iTerm2 < 3.5.12

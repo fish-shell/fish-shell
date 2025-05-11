@@ -13,7 +13,7 @@ function __fish_print_pacman_packages
         __fish_cache_read $cache_file 250 && return
         __fish_cache_put $cache_file
         # prints: <package name>	Package
-        pacman -Ssq | sed -e 's/$/\t'Package'/' >$cache_file &
+        pacman -Ssq | sed -e 's/$/\t'Package'/' | tee $cache_file
         return 0
     else
         pacman -Q | string replace ' ' \t

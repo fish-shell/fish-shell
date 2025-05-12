@@ -841,7 +841,7 @@ impl<'a> Reader<'a> {
         let evt_to_return: CharEvent;
         loop {
             let evt = self.readch();
-            if evt.is_readline_or_command() {
+            if evt.is_readline_or_command() || evt.is_check_exit() {
                 saved_events.push(evt);
             } else {
                 evt_to_return = evt;

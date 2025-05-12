@@ -4,7 +4,7 @@ use crate::universal_notifier::UniversalNotifier;
 use crate::wchar::prelude::*;
 use crate::wutil::wdirname;
 use crate::FLOGF;
-use nix::sys::event::{EventFilter, EventFlag, FilterFlag, KEvent, Kqueue};
+use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent, Kqueue};
 use std::fs::File;
 use std::os::fd::AsFd;
 use std::os::unix::fs::MetadataExt;
@@ -53,7 +53,7 @@ impl KqueueNotifier {
         let change_event = KEvent::new(
             dir_fd.as_raw_fd() as usize,
             EventFilter::EVFILT_VNODE,
-            EventFlag::EV_ADD | EventFlag::EV_CLEAR,
+            EvFlags::EV_ADD | EvFlags::EV_CLEAR,
             // NOTE_EXTEND w/ a dir fd: dir entry added or removed as the result of a rename,
             // but NOT if the rename was within the directory.
             // NOTE_LINK w/ a dir fd: subdirectory created or deleted
@@ -112,7 +112,7 @@ impl UniversalNotifier for KqueueNotifier {
         let mut events = [KEvent::new(
             0,
             EventFilter::EVFILT_READ,
-            EventFlag::empty(),
+            EvFlags::empty(),
             FilterFlag::empty(),
             0,
             0,
@@ -133,7 +133,7 @@ impl UniversalNotifier for KqueueNotifier {
             if event_count > 0 {
                 have_event = true;
                 for event in &events[..event_count] {
-                    if event.flags().contains(EventFlag::EV_ERROR) {
+                    if event.flags().contains(EvFlags::EV_ERROR) {
                         // Error encountered processing this changelist item
                         FLOGF!(
                             warning,

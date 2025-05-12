@@ -58,26 +58,23 @@ function extract_fish_script_messages --argument-names regex
     # We work around this issue by manually writing the file content.
 
     # Steps:
-    # 1. We extract strings to be translated from the file f and drop the rest. This step
+    # 1. We extract strings to be translated from the relevant files and drop the rest. This step
     #    depends on the regex matching the entire line, and the first capture group matching the
     #    string.
     # 2. We unescape. This gets rid of some escaping necessary in fish strings.
-    # 3. Single backslashes are replaced by double backslashes. This results in the backslashes
-    #    being interpreted as literal backslashes by gettext tooling.
-    # 4. Double quotes are escaped, such that they are not interpreted as the start or end of
-    #    a msgid.
-    # 5. The resulting strings are sorted alphabetically. This step is optional. Not sorting would
+    # 3. The resulting strings are sorted alphabetically. This step is optional. Not sorting would
     #    result in strings from the same file appearing together. Removing duplicates is also
     #    optional, since msguniq takes care of that later on as well.
+    # 4. Single backslashes are replaced by double backslashes. This results in the backslashes
+    #    being interpreted as literal backslashes by gettext tooling.
+    # 5. Double quotes are escaped, such that they are not interpreted as the start or end of
+    #    a msgid.
     # 6. We transform the string into the format expected in a PO file.
-    for f in share/config.fish share/completions/*.fish share/functions/*.fish
-        string replace --filter --regex $regex '$1' <$f |
-            string unescape |
-            string replace --all '\\' '\\\\' |
-            string replace --all '"' '\\"'
-    end |
+    cat share/config.fish share/completions/*.fish share/functions/*.fish |
+        string replace --filter --regex $regex '$1' |
+        string unescape |
         sort -u |
-        sed -E 's/^(.*)$/msgid "\1"\nmsgstr ""\n/' >>$output_file
+        sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_' >>$output_file
 end
 
 # This regex handles explicit requests to translate a message. These are more important to translate

@@ -29,8 +29,9 @@ set -l strs (grep -A1 wgettext_static_str <$tmpfile |
              string replace -a "\'" "'")
 
 # Extract any constants
-set -a strs (string match -rv 'BUILD_VERSION:|PACKAGE_NAME' <$tmpfile |
-             string match -rg 'const [A-Z_]*: &str = "(.*)"' | string replace -a "\'" "'")
+set -a strs (grep -Ev 'BUILD_VERSION:|PACKAGE_NAME' <$tmpfile |
+             grep -E 'const [A-Z_]*: &str = "(.*)"' |
+             sed -E -e 's/^.*const [A-Z_]*: &str = "(.*)".*$/\1/' -e "s_\\\'_'_g")
 
 rm $tmpfile
 

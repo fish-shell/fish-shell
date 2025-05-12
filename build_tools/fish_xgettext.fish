@@ -15,21 +15,24 @@ begin
     echo ""
 end >$output_file
 
+set -l tmpfile (mktemp)
 # This is a gigantic crime.
 # We use cargo-expand to get all our wgettext invocations.
 # This might be replaced once we have a tool which properly handles macro expansions.
-set -l expanded (cargo expand --lib; for f in fish fish_indent fish_key_reader; cargo expand --bin $f; end)
+begin cargo expand --lib; for f in fish fish_indent fish_key_reader; cargo expand --bin $f; end; end >$tmpfile
 
 # Extract any gettext call
-set -l strs (printf '%s\n' $expanded | grep -A1 wgettext_static_str |
+set -l strs (grep -A1 wgettext_static_str <$tmpfile |
              grep 'widestring::internals::core::primitive::str =' |
              string match -rg '"(.*)"' | string match -rv '^%ls$|^$' |
              # escaping difference between gettext and cargo-expand: single-quotes
              string replace -a "\'" "'")
 
 # Extract any constants
-set -a strs (string match -rv 'BUILD_VERSION:|PACKAGE_NAME' -- $expanded |
+set -a strs (string match -rv 'BUILD_VERSION:|PACKAGE_NAME' <$tmpfile |
              string match -rg 'const [A-Z_]*: &str = "(.*)"' | string replace -a "\'" "'")
+
+rm $tmpfile
 
 # Sort the extracted strings and remove duplicates.
 # This is optional.

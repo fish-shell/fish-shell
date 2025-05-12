@@ -247,7 +247,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # in vim p means paste *after* current character, so go forward a char before pasting
     # also in vim, P means paste *at* current position (like at '|' with cursor = line),
     # \ so there's no need to go back a char, just paste it without moving
-    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_modefish_cursor_end_modeinclusive' yank
+    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' yank
     bind -s --preset P yank
     bind -s --preset g,p yank-pop
 

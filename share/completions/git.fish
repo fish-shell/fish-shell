@@ -786,7 +786,7 @@ end
 
 # Suggest branches for the specified remote - returns 1 if no known remote is specified
 function __fish_git_branch_for_remote
-    set -l remotes (__fish_git_remotes)
+    set -l remotes (__fish_git remote 2>/dev/null)
     set -l remote
     set -l cmd (commandline -xpc)
     for r in $remotes

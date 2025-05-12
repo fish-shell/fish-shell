@@ -249,10 +249,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Lowercase r, enters replace_one mode
     #
     bind -s --preset -m replace_one r repaint-mode
-    bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
-    bind -s --preset -M replace_one -m default enter 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
-    bind -s --preset -M replace_one -m default ctrl-j 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
-    bind -s --preset -M replace_one -m default ctrl-m 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
+    bind -s --preset -M replace_one -m default '' 'set -g fish_cursor_end_mode exclusive' delete-char self-insert backward-char repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default enter 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default ctrl-j 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default ctrl-m 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
     bind -s --preset -M replace_one -m default escape cancel repaint-mode
     bind -s --preset -M replace_one -m default ctrl-\[ cancel repaint-mode
 

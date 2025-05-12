@@ -747,7 +747,7 @@ impl<'a> Reader<'a> {
                             use ImplicitEvent::*;
                             match evt {
                                 Key(_) => true,
-                                Implicit(Eof | CheckExit) => true,
+                                Implicit(Eof) => true,
                                 Readline(_) | Command(_) | Implicit(_) | QueryResponse(_) => false,
                             }
                         });

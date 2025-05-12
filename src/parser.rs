@@ -30,6 +30,7 @@ use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
@@ -1067,7 +1068,7 @@ impl Parser {
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The Parser will deallocate it.
-    /// If profiling is not active, this returns nullptr.
+    /// If profiling is not active, this returns None.
     pub fn create_profile_item(&self) -> Option<usize> {
         if PROFILING_ACTIVE.load() {
             let mut profile_items = self.profile_items.borrow_mut();
@@ -1271,7 +1272,12 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
             )
             .as_bytes(),
         );
-        let _ = out.write_all(&wcs2string(&item.cmd));
+        let indentation_level = col_width + 1 + col_width + 1 + level + 1;
+        let indented_cmd = item.cmd.replace(
+            L!("\n"),
+            &(WString::from("\n") + &wstr::repeat(L!(" "), indentation_level)[..]),
+        );
+        let _ = out.write_all(&wcs2string(&indented_cmd));
         let _ = out.write_all(b"\n");
     }
 }

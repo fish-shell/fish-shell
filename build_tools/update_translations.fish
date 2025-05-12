@@ -22,8 +22,8 @@
 # Ensure that sorting output is consistent by setting LC_ALL here.
 set -gx LC_ALL C.UTF-8
 
-set -l template_file messages.pot
 set -l build_tools (status dirname)
+set -l template_file $build_tools/../messages.pot
 set -l po_dir $build_tools/../po
 
 set -l extract
@@ -67,7 +67,8 @@ if set -l --query _flag_only_mo
 end
 
 if set -l --query extract
-    $build_tools/fish_xgettext.fish
+    $build_tools/fish_xgettext.fish >$template_file
+    or exit 1
 end
 
 for po_file in $po_files

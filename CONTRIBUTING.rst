@@ -292,24 +292,11 @@ stored in the ``po`` directory, named ``LANG.po``, where ``LANG`` is the
 two letter ISO 639-1 language code of the target language (eg ``de`` for
 German).
 
-To create a new translation:
-
-* generate a ``messages.pot`` file by running ``build_tools/fish_xgettext.fish`` from
-  the source tree
-* copy ``messages.pot`` to ``po/LANG.po``
-
-To update a translation:
-
-* generate a ``messages.pot`` file by running
-  ``build_tools/fish_xgettext.fish`` from the source tree
-
-* update the existing translation by running
-  ``msgmerge --update --no-fuzzy-matching --no-wrap po/LANG.po messages.pot``
-
-The ``--no-fuzzy-matching`` is important as we have had terrible experiences with gettext's "fuzzy" translations in the past.
+To create a new translation, run ``build_tools/update_translations.fish po/LANG.po``.
+If you add/remove/change a translatable strings, run ``build_tools/update_translations.fish`` to propagate this to all translation files (``po/*.po`).
 
 Many tools are available for editing translation files, including
-command-line and graphical user interface programs. For simple use, you can just use your text editor.
+command-line and graphical user interface programs. For simple use, you can use your text editor.
 
 Open up the po file, for example ``po/sv.po``, and you'll see something like::
 

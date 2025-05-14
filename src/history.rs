@@ -201,11 +201,6 @@ impl LockedHistoryFile {
     unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
 
-        // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
-        // is on a remote filesystem.
-        if ABANDONED_LOCKING.load() {
-            return false;
-        }
         if CHAOS_MODE.load() {
             return false;
         }
@@ -213,20 +208,7 @@ impl LockedHistoryFile {
             return false;
         }
 
-        let start_time = SystemTime::now();
         let retval = unsafe { flock(file.as_raw_fd(), lock_type) };
-        if let Ok(duration) = start_time.elapsed() {
-            if duration > Duration::from_millis(250) {
-                FLOG!(
-                    warning,
-                    wgettext_fmt!(
-                        "Locking the history file took too long (%.3f seconds).",
-                        duration.as_secs_f64()
-                    )
-                );
-                ABANDONED_LOCKING.store(true);
-            }
-        }
         retval != -1
     }
 
@@ -517,10 +499,6 @@ struct HistoryImpl {
     /// List of old items, as offsets into out mmap data.
     old_item_offsets: Vec<usize>,
 }
-
-/// If set, we gave up on file locking because it took too long.
-/// Note this is shared among all history instances.
-static ABANDONED_LOCKING: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 impl HistoryImpl {
     /// Add a new history item to the end. If `pending` is set, the item will not be returned by

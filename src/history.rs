@@ -23,16 +23,13 @@
 //! rare cases with multiple simultaneous shell sessions, lose a history item; this is
 //! considered preferable to hanging the the shell waiting for a lock.
 
-use crate::{
-    common::cstr2wcstring, env::EnvVar, wcstringutil::trim,
-    wutil::fileid::file_id_for_path_or_error,
-};
+use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
     ffi::CString,
     fs::File,
-    io::{BufRead, Read, Seek, SeekFrom, Write},
+    io::{BufRead, Read, Write},
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -42,7 +39,7 @@ use std::{
 };
 
 use bitflags::bitflags;
-use libc::{fchown, flock, EINTR, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::{c_int, fchown, flock, EINTR, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -73,8 +70,7 @@ use crate::{
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
     wutil::{
-        file_id_for_file, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink,
-        FileId, INVALID_FILE_ID,
+        file_id_for_file, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId, INVALID_FILE_ID,
     },
 };
 
@@ -142,11 +138,6 @@ const HISTORY_OUTPUT_BUFFER_SIZE: usize = 64 * 1024;
 /// The file access mode we use for creating history files
 const HISTORY_FILE_MODE: Mode = Mode::from_bits_truncate(0o600);
 
-/// How many times we retry to save
-/// Saving may fail if the file is modified in between our opening
-/// the file and taking the lock
-const MAX_SAVE_TRIES: usize = 1024;
-
 pub const VACUUM_FREQUENCY: usize = 25;
 
 /// Output the contents `buffer` to `file` and clear the `buffer`.
@@ -162,6 +153,138 @@ fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> st
     drain_buffer_into_file_no_flush(buffer, file)?;
     file.flush()?;
     file.sync_all()
+}
+
+/// Use this struct for all history file accesses.
+/// Otherwise, races on the file are possible.
+/// The lock is released when this struct is dropped.
+struct LockedHistoryFile {
+    /// This file contains the actual history.
+    /// It should only be accessed through this struct,
+    /// because the locks used here do not protect from other accesses to the file.
+    pub history_file: File,
+    /// This file is the one being locked.
+    /// The lock is not placed on the history file due to issues with renaming.
+    /// If the history file is renamed after opening and before locking it,
+    /// There are two independent files around, whose locks do not interact.
+    /// In some cases this can be identified by checking file identifiers and timestamps,
+    /// but even with such checks races and corresponding file corruption can occur.
+    /// It is simpler to have a separate lock file, which does not change.
+    ///
+    /// We may fail to lock (e.g. on lockless NFS - see issue #685.
+    /// In that case, we proceed as if locking succeeded.
+    /// This might result in corruption,
+    /// but the alternative of not having a history at all is not desirable either.
+    _lock_file: File,
+}
+
+enum LockingMode {
+    Shared,
+    Exclusive,
+}
+
+impl LockingMode {
+    pub fn to_flock_op(&self) -> c_int {
+        match self {
+            LockingMode::Shared => LOCK_SH,
+            LockingMode::Exclusive => LOCK_EX,
+        }
+    }
+}
+
+impl LockedHistoryFile {
+    /// Maybe lock a history file.
+    /// Returns `true` if successful, `false` if locking was skipped.
+    ///
+    /// # Safety
+    ///
+    /// The file descriptor of `file` and `lock_type` must be valid arguments to `flock(2)`.
+    unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
+        assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
+
+        // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
+        // is on a remote filesystem.
+        if ABANDONED_LOCKING.load() {
+            return false;
+        }
+        if CHAOS_MODE.load() {
+            return false;
+        }
+        if path_get_data_remoteness() == DirRemoteness::remote {
+            return false;
+        }
+
+        let (ok, start_time) = loop {
+            let start_time = SystemTime::now();
+            if unsafe { flock(file.as_raw_fd(), lock_type) } != -1 {
+                break (true, start_time);
+            }
+            if errno::errno().0 != EINTR {
+                break (false, start_time);
+            }
+        };
+        if let Ok(duration) = start_time.elapsed() {
+            if duration > Duration::from_millis(250) {
+                FLOG!(
+                    warning,
+                    wgettext_fmt!(
+                        "Locking the history file took too long (%.3f seconds).",
+                        duration.as_secs_f64()
+                    )
+                );
+                ABANDONED_LOCKING.store(true);
+            }
+        }
+        ok
+    }
+
+    pub fn new(
+        locking_mode: LockingMode,
+        file_name: &wstr,
+        file_flags: OFlag,
+        file_mode: nix::sys::stat::Mode,
+    ) -> std::io::Result<Option<Self>> {
+        const LOCK_FILE_SUFFIX: &wstr = L!(".lock");
+
+        // Get the path to the real history file.
+        // No history should be saved if fish_history is set to the empty string,
+        // so nothing needs to be done here and `None` is returned.
+        let Some(history_path) = history_filename(file_name, L!("")) else {
+            return Ok(None);
+        };
+        let history_path = wrealpath(&history_path).unwrap_or(history_path);
+
+        // The only way this should be able to fail is if `get_data_directory()` succeeds above but
+        // fails here.
+        let Some(lock_file_path) = history_filename(file_name, LOCK_FILE_SUFFIX) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Could not obtain lock file path.",
+            ));
+        };
+        let lock_file_path = wrealpath(&lock_file_path).unwrap_or(lock_file_path);
+
+        // We start by locking the dedicated lock file.
+        // This is required to avoid racing modifications by other threads/processes.
+        // If the lock is not released explicitly, it is released when the file descriptor of
+        // `lock_file` is closed, which happens in the `Drop` implementation of `File`.
+        let mut lock_file = wopen_cloexec(
+            &lock_file_path,
+            OFlag::O_RDONLY | OFlag::O_CREAT,
+            Mode::S_IRUSR,
+        )?;
+        unsafe {
+            Self::maybe_lock_file(&mut lock_file, locking_mode.to_flock_op());
+        }
+
+        // Open the history file
+        let history_file = wopen_cloexec(&history_path, file_flags, file_mode)?;
+
+        Ok(Some(Self {
+            _lock_file: lock_file,
+            history_file,
+        }))
+    }
 }
 
 struct TimeProfiler {
@@ -499,31 +622,19 @@ impl HistoryImpl {
         self.loaded_old = true;
 
         let _profiler = TimeProfiler::new("load_old");
-        if let Some(filename) = history_filename(&self.name, L!("")) {
-            let Ok(mut file) = wopen_cloexec(&filename, OFlag::O_RDONLY, Mode::empty()) else {
-                return;
-            };
 
-            // Take a read lock to guard against someone else appending. This is released after
-            // getting the file's length. We will read the file after releasing the lock, but that's
-            // not a problem, because we never modify already written data. In short, the purpose of
-            // this lock is to ensure we don't see the file size change mid-update.
-            //
-            // We may fail to lock (e.g. on lockless NFS - see issue #685. In that case, we proceed
-            // as if it did not fail. The risk is that we may get an incomplete history item; this
-            // is unlikely because we only treat an item as valid if it has a terminating newline.
-            let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
-            self.file_contents = HistoryFileContents::create(&mut file);
+        if let Ok(Some(mut locked_history_file)) = LockedHistoryFile::new(
+            LockingMode::Shared,
+            &self.name,
+            OFlag::O_RDONLY,
+            Mode::empty(),
+        ) {
+            self.file_contents = HistoryFileContents::create(&mut locked_history_file.history_file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_file(&file)
+                file_id_for_file(&locked_history_file.history_file)
             } else {
                 INVALID_FILE_ID
             };
-            if locked {
-                unsafe {
-                    Self::unlock_file(&mut file);
-                }
-            }
 
             let _profiler = TimeProfiler::new("populate_from_file_contents");
             self.populate_from_file_contents();
@@ -669,149 +780,89 @@ impl HistoryImpl {
             self.new_items.len() - self.first_unwritten_new_item_index
         );
 
-        // We want to rewrite the file, while holding the lock for as briefly as possible
-        // To do this, we speculatively write a file, and then lock and see if our original file changed
-        // Repeat until we succeed or give up
-        let Some(possibly_indirect_target_name) = history_filename(&self.name, L!("")) else {
+        // We want to rewrite the history file.
+        // To avoid issues with crashes during writing,
+        // we write to a temporary file and once we are done, this file is renamed such that it
+        // replaces the original history file.
+        // To avoid races, the original history file needs to be locked for the entire duration.
+        // Taking a shared lock first and later upgrading to an exclusive one could result in a
+        // deadlock, so we take an exclusive one immediately.
+        let Ok(Some(mut locked_history_file)) = LockedHistoryFile::new(
+            LockingMode::Exclusive,
+            &self.name,
+            OFlag::O_RDONLY | OFlag::O_CREAT,
+            HISTORY_FILE_MODE,
+        ) else {
+            // TODO: better error handling
             return;
         };
+
         let Some(tmp_name_template) = history_filename(&self.name, L!(".XXXXXX")) else {
             return;
         };
-
-        // If the history file is a symlink, we want to rewrite the real file so long as we can find it.
-        let target_name =
-            wrealpath(&possibly_indirect_target_name).unwrap_or(possibly_indirect_target_name);
-
         // Make our temporary file
         let Some((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
             return;
         };
-        let mut done = false;
-        for _i in 0..MAX_SAVE_TRIES {
-            if done {
-                break;
-            }
+        if !self
+            .rewrite_to_temporary_file(Some(&mut locked_history_file.history_file), &mut tmp_file)
+        {
+            // Failed to write, no good
+            let _ = wunlink(&tmp_name);
+            return;
+        }
 
-            let target_file_before = wopen_cloexec(
-                &target_name,
-                OFlag::O_RDONLY | OFlag::O_CREAT,
-                HISTORY_FILE_MODE,
+        // Ensure we maintain the ownership and permissions of the original (#2355). If the
+        // stat fails, we assume (hope) our default permissions are correct. This
+        // corresponds to e.g. someone running sudo -E as the very first command. If they
+        // did, it would be tricky to set the permissions correctly. (bash doesn't get this
+        // case right either).
+        if let Ok(md) = locked_history_file.history_file.metadata() {
+            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
+            if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
+                FLOG!(
+                    history_file,
+                    "Error when changing ownership of history file:",
+                    errno::errno()
+                );
+            }
+            if let Err(e) = tmp_file.set_permissions(md.permissions()) {
+                FLOG!(history_file, "Error when changing mode of history file:", e);
+            }
+        } else {
+            FLOG!(history_file, "Could not get metadata for history file");
+        }
+
+        // TODO: this is a duplicate of the code in LockedHistoryFile::new().
+        let Some(history_path) = history_filename(&self.name, L!("")) else {
+            FLOG!(history_file, "Could not obtain history file path.");
+            let _ = wunlink(&tmp_name);
+            return;
+        };
+        let history_path = wrealpath(&history_path).unwrap_or(history_path);
+
+        if wrename(&tmp_name, &history_path) == -1 {
+            FLOG!(
+                error,
+                wgettext_fmt!(
+                    "Error when renaming history file: %s",
+                    errno::errno().to_string()
+                )
             );
-            if let Err(err) = target_file_before {
-                FLOG!(history_file, "Error opening history file:", err);
-            }
-
-            let orig_file_id = target_file_before
-                .as_ref()
-                .map(file_id_for_file)
-                .unwrap_or(INVALID_FILE_ID);
-
-            // Open any target file, but do not lock it right away
-            if !self.rewrite_to_temporary_file(target_file_before.ok().as_mut(), &mut tmp_file) {
-                // Failed to write, no good
-                break;
-            }
-
-            // The crux! We rewrote the history file; see if the history file changed while we
-            // were rewriting it. Make an effort to take the lock before checking, to avoid racing.
-            // If the open fails, then proceed; this may be because there is no current history
-            let mut new_file_id = INVALID_FILE_ID;
-
-            let mut target_file_after = wopen_cloexec(&target_name, OFlag::O_RDONLY, Mode::empty());
-            if let Ok(target_file_after) = target_file_after.as_mut() {
-                // critical to take the lock before checking file IDs,
-                // and hold it until after we are done replacing.
-                // Also critical to check the file at the path, NOT based on our fd.
-                // It's only OK to replace the file while holding the lock.
-                // Note any lock is released when target_file_after is closed.
-                unsafe {
-                    Self::maybe_lock_file(target_file_after, LOCK_EX);
-                }
-                new_file_id = match file_id_for_path_or_error(&target_name) {
-                    Ok(file_id) => file_id,
-                    Err(err) => {
-                        if err.kind() != std::io::ErrorKind::NotFound {
-                            FLOG!(history_file, "Error re-opening history file:", err);
-                        }
-                        INVALID_FILE_ID
-                    }
-                }
-            }
-
-            let can_replace_file = new_file_id == orig_file_id || new_file_id == INVALID_FILE_ID;
-            if !can_replace_file {
-                // The file has changed, so we're going to re-read it
-                // Truncate our tmp_file so we can reuse it
-                if let Err(err) = tmp_file.set_len(0) {
-                    FLOG!(
-                        history_file,
-                        "Error when truncating temporary history file:",
-                        err
-                    );
-                }
-                if let Err(err) = tmp_file.seek(SeekFrom::Start(0)) {
-                    FLOG!(
-                        history_file,
-                        "Error resetting cursor in temporary history file:",
-                        err
-                    );
-                }
-            } else {
-                // The file is unchanged, or the new file doesn't exist or we can't read it
-                // We also attempted to take the lock, so we feel confident in replacing it
-
-                // Ensure we maintain the ownership and permissions of the original (#2355). If the
-                // stat fails, we assume (hope) our default permissions are correct. This
-                // corresponds to e.g. someone running sudo -E as the very first command. If they
-                // did, it would be tricky to set the permissions correctly. (bash doesn't get this
-                // case right either).
-                if let Ok(target_file_after) = target_file_after.as_ref() {
-                    if let Ok(md) = target_file_after.metadata() {
-                        // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
-                        if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                            FLOG!(
-                                history_file,
-                                "Error when changing ownership of history file:",
-                                errno::errno()
-                            );
-                        }
-                        if let Err(e) = tmp_file.set_permissions(md.permissions()) {
-                            FLOG!(history_file, "Error when changing mode of history file:", e);
-                        }
-                    }
-                }
-
-                // Slide it into place
-                if wrename(&tmp_name, &target_name) == -1 {
-                    FLOG!(
-                        error,
-                        wgettext_fmt!(
-                            "Error when renaming history file: %s",
-                            errno::errno().to_string()
-                        )
-                    );
-                }
-
-                // We did it
-                done = true;
-            }
         }
 
         // Ensure we never leave the old file around
         let _ = wunlink(&tmp_name);
 
-        if done {
-            // We've saved everything, so we have no more unsaved items.
-            self.first_unwritten_new_item_index = self.new_items.len();
+        // We've saved everything, so we have no more unsaved items.
+        self.first_unwritten_new_item_index = self.new_items.len();
 
-            // We deleted our deleted items.
-            self.deleted_items.clear();
+        // We deleted our deleted items.
+        self.deleted_items.clear();
 
-            // Our history has been written to the file, so clear our state so we can re-reference the
-            // file.
-            self.clear_file_state();
-        }
+        // Our history has been written to the file, so clear our state so we can re-reference the
+        // file.
+        self.clear_file_state();
     }
 
     /// Saves history by appending to the file.
@@ -824,54 +875,19 @@ impl HistoryImpl {
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
 
-        // If the file is different (someone vacuumed it) then we need to update our mmap.
-        let mut file_changed = false;
-
-        // Get the path to the real history file.
-        let Some(history_path) = history_filename(&self.name, L!("")) else {
-            // No history should be saved if fish_history is set to the empty string,
-            // so nothing needs to be done here.
+        let Some(mut locked_history_file) = LockedHistoryFile::new(
+            LockingMode::Exclusive,
+            &self.name,
+            OFlag::O_WRONLY | OFlag::O_APPEND | OFlag::O_CREAT,
+            HISTORY_FILE_MODE,
+        )?
+        else {
             return Ok(());
         };
 
-        // We are going to open the file, lock it, append to it, and then close it
-        // After locking it, we need to stat the file at the path; if there is a new file there, it
-        // means the file was replaced and we have to try again.
-        // Limit our max tries so we don't do this forever.
-        let mut num_attempts = 0;
-        let mut history_file = loop {
-            if num_attempts == MAX_SAVE_TRIES {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Number of unsuccessful attempts to open history file exceeds maximum.",
-                ));
-            }
-            // Return immediately if an error occurs here.
-            let mut file = wopen_cloexec(
-                &history_path,
-                OFlag::O_WRONLY | OFlag::O_APPEND,
-                Mode::empty(),
-            )?;
-
-            // Exclusive lock on the entire file. This is released when we close the file (below). This
-            // may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that
-            // we may get interleaved history items, which is considered better than no history, or
-            // forcing everything through the slow copy-move mode. We try to minimize this possibility
-            // by writing with O_APPEND.
-            unsafe {
-                Self::maybe_lock_file(&mut file, LOCK_EX);
-            }
-            let file_id = file_id_for_file(&file);
-            if file_id_for_path(&history_path) == file_id {
-                // File IDs match, so the file we opened is still at that path
-                // We're going to use this fd
-                if file_id != self.history_file_id {
-                    file_changed = true;
-                }
-                break file;
-            }
-            num_attempts += 1;
-        };
+        // Check if the file was modified since it was last read.
+        let file_id = file_id_for_file(&locked_history_file.history_file);
+        let file_changed = file_id != self.history_file_id;
 
         // We (hopefully successfully) took the exclusive lock. Append to the file.
         // Note that this is sketchy for a few reasons:
@@ -879,9 +895,6 @@ impl HistoryImpl {
         // no longer be sorted by timestamp.
         //   - Another shell may have appended the same items, so our file may now contain
         // duplicates.
-        //
-        // We cannot modify any previous parts of our file, because other instances may be reading
-        // those portions. We can only append.
         //
         // Originally we always rewrote the file on saving, which avoided both of these problems.
         // However, appending allows us to save history after every command, which is nice!
@@ -906,7 +919,10 @@ impl HistoryImpl {
                 // the file system.
                 // Flushing and syncing each iteration adds overhead,
                 // but hopefully there are not that many items to write when appending.
-                res = drain_buffer_into_file_and_flush(&mut buffer, &mut history_file);
+                res = drain_buffer_into_file_and_flush(
+                    &mut buffer,
+                    &mut locked_history_file.history_file,
+                );
                 if res.is_err() {
                     break;
                 }
@@ -918,11 +934,11 @@ impl HistoryImpl {
         // Since we just modified the file, update our history_file_id to match its current state
         // Otherwise we'll think the file has been changed by someone else the next time we go to
         // write.
-        // We don't update the mapping since we only appended to the file, and everything we
+        // We don't update `self.file_contents` since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id_for_file(&history_file);
+        self.history_file_id = file_id;
 
-        drop(history_file);
+        drop(locked_history_file);
 
         // If someone has replaced the file, forget our file state.
         if file_changed {
@@ -957,7 +973,7 @@ impl HistoryImpl {
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
             if let Err(e) = self.save_internal_via_appending() {
-                FLOG!(history, "Appending failed", e);
+                FLOG!(history, "Appending failed:", e);
             } else {
                 ok = true;
             }
@@ -1336,60 +1352,6 @@ impl HistoryImpl {
         self.load_old_if_needed();
         let old_item_count = self.old_item_offsets.len();
         return new_item_count + old_item_count;
-    }
-
-    /// Maybe lock a history file.
-    /// Returns `true` if successful, `false` if locking was skipped.
-    ///
-    /// # Safety
-    ///
-    /// `fd` and `lock_type` must be valid arguments to `flock(2)`.
-    unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
-        assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
-
-        // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
-        // is on a remote filesystem.
-        if ABANDONED_LOCKING.load() {
-            return false;
-        }
-        if CHAOS_MODE.load() {
-            return false;
-        }
-        if path_get_data_remoteness() == DirRemoteness::remote {
-            return false;
-        }
-
-        let (ok, start_time) = loop {
-            let start_time = SystemTime::now();
-            if unsafe { flock(file.as_raw_fd(), lock_type) } != -1 {
-                break (true, start_time);
-            }
-            if errno::errno().0 != EINTR {
-                break (false, start_time);
-            }
-        };
-        if let Ok(duration) = start_time.elapsed() {
-            if duration > Duration::from_millis(250) {
-                FLOG!(
-                    warning,
-                    wgettext_fmt!(
-                        "Locking the history file took too long (%.3f seconds).",
-                        duration.as_secs_f64()
-                    )
-                );
-                ABANDONED_LOCKING.store(true);
-            }
-        }
-        ok
-    }
-
-    /// Unlock a history file.
-    ///
-    /// # Safety
-    ///
-    /// `fd` must be a valid argument to `flock(2)` with `LOCK_UN`.
-    unsafe fn unlock_file(file: &mut File) {
-        libc::flock(file.as_raw_fd(), LOCK_UN);
     }
 }
 

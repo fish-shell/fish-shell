@@ -132,10 +132,7 @@ impl HistoryFileContents {
                 Ok(region) => region,
                 Err(err) if err.raw_os_error() == Some(ENODEV) => {
                     // Our mmap failed with ENODEV, which means the underlying
-                    // filesystem does not support mapping. Treat this as a hint
-                    // that the filesystem is remote, and so disable locks for
-                    // the history file.
-                    super::ABANDONED_LOCKING.store(true);
+                    // filesystem does not support mapping.
                     // Create an anonymous mapping and read() the file into it.
                     map_anon(file, len)?
                 }

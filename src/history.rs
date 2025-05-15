@@ -149,18 +149,13 @@ const MAX_SAVE_TRIES: usize = 1024;
 pub const VACUUM_FREQUENCY: usize = 25;
 
 /// Output the contents `buffer` to `file` and clear the `buffer`.
-fn drain_buffer_into_file_no_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
+fn flush_to_file(buffer: &mut Vec<u8>, file: &mut File, min_size: usize) -> std::io::Result<()> {
+    if buffer.is_empty() || buffer.len() < min_size {
+        return Ok(());
+    }
     file.write_all(buffer)?;
     buffer.clear();
     Ok(())
-}
-
-/// Output the contents `buffer` to `file` and clear the `buffer`.
-/// Flush the file and sync it to ensure that the updates actually reach the file system.
-fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> std::io::Result<()> {
-    drain_buffer_into_file_no_flush(buffer, file)?;
-    file.flush()?;
-    file.sync_all()
 }
 
 struct TimeProfiler {
@@ -635,15 +630,13 @@ impl HistoryImpl {
         let mut buffer = Vec::with_capacity(HISTORY_OUTPUT_BUFFER_SIZE + 128);
         for item in items {
             append_history_item_to_buffer(&item, &mut buffer);
-            if buffer.len() >= HISTORY_OUTPUT_BUFFER_SIZE {
-                if let Err(e) = drain_buffer_into_file_no_flush(&mut buffer, dst) {
-                    err = Some(e);
-                    break;
-                }
+            if let Err(e) = flush_to_file(&mut buffer, dst, HISTORY_OUTPUT_BUFFER_SIZE) {
+                err = Some(e);
+                break;
             }
         }
         if err.is_none() {
-            if let Err(e) = drain_buffer_into_file_and_flush(&mut buffer, dst) {
+            if let Err(e) = flush_to_file(&mut buffer, dst, 0) {
                 err = Some(e);
             }
         }
@@ -900,18 +893,17 @@ impl HistoryImpl {
             let item = &self.new_items[self.first_unwritten_new_item_index];
             if item.should_write_to_disk() {
                 append_history_item_to_buffer(item, &mut buffer);
-                // Ensure that each item is written individually and makes it to storage.
-                // This is done to keep `self.first_unwritten_new_item_index` consistent with
-                // the file system.
-                // Flushing and syncing each iteration adds overhead,
-                // but hopefully there are not that many items to write when appending.
-                res = drain_buffer_into_file_and_flush(&mut buffer, &mut history_file);
+                res = flush_to_file(&mut buffer, &mut history_file, HISTORY_OUTPUT_BUFFER_SIZE);
                 if res.is_err() {
                     break;
                 }
             }
             // We wrote or skipped this item, hooray.
             self.first_unwritten_new_item_index += 1;
+        }
+
+        if res.is_ok() {
+            res = flush_to_file(&mut buffer, &mut history_file, 0);
         }
 
         // Since we just modified the file, update our history_file_id to match its current state

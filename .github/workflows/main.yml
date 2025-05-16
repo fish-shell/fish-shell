@@ -19,7 +19,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@1.70
     - name: Install deps
       run: |
-        sudo apt install gettext libpcre2-dev python3-pexpect tmux
+        sudo apt install gettext libpcre2-dev python3-pexpect python3-sphinx tmux
         # Generate a locale that uses a comma as decimal separator.
         sudo locale-gen fr_FR.UTF-8
     - name: cmake

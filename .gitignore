@@ -38,7 +38,7 @@ Desktop.ini
 Thumbs.db
 ehthumbs.db
 
-messages.pot
+po/template.po
 *.mo
 .directory
 .fuse_hidden*

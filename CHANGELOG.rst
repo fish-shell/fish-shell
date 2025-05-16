@@ -67,7 +67,7 @@ New or improved bindings
 Completions
 ^^^^^^^^^^^
 - ``git`` completions now show the remote url as a description when completing remotes.
-- ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issuse:`11465`).
+- ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^

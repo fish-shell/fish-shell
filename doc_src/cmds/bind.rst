@@ -426,7 +426,7 @@ Launch ``git diff`` and repaint the commandline afterwards when :kbd:`ctrl-g` is
    bind ctrl-g 'git diff' repaint
 
 Swap :kbd:`tab` and :kbd:`shift-tab`, making tab focus the search field.
-But if the search field is already active, keep the behavior (:kbd:`tab` cycles forward, :kbd:`shift-tab` backward).
+But if the search field is already active, keep the behavior (:kbd:`tab` cycles forward, :kbd:`shift-tab` backward).::
 
    bind tab '
        if commandline --search-field >/dev/null

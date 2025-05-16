@@ -44,9 +44,14 @@ begin
     rm $cargo_expanded_file
 
     # Sort the extracted strings and remove duplicates.
-    # Then, transform them into the po format
+    # Then, transform them into the po format.
+    # If a string contains a '%' it is considered a format string and marked with a '#, c-format'.
+    # This allows msgfmt to identify issues with translations whose format string does not match the
+    # original.
     sort -u $rust_string_file |
-        sed -E 's/^(.*)$/msgid "\1"\nmsgstr ""\n/'
+        sed -E -e '/%/ i\
+#, c-format
+' -e 's/^(.*)$/msgid "\1"\nmsgstr ""\n/'
 
     rm $rust_string_file
 

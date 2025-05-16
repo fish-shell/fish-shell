@@ -248,15 +248,8 @@ fn pound_on_history(item_count: usize, idx: usize) -> Arc<History> {
 fn test_history_races() {
     let _cleanup = test_init();
     // This always fails under WSL
+    // TODO: Check if this is still true.
     if is_windows_subsystem_for_linux(WSL::V1) {
-        return;
-    }
-
-    // This fails too often on Github Actions,
-    // leading to a bunch of spurious test failures on unrelated PRs.
-    // For now it's better to disable it.
-    // TODO: Figure out *why* it does that and fix it.
-    if std::env::var_os("CI").is_some() {
         return;
     }
 

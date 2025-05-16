@@ -309,7 +309,7 @@ To create a new translation, run::
 
 By default, this also creates ``mo`` files, which contain the information from the ``po`` files in a
 binary format.
-Fish needs these files to for actually translating at runtime.
+Fish uses these files for translating at runtime.
 They are not tracked in version control, but they can help translators check if their translations
 show up correctly.
 If you build fish locally (``cargo build``), and then run the resulting binary,

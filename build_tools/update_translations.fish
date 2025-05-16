@@ -23,7 +23,7 @@
 set -gx LC_ALL C.UTF-8
 
 set -l build_tools (status dirname)
-set -l template_file $build_tools/../messages.pot
+set -l template_file $build_tools/../po/template.po
 set -l po_dir $build_tools/../po
 
 set -l extract

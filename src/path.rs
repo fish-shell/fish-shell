@@ -703,24 +703,10 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
     #[cfg(not(target_os = "linux"))]
     {
-        let st_local = ST_LOCAL();
-        if st_local != 0 {
-            // ST_LOCAL is a flag to statvfs, which is itself standardized.
-            // In practice the only system to use this path is NetBSD.
-            let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
-            if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
-                return DirRemoteness::unknown;
-            }
-            // statvfs::f_flag is `unsigned long`, which is 4-bytes on most 32-bit targets.
-            #[cfg_attr(target_pointer_width = "64", allow(clippy::useless_conversion))]
-            return if u64::from(buf.f_flag) & st_local != 0 {
-                DirRemoteness::local
-            } else {
-                DirRemoteness::remote
-            };
-        }
-        let mnt_local = MNT_LOCAL();
-        if mnt_local != 0 {
+        // ST_LOCAL is a flag to statvfs, which is itself standardized.
+        // In practice the only system to define it is NetBSD.
+        let local_flag = ST_LOCAL() | MNT_LOCAL();
+        if local_flag != 0 {
             let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
             if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
                 return DirRemoteness::unknown;
@@ -728,7 +714,7 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
             // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
             // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
             #[allow(clippy::useless_conversion)]
-            return if u64::from(buf.f_flag) & mnt_local != 0 {
+            return if u64::from(buf.f_flag) & local_flag != 0 {
                 DirRemoteness::local
             } else {
                 DirRemoteness::remote

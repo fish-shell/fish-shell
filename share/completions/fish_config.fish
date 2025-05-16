@@ -1,6 +1,6 @@
 complete fish_config -f
 set -l prompt_commands choose save show list
-set -l theme_commands choose demo dump save show list
+set -l theme_commands choose demo dump save show list update
 complete fish_config -n __fish_use_subcommand -a prompt -d 'View and pick from the sample prompts'
 complete fish_config -n "__fish_seen_subcommand_from prompt; and not __fish_seen_subcommand_from $prompt_commands" \
     -a choose -d 'View and pick from the sample prompts'
@@ -16,6 +16,7 @@ complete fish_config -n __fish_use_subcommand -a browse -d 'Open the web-based U
 
 complete fish_config -n __fish_use_subcommand -a theme -d 'View and pick from the sample themes'
 complete fish_config -n '__fish_seen_subcommand_from theme; and __fish_seen_subcommand_from choose save show' -a '(fish_config theme list)'
+complete fish_config -n '__fish_seen_subcommand_from theme; and __fish_seen_subcommand_from save' -l track -d 'Add --track to color variables to apply future theme updates'
 complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \
     -a choose -d 'View and pick from the sample themes'
 complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \
@@ -28,3 +29,5 @@ complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_
     -a demo -d 'Show example in the current theme'
 complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \
     -a dump -d 'Print the current theme in .theme format'
+complete fish_config -n "__fish_seen_subcommand_from theme; and not __fish_seen_subcommand_from $theme_commands" \
+    -a update -d "Update universal colors that have the tracking flag set"

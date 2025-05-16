@@ -105,6 +105,24 @@ path filter -vf bin argagagji
 # CHECK: bin
 # CHECK: argagagji
 
+# With --all, return true if all paths are passed.
+path filter --all bin bin/bash
+echo $status
+# CHECK: 0
+path filter --all bin argagagji
+echo $status
+# CHECK: 1
+path filter -A bin bin/bash
+echo $status
+# CHECK: 0
+# With --all and --invert, return true if none of paths is passed.
+path filter --all --invert bin bin/bash
+echo $status
+# CHECK: 1
+path filter --all --invert  argagagji argagagji2 
+echo $status
+# CHECK: 0
+
 path filter --type file bin bin/fish
 # Only fish is a file
 # CHECK: bin/fish
@@ -325,3 +343,9 @@ path basename -E foo.txt /usr/local/foo.bar /foo.tar.gz
 
 path basename --null-out bar baz | string escape
 # CHECK: bar\x00baz\x00
+
+rm -rf $TMPDIR/bin
+rm -rf $TMPDIR/sbin
+rm -rf $TMPDIR/stuff
+rm $TMPDIR/link
+rm $TMPDIR/target

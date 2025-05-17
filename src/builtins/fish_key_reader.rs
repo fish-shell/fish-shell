@@ -7,10 +7,9 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt};
+use std::{ops::ControlFlow, os::unix::prelude::OsStrExt};
 
 use libc::{STDIN_FILENO, VEOF, VINTR};
-use once_cell::unsync::OnceCell;
 
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
@@ -21,7 +20,7 @@ use crate::{
     future_feature_flags,
     input_common::{
         match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
-        QueryResponse, QueryResultEvent, TerminalQuery,
+        QueryResultEvent,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -29,11 +28,9 @@ use crate::{
     print_help::print_help,
     proc::set_interactive_session,
     reader::{check_exit_loop_maybe_warning, initial_query, reader_init, set_shell_modes},
-    signal::signal_set_handlers,
-    terminal::Capability,
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::{get_kitty_keyboard_capability, set_kitty_keyboard_capability, TtyHandoff},
+    tty_handoff::TtyHandoff,
     wchar::prelude::*,
     wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
@@ -82,9 +79,13 @@ fn should_exit(
 }
 
 /// Process the characters we receive as the user presses keys.
-fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) -> BuiltinResult {
+fn process_input(
+    streams: &mut IoStreams,
+    continuous_mode: bool,
+    verbose: bool,
+    mut input_queue: InputEventQueue,
+) -> BuiltinResult {
     let mut first_char_seen = false;
-    let mut queue = InputEventQueue::new(STDIN_FILENO);
     let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
@@ -93,16 +94,11 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
 
     while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         use QueryResultEvent::*;
-        let kevt = match queue.readch() {
+        let kevt = match input_queue.readch() {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
-            CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
-                if get_kitty_keyboard_capability() == Capability::Unknown {
-                    set_kitty_keyboard_capability(|| {}, Capability::NotSupported);
-                }
-                continue;
-            }
-            CharEvent::QueryResult(_) => continue,
+            CharEvent::QueryResult(Timeout) => panic!("should not be querying"),
+            CharEvent::QueryResult(Response(_)) => continue,
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));
@@ -148,6 +144,7 @@ fn setup_and_process_keys(
     streams: &mut IoStreams,
     continuous_mode: bool,
     verbose: bool,
+    input_queue: InputEventQueue,
 ) -> BuiltinResult {
     // We need to set the shell-modes for ICRNL,
     // in fish-proper this is done once a command is run.
@@ -167,7 +164,7 @@ fn setup_and_process_keys(
         streams.err.appendln(L!("\n"));
     }
 
-    process_input(streams, continuous_mode, verbose)
+    process_input(streams, continuous_mode, verbose, input_queue)
 }
 
 fn parse_flags(
@@ -255,7 +252,12 @@ pub fn fish_key_reader(
         return Err(STATUS_CMD_ERROR);
     }
 
-    setup_and_process_keys(streams, continuous_mode, verbose)
+    setup_and_process_keys(
+        streams,
+        continuous_mode,
+        verbose,
+        InputEventQueue::new(streams.stdin_fd),
+    )
 }
 
 pub fn main() {
@@ -305,9 +307,8 @@ fn throwing_main() -> i32 {
         return 1;
     }
 
-    signal_set_handlers(true);
-    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
-    initial_query(streams.stdin_fd, &blocking_query, streams.out, None);
+    let input_queue = initial_query();
 
-    setup_and_process_keys(&mut streams, continuous_mode, verbose).builtin_status_code()
+    setup_and_process_keys(&mut streams, continuous_mode, verbose, input_queue)
+        .builtin_status_code()
 }

@@ -401,6 +401,8 @@ pub enum ImplicitEvent {
     /// An event was handled internally, or an interrupt was received. Check to see if the reader
     /// loop should exit.
     CheckExit,
+    /// A blocking terminal query was interrupterd with ctrl-c.
+    QueryInterrupted,
     /// Our terminal window gained focus.
     FocusIn,
     /// Our terminal window lost focus.
@@ -800,7 +802,7 @@ pub trait InputEventQueuer {
         if self.is_blocked_querying() {
             use ImplicitEvent::*;
             match self.get_input_data().queue.front()? {
-                CharEvent::QueryResult(_) | CharEvent::Implicit(CheckExit | Eof) => {}
+                CharEvent::QueryResult(_) | CharEvent::Implicit(Eof | QueryInterrupted) => {}
                 CharEvent::Key(_)
                 | CharEvent::Readline(_)
                 | CharEvent::Command(_)
@@ -961,6 +963,7 @@ pub trait InputEventQueuer {
                             let ok = stop_query(self.blocking_query());
                             assert!(ok);
                             self.get_input_data_mut().queue.clear();
+                            self.push_front(CharEvent::Implicit(ImplicitEvent::QueryInterrupted));
                         }
                         continue;
                     }
@@ -1281,6 +1284,7 @@ pub trait InputEventQueuer {
                 _ => return None,
             },
             b'c' if private_mode == Some(b'?') => {
+                FLOG!(reader, "Received primary device attribute response");
                 self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(
                     QueryResponse::PrimaryDeviceAttribute,
                 )));
@@ -1663,6 +1667,7 @@ pub trait InputEventQueuer {
                     "Received interrupt, giving up on waiting for terminal response"
                 );
                 self.get_input_data_mut().queue.clear();
+                self.push_front(CharEvent::Implicit(ImplicitEvent::QueryInterrupted));
             } else {
                 self.push_front(interrupt_evt);
             }

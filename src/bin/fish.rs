@@ -44,6 +44,7 @@ use fish::{
     flog::{self, activate_flog_categories_by_pattern, set_flog_file_fd, FLOG, FLOGF},
     fprintf, function, future_feature_flags as features,
     history::{self, start_private_mode},
+    input_common::InputEventQueuer,
     io::IoChain,
     nix::{getpid, getrusage, isatty, RUsage},
     panic::panic_handler,
@@ -57,13 +58,14 @@ use fish::{
         get_login, is_interactive_session, mark_login, mark_no_exec, proc_init,
         set_interactive_session, Pid,
     },
-    reader::{reader_init, reader_read, term_copy_modes},
+    reader::{initial_query, reader_init, reader_read, reader_stdin_is_a_tty, term_copy_modes},
     signal::{signal_clear_cancel, signal_unblock_all},
     threads::{self},
     topic_monitor,
     wchar::prelude::*,
     wutil::waccess,
 };
+use libc::STDIN_FILENO;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
 use std::ffi::{CString, OsStr, OsString};
@@ -371,7 +373,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
     // We are an interactive session if we have not been given an explicit
     // command or file to execute and stdin is a tty. Note that the -i or
     // --interactive options also force interactive mode.
-    if opts.batch_cmds.is_empty() && optind == args.len() && isatty(libc::STDIN_FILENO) {
+    if opts.batch_cmds.is_empty() && optind == args.len() && isatty(STDIN_FILENO) {
         set_interactive_session(true);
     }
 
@@ -521,6 +523,38 @@ fn throwing_main() -> i32 {
     let parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
+    #[derive(Eq, PartialEq)]
+    enum CommandSource {
+        Arguments,
+        Stdin,
+        File,
+    }
+    let command_source = if !opts.batch_cmds.is_empty() {
+        CommandSource::Arguments
+    } else if my_optind == args.len() {
+        CommandSource::Stdin
+    } else {
+        CommandSource::File
+    };
+
+    if command_source == CommandSource::Stdin && reader_stdin_is_a_tty(STDIN_FILENO) {
+        // Implicitly interactive mode.
+        if opts.no_exec {
+            FLOG!(
+                error,
+                "no-execute mode enabled and no script given. Exiting"
+            );
+            // above line should always exit
+            return libc::EXIT_FAILURE;
+        }
+        let mut input_queue = initial_query();
+        let input_data = input_queue.get_input_data_mut();
+        parser
+            .pending_input
+            .borrow_mut()
+            .extend(std::mem::take(&mut input_data.queue));
+    }
+
     if !opts.no_exec && !opts.no_config {
         read_init(parser, config_paths.as_ref().unwrap());
     }
@@ -562,7 +596,7 @@ fn throwing_main() -> i32 {
     // Clear signals in case we were interrupted (#9024).
     signal_clear_cancel();
 
-    if !opts.batch_cmds.is_empty() {
+    if command_source == CommandSource::Arguments {
         // Run the commands specified as arguments, if any.
         if get_login() {
             // Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds.
@@ -579,17 +613,8 @@ fn throwing_main() -> i32 {
         );
         res = run_command_list(parser, &opts.batch_cmds);
         parser.libdata_mut().exit_current_script = false;
-    } else if my_optind == args.len() {
-        // Implicitly interactive mode.
-        if opts.no_exec && isatty(libc::STDIN_FILENO) {
-            FLOG!(
-                error,
-                "no-execute mode enabled and no script given. Exiting"
-            );
-            // above line should always exit
-            return libc::EXIT_FAILURE;
-        }
-        res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
+    } else if command_source == CommandSource::Stdin {
+        res = reader_read(parser, STDIN_FILENO, &IoChain::new());
     } else {
         let n = wcs2string(&args[my_optind]);
         let path = OsStr::from_bytes(&n);

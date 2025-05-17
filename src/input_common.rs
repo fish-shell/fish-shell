@@ -961,10 +961,7 @@ pub trait InputEventQueuer {
         assert!(buffer.len() <= 2);
         let recursive_invocation = buffer.len() == 2;
         let Some(next) = self.try_readb(buffer) else {
-            if !self.paste_is_buffering() {
-                return Some(KeyEvent::from_raw(key::Escape));
-            }
-            return None;
+            return Some(KeyEvent::from_raw(key::Escape));
         };
         let invalid = KeyEvent::from_raw(key::Invalid);
         if recursive_invocation && next == b'\x1b' {

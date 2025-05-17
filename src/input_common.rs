@@ -909,10 +909,7 @@ pub trait InputEventQueuer {
         have_escape_prefix: &mut bool,
     ) -> Option<KeyEvent> {
         let Some(next) = self.try_readb(buffer) else {
-            if !self.paste_is_buffering() {
-                return Some(KeyEvent::from_raw(key::Escape));
-            }
-            return None;
+            return Some(KeyEvent::from_raw(key::Escape));
         };
         let invalid = KeyEvent::from_raw(key::Invalid);
         if buffer.len() == 2 && next == b'\x1b' {

@@ -395,7 +395,11 @@ impl TtyHandoff {
         if self.owner.is_some() {
             FLOG!(proc_pgroup, "fish reclaiming terminal");
             if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                FLOG!(warning, "Could not return shell to foreground");
+                FLOG!(
+                    warning,
+                    "Could not return shell to foreground:",
+                    errno::errno()
+                );
                 perror("tcsetpgrp");
             }
             self.owner = None;

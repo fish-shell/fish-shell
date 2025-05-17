@@ -1,5 +1,7 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{self, Ast, Keyword, Leaf, List, Node, NodeVisitor, Token};
+use crate::ast::{
+    self, is_same_node, Ast, Keyword, Kind, Leaf, Node, NodeVisitor, Token, Traversal,
+};
 use crate::builtins::shared::builtin_exists;
 use crate::common::{
     escape_string, unescape_string, valid_var_name, valid_var_name_char, EscapeFlags,
@@ -218,17 +220,30 @@ fn parse_util_locate_cmdsub(
     let mut last_dollar = None;
     let mut paran_begin = None;
     let mut paran_end = None;
+    enum Quote {
+        Real(char),
+        VirtualDouble,
+    }
     fn process_opening_quote(
         input: &[char],
         inout_is_quoted: &mut Option<&mut bool>,
         paran_count: i32,
         quoted_cmdsubs: &mut Vec<i32>,
-        pos: usize,
+        mut pos: usize,
         last_dollar: &mut Option<usize>,
-        quote: char,
+        quote: Quote,
     ) -> Option<usize> {
+        let quote = match quote {
+            Quote::Real(q) => q,
+            Quote::VirtualDouble => {
+                pos = pos.saturating_sub(1);
+                '"'
+            }
+        };
         let q_end = quote_end(input.into(), pos, quote)?;
+        // Found a valid closing quote.
         if input[q_end] == '$' {
+            // The closing quote is another quoted command substitution.
             *last_dollar = Some(q_end);
             quoted_cmdsubs.push(paran_count);
         }
@@ -254,9 +269,9 @@ fn parse_util_locate_cmdsub(
             &mut quoted_cmdsubs,
             pos,
             &mut last_dollar,
-            '"',
+            Quote::VirtualDouble,
         )
-        .unwrap_or(input.len());
+        .map_or(input.len(), |pos| pos + 1);
     }
 
     while pos < input.len() {
@@ -270,7 +285,7 @@ fn parse_util_locate_cmdsub(
                     &mut quoted_cmdsubs,
                     pos,
                     &mut last_dollar,
-                    c,
+                    Quote::Real(c),
                 ) {
                     Some(q_end) => pos = q_end,
                     None => break,
@@ -293,7 +308,8 @@ fn parse_util_locate_cmdsub(
             } else if c == ')' {
                 paran_count -= 1;
 
-                if paran_count == 0 && paran_end.is_none() {
+                if paran_count == 0 {
+                    assert!(paran_end.is_none());
                     paran_end = Some(pos);
                     break;
                 }
@@ -307,21 +323,19 @@ fn parse_util_locate_cmdsub(
                 if quoted_cmdsubs.last() == Some(&paran_count) {
                     quoted_cmdsubs.pop();
                     // Quoted command substitutions temporarily close double quotes.
-                    // In "foo$(bar)baz$(qux)"
-                    // We are here ^
-                    // After the ) in a quoted command substitution, we need to act as if
-                    // there was an invisible double quote.
-                    match quote_end(input.into(), pos, '"') {
-                        Some(q_end) => {
-                            // Found a valid closing quote.
-                            // Stop at $(qux), which is another quoted command substitution.
-                            if input[q_end] == '$' {
-                                quoted_cmdsubs.push(paran_count);
-                            }
-                            pos = q_end;
-                        }
+                    // In "foo$(bar)baz$(qux)", after the ), we need to act as if there was a double quote.
+                    match process_opening_quote(
+                        input,
+                        &mut inout_is_quoted,
+                        paran_count,
+                        &mut quoted_cmdsubs,
+                        pos,
+                        &mut last_dollar,
+                        Quote::VirtualDouble,
+                    ) {
+                        Some(q_end) => pos = q_end,
                         None => break,
-                    };
+                    }
                 }
             }
             is_token_begin = is_token_delimiter(c, input.get(pos + 1).copied());
@@ -753,7 +767,7 @@ fn compute_indents(src: &wstr, initial_indent: i32) -> Vec<i32> {
     // the last node we visited becomes the input indent of the next. I.e. in the case of 'switch
     // foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it
     // were a case item list.
-    let ast = Ast::parse(
+    let ast = ast::parse(
         src,
         ParseTreeFlags::CONTINUE_AFTER_ERROR
             | ParseTreeFlags::INCLUDE_COMMENTS
@@ -825,7 +839,10 @@ pub fn apply_indents(src: &wstr, indents: &[i32]) -> WString {
 // Visit all of our nodes. When we get a job_list or case_item_list, increment indent while
 // visiting its children.
 struct IndentVisitor<'a> {
-    // companion: Pin<&'a mut indent_visitor_t>,
+    // The parent node of the node we are currently visiting, or None if we are the root.
+    parent: Option<&'a dyn ast::Node>,
+
+    // companion: Pin<&'a mut IndentVisitor>,
     // The one-past-the-last index of the most recently encountered leaf node.
     // We use this to populate the indents even if there's no tokens in the range.
     last_leaf_end: usize,
@@ -849,9 +866,11 @@ struct IndentVisitor<'a> {
     // List of locations of escaped newline characters.
     line_continuations: Vec<usize>,
 }
+
 impl<'a> IndentVisitor<'a> {
     fn new(src: &'a wstr, indents: &'a mut Vec<i32>, initial_indent: i32) -> Self {
         Self {
+            parent: None,
             last_leaf_end: 0,
             last_indent: initial_indent - 1,
             unclosed: false,
@@ -972,28 +991,26 @@ impl<'a> IndentVisitor<'a> {
         }
     }
 }
+
 impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
     // Default implementation is to just visit children.
     fn visit(&mut self, node: &'a dyn Node) {
-        let mut inc = 0;
-        let mut dec = 0;
-        use ast::{Category, Type};
-        match node.typ() {
-            Type::job_list | Type::andor_job_list => {
+        let mut inc_dec = (0, 0);
+        match node.kind() {
+            Kind::JobList(_) | Kind::AndorJobList(_) => {
                 // Job lists are never unwound.
-                inc = 1;
-                dec = 1;
+                inc_dec = (1, 1);
             }
 
             // Increment indents for conditions in headers (#1665).
-            Type::job_conjunction => {
-                if [Type::while_header, Type::if_clause].contains(&node.parent().unwrap().typ()) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobConjunction(_node) => {
+                let parent_kind = self.parent.unwrap().kind();
+                if matches!(parent_kind, Kind::IfClause(_) | Kind::WhileHeader(_)) {
+                    inc_dec = (1, 1);
                 }
             }
 
-            // Increment indents for job_continuation_t if it contains a newline.
+            // Increment indents for JobContinuation if it contains a newline.
             // This is a bit of a hack - it indents cases like:
             //    cmd1 |
             //    ....cmd2
@@ -1002,22 +1019,20 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Type::job_continuation => {
-                if self.has_newline(&node.as_job_continuation().unwrap().newlines) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobContinuation(node) => {
+                if self.has_newline(&node.newlines) {
+                    inc_dec = (1, 1);
                 }
             }
 
             // Likewise for && and ||.
-            Type::job_conjunction_continuation => {
-                if self.has_newline(&node.as_job_conjunction_continuation().unwrap().newlines) {
-                    inc = 1;
-                    dec = 1;
+            Kind::JobConjunctionContinuation(node) => {
+                if self.has_newline(&node.newlines) {
+                    inc_dec = (1, 1);
                 }
             }
 
-            Type::case_item_list => {
+            Kind::CaseItemList(_) => {
                 // Here's a hack. Consider:
                 // switch abc
                 //    cas
@@ -1035,37 +1050,35 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
                 // And so we will think that the 'cas' job is at the same level as the switch.
                 // To address this, if we see that the switch statement was not closed, do not
                 // decrement the indent afterwards.
-                inc = 1;
-                let switchs = node.parent().unwrap().as_switch_statement().unwrap();
-                dec = if switchs.end.has_source() { 1 } else { 0 };
+                let Kind::SwitchStatement(switchs) = self.parent.unwrap().kind() else {
+                    panic!("Expected switch statement");
+                };
+                let dec = if switchs.end.has_source() { 1 } else { 0 };
+                inc_dec = (1, dec);
             }
-            Type::token_base => {
-                let token_type = node.as_token().unwrap().token_type();
-                let parent_type = node.parent().unwrap().typ();
-                if parent_type == Type::begin_header && token_type == ParseTokenType::end {
+
+            Kind::Token(node) => {
+                let token_type = node.token_type();
+                let parent_kind = self.parent.unwrap().kind();
+                if matches!(parent_kind, Kind::BeginHeader(_)) && token_type == ParseTokenType::end
+                {
                     // The newline after "begin" is optional, so it is part of the header.
                     // The header is not in the indented block, so indent the newline here.
                     if node.source(self.src) == "\n" {
-                        inc = 1;
-                        dec = 1;
+                        inc_dec = (1, 1);
                     }
                 }
-                // if token_type == ParseTokenType::right_brace && parent_type == Type::brace_statement
-                // {
-                //     inc = 1;
-                //     dec = 1;
-                // }
             }
-            _ => (),
-        }
 
+            _ => {}
+        }
         let range = node.source_range();
-        if range.length() > 0 && node.category() == Category::leaf {
+        if range.length() > 0 && node.as_leaf().is_some() {
             self.record_line_continuations_until(range.start());
             self.indents[self.last_leaf_end..range.start()].fill(self.last_indent);
         }
 
-        self.indent += inc;
+        self.indent += inc_dec.0;
 
         // If we increased the indentation, apply it to the remainder of the string, even if the
         // list is empty. For example (where _ represents the cursor):
@@ -1074,12 +1087,12 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
         //       _
         //
         // we want to indent the newline.
-        if inc != 0 {
+        if inc_dec.0 != 0 {
             self.last_indent = self.indent;
         }
 
         // If this is a leaf node, apply the current indentation.
-        if node.category() == Category::leaf && range.length() != 0 {
+        if node.as_leaf().is_some() && range.length() != 0 {
             let leading_spaces = self.src[..range.start()]
                 .chars()
                 .rev()
@@ -1091,8 +1104,10 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             self.last_indent = self.indent;
         }
 
-        node.accept(self, false);
-        self.indent -= dec;
+        let saved = self.parent.replace(node);
+        node.accept(self);
+        self.parent = saved;
+        self.indent -= inc_dec.1;
     }
 }
 
@@ -1117,7 +1132,7 @@ pub fn parse_util_detect_errors(
 
     // Parse the input string into an ast. Some errors are detected here.
     let mut parse_errors = ParseErrorList::new();
-    let ast = Ast::parse(buff_src, parse_flags, Some(&mut parse_errors));
+    let ast = ast::parse(buff_src, parse_flags, Some(&mut parse_errors));
     if allow_incomplete {
         // Issue #1238: If the only error was unterminated quote, then consider this to have parsed
         // successfully.
@@ -1185,69 +1200,97 @@ pub fn parse_util_detect_errors_in_ast(
     // Verify return only within a function.
     // Verify no variable expansions.
 
-    for node in ast::Traversal::new(ast.top()) {
-        if let Some(jc) = node.as_job_continuation() {
-            // Somewhat clumsy way of checking for a statement without source in a pipeline.
-            // See if our pipe has source but our statement does not.
-            if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
-                has_unclosed_pipe = true;
+    let mut traversal = ast::Traversal::new(ast.top());
+    while let Some(node) = traversal.next() {
+        match node.kind() {
+            Kind::JobContinuation(jc) => {
+                // Somewhat clumsy way of checking for a statement without source in a pipeline.
+                // See if our pipe has source but our statement does not.
+                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                    has_unclosed_pipe = true;
+                }
             }
-        } else if let Some(job_conjunction) = node.as_job_conjunction() {
-            errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
-        } else if let Some(jcc) = node.as_job_conjunction_continuation() {
-            // Somewhat clumsy way of checking for a job without source in a conjunction.
-            // See if our conjunction operator (&& or ||) has source but our job does not.
-            if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
-                has_unclosed_conjunction = true;
+            Kind::JobConjunction(job_conjunction) => {
+                errored |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
-        } else if let Some(arg) = node.as_argument() {
-            let arg_src = arg.source(buff_src);
-            res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
-                .err()
-                .unwrap_or_default();
-        } else if let Some(job) = node.as_job_pipeline() {
-            // Disallow background in the following cases:
-            //
-            // foo & ; and bar
-            // foo & ; or bar
-            // if foo & ; end
-            // while foo & ; end
-            // If it's not a background job, nothing to do.
-            if job.bg.is_some() {
-                errored |= detect_errors_in_backgrounded_job(job, &mut out_errors);
+            Kind::JobConjunctionContinuation(jcc) => {
+                // Somewhat clumsy way of checking for a job without source in a conjunction.
+                // See if our conjunction operator (&& or ||) has source but our job does not.
+                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                    has_unclosed_conjunction = true;
+                }
             }
-        } else if let Some(stmt) = node.as_decorated_statement() {
-            errored |= detect_errors_in_decorated_statement(buff_src, stmt, &mut out_errors);
-        } else if let Some(block) = node.as_block_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !block.end.has_source() {
-                has_unclosed_block = true;
+            Kind::Argument(arg) => {
+                let arg_src = arg.source(buff_src);
+                res |= parse_util_detect_errors_in_argument(arg, arg_src, &mut out_errors)
+                    .err()
+                    .unwrap_or_default();
             }
-            errored |=
-                detect_errors_in_block_redirection_list(&block.args_or_redirs, &mut out_errors);
-        } else if let Some(brace_statement) = node.as_brace_statement() {
-            // If our closing brace had no source, we are unsourced.
-            if !brace_statement.right_brace.has_source() {
-                has_unclosed_block = true;
+            Kind::JobPipeline(job) => {
+                // Disallow background in the following cases:
+                //
+                // foo & ; and bar
+                // foo & ; or bar
+                // if foo & ; end
+                // while foo & ; end
+                // If it's not a background job, nothing to do.
+                if job.bg.is_some() {
+                    errored |= detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
+                }
             }
-            errored |= detect_errors_in_block_redirection_list(
-                &brace_statement.args_or_redirs,
-                &mut out_errors,
-            );
-        } else if let Some(ifs) = node.as_if_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !ifs.end.has_source() {
-                has_unclosed_block = true;
+            Kind::DecoratedStatement(stmt) => {
+                errored |= detect_errors_in_decorated_statement(
+                    buff_src,
+                    &traversal,
+                    stmt,
+                    &mut out_errors,
+                );
             }
-            errored |=
-                detect_errors_in_block_redirection_list(&ifs.args_or_redirs, &mut out_errors);
-        } else if let Some(switchs) = node.as_switch_statement() {
-            // If our 'end' had no source, we are unsourced.
-            if !switchs.end.has_source() {
-                has_unclosed_block = true;
+            Kind::BlockStatement(block) => {
+                // If our 'end' had no source, we are unsourced.
+                if !block.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &block.args_or_redirs,
+                    &mut out_errors,
+                );
             }
-            errored |=
-                detect_errors_in_block_redirection_list(&switchs.args_or_redirs, &mut out_errors);
+            Kind::BraceStatement(brace_statement) => {
+                // If our closing brace had no source, we are unsourced.
+                if !brace_statement.right_brace.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &brace_statement.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            Kind::IfStatement(ifs) => {
+                // If our 'end' had no source, we are unsourced.
+                if !ifs.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &ifs.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            Kind::SwitchStatement(switchs) => {
+                // If our 'end' had no source, we are unsourced.
+                if !switchs.end.has_source() {
+                    has_unclosed_block = true;
+                }
+                errored |= detect_errors_in_block_redirection_list(
+                    node,
+                    &switchs.args_or_redirs,
+                    &mut out_errors,
+                );
+            }
+            _ => {}
         }
     }
 
@@ -1284,14 +1327,15 @@ pub fn parse_util_detect_errors_in_argument_list(
 
     // Parse the string as a freestanding argument list.
     let mut errors = ParseErrorList::new();
-    let ast = Ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
+    let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::empty(), Some(&mut errors));
     if !errors.is_empty() {
         return get_error_text(&errors);
     }
 
     // Get the root argument list and extract arguments from it.
     // Test each of these.
-    let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+    let arg_list: &ast::FreestandingArgumentList = ast.top();
+    let args = &arg_list.arguments;
     for arg in args.iter() {
         let arg_src = arg.source(arg_list_src);
         if parse_util_detect_errors_in_argument(arg, arg_src, &mut Some(&mut errors)).is_err() {
@@ -1505,8 +1549,9 @@ fn detect_errors_in_job_conjunction(
     false
 }
 
-/// Given that the job given by node should be backgrounded, return true if we detect any errors.
+/// Given that the job should be backgrounded, return true if we detect any errors.
 fn detect_errors_in_backgrounded_job(
+    traversal: &Traversal,
     job: &ast::JobPipeline,
     parse_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
@@ -1520,35 +1565,37 @@ fn detect_errors_in_backgrounded_job(
     // foo & ; or bar
     // if foo & ; end
     // while foo & ; end
-    let Some(job_conj) = job.parent().unwrap().as_job_conjunction() else {
+    let Kind::JobConjunction(job_conj) = traversal.parent(job).kind() else {
         return false;
     };
 
-    if job_conj.parent().unwrap().as_if_clause().is_some()
-        || job_conj.parent().unwrap().as_while_header().is_some()
-    {
+    let job_conj_parent = traversal.parent(job_conj);
+    if matches!(
+        job_conj_parent.kind(),
+        Kind::IfClause(_) | Kind::WhileHeader(_)
+    ) {
         errored = append_syntax_error!(
             parse_errors,
             source_range.start(),
             source_range.length(),
             BACKGROUND_IN_CONDITIONAL_ERROR_MSG
         );
-    } else if let Some(jlist) = job_conj.parent().unwrap().as_job_list() {
+    } else if let Kind::JobList(jlist) = job_conj_parent.kind() {
         // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
         // Find the index of ourselves in the job list.
         let index = jlist
             .iter()
-            .position(|job| job.pointer_eq(job_conj))
+            .position(|job| is_same_node(job, job_conj))
             .expect("Should have found the job in the list");
 
         // Try getting the next job and check its decorator.
         if let Some(next) = jlist.get(index + 1) {
             if let Some(deco) = &next.decorator {
                 assert!(
-                    [ParseKeyword::kw_and, ParseKeyword::kw_or].contains(&deco.keyword()),
+                    [ParseKeyword::And, ParseKeyword::Or].contains(&deco.keyword()),
                     "Unexpected decorator keyword"
                 );
-                let deco_name = if deco.keyword() == ParseKeyword::kw_and {
+                let deco_name = if deco.keyword() == ParseKeyword::And {
                     L!("and")
                 } else {
                     L!("or")
@@ -1567,9 +1614,10 @@ fn detect_errors_in_backgrounded_job(
 }
 
 /// Given a source buffer `buff_src` and decorated statement `dst` within it, return true if there
-/// is an error and false if not. `storage` may be used to reduce allocations.
+/// is an error and false if not.
 fn detect_errors_in_decorated_statement(
     buff_src: &wstr,
+    traversal: &ast::Traversal,
     dst: &ast::DecoratedStatement,
     parse_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
@@ -1586,22 +1634,23 @@ fn detect_errors_in_decorated_statement(
     }
 
     // Get the statement we are part of.
-    let st = dst.parent().unwrap().as_statement().unwrap();
+    let Kind::Statement(st) = traversal.parent(dst).kind() else {
+        panic!();
+    };
 
     // Walk up to the job.
-    let mut job = None;
-    let mut cursor = dst.parent();
-    while job.is_none() {
-        let c = cursor.expect("Reached root without finding a job");
-        job = c.as_job_pipeline();
-        cursor = c.parent();
-    }
-    let job = job.expect("Should have found the job");
+    let job = traversal
+        .parent_nodes()
+        .find_map(|n| match n.kind() {
+            Kind::JobPipeline(job) => Some(job),
+            _ => None,
+        })
+        .expect("should have found the job");
 
     // Check our pipeline position.
     let pipe_pos = if job.continuation.is_empty() {
         PipelinePosition::none
-    } else if job.statement.pointer_eq(st) {
+    } else if is_same_node(&job.statement, st) {
         PipelinePosition::first
     } else {
         PipelinePosition::subsequent
@@ -1700,30 +1749,31 @@ fn detect_errors_in_decorated_statement(
         }
 
         // Check that we don't break or continue from outside a loop.
-        if !errored && [L!("break"), L!("continue")].contains(&&command[..]) && !first_arg_is_help {
+        if !errored && (command == "break" || command == "continue") && !first_arg_is_help {
             // Walk up until we hit a 'for' or 'while' loop. If we hit a function first,
             // stop the search; we can't break an outer loop from inside a function.
             // This is a little funny because we can't tell if it's a 'for' or 'while'
             // loop from the ancestor alone; we need the header. That is, we hit a
             // block_statement, and have to check its header.
             let mut found_loop = false;
-            let mut ancestor: Option<&dyn Node> = Some(dst);
-            while let Some(anc) = ancestor {
-                if let Some(block) = anc.as_block_statement() {
-                    if [ast::Type::for_header, ast::Type::while_header]
-                        .contains(&block.header.typ())
-                    {
+            for block in traversal.parent_nodes().filter_map(|anc| match anc.kind() {
+                Kind::BlockStatement(block) => Some(block),
+                _ => None,
+            }) {
+                match block.header {
+                    ast::BlockStatementHeader::For(_) | ast::BlockStatementHeader::While(_) => {
                         // This is a loop header, so we can break or continue.
                         found_loop = true;
                         break;
-                    } else if block.header.typ() == ast::Type::function_header {
+                    }
+                    ast::BlockStatementHeader::Function(_) => {
                         // This is a function header, so we cannot break or
                         // continue. We stop our search here.
                         found_loop = false;
                         break;
                     }
+                    _ => {}
                 }
-                ancestor = anc.parent();
             }
 
             if !found_loop {
@@ -1779,34 +1829,23 @@ fn detect_errors_in_decorated_statement(
     errored
 }
 
-// Given we have a trailing argument_or_redirection_list, like `begin; end > /dev/null`, verify that
-// there are no arguments in the list.
+// Given we have a trailing ArgumentOrRedirectionList, like `begin; end > /dev/null`, verify that
+// there are no arguments in the list. The parent of the list is provided.
 fn detect_errors_in_block_redirection_list(
+    parent: &dyn Node,
     args_or_redirs: &ast::ArgumentOrRedirectionList,
     out_errors: &mut Option<&mut ParseErrorList>,
 ) -> bool {
     let Some(first_arg) = get_first_arg(args_or_redirs) else {
         return false;
     };
-    if args_or_redirs
-        .parent()
-        .unwrap()
-        .as_brace_statement()
-        .is_some()
-    {
-        return append_syntax_error!(
-            out_errors,
-            first_arg.source_range().start(),
-            first_arg.source_range().length(),
-            RIGHT_BRACE_ARG_ERR_MSG
-        );
+    let r = first_arg.source_range();
+    if let Kind::BraceStatement(_) = parent.kind() {
+        append_syntax_error!(out_errors, r.start(), r.length(), RIGHT_BRACE_ARG_ERR_MSG);
+    } else {
+        append_syntax_error!(out_errors, r.start(), r.length(), END_ARG_ERR_MSG);
     }
-    append_syntax_error!(
-        out_errors,
-        first_arg.source_range().start(),
-        first_arg.source_range().length(),
-        END_ARG_ERR_MSG
-    )
+    true
 }
 
 /// Given a string containing a variable expansion error, append an appropriate error to the errors

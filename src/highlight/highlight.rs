@@ -1,17 +1,16 @@
 //! Functions for syntax highlighting.
 use crate::abbrs::{self, with_abbrs};
 use crate::ast::{
-    self, Argument, Ast, BlockStatement, BlockStatementHeaderVariant, BraceStatement,
-    DecoratedStatement, Keyword, Leaf, List, Node, NodeVisitor, Redirection, Token, Type,
-    VariableAssignment,
+    self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+    Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::color::RgbColor;
+use crate::color::Color;
 use crate::common::{
     valid_var_name, valid_var_name_char, ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
 };
 use crate::complete::complete_wrap_map;
-use crate::env::Environment;
+use crate::env::{EnvVar, Environment};
 use crate::expand::{
     expand_one, expand_to_command_and_args, ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR,
 };
@@ -27,7 +26,8 @@ use crate::parse_util::{
     parse_util_locate_cmdsubst_range, parse_util_slice_length, MaybeParentheses,
 };
 use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
-use crate::terminal::{parse_color, Outputter};
+use crate::terminal::Outputter;
+use crate::text_face::{parse_text_face, TextFace, UnderlineStyle};
 use crate::threads::assert_is_background_thread;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir};
 use crate::wchar::{wstr, WString, L};
@@ -71,12 +71,14 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
     for (i, c) in text.chars().enumerate() {
         let color = colors[i];
         if color != last_color {
-            outp.set_color(rv.resolve_spec(&color, false, vars), RgbColor::NORMAL);
+            let mut face = rv.resolve_spec(&color, vars);
+            face.bg = Color::Normal; // Historical behavior.
+            outp.set_text_face(face);
             last_color = color;
         }
         outp.writech(c);
     }
-    outp.set_color(RgbColor::NORMAL, RgbColor::NORMAL);
+    outp.set_text_face(TextFace::default());
     outp.contents().to_owned()
 }
 
@@ -107,8 +109,7 @@ pub fn highlight_shell(
 /// one screen redraw.
 #[derive(Default)]
 pub struct HighlightColorResolver {
-    fg_cache: HashMap<HighlightSpec, RgbColor>,
-    bg_cache: HashMap<HighlightSpec, RgbColor>,
+    cache: HashMap<HighlightSpec, TextFace>,
 }
 
 /// highlight_color_resolver_t resolves highlight specs (like "a command") to actual RGB colors.
@@ -119,86 +120,78 @@ impl HighlightColorResolver {
         Default::default()
     }
     /// Return an RGB color for a given highlight spec.
-    pub fn resolve_spec(
+    pub(crate) fn resolve_spec(
         &mut self,
         highlight: &HighlightSpec,
-        is_background: bool,
         vars: &dyn Environment,
-    ) -> RgbColor {
-        let cache = if is_background {
-            &mut self.bg_cache
-        } else {
-            &mut self.fg_cache
-        };
-        match cache.entry(*highlight) {
+    ) -> TextFace {
+        match self.cache.entry(*highlight) {
             Entry::Occupied(e) => *e.get(),
             Entry::Vacant(e) => {
-                let color = Self::resolve_spec_uncached(highlight, is_background, vars);
-                e.insert(color);
-                color
+                let face = Self::resolve_spec_uncached(highlight, vars);
+                e.insert(face);
+                face
             }
         }
     }
-    pub fn resolve_spec_uncached(
+    pub(crate) fn resolve_spec_uncached(
         highlight: &HighlightSpec,
-        is_background: bool,
         vars: &dyn Environment,
-    ) -> RgbColor {
-        let mut result = RgbColor::NORMAL;
-        let role = if is_background {
-            highlight.background
-        } else {
-            highlight.foreground
+    ) -> TextFace {
+        let resolve_role = |role| {
+            vars.get_unless_empty(get_highlight_var_name(role))
+                .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
+                .or_else(|| vars.get_unless_empty(get_highlight_var_name(HighlightRole::normal)))
+                .as_ref()
+                .map(parse_text_face_for_highlight)
+                .unwrap_or_else(TextFace::default)
         };
+        let mut face = resolve_role(highlight.foreground);
 
-        let var = vars
-            .get_unless_empty(get_highlight_var_name(role))
-            .or_else(|| vars.get_unless_empty(get_highlight_var_name(get_fallback(role))))
-            .or_else(|| vars.get(get_highlight_var_name(HighlightRole::normal)));
-        if let Some(var) = var {
-            result = parse_color(&var, is_background);
+        // Optimization: no need to parse again if both colors are the same.
+        if highlight.background != highlight.foreground {
+            let bg_face = resolve_role(highlight.background);
+            face.bg = bg_face.bg;
+            // In case the background role is different from the foreground one, we ignore its style
+            // except for reverse mode.
+            face.style.reverse |= bg_face.style.is_reverse();
         }
 
         // Handle modifiers.
-        if !is_background && highlight.valid_path {
-            if let Some(var2) = vars.get(L!("fish_color_valid_path")) {
-                let result2 = parse_color(&var2, is_background);
-                if result.is_normal() {
-                    result = result2;
-                } else if !result2.is_normal() {
-                    // Valid path has an actual color, use it and merge the modifiers.
-                    let mut rescol = result2;
-                    rescol.set_bold(result.is_bold() || result2.is_bold());
-                    rescol.set_underline(result.is_underline() || result2.is_underline());
-                    rescol.set_italics(result.is_italics() || result2.is_italics());
-                    rescol.set_dim(result.is_dim() || result2.is_dim());
-                    rescol.set_reverse(result.is_reverse() || result2.is_reverse());
-                    result = rescol;
-                } else {
-                    if result2.is_bold() {
-                        result.set_bold(true)
-                    };
-                    if result2.is_underline() {
-                        result.set_underline(true)
-                    };
-                    if result2.is_italics() {
-                        result.set_italics(true)
-                    };
-                    if result2.is_dim() {
-                        result.set_dim(true)
-                    };
-                    if result2.is_reverse() {
-                        result.set_reverse(true)
-                    };
+        if highlight.valid_path {
+            if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
+                // Historical behavior is to not apply background.
+                let valid_path_face = parse_text_face_for_highlight(&valid_path_var);
+                // Apply the foreground, except if it's normal. The intention here is likely
+                // to only override foreground if the valid path color has an explicit foreground.
+                if !valid_path_face.fg.is_normal() {
+                    face.fg = valid_path_face.fg;
                 }
+                face.style = face.style.union_prefer_right(valid_path_face.style);
             }
         }
 
-        if !is_background && highlight.force_underline {
-            result.set_underline(true);
+        if highlight.force_underline {
+            face.style.inject_underline(UnderlineStyle::Single);
         }
 
-        result
+        face
+    }
+}
+
+/// Return the internal color code representing the specified color.
+pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> TextFace {
+    let face = parse_text_face(var.as_list());
+    let default = TextFace::default();
+    let fg = face.fg.unwrap_or(default.fg);
+    let bg = face.bg.unwrap_or(default.bg);
+    let underline_color = face.underline_color.unwrap_or(default.underline_color);
+    let style = face.style;
+    TextFace {
+        fg,
+        bg,
+        underline_color,
+        style,
     }
 }
 
@@ -278,15 +271,16 @@ fn autosuggest_parse_command(
     buff: &wstr,
     ctx: &OperationContext<'_>,
 ) -> Option<(WString, WString)> {
-    let ast = Ast::parse(
+    let ast = ast::parse(
         buff,
         ParseTreeFlags::CONTINUE_AFTER_ERROR | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS,
         None,
     );
 
     // Find the first statement.
-    let jc = ast.top().as_job_list().unwrap().get(0)?;
-    let first_statement = jc.job.statement.contents.as_decorated_statement()?;
+    let job_list: &ast::JobList = ast.top();
+    let jc = job_list.get(0)?;
+    let first_statement = jc.job.statement.as_decorated_statement()?;
 
     if let Some(expanded_command) = statement_get_expanded_command(buff, first_statement, ctx) {
         let mut arg = WString::new();
@@ -715,7 +709,7 @@ impl<'s> Highlighter<'s> {
             | ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS
             | ParseTreeFlags::LEAVE_UNTERMINATED
             | ParseTreeFlags::SHOW_EXTRA_SEMIS;
-        let ast = Ast::parse(self.buff, ast_flags, None);
+        let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());
         if self.ctx.check_cancel() {
@@ -838,33 +832,33 @@ impl<'s> Highlighter<'s> {
 
     // Visit the children of a node.
     fn visit_children(&mut self, node: &dyn Node) {
-        node.accept(self, false);
+        node.accept(self);
     }
     // AST visitor implementations.
     fn visit_keyword(&mut self, node: &dyn Keyword) {
         let mut role = HighlightRole::normal;
         match node.keyword() {
-            ParseKeyword::kw_begin
-            | ParseKeyword::kw_builtin
-            | ParseKeyword::kw_case
-            | ParseKeyword::kw_command
-            | ParseKeyword::kw_else
-            | ParseKeyword::kw_end
-            | ParseKeyword::kw_exec
-            | ParseKeyword::kw_for
-            | ParseKeyword::kw_function
-            | ParseKeyword::kw_if
-            | ParseKeyword::kw_in
-            | ParseKeyword::kw_switch
-            | ParseKeyword::kw_while => role = HighlightRole::keyword,
-            ParseKeyword::kw_and
-            | ParseKeyword::kw_or
-            | ParseKeyword::kw_not
-            | ParseKeyword::kw_exclam
-            | ParseKeyword::kw_time => role = HighlightRole::operat,
-            ParseKeyword::none => (),
+            ParseKeyword::Begin
+            | ParseKeyword::Builtin
+            | ParseKeyword::Case
+            | ParseKeyword::Command
+            | ParseKeyword::Else
+            | ParseKeyword::End
+            | ParseKeyword::Exec
+            | ParseKeyword::For
+            | ParseKeyword::Function
+            | ParseKeyword::If
+            | ParseKeyword::In
+            | ParseKeyword::Switch
+            | ParseKeyword::While => role = HighlightRole::keyword,
+            ParseKeyword::And
+            | ParseKeyword::Or
+            | ParseKeyword::Not
+            | ParseKeyword::Exclam
+            | ParseKeyword::Time => role = HighlightRole::operat,
+            ParseKeyword::None => (),
         };
-        self.color_node(node.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(node.as_node(), HighlightSpec::with_fg(role));
     }
     fn visit_token(&mut self, tok: &dyn Token) {
         let mut role = HighlightRole::normal;
@@ -884,11 +878,11 @@ impl<'s> Highlighter<'s> {
             }
             _ => (),
         }
-        self.color_node(tok.leaf_as_node(), HighlightSpec::with_fg(role));
+        self.color_node(tok.as_node(), HighlightSpec::with_fg(role));
     }
     // Visit an argument, perhaps knowing that our command is cd.
     fn visit_argument(&mut self, arg: &Argument, cmd_is_cd: bool, options_allowed: bool) {
-        self.color_as_argument(arg.as_node(), options_allowed);
+        self.color_as_argument(arg, options_allowed);
         if !self.io_still_ok() {
             return;
         }
@@ -912,7 +906,7 @@ impl<'s> Highlighter<'s> {
                     self.color_array[i].valid_path = true;
                 }
             }
-            Err(..) => self.color_node(arg.as_node(), HighlightSpec::with_fg(HighlightRole::error)),
+            Err(..) => self.color_node(arg, HighlightSpec::with_fg(HighlightRole::error)),
         }
     }
 
@@ -926,10 +920,7 @@ impl<'s> Highlighter<'s> {
         // It may have parsed successfully yet still be invalid (e.g. 9999999999999>&1)
         // If so, color the whole thing invalid and stop.
         if !oper.is_valid() {
-            self.color_node(
-                redir.as_node(),
-                HighlightSpec::with_fg(HighlightRole::error),
-            );
+            self.color_node(redir, HighlightSpec::with_fg(HighlightRole::error));
             return;
         }
 
@@ -943,7 +934,7 @@ impl<'s> Highlighter<'s> {
         // Check if the argument contains a command substitution. If so, highlight it as a param
         // even though it's a command redirection, and don't try to do any other validation.
         if has_cmdsub(&target) {
-            self.color_as_argument(redir.target.leaf_as_node(), true);
+            self.color_as_argument(&redir.target, true);
             return;
         }
         // No command substitution, so we can highlight the target file or fd. For example,
@@ -959,7 +950,7 @@ impl<'s> Highlighter<'s> {
             self.file_tester.test_redirection_target(&target, oper.mode)
         };
         self.color_node(
-            redir.target.leaf_as_node(),
+            &redir.target,
             HighlightSpec::with_fg(if target_is_valid {
                 HighlightRole::redirection
             } else {
@@ -1053,15 +1044,14 @@ impl<'s> Highlighter<'s> {
     }
     fn visit_block_statement(&mut self, block: &BlockStatement) {
         match &block.header {
-            BlockStatementHeaderVariant::None => panic!(),
-            BlockStatementHeaderVariant::ForHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::WhileHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::FunctionHeader(node) => self.visit(node),
-            BlockStatementHeaderVariant::BeginHeader(node) => self.visit(node),
+            BlockStatementHeader::For(node) => self.visit(node),
+            BlockStatementHeader::While(node) => self.visit(node),
+            BlockStatementHeader::Function(node) => self.visit(node),
+            BlockStatementHeader::Begin(node) => self.visit(node),
         }
         self.visit(&block.args_or_redirs);
         let pending_variables_count = self.pending_variables.len();
-        if let Some(fh) = block.header.as_for_header() {
+        if let BlockStatementHeader::For(fh) = &block.header {
             let var_name = fh.var_name.source(self.buff);
             self.pending_variables.push(var_name);
         }
@@ -1123,17 +1113,13 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
             self.visit_token(token);
             return;
         }
-        match node.typ() {
-            Type::argument => self.visit_argument(node.as_argument().unwrap(), false, true),
-            Type::redirection => self.visit_redirection(node.as_redirection().unwrap()),
-            Type::variable_assignment => {
-                self.visit_variable_assignment(node.as_variable_assignment().unwrap())
-            }
-            Type::decorated_statement => {
-                self.visit_decorated_statement(node.as_decorated_statement().unwrap())
-            }
-            Type::block_statement => self.visit_block_statement(node.as_block_statement().unwrap()),
-            Type::brace_statement => self.visit_brace_statement(node.as_brace_statement().unwrap()),
+        match node.kind() {
+            Kind::Argument(node) => self.visit_argument(node, false, true),
+            Kind::Redirection(node) => self.visit_redirection(node),
+            Kind::VariableAssignment(node) => self.visit_variable_assignment(node),
+            Kind::DecoratedStatement(node) => self.visit_decorated_statement(node),
+            Kind::BlockStatement(node) => self.visit_block_statement(node),
+            Kind::BraceStatement(node) => self.visit_brace_statement(node),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }
@@ -1279,7 +1265,7 @@ pub enum HighlightRole {
     pager_selected_description,
 }
 
-/// Simply value type describing how a character should be highlighted..
+/// Simple value type describing how a character should be highlighted.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct HighlightSpec {
     pub foreground: HighlightRole,

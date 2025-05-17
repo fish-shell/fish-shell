@@ -13,7 +13,6 @@ use crate::{
     ast::unescape_keyword,
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
-    tokenizer::is_brace_statement,
     util::wcsfilecmp,
     wutil::sprintf,
 };
@@ -667,20 +666,7 @@ impl<'ctx> Completer<'ctx> {
 
         // Get all the arguments.
         let mut tokens = Vec::new();
-        {
-            let proc_range =
-                parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
-            let start = proc_range.start;
-            if start != 0
-                && cmdline.as_char_slice()[start - 1] == '{'
-                && (start == cmdline.len()
-                    || !is_brace_statement(cmdline.as_char_slice().get(start).copied()))
-            {
-                // We don't want to suggest commands here, since this command line parses as
-                // brace expansion.
-                return;
-            }
-        }
+        parse_util_process_extent(&cmdline, position_in_statement, Some(&mut tokens));
         let actual_token_count = tokens.len();
 
         // Hack: fix autosuggestion by removing prefixing "and"s #6249.
@@ -1953,19 +1939,16 @@ impl<'ctx> Completer<'ctx> {
         // Perhaps set a transient commandline so that custom completions
         // builtin_commandline will refer to the wrapped command. But not if
         // we're doing autosuggestions.
-        let mut _remove_transient = None;
-        let wants_transient =
-            (ad.wrap_depth > 0 || !ad.var_assignments.is_empty()) && !is_autosuggest;
-        if wants_transient {
+        let _remove_transient = (!is_autosuggest).then(|| {
             let parser = self.ctx.parser();
             let saved_transient = parser
                 .libdata_mut()
                 .transient_commandline
                 .replace(cmdline.to_owned());
-            _remove_transient = Some(ScopeGuard::new((), move |_| {
+            ScopeGuard::new((), move |_| {
                 parser.libdata_mut().transient_commandline = saved_transient;
-            }));
-        }
+            })
+        });
 
         // Maybe apply variable assignments.
         let _restore_vars = self.apply_var_assignments(ad.var_assignments);

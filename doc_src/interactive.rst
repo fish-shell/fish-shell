@@ -89,7 +89,16 @@ Or, to see all themes, right in your terminal::
 Syntax highlighting variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command. The modifier switches accepted by ``set_color`` like ``--bold``, ``--dim``, ``--italics``, ``--reverse`` and ``--underline`` are also accepted.
+The colors used by fish for syntax highlighting can be configured by changing the values of various variables. The value of these variables can be one of the colors accepted by the :doc:`set_color <cmds/set_color>` command.
+Options accepted by ``set_color`` like
+``--background=``,
+``--bold``,
+``--dim``,
+``--italics``,
+``--reverse``,
+``--underline`` and
+``--underline-color=``
+are also accepted.
 
 
 Example: to make errors highlighted and red, use::
@@ -345,7 +354,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-o` opens the file at the cursor in a pager. If the cursor is in command position and the command is a script, it will instead open that script in your editor. The editor is chosen from the first available of the ``$VISUAL`` or ``$EDITOR`` variables.
 
-- :kbd:`alt-p` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged.
+- :kbd:`alt-p` adds the string ``&| less;`` to the end of the job under the cursor. The result is that the output of the command will be paged. If you set the ``PAGER`` variable, its value is used instead of ``less``.
 
 - :kbd:`alt-w` prints a short description of the command under the cursor.
 

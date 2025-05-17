@@ -62,7 +62,7 @@ $fish --profile $tmp/normal.prof --profile-startup $tmp/startup.prof -ic exit
 
 # This should be the full file - just the one command we gave explicitly!
 cat $tmp/normal.prof
-# CHECK: Time{{\s+}}Sum{{\s+}}Command
+# CHECK: Time (μs){{\s+}}Sum (μs){{\s+}}Command
 # CHECK: {{\d+\s+\d+\s+>}} exit
 
 string match -rq "builtin source " < $tmp/startup.prof

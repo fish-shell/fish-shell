@@ -528,6 +528,18 @@ impl Screen {
         self.save_status();
     }
 
+    pub fn multiline_prompt_hack(&mut self) {
+        // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
+        // by lying to ourselves and claiming that we're really below what we consider "line 0"
+        // (which is the last line of the prompt). This will cause us to move up to try to get back
+        // to line 0, but really we're getting back to the initial line of the prompt.
+        let prompt_line_count = self
+            .actual_left_prompt
+            .as_ref()
+            .map_or(1, |p| calc_prompt_lines(p));
+        self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
+    }
+
     /// Resets the screen buffer's internal knowledge about the contents of the screen,
     /// optionally repainting the prompt as well.
     /// This function assumes that the current line is still valid.
@@ -539,15 +551,7 @@ impl Screen {
             std::cmp::max(self.actual_lines_before_reset, self.actual.line_count());
 
         if repaint_prompt {
-            // If the prompt is multi-line, we need to move up to the prompt's initial line. We do this
-            // by lying to ourselves and claiming that we're really below what we consider "line 0"
-            // (which is the last line of the prompt). This will cause us to move up to try to get back
-            // to line 0, but really we're getting back to the initial line of the prompt.
-            let prompt_line_count = self
-                .actual_left_prompt
-                .as_ref()
-                .map_or(1, |p| calc_prompt_lines(p));
-            self.actual.cursor.y += prompt_line_count.checked_sub(1).unwrap();
+            self.multiline_prompt_hack();
             self.actual_left_prompt = None;
             self.need_clear_screen = true;
         }
@@ -752,11 +756,11 @@ impl Screen {
     /// Return whether we believe the cursor is wrapped onto the last line, and that line is
     /// otherwise empty. This includes both soft and hard wrapping.
     pub fn cursor_is_wrapped_to_own_line(&self) -> bool {
-        // Note == comparison against the line count is correct: we do not create a line just for the
-        // cursor. If there is a line containing the cursor, then it means that line has contents and we
-        // should return false.
         // Don't consider dumb terminals to have wrapping for the purposes of this function.
-        self.actual.cursor.x == 0 && self.actual.cursor.y == self.actual.line_count() && !is_dumb()
+        self.actual.cursor.x == 0
+            && self.actual.cursor.y != 0
+            && self.actual.cursor.y + 1 == self.actual.line_count()
+            && !is_dumb()
     }
 
     /// Appends a character to the end of the line that the output cursor is on. This function
@@ -1034,9 +1038,9 @@ impl Screen {
         // Helper function to set a resolved color, using the caching resolver.
         let mut color_resolver = HighlightColorResolver::new();
         let mut set_color = |zelf: &mut Self, c| {
-            let fg = color_resolver.resolve_spec(&c, false, vars);
-            let bg = color_resolver.resolve_spec(&c, true, vars);
-            zelf.outp.borrow_mut().set_color(fg, bg);
+            zelf.outp
+                .borrow_mut()
+                .set_text_face(color_resolver.resolve_spec(&c, vars));
         };
 
         let mut cached_layouts = LAYOUT_CACHE_SHARED.lock().unwrap();

@@ -53,7 +53,7 @@ function man --description "Format and display the on-line manual pages"
         end
     end
 
-    if not set -q argv[2] && status list-files "man/man1/$argv[1].1" >/dev/null
+    if not set -q argv[2] && status list-files "man/man1/$argv[1].1" &>/dev/null
         __fish_print_help $argv
         return
     end

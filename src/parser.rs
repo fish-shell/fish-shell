@@ -1,10 +1,10 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{self, Ast, List, Node};
+use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
 use crate::common::{
-    escape_string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding,
-    ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
+    escape_string, wcs2string, CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef,
+    ScopeGuarding, ScopedCell, ScopedRefCell, PROFILING_ACTIVE,
 };
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStack, EnvStackSetResult, Environment, Statuses};
@@ -14,7 +14,7 @@ use crate::expand::{
 };
 use crate::fds::{open_dir, BEST_O_SEARCH};
 use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::terminal_protocols_disable_ifn;
+use crate::input_common::{terminal_protocols_disable_ifn, TerminalQuery};
 use crate::io::IoChain;
 use crate::job_group::MaybeJobId;
 use crate::operation_context::{OperationContext, EXPANSION_LIMIT_DEFAULT};
@@ -30,15 +30,19 @@ use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wutil::{perror, wgettext, wgettext_fmt};
 use crate::{function, FLOG};
 use libc::c_int;
+use once_cell::unsync::OnceCell;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::{CStr, OsStr};
+use std::fs::File;
+use std::io::Write;
 use std::num::NonZeroU32;
-use std::os::fd::{AsRawFd, OwnedFd, RawFd};
+use std::os::fd::OwnedFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
@@ -437,6 +441,8 @@ pub struct Parser {
 
     /// Global event blocks.
     pub global_event_blocks: AtomicU64,
+
+    pub blocking_query: OnceCell<RefCell<Option<TerminalQuery>>>,
 }
 
 impl Parser {
@@ -454,6 +460,7 @@ impl Parser {
             cancel_behavior,
             profile_items: RefCell::default(),
             global_event_blocks: AtomicU64::new(0),
+            blocking_query: OnceCell::new(),
         };
 
         match open_dir(CStr::from_bytes_with_nul(b".\0").unwrap(), BEST_O_SEARCH) {
@@ -550,7 +557,7 @@ impl Parser {
         block_type: BlockType,
     ) -> EvalRes {
         assert!([BlockType::top, BlockType::subst].contains(&block_type));
-        let job_list = ps.ast.top().as_job_list().unwrap();
+        let job_list = ps.ast.top();
         if !job_list.is_empty() {
             // Execute the top job list.
             self.eval_node(ps, job_list, io, job_group, block_type)
@@ -575,7 +582,7 @@ impl Parser {
         use crate::parse_tree::ParsedSource;
         use crate::parse_util::parse_util_detect_errors_in_ast;
         let mut errors = vec![];
-        let ast = Ast::parse(&src, ParseTreeFlags::empty(), Some(&mut errors));
+        let ast = ast::parse(&src, ParseTreeFlags::empty(), Some(&mut errors));
         let mut errored = ast.errored();
         if !errored {
             errored = parse_util_detect_errors_in_ast(&ast, &src, Some(&mut errors)).is_err();
@@ -720,7 +727,7 @@ impl Parser {
         ctx: &OperationContext<'_>,
     ) -> CompletionList {
         // Parse the string as an argument list.
-        let ast = Ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), None);
+        let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), None);
         if ast.errored() {
             // Failed to parse. Here we expect to have reported any errors in test_args.
             return vec![];
@@ -728,8 +735,7 @@ impl Parser {
 
         // Get the root argument list and extract arguments from it.
         let mut result = vec![];
-        let list = ast.top().as_freestanding_argument_list().unwrap();
-        for arg in &list.arguments {
+        for arg in &ast.top().arguments {
             let arg_src = arg.source(arg_list_src);
             if matches!(
                 expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).result,
@@ -1062,7 +1068,7 @@ impl Parser {
 
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The Parser will deallocate it.
-    /// If profiling is not active, this returns nullptr.
+    /// If profiling is not active, this returns None.
     pub fn create_profile_item(&self) -> Option<usize> {
         if PROFILING_ACTIVE.load() {
             let mut profile_items = self.profile_items.borrow_mut();
@@ -1085,7 +1091,7 @@ impl Parser {
     pub fn emit_profiling(&self, path: &OsStr) {
         // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
         // exiting (and hence will not fork).
-        let f = match std::fs::File::create(path) {
+        let mut f = match std::fs::File::create(path) {
             Ok(f) => f,
             Err(err) => {
                 FLOG!(
@@ -1099,8 +1105,7 @@ impl Parser {
                 return;
             }
         };
-        fprintf!(f.as_raw_fd(), "Time\tSum\tCommand\n");
-        print_profile(&self.profile_items.borrow(), f.as_raw_fd());
+        print_profile(&self.profile_items.borrow(), &mut f);
     }
 
     pub fn get_backtrace(&self, src: &wstr, errors: &ParseErrorList) -> WString {
@@ -1224,7 +1229,15 @@ fn user_presentable_path(path: &wstr, vars: &dyn Environment) -> WString {
 }
 
 /// Print profiling information to the specified stream.
-fn print_profile(items: &[ProfileItem], out: RawFd) {
+fn print_profile(items: &[ProfileItem], out: &mut File) {
+    let col_width = 10;
+    let _ = out.write_all(
+        format!(
+            "{:^col_width$} {:^col_width$} Command\n",
+            "Time (μs)", "Sum (μs)",
+        )
+        .as_bytes(),
+    );
     for (idx, item) in items.iter().enumerate() {
         if item.skipped || item.cmd.is_empty() {
             continue;
@@ -1233,7 +1246,7 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
         let total_time = item.duration;
 
         // Compute the self time as the total time, minus the total time consumed by subsequent
-        // items exactly one eval level deeper.
+        // items exactly one eval level deeper.
         let mut self_time = item.duration;
         for nested_item in items[idx + 1..].iter() {
             if nested_item.skipped {
@@ -1251,12 +1264,21 @@ fn print_profile(items: &[ProfileItem], out: RawFd) {
             }
         }
 
-        fprintf!(out, "%lld\t%lld\t", self_time, total_time);
-        for _i in 0..item.level {
-            fprintf!(out, "-");
-        }
-
-        fprintf!(out, "> %ls\n", item.cmd);
+        let level = item.level.unsigned_abs().saturating_add(1);
+        let _ = out.write_all(
+            format!(
+                "{:>col_width$} {:>col_width$} {:->level$} ",
+                self_time, total_time, '>'
+            )
+            .as_bytes(),
+        );
+        let indentation_level = col_width + 1 + col_width + 1 + level + 1;
+        let indented_cmd = item.cmd.replace(
+            L!("\n"),
+            &(WString::from("\n") + &wstr::repeat(L!(" "), indentation_level)[..]),
+        );
+        let _ = out.write_all(&wcs2string(&indented_cmd));
+        let _ = out.write_all(b"\n");
     }
 }
 

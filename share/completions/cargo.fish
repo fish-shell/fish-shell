@@ -1,20 +1,25 @@
 # Tab completion for cargo (https://github.com/rust-lang/cargo).
 
 ## --- WRITTEN MANUALLY ---
-set -l __fish_cargo_subcommands (cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
+
+function __fish_cargo
+    cargo --color=never $argv
+end
+
+set -l __fish_cargo_subcommands (__fish_cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
 
 complete -c cargo -f -c cargo -n __fish_use_subcommand -a "$__fish_cargo_subcommands"
 complete -c cargo -x -c cargo -n '__fish_seen_subcommand_from help' -a "$__fish_cargo_subcommands"
 
 for x in bench b build c check rustc t test
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bench -a "(cargo bench --bench 2>&1 | string replace -rf '^\s+' '')"
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bench -a "(__fish_cargo bench --bench 2>&1 | string replace -rf '^\s+' '')"
     complete -c cargo -n "__fish_seen_subcommand_from $x" -l lib -d 'Only this package\'s library'
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -a "(cargo test --test 2>&1 | string replace -rf '^\s+' '')"
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l test -a "(__fish_cargo test --test 2>&1 | string replace -rf '^\s+' '')"
 end
 
 for x in bench b build c check r run rustc t test
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(cargo run --bin 2>&1 | string replace -rf '^\s+' '')"
-    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(cargo run --example 2>&1 | string replace -rf '^\s+' '')"
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l bin -a "(__fish_cargo run --bin 2>&1 | string replace -rf '^\s+' '')"
+    complete -c cargo -x -n "__fish_seen_subcommand_from $x" -l example -a "(__fish_cargo run --example 2>&1 | string replace -rf '^\s+' '')"
 end
 
 # If using rustup, get the list of installed targets from there. Otherwise print all targets.
@@ -38,16 +43,21 @@ end
 
 function __fish_cargo_features
     if command -q jq
-        cargo read-manifest | jq -r '.features | keys | .[]' | __fish_concat_completions
+        __fish_cargo read-manifest | jq -r '.features | keys | .[]' | __fish_concat_completions
     else if set -l python (__fish_anypython)
-        cargo read-manifest | command $python -Sc "import sys, json"\n"print(*json.load(sys.stdin)['features'].keys(), sep='\n')" | __fish_concat_completions
+        __fish_cargo read-manifest | command $python -Sc "import sys, json"\n"print(*json.load(sys.stdin)['features'].keys(), sep='\n')" | __fish_concat_completions
     end
 end
 
 function __fish_cargo_packages
-    find . -name Cargo.toml | string replace -rf '.*/([^/]+)/?Cargo.toml' '$1'
+    if command -q jq
+        __fish_cargo metadata --no-deps --format-version 1 | jq -r '.packages | .[] | .name' | __fish_concat_completions
+    else if set -l python (__fish_anypython)
+        __fish_cargo metadata --no-deps --format-version 1 |
+            command $python -Sc "import sys, json"\n"print(*[x['name'] for x in json.load(sys.stdin)['packages']], sep='\n')"
+    end
 end
-complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l package \
+complete -c cargo -n '__fish_seen_subcommand_from run test build debug check clippy' -s p -l package \
     -xa "(__fish_cargo_packages)"
 
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
@@ -55,7 +65,7 @@ complete -c cargo -n '__fish_seen_subcommand_from run test build debug check' -l
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'
 complete -c cargo -n __fish_use_subcommand -l color -d 'Coloring: auto, always, never'
 complete -c cargo -n __fish_use_subcommand -l config -d 'Override a configuration value (unstable)'
-complete -c cargo -n __fish_use_subcommand -s Z -d 'Unstable (nightly-only) flags to Cargo, see \'cargo -Z help\' for details' -xa '(cargo -Z help | string replace -rf \'^\s*-Z (\S+)\s+(.*)\' \'$1\t$2\')'
+complete -c cargo -n __fish_use_subcommand -s Z -d 'Unstable (nightly-only) flags to Cargo, see \'cargo -Z help\' for details' -xa '(__fish_cargo -Z help | string replace -rf \'^\s*-Z (\S+)\s+(.*)\' \'$1\t$2\')'
 complete -c cargo -n __fish_use_subcommand -s V -l version -d 'Print version info and exit'
 complete -c cargo -n __fish_use_subcommand -l list -d 'List installed commands'
 complete -c cargo -n __fish_use_subcommand -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
@@ -713,7 +723,7 @@ complete -c cargo -n "__fish_seen_subcommand_from tree" -s v -l verbose -d 'Use 
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from tree" -l offline -d 'Run without accessing the network'
-complete -c cargo -n "__fish_seen_subcommand_from uninstall" -fa '(cargo install --list | string replace -rf "(\S+) (.*):" \'$1\t$2\')'
+complete -c cargo -n "__fish_seen_subcommand_from uninstall" -fa '(__fish_cargo install --list | string replace -rf "(\S+) (.*):" \'$1\t$2\')'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -s p -l package -d 'Package to uninstall'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -l bin -d 'Only uninstall the binary NAME'
 complete -c cargo -n "__fish_seen_subcommand_from uninstall" -l root -d 'Directory to uninstall packages from'
@@ -836,8 +846,8 @@ if command -q cargo-asm
     # Warning: this will build the project and can take time! We make sure to only call it if it's not a switch so completions
     # for --foo will always be fast.
     if command -q timeout
-        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(timeout 1 cargo asm)"
+        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(timeout 1 __fish_cargo asm)"
     else
-        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(cargo asm)"
+        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo asm)"
     end
 end

@@ -2,7 +2,7 @@
 //! for testing if a command with a given name can be found in the PATH, and various other
 //! path-related issues.
 
-use crate::common::{is_windows_subsystem_for_linux as is_wsl, wcs2osstring, wcs2zstring, WSL};
+use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
@@ -308,29 +308,6 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
         return GetPathResult::new(test_path(cmd).err(), cmd.to_owned());
     }
 
-    // WSLv1/WSLv2 tack on the entire Windows PATH to the end of the PATH environment variable, and
-    // accessing these paths from WSL binaries is pathalogically slow. We also don't expect to find
-    // any "normal" nix binaries under these paths, so we can skip them unless we are executing bins
-    // with Windows-ish names. We try to keep paths manually added to $fish_user_paths by only
-    // chopping off entries after the last "normal" PATH entry.
-    let pathsv = if is_wsl(WSL::Any) && !cmd.contains('.') {
-        let win_path_count = pathsv
-            .iter()
-            .rev()
-            .take_while(|p| {
-                let p = p.as_ref();
-                p.starts_with("/mnt/")
-                    && p.chars()
-                        .nth("/mnt/x".len())
-                        .map(|c| c == '/')
-                        .unwrap_or(false)
-            })
-            .count();
-        &pathsv[..pathsv.len() - win_path_count]
-    } else {
-        pathsv
-    };
-
     let mut best = noent_res;
     for next_path in pathsv {
         let next_path: &wstr = next_path.as_ref();
@@ -457,28 +434,22 @@ pub fn path_as_implicit_cd(path: &wstr, wd: &wstr, vars: &dyn Environment) -> Op
 pub fn path_make_canonical(path: &mut WString) {
     let chars: &mut [char] = path.as_char_slice_mut();
 
-    // Ignore trailing slashes, unless it's the first character.
-    let mut len = chars.len();
-    while len > 1 && chars[len - 1] == '/' {
-        len -= 1;
-    }
-
     // Turn runs of slashes into a single slash.
-    let mut trailing = 0;
+    let mut written = 0;
     let mut prev_was_slash = false;
-    for leading in 0..len {
-        let c = chars[leading];
+    for read in 0..chars.len() {
+        let c = chars[read];
         let is_slash = c == '/';
-        if !prev_was_slash || !is_slash {
-            // This is either the first slash in a run, or not a slash at all.
-            chars[trailing] = c;
-            trailing += 1;
+        if prev_was_slash && is_slash {
+            continue;
         }
+        // This is either the first slash in a run, or not a slash at all.
+        chars[written] = c;
+        written += 1;
         prev_was_slash = is_slash;
     }
-    assert!(trailing <= len);
-    if trailing < len {
-        path.truncate(trailing);
+    if written > 1 {
+        path.truncate(written - usize::from(prev_was_slash));
     }
 }
 
@@ -732,24 +703,10 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
     #[cfg(not(target_os = "linux"))]
     {
-        let st_local = ST_LOCAL();
-        if st_local != 0 {
-            // ST_LOCAL is a flag to statvfs, which is itself standardized.
-            // In practice the only system to use this path is NetBSD.
-            let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
-            if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
-                return DirRemoteness::unknown;
-            }
-            // statvfs::f_flag is `unsigned long`, which is 4-bytes on most 32-bit targets.
-            #[cfg_attr(target_pointer_width = "64", allow(clippy::useless_conversion))]
-            return if u64::from(buf.f_flag) & st_local != 0 {
-                DirRemoteness::local
-            } else {
-                DirRemoteness::remote
-            };
-        }
-        let mnt_local = MNT_LOCAL();
-        if mnt_local != 0 {
+        // ST_LOCAL is a flag to statvfs, which is itself standardized.
+        // In practice the only system to define it is NetBSD.
+        let local_flag = ST_LOCAL() | MNT_LOCAL();
+        if local_flag != 0 {
             let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
             if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
                 return DirRemoteness::unknown;
@@ -757,7 +714,7 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
             // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
             // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
             #[allow(clippy::useless_conversion)]
-            return if u64::from(buf.f_flag) & mnt_local != 0 {
+            return if u64::from(buf.f_flag) & local_flag != 0 {
                 DirRemoteness::local
             } else {
                 DirRemoteness::remote
@@ -824,6 +781,10 @@ fn test_path() {
     path = L!("/").to_owned();
     path_make_canonical(&mut path);
     assert_eq!(&path, L!("/"));
+
+    path = L!("/home/fishuser/").to_owned();
+    path_make_canonical(&mut path);
+    assert_eq!(&path, L!("/home/fishuser"));
 
     assert!(!paths_are_equivalent(L!("/foo/bar/baz"), L!("foo/bar/baz")));
     assert!(paths_are_equivalent(

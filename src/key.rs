@@ -4,6 +4,7 @@ use crate::{
     common::{escape_string, EscapeFlags, EscapeStringStyle},
     fallback::fish_wcwidth,
     flog::FloggableDebug,
+    future_feature_flags::{test as feature_test, FeatureFlag},
     reader::TERMINAL_MODE_ON_STARTUP,
     wchar::{decode_byte_from_char, prelude::*},
     wutil::{fish_is_pua, fish_wcstoul},
@@ -438,7 +439,9 @@ fn ctrl_to_symbol(buf: &mut WString, c: char) {
 /// Return true if the character must be escaped when used in the sequence of chars to be bound in
 /// a `bind` command.
 fn must_escape(is_first_in_token: bool, c: char) -> bool {
-    "[]()<>{}*\\$;&|'\"".contains(c) || (is_first_in_token && "~#".contains(c))
+    "[]()<>{}*\\$;&|'\"".contains(c)
+        || (is_first_in_token && "~#".contains(c))
+        || (c == '?' && !feature_test(FeatureFlag::qmark_noglob))
 }
 
 fn ascii_printable_to_symbol(buf: &mut WString, is_first_in_token: bool, c: char) {

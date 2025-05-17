@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::ast::{Ast, Leaf};
+use crate::ast::{self, Kind, Leaf};
 use crate::common::{unescape_string, UnescapeFlags, UnescapeStringStyle};
 use crate::complete::Completion;
 use crate::expand::{expand_string, ExpandFlags, ExpandResultCode};
@@ -44,7 +44,7 @@ enum AppendMode {
     Append,
 }
 
-enum TokenMode {
+enum TokenOutputMode {
     Expanded,
     Raw,
     Unescaped,
@@ -108,7 +108,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
     }
     insert.find(L!("$ "))?; // Early return.
     let source = prefix.to_owned() + insert;
-    let ast = Ast::parse(
+    let ast = ast::parse(
         &source,
         ParseTreeFlags::ACCEPT_INCOMPLETE_TOKENS | ParseTreeFlags::LEAVE_UNTERMINATED,
         None,
@@ -116,7 +116,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
     let mut stripped = WString::new();
     let mut have = prefix.len();
     for node in ast.walk() {
-        let Some(ds) = node.as_decorated_statement() else {
+        let Kind::DecoratedStatement(ds) = node.kind() else {
             continue;
         };
         let Some(range) = ds.command.range() else {
@@ -151,7 +151,7 @@ fn write_part(
     range: Range<usize>,
     range_is_single_token: bool,
     cut_at_cursor: bool,
-    token_mode: Option<TokenMode>,
+    token_mode: Option<TokenOutputMode>,
     buffer: &wstr,
     cursor_pos: usize,
     streams: &mut IoStreams,
@@ -171,7 +171,7 @@ fn write_part(
     let mut args = vec![];
     let mut add_token = |token_text: &wstr| {
         match token_mode {
-            TokenMode::Expanded => {
+            TokenOutputMode::Expanded => {
                 const COMMANDLINE_TOKENS_MAX_EXPANSION: usize = 512;
 
                 match expand_string(
@@ -199,10 +199,10 @@ fn write_part(
                     ExpandResultCode::ok => (),
                 };
             }
-            TokenMode::Raw => {
+            TokenOutputMode::Raw => {
                 args.push(Completion::from_completion(token_text.to_owned()));
             }
-            TokenMode::Unescaped => {
+            TokenOutputMode::Unescaped => {
                 let unescaped = unescape_string(
                     token_text,
                     UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
@@ -218,9 +218,15 @@ fn write_part(
         add_token(buff);
     } else {
         let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
+        let mut in_redirection = false;
         while let Some(token) = tok.next() {
             if cut_at_cursor && token.end() >= pos {
                 break;
+            }
+            let is_redirection_target = in_redirection;
+            in_redirection = token.type_ == TokenType::redirect;
+            if is_redirection_target && token.type_ == TokenType::string {
+                continue;
             }
             if token.type_ != TokenType::string {
                 continue;
@@ -319,9 +325,9 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
                     return Err(STATUS_INVALID_ARGS);
                 }
                 token_mode = Some(match c {
-                    'x' => TokenMode::Expanded,
-                    '\x02' => TokenMode::Raw,
-                    'o' => TokenMode::Unescaped,
+                    'x' => TokenOutputMode::Expanded,
+                    '\x02' => TokenOutputMode::Raw,
+                    'o' => TokenOutputMode::Unescaped,
                     _ => unreachable!(),
                 })
             }
@@ -447,7 +453,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         streams.err.append(wgettext_fmt!(
             BUILTIN_ERR_COMBO2,
             cmd,
-            "--cut-at-cursor and --tokens can not be used when setting the commandline"
+            "--cut-at-cursor and token options can not be used when setting the commandline"
         ));
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
@@ -730,22 +736,16 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
             current_cursor_pos,
             streams,
         );
-    } else if positional_args == 1 {
-        replace_part(
-            parser,
-            range,
-            args[w.wopt_index],
-            append_mode,
-            current_buffer,
-            current_cursor_pos,
-            search_field_mode,
-        );
     } else {
-        let sb = join_strings(&w.argv[w.wopt_index..], '\n');
+        let replacement = if positional_args == 1 {
+            Cow::Borrowed(args[w.wopt_index])
+        } else {
+            Cow::Owned(join_strings(&w.argv[w.wopt_index..], '\n'))
+        };
         replace_part(
             parser,
             range,
-            &sb,
+            &replacement,
             append_mode,
             current_buffer,
             current_cursor_pos,

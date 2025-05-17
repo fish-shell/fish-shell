@@ -426,3 +426,12 @@ set -S var
 echo '1  {} "{}"' | read -lat var
 echo $var
 # CHECK: 1 {} {}
+
+printf \xf9\x98\xb1\x83\x8b | read -z out_of_range_codepoint
+set -S out_of_range_codepoint
+# CHECK: $out_of_range_codepoint: set in global scope, unexported, with 1 elements
+# CHECK: $out_of_range_codepoint[1]: |\Xf9\X98\Xb1\X83\X8b|
+
+printf \xff | { read invalid_utf8; set -S invalid_utf8 }
+# CHECK: $invalid_utf8: set in global scope, unexported, with 1 elements
+# CHECK: $invalid_utf8[1]: |\Xff|

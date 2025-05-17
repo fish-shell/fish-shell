@@ -53,18 +53,22 @@ function __fish_complete_special_vars
         FISH_DEBUG "list of enabled debug categories" \
         FISH_DEBUG_OUTPUT "debug output path" \
         umask "current file creation mask" \
-        fish_handle_reflow "if fish should repaint prompt when the term resizes" \
-        fish_cursor_selection_mode "set to 'inclusive' if selections should include the cursor" \
-        fish_cursor_end_mode "set to 'inclusive' to disallow moving the cursor beyond the command line end" \
-        fish_emoji_width "cols wide fish assumes emoji render as" \
-        fish_key_bindings "name of function that sets binds" \
-        fish_autosuggestion_enabled "turns autosuggestions on or off" \
         fish_ambiguous_width "affects computed width of east asian chars" \
+        fish_autosuggestion_enabled "set to 0 to turn autosuggestions off" \
+        fish_cursor_end_mode "set to 'inclusive' to disallow moving the cursor beyond the command line end" \
+        fish_cursor_selection_mode "set to 'inclusive' if selections should include the cursor" \
+        fish_emoji_width "cols wide fish assumes emoji render as" \
         fish_escape_delay_ms "How long fish waits to distinguish escape and alt" \
         fish_greeting "The message to display at start (also a function)" \
+        fish_handle_reflow "if fish should repaint prompt when the term resizes" \
         fish_history "The session id to store history under" \
+        fish_key_bindings "name of function that sets binds" \
+        fish_term24bit "set to 0 to use the color palette instead of true-colors" \
+        fish_term256 "set to 0 to use the 16-color palette instead of 256" \
         fish_trace "Enables execution tracing (if set to non-empty value)" \
+        fish_transient_prompt "set to 1 to re-run prompts before pushing them to scrollback" \
         fish_user_paths "A list of dirs to prepend to PATH"
+
 end
 
 #
@@ -123,11 +127,13 @@ complete -c set -n '__fish_seen_argument -s e -l erase; and __fish_seen_argument
 # Color completions
 complete -c set -n '__fish_set_is_color true false' -x -a '(set_color --print-colors)' -d 'text color'
 complete -c set -n '__fish_set_is_color false true' -a '--background=(set_color --print-colors)'
+complete -c set -n '__fish_set_is_color false true' -a '--underline-color=(set_color --print-colors)'
 complete -c set -n '__fish_set_is_color true false' -a --bold -x
 complete -c set -n '__fish_set_is_color true false' -a --dim -x
 complete -c set -n '__fish_set_is_color true false' -a --italics -x
 complete -c set -n '__fish_set_is_color true true' -a --reverse -x
 complete -c set -n '__fish_set_is_color true false' -a --underline -x
+complete -c set -n '__fish_set_is_color true false' -a--underline={double,curly,dotted,dashed} -x
 
 # Locale completions
 complete -c set -n '__fish_set_is_locale; and not __fish_seen_argument -s e -l erase' -x -a '(command -sq locale; and locale -a)' -d Locale

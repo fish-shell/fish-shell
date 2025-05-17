@@ -11,8 +11,10 @@ use crate::env::EnvMode;
 use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
+use crate::input_common::decode_input_byte;
 use crate::input_common::terminal_protocols_disable_ifn;
-use crate::libc::MB_CUR_MAX;
+use crate::input_common::DecodeState;
+use crate::input_common::InvalidPolicy;
 use crate::nix::isatty;
 use crate::reader::commandline_set_buffer;
 use crate::reader::ReaderConfig;
@@ -23,7 +25,6 @@ use crate::tokenizer::TOK_ARGUMENT_LIST;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
-use crate::wutil::encoding::mbrtowc;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
 use libc::SEEK_CUR;
@@ -338,68 +339,62 @@ fn read_one_char_at_a_time(
     split_null: bool,
 ) -> BuiltinResult {
     let mut exit_res = Ok(SUCCESS);
-    let mut eof = false;
     let mut nbytes = 0;
 
+    let mut unconsumed = vec![];
+
     loop {
-        let mut finished = false;
-        let mut res = '\x00';
         let mut state = zero_mbstate();
 
-        while !finished {
+        let chars_read = buff.len();
+        let res = loop {
             let mut b = [0_u8; 1];
             match read_blocked(fd, &mut b) {
                 Ok(0) | Err(_) => {
-                    eof = true;
-                    break;
+                    break None;
                 }
                 _ => {}
             }
             let b = b[0];
-
+            unconsumed.push(b);
             nbytes += 1;
-            if MB_CUR_MAX() == 1 {
-                res = char::from(b);
-                finished = true;
-            } else {
-                let sz = unsafe {
-                    mbrtowc(
-                        std::ptr::addr_of_mut!(res).cast(),
-                        std::ptr::addr_of!(b).cast(),
-                        1,
-                        &mut state,
-                    )
-                } as isize;
-                if sz == -1 {
-                    state = zero_mbstate();
-                } else if sz != -2 {
-                    finished = true;
+            let mut consumed = 0;
+            match decode_input_byte(
+                buff,
+                InvalidPolicy::Passthrough,
+                &mut state,
+                &unconsumed,
+                &mut consumed,
+            ) {
+                DecodeState::Incomplete => continue,
+                DecodeState::Complete => {
+                    unconsumed.clear();
+                    break Some(buff.as_char_slice().last().unwrap());
                 }
+                DecodeState::Error => unreachable!(),
             }
-        }
+        };
 
         if nbytes > READ_BYTE_LIMIT.load(Ordering::Relaxed) {
+            // Historical behavior: do not include the codepoint that made us overflow.
+            buff.truncate(chars_read);
             exit_res = Err(STATUS_READ_TOO_MUCH);
             break;
         }
-        if eof {
+        let Some(&res) = res else {
+            // EOF
+            if buff.is_empty() {
+                exit_res = Err(STATUS_CMD_ERROR);
+            }
+            break;
+        };
+        if res == if split_null { '\0' } else { '\n' } {
+            buff.pop();
             break;
         }
-        if !split_null && res == '\n' {
-            break;
-        }
-        if split_null && res == '\0' {
-            break;
-        }
-
-        buff.push(res);
         if nchars > 0 && nchars <= buff.len() {
             break;
         }
-    }
-
-    if buff.is_empty() && eof {
-        exit_res = Err(STATUS_CMD_ERROR);
     }
 
     exit_res

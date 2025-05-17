@@ -96,7 +96,9 @@ function __fish_git_refs
 end
 
 function __fish_git_remotes
-    __fish_git remote 2>/dev/null
+    # Example of output parsed:
+    # "remote.upstream.url git@github.com:fish-shell/fish-shell.git" -> "upstream\tgit@github.com:fish-shell/fish-shell.git"
+    __fish_git config --get-regexp 'remote\.[a-z]+\.url' | string replace -rf 'remote\.(.*)\.url (.*)' '$1\t$2'
 end
 
 function __fish_git_files
@@ -784,7 +786,7 @@ end
 
 # Suggest branches for the specified remote - returns 1 if no known remote is specified
 function __fish_git_branch_for_remote
-    set -l remotes (__fish_git_remotes)
+    set -l remotes (__fish_git remote 2>/dev/null)
     set -l remote
     set -l cmd (commandline -xpc)
     for r in $remotes

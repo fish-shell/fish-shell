@@ -1,12 +1,14 @@
 fish 4.1.0 (released ???)
 =========================
 
+.. ignore for 4.1: 10929 10940 10948 10955 10965 10975 10989 10990 10998 11028 11052 11055 11069 11071 11079 11092 11098 11104 11106 11110 11140 11146 11148 11150 11214 11218 11259 11288 11299 11328 11350 11373 11395 11417 11419  
+
 Notable improvements and fixes
 ------------------------------
 - Compound commands (``begin; echo 1; echo 2; end``) can now be now be abbreviated using braces (``{ echo1; echo 2 }``), like in other shells.
-- Fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline.
+- Fish now supports transient prompts: if :envvar:`fish_transient_prompt` is set to 1, fish will reexecute prompt functions with the ``--final-rendering`` argument before running a commandline (:issue:`11153`).
 - When tab completion results are truncated, any common directory name is omitted. E.g. if you complete "share/functions", and it includes the files "foo.fish" and "bar.fish",
-  the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once.
+  the completion pager will now show "…/foo.fish" and "…/bar.fish". This will make the candidates shorter and allow for more to be shown at once (:issue:`11250`).
 - The self-installing configuration introduced in fish 4.0 has been changed.
   Now fish built with embedded data will just read the data straight from its own binary or write it out when necessary, instead of requiring an installation step on start.
   That means it is now possible to build fish as a single file and copy it to a compatible system, including as a different user, without extracting any files.
@@ -19,20 +21,23 @@ Notable improvements and fixes
 
 Deprecations and removed features
 ---------------------------------
-- Tokens like ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
-- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation.
+- Tokens like ``{echo,echo}`` or ``{ echo, echo }`` in command position are no longer interpreted as brace expansion but as compound command.
+- Terminfo-style key names (``bind -k``) are no longer supported. They had been superseded by the native notation since 4.0,
+  and currently they would map back to information from terminfo, which does not match what terminals would send with the kitty keyboard protocol (:issue:`11342`).
 - fish no longer reads the terminfo database, so its behavior is no longer affected by the :envvar:`TERM` environment variable (:issue:`11344`).
   For the time being, this can be turned off via the "ignore-terminfo" feature flag::
 
     set -Ua fish_features no-ignore-terminfo
 
-- The `--install` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new `status list-files` and `status get-file` subcommands, but it should no longer be necessary. (:issue:`11143`)
-- RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if the terminal does not advertise support via ``COLORTERM``.
+- The ``--install`` option when fish is built as self-installable was removed. If you need to write out fish's data you can use the new ``status list-files`` and ``status get-file`` subcommands, but it should no longer be necessary. (:issue:`11143`)
+- RGB colors (``set_color ff0000``) now default to using 24-bit RGB true-color commands, even if $COLORTERM is unset, because that is often lost e.g. over ssh (:issue:`11372`)
 
-  - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or ``set COLORTERM 0``.
+  - To go back to using the nearest match from the 256-color palette, use ``set fish_term24bit 0`` or set $COLORTERM to a value that is not "24bit" or "truecolor".
     To make the nearest-match logic use the 16 color palette instead, use ``set fish_term256 0``.
   - Inside macOS Terminal.app, fish makes an attempt to still use the palette colors.
     If that doesn't work, use ``set fish_term24bit 0``.
+- ``set_color --background=COLOR`` no longer implicitly activates bold mode.
+  To mitigate this change on existing installations that use a default theme, update your theme with ``fish_config theme choose`` or ``fish_config theme save``.
 
 Scripting improvements
 ----------------------
@@ -42,7 +47,7 @@ Interactive improvements
 - Autosuggestions are now also provided in multi-line command lines. Like `ctrl-r`, autosuggestions operate only on the current line.
 - Autosuggestions used to not suggest multi-line commandlines from history; now autosuggestions include individual lines from multi-line command lines.
 - The history search now preserves ordering between :kbd:`ctrl-s` forward and :kbd:`ctrl-r` backward searches.
-- Left mouse click (as requested by `click_events <terminal-compatibility.html#click-events>`__) can now select pager items.
+- Left mouse click (as requested by `click_events <terminal-compatibility.html#click-events>`__) can now select pager items (:issue:`10932`).
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any ``$`` prefix.
 
@@ -54,27 +59,54 @@ New or improved bindings
 - :kbd:`ctrl-z` (undo) after executing a command will restore the previous cursor position instead of placing the cursor at the end of the command line.
 - The OSC 133 prompt marking feature has learned about kitty's ``click_events=1`` flag, which allows moving fish's cursor by clicking.
 - :kbd:`ctrl-l` now pushes all text located above the prompt to the terminal's scrollback, before clearing and redrawing the screen (via a new special input function ``scrollback-push``).
-  This feature depends on the terminal advertising via XTGETTCAP support for the ``indn`` terminfo capability,
-  and on the terminal supporting Synchronized Output (which is currently used by fish to detect features).
-  If any is missing, the binding falls back to ``clear-screen``.
+  For compatibility with terminals that do not provide the scroll-forward command,
+  this is only enabled by default if the terminal advertises support for the ``indn`` capability via XTGETTCAP.
 - Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
   If there is any modifier other than shift, this is the recommended notation (as opposed to :kbd:`ctrl-Ä`).
 
 Completions
 ^^^^^^^^^^^
+- ``git`` completions now show the remote url as a description when completing remotes.
+- ``systemctl`` completions no longer print escape codes if ``SYSTEMD_COLORS`` is set (:issue:`11465`).
 
 Improved terminal support
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+- Support for double, curly, dotted and dashed underlines in `fish_color_*` variables and :doc:`set_color <cmds/set_color>` (:issue:`10957`).
+- Underlines can now be colored independent of text (:issue:`7619`).
 - New documentation page `Terminal Compatibility <terminal-compatibility.html>`_ (also accessible via ``man fish-terminal-compatibility``) lists required and optional terminal control sequences used by fish.
 
 Other improvements
 ------------------
 - ``fish_indent`` and ``fish_key_reader`` are now available as builtins, and if fish is called with that name it will act like the given tool (as a multi-call binary).
   This allows truly distributing fish as a single file. (:issue:`10876`)
+- ``fish_indent --dump-parse-tree`` now emits simple metrics about the tree including its memory consumption.
 
 For distributors
 ----------------
-- ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space.
+- ``fish_indent`` and ``fish_key_reader`` are still built as separate binaries for now, but can also be replaced with a symlink if you want to save disk space (:issue:`10876`).
+- The CMake system was simplified and no longer second-guesses rustup. It will run rustc and cargo via $PATH or in ~/.cargo/bin/.
+  If that doesn't match your setup, set the Rust_COMPILER and Rust_CARGO cmake variables (:issue:`11328`).
+- Cygwin support has been reintroduced, since rust gained a Cygwin target (https://github.com/rust-lang/rust/pull/134999, :issue:`11238`).
+
+--------------
+
+fish 4.0.2 (released April 20, 2025)
+====================================
+
+This release of fish fixes a number of issues identified in fish 4.0.1:
+
+- Completions are quoted, rather than backslash-escaped, only if the completion is unambiguous. Continuing to edit the token is therefore easier (:issue:`11271`). This changes the behavior introduced in 4.0.0 where all completions were quoted.
+- The warning when the terminfo database can't be found has been downgraded to a log message. fish will act as if the terminal behaves like xterm-256color, which is correct for the vast majority of cases (:issue:`11277`, :issue:`11290`).
+- Key combinations using the super (Windows/command) key can now (actually) be bound using the :kbd:`super-` prefix (:issue:`11217`). This was listed in the release notes for 4.0.1 but did not work correctly.
+- :doc:`function <cmds/function>` is stricter about argument parsing, rather than allowing additional parameters to be silently ignored (:issue:`11295`).
+- Using parentheses in the :doc:`test <cmds/test>` builtin works correctly, following a regression in 4.0.0 where they were not recognized (:issue:`11387`). 
+- :kbd:`delete` in Vi mode when Num Lock is active will work correctly (:issue:`11303`).
+- Abbreviations cannot alter the command-line contents, preventing a crash (:issue:`11324`).
+- Improvements to various completions, including new completions for ``wl-randr`` (:issue:`11301`), performance improvements for ``cargo`` completions by avoiding network requests (:issue:`11347`), and other improvements for  ``btrfs`` (:issue:`11320`), ``cryptsetup`` (:issue:`11315`), ``git`` (:issue:`11319`, :issue:`11322`, :issue:`11323`), ``jj`` (:issue:`11046`), and ``systemd-analyze`` (:issue:`11314`).
+- The Mercurial (``hg``) prompt can handle working directories that contain an embedded newline, rather than producing errors (:issue:`11348`).
+- A number of crashes have been fixed. Triggers include prompts containing backspace characters (:issue:`11280`), history pager search (:issue:`11355`), invalid UTF-8 in :doc:`read <cmds/read>` (:issue:`11383`), and the ``kill-selection`` binding (:issue:`11367`).
+- A race condition in the test suite has been fixed (:issue:`11254`), and a test for fish versioning relaxed to support downstream distributors' modifications (:issue:`11173`).
+- Small improvements to the documentation (:issue:`11264`, :issue:`11329`, :issue:`11361`).
 
 --------------
 

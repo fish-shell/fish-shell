@@ -30,7 +30,7 @@ pub struct AutoCloseFd {
 
 impl Read for AutoCloseFd {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        nix::unistd::read(self.as_raw_fd(), buf).map_err(std::io::Error::from)
+        nix::unistd::read(self, buf).map_err(std::io::Error::from)
     }
 }
 
@@ -187,7 +187,7 @@ fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> 
     }
 
     // Here we are asking the kernel to give us a cloexec fd.
-    let newfd = match nix::fcntl::fcntl(raw_fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)) {
+    let newfd = match nix::fcntl::fcntl(&fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)) {
         Ok(newfd) => newfd,
         Err(err) => {
             perror("fcntl");
@@ -238,7 +238,7 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(|raw_fd| unsafe { File::from_raw_fd(raw_fd) });
+        let ret = ret.map(File::from);
         match ret {
             Ok(file) => {
                 return Ok(file);

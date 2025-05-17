@@ -1,68 +1,101 @@
 #!/usr/bin/env fish
 #
-# Tool to generate messages.pot
+# Tool to generate gettext messages template file.
+# Writes to stdout.
 
-# Create temporary directory for these operations. OS X `mktemp` is somewhat restricted, so this block
-# works around that - based on share/functions/funced.fish.
-set -q TMPDIR
-or set -l TMPDIR /tmp
-set -l tmpdir (mktemp -d $TMPDIR/fish.XXXXXX)
-or exit 1
+begin
+    # Write header. This is required by msguniq.
+    # Note that this results in the file being overwritten.
+    # This is desired behavior, to get rid of the results of prior invocations
+    # of this script.
+    begin
+        echo 'msgid ""'
+        echo 'msgstr ""'
+        echo '"Content-Type: text/plain; charset=UTF-8\n"'
+        echo ""
+    end
 
-# This is a gigantic crime.
-# xgettext still does not support rust *at all*, so we use cargo-expand to get all our wgettext invocations.
-set -l expanded (cargo expand --lib; for f in fish{,_indent,_key_reader}; cargo expand --bin $f; end)
+    set -l cargo_expanded_file (mktemp)
+    # This is a gigantic crime.
+    # We use cargo-expand to get all our wgettext invocations.
+    # This might be replaced once we have a tool which properly handles macro expansions.
+    begin
+        cargo expand --lib
+        for f in fish fish_indent fish_key_reader
+            cargo expand --bin $f
+        end
+    end >$cargo_expanded_file
 
-# Extract any gettext call
-set -l strs (printf '%s\n' $expanded | grep -A1 wgettext_static_str |
-             grep 'widestring::internals::core::primitive::str =' |
-             string match -rg '"(.*)"' | string match -rv '^%ls$|^$' |
-             # escaping difference between gettext and cargo-expand: single-quotes
-             string replace -a "\'" "'" | sort -u)
+    set -l rust_string_file (mktemp)
 
-# Extract any constants
-set -a strs (string match -rv 'BUILD_VERSION:|PACKAGE_NAME' -- $expanded |
-             string match -rg 'const [A-Z_]*: &str = "(.*)"' | string replace -a "\'" "'")
+    # Extract any gettext call
+    grep -A1 wgettext_static_str <$cargo_expanded_file |
+        grep 'widestring::internals::core::primitive::str =' |
+        string match -rg '"(.*)"' |
+        string match -rv '^%ls$|^$' |
+        # escaping difference between gettext and cargo-expand: single-quotes
+        string replace -a "\'" "'" >$rust_string_file
 
-# We construct messages.pot ourselves instead of forcing this into msgmerge or whatever.
-# The escaping so far works out okay.
-for str in $strs
-    # grep -P needed for string escape to be compatible (PCRE-style),
-    # -H gives the filename, -n the line number.
-    # If you want to run this on non-GNU grep: Don't.
-    echo "#:" (grep -PHn -r -- (string escape --style=regex -- $str) src/ |
-    head -n1 | string replace -r ':\s.*' '')
-    echo "msgid \"$str\""
-    echo 'msgstr ""'
-end >messages.pot
+    # Extract any constants
+    grep -Ev 'BUILD_VERSION:|PACKAGE_NAME' <$cargo_expanded_file |
+        grep -E 'const [A-Z_]*: &str = "(.*)"' |
+        sed -E -e 's/^.*const [A-Z_]*: &str = "(.*)".*$/\1/' -e "s_\\\'_'_g" >>$rust_string_file
 
-# This regex handles descriptions for `complete` and `function` statements. These messages are not
-# particularly important to translate. Hence the "implicit" label.
-set -l implicit_regex '(?:^| +)(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+    rm $cargo_expanded_file
 
-# This regex handles explicit requests to translate a message. These are more important to translate
-# than messages which should be implicitly translated.
-set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
+    # Sort the extracted strings and remove duplicates.
+    # Then, transform them into the po format.
+    # If a string contains a '%' it is considered a format string and marked with a '#, c-format'.
+    # This allows msgfmt to identify issues with translations whose format string does not match the
+    # original.
+    sort -u $rust_string_file |
+        sed -E -e '/%/ i\
+#, c-format
+' -e 's/^(.*)$/msgid "\1"\nmsgstr ""\n/'
 
-mkdir -p $tmpdir/implicit/share/completions $tmpdir/implicit/share/functions
-mkdir -p $tmpdir/explicit/share/completions $tmpdir/explicit/share/functions
+    rm $rust_string_file
 
-for f in share/config.fish share/completions/*.fish share/functions/*.fish
-    # Extract explicit attempts to translate a message. That is, those that are of the form
-    # `(_ "message")`.
-    string replace --filter --regex $explicit_regex '$1' <$f | string unescape \
-        | string replace --all '"' '\\"' | string replace -r '(.*)' 'N_ "$1"' >$tmpdir/explicit/$f
+    function extract_fish_script_messages --argument-names regex
 
-    # Handle `complete` / `function` description messages. The `| fish` is subtle. It basically
-    # avoids the need to use `source` with a command substitution that could affect the current
-    # shell.
-    string replace --filter --regex $implicit_regex '$1' <$f | string unescape \
-        | string replace --all '"' '\\"' | string replace -r '(.*)' 'N_ "$1"' >$tmpdir/implicit/$f
-end
+        # Using xgettext causes more trouble than it helps.
+        # This is due to handling of escaping in fish differing from formats xgettext understands
+        # (e.g. POSIX shell strings).
+        # We work around this issue by manually writing the file content.
 
-xgettext -j -k -kN_ -LShell --from-code=UTF-8 -cDescription --no-wrap -o messages.pot $tmpdir/{ex,im}plicit/share/*/*.fish
+        # Steps:
+        # 1. We extract strings to be translated from the relevant files and drop the rest. This step
+        #    depends on the regex matching the entire line, and the first capture group matching the
+        #    string.
+        # 2. We unescape. This gets rid of some escaping necessary in fish strings.
+        # 3. The resulting strings are sorted alphabetically. This step is optional. Not sorting would
+        #    result in strings from the same file appearing together. Removing duplicates is also
+        #    optional, since msguniq takes care of that later on as well.
+        # 4. Single backslashes are replaced by double backslashes. This results in the backslashes
+        #    being interpreted as literal backslashes by gettext tooling.
+        # 5. Double quotes are escaped, such that they are not interpreted as the start or end of
+        #    a msgid.
+        # 6. We transform the string into the format expected in a PO file.
+        cat share/config.fish share/completions/*.fish share/functions/*.fish |
+            string replace --filter --regex $regex '$1' |
+            string unescape |
+            sort -u |
+            sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_'
+    end
 
-# Remove the tmpdir from the location to avoid churn
-sed -i 's_^#: /.*/share/_#: share/_' messages.pot
+    # This regex handles explicit requests to translate a message. These are more important to translate
+    # than messages which should be implicitly translated.
+    set -l explicit_regex '.*\( *_ (([\'"]).+?(?<!\\\\)\\2) *\).*'
+    extract_fish_script_messages $explicit_regex
 
-rm -r $tmpdir
+    # This regex handles descriptions for `complete` and `function` statements. These messages are not
+    # particularly important to translate. Hence the "implicit" label.
+    set -l implicit_regex '^(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (([\'"]).+?(?<!\\\\)\\2).*'
+    extract_fish_script_messages $implicit_regex
+end |
+    # At this point, all extracted strings have been written to stdout,
+    # starting with the ones taken from the Rust sources,
+    # followed by strings explicitly marked for translation in fish scripts,
+    # and finally the strings from fish scripts which get translated implicitly.
+    # Because we do not eliminate duplicates across these categories,
+    # we do it here, since other gettext tools expect no duplicates.
+    msguniq --no-wrap

@@ -40,7 +40,7 @@ libc = "0.2"
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
 lru = "0.13.0"
-nix = { version = "0.29.0", default-features = false, features = [
+nix = { version = "0.30.1", default-features = false, features = [
     "event",
     "inotify",
     "resource",
@@ -54,7 +54,7 @@ fish-printf = { path = "./printf", features = ["widestring"] }
 # available on macOS < 10.12. We can enable "getrandom" when we raise the
 # minimum supported version to 10.12.
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
-widestring = "1.1.0"
+widestring = "1.2.0"
 # We need 0.9.0 specifically for some crash fixes.
 terminfo = "0.9.0"
 rust-embed = { version = "8.2.0", optional = true }
@@ -99,7 +99,7 @@ embed-data = ["dep:rust-embed"]
 asan = []
 tsan = []
 
-[lints]
+[workspace.lints]
 rust.non_camel_case_types = "allow"
 rust.non_upper_case_globals = "allow"
 rust.unknown_lints = "allow"
@@ -107,3 +107,12 @@ rust.unstable_name_collisions = "allow"
 clippy.manual_range_contains = "allow"
 clippy.needless_return = "allow"
 clippy.needless_lifetimes = "allow"
+
+# We do not want to use the e?print(ln)?! macros.
+# These lints flag their use.
+# In the future, they might change to flag other methods of printing.
+clippy.print_stdout = "deny"
+clippy.print_stderr = "deny"
+
+[lints]
+workspace = true

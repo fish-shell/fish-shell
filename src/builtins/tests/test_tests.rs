@@ -28,9 +28,10 @@ fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> boo
     let result = builtin_test(&parser, &mut streams, &mut argv).builtin_status_code();
 
     if result != expected {
-        eprintln!(
-            "expected builtin_test() to return {}, got {}",
-            expected, result
+        eprintf!(
+            "expected builtin_test() to return %s, got %s\n",
+            expected.to_string(),
+            result.to_string()
         );
     }
     result == expected
@@ -98,6 +99,12 @@ fn test_test() {
     assert!(run_test_test(0, &["15", "-ge", "10"]));
     assert!(run_test_test(1, &["!", "15", "-ge", "10"]));
     assert!(run_test_test(0, &["!", "!", "15", "-ge", "10"]));
+
+    assert!(run_test_test(0, &[
+        "(", "-d", "/", ")",
+        "-o",
+        "(", "!", "-d", "/", ")",
+    ]));
 
     assert!(run_test_test(0, &["0", "-ne", "1", "-a", "0", "-eq", "0"]));
     assert!(run_test_test(0, &["0", "-ne", "1", "-a", "-n", "5"]));

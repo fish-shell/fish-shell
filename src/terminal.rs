@@ -1,11 +1,11 @@
 // Generic output functions.
-use crate::color::{self, Color24, RgbColor};
+use crate::color::{Color, Color24};
 use crate::common::ToCString;
 use crate::common::{self, escape_string, wcs2string, wcs2string_appending, EscapeStringStyle};
-use crate::env::EnvVar;
 use crate::future_feature_flags::{self, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::screen::{is_dumb, only_grayscale};
+use crate::text_face::{TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use crate::wchar::prelude::*;
 use crate::FLOGF;
@@ -41,6 +41,13 @@ pub fn set_color_support(val: ColorSupport) {
     COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
 }
 
+#[derive(Clone, Copy)]
+pub(crate) enum Paintable {
+    Foreground,
+    Background,
+    Underline,
+}
+
 #[derive(Clone)]
 pub(crate) enum TerminalCommand<'a> {
     // Text attributes
@@ -48,7 +55,7 @@ pub(crate) enum TerminalCommand<'a> {
     EnterBoldMode,
     EnterDimMode,
     EnterItalicsMode,
-    EnterUnderlineMode,
+    EnterUnderlineMode(UnderlineStyle),
     EnterReverseMode,
     EnterStandoutMode,
     ExitItalicsMode,
@@ -60,8 +67,10 @@ pub(crate) enum TerminalCommand<'a> {
     ClearToEndOfScreen,
 
     // Colors
-    SelectPaletteColor(/*is_foreground=*/ bool, u8),
-    SelectRgbColor(/*is_foreground=*/ bool, u8, u8, u8),
+    SelectPaletteColor(Paintable, u8),
+    SelectRgbColor(Paintable, Color24),
+    DefaultBackgroundColor,
+    DefaultUnderlineColor,
 
     // Cursor Movement
     CursorUp,
@@ -77,10 +86,6 @@ pub(crate) enum TerminalCommand<'a> {
 
     DecsetAlternateScreenBuffer,
     DecrstAlternateScreenBuffer,
-    DecsetSynchronizedUpdate,
-    DecrstSynchronizedUpdate,
-
-    QuerySynchronizedOutput,
 
     // Keyboard protocols
     KittyKeyboardProgressiveEnhancementsEnable,
@@ -143,7 +148,7 @@ pub(crate) trait Output {
             EnterBoldMode => ti(self, b"\x1b[1m", |t| &t.enter_bold_mode),
             EnterDimMode => ti(self, b"\x1b[2m", |t| &t.enter_dim_mode),
             EnterItalicsMode => ti(self, b"\x1b[3m", |t| &t.enter_italics_mode),
-            EnterUnderlineMode => ti(self, b"\x1b[4m", |t| &t.enter_underline_mode),
+            EnterUnderlineMode(style) => underline_mode(self, style),
             EnterReverseMode => ti(self, b"\x1b[7m", |t| &t.enter_reverse_mode),
             EnterStandoutMode => ti(self, b"\x1b[7m", |t| &t.enter_standout_mode),
             ExitItalicsMode => ti(self, b"\x1b[23m", |t| &t.exit_italics_mode),
@@ -151,8 +156,10 @@ pub(crate) trait Output {
             ClearScreen => ti(self, b"\x1b[H\x1b[2J", |term| &term.clear_screen),
             ClearToEndOfLine => ti(self, b"\x1b[K", |term| &term.clr_eol),
             ClearToEndOfScreen => ti(self, b"\x1b[J", |term| &term.clr_eos),
-            SelectPaletteColor(is_foreground, idx) => palette_color(self, is_foreground, idx),
-            SelectRgbColor(is_foreground, r, g, b) => rgb_color(self, is_foreground, r, g, b),
+            SelectPaletteColor(paintable, idx) => palette_color(self, paintable, idx),
+            SelectRgbColor(paintable, rgb) => rgb_color(self, paintable, rgb),
+            DefaultBackgroundColor => write(self, b"\x1b[49m"),
+            DefaultUnderlineColor => write(self, b"\x1b[59m"),
             CursorUp => ti(self, b"\x1b[A", |term| &term.cursor_up),
             CursorDown => ti(self, b"\n", |term| &term.cursor_down),
             CursorLeft => ti(self, b"\x08", |term| &term.cursor_left),
@@ -163,9 +170,6 @@ pub(crate) trait Output {
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),
             DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
             DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
-            DecsetSynchronizedUpdate => write(self, b"\x1b[?2026h"),
-            DecrstSynchronizedUpdate => write(self, b"\x1b[?2026l"),
-            QuerySynchronizedOutput => write(self, b"\x1b[?2026$p"),
             KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
             KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
             QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
@@ -224,32 +228,39 @@ pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability:
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";
 
-pub(crate) static SYNCHRONIZED_OUTPUT_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
 pub(crate) fn use_terminfo() -> bool {
     !future_feature_flags::test(FeatureFlag::ignore_terminfo) && TERM.lock().unwrap().is_some()
 }
 
-fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
-    if only_grayscale()
-        && !(RgbColor {
-            typ: color::Type::Named { idx },
-            flags: color::Flags::DEFAULT,
-        })
-        .is_grayscale()
-    {
+fn underline_mode(out: &mut impl Output, style: UnderlineStyle) -> bool {
+    use UnderlineStyle as UL;
+    let style = match style {
+        UL::Single => return maybe_terminfo(out, b"\x1b[4m", |t| &t.enter_underline_mode),
+        UL::Double => 2,
+        UL::Curly => 3,
+        UL::Dotted => 4,
+        UL::Dashed => 5,
+    };
+    write_to_output!(out, "\x1b[4:{}m", style);
+    true
+}
+
+fn palette_color(out: &mut impl Output, paintable: Paintable, mut idx: u8) -> bool {
+    if only_grayscale() && !(Color::Named { idx }).is_grayscale() {
         return false;
     }
     if use_terminfo() {
         let term = crate::terminal::term();
-        let Some(command) = (if foreground {
-            term.set_a_foreground
+        let Some(command) = (match paintable {
+            Paintable::Foreground => term
+                .set_a_foreground
                 .as_ref()
-                .or(term.set_foreground.as_ref())
-        } else {
-            term.set_a_background
+                .or(term.set_foreground.as_ref()),
+            Paintable::Background => term
+                .set_a_background
                 .as_ref()
-                .or(term.set_background.as_ref())
+                .or(term.set_background.as_ref()),
+            Paintable::Underline => None,
         }) else {
             return false;
         };
@@ -264,7 +275,14 @@ fn palette_color(out: &mut impl Output, foreground: bool, mut idx: u8) -> bool {
             idx -= 8;
         }
     }
-    let bg = if foreground { 0 } else { 10 };
+    let bg = match paintable {
+        Paintable::Foreground => 0,
+        Paintable::Background => 10,
+        Paintable::Underline => {
+            write_to_output!(out, "\x1b[58:5:{}m", idx);
+            return true;
+        }
+    };
     match idx {
         0..=7 => write_to_output!(out, "\x1b[{}m", 30 + bg + idx),
         8..=15 => write_to_output!(out, "\x1b[{}m", 90 + bg + (idx - 8)),
@@ -283,17 +301,19 @@ fn term_supports_color_natively(term: &Term, c: u8) -> bool {
     }
 }
 
-fn rgb_color(out: &mut impl Output, foreground: bool, r: u8, g: u8, b: u8) -> bool {
+fn rgb_color(out: &mut impl Output, paintable: Paintable, rgb: Color24) -> bool {
     // Foreground: ^[38;2;<r>;<g>;<b>m
     // Background: ^[48;2;<r>;<g>;<b>m
-    write_to_output!(
-        out,
-        "\x1b[{};2;{};{};{}m",
-        if foreground { 38 } else { 48 },
-        r,
-        g,
-        b
-    );
+    // Underline: ^[58:2::<r>:<g>:<b>m
+    let code = match paintable {
+        Paintable::Foreground => 38,
+        Paintable::Background => 48,
+        Paintable::Underline => {
+            write_to_output!(out, "\x1b[58:2::{}:{}:{}m", rgb.r, rgb.g, rgb.b);
+            return true;
+        }
+    };
+    write_to_output!(out, "\x1b[{code};2;{};{};{}m", rgb.r, rgb.g, rgb.b);
     true
 }
 
@@ -395,19 +415,11 @@ fn scroll_forward(out: &mut impl Output, lines: usize) -> bool {
     true
 }
 
-fn index_for_color(c: RgbColor) -> u8 {
+fn index_for_color(c: Color) -> u8 {
     if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
         return c.to_name_index();
     }
     c.to_term256_index()
-}
-
-fn write_foreground_color(outp: &mut Outputter, idx: u8) -> bool {
-    outp.write_command(TerminalCommand::SelectPaletteColor(true, idx))
-}
-
-fn write_background_color(outp: &mut Outputter, idx: u8) -> bool {
-    outp.write_command(TerminalCommand::SelectPaletteColor(false, idx))
 }
 
 pub struct Outputter {
@@ -420,17 +432,10 @@ pub struct Outputter {
     /// fd to output to, or -1 for none.
     fd: RawFd,
 
-    /// Foreground.
-    last_color: RgbColor,
-
-    /// Background.
-    last_color2: RgbColor,
-
-    was_bold: bool,
-    was_underline: bool,
-    was_italics: bool,
-    was_dim: bool,
-    was_reverse: bool,
+    /// Assume this corresponds to the current state of the terminal.
+    /// This assumption holds if we start from the default state. Currently, builtin set_color
+    /// should be the only exception.
+    last: TextFace,
 }
 
 impl Outputter {
@@ -441,13 +446,7 @@ impl Outputter {
             contents: Vec::new(),
             buffer_count: 0,
             fd,
-            last_color: RgbColor::NORMAL,
-            last_color2: RgbColor::NORMAL,
-            was_bold: false,
-            was_underline: false,
-            was_italics: false,
-            was_dim: false,
-            was_reverse: false,
+            last: TextFace::default(),
         }
     }
 
@@ -456,12 +455,12 @@ impl Outputter {
         Self::new_from_fd(-1)
     }
 
-    fn reset_modes(&mut self) {
-        self.was_bold = false;
-        self.was_underline = false;
-        self.was_italics = false;
-        self.was_dim = false;
-        self.was_reverse = false;
+    pub fn new_buffering_no_assume_normal() -> Self {
+        let mut zelf = Self::new_buffering();
+        zelf.last.fg = Color::None;
+        zelf.last.bg = Color::None;
+        assert_eq!(zelf.last.underline_color, Color::None);
+        zelf
     }
 
     fn maybe_flush(&mut self) {
@@ -472,16 +471,12 @@ impl Outputter {
 
     /// Unconditionally write the color string to the output.
     /// Exported for builtin_set_color's usage only.
-    pub fn write_color(&mut self, color: RgbColor, is_fg: bool) -> bool {
+    pub(crate) fn write_color(&mut self, paintable: Paintable, color: Color) -> bool {
         let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);
-            if is_fg {
-                return write_foreground_color(self, idx);
-            } else {
-                return write_background_color(self, idx);
-            };
+            return self.write_command(TerminalCommand::SelectPaletteColor(paintable, idx));
         }
 
         if only_grayscale() && color.is_grayscale() {
@@ -489,8 +484,17 @@ impl Outputter {
         }
 
         // 24 bit!
-        let Color24 { r, g, b } = color.to_color24();
-        self.write_command(TerminalCommand::SelectRgbColor(is_fg, r, g, b))
+        self.write_command(TerminalCommand::SelectRgbColor(
+            paintable,
+            color.to_color24(),
+        ))
+    }
+
+    /// Unconditionally resets colors and text style.
+    pub(crate) fn reset_text_face(&mut self) {
+        use TerminalCommand::ExitAttributeMode;
+        self.write_command(ExitAttributeMode);
+        self.last = TextFace::default();
     }
 
     /// Sets the fg and bg color. May be called as often as you like, since if the new color is the same
@@ -509,132 +513,115 @@ impl Outputter {
     ///
     /// - Lastly we may need to write set_a_background or set_a_foreground to set the other half of the
     /// color pair to what it should be.
-    #[allow(clippy::if_same_then_else)]
-    pub fn set_color(&mut self, mut fg: RgbColor, mut bg: RgbColor) {
-        const normal: RgbColor = RgbColor::NORMAL;
-        let mut bg_set = false;
-        let mut last_bg_set = false;
-        let is_bold = fg.is_bold() || bg.is_bold();
-        let is_underline = fg.is_underline() || bg.is_underline();
-        let is_italics = fg.is_italics() || bg.is_italics();
-        let is_dim = fg.is_dim() || bg.is_dim();
-        let is_reverse = fg.is_reverse() || bg.is_reverse();
+    pub(crate) fn set_text_face(&mut self, face: TextFace) {
+        self.set_text_face_internal(face, true)
+    }
+    pub(crate) fn set_text_face_no_magic(&mut self, face: TextFace) {
+        self.set_text_face_internal(face, false)
+    }
+    fn set_text_face_internal(&mut self, face: TextFace, salvage_unreadable: bool) {
+        let mut fg = face.fg;
+        let bg = face.bg;
+        let underline_color = face.underline_color;
+        let style = face.style;
 
-        if fg.is_reset() || bg.is_reset() {
-            #[allow(unused_assignments)]
-            {
-                fg = normal;
-                bg = normal;
-            }
-            self.reset_modes();
-            // If we exit attribute mode, we must first set a color, or previously colored text might
-            // lose its color. Terminals are weird...
-            write_foreground_color(self, 0);
-            self.write_command(ExitAttributeMode);
-            return;
-        }
         use TerminalCommand::{
-            EnterBoldMode, EnterDimMode, EnterItalicsMode, EnterReverseMode, EnterStandoutMode,
-            EnterUnderlineMode, ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
+            DefaultBackgroundColor, DefaultUnderlineColor, EnterBoldMode, EnterDimMode,
+            EnterItalicsMode, EnterReverseMode, EnterStandoutMode, EnterUnderlineMode,
+            ExitAttributeMode, ExitItalicsMode, ExitUnderlineMode,
         };
-        if (self.was_bold && !is_bold)
-            || (self.was_dim && !is_dim)
-            || (self.was_reverse && !is_reverse)
-        {
-            // Only way to exit bold/dim/reverse mode is a reset of all attributes.
-            self.write_command(ExitAttributeMode);
-            self.last_color = normal;
-            self.last_color2 = normal;
-            self.reset_modes();
+
+        // Removes all styles that are individually resettable.
+        let non_resettable = |mut style: TextStyling| {
+            style.italics = false;
+            style.underline_style = None;
+            style
+        };
+        let non_resettable_attributes_to_unset =
+            non_resettable(self.last.style).difference_prefer_empty(non_resettable(style));
+        if !non_resettable_attributes_to_unset.is_empty() {
+            // Only way to exit non-resettable ones is a reset of all attributes.
+            self.reset_text_face();
         }
-        if !self.last_color2.is_special() {
-            // Background was set.
-            // "Special" here refers to the special "normal", "reset" and "none" colors,
-            // that really just disable the background.
-            last_bg_set = true;
-        }
-        if !bg.is_special() {
-            // Background is set.
-            bg_set = true;
-            if fg == bg {
-                fg = if bg == RgbColor::WHITE {
-                    RgbColor::BLACK
+        if salvage_unreadable {
+            if !bg.is_special() && fg == bg {
+                fg = if bg == Color::WHITE {
+                    Color::BLACK
                 } else {
-                    RgbColor::WHITE
+                    Color::WHITE
                 };
             }
         }
 
-        if bg_set && !last_bg_set {
-            // Background color changed and is set, so we enter bold mode to make reading easier.
-            // This means bold mode is _always_ on when the background color is set.
-            self.write_command(EnterBoldMode);
-        }
-        if !bg_set && last_bg_set {
-            // Background color changed and is no longer set, so we exit bold mode.
-            self.write_command(ExitAttributeMode);
-            self.reset_modes();
-            // We don't know if exit_attribute_mode resets colors, so we set it to something known.
-            if write_foreground_color(self, 0) {
-                self.last_color = RgbColor::BLACK;
-            }
-        }
-
-        if self.last_color != fg {
+        if !fg.is_none() && fg != self.last.fg {
             if fg.is_normal() {
-                write_foreground_color(self, 0);
                 self.write_command(ExitAttributeMode);
 
-                self.last_color2 = RgbColor::NORMAL;
-                self.reset_modes();
-            } else if !fg.is_special() {
-                self.write_color(fg, true /* foreground */);
+                self.last.bg = Color::Normal;
+                self.last.underline_color = Color::Normal;
+                self.last.style = TextStyling::default();
+            } else {
+                assert!(!fg.is_special());
+                self.write_color(Paintable::Foreground, fg);
             }
+            self.last.fg = fg;
         }
-        self.last_color = fg;
 
-        if self.last_color2 != bg {
+        if !bg.is_none() && bg != self.last.bg {
             if bg.is_normal() {
-                write_background_color(self, 0);
-
-                self.write_command(ExitAttributeMode);
-                if !self.last_color.is_normal() {
-                    self.write_color(self.last_color, true /* foreground */);
-                }
-                self.reset_modes();
-                self.last_color2 = bg;
-            } else if !bg.is_special() {
-                self.write_color(bg, false /* not foreground */);
-                self.last_color2 = bg;
+                self.write_command(DefaultBackgroundColor);
+            } else {
+                assert!(!bg.is_special());
+                self.write_color(Paintable::Background, bg);
             }
+            self.last.bg = bg;
+        }
+
+        if !underline_color.is_none() && underline_color != self.last.underline_color {
+            if underline_color.is_normal() {
+                self.write_command(DefaultUnderlineColor);
+            } else {
+                self.write_color(Paintable::Underline, underline_color);
+            }
+            self.last.underline_color = underline_color;
         }
 
         // Lastly, we set bold, underline, italics, dim, and reverse modes correctly.
-        if is_bold && !self.was_bold && !bg_set && self.write_command(EnterBoldMode) {
-            self.was_bold = is_bold;
+        if style.is_bold() && !self.last.style.is_bold() && self.write_command(EnterBoldMode) {
+            self.last.style.bold = true;
         }
 
-        if !self.was_underline && is_underline && self.write_command(EnterUnderlineMode) {
-            self.was_underline = is_underline;
-        } else if self.was_underline && !is_underline && self.write_command(ExitUnderlineMode) {
-            self.was_underline = is_underline;
-        }
-
-        if self.was_italics && !is_italics && self.write_command(ExitItalicsMode) {
-            self.was_italics = is_italics;
-        } else if !self.was_italics && is_italics && self.write_command(EnterItalicsMode) {
-            self.was_italics = is_italics;
-        }
-
-        if is_dim && !self.was_dim && self.write_command(EnterDimMode) {
-            self.was_dim = is_dim;
-        }
-        // N.B. there is no exit_dim_mode, it's handled by exit_attribute_mode above.
-
-        if is_reverse && !self.was_reverse {
-            if self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode) {
-                self.was_reverse = is_reverse;
+        if style.underline_style != self.last.style.underline_style {
+            match style.underline_style {
+                None => {
+                    if self.write_command(ExitUnderlineMode) {
+                        self.last.style.underline_style = None;
+                    }
+                }
+                Some(underline_style) => {
+                    if self.write_command(EnterUnderlineMode(underline_style)) {
+                        self.last.style.underline_style = Some(underline_style);
+                    }
+                }
             }
+        }
+
+        let was_italics = self.last.style.is_italics();
+        if !style.is_italics() && was_italics && self.write_command(ExitItalicsMode) {
+            self.last.style.italics = false;
+        } else if style.is_italics() && !was_italics && self.write_command(EnterItalicsMode) {
+            self.last.style.italics = true;
+        }
+
+        if style.is_dim() && !self.last.style.is_dim() && self.write_command(EnterDimMode) {
+            self.last.style.dim = true;
+        }
+
+        if style.is_reverse()
+            && !self.last.style.is_reverse()
+            && (self.write_command(EnterReverseMode) || self.write_command(EnterStandoutMode))
+        {
+            self.last.style.reverse = true;
         }
     }
 
@@ -738,113 +725,30 @@ impl<'a> Output for BufferedOutputter<'a> {
 
 /// Given a list of RgbColor, pick the "best" one, as determined by the color support. Returns
 /// RgbColor::NONE if empty.
-pub fn best_color(candidates: &[RgbColor], support: ColorSupport) -> RgbColor {
-    if candidates.is_empty() {
-        return RgbColor::NONE;
-    }
-
-    let mut first_rgb = RgbColor::NONE;
-    let mut first_named = RgbColor::NONE;
+pub fn best_color(candidates: impl Iterator<Item = Color>, support: ColorSupport) -> Option<Color> {
+    let mut first = None;
+    let mut first_rgb = None;
+    let mut first_named = None;
     for color in candidates {
+        if first.is_none() {
+            first = Some(color);
+        }
         if first_rgb.is_none() && color.is_rgb() {
-            first_rgb = *color;
+            first_rgb = Some(color);
         }
         if first_named.is_none() && color.is_named() {
-            first_named = *color;
+            first_named = Some(color);
         }
     }
 
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
-    let mut result;
     let has_term256 = support.contains(ColorSupport::TERM_256COLOR);
-    if (!first_rgb.is_none() && has_term256) || first_named.is_none() {
-        result = first_rgb;
+    (if (first_rgb.is_some() && has_term256) || first_named.is_none() {
+        first_rgb
     } else {
-        result = first_named;
-    }
-    if result.is_none() {
-        result = candidates[0];
-    }
-    result
-}
-
-/// Return the internal color code representing the specified color.
-/// TODO: This code should be refactored to enable sharing with builtin_set_color.
-///       In particular, the argument parsing still isn't fully capable.
-pub fn parse_color(var: &EnvVar, is_background: bool) -> RgbColor {
-    let mut result = parse_color_maybe_none(var, is_background);
-    if result.is_none() {
-        result.typ = color::Type::Normal;
-    }
-    result
-}
-
-pub fn parse_color_maybe_none(var: &EnvVar, is_background: bool) -> RgbColor {
-    let mut is_bold = false;
-    let mut is_underline = false;
-    let mut is_italics = false;
-    let mut is_dim = false;
-    let mut is_reverse = false;
-
-    let mut candidates: Vec<RgbColor> = Vec::new();
-
-    let prefix = L!("--background=");
-
-    let mut next_is_background = false;
-    let mut color_name = WString::new();
-    for next in var.as_list() {
-        color_name.clear();
-        #[allow(clippy::collapsible_else_if)]
-        if is_background {
-            if color_name.is_empty() && next_is_background {
-                color_name = next.to_owned();
-                next_is_background = false;
-            } else if next.starts_with(prefix) {
-                // Look for something like "--background=red".
-                color_name = next.slice_from(prefix.char_count()).to_owned();
-            } else if next == "--background" || next == "-b" {
-                // Without argument attached the next token is the color
-                // - if it's another option it's an error.
-                next_is_background = true;
-            } else if next == "--reverse" || next == "-r" {
-                // Reverse should be meaningful in either context
-                is_reverse = true;
-            } else if next.starts_with("-b") {
-                // Look for something like "-bred".
-                // Yes, that length is hardcoded.
-                color_name = next.slice_from(2).to_owned();
-            }
-        } else {
-            if next == "--bold" || next == "-o" {
-                is_bold = true;
-            } else if next == "--underline" || next == "-u" {
-                is_underline = true;
-            } else if next == "--italics" || next == "-i" {
-                is_italics = true;
-            } else if next == "--dim" || next == "-d" {
-                is_dim = true;
-            } else if next == "--reverse" || next == "-r" {
-                is_reverse = true;
-            } else {
-                color_name = next.clone();
-            }
-        }
-
-        if !color_name.is_empty() {
-            let color: Option<RgbColor> = RgbColor::from_wstr(&color_name);
-            if let Some(color) = color {
-                candidates.push(color);
-            }
-        }
-    }
-
-    let mut result = best_color(&candidates, get_color_support());
-    result.set_bold(is_bold);
-    result.set_underline(is_underline);
-    result.set_italics(is_italics);
-    result.set_dim(is_dim);
-    result.set_reverse(is_reverse);
-    result
+        first_named
+    })
+    .or(first)
 }
 
 /// The [`Term`] singleton. Initialized via a call to [`setup()`] and surfaced to the outside world via [`term()`].

@@ -227,46 +227,66 @@ def parse_color(color_str):
     comps = color_str.split(" ")
     color = ""
     background_color = ""
-    bold, underline, italics, dim, reverse = False, False, False, False, False
-    for comp in comps:
+    underline_color = ""
+    bold = False
+    underline = False
+    italics = False
+    dim = False
+    reverse = False
+    i = 0
+    while i < len(comps):
+        comp = comps[i]
         # Remove quotes
         comp = comp.strip("'\" ")
         if comp == "--bold" or comp == "-o":
             bold = True
         elif comp == "--underline" or comp == "-u":
-            underline = True
+            underline = "single"
+        elif comp.startswith("--underline="):
+            underline = comp.stripprefix("--underline=")
+        elif comp.startswith("-u"): # Multiple short options like "-rucurly" are not yet supported.
+            underline = comp.stripprefix("-u")
         elif comp == "--italics" or comp == "-i":
             italics = True
         elif comp == "--dim" or comp == "-d":
             dim = True
         elif comp == "--reverse" or comp == "-r":
             reverse = True
-        elif comp.startswith("--background"):
-            # Background color
-            c = comp[len("--background=") :]
-            parsed_c = parse_one_color(c)
-            # We prefer the unparsed version - if it says "brgreen", we use brgreen,
-            # instead of 00ff00
-            if better_color(background_color, parsed_c) == parsed_c:
-                background_color = c
-        elif comp.startswith("-b"):
-            # Background color in short.
-            skip = len("-b")
-            if comp[len("-b=")] in ["=", " "]:
-                skip += 1
-            c = comp[skip:]
-            parsed_c = parse_one_color(c)
-            if better_color(background_color, parsed_c) == parsed_c:
-                background_color = c
         else:
-            # Regular color
-            parsed_c = parse_one_color(comp)
-            if better_color(color, parsed_c) == parsed_c:
-                color = comp
+            def parse_opt(current_best: str, i: int, long_opt: str, short_opt: str | None) -> str:
+                if comp.startswith(long_opt):
+                    c = comp[len(long_opt) :]
+                    parsed_c = parse_one_color(c)
+                    # We prefer the unparsed version - if it says "brgreen", we use brgreen,
+                    # instead of 00ff00
+                    if better_color(current_best, parsed_c) == parsed_c:
+                        return True, c, i
+                elif short_opt is not None and comp.startswith(short_opt):
+                    if comp == short_opt:
+                        if i + 1 == len(comps):
+                            c = ""
+                        else:
+                            c = comps[i + 1]
+                            i += 1
+                    else:
+                        c = comp[len(short_opt):]
+                    parsed_c = parse_one_color(c)
+                    if better_color(current_best, parsed_c) == parsed_c:
+                        return True, c, i
+                return False, current_best, i
+            is_bg, background_color, i = parse_opt(background_color, i, "--background", "-b")
+            is_ul, underline_color, i = parse_opt(underline_color, i, "--underline-color", None)
+            if not (is_bg or is_ul):
+                # Regular color
+                parsed_c = parse_one_color(comp)
+                if better_color(color, parsed_c) == parsed_c:
+                    color = comp
+        i += 1
 
     return {
         "color": color,
         "background": background_color,
+        "underline-color": underline_color,
         "bold": bold,
         "underline": underline,
         "italics": italics,
@@ -284,8 +304,8 @@ def unparse_color(col):
         ret += col["color"]
     if col["bold"]:
         ret += " --bold"
-    if col["underline"]:
-        ret += " --underline"
+    if col["underline"] is not None:
+        ret += " --underline=" + col["underline"]
     if col["italics"]:
         ret += " --italics"
     if col["dim"]:
@@ -294,6 +314,8 @@ def unparse_color(col):
         ret += " --reverse"
     if col["background"]:
         ret += " --background=" + col["background"]
+    if col["underline-color"]:
+        ret += " --underline-color=" + col["underline-color"]
     return ret
 
 

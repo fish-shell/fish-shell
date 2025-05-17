@@ -1340,7 +1340,7 @@ fn can_be_encoded(wc: char) -> bool {
 /// Return the number of bytes read, or 0 on EOF, or an error.
 pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
-        let res = nix::unistd::read(fd, buf);
+        let res = nix::unistd::read(unsafe { BorrowedFd::borrow_raw(fd) }, buf);
         if let Err(nix::Error::EINTR) = res {
             continue;
         }
@@ -1408,27 +1408,6 @@ macro_rules! write_to_output {
     ($out:expr, $($arg:tt)*) => {{
         $crate::common::do_write_to_output($out, format_args!($($arg)*));
     }};
-}
-
-/// A rusty port of the C++ `read_loop()` function from `common.cpp`. This should be deprecated in
-/// favor of native rust read/write methods at some point.
-///
-/// Returns the number of bytes read or an IO error.
-pub fn read_loop<Fd: AsRawFd>(fd: &Fd, buf: &mut [u8]) -> std::io::Result<usize> {
-    let fd = fd.as_raw_fd();
-    loop {
-        match nix::unistd::read(fd, buf) {
-            Ok(read) => {
-                return Ok(read);
-            }
-            Err(err) => {
-                if matches!(err, nix::Error::EAGAIN | nix::Error::EINTR) {
-                    continue;
-                }
-                return Err(std::io::Error::from(err));
-            }
-        }
-    }
 }
 
 /// Write the given paragraph of output, redoing linebreaks to fit `termsize`.

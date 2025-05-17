@@ -127,7 +127,7 @@ function fish_config --description "Launch fish's web based configuration"
                         end
                     end
                     if not set -q have[1]
-                        if status list-files tools/web_config/sample_prompts/$argv[1].fish >/dev/null
+                        if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
                             status get-file tools/web_config/sample_prompts/$argv[1].fish | source
                             # HACK: `source` gives us a filename of "-", so we check manually if we had a right prompt
                             set have ""
@@ -170,7 +170,7 @@ function fish_config --description "Launch fish's web based configuration"
                                 end
                             end
                             if not set -q have[1]
-                                if status list-files tools/web_config/sample_prompts/$argv[1].fish >/dev/null
+                                if status list-files tools/web_config/sample_prompts/$argv[1].fish &>/dev/null
                                     status get-file tools/web_config/sample_prompts/$argv[1].fish | source
                                 else
                                     echo "No such prompt: '$argv[1]'" >&2
@@ -303,7 +303,7 @@ function fish_config --description "Launch fish's web based configuration"
                         end
 
                         if not set -q file[1]
-                            if status list-files tools/web_config/themes/$argv[1].theme >/dev/null
+                            if status list-files tools/web_config/themes/$argv[1].theme &>/dev/null
                                 set file tools/web_config/themes/$argv[1].theme
                             else
                                 echo "No such theme: $argv[1]" >&2

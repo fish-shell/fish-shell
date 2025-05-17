@@ -35,22 +35,19 @@ use std::{
     io::{BufRead, Read, Seek, SeekFrom, Write},
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::{
-        fd::{AsFd, AsRawFd},
-        unix::fs::MetadataExt,
-    },
+    os::{fd::AsRawFd, unix::fs::MetadataExt},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use bitflags::bitflags;
-use libc::{fchmod, fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::{fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
 
 use crate::{
-    ast::{Ast, Node},
+    ast::{self, Kind, Node},
     common::{
         str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
         UnescapeStringStyle,
@@ -74,10 +71,9 @@ use crate::{
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
-    wutil::fstat,
     wutil::{
-        file_id_for_fd, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId,
-        INVALID_FILE_ID,
+        file_id_for_file, file_id_for_path, wgettext_fmt, wrealpath, wrename, wstat, wunlink,
+        FileId, INVALID_FILE_ID,
     },
 };
 
@@ -518,7 +514,7 @@ impl HistoryImpl {
             let locked = unsafe { Self::maybe_lock_file(&mut file, LOCK_SH) };
             self.file_contents = HistoryFileContents::create(&mut file);
             self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_fd(file.as_fd())
+                file_id_for_file(&file)
             } else {
                 INVALID_FILE_ID
             };
@@ -707,7 +703,7 @@ impl HistoryImpl {
 
             let orig_file_id = target_file_before
                 .as_ref()
-                .map(|fd| file_id_for_fd(fd.as_fd()))
+                .map(file_id_for_file)
                 .unwrap_or(INVALID_FILE_ID);
 
             // Open any target file, but do not lock it right away
@@ -770,7 +766,8 @@ impl HistoryImpl {
                 // did, it would be tricky to set the permissions correctly. (bash doesn't get this
                 // case right either).
                 if let Ok(target_file_after) = target_file_after.as_ref() {
-                    if let Ok(md) = fstat(target_file_after.as_raw_fd()) {
+                    if let Ok(md) = target_file_after.metadata() {
+                        // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
                         if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                             FLOG!(
                                 history_file,
@@ -778,15 +775,8 @@ impl HistoryImpl {
                                 errno::errno()
                             );
                         }
-                        #[allow(clippy::useless_conversion)]
-                        if unsafe { fchmod(tmp_file.as_raw_fd(), md.mode().try_into().unwrap()) }
-                            == -1
-                        {
-                            FLOG!(
-                                history_file,
-                                "Error when changing mode of history file:",
-                                errno::errno(),
-                            );
+                        if let Err(e) = tmp_file.set_permissions(md.permissions()) {
+                            FLOG!(history_file, "Error when changing mode of history file:", e);
                         }
                     }
                 }
@@ -870,7 +860,7 @@ impl HistoryImpl {
             unsafe {
                 Self::maybe_lock_file(&mut file, LOCK_EX);
             }
-            let file_id = file_id_for_fd(file.as_fd());
+            let file_id = file_id_for_file(&file);
             if file_id_for_path(&history_path) == file_id {
                 // File IDs match, so the file we opened is still at that path
                 // We're going to use this fd
@@ -929,7 +919,7 @@ impl HistoryImpl {
         // write.
         // We don't update the mapping since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id_for_fd(history_file.as_fd());
+        self.history_file_id = file_id_for_file(&history_file);
 
         drop(history_file);
 
@@ -1356,8 +1346,6 @@ impl HistoryImpl {
     unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
 
-        let raw_fd = file.as_raw_fd();
-
         // Don't lock if it took too long before, if we are simulating a failing lock, or if our history
         // is on a remote filesystem.
         if ABANDONED_LOCKING.load() {
@@ -1371,7 +1359,7 @@ impl HistoryImpl {
         }
 
         let start_time = SystemTime::now();
-        let retval = unsafe { flock(raw_fd, lock_type) };
+        let retval = unsafe { flock(file.as_raw_fd(), lock_type) };
         if let Ok(duration) = start_time.elapsed() {
             if duration > Duration::from_millis(250) {
                 FLOG!(
@@ -1508,7 +1496,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
         }
     }
 
-    if Ast::parse(line, ParseTreeFlags::empty(), None).errored() {
+    if ast::parse(line, ParseTreeFlags::empty(), None).errored() {
         return false;
     }
 
@@ -1593,16 +1581,16 @@ impl History {
 
         // Find all arguments that look like they could be file paths.
         let mut needs_sync_write = false;
-        let ast = Ast::parse(s, ParseTreeFlags::empty(), None);
+        let ast = ast::parse(s, ParseTreeFlags::empty(), None);
 
         let mut potential_paths = Vec::new();
         for node in ast.walk() {
-            if let Some(arg) = node.as_argument() {
+            if let Kind::Argument(arg) = node.kind() {
                 let potential_path = arg.source(s);
                 if string_could_be_path(potential_path) {
                     potential_paths.push(potential_path.to_owned());
                 }
-            } else if let Some(stmt) = node.as_decorated_statement() {
+            } else if let Kind::DecoratedStatement(stmt) = node.kind() {
                 // Hack hack hack - if the command is likely to trigger an exit, then don't do
                 // background file detection, because we won't be able to write it to our history file
                 // before we exit.

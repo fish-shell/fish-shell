@@ -38,24 +38,15 @@ bitflags! {
 }
 
 /// A range of source code.
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct SourceRange {
     pub start: u32,
     pub length: u32,
 }
 
-impl Default for SourceRange {
-    fn default() -> Self {
-        SourceRange {
-            start: 0,
-            length: 0,
-        }
-    }
-}
-
 impl SourceRange {
-    pub fn as_usize(&self) -> std::ops::Range<usize> {
-        (*self).into()
+    pub fn as_usize(self) -> std::ops::Range<usize> {
+        self.into()
     }
 }
 
@@ -81,30 +72,29 @@ pub enum ParseTokenType {
     comment,
 }
 
-#[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ParseKeyword {
-    // 'none' is not a keyword, it is a sentinel indicating nothing.
-    none,
-
-    kw_and,
-    kw_begin,
-    kw_builtin,
-    kw_case,
-    kw_command,
-    kw_else,
-    kw_end,
-    kw_exclam,
-    kw_exec,
-    kw_for,
-    kw_function,
-    kw_if,
-    kw_in,
-    kw_not,
-    kw_or,
-    kw_switch,
-    kw_time,
-    kw_while,
+    // 'None' is not a keyword, it is a sentinel indicating nothing.
+    // Note it proves convenient to keep this as a value rather than using Option.
+    None,
+    And,
+    Begin,
+    Builtin,
+    Case,
+    Command,
+    Else,
+    End,
+    Exclam,
+    Exec,
+    For,
+    Function,
+    If,
+    In,
+    Not,
+    Or,
+    Switch,
+    Time,
+    While,
 }
 
 // Statement decorations like 'command' or 'exec'.
@@ -157,20 +147,20 @@ impl SourceRange {
             length: length.try_into().unwrap(),
         }
     }
-    pub fn start(&self) -> usize {
+    pub fn start(self) -> usize {
         self.start.try_into().unwrap()
     }
-    pub fn length(&self) -> usize {
+    pub fn length(self) -> usize {
         self.length.try_into().unwrap()
     }
-    pub fn end(&self) -> usize {
+    pub fn end(self) -> usize {
         self.start
             .checked_add(self.length)
             .expect("Overflow")
             .try_into()
             .unwrap()
     }
-    pub fn combine(&self, other: Self) -> Self {
+    pub fn combine(self, other: Self) -> Self {
         let start = std::cmp::min(self.start, other.start);
         SourceRange {
             start,
@@ -183,7 +173,7 @@ impl SourceRange {
     }
 
     // Return true if a location is in this range, including one-past-the-end.
-    pub fn contains_inclusive(&self, loc: usize) -> bool {
+    pub fn contains_inclusive(self, loc: usize) -> bool {
         self.start() <= loc && loc - self.start() <= self.length()
     }
 }
@@ -224,7 +214,7 @@ impl ParseTokenType {
 
 impl Default for ParseKeyword {
     fn default() -> Self {
-        ParseKeyword::none
+        ParseKeyword::None
     }
 }
 
@@ -232,24 +222,24 @@ impl ParseKeyword {
     /// Return the keyword as a string.
     pub fn to_wstr(self) -> &'static wstr {
         match self {
-            ParseKeyword::kw_and => L!("and"),
-            ParseKeyword::kw_begin => L!("begin"),
-            ParseKeyword::kw_builtin => L!("builtin"),
-            ParseKeyword::kw_case => L!("case"),
-            ParseKeyword::kw_command => L!("command"),
-            ParseKeyword::kw_else => L!("else"),
-            ParseKeyword::kw_end => L!("end"),
-            ParseKeyword::kw_exclam => L!("!"),
-            ParseKeyword::kw_exec => L!("exec"),
-            ParseKeyword::kw_for => L!("for"),
-            ParseKeyword::kw_function => L!("function"),
-            ParseKeyword::kw_if => L!("if"),
-            ParseKeyword::kw_in => L!("in"),
-            ParseKeyword::kw_not => L!("not"),
-            ParseKeyword::kw_or => L!("or"),
-            ParseKeyword::kw_switch => L!("switch"),
-            ParseKeyword::kw_time => L!("time"),
-            ParseKeyword::kw_while => L!("while"),
+            ParseKeyword::And => L!("and"),
+            ParseKeyword::Begin => L!("begin"),
+            ParseKeyword::Builtin => L!("builtin"),
+            ParseKeyword::Case => L!("case"),
+            ParseKeyword::Command => L!("command"),
+            ParseKeyword::Else => L!("else"),
+            ParseKeyword::End => L!("end"),
+            ParseKeyword::Exclam => L!("!"),
+            ParseKeyword::Exec => L!("exec"),
+            ParseKeyword::For => L!("for"),
+            ParseKeyword::Function => L!("function"),
+            ParseKeyword::If => L!("if"),
+            ParseKeyword::In => L!("in"),
+            ParseKeyword::Not => L!("not"),
+            ParseKeyword::Or => L!("or"),
+            ParseKeyword::Switch => L!("switch"),
+            ParseKeyword::Time => L!("time"),
+            ParseKeyword::While => L!("while"),
             _ => L!("unknown_keyword"),
         }
     }
@@ -263,26 +253,28 @@ impl fish_printf::ToArg<'static> for ParseKeyword {
 
 impl From<&wstr> for ParseKeyword {
     fn from(s: &wstr) -> Self {
-        match s {
-            _ if s == "!" => ParseKeyword::kw_exclam,
-            _ if s == "and" => ParseKeyword::kw_and,
-            _ if s == "begin" => ParseKeyword::kw_begin,
-            _ if s == "builtin" => ParseKeyword::kw_builtin,
-            _ if s == "case" => ParseKeyword::kw_case,
-            _ if s == "command" => ParseKeyword::kw_command,
-            _ if s == "else" => ParseKeyword::kw_else,
-            _ if s == "end" => ParseKeyword::kw_end,
-            _ if s == "exec" => ParseKeyword::kw_exec,
-            _ if s == "for" => ParseKeyword::kw_for,
-            _ if s == "function" => ParseKeyword::kw_function,
-            _ if s == "if" => ParseKeyword::kw_if,
-            _ if s == "in" => ParseKeyword::kw_in,
-            _ if s == "not" => ParseKeyword::kw_not,
-            _ if s == "or" => ParseKeyword::kw_or,
-            _ if s == "switch" => ParseKeyword::kw_switch,
-            _ if s == "time" => ParseKeyword::kw_time,
-            _ if s == "while" => ParseKeyword::kw_while,
-            _ => ParseKeyword::none,
+        // Note this is called in hot loops.
+        let c0 = s.as_char_slice().get(0).copied().unwrap_or('\0');
+        match c0 {
+            '!' if s == L!("!") => ParseKeyword::Exclam,
+            'a' if s == L!("and") => ParseKeyword::And,
+            'b' if s == L!("begin") => ParseKeyword::Begin,
+            'b' if s == L!("builtin") => ParseKeyword::Builtin,
+            'c' if s == L!("case") => ParseKeyword::Case,
+            'c' if s == L!("command") => ParseKeyword::Command,
+            'e' if s == L!("else") => ParseKeyword::Else,
+            'e' if s == L!("end") => ParseKeyword::End,
+            'e' if s == L!("exec") => ParseKeyword::Exec,
+            'f' if s == L!("for") => ParseKeyword::For,
+            'f' if s == L!("function") => ParseKeyword::Function,
+            'i' if s == L!("if") => ParseKeyword::If,
+            'i' if s == L!("in") => ParseKeyword::In,
+            'n' if s == L!("not") => ParseKeyword::Not,
+            'o' if s == L!("or") => ParseKeyword::Or,
+            's' if s == L!("switch") => ParseKeyword::Switch,
+            't' if s == L!("time") => ParseKeyword::Time,
+            'w' if s == L!("while") => ParseKeyword::While,
+            _ => ParseKeyword::None,
         }
     }
 }
@@ -423,7 +415,7 @@ pub fn token_type_user_presentable_description(
     type_: ParseTokenType,
     keyword: ParseKeyword,
 ) -> WString {
-    if keyword != ParseKeyword::none {
+    if keyword != ParseKeyword::None {
         return sprintf!("keyword: '%ls'", keyword.to_wstr());
     }
     match type_ {

@@ -1,13 +1,13 @@
 #include <locale.h>
-#include <paths.h>
+#include <paths.h>  // _PATH_BSHELL
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>     // MB_CUR_MAX
+#include <sys/mount.h>  // MNT_LOCAL
 #include <sys/resource.h>
-#include <unistd.h>
-
-#define UNUSED(x) (void)(x)
+#include <sys/statvfs.h>  // ST_LOCAL
+#include <unistd.h>       // _CS_PATH, _PC_CASE_SENSITIVE
 
 size_t C_MB_CUR_MAX() { return MB_CUR_MAX; }
 

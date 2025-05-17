@@ -3,32 +3,31 @@
 # preferred_background: 1F2430
 
 fish_color_normal CBCCC6
+fish_color_autosuggestion 707A8C
+fish_color_cancel -r
 fish_color_command 5CCFE6
-fish_color_quote BAE67E
-fish_color_redirection D4BFFF
-fish_color_end F29E74
-fish_color_error FF3333
-fish_color_param CBCCC6
 fish_color_comment 5C6773
-fish_color_match F28779
-fish_color_selection --background=FFCC66
-fish_color_search_match --background=FFCC66
-fish_color_history_current --bold
-fish_color_operator FFCC66
-fish_color_escape 95E6CB
 fish_color_cwd 73D0FF
 fish_color_cwd_root red
-fish_color_valid_path --underline
-fish_color_autosuggestion 707A8C
-fish_color_user brgreen
+fish_color_end F29E74
+fish_color_error FF3333
+fish_color_escape 95E6CB
+fish_color_history_current --bold
 fish_color_host normal
-fish_color_cancel -r
+fish_color_host_remote yellow
+fish_color_keyword 5CCFE6
+fish_color_operator FFCC66
+fish_color_option CBCCC6
+fish_color_param CBCCC6
+fish_color_quote BAE67E
+fish_color_redirection D4BFFF
+fish_color_search_match --background=FFCC66 --bold
+fish_color_selection --background=FFCC66 --bold
+fish_color_status red
+fish_color_user brgreen
+fish_color_valid_path --underline
 fish_pager_color_completion normal
 fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
-fish_pager_color_progress brwhite --background=cyan
+fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background --background=FFCC66
-fish_color_option CBCCC6
-fish_color_keyword 5CCFE6
-fish_color_host_remote yellow
-fish_color_status red

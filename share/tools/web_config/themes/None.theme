@@ -1,6 +1,7 @@
 # name: '(Almost) No Colors'
 # preferred_background: 'black'
 
+fish_color_normal normal
 fish_color_autosuggestion brblack
 fish_color_cancel
 fish_color_command
@@ -12,9 +13,8 @@ fish_color_error
 fish_color_escape
 fish_color_history_current
 fish_color_host normal
+fish_color_host_remote yellow
 fish_color_keyword
-fish_color_match
-fish_color_normal normal
 fish_color_operator
 fish_color_option
 fish_color_param
@@ -30,4 +30,3 @@ fish_pager_color_description brblack
 fish_pager_color_prefix '--underline'
 fish_pager_color_progress brblack
 fish_pager_color_selected_background -r
-fish_color_host_remote yellow

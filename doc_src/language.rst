@@ -788,11 +788,10 @@ Some more examples::
   # Output is 1 2 3
 
   echo $$var[2][3]
-  # $var[1] is listtwo, third element of that is 6, output is 6
+  # $var[2] is listtwo, third element of that is 6, output is 6
 
   echo $$var[..][2]
-  # The second element of every variable, so output is
-  # 2 5
+  # The second element of every variable, so output is 2 5
 
 Variables as command
 ''''''''''''''''''''
@@ -917,6 +916,12 @@ If there is nothing between a brace and a comma or two commas, it's interpreted 
     /bin /bin /usr/bin
 
 To use a "," as an element, :ref:`quote <quotes>` or :ref:`escape <escapes>` it.
+
+The very first character of a command token is never interpreted as expanding brace, because it's the beginning of a :ref:`compound statement <cmd-begin>`::
+
+    > {echo hello, && echo world}
+    hello,
+    world
 
 .. _cartesian-product:
 

@@ -73,11 +73,13 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
         };
 
         for (arg, want_newline) in arguments(args, optind, streams) {
-            let trim_start = self.left.then(|| to_trim_start(&arg)).unwrap_or(0);
+            let trim_start = if self.left { to_trim_start(&arg) } else { 0 };
             // collision is only an issue if the whole string is getting trimmed
-            let trim_end = (self.right && trim_start != arg.len())
-                .then(|| to_trim_end(&arg))
-                .unwrap_or(0);
+            let trim_end = if self.right && trim_start != arg.len() {
+                to_trim_end(&arg)
+            } else {
+                0
+            };
 
             ntrim += trim_start + trim_end;
             if !self.quiet {

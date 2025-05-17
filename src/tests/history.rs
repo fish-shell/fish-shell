@@ -315,15 +315,15 @@ fn test_history_races() {
             // Remove everything from this item on
             let removed = list.drain(position..);
             for line in removed.into_iter().rev() {
-                println!("Item dropped from history: {line}");
+                printf!("Item dropped from history: %ls\n", line);
             }
 
             found = true;
             break;
         }
         if !found {
-            println!(
-                "Line '{}' found in history, but not found in some array",
+            printf!(
+                "Line '%ls' found in history, but not found in some array\n",
                 item.str()
             );
             for list in &expected_lines {

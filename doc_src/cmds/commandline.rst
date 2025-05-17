@@ -74,6 +74,9 @@ The following options change what part of the commandline is printed or updated:
 **--search-field**
     Use the pager search field instead of the command line. Returns false if the search field is not shown.
 
+**--input=INPUT**
+    Operate on this string instead of the commandline. Useful for using options like **--tokens-expanded**.
+
 The following options change the way ``commandline`` prints the current commandline buffer:
 
 **-c** or **--cut-at-cursor**
@@ -87,10 +90,7 @@ The following options change the way ``commandline`` prints the current commandl
     Perform argument expansion on the selection and print one argument per line.
     Command substitutions are not expanded but forwarded as-is.
 
-**--tokens-raw**
-    Print arguments in the selection as they appear on the command line, one per line.
-
-**-o** or **tokenize**
+**-o**, **tokenize**, **--tokens-raw**
     Deprecated; do not use.
 
 If ``commandline`` is called during a call to complete a given string using ``complete -C STRING``, ``commandline`` will consider the specified string to be the current contents of the command line.

@@ -45,7 +45,7 @@ cd "$PREFIX_TMPDIR"
 mkdir .cargo
 cargo vendor --manifest-path "$wd/Cargo.toml" > .cargo/config.toml
 
-tar cfvJ $path.xz vendor .cargo
+tar cfvJ "$path".xz vendor .cargo
 
 cd -
 rm -r "$PREFIX_TMPDIR"

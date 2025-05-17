@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
 usage() {
     cat << EOF
-Usage: $(basename $0) [--shell-before] [--shell-after] DOCKERFILE
+Usage: $(basename "$0") [--shell-before] [--shell-after] DOCKERFILE
 Options:
     --shell-before   Before the tests start, run a bash shell
     --shell-after    After the tests end, run a bash shell
@@ -18,7 +18,7 @@ export DOCKER_BUILDKIT=1
 set -e
 
 # Get fish source directory.
-FISH_SRC_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null && pwd)
+FISH_SRC_DIR=$(cd "$( dirname "$0" )"/.. >/dev/null && pwd)
 
 # Parse args.
 while [ $# -gt 1 ]; do
@@ -36,7 +36,7 @@ while [ $# -gt 1 ]; do
     shift
 done
 
-DOCKERFILE=${@:$OPTIND:1}
+DOCKERFILE="$1"
 test -n "$DOCKERFILE" || usage
 
 # Construct a docker image.
@@ -47,6 +47,7 @@ docker build \
     "$FISH_SRC_DIR"/docker/context/
 
 # Run tests in it, allowing them to fail without failing this script.
+# shellcheck disable=SC2086  # $DOCKER_EXTRA_ARGS should have globbing and splitting applied.
 docker run -it \
     --mount type=bind,source="$FISH_SRC_DIR",target=/fish-source,readonly \
     $DOCKER_EXTRA_ARGS \

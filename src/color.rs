@@ -1,4 +1,3 @@
-use bitflags::bitflags;
 use std::cmp::Ordering;
 
 use crate::wchar::prelude::*;
@@ -22,65 +21,22 @@ impl Color24 {
     }
 }
 
+/// A type that represents a color.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum Type {
+pub enum Color {
     // TODO: remove this? Users should probably use `Option<RgbColor>` instead
     None,
     Named { idx: u8 },
     Rgb(Color24),
     Normal,
-    Reset,
 }
 
-bitflags! {
-    #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-    pub struct Flags: u8 {
-        const DEFAULT = 0;
-        const BOLD = 1<<0;
-        const UNDERLINE = 1<<1;
-        const ITALICS = 1<<2;
-        const DIM = 1<<3;
-        const REVERSE = 1<<4;
-    }
-}
-
-/// A type that represents a color.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct RgbColor {
-    pub typ: Type,
-    pub flags: Flags,
-}
-
-impl RgbColor {
+impl Color {
     /// The color white
-    pub const WHITE: Self = Self {
-        typ: Type::Named { idx: 7 },
-        flags: Flags::DEFAULT,
-    };
+    pub const WHITE: Self = Self::Named { idx: 7 };
 
     /// The color black
-    pub const BLACK: Self = Self {
-        typ: Type::Named { idx: 0 },
-        flags: Flags::DEFAULT,
-    };
-
-    /// The reset special color.
-    pub const RESET: Self = Self {
-        typ: Type::Reset,
-        flags: Flags::DEFAULT,
-    };
-
-    /// The normal special color.
-    pub const NORMAL: Self = Self {
-        typ: Type::Normal,
-        flags: Flags::DEFAULT,
-    };
-
-    /// The none special color.
-    pub const NONE: Self = Self {
-        typ: Type::None,
-        flags: Flags::DEFAULT,
-    };
+    pub const BLACK: Self = Self::Named { idx: 0 };
 
     /// Parse a color from a string.
     pub fn from_wstr(s: &wstr) -> Option<Self> {
@@ -91,35 +47,27 @@ impl RgbColor {
 
     /// Create an RGB color.
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
-        Self {
-            typ: Type::Rgb(Color24 { r, g, b }),
-            flags: Flags::DEFAULT,
-        }
+        Self::Rgb(Color24 { r, g, b })
     }
 
     /// Returns whether the color is the normal special color.
     pub const fn is_normal(self) -> bool {
-        matches!(self.typ, Type::Normal)
-    }
-
-    /// Returns whether the color is the reset special color.
-    pub const fn is_reset(self) -> bool {
-        matches!(self.typ, Type::Reset)
+        matches!(self, Self::Normal)
     }
 
     /// Returns whether the color is the none special color.
     pub const fn is_none(self) -> bool {
-        matches!(self.typ, Type::None)
+        matches!(self, Self::None)
     }
 
     /// Returns whether the color is a named color (like "magenta").
     pub const fn is_named(self) -> bool {
-        matches!(self.typ, Type::Named { .. })
+        matches!(self, Self::Named { .. })
     }
 
     /// Returns whether the color is specified via RGB components.
     pub const fn is_rgb(self) -> bool {
-        matches!(self.typ, Type::Rgb(_))
+        matches!(self, Self::Rgb(_))
     }
 
     /// Returns whether the color is special, that is, not rgb or named.
@@ -127,73 +75,22 @@ impl RgbColor {
         !self.is_named() && !self.is_rgb()
     }
 
-    /// Returns whether the color is bold.
-    pub const fn is_bold(self) -> bool {
-        self.flags.contains(Flags::BOLD)
-    }
-
-    /// Set whether the color is bold.
-    pub fn set_bold(&mut self, bold: bool) {
-        self.flags.set(Flags::BOLD, bold)
-    }
-
-    /// Returns whether the color is underlined.
-    pub const fn is_underline(self) -> bool {
-        self.flags.contains(Flags::UNDERLINE)
-    }
-
-    /// Set whether the color is underline.
-    pub fn set_underline(&mut self, underline: bool) {
-        self.flags.set(Flags::UNDERLINE, underline)
-    }
-
-    /// Returns whether the color is italics.
-    pub const fn is_italics(self) -> bool {
-        self.flags.contains(Flags::ITALICS)
-    }
-
-    /// Set whether the color is italics.
-    pub fn set_italics(&mut self, italics: bool) {
-        self.flags.set(Flags::ITALICS, italics)
-    }
-
-    /// Returns whether the color is dim.
-    pub const fn is_dim(self) -> bool {
-        self.flags.contains(Flags::DIM)
-    }
-
-    /// Set whether the color is dim.
-    pub fn set_dim(&mut self, dim: bool) {
-        self.flags.set(Flags::DIM, dim)
-    }
-
-    /// Returns whether the color is reverse.
-    pub const fn is_reverse(self) -> bool {
-        self.flags.contains(Flags::REVERSE)
-    }
-
-    /// Set whether the color is reverse.
-    pub fn set_reverse(&mut self, reverse: bool) {
-        self.flags.set(Flags::REVERSE, reverse)
-    }
-
     pub fn is_grayscale(&self) -> bool {
-        match self.typ {
-            Type::None => true,
-            Type::Named { idx } => [0, 7, 8, 15, 16].contains(&idx) || (232..=255).contains(&idx),
-            Type::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
-            Type::Normal => true,
-            Type::Reset => true,
+        match self {
+            Self::None => true,
+            Self::Named { idx } => [0, 7, 8, 15, 16].contains(idx) || (232..=255).contains(idx),
+            Self::Rgb(rgb) => rgb.r == rgb.g && rgb.r == rgb.b,
+            Self::Normal => true,
         }
     }
 
     /// Returns the name index for the given color. Requires that the color be named or RGB.
     pub fn to_name_index(self) -> u8 {
         // TODO: This should look for the nearest color.
-        match self.typ {
-            Type::Named { idx } => idx,
-            Type::Rgb(c) => term16_color_for_rgb(c),
-            Type::None | Type::Normal | Type::Reset => {
+        match self {
+            Self::Named { idx } => idx,
+            Self::Rgb(c) => term16_color_for_rgb(c),
+            Self::None | Self::Normal => {
                 panic!("to_name_index() called on Color that's not named or RGB")
             }
         }
@@ -201,7 +98,7 @@ impl RgbColor {
 
     /// Returns the term256 index for the given color. Requires that the color be RGB.
     pub fn to_term256_index(self) -> u8 {
-        let Type::Rgb(c) = self.typ else {
+        let Self::Rgb(c) = self else {
             panic!("Tried to get term256 index of non-RGB color");
         };
 
@@ -210,7 +107,7 @@ impl RgbColor {
 
     /// Returns the 24 bit color for the given color. Requires that the color be RGB.
     pub const fn to_color24(self) -> Color24 {
-        let Type::Rgb(c) = self.typ else {
+        let Self::Rgb(c) = self else {
             panic!("Tried to get color24 of non-RGB color");
         };
 
@@ -238,20 +135,11 @@ impl RgbColor {
 
     /// Try parsing a special color name like "normal".
     fn try_parse_special(special: &wstr) -> Option<Self> {
-        // TODO: this is a very hot function, may need optimization by e.g. comparing length first,
-        // depending on how well inlining of `simple_icase_compare` works
-        let typ = if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
-            Type::Normal
-        } else if simple_icase_compare(special, L!("reset")) == Ordering::Equal {
-            Type::Reset
+        if simple_icase_compare(special, L!("normal")) == Ordering::Equal {
+            Some(Self::Normal)
         } else {
-            return None;
-        };
-
-        Some(Self {
-            typ,
-            flags: Flags::default(),
-        })
+            None
+        }
     }
 
     /// Try parsing an rgb color like "#F0A030".
@@ -293,7 +181,7 @@ impl RgbColor {
         } else {
             return None;
         };
-        Some(RgbColor::from_rgb(r, g, b))
+        Some(Color::from_rgb(r, g, b))
     }
 
     /// Try parsing an explicit color name like "magenta".
@@ -302,11 +190,8 @@ impl RgbColor {
             .binary_search_by(|c| simple_icase_compare(c.name, name))
             .ok()?;
 
-        Some(Self {
-            typ: Type::Named {
-                idx: NAMED_COLORS[i].idx,
-            },
-            flags: Flags::default(),
+        Some(Self::Named {
+            idx: NAMED_COLORS[i].idx,
         })
     }
 }
@@ -436,40 +321,37 @@ fn term256_color_for_rgb(color: Color24) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::color::{Color24, Flags, RgbColor, Type};
+    use crate::color::{Color, Color24};
     use crate::wchar::prelude::*;
 
     #[test]
     fn parse() {
-        assert!(RgbColor::from_wstr(L!("#FF00A0")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("FF00A0")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("#F30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("F30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("f30")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("#FF30a5")).unwrap().is_rgb());
-        assert!(RgbColor::from_wstr(L!("3f30")).is_none());
-        assert!(RgbColor::from_wstr(L!("##f30")).is_none());
-        assert!(RgbColor::from_wstr(L!("magenta")).unwrap().is_named());
-        assert!(RgbColor::from_wstr(L!("MaGeNTa")).unwrap().is_named());
-        assert!(RgbColor::from_wstr(L!("mooganta")).is_none());
+        assert!(Color::from_wstr(L!("#FF00A0")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("FF00A0")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("#F30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("F30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("f30")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("#FF30a5")).unwrap().is_rgb());
+        assert!(Color::from_wstr(L!("3f30")).is_none());
+        assert!(Color::from_wstr(L!("##f30")).is_none());
+        assert!(Color::from_wstr(L!("magenta")).unwrap().is_named());
+        assert!(Color::from_wstr(L!("MaGeNTa")).unwrap().is_named());
+        assert!(Color::from_wstr(L!("mooganta")).is_none());
     }
 
     #[test]
     fn parse_rgb() {
-        assert!(RgbColor::from_wstr(L!("##FF00A0")).is_none());
-        assert!(RgbColor::from_wstr(L!("#FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr(L!("FF00A0")) == Some(RgbColor::from_rgb(0xff, 0x00, 0xa0)));
-        assert!(RgbColor::from_wstr(L!("FAF")) == Some(RgbColor::from_rgb(0xff, 0xaa, 0xff)));
+        assert!(Color::from_wstr(L!("##FF00A0")).is_none());
+        assert!(Color::from_wstr(L!("#FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(Color::from_wstr(L!("FF00A0")) == Some(Color::from_rgb(0xff, 0x00, 0xa0)));
+        assert!(Color::from_wstr(L!("FAF")) == Some(Color::from_rgb(0xff, 0xaa, 0xff)));
     }
 
     // Regression test for multiplicative overflow in convert_color.
     #[test]
     fn test_term16_color_for_rgb() {
         for c in 0..=u8::MAX {
-            let color = RgbColor {
-                typ: Type::Rgb(Color24 { r: c, g: c, b: c }),
-                flags: Flags::DEFAULT,
-            };
+            let color = Color::Rgb(Color24 { r: c, g: c, b: c });
             let _ = color.to_name_index();
         }
     }
@@ -477,52 +359,52 @@ mod tests {
     #[test]
     fn parse_short_hex_with_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("#F3A")),
-            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+            Color::try_parse_rgb(L!("#F3A")),
+            Some(Color::from_rgb(0xFF, 0x33, 0xAA))
         );
     }
 
     #[test]
     fn parse_long_hex_with_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("#F3A035")),
-            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+            Color::try_parse_rgb(L!("#F3A035")),
+            Some(Color::from_rgb(0xF3, 0xA0, 0x35))
         );
     }
 
     #[test]
     fn parse_short_hex_without_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("F3A")),
-            Some(RgbColor::from_rgb(0xFF, 0x33, 0xAA))
+            Color::try_parse_rgb(L!("F3A")),
+            Some(Color::from_rgb(0xFF, 0x33, 0xAA))
         );
     }
 
     #[test]
     fn parse_long_hex_without_hash() {
         assert_eq!(
-            RgbColor::try_parse_rgb(L!("F3A035")),
-            Some(RgbColor::from_rgb(0xF3, 0xA0, 0x35))
+            Color::try_parse_rgb(L!("F3A035")),
+            Some(Color::from_rgb(0xF3, 0xA0, 0x35))
         );
     }
 
     #[test]
     fn invalid_hex_length() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("#F3A03")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3A0")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#F3A03")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3A0")), None);
     }
 
     #[test]
     fn invalid_hex_character() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("#GFA")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3G035")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#GFA")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3G035")), None);
     }
 
     #[test]
     fn invalid_hash_combinations() {
-        assert_eq!(RgbColor::try_parse_rgb(L!("##F3A")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("###F3A035")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("F3A#")), None);
-        assert_eq!(RgbColor::try_parse_rgb(L!("#F#3A")), None);
+        assert_eq!(Color::try_parse_rgb(L!("##F3A")), None);
+        assert_eq!(Color::try_parse_rgb(L!("###F3A035")), None);
+        assert_eq!(Color::try_parse_rgb(L!("F3A#")), None);
+        assert_eq!(Color::try_parse_rgb(L!("#F#3A")), None);
     }
 }

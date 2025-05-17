@@ -2,32 +2,31 @@
 # preferred_background: 'black'
 
 fish_color_normal normal
+fish_color_autosuggestion 9C9C9C
+fish_color_cancel -r
 fish_color_command F4F4F4
-fish_color_quote 666A80
-fish_color_redirection FAFAFA
+fish_color_comment B0B0B0
+fish_color_cwd green
+fish_color_cwd_root red
 fish_color_end 969696
 fish_color_error FFA779
-fish_color_param A0A0F0
-fish_color_comment B0B0B0
-fish_color_match --background=brblue
-fish_color_selection white --bold --background=brblack
-fish_color_search_match bryellow --background=brblack
-fish_color_history_current --bold
-fish_color_operator 00a6b2
 fish_color_escape 00a6b2
-fish_color_cwd green
-fish_color_valid_path --underline
-fish_color_cwd_root red
-fish_color_autosuggestion 9C9C9C
-fish_color_user brgreen
+fish_color_history_current --bold
 fish_color_host normal
-fish_color_cancel -r
+fish_color_host_remote yellow
+fish_color_keyword F4F4F4
+fish_color_operator 00a6b2
+fish_color_option A0A0F0
+fish_color_param A0A0F0
+fish_color_quote 666A80
+fish_color_redirection FAFAFA
+fish_color_search_match white --background=brblack --bold
+fish_color_selection white --background=brblack --bold
+fish_color_status red
+fish_color_user brgreen
+fish_color_valid_path --underline
 fish_pager_color_completion normal
 fish_pager_color_description B3A06D yellow
 fish_pager_color_prefix normal --bold --underline
-fish_pager_color_progress brwhite --background=cyan
+fish_pager_color_progress brwhite --background=cyan --bold
 fish_pager_color_selected_background --background=brblack
-fish_color_option A0A0F0
-fish_color_keyword F4F4F4
-fish_color_host_remote yellow
-fish_color_status red

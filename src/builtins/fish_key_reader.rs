@@ -7,32 +7,30 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{ops::ControlFlow, os::unix::prelude::OsStrExt, sync::atomic::Ordering};
+use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt, sync::atomic::Ordering};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
+use once_cell::unsync::OnceCell;
 
 #[allow(unused_imports)]
 use crate::future::IsSomeAnd;
 use crate::{
     builtins::shared::BUILTIN_ERR_UNKNOWN,
     common::{shell_modes, str2wcstring, PROGRAM_NAME},
-    env::env_init,
+    env::{env_init, EnvStack, Environment},
+    future_feature_flags,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, ImplicitEvent,
-        InputEventQueue, InputEventQueuer, KeyEvent,
+        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
+        InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
     proc::set_interactive_session,
-    reader::{check_exit_loop_maybe_warning, reader_init},
+    reader::{check_exit_loop_maybe_warning, initial_query, reader_init},
     signal::signal_set_handlers,
-    terminal::{
-        Capability, Output,
-        TerminalCommand::{QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute},
-        KITTY_KEYBOARD_SUPPORTED,
-    },
+    terminal::{Capability, KITTY_KEYBOARD_SUPPORTED},
     threads,
     topic_monitor::topic_monitor_init,
     wchar::prelude::*,
@@ -89,15 +87,15 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
 
         let kevt = match queue.readch() {
             CharEvent::Key(kevt) => kevt,
-            CharEvent::Readline(_) | CharEvent::Command(_) => continue,
-            CharEvent::Implicit(ImplicitEvent::PrimaryDeviceAttribute) => {
+            CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
+            CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
                 if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _ {
                     KITTY_KEYBOARD_SUPPORTED
                         .store(Capability::NotSupported as _, Ordering::Release);
                 }
                 continue;
             }
-            CharEvent::Implicit(_) => continue,
+            CharEvent::QueryResponse(_) => continue,
         };
         if verbose {
             streams.out.append(L!("# decoded from: "));
@@ -155,11 +153,8 @@ fn setup_and_process_keys(
     // in fish-proper this is done once a command is run.
     unsafe { libc::tcsetattr(0, TCSANOW, &*shell_modes()) };
     terminal_protocol_hacks();
-
-    streams
-        .out
-        .write_command(QueryKittyKeyboardProgressiveEnhancements);
-    streams.out.write_command(QueryPrimaryDeviceAttribute);
+    let blocking_query: OnceCell<RefCell<Option<TerminalQuery>>> = OnceCell::new();
+    initial_query(&blocking_query, streams.out, None);
 
     if continuous_mode {
         streams.err.append(L!("\n"));
@@ -274,6 +269,11 @@ fn throwing_main() -> i32 {
     threads::init();
     env_init(None, true, false);
     reader_init(false);
+    if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
+        for s in features_var.as_list() {
+            future_feature_flags::set_from_string(s.as_utfstr());
+        }
+    }
 
     let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));
     let mut err = Fd(FdOutputStream::new(STDERR_FILENO));

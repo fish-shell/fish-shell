@@ -1,10 +1,10 @@
-use crate::ast::{self, Ast, JobPipeline, List, Node, Traversal};
+use crate::ast::{self, is_same_node, Ast, Castable, JobList, JobPipeline, Kind, Node, Traversal};
 use crate::common::ScopeGuard;
 use crate::env::EnvStack;
 use crate::expand::ExpandFlags;
 use crate::io::{IoBufferfill, IoChain};
 use crate::parse_constants::{
-    ParseErrorCode, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
+    ParseErrorCode, ParseTokenType, ParseTreeFlags, ParserTestErrorBits, StatementDecoration,
 };
 use crate::parse_tree::{parse_source, LineCounter};
 use crate::parse_util::{parse_util_detect_errors, parse_util_detect_errors_in_argument};
@@ -31,11 +31,11 @@ fn test_parser() {
 
     fn detect_argument_errors(src: &str) -> Result<(), ParserTestErrorBits> {
         let src = WString::from_str(src);
-        let ast = Ast::parse_argument_list(&src, ParseTreeFlags::default(), None);
+        let ast = ast::parse_argument_list(&src, ParseTreeFlags::default(), None);
         if ast.errored() {
             return Err(ParserTestErrorBits::ERROR);
         }
-        let args = &ast.top().as_freestanding_argument_list().unwrap().arguments;
+        let args = &ast.top().arguments;
         let first_arg = args.get(0).expect("Failed to parse an argument");
         let mut errors = None;
         parse_util_detect_errors_in_argument(first_arg, first_arg.source(&src), &mut errors)
@@ -323,7 +323,7 @@ fn test_new_parser_correctness() {
     let _cleanup = test_init();
     macro_rules! validate {
         ($src:expr, $ok:expr) => {
-            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
+            let ast = ast::parse(L!($src), ParseTreeFlags::default(), None);
             assert_eq!(ast.errored(), !$ok);
         };
     }
@@ -400,7 +400,7 @@ fn test_new_parser_correctness_by_fuzzing() {
         let mut permutation = 0;
         while let Some(src) = string_for_permutation(&fuzzes, len, permutation) {
             permutation += 1;
-            Ast::parse(&src, ParseTreeFlags::default(), None);
+            ast::parse(&src, ParseTreeFlags::default(), None);
         }
     }
 }
@@ -416,7 +416,7 @@ fn test_new_parser_ll2() {
     // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
     // true if successful.
     fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
-        let ast = Ast::parse(src, ParseTreeFlags::default(), None);
+        let ast = ast::parse(src, ParseTreeFlags::default(), None);
         if ast.errored() {
             return None;
         }
@@ -424,7 +424,7 @@ fn test_new_parser_ll2() {
         // Get the statement. Should only have one.
         let mut statement = None;
         for n in Traversal::new(ast.top()) {
-            if let Some(tmp) = n.as_decorated_statement() {
+            if let Kind::DecoratedStatement(tmp) = n.kind() {
                 assert!(
                     statement.is_none(),
                     "More than one decorated statement found in '{}'",
@@ -513,21 +513,21 @@ fn test_new_parser_ll2() {
     // Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is
     // not (issue #1240).
     macro_rules! check_function_help {
-        ($src:expr, $typ:expr) => {
-            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), None);
+        ($src:expr, $kind:pat) => {
+            let ast = ast::parse(L!($src), ParseTreeFlags::default(), None);
             assert!(!ast.errored());
             assert_eq!(
                 Traversal::new(ast.top())
-                    .filter(|n| n.typ() == $typ)
+                    .filter(|n| matches!(n.kind(), $kind))
                     .count(),
                 1
             );
         };
     }
-    check_function_help!("function -h", ast::Type::decorated_statement);
-    check_function_help!("function --help", ast::Type::decorated_statement);
-    check_function_help!("function --foo; end", ast::Type::function_header);
-    check_function_help!("function foo; end", ast::Type::function_header);
+    check_function_help!("function -h", ast::Kind::DecoratedStatement(_));
+    check_function_help!("function --help", ast::Kind::DecoratedStatement(_));
+    check_function_help!("function --foo; end", ast::Kind::FunctionHeader(_));
+    check_function_help!("function foo; end", ast::Kind::FunctionHeader(_));
 }
 
 #[test]
@@ -538,13 +538,13 @@ fn test_new_parser_ad_hoc() {
 
     // Ensure that 'case' terminates a job list.
     let src = L!("switch foo ; case bar; case baz; end");
-    let ast = Ast::parse(src, ParseTreeFlags::default(), None);
+    let ast = ast::parse(src, ParseTreeFlags::default(), None);
     assert!(!ast.errored());
-    // Expect two case_item_lists. The bug was that we'd
+    // Expect two CaseItems. The bug was that we'd
     // try to run a command 'case'.
     assert_eq!(
         Traversal::new(ast.top())
-            .filter(|n| n.typ() == ast::Type::case_item)
+            .filter(|n| matches!(n.kind(), ast::Kind::CaseItem(_)))
             .count(),
         2
     );
@@ -554,17 +554,17 @@ fn test_new_parser_ad_hoc() {
     // leading to an infinite loop.
 
     // By itself it should produce an error.
-    let ast = Ast::parse(L!("a="), ParseTreeFlags::default(), None);
+    let ast = ast::parse(L!("a="), ParseTreeFlags::default(), None);
     assert!(ast.errored());
 
     // If we are leaving things unterminated, this should not produce an error.
     // i.e. when typing "a=" at the command line, it should be treated as valid
     // because we don't want to color it as an error.
-    let ast = Ast::parse(L!("a="), ParseTreeFlags::LEAVE_UNTERMINATED, None);
+    let ast = ast::parse(L!("a="), ParseTreeFlags::LEAVE_UNTERMINATED, None);
     assert!(!ast.errored());
 
     let mut errors = vec![];
-    Ast::parse(
+    ast::parse(
         L!("begin; echo ("),
         ParseTreeFlags::LEAVE_UNTERMINATED,
         Some(&mut errors),
@@ -573,7 +573,7 @@ fn test_new_parser_ad_hoc() {
     assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
 
     errors.clear();
-    Ast::parse(
+    ast::parse(
         L!("for x in ("),
         ParseTreeFlags::LEAVE_UNTERMINATED,
         Some(&mut errors),
@@ -582,7 +582,7 @@ fn test_new_parser_ad_hoc() {
     assert!(errors[0].code == ParseErrorCode::tokenizer_unterminated_subshell);
 
     errors.clear();
-    Ast::parse(
+    ast::parse(
         L!("begin; echo '"),
         ParseTreeFlags::LEAVE_UNTERMINATED,
         Some(&mut errors),
@@ -598,7 +598,7 @@ fn test_new_parser_errors() {
     macro_rules! validate {
         ($src:expr, $expected_code:expr) => {
             let mut errors = vec![];
-            let ast = Ast::parse(L!($src), ParseTreeFlags::default(), Some(&mut errors));
+            let ast = ast::parse(L!($src), ParseTreeFlags::default(), Some(&mut errors));
             assert!(ast.errored());
             assert_eq!(
                 errors.into_iter().map(|e| e.code).collect::<Vec<_>>(),
@@ -733,7 +733,7 @@ fn test_cancellation() {
     reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 
-    println!("Testing Ctrl-C cancellation. If this hangs, that's a bug!");
+    printf!("Testing Ctrl-C cancellation. If this hangs, that's a bug!\n");
 
     // Enable fish's signal handling here.
     signal_set_handlers(true);
@@ -786,7 +786,7 @@ fn test_line_counter() {
         assert_eq!(line_offset, expected);
     }
 
-    let pipelines: Vec<_> = ps.ast.walk().filter_map(|n| n.as_job_pipeline()).collect();
+    let pipelines: Vec<_> = ps.ast.walk().filter_map(ast::JobPipeline::cast).collect();
     assert_eq!(pipelines.len(), 3);
     let src_offsets = [0, 0, 2];
     assert_eq!(line_counter.source_offset_of_node(), None);
@@ -817,4 +817,165 @@ fn test_line_counter_empty() {
     assert_eq!(line_counter.line_offset_of_character_at_offset(0), 0);
     assert_eq!(line_counter.line_offset_of_node(), None);
     assert_eq!(line_counter.source_offset_of_node(), None);
+}
+
+// Helper for testing a simple ast traversal.
+// The ast is always for the command 'true;'.
+struct TrueSemiAstTester<'a> {
+    // The AST we are testing.
+    ast: &'a Ast,
+
+    // Expected parent-child relationships, in the order we expect to encounter them.
+    parent_child: Box<[(&'a dyn Node, &'a dyn Node)]>,
+}
+
+impl<'a> TrueSemiAstTester<'a> {
+    const TRUE_SEMI: &'static wstr = L!("true;");
+    fn new(ast: &'a Ast) -> Self {
+        let job_list: &JobList = ast.top();
+        let job_conjunction = &job_list[0];
+        let job_pipeline = &job_conjunction.job;
+        let variable_assignment_list = &job_pipeline.variables;
+        let statement = &job_pipeline.statement;
+
+        let decorated_statement = statement
+            .as_decorated_statement()
+            .expect("Expected decorated_statement");
+        let command = &decorated_statement.command;
+        let args_or_redirs = &decorated_statement.args_or_redirs;
+        let job_continuation = &job_pipeline.continuation;
+        let job_conjunction_continuation = &job_conjunction.continuations;
+        let semi_nl = job_conjunction.semi_nl.as_ref().expect("Expected semi_nl");
+
+        // Helpful parent-child map, such that the children are in the order that we expect to encounter them
+        // in the AST.
+        let parent_child: &[(&'a dyn Node, &'a dyn Node)] = &[
+            (job_list, job_conjunction),
+            (job_conjunction, job_pipeline),
+            (job_pipeline, variable_assignment_list),
+            (job_pipeline, statement),
+            (statement, decorated_statement),
+            (decorated_statement, command),
+            (decorated_statement, args_or_redirs),
+            (job_pipeline, job_continuation),
+            (job_conjunction, job_conjunction_continuation),
+            (job_conjunction, semi_nl),
+        ];
+        Self {
+            ast,
+            parent_child: Box::from(parent_child),
+        }
+    }
+
+    // Expected nodes, in-order.
+    fn expected_nodes(&self) -> Vec<&'a dyn Node> {
+        let mut expected: Vec<&dyn Node> = vec![self.ast.top()];
+        expected.extend(self.parent_child.iter().map(|&(_p, c)| c));
+        expected
+    }
+
+    // Helper function to construct the parent list of a given node, such at the first entry is
+    // the node itself, and the last entry is the root node.
+    fn get_parents<'s>(&'s self, node: &'a dyn Node) -> impl Iterator<Item = &'a dyn Node> + 's {
+        let mut next = Some(node);
+        std::iter::from_fn(move || {
+            let out = next?;
+            next = self
+                .parent_child
+                .iter()
+                .find_map(|&(p, c)| is_same_node(c, out).then_some(p));
+            Some(out)
+        })
+    }
+}
+
+#[test]
+fn test_ast() {
+    // Light testing of the AST and traversals.
+    let ast = ast::parse(TrueSemiAstTester::TRUE_SEMI, ParseTreeFlags::empty(), None);
+    let tester = TrueSemiAstTester::new(&ast);
+
+    // Walk the AST and collect all nodes.
+    // See is_same_node comments for why we can't use assert_eq! here.
+    let found = ast.walk().collect::<Vec<_>>();
+    let expected = tester.expected_nodes();
+    assert_eq!(found.len(), expected.len());
+    for idx in 0..found.len() {
+        assert!(is_same_node(found[idx], expected[idx]));
+    }
+
+    // Walk and check parents.
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        let expected_parents = tester.get_parents(node).collect::<Vec<_>>();
+        let found_parents = traversal.parent_nodes().collect::<Vec<_>>();
+        assert_eq!(found_parents.len(), expected_parents.len());
+        for idx in 0..found_parents.len() {
+            assert!(is_same_node(found_parents[idx], expected_parents[idx]));
+        }
+    }
+
+    // Find the decorated statement.
+    let decorated_statement = ast
+        .walk()
+        .find(|n| matches!(n.kind(), ast::Kind::DecoratedStatement(_)))
+        .expect("Expected decorated statement");
+
+    // Test the skip feature. Don't descend into the decorated_statement.
+    let expected_skip: Vec<&dyn Node> = expected
+        .iter()
+        .copied()
+        .filter(|&n| {
+            // Discard nodes who have the decorated_statement as a parent,
+            // excepting the decorated_statement itself.
+            tester
+                .get_parents(n)
+                .skip(1)
+                .all(|p| !is_same_node(p, decorated_statement))
+        })
+        .collect();
+
+    let mut found = vec![];
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        if is_same_node(node, decorated_statement) {
+            traversal.skip_children(node);
+        }
+        found.push(node);
+    }
+    assert_eq!(found.len(), expected_skip.len());
+    for idx in 0..found.len() {
+        assert!(is_same_node(found[idx], expected_skip[idx]));
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_traversal_skip_children_panics() {
+    // Test that we panic if we try to skip children of a node that is not the current node.
+    let ast = ast::parse(L!("true;"), ParseTreeFlags::empty(), None);
+    let mut traversal = ast.walk();
+    while let Some(node) = traversal.next() {
+        if matches!(node.kind(), ast::Kind::DecoratedStatement(_)) {
+            // Should panic as we can only skip the current node.
+            traversal.skip_children(ast.top());
+        }
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_traversal_parent_panics() {
+    // Can only get the parent of nodes still on the stack.
+    let ast = ast::parse(L!("true;"), ParseTreeFlags::empty(), None);
+    let mut traversal = ast.walk();
+    let mut decorated_statement = None;
+    while let Some(node) = traversal.next() {
+        if let Kind::DecoratedStatement(_) = node.kind() {
+            decorated_statement = Some(node);
+        } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::end) {
+            // should panic as the decorated_statement is not on the stack.
+            let _ = traversal.parent(decorated_statement.unwrap());
+        }
+    }
 }

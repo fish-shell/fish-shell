@@ -113,13 +113,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M insert end end-of-line
     bind -s --preset -M default end end-of-line
 
-    # Vi moves the cursor back if, after deleting, it is at EOL.
-    # To emulate that, move forward, then backward, which will be a NOP
-    # if there is something to move forward to.
-    bind -s --preset -M default x delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M default x delete-char
     bind -s --preset -M default X backward-delete-char
-    bind -s --preset -M insert delete delete-char forward-single-char backward-char
-    bind -s --preset -M default delete delete-char 'set fish_cursor_end_mode exclusive' forward-single-char backward-char 'set fish_cursor_end_mode inclusive'
+    bind -s --preset -M insert delete delete-char
+    bind -s --preset -M default delete delete-char
 
     # Backspace deletes a char in insert mode, but not in normal/default mode.
     bind -s --preset -M insert backspace backward-delete-char
@@ -238,7 +235,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # in vim p means paste *after* current character, so go forward a char before pasting
     # also in vim, P means paste *at* current position (like at '|' with cursor = line),
     # \ so there's no need to go back a char, just paste it without moving
-    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_modefish_cursor_end_modeinclusive' yank
+    bind -s --preset p 'set -g fish_cursor_end_mode exclusive' forward-char 'set -g fish_cursor_end_mode inclusive' yank
     bind -s --preset P yank
     bind -s --preset g,p yank-pop
 
@@ -252,10 +249,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Lowercase r, enters replace_one mode
     #
     bind -s --preset -m replace_one r repaint-mode
-    bind -s --preset -M replace_one -m default '' delete-char self-insert backward-char repaint-mode
-    bind -s --preset -M replace_one -m default enter 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
-    bind -s --preset -M replace_one -m default ctrl-j 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
-    bind -s --preset -M replace_one -m default ctrl-m 'commandline -f delete-char; commandline -i \n; commandline -f backward-char; commandline -f repaint-mode'
+    bind -s --preset -M replace_one -m default '' 'set -g fish_cursor_end_mode exclusive' delete-char self-insert backward-char repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default enter 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default ctrl-j 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
+    bind -s --preset -M replace_one -m default ctrl-m 'set -g fish_cursor_end_mode exclusive' 'commandline -f delete-char; commandline -i \n; commandline -f backward-char' repaint-mode 'set -g fish_cursor_end_mode inclusive'
     bind -s --preset -M replace_one -m default escape cancel repaint-mode
     bind -s --preset -M replace_one -m default ctrl-\[ cancel repaint-mode
 

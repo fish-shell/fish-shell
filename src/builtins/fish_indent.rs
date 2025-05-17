@@ -15,9 +15,7 @@ use crate::panic::panic_handler;
 use libc::LC_ALL;
 
 use super::prelude::*;
-use crate::ast::{
-    self, Ast, Category, Leaf, List, Node, NodeVisitor, SourceRangeList, Traversal, Type,
-};
+use crate::ast::{self, Ast, Kind, Leaf, Node, NodeVisitor, SourceRangeList, Traversal};
 use crate::common::{
     str2wcstring, unescape_string, wcs2string, UnescapeFlags, UnescapeStringStyle, PROGRAM_NAME,
 };
@@ -48,17 +46,20 @@ use crate::wutil::fish_iswalnum;
 /// certain runs, weight line breaks, have a cost model, etc.
 struct PrettyPrinter<'source, 'ast> {
     /// The parsed ast.
-    ast: Ast,
+    ast: &'ast Ast,
 
     state: PrettyPrinterState<'source, 'ast>,
 }
 
 struct PrettyPrinterState<'source, 'ast> {
-    /// Original source.
+    // Original source.
     source: &'source wstr,
 
-    /// The indents of our string.
-    /// This has the same length as 'source' and describes the indentation level.
+    // The traversal of the ast.
+    traversal: Traversal<'ast>,
+
+    // The indents of our string.
+    // This has the same length as 'source' and describes the indentation level.
     indents: Vec<i32>,
 
     /// The prettifier output.
@@ -85,6 +86,58 @@ struct PrettyPrinterState<'source, 'ast> {
     errors: Option<&'ast SourceRangeList>,
 }
 
+#[derive(Copy, Clone, Default, Debug)]
+struct AstSizeMetrics {
+    /// The total number of nodes.
+    node_count: usize,
+    /// The number of branches, leaves, and lists, tokens, and keywords.
+    /// Note tokens and keywords are also counted as leaves.
+    branch_count: usize,
+    leaf_count: usize,
+    token_count: usize,
+    keyword_count: usize,
+    // An estimate of the total allocated size of the ast in bytes.
+    memory_size: usize,
+}
+
+impl std::fmt::Display for AstSizeMetrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "AstSizeMetrics:")?;
+        writeln!(f, "  nodes: {}", self.node_count)?;
+        writeln!(f, "  branches: {}", self.branch_count)?;
+        writeln!(f, "  leaves: {}", self.leaf_count)?;
+        writeln!(f, "  tokens: {}", self.token_count)?;
+        writeln!(f, "  keywords: {}", self.keyword_count)?;
+
+        let memsize = self.memory_size;
+        let (val, unit) = if memsize >= 1024 * 1024 {
+            (memsize as f64 / (1024.0 * 1024.0), "MB")
+        } else {
+            (memsize as f64 / 1024.0, "KB")
+        };
+        writeln!(f, "  memory: {} bytes ({:.2} {})", memsize, val, unit)
+    }
+}
+
+impl<'a> NodeVisitor<'a> for AstSizeMetrics {
+    fn visit(&mut self, node: &'a dyn Node) {
+        self.node_count += 1;
+        self.memory_size += node.self_memory_size();
+        if node.as_leaf().is_some() {
+            self.leaf_count += 1;
+        } else {
+            self.branch_count += 1; // treating lists as branches
+        }
+        if node.as_token().is_some() {
+            self.token_count += 1;
+        }
+        if node.as_keyword().is_some() {
+            self.keyword_count += 1;
+        }
+        node.accept(self);
+    }
+}
+
 /// Flags we support.
 #[derive(Copy, Clone, Default)]
 struct GapFlags {
@@ -105,11 +158,13 @@ struct GapFlags {
 }
 
 impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
-    fn new(source: &'source wstr, do_indent: bool) -> Self {
+    fn new(source: &'source wstr, ast: &'ast Ast, do_indent: bool) -> Self {
+        let traversal = Traversal::new(ast.top());
         let mut zelf = Self {
-            ast: Ast::parse(source, parse_flags(), None),
+            ast,
             state: PrettyPrinterState {
                 source,
+                traversal,
                 indents: if do_indent
                 /* Whether to indent, or just insert spaces. */
                 {
@@ -135,10 +190,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
     }
 
     // Entry point. Prettify our source code and return it.
-    fn prettify(&'ast mut self) -> WString {
+    fn prettify(&mut self) -> WString {
         self.state.output.clear();
         self.state.errors = Some(&self.ast.extras.errors);
-        self.state.visit(self.ast.top());
+        self.state.prettify_traversal();
 
         // Trailing gap text.
         self.state.emit_gap_text_before(
@@ -163,7 +218,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
         // Collect the token ranges into a list.
         let mut tok_ranges = vec![];
         for node in Traversal::new(self.ast.top()) {
-            if node.category() == Category::leaf {
+            if let Some(node) = node.as_leaf() {
                 let r = node.source_range();
                 if r.length() > 0 {
                     tok_ranges.push(r);
@@ -209,10 +264,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             // See if we have a condition and an andor_job_list.
             let condition;
             let andors;
-            if let Some(ifc) = node.as_if_clause() {
+            if let Kind::IfClause(ifc) = node.kind() {
                 condition = ifc.condition.semi_nl.as_ref();
                 andors = &ifc.andor_tail;
-            } else if let Some(wc) = node.as_while_header() {
+            } else if let Kind::WhileHeader(wc) = node.kind() {
                 condition = wc.condition.semi_nl.as_ref();
                 andors = &wc.andor_tail;
             } else {
@@ -220,10 +275,10 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             }
 
             // If there is no and-or tail then we always use a newline.
-            if andors.count() > 0 {
+            if !andors.is_empty() {
                 condition.map(&mut mark_semi_from_input);
                 // Mark all but last of the andor list.
-                for andor in andors.iter().take(andors.count() - 1) {
+                for andor in andors.iter().take(andors.len() - 1) {
                     mark_semi_from_input(andor.job.semi_nl.as_ref().unwrap());
                 }
             }
@@ -231,7 +286,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
 
         // `{ x; y; }` gets semis if the input uses semis and it spans only one line.
         for node in Traversal::new(self.ast.top()) {
-            let Some(brace_statement) = node.as_brace_statement() else {
+            let Kind::BraceStatement(brace_statement) = node.kind() else {
                 continue;
             };
             if self
@@ -248,7 +303,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
 
         // `x ; and y` gets semis if it has them already, and they are on the same line.
         for node in Traversal::new(self.ast.top()) {
-            let Some(job_list) = node.as_job_list() else {
+            let Kind::JobList(job_list) = node.kind() else {
                 continue;
             };
             let mut prev_job_semi_nl = None;
@@ -296,7 +351,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             .collect();
         let mut next_newline = 0;
         for node in Traversal::new(self.ast.top()) {
-            let Some(brace_statement) = node.as_brace_statement() else {
+            let Kind::BraceStatement(brace_statement) = node.kind() else {
                 continue;
             };
             while next_newline != newline_offsets.len()
@@ -326,36 +381,36 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     // Return gap text flags for the gap text that comes *before* a given node type.
     fn gap_text_flags_before_node(&self, node: &dyn Node) -> GapFlags {
         let mut result = GapFlags::default();
-        match node.typ() {
+        match node.kind() {
             // Allow escaped newlines before leaf nodes that can be part of a long command.
-            Type::argument | Type::redirection | Type::variable_assignment => {
+            Kind::Argument(_) | Kind::Redirection(_) | Kind::VariableAssignment(_) => {
                 result.allow_escaped_newlines = true
             }
-            Type::token_base => {
+            Kind::Token(token) => {
                 // Allow escaped newlines before && and ||, and also pipes.
-                match node.as_token().unwrap().token_type() {
+                match token.token_type() {
                     ParseTokenType::andand | ParseTokenType::oror | ParseTokenType::pipe => {
                         result.allow_escaped_newlines = true;
                     }
                     ParseTokenType::string => {
                         // Allow escaped newlines before commands that follow a variable assignment
                         // since both can be long (#7955).
-                        let p = node.parent().unwrap();
-                        if p.typ() != Type::decorated_statement {
+                        let p = self.traversal.parent(node);
+                        if !matches!(p.kind(), Kind::DecoratedStatement(_)) {
                             return result;
                         }
-                        let p = p.parent().unwrap();
-                        assert_eq!(p.typ(), Type::statement);
-                        let p = p.parent().unwrap();
-                        if let Some(job) = p.as_job_pipeline() {
+                        let p = self.traversal.parent(p);
+                        assert!(matches!(p.kind(), Kind::Statement(_)));
+                        let p = self.traversal.parent(p);
+                        if let Kind::JobPipeline(job) = p.kind() {
                             if !job.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
-                        } else if let Some(job_cnt) = p.as_job_continuation() {
+                        } else if let Kind::JobContinuation(job_cnt) = p.kind() {
                             if !job_cnt.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
-                        } else if let Some(not_stmt) = p.as_not_statement() {
+                        } else if let Kind::NotStatement(not_stmt) = p.kind() {
                             if !not_stmt.variables.is_empty() {
                                 result.allow_escaped_newlines = true;
                             }
@@ -672,14 +727,12 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
     }
 
     fn is_multi_line_brace(&self, node: &dyn ast::Token) -> bool {
-        node.parent()
-            .unwrap()
-            .as_brace_statement()
-            .is_some_and(|brace_statement| {
-                self.multi_line_brace_statement_locations
-                    .binary_search(&brace_statement.source_range().start())
-                    .is_ok()
-            })
+        let Kind::BraceStatement(brace) = self.traversal.parent(node.as_node()).kind() else {
+            return false;
+        };
+        self.multi_line_brace_statement_locations
+            .binary_search(&brace.source_range().start())
+            .is_ok()
     }
     fn visit_left_brace(&mut self, node: &dyn ast::Token) {
         let range = node.source_range();
@@ -750,9 +803,60 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         self.emit_gap_text(gap_range, flags);
     }
 
-    fn visit_begin_header(&mut self) {
+    fn visit_begin_header(&mut self, node: &ast::BeginHeader) {
+        self.emit_node_text(&node.kw_begin);
+        if let Some(semi_nl) = &node.semi_nl {
+            self.visit_semi_nl(semi_nl);
+        }
+        // 'begin' does not require a newline after it, but we insert one.
         if !self.at_line_start() {
             self.emit_newline();
+        }
+    }
+
+    // Prettify our ast traversal, populating the output.
+    fn prettify_traversal(&mut self) {
+        while let Some(node) = self.traversal.next() {
+            // Leaf nodes we just visit their text.
+            if node.as_keyword().is_some() {
+                self.emit_node_text(node);
+                continue;
+            }
+            if let Some(token) = node.as_token() {
+                match token.token_type() {
+                    ParseTokenType::end => self.visit_semi_nl(token),
+                    ParseTokenType::left_brace => self.visit_left_brace(token),
+                    ParseTokenType::right_brace => self.visit_right_brace(token),
+                    _ => self.emit_node_text(node),
+                }
+                continue;
+            }
+
+            match node.kind() {
+                Kind::Argument(_) | Kind::VariableAssignment(_) => {
+                    self.emit_node_text(node);
+                    self.traversal.skip_children(node);
+                }
+                Kind::Redirection(node) => {
+                    self.visit_redirection(node);
+                    self.traversal.skip_children(node);
+                }
+                Kind::MaybeNewlines(node) => {
+                    self.visit_maybe_newlines(node);
+                    self.traversal.skip_children(node);
+                }
+                Kind::BeginHeader(node) => {
+                    self.visit_begin_header(node);
+                    self.traversal.skip_children(node);
+                }
+                _ => {
+                    // Default is to visit children. We expect all leaves to have been handled above.
+                    assert!(
+                        node.as_leaf().is_none(),
+                        "Should have handled all leaf nodes"
+                    );
+                }
+            }
         }
     }
 }
@@ -763,50 +867,6 @@ fn parse_flags() -> ParseTreeFlags {
         | ParseTreeFlags::INCLUDE_COMMENTS
         | ParseTreeFlags::LEAVE_UNTERMINATED
         | ParseTreeFlags::SHOW_BLANK_LINES
-}
-
-impl<'source, 'ast> NodeVisitor<'_> for PrettyPrinterState<'source, 'ast> {
-    // Default implementation is to just visit children.
-    fn visit(&mut self, node: &'_ dyn Node) {
-        // Leaf nodes we just visit their text.
-        if node.as_keyword().is_some() {
-            self.emit_node_text(node);
-            return;
-        }
-        if let Some(token) = node.as_token() {
-            match token.token_type() {
-                ParseTokenType::end => self.visit_semi_nl(token),
-                ParseTokenType::left_brace => self.visit_left_brace(token),
-                ParseTokenType::right_brace => self.visit_right_brace(token),
-                _ => self.emit_node_text(node),
-            }
-            return;
-        }
-        match node.typ() {
-            Type::argument | Type::variable_assignment => {
-                self.emit_node_text(node);
-            }
-            Type::redirection => {
-                self.visit_redirection(node.as_redirection().unwrap());
-            }
-            Type::maybe_newlines => {
-                self.visit_maybe_newlines(node.as_maybe_newlines().unwrap());
-            }
-            Type::begin_header => {
-                // 'begin' does not require a newline after it, but we insert one.
-                node.accept(self, false);
-                self.visit_begin_header();
-            }
-            _ => {
-                // For branch and list nodes, default is to visit their children.
-                if [Category::branch, Category::list].contains(&node.category()) {
-                    node.accept(self, false);
-                    return;
-                }
-                panic!("unexpected node type");
-            }
-        }
-    }
 }
 
 /// Return whether a character at a given index is escaped.
@@ -1181,7 +1241,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
 // Entry point for prettification.
 fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
     if DUMP_PARSE_TREE.load() {
-        let ast = Ast::parse(
+        let ast = ast::parse(
             src,
             ParseTreeFlags::LEAVE_UNTERMINATED
                 | ParseTreeFlags::INCLUDE_COMMENTS
@@ -1190,8 +1250,14 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
         );
         let ast_dump = ast.dump(src);
         streams.err.appendln(ast_dump);
+
+        // Output metrics too.
+        let mut metrics = AstSizeMetrics::default();
+        metrics.visit(ast.top());
+        streams.err.appendln(format!("{}", metrics));
     }
-    let mut printer = PrettyPrinter::new(src, do_indent);
+    let ast = ast::parse(src, parse_flags(), None);
+    let mut printer = PrettyPrinter::new(src, &ast, do_indent);
     printer.prettify()
 }
 

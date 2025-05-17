@@ -73,7 +73,7 @@ The following options are available:
 **-f** or **--function-names**
     Display a list of available input functions
 
--**-K** or **--key-names**
+**-K** or **--key-names**
     Display a list of available named keys such as ``backspace``.
 
 **-L** or **--list-modes**
@@ -169,7 +169,7 @@ The following special input functions are available:
     start selecting text
 
 ``cancel``
-    close the pager if it is open, or undo the most recent completion if one was just inserted, or otherwise cancel the current commandline and replace it with a new empty one
+    close the pager if it is open, or undo the most recent completion if one was just inserted
 
 ``cancel-commandline``
     cancel the current commandline and replace it with a new empty one, leaving the old one in place with a marker to show that it was cancelled
@@ -424,6 +424,24 @@ Turn on :ref:`vi key bindings <vi-mode>` and rebind :kbd:`ctrl-c` to clear the i
 Launch ``git diff`` and repaint the commandline afterwards when :kbd:`ctrl-g` is pressed::
 
    bind ctrl-g 'git diff' repaint
+
+Swap :kbd:`tab` and :kbd:`shift-tab`, making tab focus the search field.
+But if the search field is already active, keep the behavior (:kbd:`tab` cycles forward, :kbd:`shift-tab` backward).::
+
+   bind tab '
+       if commandline --search-field >/dev/null
+           commandline -f complete
+       else
+           commandline -f complete-and-search
+       end
+   '
+   bind shift-tab '
+       if commandline --search-field >/dev/null
+           commandline -f complete-and-search
+       else
+           commandline -f complete
+       end
+   '
 
 .. _cmd-bind-termlimits:
 

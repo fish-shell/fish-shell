@@ -16,8 +16,9 @@ pub fn print_help(command: &str) {
         .spawn()
         .and_then(|mut c| c.wait())
     {
-        Ok(status) if !status.success() => eprintln!("{}", HELP_ERR),
-        Err(e) => eprintln!("{}: {}", HELP_ERR, e),
+        // TODO: should be translated
+        Ok(status) if !status.success() => eprintf!("%s\n", HELP_ERR),
+        Err(e) => eprintf!("%s: %s\n", HELP_ERR, e),
         _ => (),
     }
 }

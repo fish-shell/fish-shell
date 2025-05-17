@@ -1,5 +1,6 @@
 //! stdlib backports
 
+// TODO(MSRV): is_none_or was added in rust 1.82
 pub trait IsSomeAnd {
     type Type;
     #[allow(clippy::wrong_self_convention)]
@@ -15,6 +16,7 @@ impl<T> IsSomeAnd for Option<T> {
     }
 }
 
+// TODO(MSRV): is_sorted_by was added in rust 1.82
 pub trait IsSorted {
     type T;
     fn is_sorted_by(&self, pred: impl Fn(&Self::T, &Self::T) -> Option<std::cmp::Ordering>)

@@ -14,6 +14,7 @@ function __fish_complete_suffix -d "Complete using files"
     argparse 'prefix=' 'description=' 'complete=' -- $argv
 
     set -l suff (string escape --style=regex -- $argv)
+    set -l files
 
     # Simple and common case: no prefix, just complete normally and sort matching files first.
     if test -z $_flag_prefix
@@ -33,7 +34,7 @@ function __fish_complete_suffix -d "Complete using files"
 
         # Strip leading ./ as it confuses the detection of base and suffix
         # It is conditionally re-added below.
-        set base $_flag_prefix(string replace -r '^("\')?\\./' '' -- $_flag_complete | string trim -c '\'"') # " make emacs syntax highlighting happy
+        set -l base $_flag_prefix(string replace -r '^("\')?\\./' '' -- $_flag_complete | string trim -c '\'"') # " make emacs syntax highlighting happy
 
         set -l all
         set -l files_with_suffix
@@ -74,7 +75,7 @@ function __fish_complete_suffix -d "Complete using files"
             set _flag_description "\t$_flag_description"
         end
         if string match -qr -- . "$_flag_prefix"
-            set prefix (string escape --style=regex -- $_flag_prefix)
+            set -l prefix (string escape --style=regex -- $_flag_prefix)
             set files (string replace -r -- "^$prefix" "" $files)
         end
         printf "%s$_flag_description\n" $files

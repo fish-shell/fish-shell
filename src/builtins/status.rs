@@ -474,7 +474,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.append(wgettext_fmt!(
+                streams.err.appendln(wgettext_fmt!(
                     "%ls: fish was not built with embedded files",
                     cmd,
                 ));
@@ -520,7 +520,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.append(wgettext_fmt!(
+                streams.err.appendln(wgettext_fmt!(
                     "%ls: fish was not built with embedded files",
                     cmd,
                 ));

@@ -684,10 +684,11 @@ mod test_expressions {
 
             if let Token::UnaryBoolean(token) = first_token {
                 let subject = self.parse_3_arg_expression(start + 1, end)?;
+                let range = start..subject.range().end;
                 UnaryOperator {
                     subject,
                     token,
-                    range: start..end,
+                    range,
                 }
                 .into_some_box()
             } else if first_token == Token::ParenOpen {

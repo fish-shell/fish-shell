@@ -933,6 +933,7 @@ pub trait InputEventQueuer {
                             );
                             let ok = stop_query(self.blocking_query());
                             assert!(ok);
+                            self.get_input_data_mut().queue.clear();
                         }
                         continue;
                     }
@@ -1637,7 +1638,7 @@ pub trait InputEventQueuer {
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
                 );
-                self.push_back(interrupt_evt);
+                self.get_input_data_mut().queue.clear();
             } else {
                 self.push_front(interrupt_evt);
             }

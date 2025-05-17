@@ -25,11 +25,9 @@ use libc::{
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use once_cell::sync::Lazy;
-use once_cell::unsync::OnceCell;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::cell::RefMut;
 use std::cell::UnsafeCell;
 use std::cmp;
@@ -40,6 +38,7 @@ use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::BorrowedFd;
 use std::os::fd::{AsRawFd, RawFd};
+use std::os::unix::ffi::OsStrExt;
 use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
@@ -85,7 +84,7 @@ use crate::history::{
     history_session_id, in_private_mode, History, HistorySearch, PersistenceMode, SearchDirection,
     SearchFlags, SearchType,
 };
-use crate::input::init_input;
+use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
@@ -267,28 +266,73 @@ fn querying_allowed(in_fd: RawFd) -> bool {
         && isatty(STDOUT_FILENO)
 }
 
-pub(crate) fn initial_query(
-    in_fd: RawFd,
-    blocking_query: &OnceCell<RefCell<Option<TerminalQuery>>>,
-    out: &mut impl Output,
-    vars: Option<&dyn Environment>,
-) {
-    blocking_query.get_or_init(|| {
+pub fn terminal_init() -> InputEventQueue {
+    reader_interactive_init();
+
+    let mut input_queue = InputEventQueue::new(STDIN_FILENO);
+
+    let _init_tty_metadata = ScopeGuard::new((), |()| {
         initialize_tty_metadata();
-        let query = if !querying_allowed(in_fd) {
-            None
-        } else {
-            // Query for kitty keyboard protocol support.
-            out.write_command(QueryKittyKeyboardProgressiveEnhancements);
-            out.write_command(QueryXtversion);
-            if let Some(vars) = vars {
-                query_capabilities_via_dcs(out.by_ref(), vars);
-            }
-            out.write_command(QueryPrimaryDeviceAttribute);
-            Some(TerminalQuery::Initial)
-        };
-        RefCell::new(query)
     });
+
+    if !querying_allowed(STDIN_FILENO) {
+        return input_queue;
+    }
+
+    set_shell_modes(STDIN_FILENO, "initial query");
+    {
+        let mut out = BufferedOutputter::new(Outputter::stdoutput());
+        // Query for kitty keyboard protocol support.
+        out.write_command(QueryKittyKeyboardProgressiveEnhancements);
+        out.write_command(QueryXtversion);
+        query_capabilities_via_dcs(out.by_ref());
+        out.write_command(QueryPrimaryDeviceAttribute);
+    }
+    input_queue.blocking_query().replace(TerminalQuery::Initial);
+
+    while !check_exit_loop_maybe_warning(None) {
+        use CharEvent::{Command, Implicit, Key, Readline};
+        use ImplicitEvent::{CheckExit, Eof, QueryInterrupted};
+        use QueryResultEvent::*;
+        match input_queue.readch() {
+            Implicit(Eof) => reader_sighup(),
+            Implicit(CheckExit) => {}
+            Implicit(QueryInterrupted) => break,
+            CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute) | Timeout) => {
+                if get_kitty_keyboard_capability() == Capability::Unknown {
+                    set_kitty_keyboard_capability(
+                        reader_save_screen_state,
+                        Capability::NotSupported,
+                    );
+                }
+                break;
+            }
+            CharEvent::QueryResult(Response(_)) => (),
+            Key(_) | Readline(_) | Command(_) | Implicit(_) => panic!(),
+        };
+    }
+
+    stop_query(input_queue.blocking_query());
+
+    let input_data = input_queue.get_input_data();
+    // We blocked execution of code and mappings so input function args must be empty.
+    assert!(input_data.input_function_args.is_empty());
+    if input_data.paste_buffer.is_some() {
+        // The terminal should never interleave query responses with a bracketed paste
+        // command. hence this should only happen on timeout.
+        FLOG!(
+            reader,
+            "Bracketed paste was interrupted; dropping uncommitted paste buffer"
+        )
+    }
+    assert!(input_data.event_storage.is_empty());
+    FLOGF!(
+        reader,
+        "Returning %lu pending input events",
+        input_data.queue.len()
+    );
+
+    input_queue
 }
 
 /// The stack of current interactive reading contexts.
@@ -329,7 +373,12 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     let data = current_data().unwrap();
     data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
     if !parser.interactive_initialized.swap(true) {
-        reader_interactive_init(parser);
+        // Provide value for `status current-command`
+        parser.libdata_mut().status_vars.command = L!("fish").to_owned();
+        // Also provide a value for the deprecated fish 2.0 $_ variable
+        parser
+            .vars()
+            .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
     }
     Reader { data, parser }
 }
@@ -1548,7 +1597,7 @@ pub fn combine_command_and_autosuggestion(
 
 impl<'a> Reader<'a> {
     pub(crate) fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.parser.blocking_query.get().unwrap().borrow_mut()
+        self.parser.blocking_query.borrow_mut()
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
@@ -2233,13 +2282,6 @@ impl<'a> Reader<'a> {
         // Set the new modes.
         set_shell_modes(self.conf.inputfd, "readline");
 
-        initial_query(
-            self.conf.inputfd,
-            &self.parser.blocking_query,
-            &mut BufferedOutputter::new(Outputter::stdoutput()),
-            Some(self.parser.vars()),
-        );
-
         // HACK: Don't abandon line for the first prompt, because
         // if we're started with the terminal it might not have settled,
         // so the width is quite likely to be in flight.
@@ -2263,6 +2305,7 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
+        self.insert_front(self.parser.pending_input.take());
         while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
             tty.enable_tty_protocols();
@@ -2541,6 +2584,7 @@ impl<'a> Reader<'a> {
             CharEvent::Implicit(implicit_event) => match implicit_event {
                 ImplicitEvent::Eof => reader_sighup(),
                 ImplicitEvent::CheckExit => (),
+                ImplicitEvent::QueryInterrupted => (),
                 ImplicitEvent::FocusIn => {
                     event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
                 }
@@ -2567,15 +2611,7 @@ impl<'a> Reader<'a> {
                 use QueryResponse::*;
                 use QueryResultEvent::*;
                 let query = match (&mut **query, query_result) {
-                    (Some(TerminalQuery::Initial), Response(PrimaryDeviceAttribute) | Timeout) => {
-                        if get_kitty_keyboard_capability() == Capability::Unknown {
-                            set_kitty_keyboard_capability(
-                                reader_save_screen_state,
-                                Capability::NotSupported,
-                            );
-                        }
-                        maybe_query
-                    }
+                    (Some(TerminalQuery::Initial), _) => panic!(),
                     (
                         Some(TerminalQuery::CursorPosition(cursor_pos_query)),
                         Response(CursorPosition(cursor_pos)),
@@ -2630,13 +2666,15 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
 
 #[allow(renamed_and_removed_lints)]
 #[allow(clippy::blocks_in_if_conditions)] // for old clippy
-fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
-    if vars.get_unless_empty(L!("STY")).is_some()
-        || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
-            let term = &term.as_list()[0];
-            term == "screen" || term == "screen-256color"
-        })
-    {
+fn query_capabilities_via_dcs(out: &mut impl Output) {
+    if {
+        use std::env::var_os;
+        var_os("STY").is_some()
+            || var_os("TERM").is_some_and(|term| {
+                let screens: [&[u8]; 2] = [b"screen", b"screen-256color"];
+                screens.contains(&term.as_bytes())
+            })
+    } {
         return;
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
@@ -4490,14 +4528,11 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
 }
 
 /// Initialize data for interactive use.
-fn reader_interactive_init(parser: &Parser) {
+fn reader_interactive_init() {
     assert_is_main_thread();
 
     let mut shell_pgid = getpgrp();
     let shell_pid = getpid();
-
-    // Set up key bindings.
-    init_input();
 
     // Ensure interactive signal handling is enabled.
     signal_set_handlers_once(true);
@@ -4536,15 +4571,6 @@ fn reader_interactive_init(parser: &Parser) {
     }
 
     termsize_invalidate_tty();
-
-    // Provide value for `status current-command`
-    parser.libdata_mut().status_vars.command = L!("fish").to_owned();
-    // Also provide a value for the deprecated fish 2.0 $_ variable
-    parser
-        .vars()
-        .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
-
-    initialize_tty_metadata();
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.

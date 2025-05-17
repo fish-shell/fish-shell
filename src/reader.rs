@@ -1060,12 +1060,11 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 }
 
 /// Read one line of input. Before calling this function, reader_push() must have been called in
-/// order to set up a valid reader environment. If nchars > 0, return after reading that many
+/// order to set up a valid reader environment. If nchars is given, return after reading that many
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(parser: &Parser, nchars: usize) -> Option<WString> {
-    let nchars = NonZeroUsize::try_from(nchars).ok();
+pub fn reader_readline(parser: &Parser, nchars: Option<NonZeroUsize>) -> Option<WString> {
     let data = current_data().unwrap();
     let mut reader = Reader { parser, data };
     reader.readline(nchars)

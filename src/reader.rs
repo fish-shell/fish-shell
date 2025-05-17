@@ -2434,8 +2434,7 @@ impl<'a> Reader<'a> {
         });
 
         // If we ran `exit` anywhere, exit.
-        self.exit_loop_requested =
-            self.exit_loop_requested || self.parser.libdata().exit_current_script;
+        self.exit_loop_requested |= self.parser.libdata().exit_current_script;
         self.parser.libdata_mut().exit_current_script = false;
         if self.exit_loop_requested {
             return ControlFlow::Continue(());

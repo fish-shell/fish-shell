@@ -5,15 +5,8 @@ function __fish_print_xbps_packages
     argparse i/installed -- $argv
     or return 1
 
-    set -l xdg_cache_home (__fish_make_cache_dir)
-    or return
-
     if not set -q _flag_installed
-        set -l cache_file $xdg_cache_home/xbps
-        __fish_cache_read $cache_file 300 && return
-        __fish_cache_put $cache_file
-        # prints: <package name>	Package
-        xbps-query -Rs "" | sed 's/^... \([^ ]*\)-.* .*/\1/; s/$/\t'Package'/' | tee $cache_file
+        __fish_cached -t 300 -- "xbps-query -Rs '' | sed 's/^... \([^ ]*\)-.* .*/\1/; s/\$/\tPackage/'"
         return 0
     else
         xbps-query -l | sed 's/^.. \([^ ]*\)-.* .*/\1/' # TODO: actually put package versions in tab for locally installed packages

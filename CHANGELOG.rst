@@ -5,6 +5,7 @@ Notable improvements and fixes
 ------------------------------
 - New Taiwanese Chinese translation.
 - :ref:`Transient prompt <transient-prompt>` containing more lines than the final prompt will now be cleared properly (:issue:`11875`).
+- History-based autosuggestions now include multi-line commands.
 
 Deprecations and removed features
 ---------------------------------

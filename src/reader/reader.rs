@@ -86,12 +86,13 @@ use crate::history::{
     History, HistorySearch, PersistenceMode, SearchDirection, SearchFlags, SearchType,
     history_session_id, in_private_mode,
 };
+use crate::input_common::CursorPositionQueryReason;
 use crate::input_common::InputEventQueue;
 use crate::input_common::InputEventQueuer;
 use crate::input_common::QueryResponse;
 use crate::input_common::{
-    CharEvent, CharInputStyle, CursorPositionQuery, CursorPositionQueryKind, ImplicitEvent,
-    InputData, QueryResultEvent, ReadlineCmd, TerminalQuery, stop_query,
+    CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData, QueryResultEvent,
+    ReadlineCmd, TerminalQuery, stop_query,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -1099,6 +1100,19 @@ pub fn reader_schedule_prompt_repaint() {
     }
 }
 
+pub fn reader_update_termsize(parser: &Parser) {
+    let last = termsize_last();
+    let new = termsize_update(parser);
+    if new.height() == last.height() {
+        return;
+    }
+    let Some(data) = current_data() else {
+        return;
+    };
+    let mut data = Reader { parser, data };
+    data.push_front(CharEvent::Implicit(ImplicitEvent::WindowHeight));
+}
+
 pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
     if parser.scope().readonly_commandline {
         return;
@@ -1562,17 +1576,13 @@ impl ReaderData {
         true
     }
 
-    pub fn mouse_left_click(&mut self, viewport_cursor_y: usize, click_position: ViewportPosition) {
+    pub fn mouse_left_click(&mut self, click_position: ViewportPosition) {
         FLOGF!(
             reader,
-            "Received left mouse click at %u. Cursor is at %u",
+            "Received left mouse click at %u",
             format!("{:?}", click_position),
-            viewport_cursor_y,
         );
-        match self
-            .screen
-            .offset_in_cmdline_given_cursor(click_position, viewport_cursor_y)
-        {
+        match self.screen.offset_in_cmdline_given_cursor(click_position) {
             CharOffset::Cmd(new_pos) | CharOffset::Pointer(new_pos) => {
                 let (elt, _el) = self.active_edit_line();
                 self.update_buff_pos(elt, Some(new_pos));
@@ -1637,13 +1647,22 @@ fn combine_command_and_autosuggestion(
 }
 
 impl<'a> Reader<'a> {
-    pub fn request_cursor_position(&mut self, q: CursorPositionQuery) {
+    pub fn request_cursor_position(&mut self, reason: CursorPositionQueryReason) {
+        if self
+            .vars()
+            .get_unless_empty(L!("FISH_TEST_NO_CURSOR_POSITION_QUERY"))
+            .is_some()
+        {
+            return;
+        }
         if !querying_allowed(self.vars()) {
             return;
         }
         let mut query = self.blocking_query();
         assert!(query.is_none());
-        *query = Some(TerminalQuery::CursorPosition(q));
+        *query = Some(TerminalQuery::CursorPosition(CursorPositionQuery::new(
+            reason,
+        )));
         {
             let mut out = Outputter::stdoutput().borrow_mut();
             out.begin_buffering();
@@ -1821,15 +1840,15 @@ impl<'a> Reader<'a> {
             ],
         );
 
-        // Compute the indentation, then extend it with 0s for the autosuggestion. The autosuggestion
-        // always conceptually has an indent of 0.
-        let mut indents = parse_util_compute_indents(cmd_line.text());
-        indents.splice(pos..pos, vec![0; autosuggested_range.len()]);
+        // Compute the indentation.
+        let indents = parse_util_compute_indents(&full_line);
 
         let screen = &mut self.data.screen;
         let pager = &mut self.data.pager;
         let current_page_rendering = &mut self.data.current_page_rendering;
+        let curr_termsize = termsize_last();
         screen.write(
+            curr_termsize,
             // Prepend the mode prompt to the left prompt.
             &(self.data.mode_prompt_buff.clone() + &self.data.left_prompt_buff[..]),
             &self.data.right_prompt_buff,
@@ -1844,6 +1863,7 @@ impl<'a> Reader<'a> {
             current_page_rendering,
             is_final_rendering,
         );
+        screen.autoscroll(curr_termsize.height())
     }
 }
 
@@ -2333,6 +2353,8 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
+        self.request_cursor_position(CursorPositionQueryReason::NewPrompt);
+
         while !check_exit_loop_maybe_warning(Some(self)) {
             // Enable tty protocols while we read input.
             tty.enable_tty_protocols();
@@ -2506,7 +2528,7 @@ impl<'a> Reader<'a> {
             self.rls_mut().complete_did_insert = false;
         }
         // Perhaps update the termsize. This is cheap if it has not changed.
-        self.update_termsize();
+        reader_update_termsize(self.parser);
 
         // Repaint as needed.
         self.color_suggest_repaint_now();
@@ -2625,9 +2647,11 @@ impl<'a> Reader<'a> {
                     }
                     MouseLeft(position) => {
                         FLOG!(reader, "Mouse left click", position);
-                        self.request_cursor_position(CursorPositionQuery::new(
-                            CursorPositionQueryKind::MouseLeft(position),
-                        ));
+                        self.mouse_left_click(position);
+                    }
+                    WindowHeight => {
+                        FLOG!(reader, "Handling window height change");
+                        self.request_cursor_position(CursorPositionQueryReason::WindowHeightChange);
                     }
                 }
             }
@@ -2651,20 +2675,20 @@ impl<'a> Reader<'a> {
                     ) => {
                         let cursor_pos_query = cursor_pos_query.clone();
                         drop(maybe_query);
-                        use CursorPositionQueryKind::*;
                         let cursor_pos = cursor_pos_query.result;
-                        match cursor_pos_query.kind {
-                            MouseLeft(click_position) => {
-                                if let Some(cursor_pos) = cursor_pos {
-                                    self.mouse_left_click(cursor_pos.y, click_position);
-                                }
-                            }
-                            ScrollbackPush => {
-                                if let Some(cursor_pos) = cursor_pos {
-                                    self.screen.push_to_scrollback(cursor_pos.y);
-                                }
-                            }
+                        use CursorPositionQueryReason::*;
+                        let reason = cursor_pos_query.reason;
+                        let whence = match reason {
+                            NewPrompt => "cursor position query on new prompt",
+                            WindowHeightChange => "cursor position query on window height change",
                         };
+                        let y = cursor_pos.map(|cursor_pos| match reason {
+                            NewPrompt => cursor_pos.y,
+                            WindowHeightChange => {
+                                self.screen.command_line_y_given_cursor_y(cursor_pos.y)
+                            }
+                        });
+                        self.screen.set_position_in_viewport(whence, y);
                         self.blocking_query()
                     }
                     // Rogue reply
@@ -2740,7 +2764,7 @@ impl<'a> Reader<'a> {
             }
             rl::EndOfLine => {
                 if self.is_at_autosuggestion() {
-                    self.accept_autosuggestion(AutosuggestionPortion::Count(usize::MAX));
+                    self.accept_autosuggestion(AutosuggestionPortion::Line);
                 } else if !self.is_at_end() {
                     loop {
                         let position = {
@@ -3959,24 +3983,7 @@ impl<'a> Reader<'a> {
                 self.clear_screen_and_repaint();
             }
             rl::ScrollbackPush => {
-                let query = self.blocking_query();
-                let Some(query) = &*query else {
-                    drop(query);
-                    self.request_cursor_position(CursorPositionQuery::new(
-                        CursorPositionQueryKind::ScrollbackPush,
-                    ));
-                    return;
-                };
-                match query {
-                    TerminalQuery::Initial => panic!(),
-                    TerminalQuery::CursorPosition(_) => {
-                        // TODO: re-queue it I guess.
-                        FLOG!(
-                            reader,
-                            "Ignoring scrollback-push received while still waiting for Cursor Position Report"
-                        );
-                    }
-                }
+                self.screen.push_to_scrollback();
             }
             rl::SelfInsert | rl::SelfInsertNotFirst | rl::FuncAnd | rl::FuncOr => {
                 // This can be reached via `commandline -f and` etc
@@ -3996,6 +4003,8 @@ impl<'a> Reader<'a> {
         Outputter::stdoutput()
             .borrow_mut()
             .write_command(ClearScreen);
+        self.screen
+            .set_position_in_viewport("screen clear", Some(0));
         self.screen.reset_line(/*repaint_prompt=*/ true);
         self.layout_and_repaint(L!("readline"));
 
@@ -4104,9 +4113,6 @@ impl<'a> Reader<'a> {
             return true;
         }
 
-        // Delete any autosuggestion.
-        self.autosuggestion.clear();
-
         // The user may have hit return with pager contents, but while not navigating them.
         // Clear the pager in that event.
         self.clear_pager();
@@ -4152,6 +4158,9 @@ impl<'a> Reader<'a> {
             }
             unreachable!();
         }
+
+        // Delete any autosuggestion.
+        self.autosuggestion.clear();
 
         self.add_to_history();
         self.rls_mut().finished = true;
@@ -4225,11 +4234,6 @@ impl ReaderData {
 }
 
 impl<'a> Reader<'a> {
-    /// Called to update the termsize, including $COLUMNS and $LINES, as necessary.
-    fn update_termsize(&mut self) {
-        termsize_update(self.parser);
-    }
-
     /// Flash the screen. This function changes the color of the current line momentarily.
     fn flash(&mut self, mut flash_range: Range<usize>) {
         // Multiple flashes may be enqueued by keypress repeat events and can pile up to cause a
@@ -4743,7 +4747,7 @@ impl<'a> Reader<'a> {
 
         // Update the termsize now.
         // This allows prompts to react to $COLUMNS.
-        self.update_termsize();
+        reader_update_termsize(self.parser);
 
         self.mode_prompt_buff.clear();
         if function::exists(MODE_PROMPT_FUNCTION_NAME, self.parser) {
@@ -4893,31 +4897,36 @@ fn get_autosuggestion_performer(
             return nothing;
         }
 
-        // Let's make sure we aren't using the empty string.
-        let search_string_range = range_of_line_at_cursor(&command_line, cursor_pos);
-        let search_string = &command_line[search_string_range.clone()];
-        let Some(last_char) = search_string.chars().next_back() else {
-            return nothing;
-        };
-
-        // Search history for a matching item unless this line is not a continuation line or quoted.
-        let cursor_line_has_process_start = {
-            let mut tokens = vec![];
-            parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
-            range_of_line_at_cursor(
-                &command_line,
-                tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
-            ) == search_string_range
-        };
-
         // Only to be used if no case-sensitive suggestions are found.
         let mut icase_history_result = None;
 
-        if cursor_line_has_process_start {
+        let line_range = range_of_line_at_cursor(&command_line, cursor_pos);
+        // Search history for a matching item unless this line is not a continuation line or quoted.
+        for (search_type, range) in [
+            (SearchType::Prefix, 0..command_line.len()),
+            (SearchType::LinePrefix, line_range.clone()),
+        ] {
+            if range.is_empty() {
+                continue;
+            }
+            let search_string = &command_line[range.clone()];
+            if search_type == SearchType::LinePrefix {
+                let cursor_line_has_process_start = {
+                    let mut tokens = vec![];
+                    parse_util_process_extent(&command_line, cursor_pos, Some(&mut tokens));
+                    range_of_line_at_cursor(
+                        &command_line,
+                        tokens.first().map(|tok| tok.offset()).unwrap_or(cursor_pos),
+                    ) == range
+                };
+                if !cursor_line_has_process_start {
+                    continue;
+                }
+            }
             let mut searcher = HistorySearch::new_with(
-                history,
+                history.clone(),
                 search_string.to_owned(),
-                SearchType::LinePrefix,
+                search_type,
                 SearchFlags::IGNORE_CASE,
                 0,
             );
@@ -4925,28 +4934,44 @@ fn get_autosuggestion_performer(
             while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
                 let item = searcher.current_item();
 
-                // The history item's may have multiple lines of text.
-                // Only suggest the line that actually contains the search string.
+                let (matched_part, icase) = if search_type == SearchType::Prefix {
+                    let mut matched_part =
+                        item.str().starts_with(search_string).then_some(item.str());
+                    let mut icase = false;
+                    // Only check for a case-insensitive match if we haven't already found one
+                    if matched_part.is_none() && icase_history_result.is_none() {
+                        icase = true;
+                        matched_part =
+                            string_prefixes_string_case_insensitive(search_string, item.str())
+                                .then_some(item.str());
+                    }
 
-                let lines = item
-                    .str()
-                    .as_char_slice()
-                    .split(|&c| c == '\n')
-                    .rev()
-                    .map(wstr::from_char_slice);
+                    (matched_part, icase)
+                } else {
+                    // The history items may have multiple lines of text.
+                    // Only suggest the line that actually contains the search string.
+                    let lines = item
+                        .str()
+                        .as_char_slice()
+                        .split(|&c| c == '\n')
+                        .rev()
+                        .map(wstr::from_char_slice);
 
-                let mut icase = false;
-                let mut matched_line = lines.clone().find(|line| line.starts_with(search_string));
+                    let mut icase = false;
+                    let mut matched_part =
+                        lines.clone().find(|line| line.starts_with(search_string));
 
-                // Only check for a case-insensitive match if we haven't already found one
-                if matched_line.is_none() && icase_history_result.is_none() {
-                    icase = true;
-                    matched_line = lines
-                        .into_iter()
-                        .find(|line| string_prefixes_string_case_insensitive(search_string, line));
-                }
+                    // Only check for a case-insensitive match if we haven't already found one
+                    if matched_part.is_none() && icase_history_result.is_none() {
+                        icase = true;
+                        matched_part = lines.into_iter().find(|line| {
+                            string_prefixes_string_case_insensitive(search_string, line)
+                        });
+                    }
 
-                let Some(matched_line) = matched_line else {
+                    (matched_part, icase)
+                };
+                let Some(matched_part) = matched_part else {
                     assert!(
                         icase_history_result.is_some(),
                         "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
@@ -4956,11 +4981,11 @@ fn get_autosuggestion_performer(
 
                 if autosuggest_validate_from_history(item, &working_directory, &ctx) {
                     // The command autosuggestion was handled specially, so we're done.
-                    let is_whole = matched_line.len() == item.str().len();
+                    let is_whole = matched_part.len() == item.str().len();
                     let result = AutosuggestionResult::new(
                         command_line.clone(),
-                        search_string_range.clone(),
-                        matched_line.into(),
+                        range.clone(),
+                        matched_part.into(),
                         icase,
                         is_whole,
                     );
@@ -4978,6 +5003,11 @@ fn get_autosuggestion_performer(
             return nothing;
         }
 
+        let Some(last_char) = command_line[line_range.clone()].chars().next_back() else {
+            // Let's make sure we aren't using the empty string.
+            return nothing;
+        };
+
         // Here we do something a little funny. If the line ends with a space, and the cursor is not
         // at the end, don't use completion autosuggestions. It ends up being pretty weird seeing
         // stuff get spammed on the right while you go back to edit a line
@@ -4994,7 +5024,7 @@ fn get_autosuggestion_performer(
 
         // Try normal completions.
         let complete_flags = CompletionRequestOptions::autosuggest();
-        let mut would_be_cursor = search_string_range.end;
+        let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, &ctx);
 
@@ -5028,7 +5058,7 @@ fn get_autosuggestion_performer(
         };
         let mut result = AutosuggestionResult::new(
             command_line,
-            search_string_range,
+            line_range,
             suggestion,
             true, // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
@@ -5040,6 +5070,7 @@ fn get_autosuggestion_performer(
 
 enum AutosuggestionPortion {
     Count(usize),
+    Line,
     PerMoveWordStyle(MoveWordStyle),
 }
 
@@ -5169,7 +5200,12 @@ impl<'a> Reader<'a> {
             return false;
         }
         let el = &self.command_line;
-        range_of_line_at_cursor(el.text(), el.position()) == autosuggestion.search_string_range
+        let search_string_range = &autosuggestion.search_string_range;
+        // Single-line autosuggestion
+        range_of_line_at_cursor(el.text(), el.position()) == *search_string_range || {
+            // Multi-line autosuggestion
+            search_string_range.start == 0 && el.position() <= search_string_range.end
+        }
     }
 
     // Accept any autosuggestion by replacing the command line with it. If full is true, take the whole
@@ -5201,6 +5237,20 @@ impl<'a> Reader<'a> {
                         autosuggestion_text[start..start + count].to_owned(),
                     )
                 }
+            }
+            AutosuggestionPortion::Line => {
+                let suggested = &autosuggestion_text[search_string_range.len()..];
+                let line_end = suggested
+                    .chars()
+                    .position(|c| c == '\n')
+                    .unwrap_or(suggested.len());
+                if line_end == 0 {
+                    return;
+                }
+                (
+                    search_string_range.end..search_string_range.end,
+                    suggested[..line_end].to_owned(),
+                )
             }
             AutosuggestionPortion::PerMoveWordStyle(style) => {
                 // Accept characters according to the specified style.

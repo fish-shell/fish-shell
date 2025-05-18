@@ -10,10 +10,10 @@ isolated-tmux-start -C '
             printf "> full prompt > "
         end
     end
-    bind ctrl-j "set transient true; commandline -f repaint execute"
+    bind ctrl-x "set transient true; commandline -f repaint execute"
 '
 
-isolated-tmux send-keys 'echo foo' C-j
+isolated-tmux send-keys 'echo foo' C-x
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: > echo foo

@@ -11,6 +11,7 @@ use crate::FLOG;
 use crate::editable_line::line_at_cursor;
 use crate::key::ViewportPosition;
 use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::LinkedList;
 use std::io::Write;
@@ -36,7 +37,7 @@ use crate::terminal::TerminalCommand::{
     CursorUp, EnterDimMode, ExitAttributeMode, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Output, Outputter, use_terminfo};
-use crate::termsize::{Termsize, termsize_last};
+use crate::termsize::Termsize;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use crate::wutil::fstat;
@@ -221,6 +222,8 @@ pub struct Screen {
     /// Receiver for our output.
     outp: &'static RefCell<Outputter>,
 
+    /// Vertical offset of the screen contents within the terminal window.
+    viewport_y: Option<usize>,
     /// The internal representation of the desired screen contents.
     desired: ScreenData,
     /// The internal representation of the actual screen contents.
@@ -253,6 +256,7 @@ impl Default for Screen {
             autosuggestion_is_truncated: Default::default(),
             scrolled: Default::default(),
             outp: Outputter::stdoutput(),
+            viewport_y: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
@@ -281,6 +285,7 @@ impl Screen {
     #[allow(clippy::too_many_arguments)]
     pub fn write(
         &mut self,
+        curr_termsize: Termsize,
         left_prompt: &wstr,
         right_prompt: &wstr,
         commandline: &wstr,
@@ -294,7 +299,6 @@ impl Screen {
         page_rendering: &mut PageRendering,
         is_final_rendering: bool,
     ) {
-        let curr_termsize = termsize_last();
         let screen_width = curr_termsize.width();
         let screen_height = curr_termsize.height();
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
@@ -339,6 +343,8 @@ impl Screen {
         let layout = compute_layout(
             get_ellipsis_char(),
             screen_width,
+            screen_height,
+            self.viewport_y,
             left_prompt,
             right_prompt,
             explicit_before_suggestion,
@@ -557,8 +563,13 @@ impl Screen {
         self.save_status();
     }
 
-    pub fn push_to_scrollback(&mut self, viewport_cursor_y: usize) {
+    pub fn push_to_scrollback(&mut self) {
+        let Some(viewport_cursor_y) = self.viewport_y else {
+            return;
+        };
+        FLOG!(reader, "Pushing to scrollback");
         let lines_to_scroll = self.command_line_y_given_cursor_y(viewport_cursor_y);
+        self.set_position_in_viewport("scrollback-push", Some(0));
         if lines_to_scroll == 0 {
             return;
         }
@@ -569,7 +580,37 @@ impl Screen {
         out.write_command(CursorMove(CardinalDirection::Up, lines_to_scroll));
     }
 
-    fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
+    pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
+        FLOGF!(
+            reader,
+            "Setting screen y to %s due to %s",
+            viewport_y.map_or("<none>".to_string(), |y| format!("{y}")),
+            whence,
+        );
+        self.viewport_y = viewport_y;
+    }
+
+    pub fn autoscroll(&mut self, screen_height: usize) {
+        let Some(viewport_y) = self.viewport_y else {
+            return;
+        };
+        let actual_lines = self.actual.line_count();
+        let remaining_vertical_space = screen_height.saturating_sub(actual_lines);
+        if viewport_y > remaining_vertical_space {
+            FLOGF!(
+                reader,
+                "printing %u lines at y=%u would exceed window height (%u); \
+                     assuming the extra lines have been pushed to scrollback, setting screen y to %d",
+                actual_lines,
+                viewport_y,
+                screen_height,
+                remaining_vertical_space,
+            );
+            self.set_position_in_viewport("autoscroll", Some(remaining_vertical_space));
+        }
+    }
+
+    pub fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
         let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
         prompt_y.unwrap_or_else(|| {
             FLOG!(
@@ -586,9 +627,11 @@ impl Screen {
     pub fn offset_in_cmdline_given_cursor(
         &mut self,
         viewport_position: ViewportPosition,
-        viewport_cursor_y: usize,
     ) -> CharOffset {
-        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_cursor_y);
+        let Some(viewport_y) = self.viewport_y else {
+            return CharOffset::None;
+        };
+        let viewport_prompt_y = self.command_line_y_given_cursor_y(viewport_y);
         let y = viewport_position
             .y
             .checked_sub(viewport_prompt_y)
@@ -1925,6 +1968,8 @@ fn truncation_offset_for_width(str: &wstr, max_width: usize) -> usize {
 fn compute_layout(
     ellipsis_char: char,
     screen_width: usize,
+    screen_height: usize,
+    screen_viewport_y: Option<usize>,
     left_untrunc_prompt: &wstr,
     right_untrunc_prompt: &wstr,
     commandline_before_suggestion: &wstr,
@@ -1962,7 +2007,6 @@ fn compute_layout(
     .chars()
     .map(wcwidth_rendered_min_0)
     .sum();
-    let autosuggest_total_width = autosuggestion_str.chars().map(wcwidth_rendered_min_0).sum();
 
     // Here are the layouts we try:
     // 1. Right prompt visible.
@@ -1995,34 +2039,126 @@ fn compute_layout(
     // Now we should definitely fit.
     assert!(left_prompt_width + right_prompt_width <= screen_width);
 
-    // Calculate space available for autosuggestion.
-    let width = (left_prompt_width
-        + autosuggestion_line_explicit_width
+    // Truncate each logical line from the autosuggestion to fit on a single screen line.
+    // In future, we should truncate only once, at the end (#12004).
+    let cursor_y = left_prompt_layout.line_starts.len() - 1
         + commandline_before_suggestion
             .chars()
-            .rposition(|c| c == '\n')
-            .map_or(right_prompt_width, |pos| {
-                usize::try_from(indent[pos]).unwrap() * INDENT_STEP
-            }))
-        % screen_width;
-    let available_autosuggest_space = screen_width - width;
+            .filter(|&c| c == '\n')
+            .count();
 
-    // Truncate the autosuggestion to fit on the line.
-    let mut autosuggestion = WString::new();
-    if available_autosuggest_space >= autosuggest_total_width {
-        autosuggestion = autosuggestion_str.to_owned();
-    } else if autosuggest_total_width > 0 {
-        let truncation_offset =
-            truncation_offset_for_width(autosuggestion_str, available_autosuggest_space - 1);
-        autosuggestion = autosuggestion_str[..truncation_offset].to_owned();
-        autosuggestion.push(ellipsis_char);
+    struct SuggestionLine<'a> {
+        available_autosuggest_space: usize,
+        autosuggestion_line: &'a wstr,
+        autosuggest_total_width: usize,
+    }
+    let mut suggestion_lines = vec![];
+
+    let mut available_vertical_space = screen_viewport_y.map_or(
+        1, // Cursor position report not implemented in the terminal?
+        |screen_viewport_y| screen_height.saturating_sub(screen_viewport_y + cursor_y),
+    );
+    let mut truncated_vertically = false;
+    let mut suggestion_start = commandline_before_suggestion.len();
+    for (line, autosuggestion_line) in autosuggestion_str
+        .as_char_slice()
+        .split(|&c| c == '\n')
+        .enumerate()
+    {
+        let autosuggestion_line = wstr::from_char_slice(autosuggestion_line);
+        let autosuggest_total_width = autosuggestion_line
+            .chars()
+            .map(wcwidth_rendered_min_0)
+            .sum();
+
+        // Calculate space available for autosuggestion.
+        let indent_width = |pos| usize::try_from(indent[pos]).unwrap() * INDENT_STEP;
+        let width = left_prompt_width
+            + if line == 0 {
+                autosuggestion_line_explicit_width
+                    + commandline_before_suggestion
+                        .chars()
+                        .rposition(|c| c == '\n')
+                        .map_or(right_prompt_width, indent_width)
+            } else {
+                indent_width(suggestion_start - "\n".len())
+            };
+        let available_horizontal_space = screen_width - (width % screen_width);
+
+        let suggestion_line_height =
+            if width >= screen_width || autosuggest_total_width >= available_horizontal_space {
+                // As per the comment above, we truncate and autosuggestion lines that would wrap.
+                // We truncate them at the very end of the screen, so they (barely) soft wrap,
+                // and take up two screen lines.
+                2
+            } else {
+                1
+            };
+        match available_vertical_space.checked_sub(suggestion_line_height) {
+            Some(lines) => available_vertical_space = lines,
+            None => {
+                truncated_vertically = true;
+                break;
+            }
+        };
+
+        suggestion_lines.push(SuggestionLine {
+            available_autosuggest_space: available_horizontal_space,
+            autosuggestion_line,
+            autosuggest_total_width,
+        });
+
+        suggestion_start += autosuggestion_line.len() + "\n".len();
     }
 
-    let suggestion_start = commandline_before_suggestion.len();
-    let truncation_range =
-        suggestion_start + autosuggestion.len()..suggestion_start + autosuggestion_str.len();
-    colors.drain(truncation_range.clone());
-    indent.drain(truncation_range);
+    let mut autosuggestion = WString::new();
+    let mut erased = 0;
+    let mut suggestion_start = commandline_before_suggestion.len();
+    for (
+        line,
+        &SuggestionLine {
+            available_autosuggest_space,
+            autosuggestion_line,
+            autosuggest_total_width,
+        },
+    ) in suggestion_lines.iter().enumerate()
+    {
+        let truncated_suggestion_line;
+        let mut vertical_truncation_marker = None;
+        if autosuggest_total_width > 0 && autosuggest_total_width >= available_autosuggest_space {
+            // horizontal truncation
+            let truncation_offset =
+                truncation_offset_for_width(autosuggestion_line, available_autosuggest_space - 1);
+            truncated_suggestion_line = Cow::Owned(
+                autosuggestion_line[..truncation_offset].to_owned()
+                    + wstr::from_char_slice(&[ellipsis_char]),
+            );
+        } else if truncated_vertically && line == suggestion_lines.len() - 1 {
+            // vertical truncation
+            truncated_suggestion_line = Cow::Borrowed(autosuggestion_line);
+            vertical_truncation_marker = Some(ellipsis_char);
+        } else {
+            // no truncation
+            assert!(available_autosuggest_space >= autosuggest_total_width);
+            truncated_suggestion_line = Cow::Borrowed(autosuggestion_line);
+        }
+
+        let truncation_range = suggestion_start - erased + truncated_suggestion_line.len()
+            ..suggestion_start - erased + autosuggestion_line.len();
+        colors.drain(truncation_range.clone());
+        indent.drain(truncation_range.clone());
+        erased += truncation_range.len();
+        suggestion_start += autosuggestion_line.len() + "\n".len();
+        if line != 0 {
+            autosuggestion.push('\n');
+        }
+        autosuggestion.push_utfstr(&truncated_suggestion_line);
+        if let Some(extra) = vertical_truncation_marker {
+            autosuggestion.push(extra);
+            colors.insert(truncation_range.end, colors[truncation_range.end - 1]);
+            indent.insert(truncation_range.end, indent[truncation_range.end - 1]);
+        }
+    }
     result.autosuggestion = autosuggestion;
 
     result
@@ -2324,6 +2460,8 @@ mod tests {
                     compute_layout(
                         '…',
                         $screen_width,
+                        /*screen_height=*/ 24,
+                        /*screen_viewport_y=*/ Some(0),
                         L!($left_untrunc_prompt),
                         L!($right_untrunc_prompt),
                         L!($commandline_before_suggestion),
@@ -2422,7 +2560,7 @@ mod tests {
                 "left>",
                 5,
                 "",
-                "s",
+                "…",
             )
         );
         validate!(

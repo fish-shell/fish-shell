@@ -324,6 +324,8 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
+    /// Window height changed.
+    WindowHeight,
 }
 
 #[derive(Debug, Clone)]
@@ -695,20 +697,23 @@ impl InputData {
 }
 
 #[derive(Clone, Eq, PartialEq)]
-pub enum CursorPositionQueryKind {
-    MouseLeft(ViewportPosition),
-    ScrollbackPush,
+pub enum CursorPositionQueryReason {
+    NewPrompt,
+    WindowHeightChange,
 }
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct CursorPositionQuery {
-    pub kind: CursorPositionQueryKind,
+    pub reason: CursorPositionQueryReason,
     pub result: Option<ViewportPosition>,
 }
 
 impl CursorPositionQuery {
-    pub fn new(kind: CursorPositionQueryKind) -> Self {
-        Self { kind, result: None }
+    pub fn new(reason: CursorPositionQueryReason) -> Self {
+        Self {
+            reason,
+            result: None,
+        }
     }
 }
 

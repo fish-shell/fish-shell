@@ -177,7 +177,8 @@ Optional Commands
        and the second parameter is the column number.
        Both start at 1.
 
-       This is used by the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function,
+       This is used for truncating multiline autosuggestions at the screen's bottom edge,
+       by the :ref:`scrollback-push <special-input-functions-scrollback-push>` special input function,
        and inside terminals that implement the OSC 133 :ref:`click_events <term-compat-osc-133>` feature.
    * - ``\e[ \x20 q``
      - Se

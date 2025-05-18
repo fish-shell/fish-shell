@@ -13,8 +13,8 @@ use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
 use crate::parser::{Block, Parser};
 use crate::proc::Pid;
+use crate::reader::reader_update_termsize;
 use crate::signal::{Signal, signal_check_cancel, signal_handle};
-use crate::termsize::termsize_update;
 use crate::wchar::prelude::*;
 
 pub enum event_type_t {
@@ -549,7 +549,7 @@ pub fn fire_delayed(parser: &Parser) {
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.
         if sig == libc::SIGWINCH {
-            termsize_update(parser);
+            reader_update_termsize(parser)
         }
         let event = Event {
             desc: EventDescription::Signal { signal: sig },

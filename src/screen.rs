@@ -250,9 +250,9 @@ pub struct Screen {
 impl Default for Screen {
     fn default() -> Self {
         Self {
-            outp: Outputter::stdoutput(),
             autosuggestion_is_truncated: Default::default(),
             scrolled: Default::default(),
+            outp: Outputter::stdoutput(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),

@@ -3,9 +3,10 @@
 //!
 //! Many of these functions are more or less broken and incomplete.
 
+use crate::common::{str2wcstring, wcs2zstring};
 use crate::wchar::prelude::*;
 use crate::widecharwidth::{WcLookupTable, WcWidth};
-use errno::{errno, Errno};
+use errno::errno;
 use once_cell::sync::Lazy;
 use std::cmp;
 use std::ffi::CString;
@@ -118,7 +119,7 @@ pub fn fish_wcswidth(s: &wstr) -> isize {
 // Replacement for mkostemp(str, O_CLOEXEC)
 // This uses mkostemp if available,
 // otherwise it uses mkstemp followed by fcntl
-pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), Errno> {
+fn fish_mkstemp_cloexec(name_template: CString) -> std::io::Result<(File, CString)> {
     let name = name_template.into_raw();
     #[cfg(not(apple))]
     let fd = {
@@ -135,10 +136,26 @@ pub fn fish_mkstemp_cloexec(name_template: CString) -> Result<(File, CString), E
         fd
     };
     if fd == -1 {
-        Err(errno())
+        Err(std::io::Error::from(errno()))
     } else {
         unsafe { Ok((File::from_raw_fd(fd), CString::from_raw(name))) }
     }
+}
+
+/// Creates a temporary file created according to the template and its name if successful.
+pub fn create_temporary_file(name_template: &wstr) -> std::io::Result<(File, WString)> {
+    let (fd, c_string_template) = loop {
+        match fish_mkstemp_cloexec(wcs2zstring(name_template)) {
+            Ok(tmp_file_data) => break tmp_file_data,
+            Err(e) => match e.kind() {
+                std::io::ErrorKind::Interrupted => {}
+                _ => {
+                    return Err(e);
+                }
+            },
+        }
+    };
+    Ok((fd, str2wcstring(c_string_template.to_bytes())))
 }
 
 pub fn wcscasecmp(lhs: &wstr, rhs: &wstr) -> cmp::Ordering {

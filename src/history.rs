@@ -23,7 +23,9 @@
 //! rare cases with multiple simultaneous shell sessions, lose a history item; this is
 //! considered preferable to hanging the the shell waiting for a lock.
 
-use crate::{common::cstr2wcstring, env::EnvVar, wcstringutil::trim};
+use crate::{
+    common::cstr2wcstring, env::EnvVar, fallback::create_temporary_file, wcstringutil::trim,
+};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -46,13 +48,9 @@ use rand::Rng;
 
 use crate::{
     ast::{self, Kind, Node},
-    common::{
-        str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
-        UnescapeStringStyle,
-    },
+    common::{str2wcstring, unescape_string, valid_var_name, CancelChecker, UnescapeStringStyle},
     env::{EnvMode, EnvStack, Environment},
     expand::{expand_one, ExpandFlags},
-    fallback::fish_mkstemp_cloexec,
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
@@ -219,29 +217,35 @@ impl LockedHistoryFile {
         }
     }
 
+    /// Creates a `LockedHistoryFile`.
+    /// Use this to access the history file, as it ensures correct locking.
+    /// Use `LockingMode::Exclusive` if you want to modify the history file in any way.
+    /// Otherwise you should use `LockingMode::Shared`.
+    /// `file_name` should just be a name, not a full path.
+    /// `file_flags` and `file_mode` are used for opening (and potentially creating) the history
+    /// file.
     pub fn new(
         locking_mode: LockingMode,
         file_name: &wstr,
         file_flags: OFlag,
         file_mode: nix::sys::stat::Mode,
-    ) -> std::io::Result<Option<Self>> {
+    ) -> std::io::Result<Self> {
         const LOCK_FILE_SUFFIX: &wstr = L!(".lock");
 
         // Get the path to the real history file.
-        // No history should be saved if fish_history is set to the empty string,
-        // so nothing needs to be done here and `None` is returned.
-        let Some(history_path) = history_filename(file_name, L!("")) else {
-            return Ok(None);
-        };
+        let history_path = history_filename(file_name, L!(""))?;
         let history_path = wrealpath(&history_path).unwrap_or(history_path);
 
         // The only way this should be able to fail is if `get_data_directory()` succeeds above but
         // fails here.
-        let Some(lock_file_path) = history_filename(file_name, LOCK_FILE_SUFFIX) else {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Could not obtain lock file path.",
-            ));
+        let lock_file_path = match history_filename(file_name, LOCK_FILE_SUFFIX) {
+            Ok(path) => path,
+            Err(e) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Could not obtain lock file path: {e}"),
+                ));
+            }
         };
         let lock_file_path = wrealpath(&lock_file_path).unwrap_or(lock_file_path);
 
@@ -261,10 +265,10 @@ impl LockedHistoryFile {
         // Open the history file
         let history_file = wopen_cloexec(&history_path, file_flags, file_mode)?;
 
-        Ok(Some(Self {
+        Ok(Self {
             _lock_file: lock_file,
             history_file,
-        }))
+        })
     }
 }
 
@@ -323,20 +327,31 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
     }
 }
 
-/// Returns the path for the history file for the given `session_id`, or `None` if it could not be
-/// loaded. If `suffix` is provided, append that suffix to the path; this is used for temporary files.
-fn history_filename(session_id: &wstr, suffix: &wstr) -> Option<WString> {
+/// Returns the path for the history file for the given `session_id`,
+/// or an error.
+/// An error is returned for an empty session id (which indicates private mode).
+/// An error is returned if obtaining the data directory failed.
+/// Because the `path_get_data` function does not return error information,
+/// we cannot provide more detail about the reason for the failure here.
+/// If `suffix` is provided, append that suffix to the path; this is used for temporary files and
+/// lock files.
+fn history_filename(session_id: &wstr, suffix: &wstr) -> std::io::Result<WString> {
     if session_id.is_empty() {
-        return None;
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Obtaining the history filename is not possible when the name is empty (private mode)",
+        ));
     }
 
-    let mut result = path_get_data()?;
+    let Some(mut result) = path_get_data() else {
+        return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Error obtaining data directory. This is a manually constructed error which does not indicate why this happened."));
+    };
 
     result.push('/');
     result.push_utfstr(session_id);
     result.push_utfstr(L!("_history"));
     result.push_utfstr(suffix);
-    Some(result)
+    Ok(result)
 }
 
 pub type PathList = Vec<WString>;
@@ -600,7 +615,7 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
 
-        if let Ok(Some(mut locked_history_file)) = LockedHistoryFile::new(
+        if let Ok(mut locked_history_file) = LockedHistoryFile::new(
             LockingMode::Shared,
             &self.name,
             OFlag::O_RDONLY,
@@ -663,8 +678,11 @@ impl HistoryImpl {
     }
 
     /// Given an existing history file, write a new history file to `dst`.
-    /// Returns false on error, true on success
-    fn rewrite_to_temporary_file(&self, existing_file: Option<&mut File>, dst: &mut File) -> bool {
+    fn rewrite_to_temporary_file(
+        &self,
+        existing_file: Option<&mut File>,
+        dst: &mut File,
+    ) -> std::io::Result<()> {
         // We are reading FROM existing_file and writing TO dst
 
         // Make an LRU cache to save only the last N elements.
@@ -742,15 +760,14 @@ impl HistoryImpl {
                 "Error writing to temporary history file:",
                 err
             );
-
-            false
+            Err(err)
         } else {
-            true
+            Ok(())
         }
     }
 
     /// Saves history by rewriting the file.
-    fn save_internal_via_rewrite(&mut self) {
+    fn save_internal_via_rewrite(&mut self) -> std::io::Result<()> {
         FLOGF!(
             history,
             "Saving %lu items via rewrite",
@@ -761,32 +778,26 @@ impl HistoryImpl {
         // To avoid issues with crashes during writing,
         // we write to a temporary file and once we are done, this file is renamed such that it
         // replaces the original history file.
-        // To avoid races, the original history file needs to be locked for the entire duration.
+        // To avoid races, we need to have exclusive access to the history file for the entire
+        // duration, which we get via an exclusive lock on the corresponding lock file.
         // Taking a shared lock first and later upgrading to an exclusive one could result in a
         // deadlock, so we take an exclusive one immediately.
-        let Ok(Some(mut locked_history_file)) = LockedHistoryFile::new(
+        let mut locked_history_file = LockedHistoryFile::new(
             LockingMode::Exclusive,
             &self.name,
             OFlag::O_RDONLY | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
-        ) else {
-            // TODO: better error handling
-            return;
-        };
+        )?;
 
-        let Some(tmp_name_template) = history_filename(&self.name, L!(".XXXXXX")) else {
-            return;
-        };
+        let tmp_name_template = history_filename(&self.name, L!(".XXXXXX"))?;
         // Make our temporary file
-        let Some((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
-            return;
-        };
-        if !self
+        let (mut tmp_file, tmp_name) = create_temporary_file(&tmp_name_template)?;
+        if let Err(e) = self
             .rewrite_to_temporary_file(Some(&mut locked_history_file.history_file), &mut tmp_file)
         {
             // Failed to write, no good
             let _ = wunlink(&tmp_name);
-            return;
+            return Err(e);
         }
 
         // Ensure we maintain the ownership and permissions of the original (#2355). If the
@@ -811,21 +822,27 @@ impl HistoryImpl {
         }
 
         // TODO: this is a duplicate of the code in LockedHistoryFile::new().
-        let Some(history_path) = history_filename(&self.name, L!("")) else {
-            FLOG!(history_file, "Could not obtain history file path.");
-            let _ = wunlink(&tmp_name);
-            return;
+        let history_path = match history_filename(&self.name, L!("")) {
+            Ok(path) => path,
+            Err(e) => {
+                FLOG!(history_file, "Could not obtain history file path.");
+                let _ = wunlink(&tmp_name);
+                return Err(e);
+            }
         };
         let history_path = wrealpath(&history_path).unwrap_or(history_path);
 
         if wrename(&tmp_name, &history_path) == -1 {
+            let error_number = errno::errno();
             FLOG!(
                 error,
                 wgettext_fmt!(
                     "Error when renaming history file: %s",
-                    errno::errno().to_string()
+                    error_number.to_string()
                 )
             );
+            let _ = wunlink(&tmp_name);
+            return Err(std::io::Error::from(error_number));
         }
 
         // Ensure we never leave the old file around
@@ -840,6 +857,8 @@ impl HistoryImpl {
         // Our history has been written to the file, so clear our state so we can re-reference the
         // file.
         self.clear_file_state();
+
+        Ok(())
     }
 
     /// Saves history by appending to the file.
@@ -852,15 +871,12 @@ impl HistoryImpl {
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
 
-        let Some(mut locked_history_file) = LockedHistoryFile::new(
+        let mut locked_history_file = LockedHistoryFile::new(
             LockingMode::Exclusive,
             &self.name,
             OFlag::O_WRONLY | OFlag::O_APPEND | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
-        )?
-        else {
-            return Ok(());
-        };
+        )?;
 
         // Check if the file was modified since it was last read.
         let file_id = file_id_for_file(&locked_history_file.history_file);
@@ -934,7 +950,7 @@ impl HistoryImpl {
             return;
         }
 
-        if history_filename(&self.name, L!("")).is_none() {
+        if self.name.is_empty() {
             // We're in the "incognito" mode. Pretend we've saved the history.
             self.first_unwritten_new_item_index = self.new_items.len();
             self.deleted_items.clear();
@@ -950,14 +966,16 @@ impl HistoryImpl {
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
             if let Err(e) = self.save_internal_via_appending() {
-                FLOG!(history, "Appending failed:", e);
+                FLOG!(history, "Appending to history failed:", e);
             } else {
                 ok = true;
             }
         }
         if !ok {
             // We did not or could not append; rewrite the file ("vacuum" it).
-            self.save_internal_via_rewrite();
+            if let Err(e) = self.save_internal_via_rewrite() {
+                FLOG!(history, "Rewriting history failed:", e)
+            }
         }
     }
 
@@ -1031,9 +1049,12 @@ impl HistoryImpl {
             // If we've loaded old items, see if we have any offsets.
             self.old_item_offsets.is_empty()
         } else {
+            if self.name.is_empty() {
+                return true;
+            }
             // If we have not loaded old items, don't actually load them (which may be expensive); just
             // stat the file and see if it exists and is nonempty.
-            let Some(where_) = history_filename(&self.name, L!("")) else {
+            let Ok(where_) = history_filename(&self.name, L!("")) else {
                 return true;
             };
 
@@ -1089,7 +1110,7 @@ impl HistoryImpl {
         self.deleted_items.clear();
         self.first_unwritten_new_item_index = 0;
         self.old_item_offsets.clear();
-        if let Some(filename) = history_filename(&self.name, L!("")) {
+        if let Ok(filename) = history_filename(&self.name, L!("")) {
             wunlink(&filename);
         }
         self.clear_file_state();
@@ -1110,7 +1131,7 @@ impl HistoryImpl {
     /// file to the new history file.
     /// The new contents will automatically be re-mapped later.
     fn populate_from_config_path(&mut self) {
-        let Some(new_file) = history_filename(&self.name, L!("")) else {
+        let Ok(new_file) = history_filename(&self.name, L!("")) else {
             return;
         };
 
@@ -1330,17 +1351,6 @@ impl HistoryImpl {
         let old_item_count = self.old_item_offsets.len();
         return new_item_count + old_item_count;
     }
-}
-
-// Returns the fd of an opened temporary file, or None on failure.
-fn create_temporary_file(name_template: &wstr) -> Option<(File, WString)> {
-    for _attempt in 0..10 {
-        let narrow_str = wcs2zstring(name_template);
-        if let Ok((fd, narrow_str)) = fish_mkstemp_cloexec(narrow_str) {
-            return Some((fd, str2wcstring(narrow_str.to_bytes())));
-        }
-    }
-    None
 }
 
 fn string_could_be_path(potential_path: &wstr) -> bool {

@@ -27,11 +27,12 @@ use crate::wchar::WString;
 use crate::wutil::perror;
 use nix::errno::Errno;
 use nix::unistd;
-use std::cell::{Cell, UnsafeCell};
+use std::cell::Cell;
 use std::os::fd::AsRawFd;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
+#[cfg(target_os = "linux")]
+use std::{cell::UnsafeCell, pin::Pin};
 
 /// The list of topics which may be observed.
 #[repr(u8)]
@@ -159,6 +160,7 @@ impl GenerationsList {
 pub enum BinarySemaphore {
     /// Initialized semaphore.
     /// This is Box'd so it has a stable address.
+    #[cfg(target_os = "linux")]
     Semaphore(Pin<Box<UnsafeCell<libc::sem_t>>>),
     /// Pipes used to emulate a semaphore, if not initialized.
     Pipes(AutoClosePipes),
@@ -198,6 +200,7 @@ impl BinarySemaphore {
     pub fn post(&self) {
         // Beware, we are in a signal handler.
         match self {
+            #[cfg(target_os = "linux")]
             Self::Semaphore(sem) => {
                 let res = unsafe { libc::sem_post(sem.get()) };
                 // sem_post is non-interruptible.
@@ -222,6 +225,7 @@ impl BinarySemaphore {
     /// This loops on EINTR.
     pub fn wait(&self) {
         match self {
+            #[cfg(target_os = "linux")]
             Self::Semaphore(sem) => {
                 loop {
                     match unsafe { libc::sem_wait(sem.get()) } {
@@ -261,9 +265,7 @@ impl BinarySemaphore {
     }
 }
 
-// sem_destroy has been deprecated since macOS 10.10 but we only use it under Linux so silence the
-// warning.
-#[cfg_attr(apple, allow(deprecated))]
+#[cfg(target_os = "linux")]
 impl Drop for BinarySemaphore {
     fn drop(&mut self) {
         if let Self::Semaphore(sem) = self {

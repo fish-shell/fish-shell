@@ -3,11 +3,12 @@
 // That means no locking, no allocating, no freeing memory, etc!
 use super::flog_safe::FLOG_SAFE;
 use crate::nix::getpid;
+use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::proc::Pid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
-use libc::{c_char, pid_t, O_RDONLY};
+use libc::{pid_t, O_RDONLY};
 use std::ffi::CStr;
 use std::num::NonZeroU32;
 use std::os::unix::fs::MetadataExt;
@@ -33,20 +34,6 @@ fn clear_cloexec(fd: i32) -> i32 {
     } else {
         return unsafe { libc::fcntl(fd, libc::F_SETFD, new_flags) };
     }
-}
-
-/// Safe strlen(). Note strlen is async-signal safe as of POSIX.1-2008
-/// but we just implement our own.
-fn strlen_safe(s: *const libc::c_char) -> usize {
-    let mut len = 0;
-    let mut cursor: *const libc::c_char = s;
-    unsafe {
-        while *cursor != 0 {
-            len += 1;
-            cursor = cursor.offset(1);
-        }
-    }
-    len
 }
 
 /// Report the error code for a failed setpgid call.
@@ -243,29 +230,13 @@ pub fn execute_fork() -> pid_t {
 pub(crate) fn safe_report_exec_error(
     err: i32,
     actual_cmd: &CStr,
-    argvv: *const *const c_char,
-    envv: *const *const c_char,
+    argvv: &OwningNullTerminatedArray,
+    envv: &OwningNullTerminatedArray,
 ) {
     match err {
         libc::E2BIG => {
-            let mut sz = 0;
-            let mut szenv = 0;
-            unsafe {
-                // Compute total size of argv.
-                let mut cursor = argvv;
-                while !(*cursor).is_null() {
-                    sz += strlen_safe(*cursor) + 1;
-                    cursor = cursor.offset(1);
-                }
-
-                // Compute total size of envp.
-                cursor = envv;
-                while !(*cursor).is_null() {
-                    szenv += strlen_safe(*cursor) + 1;
-                    cursor = cursor.offset(1);
-                }
-                sz += szenv;
-            }
+            let szenv = envv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
+            let sz = szenv + argvv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
 
             let arg_max = unsafe { libc::sysconf(libc::_SC_ARG_MAX) };
             if arg_max > 0 {

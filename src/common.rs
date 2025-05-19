@@ -1563,9 +1563,10 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
     }
 
     let wsl = RESULT.get_or_init(|| {
-        let mut info: libc::utsname = unsafe { mem::zeroed() };
+        let mut info = mem::MaybeUninit::uninit();
         let release: &[u8] = unsafe {
-            libc::uname(&mut info);
+            libc::uname(info.as_mut_ptr());
+            let info = info.assume_init();
             std::mem::transmute(&info.release[..])
         };
 
@@ -1635,7 +1636,7 @@ pub fn fish_reserved_codepoint(c: char) -> bool {
 
 pub fn redirect_tty_output(in_signal_handler: bool) {
     unsafe {
-        let mut t: libc::termios = mem::zeroed();
+        let mut t = mem::MaybeUninit::uninit();
         let s = CStr::from_bytes_with_nul(b"/dev/null\0").unwrap();
         let fd = libc::open(s.as_ptr(), O_WRONLY);
         if in_signal_handler && fd == -1 {
@@ -1644,7 +1645,7 @@ pub fn redirect_tty_output(in_signal_handler: bool) {
             assert!(fd != -1, "Could not open /dev/null!");
         }
         for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-            if libc::tcgetattr(stdfd, &mut t) == -1 && errno::errno().0 == EIO {
+            if libc::tcgetattr(stdfd, t.as_mut_ptr()) == -1 && errno::errno().0 == EIO {
                 libc::dup2(fd, stdfd);
             }
         }

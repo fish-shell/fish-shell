@@ -59,6 +59,7 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
+use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
@@ -481,8 +482,11 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
         return;
     }
 
-    let mut blocked_signals: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut blocked_signals) };
+    let mut blocked_signals = MaybeUninit::uninit();
+    let mut blocked_signals = unsafe {
+        libc::sigemptyset(blocked_signals.as_mut_ptr());
+        blocked_signals.assume_init()
+    };
     let blocked_signals = if blocked_signals_for_job(j, &mut blocked_signals) {
         Some(&blocked_signals)
     } else {
@@ -685,8 +689,11 @@ fn fork_child_for_process(
     };
 
     // Decide if the job wants to set a custom sigmask.
-    let mut blocked_signals: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut blocked_signals) };
+    let mut blocked_signals = MaybeUninit::uninit();
+    let mut blocked_signals = unsafe {
+        libc::sigemptyset(blocked_signals.as_mut_ptr());
+        blocked_signals.assume_init()
+    };
     let blocked_signals = if blocked_signals_for_job(job, &mut blocked_signals) {
         Some(&blocked_signals)
     } else {

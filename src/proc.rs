@@ -36,6 +36,7 @@ use portable_atomic::AtomicU64;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
+use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
 use std::os::fd::RawFd;
 use std::rc::Rc;
@@ -343,9 +344,9 @@ impl TtyTransfer {
     /// Save the current tty modes into the owning job group, if we are transferred.
     pub fn save_tty_modes(&mut self) {
         if let Some(ref mut owner) = self.owner {
-            let mut tmodes: libc::termios = unsafe { std::mem::zeroed() };
-            if unsafe { libc::tcgetattr(STDIN_FILENO, &mut tmodes) } == 0 {
-                owner.tmodes.replace(Some(tmodes));
+            let mut tmodes = MaybeUninit::uninit();
+            if unsafe { libc::tcgetattr(STDIN_FILENO, tmodes.as_mut_ptr()) } == 0 {
+                owner.tmodes.replace(Some(unsafe { tmodes.assume_init() }));
             } else if errno::errno().0 != ENOTTY {
                 perror("tcgetattr");
             }

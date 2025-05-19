@@ -5,6 +5,7 @@ use crate::flog::FLOG;
 use crate::parser::Parser;
 use crate::wchar::prelude::*;
 use crate::wutil::fish_wcstoi;
+use std::mem::MaybeUninit;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Mutex;
 
@@ -40,8 +41,9 @@ fn var_to_int_or(var: Option<EnvVar>, default: isize) -> isize {
 fn read_termsize_from_tty() -> Option<Termsize> {
     let mut ret: Option<Termsize> = None;
     // Note: historically we've supported libc::winsize not existing.
-    let mut winsize: libc::winsize = unsafe { std::mem::zeroed() };
-    if unsafe { libc::ioctl(0, libc::TIOCGWINSZ, &mut winsize as *mut libc::winsize) } >= 0 {
+    let mut winsize = MaybeUninit::<libc::winsize>::uninit();
+    if unsafe { libc::ioctl(0, libc::TIOCGWINSZ, winsize.as_mut_ptr()) } >= 0 {
+        let mut winsize = unsafe { winsize.assume_init() };
         // 0 values are unusable, fall back to the default instead.
         if winsize.ws_col == 0 {
             FLOG!(

@@ -505,8 +505,7 @@ impl HistoryImpl {
                 OFlag::O_RDONLY,
                 Mode::empty(),
             ) {
-                self.file_contents =
-                    HistoryFileContents::create(&mut locked_history_file.data_file);
+                self.file_contents = HistoryFileContents::create(&mut locked_history_file).ok();
                 self.history_file_id = if self.file_contents.is_some() {
                     file_id_for_file(&locked_history_file.data_file)
                 } else {
@@ -566,7 +565,7 @@ impl HistoryImpl {
     /// Given an existing history file, write a new history file to `dst`.
     fn rewrite_to_temporary_file(
         &self,
-        existing_file: Option<&mut File>,
+        existing_file: &mut LockedFile,
         dst: &mut File,
     ) -> std::io::Result<()> {
         // We are reading FROM existing_file and writing TO dst
@@ -576,32 +575,29 @@ impl HistoryImpl {
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        if let Some(existing_file) = existing_file {
-            if let Some(local_file) = HistoryFileContents::create(existing_file) {
-                let mut cursor = 0;
-                while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
-                    // Try decoding an old item.
-                    let Some(old_item) = local_file.decode_item(offset) else {
-                        continue;
-                    };
+        if let Ok(local_file) = HistoryFileContents::create(existing_file) {
+            let mut cursor = 0;
+            while let Some(offset) = local_file.offset_of_next_item(&mut cursor, None) {
+                // Try decoding an old item.
+                let Some(old_item) = local_file.decode_item(offset) else {
+                    continue;
+                };
 
-                    // If old item is newer than session always erase if in deleted.
-                    if old_item.timestamp() > self.boundary_timestamp {
-                        if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
-                            continue;
-                        }
-                        lru.add_item(old_item);
-                    } else {
-                        // If old item is older and in deleted items don't erase if added by
-                        // clear_session.
-                        if old_item.is_empty()
-                            || self.deleted_items.get(old_item.str()) == Some(&false)
-                        {
-                            continue;
-                        }
-                        // Add this old item.
-                        lru.add_item(old_item);
+                // If old item is newer than session always erase if in deleted.
+                if old_item.timestamp() > self.boundary_timestamp {
+                    if old_item.is_empty() || self.deleted_items.contains_key(old_item.str()) {
+                        continue;
                     }
+                    lru.add_item(old_item);
+                } else {
+                    // If old item is older and in deleted items don't erase if added by
+                    // clear_session.
+                    if old_item.is_empty() || self.deleted_items.get(old_item.str()) == Some(&false)
+                    {
+                        continue;
+                    }
+                    // Add this old item.
+                    lru.add_item(old_item);
                 }
             }
         }
@@ -681,9 +677,7 @@ impl HistoryImpl {
         let tmp_name_template = history_filename(&self.name, L!(".XXXXXX"))?;
         // Make our temporary file
         let (mut tmp_file, tmp_name) = create_temporary_file(&tmp_name_template)?;
-        if let Err(e) =
-            self.rewrite_to_temporary_file(Some(&mut locked_history_file.data_file), &mut tmp_file)
-        {
+        if let Err(e) = self.rewrite_to_temporary_file(&mut locked_history_file, &mut tmp_file) {
             // Failed to write, no good
             let _ = wunlink(&tmp_name);
             return Err(e);

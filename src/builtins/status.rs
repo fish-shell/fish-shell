@@ -672,11 +672,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 STATUS_CURRENT_CMD => {
                     let command = &parser.libdata().status_vars.command;
                     if !command.is_empty() {
-                        streams.out.append(command);
+                        streams.out.appendln(command);
                     } else {
                         streams.out.appendln(*PROGRAM_NAME.get().unwrap());
                     }
-                    streams.out.append_char('\n');
                 }
                 STATUS_CURRENT_COMMANDLINE => {
                     let commandline = &parser.libdata().status_vars.commandline;

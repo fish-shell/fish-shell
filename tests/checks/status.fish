@@ -38,6 +38,9 @@ status --job-control=1none
 # Now set it to a valid mode.
 status job-control none
 
+status current-command | sed s/^/^/
+# CHECK: ^fish
+
 # Check status -u outside functions
 status current-function
 #CHECK: Not a function

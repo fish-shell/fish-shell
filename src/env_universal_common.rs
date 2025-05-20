@@ -4,9 +4,9 @@ use crate::common::{
     timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
-use crate::fallback::create_temporary_file;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
+use crate::fs::create_temporary_file;
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};

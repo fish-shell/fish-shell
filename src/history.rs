@@ -23,9 +23,7 @@
 //! rare cases with multiple simultaneous shell sessions, lose a history item; this is
 //! considered preferable to hanging the the shell waiting for a lock.
 
-use crate::{
-    common::cstr2wcstring, env::EnvVar, fallback::create_temporary_file, wcstringutil::trim,
-};
+use crate::{common::cstr2wcstring, env::EnvVar, fs::create_temporary_file, wcstringutil::trim};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},

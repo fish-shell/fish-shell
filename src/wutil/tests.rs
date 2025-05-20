@@ -1,6 +1,7 @@
+use crate::fds::AutoCloseFd;
+use crate::fs::create_temporary_file;
 use crate::tests::prelude::*;
 use crate::util::get_rng;
-use crate::{fallback::create_temporary_file, fds::AutoCloseFd};
 use libc::{c_void, O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
 use rand::Rng;
 use std::{ffi::CString, ptr};

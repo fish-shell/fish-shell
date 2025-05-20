@@ -42,7 +42,7 @@ use std::{
 };
 
 use bitflags::bitflags;
-use libc::{fchown, flock, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::{fchown, flock, EINTR, LOCK_EX, LOCK_SH, LOCK_UN};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -1359,8 +1359,15 @@ impl HistoryImpl {
             return false;
         }
 
-        let start_time = SystemTime::now();
-        let retval = unsafe { flock(file.as_raw_fd(), lock_type) };
+        let (ok, start_time) = loop {
+            let start_time = SystemTime::now();
+            if unsafe { flock(file.as_raw_fd(), lock_type) } == -1 {
+                if errno::errno().0 != EINTR {
+                    break (false, start_time);
+                }
+            }
+            break (true, start_time);
+        };
         if let Ok(duration) = start_time.elapsed() {
             if duration > Duration::from_millis(250) {
                 FLOG!(
@@ -1373,7 +1380,7 @@ impl HistoryImpl {
                 ABANDONED_LOCKING.store(true);
             }
         }
-        retval != -1
+        ok
     }
 
     /// Unlock a history file.

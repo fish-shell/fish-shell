@@ -1911,7 +1911,3 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
 static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-/// Whether we're in maximum chaos mode, useful for testing.
-/// This causes things like locks to fail.
-pub static CHAOS_MODE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

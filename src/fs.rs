@@ -1,7 +1,6 @@
 use crate::{
     common::{str2wcstring, wcs2zstring},
     fds::wopen_cloexec,
-    history::CHAOS_MODE,
     path::{path_get_data_remoteness, DirRemoteness},
     wchar::prelude::*,
 };
@@ -103,9 +102,6 @@ impl LockedFile {
     unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
         assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
 
-        if CHAOS_MODE.load() {
-            return false;
-        }
         if path_get_data_remoteness() == DirRemoteness::remote {
             return false;
         }

@@ -53,10 +53,12 @@ pub struct FdReadableSet {
 impl FdReadableSet {
     /// Construct an empty set.
     pub fn new() -> FdReadableSet {
-        FdReadableSet {
-            fdset_: unsafe { std::mem::zeroed() },
-            nfds_: 0,
-        }
+        let mut fdset_ = std::mem::MaybeUninit::uninit();
+        let fdset_ = unsafe {
+            libc::FD_ZERO(fdset_.as_mut_ptr());
+            fdset_.assume_init()
+        };
+        FdReadableSet { fdset_, nfds_: 0 }
     }
 
     /// Reset back to an empty set.

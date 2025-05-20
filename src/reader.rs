@@ -29,6 +29,7 @@ use std::cell::RefMut;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
+use std::mem::MaybeUninit;
 use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
@@ -656,10 +657,11 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
     // See also, commit 396bf12. Without the need for this workaround we would just write:
     // int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
     if fd == STDIN_FILENO {
-        let mut t: libc::termios = unsafe { std::mem::zeroed() };
+        let mut t = MaybeUninit::uninit();
         if isatty(STDIN_FILENO) {
             interactive = true;
-        } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1 && errno().0 == EIO {
+        } else if unsafe { libc::tcgetattr(STDIN_FILENO, t.as_mut_ptr()) } == -1 && errno().0 == EIO
+        {
             redirect_tty_output(false);
             interactive = true;
         }
@@ -2180,8 +2182,10 @@ impl<'a> Reader<'a> {
         unsafe { libc::tcsetpgrp(self.conf.inputfd, libc::getpgrp()) };
 
         // Get the current terminal modes. These will be restored when the function returns.
-        let mut old_modes: libc::termios = unsafe { std::mem::zeroed() };
-        if unsafe { libc::tcgetattr(self.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
+        let mut old_modes = MaybeUninit::uninit();
+        if unsafe { libc::tcgetattr(self.conf.inputfd, old_modes.as_mut_ptr()) } == -1
+            && errno().0 == EIO
+        {
             redirect_tty_output(false);
         }
 
@@ -2275,7 +2279,7 @@ impl<'a> Reader<'a> {
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+            if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, old_modes.as_ptr()) } == -1
                 && is_interactive_session()
             {
                 if errno().0 == EIO {
@@ -4259,10 +4263,10 @@ fn term_donate(quiet: bool /* = false */) {
 
 /// Copy the (potentially changed) terminal modes and use them from now on.
 pub fn term_copy_modes() {
-    let mut modes: libc::termios = unsafe { std::mem::zeroed() };
-    unsafe { libc::tcgetattr(STDIN_FILENO, &mut modes) };
+    let mut modes = MaybeUninit::uninit();
+    unsafe { libc::tcgetattr(STDIN_FILENO, modes.as_mut_ptr()) };
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = modes;
+    *tty_modes_for_external_cmds = unsafe { modes.assume_init() };
     // We still want to fix most egregious breakage.
     // E.g. OPOST is *not* something that should be set globally,
     // and 99% triggered by a crashed program.

@@ -33,6 +33,7 @@ use std::{
     ffi::CString,
     fs::File,
     io::{BufRead, Read, Seek, SeekFrom, Write},
+    mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
     os::{fd::AsRawFd, unix::fs::MetadataExt},
@@ -1443,9 +1444,9 @@ fn format_history_record(
     // This warns for musl, but the warning is useless to us - there is nothing we can or should do.
     #[allow(deprecated)]
     let seconds = seconds as libc::time_t;
-    let mut timestamp: libc::tm = unsafe { std::mem::zeroed() };
+    let mut timestamp = MaybeUninit::uninit();
     if let Some(show_time_format) = show_time_format.and_then(|s| CString::new(s).ok()) {
-        if !unsafe { libc::localtime_r(&seconds, &mut timestamp).is_null() } {
+        if !unsafe { libc::localtime_r(&seconds, timestamp.as_mut_ptr()).is_null() } {
             const max_tstamp_length: usize = 100;
             let mut timestamp_str = [0_u8; max_tstamp_length];
             use libc::strftime;
@@ -1454,7 +1455,7 @@ fn format_history_record(
                     &mut timestamp_str[0] as *mut u8 as *mut libc::c_char,
                     max_tstamp_length,
                     show_time_format.as_ptr(),
-                    &timestamp,
+                    timestamp.as_ptr(),
                 )
             } != 0
             {

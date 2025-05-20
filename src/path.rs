@@ -15,6 +15,7 @@ use libc::{EACCES, ENOENT, ENOTDIR, F_OK, X_OK};
 use once_cell::sync::Lazy;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
+use std::mem::MaybeUninit;
 use std::os::unix::prelude::*;
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
@@ -670,10 +671,11 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
     let narrow = wcs2zstring(path);
     #[cfg(target_os = "linux")]
     {
-        let mut buf: libc::statfs = unsafe { std::mem::zeroed() };
-        if unsafe { libc::statfs(narrow.as_ptr(), &mut buf) } < 0 {
+        let mut buf = MaybeUninit::uninit();
+        if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
             return DirRemoteness::unknown;
         }
+        let buf = unsafe { buf.assume_init() };
         // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
         // these are in varying headers. Simply hard code them.
         // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
@@ -707,10 +709,11 @@ fn path_remoteness(path: &wstr) -> DirRemoteness {
         // In practice the only system to define it is NetBSD.
         let local_flag = ST_LOCAL() | MNT_LOCAL();
         if local_flag != 0 {
-            let mut buf: libc::statvfs = unsafe { std::mem::zeroed() };
-            if unsafe { libc::statvfs(narrow.as_ptr(), &mut buf) } < 0 {
+            let mut buf = MaybeUninit::uninit();
+            if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
                 return DirRemoteness::unknown;
             }
+            let buf = unsafe { buf.assume_init() };
             // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
             // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
             #[allow(clippy::useless_conversion)]

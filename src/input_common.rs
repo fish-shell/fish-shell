@@ -29,6 +29,7 @@ use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
 use crate::wutil::fish_wcstol;
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;
+use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
 use std::os::unix::ffi::OsStrExt;
 use std::ptr;
@@ -1463,8 +1464,8 @@ pub trait InputEventQueuer {
         // We are not prepared to handle a signal immediately; we only want to know if we get input on
         // our fd before the timeout. Use pselect to block all signals; we will handle signals
         // before the next call to readch().
-        let mut sigs: libc::sigset_t = unsafe { std::mem::zeroed() };
-        unsafe { libc::sigfillset(&mut sigs) };
+        let mut sigs = MaybeUninit::uninit();
+        unsafe { libc::sigfillset(sigs.as_mut_ptr()) };
 
         // pselect expects timeouts in nanoseconds.
         const NSEC_PER_MSEC: u64 = 1000 * 1000;
@@ -1476,27 +1477,27 @@ pub trait InputEventQueuer {
         };
 
         // We have one fd of interest.
-        let mut fdset: libc::fd_set = unsafe { std::mem::zeroed() };
+        let mut fdset = MaybeUninit::uninit();
         let in_fd = self.get_in_fd();
         unsafe {
-            libc::FD_ZERO(&mut fdset);
-            libc::FD_SET(in_fd, &mut fdset);
+            libc::FD_ZERO(fdset.as_mut_ptr());
+            libc::FD_SET(in_fd, fdset.as_mut_ptr());
         };
         let res = unsafe {
             libc::pselect(
                 in_fd + 1,
-                &mut fdset,
+                fdset.as_mut_ptr(),
                 ptr::null_mut(),
                 ptr::null_mut(),
                 &timeout,
-                &sigs,
+                sigs.as_ptr(),
             )
         };
 
         // Prevent signal starvation on WSL causing the `torn_escapes.py` test to fail
         if is_windows_subsystem_for_linux(WSL::V1) {
             // Merely querying the current thread's sigmask is sufficient to deliver a pending signal
-            let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), &mut sigs) };
+            let _ = unsafe { libc::pthread_sigmask(0, ptr::null(), sigs.as_mut_ptr()) };
         }
         if res > 0 {
             return Some(self.readch());

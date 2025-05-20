@@ -1,3 +1,4 @@
+use std::mem::MaybeUninit;
 use std::num::NonZeroI32;
 
 use crate::common::exit_without_destructors;
@@ -131,8 +132,9 @@ pub fn signal_reset_handlers() {
 
     for data in SIGNAL_TABLE.iter() {
         if data.signal == libc::SIGHUP {
-            let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
-            unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null(), &mut oact) };
+            let mut oact = MaybeUninit::uninit();
+            unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null(), oact.as_mut_ptr()) };
+            let oact = unsafe { oact.assume_init() };
             if oact.sa_sigaction == libc::SIG_IGN {
                 continue;
             }
@@ -277,30 +279,31 @@ pub fn signal_handle(sig: Signal) {
 }
 
 pub static signals_to_default: Lazy<libc::sigset_t> = Lazy::new(|| {
-    let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut set) };
+    let mut set = MaybeUninit::uninit();
+    unsafe { libc::sigemptyset(set.as_mut_ptr()) };
     for data in SIGNAL_TABLE.iter() {
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
         if data.signal == libc::SIGHUP {
-            let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), &mut act) };
+            let mut act = MaybeUninit::uninit();
+            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), act.as_mut_ptr()) };
+            let act = unsafe { act.assume_init() };
             if act.sa_sigaction == libc::SIG_IGN {
                 continue;
             }
         }
-        unsafe { libc::sigaddset(&mut set, data.signal.code()) };
+        unsafe { libc::sigaddset(set.as_mut_ptr(), data.signal.code()) };
     }
-    return set;
+    unsafe { set.assume_init() }
 });
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 pub fn signal_unblock_all() {
     unsafe {
-        let mut iset: libc::sigset_t = std::mem::zeroed();
-        libc::sigemptyset(&mut iset);
-        libc::sigprocmask(libc::SIG_SETMASK, &iset, std::ptr::null_mut());
+        let mut iset = MaybeUninit::uninit();
+        libc::sigemptyset(iset.as_mut_ptr());
+        libc::sigprocmask(libc::SIG_SETMASK, iset.as_ptr(), std::ptr::null_mut());
     }
 }
 

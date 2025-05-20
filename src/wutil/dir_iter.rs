@@ -9,6 +9,7 @@ use libc::{
 };
 use std::cell::Cell;
 use std::io;
+use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
 use std::ptr::{addr_of, NonNull};
 use std::rc::Rc;
@@ -102,8 +103,9 @@ impl DirEntry {
             return;
         }
         let narrow = wcs2zstring(&self.name);
-        let mut s: libc::stat = unsafe { std::mem::zeroed() };
-        if unsafe { libc::fstatat(fd, narrow.as_ptr(), &mut s, 0) } == 0 {
+        let mut s = MaybeUninit::uninit();
+        if unsafe { libc::fstatat(fd, narrow.as_ptr(), s.as_mut_ptr(), 0) } == 0 {
+            let s = unsafe { s.assume_init() };
             // st_dev is a dev_t, which is i32 on OpenBSD/Haiku and u32 in FreeBSD 11
             #[allow(clippy::unnecessary_cast)]
             let dev_inode = DevInode {

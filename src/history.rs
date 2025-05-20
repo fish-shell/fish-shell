@@ -1361,12 +1361,12 @@ impl HistoryImpl {
 
         let (ok, start_time) = loop {
             let start_time = SystemTime::now();
-            if unsafe { flock(file.as_raw_fd(), lock_type) } == -1 {
-                if errno::errno().0 != EINTR {
-                    break (false, start_time);
-                }
+            if unsafe { flock(file.as_raw_fd(), lock_type) } != -1 {
+                break (true, start_time);
             }
-            break (true, start_time);
+            if errno::errno().0 != EINTR {
+                break (false, start_time);
+            }
         };
         if let Ok(duration) = start_time.elapsed() {
             if duration > Duration::from_millis(250) {

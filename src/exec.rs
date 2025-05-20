@@ -31,9 +31,7 @@ use crate::io::{
 };
 use crate::libc::_PATH_BSHELL;
 use crate::nix::isatty;
-use crate::null_terminated_array::{
-    null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,
-};
+use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::proc::Pid;
@@ -52,7 +50,7 @@ use crate::wutil::{fish_wcstol, perror};
 use crate::wutil::{wgettext, wgettext_fmt};
 use errno::{errno, set_errno};
 use libc::{
-    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
+    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::fcntl::OFlag;
@@ -388,8 +386,8 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
 fn safe_launch_process(
     _p: &Process,
     actual_cmd: &CStr,
-    argv: &impl AsNullTerminatedArray<CharType = c_char>,
-    envv: &impl AsNullTerminatedArray<CharType = c_char>,
+    argv: &OwningNullTerminatedArray,
+    envv: &OwningNullTerminatedArray,
 ) -> ! {
     // This function never returns, so we take certain liberties with constness.
 
@@ -405,7 +403,7 @@ fn safe_launch_process(
         // Construct new argv.
         // We must not allocate memory, so only 128 args are supported.
         const maxargs: usize = 128;
-        let nargs = null_terminated_array_length(argv.get());
+        let nargs = argv.len();
         let argv = unsafe { slice::from_raw_parts(argv.get(), nargs) };
         if nargs <= maxargs {
             // +1 for /bin/sh, +1 for terminating nullptr
@@ -422,7 +420,7 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd, argv.get(), envv.get());
+    safe_report_exec_error(errno().0, actual_cmd, argv, envv);
     exit_without_destructors(exit_code_from_exec_error(err.0));
 }
 
@@ -442,7 +440,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode(false);
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, &actual_cmd, &argv, &*envp);
+    safe_launch_process(p, &actual_cmd, &argv, &envp);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -858,7 +856,7 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, &actual_cmd, argv.get(), envv.get());
+                safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
                     .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(
                         err.0,
@@ -897,7 +895,7 @@ fn exec_external_command(
     }
 
     fork_child_for_process(j, p, &dup2s, L!("external command"), |p| {
-        safe_launch_process(p, &actual_cmd, &argv, &*envv)
+        safe_launch_process(p, &actual_cmd, &argv, &envv)
     })
 }
 

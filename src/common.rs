@@ -1184,15 +1184,12 @@ pub fn truncate_at_nul(input: &wstr) -> &wstr {
 }
 
 pub fn cstr2wcstring(input: &[u8]) -> WString {
-    let strlen = input.iter().position(|c| *c == b'\0').unwrap();
-    str2wcstring(&input[0..strlen])
+    let input = CStr::from_bytes_until_nul(input).unwrap().to_bytes();
+    str2wcstring(input)
 }
 
 pub(crate) fn charptr2wcstring(input: *const libc::c_char) -> WString {
-    let input: &[u8] = unsafe {
-        let strlen = libc::strlen(input);
-        slice::from_raw_parts(input.cast(), strlen)
-    };
+    let input: &[u8] = unsafe { CStr::from_ptr(input).to_bytes() };
     str2wcstring(input)
 }
 

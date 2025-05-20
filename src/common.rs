@@ -1559,12 +1559,13 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
     }
 
     let wsl = RESULT.get_or_init(|| {
-        let mut info = mem::MaybeUninit::uninit();
-        let release: &[u8] = unsafe {
+        let release = unsafe {
+            let mut info = mem::MaybeUninit::uninit();
             libc::uname(info.as_mut_ptr());
             let info = info.assume_init();
-            std::mem::transmute(&info.release[..])
+            info.release
         };
+        let release: &[u8] = unsafe { std::mem::transmute(&release[..]) };
 
         // Sample utsname.release under WSLv2, testing for something like `4.19.104-microsoft-standard`
         // or `5.10.16.3-microsoft-standard-WSL2`

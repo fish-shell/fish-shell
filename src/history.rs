@@ -507,7 +507,7 @@ impl HistoryImpl {
             ) {
                 self.file_contents = HistoryFileContents::create(&mut locked_history_file).ok();
                 self.history_file_id = if self.file_contents.is_some() {
-                    file_id_for_file(&locked_history_file.data_file)
+                    file_id_for_file(locked_history_file.get_file())
                 } else {
                     INVALID_FILE_ID
                 };
@@ -688,7 +688,7 @@ impl HistoryImpl {
         // corresponds to e.g. someone running sudo -E as the very first command. If they
         // did, it would be tricky to set the permissions correctly. (bash doesn't get this
         // case right either).
-        if let Ok(md) = locked_history_file.data_file.metadata() {
+        if let Ok(md) = locked_history_file.get_file().metadata() {
             // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
             if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                 FLOG!(
@@ -754,7 +754,7 @@ impl HistoryImpl {
         )?;
 
         // Check if the file was modified since it was last read.
-        let file_id = file_id_for_file(&locked_history_file.data_file);
+        let file_id = file_id_for_file(locked_history_file.get_file());
         let file_changed = file_id != self.history_file_id;
 
         // We (hopefully successfully) took the exclusive lock. Append to the file.
@@ -789,7 +789,7 @@ impl HistoryImpl {
                 // but hopefully there are not that many items to write when appending.
                 res = drain_buffer_into_file_and_flush(
                     &mut buffer,
-                    &mut locked_history_file.data_file,
+                    locked_history_file.get_file_mut(),
                 );
                 if res.is_err() {
                     break;

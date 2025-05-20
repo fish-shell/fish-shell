@@ -51,7 +51,7 @@ impl MmapRegion {
                 len,
                 PROT_READ,
                 MAP_PRIVATE,
-                file.data_file.as_raw_fd(),
+                file.get_file().as_raw_fd(),
                 0,
             )
         };
@@ -118,7 +118,7 @@ impl HistoryFileContents {
     /// Construct history file contents from a locked history file.
     pub fn create(history_file: &mut LockedFile) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
-        let len: usize = match history_file.data_file.seek(SeekFrom::End(0))?.try_into() {
+        let len: usize = match history_file.get_file().seek(SeekFrom::End(0))?.try_into() {
             Ok(len) => len,
             Err(err) => {
                 return Err(std::io::Error::new(
@@ -130,7 +130,7 @@ impl HistoryFileContents {
         let map_anon = |file: &mut LockedFile, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
-            file.data_file.seek(SeekFrom::Start(0))?;
+            file.get_file().seek(SeekFrom::Start(0))?;
             read_zero_padded(file, region.as_mut())?;
             Ok(region)
         };
@@ -248,7 +248,7 @@ fn should_mmap() -> bool {
 // It might be reasonable to explicitly zero regardless, just to be sure.
 fn read_zero_padded(file: &mut LockedFile, mut dest: &mut [u8]) -> std::io::Result<()> {
     while !dest.is_empty() {
-        match file.data_file.read(dest) {
+        match file.get_file().read(dest) {
             Ok(0) => break,
             Ok(amt) => {
                 dest = &mut dest[amt..];

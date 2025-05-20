@@ -63,7 +63,7 @@ pub struct LockedFile {
     /// This is the file which requires mutual exclusion.
     /// It should only be accessed through this struct,
     /// because the locks used here do not protect from other accesses to the file.
-    pub data_file: File,
+    data_file: File,
     /// This file is the one being locked.
     /// The lock is not placed on the data file directly due to issues with renaming.
     /// If the data file is renamed after opening and before locking it,
@@ -158,5 +158,13 @@ impl LockedFile {
             data_file,
             _lock_file: lock_file,
         })
+    }
+
+    pub fn get_file(&self) -> &File {
+        &self.data_file
+    }
+
+    pub fn get_file_mut(&mut self) -> &mut File {
+        &mut self.data_file
     }
 }

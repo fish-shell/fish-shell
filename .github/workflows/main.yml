@@ -82,13 +82,14 @@ jobs:
     - name: Install deps
       run: |
         sudo apt install gettext libpcre2-dev python3-pexpect tmux
+        sudo apt install llvm # for llvm-symbolizer
     - name: cmake
       env:
           CC: clang
       run: |
         mkdir build && cd build
         # Rust's ASAN requires the build system to explicitly pass a --target triple. We read that
-        # value from CMake variable Rust_CARGO_TARGET (shared with corrosion).
+        # value from CMake variable Rust_CARGO_TARGET.
         cmake .. -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu -DCMAKE_BUILD_TYPE=Debug
     - name: make
       run: |
@@ -104,8 +105,8 @@ jobs:
           # UPDATE: this can cause spurious leak reports for __cxa_thread_atexit_impl() under glibc.
           LSAN_OPTIONS: verbosity=0:log_threads=0:use_tls=1:print_suppressions=0
       run: |
-        llvm_version=$(clang --version | awk 'NR==1 { split($NF, version, "."); print version[1] }')
-        export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$llvm_version
+        set -x
+        export ASAN_SYMBOLIZER_PATH=$(command -v /usr/bin/llvm-symbolizer* | sort -n | head -1)
         export LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=$PWD/build_tools/lsan_suppressions.txt"
         make -C build VERBOSE=1 fish_run_tests
 

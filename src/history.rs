@@ -151,17 +151,17 @@ fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> st
     file.sync_all()
 }
 
-/// Use this struct for all history file accesses.
+/// Use this struct for all accesses to file which need mutual exclusion.
 /// Otherwise, races on the file are possible.
 /// The lock is released when this struct is dropped.
-struct LockedHistoryFile {
-    /// This file contains the actual history.
+struct LockedFile {
+    /// This is the file which requires mutual exclusion.
     /// It should only be accessed through this struct,
     /// because the locks used here do not protect from other accesses to the file.
-    pub history_file: File,
+    pub data_file: File,
     /// This file is the one being locked.
-    /// The lock is not placed on the history file due to issues with renaming.
-    /// If the history file is renamed after opening and before locking it,
+    /// The lock is not placed on the data file directly due to issues with renaming.
+    /// If the data file is renamed after opening and before locking it,
     /// There are two independent files around, whose locks do not interact.
     /// In some cases this can be identified by checking file identifiers and timestamps,
     /// but even with such checks races and corresponding file corruption can occur.
@@ -170,7 +170,7 @@ struct LockedHistoryFile {
     /// We may fail to lock (e.g. on lockless NFS - see issue #685.
     /// In that case, we proceed as if locking succeeded.
     /// This might result in corruption,
-    /// but the alternative of not having a history at all is not desirable either.
+    /// but the alternative of not being able to access the file at all is not desirable either.
     _lock_file: File,
 }
 
@@ -188,8 +188,8 @@ impl LockingMode {
     }
 }
 
-impl LockedHistoryFile {
-    /// Maybe lock a history file.
+impl LockedFile {
+    /// Maybe lock a file.
     /// Returns `true` if successful, `false` if locking was skipped.
     ///
     /// # Safety
@@ -215,37 +215,23 @@ impl LockedHistoryFile {
         }
     }
 
-    /// Creates a `LockedHistoryFile`.
-    /// Use this to access the history file, as it ensures correct locking.
-    /// Use `LockingMode::Exclusive` if you want to modify the history file in any way.
+    /// Creates a `LockedFile`.
+    /// Use this for any access to a which requires mutual exclusion, as it ensures correct locking.
+    /// Use `LockingMode::Exclusive` if you want to modify the file in any way.
     /// Otherwise you should use `LockingMode::Shared`.
     /// `file_name` should just be a name, not a full path.
-    /// `file_flags` and `file_mode` are used for opening (and potentially creating) the history
-    /// file.
+    /// `file_flags` and `file_mode` are used for opening (and potentially creating) the file.
+    /// Note that this tries to create a separate lock file in the same directory as the file.
     pub fn new(
         locking_mode: LockingMode,
-        file_name: &wstr,
+        file_path: &wstr,
         file_flags: OFlag,
         file_mode: nix::sys::stat::Mode,
     ) -> std::io::Result<Self> {
         const LOCK_FILE_SUFFIX: &wstr = L!(".lock");
-
-        // Get the path to the real history file.
-        let history_path = history_filename(file_name, L!(""))?;
-        let history_path = wrealpath(&history_path).unwrap_or(history_path);
-
-        // The only way this should be able to fail is if `get_data_directory()` succeeds above but
-        // fails here.
-        let lock_file_path = match history_filename(file_name, LOCK_FILE_SUFFIX) {
-            Ok(path) => path,
-            Err(e) => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Could not obtain lock file path: {e}"),
-                ));
-            }
-        };
-        let lock_file_path = wrealpath(&lock_file_path).unwrap_or(lock_file_path);
+        let mut lock_file_path = file_path.to_owned();
+        lock_file_path.push_utfstr(LOCK_FILE_SUFFIX);
+        let lock_file_path = lock_file_path;
 
         // We start by locking the dedicated lock file.
         // This is required to avoid racing modifications by other threads/processes.
@@ -260,12 +246,12 @@ impl LockedHistoryFile {
             Self::maybe_lock_file(&mut lock_file, locking_mode.to_flock_op());
         }
 
-        // Open the history file
-        let history_file = wopen_cloexec(&history_path, file_flags, file_mode)?;
+        // Open the data file
+        let data_file = wopen_cloexec(file_path, file_flags, file_mode)?;
 
         Ok(Self {
+            data_file,
             _lock_file: lock_file,
-            history_file,
         })
     }
 }
@@ -331,8 +317,7 @@ impl LruCacheExt for LruCache<WString, HistoryItem> {
 /// An error is returned if obtaining the data directory failed.
 /// Because the `path_get_data` function does not return error information,
 /// we cannot provide more detail about the reason for the failure here.
-/// If `suffix` is provided, append that suffix to the path; this is used for temporary files and
-/// lock files.
+/// If `suffix` is provided, append that suffix to the path; this is used for temporary files.
 fn history_filename(session_id: &wstr, suffix: &wstr) -> std::io::Result<WString> {
     if session_id.is_empty() {
         return Err(std::io::Error::new(
@@ -613,21 +598,26 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
 
-        if let Ok(mut locked_history_file) = LockedHistoryFile::new(
-            LockingMode::Shared,
-            &self.name,
-            OFlag::O_RDONLY,
-            Mode::empty(),
-        ) {
-            self.file_contents = HistoryFileContents::create(&mut locked_history_file.history_file);
-            self.history_file_id = if self.file_contents.is_some() {
-                file_id_for_file(&locked_history_file.history_file)
-            } else {
-                INVALID_FILE_ID
-            };
+        // Get the path to the real history file.
+        if let Ok(history_path) = history_filename(&self.name, L!("")) {
+            let history_path = wrealpath(&history_path).unwrap_or(history_path);
+            if let Ok(mut locked_history_file) = LockedFile::new(
+                LockingMode::Shared,
+                &history_path,
+                OFlag::O_RDONLY,
+                Mode::empty(),
+            ) {
+                self.file_contents =
+                    HistoryFileContents::create(&mut locked_history_file.data_file);
+                self.history_file_id = if self.file_contents.is_some() {
+                    file_id_for_file(&locked_history_file.data_file)
+                } else {
+                    INVALID_FILE_ID
+                };
 
-            let _profiler = TimeProfiler::new("populate_from_file_contents");
-            self.populate_from_file_contents();
+                let _profiler = TimeProfiler::new("populate_from_file_contents");
+                self.populate_from_file_contents();
+            }
         }
     }
 
@@ -772,6 +762,9 @@ impl HistoryImpl {
             self.new_items.len() - self.first_unwritten_new_item_index
         );
 
+        // Get the path to the real history file.
+        let history_path = history_filename(&self.name, L!(""))?;
+        let history_path = wrealpath(&history_path).unwrap_or(history_path);
         // We want to rewrite the history file.
         // To avoid issues with crashes during writing,
         // we write to a temporary file and once we are done, this file is renamed such that it
@@ -780,9 +773,9 @@ impl HistoryImpl {
         // duration, which we get via an exclusive lock on the corresponding lock file.
         // Taking a shared lock first and later upgrading to an exclusive one could result in a
         // deadlock, so we take an exclusive one immediately.
-        let mut locked_history_file = LockedHistoryFile::new(
+        let mut locked_history_file = LockedFile::new(
             LockingMode::Exclusive,
-            &self.name,
+            &history_path,
             OFlag::O_RDONLY | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
         )?;
@@ -790,8 +783,8 @@ impl HistoryImpl {
         let tmp_name_template = history_filename(&self.name, L!(".XXXXXX"))?;
         // Make our temporary file
         let (mut tmp_file, tmp_name) = create_temporary_file(&tmp_name_template)?;
-        if let Err(e) = self
-            .rewrite_to_temporary_file(Some(&mut locked_history_file.history_file), &mut tmp_file)
+        if let Err(e) =
+            self.rewrite_to_temporary_file(Some(&mut locked_history_file.data_file), &mut tmp_file)
         {
             // Failed to write, no good
             let _ = wunlink(&tmp_name);
@@ -803,7 +796,7 @@ impl HistoryImpl {
         // corresponds to e.g. someone running sudo -E as the very first command. If they
         // did, it would be tricky to set the permissions correctly. (bash doesn't get this
         // case right either).
-        if let Ok(md) = locked_history_file.history_file.metadata() {
+        if let Ok(md) = locked_history_file.data_file.metadata() {
             // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
             if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
                 FLOG!(
@@ -818,17 +811,6 @@ impl HistoryImpl {
         } else {
             FLOG!(history_file, "Could not get metadata for history file");
         }
-
-        // TODO: this is a duplicate of the code in LockedHistoryFile::new().
-        let history_path = match history_filename(&self.name, L!("")) {
-            Ok(path) => path,
-            Err(e) => {
-                FLOG!(history_file, "Could not obtain history file path.");
-                let _ = wunlink(&tmp_name);
-                return Err(e);
-            }
-        };
-        let history_path = wrealpath(&history_path).unwrap_or(history_path);
 
         if wrename(&tmp_name, &history_path) == -1 {
             let error_number = errno::errno();
@@ -869,15 +851,18 @@ impl HistoryImpl {
         // No deleting allowed.
         assert!(self.deleted_items.is_empty());
 
-        let mut locked_history_file = LockedHistoryFile::new(
+        // Get the path to the real history file.
+        let history_path = history_filename(&self.name, L!(""))?;
+        let history_path = wrealpath(&history_path).unwrap_or(history_path);
+        let mut locked_history_file = LockedFile::new(
             LockingMode::Exclusive,
-            &self.name,
+            &history_path,
             OFlag::O_WRONLY | OFlag::O_APPEND | OFlag::O_CREAT,
             HISTORY_FILE_MODE,
         )?;
 
         // Check if the file was modified since it was last read.
-        let file_id = file_id_for_file(&locked_history_file.history_file);
+        let file_id = file_id_for_file(&locked_history_file.data_file);
         let file_changed = file_id != self.history_file_id;
 
         // We (hopefully successfully) took the exclusive lock. Append to the file.
@@ -912,7 +897,7 @@ impl HistoryImpl {
                 // but hopefully there are not that many items to write when appending.
                 res = drain_buffer_into_file_and_flush(
                     &mut buffer,
-                    &mut locked_history_file.history_file,
+                    &mut locked_history_file.data_file,
                 );
                 if res.is_err() {
                     break;

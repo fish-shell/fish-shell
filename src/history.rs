@@ -23,7 +23,12 @@
 //! rare cases with multiple simultaneous shell sessions, lose a history item; this is
 //! considered preferable to hanging the the shell waiting for a lock.
 
-use crate::{common::cstr2wcstring, env::EnvVar, fs::create_temporary_file, wcstringutil::trim};
+use crate::{
+    common::cstr2wcstring,
+    env::EnvVar,
+    fs::{create_temporary_file, LockedFile, LockingMode},
+    wcstringutil::trim,
+};
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -39,7 +44,7 @@ use std::{
 };
 
 use bitflags::bitflags;
-use libc::{c_int, fchown, flock, EINTR, LOCK_EX, LOCK_SH, LOCK_UN};
+use libc::fchown;
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -57,9 +62,7 @@ use crate::{
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{parse_util_detect_errors, parse_util_unescape_wildcards},
-    path::{
-        path_get_config, path_get_data, path_get_data_remoteness, path_is_valid, DirRemoteness,
-    },
+    path::{path_get_config, path_get_data, path_is_valid},
     threads::{assert_is_background_thread, iothread_perform},
     util::{find_subslice, get_rng},
     wchar::prelude::*,
@@ -149,111 +152,6 @@ fn drain_buffer_into_file_and_flush(buffer: &mut Vec<u8>, file: &mut File) -> st
     drain_buffer_into_file_no_flush(buffer, file)?;
     file.flush()?;
     file.sync_all()
-}
-
-/// Use this struct for all accesses to file which need mutual exclusion.
-/// Otherwise, races on the file are possible.
-/// The lock is released when this struct is dropped.
-struct LockedFile {
-    /// This is the file which requires mutual exclusion.
-    /// It should only be accessed through this struct,
-    /// because the locks used here do not protect from other accesses to the file.
-    pub data_file: File,
-    /// This file is the one being locked.
-    /// The lock is not placed on the data file directly due to issues with renaming.
-    /// If the data file is renamed after opening and before locking it,
-    /// There are two independent files around, whose locks do not interact.
-    /// In some cases this can be identified by checking file identifiers and timestamps,
-    /// but even with such checks races and corresponding file corruption can occur.
-    /// It is simpler to have a separate lock file, which does not change.
-    ///
-    /// We may fail to lock (e.g. on lockless NFS - see issue #685.
-    /// In that case, we proceed as if locking succeeded.
-    /// This might result in corruption,
-    /// but the alternative of not being able to access the file at all is not desirable either.
-    _lock_file: File,
-}
-
-enum LockingMode {
-    Shared,
-    Exclusive,
-}
-
-impl LockingMode {
-    pub fn to_flock_op(&self) -> c_int {
-        match self {
-            LockingMode::Shared => LOCK_SH,
-            LockingMode::Exclusive => LOCK_EX,
-        }
-    }
-}
-
-impl LockedFile {
-    /// Maybe lock a file.
-    /// Returns `true` if successful, `false` if locking was skipped.
-    ///
-    /// # Safety
-    ///
-    /// The file descriptor of `file` and `lock_type` must be valid arguments to `flock(2)`.
-    unsafe fn maybe_lock_file(file: &mut File, lock_type: libc::c_int) -> bool {
-        assert!(lock_type & LOCK_UN == 0, "Do not use lock_file to unlock");
-
-        if CHAOS_MODE.load() {
-            return false;
-        }
-        if path_get_data_remoteness() == DirRemoteness::remote {
-            return false;
-        }
-
-        loop {
-            if unsafe { flock(file.as_raw_fd(), lock_type) } != -1 {
-                return true;
-            }
-            if errno::errno().0 != EINTR {
-                return false;
-            }
-        }
-    }
-
-    /// Creates a `LockedFile`.
-    /// Use this for any access to a which requires mutual exclusion, as it ensures correct locking.
-    /// Use `LockingMode::Exclusive` if you want to modify the file in any way.
-    /// Otherwise you should use `LockingMode::Shared`.
-    /// `file_name` should just be a name, not a full path.
-    /// `file_flags` and `file_mode` are used for opening (and potentially creating) the file.
-    /// Note that this tries to create a separate lock file in the same directory as the file.
-    pub fn new(
-        locking_mode: LockingMode,
-        file_path: &wstr,
-        file_flags: OFlag,
-        file_mode: nix::sys::stat::Mode,
-    ) -> std::io::Result<Self> {
-        const LOCK_FILE_SUFFIX: &wstr = L!(".lock");
-        let mut lock_file_path = file_path.to_owned();
-        lock_file_path.push_utfstr(LOCK_FILE_SUFFIX);
-        let lock_file_path = lock_file_path;
-
-        // We start by locking the dedicated lock file.
-        // This is required to avoid racing modifications by other threads/processes.
-        // If the lock is not released explicitly, it is released when the file descriptor of
-        // `lock_file` is closed, which happens in the `Drop` implementation of `File`.
-        let mut lock_file = wopen_cloexec(
-            &lock_file_path,
-            OFlag::O_RDONLY | OFlag::O_CREAT,
-            Mode::S_IRUSR,
-        )?;
-        unsafe {
-            Self::maybe_lock_file(&mut lock_file, locking_mode.to_flock_op());
-        }
-
-        // Open the data file
-        let data_file = wopen_cloexec(file_path, file_flags, file_mode)?;
-
-        Ok(Self {
-            data_file,
-            _lock_file: lock_file,
-        })
-    }
 }
 
 struct TimeProfiler {

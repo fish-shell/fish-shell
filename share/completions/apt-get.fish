@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand -d 'Test if apt has yet to be given the subcommand'
     for i in (commandline -xpc)
-        if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean changelog
+        if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge autoremove autopurge source build-dep check clean autoclean changelog
             return 1
         end
     end
@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package -d 'Test if apt command should have packages as potential completion'
     for i in (commandline -xpc)
-        if contains -- $i contains install remove purge build-dep changelog
+        if contains -- $i contains install remove purge autoremove autopurge build-dep changelog
             return 0
         end
     end
@@ -34,7 +34,8 @@ complete -f -n __fish_apt_no_subcommand -c apt-get -a build-dep -d 'Install/remo
 complete -f -n __fish_apt_no_subcommand -c apt-get -a check -d 'Update cache and check dependencies'
 complete -f -n __fish_apt_no_subcommand -c apt-get -a clean -d 'Clean local caches and packages'
 complete -f -n __fish_apt_no_subcommand -c apt-get -a autoclean -d 'Clean packages no longer be downloaded'
-complete -f -n __fish_apt_no_subcommand -c apt-get -a autoremove -d 'Remove automatically installed packages'
+complete -f -n __fish_apt_no_subcommand -c apt-get -a autoremove -d 'Remove packages no longer needed as dependencies'
+complete -f -n __fish_apt_no_subcommand -c apt-get -a autopurge -d 'Remove packages no longer needed as dependencies and delete their config files'
 complete -c apt-get -l no-install-recommends -d 'Do not install recommended packages'
 complete -c apt-get -l no-install-suggests -d 'Do not install suggested packages'
 complete -c apt-get -s d -l download-only -d 'Download Only'

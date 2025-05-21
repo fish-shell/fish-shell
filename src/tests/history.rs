@@ -248,15 +248,8 @@ fn pound_on_history(item_count: usize, idx: usize) -> Arc<History> {
 fn test_history_races() {
     let _cleanup = test_init();
     // This always fails under WSL
+    // TODO: Check if this is still true.
     if is_windows_subsystem_for_linux(WSL::V1) {
-        return;
-    }
-
-    // This fails too often on Github Actions,
-    // leading to a bunch of spurious test failures on unrelated PRs.
-    // For now it's better to disable it.
-    // TODO: Figure out *why* it does that and fix it.
-    if std::env::var_os("CI").is_some() {
         return;
     }
 
@@ -271,8 +264,6 @@ fn test_history_races() {
 
     // Ensure history is clear.
     History::new(L!("race_test")).clear();
-
-    // history::CHAOS_MODE.store(true);
 
     let mut children = Vec::with_capacity(RACE_COUNT);
     for i in 0..RACE_COUNT {
@@ -295,7 +286,6 @@ fn test_history_races() {
 
     // Ensure that we got sane, sorted results.
     let hist = History::new(L!("race_test"));
-    history::CHAOS_MODE.store(false);
 
     // History is enumerated from most recent to least
     // Every item should be the last item in some array

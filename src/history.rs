@@ -2,31 +2,22 @@
 //!
 //! 1. All history files are append-only. Data, once written, is never modified.
 //!
-//! 2. A history file may be re-written ("vacuumed"). This involves reading in the file and writing a
-//! new one, while performing maintenance tasks: discarding items in an LRU fashion until we reach
-//! the desired maximum count, removing duplicates, and sorting them by timestamp (eventually, not
-//! implemented yet). The new file is atomically moved into place via rename().
+//! 2. A history file may be re-written ("vacuumed"). This involves reading in the file and writing
+//!    a new one, while performing maintenance tasks: discarding items in an LRU fashion until we
+//!    reach the desired maximum count, removing duplicates, and sorting them by timestamp
+//!    (eventually, not implemented yet). The new file is atomically moved into place via `rename()`.
 //!
-//! 3. History files are mapped in via mmap(). Before the file is mapped, the file takes a fcntl read
-//! lock. The purpose of this lock is to avoid seeing a transient state where partial data has been
-//! written to the file.
+//! 3. History files are mapped in via `mmap()`. This allows only storing one `usize` per item (its
+//!    offset), and lazily loading items on demand, which reduces memory consumption.
 //!
-//! 4. History is appended to under a fcntl write lock.
-//!
-//! 5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can
-//! trigger race conditions. This is useful for testing.
-//!
-//! Locking on remote filesystems may hang for an unacceptably long time. For that reason, fish
-//! does not take locks on the file if it believes the history file is on a remote filesystem,
-//! or if the mmap fails with ENODEV, or if the first lock attempt takes excessively long.
-//! Eliding locks means that two concurrent shell sessions with a remote history file may, in
-//! rare cases with multiple simultaneous shell sessions, lose a history item; this is
-//! considered preferable to hanging the the shell waiting for a lock.
+//! 4. Accesses to the history file need to be synchronized. This is achieved by functionality in
+//!    `src/fs.rs`. By default, `flock()` is used for locking. If that is unavailable, an imperfect
+//!    fallback solution attempts to detect races and retries if a race is detected.
 
 use crate::{
     common::cstr2wcstring,
     env::EnvVar,
-    fs::{create_temporary_file, LockedFile, LockingMode},
+    fs::{rewrite_via_temporary_file, LockedFile, LockingMode},
     wcstringutil::trim,
 };
 use std::{
@@ -38,13 +29,11 @@ use std::{
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
-    os::{fd::AsRawFd, unix::fs::MetadataExt},
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use bitflags::bitflags;
-use libc::fchown;
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng;
@@ -68,9 +57,7 @@ use crate::{
     wchar::prelude::*,
     wcstringutil::subsequence_in_string,
     wildcard::{wildcard_match, ANY_STRING},
-    wutil::{
-        file_id_for_file, wgettext_fmt, wrealpath, wrename, wstat, wunlink, FileId, INVALID_FILE_ID,
-    },
+    wutil::{file_id_for_file, wgettext_fmt, wrealpath, wstat, wunlink, FileId, INVALID_FILE_ID},
 };
 
 mod file;
@@ -505,7 +492,8 @@ impl HistoryImpl {
                 OFlag::O_RDONLY,
                 Mode::empty(),
             ) {
-                self.file_contents = HistoryFileContents::create(&mut locked_history_file).ok();
+                self.file_contents =
+                    HistoryFileContents::create(locked_history_file.get_file_mut()).ok();
                 self.history_file_id = if self.file_contents.is_some() {
                     file_id_for_file(locked_history_file.get_file())
                 } else {
@@ -565,7 +553,7 @@ impl HistoryImpl {
     /// Given an existing history file, write a new history file to `dst`.
     fn rewrite_to_temporary_file(
         &self,
-        existing_file: &mut LockedFile,
+        existing_file: &mut File,
         dst: &mut File,
     ) -> std::io::Result<()> {
         // We are reading FROM existing_file and writing TO dst
@@ -659,66 +647,13 @@ impl HistoryImpl {
         // Get the path to the real history file.
         let history_path = history_filename(&self.name, L!(""))?;
         let history_path = wrealpath(&history_path).unwrap_or(history_path);
-        // We want to rewrite the history file.
-        // To avoid issues with crashes during writing,
-        // we write to a temporary file and once we are done, this file is renamed such that it
-        // replaces the original history file.
-        // To avoid races, we need to have exclusive access to the history file for the entire
-        // duration, which we get via an exclusive lock on the corresponding lock file.
-        // Taking a shared lock first and later upgrading to an exclusive one could result in a
-        // deadlock, so we take an exclusive one immediately.
-        let mut locked_history_file = LockedFile::new(
-            LockingMode::Exclusive,
-            &history_path,
-            OFlag::O_RDONLY | OFlag::O_CREAT,
-            HISTORY_FILE_MODE,
-        )?;
 
-        let tmp_name_template = history_filename(&self.name, L!(".XXXXXX"))?;
-        // Make our temporary file
-        let (mut tmp_file, tmp_name) = create_temporary_file(&tmp_name_template)?;
-        if let Err(e) = self.rewrite_to_temporary_file(&mut locked_history_file, &mut tmp_file) {
-            // Failed to write, no good
-            let _ = wunlink(&tmp_name);
-            return Err(e);
-        }
+        let rewrite = |old_file: &mut File, tmp_file: &mut File| -> std::io::Result<()> {
+            self.rewrite_to_temporary_file(old_file, tmp_file)
+        };
 
-        // Ensure we maintain the ownership and permissions of the original (#2355). If the
-        // stat fails, we assume (hope) our default permissions are correct. This
-        // corresponds to e.g. someone running sudo -E as the very first command. If they
-        // did, it would be tricky to set the permissions correctly. (bash doesn't get this
-        // case right either).
-        if let Ok(md) = locked_history_file.get_file().metadata() {
-            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
-            if unsafe { fchown(tmp_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                FLOG!(
-                    history_file,
-                    "Error when changing ownership of history file:",
-                    errno::errno()
-                );
-            }
-            if let Err(e) = tmp_file.set_permissions(md.permissions()) {
-                FLOG!(history_file, "Error when changing mode of history file:", e);
-            }
-        } else {
-            FLOG!(history_file, "Could not get metadata for history file");
-        }
-
-        if wrename(&tmp_name, &history_path) == -1 {
-            let error_number = errno::errno();
-            FLOG!(
-                error,
-                wgettext_fmt!(
-                    "Error when renaming history file: %s",
-                    error_number.to_string()
-                )
-            );
-            let _ = wunlink(&tmp_name);
-            return Err(std::io::Error::from(error_number));
-        }
-
-        // Ensure we never leave the old file around
-        let _ = wunlink(&tmp_name);
+        let (file_id, _) = rewrite_via_temporary_file(&history_path, &LOCK_HISTORY_FILE, rewrite)?;
+        self.history_file_id = file_id;
 
         // We've saved everything, so we have no more unsaved items.
         self.first_unwritten_new_item_index = self.new_items.len();
@@ -1911,3 +1846,5 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
 static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+static LOCK_HISTORY_FILE: RelaxedAtomicBool = RelaxedAtomicBool::new(true);

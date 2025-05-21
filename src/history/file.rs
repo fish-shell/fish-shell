@@ -2,6 +2,7 @@
 
 use std::{
     borrow::Cow,
+    fs::File,
     io::{Read, Seek, SeekFrom, Write},
     ops::{Deref, DerefMut},
     os::fd::AsRawFd,
@@ -14,7 +15,6 @@ use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
-    fs::LockedFile,
     path::{path_get_config_remoteness, DirRemoteness},
 };
 
@@ -44,14 +44,14 @@ impl MmapRegion {
     }
 
     /// Map a region `[0, len)` from a locked file.
-    pub fn map_file(file: &LockedFile, len: usize) -> std::io::Result<Self> {
+    pub fn map_file(file: &File, len: usize) -> std::io::Result<Self> {
         let ptr = unsafe {
             mmap(
                 std::ptr::null_mut(),
                 len,
                 PROT_READ,
                 MAP_PRIVATE,
-                file.get_file().as_raw_fd(),
+                file.as_raw_fd(),
                 0,
             )
         };
@@ -116,9 +116,9 @@ pub struct HistoryFileContents {
 
 impl HistoryFileContents {
     /// Construct history file contents from a locked history file.
-    pub fn create(history_file: &mut LockedFile) -> std::io::Result<Self> {
+    pub fn create(history_file: &mut File) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
-        let len: usize = match history_file.get_file().seek(SeekFrom::End(0))?.try_into() {
+        let len: usize = match history_file.seek(SeekFrom::End(0))?.try_into() {
             Ok(len) => len,
             Err(err) => {
                 return Err(std::io::Error::new(
@@ -127,10 +127,10 @@ impl HistoryFileContents {
                 ))
             }
         };
-        let map_anon = |file: &mut LockedFile, len: usize| -> std::io::Result<MmapRegion> {
+        let map_anon = |file: &mut File, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
-            file.get_file().seek(SeekFrom::Start(0))?;
+            file.seek(SeekFrom::Start(0))?;
             read_zero_padded(file, region.as_mut())?;
             Ok(region)
         };
@@ -246,9 +246,9 @@ fn should_mmap() -> bool {
 // TODO: If locking works, there should never be a need to fill.
 // Also, are there any operating systems where anonymous memory mappings are not zeroed?
 // It might be reasonable to explicitly zero regardless, just to be sure.
-fn read_zero_padded(file: &mut LockedFile, mut dest: &mut [u8]) -> std::io::Result<()> {
+fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()> {
     while !dest.is_empty() {
-        match file.get_file().read(dest) {
+        match file.read(dest) {
             Ok(0) => break,
             Ok(amt) => {
                 dest = &mut dest[amt..];

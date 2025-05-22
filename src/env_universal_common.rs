@@ -801,7 +801,7 @@ impl EnvUniversal {
         {
             let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
             times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
-            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } != 0 {
+            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } == 0 {
                 unsafe {
                     libc::futimens(private_file.as_raw_fd(), &times[0]);
                 }

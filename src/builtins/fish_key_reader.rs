@@ -117,6 +117,11 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             shifted_key.codepoint = kevt.key.shifted_codepoint;
             keys.push((shifted_key, "shifted key"));
         }
+        if kevt.key.base_layout_codepoint != '\0' {
+            let mut base_layout_key = kevt.key.key;
+            base_layout_key.codepoint = kevt.key.base_layout_codepoint;
+            keys.push((base_layout_key, "physical key"));
+        }
         for (key, explanation) in keys {
             streams.out.append(sprintf!(
                 "bind %s 'do something'%s%s\n",

@@ -1200,9 +1200,10 @@ pub trait InputEventQueuer {
                     char::from_u32(u32::from(function_key(3)) + params[0][0] - 25).unwrap(),
                 )), // rxvt style
                 27 => {
-                    let key =
-                        canonicalize_keyed_control_char(char::from_u32(params[2][0]).unwrap());
-                    masked_key(key, None)
+                    let Some(key) = char::from_u32(params[2][0]) else {
+                        return invalid_sequence(buffer);
+                    };
+                    masked_key(canonicalize_keyed_control_char(key), None)
                 }
                 28 | 29 => KeyEvent::from(shift(
                     char::from_u32(u32::from(function_key(5)) + params[0][0] - 28).unwrap(),
@@ -1270,14 +1271,17 @@ pub trait InputEventQueuer {
                     57424 => key::End,
                     57425 => key::Insert,
                     57426 => key::Delete,
-                    cp => canonicalize_keyed_control_char(char::from_u32(cp).unwrap()),
+                    cp => {
+                        let Some(key) = char::from_u32(cp) else {
+                            return invalid_sequence(buffer);
+                        };
+                        canonicalize_keyed_control_char(key)
+                    }
                 };
-                masked_key(
-                    key,
-                    Some(canonicalize_keyed_control_char(
-                        char::from_u32(params[0][1]).unwrap(),
-                    )),
-                )
+                let Some(shifted_key) = char::from_u32(params[0][1]) else {
+                    return invalid_sequence(buffer);
+                };
+                masked_key(key, Some(canonicalize_keyed_control_char(shifted_key)))
             }
             b'Z' => KeyEvent::from(shift(key::Tab)),
             b'I' => {

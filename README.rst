@@ -1,9 +1,14 @@
+`fish <https://fishshell.com/>`__ - the friendly interactive shell
+=============================================================================================
+
+|Build Status| |Cirrus CI| |OpenSSF Scorecard|
+
 .. |Cirrus CI| image:: https://api.cirrus-ci.com/github/fish-shell/fish-shell.svg?branch=master
       :target: https://cirrus-ci.com/github/fish-shell/fish-shell
       :alt: Cirrus CI Build Status
-
-`fish <https://fishshell.com/>`__ - the friendly interactive shell |Build Status| |Cirrus CI|
-=============================================================================================
+.. |OpenSSF Scorecard| image:: https://api.scorecard.dev/projects/github.com/janderssonse/fish-shell/badge
+   :target: https://scorecard.dev/viewer/?uri=github.com/janderssonse/fish-shell
+   :alt: OpenSSF Scorecard
 
 fish is a smart and user-friendly command line shell for macOS, Linux,
 and the rest of the family. fish includes features like syntax

@@ -114,6 +114,12 @@ pub(crate) struct TextFace {
     pub(crate) style: TextStyling,
 }
 
+impl Default for TextFace {
+    fn default() -> Self {
+        Self::default()
+    }
+}
+
 impl TextFace {
     pub const fn default() -> Self {
         Self {
@@ -134,12 +140,12 @@ impl TextFace {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Eq, PartialEq)]
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,
     pub(crate) underline_color: Option<Color>,
-    pub(crate) style: TextStyling,
+    pub(crate) style: Option<TextStyling>,
 }
 
 pub(crate) fn parse_text_face(arguments: &[WString]) -> SpecifiedTextFace {
@@ -170,6 +176,7 @@ pub(crate) enum ParsedArgs<'argarray, 'args> {
 
 pub(crate) enum ParseError<'args> {
     MissingOptArg,
+    MultipleTracking,
     UnknownColor(&'args wstr),
     UnknownUnderlineStyle(&'args wstr),
     UnknownOption(usize),
@@ -192,6 +199,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         wopt(L!("reverse"), ArgType::NoArgument, 'r'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("print-colors"), ArgType::NoArgument, 'c'),
+        wopt(L!("track"), ArgType::RequiredArgument, '\x01'),
     ];
     let long_options = &long_options[..long_options.len() - builtin_extra_args];
 
@@ -213,6 +221,7 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
     let mut underline_colors = vec![];
     let mut style = TextStyling::default();
     let mut print_color_mode = false;
+    let mut tracking = false;
 
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(c) = w.next_opt() {
@@ -221,6 +230,12 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
                 if let Some(bg) = parse_color(w.woptarg.unwrap())? {
                     bg_colors.push(bg);
                 }
+            }
+            '\x01' => {
+                if is_builtin && tracking {
+                    return Err(MultipleTracking);
+                }
+                tracking = true;
             }
             '\x02' => {
                 if let Some(underline_color) = parse_color(w.woptarg.unwrap())? {
@@ -308,6 +323,6 @@ pub(crate) fn parse_text_face_and_options<'argarray, 'args>(
         fg,
         bg,
         underline_color,
-        style,
+        style: (style != TextStyling::default()).then_some(style),
     }))
 }

@@ -7,8 +7,8 @@ use crate::flog::FLOG;
 use crate::future::IsSomeAnd;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::input_common::{
-    CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer, ReadlineCmd,
-    TerminalQuery, R_END_INPUT_FUNCTIONS,
+    match_key_event_to_key, CharEvent, CharInputStyle, ImplicitEvent, InputData, InputEventQueuer,
+    KeyMatchQuality, ReadlineCmd, TerminalQuery, R_END_INPUT_FUNCTIONS,
 };
 use crate::key::{self, canonicalize_raw_escapes, ctrl, Key, Modifiers};
 use crate::proc::job_reap;
@@ -20,6 +20,7 @@ use crate::threads::{assert_is_main_thread, iothread_service_main};
 use crate::wchar::prelude::*;
 use once_cell::sync::Lazy;
 use std::cell::RefMut;
+use std::mem;
 use std::sync::{
     atomic::{AtomicU32, Ordering},
     Mutex, MutexGuard,
@@ -502,14 +503,19 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
 
     /// Check if the next event is the given character. This advances the index on success only.
     /// If `escaped` is set, then return false if this (or any other) character had a timeout.
-    fn next_is_char(&mut self, style: &KeyNameStyle, key: Key, escaped: bool) -> bool {
+    fn next_is_char(
+        &mut self,
+        style: &KeyNameStyle,
+        key: Key,
+        escaped: bool,
+    ) -> Option<KeyMatchQuality> {
         assert!(
             self.idx <= self.peeked.len(),
             "Index must not be larger than dequeued event count"
         );
         // See if we had a timeout already.
         if escaped && self.had_timeout {
-            return false;
+            return None;
         }
         // Grab a new event if we have exhausted what we have already peeked.
         // Use either readch or readch_timed, per our param.
@@ -520,7 +526,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     Some(evt) => evt,
                     None => {
                         self.had_timeout = true;
-                        return false;
+                        return None;
                     }
                 }
             } else {
@@ -529,7 +535,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     Some(evt) => evt,
                     None => {
                         self.had_timeout = true;
-                        return false;
+                        return None;
                     }
                 }
             };
@@ -539,9 +545,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         // Now we have peeked far enough; check the event.
         // If it matches the char, then increment the index.
         let evt = &self.peeked[self.idx];
-        let Some(kevt) = evt.get_key() else {
-            return false;
-        };
+        let kevt = evt.get_key()?;
         if kevt.seq == L!("\x1b") && key.modifiers == Modifiers::ALT {
             self.idx += 1;
             self.subidx = 0;
@@ -549,13 +553,13 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             return self.next_is_char(style, Key::from_raw(key.codepoint), true);
         }
         if *style == KeyNameStyle::Plain {
-            if kevt.key == key {
+            let result = match_key_event_to_key(&kevt.key, &key);
+            if let Some(key_match) = &result {
                 assert!(self.subidx == 0);
                 self.idx += 1;
-                FLOG!(reader, "matched full key", key);
-                return true;
+                FLOG!(reader, "matched full key", key, "kind", key_match);
             }
-            return false;
+            return result;
         }
         let actual_seq = kevt.seq.as_char_slice();
         if !actual_seq.is_empty() {
@@ -575,7 +579,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         actual_seq.len()
                     )
                 );
-                return true;
+                return Some(KeyMatchQuality::Legacy);
             }
             if key.modifiers == Modifiers::ALT && seq_char == '\x1b' {
                 if self.subidx + 1 == actual_seq.len() {
@@ -595,11 +599,11 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                         self.subidx = 0;
                     }
                     FLOG!(reader, format!("matched {key} against raw escape sequence"));
-                    return true;
+                    return Some(KeyMatchQuality::Legacy);
                 }
             }
         }
-        false
+        None
     }
 
     /// Consume all events up to the current index.
@@ -627,7 +631,12 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
     }
 
     /// Return true if this `peeker` matches a given sequence of char events given by `str`.
-    fn try_peek_sequence(&mut self, style: &KeyNameStyle, seq: &[Key]) -> bool {
+    fn try_peek_sequence(
+        &mut self,
+        style: &KeyNameStyle,
+        seq: &[Key],
+        quality: &mut Vec<KeyMatchQuality>,
+    ) -> bool {
         assert!(
             !seq.is_empty(),
             "Empty sequence passed to try_peek_sequence"
@@ -637,9 +646,10 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             // If we just read an escape, we need to add a timeout for the next char,
             // to distinguish between the actual escape key and an "alt"-modifier.
             let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::Escape);
-            if !self.next_is_char(style, *key, escaped) {
+            let Some(spec) = self.next_is_char(style, *key, escaped) else {
                 return false;
-            }
+            };
+            quality.push(spec);
             prev = *key;
         }
         if self.subidx != 0 {
@@ -656,16 +666,24 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
     /// user's mapping list, then the preset list.
     /// Return none if nothing matches, or if we may have matched a longer sequence but it was
     /// interrupted by a readline event.
-    pub fn find_mapping(
+    pub fn find_mapping<'a>(
         &mut self,
         vars: &dyn Environment,
-        ip: &InputMappingSet,
+        ip: &'a InputMappingSet,
     ) -> Option<InputMapping> {
-        let mut generic: Option<&InputMapping> = None;
         let bind_mode = input_get_bind_mode(vars);
-        let mut escape: Option<&InputMapping> = None;
+
+        struct MatchedMapping<'a> {
+            mapping: &'a InputMapping,
+            quality: Vec<KeyMatchQuality>,
+            idx: usize,
+            subidx: usize,
+        }
+
+        let mut deferred: Option<MatchedMapping<'a>> = None;
 
         let ml = ip.mapping_list.iter().chain(ip.preset_mapping_list.iter());
+        let mut quality = vec![];
         for m in ml {
             if m.mode != bind_mode {
                 continue;
@@ -673,24 +691,41 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
 
             // Defer generic mappings until the end.
             if m.is_generic() {
-                if generic.is_none() {
-                    generic = Some(m);
+                if deferred.is_none() {
+                    deferred = Some(MatchedMapping {
+                        mapping: m,
+                        quality: vec![],
+                        idx: self.idx,
+                        subidx: self.subidx,
+                    });
                 }
                 continue;
             }
 
             // FLOG!(reader, "trying mapping", format!("{:?}", m));
-            if self.try_peek_sequence(&m.key_name_style, &m.seq) {
-                // A binding for just escape should also be deferred
-                // so escape sequences take precedence.
-                if m.seq == vec![Key::from_raw(key::Escape)] {
-                    if escape.is_none() {
-                        escape = Some(m);
-                    }
-                } else {
+            if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
+                // // A binding for just escape should also be deferred
+                // // so escape sequences take precedence.
+                let is_escape = m.seq == vec![Key::from_raw(key::Escape)];
+                let is_perfect_match = quality
+                    .iter()
+                    .all(|key_match| *key_match == KeyMatchQuality::Exact);
+                if !is_escape && is_perfect_match {
                     return Some(m.clone());
                 }
+                if deferred
+                    .as_ref()
+                    .is_none_or(|matched| !is_escape && quality >= matched.quality)
+                {
+                    deferred = Some(MatchedMapping {
+                        mapping: m,
+                        quality: mem::take(&mut quality),
+                        idx: self.idx,
+                        subidx: self.subidx,
+                    });
+                }
             }
+            quality.clear();
             self.restart();
         }
         if self.char_sequence_interrupted() {
@@ -699,17 +734,13 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             return None;
         }
 
-        if escape.is_some() {
-            // We need to reconsume the escape.
-            self.next();
-            return escape.cloned();
-        }
-
-        if generic.is_some() {
-            generic.cloned()
-        } else {
-            None
-        }
+        deferred
+            .map(|matched| {
+                self.idx = matched.idx;
+                self.subidx = matched.subidx;
+                matched.mapping
+            })
+            .cloned()
     }
 }
 

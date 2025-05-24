@@ -20,8 +20,8 @@ use crate::{
     env::{env_init, EnvStack, Environment},
     future_feature_flags,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
+        match_key_event_to_key, terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent,
+        InputEventQueue, InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key, Modifiers},
     nix::isatty,
@@ -40,19 +40,24 @@ use crate::{
 use super::prelude::*;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<KeyEvent>, key: KeyEvent) -> bool {
-    recent_keys.push(key);
+fn should_exit(
+    streams: &mut IoStreams,
+    recent_keys: &mut Vec<KeyEvent>,
+    key_evt: KeyEvent,
+) -> bool {
+    recent_keys.push(key_evt);
 
     for evt in [VINTR, VEOF] {
         let modes = shell_modes();
         let cc = Key::from_single_byte(modes.c_cc[evt]);
 
-        if key == cc {
+        if match_key_event_to_key(&key_evt, &cc).is_some() {
             if recent_keys
                 .iter()
                 .rev()
                 .nth(1)
-                .is_some_and(|&prev| prev == cc)
+                .and_then(|prev| match_key_event_to_key(prev, &cc))
+                .is_some()
             {
                 return true;
             }

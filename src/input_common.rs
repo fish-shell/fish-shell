@@ -6,7 +6,7 @@ use crate::common::{
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::FdReadableSet;
-use crate::flog::FLOG;
+use crate::flog::{FloggableDebug, FLOG};
 use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::future_feature_flags::{feature_test, FeatureFlag};
 use crate::global_safety::RelaxedAtomicBool;
@@ -208,24 +208,33 @@ fn apply_shift(mut key: Key, do_ascii: bool, shifted_codepoint: char) -> Option<
     Some(key)
 }
 
-impl PartialEq<Key> for KeyEvent {
-    fn eq(&self, key: &Key) -> bool {
-        if &self.key == key {
-            return true;
-        }
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum KeyMatchQuality {
+    Legacy,
+    ModuloShift,
+    Exact,
+}
 
-        let Some(shifted_evt) = apply_shift(self.key, false, self.shifted_codepoint) else {
-            return false;
-        };
-        let Some(shifted_key) = apply_shift(*key, true, '\0') else {
-            return false;
-        };
-        shifted_evt == shifted_key
+impl FloggableDebug for KeyMatchQuality {}
+
+pub fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyMatchQuality> {
+    if &event.key == key {
+        return Some(KeyMatchQuality::Exact);
     }
+
+    let shifted_evt = apply_shift(event.key, false, event.shifted_codepoint)?;
+    let shifted_key = apply_shift(*key, true, '\0')?;
+    (shifted_evt == shifted_key).then_some(KeyMatchQuality::ModuloShift)
 }
 
 #[test]
-fn test_key_event_eq() {
+fn test_match_key_event_to_key() {
+    macro_rules! validate {
+        ($evt:expr, $key:expr, $expected:expr) => {
+            assert_eq!(match_key_event_to_key(&$evt, &$key), $expected);
+        };
+    }
+
     let none = Modifiers::default();
     let shift = Modifiers::SHIFT;
     let ctrl = Modifiers::CTRL;
@@ -235,41 +244,48 @@ fn test_key_event_eq() {
         ..Default::default()
     };
 
-    assert_eq!(KeyEvent::new(none, 'a'), Key::new(none, 'a'));
-    assert_ne!(KeyEvent::new(none, 'a'), Key::new(none, 'A'));
-    assert_eq!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'));
-    assert_ne!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'));
-    assert_ne!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'));
+    let exact = KeyMatchQuality::Exact;
+    let modulo_shift = KeyMatchQuality::ModuloShift;
+
+    validate!(KeyEvent::new(none, 'a'), Key::new(none, 'a'), Some(exact));
+    validate!(KeyEvent::new(none, 'a'), Key::new(none, 'A'), None);
+    validate!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'), Some(exact));
+    validate!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'), None);
+    validate!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'), None);
     // For historical reasons we canonicalize notation for ASCII keys like "shift-a" to "A",
     // but not "shift-a" events - those should send a shifted key.
-    assert_eq!(KeyEvent::new(none, 'A'), Key::new(shift, 'a'));
-    assert_ne!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'));
-    assert_eq!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'));
-    assert_ne!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'));
+    validate!(
+        KeyEvent::new(none, 'A'),
+        Key::new(shift, 'a'),
+        Some(modulo_shift)
+    );
+    validate!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'), None);
+    validate!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'), Some(exact));
+    validate!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'), None);
 
     // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
     // the shifted key in the canonical notation, because the unshifted one may depend on the
     // keyboard layout.
     let ctrl_shift_equals = KeyEvent::with_shifted_codepoint(ctrl_shift, '=', Some('+'));
-    assert_eq!(ctrl_shift_equals, Key::new(ctrl_shift, '='));
-    assert_eq!(ctrl_shift_equals, Key::new(ctrl, '+')); // canonical notation
-    assert_ne!(ctrl_shift_equals, Key::new(ctrl_shift, '+'));
-    assert_ne!(ctrl_shift_equals, Key::new(ctrl, '='));
+    validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
+    validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
+    validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
+    validate!(ctrl_shift_equals, Key::new(ctrl, '='), None);
 
     // A event like capslock-shift-ä may or may not include a shifted codepoint.
     //
     // Without a shifted codepoint, we cannot easily match ctrl-Ä.
     let caps_ctrl_shift_ä = KeyEvent::new(ctrl_shift, 'ä');
-    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä')); // canonical notation
-    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'));
-    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä')); // can't match without shifted key
-    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'));
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
     // With a shifted codepoint, we can match the alternative notation too.
     let caps_ctrl_shift_ä = KeyEvent::with_shifted_codepoint(ctrl_shift, 'ä', Some('Ä'));
-    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä')); // canonical notation
-    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'));
-    assert_eq!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä')); // matched via shifted key
-    assert_ne!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'));
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
+    validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
 }
 
 /// Represents an event on the character input stream.
@@ -823,7 +839,7 @@ pub trait InputEventQueuer {
                     }
                     let mut seq = WString::new();
                     let mut key = key_with_escape;
-                    if key.is_some_and(|key| key == Key::from_raw(key::Invalid)) {
+                    if key.is_some_and(|key| key.key == Key::from_raw(key::Invalid)) {
                         continue;
                     }
                     assert!(key.map_or(true, |key| key.codepoint != key::Invalid));
@@ -903,7 +919,7 @@ pub trait InputEventQueuer {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {
-                        if nested_sequence == invalid.key {
+                        if nested_sequence.key == invalid.key {
                             return Some(KeyEvent::from_raw(key::Escape));
                         }
                         nested_sequence.modifiers.alt = true;

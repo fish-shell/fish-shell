@@ -20,8 +20,8 @@ use fish::{
     eprintf, fprintf,
     input::input_terminfo_get_name,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent,
+        match_key_event_to_key, terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent,
+        InputEventQueue, InputEventQueuer, KeyEvent,
     },
     key::{char_to_symbol, Key, Modifiers},
     panic::panic_handler,
@@ -44,12 +44,13 @@ fn should_exit(recent_keys: &mut Vec<KeyEvent>, key_evt: KeyEvent) -> bool {
         let modes = shell_modes();
         let cc = Key::from_single_byte(modes.c_cc[evt]);
 
-        if key_evt == cc {
+        if match_key_event_to_key(&key_evt, &cc).is_some() {
             if recent_keys
                 .iter()
                 .rev()
                 .nth(1)
-                .is_some_and(|&prev| prev == cc)
+                .and_then(|&prev| match_key_event_to_key(&prev, &cc))
+                .is_some()
             {
                 return true;
             }

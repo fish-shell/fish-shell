@@ -229,13 +229,30 @@ impl EnvUniversal {
             return (false, None);
         };
 
-        // Read from it.
-        let callbacks = self.load_from_file(&vars_file);
-
-        if self.ok_to_save {
-            (self.save(&directory), callbacks)
-        } else {
-            (true, callbacks)
+        // TODO: proper locking
+        match self.load_from_file(&vars_file) {
+            Ok(updates) => match updates {
+                Some((export_generation_increment, vars, callbacks)) => {
+                    self.export_generation += export_generation_increment;
+                    self.vars = vars;
+                    if self.ok_to_save {
+                        (self.save(&directory), Some(callbacks))
+                    } else {
+                        (true, Some(callbacks))
+                    }
+                }
+                None => {
+                    if self.ok_to_save {
+                        (self.save(&directory), None)
+                    } else {
+                        (true, None)
+                    }
+                }
+            },
+            Err(e) => {
+                FLOG!(uvar_file, "universal log sync failed:", e);
+                (false, None)
+            }
         }
     }
 
@@ -382,16 +399,37 @@ impl EnvUniversal {
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_file(&file)
+        // TODO: proper locking
+        match self.load_from_file(&file) {
+            Ok(Some((export_generation_increment, vars, callbacks))) => {
+                self.export_generation += export_generation_increment;
+                self.vars = vars;
+                Some(callbacks)
+            }
+            Ok(None) => None,
+            Err(e) => {
+                FLOG!(uvar_file, "loading universal log from file failed:", e);
+                None
+            }
+        }
     }
 
     /// Load environment variables from the opened [`file`](`File`).
-    fn load_from_file(&mut self, file: &File) -> Option<CallbackDataList> {
+    /// If successful, [`None`] indicates that no updates were necessary, whereas the [`Some`]
+    /// variant contains updated data.
+    /// That is:
+    /// 1. by how much `self.export_generation` should be incremented
+    /// 2. the new variable table (to replace `self.vars`)
+    /// 3. callbacks
+    fn load_from_file(
+        &mut self,
+        file: &File,
+    ) -> std::io::Result<Option<(u64, VarTable, CallbackDataList)>> {
         // Get the dev / inode.
         let current_file_id = file_id_for_file(file);
         if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
-            None
+            Ok(None)
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
@@ -401,17 +439,20 @@ impl EnvUniversal {
             // save.
             if format == UvarFormat::future {
                 self.ok_to_save = false;
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Universal variable file format is invalid.",
+                ));
             }
 
             // Announce changes and update our exports generation.
-            let callbacks = self.generate_callbacks_and_update_exports(&new_vars);
+            let (export_generation_increment, callbacks) =
+                self.generate_callbacks_and_update_exports(&new_vars);
 
             // Acquire the new variables.
             self.acquire_variables(&mut new_vars);
-            // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-            self.vars = new_vars;
             self.last_read_file_id = current_file_id;
-            Some(callbacks)
+            Ok(Some((export_generation_increment, new_vars, callbacks)))
         }
     }
 
@@ -565,9 +606,15 @@ impl EnvUniversal {
         ret == 0
     }
 
-    // Given a variable table, generate callbacks representing the difference between our vars and
-    // the new vars. Also update our exports generation count as necessary.
-    fn generate_callbacks_and_update_exports(&mut self, new_vars: &VarTable) -> CallbackDataList {
+    /// Given a variable table, generate callbacks representing the difference between our vars and
+    /// the new vars.
+    /// Returns by how much the exports generation count should be incremented, as well as a
+    /// callback list.
+    fn generate_callbacks_and_update_exports(
+        &self,
+        new_vars: &VarTable,
+    ) -> (u64, CallbackDataList) {
+        let mut export_generation_increment = 0;
         let mut callbacks = CallbackDataList::new();
         // Construct callbacks for erased values.
         for (key, value) in &self.vars {
@@ -583,7 +630,7 @@ impl EnvUniversal {
                     val: None,
                 });
                 if value.exports() {
-                    self.export_generation += 1;
+                    export_generation_increment += 1;
                 }
             }
         }
@@ -602,7 +649,7 @@ impl EnvUniversal {
             let export_changed = old_exports != new_entry.exports();
             let value_changed = existing.is_some_and(|v| v != new_entry);
             if export_changed || value_changed {
-                self.export_generation += 1;
+                export_generation_increment += 1;
             }
             if existing.is_none() || export_changed || value_changed {
                 // Value is set for the first time, or has changed.
@@ -612,11 +659,11 @@ impl EnvUniversal {
                 });
             }
         }
-        callbacks
+        (export_generation_increment, callbacks)
     }
 
     /// Copy modified values from existing vars to `vars_to_acquire`.
-    fn acquire_variables(&mut self, vars_to_acquire: &mut VarTable) {
+    fn acquire_variables(&self, vars_to_acquire: &mut VarTable) {
         for key in &self.modified {
             match self.vars.get(key) {
                 None => {

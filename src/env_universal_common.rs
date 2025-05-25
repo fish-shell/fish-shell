@@ -154,34 +154,32 @@ impl EnvUniversal {
 
     /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
-    pub fn initialize(&mut self, callbacks: &mut CallbackDataList) {
+    pub fn initialize(&mut self) -> Option<CallbackDataList> {
         // Set do_flock to false immediately if the default variable path is on a remote filesystem.
         // See #7968.
         if path_get_config_remoteness() == DirRemoteness::remote {
             self.do_flock = false;
         }
-        self.initialize_at_path(callbacks, default_vars_path());
+        self.initialize_at_path(default_vars_path())
     }
 
     /// Initialize a this uvars for a given path.
     /// This is exposed for testing only.
-    pub fn initialize_at_path(&mut self, callbacks: &mut CallbackDataList, path: WString) {
+    pub fn initialize_at_path(&mut self, path: WString) -> Option<CallbackDataList> {
         if path.is_empty() {
-            return;
+            return None;
         }
         assert!(!self.initialized(), "Already initialized");
         self.vars_path = path;
 
-        if self.load_from_path(callbacks) {
-            // Successfully loaded from our normal path.
-        }
+        self.load_from_path()
     }
 
     /// Reads and writes variables at the correct path. Returns true if modified variables were
     /// written.
-    pub fn sync(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    pub fn sync(&mut self) -> (bool, Option<CallbackDataList>) {
         if !self.initialized() {
-            return false;
+            return (false, None);
         }
 
         FLOG!(uvar_file, "universal log sync");
@@ -216,9 +214,9 @@ impl EnvUniversal {
         // with fire anyways.
         // If we have no changes, just load.
         if self.modified.is_empty() {
-            self.load_from_path_narrow(callbacks);
+            let callbacks = self.load_from_path_narrow();
             FLOG!(uvar_file, "universal log no modifications");
-            return false;
+            return (false, callbacks);
         }
 
         let directory = wdirname(&self.vars_path).to_owned();
@@ -228,16 +226,16 @@ impl EnvUniversal {
         // Open the file.
         let Some(mut vars_file) = self.open_and_acquire_lock() else {
             FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
-            return false;
+            return (false, None);
         };
 
         // Read from it.
-        self.load_from_file(&mut vars_file, callbacks);
+        let callbacks = self.load_from_file(&mut vars_file);
 
         if self.ok_to_save {
-            self.save(&directory)
+            (self.save(&directory), callbacks)
         } else {
-            true
+            (true, callbacks)
         }
     }
 
@@ -364,38 +362,38 @@ impl EnvUniversal {
         !self.vars_path.is_empty()
     }
 
-    fn load_from_path(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    fn load_from_path(&mut self) -> Option<CallbackDataList> {
         self.narrow_vars_path = wcs2zstring(&self.vars_path);
-        self.load_from_path_narrow(callbacks)
+        self.load_from_path_narrow()
     }
 
-    fn load_from_path_narrow(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    fn load_from_path_narrow(&mut self) -> Option<CallbackDataList> {
         // Check to see if the file is unchanged. We do this again in load_from_file, but this avoids
         // opening the file unnecessarily.
         if self.last_read_file_id != INVALID_FILE_ID
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
             FLOG!(uvar_file, "universal log sync elided based on fast stat()");
-            return true;
+            return None;
         }
 
         let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
         else {
-            return false;
+            return None;
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_file(&mut file, callbacks);
-        true
+        self.load_from_file(&mut file)
     }
 
     // Load environment variables from the opened [`File`] `file`. It must be mutable because we
     // will read from the underlying fd.
-    fn load_from_file(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
+    fn load_from_file(&mut self, file: &mut File) -> Option<CallbackDataList> {
         // Get the dev / inode.
         let current_file_id = file_id_for_file(file);
         if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
+            None
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
@@ -408,11 +406,12 @@ impl EnvUniversal {
             }
 
             // Announce changes and update our exports generation.
-            self.generate_callbacks_and_update_exports(&new_vars, callbacks);
+            let callbacks = self.generate_callbacks_and_update_exports(&new_vars);
 
             // Acquire the new variables.
             self.acquire_variables(new_vars);
             self.last_read_file_id = current_file_id;
+            Some(callbacks)
         }
     }
 
@@ -568,11 +567,8 @@ impl EnvUniversal {
 
     // Given a variable table, generate callbacks representing the difference between our vars and
     // the new vars. Also update our exports generation count as necessary.
-    fn generate_callbacks_and_update_exports(
-        &mut self,
-        new_vars: &VarTable,
-        callbacks: &mut CallbackDataList,
-    ) {
+    fn generate_callbacks_and_update_exports(&mut self, new_vars: &VarTable) -> CallbackDataList {
+        let mut callbacks = CallbackDataList::new();
         // Construct callbacks for erased values.
         for (key, value) in &self.vars {
             // Skip modified values.
@@ -616,6 +612,7 @@ impl EnvUniversal {
                 });
             }
         }
+        callbacks
     }
 
     // Given a variable table, copy unmodified values into self.
@@ -628,8 +625,7 @@ impl EnvUniversal {
                     vars_to_acquire.remove(key);
                 }
                 Some(src) => {
-                    // The value has been modified. Copy it over. Note we can destructively modify the
-                    // source entry in vars since we are about to get rid of this->vars entirely.
+                    // The value has been modified. Copy it over.
                     vars_to_acquire.insert(key.clone(), src.clone());
                 }
             }

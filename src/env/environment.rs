@@ -8,7 +8,6 @@ use crate::builtins::shared::{BuiltinResult, SUCCESS};
 use crate::common::{str2wcstring, unescape_string, wcs2zstring, UnescapeStringStyle};
 use crate::env::{EnvMode, EnvVar, Statuses};
 use crate::env_dispatch::{env_dispatch_init, env_dispatch_var_change};
-use crate::env_universal_common::CallbackDataList;
 use crate::event::Event;
 use crate::flog::FLOG;
 use crate::global_safety::RelaxedAtomicBool;
@@ -351,22 +350,23 @@ impl EnvStack {
         }
         UVARS_LOCALLY_MODIFIED.store(false);
 
-        let mut callbacks = CallbackDataList::new();
-        let changed = uvars().sync(&mut callbacks);
+        let (changed, callbacks) = uvars().sync();
         if changed {
             default_notifier().post_notification();
         }
         // React internally to changes to special variables like LANG, and populate on-variable events.
         let mut result = Vec::new();
-        for callback in callbacks {
-            let name = callback.key;
-            env_dispatch_var_change(&name, self);
-            let evt = if callback.val.is_none() {
-                Event::variable_erase(name)
-            } else {
-                Event::variable_set(name)
-            };
-            result.push(evt);
+        if let Some(callbacks) = callbacks {
+            for callback in callbacks {
+                let name = callback.key;
+                env_dispatch_var_change(&name, self);
+                let evt = if callback.val.is_none() {
+                    Event::variable_erase(name)
+                } else {
+                    Event::variable_set(name)
+                };
+                result.push(evt);
+            }
         }
         result
     }
@@ -792,8 +792,7 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         UVAR_SCOPE_IS_GLOBAL.store(true);
     } else {
         // Set up universal variables using the default path.
-        let mut callbacks = CallbackDataList::new();
-        uvars().initialize(&mut callbacks);
+        let callbacks = uvars().initialize().unwrap_or_default();
         for callback in callbacks {
             env_dispatch_var_change(&callback.key, vars);
         }

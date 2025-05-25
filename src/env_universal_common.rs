@@ -35,6 +35,7 @@ const O_EXLOCK: OFlag = OFlag::O_EXLOCK;
 const O_EXLOCK: OFlag = OFlag::empty();
 
 /// Callback data, reflecting a change in universal variables.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CallbackData {
     // The name of the variable.
     pub key: WString,
@@ -70,10 +71,6 @@ pub struct EnvUniversal {
     // A generation count which is incremented every time an exported variable is modified.
     export_generation: u64,
 
-    // Whether it's OK to save. This may be set to false if we discover that a future version of
-    // fish wrote the uvars contents.
-    ok_to_save: bool,
-
     // If true, attempt to flock the uvars file.
     // This latches to false if the file is found to be remote, where flock may hang.
     do_flock: bool,
@@ -91,7 +88,6 @@ impl EnvUniversal {
             vars: Default::default(),
             modified: Default::default(),
             export_generation: 1,
-            ok_to_save: true,
             do_flock: true,
             last_read_file_id: INVALID_FILE_ID,
         }
@@ -234,19 +230,9 @@ impl EnvUniversal {
                 Some((export_generation_increment, vars, callbacks)) => {
                     self.export_generation += export_generation_increment;
                     self.vars = vars;
-                    if self.ok_to_save {
-                        (self.save(&directory), Some(callbacks))
-                    } else {
-                        (true, Some(callbacks))
-                    }
+                    (self.save(&directory), Some(callbacks))
                 }
-                None => {
-                    if self.ok_to_save {
-                        (self.save(&directory), None)
-                    } else {
-                        (true, None)
-                    }
-                }
+                None => (self.save(&directory), None),
             },
             Err(e) => {
                 FLOG!(uvar_file, "universal log sync failed:", e);
@@ -362,12 +348,6 @@ impl EnvUniversal {
         contents
     }
 
-    /// Exposed for testing only.
-    #[cfg(test)]
-    pub fn is_ok_to_save(&self) -> bool {
-        self.ok_to_save
-    }
-
     /// Access the export generation.
     pub fn get_export_generation(&self) -> u64 {
         self.export_generation
@@ -434,10 +414,7 @@ impl EnvUniversal {
             let mut new_vars = VarTable::new();
             let format = Self::read_message_internal(file, &mut new_vars);
 
-            // Hacky: if the read format is in the future, avoid overwriting the file: never try to
-            // save.
             if format == UvarFormat::future {
-                self.ok_to_save = false;
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
                     "Universal variable file format is invalid.",
@@ -750,7 +727,6 @@ impl EnvUniversal {
     // Return true on success, false on failure.
     fn save(&mut self, directory: &wstr) -> bool {
         use crate::common::ScopeGuard;
-        assert!(self.ok_to_save, "It's not OK to save");
 
         // Open adjacent temporary file.
         let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");

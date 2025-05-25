@@ -1,17 +1,16 @@
 #![allow(clippy::bad_bit_mask)]
 
 use crate::common::{
-    str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags,
-    UnescapeStringStyle,
+    timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
-use crate::fallback::fish_mkstemp_cloexec;
 use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
+use crate::fs::create_temporary_file;
 use crate::path::path_get_config;
 use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wcstringutil::{join_strings, string_suffixes_string, LineIterator};
+use crate::wcstringutil::{join_strings, LineIterator};
 use crate::wutil::{
     file_id_for_file, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename,
     wstat, wunlink, FileId, INVALID_FILE_ID,
@@ -523,47 +522,7 @@ impl EnvUniversal {
         }
     }
 
-    fn open_temporary_file(
-        &mut self,
-        directory: &wstr,
-        out_path: &mut WString,
-    ) -> Result<File, Errno> {
-        // Create and open a temporary file for writing within the given directory. Try to create a
-        // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
-        // This should almost always succeed on the first try.
-        assert!(!string_suffixes_string(L!("/"), directory));
-
-        let mut attempt = 0;
-        let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
-        let result = loop {
-            attempt += 1;
-            let result = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
-            match (result, attempt) {
-                (Ok(r), _) => break r,
-                (Err(e), 10) => {
-                    FLOG!(
-                        error,
-                        // We previously used to log a copy of the buffer we expected mk(o)stemp to
-                        // update with the new path, but mkstemp(3) says the contents of the buffer
-                        // are undefined in case of EEXIST, but left unchanged in case of EINVAL. So
-                        // just log the original template we pass in to the function instead.
-                        wgettext_fmt!(
-                            "Unable to create temporary file '%ls': %s",
-                            &tmp_name_template,
-                            e.to_string()
-                        )
-                    );
-                    return Err(e);
-                }
-                _ => continue,
-            }
-        };
-
-        *out_path = str2wcstring(result.1.as_bytes());
-        Ok(result.0)
-    }
-
-    /// Writes our state to the fd. path is provided only for error reporting.
+    /// Writes our state to the [`file`](`File`). path is provided only for error reporting.
     fn write_to_file(&mut self, file: &mut File, path: &wstr) -> std::io::Result<()> {
         let contents = Self::serialize_with_vars(&self.vars);
 
@@ -795,10 +754,14 @@ impl EnvUniversal {
         assert!(self.ok_to_save, "It's not OK to save");
 
         // Open adjacent temporary file.
-        let mut private_file_path = WString::new();
-        let Ok(mut private_file) = self.open_temporary_file(directory, &mut private_file_path)
-        else {
-            return false;
+        let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
+        let (mut private_file, private_file_path) = match create_temporary_file(&tmp_name_template)
+        {
+            Ok(tmp_file_data) => tmp_file_data,
+            Err(e) => {
+                FLOG!(warning, "Could not create temporary file:", e);
+                return false;
+            }
         };
         // unlink pfp upon failure. In case of success, it (already) won't exist.
         let delete_pfp = ScopeGuard::new(private_file_path, |path| {

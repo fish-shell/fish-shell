@@ -24,7 +24,7 @@
 //! considered preferable to hanging the the shell waiting for a lock.
 
 use crate::{
-    common::cstr2wcstring, env::EnvVar, wcstringutil::trim,
+    common::cstr2wcstring, env::EnvVar, fs::create_temporary_file, wcstringutil::trim,
     wutil::fileid::file_id_for_path_or_error,
 };
 use std::{
@@ -49,13 +49,9 @@ use rand::Rng;
 
 use crate::{
     ast::{self, Kind, Node},
-    common::{
-        str2wcstring, unescape_string, valid_var_name, wcs2zstring, CancelChecker,
-        UnescapeStringStyle,
-    },
+    common::{str2wcstring, unescape_string, valid_var_name, CancelChecker, UnescapeStringStyle},
     env::{EnvMode, EnvStack, Environment},
     expand::{expand_one, ExpandFlags},
-    fallback::fish_mkstemp_cloexec,
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
     global_safety::RelaxedAtomicBool,
@@ -684,7 +680,7 @@ impl HistoryImpl {
             wrealpath(&possibly_indirect_target_name).unwrap_or(possibly_indirect_target_name);
 
         // Make our temporary file
-        let Some((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
+        let Ok((mut tmp_file, tmp_name)) = create_temporary_file(&tmp_name_template) else {
             return;
         };
         let mut done = false;
@@ -1391,17 +1387,6 @@ impl HistoryImpl {
     unsafe fn unlock_file(file: &mut File) {
         libc::flock(file.as_raw_fd(), LOCK_UN);
     }
-}
-
-// Returns the fd of an opened temporary file, or None on failure.
-fn create_temporary_file(name_template: &wstr) -> Option<(File, WString)> {
-    for _attempt in 0..10 {
-        let narrow_str = wcs2zstring(name_template);
-        if let Ok((fd, narrow_str)) = fish_mkstemp_cloexec(narrow_str) {
-            return Some((fd, str2wcstring(narrow_str.to_bytes())));
-        }
-    }
-    None
 }
 
 fn string_could_be_path(potential_path: &wstr) -> bool {

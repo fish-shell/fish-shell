@@ -224,13 +224,13 @@ impl EnvUniversal {
         FLOG!(uvar_file, "universal log performing full sync");
 
         // Open the file.
-        let Some(mut vars_file) = self.open_and_acquire_lock() else {
+        let Some(vars_file) = self.open_and_acquire_lock() else {
             FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
             return (false, None);
         };
 
         // Read from it.
-        let callbacks = self.load_from_file(&mut vars_file);
+        let callbacks = self.load_from_file(&vars_file);
 
         if self.ok_to_save {
             (self.save(&directory), callbacks)
@@ -377,18 +377,16 @@ impl EnvUniversal {
             return None;
         }
 
-        let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
-        else {
+        let Ok(file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty()) else {
             return None;
         };
 
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_file(&mut file)
+        self.load_from_file(&file)
     }
 
-    // Load environment variables from the opened [`File`] `file`. It must be mutable because we
-    // will read from the underlying fd.
-    fn load_from_file(&mut self, file: &mut File) -> Option<CallbackDataList> {
+    /// Load environment variables from the opened [`file`](`File`).
+    fn load_from_file(&mut self, file: &File) -> Option<CallbackDataList> {
         // Get the dev / inode.
         let current_file_id = file_id_for_file(file);
         if current_file_id == self.last_read_file_id {

@@ -407,7 +407,9 @@ impl EnvUniversal {
             let callbacks = self.generate_callbacks_and_update_exports(&new_vars);
 
             // Acquire the new variables.
-            self.acquire_variables(new_vars);
+            self.acquire_variables(&mut new_vars);
+            // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
+            self.vars = new_vars;
             self.last_read_file_id = current_file_id;
             Some(callbacks)
         }
@@ -613,9 +615,8 @@ impl EnvUniversal {
         callbacks
     }
 
-    // Given a variable table, copy unmodified values into self.
-    fn acquire_variables(&mut self, mut vars_to_acquire: VarTable) {
-        // Copy modified values from existing vars to vars_to_acquire.
+    /// Copy modified values from existing vars to `vars_to_acquire`.
+    fn acquire_variables(&mut self, vars_to_acquire: &mut VarTable) {
         for key in &self.modified {
             match self.vars.get(key) {
                 None => {
@@ -628,9 +629,6 @@ impl EnvUniversal {
                 }
             }
         }
-
-        // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-        self.vars = vars_to_acquire;
     }
 
     fn populate_1_variable(

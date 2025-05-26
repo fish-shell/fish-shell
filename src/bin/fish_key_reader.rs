@@ -23,7 +23,7 @@ use fish::{
         match_key_event_to_key, terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent,
         InputEventQueue, InputEventQueuer, KeyEvent,
     },
-    key::{char_to_symbol, Key, Modifiers},
+    key::{char_to_symbol, Key},
     panic::panic_handler,
     print_help::print_help,
     printf,
@@ -114,33 +114,22 @@ fn process_input(continuous_mode: bool, verbose: bool) -> i32 {
             }
             printf!("\n");
         }
-        let print_bind_example = |key: &Key, recommended: bool| {
-            printf!(
-                "bind %s 'do something'%s\n",
-                key,
-                if recommended {
-                    " # recommended notation"
-                } else {
-                    ""
-                }
-            );
-        };
         let have_shifted_key = kevt.key.shifted_codepoint != '\0';
-        // If we have shift + some other modifier, the lowercase version is the canonical one.
-        let prefer_explicit_shift = kevt.key.modifiers.shift
-            && kevt.key.modifiers != Modifiers::SHIFT
-            && kevt
-                .key
-                .shifted_codepoint
-                .to_lowercase()
-                .eq(Some(kevt.key.codepoint).into_iter());
+        let mut keys = vec![(kevt.key.key, "")];
         if have_shifted_key {
             let mut shifted_key = kevt.key.key;
             shifted_key.modifiers.shift = false;
             shifted_key.codepoint = kevt.key.shifted_codepoint;
-            print_bind_example(&shifted_key, !prefer_explicit_shift);
+            keys.push((shifted_key, "shifted key"));
         }
-        print_bind_example(&kevt.key, have_shifted_key && prefer_explicit_shift);
+        for (key, explanation) in keys {
+            printf!(
+                "bind %s 'do something'%s%s\n",
+                key,
+                if explanation.is_empty() { "" } else { " # " },
+                explanation,
+            );
+        }
         if let Some(name) = sequence_name(&mut recent_chars1, c) {
             printf!("bind -k %ls 'do something'\n", name);
         }

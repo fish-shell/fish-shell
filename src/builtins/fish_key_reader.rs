@@ -23,7 +23,7 @@ use crate::{
         match_key_event_to_key, terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent,
         InputEventQueue, InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
     },
-    key::{char_to_symbol, Key, Modifiers},
+    key::{char_to_symbol, Key},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
@@ -109,32 +109,21 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             }
             streams.out.append(L!("\n"));
         }
-        let mut print_bind_example = |key: &Key, recommended: bool| {
-            streams.out.append(sprintf!(
-                "bind %s 'do something'%s\n",
-                key,
-                if recommended {
-                    " # recommended notation"
-                } else {
-                    ""
-                }
-            ));
-        };
         let have_shifted_key = kevt.key.shifted_codepoint != '\0';
-        // If we have shift + some other modifier, the lowercase version is the canonical one.
-        let prefer_explicit_shift = kevt.key.modifiers.shift
-            && kevt.key.modifiers != Modifiers::SHIFT
-            && kevt
-                .key
-                .shifted_codepoint
-                .to_lowercase()
-                .eq(Some(kevt.key.codepoint).into_iter());
-        print_bind_example(&kevt.key, have_shifted_key && prefer_explicit_shift);
+        let mut keys = vec![(kevt.key.key, "")];
         if have_shifted_key {
             let mut shifted_key = kevt.key.key;
             shifted_key.modifiers.shift = false;
             shifted_key.codepoint = kevt.key.shifted_codepoint;
-            print_bind_example(&shifted_key, !prefer_explicit_shift);
+            keys.push((shifted_key, "shifted key"));
+        }
+        for (key, explanation) in keys {
+            streams.out.append(sprintf!(
+                "bind %s 'do something'%s%s\n",
+                key,
+                if explanation.is_empty() { "" } else { " # " },
+                explanation,
+            ));
         }
 
         if continuous_mode && should_exit(streams, &mut recent_chars, kevt.key) {

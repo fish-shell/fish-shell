@@ -129,13 +129,13 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
                 .shifted_codepoint
                 .to_lowercase()
                 .eq(Some(kevt.key.codepoint).into_iter());
+        print_bind_example(&kevt.key, have_shifted_key && prefer_explicit_shift);
         if have_shifted_key {
             let mut shifted_key = kevt.key.key;
             shifted_key.modifiers.shift = false;
             shifted_key.codepoint = kevt.key.shifted_codepoint;
             print_bind_example(&shifted_key, !prefer_explicit_shift);
         }
-        print_bind_example(&kevt.key, have_shifted_key && prefer_explicit_shift);
 
         if continuous_mode && should_exit(streams, &mut recent_chars, kevt.key) {
             streams.err.appendln("\nExiting at your request.");

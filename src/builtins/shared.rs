@@ -26,10 +26,8 @@ pub const DEFAULT_READ_PROMPT: &wstr =
 pub const BUILTIN_ERR_MISSING: &str = "%ls: %ls: option requires an argument\n";
 
 /// Error message on missing man page.
-pub const BUILTIN_ERR_MISSING_HELP: &str = concat!(
-    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will ",
-    "show an online version\n"
-);
+pub const BUILTIN_ERR_MISSING_HELP: &str =
+    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n";
 
 /// Error message on multiple scope levels for variables.
 pub const BUILTIN_ERR_GLOCAL: &str =

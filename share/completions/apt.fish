@@ -6,8 +6,8 @@ if [ "$(uname -s)" = Darwin -a "$(command -s apt)" = /usr/bin/apt ]
     exit 1
 end
 
-set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove depends rdepends
-set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends autoremove
+set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove autopurge depends rdepends
+set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends autoremove autopurge
 set -l installed_pkg_subcmds remove
 set -l handle_file_pkg_subcmds install
 
@@ -114,7 +114,7 @@ __fish_apt_subcommand changelog -r -d 'Download and display package changelog'
 # Autoremove
 __fish_apt_subcommand autoremove -d 'Remove packages no longer needed as dependencies'
 
-# Autoremove
+# Autopurge
 __fish_apt_subcommand autopurge -d 'Remove packages no longer needed as dependencies and delete their config files'
 
 # Clean

@@ -278,10 +278,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_NOT_EXECUTABLE,
                         &statement.command,
-                        concat!(
-                            "Unknown command. A component of '%ls' is not a ",
-                            "directory. Check your $PATH."
-                        ),
+                        "Unknown command. A component of '%ls' is not a directory. Check your $PATH.",
                         cmd
                     );
                 } else {

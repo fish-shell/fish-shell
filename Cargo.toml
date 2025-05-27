@@ -1,11 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["printf"]
+members = ["printf", "gettext-extraction"]
 
 [workspace.package]
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.70"
 edition = "2021"
+repository = "https://github.com/fish-shell/fish-shell"
 
 [profile.release]
 overflow-checks = true
@@ -24,7 +25,6 @@ default-run = "fish"
 # see doc_src/license.rst for details
 # don't forget to update COPYING and debian/copyright too
 license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
-repository = "https://github.com/fish-shell/fish-shell"
 homepage = "https://fishshell.com"
 readme = "README.rst"
 
@@ -49,6 +49,7 @@ nix = { version = "0.30.1", default-features = false, features = [
 num-traits = "0.2.19"
 once_cell = "1.19.0"
 fish-printf = { path = "./printf", features = ["widestring"] }
+fish-gettext-extraction = { path = "./gettext-extraction" }
 
 # Don't use the "getrandom" feature as it requires "getentropy" which was not
 # available on macOS < 10.12. We can enable "getrandom" when we raise the

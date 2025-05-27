@@ -20,7 +20,9 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
-pub use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
+pub use gettext::{
+    localizable_consts, localizable_string, wgettext, wgettext_fmt, LocalizableString,
+};
 use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};

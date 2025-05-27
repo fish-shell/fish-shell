@@ -3,6 +3,7 @@
 # Tool to generate gettext messages template file.
 # Writes to stdout.
 
+
 begin
     # Write header. This is required by msguniq.
     # Note that this results in the file being overwritten.
@@ -15,45 +16,17 @@ begin
         echo ""
     end
 
-    set -l cargo_expanded_file (mktemp)
-    # This is a gigantic crime.
-    # We use cargo-expand to get all our wgettext invocations.
-    # This might be replaced once we have a tool which properly handles macro expansions.
-    begin
-        cargo expand --lib
-        for f in fish fish_indent fish_key_reader
-            cargo expand --bin $f
-        end
-    end >$cargo_expanded_file
+    set -l rust_extraction_file (mktemp)
 
-    set -l rust_string_file (mktemp)
+    # We need to build to ensure that the proc macro for extracting strings runs.
+    FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check
+    or exit 1
 
-    # Extract any gettext call
-    grep -A1 wgettext_static_str <$cargo_expanded_file |
-        grep 'widestring::internals::core::primitive::str =' |
-        string match -rg '"(.*)"' |
-        string match -rv '^%ls$|^$' |
-        # escaping difference between gettext and cargo-expand: single-quotes
-        string replace -a "\'" "'" >$rust_string_file
+    # Get rid of duplicates and sort.
+    msguniq --no-wrap --strict --sort-output $rust_extraction_file
+    or exit 1
 
-    # Extract any constants
-    grep -Ev 'BUILD_VERSION:|PACKAGE_NAME' <$cargo_expanded_file |
-        grep -E 'const [A-Z_]*: &str = "(.*)"' |
-        sed -E -e 's/^.*const [A-Z_]*: &str = "(.*)".*$/\1/' -e "s_\\\'_'_g" >>$rust_string_file
-
-    rm $cargo_expanded_file
-
-    # Sort the extracted strings and remove duplicates.
-    # Then, transform them into the po format.
-    # If a string contains a '%' it is considered a format string and marked with a '#, c-format'.
-    # This allows msgfmt to identify issues with translations whose format string does not match the
-    # original.
-    sort -u $rust_string_file |
-        sed -E -e '/%/ i\
-#, c-format
-' -e 's/^(.*)$/msgid "\1"\nmsgstr ""\n/'
-
-    rm $rust_string_file
+    rm $rust_extraction_file
 
     function extract_fish_script_messages --argument-names regex
 

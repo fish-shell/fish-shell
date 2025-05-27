@@ -32,11 +32,8 @@ jobs:
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests
-    - uses: dtolnay/rust-toolchain@stable
     - name: translation updates
       run: |
-        # Required for our custom xgettext implementation.
-        cargo install --locked --version 1.0.106 cargo-expand
         # Generate PO files. This should not result it a change in the repo if all translations are
         # up to date.
         # Ensure that fish is available as an executable.

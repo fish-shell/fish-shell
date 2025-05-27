@@ -361,7 +361,7 @@ macro_rules! append_syntax_error {
             error.source_start = $source_start;
             error.source_length = 0;
             error.code = ParseErrorCode::syntax;
-            error.text = wgettext_maybe_fmt!($fmt $(, $arg)*);
+            error.text = wgettext_fmt!($fmt $(, $arg)*);
             errors.push(error);
         }
     }
@@ -377,7 +377,7 @@ macro_rules! append_cmdsub_error {
     ) => {
         append_cmdsub_error_formatted!(
             $errors, $source_start, $source_end,
-            wgettext_maybe_fmt!($fmt $(, $arg)*));
+            wgettext_fmt!($fmt $(, $arg)*));
     }
 }
 

@@ -22,56 +22,84 @@ pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult
 pub const DEFAULT_READ_PROMPT: &wstr =
     L!("set_color green; echo -n read; set_color normal; echo -n \"> \"");
 
-/// Error message on missing argument.
-pub const BUILTIN_ERR_MISSING: &str = "%ls: %ls: option requires an argument\n";
+localizable_consts!(
+    /// Error message on missing argument.
+    pub BUILTIN_ERR_MISSING
+    "%ls: %ls: option requires an argument\n"
 
-/// Error message on missing man page.
-pub const BUILTIN_ERR_MISSING_HELP: &str =
-    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n";
+    /// Error message on missing man page.
+    pub BUILTIN_ERR_MISSING_HELP
+    "fish: %ls: missing man page\nDocumentation may not be installed.\n`help %ls` will show an online version\n"
 
-/// Error message on multiple scope levels for variables.
-pub const BUILTIN_ERR_GLOCAL: &str =
-    "%ls: scope can be only one of: universal function global local\n";
+    /// Error message on multiple scope levels for variables.
+    pub BUILTIN_ERR_GLOCAL
+    "%ls: scope can be only one of: universal function global local\n"
 
-/// Error message for specifying both export and unexport to set/read.
-pub const BUILTIN_ERR_EXPUNEXP: &str = "%ls: cannot both export and unexport\n";
+    /// Error message for specifying both export and unexport to set/read.
+    pub BUILTIN_ERR_EXPUNEXP
+    "%ls: cannot both export and unexport\n"
 
-/// Error message for specifying both path and unpath to set/read.
-pub const BUILTIN_ERR_PATHUNPATH: &str = "%ls: cannot both path and unpath\n";
+    /// Error message for specifying both path and unpath to set/read.
+    pub BUILTIN_ERR_PATHUNPATH
+    "%ls: cannot both path and unpath\n"
 
-/// Error message for unknown switch.
-pub const BUILTIN_ERR_UNKNOWN: &str = "%ls: %ls: unknown option\n";
+    /// Error message for unknown switch.
+    pub BUILTIN_ERR_UNKNOWN
+    "%ls: %ls: unknown option\n"
 
-/// Error message for invalid bind mode name.
-pub const BUILTIN_ERR_BIND_MODE: &str = "%ls: %ls: invalid mode name. See `help identifiers`\n";
+    /// Error message for invalid bind mode name.
+    pub BUILTIN_ERR_BIND_MODE
+    "%ls: %ls: invalid mode name. See `help identifiers`\n"
 
-/// Error message when too many arguments are supplied to a builtin.
-pub const BUILTIN_ERR_TOO_MANY_ARGUMENTS: &str = "%ls: too many arguments\n";
+    /// Error message when too many arguments are supplied to a builtin.
+    pub BUILTIN_ERR_TOO_MANY_ARGUMENTS
+    "%ls: too many arguments\n"
 
-/// Error message when integer expected
-pub const BUILTIN_ERR_NOT_NUMBER: &str = "%ls: %ls: invalid integer\n";
+    /// Error message when integer expected
+    pub BUILTIN_ERR_NOT_NUMBER
+    "%ls: %ls: invalid integer\n"
 
-/// Command that requires a subcommand was invoked without a recognized subcommand.
-pub const BUILTIN_ERR_MISSING_SUBCMD: &str = "%ls: missing subcommand\n";
-pub const BUILTIN_ERR_INVALID_SUBCMD: &str = "%ls: %ls: invalid subcommand\n";
+    /// Command that requires a subcommand was invoked without a recognized subcommand.
+    pub BUILTIN_ERR_MISSING_SUBCMD
+    "%ls: missing subcommand\n"
 
-/// Error messages for unexpected args.
-pub const BUILTIN_ERR_ARG_COUNT0: &str = "%ls: missing argument\n";
-pub const BUILTIN_ERR_ARG_COUNT1: &str = "%ls: expected %d arguments; got %d\n";
-pub const BUILTIN_ERR_ARG_COUNT2: &str = "%ls: %ls: expected %d arguments; got %d\n";
-pub const BUILTIN_ERR_MIN_ARG_COUNT1: &str = "%ls: expected >= %d arguments; got %d\n";
-pub const BUILTIN_ERR_MAX_ARG_COUNT1: &str = "%ls: expected <= %d arguments; got %d\n";
+    pub BUILTIN_ERR_INVALID_SUBCMD
+    "%ls: %ls: invalid subcommand\n"
 
-/// Error message for invalid variable name.
-pub const BUILTIN_ERR_VARNAME: &str = "%ls: %ls: invalid variable name. See `help identifiers`\n";
+    /// Error messages for unexpected args.
+    pub BUILTIN_ERR_ARG_COUNT0
+    "%ls: missing argument\n"
 
-/// Error message on invalid combination of options.
-pub const BUILTIN_ERR_COMBO: &str = "%ls: invalid option combination\n";
-pub const BUILTIN_ERR_COMBO2: &str = "%ls: invalid option combination, %ls\n";
-pub const BUILTIN_ERR_COMBO2_EXCLUSIVE: &str = "%ls: %ls %ls: options cannot be used together\n";
+    pub BUILTIN_ERR_ARG_COUNT1
+    "%ls: expected %d arguments; got %d\n"
 
-/// The send stuff to foreground message.
-pub const FG_MSG: &str = "Send job %d (%ls) to foreground\n";
+    pub BUILTIN_ERR_ARG_COUNT2
+    "%ls: %ls: expected %d arguments; got %d\n"
+
+    pub BUILTIN_ERR_MIN_ARG_COUNT1
+    "%ls: expected >= %d arguments; got %d\n"
+
+    pub BUILTIN_ERR_MAX_ARG_COUNT1
+    "%ls: expected <= %d arguments; got %d\n"
+
+    /// Error message for invalid variable name.
+    pub BUILTIN_ERR_VARNAME
+    "%ls: %ls: invalid variable name. See `help identifiers`\n"
+
+    /// Error message on invalid combination of options.
+    pub BUILTIN_ERR_COMBO
+    "%ls: invalid option combination\n"
+
+    pub BUILTIN_ERR_COMBO2
+    "%ls: invalid option combination, %ls\n"
+
+    pub BUILTIN_ERR_COMBO2_EXCLUSIVE
+    "%ls: %ls %ls: options cannot be used together\n"
+
+    /// The send stuff to foreground message.
+    pub FG_MSG
+    "Send job %d (%ls) to foreground\n"
+);
 
 // Return values (`$status` values for fish scripts) for various situations.
 
@@ -1007,7 +1035,9 @@ fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]
 
 fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     for arg in &argv[1..] {
-        streams.out.append(wgettext_str(arg));
+        streams.out.append(
+            crate::wutil::LocalizableString::from_external_source((*arg).to_owned()).localize(),
+        );
     }
     Ok(SUCCESS)
 }

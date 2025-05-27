@@ -461,70 +461,86 @@ pub const FISH_MAX_EVAL_DEPTH: isize = 250;
 #[cfg(not(feature = "tsan"))]
 pub const FISH_MAX_EVAL_DEPTH: isize = 500;
 
-/// Error message on a function that calls itself immediately.
-pub const INFINITE_FUNC_RECURSION_ERR_MSG: &str =
-    "The function '%ls' calls itself immediately, which would result in an infinite loop.";
+localizable_consts!(
+    /// Error message on a function that calls itself immediately.
+    pub INFINITE_FUNC_RECURSION_ERR_MSG
+    "The function '%ls' calls itself immediately, which would result in an infinite loop."
 
-/// Error message on reaching maximum call stack depth.
-pub const CALL_STACK_LIMIT_EXCEEDED_ERR_MSG: &str =
-    "The call stack limit has been exceeded. Do you have an accidental infinite loop?";
+    /// Error message on reaching maximum call stack depth.
+    pub CALL_STACK_LIMIT_EXCEEDED_ERR_MSG
+    "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 
-/// Error message when encountering an unknown builtin name.
-pub const UNKNOWN_BUILTIN_ERR_MSG: &str = "Unknown builtin '%ls'";
+    /// Error message when encountering an unknown builtin name.
+    pub UNKNOWN_BUILTIN_ERR_MSG
+    "Unknown builtin '%ls'"
 
-/// Error message when encountering a failed expansion, e.g. for the variable name in for loops.
-pub const FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG: &str = "Unable to expand variable name '%ls'";
+    /// Error message when encountering a failed expansion, e.g. for the variable name in for loops.
+    pub FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG
+    "Unable to expand variable name '%ls'"
 
-/// Error message when encountering an illegal file descriptor.
-pub const ILLEGAL_FD_ERR_MSG: &str = "Illegal file descriptor in redirection '%ls'";
+    /// Error message when encountering an illegal file descriptor.
+    pub ILLEGAL_FD_ERR_MSG
+    "Illegal file descriptor in redirection '%ls'"
 
-/// Error message for wildcards with no matches.
-pub const WILDCARD_ERR_MSG: &str = "No matches for wildcard '%ls'. See `help wildcards-globbing`.";
+    /// Error message for wildcards with no matches.
+    pub WILDCARD_ERR_MSG
+    "No matches for wildcard '%ls'. See `help wildcards-globbing`."
 
-/// Error when using break outside of loop.
-pub const INVALID_BREAK_ERR_MSG: &str = "'break' while not inside of loop";
+    /// Error when using break outside of loop.
+    pub INVALID_BREAK_ERR_MSG
+    "'break' while not inside of loop"
 
-/// Error when using continue outside of loop.
-pub const INVALID_CONTINUE_ERR_MSG: &str = "'continue' while not inside of loop";
+    /// Error when using continue outside of loop.
+    pub INVALID_CONTINUE_ERR_MSG
+    "'continue' while not inside of loop"
 
-/// Error message when a command may not be in a pipeline.
-pub const INVALID_PIPELINE_CMD_ERR_MSG: &str = "The '%ls' command can not be used in a pipeline";
+    /// Error message when a command may not be in a pipeline.
+    pub INVALID_PIPELINE_CMD_ERR_MSG
+    "The '%ls' command can not be used in a pipeline"
 
-// Error messages. The number is a reminder of how many format specifiers are contained.
+    // Error messages. The number is a reminder of how many format specifiers are contained.
 
-/// Error for $^.
-pub const ERROR_BAD_VAR_CHAR1: &str = "$%lc is not a valid variable in fish.";
+    /// Error for $^.
+    pub ERROR_BAD_VAR_CHAR1
+    "$%lc is not a valid variable in fish."
 
-/// Error for ${a}.
-pub const ERROR_BRACKETED_VARIABLE1: &str =
-    "Variables cannot be bracketed. In fish, please use {$%ls}.";
+    /// Error for ${a}.
+    pub ERROR_BRACKETED_VARIABLE1
+    "Variables cannot be bracketed. In fish, please use {$%ls}."
 
-/// Error for "${a}".
-pub const ERROR_BRACKETED_VARIABLE_QUOTED1: &str =
-    "Variables cannot be bracketed. In fish, please use \"$%ls\".";
+    /// Error for "${a}".
+    pub ERROR_BRACKETED_VARIABLE_QUOTED1
+    "Variables cannot be bracketed. In fish, please use \"$%ls\"."
 
-/// Error issued on $?.
-pub const ERROR_NOT_STATUS: &str = "$? is not the exit status. In fish, please use $status.";
+    /// Error issued on $?.
+    pub ERROR_NOT_STATUS
+    "$? is not the exit status. In fish, please use $status."
 
-/// Error issued on $$.
-pub const ERROR_NOT_PID: &str = "$$ is not the pid. In fish, please use $fish_pid.";
+    /// Error issued on $$.
+    pub ERROR_NOT_PID
+    "$$ is not the pid. In fish, please use $fish_pid."
 
-/// Error issued on $#.
-pub const ERROR_NOT_ARGV_COUNT: &str = "$# is not supported. In fish, please use 'count $argv'.";
+    /// Error issued on $#.
+    pub ERROR_NOT_ARGV_COUNT
+    "$# is not supported. In fish, please use 'count $argv'."
 
-/// Error issued on $@.
-pub const ERROR_NOT_ARGV_AT: &str = "$@ is not supported. In fish, please use $argv.";
+    /// Error issued on $@.
+    pub ERROR_NOT_ARGV_AT
+    "$@ is not supported. In fish, please use $argv."
 
-/// Error issued on $*.
-pub const ERROR_NOT_ARGV_STAR: &str = "$* is not supported. In fish, please use $argv.";
+    /// Error issued on $*.
+    pub ERROR_NOT_ARGV_STAR
+    "$* is not supported. In fish, please use $argv."
 
-/// Error issued on $.
-pub const ERROR_NO_VAR_NAME: &str = "Expected a variable name after this $.";
+    /// Error issued on $.
+    pub ERROR_NO_VAR_NAME
+    "Expected a variable name after this $."
 
-/// Error message for Posix-style assignment: foo=bar.
-pub const ERROR_BAD_COMMAND_ASSIGN_ERR_MSG: &str =
-    "Unsupported use of '='. In fish, please use 'set %ls %ls'.";
+    /// Error message for Posix-style assignment: foo=bar.
+    pub ERROR_BAD_COMMAND_ASSIGN_ERR_MSG
+    "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 
-/// Error message for a command like `time foo &`.
-pub const ERROR_TIME_BACKGROUND: &str =
-    "'time' is not supported for background jobs. Consider using 'command time'.";
+    /// Error message for a command like `time foo &`.
+    pub ERROR_TIME_BACKGROUND
+    "'time' is not supported for background jobs. Consider using 'command time'."
+);

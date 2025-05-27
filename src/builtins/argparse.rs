@@ -8,7 +8,10 @@ use crate::wutil::fish_iswalnum;
 
 const VAR_NAME_PREFIX: &wstr = L!("_flag_");
 
-const BUILTIN_ERR_INVALID_OPT_SPEC: &str = "%ls: Invalid option spec '%ls' at char '%lc'\n";
+localizable_consts!(
+    BUILTIN_ERR_INVALID_OPT_SPEC
+    "%ls: Invalid option spec '%ls' at char '%lc'\n"
+);
 
 #[derive(PartialEq)]
 enum ArgCardinality {

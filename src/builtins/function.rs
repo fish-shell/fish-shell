@@ -354,7 +354,7 @@ pub fn function(
     let props = function::FunctionProperties {
         func_node,
         named_arguments: opts.named_arguments,
-        description: opts.description,
+        description: LocalizableString::from_external_source(opts.description),
         inherit_vars: inherit_vars.into_boxed_slice(),
         shadow_scope: opts.shadow_scope,
         is_autoload: RelaxedAtomicBool::new(false),

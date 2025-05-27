@@ -44,10 +44,9 @@ use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
-use crate::wutil::{wgettext, wgettext_fmt};
 use errno::{errno, set_errno};
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,

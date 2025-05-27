@@ -79,8 +79,11 @@ const PAGER_MAX_COLS: usize = 6;
 /// Width of the search field.
 const PAGER_SEARCH_FIELD_WIDTH: usize = 12;
 
-/// Text we use for the search field.
-const SEARCH_FIELD_PROMPT: &str = "search: ";
+localizable_consts!(
+    /// Text we use for the search field.
+    SEARCH_FIELD_PROMPT
+    "search: "
+);
 
 const PAGER_SELECTION_NONE: usize = usize::MAX;
 

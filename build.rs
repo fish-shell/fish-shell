@@ -63,6 +63,8 @@ fn main() {
     #[cfg(not(debug_assertions))]
     rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
 
+    rsconf::rebuild_if_env_changed("GETTEXT_EXTRACTION_DIR");
+
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)

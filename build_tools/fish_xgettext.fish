@@ -3,6 +3,7 @@
 # Tool to generate gettext messages template file.
 # Writes to stdout.
 
+
 begin
     # Write header. This is required by msguniq.
     # Note that this results in the file being overwritten.
@@ -15,45 +16,65 @@ begin
         echo ""
     end
 
-    set -l cargo_expanded_file (mktemp)
-    # This is a gigantic crime.
-    # We use cargo-expand to get all our wgettext invocations.
-    # This might be replaced once we have a tool which properly handles macro expansions.
-    begin
-        cargo expand --lib
-        for f in fish fish_indent fish_key_reader
-            cargo expand --bin $f
-        end
-    end >$cargo_expanded_file
+    set extraction_dir (mktemp -d)
 
-    set -l rust_string_file (mktemp)
+    # We need to build to ensure that the proc macro for extracting strings runs.
+    GETTEXT_EXTRACTION_DIR=$extraction_dir cargo build
 
-    # Extract any gettext call
-    grep -A1 wgettext_static_str <$cargo_expanded_file |
-        grep 'widestring::internals::core::primitive::str =' |
-        string match -rg '"(.*)"' |
-        string match -rv '^%ls$|^$' |
-        # escaping difference between gettext and cargo-expand: single-quotes
-        string replace -a "\'" "'" >$rust_string_file
+    set -l rust_string_file $extraction_dir/literals
 
-    # Extract any constants
-    grep -Ev 'BUILD_VERSION:|PACKAGE_NAME' <$cargo_expanded_file |
-        grep -E 'const [A-Z_]*: &str = "(.*)"' |
-        sed -E -e 's/^.*const [A-Z_]*: &str = "(.*)".*$/\1/' -e "s_\\\'_'_g" >>$rust_string_file
+    # Extract constants which get passed to gettext
+    #
+    # The input file contains the name of one constant per line.
+    # Each of these constants is passed to gettext, so we want to extract the corresponding string.
+    # This is not possible in a proc macro, because such a macro just sees the name of the constant,
+    # without having a way to get the corresponding literal.
+    # Therefore, it writes the names of these constants to a file,
+    # and we use these names to extract the corresponding literals from the source files using find+sed.
 
-    rm $cargo_expanded_file
+    # We create a pattern which matches all of our constant names.
+    # This is done by joining the lines of the source file with '|', to create regex alternatives.
+    set -l consts (string join '|' <$extraction_dir/consts)
+    # This is used to identify the first line of constant definitions spanning two lines.
+    set -l const_pattern_first_line '^.*const ('$consts'): &str ='
+    # The pattern for identifying constant definitions.
+    # The first group is required to enclose the '|' separated constant names.
+    # The second group is for the string literal we want to extract.
+    set -l const_pattern $const_pattern_first_line'\s*(".*");$'
+
+    # This is the directory we want to search in.
+    # At the time of writing, gettext calls are only present in this directory.
+    # If gettext calls are added in sub-crates, this needs to be modified.
+    set -l src_dir (status dirname)/../src
+
+    # `find` is used to pass the paths of all relevant files to sed.
+    # `sed` is used to find the definitions of the constants and to extract the string literals.
+    # Explanation of the sed command:
+    # 1. sed is line-based, which is a problem if there is a line break after the '=' in the
+    #    definition. (Line breaks at other locations are not handled and would break this.)
+    #    Therefore, if we find a constant definition whose line ends on '=', we add the next line to
+    #    the pattern space. This line should contain the string literal.
+    #    This leaves us with a pattern space containing the entire constant definition.
+    # 2. With the pattern space prepared, we check if it matches our constant definition pattern.
+    #    The remaining commands are only executed if we find a match.
+    # 3. If this step is reached, we have found a pattern definition,
+    #    so extract the string literal and print it.
+    find $src_dir -type f -name '*.rs' -exec sed -nE -e '/'$const_pattern_first_line'$/N; /'$const_pattern'/ { s/'$const_pattern'/\2/; p }' {} '+' >>$rust_string_file
 
     # Sort the extracted strings and remove duplicates.
-    # Then, transform them into the po format.
+    # Double quotes are removed for sorting, because they can result in a string being placed before
+    # a proper prefix of that string.
+    # Once sorted, transform the strings into the po format.
     # If a string contains a '%' it is considered a format string and marked with a '#, c-format'.
     # This allows msgfmt to identify issues with translations whose format string does not match the
     # original.
-    sort -u $rust_string_file |
+    sed -E 's/^"(.*)"$/\1/' $rust_string_file |
+        sort -u  |
         sed -E -e '/%/ i\
 #, c-format
 ' -e 's/^(.*)$/msgid "\1"\nmsgstr ""\n/'
 
-    rm $rust_string_file
+    rm -r $extraction_dir
 
     function extract_fish_script_messages --argument-names regex
 

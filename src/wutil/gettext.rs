@@ -138,7 +138,9 @@ pub fn wgettext_str(s: &wstr) -> &'static wstr {
 #[macro_export]
 macro_rules! wgettext {
     ($string:expr) => {
-        $crate::wutil::gettext::wgettext_static_str(widestring::utf32str!($string))
+        $crate::wutil::gettext::wgettext_static_str(widestring::utf32str!(
+            fish_gettext_extraction::gettext_extract!($string)
+        ))
     };
 }
 pub use wgettext;

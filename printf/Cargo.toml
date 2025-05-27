@@ -3,7 +3,7 @@ name = "fish-printf"
 edition.workspace = true
 rust-version.workspace = true
 version = "0.2.1"
-repository = "https://github.com/fish-shell/fish-shell"
+repository.workspace = true
 description = "printf implementation, based on musl"
 license = "MIT"
 

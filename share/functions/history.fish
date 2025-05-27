@@ -95,6 +95,7 @@ function history --description "display or manipulate interactive command histor
             set -l searchterm $argv
             if not set -q argv[1]
                 read -P"Search term: " searchterm
+                or return $status
             end
 
             if test "$search_mode" = --exact
@@ -119,6 +120,7 @@ function history --description "display or manipulate interactive command histor
                 echo "Enter 'all' to delete all the matching entries."
                 echo
                 read --local --prompt "echo 'Delete which entries? '" choice
+                or return $status
                 echo ''
 
                 if test -z "$choice"
@@ -192,6 +194,7 @@ function history --description "display or manipulate interactive command histor
 
             printf (_ "If you enter 'yes' your entire interactive command history will be erased\n")
             read --local --prompt "echo 'Are you sure you want to clear history? (yes/no) '" choice
+            or return $status
             if test "$choice" = yes
                 builtin history clear $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $argv
                 and printf (_ "Command history cleared!\n")
@@ -205,6 +208,7 @@ function history --description "display or manipulate interactive command histor
             set -l newitem $argv
             if not set -q argv[1]
                 read -P "Command: " newitem
+                or return $status
             end
 
             builtin history append $search_mode $show_time $max_count $_flag_case_sensitive $_flag_reverse $_flag_null -- $newitem

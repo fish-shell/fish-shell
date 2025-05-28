@@ -649,6 +649,7 @@ function __fish_git_aliased_command
     end
 end
 
+set -g __fish_git_aliases
 git config -z --get-regexp 'alias\..*' | while read -lz alias cmdline
     set -l command (__fish_git_aliased_command $cmdline)
     string match -q --regex '\w+' -- $command; or continue

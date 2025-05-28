@@ -243,7 +243,11 @@ pub(crate) fn initial_query(
     vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
-        let query = if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
+        let query = if is_dumb()
+            || IN_MIDNIGHT_COMMANDER.load()
+            || IN_DVTM.load()
+            || !isatty(STDOUT_FILENO)
+        {
             None
         } else {
             // Query for kitty keyboard protocol support.
@@ -1525,6 +1529,9 @@ impl<'a> Reader<'a> {
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
+        if !isatty(STDOUT_FILENO) {
+            return;
+        }
         let mut query = self.blocking_query();
         assert!(query.is_none());
         *query = Some(TerminalQuery::CursorPositionReport(q));

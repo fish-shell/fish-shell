@@ -100,35 +100,29 @@ impl Autoload {
         use crate::wchar_ext::WExt;
 
         let mut possible_path = None;
-        if let Some(var) = env.get(self.env_var_name) {
-            match self.resolve_command_impl(cmd, var.as_list()) {
-                AutoloadResult::Path(path) => {
-                    crate::FLOGF!(autoload, "Loading from path with var: %ls", path);
-                    // HACK: Ignore generated_completions until we tried the embedded assets
-                    if path
-                        .find("/generated_completions/".chars().collect::<Vec<_>>())
-                        .is_some()
-                    {
-                        possible_path = Some(path);
-                    } else {
-                        return Some(AutoloadPath::Path(path));
-                    }
-                }
-                AutoloadResult::Loaded => return None,
-                AutoloadResult::Pending => return None,
-                AutoloadResult::None => (),
-            };
-        } else {
-            match self.resolve_command_impl(cmd, &[]) {
-                AutoloadResult::Path(path) => {
-                    crate::FLOGF!(autoload, "Loading from path with var: %ls", path);
+        match self.resolve_command_impl(
+            cmd,
+            env.get(self.env_var_name)
+                .as_ref()
+                .map(|var| var.as_list())
+                .unwrap_or_default(),
+        ) {
+            AutoloadResult::Path(path) => {
+                crate::FLOGF!(autoload, "Loading from path with var: %ls", path);
+                // HACK: Ignore generated_completions until we tried the embedded assets
+                if path
+                    .find("/generated_completions/".chars().collect::<Vec<_>>())
+                    .is_some()
+                {
+                    possible_path = Some(path);
+                } else {
                     return Some(AutoloadPath::Path(path));
                 }
-                AutoloadResult::Loaded => return None,
-                AutoloadResult::Pending => return None,
-                AutoloadResult::None => (),
-            };
-        }
+            }
+            AutoloadResult::Loaded => return None,
+            AutoloadResult::Pending => return None,
+            AutoloadResult::None => (),
+        };
 
         // HACK: In cargo tests, this used to never load functions
         // It will hang for reasons unrelated to this.

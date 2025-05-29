@@ -177,7 +177,7 @@ fn builtin_complete_remove_cmd(
 
     if !removed {
         // This means that all loops were empty.
-        complete_remove_all(cmd.to_owned(), cmd_is_path);
+        complete_remove_all(cmd.to_owned(), cmd_is_path, /*explicit=*/ true);
     }
 }
 

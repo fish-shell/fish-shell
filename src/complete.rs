@@ -2343,14 +2343,14 @@ pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: Comp
 }
 
 /// Removes all completions for a given command.
-pub fn complete_remove_all(cmd: WString, cmd_is_path: bool) {
+pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
     let idx = CompletionEntryIndex {
         name: cmd,
         is_path: cmd_is_path,
     };
     let removed = completion_map.remove(&idx).is_some();
-    if !removed && !idx.is_path {
+    if explicit && !removed && !idx.is_path {
         COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
     }
 }
@@ -2523,7 +2523,7 @@ pub fn complete_invalidate_path() {
         .expect("mutex poisoned")
         .get_autoloaded_commands();
     for cmd in cmds {
-        complete_remove_all(cmd, false /* not a path */);
+        complete_remove_all(cmd, /*cmd_is_path=*/ false, /*explicit=*/ false);
     }
 }
 

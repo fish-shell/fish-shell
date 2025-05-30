@@ -369,6 +369,8 @@ impl FunctionProperties {
         if self.description.is_empty() {
             L!("")
         } else {
+            // The descriptions are extracted from the completion scripts.
+            // No extraction is required (or possible) from fish's code.
             wgettext_str(&self.description)
         }
     }

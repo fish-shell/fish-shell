@@ -25,7 +25,7 @@ pub mod categories {
         ) => {
             pub static $var: category_t = category_t {
                 name: L!($name),
-                description: L!($description),
+                description: L!(fish_gettext_extraction::gettext_extract!($description)),
                 enabled: AtomicBool::new($enabled),
             };
         };

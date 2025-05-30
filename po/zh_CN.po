@@ -854,9 +854,21 @@ msgstr "--tokens 选项是相互排斥的"
 msgid "A second attempt to exit will terminate them.\n"
 msgstr "第二次尝试退出将终止它们.\n"
 
+msgid "Abbreviation expansion"
+msgstr ""
+
 #, c-format
 msgid "Abbreviation: %ls"
 msgstr "缩写:%ls"
+
+msgid "Abort"
+msgstr ""
+
+msgid "Abort (Alias for SIGABRT)"
+msgstr ""
+
+msgid "Address boundary error"
+msgstr ""
 
 msgid "Always"
 msgstr "总是"
@@ -868,14 +880,29 @@ msgstr "设置管道时出错"
 msgid "Argument is not a number: '%ls'"
 msgstr "参数不是数字:  '%ls'"
 
+msgid "Background IO thread events"
+msgstr ""
+
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "后台命令不能用作条件"
+
+msgid "Bad system call"
+msgstr ""
 
 msgid "Block of code to run conditionally"
 msgstr "有条件运行的代码块"
 
+msgid "Broken pipe"
+msgstr ""
+
+msgid "CPU time limit exceeded"
+msgstr ""
+
 msgid "CPU\t"
 msgstr "CPU\t"
+
+msgid "Calls to fork()"
+msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "运行交互式会话时不能使用 no-execute模式"
@@ -890,8 +917,23 @@ msgstr "无法使用 stdin (fd 0) 作为管道输出"
 msgid "Change working directory"
 msgstr "改变工作目录"
 
+msgid "Changes to exported variables"
+msgstr ""
+
+msgid "Changes to locale variables"
+msgstr ""
+
+msgid "Character encoding issues"
+msgstr ""
+
 msgid "Check if a thing is a thing"
 msgstr "检查某事是否是其自身"
+
+msgid "Child process status changed"
+msgstr ""
+
+msgid "Command history events"
+msgstr ""
 
 msgid "Command not executable"
 msgstr "命令不是可执行的"
@@ -904,6 +946,9 @@ msgstr "命令名称无效"
 
 msgid "Conditionally run blocks of code"
 msgstr "有条件运行代码块"
+
+msgid "Continue previously stopped process"
+msgstr ""
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "无法确定当前工作目录 . 你的本地设置正确吗?"
@@ -923,6 +968,9 @@ msgstr "计算参数个数"
 
 msgid "Create a block of code"
 msgstr "创建代码区块"
+
+msgid "Debugging aid (on by default)"
+msgstr ""
 
 msgid "Define a new function"
 msgstr "定义一个新函数"
@@ -960,6 +1008,9 @@ msgstr "重命名历史文件时出错:%s"
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "读取文件 %ls 时出错\n"
+
+msgid "Errors reported by exec (on by default)"
+msgstr ""
 
 msgid "Evaluate a string as a statement"
 msgstr "将此字符串视为一条程序语句进行执行"
@@ -1024,6 +1075,9 @@ msgstr ""
 msgid "Expression is bogus"
 msgstr "表达式存在问题"
 
+msgid "FD monitor events"
+msgstr ""
+
 msgid "Failed to assign shell to its own process group"
 msgstr "无法将shell分配到它自己的进程组"
 
@@ -1032,6 +1086,24 @@ msgstr "设置启动终端模式失败 !"
 
 msgid "Failed to take control of the terminal"
 msgstr "控制终端失败"
+
+msgid "File size limit exceeded"
+msgstr ""
+
+msgid "Finding and reading configuration"
+msgstr ""
+
+msgid "Firing events"
+msgstr ""
+
+msgid "Floating point exception"
+msgstr ""
+
+msgid "Forced quit"
+msgstr ""
+
+msgid "Forced stop"
+msgstr ""
 
 msgid "Generate random number"
 msgstr "生成随机数"
@@ -1060,6 +1132,9 @@ msgstr "提示: 起始'0'没有跟'x' 表示八进制数字"
 msgid "History of commands executed by user"
 msgstr "用户执行的历史命令"
 
+msgid "History performance measurements"
+msgstr ""
+
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
 msgstr "历史会话 ID '%ls' 不是有效的可变名称 . 切换回`%ls`."
@@ -1072,9 +1147,15 @@ msgstr "%ls 的 Home"
 msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr "检测到自身为孤立进程，优雅退出。进程 pid 为 %d."
 
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr ""
+
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr "重定向 '%ls' 中的非法文件描述符  '"
+
+msgid "Illegal instruction"
+msgstr ""
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
@@ -1083,6 +1164,12 @@ msgstr "不完整的转义序列 '%ls'"
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
 msgstr "整数 %lld 在 '%ls' 中,后面跟随着非数字"
+
+msgid "Internal (non-forked) process events"
+msgstr ""
+
+msgid "Internal details of the topic monitor"
+msgstr ""
 
 msgid "Invalid arguments"
 msgstr "无效的参数"
@@ -1123,6 +1210,15 @@ msgstr "任务控制:%ls\n"
 msgid "Job\tGroup\t"
 msgstr "任务\t组\t"
 
+msgid "Jobs being executed"
+msgstr ""
+
+msgid "Jobs changing status"
+msgstr ""
+
+msgid "Jobs getting started or continued"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "列出或移除函数"
 
@@ -1145,6 +1241,9 @@ msgstr "操纵字符串"
 
 msgid "Measure how long a command or block takes"
 msgstr "测量命令或块需要多长时间"
+
+msgid "Misaligned address error"
+msgstr ""
 
 msgid "Mismatched braces"
 msgstr "牙套不匹配"
@@ -1188,6 +1287,9 @@ msgstr "不是一个函数"
 msgid "Not a number"
 msgstr "没有号码"
 
+msgid "Notifications about universal variable changes"
+msgstr ""
+
 msgid "Number is infinite"
 msgstr "数字是无限的"
 
@@ -1210,6 +1312,9 @@ msgstr ""
 msgid "Parse options in fish script"
 msgstr "分析fish文脚本中的选项"
 
+msgid "Parsing fish AST"
+msgstr ""
+
 msgid "Perform a command multiple times"
 msgstr "多次执行一条命令"
 
@@ -1223,6 +1328,12 @@ msgstr "请将 $ls 设置为您有写入权限的目录 ."
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
 msgstr "请在开始钓fish前设置 %ls 或 home 环境变量 ."
+
+msgid "Polite quit request"
+msgstr ""
+
+msgid "Power failure"
+msgstr ""
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
@@ -1240,14 +1351,44 @@ msgstr "打印工作目录"
 msgid "Prints formatted text"
 msgstr "打印格式化文本"
 
+msgid "Process groups"
+msgstr ""
+
 msgid "Process\n"
 msgstr "进程\n"
+
+msgid "Profiling timer expired"
+msgstr ""
+
+msgid "Quit request from job control (^C)"
+msgstr ""
+
+msgid "Quit request from job control with core dump (^\\)"
+msgstr ""
+
+msgid "Reacting to variables"
+msgstr ""
 
 msgid "Read a line of input into variables"
 msgstr "将输入的一行读入到变量中"
 
+msgid "Reading/Writing the history file"
+msgstr ""
+
+msgid "Reaping external (forked) processes"
+msgstr ""
+
+msgid "Reaping internal (non-forked) processes"
+msgstr ""
+
+msgid "Refcell dynamic borrowing"
+msgstr ""
+
 msgid "Remove job from job list"
 msgstr "从工作列表中删除任务"
+
+msgid "Rendering the command line"
+msgstr ""
 
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
@@ -1278,8 +1419,14 @@ msgstr "如果上次命令成功运行命令"
 msgid "Run command in current process"
 msgstr "在当前进程下执行命令"
 
+msgid "Screen repaints"
+msgstr ""
+
 msgid "Search for a specified string in a list"
 msgstr "在指定列表中搜索一个特定的字符串"
+
+msgid "Searching/using paths"
+msgstr ""
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
@@ -1295,6 +1442,9 @@ msgstr "将任务置于后台"
 msgid "Send job to foreground"
 msgstr "将任务带回到前台"
 
+msgid "Serious unexpected errors (on by default)"
+msgstr ""
+
 msgid "Set or get the commandline"
 msgstr "设置或取得命令行"
 
@@ -1306,6 +1456,9 @@ msgstr "显示绝对路径 sans 符号链接"
 
 msgid "Skip over remaining innermost loop"
 msgstr "跳过剩下的最内环"
+
+msgid "Stack fault"
+msgstr ""
 
 msgid "Standard input"
 msgstr "标准输入"
@@ -1324,6 +1477,15 @@ msgstr "状态\t命令\n"
 msgid "Stdin must be attached to a tty."
 msgstr ""
 
+msgid "Stop from terminal input"
+msgstr ""
+
+msgid "Stop from terminal output"
+msgstr ""
+
+msgid "Stop request from job control (^Z)"
+msgstr ""
+
 msgid "Stop the currently evaluated function"
 msgstr "停止当前求值的函数"
 
@@ -1332,6 +1494,18 @@ msgstr "停止最内层的循环"
 
 msgid "Temporarily block delivery of events"
 msgstr "Temporarily block delivery of events"
+
+msgid "Terminal feature detection"
+msgstr ""
+
+msgid "Terminal hung up"
+msgstr ""
+
+msgid "Terminal ownership events"
+msgstr ""
+
+msgid "Terminal protocol negotiation"
+msgstr ""
 
 msgid "Test a condition"
 msgstr "测试一个条件"
@@ -1350,6 +1524,9 @@ msgstr "'time'命令可能只在管道开始的时候"
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr "呼叫堆栈限制已经超过 . 你有一个意外的无限循环?"
 
+msgid "The completion system"
+msgstr ""
+
 #, c-format
 msgid "The error was '%s'."
 msgstr "错误为 '%s' ."
@@ -1364,6 +1541,9 @@ msgstr "扩展的命令为空 ."
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
 msgstr "函数 '%ls' 立即调用它, 会导致无限循环 ."
 
+msgid "The interactive reader/input system"
+msgstr ""
+
 msgid "There are still jobs active:\n"
 msgstr "仍然有活动的工作: \n"
 
@@ -1372,6 +1552,9 @@ msgstr "这是登录shell\n"
 
 msgid "This is not a login shell\n"
 msgstr "这不是登录shell\n"
+
+msgid "Timer expired"
+msgstr ""
 
 msgid "Too few arguments"
 msgstr "参数太少"
@@ -1385,8 +1568,14 @@ msgstr "太多参数"
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr "命令替换释放的数据过多, 因此被丢弃"
 
+msgid "Trace or breakpoint trap"
+msgstr ""
+
 msgid "Translate a string"
 msgstr "翻译字符串"
+
+msgid "Trying to print invalid output"
+msgstr ""
 
 #, c-format
 msgid "Unable to create temporary file '%ls': %s"
@@ -1502,8 +1691,17 @@ msgstr "未匹配的通配符"
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr "不支持使用'='. 在fish类中,请使用'set %ls %ls'."
 
+msgid "Urgent socket condition"
+msgstr ""
+
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr "使用' 取消 PID ' 从列表中删除任务而不终止它们 .\n"
+
+msgid "User defined signal 1"
+msgstr ""
+
+msgid "User defined signal 2"
+msgstr ""
 
 #, c-format
 msgid "Variable: %ls"
@@ -1517,8 +1715,26 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
+msgid "Virtual timefr expired"
+msgstr ""
+
 msgid "Wait for background processes completed"
 msgstr "等待背景进程完成"
+
+msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+msgid "Warnings (on by default)"
+msgstr ""
+
+msgid "Warnings about unusable paths for config/history (on by default)"
+msgstr ""
+
+msgid "Window size change"
+msgstr ""
+
+msgid "Writing/reading the universal variable store"
+msgstr ""
 
 msgid "[: the last argument must be ']'"
 msgstr "[:最后的论点必须是  '"
@@ -1532,6 +1748,9 @@ msgstr ""
 
 msgid "array indices start at 1, not 0."
 msgstr "数组指数起始时间为 1,而不是 0."
+
+msgid "autoloading"
+msgstr ""
 
 #, c-format
 msgid "builtin %ls: %ls: %s\n"

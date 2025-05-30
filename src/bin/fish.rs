@@ -319,6 +319,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 // A little extra space.
                 name_width += 2;
                 for cat in cats.iter() {
+                    // Extraction happens in the `src/flog.rs:declare_category!` macro.
                     let desc = wgettext_str(cat.description);
                     // this is left-justified
                     printf!("%-*ls %ls\n", name_width, cat.name, desc);

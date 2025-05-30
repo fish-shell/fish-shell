@@ -70,19 +70,6 @@ static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %l
 /// Description for abbreviations.
 static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
 
-/// The special cased translation macro for completions. The empty string needs to be special cased,
-/// since it can occur, and should not be translated. (Gettext returns the version information as
-/// the response).
-#[inline(always)]
-#[allow(non_snake_case)]
-fn C_(s: &wstr) -> &'static wstr {
-    if s.is_empty() {
-        L!("")
-    } else {
-        wgettext_str(s)
-    }
-}
-
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub struct CompletionMode {
     /// If set, skip file completions.
@@ -399,7 +386,16 @@ struct CompleteEntryOpt {
 
 impl CompleteEntryOpt {
     pub fn localized_desc(&self) -> &'static wstr {
-        C_(&self.desc)
+        if self.desc.is_empty() {
+            // The empty string needs to be special cased,
+            // since it can occur, and should not be translated.
+            // (Gettext returns the version information as the response.)
+            L!("")
+        } else {
+            // The descriptions are extracted from the completion scripts.
+            // No extraction is required (or possible) from fish's code.
+            wgettext_str(&self.desc)
+        }
     }
 
     pub fn expected_dash_count(&self) -> usize {

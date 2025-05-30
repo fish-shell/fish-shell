@@ -863,9 +863,21 @@ msgstr ""
 msgid "A second attempt to exit will terminate them.\n"
 msgstr ""
 
+msgid "Abbreviation expansion"
+msgstr ""
+
 #, c-format
 msgid "Abbreviation: %ls"
 msgstr ""
+
+msgid "Abort"
+msgstr "Abortado"
+
+msgid "Abort (Alias for SIGABRT)"
+msgstr "Abortado (Outro nome para SIGABRT)"
+
+msgid "Address boundary error"
+msgstr "Erro de fronteira de endereço (Falha de segmentação)"
 
 msgid "Always"
 msgstr "Sempre"
@@ -877,14 +889,29 @@ msgstr "Ocorreu um erro ao preparar pipe"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
+msgid "Background IO thread events"
+msgstr ""
+
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr ""
+
+msgid "Bad system call"
+msgstr "Chamada de sistema ruim"
 
 msgid "Block of code to run conditionally"
 msgstr ""
 
+msgid "Broken pipe"
+msgstr "Pipe sem saída"
+
+msgid "CPU time limit exceeded"
+msgstr "Limite de tempo da CPU excedido"
+
 msgid "CPU\t"
 msgstr "CPU\t"
+
+msgid "Calls to fork()"
+msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Não pode usar o modo não-executar durante uma sessão interativa"
@@ -899,8 +926,23 @@ msgstr "Não pode usar entrada padrão (fd 0) como saída de pipe"
 msgid "Change working directory"
 msgstr "Muda diretório de trabalho"
 
+msgid "Changes to exported variables"
+msgstr ""
+
+msgid "Changes to locale variables"
+msgstr ""
+
+msgid "Character encoding issues"
+msgstr ""
+
 msgid "Check if a thing is a thing"
 msgstr "Verifica se uma coisa é uma coisa"
+
+msgid "Child process status changed"
+msgstr "Mudança de estado de processo filho"
+
+msgid "Command history events"
+msgstr ""
 
 msgid "Command not executable"
 msgstr ""
@@ -913,6 +955,9 @@ msgstr ""
 
 msgid "Conditionally run blocks of code"
 msgstr ""
+
+msgid "Continue previously stopped process"
+msgstr "Continuar processo previamente parado"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
@@ -932,6 +977,9 @@ msgstr "Conta o número de argumentos"
 
 msgid "Create a block of code"
 msgstr "Cria um bloco de código"
+
+msgid "Debugging aid (on by default)"
+msgstr ""
 
 msgid "Define a new function"
 msgstr "Define uma nova função"
@@ -969,6 +1017,9 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Erro ao ler arquivo %ls\n"
+
+msgid "Errors reported by exec (on by default)"
+msgstr ""
 
 msgid "Evaluate a string as a statement"
 msgstr "Avaliar a string como um comando"
@@ -1033,6 +1084,9 @@ msgstr ""
 msgid "Expression is bogus"
 msgstr ""
 
+msgid "FD monitor events"
+msgstr ""
+
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
@@ -1041,6 +1095,24 @@ msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr ""
+
+msgid "File size limit exceeded"
+msgstr "Limite de tamanho de arquivo excedido"
+
+msgid "Finding and reading configuration"
+msgstr ""
+
+msgid "Firing events"
+msgstr ""
+
+msgid "Floating point exception"
+msgstr "Exceção de ponto flutuante"
+
+msgid "Forced quit"
+msgstr "Saída forçada"
+
+msgid "Forced stop"
+msgstr "Parada forçada"
 
 msgid "Generate random number"
 msgstr "Gera um número aleatório"
@@ -1069,6 +1141,9 @@ msgstr ""
 msgid "History of commands executed by user"
 msgstr "Histórico de funções executadas pelo usuário"
 
+msgid "History performance measurements"
+msgstr ""
+
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
 msgstr ""
@@ -1081,9 +1156,15 @@ msgstr "Diretório de usuário para %ls"
 msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr "Pareço um processo órfão, então estou saindo educadamente. Meu pid é %d."
 
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr "E/S em descritor de arquivo assíncrono possível"
+
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr "Descritor de arquivo ilegal na redireção “%ls”"
+
+msgid "Illegal instruction"
+msgstr "Instrução ilegal"
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
@@ -1091,6 +1172,12 @@ msgstr ""
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
+msgstr ""
+
+msgid "Internal (non-forked) process events"
+msgstr ""
+
+msgid "Internal details of the topic monitor"
 msgstr ""
 
 msgid "Invalid arguments"
@@ -1132,6 +1219,15 @@ msgstr "Controle de tarefa: %ls\n"
 msgid "Job\tGroup\t"
 msgstr "Tarefa\tGrupo\t"
 
+msgid "Jobs being executed"
+msgstr ""
+
+msgid "Jobs changing status"
+msgstr ""
+
+msgid "Jobs getting started or continued"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "Lista ou remove funções"
 
@@ -1154,6 +1250,9 @@ msgstr "Manipula strings"
 
 msgid "Measure how long a command or block takes"
 msgstr "Mede quanto tempo demora um comando ou bloco"
+
+msgid "Misaligned address error"
+msgstr "Erro de endereço de barramento"
 
 msgid "Mismatched braces"
 msgstr ""
@@ -1197,6 +1296,9 @@ msgstr ""
 msgid "Not a number"
 msgstr ""
 
+msgid "Notifications about universal variable changes"
+msgstr ""
+
 msgid "Number is infinite"
 msgstr ""
 
@@ -1219,6 +1321,9 @@ msgstr ""
 msgid "Parse options in fish script"
 msgstr "Parsear opções em um script fish"
 
+msgid "Parsing fish AST"
+msgstr ""
+
 msgid "Perform a command multiple times"
 msgstr "Executa um comando várias vezes"
 
@@ -1232,6 +1337,12 @@ msgstr ""
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
 msgstr ""
+
+msgid "Polite quit request"
+msgstr "Requisição educada de término"
+
+msgid "Power failure"
+msgstr "Falha de energia"
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
@@ -1249,14 +1360,44 @@ msgstr "Imprime o diretório de trabalho"
 msgid "Prints formatted text"
 msgstr "Imprime texto formatado"
 
+msgid "Process groups"
+msgstr ""
+
 msgid "Process\n"
 msgstr "Processo\n"
+
+msgid "Profiling timer expired"
+msgstr "Temporizador de análise expirado"
+
+msgid "Quit request from job control (^C)"
+msgstr "Interrupção de teclado (^C)"
+
+msgid "Quit request from job control with core dump (^\\)"
+msgstr "Interrupção com imagem do núcleo gravada (^\\)"
+
+msgid "Reacting to variables"
+msgstr ""
 
 msgid "Read a line of input into variables"
 msgstr "Lê uma linha de entrada e a coloca em variáveis"
 
+msgid "Reading/Writing the history file"
+msgstr ""
+
+msgid "Reaping external (forked) processes"
+msgstr ""
+
+msgid "Reaping internal (non-forked) processes"
+msgstr ""
+
+msgid "Refcell dynamic borrowing"
+msgstr ""
+
 msgid "Remove job from job list"
 msgstr "Remove a tarefa da lista de tarefas"
+
+msgid "Rendering the command line"
+msgstr ""
 
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
@@ -1287,8 +1428,14 @@ msgstr ""
 msgid "Run command in current process"
 msgstr "Executa um comando como o processo atual"
 
+msgid "Screen repaints"
+msgstr ""
+
 msgid "Search for a specified string in a list"
 msgstr "Procura uma string especificada em uma lista"
+
+msgid "Searching/using paths"
+msgstr ""
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
@@ -1304,6 +1451,9 @@ msgstr "Envia tarefa para segundo plano"
 msgid "Send job to foreground"
 msgstr "Envia tarefa para primeiro plano"
 
+msgid "Serious unexpected errors (on by default)"
+msgstr ""
+
 msgid "Set or get the commandline"
 msgstr "Obtém ou altera o buffer da linha de comando"
 
@@ -1315,6 +1465,9 @@ msgstr ""
 
 msgid "Skip over remaining innermost loop"
 msgstr ""
+
+msgid "Stack fault"
+msgstr "Falha de pilha"
 
 msgid "Standard input"
 msgstr "Entrada padrão"
@@ -1333,6 +1486,15 @@ msgstr "Estado\tComando\n"
 msgid "Stdin must be attached to a tty."
 msgstr ""
 
+msgid "Stop from terminal input"
+msgstr "Parada para entrada de terminal"
+
+msgid "Stop from terminal output"
+msgstr "Parada para saída de terminal"
+
+msgid "Stop request from job control (^Z)"
+msgstr "Parada requisitada por teclado (^Z)"
+
 msgid "Stop the currently evaluated function"
 msgstr "Pára a função em execução"
 
@@ -1341,6 +1503,18 @@ msgstr "Pára o laço mais interno"
 
 msgid "Temporarily block delivery of events"
 msgstr "Bloqueia temporariamente a entrega de eventos"
+
+msgid "Terminal feature detection"
+msgstr ""
+
+msgid "Terminal hung up"
+msgstr "Término de comunicação com terminal"
+
+msgid "Terminal ownership events"
+msgstr ""
+
+msgid "Terminal protocol negotiation"
+msgstr ""
 
 msgid "Test a condition"
 msgstr "Testa uma condição"
@@ -1359,6 +1533,9 @@ msgstr ""
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
+msgid "The completion system"
+msgstr ""
+
 #, c-format
 msgid "The error was '%s'."
 msgstr ""
@@ -1373,6 +1550,9 @@ msgstr "O comand expandido estava vazio."
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
 msgstr "A função “%ls” se chama imediatamente, o que causaria um loop infinito."
 
+msgid "The interactive reader/input system"
+msgstr ""
+
 msgid "There are still jobs active:\n"
 msgstr ""
 
@@ -1381,6 +1561,9 @@ msgstr "Este é um shell de login\n"
 
 msgid "This is not a login shell\n"
 msgstr "Este não é um shell de login\n"
+
+msgid "Timer expired"
+msgstr "Temporizador expirado"
 
 msgid "Too few arguments"
 msgstr ""
@@ -1394,8 +1577,14 @@ msgstr ""
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
 
+msgid "Trace or breakpoint trap"
+msgstr "Atingiu ponto de parada"
+
 msgid "Translate a string"
 msgstr "Traduz uma string"
+
+msgid "Trying to print invalid output"
+msgstr ""
 
 #, c-format
 msgid "Unable to create temporary file '%ls': %s"
@@ -1511,8 +1700,17 @@ msgstr ""
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
+msgid "Urgent socket condition"
+msgstr "Condição urgente de socket"
+
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
+
+msgid "User defined signal 1"
+msgstr "Sinal definido pelo usuário 1"
+
+msgid "User defined signal 2"
+msgstr "Sinal definido pelo usuário 2"
 
 #, c-format
 msgid "Variable: %ls"
@@ -1526,8 +1724,26 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
+msgid "Virtual timefr expired"
+msgstr ""
+
 msgid "Wait for background processes completed"
 msgstr "Espera até os processos no background completarem"
+
+msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+msgid "Warnings (on by default)"
+msgstr ""
+
+msgid "Warnings about unusable paths for config/history (on by default)"
+msgstr ""
+
+msgid "Window size change"
+msgstr "Mudança de tamanho de janela"
+
+msgid "Writing/reading the universal variable store"
+msgstr ""
 
 msgid "[: the last argument must be ']'"
 msgstr ""
@@ -1538,6 +1754,9 @@ msgid ""
 msgstr ""
 
 msgid "array indices start at 1, not 0."
+msgstr ""
+
+msgid "autoloading"
 msgstr ""
 
 #, c-format
@@ -79056,107 +79275,14 @@ msgstr ""
 #~ msgid "Could not return shell to foreground"
 #~ msgstr "Não foi possível retornar shell ao primeiro plano"
 
-#~ msgid "Terminal hung up"
-#~ msgstr "Término de comunicação com terminal"
-
-#~ msgid "Quit request from job control (^C)"
-#~ msgstr "Interrupção de teclado (^C)"
-
-#~ msgid "Quit request from job control with core dump (^\\)"
-#~ msgstr "Interrupção com imagem do núcleo gravada (^\\)"
-
-#~ msgid "Illegal instruction"
-#~ msgstr "Instrução ilegal"
-
-#~ msgid "Trace or breakpoint trap"
-#~ msgstr "Atingiu ponto de parada"
-
-#~ msgid "Abort"
-#~ msgstr "Abortado"
-
-#~ msgid "Misaligned address error"
-#~ msgstr "Erro de endereço de barramento"
-
-#~ msgid "Floating point exception"
-#~ msgstr "Exceção de ponto flutuante"
-
-#~ msgid "Forced quit"
-#~ msgstr "Saída forçada"
-
-#~ msgid "User defined signal 1"
-#~ msgstr "Sinal definido pelo usuário 1"
-
-#~ msgid "User defined signal 2"
-#~ msgstr "Sinal definido pelo usuário 2"
-
-#~ msgid "Address boundary error"
-#~ msgstr "Erro de fronteira de endereço (Falha de segmentação)"
-
-#~ msgid "Broken pipe"
-#~ msgstr "Pipe sem saída"
-
-#~ msgid "Timer expired"
-#~ msgstr "Temporizador expirado"
-
-#~ msgid "Polite quit request"
-#~ msgstr "Requisição educada de término"
-
-#~ msgid "Child process status changed"
-#~ msgstr "Mudança de estado de processo filho"
-
-#~ msgid "Continue previously stopped process"
-#~ msgstr "Continuar processo previamente parado"
-
-#~ msgid "Forced stop"
-#~ msgstr "Parada forçada"
-
-#~ msgid "Stop request from job control (^Z)"
-#~ msgstr "Parada requisitada por teclado (^Z)"
-
-#~ msgid "Stop from terminal input"
-#~ msgstr "Parada para entrada de terminal"
-
-#~ msgid "Stop from terminal output"
-#~ msgstr "Parada para saída de terminal"
-
-#~ msgid "Urgent socket condition"
-#~ msgstr "Condição urgente de socket"
-
-#~ msgid "CPU time limit exceeded"
-#~ msgstr "Limite de tempo da CPU excedido"
-
-#~ msgid "File size limit exceeded"
-#~ msgstr "Limite de tamanho de arquivo excedido"
-
 #~ msgid "Virtual timer expired"
 #~ msgstr "Temporizador virtual expirado"
-
-#~ msgid "Profiling timer expired"
-#~ msgstr "Temporizador de análise expirado"
-
-#~ msgid "Window size change"
-#~ msgstr "Mudança de tamanho de janela"
-
-#~ msgid "I/O on asynchronous file descriptor is possible"
-#~ msgstr "E/S em descritor de arquivo assíncrono possível"
-
-#~ msgid "Power failure"
-#~ msgstr "Falha de energia"
-
-#~ msgid "Bad system call"
-#~ msgstr "Chamada de sistema ruim"
 
 #~ msgid "Information request"
 #~ msgstr "Requisição de informação"
 
-#~ msgid "Stack fault"
-#~ msgstr "Falha de pilha"
-
 #~ msgid "Emulator trap"
 #~ msgstr "Armadilha de emulador"
-
-#~ msgid "Abort (Alias for SIGABRT)"
-#~ msgstr "Abortado (Outro nome para SIGABRT)"
 
 #~ msgid "Unused signal"
 #~ msgstr "Sinal não utilizado"

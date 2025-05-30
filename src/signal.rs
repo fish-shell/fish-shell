@@ -366,7 +366,11 @@ impl LookupEntry {
 
 macro_rules! signal_entry {
     ($name:ident, $desc:expr) => {
-        LookupEntry::new(libc::$name, L!(stringify!($name)), L!($desc))
+        LookupEntry::new(
+            libc::$name,
+            L!(stringify!($name)),
+            L!(fish_gettext_extraction::gettext_extract!($desc)),
+        )
     };
 }
 
@@ -479,7 +483,10 @@ impl Signal {
     /// Previously signal_get_desc().
     pub fn desc(&self) -> &'static wstr {
         match self.get_lookup_entry() {
-            Some(entry) => wgettext_str(entry.desc),
+            Some(entry) => {
+                // Extraction happens in the `signal_entry!` macro.
+                wgettext_str(entry.desc)
+            }
             None => wgettext!("Unknown"),
         }
     }

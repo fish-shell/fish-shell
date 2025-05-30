@@ -862,9 +862,21 @@ msgstr ""
 msgid "A second attempt to exit will terminate them.\n"
 msgstr ""
 
+msgid "Abbreviation expansion"
+msgstr ""
+
 #, c-format
 msgid "Abbreviation: %ls"
 msgstr ""
+
+msgid "Abort"
+msgstr "Abort"
+
+msgid "Abort (Alias for SIGABRT)"
+msgstr "Abort (Alias for SIGABRT)"
+
+msgid "Address boundary error"
+msgstr "Address boundary error"
 
 msgid "Always"
 msgstr "Always"
@@ -876,14 +888,29 @@ msgstr "An error occurred while setting up pipe"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
+msgid "Background IO thread events"
+msgstr ""
+
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "Backgrounded commands can not be used as conditionals"
+
+msgid "Bad system call"
+msgstr "Bad system call"
 
 msgid "Block of code to run conditionally"
 msgstr ""
 
+msgid "Broken pipe"
+msgstr "Broken pipe"
+
+msgid "CPU time limit exceeded"
+msgstr "CPU time limit exceeded"
+
 msgid "CPU\t"
 msgstr "CPU\t"
+
+msgid "Calls to fork()"
+msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
@@ -898,7 +925,22 @@ msgstr "Cannot use stdin (fd 0) as pipe output"
 msgid "Change working directory"
 msgstr "Change working directory"
 
+msgid "Changes to exported variables"
+msgstr ""
+
+msgid "Changes to locale variables"
+msgstr ""
+
+msgid "Character encoding issues"
+msgstr ""
+
 msgid "Check if a thing is a thing"
+msgstr ""
+
+msgid "Child process status changed"
+msgstr "Child process status changed"
+
+msgid "Command history events"
 msgstr ""
 
 msgid "Command not executable"
@@ -912,6 +954,9 @@ msgstr ""
 
 msgid "Conditionally run blocks of code"
 msgstr ""
+
+msgid "Continue previously stopped process"
+msgstr "Continue previously stopped process"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
@@ -931,6 +976,9 @@ msgstr "Count the number of arguments"
 
 msgid "Create a block of code"
 msgstr "Create a block of code"
+
+msgid "Debugging aid (on by default)"
+msgstr ""
 
 msgid "Define a new function"
 msgstr "Define a new function"
@@ -968,6 +1016,9 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Error while reading file %ls\n"
+
+msgid "Errors reported by exec (on by default)"
+msgstr ""
 
 msgid "Evaluate a string as a statement"
 msgstr ""
@@ -1032,6 +1083,9 @@ msgstr ""
 msgid "Expression is bogus"
 msgstr ""
 
+msgid "FD monitor events"
+msgstr ""
+
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
@@ -1040,6 +1094,24 @@ msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr ""
+
+msgid "File size limit exceeded"
+msgstr "File size limit exceeded"
+
+msgid "Finding and reading configuration"
+msgstr ""
+
+msgid "Firing events"
+msgstr ""
+
+msgid "Floating point exception"
+msgstr "Floating point exception"
+
+msgid "Forced quit"
+msgstr "Forced quit"
+
+msgid "Forced stop"
+msgstr "Forced stop"
 
 msgid "Generate random number"
 msgstr "Generate random number"
@@ -1068,6 +1140,9 @@ msgstr ""
 msgid "History of commands executed by user"
 msgstr "History of commands executed by user"
 
+msgid "History performance measurements"
+msgstr ""
+
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
 msgstr ""
@@ -1080,9 +1155,15 @@ msgstr "Home for %ls"
 msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr "I/O on asynchronous file descriptor is possible"
+
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr "Illegal file descriptor in redirection “%ls”"
+
+msgid "Illegal instruction"
+msgstr "Illegal instruction"
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
@@ -1090,6 +1171,12 @@ msgstr ""
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
+msgstr ""
+
+msgid "Internal (non-forked) process events"
+msgstr ""
+
+msgid "Internal details of the topic monitor"
 msgstr ""
 
 msgid "Invalid arguments"
@@ -1131,6 +1218,15 @@ msgstr "Job control: %ls\n"
 msgid "Job\tGroup\t"
 msgstr "Job\tGroup\t"
 
+msgid "Jobs being executed"
+msgstr ""
+
+msgid "Jobs changing status"
+msgstr ""
+
+msgid "Jobs getting started or continued"
+msgstr ""
+
 msgid "List or remove functions"
 msgstr "List or remove functions"
 
@@ -1153,6 +1249,9 @@ msgstr ""
 
 msgid "Measure how long a command or block takes"
 msgstr ""
+
+msgid "Misaligned address error"
+msgstr "Misaligned address error"
 
 msgid "Mismatched braces"
 msgstr ""
@@ -1196,6 +1295,9 @@ msgstr ""
 msgid "Not a number"
 msgstr ""
 
+msgid "Notifications about universal variable changes"
+msgstr ""
+
 msgid "Number is infinite"
 msgstr ""
 
@@ -1218,6 +1320,9 @@ msgstr ""
 msgid "Parse options in fish script"
 msgstr ""
 
+msgid "Parsing fish AST"
+msgstr ""
+
 msgid "Perform a command multiple times"
 msgstr "Perform a command multiple times"
 
@@ -1231,6 +1336,12 @@ msgstr ""
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
 msgstr ""
+
+msgid "Polite quit request"
+msgstr "Polite quit request"
+
+msgid "Power failure"
+msgstr "Power failure"
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
@@ -1248,13 +1359,43 @@ msgstr "Print the working directory"
 msgid "Prints formatted text"
 msgstr "Prints formatted text"
 
+msgid "Process groups"
+msgstr ""
+
 msgid "Process\n"
 msgstr "Process\n"
+
+msgid "Profiling timer expired"
+msgstr "Profiling timer expired"
+
+msgid "Quit request from job control (^C)"
+msgstr "Quit request from job control (^C)"
+
+msgid "Quit request from job control with core dump (^\\)"
+msgstr "Quit request from job control with core dump (^\\)"
+
+msgid "Reacting to variables"
+msgstr ""
 
 msgid "Read a line of input into variables"
 msgstr "Read a line of input into variables"
 
+msgid "Reading/Writing the history file"
+msgstr ""
+
+msgid "Reaping external (forked) processes"
+msgstr ""
+
+msgid "Reaping internal (non-forked) processes"
+msgstr ""
+
+msgid "Refcell dynamic borrowing"
+msgstr ""
+
 msgid "Remove job from job list"
+msgstr ""
+
+msgid "Rendering the command line"
 msgstr ""
 
 #, c-format
@@ -1286,8 +1427,14 @@ msgstr ""
 msgid "Run command in current process"
 msgstr "Run command in current process"
 
+msgid "Screen repaints"
+msgstr ""
+
 msgid "Search for a specified string in a list"
 msgstr "Search for a specified string in a list"
+
+msgid "Searching/using paths"
+msgstr ""
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
@@ -1303,6 +1450,9 @@ msgstr "Send job to background"
 msgid "Send job to foreground"
 msgstr "Send job to foreground"
 
+msgid "Serious unexpected errors (on by default)"
+msgstr ""
+
 msgid "Set or get the commandline"
 msgstr "Set or get the commandline"
 
@@ -1314,6 +1464,9 @@ msgstr ""
 
 msgid "Skip over remaining innermost loop"
 msgstr ""
+
+msgid "Stack fault"
+msgstr "Stack fault"
 
 msgid "Standard input"
 msgstr "Standard input"
@@ -1332,6 +1485,15 @@ msgstr "State\tCommand\n"
 msgid "Stdin must be attached to a tty."
 msgstr ""
 
+msgid "Stop from terminal input"
+msgstr "Stop from terminal input"
+
+msgid "Stop from terminal output"
+msgstr "Stop from terminal output"
+
+msgid "Stop request from job control (^Z)"
+msgstr "Stop request from job control (^Z)"
+
 msgid "Stop the currently evaluated function"
 msgstr "Stop the currently evaluated function"
 
@@ -1340,6 +1502,18 @@ msgstr "Stop the innermost loop"
 
 msgid "Temporarily block delivery of events"
 msgstr "Temporarily block delivery of events"
+
+msgid "Terminal feature detection"
+msgstr ""
+
+msgid "Terminal hung up"
+msgstr "Terminal hung up"
+
+msgid "Terminal ownership events"
+msgstr ""
+
+msgid "Terminal protocol negotiation"
+msgstr ""
 
 msgid "Test a condition"
 msgstr "Test a condition"
@@ -1358,6 +1532,9 @@ msgstr ""
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
+msgid "The completion system"
+msgstr ""
+
 #, c-format
 msgid "The error was '%s'."
 msgstr "The error was '%s'."
@@ -1372,6 +1549,9 @@ msgstr ""
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
 msgstr "The function “%ls” calls itself immediately, which would result in an infinite loop."
 
+msgid "The interactive reader/input system"
+msgstr ""
+
 msgid "There are still jobs active:\n"
 msgstr ""
 
@@ -1380,6 +1560,9 @@ msgstr "This is a login shell\n"
 
 msgid "This is not a login shell\n"
 msgstr "This is not a login shell\n"
+
+msgid "Timer expired"
+msgstr "Timer expired"
 
 msgid "Too few arguments"
 msgstr ""
@@ -1393,7 +1576,13 @@ msgstr ""
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
 
+msgid "Trace or breakpoint trap"
+msgstr "Trace or breakpoint trap"
+
 msgid "Translate a string"
+msgstr ""
+
+msgid "Trying to print invalid output"
 msgstr ""
 
 #, c-format
@@ -1510,8 +1699,17 @@ msgstr ""
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
+msgid "Urgent socket condition"
+msgstr "Urgent socket condition"
+
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
+
+msgid "User defined signal 1"
+msgstr "User defined signal 1"
+
+msgid "User defined signal 2"
+msgstr "User defined signal 2"
 
 #, c-format
 msgid "Variable: %ls"
@@ -1525,7 +1723,25 @@ msgstr ""
 msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
 msgstr ""
 
+msgid "Virtual timefr expired"
+msgstr ""
+
 msgid "Wait for background processes completed"
+msgstr ""
+
+msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+msgid "Warnings (on by default)"
+msgstr ""
+
+msgid "Warnings about unusable paths for config/history (on by default)"
+msgstr ""
+
+msgid "Window size change"
+msgstr "Window size change"
+
+msgid "Writing/reading the universal variable store"
 msgstr ""
 
 msgid "[: the last argument must be ']'"
@@ -1537,6 +1753,9 @@ msgid ""
 msgstr ""
 
 msgid "array indices start at 1, not 0."
+msgstr ""
+
+msgid "autoloading"
 msgstr ""
 
 #, c-format
@@ -79179,107 +79398,14 @@ msgstr ""
 #~ msgid "Could not return shell to foreground"
 #~ msgstr "Could not return shell to foreground"
 
-#~ msgid "Terminal hung up"
-#~ msgstr "Terminal hung up"
-
-#~ msgid "Quit request from job control (^C)"
-#~ msgstr "Quit request from job control (^C)"
-
-#~ msgid "Quit request from job control with core dump (^\\)"
-#~ msgstr "Quit request from job control with core dump (^\\)"
-
-#~ msgid "Illegal instruction"
-#~ msgstr "Illegal instruction"
-
-#~ msgid "Trace or breakpoint trap"
-#~ msgstr "Trace or breakpoint trap"
-
-#~ msgid "Abort"
-#~ msgstr "Abort"
-
-#~ msgid "Misaligned address error"
-#~ msgstr "Misaligned address error"
-
-#~ msgid "Floating point exception"
-#~ msgstr "Floating point exception"
-
-#~ msgid "Forced quit"
-#~ msgstr "Forced quit"
-
-#~ msgid "User defined signal 1"
-#~ msgstr "User defined signal 1"
-
-#~ msgid "User defined signal 2"
-#~ msgstr "User defined signal 2"
-
-#~ msgid "Address boundary error"
-#~ msgstr "Address boundary error"
-
-#~ msgid "Broken pipe"
-#~ msgstr "Broken pipe"
-
-#~ msgid "Timer expired"
-#~ msgstr "Timer expired"
-
-#~ msgid "Polite quit request"
-#~ msgstr "Polite quit request"
-
-#~ msgid "Child process status changed"
-#~ msgstr "Child process status changed"
-
-#~ msgid "Continue previously stopped process"
-#~ msgstr "Continue previously stopped process"
-
-#~ msgid "Forced stop"
-#~ msgstr "Forced stop"
-
-#~ msgid "Stop request from job control (^Z)"
-#~ msgstr "Stop request from job control (^Z)"
-
-#~ msgid "Stop from terminal input"
-#~ msgstr "Stop from terminal input"
-
-#~ msgid "Stop from terminal output"
-#~ msgstr "Stop from terminal output"
-
-#~ msgid "Urgent socket condition"
-#~ msgstr "Urgent socket condition"
-
-#~ msgid "CPU time limit exceeded"
-#~ msgstr "CPU time limit exceeded"
-
-#~ msgid "File size limit exceeded"
-#~ msgstr "File size limit exceeded"
-
 #~ msgid "Virtual timer expired"
 #~ msgstr "Virtual timer expired"
-
-#~ msgid "Profiling timer expired"
-#~ msgstr "Profiling timer expired"
-
-#~ msgid "Window size change"
-#~ msgstr "Window size change"
-
-#~ msgid "I/O on asynchronous file descriptor is possible"
-#~ msgstr "I/O on asynchronous file descriptor is possible"
-
-#~ msgid "Power failure"
-#~ msgstr "Power failure"
-
-#~ msgid "Bad system call"
-#~ msgstr "Bad system call"
 
 #~ msgid "Information request"
 #~ msgstr "Information request"
 
-#~ msgid "Stack fault"
-#~ msgstr "Stack fault"
-
 #~ msgid "Emulator trap"
 #~ msgstr "Emulator trap"
-
-#~ msgid "Abort (Alias for SIGABRT)"
-#~ msgstr "Abort (Alias for SIGABRT)"
 
 #~ msgid "Unused signal"
 #~ msgstr "Unused signal"

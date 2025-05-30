@@ -32,6 +32,19 @@ jobs:
       # into automatic CI failure day, so we don't do that.
       run: cargo clippy --workspace --all-targets
 
+  rustdoc:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dtolnay/rust-toolchain@stable
+    - name: cargo doc
+      run: |
+        RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all
+    - name: cargo doctest
+      run: |
+        cargo test --doc --workspace --all
+
   # Disabling for now because it also checks "advisories",
   # making CI fail for reasons unrelated to the patch
   # cargo-deny:

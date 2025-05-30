@@ -1561,7 +1561,7 @@ static MIDNIGHT_COMMANDER_HACK: RelaxedAtomicBool = RelaxedAtomicBool::new(false
 
 /// Midnight Commander tries to extract the last line of the prompt, and does so in a way that is
 /// broken if you do '\r' after it like we normally do.
-/// See https://midnight-commander.org/ticket/4258.
+/// See <https://midnight-commander.org/ticket/4258>.
 pub fn screen_set_midnight_commander_hack() {
     MIDNIGHT_COMMANDER_HACK.store(true)
 }

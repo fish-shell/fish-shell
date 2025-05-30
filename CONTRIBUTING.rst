@@ -297,12 +297,6 @@ Adding translations for a new language
 Creating new translations requires the Gettext tools.
 More specifically, you will need ``msguniq`` and ``msgmerge`` for creating translations for a new
 language.
-In addition, the ``cargo-expand`` tool is required.
-If you have ``cargo`` installed, run::
-
-  cargo install --locked --version 1.0.106 cargo-expand
-
-to install ``cargo-expand`` (Note that other versions might not work correctly with our scripts).
 To create a new translation, run::
 
     build_tools/update_translations.fish po/LANG.po

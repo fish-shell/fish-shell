@@ -58,29 +58,12 @@ function __fish_flatpak
     flatpak $argv | string replace -rf '^([^A-Z].*?)(?: +|\t)(.*?)\s*$' '$1\t$2'
 end
 
-function __fish_print_flatpak_packages
-    set -l xdg_cache_home (__fish_make_cache_dir)
-    or return
-    set -l cache_file $xdg_cache_home/flatpak
-    if test -f $cache_file
-        cat $cache_file
-        set -l age (path mtime -R -- $cache_file)
-        set -l max_age 250
-        if test $age -lt $max_age
-            return
-        end
-    end
-    __fish_cache_put $cache_file
-    __fish_flatpak remote-ls --columns=application,name >$cache_file &
-    return 0
-end
-
 complete -f -c flatpak -n "__fish_seen_subcommand_from run" -a "(__fish_flatpak list --app --columns=application,name)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from info uninstall" -a "(__fish_flatpak list --columns=application,name)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from enter kill" -a "(__fish_flatpak ps --columns=instance,application)"
 complete -f -c flatpak -n "__fish_seen_subcommand_from remote-info remote-ls remote-modify remote-delete" -a "(__fish_flatpak remotes --columns=name,title)"
 
-complete -c flatpak -n '__fish_seen_subcommand_from install' -xa "(__fish_print_flatpak_packages)"
+complete -c flatpak -n '__fish_seen_subcommand_from install' -xa "(__fish_cached -t 250 -- '__fish_flatpak remote-ls --columns=application,name')"
 
 # Plenty of the other stuff is too free-form to complete (e.g. remote-add).
 complete -f -c flatpak -s h -l help

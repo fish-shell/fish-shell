@@ -17,6 +17,10 @@
 #   - Specify the language you want to work on as an argument, which must be a file in the po/
 #     directory. You can specify a language which does not have translations yet by specifying the
 #     name of a file which does not yet exist. Make sure to follow the naming convention.
+# For testing:
+#   - Specify `--dry-run` to see if any updates to the PO files would by applied by this script.
+#     If this flag is specified, the script will exit with an error if there are outstanding
+#     changes, and will display the diff. Do not specify other flags if `--dry-run` is specified.
 
 # The sort utility is locale-sensitive.
 # Ensure that sorting output is consistent by setting LC_ALL here.
@@ -30,8 +34,21 @@ set -l extract
 set -l po
 set -l mo
 
-argparse --exclusive 'no-mo,only-mo' 'no-mo' 'only-mo' -- $argv
+function cleanup_exit
+    set -l exit_status $status
+
+    if set -g --query tmpdir
+        rm -r $tmpdir
+    end
+
+    exit $exit_status
+end
+
+argparse --exclusive 'no-mo,only-mo,dry-run' 'no-mo' 'only-mo' 'dry-run' -- $argv
 or exit $status
+
+# Make sure that the template file is not included in $po_files.
+rm $template_file 2>/dev/null
 
 if test -z $argv[1]
     # Update everything if not specified otherwise.
@@ -71,10 +88,28 @@ if set -l --query extract
     or exit 1
 end
 
+# Protect from externally set $tmpdir leaking into this script.
+set -g --erase tmpdir
+if set -l --query _flag_dry_run
+    # On a dry run, we do not modify po/ but write to a temporary directory instead and check if
+    # there is a difference between po/ and the tmpdir after re-generating the PO files.
+    set -g tmpdir (mktemp -d)
+
+    # On a dry-run, we do not update the MO files.
+    set -l --erase mo
+
+    # Ensure tmpdir has the same initial state as the po dir.
+    cp -r $po_dir/* $tmpdir
+end
+
 for po_file in $po_files
+    if set -g --query tmpdir
+        set po_file $tmpdir/(basename $po_file)
+    end
     if set -l --query po
         if test -e $po_file
-            msgmerge --update --no-fuzzy-matching --no-wrap --backup=none $po_file $template_file
+            msgmerge --update --no-fuzzy-matching --no-wrap --backup=none --quiet $po_file $template_file
+            or cleanup_exit
         else
             cp $template_file $po_file
         end
@@ -86,3 +121,13 @@ for po_file in $po_files
         msgfmt --check-format --output-file=$out_dir/fish.mo $po_file
     end
 end
+
+rm $template_file
+
+if set -g --query tmpdir
+    rm $tmpdir/template.po
+    diff -ur po $tmpdir
+    or cleanup_exit
+end
+
+cleanup_exit

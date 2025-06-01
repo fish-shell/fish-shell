@@ -72,7 +72,7 @@ function __fish_git_unique_remote_branches
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
     __fish_git for-each-ref --format="%(refname:strip=3)" \
         --sort="refname:strip=3" \
-        "refs/remotes/*/$match*" "refs/remotes/*/*/**" 2>/dev/null | uniq -u
+        refs/remotes/ 2>/dev/null | uniq -u
 end
 
 function __fish_git_tags

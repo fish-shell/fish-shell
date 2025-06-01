@@ -1119,9 +1119,9 @@ complete -f -c git -n "__fish_git_using_command remote" -n "__fish_seen_subcomma
 
 ### show
 complete -f -c git -n __fish_git_needs_command -a show -d 'Show the last commit of a branch'
+complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_complete_stashes)'
 __fish_git_add_revision_completion -n '__fish_git_using_command show'
 complete -f -c git -n __fish_git_needs_rev_files -n 'not contains -- -- (commandline -xpc)' -xa '(__fish_git_complete_rev_files)'
-complete -f -c git -n '__fish_git_using_command show' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_complete_stashes)'
 complete -F -c git -n '__fish_git_using_command show' -n 'contains -- -- (commandline -xpc)'
 complete -f -c git -n '__fish_git_using_command show' -l format -d 'Pretty-print the contents of the commit logs in a given format' -a '(__fish_git_show_opt format)'
 complete -f -c git -n '__fish_git_using_command show' -l abbrev-commit -d 'Show only a partial hexadecimal commit object name'

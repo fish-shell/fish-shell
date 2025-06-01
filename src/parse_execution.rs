@@ -41,7 +41,7 @@ use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::proc::{
     get_job_control_mode, job_reap, no_exec, ConcreteAssignment, Job, JobControl, JobProperties,
-    JobRef, Process, ProcessList, ProcessType,
+    JobRef, Process, ProcessType,
 };
 use crate::reader::fish_is_unwinding_for_exit;
 use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
@@ -1778,10 +1778,11 @@ impl<'a> ExecutionContext<'a> {
         job_node: &ast::JobPipeline,
         _associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        // We are going to construct process_t structures for every statement in the job.
-        // Create processes. Each one may fail.
-        let mut processes = ProcessList::new();
-        processes.push(Box::new(Process::new()));
+        // We are going to construct Process structures for every statement in the job.
+        // Create processes. Each one may fail. We know how many there are.
+        let mut processes: Vec<Process> = Vec::new();
+        processes.reserve_exact(1 + job_node.continuation.len());
+        processes.push(Process::new());
         let mut result = self.populate_job_process(
             ctx,
             j,
@@ -1790,7 +1791,7 @@ impl<'a> ExecutionContext<'a> {
             &job_node.variables,
         );
 
-        // Construct process_ts for job continuations (pipelines).
+        // Construct Processes for job continuations (pipelines).
         for jc in &job_node.continuation {
             if result != EndExecutionReason::ok {
                 break;
@@ -1821,7 +1822,7 @@ impl<'a> ExecutionContext<'a> {
             }
 
             // Store the new process (and maybe with an error).
-            processes.push(Box::new(Process::new()));
+            processes.push(Process::new());
             result = self.populate_job_process(
                 ctx,
                 j,

@@ -780,9 +780,6 @@ impl Process {
     }
 }
 
-pub type ProcessPtr = Box<Process>;
-pub type ProcessList = Vec<ProcessPtr>;
-
 /// A set of jobs properties. These are immutable: they do not change for the lifetime of the
 /// job.
 #[derive(Default, Clone, Copy)]
@@ -832,7 +829,7 @@ pub struct Job {
     command_str: WString,
 
     /// All the processes in this job.
-    pub processes: ProcessList,
+    pub processes: Vec<Process>,
 
     // The group containing this job.
     // This is never cleared.
@@ -867,13 +864,13 @@ impl Job {
 
     /// Borrow the job's process list. Only read-only or interior mutability actions may be
     /// performed on the processes in the list.
-    pub fn processes(&self) -> &ProcessList {
+    pub fn processes(&self) -> &[Process] {
         &self.processes
     }
 
     /// Get mutable access to the job's process list.
     /// Only available with a mutable reference `&mut Job`.
-    pub fn processes_mut(&mut self) -> &mut ProcessList {
+    pub fn processes_mut(&mut self) -> &mut Vec<Process> {
         &mut self.processes
     }
 
@@ -881,14 +878,14 @@ impl Job {
     ///
     /// Equivalent to `processes().iter().filter(|p| p.pid.is_some())`.
     #[inline(always)]
-    pub fn external_procs(&self) -> impl Iterator<Item = &ProcessPtr> {
+    pub fn external_procs(&self) -> impl Iterator<Item = &Process> {
         self.processes.iter().filter(|p| p.pid.load().is_some())
     }
 
     /// Return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might
     /// also reap the process group and then we cannot add new processes to the group.
-    pub fn can_reap(&self, p: &ProcessPtr) -> bool {
+    pub fn can_reap(&self, p: &Process) -> bool {
         !(
             // Can't reap twice.
             p.is_completed() ||

@@ -106,14 +106,22 @@ function __fish_git_remotes
     __fish_git config --get-regexp 'remote\.[a-z]+\.url' | string replace -rf 'remote\.(.*)\.url (.*)' '$1\t$2'
 end
 
-set -g __fish_git_recent_commits_arg
+set -g __fish_git_extra_recent_commits false
 set -g __fish_git_unqualified_unique_remote_branches false
 set -g __fish_git_filter_non_pushable 'string join \n'
 
 function __fish_git_add_revision_completion
     set -l c complete -f -c git $argv -n 'not contains -- -- (commandline -xpc)' -ka
     # The following dynamic, order-preserved (-k) completions will be shown in reverse order (see #9221)
-    $c "(__fish_git_recent_commits $__fish_git_recent_commits_arg | $__fish_git_filter_non_pushable)"
+    $c "(__fish_git_recent_commits \$(
+        if $__fish_git_extra_recent_commits
+            begin
+                echo HEAD
+                git for-each-ref --sort=-committerdate --format='%(refname)' 2>/dev/null \
+                    refs/tags refs/heads
+            end | string join ' '
+        end
+    ) | $__fish_git_filter_non_pushable)"
     $c "(__fish_git_tags)" -d Tag
     $c "(__fish_git_heads | $__fish_git_filter_non_pushable)" -d Head
     $c "(__fish_git_remotes | $__fish_git_filter_non_pushable)" -d 'Remote alias'
@@ -1204,7 +1212,7 @@ complete -c git -n '__fish_git_using_command am' -l show-current-patch -a 'diff 
 complete -F -c git -n '__fish_git_using_command checkout' -n 'contains -- -- (commandline -xpc)'
 complete -f -c git -n __fish_git_needs_command -a checkout -d 'Checkout and switch to a branch'
 begin
-    set -lx __fish_git_recent_commits_arg --all
+    set -lx __fish_git_extra_recent_commits true
     set -lx __fish_git_unqualified_unique_remote_branches true
     __fish_git_add_revision_completion -n '__fish_git_using_command checkout'
 end
@@ -1466,7 +1474,7 @@ complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between com
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_ranges)'
 complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_complete_stashes)'
 begin
-    set -lx __fish_git_recent_commits_arg --all
+    set -lx __fish_git_extra_recent_commits true
     __fish_git_add_revision_completion -n '__fish_git_using_command diff'
 end
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
@@ -2061,7 +2069,7 @@ complete -f -c git -n '__fish_git_using_command switch' -ka '(__fish_git_branche
 complete -f -c git -n '__fish_git_using_command switch' -s c -l create -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command switch' -s C -l force-create -d 'Force create a new branch'
 begin
-    set -lx __fish_git_recent_commits_arg --all
+    set -lx __fish_git_extra_recent_commits true
     __fish_git_add_revision_completion -n '__fish_git_using_command switch' -s d -l detach -r
 end
 complete -f -c git -n '__fish_git_using_command switch' -s d -l detach -d 'Switch to a commit for inspection and discardable experiment' -rka '(__fish_git_refs)'
@@ -2619,6 +2627,6 @@ for file in (path filter -xZ $PATH/git-* | path basename)
 end
 
 functions --erase __fish_git_add_revision_completion
-set -eg __fish_git_recent_commits_arg
+set -eg __fish_git_extra_recent_commits
 set -eg __fish_git_unqualified_unique_remote_branches
 set -eg __fish_git_filter_non_pushable

@@ -46,7 +46,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
 use std::sync::Arc;
 
 /// Types of processes.
-#[derive(Default, Eq, PartialEq)]
+#[derive(Default)]
 pub enum ProcessType {
     /// A regular external command.
     #[default]
@@ -746,6 +746,23 @@ impl Process {
         }
     }
 
+    /// Return if we match various types.
+    pub fn is_builtin(&self) -> bool {
+        matches!(self.typ, ProcessType::Builtin)
+    }
+    pub fn is_function(&self) -> bool {
+        matches!(self.typ, ProcessType::Function)
+    }
+    pub fn is_block_node(&self) -> bool {
+        matches!(self.typ, ProcessType::BlockNode)
+    }
+    pub fn is_external(&self) -> bool {
+        matches!(self.typ, ProcessType::External)
+    }
+    pub fn is_exec(&self) -> bool {
+        matches!(self.typ, ProcessType::Exec)
+    }
+
     /// Return the wait handle for the process, if it exists.
     pub fn get_wait_handle(&self) -> Option<WaitHandleRef> {
         self.wait_handle.borrow().clone()
@@ -763,7 +780,7 @@ impl Process {
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
     pub fn make_wait_handle(&self, jid: InternalJobId) -> Option<WaitHandleRef> {
-        if self.typ != ProcessType::External || self.pid().is_none() {
+        if !matches!(self.typ, ProcessType::External) || self.pid().is_none() {
             // Not waitable.
             None
         } else {

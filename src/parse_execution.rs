@@ -720,7 +720,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Determine the process type.
         let mut process_type = self.process_type_for_command(ctx, statement, &cmd);
-        let external_cmd = if [ProcessType::External, ProcessType::Exec].contains(&process_type) {
+        let external_cmd = if matches!(process_type, ProcessType::External | ProcessType::Exec) {
             let parser = ctx.parser();
             // Determine the actual command. This may be an implicit cd.
             let external_cmd = path_try_get_path(&cmd, parser.vars());

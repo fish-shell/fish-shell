@@ -16,7 +16,8 @@ function __fish_git
         end
     end
     # Using 'command git' to avoid interactions for aliases from git to (e.g.) hub
-    command git $global_args $saved_args 2>/dev/null
+    set -l git $__fish_git_timeout git
+    command $git $global_args $saved_args 2>/dev/null
 end
 
 # Print an optspec for argparse to handle git's options that are independent of any subcommand.
@@ -66,7 +67,7 @@ function __fish_git_local_branches
 end
 
 function __fish_git_remote_branches
-    __fish_git for-each-ref --format='%(refname:strip=2)%09Remote Branch' refs/remotes/ 2>/dev/null
+    __fish_git_timeout=(string split ' ' -- (command -v timeout)' 0.200') __fish_git for-each-ref --format='%(refname:strip=2)%09Remote Branch' refs/remotes/ 2>/dev/null
 end
 
 function __fish_git_unique_remote_branches
@@ -74,7 +75,7 @@ function __fish_git_unique_remote_branches
     # if they are unambiguous.
     # E.g. if only alice has a "frobulate" branch
     # `git checkout frobulate` is equivalent to `git checkout -b frobulate --track alice/frobulate`.
-    __fish_git for-each-ref --format="%(refname:strip=3)" \
+    __fish_git_timeout=(string split ' ' -- (command -v timeout)' 0.200') __fish_git for-each-ref --format="%(refname:strip=3)" \
         --sort="refname:strip=3" \
         refs/remotes/ 2>/dev/null | uniq -u
 end

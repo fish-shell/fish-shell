@@ -593,7 +593,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // If we have nothing to write we can elide the thread.
     // TODO: support eliding output to /dev/null.
     if f.skip_out() && f.skip_err() {
-        internal_proc.mark_exited(&p.status);
+        internal_proc.mark_exited(p.status());
         return;
     }
 
@@ -603,10 +603,10 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // If our process is a builtin, it will have already set its status value. Make sure we
     // propagate that if our I/O succeeds and don't read it on a background thread. TODO: have
     // builtin_run provide this directly, rather than setting it in the process.
-    f.success_status = p.status.clone();
+    f.success_status = p.status();
 
     iothread_perform_cant_wait(move || {
-        let mut status = f.success_status.clone();
+        let mut status = f.success_status;
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
                 if err.raw_os_error() != Some(EPIPE) {
@@ -627,7 +627,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
                 }
             }
         }
-        f.internal_proc.mark_exited(&status);
+        f.internal_proc.mark_exited(status);
     });
 }
 
@@ -649,7 +649,7 @@ fn run_internal_process_or_short_circuit(
                 "Set status of job %d (%ls) to %d using short circuit",
                 j.job_id(),
                 j.preview(),
-                p.status.status_value()
+                p.status().status_value()
             );
             if let Some(statuses) = j.get_statuses() {
                 parser.set_last_statuses(statuses);
@@ -864,7 +864,7 @@ fn exec_external_command(
             Err(err) => {
                 safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
-                    .update(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
+                    .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
                 return Err(());
             }
         };
@@ -1052,7 +1052,7 @@ fn exec_block_or_func_process(
         // Note this may fail if the function was erased.
         get_performer_for_function(p, j, &io_chain)?
     };
-    p.status.update(performer(parser, p, None, None));
+    p.status.set(performer(parser, p, None, None));
 
     // If we have a block output buffer, populate it now.
     let mut buffer_contents = vec![];
@@ -1166,7 +1166,7 @@ fn exec_builtin_process(
 
     let performer = get_performer_for_builtin(p, j, io_chain);
     let status = performer(parser, p, Some(&mut out), Some(&mut err));
-    p.status.update(status);
+    p.status.set(status);
     handle_builtin_output(parser, j, p, io_chain, &out, &err);
     Ok(())
 }

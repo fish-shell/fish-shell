@@ -33,7 +33,6 @@ use libc::{
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
-use std::borrow::Borrow;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
@@ -43,8 +42,8 @@ use std::os::fd::RawFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+use std::sync::{Arc, OnceLock};
 
 /// Types of processes.
 #[derive(Default)]
@@ -106,33 +105,18 @@ pub fn clock_ticks_to_seconds(ticks: ClockTicks) -> f64 {
 pub type JobGroupRef = Arc<JobGroup>;
 
 /// A ProcStatus is a value type that encapsulates logic around exited vs stopped vs signaled,
-/// etc.
-///
-/// It contains two fields packed into an AtomicU64 to allow interior mutability, `status: i32` and
-/// `empty: bool`.
-#[derive(Default)]
-pub struct ProcStatus {
-    value: AtomicU64,
-}
-
-impl Clone for ProcStatus {
-    fn clone(&self) -> Self {
-        Self {
-            value: AtomicU64::new(self.value.load(Ordering::Relaxed)),
-        }
-    }
-}
+/// etc. It contains an i32 status, or None if the status should be ignored (e.g. for builtin set).
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ProcStatus(Option<i32>);
 
 impl ProcStatus {
-    fn new(status: i32, empty: bool) -> Self {
-        ProcStatus {
-            value: Self::to_u64(status, empty).into(),
-        }
+    fn new(status: Option<i32>) -> Self {
+        ProcStatus(status)
     }
 
-    /// Returns the raw `i32` status value.
+    /// Returns the raw `i32` status value, or 0 if empty.
     fn status(&self) -> i32 {
-        Self::from_u64(self.value.load(Ordering::Relaxed)).0
+        self.0.unwrap_or(0)
     }
 
     /// Returns the `empty` field.
@@ -140,31 +124,7 @@ impl ProcStatus {
     /// If `empty` is `true` then there is no actual status to report (e.g. background or variable
     /// assignment).
     pub fn is_empty(&self) -> bool {
-        Self::from_u64(self.value.load(Ordering::Relaxed)).1
-    }
-
-    /// Replace the current `ProcStatus` with that of `other`.
-    /// The 'Borrow' means that `other` can be a `ProcStatus` or a reference to one.
-    pub fn update(&self, other: impl Borrow<ProcStatus>) {
-        self.value.store(
-            other.borrow().value.load(Ordering::Relaxed),
-            Ordering::Relaxed,
-        );
-    }
-
-    fn set_status(&self, status: i32) {
-        let value = Self::to_u64(status, self.is_empty());
-        self.value.store(value, Ordering::Relaxed);
-    }
-
-    fn to_u64(status: i32, empty: bool) -> u64 {
-        (u64::from(empty) << 32) | u64::from(status as u32)
-    }
-
-    fn from_u64(bits: u64) -> (i32, bool) {
-        let status = bits as u32 as i32;
-        let empty = (bits >> 32) != 0;
-        (status, empty)
+        self.0.is_none()
     }
 
     /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
@@ -181,7 +141,7 @@ impl ProcStatus {
 
     /// Construct from a status returned from a waitpid call.
     pub fn from_waitpid(status: i32) -> ProcStatus {
-        ProcStatus::new(status, false)
+        ProcStatus::new(Some(status))
     }
 
     /// Construct directly from an exit code.
@@ -200,18 +160,17 @@ impl ProcStatus {
         );
 
         assert!(ret < 256);
-        ProcStatus::new(Self::w_exitcode(ret, 0 /* sig */), false)
+        ProcStatus::new(Some(Self::w_exitcode(ret, 0 /* sig */)))
     }
 
     /// Construct directly from a signal.
     pub fn from_signal(signal: Signal) -> ProcStatus {
-        ProcStatus::new(Self::w_exitcode(0 /* ret */, signal.code()), false)
+        ProcStatus::new(Some(Self::w_exitcode(0 /* ret */, signal.code())))
     }
 
     /// Construct an empty status_t (e.g. `set foo bar`).
     pub fn empty() -> ProcStatus {
-        let empty = true;
-        ProcStatus::new(0, empty)
+        ProcStatus::new(None)
     }
 
     /// Return if we are stopped (as in SIGSTOP).
@@ -270,11 +229,10 @@ pub struct InternalProc {
     /// This is used for logging purposes only.
     internal_proc_id: u64,
 
-    /// Whether the process has exited.
-    exited: AtomicBool,
-
     /// If the process has exited, its status code.
-    status: ProcStatus,
+    /// Note the presence of a ProcStatus (even if empty) indicates that this process
+    /// has exited.
+    status: OnceLock<ProcStatus>,
 }
 
 impl InternalProc {
@@ -282,21 +240,18 @@ impl InternalProc {
         static NEXT_PROC_ID: AtomicU64 = AtomicU64::new(0);
         Self {
             internal_proc_id: NEXT_PROC_ID.fetch_add(1, Ordering::SeqCst),
-            exited: AtomicBool::new(false),
-            status: ProcStatus::default(),
+            status: OnceLock::new(),
         }
     }
 
     /// Return if this process has exited.
     pub fn exited(&self) -> bool {
-        self.exited.load(Ordering::Acquire)
+        self.status.get().is_some()
     }
 
     /// Mark this process as having exited with the given `status`.
-    pub fn mark_exited(&self, status: &ProcStatus) {
-        assert!(!self.exited(), "Process is already exited");
-        self.status.update(status);
-        self.exited.store(true, Ordering::Release);
+    pub fn mark_exited(&self, status: ProcStatus) {
+        self.status.set(status).expect("Status already set");
         topic_monitor_principal().post(Topic::internal_exit);
         FLOG!(
             proc_internal_proc,
@@ -308,8 +263,7 @@ impl InternalProc {
     }
 
     pub fn get_status(&self) -> ProcStatus {
-        assert!(self.exited(), "Process is not exited");
-        self.status.clone()
+        *self.status.get().expect("Process has not exited")
     }
 
     pub fn get_id(&self) -> u64 {
@@ -639,7 +593,7 @@ pub struct Process {
     pub posted_proc_exit: RelaxedAtomicBool,
 
     /// Reported status value.
-    pub status: ProcStatus,
+    pub status: Cell<ProcStatus>,
 
     pub last_times: Cell<ProcTimes>,
 
@@ -711,6 +665,12 @@ impl Process {
         self.argv.get(0).map(|s| s.as_utfstr())
     }
 
+    /// Returns the status.
+    #[inline]
+    pub fn status(&self) -> ProcStatus {
+        self.status.get()
+    }
+
     /// Redirection list getter and setter.
     pub fn redirection_specs(&self) -> &RedirectionSpecList {
         &self.proc_redirection_specs
@@ -736,9 +696,9 @@ impl Process {
         self.completed.store(true);
         // The status may have already been set to e.g. STATUS_NOT_EXECUTABLE.
         // Only stomp a successful status.
-        if self.status.is_success() {
+        if self.status().is_success() {
             self.status
-                .set_status(ProcStatus::from_exit_code(libc::EXIT_FAILURE).status())
+                .set(ProcStatus::from_exit_code(libc::EXIT_FAILURE))
         }
     }
 
@@ -1077,7 +1037,7 @@ impl Job {
             // finished.
             let procs = self.processes();
             let p = procs.last().unwrap();
-            if p.status.normal_exited() || p.status.signal_exited() {
+            if p.status().normal_exited() || p.status().signal_exited() {
                 if let Some(statuses) = self.get_statuses() {
                     parser.set_last_statuses(statuses);
                     parser.libdata_mut().status_count += 1;
@@ -1140,7 +1100,7 @@ impl Job {
         let mut laststatus = 0;
         st.pipestatus.resize(self.processes().len(), 0);
         for (i, p) in self.processes().iter().enumerate() {
-            let status = &p.status;
+            let status = p.status();
             if status.is_empty() {
                 // Corner case for if a variable assignment is part of a pipeline.
                 // e.g. `false | set foo bar | true` will push 1 in the second spot,
@@ -1334,8 +1294,8 @@ pub fn proc_init() {
 }
 
 /// Set the status of `proc` to `status`.
-fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
-    proc.status.update(status);
+fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
+    proc.status.set(status);
     if status.stopped() {
         proc.stopped.store(true);
     } else if status.continued() {
@@ -1516,7 +1476,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             // The process has stopped or exited! Update its status.
             let status = ProcStatus::from_waitpid(statusv);
-            handle_child_status(j, proc, &status);
+            handle_child_status(j, proc, status);
             if status.stopped() {
                 j.group().set_is_foreground(false);
             }
@@ -1529,7 +1489,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     "Reaped external process '%ls' (pid %d, status %d)",
                     proc.argv0().unwrap(),
                     pid,
-                    proc.status.status_value()
+                    proc.status().status_value()
                 );
             } else {
                 assert!(status.stopped() || status.continued());
@@ -1538,7 +1498,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     "External process '%ls' (pid %d, %s)",
                     proc.argv0().unwrap(),
                     proc.pid().unwrap(),
-                    if proc.status.stopped() {
+                    if proc.status().stopped() {
                         "stopped"
                     } else {
                         "continued"
@@ -1577,13 +1537,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             // The process gets the status from its internal proc.
             let status = internal_proc.get_status();
-            handle_child_status(j, proc, &status);
+            handle_child_status(j, proc, status);
             FLOGF!(
                 proc_reap_internal,
                 "Reaped internal process '%ls' (id %llu, status %d)",
                 proc.argv0().unwrap(),
                 internal_proc.get_id(),
-                proc.status.status_value(),
+                proc.status().status_value(),
             );
         }
     }
@@ -1602,7 +1562,7 @@ fn generate_process_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
                 p.posted_proc_exit.store(true);
                 out_evts.push(Event::process_exit(
                     p.pid().unwrap(),
-                    p.status.status_value(),
+                    p.status().status_value(),
                 ));
             }
         }
@@ -1632,7 +1592,7 @@ fn proc_wants_summary(j: &Job, p: &Process) -> bool {
     }
 
     // Did we die due to a signal other than SIGPIPE?
-    let s = &p.status;
+    let s = p.status();
     if !s.signal_exited() || s.signal_code() == SIGPIPE {
         return false;
     }
@@ -1712,7 +1672,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
         Some(p) => {
             // We are summarizing a process which exited with a signal.
             // Arguments are the signal name and description.
-            let sig = Signal::new(p.status.signal_code());
+            let sig = Signal::new(p.status().signal_code());
             buffer.push(' ');
             buffer += &escape(sig.name())[..];
 
@@ -1784,7 +1744,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
     // Mark all wait handles as complete (but don't create just for this).
     for proc in job.processes().iter() {
         if let Some(wh) = proc.get_wait_handle() {
-            wh.set_status_and_complete(proc.status.status_value());
+            wh.set_status_and_complete(proc.status().status_value());
         }
     }
 }

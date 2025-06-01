@@ -864,9 +864,7 @@ fn exec_external_command(
             Err(err) => {
                 safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
-                    .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(
-                        err.0,
-                    )));
+                    .update(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
                 return Err(());
             }
         };
@@ -965,6 +963,23 @@ type ProcPerformer = dyn FnOnce(
     Option<&mut OutputStream>,
 ) -> ProcStatus;
 
+// Return a function which may be to run the given block node process 'p'.
+fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
+    let ProcessType::BlockNode(node) = &p.typ else {
+        panic!("Expected a block node process");
+    };
+
+    // We want to capture the job group.
+    let job_group = job.group.clone();
+    let io_chain = io_chain.clone();
+    let node = node.clone();
+    Box::new(move |parser: &Parser, _p: &Process, _out, _err| {
+        parser
+            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
+            .status
+    })
+}
+
 // Return a function which may be to run the given process 'p'.
 // May return None in the rare case that the to-be called fish function no longer
 // exists. This is just an artifact of the fact that we only capture the functions name, not its
@@ -974,53 +989,37 @@ type ProcPerformer = dyn FnOnce(
 //    function foo; echo hi; end
 //    foo (functions --erase foo)
 //
-fn get_performer_for_process(
+fn get_performer_for_function(
     p: &Process,
     job: &Job,
     io_chain: &IoChain,
-) -> Option<Box<ProcPerformer>> {
-    assert!(
-        p.is_block_node() || p.is_function(),
-        "Unexpected process type"
-    );
+) -> Result<Box<ProcPerformer>, ()> {
+    assert!(p.is_function());
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
+    // This may occur if the function was erased as part of its arguments or in other strange edge cases.
+    let Some(props) = function::get_props(p.argv0().unwrap()) else {
+        FLOG!(
+            error,
+            wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
+        );
+        return Err(());
+    };
+    Ok(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
+        let argv = p.argv();
+        // Pull out the job list from the function.
+        let fb = function_prepare_environment(parser, argv.clone(), &props);
+        let body_node = props.func_node.child_ref(|n| &n.jobs);
+        let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
+        function_restore_environment(parser, fb);
 
-    if let ProcessType::BlockNode(node) = &p.typ {
-        let node = node.clone();
-        Some(Box::new(
-            move |parser: &Parser, _p: &Process, _out, _err| {
-                parser
-                    .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
-                    .status
-            },
-        ))
-    } else {
-        assert!(p.is_function());
-        let Some(props) = function::get_props(p.argv0().unwrap()) else {
-            FLOG!(
-                error,
-                wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
-            );
-            return None;
-        };
-        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-            let argv = p.argv();
-            // Pull out the job list from the function.
-            let fb = function_prepare_environment(parser, argv.clone(), &props);
-            let body_node = props.func_node.child_ref(|n| &n.jobs);
-            let mut res =
-                parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
-            function_restore_environment(parser, fb);
-
-            // If the function did not execute anything, treat it as success.
-            if res.was_empty {
-                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
-            }
-            res.status
-        }))
-    }
+        // If the function did not execute anything, treat it as success.
+        if res.was_empty {
+            res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+        }
+        res.status
+    }))
 }
 
 /// Execute a block node or function "process".
@@ -1032,6 +1031,7 @@ fn exec_block_or_func_process(
     mut io_chain: IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
+    assert!(p.is_block_node() || p.is_function());
     // Create an output buffer if we're piping to another process.
     let mut block_output_bufferfill = None;
     if piped_output_needs_buffering {
@@ -1046,14 +1046,13 @@ fn exec_block_or_func_process(
         }
     }
 
-    // Get the process performer, and just execute it directly.
-    // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
-    // its captured io chain.
-    if let Some(performer) = get_performer_for_process(p, j, &io_chain) {
-        p.status.update(&performer(parser, p, None, None));
+    let performer = if p.is_block_node() {
+        get_performer_for_block_node(p, j, &io_chain)
     } else {
-        return Err(());
-    }
+        // Note this may fail if the function was erased.
+        get_performer_for_function(p, j, &io_chain)?
+    };
+    p.status.update(performer(parser, p, None, None));
 
     // If we have a block output buffer, populate it now.
     let mut buffer_contents = vec![];
@@ -1167,7 +1166,7 @@ fn exec_builtin_process(
 
     let performer = get_performer_for_builtin(p, j, io_chain);
     let status = performer(parser, p, Some(&mut out), Some(&mut err));
-    p.status.update(&status);
+    p.status.update(status);
     handle_builtin_output(parser, j, p, io_chain, &out, &err);
     Ok(())
 }

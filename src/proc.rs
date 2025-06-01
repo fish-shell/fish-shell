@@ -33,6 +33,7 @@ use libc::{
 use once_cell::sync::Lazy;
 #[cfg(not(target_has_atomic = "64"))]
 use portable_atomic::AtomicU64;
+use std::borrow::Borrow;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
@@ -104,7 +105,7 @@ pub fn clock_ticks_to_seconds(ticks: ClockTicks) -> f64 {
 
 pub type JobGroupRef = Arc<JobGroup>;
 
-/// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
+/// A ProcStatus is a value type that encapsulates logic around exited vs stopped vs signaled,
 /// etc.
 ///
 /// It contains two fields packed into an AtomicU64 to allow interior mutability, `status: i32` and
@@ -143,9 +144,12 @@ impl ProcStatus {
     }
 
     /// Replace the current `ProcStatus` with that of `other`.
-    pub fn update(&self, other: &ProcStatus) {
-        self.value
-            .store(other.value.load(Ordering::Relaxed), Ordering::Relaxed);
+    /// The 'Borrow' means that `other` can be a `ProcStatus` or a reference to one.
+    pub fn update(&self, other: impl Borrow<ProcStatus>) {
+        self.value.store(
+            other.borrow().value.load(Ordering::Relaxed),
+            Ordering::Relaxed,
+        );
     }
 
     fn set_status(&self, status: i32) {

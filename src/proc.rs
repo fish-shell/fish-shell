@@ -51,9 +51,12 @@ pub enum ProcessType {
     /// A regular external command.
     #[default]
     External,
-    /// A builtin command.
+    /// A builtin command. The builtin name is stored in `argv[0]`.
     Builtin,
     /// A shellscript function.
+    /// The function name is stored in `argv[0]`.
+    /// Note we don't capture the function body here, because the
+    /// function body may change as part of argument expansion.
     Function,
     /// A block of commands, represented as a node.
     /// This is always either block, ifs, or switchs, never boolean or decorated.

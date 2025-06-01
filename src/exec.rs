@@ -965,11 +965,15 @@ type ProcPerformer = dyn FnOnce(
     Option<&mut OutputStream>,
 ) -> ProcStatus;
 
-// Return a function which may be to run the given process \p.
-// May return an empty std::function in the rare case that the to-be called fish function no longer
-// exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
+// Return a function which may be to run the given process 'p'.
+// May return None in the rare case that the to-be called fish function no longer
+// exists. This is just an artifact of the fact that we only capture the functions name, not its
 // properties, when creating the job; thus a race could delete the function before we fetch its
-// properties.
+// properties. Note this is user visible. An example:
+//
+//    function foo; echo hi; end
+//    foo (functions --erase foo)
+//
 fn get_performer_for_process(
     p: &Process,
     job: &Job,

@@ -174,4 +174,16 @@ functions -q foo
 echo exists $status
 # CHECK: exists 1
 
+# If a function is changed as part of its own arguments, then we see the change.
+# This codifies historic behavior.
+function foo; echo before; end
+foo (function foo; echo after; end)
+# CHECK: after
+
+# If a function is deleted as part of its own arguments, then we see the change.
+# This codifies historic behavior.
+function foo; echo before; end
+foo (functions --erase foo)
+# CHECKERR: error: Unknown function 'foo'
+
 exit 0

@@ -56,7 +56,8 @@ pub enum ProcessType {
     /// A shellscript function.
     Function,
     /// A block of commands, represented as a node.
-    BlockNode,
+    /// This is always either block, ifs, or switchs, never boolean or decorated.
+    BlockNode(NodeRef<ast::Statement>),
     /// The exec builtin.
     Exec,
 }
@@ -599,10 +600,6 @@ pub struct Process {
     /// Type of process.
     pub typ: ProcessType,
 
-    /// For internal block processes only, the node of the statement.
-    /// This is always either block, ifs, or switchs, never boolean or decorated.
-    pub block_node: Option<NodeRef<ast::Statement>>,
-
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     pub variable_assignments: Vec<ConcreteAssignment>,
 
@@ -741,7 +738,7 @@ impl Process {
     /// Return whether this process type is internal (block, function, or builtin).
     pub fn is_internal(&self) -> bool {
         match self.typ {
-            ProcessType::Builtin | ProcessType::Function | ProcessType::BlockNode => true,
+            ProcessType::Builtin | ProcessType::Function | ProcessType::BlockNode(_) => true,
             ProcessType::External | ProcessType::Exec => false,
         }
     }
@@ -754,7 +751,7 @@ impl Process {
         matches!(self.typ, ProcessType::Function)
     }
     pub fn is_block_node(&self) -> bool {
-        matches!(self.typ, ProcessType::BlockNode)
+        matches!(self.typ, ProcessType::BlockNode(_))
     }
     pub fn is_external(&self) -> bool {
         matches!(self.typ, ProcessType::External)

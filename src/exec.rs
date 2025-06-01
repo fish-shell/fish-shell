@@ -983,13 +983,15 @@ fn get_performer_for_process(
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
 
-    if p.is_block_node() {
-        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-            let node = p.block_node.as_ref().expect("Process is missing node info");
-            parser
-                .eval_node(node, &io_chain, job_group.as_ref(), BlockType::top)
-                .status
-        }))
+    if let ProcessType::BlockNode(node) = &p.typ {
+        let node = node.clone();
+        Some(Box::new(
+            move |parser: &Parser, _p: &Process, _out, _err| {
+                parser
+                    .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
+                    .status
+            },
+        ))
     } else {
         assert!(p.is_function());
         let Some(props) = function::get_props(p.argv0().unwrap()) else {
@@ -1255,7 +1257,7 @@ fn exec_process_in_job(
         process_net_io_chain.push(Arc::new(IoClose::new(afd.as_raw_fd())));
     }
 
-    if !matches!(p.typ, ProcessType::BlockNode) {
+    if !p.is_block_node() {
         // A simple `begin ... end` should not be considered an execution of a command.
         parser.libdata_mut().exec_count += 1;
     }
@@ -1291,7 +1293,7 @@ fn exec_process_in_job(
     // Execute the process.
     p.check_generations_before_launch();
     match p.typ {
-        ProcessType::Function | ProcessType::BlockNode => exec_block_or_func_process(
+        ProcessType::Function | ProcessType::BlockNode(_) => exec_block_or_func_process(
             parser,
             j,
             p,

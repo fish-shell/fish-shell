@@ -831,8 +831,7 @@ impl<'a> ExecutionContext<'a> {
         let mut redirections = RedirectionSpecList::new();
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
-            proc.typ = ProcessType::BlockNode;
-            proc.block_node = Some(NodeRef::new(Arc::clone(self.pstree()), statement));
+            proc.typ = ProcessType::BlockNode(NodeRef::new(Arc::clone(self.pstree()), statement));
             proc.set_redirection_specs(redirections);
         }
         reason

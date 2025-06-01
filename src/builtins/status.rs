@@ -369,9 +369,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             streams.out.append(wgettext!("This is not a login shell\n"));
         }
         let job_control_mode = match get_job_control_mode() {
-            JobControl::interactive => wgettext!("Only on interactive jobs"),
-            JobControl::none => wgettext!("Never"),
-            JobControl::all => wgettext!("Always"),
+            JobControl::Interactive => wgettext!("Only on interactive jobs"),
+            JobControl::None => wgettext!("Never"),
+            JobControl::All => wgettext!("Always"),
         };
         streams
             .out
@@ -639,14 +639,14 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_IS_FULL_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::all {
+                    if get_job_control_mode() == JobControl::All {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
                 STATUS_IS_INTERACTIVE_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::interactive {
+                    if get_job_control_mode() == JobControl::Interactive {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
@@ -660,7 +660,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_IS_NO_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::none {
+                    if get_job_control_mode() == JobControl::None {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);

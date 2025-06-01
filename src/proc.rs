@@ -50,23 +50,23 @@ use std::sync::Arc;
 pub enum ProcessType {
     /// A regular external command.
     #[default]
-    external,
+    External,
     /// A builtin command.
-    builtin,
+    Builtin,
     /// A shellscript function.
-    function,
+    Function,
     /// A block of commands, represented as a node.
-    block_node,
+    BlockNode,
     /// The exec builtin.
-    exec,
+    Exec,
 }
 
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum JobControl {
-    all,
-    interactive,
-    none,
+    All,
+    Interactive,
+    None,
 }
 
 impl TryFrom<&wstr> for JobControl {
@@ -74,11 +74,11 @@ impl TryFrom<&wstr> for JobControl {
 
     fn try_from(value: &wstr) -> Result<Self, Self::Error> {
         if value == "full" {
-            Ok(JobControl::all)
+            Ok(JobControl::All)
         } else if value == "interactive" {
-            Ok(JobControl::interactive)
+            Ok(JobControl::Interactive)
         } else if value == "none" {
-            Ok(JobControl::none)
+            Ok(JobControl::None)
         } else {
             Err(())
         }
@@ -582,13 +582,13 @@ impl AtomicPid {
 /// represents it. Shellscript functions, builtins and blocks of code may all need to spawn an
 /// external process that handles the piping and redirecting of IO for them.
 ///
-/// If the process is of type [`ProcessType::external`] or [`ProcessType::exec`], `argv` is the argument
+/// If the process is of type [`ProcessType::External`] or [`ProcessType::Exec`], `argv` is the argument
 /// array and `actual_cmd` is the absolute path of the command to execute.
 ///
-/// If the process is of type [`ProcessType::builtin`], `argv` is the argument vector, and `argv[0]` is
+/// If the process is of type [`ProcessType::Builtin`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the builtin command.
 ///
-/// If the process is of type [`ProcessType::function`], `argv` is the argument vector, and `argv[0]` is
+/// If the process is of type [`ProcessType::Function`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the shellscript function.
 #[derive(Default)]
 pub struct Process {
@@ -607,7 +607,7 @@ pub struct Process {
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     pub variable_assignments: Vec<ConcreteAssignment>,
 
-    /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
+    /// Actual command to pass to exec in case of ProcessType::External or ProcessType::Exec.
     pub actual_cmd: WString,
 
     /// Generation counts for reaping.
@@ -742,8 +742,8 @@ impl Process {
     /// Return whether this process type is internal (block, function, or builtin).
     pub fn is_internal(&self) -> bool {
         match self.typ {
-            ProcessType::builtin | ProcessType::function | ProcessType::block_node => true,
-            ProcessType::external | ProcessType::exec => false,
+            ProcessType::Builtin | ProcessType::Function | ProcessType::BlockNode => true,
+            ProcessType::External | ProcessType::Exec => false,
         }
     }
 
@@ -764,7 +764,7 @@ impl Process {
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
     pub fn make_wait_handle(&self, jid: InternalJobId) -> Option<WaitHandleRef> {
-        if self.typ != ProcessType::external || self.pid().is_none() {
+        if self.typ != ProcessType::External || self.pid().is_none() {
             // Not waitable.
             None
         } else {
@@ -1203,13 +1203,13 @@ pub fn set_job_control_mode(mode: JobControl) {
     // tcsetpgrp(), but as fish is now a background process it will receive SIGTTOU and stop! Ensure
     // that doesn't happen by ignoring SIGTTOU.
     // Note that if we become interactive, we also ignore SIGTTOU.
-    if mode == JobControl::all {
+    if mode == JobControl::All {
         unsafe {
             libc::signal(SIGTTOU, SIG_IGN);
         }
     }
 }
-static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8);
+static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::Interactive as u8);
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.

@@ -74,7 +74,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     // Handle an exec call.
-    if job.processes()[0].typ == ProcessType::exec {
+    if job.processes()[0].typ == ProcessType::Exec {
         // If we are interactive, perhaps disallow exec if there are background jobs.
         if !allow_exec_with_background_jobs(parser) {
             for p in job.processes().iter() {
@@ -807,7 +807,7 @@ fn handle_builtin_output(
     out: &OutputStream,
     err: &OutputStream,
 ) {
-    assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
+    assert!(p.typ == ProcessType::Builtin, "Process is not a builtin");
 
     // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
     let outbuff = wcs2string(out.contents());
@@ -834,7 +834,7 @@ fn exec_external_command(
     p: &Process,
     proc_io_chain: &IoChain,
 ) -> LaunchResult {
-    assert!(p.typ == ProcessType::external, "Process is not external");
+    assert!(p.typ == ProcessType::External, "Process is not external");
     // Get argv and envv before we fork.
     let narrow_argv = p.argv().iter().map(|s| wcs2zstring(s)).collect();
     let argv = OwningNullTerminatedArray::new(narrow_argv);
@@ -976,14 +976,14 @@ fn get_performer_for_process(
     io_chain: &IoChain,
 ) -> Option<Box<ProcPerformer>> {
     assert!(
-        [ProcessType::function, ProcessType::block_node].contains(&p.typ),
+        matches!(p.typ, ProcessType::Function | ProcessType::BlockNode),
         "Unexpected process type"
     );
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
 
-    if p.typ == ProcessType::block_node {
+    if p.typ == ProcessType::BlockNode {
         Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
             let source = p
                 .block_node_source
@@ -1004,7 +1004,7 @@ fn get_performer_for_process(
                 .status
         }))
     } else {
-        assert!(p.typ == ProcessType::function);
+        assert!(p.typ == ProcessType::Function);
         let Some(props) = function::get_props(p.argv0().unwrap()) else {
             FLOG!(
                 error,
@@ -1090,7 +1090,7 @@ fn exec_block_or_func_process(
 }
 
 fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
-    assert!(p.typ == ProcessType::builtin, "Process must be a builtin");
+    assert!(p.typ == ProcessType::Builtin, "Process must be a builtin");
 
     // Determine if we have a "direct" redirection for stdin.
     let mut stdin_is_directly_redirected = false;
@@ -1172,7 +1172,7 @@ fn exec_builtin_process(
     io_chain: &IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
-    assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
+    assert!(p.typ == ProcessType::Builtin, "Process is not a builtin");
     let mut out =
         create_output_stream_for_builtin(STDOUT_FILENO, io_chain, piped_output_needs_buffering);
     let mut err =
@@ -1274,7 +1274,7 @@ fn exec_process_in_job(
         process_net_io_chain.push(Arc::new(IoClose::new(afd.as_raw_fd())));
     }
 
-    if p.typ != ProcessType::block_node {
+    if p.typ != ProcessType::BlockNode {
         // A simple `begin ... end` should not be considered an execution of a command.
         parser.libdata_mut().exec_count += 1;
     }
@@ -1310,21 +1310,21 @@ fn exec_process_in_job(
     // Execute the process.
     p.check_generations_before_launch();
     match p.typ {
-        ProcessType::function | ProcessType::block_node => exec_block_or_func_process(
+        ProcessType::Function | ProcessType::BlockNode => exec_block_or_func_process(
             parser,
             j,
             p,
             process_net_io_chain,
             piped_output_needs_buffering,
         ),
-        ProcessType::builtin => exec_builtin_process(
+        ProcessType::Builtin => exec_builtin_process(
             parser,
             j,
             p,
             &process_net_io_chain,
             piped_output_needs_buffering,
         ),
-        ProcessType::external => {
+        ProcessType::External => {
             parser.libdata_mut().exec_external_count += 1;
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
@@ -1332,7 +1332,7 @@ fn exec_process_in_job(
             parser.mut_wait_handles().remove_by_pid(p.pid().unwrap());
             Ok(())
         }
-        ProcessType::exec => {
+        ProcessType::Exec => {
             // We should have handled exec up above.
             panic!("process_type_t::exec process found in pipeline, where it should never be. Aborting.");
         }
@@ -1353,13 +1353,13 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
     }
 
     // Skip execs, which can only appear at the front.
-    if j.processes()[0].typ == ProcessType::exec {
+    if j.processes()[0].typ == ProcessType::Exec {
         return None;
     }
 
     // Find the last non-external process, and return it if it pipes into an external process.
     for (i, p) in j.processes().iter().enumerate().rev() {
-        if p.typ != ProcessType::external {
+        if p.typ != ProcessType::External {
             return if p.is_last_in_job { None } else { Some(i) };
         }
     }

@@ -565,16 +565,16 @@ impl<'a> ExecutionContext<'a> {
         // Determine the process type, which depends on the statement decoration (command, builtin,
         // etc).
         match statement.decoration() {
-            StatementDecoration::exec => ProcessType::exec,
-            StatementDecoration::command => ProcessType::external,
-            StatementDecoration::builtin => ProcessType::builtin,
+            StatementDecoration::exec => ProcessType::Exec,
+            StatementDecoration::command => ProcessType::External,
+            StatementDecoration::builtin => ProcessType::Builtin,
             StatementDecoration::none => {
                 if function::exists(cmd, ctx.parser()) {
-                    ProcessType::function
+                    ProcessType::Function
                 } else if builtin_exists(cmd) {
-                    ProcessType::builtin
+                    ProcessType::Builtin
                 } else {
-                    ProcessType::external
+                    ProcessType::External
                 }
             }
         }
@@ -720,7 +720,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Determine the process type.
         let mut process_type = self.process_type_for_command(ctx, statement, &cmd);
-        let external_cmd = if [ProcessType::external, ProcessType::exec].contains(&process_type) {
+        let external_cmd = if [ProcessType::External, ProcessType::Exec].contains(&process_type) {
             let parser = ctx.parser();
             // Determine the actual command. This may be an implicit cd.
             let external_cmd = path_try_get_path(&cmd, parser.vars());
@@ -771,9 +771,9 @@ impl<'a> ExecutionContext<'a> {
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
             process_type = if function::exists(L!("cd"), ctx.parser()) {
-                ProcessType::function
+                ProcessType::Function
             } else {
-                ProcessType::builtin
+                ProcessType::Builtin
             };
         } else {
             // Not implicit cd.
@@ -831,7 +831,7 @@ impl<'a> ExecutionContext<'a> {
         let mut redirections = RedirectionSpecList::new();
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
-            proc.typ = ProcessType::block_node;
+            proc.typ = ProcessType::BlockNode;
             proc.block_node_source = Some(Arc::clone(self.pstree()));
             proc.internal_block_node = Some(statement.into());
             proc.set_redirection_specs(redirections);
@@ -1879,9 +1879,9 @@ impl<'a> ExecutionContext<'a> {
             return false;
         }
         match get_job_control_mode() {
-            JobControl::all => true,
-            JobControl::interactive => ctx.parser().is_interactive(),
-            JobControl::none => false,
+            JobControl::All => true,
+            JobControl::Interactive => ctx.parser().is_interactive(),
+            JobControl::None => false,
         }
     }
 }

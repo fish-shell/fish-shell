@@ -985,22 +985,9 @@ fn get_performer_for_process(
 
     if p.typ == ProcessType::BlockNode {
         Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-            let source = p
-                .block_node_source
-                .as_ref()
-                .expect("Process is missing source info");
-            let node = p
-                .internal_block_node
-                .as_ref()
-                .expect("Process is missing node info");
+            let node = p.block_node.as_ref().expect("Process is missing node info");
             parser
-                .eval_node(
-                    source,
-                    unsafe { node.as_ref() },
-                    &io_chain,
-                    job_group.as_ref(),
-                    BlockType::top,
-                )
+                .eval_node(node, &io_chain, job_group.as_ref(), BlockType::top)
                 .status
         }))
     } else {
@@ -1015,16 +1002,10 @@ fn get_performer_for_process(
         Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
             let argv = p.argv();
             // Pull out the job list from the function.
-            let body = &props.func_node.jobs;
             let fb = function_prepare_environment(parser, argv.clone(), &props);
-            let parsed_source = props.func_node.parsed_source_ref();
-            let mut res = parser.eval_node(
-                &parsed_source,
-                body,
-                &io_chain,
-                job_group.as_ref(),
-                BlockType::top,
-            );
+            let body_node = props.func_node.child_ref(|n| &n.jobs);
+            let mut res =
+                parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
             function_restore_environment(parser, fb);
 
             // If the function did not execute anything, treat it as success.

@@ -832,8 +832,7 @@ impl<'a> ExecutionContext<'a> {
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
             proc.typ = ProcessType::BlockNode;
-            proc.block_node_source = Some(Arc::clone(self.pstree()));
-            proc.internal_block_node = Some(statement.into());
+            proc.block_node = Some(NodeRef::new(Arc::clone(self.pstree()), statement));
             proc.set_redirection_specs(redirections);
         }
         reason
@@ -1280,10 +1279,7 @@ impl<'a> ExecutionContext<'a> {
             ctx.parser(),
             &mut streams,
             &mut shim_arguments,
-            NodeRef::new(
-                Arc::clone(self.pstree()),
-                statement as *const ast::BlockStatement,
-            ),
+            NodeRef::new(Arc::clone(self.pstree()), statement),
         );
 
         ctx.parser().libdata_mut().status_count += 1;

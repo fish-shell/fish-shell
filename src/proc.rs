@@ -13,7 +13,7 @@ use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
-use crate::parse_tree::ParsedSourceRef;
+use crate::parse_tree::NodeRef;
 use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
@@ -601,8 +601,7 @@ pub struct Process {
 
     /// For internal block processes only, the node of the statement.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
-    pub block_node_source: Option<ParsedSourceRef>,
-    pub internal_block_node: Option<std::ptr::NonNull<ast::Statement>>,
+    pub block_node: Option<NodeRef<ast::Statement>>,
 
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     pub variable_assignments: Vec<ConcreteAssignment>,

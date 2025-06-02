@@ -1,10 +1,11 @@
 //! Wrappers around posix_spawn.
 
 use super::blocked_signals_for_job;
+use crate::exec::{is_thompson_shell_script, PgroupPolicy};
+use crate::libc::_PATH_BSHELL;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::signals_to_default;
-use crate::{exec::is_thompson_shell_script, libc::_PATH_BSHELL};
 use errno::Errno;
 use libc::{c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
@@ -99,18 +100,20 @@ pub struct PosixSpawner {
 }
 
 impl PosixSpawner {
-    pub fn new(j: &Job, dup2s: &Dup2List) -> Result<PosixSpawner, Errno> {
+    pub fn new(
+        j: &Job,
+        pgroup_policy: PgroupPolicy,
+        dup2s: &Dup2List,
+    ) -> Result<PosixSpawner, Errno> {
         let mut attr = Attr::new()?;
         let mut actions = FileActions::new()?;
 
         // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
         // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
-        let desired_pgid = if let Some(pgid) = j.get_pgid() {
-            Some(pgid.get())
-        } else if j.processes()[0].leads_pgrp {
-            Some(0)
-        } else {
-            None
+        let desired_pgid = match pgroup_policy {
+            PgroupPolicy::Inherit => None,
+            PgroupPolicy::Lead => Some(0),
+            PgroupPolicy::Join(pid) => Some(pid),
         };
 
         // Set our flags.

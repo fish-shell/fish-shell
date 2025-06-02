@@ -4,7 +4,6 @@
 use super::flog_safe::FLOG_SAFE;
 use crate::nix::getpid;
 use crate::null_terminated_array::OwningNullTerminatedArray;
-use crate::proc::Pid;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
@@ -40,20 +39,20 @@ fn clear_cloexec(fd: i32) -> i32 {
 pub(crate) fn report_setpgid_error(
     err: i32,
     is_parent: bool,
-    pid: Pid,
-    desired_pgid: Pid,
+    pid: libc::pid_t,
+    desired_pgid: libc::pid_t,
     job_id: i64,
     command: &CStr,
     argv0: &CStr,
 ) {
-    let cur_group = unsafe { libc::getpgid(pid.as_pid_t()) };
+    let cur_group = unsafe { libc::getpgid(pid) };
 
     FLOG_SAFE!(
         warning,
         "Could not send ",
         if is_parent { "child" } else { "self" },
         " ",
-        pid.get(),
+        pid,
         ", '",
         argv0,
         "' in job ",
@@ -63,35 +62,35 @@ pub(crate) fn report_setpgid_error(
         "' from group ",
         cur_group,
         " to group ",
-        desired_pgid.get(),
+        desired_pgid,
     );
 
     match err {
-        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid.get(), " has already exec'd"),
+        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
         libc::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
         libc::EPERM => {
             FLOG_SAFE!(
                 error,
                 "setpgid: Process ",
-                pid.get(),
+                pid,
                 " is a session leader or pgid ",
                 cur_group,
                 " does not match"
             );
         }
-        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid.get(), " does not match"),
+        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
         _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err),
     }
 }
 
-/// Execute setpgid, moving pid into the given pgroup.
+/// Execute setpgid, assigning a new pgroup based on the specified policy.
 /// Return the result of setpgid.
-pub fn execute_setpgid(pid: Pid, pgroup: Pid, is_parent: bool) -> i32 {
+pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -> i32 {
     // There is a comment "Historically we have looped here to support WSL."
     // TODO: stop looping.
     let mut eperm_count = 0;
     loop {
-        if unsafe { libc::setpgid(pid.as_pid_t(), pgroup.as_pid_t()) } == 0 {
+        if unsafe { libc::setpgid(pid, pgroup) } == 0 {
             return 0;
         }
         let err = errno::errno().0;

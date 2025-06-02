@@ -30,7 +30,7 @@ use crate::io::{
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
 use crate::libc::_PATH_BSHELL;
-use crate::nix::isatty;
+use crate::nix::{getpid, isatty};
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 #[cfg(FISH_USE_POSIX_SPAWN)]
@@ -668,13 +668,21 @@ fn run_internal_process_or_short_circuit(
     }
 }
 
-/// Call fork() as part of executing a process `p` in a job \j. Execute `child_action` in the
-/// context of the child.
+/// Different ways to assign a pgroup for a process.
+#[derive(Copy, Clone)]
+pub enum PgroupPolicy {
+    Inherit,           // Inherit fish's pgroup.
+    Join(libc::pid_t), // Join a specific pgroup.
+    Lead,              // The new process is the leader of a new pgroup.
+}
+
+/// Call fork() as part of executing a process in a job. Set up process groups.
+/// Execute `child_action` in the context of the child.
 fn fork_child_for_process(
     job: &Job,
     p: &Process,
     dup2s: &Dup2List,
-    fork_type: &wstr,
+    pgroup_policy: PgroupPolicy,
     child_action: impl FnOnce(&Process),
 ) -> LaunchResult {
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
@@ -701,56 +709,59 @@ fn fork_child_for_process(
     // to avoid allocations in the forked child.
     let narrow_cmd = wcs2zstring(job.command());
     let narrow_argv0 = wcs2zstring(p.argv0().unwrap_or_default());
+    let job_id = job.job_id().as_num();
 
-    let pid = execute_fork();
-    if pid < 0 {
+    // Time to fork.
+    let fork_res = execute_fork();
+    if fork_res < 0 {
         return Err(());
     }
 
-    // Note we are now post-fork if `is_parent is false.
-    // ONLY ASYNC SIGNAL-SAFE FUNCTIONS MAY BE CALLED AFTER FORK.
-    let is_parent = pid > 0;
+    // Determine the child pid.
+    let is_parent = fork_res > 0;
+    let pid: libc::pid_t = if is_parent { fork_res } else { getpid() };
 
-    // Record the pgroup if this is the leader.
-    // Both parent and child attempt to send the process to its new group, to resolve the race.
-    let pid = if is_parent { pid } else { crate::nix::getpid() };
-    let pid: Pid = Pid::new(pid).unwrap();
-    p.set_pid(pid);
-    if p.leads_pgrp {
-        job.group().set_pgid(pid);
-    }
-    {
-        let pid = p.pid().unwrap();
-        if let Some(pgid) = job.group().get_pgid() {
-            let err = execute_setpgid(pid, pgid, is_parent);
-            if err != 0 {
-                report_setpgid_error(
-                    err,
-                    is_parent,
-                    pid,
-                    pgid,
-                    job.job_id().as_num(),
-                    &narrow_cmd,
-                    &narrow_argv0,
-                )
-            }
+    // Send the process to a new pgroup if requested.
+    // Do this in BOTH the parent and child, to resolve the well-known race.
+    if let Some(pgid) = match pgroup_policy {
+        PgroupPolicy::Inherit => None,
+        PgroupPolicy::Join(pgid) => Some(pgid),
+        PgroupPolicy::Lead => Some(pid),
+    } {
+        let err = execute_setpgid(pid, pgid, is_parent);
+        // Note this error is not fatal.
+        if err != 0 {
+            report_setpgid_error(
+                err,
+                is_parent,
+                pid,
+                pgid,
+                job_id,
+                &narrow_cmd,
+                &narrow_argv0,
+            )
         }
     }
 
     if !is_parent {
-        // Child process.
+        // Set up the child process and run its action.
         child_setup_process(claim_tty_from, blocked_signals, true, dup2s);
         child_action(p);
-        panic!("Child process returned control to fork_child lambda!");
+        panic!("Child process returned control to fork_child!");
+    }
+
+    // We are the parent. Record the pid and store the pgid for the job if it should lead the pgroup.
+    p.set_pid(Pid::new(pid).unwrap());
+    if matches!(pgroup_policy, PgroupPolicy::Lead) {
+        job.group().set_pgid(Pid::new(pid).unwrap());
     }
 
     let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
     FLOGF!(
         exec_fork,
-        "Fork #%d, pid %d: %s for '%ls'",
+        "Fork #%d, pid %d fork external command for '%ls'",
         count,
         pid,
-        fork_type,
         p.argv0().unwrap()
     );
     Ok(())
@@ -846,6 +857,16 @@ fn exec_external_command(
     // Convert our IO chain to a dup2 sequence.
     let dup2s = dup2_list_resolve_chain(proc_io_chain);
 
+    // Decide on pgroups - either we stay in fish's pgroup, or we set the pgroup from our leader,
+    // or we become the leader.
+    let pgroup_policy = if p.leads_pgrp {
+        PgroupPolicy::Lead
+    } else if let Some(pgid) = j.group().get_pgid() {
+        PgroupPolicy::Join(pgid.as_pid_t())
+    } else {
+        PgroupPolicy::Inherit
+    };
+
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
     let _ = make_fd_blocking(STDIN_FILENO);
@@ -860,7 +881,7 @@ fn exec_external_command(
         let file = &parser.libdata().current_filename;
         let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1; // spawn counts as a fork+exec
 
-        let pid = PosixSpawner::new(j, &dup2s).and_then(|mut spawner| {
+        let pid = PosixSpawner::new(j, pgroup_policy, &dup2s).and_then(|mut spawner| {
             spawner.spawn(actual_cmd.as_ptr(), argv.get_mut(), envv.get_mut())
         });
         let pid = match pid {
@@ -872,12 +893,6 @@ fn exec_external_command(
                 return Err(());
             }
         };
-        let pid = Pid::new(pid).expect("Should have either a valid pid, or an error");
-
-        // This usleep can be used to test for various race conditions
-        // (https://github.com/fish-shell/fish-shell/issues/360).
-        // usleep(10000);
-
         FLOGF!(
             exec_fork,
             "Fork #%d, pid %d: spawn external command '%s' from '%ls'",
@@ -890,9 +905,9 @@ fn exec_external_command(
         );
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p.set_pid(pid);
+        p.set_pid(Pid::new(pid).unwrap());
         if p.leads_pgrp {
-            j.group().set_pgid(pid);
+            j.group().set_pgid(Pid::new(pid).unwrap());
             // posix_spawn should in principle set the pgid before returning.
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
@@ -902,7 +917,7 @@ fn exec_external_command(
         return Ok(());
     }
 
-    fork_child_for_process(j, p, &dup2s, L!("external command"), |p| {
+    fork_child_for_process(j, p, &dup2s, pgroup_policy, |p| {
         safe_launch_process(p, &actual_cmd, &argv, &envv)
     })
 }

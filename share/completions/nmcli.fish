@@ -2,8 +2,6 @@ set -l nmoutput '(nmcli -g NAME connection show --active 2>/dev/null)'
 set -l cname "$nmoutput"\t"Active connection"
 set -a cname '(nmcli -g NAME connection show 2>/dev/null)\t"Connection"'
 set -l ifname '(nmcli -g DEVICE device status 2>/dev/null)\t"Interface name"'
-set -l ssid '(nmcli -g SSID device wifi list 2>/dev/null)\t"SSID"'
-set -l bssid '(nmcli -g BSSID device wifi list 2>/dev/null | string replace --all \\\ "")\t"BSSID"'
 
 set -l nmcli_commands general networking radio connection device agent monitor help
 set -l nmcli_general status hostname permissions logging help
@@ -12,6 +10,20 @@ set -l nmcli_radio all wifi wwan help
 set -l nmcli_connection show up down add modify clone edit delete monitor reload load import export help
 set -l nmcli_device status show set connect reapply modify disconnect delete monitor wifi lldp help
 set -l nmcli_agent secret polkit all help
+
+# getting SSIDs might be slow, only retrieve them if completion requires them
+function __fish_nmcli_ssids
+    for ssid in (nmcli -g SSID device wifi list 2>/dev/null)
+        echo $ssid\t"SSID"
+    end
+end
+
+# getting BSSIDs might be slow, only retrieve them if completion requires them
+function __fish_nmcli_bssids
+    for bssid in (nmcli -g BSSID device wifi list 2>/dev/null | string replace --all \\\ "")
+        echo $bssid\t"BSSID"
+    end
+end
 
 complete -c nmcli -s t -l terse -d 'Output is terse' -n "not __fish_seen_subcommand_from $nmcli_commands"
 complete -c nmcli -s p -l pretty -d 'Output is pretty' -n "not __fish_seen_subcommand_from $nmcli_commands"
@@ -57,7 +69,7 @@ complete -c nmcli -n "contains_seq connection show -- (commandline -xp)" -l orde
 complete -c nmcli -n "contains_seq connection show -- (commandline -xp)" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -xp) && not contains -- (commandline -xp)[-1] ifname ap" -xa "help $cname" -k
 complete -c nmcli -n "contains_seq connection up -- (commandline -xp) && test (commandline -xp)[-1] = ifname" -xa "$ifname" -k
-complete -c nmcli -n "contains_seq connection up -- (commandline -xp) && test (commandline -xp)[-1] = ap" -xa "$bssid"
+complete -c nmcli -n "contains_seq connection up -- (commandline -xp) && test (commandline -xp)[-1] = ap" -xa "(__fish_nmcli_bssids)"
 complete -c nmcli -n "contains_seq connection up -- (commandline -xp)" -xa nsp -d 'Specify NSP to connect to (only for WiMAX)'
 complete -c nmcli -n "contains_seq connection up -- (commandline -xp)" -xa passwd-file -d 'password file to activate the connection'
 complete -c nmcli -n "contains_seq connection down -- (commandline -xp)" -xa "help $cname" -k
@@ -81,15 +93,15 @@ complete -c nmcli -n "contains_seq device set -- (commandline -xp)" -xa 'ifname 
 complete -c nmcli -n "contains_seq device wifi -- (commandline -xp); and not __fish_seen_subcommand_from $wifi_commands" -xa "$wifi_commands"
 complete -c nmcli -n "contains_seq device wifi list -- (commandline -xp)" -xa 'ifname bssid'
 complete -c nmcli -n "contains_seq device wifi list ifname -- (commandline -xp)" -xa "$ifname"
-complete -c nmcli -n "contains_seq device wifi list bssid -- (commandline -xp)" -xa "$bssid"
-complete -c nmcli -n "contains_seq device wifi connect -- (commandline -xp)" -xa "$ssid $bssid password wep-key-type ifname bssid name private hidden" -k
+complete -c nmcli -n "contains_seq device wifi list bssid -- (commandline -xp)" -xa "(__fish_nmcli_bssids)"
+complete -c nmcli -n "contains_seq device wifi connect -- (commandline -xp)" -xa "(__fish_nmcli_ssids) (__fish_nmcli_bssids) password wep-key-type ifname bssid name private hidden" -k
 complete -c nmcli -n "contains_seq device wifi connect ifname -- (commandline -xp)" -xa "$ifname"
-complete -c nmcli -n "contains_seq device wifi connect bssid -- (commandline -xp)" -xa "$bssid"
+complete -c nmcli -n "contains_seq device wifi connect bssid -- (commandline -xp)" -xa "(__fish_nmcli_bssids)"
 complete -c nmcli -n "contains_seq device wifi hotspot -- (commandline -xp)" -xa 'ifname con-name ssid band channel password'
 complete -c nmcli -n "contains_seq device wifi hotspot ifname -- (commandline -xp)" -xa "$ifname"
 complete -c nmcli -n "contains_seq device wifi rescan -- (commandline -xp)" -xa 'ifname ssid'
 complete -c nmcli -n "contains_seq device wifi rescan ifname -- (commandline -xp)" -xa "$ifname"
-complete -c nmcli -n "contains_seq device wifi rescan ssid -- (commandline -xp)" -xa "$ssid"
+complete -c nmcli -n "contains_seq device wifi rescan ssid -- (commandline -xp)" -xa "(__fish_nmcli_ssids)"
 complete -c nmcli -n "contains_seq device lldp -- (commandline -xp)" -xa list
 
 complete -c nmcli -n "__fish_seen_subcommand_from agent; and not __fish_seen_subcommand_from $nmcli_agent" -xa secret -d "Register nmcli as NM secret agent"

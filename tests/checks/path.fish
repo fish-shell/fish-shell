@@ -105,6 +105,21 @@ path filter -vf bin argagagji
 # CHECK: bin
 # CHECK: argagagji
 
+# With --all, return true if all paths are passed.
+path filter --all bin bin/bash
+echo $status
+# CHECK: 0
+path filter --all bin argagagji
+echo $status
+# CHECK: 1
+# With --all and --invert, return true if none of paths is passed.
+path filter --all --invert bin bin/bash
+echo $status
+# CHECK: 1
+path filter --all --invert argagagji argagagji2
+echo $status
+# CHECK: 0
+
 path filter --type file bin bin/fish
 # Only fish is a file
 # CHECK: bin/fish
@@ -273,8 +288,6 @@ path sort --unique --key=basename {def,abc}/{456,123,789} def/{abc,def,0} abc/{f
 # CHECK: def/def
 # CHECK: abc/foo
 
-
-
 # Symlink loop.
 # It goes brrr.
 ln -s target link
@@ -288,13 +301,12 @@ test (path resolve link) = (pwd -P)/link
 and echo link resolves to link
 # CHECK: link resolves to link
 
-
 # path mtime
 # These tests deal with *time*, so we have to account
 # for slow systems (like CI).
 # So we should only test with a lot of slack.
 
-echo bananana >> foo
+echo bananana >>foo
 test (math abs (date +%s) - (path mtime foo)) -lt 20
 or echo MTIME IS BOGUS
 

@@ -154,6 +154,9 @@ struct Options<'args> {
 
     no_ext_valid: bool,
     no_ext: bool,
+
+    all_valid: bool,
+    all: bool,
 }
 
 #[inline]
@@ -201,14 +204,13 @@ fn construct_short_opts(opts: &Options) -> WString {
     if opts.no_ext_valid {
         short_opts.push('E');
     }
-
     short_opts
 }
 
 /// Note that several long flags share the same short flag. That is okay. The caller is expected
 /// to indicate that a max of one of the long flags sharing a short flag is valid.
 /// Remember: adjust the completions in share/completions/ when options change
-const LONG_OPTIONS: [WOption<'static>; 11] = [
+const LONG_OPTIONS: [WOption<'static>; 12] = [
     wopt(L!("quiet"), NoArgument, 'q'),
     wopt(L!("null-in"), NoArgument, 'z'),
     wopt(L!("null-out"), NoArgument, 'Z'),
@@ -220,6 +222,7 @@ const LONG_OPTIONS: [WOption<'static>; 11] = [
     wopt(L!("unique"), NoArgument, 'u'),
     wopt(L!("key"), RequiredArgument, NON_OPTION_CHAR),
     wopt(L!("no-extension"), NoArgument, 'E'),
+    wopt(L!("all"), NoArgument, '\x02'),
 ];
 
 fn parse_opts<'args>(
@@ -337,6 +340,11 @@ fn parse_opts<'args>(
             NON_OPTION_CHAR => {
                 assert!(w.woptarg.is_some());
                 opts.key = w.woptarg;
+                continue;
+            }
+
+            '\x02' if opts.all_valid => {
+                opts.all = true;
                 continue;
             }
             _ => {
@@ -846,6 +854,7 @@ fn path_filter_maybe_is(
     opts.types_valid = true;
     opts.perms_valid = true;
     opts.invert_valid = true;
+    opts.all_valid = true;
     let mut optind = 0;
 
     parse_opts(&mut opts, &mut optind, 0, args, parser, streams)?;
@@ -873,7 +882,10 @@ fn path_filter_maybe_is(
         None
     };
 
-    for (arg, _) in arguments.filter(|(f, _)| {
+    // Collect arguments into a Vec so we can use .len()
+    let arguments_vec: Vec<_> = arguments.collect();
+
+    for (arg, _) in arguments_vec.iter().cloned().filter(|(f, _)| {
         (opts.perms.is_none() && opts.types.is_none())
             || (filter_path(&opts, f, uid, gid) != opts.invert)
     }) {
@@ -881,10 +893,20 @@ fn path_filter_maybe_is(
         if opts.perms.is_none() && opts.types.is_none() {
             let ok = waccess(&arg, F_OK) == 0;
             if ok == opts.invert {
+                // For --all, fail early if any path does not match the filter.
+                if opts.all {
+                    return Err(STATUS_CMD_ERROR);
+                }
                 continue;
             }
         }
 
+        n_transformed += 1;
+
+        if opts.all {
+            // For --all, do not output paths, just check all must match.
+            continue;
+        }
         // We *know* this is a filename,
         // and so if it starts with a `-` we *know* it is relative
         // to $PWD. So we can add `./`.
@@ -895,12 +917,16 @@ fn path_filter_maybe_is(
         } else {
             path_out(streams, &opts, arg);
         }
-        n_transformed += 1;
         if opts.quiet {
             return Ok(SUCCESS);
         };
     }
 
+    if opts.all && n_transformed != arguments_vec.len() {
+        // We have a filter and some paths didn't match.
+        // Return Err if we have a filter and some paths didn't match.
+        return Err(STATUS_CMD_ERROR);
+    }
     if n_transformed > 0 {
         Ok(SUCCESS)
     } else {
@@ -922,7 +948,6 @@ pub fn path(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         return Err(STATUS_INVALID_ARGS);
     };
     let argc = args.len();
-
     if argc <= 1 {
         streams
             .err

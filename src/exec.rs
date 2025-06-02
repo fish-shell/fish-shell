@@ -706,11 +706,15 @@ fn fork_child_for_process(
     if pid < 0 {
         return Err(());
     }
+
+    // Note we are now post-fork if `is_parent is false.
+    // ONLY ASYNC SIGNAL-SAFE FUNCTIONS MAY BE CALLED AFTER FORK.
     let is_parent = pid > 0;
 
     // Record the pgroup if this is the leader.
     // Both parent and child attempt to send the process to its new group, to resolve the race.
     let pid = if is_parent { pid } else { crate::nix::getpid() };
+    let pid: Pid = Pid::new(pid).unwrap();
     p.set_pid(pid);
     if p.leads_pgrp {
         job.group().set_pgid(pid);
@@ -886,9 +890,9 @@ fn exec_external_command(
         );
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p.pid.store(pid);
+        p.set_pid(pid);
         if p.leads_pgrp {
-            j.group().set_pgid(pid.as_pid_t());
+            j.group().set_pgid(pid);
             // posix_spawn should in principle set the pgid before returning.
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.

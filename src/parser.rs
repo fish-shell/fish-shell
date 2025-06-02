@@ -1053,10 +1053,11 @@ impl Parser {
     }
 
     /// Returns the job and job index with the given pid.
+    /// This assumes that all external jobs have a pid.
     pub fn job_get_with_index_from_pid(&self, pid: Pid) -> Option<(usize, JobRef)> {
         for (i, job) in self.jobs().iter().enumerate() {
             for p in job.external_procs() {
-                if p.pid.load().unwrap() == pid {
+                if p.pid().unwrap() == pid {
                     return Some((i, job.clone()));
                 }
             }

@@ -42,7 +42,7 @@ use std::os::fd::RawFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::{AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, OnceLock};
 
 /// Types of processes.
@@ -513,24 +513,6 @@ impl fish_printf::ToArg<'static> for Pid {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct AtomicPid(AtomicU32);
-
-impl AtomicPid {
-    #[inline(always)]
-    pub fn load(&self) -> Option<Pid> {
-        Pid::new(self.0.load(Ordering::Relaxed) as i32)
-    }
-    #[inline(always)]
-    pub fn store(&self, pid: Pid) {
-        self.0.store(pid.get() as u32, Ordering::Relaxed);
-    }
-    #[inline(always)]
-    pub fn swap(&self, pid: Pid) -> Option<Pid> {
-        Pid::new(self.0.swap(pid.get() as u32, Ordering::Relaxed) as i32)
-    }
-}
-
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
@@ -571,7 +553,7 @@ pub struct Process {
     pub gens: GenerationsList,
 
     /// Process ID or `None` where not available.
-    pub pid: AtomicPid,
+    pub pid: OnceLock<Pid>,
 
     /// If we are an "internal process," that process.
     pub internal_proc: RefCell<Option<Arc<InternalProc>>>,
@@ -635,7 +617,7 @@ impl Process {
     /// Retrieves the associated [`libc::pid_t`], `None` if unset.
     #[inline(always)]
     pub fn pid(&self) -> Option<Pid> {
-        self.pid.load()
+        self.pid.get().copied()
     }
 
     #[inline(always)]
@@ -644,10 +626,10 @@ impl Process {
     }
 
     /// Sets the process' pid. Panics if a pid has already been set.
-    pub fn set_pid(&self, pid: libc::pid_t) {
-        let pid = Pid::new(pid).expect("Invalid pid passed to Process::set_pid()");
-        let old = self.pid.swap(pid);
-        assert!(old.is_none(), "Process::set_pid() called more than once!");
+    pub fn set_pid(&self, pid: Pid) {
+        self.pid
+            .set(pid)
+            .expect("Process::set_pid() called more than once!");
     }
 
     /// Sets `argv`.
@@ -859,7 +841,7 @@ impl Job {
     /// Equivalent to `processes().iter().filter(|p| p.pid.is_some())`.
     #[inline(always)]
     pub fn external_procs(&self) -> impl Iterator<Item = &Process> {
-        self.processes.iter().filter(|p| p.pid.load().is_some())
+        self.processes.iter().filter(|p| p.pid().is_some())
     }
 
     /// Return whether it is OK to reap a given process. Sometimes we want to defer reaping a
@@ -899,9 +881,7 @@ impl Job {
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This will never be fish's own pid.
     pub fn get_last_pid(&self) -> Option<Pid> {
-        self.external_procs()
-            .last()
-            .and_then(|proc| proc.pid.load())
+        self.external_procs().last().and_then(|proc| proc.pid())
     }
 
     /// The id of this job.
@@ -1282,7 +1262,7 @@ pub fn proc_update_jiffies(parser: &Parser) {
         for p in job.external_procs() {
             p.last_times.replace(ProcTimes {
                 time: timef(),
-                jiffies: proc_get_jiffies(p.pid.load().unwrap()),
+                jiffies: proc_get_jiffies(p.pid().unwrap()),
             });
         }
     }

@@ -32,7 +32,7 @@ fn cpu_use(j: &Job) -> f64 {
     let mut u = 0.0;
     for p in j.external_procs() {
         let now = timef();
-        let jiffies = proc_get_jiffies(p.pid.load().unwrap());
+        let jiffies = proc_get_jiffies(*p.pid.get().unwrap());
         let last_jiffies = p.last_times.get().jiffies;
         let since = now - last_jiffies as f64;
         if since > 0.0 && jiffies > last_jiffies {
@@ -99,7 +99,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             }
 
             for p in j.external_procs() {
-                out += &sprintf!("%d\n", p.pid.load().unwrap())[..];
+                out += &sprintf!("%d\n", *p.pid.get().unwrap())[..];
             }
             streams.out.append(out);
         }

@@ -15,7 +15,7 @@ use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
-    path::{path_get_config_remoteness, DirRemoteness},
+    path::{path_get_data_remoteness, DirRemoteness},
 };
 
 /// History file types.
@@ -243,7 +243,7 @@ fn should_mmap() -> bool {
     }
 
     // mmap only if we are known not-remote.
-    path_get_config_remoteness() != DirRemoteness::remote
+    path_get_data_remoteness() != DirRemoteness::remote
 }
 
 fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {

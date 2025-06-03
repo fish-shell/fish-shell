@@ -1360,9 +1360,6 @@ impl HistoryImpl {
         if ABANDONED_LOCKING.load() {
             return false;
         }
-        if CHAOS_MODE.load() {
-            return false;
-        }
         if path_get_data_remoteness() == DirRemoteness::remote {
             return false;
         }
@@ -2084,7 +2081,3 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
 static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-/// Whether we're in maximum chaos mode, useful for testing.
-/// This causes things like locks to fail.
-pub static CHAOS_MODE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

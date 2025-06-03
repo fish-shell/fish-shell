@@ -124,6 +124,8 @@ pub mod categories {
 
         (profile_history, "profile-history", "History performance measurements");
 
+        (synced_file_access, "synced-file-access", "Synchronized file access");
+
         (iothread, "iothread", "Background IO thread events");
         (fd_monitor, "fd-monitor", "FD monitor events");
 

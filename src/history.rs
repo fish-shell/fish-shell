@@ -395,12 +395,7 @@ impl HistoryImpl {
     /// `item_at_index()` until a call to `resolve_pending()`. Pending items are tracked with an
     /// offset into the array of new items, so adding a non-pending item has the effect of resolving
     /// all pending items.
-    fn add(
-        &mut self,
-        item: HistoryItem,
-        pending: bool, /*=false*/
-        do_save: bool, /*=true*/
-    ) {
+    fn add(&mut self, item: HistoryItem, pending: bool, do_save: bool) {
         // We use empty items as sentinels to indicate the end of history.
         // Do not allow them to be added (#6032).
         if item.contents.is_empty() {
@@ -1283,7 +1278,7 @@ impl History {
     /// Privately add an item. If pending, the item will not be returned by history searches until a
     /// call to resolve_pending. Any trailing ephemeral items are dropped.
     /// Exposed for testing.
-    pub fn add(&self, item: HistoryItem, pending: bool /*=false*/) {
+    pub fn add(&self, item: HistoryItem, pending: bool) {
         self.imp().add(item, pending, true)
     }
 

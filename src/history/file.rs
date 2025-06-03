@@ -117,7 +117,7 @@ pub struct HistoryFileContents {
 
 impl HistoryFileContents {
     /// Construct a history file contents from a [`File`] reference.
-    pub fn create(history_file: &mut File) -> std::io::Result<Self> {
+    pub fn create(mut history_file: &File) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
         let len: usize = match history_file.seek(SeekFrom::End(0))?.try_into() {
             Ok(len) => len,
@@ -128,11 +128,11 @@ impl HistoryFileContents {
                 ))
             }
         };
-        let map_anon = |file: &mut File, len: usize| -> std::io::Result<MmapRegion> {
+        let map_anon = |mut file: &File, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
             file.seek(SeekFrom::Start(0))?;
-            read_zero_padded(&mut *file, region.as_mut())?;
+            file.read_exact(&mut region)?;
             Ok(region)
         };
         let region = if should_mmap() {
@@ -244,22 +244,6 @@ fn should_mmap() -> bool {
 
     // mmap only if we are known not-remote.
     path_get_config_remoteness() != DirRemoteness::remote
-}
-
-/// Read from `file` to fill `dest`, zeroing any unused space.
-fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()> {
-    while !dest.is_empty() {
-        match file.read(dest) {
-            Ok(0) => break,
-            Ok(amt) => {
-                dest = &mut dest[amt..];
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-            Err(err) => return Err(err),
-        }
-    }
-    dest.fill(0u8);
-    Ok(())
 }
 
 fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {

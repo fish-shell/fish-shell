@@ -50,6 +50,7 @@ Interactive improvements
 - Left mouse click (as requested by `click_events <terminal-compatibility.html#click-events>`__) can now select pager items (:issue:`10932`).
 - Instead of flashing all the text to the left of the cursor, fish now flashes the matched token during history token search, the completed token during completion (:issue:`11050`), the autosuggestion when deleting it, and the full command line in all other cases.
 - Pasted commands are now stripped of any ``$`` prefix.
+- The :kbd:`alt-s` binding will now also use ``run0`` if available.
 
 New or improved bindings
 ^^^^^^^^^^^^^^^^^^^^^^^^

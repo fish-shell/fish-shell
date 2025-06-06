@@ -316,7 +316,7 @@ function fish_config --description "Launch fish's web based configuration"
                         if string match -qr '^tools/' -- $file
                             set content (status get-file $file)
                         else
-                            read -z content < $file
+                            read -z content <$file
                         end
 
                         printf %s\n $content | while read -lat toks

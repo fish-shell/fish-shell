@@ -5,7 +5,8 @@
 #
 # Usage: ./diff_profiles.fish profile1.log profile2.log > profile_diff.log
 
-if test (count $argv) -ne 2;
+if test (count $argv) -ne 2
+
     echo "Incorrect number of arguments."
     echo "Usage: "(status filename)" profile1.log profile2.log"
     exit 1

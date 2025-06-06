@@ -44,7 +44,7 @@ function cleanup_exit
     exit $exit_status
 end
 
-argparse --exclusive 'no-mo,only-mo,dry-run' 'no-mo' 'only-mo' 'dry-run' -- $argv
+argparse --exclusive 'no-mo,only-mo,dry-run' no-mo only-mo dry-run -- $argv
 or exit $status
 
 # Make sure that the template file is not included in $po_files.

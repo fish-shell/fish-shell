@@ -2303,6 +2303,8 @@ pub fn complete_add(
         typ: option_type,
         result_mode,
         comp,
+        // The external source is a completion script in `share`,
+        // from which `build_tools/fish_xgettext.fish` extracts descriptions.
         desc: LocalizableString::from_external_source(desc),
         conditions: condition,
         flags,

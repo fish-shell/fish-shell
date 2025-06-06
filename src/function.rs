@@ -294,6 +294,8 @@ pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
         // Note the description is immutable, as it may be accessed on another thread, so we copy
         // the properties to modify it.
         let mut new_props = props.as_ref().clone();
+        // Translations will only be available if the function description has been extracted into
+        // the translation files available to fish.
         new_props.description = LocalizableString::from_external_source(desc);
         funcset.funcs.insert(name.to_owned(), Arc::new(new_props));
     }

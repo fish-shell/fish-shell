@@ -3,7 +3,6 @@
 # TODO: POSIX patch
 #
 
-
 # No effect on POSIX systems that don't use O_BINARY/O_TEXT
 uname -s | string match -q CYGWIN\*
 and complete -c patch -l binary -d "Read & write data in binary mode"

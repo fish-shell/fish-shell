@@ -73,7 +73,7 @@ def makeenv(script_path, home, test_helper_path):
         "LANGUAGE",
         "COLORTERM",
         "KONSOLE_VERSION",
-        "TERM", # Erase this since we still respect TERM=dumb etc.
+        "TERM",  # Erase this since we still respect TERM=dumb etc.
         "TERM_PROGRAM",
         "TERM_PROGRAM_VERSION",
         "VTE_VERSION",

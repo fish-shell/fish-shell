@@ -1,4 +1,3 @@
-
 # Returns 0 if the command has not had a subcommand yet
 # Does not currently account for -chdir
 function __fish_tofu_needs_command

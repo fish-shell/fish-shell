@@ -23,37 +23,31 @@ type R = (u32, u32);
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u8)]
 pub enum WcWidth {
-  /// The character is single-width
-  One,
-  /// The character is double-width
-  Two,
-  /// The character is not printable.
-  NonPrint,
-  /// The character is a zero-width combiner.
-  Combining,
-  /// The character is East-Asian ambiguous width.
-  Ambiguous,
-  /// The character is for private use.
-  PrivateUse,
-  /// The character is unassigned.
-  Unassigned,
-  /// Width is 1 in Unicode 8, 2 in Unicode 9+.
-  WidenedIn9,
-  /// The character is a noncharacter.
-  NonCharacter,
+    /// The character is single-width
+    One,
+    /// The character is double-width
+    Two,
+    /// The character is not printable.
+    NonPrint,
+    /// The character is a zero-width combiner.
+    Combining,
+    /// The character is East-Asian ambiguous width.
+    Ambiguous,
+    /// The character is for private use.
+    PrivateUse,
+    /// The character is unassigned.
+    Unassigned,
+    /// Width is 1 in Unicode 8, 2 in Unicode 9+.
+    WidenedIn9,
+    /// The character is a noncharacter.
+    NonCharacter,
 }
 
 /// Simple ASCII characters - used a lot, so we check them first.
-const ASCII_TABLE: &'static [R] = &[
-    (0x00020, 0x0007E)
-];
+const ASCII_TABLE: &'static [R] = &[(0x00020, 0x0007E)];
 
 /// Private usage range.
-const PRIVATE_TABLE: &'static [R] = &[
-    (0x0E000, 0x0F8FF),
-    (0xF0000, 0xFFFFD),
-    (0x100000, 0x10FFFD)
-];
+const PRIVATE_TABLE: &'static [R] = &[(0x0E000, 0x0F8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)];
 
 /// Nonprinting characters.
 const NONPRINT_TABLE: &'static [R] = &[
@@ -80,7 +74,7 @@ const NONPRINT_TABLE: &'static [R] = &[
     (0x1BCA0, 0x1BCA3),
     (0x1D173, 0x1D17A),
     (0xE0001, 0xE0001),
-    (0xE0020, 0xE007F)
+    (0xE0020, 0xE007F),
 ];
 
 /// Width 0 combining marks.
@@ -405,14 +399,11 @@ const COMBINING_TABLE: &'static [R] = &[
     (0x1E5EE, 0x1E5EF),
     (0x1E8D0, 0x1E8D6),
     (0x1E944, 0x1E94A),
-    (0xE0100, 0xE01EF)
+    (0xE0100, 0xE01EF),
 ];
 
 /// Width 0 combining letters.
-const COMBININGLETTERS_TABLE: &'static [R] = &[
-    (0x01160, 0x011FF),
-    (0x0D7B0, 0x0D7FF)
-];
+const COMBININGLETTERS_TABLE: &'static [R] = &[(0x01160, 0x011FF), (0x0D7B0, 0x0D7FF)];
 
 /// Width 2 characters.
 const DOUBLEWIDE_TABLE: &'static [R] = &[
@@ -488,7 +479,7 @@ const DOUBLEWIDE_TABLE: &'static [R] = &[
     (0x1FADF, 0x1FAE9),
     (0x1FAF0, 0x1FAF8),
     (0x20000, 0x2FFFD),
-    (0x30000, 0x3FFFD)
+    (0x30000, 0x3FFFD),
 ];
 
 /// Ambiguous-width characters.
@@ -671,7 +662,7 @@ const AMBIGUOUS_TABLE: &'static [R] = &[
     (0x1F19B, 0x1F1AC),
     (0xE0100, 0xE01EF),
     (0xF0000, 0xFFFFD),
-    (0x100000, 0x10FFFD)
+    (0x100000, 0x10FFFD),
 ];
 
 /// Unassigned characters.
@@ -1426,7 +1417,7 @@ const UNASSIGNED_TABLE: &'static [R] = &[
     (0xE0000, 0xE0000),
     (0xE0002, 0xE001F),
     (0xE0080, 0xE00FF),
-    (0xE01F0, 0xEFFFD)
+    (0xE01F0, 0xEFFFD),
 ];
 
 /// Non-characters.
@@ -1448,7 +1439,7 @@ const NONCHAR_TABLE: &'static [R] = &[
     (0xDFFFE, 0xDFFFF),
     (0xEFFFE, 0xEFFFF),
     (0xFFFFE, 0xFFFFF),
-    (0x10FFFE, 0x10FFFF)
+    (0x10FFFE, 0x10FFFF),
 ];
 
 /// Characters that were widened from width 1 to 2 in Unicode 9.
@@ -1518,7 +1509,7 @@ const WIDENED_TABLE: &'static [R] = &[
     (0x1F6EB, 0x1F6EC),
     (0x1F910, 0x1F918),
     (0x1F980, 0x1F984),
-    (0x1F9C0, 0x1F9C0)
+    (0x1F9C0, 0x1F9C0),
 ];
 
 fn in_table(arr: &[R], c: u32) -> bool {

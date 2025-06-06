@@ -10,7 +10,7 @@ Synopsis
 
     fish_config [browse]
     fish_config prompt (choose | list | save | show)
-    fish_config theme (choose | demo | dump | list | save | show)
+    fish_config theme (choose | demo | dump | list | save | show | update)
 
 Description
 -----------
@@ -40,6 +40,9 @@ Available subcommands for the ``theme`` command:
 - ``list`` lists the names of the available sample themes.
 - ``save`` saves the given theme to :ref:`universal variables <variables-universal>`.
 - ``show`` shows what the given sample theme (or all) would look like.
+- ``update`` updates any ``fish_color_*`` and ``fish_pager_color_*`` variables whose value contains
+             "--track=THEME". They are set to the latest version of that theme, and the tracking
+             option is preserved. Note that ``fish_config theme update`` is run at fish startup.
 
 The **-h** or **--help** option displays help about using this command.
 

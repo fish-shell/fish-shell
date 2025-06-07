@@ -885,10 +885,14 @@ fn path_filter_maybe_is(
     // Collect arguments into a Vec so we can use .len()
     let arguments_vec: Vec<_> = arguments.collect();
 
-    for (arg, _) in arguments_vec.iter().cloned().filter(|(f, _)| {
-        (opts.perms.is_none() && opts.types.is_none())
-            || (filter_path(&opts, f, uid, gid) != opts.invert)
-    }) {
+    for (arg, _) in arguments_vec
+        .iter()
+        .filter(|&(f, _)| {
+            (opts.perms.is_none() && opts.types.is_none())
+                || (filter_path(&opts, f, uid, gid) != opts.invert)
+        })
+        .cloned()
+    {
         // If we don't have filters, check if it exists.
         if opts.perms.is_none() && opts.types.is_none() {
             let ok = waccess(&arg, F_OK) == 0;

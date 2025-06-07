@@ -174,8 +174,10 @@ def main():
             f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}"
         )
 
+    tmp_root = tempfile.mkdtemp(prefix="fishtest-root-")
+
     for f, arg in files:
-        match run_test(f, arg, script_path, args, def_subs, lconfig, fishdir):
+        match run_test(tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir):
             case TestSkip(arg):
                 skipcount += 1
                 print_result(arg, "SKIPPED", BLUE)
@@ -186,6 +188,8 @@ def main():
             case TestPass(arg, duration_ms):
                 passcount += 1
                 print_result(arg, "PASSED", GREEN, duration_ms)
+
+    shutil.rmtree(tmp_root)
 
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")
@@ -218,79 +222,77 @@ class TestPass:
 TestResult = TestSkip | TestFail | TestPass
 
 
-def run_test(path, arg, script_path, args, def_subs, lconfig, fishdir) -> TestResult:
+def run_test(
+    tmp_root, path, arg, script_path, args, def_subs, lconfig, fishdir
+) -> TestResult:
     if not path.endswith(".fish") and not path.endswith(".py"):
         return TestFail(arg, None, f"Not a valid test file: {arg}")
 
     starttime = datetime.now()
-    with tempfile.TemporaryDirectory(prefix="fishtest-") as home:
-        makeenv(script_path, home, args.cachedir)
-        os.chdir(home)
-        if path.endswith(".fish"):
-            subs = def_subs.copy()
-            subs.update({"s": path, "fish_test_helper": home + "/fish_test_helper"})
+    home = tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root)
+    makeenv(script_path, home, args.cachedir)
+    os.chdir(home)
+    if path.endswith(".fish"):
+        subs = def_subs.copy()
+        subs.update({"s": path, "fish_test_helper": home + "/fish_test_helper"})
 
-            # littlecheck
-            ret = littlecheck.check_path(
-                path, subs, lconfig, lambda x: print(x.message())
-            )
-            endtime = datetime.now()
-            duration_ms = round((endtime - starttime).total_seconds() * 1000)
-            if ret is littlecheck.SKIP:
-                return TestSkip(arg)
-            elif ret:
-                return TestPass(arg, duration_ms)
-            else:
-                return TestFail(arg, duration_ms, f"Tmpdir is {home}")
-        elif path.endswith(".py"):
-            # environ for py files has a few changes.
-            pyenviron = os.environ.copy()
-            pyenviron.update(
-                {
-                    "PYTHONPATH": str(script_path),
-                    "fish": str(fishdir / "fish"),
-                    "fish_key_reader": str(fishdir / "fish_key_reader"),
-                    "fish_indent": str(fishdir / "fish_indent"),
-                    "TERM": "dumb",
-                    "FISH_FORCE_COLOR": "1" if sys.stdout.isatty() else "0",
-                }
-            )
-            if not PEXPECT:
-                return TestSkip(arg)
-            try:
-                proc = subprocess.run(
-                    ["python3", path],
-                    capture_output=True,
-                    env=pyenviron,
-                    # Timeout of 120 seconds, about 10 times what any of these takes
-                    timeout=120,
-                )
-            except subprocess.TimeoutExpired as e:
-                error_message = f"{RED}FAILED due to timeout{RESET}"
-                if e.output:
-                    error_message += e.output.decode("utf-8")
-                if e.stderr:
-                    error_message += e.stderr.decode("utf-8")
-                return TestFail(arg, None, error_message)
-
-            endtime = datetime.now()
-            duration_ms = round((endtime - starttime).total_seconds() * 1000)
-            if proc.returncode == 0:
-                return TestPass(arg, duration_ms)
-            elif proc.returncode == 127:
-                return TestSkip(arg)
-            else:
-                error_message = ""
-                if proc.stdout:
-                    error_message += proc.stdout.decode("utf-8")
-                if proc.stderr:
-                    error_message += proc.stderr.decode("utf-8")
-                error_message += f"Tmpdir is {home}"
-                return TestFail(arg, duration_ms, error_message)
+        # littlecheck
+        ret = littlecheck.check_path(path, subs, lconfig, lambda x: print(x.message()))
+        endtime = datetime.now()
+        duration_ms = round((endtime - starttime).total_seconds() * 1000)
+        if ret is littlecheck.SKIP:
+            return TestSkip(arg)
+        elif ret:
+            return TestPass(arg, duration_ms)
         else:
-            return TestFail(
-                arg, None, "Error in test driver. This should be unreachable."
+            return TestFail(arg, duration_ms, f"Tmpdir is {home}")
+    elif path.endswith(".py"):
+        # environ for py files has a few changes.
+        pyenviron = os.environ.copy()
+        pyenviron.update(
+            {
+                "PYTHONPATH": str(script_path),
+                "fish": str(fishdir / "fish"),
+                "fish_key_reader": str(fishdir / "fish_key_reader"),
+                "fish_indent": str(fishdir / "fish_indent"),
+                "TERM": "dumb",
+                "FISH_FORCE_COLOR": "1" if sys.stdout.isatty() else "0",
+            }
+        )
+        if not PEXPECT:
+            return TestSkip(arg)
+        try:
+            proc = subprocess.run(
+                ["python3", path],
+                capture_output=True,
+                env=pyenviron,
+                # Timeout of 120 seconds, about 10 times what any of these takes
+                timeout=120,
             )
+        except subprocess.TimeoutExpired as e:
+            error_message = f"{RED}FAILED due to timeout{RESET}"
+            if e.output:
+                error_message += e.output.decode("utf-8")
+            if e.stderr:
+                error_message += e.stderr.decode("utf-8")
+            return TestFail(arg, None, error_message)
+
+        endtime = datetime.now()
+        duration_ms = round((endtime - starttime).total_seconds() * 1000)
+        if proc.returncode == 0:
+            return TestPass(arg, duration_ms)
+        elif proc.returncode == 127:
+            return TestSkip(arg)
+        else:
+            error_message = ""
+            if proc.stdout:
+                error_message += proc.stdout.decode("utf-8")
+            if proc.stderr:
+                error_message += proc.stderr.decode("utf-8")
+            error_message += f"Tmpdir is {home}"
+            return TestFail(arg, duration_ms, error_message)
+    else:
+        return TestFail(arg, None, "Error in test driver. This should be unreachable.")
 
 
 if __name__ == "__main__":

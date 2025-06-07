@@ -1,0 +1,15 @@
+function __fish_protontricks__complete_appid
+    protontricks -l |
+        string match --regex '.*\(\d+\)' |
+        string replace --regex '(.*) \((\d+)\)' '$2\t$1'
+end
+
+complete -c protontricks-launch -f -s h -l help -d 'Show help message and exit'
+complete -c protontricks-launch -l no-term -d 'Specify no terminal is available for errors, use dialogs instead'
+complete -c protontricks-launch -s v -l verbose -d 'Increase log verbosity, can be supplied twice'
+complete -c protontricks-launch -l no-runtime -d 'Disable Steam Runtime'
+complete -c protontricks-launch -l no-bwrap -d 'Disable bwrap containerization when using Steam Runtime'
+complete -c protontricks-launch -l background-wineserver -d 'Launch a wineserver process to improve Wine startup time'
+complete -c protontricks-launch -l no-background-wineserver -d 'Do not launch wineserver process'
+complete -c protontricks-launch -l appid -xka '(__fish_protontricks__complete_appid)'
+complete -c protontricks-launch -l cwd-app -d 'Change to the Steam app directory when launching command'

@@ -1,11 +1,10 @@
-use crate::fds::AutoCloseFd;
 use crate::tests::prelude::*;
 use crate::util::get_rng;
+use crate::{fds::AutoCloseFd, fs::create_temporary_file};
 use libc::{c_void, O_CREAT, O_RDWR, O_TRUNC, SEEK_SET};
 use rand::Rng;
-use std::{ffi::CString, ptr};
-
-use crate::fallback::fish_mkstemp_cloexec;
+use std::ffi::CString;
+use std::ptr;
 
 use super::*;
 
@@ -62,8 +61,8 @@ fn test_wdirname_wbasename() {
 #[serial]
 fn test_wwrite_to_fd() {
     let _cleanup = test_init();
-    let (_fd, filename) =
-        fish_mkstemp_cloexec(CString::new("/tmp/fish_test_wwrite.XXXXXX").unwrap()).unwrap();
+    let (_file, filename) = create_temporary_file(L!("/tmp/fish_test_wwrite.XXXXXX")).unwrap();
+    let filename = CString::new(filename.to_string()).unwrap();
     let mut rng = get_rng();
     let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];
     for &size in &sizes {

@@ -1018,7 +1018,7 @@ msgid "Error reading script file '%s':"
 msgstr ""
 
 #, c-format
-msgid "Error when renaming history file: %s"
+msgid "Error when renaming file: %s"
 msgstr ""
 
 #, c-format
@@ -1237,14 +1237,6 @@ msgstr ""
 
 msgid "List or remove functions"
 msgstr "List or remove functions"
-
-#, c-format
-msgid "Locking the history file took too long (%.3f seconds)."
-msgstr ""
-
-#, c-format
-msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr ""
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr ""
@@ -1613,20 +1605,8 @@ msgid "Unable to locate the %ls directory."
 msgstr "Unable to locate the %ls directory."
 
 #, c-format
-msgid "Unable to open universal variable file '%s': %s"
-msgstr ""
-
-#, c-format
 msgid "Unable to read input file: %s"
 msgstr ""
-
-#, c-format
-msgid "Unable to rename file from '%ls' to '%ls': %s"
-msgstr ""
-
-#, c-format
-msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "Unable to write to universal variables file '%ls': %s"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
@@ -79179,6 +79159,10 @@ msgstr ""
 
 msgid "~ expansion"
 msgstr ""
+
+#, c-format
+#~ msgid "Unable to write to universal variables file '%ls': %s"
+#~ msgstr "Unable to write to universal variables file '%ls': %s"
 
 #~ msgid "empty"
 #~ msgstr "empty"

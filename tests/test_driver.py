@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import os
+import pathlib
 from pathlib import Path
 import shutil
 import subprocess
@@ -103,7 +105,7 @@ def makeenv(script_path, home, test_helper_path):
     )
 
 
-def main():
+async def main():
     if len(sys.argv) < 2:
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
         return 1
@@ -176,8 +178,13 @@ def main():
 
     tmp_root = tempfile.mkdtemp(prefix="fishtest-root-")
 
-    for f, arg in files:
-        match run_test(tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir):
+    tasks = [
+        run_test(tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir)
+        for f, arg in files
+    ]
+
+    for task in asyncio.as_completed(tasks):
+        match await task:
             case TestSkip(arg):
                 skipcount += 1
                 print_result(arg, "SKIPPED", BLUE)
@@ -222,7 +229,7 @@ class TestPass:
 TestResult = TestSkip | TestFail | TestPass
 
 
-def run_test(
+async def run_test(
     tmp_root, path, arg, script_path, args, def_subs, lconfig, fishdir
 ) -> TestResult:
     if not path.endswith(".fish") and not path.endswith(".py"):
@@ -237,7 +244,9 @@ def run_test(
         subs.update({"s": path, "fish_test_helper": home + "/fish_test_helper"})
 
         # littlecheck
-        ret = littlecheck.check_path(path, subs, lconfig, lambda x: print(x.message()))
+        ret = await littlecheck.check_path(
+            path, subs, lconfig, lambda x: print(x.message())
+        )
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
         if ret is littlecheck.SKIP:
@@ -261,34 +270,28 @@ def run_test(
         )
         if not PEXPECT:
             return TestSkip(arg)
-        try:
-            proc = subprocess.run(
-                ["python3", path],
-                capture_output=True,
-                env=pyenviron,
-                # Timeout of 120 seconds, about 10 times what any of these takes
-                timeout=120,
-            )
-        except subprocess.TimeoutExpired as e:
-            error_message = f"{RED}FAILED due to timeout{RESET}"
-            if e.output:
-                error_message += e.output.decode("utf-8")
-            if e.stderr:
-                error_message += e.stderr.decode("utf-8")
-            return TestFail(arg, None, error_message)
-
+        PIPE = asyncio.subprocess.PIPE
+        proc = await asyncio.subprocess.create_subprocess_exec(
+            "python3",
+            path,
+            stdout=PIPE,
+            stderr=PIPE,
+            env=pyenviron,
+        )
+        stdout, stderr = await proc.communicate()
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
-        if proc.returncode == 0:
+        returncode = proc.returncode
+        if returncode == 0:
             return TestPass(arg, duration_ms)
-        elif proc.returncode == 127:
+        elif returncode == 127:
             return TestSkip(arg)
         else:
             error_message = ""
-            if proc.stdout:
-                error_message += proc.stdout.decode("utf-8")
-            if proc.stderr:
-                error_message += proc.stderr.decode("utf-8")
+            if stdout:
+                error_message += stdout.decode("utf-8")
+            if stderr:
+                error_message += stderr.decode("utf-8")
             error_message += f"Tmpdir is {home}"
             return TestFail(arg, duration_ms, error_message)
     else:
@@ -297,7 +300,7 @@ def run_test(
 
 if __name__ == "__main__":
     try:
-        ret = main()
+        ret = asyncio.run(main())
         sys.exit(ret)
     except KeyboardInterrupt:
         sys.exit(130)

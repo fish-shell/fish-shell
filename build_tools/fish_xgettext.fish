@@ -3,7 +3,6 @@
 # Tool to generate gettext messages template file.
 # Writes to stdout.
 
-
 begin
     # Write header. This is required by msguniq.
     # Note that this results in the file being overwritten.

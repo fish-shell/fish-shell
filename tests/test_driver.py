@@ -50,7 +50,7 @@ def makeenv(script_path, home, test_helper_path):
     if test_helper_path:
         thp = Path(test_helper_path)
         if not os.path.exists(thp / "fish_test_helper"):
-            comp = subprocess.run(
+            subprocess.run(
                 [
                     "cc",
                     script_path / "fish_test_helper.c",
@@ -60,7 +60,7 @@ def makeenv(script_path, home, test_helper_path):
             )
         shutil.copy(thp / "fish_test_helper", home + "/fish_test_helper")
     else:
-        comp = subprocess.run(
+        subprocess.run(
             [
                 "cc",
                 script_path / "fish_test_helper.c",

@@ -195,6 +195,7 @@ complete -n '__fish_seen_subcommand_from sideload' -c adb -k -xa '(__fish_comple
 complete -n '__fish_seen_subcommand_from reconnect' -c adb -x -a device -d 'Kick current connection from device side and make it reconnect.'
 
 # commands that accept listing device files
+complete -n '__fish_seen_subcommand_from exec-out' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from shell' -c adb -f -a "(__fish_adb_list_files)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from pull' -c adb -F -a "(__fish_adb_list_files)" -d 'File on device'
 complete -n '__fish_seen_subcommand_from push' -c adb -ka "(__fish_adb_list_files)" -d 'File on device'

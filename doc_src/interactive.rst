@@ -362,7 +362,7 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-v` Same as :kbd:`alt-e`.
 
-- :kbd:`alt-s` Prepends ``sudo`` to the current commandline. If the commandline is empty, prepend ``sudo`` to the last commandline.
+- :kbd:`alt-s` Prepends ``sudo`` to the current commandline. If the commandline is empty, prepend ``sudo`` to the last commandline. If ``sudo`` is not installed, various similar commands are tried: ``doas``, ``please``, and ``run0``.
 
 - :kbd:`ctrl-space` Inserts a space without expanding an :ref:`abbreviation <abbreviations>`. For vi mode, this only applies to insert-mode.
 

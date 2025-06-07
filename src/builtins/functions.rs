@@ -244,12 +244,11 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
             let desc = match props.as_ref() {
                 Some(p) => {
-                    let localized_description = p.description.localize();
-                    if localized_description.is_empty() {
+                    if p.description.is_empty() {
                         L!("").to_owned()
                     } else {
                         escape_string(
-                            localized_description,
+                            &p.description,
                             EscapeStringStyle::Script(
                                 EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED,
                             ),

@@ -47,12 +47,14 @@ begin
         # 5. Double quotes are escaped, such that they are not interpreted as the start or end of
         #    a msgid.
         # 6. We transform the string into the format expected in a PO file.
-        cat share/config.fish share/completions/*.fish share/functions/*.fish |
+        cat $share_dir/config.fish $share_dir/completions/*.fish $share_dir/functions/*.fish |
             string replace --filter --regex $regex '$1' |
             string unescape |
             sort -u |
             sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_'
     end
+
+    set -g share_dir (status dirname)/../share
 
     # This regex handles explicit requests to translate a message. These are more important to translate
     # than messages which should be implicitly translated.

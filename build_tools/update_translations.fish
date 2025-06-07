@@ -126,7 +126,7 @@ rm $template_file
 
 if set -g --query tmpdir
     rm $tmpdir/template.po
-    diff -ur po $tmpdir
+    diff -ur $po_dir $tmpdir
     or cleanup_exit
 end
 

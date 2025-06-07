@@ -327,6 +327,11 @@ use rust_embed::RustEmbed;
 struct Docs;
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    localizable_consts!(
+        #[allow(dead_code)]
+        NO_EMBEDDED_FILES_MSG "%ls: fish was not built with embedded files"
+    );
+
     let cmd = args[0];
     let argc = args.len();
 
@@ -474,10 +479,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.appendln(wgettext_fmt!(
-                    "%ls: fish was not built with embedded files",
-                    cmd,
-                ));
+                streams
+                    .err
+                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -520,10 +524,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.appendln(wgettext_fmt!(
-                    "%ls: fish was not built with embedded files",
-                    cmd,
-                ));
+                streams
+                    .err
+                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }

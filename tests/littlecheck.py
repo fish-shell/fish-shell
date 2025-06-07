@@ -4,20 +4,21 @@
 
 from __future__ import unicode_literals
 from __future__ import print_function
-
 import argparse
+import asyncio
 import datetime
+from difflib import SequenceMatcher
 import io
 import re
 import shlex
-import subprocess
 import sys
+import unicodedata
 
 try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
-from difflib import SequenceMatcher
+
 
 # Directives can occur at the beginning of a line, or anywhere in a line that does not start with #.
 COMMENT_RE = r"^(?:[^#].*)?#\s*"
@@ -91,9 +92,6 @@ class Config(object):
 
 def output(*args):
     print("".join(args) + "\n")
-
-
-import unicodedata
 
 
 def esc(m):
@@ -382,18 +380,12 @@ def perform_substitution(input_str, subs):
     return re.sub(r"%(%|[a-zA-Z0-9_-]+)", subber, input_str)
 
 
-def runproc(cmd):
+async def runproc(cmd):
     """Wrapper around subprocess.Popen to save typing"""
-    PIPE = subprocess.PIPE
-    proc = subprocess.Popen(
-        cmd,
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE,
-        shell=True,
-        close_fds=True,  # For Python 2.6 as shipped on RHEL 6
+    PIPE = asyncio.subprocess.PIPE
+    return await asyncio.create_subprocess_shell(
+        cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE
     )
-    return proc
 
 
 class TestRun(object):
@@ -475,7 +467,7 @@ class TestRun(object):
             # Success!
             return None
 
-    def run(self):
+    async def run(self):
         """Run the command. Return a TestFailure, or None."""
 
         def split_by_newlines(s):
@@ -489,8 +481,8 @@ class TestRun(object):
 
         if self.config.verbose:
             print(self.subbed_command)
-        proc = runproc(self.subbed_command)
-        stdout, stderr = proc.communicate()
+        proc = await runproc(self.subbed_command)
+        stdout, stderr = await proc.communicate()
         # HACK: This is quite cheesy: POSIX specifies that sh should return 127 for a missing command.
         # It's also possible that it'll be returned in other situations,
         # most likely when the last command in a shell script doesn't exist.
@@ -668,7 +660,7 @@ class Checker(object):
         ]
 
 
-def check_file(input_file, name, subs, config, failure_handler):
+async def check_file(input_file, name, subs, config, failure_handler):
     """Check a single file. Return a True on success, False on error."""
     success = True
     lines = Line.readfile(input_file, name)
@@ -677,8 +669,8 @@ def check_file(input_file, name, subs, config, failure_handler):
     # Run all the REQUIRES lines first,
     # if any of them fail it's a SKIP
     for reqcmd in checker.requirecmds:
-        proc = runproc(perform_substitution(reqcmd.args, subs))
-        proc.communicate()
+        proc = await runproc(perform_substitution(reqcmd.args, subs))
+        await proc.communicate()
         if proc.returncode > 0:
             return SKIP
 
@@ -687,16 +679,16 @@ def check_file(input_file, name, subs, config, failure_handler):
 
     # Only then run the RUN lines.
     for runcmd in checker.runcmds:
-        failure = TestRun(name, runcmd, checker, subs, config).run()
+        failure = await TestRun(name, runcmd, checker, subs, config).run()
         if failure:
             failure_handler(failure)
             success = False
     return success
 
 
-def check_path(path, subs, config, failure_handler):
+async def check_path(path, subs, config, failure_handler):
     with io.open(path, encoding="utf-8") as fd:
-        return check_file(fd, path, subs, config, failure_handler)
+        return await check_file(fd, path, subs, config, failure_handler)
 
 
 def parse_subs(subs):

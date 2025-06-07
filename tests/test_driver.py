@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 import argparse
-import os
+import asyncio
+from dataclasses import dataclass
 from datetime import datetime
+import os
+import pathlib
 from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from typing import Optional
 
 import littlecheck
 
@@ -48,7 +52,7 @@ def makeenv(script_path, home, test_helper_path):
     if test_helper_path:
         thp = Path(test_helper_path)
         if not os.path.exists(thp / "fish_test_helper"):
-            comp = subprocess.run(
+            subprocess.run(
                 [
                     "cc",
                     script_path / "fish_test_helper.c",
@@ -58,7 +62,7 @@ def makeenv(script_path, home, test_helper_path):
             )
         shutil.copy(thp / "fish_test_helper", home + "/fish_test_helper")
     else:
-        comp = subprocess.run(
+        subprocess.run(
             [
                 "cc",
                 script_path / "fish_test_helper.c",
@@ -101,7 +105,7 @@ def makeenv(script_path, home, test_helper_path):
     )
 
 
-def main():
+async def main():
     if len(sys.argv) < 2:
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
         return 1
@@ -158,91 +162,42 @@ def main():
     if not PEXPECT and any(x.endswith(".py") for (x, _) in files):
         print(f"{RED}Skipping pexpect tests because pexpect is not installed{RESET}")
 
-    for f, arg in files:
-        if not f.endswith(".fish") and not f.endswith(".py"):
-            print(f"Not a valid test file: {arg}")
-            failcount += 1
-            continue
+    longest_test_name_length = max([len(arg) for _, arg in files])
+    max_expected_digits_duration = 5
 
-        starttime = datetime.now()
-        with tempfile.TemporaryDirectory(prefix="fishtest-") as home:
-            makeenv(script_path, home, args.cachedir)
-            os.chdir(home)
-            if f.endswith(".fish"):
-                subs = def_subs.copy()
-                subs.update({"s": f, "fish_test_helper": home + "/fish_test_helper"})
+    def print_result(arg, result, color, duration=None, suffix=None):
+        duration_str = (
+            ""
+            if duration is None
+            else f" {str(duration_ms).rjust(max_expected_digits_duration)} ms"
+        )
+        suffix_str = "" if suffix is None else f"\n{suffix}"
+        print(
+            f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}"
+        )
 
-                # littlecheck
-                print(f"{arg}..", end="", flush=True)
-                ret = littlecheck.check_path(
-                    f, subs, lconfig, lambda x: print(x.message())
-                )
-                endtime = datetime.now()
-                duration_ms = round((endtime - starttime).total_seconds() * 1000)
-                if ret is littlecheck.SKIP:
-                    print(f"{BLUE}SKIPPED{RESET}")
-                    skipcount += 1
-                elif ret:
-                    print(f"{GREEN}PASS{RESET} ({duration_ms} ms)")
-                    passcount += 1
-                else:
-                    print(f"{RED}FAIL{RESET} ({duration_ms} ms)")
-                    failcount += 1
-                    failed += [arg]
-                    print(f"Tmpdir is {home}")
-            elif f.endswith(".py"):
-                # environ for py files has a few changes.
-                pyenviron = os.environ.copy()
-                pyenviron.update(
-                    {
-                        "PYTHONPATH": str(script_path),
-                        "fish": str(fishdir / "fish"),
-                        "fish_key_reader": str(fishdir / "fish_key_reader"),
-                        "fish_indent": str(fishdir / "fish_indent"),
-                        "TERM": "dumb",
-                        "FISH_FORCE_COLOR": "1" if sys.stdout.isatty() else "0",
-                    }
-                )
-                print(f"{arg}..", end="", flush=True)
-                if not PEXPECT:
-                    print(f"{BLUE}SKIPPED{RESET}")
-                    skipcount += 1
-                    continue
-                try:
-                    proc = subprocess.run(
-                        ["python3", f],
-                        capture_output=True,
-                        env=pyenviron,
-                        # Timeout of 120 seconds, about 10 times what any of these takes
-                        timeout=120,
-                    )
-                except subprocess.TimeoutExpired as e:
-                    print(f"{RED}FAILED due to timeout{RESET}")
-                    if e.output:
-                        print(e.output.decode("utf-8"))
-                    if e.stderr:
-                        print(e.stderr.decode("utf-8"))
-                    failcount += 1
-                    failed += [arg]
-                    continue
+    tmp_root = tempfile.mkdtemp(prefix="fishtest-root-")
 
-                endtime = datetime.now()
-                duration_ms = round((endtime - starttime).total_seconds() * 1000)
-                if proc.returncode == 0:
-                    print(f"{GREEN}PASS{RESET} ({duration_ms} ms)")
-                    passcount += 1
-                elif proc.returncode == 127:
-                    print(f"{BLUE}SKIPPED{RESET}")
-                    skipcount += 1
-                else:
-                    print(f"{RED}FAILED{RESET} ({duration_ms} ms)")
-                    if proc.stdout:
-                        print(proc.stdout.decode("utf-8"))
-                    if proc.stderr:
-                        print(proc.stderr.decode("utf-8"))
-                    failcount += 1
-                    failed += [arg]
-                    print(f"Tmpdir is {home}")
+    tasks = [
+        run_test(tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir)
+        for f, arg in files
+    ]
+
+    for task in asyncio.as_completed(tasks):
+        match await task:
+            case TestSkip(arg):
+                skipcount += 1
+                print_result(arg, "SKIPPED", BLUE)
+            case TestFail(arg, duration_ms, error_message):
+                failcount += 1
+                failed += [arg]
+                print_result(arg, "FAILED", RED, duration_ms, error_message)
+            case TestPass(arg, duration_ms):
+                passcount += 1
+                print_result(arg, "PASSED", GREEN, duration_ms)
+
+    shutil.rmtree(tmp_root)
+
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")
     if failcount:
@@ -253,9 +208,99 @@ def main():
     return 1 if failcount else 0
 
 
+@dataclass
+class TestSkip:
+    arg: str
+
+
+@dataclass
+class TestFail:
+    arg: str
+    duration_ms: Optional[int]
+    error_message: Optional[str]
+
+
+@dataclass
+class TestPass:
+    arg: str
+    duration_ms: int
+
+
+TestResult = TestSkip | TestFail | TestPass
+
+
+async def run_test(
+    tmp_root, path, arg, script_path, args, def_subs, lconfig, fishdir
+) -> TestResult:
+    if not path.endswith(".fish") and not path.endswith(".py"):
+        return TestFail(arg, None, f"Not a valid test file: {arg}")
+
+    starttime = datetime.now()
+    home = tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root)
+    makeenv(script_path, home, args.cachedir)
+    os.chdir(home)
+    if path.endswith(".fish"):
+        subs = def_subs.copy()
+        subs.update({"s": path, "fish_test_helper": home + "/fish_test_helper"})
+
+        # littlecheck
+        ret = await littlecheck.check_path(
+            path, subs, lconfig, lambda x: print(x.message())
+        )
+        endtime = datetime.now()
+        duration_ms = round((endtime - starttime).total_seconds() * 1000)
+        if ret is littlecheck.SKIP:
+            return TestSkip(arg)
+        elif ret:
+            return TestPass(arg, duration_ms)
+        else:
+            return TestFail(arg, duration_ms, f"Tmpdir is {home}")
+    elif path.endswith(".py"):
+        # environ for py files has a few changes.
+        pyenviron = os.environ.copy()
+        pyenviron.update(
+            {
+                "PYTHONPATH": str(script_path),
+                "fish": str(fishdir / "fish"),
+                "fish_key_reader": str(fishdir / "fish_key_reader"),
+                "fish_indent": str(fishdir / "fish_indent"),
+                "TERM": "dumb",
+                "FISH_FORCE_COLOR": "1" if sys.stdout.isatty() else "0",
+            }
+        )
+        if not PEXPECT:
+            return TestSkip(arg)
+        PIPE = asyncio.subprocess.PIPE
+        proc = await asyncio.subprocess.create_subprocess_exec(
+            "python3",
+            path,
+            stdout=PIPE,
+            stderr=PIPE,
+            env=pyenviron,
+        )
+        stdout, stderr = await proc.communicate()
+        endtime = datetime.now()
+        duration_ms = round((endtime - starttime).total_seconds() * 1000)
+        returncode = proc.returncode
+        if returncode == 0:
+            return TestPass(arg, duration_ms)
+        elif returncode == 127:
+            return TestSkip(arg)
+        else:
+            error_message = ""
+            if stdout:
+                error_message += stdout.decode("utf-8")
+            if stderr:
+                error_message += stderr.decode("utf-8")
+            error_message += f"Tmpdir is {home}"
+            return TestFail(arg, duration_ms, error_message)
+    else:
+        return TestFail(arg, None, "Error in test driver. This should be unreachable.")
+
+
 if __name__ == "__main__":
     try:
-        ret = main()
+        ret = asyncio.run(main())
         sys.exit(ret)
     except KeyboardInterrupt:
         sys.exit(130)

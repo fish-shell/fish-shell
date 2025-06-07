@@ -263,7 +263,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -s --preset -M replace_one -m default ctrl-\[ cancel repaint-mode
 
     #
-    # increment or decrement numbers with ctrl+x ctrl+a
+    # increment or decrement numbers with ctrl-a (increase) and ctrl-x (decrease)
     #
     bind -s --preset -M default \ca '__fish_inc_dec_number_under_cursor increase'
     bind -s --preset -M default \cx '__fish_inc_dec_number_under_cursor decrease'

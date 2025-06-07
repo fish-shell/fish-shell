@@ -194,6 +194,7 @@ macro_rules! localizable_consts {
         )*
     ) => {
         $(
+            $(#[$attr])*
             $vis const $name: $crate::wutil::gettext::LocalizableString =
                 localizable_string!($string);
         )*

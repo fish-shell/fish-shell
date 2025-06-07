@@ -700,6 +700,11 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr "%ls: Erwartete numerischen Wert"
 
+#
+#, c-format
+msgid "%ls: fish was not built with embedded files"
+msgstr ""
+
 #, c-format
 msgid "%ls: function name required"
 msgstr "%ls: Brauche Funktionsnamen"
@@ -1178,6 +1183,10 @@ msgstr "Illegale Instruktion"
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
 msgstr "Unvollständige Escapesequenz '%ls'"
+
+#
+msgid "Information request"
+msgstr ""
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
@@ -1707,6 +1716,10 @@ msgstr "Nicht passender Platzhalter"
 
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
+msgstr ""
+
+#
+msgid "Unused signal"
 msgstr ""
 
 msgid "Urgent socket condition"

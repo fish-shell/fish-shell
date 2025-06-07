@@ -699,6 +699,11 @@ msgstr ""
 msgid "%ls: expected a numeric value"
 msgstr "%ls: esperava valor numérico"
 
+#
+#, c-format
+msgid "%ls: fish was not built with embedded files"
+msgstr ""
+
 #, c-format
 msgid "%ls: function name required"
 msgstr ""
@@ -1177,6 +1182,9 @@ msgstr "Instrução ilegal"
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
 msgstr ""
+
+msgid "Information request"
+msgstr "Requisição de informação"
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
@@ -1707,6 +1715,9 @@ msgstr ""
 #, c-format
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
+
+msgid "Unused signal"
+msgstr "Sinal não utilizado"
 
 msgid "Urgent socket condition"
 msgstr "Condição urgente de socket"
@@ -79275,14 +79286,8 @@ msgstr ""
 #~ msgid "Virtual timer expired"
 #~ msgstr "Temporizador virtual expirado"
 
-#~ msgid "Information request"
-#~ msgstr "Requisição de informação"
-
 #~ msgid "Emulator trap"
 #~ msgstr "Armadilha de emulador"
-
-#~ msgid "Unused signal"
-#~ msgstr "Sinal não utilizado"
 
 #~ msgid "Use new incremental GNU format"
 #~ msgstr "Use new incremental GNU format"

@@ -220,9 +220,6 @@ impl StringError {
         match self {
             InvalidArgs(msg) => {
                 streams.err.append(L!("string "));
-                // TODO: Once we can extract/edit translations in Rust files, replace this with
-                // something like wgettext_fmt!("%ls: %ls\n", cmd, msg) that can be translated
-                // and remove the forwarding of the cmd name to `parse_opt`
                 streams.err.append(msg);
             }
             NotANumber => {

@@ -107,10 +107,7 @@ fn parse_cmd_opts(
             }
             'i' => {
                 streams.err.append(wgettext_fmt!(
-                    concat!(
-                        "%ls: usage of -i for --silent is deprecated. Please ",
-                        "use -s or --silent instead.\n"
-                    ),
+                    "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
                     cmd
                 ));
                 return Err(STATUS_INVALID_ARGS);

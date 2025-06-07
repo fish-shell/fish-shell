@@ -28,7 +28,7 @@ pub struct FunctionProperties {
     pub named_arguments: Vec<WString>,
 
     /// Description of the function.
-    pub description: WString,
+    pub description: LocalizableString,
 
     /// Mapping of all variables that were inherited from the function definition scope to their
     /// values, as (key, values) pairs.
@@ -294,7 +294,9 @@ pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
         // Note the description is immutable, as it may be accessed on another thread, so we copy
         // the properties to modify it.
         let mut new_props = props.as_ref().clone();
-        new_props.description = desc;
+        // Translations will only be available if the function description has been extracted into
+        // the translation files available to fish.
+        new_props.description = LocalizableString::from_external_source(desc);
         funcset.funcs.insert(name.to_owned(), Arc::new(new_props));
     }
 }
@@ -364,15 +366,6 @@ pub fn invalidate_path() {
 }
 
 impl FunctionProperties {
-    /// Return the description, localized via wgettext.
-    pub fn localized_description(&self) -> &'static wstr {
-        if self.description.is_empty() {
-            L!("")
-        } else {
-            wgettext_str(&self.description)
-        }
-    }
-
     /// Return true if this function is a copy.
     pub fn is_copy(&self) -> bool {
         self.is_copy
@@ -426,7 +419,7 @@ impl FunctionProperties {
     /// Note callers must provide the function name, since the function does not know its own name.
     pub fn annotated_definition(&self, name: &wstr) -> WString {
         let mut out = WString::new();
-        let desc = self.localized_description();
+        let desc = self.description.localize();
         let def = get_function_body_source(self);
         let handlers = event::get_function_handlers(name);
 

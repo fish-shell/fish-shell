@@ -15,6 +15,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid ""
+"\n"
+"   PID  Command\n"
+msgstr ""
+
 #, c-format
 msgid " (%ls)\n"
 msgstr ""
@@ -39,6 +44,10 @@ msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr ""
 
 #, c-format
+msgid "$%lc is not a valid variable in fish."
+msgstr ""
+
+#, c-format
 msgid "$%ls: originally inherited as |%ls|\n"
 msgstr ""
 
@@ -60,6 +69,10 @@ msgstr ""
 
 #, c-format
 msgid "%.*ls: invalid conversion specification"
+msgstr ""
+
+#, c-format
+msgid "%ls"
 msgstr ""
 
 #, c-format
@@ -119,6 +132,10 @@ msgid "%ls: %*ls\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: %ls\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: %ls %ls: options cannot be used together\n"
 msgstr ""
 
@@ -135,6 +152,10 @@ msgid "%ls: %ls: contains a syntax error\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: %ls: expected %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: %ls: invalid base value\n"
 msgstr ""
 
@@ -147,11 +168,11 @@ msgid "%ls: %ls: invalid integer\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
+msgid "%ls: %ls: invalid mode\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: %ls: invalid mode\n"
+msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
 msgstr ""
 
 #, c-format
@@ -184,10 +205,6 @@ msgstr ""
 
 #, c-format
 msgid "%ls: %ls: unknown option\n"
-msgstr ""
-
-#, c-format
-msgid "%ls: %ls\n"
 msgstr ""
 
 #, c-format
@@ -663,6 +680,18 @@ msgid "%ls: exclusive flag string '%ls' is not valid\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: expected %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
+msgid "%ls: expected <= %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
+msgid "%ls: expected >= %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: expected a numeric value"
 msgstr ""
 
@@ -679,6 +708,10 @@ msgid "%ls: invalid option combination\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: invalid option combination, %ls\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: invalid underline style: %ls\n"
 msgstr ""
 
@@ -688,6 +721,10 @@ msgstr ""
 
 #, c-format
 msgid "%ls: line/column index starts at 1"
+msgstr ""
+
+#, c-format
+msgid "%ls: missing argument\n"
 msgstr ""
 
 #, c-format
@@ -824,24 +861,24 @@ msgstr ""
 msgid "--tokens options are mutually exclusive"
 msgstr ""
 
-msgid ".local/bin/"
-msgstr ""
-
-msgid ".local/share/"
-msgstr ""
-
-msgid ".local/share/doc/fish"
-msgstr ""
-
-msgid "/etc/"
-msgstr ""
-
 msgid "A second attempt to exit will terminate them.\n"
+msgstr ""
+
+msgid "Abbreviation expansion"
 msgstr ""
 
 #, c-format
 msgid "Abbreviation: %ls"
 msgstr ""
+
+msgid "Abort"
+msgstr "Avbrott"
+
+msgid "Abort (Alias for SIGABRT)"
+msgstr "Avbrott (Alias för SIGABRT)"
+
+msgid "Address boundary error"
+msgstr "Minnesadress korsar segmentgräns"
 
 msgid "Always"
 msgstr "Alltid"
@@ -853,14 +890,29 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
+msgid "Background IO thread events"
+msgstr ""
+
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr ""
+
+msgid "Bad system call"
+msgstr "Felaktigt systemanrop"
 
 msgid "Block of code to run conditionally"
 msgstr ""
 
+msgid "Broken pipe"
+msgstr "Avbrutet rör"
+
 msgid "CPU\t"
 msgstr "CPU\t"
+
+msgid "CPU time limit exceeded"
+msgstr "Slut på processortid"
+
+msgid "Calls to fork()"
+msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en interaktiv session"
@@ -875,20 +927,38 @@ msgstr ""
 msgid "Change working directory"
 msgstr "Ändra arbetskatalog"
 
+msgid "Changes to exported variables"
+msgstr ""
+
+msgid "Changes to locale variables"
+msgstr ""
+
+msgid "Character encoding issues"
+msgstr ""
+
 msgid "Check if a thing is a thing"
+msgstr ""
+
+msgid "Child process status changed"
+msgstr "Barnprocess fick ändrad status"
+
+msgid "Command\n"
+msgstr "Kommando\n"
+
+msgid "Command history events"
 msgstr ""
 
 msgid "Command not executable"
 msgstr ""
-
-msgid "Command\n"
-msgstr "Kommando\n"
 
 msgid "Commandname was invalid"
 msgstr ""
 
 msgid "Conditionally run blocks of code"
 msgstr ""
+
+msgid "Continue previously stopped process"
+msgstr "Fortsätt tidigare stannad process"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr ""
@@ -911,6 +981,9 @@ msgstr "Räkna antalet argument"
 
 msgid "Create a block of code"
 msgstr "Skapa ett kodblock"
+
+msgid "Debugging aid (on by default)"
+msgstr ""
 
 msgid "Define a new function"
 msgstr "Definera en ny funktion"
@@ -948,6 +1021,9 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Ett fel uppstod medan filen '%ls' lästes\n"
+
+msgid "Errors reported by exec (on by default)"
+msgstr ""
 
 msgid "Evaluate a string as a statement"
 msgstr ""
@@ -1012,6 +1088,9 @@ msgstr ""
 msgid "Expression is bogus"
 msgstr ""
 
+msgid "FD monitor events"
+msgstr ""
+
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
@@ -1020,6 +1099,24 @@ msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr ""
+
+msgid "File size limit exceeded"
+msgstr "Maximal filstorlek överskriden"
+
+msgid "Finding and reading configuration"
+msgstr ""
+
+msgid "Firing events"
+msgstr ""
+
+msgid "Floating point exception"
+msgstr "Flyttalsundantag"
+
+msgid "Forced quit"
+msgstr "Tvingad avslutning"
+
+msgid "Forced stop"
+msgstr "Tvingad att stoppa"
 
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
@@ -1048,6 +1145,9 @@ msgstr ""
 msgid "History of commands executed by user"
 msgstr "Historik över användarens körda kommandon"
 
+msgid "History performance measurements"
+msgstr ""
+
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
 msgstr ""
@@ -1060,9 +1160,15 @@ msgstr ""
 msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
 
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr "Läsning/skrivning på asynkron filidentifierare möjligt"
+
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr ""
+
+msgid "Illegal instruction"
+msgstr "Ogiltig instruktion"
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
@@ -1070,6 +1176,12 @@ msgstr ""
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
+msgstr ""
+
+msgid "Internal (non-forked) process events"
+msgstr ""
+
+msgid "Internal details of the topic monitor"
 msgstr ""
 
 msgid "Invalid arguments"
@@ -1104,12 +1216,21 @@ msgstr ""
 msgid "Items %lu to %lu of %lu"
 msgstr ""
 
+msgid "Job\tGroup\t"
+msgstr "Jobb\tGrupp\t"
+
 #, c-format
 msgid "Job control: %ls\n"
 msgstr "Jobkontroll: %ls\n"
 
-msgid "Job\tGroup\t"
-msgstr "Jobb\tGrupp\t"
+msgid "Jobs being executed"
+msgstr ""
+
+msgid "Jobs changing status"
+msgstr ""
+
+msgid "Jobs getting started or continued"
+msgstr ""
 
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
@@ -1133,6 +1254,9 @@ msgstr ""
 
 msgid "Measure how long a command or block takes"
 msgstr ""
+
+msgid "Misaligned address error"
+msgstr "Bussfel (Ogiltigt justerad minnesadress)"
 
 msgid "Mismatched braces"
 msgstr ""
@@ -1176,6 +1300,9 @@ msgstr ""
 msgid "Not a number"
 msgstr ""
 
+msgid "Notifications about universal variable changes"
+msgstr ""
+
 msgid "Number is infinite"
 msgstr ""
 
@@ -1198,6 +1325,9 @@ msgstr ""
 msgid "Parse options in fish script"
 msgstr ""
 
+msgid "Parsing fish AST"
+msgstr ""
+
 msgid "Perform a command multiple times"
 msgstr "Kör ett kommando upprepade gånger"
 
@@ -1211,6 +1341,12 @@ msgstr ""
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
 msgstr ""
+
+msgid "Polite quit request"
+msgstr "Artig avslutning"
+
+msgid "Power failure"
+msgstr "Strömavbrott"
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
@@ -1231,10 +1367,40 @@ msgstr ""
 msgid "Process\n"
 msgstr ""
 
+msgid "Process groups"
+msgstr ""
+
+msgid "Profiling timer expired"
+msgstr "Profileringstimer utlöst"
+
+msgid "Quit request from job control (^C)"
+msgstr "Avslutning via jobbkontroll (^C)"
+
+msgid "Quit request from job control with core dump (^\\)"
+msgstr "Avslutning via jobbkontroll med minnesdump (^\\)"
+
+msgid "Reacting to variables"
+msgstr ""
+
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till variabler"
 
+msgid "Reading/Writing the history file"
+msgstr ""
+
+msgid "Reaping external (forked) processes"
+msgstr ""
+
+msgid "Reaping internal (non-forked) processes"
+msgstr ""
+
+msgid "Refcell dynamic borrowing"
+msgstr ""
+
 msgid "Remove job from job list"
+msgstr ""
+
+msgid "Rendering the command line"
 msgstr ""
 
 #, c-format
@@ -1266,8 +1432,14 @@ msgstr ""
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
+msgid "Screen repaints"
+msgstr ""
+
 msgid "Search for a specified string in a list"
 msgstr "Sök efter en angiven sträng i en lista"
+
+msgid "Searching/using paths"
+msgstr ""
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
@@ -1283,6 +1455,9 @@ msgstr "Skicka jobb till bakgrunden"
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
+msgid "Serious unexpected errors (on by default)"
+msgstr ""
+
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
@@ -1294,6 +1469,9 @@ msgstr ""
 
 msgid "Skip over remaining innermost loop"
 msgstr ""
+
+msgid "Stack fault"
+msgstr "Stackfel"
 
 msgid "Standard input"
 msgstr "Standard in"
@@ -1312,6 +1490,15 @@ msgstr "Status\tKommando\n"
 msgid "Stdin must be attached to a tty."
 msgstr ""
 
+msgid "Stop from terminal input"
+msgstr "Stoppad från terminalläsning"
+
+msgid "Stop from terminal output"
+msgstr "Stoppad från terminalskrivning"
+
+msgid "Stop request from job control (^Z)"
+msgstr "Stoppad genom jobbkontroll (^Z)"
+
 msgid "Stop the currently evaluated function"
 msgstr "Avbryt den nuvarande funktionen"
 
@@ -1320,6 +1507,18 @@ msgstr "Avbryt den innersta loopen"
 
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
+
+msgid "Terminal feature detection"
+msgstr ""
+
+msgid "Terminal hung up"
+msgstr "Terminalen bröt uppkopplingen"
+
+msgid "Terminal ownership events"
+msgstr ""
+
+msgid "Terminal protocol negotiation"
+msgstr ""
 
 msgid "Test a condition"
 msgstr ""
@@ -1338,6 +1537,9 @@ msgstr ""
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
+msgid "The completion system"
+msgstr ""
+
 #, c-format
 msgid "The error was '%s'."
 msgstr ""
@@ -1352,6 +1554,9 @@ msgstr ""
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
 msgstr ""
 
+msgid "The interactive reader/input system"
+msgstr ""
+
 msgid "There are still jobs active:\n"
 msgstr ""
 
@@ -1360,6 +1565,9 @@ msgstr "Detta är ett login-skal\n"
 
 msgid "This is not a login shell\n"
 msgstr "Detta är inte ett login-skal\n"
+
+msgid "Timer expired"
+msgstr "Timer utlöstes"
 
 msgid "Too few arguments"
 msgstr ""
@@ -1373,7 +1581,13 @@ msgstr ""
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
 
+msgid "Trace or breakpoint trap"
+msgstr "Spårnings eller brytpunktsfälla utlöstes"
+
 msgid "Translate a string"
+msgstr ""
+
+msgid "Trying to print invalid output"
 msgstr ""
 
 #, c-format
@@ -1490,25 +1704,58 @@ msgstr ""
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr ""
 
+msgid "Urgent socket condition"
+msgstr "Viktig socket-situation"
+
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr ""
+
+msgid "User defined signal 1"
+msgstr "Användardefinerad signal 1"
+
+msgid "User defined signal 2"
+msgstr "Användardefinerad signal 2"
 
 #, c-format
 msgid "Variable: %ls"
 msgstr "Variabel: %ls"
 
+#, c-format
+msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
+msgstr ""
+
+#, c-format
+msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
+msgstr ""
+
+msgid "Virtual timefr expired"
+msgstr ""
+
 msgid "Wait for background processes completed"
+msgstr ""
+
+msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+msgid "Warnings (on by default)"
+msgstr ""
+
+msgid "Warnings about unusable paths for config/history (on by default)"
+msgstr ""
+
+msgid "Window size change"
+msgstr "Terminalfönstret ändrade storlek"
+
+msgid "Writing/reading the universal variable store"
 msgstr ""
 
 msgid "[: the last argument must be ']'"
 msgstr ""
 
-msgid ""
-"\n"
-"   PID  Command\n"
+msgid "array indices start at 1, not 0."
 msgstr ""
 
-msgid "array indices start at 1, not 0."
+msgid "autoloading"
 msgstr ""
 
 #, c-format
@@ -1567,9 +1814,6 @@ msgid "exported"
 msgstr ""
 
 msgid "file"
-msgstr ""
-
-msgid "fish/install"
 msgstr ""
 
 #, c-format
@@ -79025,107 +79269,14 @@ msgstr ""
 #~ msgid "Could not return shell to foreground"
 #~ msgstr "Kunde inte återställa skalet till förgrunden"
 
-#~ msgid "Terminal hung up"
-#~ msgstr "Terminalen bröt uppkopplingen"
-
-#~ msgid "Quit request from job control (^C)"
-#~ msgstr "Avslutning via jobbkontroll (^C)"
-
-#~ msgid "Quit request from job control with core dump (^\\)"
-#~ msgstr "Avslutning via jobbkontroll med minnesdump (^\\)"
-
-#~ msgid "Illegal instruction"
-#~ msgstr "Ogiltig instruktion"
-
-#~ msgid "Trace or breakpoint trap"
-#~ msgstr "Spårnings eller brytpunktsfälla utlöstes"
-
-#~ msgid "Abort"
-#~ msgstr "Avbrott"
-
-#~ msgid "Misaligned address error"
-#~ msgstr "Bussfel (Ogiltigt justerad minnesadress)"
-
-#~ msgid "Floating point exception"
-#~ msgstr "Flyttalsundantag"
-
-#~ msgid "Forced quit"
-#~ msgstr "Tvingad avslutning"
-
-#~ msgid "User defined signal 1"
-#~ msgstr "Användardefinerad signal 1"
-
-#~ msgid "User defined signal 2"
-#~ msgstr "Användardefinerad signal 2"
-
-#~ msgid "Address boundary error"
-#~ msgstr "Minnesadress korsar segmentgräns"
-
-#~ msgid "Broken pipe"
-#~ msgstr "Avbrutet rör"
-
-#~ msgid "Timer expired"
-#~ msgstr "Timer utlöstes"
-
-#~ msgid "Polite quit request"
-#~ msgstr "Artig avslutning"
-
-#~ msgid "Child process status changed"
-#~ msgstr "Barnprocess fick ändrad status"
-
-#~ msgid "Continue previously stopped process"
-#~ msgstr "Fortsätt tidigare stannad process"
-
-#~ msgid "Forced stop"
-#~ msgstr "Tvingad att stoppa"
-
-#~ msgid "Stop request from job control (^Z)"
-#~ msgstr "Stoppad genom jobbkontroll (^Z)"
-
-#~ msgid "Stop from terminal input"
-#~ msgstr "Stoppad från terminalläsning"
-
-#~ msgid "Stop from terminal output"
-#~ msgstr "Stoppad från terminalskrivning"
-
-#~ msgid "Urgent socket condition"
-#~ msgstr "Viktig socket-situation"
-
-#~ msgid "CPU time limit exceeded"
-#~ msgstr "Slut på processortid"
-
-#~ msgid "File size limit exceeded"
-#~ msgstr "Maximal filstorlek överskriden"
-
 #~ msgid "Virtual timer expired"
 #~ msgstr "Virtuell timer utlöst"
-
-#~ msgid "Profiling timer expired"
-#~ msgstr "Profileringstimer utlöst"
-
-#~ msgid "Window size change"
-#~ msgstr "Terminalfönstret ändrade storlek"
-
-#~ msgid "I/O on asynchronous file descriptor is possible"
-#~ msgstr "Läsning/skrivning på asynkron filidentifierare möjligt"
-
-#~ msgid "Power failure"
-#~ msgstr "Strömavbrott"
-
-#~ msgid "Bad system call"
-#~ msgstr "Felaktigt systemanrop"
 
 #~ msgid "Information request"
 #~ msgstr "Informationsbegäran"
 
-#~ msgid "Stack fault"
-#~ msgstr "Stackfel"
-
 #~ msgid "Emulator trap"
 #~ msgstr "Emulatorfälla"
-
-#~ msgid "Abort (Alias for SIGABRT)"
-#~ msgstr "Avbrott (Alias för SIGABRT)"
 
 #~ msgid "Unused signal"
 #~ msgstr "Oanvänd signal"

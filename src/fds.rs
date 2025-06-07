@@ -13,7 +13,10 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::os::unix::prelude::*;
 
-pub const PIPE_ERROR: &str = "An error occurred while setting up pipe";
+localizable_consts!(
+    pub PIPE_ERROR
+    "An error occurred while setting up pipe"
+);
 
 /// The first "high fd", which is considered outside the range of valid user-specified redirections
 /// (like >&5).
@@ -142,7 +145,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
             pipes
         }
         Err(err) => {
-            FLOG!(warning, PIPE_ERROR);
+            FLOG!(warning, PIPE_ERROR.localize());
             perror("pipe2");
             return Err(err);
         }
@@ -151,7 +154,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     let pipes = match nix::unistd::pipe() {
         Ok(pipes) => pipes,
         Err(err) => {
-            FLOG!(warning, PIPE_ERROR);
+            FLOG!(warning, PIPE_ERROR.localize());
             perror("pipe");
             return Err(err);
         }

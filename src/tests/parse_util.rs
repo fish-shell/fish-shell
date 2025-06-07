@@ -65,7 +65,7 @@ fn test_error_messages() {
                 string_matches_format(&errors[0].text, fmt),
                 "command '{}' is expected to match error pattern '{}' but is '{}'",
                 $src,
-                $error_text_format,
+                $error_text_format.localize(),
                 &errors[0].text
             );
         };

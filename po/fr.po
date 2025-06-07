@@ -117,6 +117,13 @@ msgstr ""
 "X-Generator: Gtranslator 2.91.7\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+msgid ""
+"\n"
+"   PID  Command\n"
+msgstr ""
+"\n"
+"   PID Commande\n"
+
 #, c-format
 msgid " (%ls)\n"
 msgstr ""
@@ -141,6 +148,10 @@ msgid "$$ is not the pid. In fish, please use $fish_pid."
 msgstr "$$ n’est pas le PID. Dans fish, veuillez utiliser $fish_pid."
 
 #, c-format
+msgid "$%lc is not a valid variable in fish."
+msgstr "$%lc est un nom de variable invalide dans fish."
+
+#, c-format
 msgid "$%ls: originally inherited as |%ls|\n"
 msgstr ""
 
@@ -163,6 +174,10 @@ msgstr ""
 #, c-format
 msgid "%.*ls: invalid conversion specification"
 msgstr "%.*ls : spécification de conversion invalide"
+
+#, c-format
+msgid "%ls"
+msgstr ""
 
 #, c-format
 msgid "%ls %ls: Abbreviation %ls already exists, cannot rename %ls\n"
@@ -221,6 +236,10 @@ msgid "%ls: %*ls\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: %ls\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: %ls %ls: options cannot be used together\n"
 msgstr ""
 
@@ -237,6 +256,10 @@ msgid "%ls: %ls: contains a syntax error\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: %ls: expected %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: %ls: invalid base value\n"
 msgstr ""
 
@@ -249,11 +272,11 @@ msgid "%ls: %ls: invalid integer\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
+msgid "%ls: %ls: invalid mode\n"
 msgstr ""
 
 #, c-format
-msgid "%ls: %ls: invalid mode\n"
+msgid "%ls: %ls: invalid mode name. See `help identifiers`\n"
 msgstr ""
 
 #, c-format
@@ -286,10 +309,6 @@ msgstr ""
 
 #, c-format
 msgid "%ls: %ls: unknown option\n"
-msgstr ""
-
-#, c-format
-msgid "%ls: %ls\n"
 msgstr ""
 
 #, c-format
@@ -765,6 +784,18 @@ msgid "%ls: exclusive flag string '%ls' is not valid\n"
 msgstr "%ls : le sémaphore texte exclusif '%ls' est invalide\n"
 
 #, c-format
+msgid "%ls: expected %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
+msgid "%ls: expected <= %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
+msgid "%ls: expected >= %d arguments; got %d\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: expected a numeric value"
 msgstr "%ls : valeur numérique attendue"
 
@@ -781,6 +812,10 @@ msgid "%ls: invalid option combination\n"
 msgstr ""
 
 #, c-format
+msgid "%ls: invalid option combination, %ls\n"
+msgstr ""
+
+#, c-format
 msgid "%ls: invalid underline style: %ls\n"
 msgstr ""
 
@@ -790,6 +825,10 @@ msgstr "%ls : la tâche %d ('%ls') a été arrêtée et a reçu un signal pour 
 
 #, c-format
 msgid "%ls: line/column index starts at 1"
+msgstr ""
+
+#, c-format
+msgid "%ls: missing argument\n"
 msgstr ""
 
 #, c-format
@@ -926,24 +965,24 @@ msgstr ""
 msgid "--tokens options are mutually exclusive"
 msgstr ""
 
-msgid ".local/bin/"
-msgstr ""
-
-msgid ".local/share/"
-msgstr ""
-
-msgid ".local/share/doc/fish"
-msgstr ""
-
-msgid "/etc/"
-msgstr ""
-
 msgid "A second attempt to exit will terminate them.\n"
 msgstr "Une seconde tentative d’arrêt les terminera.\n"
+
+msgid "Abbreviation expansion"
+msgstr ""
 
 #, c-format
 msgid "Abbreviation: %ls"
 msgstr ""
+
+msgid "Abort"
+msgstr "Abandon"
+
+msgid "Abort (Alias for SIGABRT)"
+msgstr "Abandon (Alias pour SIGABRT)"
+
+msgid "Address boundary error"
+msgstr "Erreur de frontière d'adresse"
 
 msgid "Always"
 msgstr "Toujours"
@@ -955,14 +994,29 @@ msgstr "Une erreur est survenue lors du paramétrage du tube"
 msgid "Argument is not a number: '%ls'"
 msgstr ""
 
+msgid "Background IO thread events"
+msgstr ""
+
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "Les commandes en arrière-plan ne peuvent être utilisées comme des conditionnelles"
+
+msgid "Bad system call"
+msgstr "Mauvais appel système"
 
 msgid "Block of code to run conditionally"
 msgstr ""
 
+msgid "Broken pipe"
+msgstr "Tube interrompu"
+
 msgid "CPU\t"
 msgstr "CPU\t"
+
+msgid "CPU time limit exceeded"
+msgstr "Limite de temps CPU dépassée"
+
+msgid "Calls to fork()"
+msgstr ""
 
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Le mode no-execute ne peut pas être utilisé dans une session interactive"
@@ -977,20 +1031,38 @@ msgstr "Impossible d’utiliser l’entrée standard (fd 0) comme sortie de tube
 msgid "Change working directory"
 msgstr "Modifier le dossier de travail"
 
+msgid "Changes to exported variables"
+msgstr ""
+
+msgid "Changes to locale variables"
+msgstr ""
+
+msgid "Character encoding issues"
+msgstr ""
+
 msgid "Check if a thing is a thing"
+msgstr ""
+
+msgid "Child process status changed"
+msgstr "L’état du processus fils a été modifié"
+
+msgid "Command\n"
+msgstr "Commande\n"
+
+msgid "Command history events"
 msgstr ""
 
 msgid "Command not executable"
 msgstr ""
-
-msgid "Command\n"
-msgstr "Commande\n"
 
 msgid "Commandname was invalid"
 msgstr ""
 
 msgid "Conditionally run blocks of code"
 msgstr ""
+
+msgid "Continue previously stopped process"
+msgstr "Continuer le processus précédemment arrêté"
 
 msgid "Could not determine current working directory. Is your locale set correctly?"
 msgstr "Impossible de déterminer le dossier de travail. Vos paramètres régionaux sont-ils corrects ?"
@@ -1013,6 +1085,9 @@ msgstr "Compter le nombre d’arguments"
 
 msgid "Create a block of code"
 msgstr "Créer un bloc de code"
+
+msgid "Debugging aid (on by default)"
+msgstr ""
 
 msgid "Define a new function"
 msgstr "Définir une nouvelle fonction"
@@ -1050,6 +1125,9 @@ msgstr ""
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Erreur lors de la lecture du fichier %ls\n"
+
+msgid "Errors reported by exec (on by default)"
+msgstr ""
 
 msgid "Evaluate a string as a statement"
 msgstr ""
@@ -1114,6 +1192,9 @@ msgstr ""
 msgid "Expression is bogus"
 msgstr ""
 
+msgid "FD monitor events"
+msgstr ""
+
 msgid "Failed to assign shell to its own process group"
 msgstr ""
 
@@ -1122,6 +1203,24 @@ msgstr ""
 
 msgid "Failed to take control of the terminal"
 msgstr ""
+
+msgid "File size limit exceeded"
+msgstr "Limite de taille de fichier dépassée"
+
+msgid "Finding and reading configuration"
+msgstr ""
+
+msgid "Firing events"
+msgstr ""
+
+msgid "Floating point exception"
+msgstr "Exception de virgule flottante"
+
+msgid "Forced quit"
+msgstr "Forcé à quitter"
+
+msgid "Forced stop"
+msgstr "Arrêt forcé"
 
 msgid "Generate random number"
 msgstr "Génère un nombre aléatoire"
@@ -1150,6 +1249,9 @@ msgstr ""
 msgid "History of commands executed by user"
 msgstr "Historique des commandes exécutées par l'utilisateur"
 
+msgid "History performance measurements"
+msgstr ""
+
 #, c-format
 msgid "History session ID '%ls' is not a valid variable name. Falling back to `%ls`."
 msgstr "L’ID de session d’historique '%ls' n’est pas un nom de variable valide ; retour à la valeur par défaut `%ls`."
@@ -1162,9 +1264,15 @@ msgstr ""
 msgid "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr "Il semblerait que je sois un processus orphelin, je m'arrête donc. Mon pid est %d."
 
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr "E/S sur un descripteur de fichier asynchrone possible"
+
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr "Descripteur de fichier erroné dans la redirection '%ls'"
+
+msgid "Illegal instruction"
+msgstr "Instruction illégale"
 
 #, c-format
 msgid "Incomplete escape sequence '%ls'"
@@ -1172,6 +1280,12 @@ msgstr ""
 
 #, c-format
 msgid "Integer %lld in '%ls' followed by non-digit"
+msgstr ""
+
+msgid "Internal (non-forked) process events"
+msgstr ""
+
+msgid "Internal details of the topic monitor"
 msgstr ""
 
 msgid "Invalid arguments"
@@ -1206,12 +1320,21 @@ msgstr ""
 msgid "Items %lu to %lu of %lu"
 msgstr ""
 
+msgid "Job\tGroup\t"
+msgstr "Tâche\tGroupe\t"
+
 #, c-format
 msgid "Job control: %ls\n"
 msgstr "Contrôle des tâches : %ls\n"
 
-msgid "Job\tGroup\t"
-msgstr "Tâche\tGroupe\t"
+msgid "Jobs being executed"
+msgstr ""
+
+msgid "Jobs changing status"
+msgstr ""
+
+msgid "Jobs getting started or continued"
+msgstr ""
 
 msgid "List or remove functions"
 msgstr "Lister ou supprimer des fonctions"
@@ -1235,6 +1358,9 @@ msgstr "Manipuler les chaînes"
 
 msgid "Measure how long a command or block takes"
 msgstr ""
+
+msgid "Misaligned address error"
+msgstr "Erreur de mauvaise adresse"
 
 msgid "Mismatched braces"
 msgstr ""
@@ -1278,6 +1404,9 @@ msgstr "Pas une fonction"
 msgid "Not a number"
 msgstr ""
 
+msgid "Notifications about universal variable changes"
+msgstr ""
+
 msgid "Number is infinite"
 msgstr ""
 
@@ -1300,6 +1429,9 @@ msgstr ""
 msgid "Parse options in fish script"
 msgstr "Analyser les options du script fish"
 
+msgid "Parsing fish AST"
+msgstr ""
+
 msgid "Perform a command multiple times"
 msgstr "Exécuter une commande plusieurs fois"
 
@@ -1313,6 +1445,12 @@ msgstr "Veuillez paramétrer $%ls à un dossier dans lequel vous avez un accès 
 #, c-format
 msgid "Please set the %ls or HOME environment variable before starting fish."
 msgstr "Veuillez paramétrer la variable d’environnement %ls ou HOME avant de lancer fish."
+
+msgid "Polite quit request"
+msgstr "Demande polie de quitter"
+
+msgid "Power failure"
+msgstr "Panne de courant"
 
 #, c-format
 msgid "Press ctrl-%c again to exit\n"
@@ -1333,11 +1471,41 @@ msgstr "Affiche le texte formaté"
 msgid "Process\n"
 msgstr "Processus\n"
 
+msgid "Process groups"
+msgstr ""
+
+msgid "Profiling timer expired"
+msgstr "Délai de profilage expiré"
+
+msgid "Quit request from job control (^C)"
+msgstr "Requête de sortie du contrôle des tâches (^C)"
+
+msgid "Quit request from job control with core dump (^\\)"
+msgstr "Requête de sortie du contrôle des tâches avec core dump (^\\)"
+
+msgid "Reacting to variables"
+msgstr ""
+
 msgid "Read a line of input into variables"
 msgstr "Lire une ligne d'entrée dans des variables"
 
+msgid "Reading/Writing the history file"
+msgstr ""
+
+msgid "Reaping external (forked) processes"
+msgstr ""
+
+msgid "Reaping internal (non-forked) processes"
+msgstr ""
+
+msgid "Refcell dynamic borrowing"
+msgstr ""
+
 msgid "Remove job from job list"
 msgstr "Supprimer la tâche de la liste des tâches"
+
+msgid "Rendering the command line"
+msgstr ""
 
 #, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
@@ -1368,8 +1536,14 @@ msgstr ""
 msgid "Run command in current process"
 msgstr "Exécuter la commande dans le processus actuel"
 
+msgid "Screen repaints"
+msgstr ""
+
 msgid "Search for a specified string in a list"
 msgstr "Rechercher une chaîne de caractères donnée dans une liste"
+
+msgid "Searching/using paths"
+msgstr ""
 
 #, c-format
 msgid "Send job %d (%ls) to foreground\n"
@@ -1385,6 +1559,9 @@ msgstr "Mettre la tâche en arrière-plan"
 msgid "Send job to foreground"
 msgstr "Mettre la tâche en premier plan"
 
+msgid "Serious unexpected errors (on by default)"
+msgstr ""
+
 msgid "Set or get the commandline"
 msgstr "Paramétrer ou obtenir la ligne de commande"
 
@@ -1396,6 +1573,9 @@ msgstr ""
 
 msgid "Skip over remaining innermost loop"
 msgstr ""
+
+msgid "Stack fault"
+msgstr "Faute de pile"
 
 msgid "Standard input"
 msgstr "Entrée standard"
@@ -1414,6 +1594,15 @@ msgstr "État\tCommande\n"
 msgid "Stdin must be attached to a tty."
 msgstr ""
 
+msgid "Stop from terminal input"
+msgstr "Arrêt de l'entrée du terminal"
+
+msgid "Stop from terminal output"
+msgstr "Arrêt de la sortie du terminal"
+
+msgid "Stop request from job control (^Z)"
+msgstr "Demande d'arrêt du contrôle des tâches (^Z)"
+
 msgid "Stop the currently evaluated function"
 msgstr "Arrêter la fonction actuellement en évaluation"
 
@@ -1422,6 +1611,18 @@ msgstr "Arrêter la boucle interne"
 
 msgid "Temporarily block delivery of events"
 msgstr "Bloquer temporairement la distribution des événements"
+
+msgid "Terminal feature detection"
+msgstr ""
+
+msgid "Terminal hung up"
+msgstr "Le terminal a raccroché"
+
+msgid "Terminal ownership events"
+msgstr ""
+
+msgid "Terminal protocol negotiation"
+msgstr ""
 
 msgid "Test a condition"
 msgstr "Vérifier une condition"
@@ -1440,6 +1641,9 @@ msgstr ""
 msgid "The call stack limit has been exceeded. Do you have an accidental infinite loop?"
 msgstr ""
 
+msgid "The completion system"
+msgstr ""
+
 #, c-format
 msgid "The error was '%s'."
 msgstr "L’erreur était '%s'"
@@ -1454,6 +1658,9 @@ msgstr ""
 msgid "The function '%ls' calls itself immediately, which would result in an infinite loop."
 msgstr "La fonction '%ls' s’appelle immédiatement, ce qui provoquerait une boucle infinie."
 
+msgid "The interactive reader/input system"
+msgstr ""
+
 msgid "There are still jobs active:\n"
 msgstr "Des tâches sont toujours actives :\n"
 
@@ -1462,6 +1669,9 @@ msgstr "Ceci est un shell de connexion\n"
 
 msgid "This is not a login shell\n"
 msgstr "Ceci n’est pas un shell de connexion\n"
+
+msgid "Timer expired"
+msgstr "Expiration du délai"
 
 msgid "Too few arguments"
 msgstr ""
@@ -1475,7 +1685,13 @@ msgstr ""
 msgid "Too much data emitted by command substitution so it was discarded"
 msgstr ""
 
+msgid "Trace or breakpoint trap"
+msgstr "Déroutement de suivi/point d'arrêt"
+
 msgid "Translate a string"
+msgstr ""
+
+msgid "Trying to print invalid output"
 msgstr ""
 
 #, c-format
@@ -1592,27 +1808,58 @@ msgstr ""
 msgid "Unsupported use of '='. In fish, please use 'set %ls %ls'."
 msgstr "Usage de '=' non supporté. Dans fish, veuillez utiliser 'set %ls %ls'."
 
+msgid "Urgent socket condition"
+msgstr "Condition urgente de socket"
+
 msgid "Use 'disown PID' to remove jobs from the list without terminating them.\n"
 msgstr "Utilisez 'disown PID' pour retirer des tâches de la liste sans les abréger\n"
+
+msgid "User defined signal 1"
+msgstr "Signal défini par l'utilisateur 1"
+
+msgid "User defined signal 2"
+msgstr "Signal défini par l'utilisateur 2"
 
 #, c-format
 msgid "Variable: %ls"
 msgstr "Variable : %ls"
 
+#, c-format
+msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
+msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuillez utiliser \"$%ls\"."
+
+#, c-format
+msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
+msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuillez utiliser {$%ls}."
+
+msgid "Virtual timefr expired"
+msgstr ""
+
 msgid "Wait for background processes completed"
 msgstr "Attendre la mort des processus en arrière-plan"
+
+msgid "Warning about using test's zero- or one-argument modes (`test -d $foo`), which will be changed in future."
+msgstr ""
+
+msgid "Warnings (on by default)"
+msgstr ""
+
+msgid "Warnings about unusable paths for config/history (on by default)"
+msgstr ""
+
+msgid "Window size change"
+msgstr "Modification de dimension de fenêtre"
+
+msgid "Writing/reading the universal variable store"
+msgstr ""
 
 msgid "[: the last argument must be ']'"
 msgstr ""
 
-msgid ""
-"\n"
-"   PID  Command\n"
-msgstr ""
-"\n"
-"   PID Commande\n"
-
 msgid "array indices start at 1, not 0."
+msgstr ""
+
+msgid "autoloading"
 msgstr ""
 
 #, c-format
@@ -1672,9 +1919,6 @@ msgstr "exportée"
 
 msgid "file"
 msgstr "fichier"
-
-msgid "fish/install"
-msgstr ""
 
 #, c-format
 msgid ""
@@ -80543,107 +80787,14 @@ msgstr ""
 #~ msgid "Could not return shell to foreground"
 #~ msgstr "Impossible de remettre le shell en premier plan"
 
-#~ msgid "Terminal hung up"
-#~ msgstr "Le terminal a raccroché"
-
-#~ msgid "Quit request from job control (^C)"
-#~ msgstr "Requête de sortie du contrôle des tâches (^C)"
-
-#~ msgid "Quit request from job control with core dump (^\\)"
-#~ msgstr "Requête de sortie du contrôle des tâches avec core dump (^\\)"
-
-#~ msgid "Illegal instruction"
-#~ msgstr "Instruction illégale"
-
-#~ msgid "Trace or breakpoint trap"
-#~ msgstr "Déroutement de suivi/point d'arrêt"
-
-#~ msgid "Abort"
-#~ msgstr "Abandon"
-
-#~ msgid "Misaligned address error"
-#~ msgstr "Erreur de mauvaise adresse"
-
-#~ msgid "Floating point exception"
-#~ msgstr "Exception de virgule flottante"
-
-#~ msgid "Forced quit"
-#~ msgstr "Forcé à quitter"
-
-#~ msgid "User defined signal 1"
-#~ msgstr "Signal défini par l'utilisateur 1"
-
-#~ msgid "User defined signal 2"
-#~ msgstr "Signal défini par l'utilisateur 2"
-
-#~ msgid "Address boundary error"
-#~ msgstr "Erreur de frontière d'adresse"
-
-#~ msgid "Broken pipe"
-#~ msgstr "Tube interrompu"
-
-#~ msgid "Timer expired"
-#~ msgstr "Expiration du délai"
-
-#~ msgid "Polite quit request"
-#~ msgstr "Demande polie de quitter"
-
-#~ msgid "Child process status changed"
-#~ msgstr "L’état du processus fils a été modifié"
-
-#~ msgid "Continue previously stopped process"
-#~ msgstr "Continuer le processus précédemment arrêté"
-
-#~ msgid "Forced stop"
-#~ msgstr "Arrêt forcé"
-
-#~ msgid "Stop request from job control (^Z)"
-#~ msgstr "Demande d'arrêt du contrôle des tâches (^Z)"
-
-#~ msgid "Stop from terminal input"
-#~ msgstr "Arrêt de l'entrée du terminal"
-
-#~ msgid "Stop from terminal output"
-#~ msgstr "Arrêt de la sortie du terminal"
-
-#~ msgid "Urgent socket condition"
-#~ msgstr "Condition urgente de socket"
-
-#~ msgid "CPU time limit exceeded"
-#~ msgstr "Limite de temps CPU dépassée"
-
-#~ msgid "File size limit exceeded"
-#~ msgstr "Limite de taille de fichier dépassée"
-
 #~ msgid "Virtual timer expired"
 #~ msgstr "Délai virtuel expiré"
-
-#~ msgid "Profiling timer expired"
-#~ msgstr "Délai de profilage expiré"
-
-#~ msgid "Window size change"
-#~ msgstr "Modification de dimension de fenêtre"
-
-#~ msgid "I/O on asynchronous file descriptor is possible"
-#~ msgstr "E/S sur un descripteur de fichier asynchrone possible"
-
-#~ msgid "Power failure"
-#~ msgstr "Panne de courant"
-
-#~ msgid "Bad system call"
-#~ msgstr "Mauvais appel système"
 
 #~ msgid "Information request"
 #~ msgstr "Demande d'information"
 
-#~ msgid "Stack fault"
-#~ msgstr "Faute de pile"
-
 #~ msgid "Emulator trap"
 #~ msgstr "Déroutement d'émulation"
-
-#~ msgid "Abort (Alias for SIGABRT)"
-#~ msgstr "Abandon (Alias pour SIGABRT)"
 
 #~ msgid "Unused signal"
 #~ msgstr "Signal inutilisé"
@@ -80651,18 +80802,6 @@ msgstr ""
 #, c-format
 #~ msgid "getcwd() failed with errno %d/%s"
 #~ msgstr "getcwd() a échoué avec l’erreur %d/%s"
-
-#, c-format
-#~ msgid "$%lc is not a valid variable in fish."
-#~ msgstr "$%lc est un nom de variable invalide dans fish."
-
-#, c-format
-#~ msgid "Variables cannot be bracketed. In fish, please use {$%ls}."
-#~ msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuillez utiliser {$%ls}."
-
-#, c-format
-#~ msgid "Variables cannot be bracketed. In fish, please use \"$%ls\"."
-#~ msgstr "Les variables ne peuvent être placées entre crochets. Dans fish, veuillez utiliser \"$%ls\"."
 
 #~ msgid "Print each token on a separate line"
 #~ msgstr "Afficher chaque lexème sur une ligne séparée"

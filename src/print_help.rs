@@ -1,10 +1,12 @@
 //! Helper for executables (not builtins) to print a help message
 //! Uses the fish in PATH, not necessarily the matching fish binary
 
+use crate::wchar::prelude::*;
+
 use std::ffi::{OsStr, OsString};
 use std::process::Command;
 
-const HELP_ERR: &str = "Could not show help message";
+const HELP_ERR: LocalizableString = localizable_string!("Could not show help message");
 
 pub fn print_help(command: &str) {
     let mut cmdline = OsString::new();
@@ -16,9 +18,8 @@ pub fn print_help(command: &str) {
         .spawn()
         .and_then(|mut c| c.wait())
     {
-        // TODO: should be translated
-        Ok(status) if !status.success() => eprintf!("%s\n", HELP_ERR),
-        Err(e) => eprintf!("%s: %s\n", HELP_ERR, e),
+        Ok(status) if !status.success() => eprintf!("%s\n", wgettext!(HELP_ERR)),
+        Err(e) => eprintf!("%s: %s\n", wgettext!(HELP_ERR), e),
         _ => (),
     }
 }

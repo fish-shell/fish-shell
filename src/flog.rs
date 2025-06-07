@@ -8,12 +8,12 @@ use std::sync::atomic::{AtomicI32, Ordering};
 #[rustfmt::skip::macros(category)]
 pub mod categories {
     use super::wstr;
-    use crate::wchar::L;
+    use crate::wchar::prelude::*;
     use std::sync::atomic::AtomicBool;
 
     pub struct category_t {
         pub name: &'static wstr,
-        pub description: &'static wstr,
+        pub description: LocalizableString,
         pub enabled: AtomicBool,
     }
 
@@ -25,7 +25,7 @@ pub mod categories {
         ) => {
             pub static $var: category_t = category_t {
                 name: L!($name),
-                description: L!($description),
+                description: localizable_string!($description),
                 enabled: AtomicBool::new($enabled),
             };
         };

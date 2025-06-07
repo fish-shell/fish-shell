@@ -351,11 +351,11 @@ impl SigChecker {
 struct LookupEntry {
     signal: Signal,
     name: &'static wstr,
-    desc: &'static wstr, // Note: this needs to be translated via gettext before presenting it to the user.
+    desc: LocalizableString, // Note: this needs to be localized via gettext before presenting it to the user.
 }
 
 impl LookupEntry {
-    const fn new(signal: i32, name: &'static wstr, desc: &'static wstr) -> Self {
+    const fn new(signal: i32, name: &'static wstr, desc: LocalizableString) -> Self {
         Self {
             signal: Signal::new(signal),
             name,
@@ -366,7 +366,11 @@ impl LookupEntry {
 
 macro_rules! signal_entry {
     ($name:ident, $desc:expr) => {
-        LookupEntry::new(libc::$name, L!(stringify!($name)), L!($desc))
+        LookupEntry::new(
+            libc::$name,
+            L!(stringify!($name)),
+            localizable_string!($desc),
+        )
     };
 }
 
@@ -479,7 +483,7 @@ impl Signal {
     /// Previously signal_get_desc().
     pub fn desc(&self) -> &'static wstr {
         match self.get_lookup_entry() {
-            Some(entry) => wgettext_str(entry.desc),
+            Some(entry) => entry.desc.localize(),
             None => wgettext!("Unknown"),
         }
     }

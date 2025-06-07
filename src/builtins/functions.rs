@@ -243,11 +243,19 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
             streams.out.appendln(shadow);
 
             let desc = match props.as_ref() {
-                Some(p) if !p.description.is_empty() => escape_string(
-                    &p.description,
-                    EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
-                ),
-                Some(p) if p.description.is_empty() => L!("").to_owned(),
+                Some(p) => {
+                    let localized_description = p.description.localize();
+                    if localized_description.is_empty() {
+                        L!("").to_owned()
+                    } else {
+                        escape_string(
+                            localized_description,
+                            EscapeStringStyle::Script(
+                                EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED,
+                            ),
+                        )
+                    }
+                }
                 _ => L!("n/a").to_owned(),
             };
             streams.out.appendln(desc);

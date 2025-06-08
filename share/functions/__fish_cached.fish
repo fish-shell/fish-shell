@@ -23,14 +23,22 @@ function __fish_cached --description "Cache the command output for a given amoun
     set -l cache_age (path mtime --relative $cache_file)
 
     if not test -f $cache_file
-        or test $cache_age -gt $max_age
-
         __fish_cache_put $cache_file
-        if not eval "$argv" >$cache_file
-            rm $cache_file 2>/dev/null
-            return 126
+        sh -c "{ $argv; } >$cache_file || rm $cache_file 2>/dev/null" &
+
+        if test -n "$last_pid"
+            # wait for at most 1 second if supported
+            command --search waitpid &>/dev/null
+            and waitpid --exited --timeout 1 $last_pid
+            and test -f $cache_file
+            and cat $cache_file
+        end
+    else
+        cat $cache_file
+
+        if test $cache_age -gt $max_age
+            __fish_cache_put $cache_file
+            sh -c "{ $argv; } >$cache_file || rm $cache_file 2>/dev/null" &
         end
     end
-
-    cat $cache_file
 end

@@ -38484,9 +38484,6 @@ msgstr ""
 msgid "Only report capturing groups"
 msgstr ""
 
-msgid "Only report commits reachable from these tips"
-msgstr ""
-
 msgid "Only report critical statistics"
 msgstr ""
 
@@ -46783,9 +46780,6 @@ msgid "Reattach/create session"
 msgstr ""
 
 msgid "Rebase all reachable commits"
-msgstr ""
-
-msgid "Rebase current branch onto given upstream or newbase"
 msgstr ""
 
 msgid "Rebase current branch onto the superproject's commit"

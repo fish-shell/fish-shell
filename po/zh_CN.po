@@ -38485,9 +38485,6 @@ msgstr "只删除 PACKAGE 不需要的目标"
 msgid "Only report capturing groups"
 msgstr "只有报告捕获组"
 
-msgid "Only report commits reachable from these tips"
-msgstr "只有报告承诺可从这些提示中达到"
-
 msgid "Only report critical statistics"
 msgstr "只报告重要统计数据"
 
@@ -46785,9 +46782,6 @@ msgstr "重排/ 创建会话"
 
 msgid "Rebase all reachable commits"
 msgstr "重新计算所有可达到的承诺"
-
-msgid "Rebase current branch onto given upstream or newbase"
-msgstr "将当前分支重新定位到给定的上游或新基地"
 
 msgid "Rebase current branch onto the superproject's commit"
 msgstr "将当前分支重新定位为超级项目的承诺"

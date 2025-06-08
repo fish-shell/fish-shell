@@ -419,7 +419,7 @@ impl FunctionProperties {
     /// Note callers must provide the function name, since the function does not know its own name.
     pub fn annotated_definition(&self, name: &wstr) -> WString {
         let mut out = WString::new();
-        let desc = &self.description;
+        let desc = self.description.localize();
         let def = get_function_body_source(self);
         let handlers = event::get_function_handlers(name);
 

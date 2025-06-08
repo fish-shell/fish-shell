@@ -1310,7 +1310,7 @@ impl<'ctx> Completer<'ctx> {
                                 }
                                 let (arg_prefix, arg) = s.split_once(arg_offset);
                                 let first_new = self.completions.completions.len();
-                                self.complete_from_args(arg, &o.comp, &o.desc, o.flags);
+                                self.complete_from_args(arg, &o.comp, o.desc.localize(), o.flags);
                                 for compl in &mut self.completions.completions[first_new..] {
                                     if compl.replaces_token() {
                                         compl.completion.insert_utfstr(0, arg_prefix);
@@ -1341,7 +1341,7 @@ impl<'ctx> Completer<'ctx> {
                             if o.result_mode.force_files {
                                 has_force = true;
                             }
-                            self.complete_from_args(s, &o.comp, &o.desc, o.flags);
+                            self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                         }
                     }
 
@@ -1377,7 +1377,7 @@ impl<'ctx> Completer<'ctx> {
                                 if o.result_mode.force_files {
                                     has_force = true;
                                 }
-                                self.complete_from_args(s, &o.comp, &o.desc, o.flags);
+                                self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                             }
                         }
                     }
@@ -1400,7 +1400,7 @@ impl<'ctx> Completer<'ctx> {
                 if o.option.is_empty() {
                     use_files &= !o.result_mode.no_files;
                     has_force |= o.result_mode.force_files;
-                    self.complete_from_args(s, &o.comp, &o.desc, o.flags);
+                    self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                 }
 
                 if !use_switches || s.is_empty() {
@@ -1433,11 +1433,12 @@ impl<'ctx> Completer<'ctx> {
                         }
                     }
                     // It's a match.
+                    let desc = o.desc.localize();
                     // Append a short-style option
-                    if !self.completions.add(Completion::with_desc(
-                        o.option.clone(),
-                        o.desc.localize().to_owned(),
-                    )) {
+                    if !self
+                        .completions
+                        .add(Completion::with_desc(o.option.clone(), desc.to_owned()))
+                    {
                         return false;
                     }
                 }
@@ -2413,7 +2414,7 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
         CompleteOptionType::DoubleLong => append_switch_short_arg(&mut out, 'l', &o.option),
     }
 
-    append_switch_short_arg(&mut out, 'd', &o.desc);
+    append_switch_short_arg(&mut out, 'd', o.desc.localize());
     append_switch_short_arg(&mut out, 'a', &o.comp);
     for c in &o.conditions {
         append_switch_short_arg(&mut out, 'n', c);

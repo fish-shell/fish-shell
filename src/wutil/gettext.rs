@@ -164,18 +164,6 @@ impl LocalizableString {
     }
 }
 
-impl std::ops::Deref for LocalizableString {
-    type Target = wstr;
-    fn deref(&self) -> &Self::Target {
-        self.localize()
-    }
-}
-
-impl AsRef<wstr> for LocalizableString {
-    fn as_ref(&self) -> &wstr {
-        self
-    }
-}
 impl std::fmt::Display for LocalizableString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.localize())

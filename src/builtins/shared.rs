@@ -1039,11 +1039,9 @@ fn builtin_false(_parser: &Parser, _streams: &mut IoStreams, _argv: &mut [&wstr]
 /// Strings not present in our repo would require a custom MO file for translation to be possible.
 fn builtin_gettext(_parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     for arg in &argv[1..] {
-        streams
-            .out
-            .append(crate::wutil::LocalizableString::from_external_source(
-                (*arg).to_owned(),
-            ));
+        streams.out.append(
+            crate::wutil::LocalizableString::from_external_source((*arg).to_owned()).localize(),
+        );
     }
     Ok(SUCCESS)
 }

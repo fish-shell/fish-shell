@@ -1,7 +1,7 @@
 #RUN: %fish %s
 
 set -g fish_complete_path c1 c2
-mkdir c1 c2
+mkdir -p c1 c2
 
 function foo; end
 for i in c1 c2

@@ -244,6 +244,7 @@ function fish_git_prompt --description "Prompt function for Git"
     set -l informative
     set -l dirty
     set -l untracked
+    set -l stash
     command git config -z --get-regexp 'bash\.(showInformativeStatus|showDirtyState|showUntrackedFiles)' 2>/dev/null | while read -lz key value
         switch $key
             case bash.showinformativestatus
@@ -270,15 +271,21 @@ function fish_git_prompt --description "Prompt function for Git"
     contains untrackedfiles $__fish_git_prompt_status_order
     or set untracked false
 
+    contains -- "$__fish_git_prompt_showstashstate" yes true 1
+    and set stash true
+    contains stashstate $__fish_git_prompt_status_order
+    or set stash false
+
     if test true = $inside_worktree
         # Use informative status if it has been enabled locally, or it has been
-        # enabled globally (via the fish variable) and dirty or untracked are not false.
+        # enabled globally (via the fish variable) and dirty, untracked, and stash are not false.
+        # (supports #9572)
         #
         # This is to allow overrides for the repository.
         if test "$informative" = true
             or begin
                 contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-                and test "$dirty" != false
+                and test "$dirty" != false -o "$untracked" != false -o "$stash" != false
             end
             set informative_status (untracked=$untracked __fish_git_prompt_informative_status $git_dir)
             if test -n "$informative_status"
@@ -307,18 +314,14 @@ function fish_git_prompt --description "Prompt function for Git"
 
                 test "$untracked" = true
                 and set untrackedfiles (string match -qr '\?\?' -- $stat; and echo 1)
+
             end
 
             if contains -- "$__fish_git_prompt_showstashstate" yes true 1
                 and test -r $git_dir/logs/refs/stash
-                # If we have informative status but don't want to actually
-                # *compute* the informative status, we might still count the stash.
-                if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-                    set stashstate (count < $git_dir/logs/refs/stash)
-                else
-                    set stashstate 1
-                end
+                set stashstate 1
             end
+
         end
 
         # (showupstream has a variety of options, not just bool)
@@ -334,10 +337,10 @@ function fish_git_prompt --description "Prompt function for Git"
         if test $detached = yes
             set branch_color $___fish_git_prompt_color_branch_detached
             set branch_done $___fish_git_prompt_color_branch_detached_done
-        else if test -n "$dirtystate$untrackedfiles"; and set -q __fish_git_prompt_color_branch_dirty
+        else if test -n "$dirtystate$untrackedfiles" -a "$dirtystate$untrackedfiles" != 00; and set -q __fish_git_prompt_color_branch_dirty
             set branch_color (set_color $__fish_git_prompt_color_branch_dirty)
             set branch_done (set_color $__fish_git_prompt_color_branch_dirty_done)
-        else if test -n "$stagedstate"; and set -q __fish_git_prompt_color_branch_staged
+        else if test -n "$stagedstate" -a "$stagedstate" != 0; and set -q __fish_git_prompt_color_branch_staged
             set branch_color (set_color $__fish_git_prompt_color_branch_staged)
             set branch_done (set_color $__fish_git_prompt_color_branch_staged_done)
         end
@@ -354,11 +357,7 @@ function fish_git_prompt --description "Prompt function for Git"
             set -l color_done $$color_done_var
             set -l symbol $$symbol_var
 
-            # If we count some things, print the number
-            # This won't be done if we actually do the full informative status
-            # because that does the printing.
             contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            and set f "$f$color$symbol$$i$color_done"
             or set f "$f$color$symbol$color_done"
         end
     end
@@ -402,11 +401,14 @@ end
 
 ### helper functions
 
-function __fish_git_prompt_informative_status
-    set -l stashstate 0
+function __fish_git_prompt_informative_status --no-scope-shadowing
+    # A number of variables computed here get bubbled up to the caller - *state and untrackedfiles
+    # to support #11199
     set -l stashfile "$argv[1]/logs/refs/stash"
     if contains -- "$__fish_git_prompt_showstashstate" yes true 1; and test -e "$stashfile"
         set stashstate (count < $stashfile)
+    else
+        set stashstate 0
     end
 
     # If we're not told to show untracked files, we don't.
@@ -420,10 +422,10 @@ function __fish_git_prompt_informative_status
     # Use git status --porcelain.
     # The v2 format is better, but we don't actually care in this case.
     set -l stats (string sub -l 2 (git -c core.fsmonitor= status --porcelain -z $untr | string split0))
-    set -l invalidstate (string match -r '^UU' $stats | count)
-    set -l stagedstate (string match -r '^[ACDMRT].' $stats | count)
-    set -l dirtystate (string match -r '^.[ACDMRT]' $stats | count)
-    set -l untrackedfiles (string match -r '^\?\?' $stats | count)
+    set invalidstate (string match -r '^UU' $stats | count)
+    set stagedstate (string match -r '^[ACDMRT].' $stats | count)
+    set dirtystate (string match -r '^.[ACDMRT]' $stats | count)
+    set untrackedfiles (string match -r '^\?\?' $stats | count)
 
     set -l info
 
@@ -433,7 +435,7 @@ function __fish_git_prompt_informative_status
         end
     else
         for i in $__fish_git_prompt_status_order
-            if test $$i != 0
+            if test "$$i" != 0
                 set -l color_var ___fish_git_prompt_color_$i
                 set -l color_done_var ___fish_git_prompt_color_{$i}_done
                 set -l symbol_var ___fish_git_prompt_char_$i

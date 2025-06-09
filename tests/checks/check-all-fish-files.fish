@@ -11,7 +11,7 @@ if test -f $timestamp_file
     set find_args -newer $timestamp_file
 end
 set -l fail_count 0
-for file in (find $dir -name "*.fish" $find_args 2>/dev/null; or find $dir -name "*.fish")
+for file in (find $dir -name "*.fish" $find_args)
     $fish -n $file; or set fail_count (math $fail_count + 1)
 end
 

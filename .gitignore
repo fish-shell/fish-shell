@@ -78,6 +78,7 @@ __pycache__
 /share/__fish_build_paths.fish
 /share/pkgconfig
 /tests/*.tmp.*
+/tests/.last-check-all-files
 
 # xcode
 ## Build generated

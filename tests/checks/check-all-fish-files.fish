@@ -5,7 +5,7 @@
 # in share/, that is - the tests are exempt because they contain syntax errors, on purpose
 
 set -l dir (path resolve -- (status dirname)/../../)
-set timestamp_file ./last_check_all_files
+set timestamp_file $dir/tests/.last-check-all-files
 set -l find_args
 if test -f $timestamp_file
     set find_args -newer $timestamp_file

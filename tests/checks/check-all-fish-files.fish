@@ -1,17 +1,15 @@
 #RUN: fish=%fish %fish %s
 # disable on CI ASAN because it's suuuper slow
 #REQUIRES: test -z "$FISH_CI_SAN"
-# Test ALL THE FISH FILES
-# in share/, that is - the tests are exempt because they contain syntax errors, on purpose
 
-set -l dir (path resolve -- (status dirname)/../../)
-set timestamp_file $dir/tests/.last-check-all-files
+set -l root (path resolve -- (status dirname)/../../)
+set timestamp_file $root/tests/.last-check-all-files
 set -l find_args
 if test -f $timestamp_file
     set find_args -newer $timestamp_file
 end
 set -l fail_count 0
-for file in (find $dir -name "*.fish" $find_args)
+for file in (find $root/{benchmarks,build_tools,etc,share,tests} -name "*.fish" $find_args)
     $fish -n $file; or set fail_count (math $fail_count + 1)
 end
 

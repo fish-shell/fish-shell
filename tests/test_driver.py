@@ -226,21 +226,34 @@ TestResult = TestSkip | TestFail | TestPass
 
 
 def run_test(
-    tmp_root: Path, path, arg, script_path, def_subs, lconfig, fishdir
+    tmp_root: Path,
+    test_file_path: str,
+    arg,
+    script_path: Path,
+    def_subs,
+    lconfig,
+    fishdir,
 ) -> TestResult:
-    if not path.endswith(".fish") and not path.endswith(".py"):
+    if not test_file_path.endswith(".fish") and not test_file_path.endswith(".py"):
         return TestFail(arg, None, f"Not a valid test file: {arg}")
 
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
     makeenv(script_path, home)
     os.chdir(home)
-    if path.endswith(".fish"):
+    if test_file_path.endswith(".fish"):
         subs = def_subs.copy()
-        subs.update({"s": path, "fish_test_helper": str(tmp_root / "fish_test_helper")})
+        subs.update(
+            {
+                "s": test_file_path,
+                "fish_test_helper": str(tmp_root / "fish_test_helper"),
+            }
+        )
 
         # littlecheck
-        ret = littlecheck.check_path(path, subs, lconfig, lambda x: print(x.message()))
+        ret = littlecheck.check_path(
+            test_file_path, subs, lconfig, lambda x: print(x.message())
+        )
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
         if ret is littlecheck.SKIP:
@@ -249,7 +262,7 @@ def run_test(
             return TestPass(arg, duration_ms)
         else:
             return TestFail(arg, duration_ms, f"Tmpdir is {home}")
-    elif path.endswith(".py"):
+    elif test_file_path.endswith(".py"):
         # environ for py files has a few changes.
         pyenviron = os.environ.copy()
         pyenviron.update(
@@ -266,7 +279,7 @@ def run_test(
             return TestSkip(arg)
         try:
             proc = subprocess.run(
-                ["python3", path],
+                ["python3", test_file_path],
                 capture_output=True,
                 env=pyenviron,
                 # Timeout of 120 seconds, about 10 times what any of these takes

@@ -174,22 +174,21 @@ def main():
             f"{arg.ljust(longest_test_name_length)}  {color}{result}{RESET}  {duration_str}{suffix_str}"
         )
 
-    tmp_root = tempfile.mkdtemp(prefix="fishtest-root-")
-
-    for f, arg in files:
-        match run_test(tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir):
-            case TestSkip(arg):
-                skipcount += 1
-                print_result(arg, "SKIPPED", BLUE)
-            case TestFail(arg, duration_ms, error_message):
-                failcount += 1
-                failed += [arg]
-                print_result(arg, "FAILED", RED, duration_ms, error_message)
-            case TestPass(arg, duration_ms):
-                passcount += 1
-                print_result(arg, "PASSED", GREEN, duration_ms)
-
-    shutil.rmtree(tmp_root)
+    with tempfile.TemporaryDirectory(prefix="fishtest-root-") as tmp_root:
+        for f, arg in files:
+            match run_test(
+                tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir
+            ):
+                case TestSkip(arg):
+                    skipcount += 1
+                    print_result(arg, "SKIPPED", BLUE)
+                case TestFail(arg, duration_ms, error_message):
+                    failcount += 1
+                    failed += [arg]
+                    print_result(arg, "FAILED", RED, duration_ms, error_message)
+                case TestPass(arg, duration_ms):
+                    passcount += 1
+                    print_result(arg, "PASSED", GREEN, duration_ms)
 
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")

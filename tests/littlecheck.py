@@ -5,12 +5,12 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 import argparse
+import asyncio
 import datetime
 from difflib import SequenceMatcher
 import io
 import re
 import shlex
-import subprocess
 import sys
 import unicodedata
 
@@ -382,17 +382,15 @@ def perform_substitution(input_str, subs):
 
 def runproc(cmd, env=None):
     """Wrapper around subprocess.Popen to save typing"""
-    PIPE = subprocess.PIPE
-    proc = subprocess.Popen(
-        cmd,
-        stdin=PIPE,
-        stdout=PIPE,
-        stderr=PIPE,
-        shell=True,
-        close_fds=True,  # For Python 2.6 as shipped on RHEL 6
-        env=env,
+    return asyncio.run(runproc_async(cmd, env=env))
+
+
+async def runproc_async(cmd, env=None):
+    """Wrapper around subprocess.Popen to save typing"""
+    PIPE = asyncio.subprocess.PIPE
+    return await asyncio.create_subprocess_shell(
+        cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env
     )
-    return proc
 
 
 class TestRun(object):
@@ -477,6 +475,10 @@ class TestRun(object):
 
     def run(self):
         """Run the command. Return a TestFailure, or None."""
+        return asyncio.run(self.run_async())
+
+    async def run_async(self):
+        """Run the command. Return a TestFailure, or None."""
 
         def split_by_newlines(s):
             """Decode a string and split it by newlines only,
@@ -489,8 +491,8 @@ class TestRun(object):
 
         if self.config.verbose:
             print(self.subbed_command)
-        proc = runproc(self.subbed_command, env=self.env)
-        stdout, stderr = proc.communicate()
+        proc = await runproc_async(self.subbed_command, env=self.env)
+        stdout, stderr = await proc.communicate()
         # HACK: This is quite cheesy: POSIX specifies that sh should return 127 for a missing command.
         # It's also possible that it'll be returned in other situations,
         # most likely when the last command in a shell script doesn't exist.
@@ -670,6 +672,13 @@ class Checker(object):
 
 def check_file(input_file, name, subs, config, failure_handler, env=None):
     """Check a single file. Return a True on success, False on error."""
+    return asyncio.run(
+        check_file_async(input_file, name, subs, config, failure_handler, env=env)
+    )
+
+
+async def check_file_async(input_file, name, subs, config, failure_handler, env=None):
+    """Check a single file. Return a True on success, False on error."""
     success = True
     lines = Line.readfile(input_file, name)
     checker = Checker(name, lines)
@@ -677,8 +686,8 @@ def check_file(input_file, name, subs, config, failure_handler, env=None):
     # Run all the REQUIRES lines first,
     # if any of them fail it's a SKIP
     for reqcmd in checker.requirecmds:
-        proc = runproc(perform_substitution(reqcmd.args, subs), env=env)
-        proc.communicate()
+        proc = await runproc_async(perform_substitution(reqcmd.args, subs), env=env)
+        await proc.communicate()
         if proc.returncode > 0:
             return SKIP
 
@@ -687,7 +696,9 @@ def check_file(input_file, name, subs, config, failure_handler, env=None):
 
     # Only then run the RUN lines.
     for runcmd in checker.runcmds:
-        failure = TestRun(name, runcmd, checker, subs, config, env=env).run()
+        failure = await TestRun(
+            name, runcmd, checker, subs, config, env=env
+        ).run_async()
         if failure:
             failure_handler(failure)
             success = False
@@ -695,8 +706,12 @@ def check_file(input_file, name, subs, config, failure_handler, env=None):
 
 
 def check_path(path, subs, config, failure_handler, env=None):
+    return asyncio.run(check_path_async(path, subs, config, failure_handler, env=env))
+
+
+async def check_path_async(path, subs, config, failure_handler, env=None):
     with io.open(path, encoding="utf-8") as fd:
-        return check_file(fd, path, subs, config, failure_handler, env=env)
+        return await check_file_async(fd, path, subs, config, failure_handler, env=env)
 
 
 def parse_subs(subs):

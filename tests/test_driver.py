@@ -25,7 +25,7 @@ BLUE = "\033[34m"
 RED = "\033[31m"
 
 
-def makeenv(script_path: Path, home: Path, test_helper_path: Optional[Path]):
+def makeenv(script_path: Path, home: Path):
     xdg_config = home / "xdg_config_home"
     func_dir = xdg_config / "fish" / "functions"
     os.makedirs(func_dir)
@@ -45,30 +45,6 @@ def makeenv(script_path: Path, home: Path, test_helper_path: Optional[Path]):
     os.makedirs(xdg_cache)
     tmp = home / "temp"
     os.makedirs(tmp)
-
-    # Compile fish_test_helper if necessary.
-    # If we're run multiple times, allow keeping this around to save time.
-    if test_helper_path:
-        thp = Path(test_helper_path)
-        if not os.path.exists(thp / "fish_test_helper"):
-            subprocess.run(
-                [
-                    "cc",
-                    script_path / "fish_test_helper.c",
-                    "-o",
-                    thp / "fish_test_helper",
-                ]
-            )
-        shutil.copy(thp / "fish_test_helper", home / "fish_test_helper")
-    else:
-        subprocess.run(
-            [
-                "cc",
-                script_path / "fish_test_helper.c",
-                "-o",
-                home / "fish_test_helper",
-            ]
-        )
 
     # unset LANG, TERM, ...
     for var in [
@@ -97,11 +73,32 @@ def makeenv(script_path: Path, home: Path, test_helper_path: Optional[Path]):
             "XDG_DATA_HOME": str(xdg_data),
             "XDG_RUNTIME_DIR": str(xdg_runtime),
             "XDG_CACHE_HOME": str(xdg_cache),
-            "fish_test_helper": str(home / "fish_test_helper"),
+            "fish_test_helper": str(home.parent / "fish_test_helper"),
             "LANG": "C",
             "LC_CTYPE": "en_US.UTF-8",
         }
     )
+
+
+def compile_test_helper(
+    cachedir: Optional[str], source_path: Path, binary_path: Path
+) -> None:
+    # Compile fish_test_helper if necessary.
+    # If we're run multiple times, allow keeping this around to save time.
+    if cachedir:
+        thp = Path(cachedir) / "fish_test_helper"
+        if not os.path.exists(thp):
+            subprocess.run(["cc", source_path, "-o", thp])
+        shutil.copy(thp, binary_path)
+    else:
+        subprocess.run(
+            [
+                "cc",
+                source_path,
+                "-o",
+                binary_path,
+            ]
+        )
 
 
 def main():
@@ -177,10 +174,15 @@ def main():
 
     with tempfile.TemporaryDirectory(prefix="fishtest-root-") as tmp_root:
         tmp_root = Path(tmp_root)
+
+        compile_test_helper(
+            args.cachedir,
+            script_path / "fish_test_helper.c",
+            tmp_root / "fish_test_helper",
+        )
+
         for f, arg in files:
-            match run_test(
-                tmp_root, f, arg, script_path, args, def_subs, lconfig, fishdir
-            ):
+            match run_test(tmp_root, f, arg, script_path, def_subs, lconfig, fishdir):
                 case TestSkip(arg):
                     skipcount += 1
                     print_result(arg, "SKIPPED", BLUE)
@@ -224,18 +226,18 @@ TestResult = TestSkip | TestFail | TestPass
 
 
 def run_test(
-    tmp_root: Path, path, arg, script_path, args, def_subs, lconfig, fishdir
+    tmp_root: Path, path, arg, script_path, def_subs, lconfig, fishdir
 ) -> TestResult:
     if not path.endswith(".fish") and not path.endswith(".py"):
         return TestFail(arg, None, f"Not a valid test file: {arg}")
 
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
-    makeenv(script_path, home, args.cachedir)
+    makeenv(script_path, home)
     os.chdir(home)
     if path.endswith(".fish"):
         subs = def_subs.copy()
-        subs.update({"s": path, "fish_test_helper": str(home / "fish_test_helper")})
+        subs.update({"s": path, "fish_test_helper": str(tmp_root / "fish_test_helper")})
 
         # littlecheck
         ret = littlecheck.check_path(path, subs, lconfig, lambda x: print(x.message()))

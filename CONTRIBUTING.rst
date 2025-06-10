@@ -219,12 +219,10 @@ Or you can run them on a fish, without involving cmake::
 
   cargo build
   cargo test # for the unit tests
-  tests/test_driver.py --cachedir=/tmp target/debug # for the script and interactive tests
+  tests/test_driver.py target/debug # for the script and interactive tests
 
 Here, the first argument to test_driver.py refers to a directory with ``fish``, ``fish_indent`` and ``fish_key_reader`` in it.
 In this example we're in the root of the git repo and have run ``cargo build`` without ``--release``, so it's a debug build.
-The ``--cachedir /tmp`` argument means it will keep the fish_test_helper binary in /tmp instead of recompiling it for every test.
-This saves some time, but isn't strictly necessary.
 
 Git hooks
 ---------

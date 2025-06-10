@@ -4,20 +4,21 @@
 
 from __future__ import unicode_literals
 from __future__ import print_function
-
 import argparse
 import datetime
+from difflib import SequenceMatcher
 import io
 import re
 import shlex
 import subprocess
 import sys
+import unicodedata
 
 try:
     from itertools import zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
-from difflib import SequenceMatcher
+
 
 # Directives can occur at the beginning of a line, or anywhere in a line that does not start with #.
 COMMENT_RE = r"^(?:[^#].*)?#\s*"
@@ -91,9 +92,6 @@ class Config(object):
 
 def output(*args):
     print("".join(args) + "\n")
-
-
-import unicodedata
 
 
 def esc(m):
@@ -382,7 +380,7 @@ def perform_substitution(input_str, subs):
     return re.sub(r"%(%|[a-zA-Z0-9_-]+)", subber, input_str)
 
 
-def runproc(cmd):
+def runproc(cmd, env=None):
     """Wrapper around subprocess.Popen to save typing"""
     PIPE = subprocess.PIPE
     proc = subprocess.Popen(
@@ -392,18 +390,20 @@ def runproc(cmd):
         stderr=PIPE,
         shell=True,
         close_fds=True,  # For Python 2.6 as shipped on RHEL 6
+        env=env,
     )
     return proc
 
 
 class TestRun(object):
-    def __init__(self, name, runcmd, checker, subs, config):
+    def __init__(self, name, runcmd, checker, subs, config, env=None):
         self.name = name
         self.runcmd = runcmd
         self.subbed_command = perform_substitution(runcmd.args, subs)
         self.checker = checker
         self.subs = subs
         self.config = config
+        self.env = env
 
     def check(self, lines, checks):
         # Reverse our lines and checks so we can pop off the end.
@@ -489,7 +489,7 @@ class TestRun(object):
 
         if self.config.verbose:
             print(self.subbed_command)
-        proc = runproc(self.subbed_command)
+        proc = runproc(self.subbed_command, env=self.env)
         stdout, stderr = proc.communicate()
         # HACK: This is quite cheesy: POSIX specifies that sh should return 127 for a missing command.
         # It's also possible that it'll be returned in other situations,
@@ -668,7 +668,7 @@ class Checker(object):
         ]
 
 
-def check_file(input_file, name, subs, config, failure_handler):
+def check_file(input_file, name, subs, config, failure_handler, env=None):
     """Check a single file. Return a True on success, False on error."""
     success = True
     lines = Line.readfile(input_file, name)
@@ -677,7 +677,7 @@ def check_file(input_file, name, subs, config, failure_handler):
     # Run all the REQUIRES lines first,
     # if any of them fail it's a SKIP
     for reqcmd in checker.requirecmds:
-        proc = runproc(perform_substitution(reqcmd.args, subs))
+        proc = runproc(perform_substitution(reqcmd.args, subs), env=env)
         proc.communicate()
         if proc.returncode > 0:
             return SKIP
@@ -687,16 +687,16 @@ def check_file(input_file, name, subs, config, failure_handler):
 
     # Only then run the RUN lines.
     for runcmd in checker.runcmds:
-        failure = TestRun(name, runcmd, checker, subs, config).run()
+        failure = TestRun(name, runcmd, checker, subs, config, env=env).run()
         if failure:
             failure_handler(failure)
             success = False
     return success
 
 
-def check_path(path, subs, config, failure_handler):
+def check_path(path, subs, config, failure_handler, env=None):
     with io.open(path, encoding="utf-8") as fd:
-        return check_file(fd, path, subs, config, failure_handler)
+        return check_file(fd, path, subs, config, failure_handler, env=env)
 
 
 def parse_subs(subs):

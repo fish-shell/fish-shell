@@ -3,6 +3,8 @@ use crate::curses;
 use crate::env::{Environment, CURSES_INITIALIZED};
 use crate::event;
 use crate::flog::FLOG;
+#[allow(unused_imports)]
+use crate::future::IsSomeAnd;
 use crate::input_common::{
     match_key_event_to_key, CharEvent, CharInputStyle, InputData, InputEventQueuer, KeyEvent,
     KeyMatchQuality, ReadlineCmd, R_END_INPUT_FUNCTIONS,

@@ -25,7 +25,7 @@ BLUE = "\033[34m"
 RED = "\033[31m"
 
 
-def makeenv(script_path: Path, home: Path):
+def makeenv(script_path: Path, home: Path) -> dict[str, str]:
     xdg_config = home / "xdg_config_home"
     func_dir = xdg_config / "fish" / "functions"
     os.makedirs(func_dir)
@@ -46,6 +46,9 @@ def makeenv(script_path: Path, home: Path):
     tmp = home / "temp"
     os.makedirs(tmp)
 
+    # Set up the environment variables for the test.
+    env = os.environ.copy()
+
     # unset LANG, TERM, ...
     for var in [
         "XDG_DATA_DIRS",
@@ -57,13 +60,13 @@ def makeenv(script_path: Path, home: Path):
         "TERM_PROGRAM_VERSION",
         "VTE_VERSION",
     ]:
-        if var in os.environ:
-            del os.environ[var]
+        if var in env:
+            del env[var]
     langvars = [key for key in os.environ.keys() if key.startswith("LC_")]
     for key in langvars:
-        del os.environ[key]
+        del env[key]
 
-    os.environ.update(
+    env.update(
         {
             "HOME": str(home),
             "TMPDIR": str(tmp),
@@ -78,6 +81,8 @@ def makeenv(script_path: Path, home: Path):
             "LC_CTYPE": "en_US.UTF-8",
         }
     )
+
+    return env
 
 
 def compile_test_helper(source_path: Path, binary_path: Path) -> None:
@@ -221,7 +226,7 @@ def run_test(
 
     starttime = datetime.now()
     home = Path(tempfile.mkdtemp(prefix="fishtest-", dir=tmp_root))
-    makeenv(script_path, home)
+    test_env = makeenv(script_path, home)
     os.chdir(home)
     if test_file_path.endswith(".fish"):
         subs = def_subs.copy()
@@ -234,7 +239,7 @@ def run_test(
 
         # littlecheck
         ret = littlecheck.check_path(
-            test_file_path, subs, lconfig, lambda x: print(x.message())
+            test_file_path, subs, lconfig, lambda x: print(x.message()), env=test_env
         )
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
@@ -245,9 +250,7 @@ def run_test(
         else:
             return TestFail(arg, duration_ms, f"Tmpdir is {home}")
     elif test_file_path.endswith(".py"):
-        # environ for py files has a few changes.
-        pyenviron = os.environ.copy()
-        pyenviron.update(
+        test_env.update(
             {
                 "PYTHONPATH": str(script_path),
                 "fish": str(fishdir / "fish"),
@@ -263,7 +266,7 @@ def run_test(
             proc = subprocess.run(
                 ["python3", test_file_path],
                 capture_output=True,
-                env=pyenviron,
+                env=test_env,
                 # Timeout of 120 seconds, about 10 times what any of these takes
                 timeout=120,
             )

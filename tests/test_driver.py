@@ -87,7 +87,8 @@ def compile_test_helper(source_path: Path, binary_path: Path) -> None:
             source_path,
             "-o",
             binary_path,
-        ]
+        ],
+        check=True,
     )
 
 

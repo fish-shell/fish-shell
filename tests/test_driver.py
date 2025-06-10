@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import os
@@ -97,7 +98,7 @@ def compile_test_helper(source_path: Path, binary_path: Path) -> None:
     )
 
 
-def main():
+async def main():
     if len(sys.argv) < 2:
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
         return 1
@@ -168,8 +169,12 @@ def main():
             tmp_root / "fish_test_helper",
         )
 
-        for f, arg in files:
-            match run_test(tmp_root, f, arg, script_path, def_subs, lconfig, fishdir):
+        tasks = [
+            run_test(tmp_root, f, arg, script_path, def_subs, lconfig, fishdir)
+            for f, arg in files
+        ]
+        for task in asyncio.as_completed(tasks):
+            match await task:
                 case TestSkip(arg):
                     skipcount += 1
                     print_result(arg, "SKIPPED", BLUE)
@@ -212,7 +217,7 @@ class TestPass:
 TestResult = TestSkip | TestFail | TestPass
 
 
-def run_test(
+async def run_test(
     tmp_root: Path,
     test_file_path: str,
     arg,
@@ -238,7 +243,7 @@ def run_test(
         )
 
         # littlecheck
-        ret = littlecheck.check_path(
+        ret = await littlecheck.check_path_async(
             test_file_path, subs, lconfig, lambda x: print(x.message()), env=test_env
         )
         endtime = datetime.now()
@@ -262,34 +267,28 @@ def run_test(
         )
         if not PEXPECT:
             return TestSkip(arg)
-        try:
-            proc = subprocess.run(
-                ["python3", test_file_path],
-                capture_output=True,
-                env=test_env,
-                # Timeout of 120 seconds, about 10 times what any of these takes
-                timeout=120,
-            )
-        except subprocess.TimeoutExpired as e:
-            error_message = f"{RED}FAILED due to timeout{RESET}"
-            if e.output:
-                error_message += e.output.decode("utf-8")
-            if e.stderr:
-                error_message += e.stderr.decode("utf-8")
-            return TestFail(arg, None, error_message)
-
+        PIPE = asyncio.subprocess.PIPE
+        proc = await asyncio.subprocess.create_subprocess_exec(
+            "python3",
+            test_file_path,
+            stdout=PIPE,
+            stderr=PIPE,
+            env=test_env,
+        )
+        stdout, stderr = await proc.communicate()
         endtime = datetime.now()
         duration_ms = round((endtime - starttime).total_seconds() * 1000)
-        if proc.returncode == 0:
+        returncode = proc.returncode
+        if returncode == 0:
             return TestPass(arg, duration_ms)
-        elif proc.returncode == 127:
+        elif returncode == 127:
             return TestSkip(arg)
         else:
             error_message = ""
-            if proc.stdout:
-                error_message += proc.stdout.decode("utf-8")
-            if proc.stderr:
-                error_message += proc.stderr.decode("utf-8")
+            if stdout:
+                error_message += stdout.decode("utf-8")
+            if stderr:
+                error_message += stderr.decode("utf-8")
             error_message += f"Tmpdir is {home}"
             return TestFail(arg, duration_ms, error_message)
     else:
@@ -298,7 +297,7 @@ def run_test(
 
 if __name__ == "__main__":
     try:
-        ret = main()
+        ret = asyncio.run(main())
         sys.exit(ret)
     except KeyboardInterrupt:
         sys.exit(130)

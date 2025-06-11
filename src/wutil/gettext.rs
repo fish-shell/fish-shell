@@ -70,6 +70,18 @@ enum MaybeStatic<'a> {
     Local(&'a wstr),
 }
 
+// Note that because entries are immortal, we simply leak non-static keys, and all values.
+static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Localizations for the current locale are cached.
+/// When the locale changes, this cache becomes stale and needs to be cleared to avoid showing
+/// localizations for the previous locale.
+pub fn wgettext_clear_cache() {
+    let mut wmap = WGETTEXT_MAP.lock().unwrap();
+    wmap.clear();
+}
+
 /// Implementation detail for wgettext!.
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
@@ -88,9 +100,6 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
 
     debug_assert!(!key.contains('\0'), "key should not contain NUL");
 
-    // Note that because entries are immortal, we simply leak non-static keys, and all values.
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
-        Lazy::new(|| Mutex::new(HashMap::new()));
     let mut wmap = WGETTEXT_MAP.lock().unwrap();
     let res = match wmap.get(key) {
         Some(v) => *v,

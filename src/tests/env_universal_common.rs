@@ -321,12 +321,12 @@ fn test_universal_ok_to_save() {
     );
 
     let mut uvars = EnvUniversal::new();
-    uvars
-        .initialize_at_path(UVARS_TEST_PATH.to_owned())
-        .unwrap_or_default();
-    assert!(!uvars.is_ok_to_save(), "Should not be OK to save");
-    uvars.sync();
-    assert!(!uvars.is_ok_to_save(), "Should still not be OK to save");
+    assert_eq!(
+        None,
+        uvars.initialize_at_path(UVARS_TEST_PATH.to_owned()),
+        "Should not be able to parse future version"
+    );
+    assert_eq!((false, None), uvars.sync());
     uvars.set(
         L!("SOMEVAR"),
         EnvVar::new(L!("SOMEVALUE").to_owned(), EnvVarFlags::empty()),

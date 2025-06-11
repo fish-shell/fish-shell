@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
 
 use crate::common::{charptr2wcstring, wcs2zstring, PACKAGE_NAME};
@@ -52,9 +53,7 @@ fn wgettext_really_init() {
         return;
     };
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    // This contains `datadir`; which when replaced to make the binary relocatable,
-    // causes null bytes at the end of the string.
-    let localedir = CString::new(localepath.display().to_string()).unwrap();
+    let localedir = CString::new(localepath.as_os_str().as_bytes()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }

@@ -7,10 +7,6 @@ on:
     # - cron: "14 13 * * *"
     workflow_dispatch:
 
-env:
-  CTEST_PARALLEL_LEVEL: "1"
-  CMAKE_BUILD_PARALLEL_LEVEL: "4"
-
 jobs:
   staticbuilds-linux:
 
@@ -36,7 +32,7 @@ jobs:
            cargo build --release --target x86_64-unknown-linux-musl
     - name: Test
       run: |
-           test -e tests/test_driver.py && tests/test_driver.py -f /tmp target/x86_64-unknown-linux-musl/release/
+           tests/test_driver.py target/x86_64-unknown-linux-musl/release/
     - name: Compress
       run: |
            tar -cazf fish-static-x86_64-$(git describe).tar.xz -C target/x86_64-unknown-linux-musl/release/ fish

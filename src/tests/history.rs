@@ -557,15 +557,15 @@ fn test_history_path_detection() {
 
     // Expected sets of paths.
     let expected_paths = [
-        vec![],                                   // cmd0
-        vec![filename.to_owned()],                // cmd1
-        vec![tmpdir + L!("/") + filename],        // cmd2
-        vec![L!("$HOME/").to_owned() + filename], // cmd3
-        vec![],                                   // cmd4
-        vec![L!("~/").to_owned() + filename],     // cmd5
-        vec![],                                   // cmd6
-        vec![],                                   // cmd7 - we do not expand globs
-        vec![],                                   // cmd8
+        vec![],                                    // cmd0
+        vec![filename.to_owned()],                 // cmd1
+        vec![tmpdir.clone() + L!("/") + filename], // cmd2
+        vec![L!("$HOME/").to_owned() + filename],  // cmd3
+        vec![],                                    // cmd4
+        vec![L!("~/").to_owned() + filename],      // cmd5
+        vec![],                                    // cmd6
+        vec![],                                    // cmd7 - we do not expand globs
+        vec![],                                    // cmd8
     ];
 
     let maxlap = 128;
@@ -586,6 +586,7 @@ fn test_history_path_detection() {
         std::thread::sleep(std::time::Duration::from_millis(2));
     }
     history.clear();
+    let _ = std::fs::remove_dir_all(wcs2osstring(&tmpdir));
 }
 
 fn install_sample_history(name: &wstr) {

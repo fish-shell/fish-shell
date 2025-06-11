@@ -315,7 +315,7 @@ function fish_git_prompt --description "Prompt function for Git"
                 # *compute* the informative status, we might still count the stash.
                 if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
                     set stashstate (count < $git_dir/logs/refs/stash)
-                else
+                else if test -s $git_dir/logs/refs/stash
                     set stashstate 1
                 end
             end

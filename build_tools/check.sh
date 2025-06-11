@@ -15,5 +15,4 @@ cargo test --no-default-features --workspace --all-targets
 cargo test --doc --workspace
 cargo doc --workspace
 
-# TODO: parallelize
 "$repo_root/tests/test_driver.py" "$build_dir"

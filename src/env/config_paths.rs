@@ -7,6 +7,7 @@ const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
 const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
+const LOCALE_DIR: &str = env!("LOCALEDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -108,6 +109,11 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         } else {
             Some(PathBuf::from(BIN_DIR))
         };
+        let locale = if cfg!(feature = "embed-data") {
+            None
+        } else {
+            Some(PathBuf::from(LOCALE_DIR))
+        };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
@@ -115,7 +121,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
-            locale: data.map(|x| x.join("share")),
+            locale,
         }
     }
 

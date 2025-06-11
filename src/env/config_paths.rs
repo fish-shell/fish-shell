@@ -26,19 +26,13 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         std::env::current_exe().unwrap_or(argv0)
     };
     let argv0 = argv0.canonicalize().unwrap_or(argv0);
-    determine_config_directory_paths(argv0)
-});
-
-fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
-    // PORTING: why is this not just an associated method on ConfigPaths?
-
     let mut paths = ConfigPaths::default();
     let mut done = false;
-    let exec_path = get_executable_path(argv0.as_ref());
+    let exec_path = get_executable_path(&argv0);
     if let Ok(exec_path) = exec_path.canonicalize() {
         FLOG!(
             config,
-            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, argv0.as_ref())
+            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
         );
         // TODO: we should determine program_name from argv0 somewhere in this file
 
@@ -155,7 +149,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
     );
 
     paths
-}
+});
 
 /// Get the absolute path to the fish executable itself
 pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {

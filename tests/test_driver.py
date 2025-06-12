@@ -174,17 +174,22 @@ async def main():
             for f, arg in files
         ]
         for task in asyncio.as_completed(tasks):
-            match await task:
-                case TestSkip(arg):
-                    skipcount += 1
-                    print_result(arg, "SKIPPED", BLUE)
-                case TestFail(arg, duration_ms, error_message):
-                    failcount += 1
-                    failed += [arg]
-                    print_result(arg, "FAILED", RED, duration_ms, error_message)
-                case TestPass(arg, duration_ms):
-                    passcount += 1
-                    print_result(arg, "PASSED", GREEN, duration_ms)
+            result = await task
+            if isinstance(result, TestSkip):
+                arg = result.arg
+                skipcount += 1
+                print_result(arg, "SKIPPED", BLUE)
+            elif isinstance(result, TestFail):
+                # fmt: off
+                arg, duration_ms, error_message = result.arg, result.duration_ms, result.error_message
+                # fmt: on
+                failcount += 1
+                failed += [arg]
+                print_result(arg, "FAILED", RED, duration_ms, error_message)
+            elif isinstance(result, TestPass):
+                arg, duration_ms = result.arg, result.duration_ms
+                passcount += 1
+                print_result(arg, "PASSED", GREEN, duration_ms)
 
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")

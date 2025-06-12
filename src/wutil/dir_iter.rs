@@ -370,8 +370,9 @@ fn test_dots() {
 #[allow(clippy::if_same_then_else)]
 fn test_dir_iter() {
     use crate::common::charptr2wcstring;
+    use crate::common::wcs2osstring;
     use crate::wchar::L;
-    use libc::{close, mkfifo, open, rmdir, symlink, unlink, O_CREAT, O_WRONLY};
+    use libc::{close, mkfifo, open, symlink, O_CREAT, O_WRONLY};
     use std::ffi::CString;
 
     let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
@@ -480,10 +481,5 @@ fn test_dir_iter() {
     assert_eq!(seen, names.len());
 
     // Clean up.
-    unsafe {
-        for name in names {
-            let _ = unlink(makepath(name).as_ptr().cast());
-        }
-        let _ = rmdir(basepath_narrow);
-    }
+    let _ = std::fs::remove_dir_all(wcs2osstring(&basepath));
 }

@@ -9,6 +9,7 @@ const DATA_DIR: &str = env!("DATADIR");
 const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
 const BIN_DIR: &str = env!("BINDIR");
+const LOCALE_DIR: &str = env!("LOCALEDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     // Read the current executable and follow all symlinks to it.
@@ -51,6 +52,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
+                locale: Some(manifest_dir.join("share/locale")),
             }
         }
 
@@ -58,18 +60,21 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             // The next check is that we are in a relocatable directory tree
             if exec_path.ends_with("bin/fish") {
                 let base_path = exec_path.parent().unwrap().parent().unwrap();
+                #[cfg(feature = "installable")]
+                let data = base_path.join("share/fish/install");
+                #[cfg(not(feature = "installable"))]
+                let data = base_path.join("share/fish");
+                let locale = Some(data.join("locale"));
                 paths = ConfigPaths {
                     // One obvious path is ~/.local (with fish in ~/.local/bin/).
                     // If we picked ~/.local/share/fish as our data path,
                     // we would install there and erase history.
                     // So let's isolate us a bit more.
-                    #[cfg(feature = "installable")]
-                    data: base_path.join("share/fish/install"),
-                    #[cfg(not(feature = "installable"))]
-                    data: base_path.join("share/fish"),
+                    data,
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
                     bin: Some(base_path.join("bin")),
+                    locale,
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -77,14 +82,18 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
                     "'fish' not in a 'bin/', trying paths relative to source tree"
                 );
                 let base_path = exec_path.parent().unwrap();
+                #[cfg(feature = "installable")]
+                let data = base_path.join("share/install");
+                #[cfg(not(feature = "installable"))]
+                let data = base_path.join("share");
+                let locale = Some(data.join("locale"));
+
                 paths = ConfigPaths {
-                    #[cfg(feature = "installable")]
-                    data: base_path.join("share/install"),
-                    #[cfg(not(feature = "installable"))]
-                    data: base_path.join("share"),
+                    data,
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
                     bin: Some(base_path.to_path_buf()),
+                    locale,
                 }
             }
 
@@ -119,6 +128,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         } else {
             Some(PathBuf::from(BIN_DIR))
         };
+        let locale = if cfg!(feature = "installable") {
+            None
+        } else {
+            Some(PathBuf::from(LOCALE_DIR))
+        };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
@@ -126,18 +140,24 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             sysconf: Path::new(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
+            locale,
         }
     }
 
     FLOGF!(
         config,
         "determine_config_directory_paths() results:\npaths.data: %ls\npaths.sysconf: \
-        %ls\npaths.doc: %ls\npaths.bin: %ls",
+        %ls\npaths.doc: %ls\npaths.bin: %ls\npaths.locale: %ls",
         paths.data.display().to_string(),
         paths.sysconf.display().to_string(),
         paths.doc.display().to_string(),
         paths
             .bin
+            .clone()
+            .map(|x| x.display().to_string())
+            .unwrap_or("|not found|".to_string()),
+        paths
+            .locale
             .clone()
             .map(|x| x.display().to_string())
             .unwrap_or("|not found|".to_string()),

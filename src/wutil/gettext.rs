@@ -1,11 +1,15 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
+use crate::{
+    common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME},
+    env::CONFIG_PATHS,
+};
 use errno::{errno, set_errno};
 use once_cell::sync::{Lazy, OnceCell};
 
@@ -47,8 +51,11 @@ use internal::*;
 
 // Really init wgettext.
 fn wgettext_really_init() {
+    let Some(ref localepath) = CONFIG_PATHS.locale else {
+        return;
+    };
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    let localedir = CString::new(env!("LOCALEDIR")).unwrap();
+    let localedir = CString::new(localepath.as_os_str().as_bytes()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }

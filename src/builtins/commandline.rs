@@ -636,19 +636,16 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         transient = parser.libdata().transient_commandline.clone().unwrap();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
-    } else if rstate.initialized {
+    } else if is_interactive_session() {
         current_buffer = &rstate.text;
         current_cursor_pos = rstate.cursor_pos;
     } else {
-        // There is no command line, either because we are not interactive, or because we are
-        // interactive and are still reading init files (in which case we silently ignore this).
-        if !is_interactive_session() {
-            streams.err.append(cmd);
-            streams
-                .err
-                .append(L!(": Can not set commandline in non-interactive mode\n"));
-            builtin_print_error_trailer(parser, streams.err, cmd);
-        }
+        // There is no command line because we are not interactive.
+        streams.err.append(cmd);
+        streams
+            .err
+            .append(L!(": Can not set commandline in non-interactive mode\n"));
+        builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_CMD_ERROR);
     }
 

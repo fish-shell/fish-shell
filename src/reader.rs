@@ -400,8 +400,6 @@ pub struct CommandlineState {
     pub search_field: Option<(WString, usize)>,
     /// pager is visible and search is active
     pub search_mode: bool,
-    /// if false, the reader has not yet been entered
-    pub initialized: bool,
 }
 
 impl CommandlineState {
@@ -415,7 +413,6 @@ impl CommandlineState {
             pager_fully_disclosed: false,
             search_field: None,
             search_mode: false,
-            initialized: false,
         }
     }
 }
@@ -1370,7 +1367,6 @@ impl ReaderData {
             });
         }
         snapshot.search_mode = self.history_search.active();
-        snapshot.initialized = true;
     }
 
     /// Apply any changes from the reader snapshot. This is called after running fish script,

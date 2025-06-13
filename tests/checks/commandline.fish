@@ -1,5 +1,7 @@
 #RUN: %fish %s
 
+set -g fish (status fish-path)
+
 commandline --input "echo foo | bar" --is-valid
 and echo Valid
 # CHECK: Valid
@@ -50,3 +52,16 @@ commandline --input "echo > {a,b}" --tokens-expanded
 commandline --input "echo {arg1,arg2} <in >out" --tokens-raw
 # CHECK: echo
 # CHECK: {arg1,arg2}
+
+$fish -ic '
+    commandline hello
+    commandline
+    commandline -i world
+    commandline
+    commandline --cursor 5
+    commandline -i " "
+    commandline
+'
+# CHECK: hello
+# CHECK: helloworld
+# CHECK: hello world

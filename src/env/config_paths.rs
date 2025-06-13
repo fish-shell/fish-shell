@@ -1,13 +1,7 @@
-use std::{
-    ffi::OsStr,
-    path::{Path, PathBuf},
-};
-
-use once_cell::sync::Lazy;
-
-use crate::{FLOG, FLOGF};
-
 use super::ConfigPaths;
+use crate::{common::get_executable_path, FLOG, FLOGF};
+use once_cell::sync::Lazy;
+use std::path::PathBuf;
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
@@ -150,28 +144,3 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 
     paths
 });
-
-/// Get the absolute path to the fish executable itself
-pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
-    if let Ok(path) = std::env::current_exe() {
-        if path.exists() {
-            return path;
-        }
-
-        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-        // then linux adds a " (deleted)" suffix.
-        // If that's not a valid path, let's remove that awkward suffix.
-        if !path.ends_with(" (deleted)") {
-            return path;
-        }
-
-        if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
-            if let Some(filename) = filename.to_str() {
-                let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
-                return parent.join(corrected_filename);
-            }
-        }
-        return path;
-    }
-    argv0.as_ref().to_owned()
-}

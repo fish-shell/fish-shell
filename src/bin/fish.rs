@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #![allow(clippy::uninlined_format_args)]
 
 #[cfg(feature = "installable")]
-use fish::common::get_executable_path;
+use fish::common::{get_executable_path, wcs2osstring};
 #[allow(unused_imports)]
 use fish::future::IsSomeAnd;
 use fish::{
@@ -293,7 +293,6 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 
 #[cfg(feature = "installable")]
 fn check_version_file(paths: &ConfigPaths, datapath: &wstr) -> Option<bool> {
-    use crate::common::wcs2osstring;
     // (false-positive, is_none_or is a backport, this builds with 1.70)
     #[allow(clippy::incompatible_msrv)]
     if paths

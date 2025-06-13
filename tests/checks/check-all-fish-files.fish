@@ -15,7 +15,7 @@ end
 
 # Prevent setting timestamp if any errors were encountered
 if test "$fail_count" -eq 0
-    touch $timestamp_file
+    touch $timestamp_file 2>/dev/null
 end
 
 # No output is good output

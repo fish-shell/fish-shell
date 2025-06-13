@@ -1,5 +1,5 @@
 complete -c gzip -s c -l stdout -d "Compress to stdout"
-complete -c gzip -s d -l decompress -k -x -a "(__fish_complete_suffix .gz .tgz)"
+complete -c gzip -s d -l decompress -d Decompress -k -x -a "(__fish_complete_suffix .gz .tgz)"
 
 complete -c gzip -s f -l force -d Overwrite
 complete -c gzip -s h -l help -d "Display help and exit"

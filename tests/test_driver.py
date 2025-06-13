@@ -11,6 +11,12 @@ import sys
 import tempfile
 from typing import Optional
 
+# TODO(python>3.8): use dict
+from typing import Dict
+
+# TODO(python>3.8): use |
+from typing import Union
+
 import littlecheck
 
 try:
@@ -26,7 +32,7 @@ BLUE = "\033[34m"
 RED = "\033[31m"
 
 
-def makeenv(script_path: Path, home: Path) -> dict[str, str]:
+def makeenv(script_path: Path, home: Path) -> Dict[str, str]:
     xdg_config = home / "xdg_config_home"
     func_dir = xdg_config / "fish" / "functions"
     os.makedirs(func_dir)
@@ -103,7 +109,8 @@ async def main():
         print("Usage: test_driver.py FISH_DIRECTORY TESTS")
         return 1
 
-    script_path = Path(__file__).parent
+    # TODO(python>3.8): no need for abspath
+    script_path = Path(os.path.abspath(__file__)).parent
 
     argparser = argparse.ArgumentParser(
         description="test_driver: Run fish's test suite"
@@ -175,6 +182,7 @@ async def main():
         ]
         for task in asyncio.as_completed(tasks):
             result = await task
+            # TODO(python>3.8): use match statement
             if isinstance(result, TestSkip):
                 arg = result.arg
                 skipcount += 1
@@ -219,7 +227,7 @@ class TestPass:
     duration_ms: int
 
 
-TestResult = TestSkip | TestFail | TestPass
+TestResult = Union[TestSkip, TestFail, TestPass]
 
 
 async def run_test(

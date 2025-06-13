@@ -388,8 +388,13 @@ def runproc(cmd, env=None):
 async def runproc_async(cmd, env=None):
     """Wrapper around subprocess.Popen to save typing"""
     PIPE = asyncio.subprocess.PIPE
+    DEVNULL = asyncio.subprocess.DEVNULL
     return await asyncio.create_subprocess_shell(
-        cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env
+        cmd,
+        stdin=DEVNULL,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
     )
 
 

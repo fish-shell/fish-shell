@@ -21,6 +21,15 @@
 #   - Specify `--dry-run` to see if any updates to the PO files would by applied by this script.
 #     If this flag is specified, the script will exit with an error if there are outstanding
 #     changes, and will display the diff. Do not specify other flags if `--dry-run` is specified.
+#
+# Specify `--use-existing-template=FILE` to prevent running cargo for extracting an up-to-date
+# version of the localized strings. This flag is intended for testing setups which make it
+# inconvenient to run cargo here, but run it in an earlier step to ensure up-to-date values.
+# This argument is passed on to the `fish_xgettext.fish` script and has no other uses.
+# `FILE` must be the path to a gettext template file generated from our compilation process.
+# It can be obtained by running:
+#   set -l FILE (mktemp)
+#   FISH_GETTEXT_EXTRACTION_FILE=$FILE cargo check
 
 # The sort utility is locale-sensitive.
 # Ensure that sorting output is consistent by setting LC_ALL here.
@@ -44,7 +53,7 @@ function cleanup_exit
     exit $exit_status
 end
 
-argparse --exclusive 'no-mo,only-mo,dry-run' no-mo only-mo dry-run -- $argv
+argparse --exclusive 'no-mo,only-mo,dry-run' no-mo only-mo dry-run use-existing-template= -- $argv
 or exit $status
 
 # Make sure that the template file is not included in $po_files.
@@ -84,7 +93,11 @@ if set -l --query _flag_only_mo
 end
 
 if set -l --query extract
-    $build_tools/fish_xgettext.fish >$template_file
+    set -l xgettext_args
+    if set -l --query _flag_use_existing_template
+        set xgettext_args --use-existing-template=$_flag_use_existing_template
+    end
+    $build_tools/fish_xgettext.fish $xgettext_args >$template_file
     or exit 1
 end
 
@@ -126,7 +139,7 @@ rm $template_file
 
 if set -g --query tmpdir
     rm $tmpdir/template.po
-    diff -ur po $tmpdir
+    diff -ur $po_dir $tmpdir
     or cleanup_exit
 end
 

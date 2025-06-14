@@ -2,6 +2,10 @@
 #
 # Tool to generate gettext messages template file.
 # Writes to stdout.
+# Intended to be called from `update_translations.fish`.
+
+argparse use-existing-template= -- $argv
+or exit $status
 
 begin
     # Write header. This is required by msguniq.
@@ -15,17 +19,25 @@ begin
         echo ""
     end
 
-    set -l rust_extraction_file (mktemp)
+    set -g repo_root (status dirname)/..
 
-    # We need to build to ensure that the proc macro for extracting strings runs.
-    FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check
-    or exit 1
+    set -l rust_extraction_file
+    if set -l --query _flag_use_existing_template
+        set rust_extraction_file $_flag_use_existing_template
+    else
+        set rust_extraction_file (mktemp)
+        # We need to build to ensure that the proc macro for extracting strings runs.
+        FISH_GETTEXT_EXTRACTION_FILE=$rust_extraction_file cargo check
+        or exit 1
+    end
 
     # Get rid of duplicates and sort.
     msguniq --no-wrap --strict --sort-output $rust_extraction_file
     or exit 1
 
-    rm $rust_extraction_file
+    if not set -l --query _flag_use_existing_template
+        rm $rust_extraction_file
+    end
 
     function extract_fish_script_messages --argument-names regex
 
@@ -47,12 +59,14 @@ begin
         # 5. Double quotes are escaped, such that they are not interpreted as the start or end of
         #    a msgid.
         # 6. We transform the string into the format expected in a PO file.
-        cat share/config.fish share/completions/*.fish share/functions/*.fish |
+        cat $share_dir/config.fish $share_dir/completions/*.fish $share_dir/functions/*.fish |
             string replace --filter --regex $regex '$1' |
             string unescape |
             sort -u |
             sed -E -e 's_\\\\_\\\\\\\\_g' -e 's_"_\\\\"_g' -e 's_^(.*)$_msgid "\1"\nmsgstr ""\n_'
     end
+
+    set -g share_dir $repo_root/share
 
     # This regex handles explicit requests to translate a message. These are more important to translate
     # than messages which should be implicitly translated.

@@ -1835,7 +1835,7 @@ impl<'a> ExecutionContext<'a> {
         if result == EndExecutionReason::ok {
             // Link up the processes.
             assert!(!processes.is_empty());
-            *j.processes_mut() = processes;
+            *j.processes_mut() = processes.into_boxed_slice();
         }
         result
     }

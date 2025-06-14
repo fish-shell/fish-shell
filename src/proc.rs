@@ -791,7 +791,7 @@ pub struct Job {
     command_str: WString,
 
     /// All the processes in this job.
-    pub processes: Vec<Process>,
+    pub processes: Box<[Process]>,
 
     // The group containing this job.
     // This is never cleared.
@@ -824,15 +824,13 @@ impl Job {
         &self.command_str
     }
 
-    /// Borrow the job's process list. Only read-only or interior mutability actions may be
-    /// performed on the processes in the list.
+    /// Borrow the job's process list.
     pub fn processes(&self) -> &[Process] {
         &self.processes
     }
 
-    /// Get mutable access to the job's process list.
-    /// Only available with a mutable reference `&mut Job`.
-    pub fn processes_mut(&mut self) -> &mut Vec<Process> {
+    /// Get the mutable list of processes.
+    pub fn processes_mut(&mut self) -> &mut Box<[Process]> {
         &mut self.processes
     }
 

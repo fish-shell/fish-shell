@@ -690,7 +690,6 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
 /// Read interactively. Read input from stdin while providing editing facilities.
 fn read_i(parser: &Parser) {
     assert_is_main_thread();
-    parser.assert_can_execute();
     let mut conf = ReaderConfig::default();
     conf.event = L!("fish_prompt");
     conf.complete_ok = true;

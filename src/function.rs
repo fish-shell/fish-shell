@@ -111,7 +111,6 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {
-    parser.assert_can_execute();
     let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
@@ -209,7 +208,6 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
 
 /// Return the properties for a function, or None, perhaps triggering autoloading.
 pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionProperties>> {
-    parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
         return None;
     }
@@ -220,7 +218,6 @@ pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionPr
 /// Returns true if the function named `cmd` exists.
 /// This may autoload.
 pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
-    parser.assert_can_execute();
     if !valid_func_name(cmd) {
         return false;
     }
@@ -287,7 +284,6 @@ fn get_function_body_source(props: &FunctionProperties) -> &wstr {
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
 pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
-    parser.assert_can_execute();
     load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();
     if let Some(props) = funcset.funcs.get(name) {

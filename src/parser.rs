@@ -27,7 +27,6 @@ use crate::parse_tree::NodeRef;
 use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, Pid, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
-use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
 use crate::wchar::prelude::*;
@@ -496,11 +495,6 @@ impl Parser {
             // If a function sources a file, don't descend further.
             .take_while(|b| b.typ() != BlockType::source)
             .any(|b| b.typ() == BlockType::subst)
-    }
-
-    /// Assert that this parser is allowed to execute on the current thread.
-    pub fn assert_can_execute(&self) {
-        assert_is_main_thread();
     }
 
     pub fn eval(&self, cmd: &wstr, io: &IoChain) -> EvalRes {

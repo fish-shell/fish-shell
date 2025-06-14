@@ -278,7 +278,6 @@ pub fn exec_subshell_for_expand(
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> Result<(), ErrorCode> {
-    parser.assert_can_execute();
     let mut break_expand = true;
     let ret = exec_subshell_internal(
         cmd,
@@ -1452,7 +1451,6 @@ fn exec_subshell_internal(
     apply_exit_status: bool,
     is_subcmd: bool,
 ) -> Result<(), ErrorCode> {
-    parser.assert_can_execute();
     let _scoped = parser.push_scope(|s| {
         s.is_subshell = true;
         s.read_limit = if is_subcmd {

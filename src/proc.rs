@@ -1170,8 +1170,6 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::Interactive as u8)
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// Return whether text was printed to stdout.
 pub fn job_reap(parser: &Parser, interactive: bool) -> bool {
-    parser.assert_can_execute();
-
     // Early out for the common case that there are no jobs.
     if parser.jobs().is_empty() {
         return false;
@@ -1386,8 +1384,6 @@ static DISOWNED_PIDS: MainThread<RefCell<Vec<Pid>>> = MainThread::new(RefCell::n
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
 fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
-    parser.assert_can_execute();
-
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
@@ -1730,8 +1726,6 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// Return whether something was printed.
 fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
-    parser.assert_can_execute();
-
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
     if parser.scope().is_cleaning_procs {

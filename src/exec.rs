@@ -975,12 +975,8 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
 // The "performer" function of a block or function process.
 // This accepts a place to execute as `parser` and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
-type ProcPerformer = dyn FnOnce(
-    &Parser,
-    &Process,
-    Option<&mut OutputStream>,
-    Option<&mut OutputStream>,
-) -> ProcStatus;
+type ProcPerformer =
+    dyn FnOnce(&Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
 
 // Return a function which may be to run the given block node process 'p'.
 fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
@@ -992,7 +988,7 @@ fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> B
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
     let node = node.clone();
-    Box::new(move |parser: &Parser, _p: &Process, _out, _err| {
+    Box::new(move |parser: &Parser, _out, _err| {
         parser
             .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
             .status
@@ -1025,10 +1021,10 @@ fn get_performer_for_function(
         );
         return Err(());
     };
-    Ok(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-        let argv = p.argv();
+    let argv = p.argv().clone();
+    Ok(Box::new(move |parser: &Parser, _out, _err| {
         // Pull out the job list from the function.
-        let fb = function_prepare_environment(parser, argv.clone(), &props);
+        let fb = function_prepare_environment(parser, argv, &props);
         let body_node = props.func_node.child_ref(|n| &n.jobs);
         let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
         function_restore_environment(parser, fb);
@@ -1071,7 +1067,7 @@ fn exec_block_or_func_process(
         // Note this may fail if the function was erased.
         get_performer_for_function(p, j, &io_chain)?
     };
-    p.status.set(performer(parser, p, None, None));
+    p.status.set(performer(parser, None, None));
 
     // If we have a block output buffer, populate it now.
     let mut buffer_contents = vec![];
@@ -1120,9 +1116,9 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
+    let argv = p.argv().clone();
     Box::new(
         move |parser: &Parser,
-              p: &Process,
               output_stream: Option<&mut OutputStream>,
               errput_stream: Option<&mut OutputStream>| {
             let output_stream = output_stream.unwrap();
@@ -1151,19 +1147,13 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
             streams.out_is_redirected = out_io.is_some();
             streams.err_is_redirected = err_io.is_some();
-            streams.out_is_piped = out_io
-                .map(|io| io.io_mode() == IoMode::pipe)
-                .unwrap_or(false);
-            streams.err_is_piped = err_io
-                .map(|io| io.io_mode() == IoMode::pipe)
-                .unwrap_or(false);
+            streams.out_is_piped = out_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
+            streams.err_is_piped = err_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
 
+            // Disallow nul bytes in the arguments, as they are not allowed in builtins.
+            let mut shim_argv: Vec<&wstr> =
+                argv.iter().map(|s| truncate_at_nul(s.as_ref())).collect();
             // Execute the builtin.
-            let mut shim_argv: Vec<&wstr> = p
-                .argv()
-                .iter()
-                .map(|s| truncate_at_nul(s.as_ref()))
-                .collect();
             builtin_run(parser, &mut shim_argv, &mut streams)
         },
     )
@@ -1184,7 +1174,7 @@ fn exec_builtin_process(
         create_output_stream_for_builtin(STDERR_FILENO, io_chain, piped_output_needs_buffering);
 
     let performer = get_performer_for_builtin(p, j, io_chain);
-    let status = performer(parser, p, Some(&mut out), Some(&mut err));
+    let status = performer(parser, Some(&mut out), Some(&mut err));
     p.status.set(status);
     handle_builtin_output(parser, j, p, io_chain, &out, &err);
     Ok(())

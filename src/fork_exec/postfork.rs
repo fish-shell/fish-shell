@@ -84,7 +84,7 @@ pub(crate) fn report_setpgid_error(
 }
 
 /// Execute setpgid, assigning a new pgroup based on the specified policy.
-/// Return the result of setpgid.
+/// Return 0 on success, or the value of errno on failure.
 pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -> i32 {
     // There is a comment "Historically we have looped here to support WSL."
     // TODO: stop looping.

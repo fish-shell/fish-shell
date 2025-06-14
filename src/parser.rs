@@ -422,7 +422,7 @@ pub struct Parser {
     block_list: RefCell<Vec<Block>>,
 
     /// Set of variables for the parser.
-    pub variables: Rc<EnvStack>,
+    pub variables: EnvStack,
 
     /// Data managed in a scoped fashion.
     scoped_data: ScopedCell<ScopedData>,
@@ -448,7 +448,7 @@ pub struct Parser {
 
 impl Parser {
     /// Create a parser.
-    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
+    pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
             line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
@@ -884,11 +884,6 @@ impl Parser {
     /// Get the variables.
     pub fn vars(&self) -> &EnvStack {
         &self.variables
-    }
-
-    /// Get the variables as an Rc.
-    pub fn vars_ref(&self) -> Rc<EnvStack> {
-        Rc::clone(&self.variables)
     }
 
     /// Get a copy of the scoped data.

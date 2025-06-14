@@ -42,7 +42,6 @@ pub mod prelude {
     use std::cell::RefCell;
     use std::env::set_current_dir;
     use std::ffi::CString;
-    use std::rc::Rc;
 
     /// A wrapper around a Parser with some test helpers.
     pub struct TestParser {
@@ -53,7 +52,7 @@ pub mod prelude {
     impl TestParser {
         pub fn new() -> TestParser {
             TestParser {
-                parser: Parser::new(Rc::new(EnvStack::new()), CancelBehavior::default()),
+                parser: Parser::new(EnvStack::new(), CancelBehavior::default()),
                 pushed_dirs: RefCell::new(Vec::new()),
             }
         }

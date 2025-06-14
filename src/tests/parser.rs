@@ -16,7 +16,6 @@ use crate::threads::iothread_perform;
 use crate::wchar::prelude::*;
 use crate::wcstringutil::join_strings;
 use libc::SIGINT;
-use std::rc::Rc;
 use std::time::Duration;
 
 #[test]
@@ -729,7 +728,7 @@ fn test_1_cancellation(parser: &Parser, src: &wstr) {
 #[serial]
 fn test_cancellation() {
     let _cleanup = test_init();
-    let parser = Parser::new(Rc::new(EnvStack::new()), CancelBehavior::Clear);
+    let parser = Parser::new(EnvStack::new(), CancelBehavior::Clear);
     reader_push(&parser, L!(""), ReaderConfig::default());
     let _pop = ScopeGuard::new((), |()| reader_pop());
 

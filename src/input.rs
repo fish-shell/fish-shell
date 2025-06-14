@@ -829,11 +829,11 @@ impl<'a> Reader<'a> {
     }
 
     fn mapping_execute_matching_or_generic(&mut self) {
-        let vars = self.parser.vars_ref();
+        let vars = self.parser.vars();
         let mut peeker = EventQueuePeeker::new(self);
         // Check for ordinary mappings.
         let ip = input_mappings();
-        if let Some(mapping) = peeker.find_mapping(&*vars, &ip) {
+        if let Some(mapping) = peeker.find_mapping(vars, &ip) {
             FLOG!(
                 reader,
                 format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)

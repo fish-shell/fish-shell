@@ -4,7 +4,6 @@ use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent, Term
 use crate::key::Key;
 use crate::wchar::prelude::*;
 use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
 
 struct TestInputEventQueuer {
     input_data: InputData,
@@ -25,7 +24,7 @@ impl InputEventQueuer for TestInputEventQueuer {
 
 #[test]
 fn test_input() {
-    let vars = Rc::new(EnvStack::new());
+    let vars = EnvStack::new();
     let mut input = TestInputEventQueuer {
         input_data: InputData::new(i32::MAX), // value doesn't matter since we don't read from it
         blocking_query: RefCell::new(None),
@@ -65,7 +64,7 @@ fn test_input() {
     }
 
     let mut peeker = EventQueuePeeker::new(&mut input);
-    let mapping = peeker.find_mapping(&*vars, &input_mappings);
+    let mapping = peeker.find_mapping(&vars, &input_mappings);
     assert!(mapping.is_some());
     assert!(mapping.unwrap().commands == ["down-line"]);
     peeker.restart();

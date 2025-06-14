@@ -49,7 +49,7 @@ pub struct OperationContext<'a> {
 impl<'a> OperationContext<'a> {
     pub fn vars(&self) -> &dyn Environment {
         match &self.vars {
-            Vars::Parser(parser) => &*parser.variables,
+            Vars::Parser(parser) => &parser.variables,
             Vars::Vars(vars) => *vars,
             Vars::TestOnly(_, vars) => *vars,
         }

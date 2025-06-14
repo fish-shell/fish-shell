@@ -272,8 +272,6 @@ fn test_history_races() {
     // Ensure history is clear.
     History::new(L!("race_test")).clear();
 
-    // history::CHAOS_MODE.store(true);
-
     let mut children = Vec::with_capacity(RACE_COUNT);
     for i in 0..RACE_COUNT {
         children.push(std::thread::spawn(move || {
@@ -295,7 +293,6 @@ fn test_history_races() {
 
     // Ensure that we got sane, sorted results.
     let hist = History::new(L!("race_test"));
-    history::CHAOS_MODE.store(false);
 
     // History is enumerated from most recent to least
     // Every item should be the last item in some array

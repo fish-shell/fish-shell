@@ -2,3 +2,4 @@
 # exclude temporary test result files.
 !*.out
 *.tmp.*
+*.lock

@@ -667,7 +667,7 @@ fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> st
 }
 
 /// Return whether the given path is on a remote filesystem.
-fn path_remoteness(path: &wstr) -> DirRemoteness {
+pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     let narrow = wcs2zstring(path);
     #[cfg(target_os = "linux")]
     {

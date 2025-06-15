@@ -69,6 +69,14 @@ enum MaybeStatic<'a> {
     Local(&'a wstr),
 }
 
+static CURRENT_MESSAGES_LOCALE: Lazy<Mutex<CString>> =
+    Lazy::new(|| Mutex::new(CString::new("").unwrap()));
+
+pub fn update_messages_locale(new_name: CString) {
+    let mut locale = CURRENT_MESSAGES_LOCALE.lock().unwrap();
+    *locale = new_name;
+}
+
 /// Implementation detail for wgettext!.
 /// Wide character wrapper around the gettext function. For historic reasons, unlike the real
 /// gettext function, wgettext takes care of setting the correct domain, etc. using the textdomain
@@ -87,10 +95,22 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
 
     debug_assert!(!key.contains('\0'), "key should not contain NUL");
 
+    // The outer map maps from the current locale (identified via CURRENT_MESSAGES_LOCALE),
+    // to a map from messages to their localizations.
+    // This allows supporting locale changes without having to leak the data for the old locale.
+    // Using this data layout can result in duplicated message keys.
     // Note that because entries are immortal, we simply leak non-static keys, and all values.
-    static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
+    static WGETTEXT_MAP: Lazy<Mutex<HashMap<CString, HashMap<&'static wstr, &'static wstr>>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
-    let mut wmap = WGETTEXT_MAP.lock().unwrap();
+    let mut all_locales_cache = WGETTEXT_MAP.lock().unwrap();
+    let locale = CURRENT_MESSAGES_LOCALE.lock().unwrap();
+    let wmap = match all_locales_cache.get_mut(locale.as_ref()) {
+        Some(wmap) => wmap,
+        None => {
+            all_locales_cache.insert(locale.clone(), HashMap::new());
+            all_locales_cache.get_mut(locale.as_ref()).unwrap()
+        }
+    };
     let res = match wmap.get(key) {
         Some(v) => *v,
         None => {

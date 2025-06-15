@@ -1020,7 +1020,7 @@ msgid "Error reading script file '%s':"
 msgstr ""
 
 #, c-format
-msgid "Error when renaming history file: %s"
+msgid "Error when renaming file: %s"
 msgstr ""
 
 #, c-format
@@ -1242,14 +1242,6 @@ msgstr ""
 
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
-
-#, c-format
-msgid "Locking the history file took too long (%.3f seconds)."
-msgstr ""
-
-#, c-format
-msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr ""
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr ""
@@ -1513,6 +1505,10 @@ msgstr "Avbryt den nuvarande funktionen"
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
+#
+msgid "Synchronized file access"
+msgstr ""
+
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
@@ -1618,19 +1614,7 @@ msgid "Unable to locate the %ls directory."
 msgstr ""
 
 #, c-format
-msgid "Unable to open universal variable file '%s': %s"
-msgstr ""
-
-#, c-format
 msgid "Unable to read input file: %s"
-msgstr ""
-
-#, c-format
-msgid "Unable to rename file from '%ls' to '%ls': %s"
-msgstr ""
-
-#, c-format
-msgid "Unable to write to universal variables file '%ls': %s"
 msgstr ""
 
 msgid "Unexpected ')' for unopened parenthesis"

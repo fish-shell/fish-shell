@@ -144,7 +144,11 @@ impl HistoryFileContents {
                         // filesystem does not support mapping. Treat this as a hint
                         // that the filesystem is remote, and so disable locks for
                         // the history file.
-                        super::ABANDONED_LOCKING.store(true);
+                        FLOG!(
+                            history_file,
+                            "Remote file system detected. Disabling history file locking.",
+                        );
+                        super::LOCK_HISTORY_FILE.store(false);
                         // Create an anonymous mapping and read() the file into it.
                         map_anon(history_file, len)?
                     } else {

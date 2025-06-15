@@ -52,6 +52,7 @@ function(CREATE_TARGET target)
             $<$<CONFIG:RelWithDebInfo>:--profile=release-with-debug>
             --target ${Rust_CARGO_TARGET}
             --no-default-features
+            --features=localize-all-languages
             ${CARGO_FLAGS}
             ${FEATURES_ARG}
       &&

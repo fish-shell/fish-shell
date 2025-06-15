@@ -3,7 +3,7 @@ use crate::common::wcs2osstring;
 use crate::common::ScopeGuard;
 use crate::common::ENCODE_DIRECT_BASE;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
-use crate::env_universal_common::{CallbackDataList, EnvUniversal, UvarFormat};
+use crate::env_universal_common::{EnvUniversal, UvarFormat};
 use crate::reader::{reader_pop, reader_push, ReaderConfig};
 use crate::tests::prelude::*;
 use crate::threads::{iothread_drain_all, iothread_perform};
@@ -15,15 +15,14 @@ const UVARS_TEST_PATH: &wstr = L!("test/fish_uvars_test/varsfile.txt");
 
 fn test_universal_helper(x: usize) {
     let _cleanup = test_init();
-    let mut callbacks = CallbackDataList::new();
     let mut uvars = EnvUniversal::new();
-    uvars.initialize_at_path(&mut callbacks, UVARS_TEST_PATH.to_owned());
+    uvars.initialize_at_path(UVARS_TEST_PATH.to_owned());
 
     for j in 0..UVARS_PER_THREAD {
         let key = sprintf!("key_%d_%d", x, j);
         let val = sprintf!("val_%d_%d", x, j);
         uvars.set(&key, EnvVar::new(val, EnvVarFlags::empty()));
-        let synced = uvars.sync(&mut callbacks);
+        let (synced, _) = uvars.sync();
         assert!(
             synced,
             "Failed to sync universal variables after modification"
@@ -32,7 +31,7 @@ fn test_universal_helper(x: usize) {
 
     // Last step is to delete the first key.
     uvars.remove(&sprintf!("key_%d_%d", x, 0));
-    let synced = uvars.sync(&mut callbacks);
+    let (synced, _) = uvars.sync();
     assert!(synced, "Failed to sync universal variables after deletion");
 }
 
@@ -54,8 +53,7 @@ fn test_universal() {
     iothread_drain_all(&mut reader);
 
     let mut uvars = EnvUniversal::new();
-    let mut callbacks = CallbackDataList::new();
-    uvars.initialize_at_path(&mut callbacks, UVARS_TEST_PATH.to_owned());
+    uvars.initialize_at_path(UVARS_TEST_PATH.to_owned());
 
     for i in 0..threads {
         for j in 0..UVARS_PER_THREAD {
@@ -219,11 +217,25 @@ fn test_universal_parsing_legacy() {
 fn test_universal_callbacks() {
     let _cleanup = test_init();
     std::fs::create_dir_all("test/fish_uvars_test/").unwrap();
-    let mut callbacks = CallbackDataList::new();
     let mut uvars1 = EnvUniversal::new();
     let mut uvars2 = EnvUniversal::new();
-    uvars1.initialize_at_path(&mut callbacks, UVARS_TEST_PATH.to_owned());
-    uvars2.initialize_at_path(&mut callbacks, UVARS_TEST_PATH.to_owned());
+    let mut callbacks = uvars1
+        .initialize_at_path(UVARS_TEST_PATH.to_owned())
+        .unwrap_or_default();
+    callbacks.append(
+        &mut uvars2
+            .initialize_at_path(UVARS_TEST_PATH.to_owned())
+            .unwrap_or_default(),
+    );
+
+    macro_rules! sync {
+        ($uvars:expr) => {
+            let (_, cb_opt) = $uvars.sync();
+            if let Some(mut cb) = cb_opt {
+                callbacks.append(&mut cb);
+            }
+        };
+    }
 
     let noflags = EnvVarFlags::empty();
 
@@ -236,8 +248,8 @@ fn test_universal_callbacks() {
     uvars1.set(L!("kappa"), EnvVar::new(L!("1").to_owned(), noflags)); //
     uvars1.set(L!("omicron"), EnvVar::new(L!("1").to_owned(), noflags)); //
 
-    uvars1.sync(&mut callbacks);
-    uvars2.sync(&mut callbacks);
+    sync!(uvars1);
+    sync!(uvars2);
 
     // Change uvars1.
     uvars1.set(L!("alpha"), EnvVar::new(L!("2").to_owned(), noflags)); // changes value
@@ -247,7 +259,7 @@ fn test_universal_callbacks() {
     ); // changes export
     uvars1.remove(L!("delta")); // erases value
     uvars1.set(L!("epsilon"), EnvVar::new(L!("1").to_owned(), noflags)); // changes nothing
-    uvars1.sync(&mut callbacks);
+    sync!(uvars1);
 
     // Change uvars2. It should treat its value as correct and ignore changes from uvars1.
     uvars2.set(L!("lambda"), EnvVar::new(L!("1").to_owned(), noflags)); // same value
@@ -255,7 +267,7 @@ fn test_universal_callbacks() {
 
     // Now see what uvars2 sees.
     callbacks.clear();
-    uvars2.sync(&mut callbacks);
+    sync!(uvars2);
 
     // Sort them to get them in a predictable order.
     callbacks.sort_by(|a, b| a.key.cmp(&b.key));
@@ -308,12 +320,12 @@ fn test_universal_ok_to_save() {
         "UVARS_TEST_PATH should be readable"
     );
 
-    let mut cbs = CallbackDataList::new();
     let mut uvars = EnvUniversal::new();
-    uvars.initialize_at_path(&mut cbs, UVARS_TEST_PATH.to_owned());
+    uvars
+        .initialize_at_path(UVARS_TEST_PATH.to_owned())
+        .unwrap_or_default();
     assert!(!uvars.is_ok_to_save(), "Should not be OK to save");
-    uvars.sync(&mut cbs);
-    cbs.clear();
+    uvars.sync();
     assert!(!uvars.is_ok_to_save(), "Should still not be OK to save");
     uvars.set(
         L!("SOMEVAR"),

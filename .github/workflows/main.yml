@@ -21,7 +21,7 @@ jobs:
       run: |
         sudo apt install gettext libpcre2-dev python3-pexpect python3-sphinx tmux
         # Generate a locale that uses a comma as decimal separator.
-        sudo locale-gen fr_FR.UTF-8
+        sudo locale-gen de_DE.UTF-8 en_US.UTF-8 fr_FR.UTF-8
     - name: cmake
       run: |
         mkdir build && cd build
@@ -166,7 +166,7 @@ jobs:
     - name: cmake
       run: |
         mkdir build && cd build
-        cmake -DWITH_GETTEXT=NO -DCMAKE_BUILD_TYPE=Debug ..
+        cmake -DCMAKE_BUILD_TYPE=Debug ..
     - name: make
       run: |
         make -C build VERBOSE=1

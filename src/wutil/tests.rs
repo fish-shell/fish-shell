@@ -61,7 +61,7 @@ fn test_wdirname_wbasename() {
 #[serial]
 fn test_wwrite_to_fd() {
     let _cleanup = test_init();
-    let (_fd, filename) = create_temporary_file(L!("/tmp/fish_test_wwrite.XXXXXX")).unwrap();
+    let (_file, filename) = create_temporary_file(L!("/tmp/fish_test_wwrite.XXXXXX")).unwrap();
     let filename = CString::new(filename.to_string()).unwrap();
     let mut rng = get_rng();
     let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];

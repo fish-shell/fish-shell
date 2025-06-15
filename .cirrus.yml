@@ -58,7 +58,7 @@ freebsd_task:
           freebsd_instance:
               image: freebsd-14-3-release-amd64-ufs
     tests_script:
-        - pkg install -y cmake-core devel/pcre2 devel/ninja lang/rust misc/py-pexpect git-lite
+        - pkg install -y cmake-core devel/pcre2 devel/ninja gettext git-lite lang/rust misc/py-pexpect
         # libclang.so is a required build dependency for rust-c++ ffi bridge
         - pkg install -y llvm
         # BSDs have the following behavior: root may open or access files even if

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
@@ -98,7 +98,6 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
     // The outer map maps from the current locale (identified via CURRENT_MESSAGES_LOCALE),
     // to a map from messages to their localizations.
     // This allows supporting locale changes without having to leak the data for the old locale.
-    // Using this data layout can result in duplicated message keys.
     // Note that because entries are immortal, we simply leak non-static keys, and all values.
     static WGETTEXT_MAP: Lazy<Mutex<HashMap<CString, HashMap<&'static wstr, &'static wstr>>>> =
         Lazy::new(|| Mutex::new(HashMap::new()));
@@ -123,7 +122,22 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
             // Get a static key, perhaps leaking it into the heap as well.
             let key: &'static wstr = match text {
                 MaybeStatic::Static(s) => s,
-                MaybeStatic::Local(s) => wstr::from_char_slice(Box::leak(s.as_char_slice().into())),
+                MaybeStatic::Local(s) => {
+                    // Cache keys to avoid leaking the them for each locale with which they are used.
+                    static CACHED_KEYS: Lazy<Mutex<HashSet<&'static wstr>>> =
+                        Lazy::new(|| Mutex::new(HashSet::new()));
+
+                    let mut cached_keys = CACHED_KEYS.lock().unwrap();
+                    if let Some(v) = cached_keys.get(s) {
+                        v
+                    } else {
+                        // Leak the value into the heap.
+                        let static_s: &'static wstr =
+                            wstr::from_char_slice(Box::leak(s.as_char_slice().into()));
+                        cached_keys.insert(static_s);
+                        static_s
+                    }
+                }
             };
 
             wmap.insert(key, value);

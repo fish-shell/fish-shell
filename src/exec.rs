@@ -40,7 +40,7 @@ use crate::proc::{
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
     TtyTransfer,
 };
-use crate::reader::{reader_run_count, restore_term_mode};
+use crate::reader::{reader_run_count, safe_restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
@@ -437,7 +437,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
-    restore_term_mode();
+    safe_restore_term_mode();
     // Bounce to launch_process. This never returns.
     safe_launch_process(p, &actual_cmd, &argv, &envp);
 }

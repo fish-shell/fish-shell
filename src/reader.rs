@@ -39,8 +39,7 @@ use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8};
+use std::sync::atomic::{AtomicI32, AtomicPtr, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -177,9 +176,9 @@ static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
-/// Mode on startup, which we restore on exit.
-pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+/// The valid terminal modes on startup. This is set once and not modified after.
+/// Warning: this is read from the SIGTERM handler! Hence the raw global.
+static TERMINAL_MODE_ON_STARTUP: AtomicPtr<libc::termios> = AtomicPtr::new(std::ptr::null_mut());
 
 /// Mode we use to execute programs.
 static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
@@ -195,6 +194,12 @@ static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
 /// If set, SIGHUP has been received. This latches to true.
 /// This is set from a signal handler.
 static SIGHUP_RECEIVED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+// Get the terminal mode on startup. This is "safe" because it's async-signal safe.
+pub fn safe_get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
+    // Safety: set atomically and not modified after.
+    unsafe { TERMINAL_MODE_ON_STARTUP.load(Ordering::Acquire).as_ref() }
+}
 
 /// A singleton snapshot of the reader state. This is factored out for thread-safety reasons:
 /// it may be fetched on a background thread.
@@ -857,8 +862,15 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
-    let mut terminal_mode_on_startup = TERMINAL_MODE_ON_STARTUP.lock().unwrap();
-    unsafe { libc::tcgetattr(STDIN_FILENO, &mut *terminal_mode_on_startup) };
+    // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
+    let mut terminal_mode_on_startup = unsafe { std::mem::zeroed::<libc::termios>() };
+    let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &mut terminal_mode_on_startup) };
+    // TODO: rationalize behavior if initial tcgetattr() fails.
+    if ret == 0 {
+        // Must be mut because AtomicPtr doesn't have const variant.
+        let leaked: *mut libc::termios = Box::leak(Box::new(terminal_mode_on_startup));
+        TERMINAL_MODE_ON_STARTUP.store(leaked, Ordering::Release);
+    }
 
     #[cfg(not(test))]
     assert!(AT_EXIT.get().is_none());
@@ -866,7 +878,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = *terminal_mode_on_startup;
+    *tty_modes_for_external_cmds = terminal_mode_on_startup;
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
     // Disable flow control by default.
@@ -878,7 +890,6 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     term_fix_modes(&mut shell_modes());
 
-    drop(terminal_mode_on_startup);
     drop(tty_modes_for_external_cmds);
 
     // Set up our fixed terminal modes once,
@@ -893,7 +904,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 // TODO(pca): this is run in our "AT_EXIT" handler from a SIGTERM handler.
 // It must be made async-signal-safe (or not invoked).
 pub fn reader_deinit(restore_foreground_pgroup: bool) {
-    restore_term_mode();
+    safe_restore_term_mode();
     crate::input_common::terminal_protocols_disable_ifn();
     if restore_foreground_pgroup {
         restore_term_foreground_process_group_for_exit();
@@ -903,18 +914,14 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// Restore the term mode if we own the terminal and are interactive (#8705).
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
-pub fn restore_term_mode() {
+/// THIS FUNCTION IS CALLED FROM A SIGNAL HANDLER. IT MUST BE ASYNC-SIGNAL-SAFE.
+pub fn safe_restore_term_mode() {
     if !is_interactive_session() || getpgrp() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
-
-    unsafe {
-        libc::tcsetattr(
-            STDIN_FILENO,
-            TCSANOW,
-            &*TERMINAL_MODE_ON_STARTUP.lock().unwrap(),
-        )
-    };
+    if let Some(modes) = safe_get_terminal_mode_on_startup() {
+        unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, modes) };
+    }
 }
 
 /// Change the history file for the current command reading context.

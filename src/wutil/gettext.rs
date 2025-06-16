@@ -194,6 +194,7 @@ macro_rules! localizable_consts {
         )*
     ) => {
         $(
+            $(#[$attr])*
             $vis const $name: $crate::wutil::gettext::LocalizableString =
                 localizable_string!($string);
         )*
@@ -247,8 +248,10 @@ pub use wgettext_fmt;
 #[serial]
 fn test_unlocalized() {
     let _cleanup = test_init();
-    let s: &'static wstr = wgettext!("abc");
+    let abc_str = LocalizableString::from_external_source(WString::from("abc"));
+    let s: &'static wstr = wgettext!(abc_str);
     assert_eq!(s, "abc");
-    let s2: &'static wstr = wgettext!("static");
+    let static_str = LocalizableString::from_external_source(WString::from("static"));
+    let s2: &'static wstr = wgettext!(static_str);
     assert_eq!(s2, "static");
 }

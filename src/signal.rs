@@ -362,12 +362,15 @@ impl LookupEntry {
 }
 
 macro_rules! signal_entry {
-    ($name:ident, $desc:expr) => {
+    ($name:ident, $desc:literal) => {
         LookupEntry::new(
             libc::$name,
             L!(stringify!($name)),
             localizable_string!($desc),
         )
+    };
+    ($name:ident, $desc:expr) => {
+        LookupEntry::new(libc::$name, L!(stringify!($name)), $desc)
     };
 }
 
@@ -406,23 +409,40 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
 
     #[cfg(any(apple, bsd))]
-    signal_entry!(SIGEMT, "Unused signal"),
+    signal_entry!(SIGEMT, SIGEMT_DESC),
 
     #[cfg(any(apple, bsd))]
-    signal_entry!(SIGINFO, "Information request"),
+    signal_entry!(SIGINFO, SIGINFO_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGSTKFLT, "Stack fault"),
+    signal_entry!(SIGSTKFLT, SIGSTKFLT_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
+    signal_entry!(SIGIOT, SIGIOT_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGPWR, "Power failure"),
+    signal_entry!(SIGPWR, SIGPWR_DESC),
 
     // TODO: determine whether SIGWIND is defined on any platform.
     //signal_entry!(SIGWIND, "Window size change"),
 ];
+
+localizable_consts!(
+    #[allow(dead_code)]
+    SIGEMT_DESC "Unused signal"
+
+    #[allow(dead_code)]
+    SIGINFO_DESC "Information request"
+
+    #[allow(dead_code)]
+    SIGSTKFLT_DESC "Stack fault"
+
+    #[allow(dead_code)]
+    SIGIOT_DESC "Abort (Alias for SIGABRT)"
+
+    #[allow(dead_code)]
+    SIGPWR_DESC "Power failure"
+);
 
 // Return true if two strings are equal, ignoring ASCII case.
 fn equals_ascii_icase(left: &wstr, right: &wstr) -> bool {

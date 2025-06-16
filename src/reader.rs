@@ -1559,7 +1559,7 @@ impl<'a> Reader<'a> {
         };
 
         let focused_on_pager = self.active_edit_line_tag() == EditableLineTag::SearchField;
-        let pager_search_field_position = focused_on_pager.then_some(self.pager.cursor_position());
+        let pager_search_field_position = focused_on_pager.then(|| self.pager.cursor_position());
         let last = &self.rendered_layout;
         check(self.force_exec_prompt_and_repaint, "forced")
             || check(self.command_line.text() != last.text, "text")
@@ -1609,8 +1609,7 @@ impl<'a> Reader<'a> {
         result.colors = self.command_line.colors().to_vec();
         assert!(result.text.len() == result.colors.len());
         result.position = self.command_line.position();
-        result.pager_search_field_position =
-            focused_on_pager.then_some(self.pager.cursor_position());
+        result.pager_search_field_position = focused_on_pager.then(|| self.pager.cursor_position());
         result.selection = self.selection;
         result.history_search_range = self.history_search.search_range_if_active();
         result.autosuggestion = self.autosuggestion.text.clone();

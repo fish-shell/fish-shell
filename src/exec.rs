@@ -437,7 +437,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
-    restore_term_mode(false);
+    restore_term_mode();
     // Bounce to launch_process. This never returns.
     safe_launch_process(p, &actual_cmd, &argv, &envp);
 }

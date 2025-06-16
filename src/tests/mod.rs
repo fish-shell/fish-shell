@@ -111,7 +111,7 @@ pub mod prelude {
         });
         reader_init(false);
         ScopeGuard::new((), |()| {
-            reader_deinit(false, false);
+            reader_deinit(false);
         })
     }
 

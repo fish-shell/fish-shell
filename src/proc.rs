@@ -4,8 +4,7 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output, timef,
-    Timepoint, WSL,
+    charptr2wcstring, escape, is_windows_subsystem_for_linux, timef, Timepoint, WSL,
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
@@ -377,14 +376,9 @@ impl TtyTransfer {
             let getpgrp_res = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
             if getpgrp_res < 0 {
                 match errno::errno().0 {
-                    ENOTTY => {
+                    ENOTTY | EBADF => {
                         // stdin is not a tty. This may come about if job control is enabled but we are
                         // not a tty - see #6573.
-                        return false;
-                    }
-                    EBADF => {
-                        // stdin has been closed. Workaround a glibc bug - see #3644.
-                        redirect_tty_output(false);
                         return false;
                     }
                     _ => {

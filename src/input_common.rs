@@ -4,7 +4,7 @@ use crate::common::{
 };
 use crate::env::{EnvStack, Environment};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::{FloggableDebug, FLOG};
+use crate::flog::{FloggableDebug, FloggableDisplay, FLOG};
 use crate::fork_exec::flog_safe::FLOG_SAFE;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::key::{
@@ -1824,6 +1824,7 @@ impl<'a> std::fmt::Display for DisplayBytes<'a> {
         Ok(())
     }
 }
+impl<'a> FloggableDisplay for DisplayBytes<'a> {}
 
 /// A simple, concrete implementation of InputEventQueuer.
 pub struct InputEventQueue {

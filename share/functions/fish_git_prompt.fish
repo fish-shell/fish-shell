@@ -200,16 +200,17 @@ function fish_git_prompt --description "Prompt function for Git"
     if functions -q __fish_git_prompt_ready && not __fish_git_prompt_ready
         return 1
     end
-    set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)
+    set -l repo_info (command git rev-parse --git-dir --git-common-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree HEAD 2>/dev/null)
     test -n "$repo_info"
     or return
 
     set -l git_dir $repo_info[1]
-    set -l inside_gitdir $repo_info[2]
-    set -l bare_repo $repo_info[3]
-    set -l inside_worktree $repo_info[4]
-    set -q repo_info[5]
-    and set -l sha $repo_info[5]
+    set -l git_common_dir $repo_info[2]
+    set -l inside_gitdir $repo_info[3]
+    set -l bare_repo $repo_info[4]
+    set -l inside_worktree $repo_info[5]
+    set -q repo_info[6]
+    and set -l sha $repo_info[6]
 
     set -l rbc (__fish_git_prompt_operation_branch_bare $repo_info)
     set -l r $rbc[1] # current operation
@@ -280,7 +281,7 @@ function fish_git_prompt --description "Prompt function for Git"
                 contains -- "$__fish_git_prompt_show_informative_status" yes true 1
                 and test "$dirty" != false
             end
-            set informative_status (untracked=$untracked __fish_git_prompt_informative_status $git_dir)
+            set informative_status (untracked=$untracked __fish_git_prompt_informative_status $git_common_dir)
             if test -n "$informative_status"
                 set informative_status "$space$informative_status"
             end
@@ -310,12 +311,12 @@ function fish_git_prompt --description "Prompt function for Git"
             end
 
             if contains -- "$__fish_git_prompt_showstashstate" yes true 1
-                and test -r $git_dir/logs/refs/stash
+                and test -r $git_common_dir/logs/refs/stash
                 # If we have informative status but don't want to actually
                 # *compute* the informative status, we might still count the stash.
                 if contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-                    set stashstate (count < $git_dir/logs/refs/stash)
-                else if test -s $git_dir/logs/refs/stash
+                    set stashstate (count < $git_common_dir/logs/refs/stash)
+                else if test -s $git_common_dir/logs/refs/stash
                     set stashstate 1
                 end
             end
@@ -461,10 +462,10 @@ end
 function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt helper, returns the current Git operation and branch"
     # This function is passed the full repo_info array
     set -l git_dir $argv[1]
-    set -l inside_gitdir $argv[2]
-    set -l bare_repo $argv[3]
-    set -q argv[5]
-    and set -l sha $argv[5]
+    set -l inside_gitdir $argv[3]
+    set -l bare_repo $argv[4]
+    set -q argv[6]
+    and set -l sha $argv[6]
 
     set -l branch
     set -l operation

@@ -8131,6 +8131,9 @@ msgstr "Testergebnisse in Datei config.cache zwischenspeichern"
 msgid "Cache test results in specified file"
 msgstr "Testergebnisse in angegebener Datei zwischenspeichern"
 
+msgid "Cache the command output for a given amount of time"
+msgstr ""
+
 msgid "Caddyfile to load"
 msgstr ""
 

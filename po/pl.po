@@ -8123,6 +8123,9 @@ msgstr ""
 msgid "Cache test results in specified file"
 msgstr ""
 
+msgid "Cache the command output for a given amount of time"
+msgstr ""
+
 msgid "Caddyfile to load"
 msgstr ""
 

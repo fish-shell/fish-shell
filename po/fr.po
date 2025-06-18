@@ -8228,6 +8228,9 @@ msgstr "Mettre en cache les résultats des tests dans le fichier config.cache"
 msgid "Cache test results in specified file"
 msgstr "Mettre en cache les résultats des tests dans le fichier spécifié"
 
+msgid "Cache the command output for a given amount of time"
+msgstr ""
+
 msgid "Caddyfile to load"
 msgstr ""
 

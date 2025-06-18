@@ -8126,6 +8126,9 @@ msgstr "文件配置中的缓存测试结果 . 缓存"
 msgid "Cache test results in specified file"
 msgstr "指定文件中的缓存测试结果"
 
+msgid "Cache the command output for a given amount of time"
+msgstr ""
+
 msgid "Caddyfile to load"
 msgstr "要装入的卡迪文件"
 

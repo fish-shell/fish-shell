@@ -634,4 +634,4 @@ complete -C'testcommand '
 
 abbr cat cat
 complete -C ca | string match -r '^cat(?:\t.*)?$'
-# CHECK: cat{{\t}}Abbreviation: cat
+# CHECK: cat{{\t}}Abbr: cat

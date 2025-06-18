@@ -21,6 +21,7 @@ struct Options {
     position: Option<Position>,
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
+    description: Option<WString>,
 }
 
 impl Options {
@@ -150,6 +151,10 @@ fn abbr_show(streams: &mut IoStreams) -> BuiltinResult {
             if let Some(ref set_cursor_marker) = abbr.set_cursor_marker {
                 add_arg(L!("--set-cursor="));
                 add_arg(&escape_string(set_cursor_marker, style));
+            }
+            if let Some(ref description) = abbr.description {
+                add_arg(L!("--description="));
+                add_arg(&escape_string(description, style))
             }
             if abbr.replacement_is_function {
                 add_arg(L!("--function"));
@@ -405,6 +410,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
             set_cursor_marker: opts.set_cursor_marker.clone(),
             from_universal: false,
             commands: opts.commands.clone(),
+            description: opts.description.clone(),
         })
     });
 
@@ -465,6 +471,7 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
             ArgType::OptionalArgument,
             SET_CURSOR_SHORT,
         ),
+        wopt(L!("description"), ArgType::OptionalArgument, 'd'),
         wopt(L!("function"), ArgType::RequiredArgument, 'f'),
         wopt(L!("rename"), ArgType::NoArgument, RENAME_SHORT),
         wopt(L!("erase"), ArgType::NoArgument, 'e'),
@@ -531,6 +538,9 @@ pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
                     return Err(STATUS_INVALID_ARGS);
                 }
                 opts.regex_pattern = w.woptarg.map(ToOwned::to_owned);
+            }
+            'd' => {
+                opts.description = w.woptarg.map(ToOwned::to_owned);
             }
             SET_CURSOR_SHORT => {
                 if opts.set_cursor_marker.is_some() {

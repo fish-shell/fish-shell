@@ -94,7 +94,7 @@ abbr --rename __abbr11 __abbr12
 
 abbr __abbr-with-dashes omega
 complete -C__abbr-with
-# CHECK: __abbr-with-dashes	Abbreviation: omega
+# CHECK: __abbr-with-dashes	Abbr: omega
 
 abbr --add --global __abbr13 aaaaaaaaaaaaa
 abbr --add --global __abbr14 bbbbbbbbbbbbb

@@ -623,11 +623,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by rewriting the file.
-    fn save_internal_via_rewrite(&mut self) -> std::io::Result<()> {
-        let Some(history_path) = self.history_file_path()? else {
-            return Ok(());
-        };
-
+    fn save_internal_via_rewrite(&mut self, history_path: &wstr) -> std::io::Result<()> {
         FLOGF!(
             history,
             "Saving %lu items via rewrite",
@@ -643,7 +639,7 @@ impl HistoryImpl {
                 })
             };
 
-        let (file_id, _) = rewrite_via_temporary_file(&history_path, rewrite)?;
+        let (file_id, _) = rewrite_via_temporary_file(history_path, rewrite)?;
         self.history_file_id = file_id;
 
         // We've saved everything, so we have no more unsaved items.
@@ -660,11 +656,7 @@ impl HistoryImpl {
     }
 
     /// Saves history by appending to the file.
-    fn save_internal_via_appending(&mut self) -> std::io::Result<()> {
-        let Some(history_path) = self.history_file_path()? else {
-            return Ok(());
-        };
-
+    fn save_internal_via_appending(&mut self, history_path: &wstr) -> std::io::Result<()> {
         FLOGF!(
             history,
             "Saving %lu items via appending",
@@ -674,7 +666,7 @@ impl HistoryImpl {
         assert!(self.deleted_items.is_empty());
 
         let mut locked_history_file =
-            LockedFile::new(LockingMode::Exclusive(WriteMethod::Append), &history_path)?;
+            LockedFile::new(LockingMode::Exclusive(WriteMethod::Append), history_path)?;
 
         // Check if the file was modified since it was last read.
         let file_id = file_id_for_file(locked_history_file.get());
@@ -754,14 +746,23 @@ impl HistoryImpl {
             self.first_unwritten_new_item_index = self.new_items.len();
             self.deleted_items.clear();
             self.clear_file_state();
+            return;
         }
+
+        let history_path = match self.history_file_path() {
+            Ok(history_path) => history_path.unwrap(),
+            Err(e) => {
+                FLOG!(history, "Saving history failed:", e);
+                return;
+            }
+        };
 
         // Try saving. If we have items to delete, we have to rewrite the file. If we do not, we can
         // append to it.
         let mut ok = false;
         if !vacuum && self.deleted_items.is_empty() {
             // Try doing a fast append.
-            if let Err(e) = self.save_internal_via_appending() {
+            if let Err(e) = self.save_internal_via_appending(&history_path) {
                 FLOG!(history, "Appending to history failed:", e);
             } else {
                 ok = true;
@@ -769,7 +770,7 @@ impl HistoryImpl {
         }
         if !ok {
             // We did not or could not append; rewrite the file ("vacuum" it).
-            if let Err(e) = self.save_internal_via_rewrite() {
+            if let Err(e) = self.save_internal_via_rewrite(&history_path) {
                 FLOG!(history, "Rewriting history failed:", e)
             }
         }

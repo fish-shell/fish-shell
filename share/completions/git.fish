@@ -804,7 +804,8 @@ function __fish_git_custom_commands
     # if any of these completion results match the name of the builtin git commands,
     # but it's simpler just to blacklist these names. They're unlikely to change,
     # and the failure mode is we accidentally complete a plumbing command.
-    for name in (string replace -r "^.*/git-([^/]*)" '$1' $PATH/git-*)
+    set -l git_subcommands $PATH/git-*
+    for name in (string replace -r "^.*/git-([^/]*)" '$1' $git_subcommands)
         switch $name
             case cvsserver receive-pack shell upload-archive upload-pack
                 # skip these
@@ -2612,7 +2613,8 @@ end
 
 # source git-* commands' autocompletion file if exists
 set -l __fish_git_custom_commands_completion
-for file in (path filter -xZ $PATH/git-* | path basename)
+set -l git_subcommands $PATH/git-*
+for file in (path filter -xZ $git_subcommands | path basename)
     # Already seen this command earlier in $PATH.
     contains -- $file $__fish_git_custom_commands_completion
     and continue

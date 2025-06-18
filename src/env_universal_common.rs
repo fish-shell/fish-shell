@@ -6,9 +6,7 @@ use crate::common::{
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{FLOG, FLOGF};
 use crate::fs::{lock_and_load, rewrite_via_temporary_file, PotentialUpdate};
-use crate::global_safety::RelaxedAtomicBool;
 use crate::path::path_get_config;
-use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};
 use crate::wcstringutil::{join_strings, LineIterator};
 use crate::wutil::{file_id_for_file, file_id_for_path_narrow, wrealpath, FileId, INVALID_FILE_ID};
@@ -18,8 +16,6 @@ use std::ffi::CString;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::mem::MaybeUninit;
-
-static LOCK_UVAR_FILE: RelaxedAtomicBool = RelaxedAtomicBool::new(true);
 
 /// Callback data, reflecting a change in universal variables.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -146,11 +142,6 @@ impl EnvUniversal {
     /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
     pub fn initialize(&mut self) -> Option<CallbackDataList> {
-        // Set `LOCK_UVAR_FILE` to false immediately if the default variable path is on a remote filesystem.
-        // See #7968.
-        if path_get_config_remoteness() == DirRemoteness::remote {
-            LOCK_UVAR_FILE.store(false);
-        }
         self.initialize_at_path(default_vars_path())
     }
 
@@ -213,7 +204,7 @@ impl EnvUniversal {
         };
 
         let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
-        match rewrite_via_temporary_file(&real_path, &LOCK_UVAR_FILE, rewrite) {
+        match rewrite_via_temporary_file(&real_path, rewrite) {
             Ok((file_id, potential_update)) => {
                 self.last_read_file_id = file_id;
                 self.ok_to_save = potential_update.do_save;
@@ -379,7 +370,7 @@ impl EnvUniversal {
         }
 
         FLOG!(uvar_file, "universal log reading from file");
-        match lock_and_load(&self.vars_path, &LOCK_UVAR_FILE, |f| {
+        match lock_and_load(&self.vars_path, |f| {
             Ok(self.load_from_file(f).map(|update| update.data))
         }) {
             Ok((

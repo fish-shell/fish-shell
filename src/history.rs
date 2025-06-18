@@ -478,11 +478,7 @@ impl HistoryImpl {
 
         let _profiler = TimeProfiler::new("load_old");
         if let Ok(Some(history_path)) = self.history_file_path() {
-            match lock_and_load(
-                &history_path,
-                &LOCK_HISTORY_FILE,
-                HistoryFileContents::create,
-            ) {
+            match lock_and_load(&history_path, HistoryFileContents::create) {
                 Ok((file_id, file_contents)) => {
                     self.file_contents = Some(file_contents);
                     self.history_file_id = file_id;
@@ -647,7 +643,7 @@ impl HistoryImpl {
                 })
             };
 
-        let (file_id, _) = rewrite_via_temporary_file(&history_path, &LOCK_HISTORY_FILE, rewrite)?;
+        let (file_id, _) = rewrite_via_temporary_file(&history_path, rewrite)?;
         self.history_file_id = file_id;
 
         // We've saved everything, so we have no more unsaved items.
@@ -668,13 +664,6 @@ impl HistoryImpl {
         let Some(history_path) = self.history_file_path()? else {
             return Ok(());
         };
-
-        if !LOCK_HISTORY_FILE.load() {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Unsupported,
-                "Appending is not supported when locking is disabled.",
-            ));
-        }
 
         FLOGF!(
             history,
@@ -1841,5 +1830,3 @@ pub fn in_private_mode(vars: &dyn Environment) -> bool {
 
 /// Whether to force the read path instead of mmap. This is useful for testing.
 static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-static LOCK_HISTORY_FILE: RelaxedAtomicBool = RelaxedAtomicBool::new(true);

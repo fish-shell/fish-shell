@@ -1,7 +1,6 @@
 use crate::{
     common::{str2wcstring, wcs2zstring, ScopeGuard},
     fds::wopen_cloexec,
-    global_safety::RelaxedAtomicBool,
     path::{path_remoteness, DirRemoteness},
     wchar::prelude::*,
     wutil::{
@@ -182,39 +181,29 @@ impl LockedFile {
 /// until it manages a run without the file being modified in the meantime, or until the maximum
 /// number of allowed attempts is reached.
 /// If the file does not exist this function will return an error.
-pub fn lock_and_load<F, UserData>(
-    path: &wstr,
-    locking_enabled: &RelaxedAtomicBool,
-    load: F,
-) -> std::io::Result<(FileId, UserData)>
+pub fn lock_and_load<F, UserData>(path: &wstr, load: F) -> std::io::Result<(FileId, UserData)>
 where
     F: Fn(&File) -> std::io::Result<UserData>,
 {
-    if locking_enabled.load() {
-        match LockedFile::new(LockingMode::Shared, path) {
-            Ok(locked_file) => {
-                return Ok((
-                    file_id_for_file(locked_file.get()),
-                    load(locked_file.get())?,
-                ));
-            }
-            Err(e) => {
-                FLOGF!(
-                    synced_file_access,
-                    "Error acquiring shared lock on the directory of '%s': %s",
-                    path,
-                    e,
-                );
-                // This function might be called when the file does not exist.
-                // Do not abandon locking is such cases.
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    // There is no point in continuing in this function if the file does not
-                    // exist.
-                    return Err(e);
-                } else {
-                    FLOG!(synced_file_access, "Disabling locking.");
-                    locking_enabled.store(false);
-                }
+    match LockedFile::new(LockingMode::Shared, path) {
+        Ok(locked_file) => {
+            return Ok((
+                file_id_for_file(locked_file.get()),
+                load(locked_file.get())?,
+            ));
+        }
+        Err(e) => {
+            FLOGF!(
+                synced_file_access,
+                "Error acquiring shared lock on the directory of '%s': %s",
+                path,
+                e,
+            );
+            // This function might be called when the file does not exist.
+            if e.kind() == std::io::ErrorKind::NotFound {
+                // There is no point in continuing in this function if the file does not
+                // exist.
+                return Err(e);
             }
         }
     }
@@ -266,8 +255,6 @@ pub struct PotentialUpdate<UserData> {
 /// # Arguments
 ///
 /// - `path`: The path to the file which should be updated.
-/// - `locking_enabled`: To indicate whether locking should be attempted. This function might
-/// update the value stored in `locking_enabled`.
 /// - `rewrite`: The function which handles reading from the file and writing to a temporary file.
 /// The first argument is for the file to read from, the second for the temporary file to write to.
 /// On success, the value returned by `rewrite` is included in this functions return value. Be
@@ -283,7 +270,6 @@ pub struct PotentialUpdate<UserData> {
 /// but before we obtained the [`FileId`] from `path`. This is a race condition we do not detect.
 pub fn rewrite_via_temporary_file<F, UserData>(
     path: &wstr,
-    locking_enabled: &RelaxedAtomicBool,
     rewrite: F,
 ) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
 where
@@ -361,29 +347,26 @@ where
     // To avoid issues with crashes during writing,
     // we write to a temporary file and once we are done, this file is renamed such that it
     // replaces the original file.
-    if locking_enabled.load() {
-        // To avoid races, we need to have exclusive access to the file for the entire
-        // duration, which we get via an exclusive lock on the parent directory.
-        // Taking a shared lock first and later upgrading to an exclusive one could result in a
-        // deadlock, so we take an exclusive one immediately.
-        match LockedFile::new(LockingMode::Exclusive(WriteMethod::RenameIntoPlace), path) {
-            Ok(locked_file) => {
-                let potential_update = rewrite(locked_file.get(), &mut tmp_file)?;
-                if potential_update.do_save {
-                    update_metadata(locked_file.get(), &tmp_file);
-                    rename(&tmp_name, path)?;
-                }
-                return Ok((file_id_for_path(path), potential_update));
+    // To avoid races, we need to have exclusive access to the file for the entire
+    // duration, which we get via an exclusive lock on the parent directory.
+    // Taking a shared lock first and later upgrading to an exclusive one could result in a
+    // deadlock, so we take an exclusive one immediately.
+    match LockedFile::new(LockingMode::Exclusive(WriteMethod::RenameIntoPlace), path) {
+        Ok(locked_file) => {
+            let potential_update = rewrite(locked_file.get(), &mut tmp_file)?;
+            if potential_update.do_save {
+                update_metadata(locked_file.get(), &tmp_file);
+                rename(&tmp_name, path)?;
             }
-            Err(e) => {
-                FLOGF!(
-                    synced_file_access,
-                    "Error acquiring exclusive lock on the directory of '%s': %s",
-                    path,
-                    e,
-                );
-                locking_enabled.store(false);
-            }
+            return Ok((file_id_for_path(path), potential_update));
+        }
+        Err(e) => {
+            FLOGF!(
+                synced_file_access,
+                "Error acquiring exclusive lock on the directory of '%s': %s",
+                path,
+                e,
+            );
         }
     }
 

@@ -309,7 +309,11 @@ fn test_history_races() {
                 continue;
             };
 
-            // Remove everything from this item on
+            // Remove the item we found.
+            list.remove(position);
+
+            // We expected this item to be the last. Items after this item
+            // in this array were therefore not found in history.
             let removed = list.drain(position..);
             for line in removed.into_iter().rev() {
                 printf!("Item dropped from history: %ls\n", line);

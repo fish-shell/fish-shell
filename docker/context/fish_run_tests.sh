@@ -15,8 +15,10 @@ then
     bash -i
 fi
 
-(set +e; ninja && ninja fish_run_tests)
+set +e
+ninja && ninja fish_run_tests
 RES=$?
+set -e
 
 # Drop the user into a shell if FISH_RUN_SHELL_AFTER_TESTS is set.
 if test -n "$FISH_RUN_SHELL_AFTER_TESTS"; then

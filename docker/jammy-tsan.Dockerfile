@@ -7,13 +7,11 @@ ENV LC_ALL=C.UTF-8
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
-    cmake \
     clang \
     gettext \
     git \
     libpcre2-dev \
     locales \
-    ninja-build \
     python3 \
     python3-pexpect \
     sudo \
@@ -39,7 +37,11 @@ COPY fish_run_tests.sh /
 ENV \
     RUSTFLAGS=-Zsanitizer=thread \
     RUSTDOCFLAGS=-Zsanitizer=thread \
-    FISH_CI_SAN=1
+    FISH_CHECK_CARGO_ARGS='-Zbuild-std --features=tsan' \
+    FISH_CHECK_TARGET_TRIPLE=x86_64-unknown-linux-gnu \
+    FISH_CI_SAN=1 \
+    FISH_TEST_MAX_CONCURRENCY=4
 
-CMD . ~/.cargo/env \
-  && /fish_run_tests.sh -DTSAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu
+ENV FISH_CHECK_LINT=false
+
+CMD . ~/.cargo/env && /fish_run_tests.sh

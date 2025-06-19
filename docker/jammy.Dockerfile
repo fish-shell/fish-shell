@@ -8,13 +8,11 @@ RUN apt-get update \
   && apt-get -y install \
     build-essential \
     cargo \
-    cmake \
     clang \
     gettext \
     git \
     libpcre2-dev \
     locales \
-    ninja-build \
     python3 \
     python3-pexpect \
     rustc \
@@ -34,5 +32,7 @@ USER fishuser
 WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
+
+ENV FISH_CHECK_LINT=false
 
 CMD /fish_run_tests.sh

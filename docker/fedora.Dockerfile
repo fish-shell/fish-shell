@@ -2,11 +2,9 @@ FROM fedora:latest
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 RUN dnf install --assumeyes \
-      cmake \
       diffutils \
       gcc-c++ \
       git-core \
-      ninja-build \
       pcre2-devel \
       python3 \
       python3-pip \
@@ -27,5 +25,7 @@ USER fishuser
 WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
+
+ENV FISH_CHECK_LINT=false
 
 CMD /fish_run_tests.sh

@@ -4,8 +4,9 @@ usage() {
     cat << EOF
 Usage: $(basename "$0") [--shell-before] [--shell-after] DOCKERFILE
 Options:
-    --shell-before   Before the tests start, run a bash shell
-    --shell-after    After the tests end, run a bash shell
+    --shell-before    Before the tests start, run a bash shell
+    --shell-after     After the tests end, run a bash shell
+    --lint, --no-lint Enable/disable linting and failure on warnings
 EOF
     exit 1
 }
@@ -28,6 +29,12 @@ while [ $# -gt 1 ]; do
             ;;
         --shell-after)
             DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_RUN_SHELL_AFTER_TESTS=1"
+            ;;
+        --lint)
+            DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_CHECK_LINT=true"
+            ;;
+        --no-lint)
+            DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_CHECK_LINT=false"
             ;;
         *)
             usage

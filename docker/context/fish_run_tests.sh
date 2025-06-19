@@ -5,24 +5,32 @@ set -e
 # This script is copied into the root directory of our Docker tests.
 # It is the entry point for running Docker-based tests.
 
-cd ~/fish-build
+cd /fish-source
 git config --global --add safe.directory /fish-source
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug /fish-source "$@"
+
+export CARGO_TARGET_DIR="$HOME"/fish-build
+
+interactive_shell() {
+    echo
+    echo "+ export=CARGO_TARGET_DIR=$CARGO_TARGET_DIR"
+    echo
+    bash -i
+}
 
 # Spawn a shell if FISH_RUN_SHELL_BEFORE_TESTS is set.
 if test -n "$FISH_RUN_SHELL_BEFORE_TESTS"
 then
-    bash -i
+    interactive_shell
 fi
 
 set +e
-ninja && ninja fish_run_tests
+build_tools/check.sh
 RES=$?
 set -e
 
 # Drop the user into a shell if FISH_RUN_SHELL_AFTER_TESTS is set.
 if test -n "$FISH_RUN_SHELL_AFTER_TESTS"; then
-    bash -i
+    interactive_shell
 fi
 
 exit $RES

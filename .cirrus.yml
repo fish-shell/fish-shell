@@ -26,7 +26,7 @@ linux_task:
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
         - mkdir build && cd build
-        - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
+        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
         - ninja -j 6 fish
         - ninja fish_run_tests
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'
@@ -45,7 +45,7 @@ linux_arm_task:
         - lscpu || true
         - (cat /proc/meminfo | grep MemTotal) || true
         - mkdir build && cd build
-        - cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=6 ..
+        - FISH_TEST_MAX_CONCURRENCY=6 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
         - ninja -j 6 fish
         - file ./fish
         - ninja fish_run_tests
@@ -54,17 +54,11 @@ linux_arm_task:
 
 freebsd_task:
     matrix:
-        # - name: FreeBSD 14
-        #   freebsd_instance:
-        #       image_family: freebsd-14-0-snap
-        - name: FreeBSD 13
+        - name: FreeBSD 14
           freebsd_instance:
-              image: freebsd-13-2-release-amd64
-        # - name: FreeBSD 12.3
-        #   freebsd_instance:
-        #       image: freebsd-12-3-release-amd64
+              image: freebsd-14-3-release-amd64-ufs
     tests_script:
-        - pkg install -y cmake-core devel/pcre2 devel/ninja misc/py-pexpect git-lite terminfo-db
+        - pkg install -y cmake-core devel/pcre2 devel/ninja lang/rust misc/py-pexpect git-lite
         # libclang.so is a required build dependency for rust-c++ ffi bridge
         - pkg install -y llvm
         # BSDs have the following behavior: root may open or access files even if
@@ -77,15 +71,7 @@ freebsd_task:
         - mkdir build && cd build
         - chown -R fish-user ..
         - sudo -u fish-user -s whoami
-        # FreeBSD's pkg currently has rust 1.66.0 while we need rust 1.70.0+. Use rustup to install
-        # the latest, but note that it only installs rust per-user.
-        - sudo -u fish-user -s fetch -qo - https://sh.rustup.rs > rustup.sh
-        - sudo -u fish-user -s sh ./rustup.sh -y --profile=minimal
-        # `sudo -s ...` does not invoke a login shell so we need a workaround to make sure the
-        # rustup environment is configured for subsequent `sudo -s ...` commands.
-        # For some reason, this doesn't do the job:
-        # - sudo -u fish-user sh -c 'echo source \$HOME/.cargo/env >> $HOME/.cshrc'
-        - sudo -u fish-user -s cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCTEST_PARALLEL_LEVEL=1 ..
-        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja -j 6 fish'
-        - sudo -u fish-user sh -c '. $HOME/.cargo/env; ninja fish_run_tests'
+        - sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+        - sudo -u fish-user -s ninja -j 6 fish
+        - sudo -u fish-user -s ninja fish_run_tests
     only_if: $CIRRUS_REPO_OWNER == 'fish-shell'

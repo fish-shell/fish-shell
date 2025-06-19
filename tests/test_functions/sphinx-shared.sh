@@ -3,9 +3,9 @@
 set -e
 
 cleanup () {
-  if [ -n "$tmp_dir" ] && [ -e "$tmp_dir" ]; then
-    rm -r "$tmp_dir"
-  fi
+    if [ -n "$tmp_dir" ] && [ -e "$tmp_dir" ]; then
+        rm -r "$tmp_dir"
+    fi
 }
 
 trap cleanup EXIT INT TERM HUP
@@ -17,12 +17,12 @@ tmp_dir=$(mktemp -d)
 doctree=$tmp_dir/doctree
 output_dir=$tmp_dir/$builder
 sphinx-build \
-  -j auto \
-  -q \
-  -W \
-  -E \
-  -b "$builder" \
-  -c "$docsrc" \
-  -d "$doctree" \
-  "$docsrc" \
-  "$output_dir"
+    -j auto \
+    -q \
+    -W \
+    -E \
+    -b "$builder" \
+    -c "$docsrc" \
+    -d "$doctree" \
+    "$docsrc" \
+    "$output_dir"

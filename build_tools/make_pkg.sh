@@ -3,18 +3,18 @@
 # Script to produce an OS X installer .pkg and .app(.zip)
 
 usage() {
-  echo "Build macOS packages, optionally signing and notarizing them."
-  echo "Usage: $0 options"
-  echo "Options:"
-  echo "  -s                            Enables code signing"
-  echo "  -f <APP_KEY.p12>              Path to .p12 file for application signing"
-  echo "  -i <INSTALLER_KEY.p12>        Path to .p12 file for installer signing"
-  echo "  -p <PASSWORD>                 Password for the .p12 files (necessary to access the certificates)"
-  echo "  -e <entitlements file>        (Optional) Path to an entitlements XML file"
-  echo "  -n                            Enables notarization. This will fail if code signing is not also enabled."
-  echo "  -j <API_KEY.JSON>             Path to JSON file generated with \`rcodesign encode-app-store-connect-api-key\` (required for notarization)"
-  echo
-  exit 1
+    echo "Build macOS packages, optionally signing and notarizing them."
+    echo "Usage: $0 options"
+    echo "Options:"
+    echo "  -s                            Enables code signing"
+    echo "  -f <APP_KEY.p12>              Path to .p12 file for application signing"
+    echo "  -i <INSTALLER_KEY.p12>        Path to .p12 file for installer signing"
+    echo "  -p <PASSWORD>                 Password for the .p12 files (necessary to access the certificates)"
+    echo "  -e <entitlements file>        (Optional) Path to an entitlements XML file"
+    echo "  -n                            Enables notarization. This will fail if code signing is not also enabled."
+    echo "  -j <API_KEY.JSON>             Path to JSON file generated with \`rcodesign encode-app-store-connect-api-key\` (required for notarization)"
+    echo
+    exit 1
 }
 
 set -x
@@ -33,32 +33,32 @@ X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.9'
 RUST_VERSION_X86_64=1.73.0
 
 while getopts "sf:i:p:e:nj:" opt; do
-  case $opt in
-    s) SIGN=1;;
-    f) P12_APP_FILE=$(realpath "$OPTARG");;
-    i) P12_INSTALL_FILE=$(realpath "$OPTARG");;
-    p) P12_PASSWORD="$OPTARG";;
-    e) ENTITLEMENTS_FILE=$(realpath "$OPTARG");;
-    n) NOTARIZE=1;;
-    j) API_KEY_FILE=$(realpath "$OPTARG");;
-    \?) usage;;
-  esac
+    case $opt in
+        s) SIGN=1;;
+        f) P12_APP_FILE=$(realpath "$OPTARG");;
+        i) P12_INSTALL_FILE=$(realpath "$OPTARG");;
+        p) P12_PASSWORD="$OPTARG";;
+        e) ENTITLEMENTS_FILE=$(realpath "$OPTARG");;
+        n) NOTARIZE=1;;
+        j) API_KEY_FILE=$(realpath "$OPTARG");;
+        \?) usage;;
+    esac
 done
 
 if [ -n "$SIGN" ] && { [ -z "$P12_APP_FILE" ] || [ -z "$P12_INSTALL_FILE" ] || [ -z "$P12_PASSWORD" ]; }; then
-  usage
+    usage
 fi
 
 if [ -n "$NOTARIZE" ] && [ -z "$API_KEY_FILE" ]; then
-  usage
+    usage
 fi
 
 VERSION=$(git describe --always --dirty 2>/dev/null)
 if test -z "$VERSION" ; then
-  echo "Could not get version from git"
-  if test -f version; then
-    VERSION=$(cat version)
-  fi
+    echo "Could not get version from git"
+    if test -f version; then
+        VERSION=$(cat version)
+    fi
 fi
 
 echo "Version is $VERSION"
@@ -76,7 +76,7 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
 # and will probably not be built universal, so the package will fail to validate/run on other systems.
 # Note CMAKE_OSX_ARCHITECTURES is still relevant for the Mac app.
 { cd "$PKGDIR/build_arm64" \
-  && cmake \
+    && cmake \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
         -DWITH_GETTEXT=OFF \
@@ -91,7 +91,7 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
 # Build for x86-64 but do not install; instead we will make some fat binaries inside the root.
 # Set RUST_VERSION_X86_64 to the last version of Rust that supports macOS 10.9.
 { cd "$PKGDIR/build_x86_64" \
-  && cmake \
+    && cmake \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-ld_classic" \
         -DWITH_GETTEXT=OFF \
@@ -99,7 +99,7 @@ mkdir -p "$PKGDIR/build_x86_64" "$PKGDIR/build_arm64" "$PKGDIR/root" "$PKGDIR/in
         -DRust_CARGO_TARGET=x86_64-apple-darwin \
         -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
         -DFISH_USE_SYSTEM_PCRE2=OFF "$SRC_DIR" \
-  && env $X86_64_DEPLOY_TARGET make VERBOSE=1 -j 12; }
+    && env $X86_64_DEPLOY_TARGET make VERBOSE=1 -j 12; }
 
 # Fatten them up.
 for FILE in "$PKGDIR"/root/usr/local/bin/*; do

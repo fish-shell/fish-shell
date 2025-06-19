@@ -15,8 +15,8 @@ indent_style = tab
 [*.{md,rst}]
 trim_trailing_whitespace = false
 
-[*.{sh,ac}]
-indent_size = 2
+[*.sh]
+indent_size = 4
 
 [Dockerfile]
 indent_size = 2

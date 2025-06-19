@@ -29,6 +29,12 @@ while [ $# -gt 1 ]; do
         --shell-after)
             DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_RUN_SHELL_AFTER_TESTS=1"
             ;;
+        --lint)
+            DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_CHECK_LINT=true"
+            ;;
+        --no-lint)
+            DOCKER_EXTRA_ARGS="$DOCKER_EXTRA_ARGS --env FISH_CHECK_LINT=false"
+            ;;
         *)
             usage
             ;;

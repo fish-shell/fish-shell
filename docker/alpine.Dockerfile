@@ -7,13 +7,11 @@ ENV LC_ALL=C.UTF-8
 RUN apk add --no-cache \
     bash \
     cargo \
-    cmake \
     g++ \
     gettext-dev \
     git \
     libintl \
     musl-dev \
-    ninja \
     pcre2-dev \
     py3-pexpect \
     python3 \
@@ -39,5 +37,7 @@ USER fishuser
 WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
+
+ENV FISH_CHECK_LINT=false
 
 CMD /fish_run_tests.sh

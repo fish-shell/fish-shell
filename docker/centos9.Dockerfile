@@ -8,17 +8,13 @@ RUN cd /etc/yum.repos.d/ && \
   sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 
 
-# install powertools to get ninja-build
 RUN dnf -y install dnf-plugins-core \
-  && dnf config-manager --set-enabled powertools \
   && yum install --assumeyes epel-release \
   && yum install --assumeyes \
     cargo \
-    cmake \
     diffutils \
     gcc-c++ \
     git \
-    ninja-build \
     python3 \
     python3-pexpect \
     openssl \
@@ -38,5 +34,7 @@ USER fishuser
 WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
+
+ENV FISH_CHECK_LINT=false
 
 CMD /fish_run_tests.sh

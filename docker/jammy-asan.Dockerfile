@@ -7,13 +7,11 @@ ENV LC_ALL=C.UTF-8
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
-    cmake \
     clang \
     gettext \
     git \
     libpcre2-dev \
     locales \
-    ninja-build \
     python3 \
     python3-pexpect \
     sudo \
@@ -42,12 +40,17 @@ COPY fish_run_tests.sh /
 ENV \
     RUSTFLAGS=-Zsanitizer=address \
     RUSTDOCFLAGS=-Zsanitizer=address \
+    FISH_CHECK_CARGO_ARGS='-Zbuild-std --features=tsan' \
+    FISH_CHECK_TARGET_TRIPLE=x86_64-unknown-linux-gnu \
+    FISH_CI_SAN=1 \
+    FISH_TEST_MAX_CONCURRENCY=4 \
     CC=clang \
     CXX=clang++ \
     ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1 \
-    LSAN_OPTIONS=verbosity=0:log_threads=0:use_tls=1:print_suppressions=0:suppressions=/fish-source/build_tools/lsan_suppressions.txt \
-    FISH_CI_SAN=1
+    LSAN_OPTIONS=verbosity=0:log_threads=0:use_tls=1:print_suppressions=0:suppressions=/fish-source/build_tools/lsan_suppressions.txt
+
+ENV FISH_CHECK_LINT=false
 
 CMD . ~/.cargo/env \
-  && ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$(cat /.llvm-version) \
-       /fish_run_tests.sh -DASAN=1 -DRust_CARGO_TARGET=x86_64-unknown-linux-gnu
+    && ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-$(cat /.llvm-version) \
+    && /fish_run_tests.sh

@@ -3,18 +3,15 @@ LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
-ENV CFLAGS="-m32"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
   && apt-get -y install \
     build-essential \
-    cmake \
     g++-multilib \
     gettext \
     git \
     locales \
-    ninja-build \
     pkg-config \
     python3 \
     python3-pexpect \
@@ -38,6 +35,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > /tmp/rustup.sh \
 
 COPY fish_run_tests.sh /
 
+ENV \
+    CFLAGS=-m32 \
+    PCRE2_SYS_STATIC=1 \
+    FISH_CHECK_TARGET_TRIPLE=i686-unknown-linux-gnu
+
+ENV FISH_CHECK_LINT=false
+
 CMD . ~/.cargo/env \
-    && rustup target add i686-unknown-linux-gnu \
-    && /fish_run_tests.sh -DFISH_USE_SYSTEM_PCRE2=OFF -DRust_CARGO_TARGET=i686-unknown-linux-gnu
+    && rustup target add ${FISH_CHECK_TARGET_TRIPLE} \
+    && /fish_run_tests.sh

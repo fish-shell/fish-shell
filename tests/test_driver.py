@@ -119,6 +119,7 @@ async def main():
         "--max-concurrency",
         type=int,
         help="Maximum number of tests to run concurrently. The default is to run all tests concurrently.",
+        default=os.environ.get("FISH_TEST_MAX_CONCURRENCY"),
     )
     argparser.add_argument(
         "fish",

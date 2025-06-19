@@ -48,6 +48,7 @@ pub mod fd_readable_set;
 pub mod fds;
 pub mod flog;
 pub mod fork_exec;
+pub mod fs;
 pub mod function;
 pub mod future;
 pub mod future_feature_flags;

@@ -5,7 +5,7 @@ use std::{
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
     ops::{Deref, DerefMut},
-    os::fd::{AsRawFd, RawFd},
+    os::fd::AsRawFd,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -15,7 +15,7 @@ use super::{HistoryItem, PersistenceMode};
 use crate::{
     common::{str2wcstring, subslice_position, wcs2string},
     flog::FLOG,
-    path::{path_get_config_remoteness, DirRemoteness},
+    path::{path_get_data_remoteness, DirRemoteness},
 };
 
 /// History file types.
@@ -43,11 +43,19 @@ impl MmapRegion {
         Self { ptr, len }
     }
 
-    /// Map a region `[0, len)` from an `fd`.
-    /// Returns [`None`] on failure.
-    pub fn map_file(fd: RawFd, len: usize) -> std::io::Result<Self> {
-        assert!(len != 0);
-        let ptr = unsafe { mmap(std::ptr::null_mut(), len, PROT_READ, MAP_PRIVATE, fd, 0) };
+    /// Map a region `[0, len)` from a locked file.
+    pub fn map_file(file: &File, len: usize) -> std::io::Result<Self> {
+        let ptr = unsafe {
+            mmap(
+                std::ptr::null_mut(),
+                len,
+                PROT_READ,
+                MAP_PRIVATE,
+                file.as_raw_fd(),
+                0,
+            )
+        };
+
         if ptr == MAP_FAILED {
             return Err(std::io::Error::last_os_error());
         }
@@ -57,12 +65,7 @@ impl MmapRegion {
     }
 
     /// Map anonymous memory of a given length.
-    /// Returns [`None`] on failure.
-    pub fn map_anon(len: usize) -> Option<Self> {
-        if len == 0 {
-            return None;
-        }
-
+    pub fn map_anon(len: usize) -> std::io::Result<Self> {
         let ptr = unsafe {
             mmap(
                 std::ptr::null_mut(),
@@ -74,11 +77,11 @@ impl MmapRegion {
             )
         };
         if ptr == MAP_FAILED {
-            return None;
+            return Err(std::io::Error::last_os_error());
         }
 
         // SAFETY: mmap of `len` was successful and returned `ptr`
-        Some(unsafe { Self::new(ptr.cast(), len) })
+        Ok(unsafe { Self::new(ptr.cast(), len) })
     }
 }
 
@@ -113,39 +116,44 @@ pub struct HistoryFileContents {
 }
 
 impl HistoryFileContents {
-    /// Construct a history file contents from a File reference.
-    pub fn create(file: &mut File) -> Option<Self> {
+    /// Construct a history file contents from a [`File`] reference.
+    pub fn create(mut history_file: &File) -> std::io::Result<Self> {
         // Check that the file is seekable, and its size.
-        let len: usize = file.seek(SeekFrom::End(0)).ok()?.try_into().ok()?;
-        if len == 0 {
-            return None;
-        }
-        let map_anon = |file: &mut File, len: usize| {
+        let len: usize = match history_file.seek(SeekFrom::End(0))?.try_into() {
+            Ok(len) => len,
+            Err(err) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Unsupported,
+                    format!("Cannot convert u64 to usize: {err}"),
+                ))
+            }
+        };
+        let map_anon = |mut file: &File, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
-            file.seek(SeekFrom::Start(0)).ok()?;
-            read_zero_padded(&mut *file, region.as_mut()).ok()?;
-            Some(region)
+            file.seek(SeekFrom::Start(0))?;
+            file.read_exact(&mut region)?;
+            Ok(region)
         };
         let region = if should_mmap() {
-            match MmapRegion::map_file(file.as_raw_fd(), len) {
+            match MmapRegion::map_file(history_file, len) {
                 Ok(region) => region,
-                Err(err) if err.raw_os_error() == Some(ENODEV) => {
-                    // Our mmap failed with ENODEV, which means the underlying
-                    // filesystem does not support mapping. Treat this as a hint
-                    // that the filesystem is remote, and so disable locks for
-                    // the history file.
-                    super::ABANDONED_LOCKING.store(true);
-                    // Create an anonymous mapping and read() the file into it.
-                    map_anon(file, len)?
+                Err(err) => {
+                    if err.raw_os_error() == Some(ENODEV) {
+                        // Our mmap failed with ENODEV, which means the underlying
+                        // filesystem does not support mapping.
+                        // Create an anonymous mapping and read() the file into it.
+                        map_anon(history_file, len)?
+                    } else {
+                        return Err(err);
+                    }
                 }
-                Err(_err) => return None,
             }
         } else {
-            map_anon(file, len)?
+            map_anon(history_file, len)?
         };
 
-        region.try_into().ok()
+        region.try_into()
     }
 
     /// Decode an item at a given offset.
@@ -184,13 +192,17 @@ fn infer_file_type(contents: &[u8]) -> HistoryFileType {
 }
 
 impl TryFrom<MmapRegion> for HistoryFileContents {
-    type Error = ();
+    type Error = std::io::Error;
 
-    fn try_from(region: MmapRegion) -> Result<Self, Self::Error> {
+    fn try_from(region: MmapRegion) -> std::io::Result<Self> {
         let type_ = infer_file_type(&region);
         if type_ == HistoryFileType::Fish1_x {
-            FLOG!(error, "unsupported history file format 1.x");
-            return Err(());
+            let error_message = "unsupported history file format 1.x";
+            FLOG!(error, error_message);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                error_message,
+            ));
         }
         Ok(Self { region })
     }
@@ -220,7 +232,7 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
     }
 }
 
-/// Check if we should mmap the fd.
+/// Check if we should mmap the file.
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
     if super::NEVER_MMAP.load() {
@@ -228,23 +240,7 @@ fn should_mmap() -> bool {
     }
 
     // mmap only if we are known not-remote.
-    path_get_config_remoteness() != DirRemoteness::remote
-}
-
-/// Read from `fd` to fill `dest`, zeroing any unused space.
-fn read_zero_padded(file: &mut File, mut dest: &mut [u8]) -> std::io::Result<()> {
-    while !dest.is_empty() {
-        match file.read(dest) {
-            Ok(0) => break,
-            Ok(amt) => {
-                dest = &mut dest[amt..];
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-            Err(err) => return Err(err),
-        }
-    }
-    dest.fill(0u8);
-    Ok(())
+    path_get_data_remoteness() != DirRemoteness::remote
 }
 
 fn replace_all(s: &mut Vec<u8>, needle: &[u8], replacement: &[u8]) {

@@ -1025,8 +1025,8 @@ msgid "Error reading script file '%s':"
 msgstr "Die Script-Datei '%s' kann nicht gelesen werden:"
 
 #, c-format
-msgid "Error when renaming history file: %s"
-msgstr "Fehler beim Umbenennen der Verlaufsdatei: %s"
+msgid "Error when renaming file: %s"
+msgstr ""
 
 #, c-format
 msgid "Error while reading file %ls\n"
@@ -1248,14 +1248,6 @@ msgstr ""
 
 msgid "List or remove functions"
 msgstr "Funktionen auflisten oder entfernen"
-
-#, c-format
-msgid "Locking the history file took too long (%.3f seconds)."
-msgstr "Sperren der Geschichts-Datei dauerte zu lang (%.3f Sekunden)."
-
-#, c-format
-msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr "Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f Sekunden)"
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "Logikoperationen werden nicht unterstützt, nimm stattdessen `test`"
@@ -1519,6 +1511,10 @@ msgstr "Derzeit ausgewertete Funktion stoppen"
 msgid "Stop the innermost loop"
 msgstr "Innerste Schleife beenden"
 
+#
+msgid "Synchronized file access"
+msgstr ""
+
 msgid "Temporarily block delivery of events"
 msgstr "Ereignisweitergabe vorübergehend blockieren"
 
@@ -1624,20 +1620,8 @@ msgid "Unable to locate the %ls directory."
 msgstr ""
 
 #, c-format
-msgid "Unable to open universal variable file '%s': %s"
-msgstr "Die Universal-Variablen-Datei '%s' kann nicht geöffnet werden: %s"
-
-#, c-format
 msgid "Unable to read input file: %s"
 msgstr ""
-
-#, c-format
-msgid "Unable to rename file from '%ls' to '%ls': %s"
-msgstr "Konnte Datei '%ls' nicht zu '%ls' umbenennen: %s"
-
-#, c-format
-msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "Die Universal-Variablen-Datei '%ls' kann nicht geschrieben werden: %s"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
@@ -79191,6 +79175,30 @@ msgstr ""
 
 msgid "~ expansion"
 msgstr ""
+
+#, c-format
+#~ msgid "Error when renaming history file: %s"
+#~ msgstr "Fehler beim Umbenennen der Verlaufsdatei: %s"
+
+#, c-format
+#~ msgid "Locking the history file took too long (%.3f seconds)."
+#~ msgstr "Sperren der Geschichts-Datei dauerte zu lang (%.3f Sekunden)."
+
+#, c-format
+#~ msgid "Locking the universal var file took too long (%.3f seconds)."
+#~ msgstr "Die Datei für universelle Variablen zu sperren dauerte zu lange (%.3f Sekunden)"
+
+#, c-format
+#~ msgid "Unable to open universal variable file '%s': %s"
+#~ msgstr "Die Universal-Variablen-Datei '%s' kann nicht geöffnet werden: %s"
+
+#, c-format
+#~ msgid "Unable to rename file from '%ls' to '%ls': %s"
+#~ msgstr "Konnte Datei '%ls' nicht zu '%ls' umbenennen: %s"
+
+#, c-format
+#~ msgid "Unable to write to universal variables file '%ls': %s"
+#~ msgstr "Die Universal-Variablen-Datei '%ls' kann nicht geschrieben werden: %s"
 
 #~ msgid "builtin\n"
 #~ msgstr "Eingebauter Befehl\n"

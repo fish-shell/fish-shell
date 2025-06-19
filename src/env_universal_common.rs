@@ -1,41 +1,24 @@
 #![allow(clippy::bad_bit_mask)]
 
 use crate::common::{
-    str2wcstring, timef, unescape_string, valid_var_name, wcs2zstring, UnescapeFlags,
-    UnescapeStringStyle,
+    unescape_string, valid_var_name, wcs2zstring, UnescapeFlags, UnescapeStringStyle,
 };
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
-use crate::fallback::fish_mkstemp_cloexec;
-use crate::fds::{open_cloexec, wopen_cloexec};
 use crate::flog::{FLOG, FLOGF};
+use crate::fs::{lock_and_load, rewrite_via_temporary_file, PotentialUpdate};
 use crate::path::path_get_config;
-use crate::path::{path_get_config_remoteness, DirRemoteness};
 use crate::wchar::{decode_byte_from_char, prelude::*};
-use crate::wcstringutil::{join_strings, string_suffixes_string, LineIterator};
-use crate::wutil::{
-    file_id_for_file, file_id_for_path, file_id_for_path_narrow, wdirname, wrealpath, wrename,
-    wstat, wunlink, FileId, INVALID_FILE_ID,
-};
-use errno::{errno, Errno};
-use libc::{EINTR, LOCK_EX};
-use nix::{fcntl::OFlag, sys::stat::Mode};
+use crate::wcstringutil::{join_strings, LineIterator};
+use crate::wutil::{file_id_for_file, file_id_for_path_narrow, wrealpath, FileId, INVALID_FILE_ID};
 use std::collections::hash_map::Entry;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::mem::MaybeUninit;
-use std::os::fd::AsRawFd;
-use std::os::unix::prelude::MetadataExt;
-
-// Pull in the O_EXLOCK constant if it is defined, otherwise set it to 0.
-#[cfg(any(apple, bsd))]
-const O_EXLOCK: OFlag = OFlag::O_EXLOCK;
-
-#[cfg(not(any(apple, bsd)))]
-const O_EXLOCK: OFlag = OFlag::empty();
 
 /// Callback data, reflecting a change in universal variables.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CallbackData {
     // The name of the variable.
     pub key: WString,
@@ -73,14 +56,19 @@ pub struct EnvUniversal {
 
     // Whether it's OK to save. This may be set to false if we discover that a future version of
     // fish wrote the uvars contents.
+    // Only update if last_read_file_id is updated as well.
     ok_to_save: bool,
 
-    // If true, attempt to flock the uvars file.
-    // This latches to false if the file is found to be remote, where flock may hang.
-    do_flock: bool,
-
     // File id from which we last read.
+    // Only update if ok_to_save is updated as well.
     last_read_file_id: FileId,
+}
+
+struct UniversalReadUpdate {
+    export_generation_increment: u64,
+    new_vars: VarTable,
+    callbacks: CallbackDataList,
+    ok_to_save: bool,
 }
 
 impl EnvUniversal {
@@ -93,7 +81,6 @@ impl EnvUniversal {
             modified: Default::default(),
             export_generation: 1,
             ok_to_save: true,
-            do_flock: true,
             last_read_file_id: INVALID_FILE_ID,
         }
     }
@@ -154,90 +141,93 @@ impl EnvUniversal {
 
     /// Initialize this uvars for the default path.
     /// This should be called at most once on any given instance.
-    pub fn initialize(&mut self, callbacks: &mut CallbackDataList) {
-        // Set do_flock to false immediately if the default variable path is on a remote filesystem.
-        // See #7968.
-        if path_get_config_remoteness() == DirRemoteness::remote {
-            self.do_flock = false;
-        }
-        self.initialize_at_path(callbacks, default_vars_path());
+    pub fn initialize(&mut self) -> Option<CallbackDataList> {
+        self.initialize_at_path(default_vars_path())
     }
 
     /// Initialize a this uvars for a given path.
     /// This is exposed for testing only.
-    pub fn initialize_at_path(&mut self, callbacks: &mut CallbackDataList, path: WString) {
+    pub fn initialize_at_path(&mut self, path: WString) -> Option<CallbackDataList> {
         if path.is_empty() {
-            return;
+            return None;
         }
         assert!(!self.initialized(), "Already initialized");
         self.vars_path = path;
 
-        if self.load_from_path(callbacks) {
-            // Successfully loaded from our normal path.
-        }
+        self.load_from_path()
     }
 
-    /// Reads and writes variables at the correct path. Returns true if modified variables were
-    /// written.
-    pub fn sync(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    /// Reads and writes variables at the correct path.
+    /// If there is an existing variables file with an unknown format, parsing it is attempted,
+    /// but it will not be overwritten.
+    /// Returns whether data was read, and the callbacks.
+    pub fn sync(&mut self) -> (bool, Option<CallbackDataList>) {
         if !self.initialized() {
-            return false;
+            return (false, None);
         }
 
         FLOG!(uvar_file, "universal log sync");
-        // Our saving strategy:
-        //
-        // 1. Open the file, producing an fd.
-        // 2. Lock the file (may be combined with step 1 on systems with O_EXLOCK)
-        // 3. After taking the lock, check if the file at the given path is different from what we
-        // opened. If so, start over.
-        // 4. Read from the file. This can be elided if its dev/inode is unchanged since the last read
-        // 5. Open an adjacent temporary file
-        // 6. Write our changes to an adjacent file
-        // 7. Move the adjacent file into place via rename. This is assumed to be atomic.
-        // 8. Release the lock and close the file
-        //
-        // Consider what happens if Process 1 and 2 both do this simultaneously. Can there be data loss?
-        // Process 1 opens the file and then attempts to take the lock. Now, either process 1 will see
-        // the original file, or process 2's new file. If it sees the new file, we're OK: it's going to
-        // read from the new file, and so there's no data loss. If it sees the old file, then process 2
-        // must have locked it (if process 1 locks it, switch their roles). The lock will block until
-        // process 2 reaches step 7; at that point process 1 will reach step 2, notice that the file has
-        // changed, and then start over.
-        //
-        // It's possible that the underlying filesystem does not support locks (lockless NFS). In this
-        // case, we risk data loss if two shells try to write their universal variables simultaneously.
-        // In practice this is unlikely, since uvars are usually written interactively.
-        //
-        // Prior versions of fish used a hard link scheme to support file locking on lockless NFS. The
-        // risk here is that if the process crashes or is killed while holding the lock, future
-        // instances of fish will not be able to obtain it. This seems to be a greater risk than that of
-        // data loss on lockless NFS. Users who put their home directory on lockless NFS are playing
-        // with fire anyways.
         // If we have no changes, just load.
         if self.modified.is_empty() {
-            self.load_from_path_narrow(callbacks);
+            let callbacks = self.load_from_path_narrow();
             FLOG!(uvar_file, "universal log no modifications");
-            return false;
+            return (false, callbacks);
         }
-
-        let directory = wdirname(&self.vars_path).to_owned();
 
         FLOG!(uvar_file, "universal log performing full sync");
 
-        // Open the file.
-        let Some(mut vars_file) = self.open_and_acquire_lock() else {
-            FLOG!(uvar_file, "universal log open_and_acquire_lock() failed");
-            return false;
+        let rewrite = |old_file: &File,
+                       tmp_file: &mut File|
+         -> std::io::Result<PotentialUpdate<Option<UniversalReadUpdate>>> {
+            match self.load_from_file(old_file) {
+                Some(potential_update) => {
+                    if potential_update.do_save {
+                        let contents = Self::serialize_with_vars(&potential_update.data.new_vars);
+                        tmp_file.write_all(&contents)?;
+                    }
+                    Ok(PotentialUpdate {
+                        do_save: potential_update.do_save,
+                        data: Some(potential_update.data),
+                    })
+                }
+                None => {
+                    if self.ok_to_save {
+                        let contents = Self::serialize_with_vars(&self.vars);
+                        tmp_file.write_all(&contents)?;
+                    }
+                    Ok(PotentialUpdate {
+                        do_save: self.ok_to_save,
+                        data: None,
+                    })
+                }
+            }
         };
 
-        // Read from it.
-        self.load_from_file(&mut vars_file, callbacks);
-
-        if self.ok_to_save {
-            self.save(&directory)
-        } else {
-            true
+        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
+        match rewrite_via_temporary_file(&real_path, rewrite) {
+            Ok((file_id, potential_update)) => {
+                self.last_read_file_id = file_id;
+                self.ok_to_save = potential_update.do_save;
+                self.modified.clear();
+                match potential_update.data {
+                    Some(UniversalReadUpdate {
+                        export_generation_increment,
+                        new_vars,
+                        callbacks,
+                        ok_to_save,
+                    }) => {
+                        assert_eq!(potential_update.do_save, ok_to_save);
+                        self.export_generation += export_generation_increment;
+                        self.vars = new_vars;
+                        (true, Some(callbacks))
+                    }
+                    None => (true, None),
+                }
+            }
+            Err(e) => {
+                FLOG!(uvar_file, "universal log sync failed:", e);
+                (false, None)
+            }
         }
     }
 
@@ -364,38 +354,66 @@ impl EnvUniversal {
         !self.vars_path.is_empty()
     }
 
-    fn load_from_path(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    fn load_from_path(&mut self) -> Option<CallbackDataList> {
         self.narrow_vars_path = wcs2zstring(&self.vars_path);
-        self.load_from_path_narrow(callbacks)
+        self.load_from_path_narrow()
     }
 
-    fn load_from_path_narrow(&mut self, callbacks: &mut CallbackDataList) -> bool {
+    fn load_from_path_narrow(&mut self) -> Option<CallbackDataList> {
         // Check to see if the file is unchanged. We do this again in load_from_file, but this avoids
         // opening the file unnecessarily.
         if self.last_read_file_id != INVALID_FILE_ID
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
             FLOG!(uvar_file, "universal log sync elided based on fast stat()");
-            return true;
+            return None;
         }
 
-        let Ok(mut file) = open_cloexec(&self.narrow_vars_path, OFlag::O_RDONLY, Mode::empty())
-        else {
-            return false;
-        };
-
         FLOG!(uvar_file, "universal log reading from file");
-        self.load_from_file(&mut file, callbacks);
-        true
+        match lock_and_load(&self.vars_path, |f| {
+            Ok(self.load_from_file(f).map(|update| update.data))
+        }) {
+            Ok((
+                file_id,
+                Some(UniversalReadUpdate {
+                    export_generation_increment,
+                    new_vars,
+                    callbacks,
+                    ok_to_save,
+                }),
+            )) => {
+                self.export_generation += export_generation_increment;
+                self.vars = new_vars;
+                self.ok_to_save = ok_to_save;
+                self.last_read_file_id = file_id;
+                Some(callbacks)
+            }
+            Ok((_, None)) => {
+                // WARNING: Do not update self.file_id here, as this would interfere with
+                // self.ok_to_save.
+                None
+            }
+            Err(e) => {
+                FLOG!(uvar_file, "Failed to load from universal variable file:", e);
+                None
+            }
+        }
     }
 
-    // Load environment variables from the opened [`File`] `file`. It must be mutable because we
-    // will read from the underlying fd.
-    fn load_from_file(&mut self, file: &mut File, callbacks: &mut CallbackDataList) {
+    /// Load environment variables from the [`file`](`File`).
+    /// If the file has not been modified since the last read, [`None`] is returned.
+    /// In this case, `self.ok_to_save` needs to be consulted to decide whether to rewrite the file.
+    /// Otherwise, the [`Some`] variant contains updated data and indicates whether the file should
+    /// be rewritten..
+    // IMPORTANT: Callers of this code assume that a return value of None means that the file id has
+    // not changed. Do not return None in other situations without modifying the callers
+    // accordingly. Otherwise, problems with self.ok_to_save are expected to occur.
+    fn load_from_file(&self, file: &File) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         // Get the dev / inode.
         let current_file_id = file_id_for_file(file);
         if current_file_id == self.last_read_file_id {
             FLOG!(uvar_file, "universal log sync elided based on fstat()");
+            None
         } else {
             // Read a variables table from the file.
             let mut new_vars = VarTable::new();
@@ -403,176 +421,36 @@ impl EnvUniversal {
 
             // Hacky: if the read format is in the future, avoid overwriting the file: never try to
             // save.
-            if format == UvarFormat::future {
-                self.ok_to_save = false;
-            }
+            let do_save = format != UvarFormat::future;
 
             // Announce changes and update our exports generation.
-            self.generate_callbacks_and_update_exports(&new_vars, callbacks);
+            let (export_generation_increment, callbacks) =
+                self.generate_callbacks_and_update_exports(&new_vars);
 
             // Acquire the new variables.
-            self.acquire_variables(new_vars);
-            self.last_read_file_id = current_file_id;
+            self.acquire_variables(&mut new_vars);
+            Some(PotentialUpdate {
+                do_save,
+                data: UniversalReadUpdate {
+                    export_generation_increment,
+                    new_vars,
+                    callbacks,
+                    ok_to_save: do_save,
+                },
+            })
         }
     }
 
-    // Functions concerned with saving.
-    fn open_and_acquire_lock(&mut self) -> Option<File> {
-        // Attempt to open the file for reading at the given path, atomically acquiring a lock. On BSD,
-        // we can use O_EXLOCK. On Linux, we open the file, take a lock, and then compare fstat() to
-        // stat(); if they match, it means that the file was not replaced before we acquired the lock.
-        //
-        // We pass O_RDONLY with O_CREAT; this creates a potentially empty file. We do this so that we
-        // have something to lock on.
-        let mut locked_by_open = false;
-        let mut flags = OFlag::O_RDWR | OFlag::O_CREAT;
-
-        if !O_EXLOCK.is_empty() && self.do_flock {
-            flags |= O_EXLOCK;
-            locked_by_open = true;
-        }
-
-        loop {
-            let mut file =
-                match wopen_cloexec(&self.vars_path, flags, Mode::from_bits_truncate(0o644)) {
-                    Ok(file) => file,
-                    Err(nix::Error::EINTR) => continue,
-                    Err(err) => {
-                        if !O_EXLOCK.is_empty() {
-                            if flags.contains(O_EXLOCK)
-                                && [nix::Error::ENOTSUP, nix::Error::EOPNOTSUPP].contains(&err)
-                            {
-                                // Filesystem probably does not support locking. Give up on locking.
-                                // Note that on Linux the two errno symbols have the same value but on BSD they're
-                                // different.
-                                flags &= !O_EXLOCK;
-                                self.do_flock = false;
-                                locked_by_open = false;
-                                continue;
-                            }
-                        }
-                        FLOG!(
-                            error,
-                            wgettext_fmt!(
-                                "Unable to open universal variable file '%s': %s",
-                                &self.vars_path,
-                                err.to_string()
-                            )
-                        );
-                        return None;
-                    }
-                };
-
-            // Lock if we want to lock and open() didn't do it for us.
-            // If flock fails, give up on locking forever.
-            if self.do_flock && !locked_by_open {
-                if !flock_uvar_file(&mut file) {
-                    self.do_flock = false;
-                }
-            }
-
-            // Hopefully we got the lock. However, it's possible the file changed out from under us
-            // while we were waiting for the lock. Make sure that didn't happen.
-            if file_id_for_file(&file) != file_id_for_path(&self.vars_path) {
-                // Oops, it changed! Try again.
-                drop(file);
-            } else {
-                return Some(file);
-            }
-        }
-    }
-
-    fn open_temporary_file(
-        &mut self,
-        directory: &wstr,
-        out_path: &mut WString,
-    ) -> Result<File, Errno> {
-        // Create and open a temporary file for writing within the given directory. Try to create a
-        // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
-        // This should almost always succeed on the first try.
-        assert!(!string_suffixes_string(L!("/"), directory));
-
-        let mut attempt = 0;
-        let tmp_name_template = directory.to_owned() + L!("/fishd.tmp.XXXXXX");
-        let result = loop {
-            attempt += 1;
-            let result = fish_mkstemp_cloexec(wcs2zstring(&tmp_name_template));
-            match (result, attempt) {
-                (Ok(r), _) => break r,
-                (Err(e), 10) => {
-                    FLOG!(
-                        error,
-                        // We previously used to log a copy of the buffer we expected mk(o)stemp to
-                        // update with the new path, but mkstemp(3) says the contents of the buffer
-                        // are undefined in case of EEXIST, but left unchanged in case of EINVAL. So
-                        // just log the original template we pass in to the function instead.
-                        wgettext_fmt!(
-                            "Unable to create temporary file '%ls': %s",
-                            &tmp_name_template,
-                            e.to_string()
-                        )
-                    );
-                    return Err(e);
-                }
-                _ => continue,
-            }
-        };
-
-        *out_path = str2wcstring(result.1.as_bytes());
-        Ok(result.0)
-    }
-
-    /// Writes our state to the fd. path is provided only for error reporting.
-    fn write_to_file(&mut self, file: &mut File, path: &wstr) -> std::io::Result<()> {
-        let contents = Self::serialize_with_vars(&self.vars);
-
-        let res = file.write_all(&contents);
-        match res.as_ref() {
-            Ok(()) => {
-                // Since we just wrote out this file, it matches our internal state; pretend we read from it.
-                self.last_read_file_id = file_id_for_file(file);
-            }
-            Err(err) => {
-                let error = Errno(err.raw_os_error().unwrap());
-                FLOG!(
-                    error,
-                    wgettext_fmt!(
-                        "Unable to write to universal variables file '%ls': %s",
-                        path,
-                        error.to_string()
-                    ),
-                );
-            }
-        }
-
-        // We don't close the file.
-        res
-    }
-
-    fn move_new_vars_file_into_place(&mut self, src: &wstr, dst: &wstr) -> bool {
-        let ret = wrename(src, dst);
-        if ret != 0 {
-            let error = errno();
-            FLOG!(
-                error,
-                wgettext_fmt!(
-                    "Unable to rename file from '%ls' to '%ls': %s",
-                    src,
-                    dst,
-                    error.to_string()
-                )
-            );
-        }
-        ret == 0
-    }
-
-    // Given a variable table, generate callbacks representing the difference between our vars and
-    // the new vars. Also update our exports generation count as necessary.
+    /// Given a variable table, generate callbacks representing the difference between our vars and
+    /// the new vars.
+    /// Returns by how much the exports generation count should be incremented, as well as a
+    /// callback list.
     fn generate_callbacks_and_update_exports(
-        &mut self,
+        &self,
         new_vars: &VarTable,
-        callbacks: &mut CallbackDataList,
-    ) {
+    ) -> (u64, CallbackDataList) {
+        let mut export_generation_increment = 0;
+        let mut callbacks = CallbackDataList::new();
         // Construct callbacks for erased values.
         for (key, value) in &self.vars {
             // Skip modified values.
@@ -587,7 +465,7 @@ impl EnvUniversal {
                     val: None,
                 });
                 if value.exports() {
-                    self.export_generation += 1;
+                    export_generation_increment += 1;
                 }
             }
         }
@@ -606,7 +484,7 @@ impl EnvUniversal {
             let export_changed = old_exports != new_entry.exports();
             let value_changed = existing.is_some_and(|v| v != new_entry);
             if export_changed || value_changed {
-                self.export_generation += 1;
+                export_generation_increment += 1;
             }
             if existing.is_none() || export_changed || value_changed {
                 // Value is set for the first time, or has changed.
@@ -616,11 +494,11 @@ impl EnvUniversal {
                 });
             }
         }
+        (export_generation_increment, callbacks)
     }
 
-    // Given a variable table, copy unmodified values into self.
-    fn acquire_variables(&mut self, mut vars_to_acquire: VarTable) {
-        // Copy modified values from existing vars to vars_to_acquire.
+    /// Copy modified values from existing vars to `vars_to_acquire`.
+    fn acquire_variables(&self, vars_to_acquire: &mut VarTable) {
         for key in &self.modified {
             match self.vars.get(key) {
                 None => {
@@ -628,15 +506,11 @@ impl EnvUniversal {
                     vars_to_acquire.remove(key);
                 }
                 Some(src) => {
-                    // The value has been modified. Copy it over. Note we can destructively modify the
-                    // source entry in vars since we are about to get rid of this->vars entirely.
+                    // The value has been modified. Copy it over.
                     vars_to_acquire.insert(key.clone(), src.clone());
                 }
             }
         }
-
-        // We have constructed all the callbacks and updated vars_to_acquire. Acquire it!
-        self.vars = vars_to_acquire;
     }
 
     fn populate_1_variable(
@@ -746,81 +620,6 @@ impl EnvUniversal {
         }
 
         Self::populate_variables(&contents, vars)
-    }
-
-    // Write our file contents.
-    // Return true on success, false on failure.
-    fn save(&mut self, directory: &wstr) -> bool {
-        use crate::common::ScopeGuard;
-        assert!(self.ok_to_save, "It's not OK to save");
-
-        // Open adjacent temporary file.
-        let mut private_file_path = WString::new();
-        let Ok(mut private_file) = self.open_temporary_file(directory, &mut private_file_path)
-        else {
-            return false;
-        };
-        // unlink pfp upon failure. In case of success, it (already) won't exist.
-        let delete_pfp = ScopeGuard::new(private_file_path, |path| {
-            wunlink(&path);
-        });
-        let private_file_path = &delete_pfp;
-
-        // Write to it.
-        if let Err(e) = self.write_to_file(&mut private_file, private_file_path) {
-            FLOG!(uvar_file, "universal log write_to_file() failed:", e);
-            return false;
-        }
-
-        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
-
-        // Ensure we maintain ownership and permissions (#2176).
-        if let Ok(md) = wstat(&real_path) {
-            // TODO(MSRV): Consider replacing with std::os::unix::fs::fchown when MSRV >= 1.73
-            if unsafe { libc::fchown(private_file.as_raw_fd(), md.uid(), md.gid()) } == -1 {
-                FLOG!(uvar_file, "universal log fchown() failed:", errno());
-            }
-            if let Err(e) = private_file.set_permissions(md.permissions()) {
-                FLOG!(uvar_file, "universal log setting permissions failed:", e);
-            }
-        }
-
-        // Linux by default stores the mtime with low precision, low enough that updates that occur
-        // in quick succession may result in the same mtime (even the nanoseconds field). So
-        // manually set the mtime of the new file to a high-precision clock. Note that this is only
-        // necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
-        // platforms we tend to notice the file has changed due to a different inode (or file size!)
-        //
-        // The current time within the Linux kernel is cached, and generally only updated on a timer
-        // interrupt. So if the timer interrupt is running at 10 milliseconds, the cached time will
-        // only be updated once every 10 milliseconds.
-        //
-        // It's probably worth finding a simpler solution to this. The tests ran into this, but it's
-        // unlikely to affect users.
-        #[cfg(any(target_os = "linux", target_os = "android"))]
-        {
-            let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
-            times[0].tv_nsec = libc::UTIME_OMIT; // don't change ctime
-            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } == 0 {
-                unsafe {
-                    libc::futimens(private_file.as_raw_fd(), &times[0]);
-                }
-            }
-        }
-
-        // Apply new file.
-        if !self.move_new_vars_file_into_place(private_file_path, &real_path) {
-            FLOG!(
-                uvar_file,
-                "universal log move_new_vars_file_into_place() failed"
-            );
-            return false;
-        }
-
-        // Success at last. All of our modified variables have now been written out.
-        self.modified.clear();
-        ScopeGuard::cancel(delete_pfp);
-        true
     }
 }
 
@@ -1000,29 +799,6 @@ fn encode_serialized(vals: &[WString]) -> WString {
         return ENV_NULL.to_owned();
     }
     join_strings(vals, UVAR_ARRAY_SEP)
-}
-
-/// Try locking the file.
-/// Return true on success, false on error.
-fn flock_uvar_file(file: &mut File) -> bool {
-    let start_time = timef();
-    while unsafe { libc::flock(file.as_raw_fd(), LOCK_EX) } == -1 {
-        if errno().0 != EINTR {
-            return false; // do nothing per issue #2149
-        }
-    }
-    let duration = timef() - start_time;
-    if duration > 0.25 {
-        FLOG!(
-            warning,
-            wgettext_fmt!(
-                "Locking the universal var file took too long (%.3f seconds).",
-                duration
-            )
-        );
-        return false;
-    }
-    true
 }
 
 fn skip_spaces(mut s: &wstr) -> &wstr {

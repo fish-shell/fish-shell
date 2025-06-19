@@ -1017,8 +1017,8 @@ msgid "Error reading script file '%s':"
 msgstr "读取脚本文件 '%s'出错: "
 
 #, c-format
-msgid "Error when renaming history file: %s"
-msgstr "重命名历史文件时出错:%s"
+msgid "Error when renaming file: %s"
+msgstr ""
 
 #, c-format
 msgid "Error while reading file %ls\n"
@@ -1240,14 +1240,6 @@ msgstr ""
 
 msgid "List or remove functions"
 msgstr "列出或移除函数"
-
-#, c-format
-msgid "Locking the history file took too long (%.3f seconds)."
-msgstr "锁定历史文件花费了太长时间(%.3f 秒)."
-
-#, c-format
-msgid "Locking the universal var file took too long (%.3f seconds)."
-msgstr "锁定 通用 var 文件花费了太长时间 (%.3f 秒) ."
 
 msgid "Logical operations are not supported, use `test` instead"
 msgstr "不支持逻辑操作,使用`test`替代"
@@ -1511,6 +1503,10 @@ msgstr "停止当前求值的函数"
 msgid "Stop the innermost loop"
 msgstr "停止最内层的循环"
 
+#
+msgid "Synchronized file access"
+msgstr ""
+
 msgid "Temporarily block delivery of events"
 msgstr "Temporarily block delivery of events"
 
@@ -1616,20 +1612,8 @@ msgid "Unable to locate the %ls directory."
 msgstr "无法找到 %ls 目录 ."
 
 #, c-format
-msgid "Unable to open universal variable file '%s': %s"
-msgstr "无法打开通用变量文件'%s': %s"
-
-#, c-format
 msgid "Unable to read input file: %s"
 msgstr "无法读取输入文件:%s"
-
-#, c-format
-msgid "Unable to rename file from '%ls' to '%ls': %s"
-msgstr "无法将文件从 '%ls' 重命名为 '%ls':%s"
-
-#, c-format
-msgid "Unable to write to universal variables file '%ls': %s"
-msgstr "无法写入通用变量文件 '%ls':%s"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "未打开的括号' ' "
@@ -79186,6 +79170,30 @@ msgstr "缩放"
 
 msgid "~ expansion"
 msgstr "~ 扩大"
+
+#, c-format
+#~ msgid "Error when renaming history file: %s"
+#~ msgstr "重命名历史文件时出错:%s"
+
+#, c-format
+#~ msgid "Locking the history file took too long (%.3f seconds)."
+#~ msgstr "锁定历史文件花费了太长时间(%.3f 秒)."
+
+#, c-format
+#~ msgid "Locking the universal var file took too long (%.3f seconds)."
+#~ msgstr "锁定 通用 var 文件花费了太长时间 (%.3f 秒) ."
+
+#, c-format
+#~ msgid "Unable to open universal variable file '%s': %s"
+#~ msgstr "无法打开通用变量文件'%s': %s"
+
+#, c-format
+#~ msgid "Unable to rename file from '%ls' to '%ls': %s"
+#~ msgstr "无法将文件从 '%ls' 重命名为 '%ls':%s"
+
+#, c-format
+#~ msgid "Unable to write to universal variables file '%ls': %s"
+#~ msgstr "无法写入通用变量文件 '%ls':%s"
 
 #~ msgid "builtin\n"
 #~ msgstr "内建\n"

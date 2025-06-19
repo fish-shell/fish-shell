@@ -43,16 +43,6 @@ set -l extract
 set -l po
 set -l mo
 
-function cleanup_exit
-    set -l exit_status $status
-
-    if set -g --query tmpdir
-        rm -r $tmpdir
-    end
-
-    exit $exit_status
-end
-
 argparse --exclusive 'no-mo,only-mo,dry-run' no-mo only-mo dry-run use-existing-template= -- $argv
 or exit $status
 
@@ -92,6 +82,19 @@ if set -l --query _flag_only_mo
     set -l --erase po
 end
 
+# Protect from externally set $tmpdir leaking into this script.
+set -g --erase tmpdir
+
+function cleanup_exit
+    set -l exit_status $status
+
+    if set -g --query tmpdir
+        rm -r $tmpdir
+    end
+
+    exit $exit_status
+end
+
 if set -l --query extract
     set -l xgettext_args
     if set -l --query _flag_use_existing_template
@@ -101,8 +104,6 @@ if set -l --query extract
     or exit 1
 end
 
-# Protect from externally set $tmpdir leaking into this script.
-set -g --erase tmpdir
 if set -l --query _flag_dry_run
     # On a dry run, we do not modify po/ but write to a temporary directory instead and check if
     # there is a difference between po/ and the tmpdir after re-generating the PO files.

@@ -36,7 +36,7 @@
 set -gx LC_ALL C.UTF-8
 
 set -l build_tools (status dirname)
-set -l template_file $build_tools/../po/template.po
+set -g tmpdir
 set -l po_dir $build_tools/../po
 
 set -l extract
@@ -45,9 +45,6 @@ set -l mo
 
 argparse --exclusive 'no-mo,only-mo,dry-run' no-mo only-mo dry-run use-existing-template= -- $argv
 or exit $status
-
-# Make sure that the template file is not included in $po_files.
-rm $template_file 2>/dev/null
 
 if test -z $argv[1]
     # Update everything if not specified otherwise.
@@ -82,11 +79,14 @@ if set -l --query _flag_only_mo
     set -l --erase po
 end
 
+set -g template_file (mktemp)
 # Protect from externally set $tmpdir leaking into this script.
 set -g tmpdir
 
 function cleanup_exit
     set -l exit_status $status
+
+    rm $template_file
 
     if set -g --query tmpdir[1]
         rm -r $tmpdir
@@ -101,7 +101,7 @@ if set -l --query extract
         set xgettext_args --use-existing-template=$_flag_use_existing_template
     end
     $build_tools/fish_xgettext.fish $xgettext_args >$template_file
-    or exit 1
+    or cleanup_exit
 end
 
 if set -l --query _flag_dry_run
@@ -137,9 +137,7 @@ for po_file in $po_files
     end
 end
 
-rm $template_file
-
-if set --query tmpdir[1]
+if set -g --query tmpdir[1]
     diff -ur $po_dir $tmpdir
     or cleanup_exit
 end

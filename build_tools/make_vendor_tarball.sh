@@ -11,15 +11,15 @@ set -e
 # We need GNU tar as that supports the --mtime and --transform options
 TAR=notfound
 for try in tar gtar gnutar; do
-  if $try -Pcf /dev/null --mtime now /dev/null >/dev/null 2>&1; then
-    TAR=$try
-    break
-  fi
+    if $try -Pcf /dev/null --mtime now /dev/null >/dev/null 2>&1; then
+        TAR=$try
+        break
+    fi
 done
 
 if [ "$TAR" = "notfound" ]; then
-  echo 'No suitable tar (supporting --mtime) found as tar/gtar/gnutar in PATH'
-  exit 1
+    echo 'No suitable tar (supporting --mtime) found as tar/gtar/gnutar in PATH'
+    exit 1
 fi
 
 # Get the current directory, which we'll use for telling Cargo where to find the sources

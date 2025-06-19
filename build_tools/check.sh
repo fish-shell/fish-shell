@@ -3,9 +3,9 @@
 set -ex
 
 cleanup () {
-  if [ -n "$template_file" ] && [ -e "$template_file" ]; then
-    rm "$template_file"
-  fi
+    if [ -n "$template_file" ] && [ -e "$template_file" ]; then
+        rm "$template_file"
+    fi
 }
 
 trap cleanup EXIT INT TERM HUP

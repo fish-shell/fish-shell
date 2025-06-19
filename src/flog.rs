@@ -1,3 +1,4 @@
+use crate::common::wcs2string;
 use crate::wchar::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::wutil::write_to_fd;
@@ -151,30 +152,68 @@ pub mod categories {
 /// and let Rust figure it out.
 /// Clients can opt a Debug type into Floggable by implementing FloggableDebug:
 ///    impl FloggableDebug for MyType {}
-pub trait FloggableDisplay {
+pub trait FloggableDisplay: std::fmt::Display {
     /// Return a string representation of this thing.
-    fn to_flog_str(&self) -> String;
-}
-
-impl<T: std::fmt::Display> FloggableDisplay for T {
-    fn to_flog_str(&self) -> String {
-        self.to_string()
+    fn to_flog_str(&self) -> Vec<u8> {
+        self.to_string().into_bytes()
     }
 }
 
+// Special handling for `WString` to decode PUA codepoints back into the original bytes.
+impl FloggableDisplay for WString {
+    fn to_flog_str(&self) -> Vec<u8> {
+        wcs2string(self)
+    }
+}
+
+impl FloggableDisplay for &wstr {
+    fn to_flog_str(&self) -> Vec<u8> {
+        wcs2string(self)
+    }
+}
+
+impl FloggableDisplay for LocalizableString {
+    fn to_flog_str(&self) -> Vec<u8> {
+        self.localize().to_flog_str()
+    }
+}
+
+macro_rules! default_flog_impls {
+    ($( $t:ty ),* ) => {
+        $(
+            impl FloggableDisplay for $t {}
+        )*
+    };
+}
+
+macro_rules! default_flog_impls_lifetimes {
+    ($( $t:ty ),* ) => {
+        $(
+            impl<'a> FloggableDisplay for $t {}
+        )*
+    };
+}
+
+default_flog_impls! {
+    String, &str, u8, u16, u32, u64, usize, i8, i16, i32, i64, isize, f32, f64, bool, char, std::io::Error, nix::errno::Errno, errno::Errno, std::backtrace::Backtrace, crate::key::Key
+}
+default_flog_impls_lifetimes! {
+    std::path::Display<'a>, std::borrow::Cow<'a, str>
+}
+
 pub trait FloggableDebug: std::fmt::Debug {
-    fn to_flog_str(&self) -> String {
-        format!("{:?}", self)
+    fn to_flog_str(&self) -> Vec<u8> {
+        format!("{:?}", self).into_bytes()
     }
 }
 
 /// Write to our FLOG file.
-pub fn flog_impl(s: &str) {
+pub fn flog_impl(s: &[u8]) {
     let fd = get_flog_file_fd();
     if fd < 0 {
         return;
     }
-    let _ = write_to_fd(s.as_bytes(), fd);
+    let _ = write_to_fd(s, fd);
 }
 
 /// The entry point for flogging.
@@ -183,17 +222,19 @@ macro_rules! FLOG {
     ($category:ident, $($elem:expr),+ $(,)*) => {
         if $crate::flog::categories::$category.enabled.load(std::sync::atomic::Ordering::Relaxed) {
             #[allow(unused_imports)]
-            use $crate::flog::{FloggableDisplay, FloggableDebug};
-            let mut vs = vec![format!("{}:", $crate::flog::categories::$category.name)];
+            use $crate::{flog::{FloggableDisplay, FloggableDebug}};
+            let mut output: Vec<u8> = Vec::new();
+            output.extend($crate::flog::categories::$category.name.to_flog_str());
+            output.push(b':');
             $(
                 {
-                   vs.push($elem.to_flog_str())
+                    output.push(b' ');
+                    output.extend($elem.to_flog_str());
                 }
             )+
             // We don't use locking here so we have to append our own newline to avoid multiple writes.
-            let mut v = vs.join(" ");
-            v.push('\n');
-            $crate::flog::flog_impl(&v);
+            output.push(b'\n');
+            $crate::flog::flog_impl(&output);
         }
     };
 }

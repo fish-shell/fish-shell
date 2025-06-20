@@ -87,11 +87,8 @@ use crate::input_common::CursorPositionQuery;
 use crate::input_common::ImplicitEvent;
 use crate::input_common::QueryResponseEvent;
 use crate::input_common::TerminalQuery;
-use crate::input_common::IN_DVTM;
-use crate::input_common::IN_MIDNIGHT_COMMANDER;
 use crate::input_common::{
-    terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData,
-    ReadlineCmd,
+    terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData, ReadlineCmd,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -150,6 +147,7 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
+use crate::tty_handoff::{initialize_tty_metadata, tty_metadata};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
@@ -264,10 +262,8 @@ pub(crate) fn initial_query(
     vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
-        let query = if is_dumb()
-            || IN_MIDNIGHT_COMMANDER.load()
-            || IN_DVTM.load()
-            || !isatty(STDOUT_FILENO)
+        let md = tty_metadata();
+        let query = if is_dumb() || md.in_midnight_commander || md.in_dvtm || !isatty(STDOUT_FILENO)
         {
             None
         } else {
@@ -4495,7 +4491,7 @@ fn reader_interactive_init(parser: &Parser) {
         .vars()
         .set_one(L!("_"), EnvMode::GLOBAL, L!("fish").to_owned());
 
-    terminal_protocol_hacks();
+    initialize_tty_metadata();
 }
 
 /// Destroy data for interactive use.

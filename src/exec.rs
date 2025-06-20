@@ -38,12 +38,12 @@ use crate::proc::Pid;
 use crate::proc::{
     hup_jobs, is_interactive_session, jobs_requiring_warning_on_exit, no_exec,
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
-    TtyTransfer,
 };
 use crate::reader::{reader_run_count, safe_restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
+use crate::tty_handoff::TtyHandoff;
 use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
@@ -110,7 +110,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     let deferred_process = get_deferred_process(job);
 
     // We may want to transfer tty ownership to the pgroup leader.
-    let mut transfer = TtyTransfer::new();
+    let mut handoff = TtyHandoff::new();
 
     // This loop loops over every process_t in the job, starting it as appropriate. This turns out
     // to be rather complex, since a process_t can be one of many rather different things.
@@ -175,7 +175,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 
         // Transfer tty?
         if p.leads_pgrp && job.group().wants_terminal() {
-            transfer.to_job_group(job.group.as_ref().unwrap());
+            handoff.to_job_group(job.group.as_ref().unwrap());
         }
     }
     drop(pipe_next_read);
@@ -236,9 +236,9 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     if job.is_stopped() {
-        transfer.save_tty_modes();
+        handoff.save_tty_modes();
     }
-    transfer.reclaim();
+    handoff.reclaim();
     true
 }
 

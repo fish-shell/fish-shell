@@ -5,7 +5,7 @@ use crate::proc::Pid;
 use crate::reader::reader_write_title;
 use crate::tokenizer::tok_command;
 use crate::wutil::perror;
-use crate::{env::EnvMode, proc::TtyTransfer};
+use crate::{env::EnvMode, tty_handoff::TtyHandoff};
 use libc::{STDIN_FILENO, TCSADRAIN};
 
 use super::prelude::*;
@@ -155,16 +155,16 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             }
         }
     }
-    let mut transfer = TtyTransfer::new();
-    transfer.to_job_group(job.group.as_ref().unwrap());
+    let mut handoff = TtyHandoff::new();
+    handoff.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();
     if resumed {
         job.continue_job(parser);
     }
     if job.is_stopped() {
-        transfer.save_tty_modes();
+        handoff.save_tty_modes();
     }
-    transfer.reclaim();
+    handoff.reclaim();
     if resumed {
         Ok(SUCCESS)
     } else {

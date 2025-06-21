@@ -3,7 +3,7 @@ name: make fish_run_tests
 on: [push, pull_request]
 
 env:
-  CTEST_PARALLEL_LEVEL: "4"
+  FISH_TEST_MAX_CONCURRENCY: "4"
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
 
 permissions:

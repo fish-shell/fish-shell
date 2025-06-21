@@ -6,8 +6,6 @@ use crate::common::{wcs2osstring, wcs2zstring};
 use crate::env::{EnvMode, EnvStack, Environment};
 use crate::expand::{expand_tilde, HOME_DIRECTORY};
 use crate::flog::{FLOG, FLOGF};
-#[cfg(not(target_os = "linux"))]
-use crate::libc::{MNT_LOCAL, ST_LOCAL};
 use crate::wchar::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use errno::{errno, set_errno, Errno};
@@ -705,25 +703,49 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
     }
     #[cfg(not(target_os = "linux"))]
     {
-        // ST_LOCAL is a flag to statvfs, which is itself standardized.
-        // In practice the only system to define it is NetBSD.
-        let local_flag = ST_LOCAL() | MNT_LOCAL();
-        if local_flag != 0 {
+        fn remoteness_via_statfs<StatFS, Flags>(
+            statfn: unsafe extern "C" fn(*const i8, *mut StatFS) -> libc::c_int,
+            flagsfn: fn(&StatFS) -> Flags,
+            is_local_flag: u64,
+            path: &std::ffi::CStr,
+        ) -> DirRemoteness
+        where
+            u64: From<Flags>,
+        {
+            if is_local_flag == 0 {
+                return DirRemoteness::unknown;
+            }
             let mut buf = MaybeUninit::uninit();
-            if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+            if unsafe { (statfn)(path.as_ptr(), buf.as_mut_ptr()) } < 0 {
                 return DirRemoteness::unknown;
             }
             let buf = unsafe { buf.assume_init() };
             // statfs::f_flag is hard-coded as 64-bits on 32/64-bit FreeBSD but it's a (4-byte)
             // long on 32-bit NetBSD.. and always 4-bytes on macOS (even on 64-bit builds).
             #[allow(clippy::useless_conversion)]
-            return if u64::from(buf.f_flags) & local_flag != 0 {
+            if u64::from((flagsfn)(&buf)) & is_local_flag != 0 {
                 DirRemoteness::local
             } else {
                 DirRemoteness::remote
-            };
+            }
         }
-        DirRemoteness::unknown
+        // ST_LOCAL is a flag to statvfs, which is itself standardized.
+        // In practice the only system to define it is NetBSD.
+        #[cfg(target_os = "netbsd")]
+        let remoteness = remoteness_via_statfs(
+            libc::statvfs,
+            |stat: &libc::statvfs| stat.f_flag,
+            crate::libc::ST_LOCAL(),
+            &narrow,
+        );
+        #[cfg(not(target_os = "netbsd"))]
+        let remoteness = remoteness_via_statfs(
+            libc::statfs,
+            |stat: &libc::statfs| stat.f_flags,
+            crate::libc::MNT_LOCAL(),
+            &narrow,
+        );
+        remoteness
     }
 }
 

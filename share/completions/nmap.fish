@@ -92,11 +92,11 @@ function __fish_complete_nmap_script
     end
     echo -e $__fish_nmap_script_completion_cache
 end
-complete -c nmap -l script -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
+complete -c nmap -l script -r -a "(__fish_stripprefix='^--script=' __fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script -r -d 'Runs a script scan'
 complete -c nmap -l script-args -d 'provide arguments to NSE scripts'
 complete -c nmap -l script-args-file -r -d 'load arguments to NSE scripts from a file'
-complete -c nmap -l script-help -r -a "(__fish_complete_list , __fish_complete_nmap_script)"
+complete -c nmap -l script-help -r -a "(__fish_stripprefix='^--script-help=' __fish_complete_list , __fish_complete_nmap_script)"
 complete -c nmap -l script-help -r -d "Shows help about scripts"
 complete -c nmap -l script-trace
 complete -c nmap -l script-updatedb

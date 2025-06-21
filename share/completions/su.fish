@@ -12,6 +12,6 @@ complete -c su -s G -l supp-group -x -a "(__fish_complete_groups)" -d "Specify a
 complete -c su -s m -s p -l preserve_environment -d "Preserve environment"
 complete -c su -s P -l pty -d "Create pseudo-terminal for the session"
 complete -c su -s s -l shell -x -a "(cat /etc/shells)" -d "Run the specified shell"
-complete -c su -s w -l whitelist-environment -x -a "(__fish_complete_list , __fish_complete_su_env_whitelist)" -d "Don't reset these environment variables"
+complete -c su -s w -l whitelist-environment -x -a "(__fish_stripprefix='^(--whitelist-environment=|-\w*w)' __fish_complete_list , __fish_complete_su_env_whitelist)" -d "Don't reset these environment variables"
 complete -c su -s h -l help -d "Display help and exit"
 complete -c su -s V -l version -d "Display version and exit"

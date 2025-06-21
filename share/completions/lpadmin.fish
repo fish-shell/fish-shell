@@ -25,7 +25,7 @@ complete -c lpadmin -s o -xa printer-is-shared=true -d 'Sets dest to shared/publ
 complete -c lpadmin -s o -xa printer-is-shared=false -d 'Sets dest to shared/published or unshared/unpublished'
 complete -c lpadmin -s o -d 'Set IPP operation policy associated with dest' -xa "printer-policy=(test -r /etc/cups/cupsd.conf; and string replace -r --filter '<Policy (.*)>' '$1' < /etc/cups/cupsd.conf)"
 
-complete -c lpadmin -s u -xa 'allow:all allow:none (__fish_complete_list , __fish_complete_users allow:)' -d 'Sets user-level access control on a destination'
-complete -c lpadmin -s u -xa '(__fish_complete_list , __fish_complete_groups allow: @)' -d 'Sets user-level access control on a destination'
-complete -c lpadmin -s u -xa 'deny:all deny:none (__fish_complete_list , __fish_complete_users deny:)' -d 'Sets user-level access control on a destination'
-complete -c lpadmin -s u -xa '(__fish_complete_list , __fish_complete_groups deny: @)' -d 'Sets user-level access control on a destination'
+complete -c lpadmin -s u -xa "allow:all allow:none (__fish_stripprefix='^-\w*u' __fish_complete_list , __fish_complete_users allow:)" -d 'Sets user-level access control on a destination'
+complete -c lpadmin -s u -xa "(__fish_stripprefix='^-\w*u' __fish_complete_list , __fish_complete_groups allow: @)" -d 'Sets user-level access control on a destination'
+complete -c lpadmin -s u -xa "deny:all deny:none (__fish_stripprefix='^-\w*u' __fish_complete_list , __fish_complete_users deny:)" -d 'Sets user-level access control on a destination'
+complete -c lpadmin -s u -xa "(__fish_stripprefix='^-\w*u' __fish_complete_list , __fish_complete_groups deny: @)" -d 'Sets user-level access control on a destination'

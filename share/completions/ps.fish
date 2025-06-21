@@ -10,7 +10,7 @@ if test "$gnu_linux" -eq 1
     # Some short options are GNU-only
     complete -c ps -s a -d "Select all processes except session leaders and terminal-less"
     complete -c ps -s A -d "Select all"
-    complete -c ps -s C -d "Select by command" -ra '(__fish_complete_list , __fish_complete_proc)'
+    complete -c ps -s C -d "Select by command" -ra "(__fish_stripprefix='^-\w*C' __fish_complete_list , __fish_complete_proc)"
     complete -c ps -s c -d 'Show different scheduler information for the -l option'
     complete -c ps -s d -d "Select all processes except session leaders"
     complete -c ps -s e -d "Select all"
@@ -24,9 +24,9 @@ if test "$gnu_linux" -eq 1
     complete -c ps -s m -d 'Show threads after processes'
     complete -c ps -s N -d "Invert selection"
     complete -c ps -s n -d "Set namelist file" -r
-    complete -c ps -s s -l sid -d "Select by session ID" -x -a "(__fish_complete_list , __fish_complete_pids)"
+    complete -c ps -s s -l sid -d "Select by session ID" -x -a "(__fish_stripprefix='^(--sid=|-\w*s)' __fish_complete_list , __fish_complete_pids)"
     complete -c ps -s T -d "Show threads. With SPID"
-    complete -c ps -s u -l user -d "Select by user" -x -a "(__fish_complete_list , __fish_complete_users)"
+    complete -c ps -s u -l user -d "Select by user" -x -a "(__fish_stripprefix='^(--script=|-\w*u)' __fish_complete_list , __fish_complete_users)"
     complete -c ps -s V -l version -d "Display version and exit"
     complete -c ps -s y -d "Do not show flags"
 
@@ -39,7 +39,7 @@ if test "$gnu_linux" -eq 1
     complete -c ps -l info -d "Display debug info"
     complete -c ps -l lines -l rows -d "Set screen height" -r
     complete -c ps -l no-headers -d 'Print no headers'
-    complete -c ps -l ppid -d "Select by parent PID" -x -a "(__fish_complete_list , __fish_complete_pids)"
+    complete -c ps -l ppid -d "Select by parent PID" -x -a "(__fish_stripprefix='^--ppid=' __fish_complete_list , __fish_complete_pids)"
     complete -c ps -l sort -d 'Specify sort order' -r
 else
     # Assume BSD options otherwise
@@ -81,6 +81,6 @@ end
 complete -c ps -s o -lformat$bsd_null -d "User defined format" -x
 complete -c ps -s Z -lcontext$bsd_null -d "Include security info"
 complete -c ps -s t -ltty$bsd_null -d "Select by tty" -r
-complete -c ps -s G -lgroup$bsd_null -d "Select by group" -x -a "(__fish_complete_list , __fish_complete_groups)"
-complete -c ps -s U -luser$bsd_null -d "Select by user" -x -a "(__fish_complete_list , __fish_complete_users)"
-complete -c ps -s p -lpid$bsd_null -d "Select by PID" -x -a "(__fish_complete_list , __fish_complete_pids)"
+complete -c ps -s G -lgroup$bsd_null -d "Select by group" -x -a "(__fish_stripprefix='^(--group=|-\w*G)' __fish_complete_list , __fish_complete_groups)"
+complete -c ps -s U -luser$bsd_null -d "Select by user" -x -a "(__fish_stripprefix='^(--user=|-\w*U)' __fish_complete_list , __fish_complete_users)"
+complete -c ps -s p -lpid$bsd_null -d "Select by PID" -x -a "(__fish_stripprefix='^(--pid=|-\w*p)' __fish_complete_list , __fish_complete_pids)"

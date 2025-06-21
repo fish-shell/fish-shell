@@ -627,3 +627,15 @@ complete -C'testcommand '
 # CHECK: check{{\t}}Check the frobnicator
 # CHECK: search{{\t}}Search for frobs
 # CHECK: show{{\t}}Show all frobs
+
+complete complete-list -xa '(__fish_complete_list , "seq 2")'
+complete -C "complete-list 1,"
+# CHECK: 1,1
+# CHECK: 1,2
+complete complete-list -s l -l number-list -xa '(__fish_stripprefix="^(--number-list=|-\w*l)" __fish_complete_list , "seq 2")'
+complete -C "complete-list --number-list=1,"
+# CHECK: --number-list=1,1
+# CHECK: --number-list=1,2
+complete -C "complete-list -abcl1,"
+# CHECK: -abcl1,1
+# CHECK: -abcl1,2

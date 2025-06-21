@@ -85,7 +85,7 @@ complete -c $command -o ds \
     -d 'Treat the last -s option as if it occurred at this point'
 
 complete -c $command -l use-srfi \
-    -a '(__fish_complete_list , __fish_guile__complete_srfis)' \
+    -a "(__fish_stripprefix='^--use-srfi=' __fish_complete_list , __fish_guile__complete_srfis)" \
     -d 'Specify the SRFI modules to load'
 
 for standard in 6 7

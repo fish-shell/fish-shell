@@ -52,11 +52,13 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-c capitalize-word
     if test (__fish_uname) = Darwin
         bind --preset $argv alt-backspace backward-kill-word
+        bind --preset $argv ctrl-alt-h backward-kill-word
         bind --preset $argv ctrl-backspace backward-kill-token
         bind --preset $argv alt-delete kill-word
         bind --preset $argv ctrl-delete kill-token
     else
         bind --preset $argv alt-backspace backward-kill-token
+        bind --preset $argv ctrl-alt-h backward-kill-token
         bind --preset $argv ctrl-backspace backward-kill-word
         bind --preset $argv alt-delete kill-token
         bind --preset $argv ctrl-delete kill-word

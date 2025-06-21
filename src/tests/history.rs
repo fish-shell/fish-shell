@@ -652,3 +652,30 @@ fn test_history_formats() {
     assert_eq!(test_history_imported_from_corrupted.get_history(), expected);
     test_history_imported_from_corrupted.clear();
 }
+
+#[test]
+fn mmap_len_0() {
+    use libc::{mmap, MAP_FAILED, MAP_PRIVATE, PROT_READ};
+    use std::os::fd::AsRawFd;
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .read(true)
+        .append(true)
+        .open("/tmp/some_arbitrary_file")
+        .unwrap();
+    let len = 0;
+    let ptr = unsafe {
+        mmap(
+            std::ptr::null_mut(),
+            len,
+            PROT_READ,
+            MAP_PRIVATE,
+            file.as_raw_fd(),
+            0,
+        )
+    };
+
+    if ptr != MAP_FAILED {
+        panic!("mmap did not fail for len == 0");
+    }
+}

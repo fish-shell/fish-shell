@@ -39,6 +39,8 @@ impl MmapRegion {
     /// `ptr` must be the result of a successful `mmap()` call with length `len`.
     unsafe fn new(ptr: *mut u8, len: usize) -> Self {
         assert!(ptr.cast() != MAP_FAILED);
+        // TODO: This failed on FreeBSD 13.2. Why was this code called with len=0?
+        // The preceding `mmap` calls should fail, resulting in this function not being called.
         assert!(len > 0);
         Self { ptr, len }
     }

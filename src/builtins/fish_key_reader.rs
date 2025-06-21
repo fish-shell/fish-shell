@@ -20,8 +20,8 @@ use crate::{
     env::{env_init, EnvStack, Environment},
     future_feature_flags,
     input_common::{
-        match_key_event_to_key, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
+        match_key_event_to_key, CharEvent, InputEventQueue, InputEventQueuer, KeyEvent,
+        QueryResponseEvent, TerminalQuery,
     },
     key::{char_to_symbol, Key},
     nix::isatty,
@@ -33,7 +33,7 @@ use crate::{
     terminal::{Capability, KITTY_KEYBOARD_SUPPORTED},
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::initialize_tty_metadata,
+    tty_handoff::{initialize_tty_metadata, TtyHandoff},
     wchar::prelude::*,
     wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
@@ -88,9 +88,10 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
     let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
-    while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
-        terminal_protocols_enable_ifn();
+    let mut handoff = TtyHandoff::new();
+    handoff.enable_tty_protocols();
 
+    while (!first_char_seen || continuous_mode) && !check_exit_loop_maybe_warning(None) {
         let kevt = match queue.readch() {
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,

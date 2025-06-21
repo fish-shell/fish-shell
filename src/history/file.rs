@@ -128,6 +128,12 @@ impl HistoryFileContents {
                 ))
             }
         };
+        if len == 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "History file is empty. Cannot create memory mapping with length 0.",
+            ));
+        }
         let map_anon = |mut file: &File, len: usize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.

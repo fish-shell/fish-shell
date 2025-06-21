@@ -235,10 +235,6 @@ pub fn append_history_item_to_buffer(item: &HistoryItem, buffer: &mut Vec<u8>) {
 /// Check if we should mmap the file.
 /// Don't try mmap() on non-local filesystems.
 fn should_mmap() -> bool {
-    if super::NEVER_MMAP.load() {
-        return false;
-    }
-
     // mmap only if we are known not-remote.
     path_get_data_remoteness() != DirRemoteness::remote
 }

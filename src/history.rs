@@ -48,7 +48,6 @@ use crate::{
     expand::{expand_one, ExpandFlags},
     fds::wopen_cloexec,
     flog::{FLOG, FLOGF},
-    global_safety::RelaxedAtomicBool,
     history::file::{append_history_item_to_buffer, HistoryFileContents},
     io::IoStreams,
     operation_context::{OperationContext, EXPANSION_LIMIT_BACKGROUND},
@@ -1828,6 +1827,3 @@ pub fn start_private_mode(vars: &EnvStack) {
 pub fn in_private_mode(vars: &dyn Environment) -> bool {
     vars.get_unless_empty(L!("fish_private_mode")).is_some()
 }
-
-/// Whether to force the read path instead of mmap. This is useful for testing.
-static NEVER_MMAP: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

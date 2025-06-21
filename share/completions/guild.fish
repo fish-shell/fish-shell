@@ -36,7 +36,7 @@ complete -c $command -s x -x \
     -n $compile_condition
 
 complete -c $command -s W -l warning \
-    -a '(__fish_complete_list , __fish_guild__complete_warnings)' \
+    -a "(__fish_stripprefix='^(--warning=|-\w*W)' __fish_complete_list , __fish_guild__complete_warnings)" \
     -d 'Specify the warning level for a compilation' \
     -n $compile_condition
 

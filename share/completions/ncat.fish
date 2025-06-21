@@ -35,7 +35,7 @@ function __fish_complete_openssl_ciphers
         printf "%s\tCipher String\n" $cs
     end
 end
-complete -c ncat -l ssl-ciphers -x -a "(__fish_complete_list : __fish_complete_openssl_ciphers)" -d "Specify SSL ciphersuites"
+complete -c ncat -l ssl-ciphers -x -a "(__fish_stripprefix='^--ssl-ciphers=' __fish_complete_list : __fish_complete_openssl_ciphers)" -d "Specify SSL ciphersuites"
 complete -c ncat -l ssl-servername -x -a "(__fish_print_hostnames)" -d "Request distinct server name"
 complete -c ncat -l ssl-alpn -x -d "Specify ALPN protocol list"
 

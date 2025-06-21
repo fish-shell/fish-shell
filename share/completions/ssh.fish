@@ -25,7 +25,7 @@ complete -c ssh -s k -d "Disables forwarding of GSSAPI credentials"
 complete -c ssh -s L -d "Specify local port forwarding" -x
 complete -c ssh -s l -x -a "(__fish_complete_users)" -d User
 complete -c ssh -s M -d "Places the ssh client into master mode"
-complete -c ssh -s m -d "MAC algorithm" -xa "(__fish_complete_list , __fish_ssh_macs)"
+complete -c ssh -s m -d "MAC algorithm" -xa "(__fish_stripprefix='^-\w*m' __fish_complete_list , __fish_ssh_macs)"
 complete -c ssh -s N -d "Do not execute remote command"
 complete -c ssh -s n -d "Prevent reading from stdin"
 complete -c ssh -s O -d "Control an active connection multiplexing master process" -x

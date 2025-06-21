@@ -11,9 +11,9 @@ i\t"ignore the device cache file"
 r\t"read the device cache file"
 u\t"read and update the device cache file"'
 
-complete -c lsof -s g -d 'select by group (^ - negates)' -xa '(__fish_complete_list , __fish_complete_groups)'
+complete -c lsof -s g -d 'select by group (^ - negates)' -xa "(__fish_stripprefix='^-\w*g' __fish_complete_list , __fish_complete_groups)"
 complete -c lsof -s l -d 'Convert UIDs to login names'
-complete -c lsof -s p -d 'Select or exclude processes by pid' -xa '(__fish_complete_list , __fish_complete_pids)'
+complete -c lsof -s p -d 'Select or exclude processes by pid' -xa "(__fish_stripprefix='^-\w*p' __fish_complete_list , __fish_complete_pids)"
 complete -c lsof -s R -d 'Print PPID'
 complete -c lsof -s t -d 'Produce terse output (pids only, no header)'
-complete -c lsof -s u -d 'select by user (^ - negates)' -xa '(__fish_complete_list , __fish_complete_users)'
+complete -c lsof -s u -d 'select by user (^ - negates)' -xa "(__fish_stripprefix='^-\w*u' __fish_complete_list , __fish_complete_users)"

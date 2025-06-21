@@ -647,3 +647,10 @@ complete -C "complete-list --number-list=1,"
 complete -C "complete-list -abcl1,"
 # CHECK: -abcl1,1
 # CHECK: -abcl1,2
+
+function esc_in_description
+    echo completion\t'escaped \n newline'
+end
+complete complete-list -l desc -xa '(__fish_complete_list , esc_in_description)'
+complete -C 'complete-list --desc '
+# CHECK: completion{{\t}}escaped {{\\n}} newline

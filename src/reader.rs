@@ -11,6 +11,11 @@
 //! When the user searches forward, i.e. presses Alt-down, the list is consulted for previous search
 //! result, and subsequent backwards searches are also handled by consulting the list up until the
 //! end of the list is reached, at which point regular searching will commence.
+//!
+//! In general interactive reads work with the tty protocols (CSI-U, etc) enabled; these are disabled
+//! before calling out to fish script, wildcards, or completions. Note CSI-U protocol prevents
+//! control-C from generating SIGINT, so failing to disable these would prevent cancellation of wildcard
+//! expansion, etc.
 
 use libc::{
     c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR, IXOFF,
@@ -81,14 +86,9 @@ use crate::history::{
     SearchType,
 };
 use crate::input::init_input;
-use crate::input_common::stop_query;
-use crate::input_common::terminal_protocols_disable_ifn;
-use crate::input_common::CursorPositionQuery;
-use crate::input_common::ImplicitEvent;
-use crate::input_common::QueryResponseEvent;
-use crate::input_common::TerminalQuery;
 use crate::input_common::{
-    terminal_protocols_enable_ifn, CharEvent, CharInputStyle, InputData, ReadlineCmd,
+    stop_query, CharEvent, CharInputStyle, CursorPositionQuery, ImplicitEvent, InputData,
+    QueryResponseEvent, ReadlineCmd, TerminalQuery,
 };
 use crate::io::IoChain;
 use crate::key::ViewportPosition;
@@ -131,9 +131,7 @@ use crate::terminal::TerminalCommand::{
     QueryCursorPosition, QueryKittyKeyboardProgressiveEnhancements, QueryPrimaryDeviceAttribute,
     QueryXtgettcap, QueryXtversion,
 };
-use crate::terminal::{
-    Capability, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE,
-};
+use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::termsize::{termsize_invalidate_tty, termsize_last, termsize_update};
 use crate::text_face::parse_text_face;
 use crate::text_face::TextFace;
@@ -147,7 +145,10 @@ use crate::tokenizer::{
     tok_command, MoveWordStateMachine, MoveWordStyle, TokenType, Tokenizer, TOK_ACCEPT_UNFINISHED,
     TOK_SHOW_COMMENTS,
 };
-use crate::tty_handoff::{initialize_tty_metadata, tty_metadata};
+use crate::tty_handoff::{
+    get_kitty_keyboard_capability, get_tty_protocols_active, initialize_tty_metadata,
+    safe_deactivate_tty_protocols, set_kitty_keyboard_capability, tty_metadata, TtyHandoff,
+};
 use crate::wchar::prelude::*;
 use crate::wcstringutil::string_prefixes_string_maybe_case_insensitive;
 use crate::wcstringutil::{
@@ -712,6 +713,11 @@ fn read_i(parser: &Parser) {
     let mut data = reader_push(parser, &history_session_id(parser.vars()), conf);
     data.import_history_if_necessary();
 
+    // Set up tty protocols. These should be enabled while we're reading interactively,
+    // and disabled before we run fish script, wildcards, or completions. This is scoped.
+    // Note this may be disabled within the loop, e.g. when running fish script bound to keys.
+    let mut tty = TtyHandoff::new();
+
     while !check_exit_loop_maybe_warning(Some(&mut data)) {
         RUN_COUNT.fetch_add(1, Ordering::Relaxed);
 
@@ -723,6 +729,8 @@ fn read_i(parser: &Parser) {
             continue;
         }
 
+        // Got a command. Disable tty protocols while we execute it.
+        tty.disable_tty_protocols();
         data.clear(EditableLineTag::Commandline);
         data.update_buff_pos(EditableLineTag::Commandline, None);
         BufferedOutputter::new(Outputter::stdoutput()).write_command(Osc133CommandStart(&command));
@@ -758,7 +766,8 @@ fn read_i(parser: &Parser) {
     }
     reader_pop();
 
-    // If we got SIGHUP, ensure the tty is redirected.
+    // If we got SIGHUP, ensure the tty is redirected and release tty handoff without
+    // trying to muck with protocols.
     if reader_received_sighup() {
         // If we are the top-level reader, then we translate SIGHUP into exit_forced.
         redirect_tty_after_sighup();
@@ -892,11 +901,9 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     }
 }
 
-// TODO(pca): this is run in our "AT_EXIT" handler from a SIGTERM handler.
-// It must be made async-signal-safe (or not invoked).
 pub fn reader_deinit(restore_foreground_pgroup: bool) {
     safe_restore_term_mode();
-    crate::input_common::terminal_protocols_disable_ifn();
+    safe_deactivate_tty_protocols();
     if restore_foreground_pgroup {
         restore_term_foreground_process_group_for_exit();
     }
@@ -2175,6 +2182,8 @@ impl<'a> Reader<'a> {
     /// Read a command to execute, respecting input bindings.
     /// Return the command, or none if we were asked to cancel (e.g. SIGHUP).
     fn readline(&mut self, nchars: Option<NonZeroUsize>) -> Option<WString> {
+        let mut tty = TtyHandoff::new();
+
         self.rls = Some(ReadlineLoopState::new());
 
         // Suppress fish_trace during executing key bindings.
@@ -2242,9 +2251,16 @@ impl<'a> Reader<'a> {
         self.force_exec_prompt_and_repaint = true;
 
         while !self.rls().finished && !check_exit_loop_maybe_warning(Some(self)) {
+            // Enable tty protocols while we read input.
+            tty.enable_tty_protocols();
             if self.handle_char_event(None).is_break() {
                 break;
             }
+        }
+
+        // Disable tty protocols now that we're going to execute a command.
+        if tty.disable_tty_protocols() {
+            self.save_screen_state();
         }
 
         if self.conf.transient_prompt {
@@ -2306,10 +2322,16 @@ impl<'a> Reader<'a> {
     fn eval_bind_cmd(&mut self, cmd: &wstr) {
         let last_statuses = self.parser.vars().get_last_statuses();
         let prev_exec_external_count = self.parser.libdata().exec_external_count;
+        // Disable TTY protocols while we run a bind command, because it may call out.
+        let mut scoped_tty = TtyHandoff::new();
+        let mut modified_tty = scoped_tty.disable_tty_protocols();
+
         self.parser.eval(cmd, &IoChain::new());
         self.parser.set_last_statuses(last_statuses);
-        if self.parser.libdata().exec_external_count != prev_exec_external_count
-            && self.data.left_prompt_buff.contains('\n')
+        modified_tty |= scoped_tty.reclaim();
+        if modified_tty
+            || (self.parser.libdata().exec_external_count != prev_exec_external_count
+                && self.data.left_prompt_buff.contains('\n'))
         {
             self.save_screen_state();
         }
@@ -2351,7 +2373,6 @@ impl<'a> Reader<'a> {
         let mut accumulated_chars = WString::new();
 
         while accumulated_chars.len() < limit {
-            terminal_protocols_enable_ifn();
             let evt = self.read_char();
             let CharEvent::Key(kevt) = &evt else {
                 event_needing_handling = Some(evt);
@@ -2545,11 +2566,11 @@ impl<'a> Reader<'a> {
                             // Rogue reply.
                             return ControlFlow::Continue(());
                         }
-                        if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed)
-                            == Capability::Unknown as _
-                        {
-                            KITTY_KEYBOARD_SUPPORTED
-                                .store(Capability::NotSupported as _, Ordering::Release);
+                        if get_kitty_keyboard_capability() == Capability::Unknown {
+                            set_kitty_keyboard_capability(Capability::NotSupported);
+                            // We may have written to the tty, so save the screen state
+                            // so we don't repaint.
+                            self.screen.save_status();
                         }
                     }
                     QueryResponseEvent::CursorPositionReport(cursor_pos) => {
@@ -2796,7 +2817,12 @@ impl<'a> Reader<'a> {
                     }
                 } else {
                     // Either the user hit tab only once, or we had no visible completion list.
+                    // Disable tty protocols while we compute completions, so that control-C
+                    // triggers SIGINT (suppressed by CSI-U).
+                    let mut tty = TtyHandoff::new();
+                    tty.disable_tty_protocols();
                     self.compute_and_apply_completions(c);
+                    tty.reclaim();
                 }
             }
             rl::PagerToggleSearch => {
@@ -4587,6 +4613,10 @@ impl<'a> Reader<'a> {
         // Prompts must be run non-interactively.
         let _noninteractive = self.parser.push_scope(|s| s.is_interactive = false);
 
+        // Suppress TTY protocols in a scoped way so that e.g. control-C can cancel the prompt.
+        let mut scoped_tty = TtyHandoff::new();
+        scoped_tty.disable_tty_protocols();
+
         // Update the termsize now.
         // This allows prompts to react to $COLUMNS.
         self.update_termsize();
@@ -5680,6 +5710,10 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
 /// Run the specified command with the correct terminal modes, and while taking care to perform job
 /// notification, set the title, etc.
 fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
+    assert!(
+        !get_tty_protocols_active(),
+        "TTY protocols should not be active"
+    );
     let ft = tok_command(cmd);
 
     // Provide values for `status current-command` and `status current-commandline`
@@ -6232,6 +6266,10 @@ impl<'a> Reader<'a> {
             c,
             ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch
         ));
+        assert!(
+            !get_tty_protocols_active(),
+            "should not be called with TTY protocols active"
+        );
 
         // Remove a trailing backslash. This may trigger an extra repaint, but this is
         // rare.
@@ -6260,9 +6298,6 @@ impl<'a> Reader<'a> {
         }
         token_range.start += cmdsub_range.start;
         token_range.end += cmdsub_range.start;
-
-        // Wildcard expansion and completion below check for cancellation.
-        terminal_protocols_disable_ifn();
 
         // Check if we have a wildcard within this string; if so we first attempt to expand the
         // wildcard; if that succeeds we don't then apply user completions (#8593).

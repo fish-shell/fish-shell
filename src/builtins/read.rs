@@ -12,7 +12,6 @@ use crate::env::Environment;
 use crate::env::READ_BYTE_LIMIT;
 use crate::env::{EnvVar, EnvVarFlags};
 use crate::input_common::decode_input_byte;
-use crate::input_common::terminal_protocols_disable_ifn;
 use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
 use crate::nix::isatty;
@@ -22,6 +21,7 @@ use crate::reader::{reader_pop, reader_push, reader_readline};
 use crate::tokenizer::Tokenizer;
 use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
 use crate::tokenizer::TOK_ARGUMENT_LIST;
+use crate::tty_handoff::TtyHandoff;
 use crate::wcstringutil::split_about;
 use crate::wcstringutil::split_string_tok;
 use crate::wutil;
@@ -244,9 +244,10 @@ fn read_interactive(
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
+        let mut scoped_handoff = TtyHandoff::new();
+        scoped_handoff.enable_tty_protocols();
         reader_readline(parser, NonZeroUsize::try_from(nchars).ok())
     };
-    terminal_protocols_disable_ifn();
     if let Some(line) = mline {
         *buff = line;
         if nchars > 0 && nchars < buff.len() {

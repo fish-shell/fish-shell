@@ -7,7 +7,7 @@
 //!
 //! Type "exit" or "quit" to terminate the program.
 
-use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt, sync::atomic::Ordering};
+use std::{cell::RefCell, ops::ControlFlow, os::unix::prelude::OsStrExt};
 
 use libc::{STDIN_FILENO, TCSANOW, VEOF, VINTR};
 use once_cell::unsync::OnceCell;
@@ -30,10 +30,13 @@ use crate::{
     proc::set_interactive_session,
     reader::{check_exit_loop_maybe_warning, initial_query, reader_init},
     signal::signal_set_handlers,
-    terminal::{Capability, KITTY_KEYBOARD_SUPPORTED},
+    terminal::Capability,
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::{initialize_tty_metadata, TtyHandoff},
+    tty_handoff::{
+        get_kitty_keyboard_capability, initialize_tty_metadata, set_kitty_keyboard_capability,
+        TtyHandoff,
+    },
     wchar::prelude::*,
     wgetopt::{wopt, ArgType, WGetopter, WOption},
 };
@@ -96,9 +99,8 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             CharEvent::Key(kevt) => kevt,
             CharEvent::Readline(_) | CharEvent::Command(_) | CharEvent::Implicit(_) => continue,
             CharEvent::QueryResponse(QueryResponseEvent::PrimaryDeviceAttribute) => {
-                if KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed) == Capability::Unknown as _ {
-                    KITTY_KEYBOARD_SUPPORTED
-                        .store(Capability::NotSupported as _, Ordering::Release);
+                if get_kitty_keyboard_capability() == Capability::Unknown {
+                    set_kitty_keyboard_capability(Capability::NotSupported);
                 }
                 continue;
             }

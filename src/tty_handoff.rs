@@ -12,14 +12,14 @@ use crate::terminal::TerminalCommand::{
     KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
     ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{Capability, Output, Outputter, KITTY_KEYBOARD_SUPPORTED};
+use crate::terminal::{Capability, Output, Outputter};
 use crate::threads::assert_is_main_thread;
 use crate::wchar_ext::ToWString;
 use crate::wutil::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use std::mem::MaybeUninit;
 use std::os::fd::BorrowedFd;
-use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 
 // Facts about our environment, which inform how we handle the tty.
 #[derive(Debug, Copy, Clone)]
@@ -58,6 +58,35 @@ impl TtyMetadata {
             pre_kitty_iterm2,
         }
     }
+}
+
+// Whether CSI-U ("Kitty") support is present in the TTY.
+static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
+
+// Get the support capability for CSI-U ("Kitty") protocols.
+pub fn get_kitty_keyboard_capability() -> Capability {
+    let cap = KITTY_KEYBOARD_SUPPORTED.load(Ordering::Relaxed);
+    match cap {
+        x if x == Capability::Supported as _ => Capability::Supported,
+        x if x == Capability::NotSupported as _ => Capability::NotSupported,
+        _ => Capability::Unknown,
+    }
+}
+
+// Set CSI-U ("Kitty") support capability.
+// This correctly handles the case where we think protocols are already enabled.
+pub fn set_kitty_keyboard_capability(cap: Capability) {
+    assert_is_main_thread();
+    // Disable and renable protocols around capabilities.
+    let mut tty = TtyHandoff::new();
+    tty.disable_tty_protocols();
+    KITTY_KEYBOARD_SUPPORTED.store(cap as _, Ordering::Relaxed);
+    FLOG!(
+        term_protocols,
+        "Set Kitty keyboard capability to",
+        format!("{:?}", cap)
+    );
+    tty.reclaim();
 }
 
 // Helper to determine which keyboard protocols to enable.
@@ -215,10 +244,13 @@ pub fn initialize_tty_metadata() {
 // A marker of the current state of the tty protocols.
 static TTY_PROTOCOLS_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
+// A marker that the tty has been closed (SIGHUP, etc) and so we should not try to write to it.
+static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 // Enable or disable TTY protocols by writing the appropriate commands to the tty.
 // Return true if we emitted any bytes to the tty.
 // Note this does NOT intialize the TTY protocls if not already initialized.
-pub fn set_tty_protocols_active(enable: bool) -> bool {
+fn set_tty_protocols_active(enable: bool) -> bool {
     assert_is_main_thread();
     // Have protocols at all? We require someone else to have initialized them.
     let Some(protocols) = tty_protocols() else {
@@ -226,10 +258,16 @@ pub fn set_tty_protocols_active(enable: bool) -> bool {
     };
     // Already set?
     // Note we don't need atomic swaps as this is only called on the main thread.
+    // Also note we (logically) set and clear this even if we got SIGHUP.
     if TTY_PROTOCOLS_ACTIVE.load() == enable {
         return false;
     }
     TTY_PROTOCOLS_ACTIVE.store(enable);
+
+    // Did we get SIGHUP?
+    if TTY_INVALID.load() {
+        return false;
+    }
 
     // Write the commands to the tty, ignoring errors.
     let commands = protocols.safe_get_commands(enable);
@@ -259,15 +297,26 @@ pub fn safe_deactivate_tty_protocols() {
         // No protocols set, nothing to do.
         return;
     };
-
     if !TTY_PROTOCOLS_ACTIVE.load() {
         return;
     }
+
+    // Did we get SIGHUP?
+    if TTY_INVALID.load() {
+        return;
+    }
+
     TTY_PROTOCOLS_ACTIVE.store(false);
     let commands = protocols.safe_get_commands(false);
     // Safety: just writing data to stdout.
     let stdout_fd = unsafe { BorrowedFd::borrow_raw(libc::STDOUT_FILENO) };
     let _ = nix::unistd::write(stdout_fd, commands);
+}
+
+// Called from a signal handler to mark the tty as invalid (e.g. SIGHUP).
+// This suppresses any further attempts to write protocols to the tty,
+pub fn safe_mark_tty_invalid() {
+    TTY_INVALID.store(true);
 }
 
 // Allows transferring the tty to a job group, while it runs, in a scoped fashion.

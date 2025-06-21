@@ -9,13 +9,10 @@ use crate::key::{
     self, alt, canonicalize_control_char, canonicalize_keyed_control_char, char_to_symbol, ctrl,
     function_key, shift, Key, Modifiers, ViewportPosition,
 };
-use crate::reader::reader_current_data;
 use crate::reader::reader_test_and_clear_interrupted;
-use crate::terminal::{
-    Capability, KITTY_KEYBOARD_SUPPORTED, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE,
-};
+use crate::terminal::{Capability, SCROLL_FORWARD_SUPPORTED, SCROLL_FORWARD_TERMINFO_CODE};
 use crate::threads::iothread_port;
-use crate::tty_handoff::set_tty_protocols_active;
+use crate::tty_handoff::set_kitty_keyboard_capability;
 use crate::universal_notifier::default_notifier;
 use crate::wchar::{encode_byte_to_char, prelude::*};
 use crate::wutil::encoding::{mbrtowc, mbstate_t, zero_mbstate};
@@ -648,22 +645,6 @@ fn parse_mask(mask: u32) -> (Modifiers, bool) {
     (modifiers, caps_lock)
 }
 
-// Trampolines to enable or disable terminal protocols.
-pub fn terminal_protocols_enable_ifn() {
-    if set_tty_protocols_active(true) {
-        // Our tty has been modified, so save the current timestamps so that
-        // the reader doesn't believe it has to repaint the prompt.
-        reader_current_data().map(|data| data.save_screen_state());
-    }
-}
-pub fn terminal_protocols_disable_ifn() {
-    if set_tty_protocols_active(false) {
-        // Our tty has been modified, so save the current timestamps so that
-        // the reader doesn't believe it has to repaint the prompt.
-        reader_current_data().map(|data| data.save_screen_state());
-    }
-}
-
 // A data type used by the input machinery.
 pub struct InputData {
     // The file descriptor from which we read input, often stdin.
@@ -1187,7 +1168,7 @@ pub trait InputEventQueuer {
                         reader,
                         "Received kitty progressive enhancement flags, marking as supported"
                     );
-                    KITTY_KEYBOARD_SUPPORTED.store(Capability::Supported as _, Ordering::Release);
+                    set_kitty_keyboard_capability(Capability::Supported);
                     return None;
                 }
 
@@ -1421,7 +1402,6 @@ pub trait InputEventQueuer {
         if let Some(evt) = self.try_pop() {
             return Some(evt);
         }
-        terminal_protocols_enable_ifn();
 
         // We are not prepared to handle a signal immediately; we only want to know if we get input on
         // our fd before the timeout. Use pselect to block all signals; we will handle signals

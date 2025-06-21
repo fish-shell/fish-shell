@@ -7,6 +7,7 @@ use crate::nix::getpid;
 use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{topic_monitor_principal, Generation, GenerationsList, Topic};
+use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
 use crate::wchar::prelude::*;
 use crate::wutil::{fish_wcstoi, perror};
 use errno::{errno, set_errno};
@@ -83,13 +84,15 @@ extern "C" fn fish_signal_handler(
             // Exit unless the signal was trapped.
             if !observed {
                 reader_sighup();
+                safe_mark_tty_invalid();
             }
             topic_monitor_principal().post(Topic::sighupint);
         }
         libc::SIGTERM => {
-            // Handle sigterm. The only thing we do is restore the front process ID, then die.
+            // Handle sigterm. The only thing we do is restore the front process ID and disable protocols, then die.
             if !observed {
                 safe_restore_term_mode();
+                safe_deactivate_tty_protocols();
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {
                     libc::signal(libc::SIGTERM, libc::SIG_DFL);

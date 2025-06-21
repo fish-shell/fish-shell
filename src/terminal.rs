@@ -216,14 +216,13 @@ fn maybe_terminfo(
     true
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(u8)]
-pub(crate) enum Capability {
+pub enum Capability {
     Unknown,
     Supported,
     NotSupported,
 }
-
-pub(crate) static KITTY_KEYBOARD_SUPPORTED: AtomicU8 = AtomicU8::new(Capability::Unknown as _);
 
 pub(crate) static SCROLL_FORWARD_SUPPORTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static SCROLL_FORWARD_TERMINFO_CODE: &str = "indn";

@@ -139,12 +139,13 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
 
     // Note if tty transfer fails, we still try running the job.
     parser.job_promote_at(job_pos);
+    let mut handoff = TtyHandoff::new();
     let _ = make_fd_blocking(STDIN_FILENO);
     {
         let job_group = job.group();
         job_group.set_is_foreground(true);
         if job.entitled_to_terminal() {
-            crate::input_common::terminal_protocols_disable_ifn();
+            handoff.disable_tty_protocols();
         }
         let tmodes = job_group.tmodes.borrow();
         if job_group.wants_terminal() && tmodes.is_some() {
@@ -155,7 +156,6 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
             }
         }
     }
-    let mut handoff = TtyHandoff::new();
     handoff.to_job_group(job.group.as_ref().unwrap());
     let resumed = job.resume();
     if resumed {

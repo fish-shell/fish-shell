@@ -59,7 +59,7 @@ freebsd_task:
         #       image_family: freebsd-14-0-snap
         - name: FreeBSD 13
           freebsd_instance:
-              image: freebsd-13-2-release-amd64
+              image: freebsd-13-3-release-amd64
         # - name: FreeBSD 12.3
         #   freebsd_instance:
         #       image: freebsd-12-3-release-amd64

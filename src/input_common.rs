@@ -732,7 +732,7 @@ pub(crate) fn terminal_protocols_disable_ifn() {
             }
         })
     });
-    let mut out = Outputter::stdoutput().borrow_mut();
+    let mut out = Outputter::new_from_fd(libc::STDOUT_FILENO);
     if BRACKETED_PASTE.load(Ordering::Acquire) {
         out.write_command(DecrstBracketedPaste);
         if IS_TMUX.load() {

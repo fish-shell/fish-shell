@@ -613,6 +613,8 @@ fn init_locale(vars: &EnvStack) {
             unsafe {
                 _nl_msg_cat_cntr += 1;
             }
+            use crate::wutil::gettext::update_messages_locale;
+            update_messages_locale(new_msg_locale.to_owned());
         }
     }
 }

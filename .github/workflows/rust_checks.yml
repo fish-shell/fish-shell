@@ -27,14 +27,9 @@ jobs:
         components: clippy
     - name: Install deps
       run: |
-        sudo apt install gettext libpcre2-dev
-    - name: cmake
-      run: |
-        cmake -B build
+        sudo apt install gettext
     - name: cargo clippy
-      # This used to have --deny=warnings, but that turns rust release day
-      # into automatic CI failure day, so we don't do that.
-      run: cargo clippy --workspace --all-targets
+      run: cargo clippy --workspace --all-targets -- --deny=warnings
 
   rustdoc:
     runs-on: ubuntu-latest

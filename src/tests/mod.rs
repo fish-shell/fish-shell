@@ -42,6 +42,7 @@ pub mod prelude {
     use std::cell::RefCell;
     use std::env::set_current_dir;
     use std::ffi::CString;
+    use std::path::PathBuf;
 
     /// A wrapper around a Parser with some test helpers.
     pub struct TestParser {
@@ -89,8 +90,10 @@ pub mod prelude {
         DONE.get_or_init(|| {
             // If we are building with `cargo build` and have build w/ `cmake`, FISH_BUILD_DIR might
             // not yet exist.
-            std::fs::create_dir_all(env!("FISH_BUILD_DIR")).unwrap();
-            set_current_dir(env!("FISH_BUILD_DIR")).unwrap();
+            let mut test_dir = PathBuf::from(env!("FISH_BUILD_DIR"));
+            test_dir.push("fish-test");
+            std::fs::create_dir_all(&test_dir).unwrap();
+            set_current_dir(&test_dir).unwrap();
             {
                 let s = CString::new("").unwrap();
                 unsafe {

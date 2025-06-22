@@ -25,14 +25,8 @@ fn main() {
         .unwrap_or(canonicalize(MANIFEST_DIR).join("target"));
 
     // FISH_BUILD_DIR is set by CMake, if we are using it.
-    // OUT_DIR is set by Cargo when the build script is running (not compiling)
-    let default_build_dir = env::var("OUT_DIR").unwrap();
-    let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
-    let build_dir = canonicalize_str(build_dir);
-    rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
-
     rsconf::set_env_value(
-        "FISH_BUILD_OUTPUT_DIR",
+        "FISH_BUILD_DIR",
         option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
     );
 

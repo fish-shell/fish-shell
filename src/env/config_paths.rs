@@ -32,7 +32,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         // TODO: we should determine program_name from argv0 somewhere in this file
 
         // Detect if we're running right out of the CMAKE build directory
-        if exec_path.starts_with(env!("FISH_BUILD_OUTPUT_DIR")) {
+        if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
             let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             FLOG!(
                 config,

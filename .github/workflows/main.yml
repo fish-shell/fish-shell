@@ -5,6 +5,7 @@ on: [push, pull_request]
 env:
   FISH_TEST_MAX_CONCURRENCY: "4"
   CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  RUST_BACKTRACE: "1"
 
 permissions:
   contents: read

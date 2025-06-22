@@ -600,7 +600,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         use std::path::PathBuf;
 
         let mut build_dir = PathBuf::from(env!("FISH_BUILD_DIR"));
-        build_dir.push("fish_root");
+        build_dir.push("fish-test-home");
 
         let err = match std::fs::create_dir_all(&build_dir) {
             Ok(_) => 0,

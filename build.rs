@@ -3,7 +3,14 @@
 use rsconf::{LinkType, Target};
 use std::env;
 use std::error::Error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+fn canonicalize(path: &str) -> PathBuf {
+    std::fs::canonicalize(path).unwrap()
+}
+fn canonicalize_str(path: &str) -> String {
+    canonicalize(path).to_str().unwrap().to_owned()
+}
 
 fn main() {
     setup_paths();
@@ -15,18 +22,13 @@ fn main() {
     // OUT_DIR is set by Cargo when the build script is running (not compiling)
     let default_build_dir = env::var("OUT_DIR").unwrap();
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
-    let build_dir = std::fs::canonicalize(build_dir).unwrap();
-    let build_dir = build_dir.to_str().unwrap();
-    rsconf::set_env_value("FISH_BUILD_DIR", build_dir);
+    let build_dir = canonicalize_str(build_dir);
+    rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
     rsconf::set_env_value(
         "CARGO_MANIFEST_DIR",
-        std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
-            .unwrap()
-            .as_path()
-            .to_str()
-            .unwrap(),
+        &canonicalize_str(env!("CARGO_MANIFEST_DIR")),
     );
 
     // Some build info
@@ -41,7 +43,7 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    let cman = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let cman = canonicalize(env!("CARGO_MANIFEST_DIR"));
     let targetman = cman.as_path().join("target").join("man");
 
     #[cfg(feature = "embed-data")]
@@ -251,8 +253,6 @@ fn has_small_stack(_: &Target) -> Result<bool, Box<dyn Error>> {
 }
 
 fn setup_paths() {
-    #[cfg(unix)]
-    use std::path::PathBuf;
     #[cfg(windows)]
     use unix_path::{Path, PathBuf};
 
@@ -396,10 +396,7 @@ fn build_man(build_dir: &Path) {
     use std::process::Command;
     let mandir = build_dir;
     let sec1dir = mandir.join("man1");
-    let docsrc_path = std::fs::canonicalize(env!("CARGO_MANIFEST_DIR"))
-        .unwrap()
-        .as_path()
-        .join("doc_src");
+    let docsrc_path = canonicalize(env!("CARGO_MANIFEST_DIR")).join("doc_src");
     let docsrc = docsrc_path.to_str().unwrap();
     let args = &[
         "-j",

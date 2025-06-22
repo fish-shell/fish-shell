@@ -46,7 +46,7 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    let targetman = cargo_target_dir.join("man");
+    let targetman = cargo_target_dir.join("fish-man");
 
     #[cfg(feature = "embed-data")]
     #[cfg(not(clippy))]

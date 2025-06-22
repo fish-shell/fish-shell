@@ -121,7 +121,11 @@ async def main():
         type=int,
         help="Maximum number of tests to run concurrently. The default is to run all tests concurrently.",
     )
-    argparser.add_argument("fish", nargs=1, help="Fish to test")
+    argparser.add_argument(
+        "fish",
+        nargs=1,
+        help="Directory containing fish binaries to test (typically 'target/debug')",
+    )
     argparser.add_argument("file", nargs="*", help="Tests to run")
     args = argparser.parse_args()
 

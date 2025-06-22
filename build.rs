@@ -5,10 +5,10 @@ use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
-fn canonicalize(path: &str) -> PathBuf {
+fn canonicalize<P: AsRef<Path>>(path: P) -> PathBuf {
     std::fs::canonicalize(path).unwrap()
 }
-fn canonicalize_str(path: &str) -> String {
+fn canonicalize_str<P: AsRef<Path>>(path: P) -> String {
     canonicalize(path).to_str().unwrap().to_owned()
 }
 
@@ -30,6 +30,12 @@ fn main() {
     let build_dir = option_env!("FISH_BUILD_DIR").unwrap_or(&default_build_dir);
     let build_dir = canonicalize_str(build_dir);
     rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
+
+    rsconf::set_env_value(
+        "FISH_BUILD_OUTPUT_DIR",
+        option_env!("FISH_BUILD_DIR").unwrap_or(cargo_target_dir.to_str().unwrap()),
+    );
+
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
     rsconf::set_env_value("CARGO_MANIFEST_DIR", &canonicalize_str(MANIFEST_DIR));

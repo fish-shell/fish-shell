@@ -12,6 +12,8 @@ fn canonicalize_str(path: &str) -> String {
     canonicalize(path).to_str().unwrap().to_owned()
 }
 
+const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
 fn main() {
     setup_paths();
 
@@ -26,10 +28,7 @@ fn main() {
     rsconf::set_env_value("FISH_BUILD_DIR", &build_dir);
     // We need to canonicalize (i.e. realpath) the manifest dir because we want to be able to
     // compare it directly as a string at runtime.
-    rsconf::set_env_value(
-        "CARGO_MANIFEST_DIR",
-        &canonicalize_str(env!("CARGO_MANIFEST_DIR")),
-    );
+    rsconf::set_env_value("CARGO_MANIFEST_DIR", &canonicalize_str(MANIFEST_DIR));
 
     // Some build info
     rsconf::set_env_value("BUILD_TARGET_TRIPLE", &env::var("TARGET").unwrap());
@@ -43,7 +42,7 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    let cman = canonicalize(env!("CARGO_MANIFEST_DIR"));
+    let cman = canonicalize(MANIFEST_DIR);
     let targetman = cman.as_path().join("target").join("man");
 
     #[cfg(feature = "embed-data")]
@@ -350,8 +349,8 @@ fn get_version(src_dir: &Path) -> String {
     // or because it refused (safe.directory applies to `git describe`!)
     // So we read the SHA ourselves.
     fn get_git_hash() -> Result<String, Box<dyn std::error::Error>> {
-        let gitdir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".git");
-        let jjdir = Path::new(env!("CARGO_MANIFEST_DIR")).join(".jj");
+        let gitdir = Path::new(MANIFEST_DIR).join(".git");
+        let jjdir = Path::new(MANIFEST_DIR).join(".jj");
         let commit_id = if gitdir.exists() {
             // .git/HEAD contains ref: refs/heads/branch
             let headpath = gitdir.join("HEAD");
@@ -396,7 +395,7 @@ fn build_man(build_dir: &Path) {
     use std::process::Command;
     let mandir = build_dir;
     let sec1dir = mandir.join("man1");
-    let docsrc_path = canonicalize(env!("CARGO_MANIFEST_DIR")).join("doc_src");
+    let docsrc_path = canonicalize(MANIFEST_DIR).join("doc_src");
     let docsrc = docsrc_path.to_str().unwrap();
     let args = &[
         "-j",

@@ -20,6 +20,10 @@ fn main() {
     // Add our default to enable tools that don't go through CMake, like "cargo test" and the
     // language server.
 
+    let cargo_target_dir: PathBuf = option_env!("CARGO_TARGET_DIR")
+        .map(canonicalize)
+        .unwrap_or(canonicalize(MANIFEST_DIR).join("target"));
+
     // FISH_BUILD_DIR is set by CMake, if we are using it.
     // OUT_DIR is set by Cargo when the build script is running (not compiling)
     let default_build_dir = env::var("OUT_DIR").unwrap();
@@ -42,8 +46,7 @@ fn main() {
 
     std::env::set_var("FISH_BUILD_VERSION", version);
 
-    let cman = canonicalize(MANIFEST_DIR);
-    let targetman = cman.as_path().join("target").join("man");
+    let targetman = cargo_target_dir.join("man");
 
     #[cfg(feature = "embed-data")]
     #[cfg(not(clippy))]

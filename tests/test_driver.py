@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 import os
@@ -194,14 +193,20 @@ async def main():
         semaphore = (
             asyncio.Semaphore(max_concurrency)
             if max_concurrency
-            else contextlib.nullcontext()
+            else None
         )
 
         async def run(f, arg):
-            async with semaphore:
+            # TODO(python>3.8): use "async with"
+            if semaphore is not None:
+                await semaphore.acquire()
+            try:
                 return await run_test(
                     tmp_root, f, arg, script_path, def_subs, lconfig, fishdir
                 )
+            finally:
+                if semaphore is not None:
+                    semaphore.release()
 
         tasks = [run(f, arg) for f, arg in files]
         for task in asyncio.as_completed(tasks):

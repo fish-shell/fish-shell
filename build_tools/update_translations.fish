@@ -121,7 +121,8 @@ for po_file in $po_files
     end
     if set -l --query po
         if test -e $po_file
-            msgmerge --update --no-fuzzy-matching --no-wrap --backup=none --quiet $po_file $template_file
+            msgmerge --no-wrap --update --no-fuzzy-matching --backup=none --quiet $po_file $template_file
+            and msgattrib --no-wrap --no-obsolete -o $po_file $po_file
             or cleanup_exit
         else
             cp $template_file $po_file

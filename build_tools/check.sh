@@ -1,5 +1,6 @@
 #!/bin/sh
 
+{
 set -ex
 
 lint=true
@@ -48,3 +49,6 @@ if $lint; then
     cargo doc --workspace
 fi
 FISH_GETTEXT_EXTRACTION_FILE=$template_file "$repo_root/tests/test_driver.py" "$build_dir"
+
+exit
+}

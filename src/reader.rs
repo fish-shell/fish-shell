@@ -39,7 +39,7 @@ use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::{AtomicI32, AtomicPtr, AtomicU32, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -176,9 +176,10 @@ static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
-/// The valid terminal modes on startup. This is set once and not modified after.
+/// The valid terminal modes on startup.
 /// Warning: this is read from the SIGTERM handler! Hence the raw global.
-static TERMINAL_MODE_ON_STARTUP: AtomicPtr<libc::termios> = AtomicPtr::new(std::ptr::null_mut());
+static TERMINAL_MODE_ON_STARTUP: once_cell::sync::OnceCell<libc::termios> =
+    once_cell::sync::OnceCell::new();
 
 /// Mode we use to execute programs.
 static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
@@ -197,8 +198,7 @@ static SIGHUP_RECEIVED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 // Get the terminal mode on startup. This is "safe" because it's async-signal safe.
 pub fn safe_get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
-    // Safety: set atomically and not modified after.
-    unsafe { TERMINAL_MODE_ON_STARTUP.load(Ordering::Acquire).as_ref() }
+    TERMINAL_MODE_ON_STARTUP.get()
 }
 
 /// A singleton snapshot of the reader state. This is factored out for thread-safety reasons:
@@ -867,9 +867,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &mut terminal_mode_on_startup) };
     // TODO: rationalize behavior if initial tcgetattr() fails.
     if ret == 0 {
-        // Must be mut because AtomicPtr doesn't have const variant.
-        let leaked: *mut libc::termios = Box::leak(Box::new(terminal_mode_on_startup));
-        TERMINAL_MODE_ON_STARTUP.store(leaked, Ordering::Release);
+        TERMINAL_MODE_ON_STARTUP.get_or_init(|| terminal_mode_on_startup);
     }
 
     #[cfg(not(test))]

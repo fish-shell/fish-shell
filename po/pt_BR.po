@@ -59773,6 +59773,9 @@ msgstr ""
 msgid "Skip things requiring root access"
 msgstr ""
 
+msgid "Skip to the end of the journal"
+msgstr ""
+
 msgid "Skip to the next movie or chapter in the playlist"
 msgstr ""
 

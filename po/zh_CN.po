@@ -59749,6 +59749,9 @@ msgstr "跳过工作副本配置文件"
 msgid "Skip things requiring root access"
 msgstr "跳过需要根访问的东西"
 
+msgid "Skip to the end of the journal"
+msgstr ""
+
 msgid "Skip to the next movie or chapter in the playlist"
 msgstr "跳转到播放列表中的下一部电影或章节"
 

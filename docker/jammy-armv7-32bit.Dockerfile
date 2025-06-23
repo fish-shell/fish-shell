@@ -1,8 +1,8 @@
 FROM arm32v7/ubuntu:jammy
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \

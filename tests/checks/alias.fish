@@ -26,11 +26,11 @@ alias l. "ls -d .*"
 # No output
 
 alias d "'/mnt/c/Program Files (x86)/devenv.exe' /Edit"
-functions d
-# CHECK: # Defined via `source`
-# CHECK: function d --wraps="'/mnt/c/Program Files (x86)/devenv.exe' /Edit" --description "alias d '/mnt/c/Program Files (x86)/devenv.exe' /Edit"
-# CHECK: '/mnt/c/Program Files (x86)/devenv.exe' /Edit $argv
-# CHECK: end
+functions d | sed s,^,^,
+# CHECK: ^# Defined via `source`
+# CHECK: ^function d --wraps="'/mnt/c/Program Files (x86)/devenv.exe' /Edit" --description "alias d '/mnt/c/Program Files (x86)/devenv.exe' /Edit"
+# CHECK: ^    '/mnt/c/Program Files (x86)/devenv.exe' /Edit $argv
+# CHECK: ^end
 
 # Use "command" to prevent recursion, and don't add --wraps to avoid accidental recursion in completion.
 alias e 'e --option=value'

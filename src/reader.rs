@@ -29,17 +29,17 @@ use std::cell::RefMut;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::io::BufReader;
+use std::mem::MaybeUninit;
 use std::num::NonZeroUsize;
 use std::ops::ControlFlow;
 use std::ops::Range;
 use std::os::fd::BorrowedFd;
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
-use std::sync::atomic::{AtomicI32, AtomicU32, AtomicU8};
+use std::sync::atomic::{AtomicI32, AtomicPtr, AtomicU32, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -50,11 +50,10 @@ use crate::ast::{self, is_same_node, Kind};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
-use crate::common::restore_term_foreground_process_group_for_exit;
 use crate::common::{
     escape, escape_string, exit_without_destructors, get_ellipsis_char, get_obfuscation_read_char,
-    redirect_tty_output, shell_modes, str2wcstring, write_loop, EscapeFlags, EscapeStringStyle,
-    ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
+    restore_term_foreground_process_group_for_exit, shell_modes, str2wcstring, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, PROGRAM_NAME, UTF8_BOM_WCHAR,
 };
 use crate::complete::{
     complete, complete_load, sort_and_prioritize, CompleteFlags, Completion, CompletionList,
@@ -177,9 +176,9 @@ static EXIT_STATE: AtomicU8 = AtomicU8::new(ExitState::None as u8);
 pub static SHELL_MODES: Lazy<Mutex<libc::termios>> =
     Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
 
-/// Mode on startup, which we restore on exit.
-pub static TERMINAL_MODE_ON_STARTUP: Lazy<Mutex<libc::termios>> =
-    Lazy::new(|| Mutex::new(unsafe { std::mem::zeroed() }));
+/// The valid terminal modes on startup. This is set once and not modified after.
+/// Warning: this is read from the SIGTERM handler! Hence the raw global.
+static TERMINAL_MODE_ON_STARTUP: AtomicPtr<libc::termios> = AtomicPtr::new(std::ptr::null_mut());
 
 /// Mode we use to execute programs.
 static TTY_MODES_FOR_EXTERNAL_CMDS: Lazy<Mutex<libc::termios>> =
@@ -195,6 +194,12 @@ static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
 /// If set, SIGHUP has been received. This latches to true.
 /// This is set from a signal handler.
 static SIGHUP_RECEIVED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+// Get the terminal mode on startup. This is "safe" because it's async-signal safe.
+pub fn safe_get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
+    // Safety: set atomically and not modified after.
+    unsafe { TERMINAL_MODE_ON_STARTUP.load(Ordering::Acquire).as_ref() }
+}
 
 /// A singleton snapshot of the reader state. This is factored out for thread-safety reasons:
 /// it may be fetched on a background thread.
@@ -227,12 +232,30 @@ fn debounce_history_pager() -> &'static Debounce {
 }
 
 fn redirect_tty_after_sighup() {
+    use libc::{EIO, ENOTTY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+    use std::fs::OpenOptions;
+
     // If we have received SIGHUP, redirect the tty to avoid a user script triggering SIGTTIN or
     // SIGTTOU.
     assert!(reader_received_sighup(), "SIGHUP not received");
     static TTY_REDIRECTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-    if !TTY_REDIRECTED.swap(true) {
-        redirect_tty_output(false);
+    if TTY_REDIRECTED.swap(true) {
+        return;
+    }
+    // dup2 all ENOTTY / EIOs to /dev/null.
+    let Ok(devnull) = OpenOptions::new().read(true).write(true).open("/dev/null") else {
+        return;
+    };
+    let fd = devnull.as_raw_fd();
+    for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
+        let mut t = std::mem::MaybeUninit::uninit();
+        unsafe {
+            if libc::tcgetattr(stdfd, t.as_mut_ptr()) != 0
+                && matches!(errno::errno().0, EIO | ENOTTY)
+            {
+                libc::dup2(fd, stdfd);
+            }
+        }
     }
 }
 
@@ -242,7 +265,11 @@ pub(crate) fn initial_query(
     vars: Option<&dyn Environment>,
 ) {
     blocking_query.get_or_init(|| {
-        let query = if is_dumb() || IN_MIDNIGHT_COMMANDER.load() || IN_DVTM.load() {
+        let query = if is_dumb()
+            || IN_MIDNIGHT_COMMANDER.load()
+            || IN_DVTM.load()
+            || !isatty(STDOUT_FILENO)
+        {
             None
         } else {
             // Query for kitty keyboard protocol support.
@@ -651,19 +678,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
     // If reader_read is called recursively through the '.' builtin, we need to preserve
     // is_interactive. This, and signal handler setup is handled by
     // proc_push_interactive/proc_pop_interactive.
-    let mut interactive = false;
-    // This block is a hack to work around https://sourceware.org/bugzilla/show_bug.cgi?id=20632.
-    // See also, commit 396bf12. Without the need for this workaround we would just write:
-    // int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
-    if fd == STDIN_FILENO {
-        let mut t: libc::termios = unsafe { std::mem::zeroed() };
-        if isatty(STDIN_FILENO) {
-            interactive = true;
-        } else if unsafe { libc::tcgetattr(STDIN_FILENO, &mut t) } == -1 && errno().0 == EIO {
-            redirect_tty_output(false);
-            interactive = true;
-        }
-    }
+    let interactive = (fd == STDIN_FILENO) && isatty(STDIN_FILENO);
 
     let _interactive_push = parser.push_scope(|s| s.is_interactive = interactive);
     signal_set_handlers_once(interactive);
@@ -684,7 +699,6 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
 /// Read interactively. Read input from stdin while providing editing facilities.
 fn read_i(parser: &Parser) {
     assert_is_main_thread();
-    parser.assert_can_execute();
     let mut conf = ReaderConfig::default();
     conf.event = L!("fish_prompt");
     conf.complete_ok = true;
@@ -848,20 +862,23 @@ fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
     // Save the initial terminal mode.
-    let mut terminal_mode_on_startup = TERMINAL_MODE_ON_STARTUP.lock().unwrap();
-    unsafe { libc::tcgetattr(STDIN_FILENO, &mut *terminal_mode_on_startup) };
+    // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
+    let mut terminal_mode_on_startup = unsafe { std::mem::zeroed::<libc::termios>() };
+    let ret = unsafe { libc::tcgetattr(libc::STDIN_FILENO, &mut terminal_mode_on_startup) };
+    // TODO: rationalize behavior if initial tcgetattr() fails.
+    if ret == 0 {
+        // Must be mut because AtomicPtr doesn't have const variant.
+        let leaked: *mut libc::termios = Box::leak(Box::new(terminal_mode_on_startup));
+        TERMINAL_MODE_ON_STARTUP.store(leaked, Ordering::Release);
+    }
 
     #[cfg(not(test))]
     assert!(AT_EXIT.get().is_none());
-    AT_EXIT.get_or_init(|| {
-        Box::new(move |in_signal_handler| {
-            reader_deinit(in_signal_handler, will_restore_foreground_pgroup)
-        })
-    });
+    AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = *terminal_mode_on_startup;
+    *tty_modes_for_external_cmds = terminal_mode_on_startup;
     term_fix_external_modes(&mut tty_modes_for_external_cmds);
 
     // Disable flow control by default.
@@ -873,7 +890,6 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     term_fix_modes(&mut shell_modes());
 
-    drop(terminal_mode_on_startup);
     drop(tty_modes_for_external_cmds);
 
     // Set up our fixed terminal modes once,
@@ -885,8 +901,10 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     }
 }
 
-pub fn reader_deinit(in_signal_handler: bool, restore_foreground_pgroup: bool) {
-    restore_term_mode(in_signal_handler);
+// TODO(pca): this is run in our "AT_EXIT" handler from a SIGTERM handler.
+// It must be made async-signal-safe (or not invoked).
+pub fn reader_deinit(restore_foreground_pgroup: bool) {
+    safe_restore_term_mode();
     crate::input_common::terminal_protocols_disable_ifn();
     if restore_foreground_pgroup {
         restore_term_foreground_process_group_for_exit();
@@ -896,20 +914,13 @@ pub fn reader_deinit(in_signal_handler: bool, restore_foreground_pgroup: bool) {
 /// Restore the term mode if we own the terminal and are interactive (#8705).
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
-pub fn restore_term_mode(in_signal_handler: bool) {
+/// THIS FUNCTION IS CALLED FROM A SIGNAL HANDLER. IT MUST BE ASYNC-SIGNAL-SAFE.
+pub fn safe_restore_term_mode() {
     if !is_interactive_session() || getpgrp() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
-
-    if unsafe {
-        libc::tcsetattr(
-            STDIN_FILENO,
-            TCSANOW,
-            &*TERMINAL_MODE_ON_STARTUP.lock().unwrap(),
-        ) == -1
-    } && errno().0 == EIO
-    {
-        redirect_tty_output(in_signal_handler);
+    if let Some(modes) = safe_get_terminal_mode_on_startup() {
+        unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, modes) };
     }
 }
 
@@ -1058,12 +1069,11 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 }
 
 /// Read one line of input. Before calling this function, reader_push() must have been called in
-/// order to set up a valid reader environment. If nchars > 0, return after reading that many
+/// order to set up a valid reader environment. If nchars is given, return after reading that many
 /// characters even if a full line has not yet been read. Note: the returned value may be longer
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
-pub fn reader_readline(parser: &Parser, nchars: usize) -> Option<WString> {
-    let nchars = NonZeroUsize::try_from(nchars).ok();
+pub fn reader_readline(parser: &Parser, nchars: Option<NonZeroUsize>) -> Option<WString> {
     let data = current_data().unwrap();
     let mut reader = Reader { parser, data };
     reader.readline(nchars)
@@ -1524,6 +1534,9 @@ impl<'a> Reader<'a> {
     }
 
     pub fn request_cursor_position(&mut self, out: &mut Outputter, q: CursorPositionQuery) {
+        if !isatty(STDOUT_FILENO) {
+            return;
+        }
         let mut query = self.blocking_query();
         assert!(query.is_none());
         *query = Some(TerminalQuery::CursorPositionReport(q));
@@ -1546,7 +1559,7 @@ impl<'a> Reader<'a> {
         };
 
         let focused_on_pager = self.active_edit_line_tag() == EditableLineTag::SearchField;
-        let pager_search_field_position = focused_on_pager.then_some(self.pager.cursor_position());
+        let pager_search_field_position = focused_on_pager.then(|| self.pager.cursor_position());
         let last = &self.rendered_layout;
         check(self.force_exec_prompt_and_repaint, "forced")
             || check(self.command_line.text() != last.text, "text")
@@ -1596,8 +1609,7 @@ impl<'a> Reader<'a> {
         result.colors = self.command_line.colors().to_vec();
         assert!(result.text.len() == result.colors.len());
         result.position = self.command_line.position();
-        result.pager_search_field_position =
-            focused_on_pager.then_some(self.pager.cursor_position());
+        result.pager_search_field_position = focused_on_pager.then(|| self.pager.cursor_position());
         result.selection = self.selection;
         result.history_search_range = self.history_search.search_range_if_active();
         result.autosuggestion = self.autosuggestion.text.clone();
@@ -2102,11 +2114,12 @@ impl ReaderData {
         precision: JumpPrecision,
         elt: EditableLineTag,
         target: char,
+        skip_till: bool,
     ) -> bool {
         self.last_jump_target = Some(target);
         self.last_jump_direction = direction;
         self.last_jump_precision = precision;
-        self.jump(direction, precision, elt, vec![target])
+        self.jump(direction, precision, elt, vec![target], skip_till)
     }
 
     fn jump(
@@ -2115,12 +2128,16 @@ impl ReaderData {
         precision: JumpPrecision,
         elt: EditableLineTag,
         targets: Vec<char>,
+        skip_till: bool,
     ) -> bool {
         let el = self.edit_line(elt);
 
         match direction {
             JumpDirection::Backward => {
                 let mut tmp_pos = el.position();
+                if precision == JumpPrecision::Till && skip_till && tmp_pos > 0 {
+                    tmp_pos -= 1;
+                }
 
                 loop {
                     if tmp_pos == 0 {
@@ -2138,6 +2155,10 @@ impl ReaderData {
             }
             JumpDirection::Forward => {
                 let mut tmp_pos = el.position() + 1;
+                if precision == JumpPrecision::Till && skip_till && tmp_pos < el.len() - 1 {
+                    tmp_pos += 1;
+                }
+
                 while tmp_pos < el.len() {
                     if targets.iter().any(|&target| el.at(tmp_pos) == target) {
                         if precision == JumpPrecision::Till {
@@ -2180,18 +2201,13 @@ impl<'a> Reader<'a> {
         unsafe { libc::tcsetpgrp(self.conf.inputfd, libc::getpgrp()) };
 
         // Get the current terminal modes. These will be restored when the function returns.
-        let mut old_modes: libc::termios = unsafe { std::mem::zeroed() };
-        if unsafe { libc::tcgetattr(self.conf.inputfd, &mut old_modes) } == -1 && errno().0 == EIO {
-            redirect_tty_output(false);
-        }
+        let mut old_modes = MaybeUninit::uninit();
+        let restore_modes =
+            unsafe { libc::tcgetattr(self.conf.inputfd, old_modes.as_mut_ptr()) } == 0;
 
         // Set the new modes.
         if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &*shell_modes()) } == -1 {
             let err = errno().0;
-            if err == EIO {
-                redirect_tty_output(false);
-            }
-
             // This check is required to work around certain issues with fish's approach to
             // terminal control when launching interactive processes while in non-interactive
             // mode. See #4178 for one such example.
@@ -2275,13 +2291,11 @@ impl<'a> Reader<'a> {
         if EXIT_STATE.load(Ordering::Relaxed) != ExitState::FinishedHandlers as _ {
             // The order of the two conditions below is important. Try to restore the mode
             // in all cases, but only complain if interactive.
-            if unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, &old_modes) } == -1
+            if restore_modes
+                && unsafe { libc::tcsetattr(self.conf.inputfd, TCSANOW, old_modes.as_ptr()) } == -1
                 && is_interactive_session()
             {
-                if errno().0 == EIO {
-                    redirect_tty_output(false);
-                }
-                perror("tcsetattr"); // return to previous mode
+                perror("tcsetattr");
             }
             Outputter::stdoutput().borrow_mut().reset_text_face();
         }
@@ -2431,8 +2445,7 @@ impl<'a> Reader<'a> {
         });
 
         // If we ran `exit` anywhere, exit.
-        self.exit_loop_requested =
-            self.exit_loop_requested || self.parser.libdata().exit_current_script;
+        self.exit_loop_requested |= self.parser.libdata().exit_current_script;
         self.parser.libdata_mut().exit_current_script = false;
         if self.exit_loop_requested {
             return ControlFlow::Continue(());
@@ -3680,7 +3693,7 @@ impl<'a> Reader<'a> {
                 let (elt, _el) = self.active_edit_line();
                 if let Some(target) = self.function_pop_arg() {
                     let success =
-                        self.jump_and_remember_last_jump(direction, precision, elt, target);
+                        self.jump_and_remember_last_jump(direction, precision, elt, target, false);
 
                     self.input_data.function_set_status(success);
                 }
@@ -3737,7 +3750,13 @@ impl<'a> Reader<'a> {
                         )
                     }
                     // If we stand on non-bracket character, we prefer to jump forward
-                    None => self.jump(JumpDirection::Forward, precision, elt, r_brackets.to_vec()),
+                    None => self.jump(
+                        JumpDirection::Forward,
+                        precision,
+                        elt,
+                        r_brackets.to_vec(),
+                        false,
+                    ),
                 };
                 self.input_data.function_set_status(success);
             }
@@ -3751,6 +3770,7 @@ impl<'a> Reader<'a> {
                         self.data.last_jump_precision,
                         elt,
                         target,
+                        true,
                     );
                 }
 
@@ -3773,6 +3793,7 @@ impl<'a> Reader<'a> {
                         self.data.last_jump_precision,
                         elt,
                         last_target,
+                        true,
                     );
                 }
 
@@ -3941,9 +3962,9 @@ impl<'a> Reader<'a> {
         // using a backslash, insert a newline.
         // If the user hits return while navigating the pager, it only clears the pager.
         if self.is_navigating_pager_contents() {
+            let search_field = &self.data.pager.search_field_line;
             if self.history_pager.is_some() && self.pager.selected_completion_idx.is_none() {
                 let range = 0..self.command_line.len();
-                let search_field = &self.data.pager.search_field_line;
                 let offset_from_end = search_field.len() - search_field.position();
                 let mut cursor = self.command_line.position();
                 let updated = replace_line_at_cursor(
@@ -3953,6 +3974,13 @@ impl<'a> Reader<'a> {
                 );
                 self.replace_substring(EditableLineTag::Commandline, range, updated);
                 self.command_line.set_position(cursor - offset_from_end);
+            } else if self
+                .pager
+                .selected_completion(&self.data.current_page_rendering)
+                .is_none()
+            {
+                let failed_search = search_field.text().to_owned();
+                self.insert_string(EditableLineTag::Commandline, &failed_search);
             }
             self.clear_pager();
             return true;
@@ -4241,9 +4269,6 @@ fn term_donate(quiet: bool /* = false */) {
         )
     } == -1
     {
-        if errno().0 == EIO {
-            redirect_tty_output(false);
-        }
         if errno().0 != EINTR {
             if !quiet {
                 FLOG!(
@@ -4259,10 +4284,10 @@ fn term_donate(quiet: bool /* = false */) {
 
 /// Copy the (potentially changed) terminal modes and use them from now on.
 pub fn term_copy_modes() {
-    let mut modes: libc::termios = unsafe { std::mem::zeroed() };
-    unsafe { libc::tcgetattr(STDIN_FILENO, &mut modes) };
+    let mut modes = MaybeUninit::uninit();
+    unsafe { libc::tcgetattr(STDIN_FILENO, modes.as_mut_ptr()) };
     let mut tty_modes_for_external_cmds = TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap();
-    *tty_modes_for_external_cmds = modes;
+    *tty_modes_for_external_cmds = unsafe { modes.assume_init() };
     // We still want to fix most egregious breakage.
     // E.g. OPOST is *not* something that should be set globally,
     // and 99% triggered by a crashed program.
@@ -4287,9 +4312,6 @@ fn term_steal(copy_modes: bool) {
         term_copy_modes();
     }
     while unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-        if errno().0 == EIO {
-            redirect_tty_output(false);
-        }
         if errno().0 != EINTR {
             FLOG!(warning, wgettext!("Could not set terminal mode for shell"));
             perror("tcsetattr");
@@ -4359,7 +4381,6 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
                 break;
             }
             // No TTY, cannot be interactive?
-            redirect_tty_output(false);
             FLOG!(
                 warning,
                 wgettext!("No TTY for interactive shell (tcgetpgrp failed)")
@@ -4424,9 +4445,6 @@ fn reader_interactive_init(parser: &Parser) {
 
         // Take control of the terminal
         if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) } == -1 {
-            if errno().0 == ENOTTY {
-                redirect_tty_output(false);
-            }
             FLOG!(error, wgettext!("Failed to take control of the terminal"));
             perror("tcsetpgrp");
             exit_without_destructors(1);
@@ -4434,9 +4452,6 @@ fn reader_interactive_init(parser: &Parser) {
 
         // Configure terminal attributes
         if unsafe { libc::tcsetattr(STDIN_FILENO, TCSANOW, &*shell_modes()) } == -1 {
-            if errno().0 == EIO {
-                redirect_tty_output(false);
-            }
             FLOG!(warning, wgettext!("Failed to set startup terminal mode!"));
             perror("tcsetattr");
         }
@@ -4877,7 +4892,13 @@ impl<'a> Reader<'a> {
         }
 
         let el = &self.data.command_line;
+        let autosuggestion = &self.autosuggestion;
         if self.is_at_line_with_autosuggestion() {
+            assert!(string_prefixes_string_maybe_case_insensitive(
+                autosuggestion.icase,
+                &el.text()[autosuggestion.search_string_range.clone()],
+                &autosuggestion.text
+            ));
             return;
         }
 
@@ -5863,7 +5884,7 @@ fn try_expand_wildcard(
     const TAB_COMPLETE_WILDCARD_MAX_EXPANSION: usize = 256;
 
     let ctx = OperationContext::background_with_cancel_checker(
-        &*parser.variables,
+        &parser.variables,
         Box::new(|| signal_check_cancel() != 0),
         TAB_COMPLETE_WILDCARD_MAX_EXPANSION,
     );

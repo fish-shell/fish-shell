@@ -9,6 +9,7 @@ use libc::{
 };
 use std::cell::Cell;
 use std::io;
+use std::mem::MaybeUninit;
 use std::os::fd::RawFd;
 use std::ptr::{addr_of, NonNull};
 use std::rc::Rc;
@@ -102,8 +103,9 @@ impl DirEntry {
             return;
         }
         let narrow = wcs2zstring(&self.name);
-        let mut s: libc::stat = unsafe { std::mem::zeroed() };
-        if unsafe { libc::fstatat(fd, narrow.as_ptr(), &mut s, 0) } == 0 {
+        let mut s = MaybeUninit::uninit();
+        if unsafe { libc::fstatat(fd, narrow.as_ptr(), s.as_mut_ptr(), 0) } == 0 {
+            let s = unsafe { s.assume_init() };
             // st_dev is a dev_t, which is i32 on OpenBSD/Haiku and u32 in FreeBSD 11
             #[allow(clippy::unnecessary_cast)]
             let dev_inode = DevInode {
@@ -368,8 +370,9 @@ fn test_dots() {
 #[allow(clippy::if_same_then_else)]
 fn test_dir_iter() {
     use crate::common::charptr2wcstring;
+    use crate::common::wcs2osstring;
     use crate::wchar::L;
-    use libc::{close, mkfifo, open, rmdir, symlink, unlink, O_CREAT, O_WRONLY};
+    use libc::{close, mkfifo, open, symlink, O_CREAT, O_WRONLY};
     use std::ffi::CString;
 
     let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
@@ -478,10 +481,5 @@ fn test_dir_iter() {
     assert_eq!(seen, names.len());
 
     // Clean up.
-    unsafe {
-        for name in names {
-            let _ = unlink(makepath(name).as_ptr().cast());
-        }
-        let _ = rmdir(basepath_narrow);
-    }
+    let _ = std::fs::remove_dir_all(wcs2osstring(&basepath));
 }

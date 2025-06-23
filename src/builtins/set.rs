@@ -20,9 +20,13 @@ use crate::{
     wutil::wcstoi::wcstoi_partial,
 };
 
-const MISMATCHED_ARGS: &str = "%ls: given %d indexes but %d values\n";
-const UVAR_ERR: &str =
-    "%ls: successfully set universal '%ls'; but a global by that name shadows it\n";
+localizable_consts!(
+    MISMATCHED_ARGS
+    "%ls: given %d indexes but %d values\n"
+
+    UVAR_ERR
+    "%ls: successfully set universal '%ls'; but a global by that name shadows it\n"
+);
 
 #[derive(Debug, Clone)]
 struct Options {

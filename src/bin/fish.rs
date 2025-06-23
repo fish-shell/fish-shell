@@ -69,7 +69,6 @@ use std::ffi::{CString, OsStr, OsString};
 use std::fs::File;
 use std::os::unix::prelude::*;
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::{env, ops::ControlFlow};
@@ -319,7 +318,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
                 // A little extra space.
                 name_width += 2;
                 for cat in cats.iter() {
-                    let desc = wgettext_str(cat.description);
+                    let desc = cat.description.localize();
                     // this is left-justified
                     printf!("%-*ls %ls\n", name_width, cat.name, desc);
                 }
@@ -520,7 +519,7 @@ fn throwing_main() -> i32 {
     reader_init(true);
 
     // Construct the root parser!
-    let env = Rc::new(EnvStack::globals().create_child(true /* dispatches_var_changes */));
+    let env = EnvStack::globals().create_child(true /* dispatches_var_changes */);
     let parser = &Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 

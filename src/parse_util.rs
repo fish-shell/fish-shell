@@ -1355,7 +1355,7 @@ macro_rules! append_syntax_error {
         {
             append_syntax_error_formatted!(
                 $errors, $source_location, $source_length,
-                wgettext_maybe_fmt!($fmt $(, $arg)*))
+                wgettext_fmt!($fmt $(, $arg)*))
         }
     }
 }
@@ -1945,21 +1945,26 @@ pub fn parse_util_expand_variable_error(
     assert!(errors.as_ref().unwrap().len() == start_error_count + 1);
 }
 
-/// Error message for use of backgrounded commands before and/or.
-pub(crate) const BOOL_AFTER_BACKGROUND_ERROR_MSG: &str =
-    "The '%ls' command can not be used immediately after a backgrounded job";
+localizable_consts!(
+    /// Error message for use of backgrounded commands before and/or.
+    pub(crate) BOOL_AFTER_BACKGROUND_ERROR_MSG
+    "The '%ls' command can not be used immediately after a backgrounded job"
 
-/// Error message for backgrounded commands as conditionals.
-const BACKGROUND_IN_CONDITIONAL_ERROR_MSG: &str =
-    "Backgrounded commands can not be used as conditionals";
+    /// Error message for backgrounded commands as conditionals.
+    BACKGROUND_IN_CONDITIONAL_ERROR_MSG
+    "Backgrounded commands can not be used as conditionals"
 
-/// Error message for arguments to 'end'
-const END_ARG_ERR_MSG: &str = "'end' does not take arguments. Did you forget a ';'?";
-const RIGHT_BRACE_ARG_ERR_MSG: &str = "'}' does not take arguments. Did you forget a ';'?";
+    /// Error message for arguments to 'end'
+    END_ARG_ERR_MSG
+    "'end' does not take arguments. Did you forget a ';'?"
 
-/// Error message when 'time' is in a pipeline.
-const TIME_IN_PIPELINE_ERR_MSG: &str =
-    "The 'time' command may only be at the beginning of a pipeline";
+    RIGHT_BRACE_ARG_ERR_MSG
+    "'}' does not take arguments. Did you forget a ';'?"
+
+    /// Error message when 'time' is in a pipeline.
+    TIME_IN_PIPELINE_ERR_MSG
+    "The 'time' command may only be at the beginning of a pipeline"
+);
 
 /// Maximum length of a variable name to show in error reports before truncation
 const var_err_len: usize = 16;

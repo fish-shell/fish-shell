@@ -14,7 +14,7 @@ use crate::{
     common::charptr2wcstring,
     reader::{get_quote, is_backslashed},
     util::wcsfilecmp,
-    wutil::sprintf,
+    wutil::{localizable_string, sprintf, LocalizableString},
 };
 use bitflags::bitflags;
 use once_cell::sync::Lazy;
@@ -45,14 +45,14 @@ use crate::{
     parser_keywords::parser_keywords_is_subcommand,
     path::{path_get_path, path_try_get_path},
     tokenizer::{variable_assignment_equals_pos, Tok, TokFlags, TokenType, Tokenizer},
-    wchar::{wstr, WString, L},
+    wchar::prelude::*,
     wchar_ext::WExt,
     wcstringutil::{
         string_fuzzy_match_string, string_prefixes_string, string_prefixes_string_case_insensitive,
         StringFuzzyMatch,
     },
     wildcard::{wildcard_complete, wildcard_has, wildcard_match},
-    wutil::{gettext::wgettext_str, wgettext, wrealpath},
+    wutil::wrealpath,
 };
 
 // Completion description strings, mostly for different types of files, such as sockets, block
@@ -69,19 +69,6 @@ static COMPLETE_VAR_DESC_VAL: Lazy<&wstr> = Lazy::new(|| wgettext!("Variable: %l
 
 /// Description for abbreviations.
 static ABBR_DESC: Lazy<&wstr> = Lazy::new(|| wgettext!("Abbreviation: %ls"));
-
-/// The special cased translation macro for completions. The empty string needs to be special cased,
-/// since it can occur, and should not be translated. (Gettext returns the version information as
-/// the response).
-#[inline(always)]
-#[allow(non_snake_case)]
-fn C_(s: &wstr) -> &'static wstr {
-    if s.is_empty() {
-        L!("")
-    } else {
-        wgettext_str(s)
-    }
-}
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub struct CompletionMode {
@@ -386,7 +373,7 @@ struct CompleteEntryOpt {
     /// Arguments to the option; may be a subshell expression expanded at evaluation time.
     comp: WString,
     /// Description of the completion.
-    desc: WString,
+    desc: LocalizableString,
     /// Conditions under which to use the option, expanded and evaluated at completion time.
     conditions: Vec<WString>,
     /// Type of the option: `ArgsOnly`, `Short`, `SingleLong`, or `DoubleLong`.
@@ -398,10 +385,6 @@ struct CompleteEntryOpt {
 }
 
 impl CompleteEntryOpt {
-    pub fn localized_desc(&self) -> &'static wstr {
-        C_(&self.desc)
-    }
-
     pub fn expected_dash_count(&self) -> usize {
         match self.typ {
             CompleteOptionType::ArgsOnly => 0,
@@ -1327,7 +1310,7 @@ impl<'ctx> Completer<'ctx> {
                                 }
                                 let (arg_prefix, arg) = s.split_once(arg_offset);
                                 let first_new = self.completions.completions.len();
-                                self.complete_from_args(arg, &o.comp, o.localized_desc(), o.flags);
+                                self.complete_from_args(arg, &o.comp, o.desc.localize(), o.flags);
                                 for compl in &mut self.completions.completions[first_new..] {
                                     if compl.replaces_token() {
                                         compl.completion.insert_utfstr(0, arg_prefix);
@@ -1358,7 +1341,7 @@ impl<'ctx> Completer<'ctx> {
                             if o.result_mode.force_files {
                                 has_force = true;
                             }
-                            self.complete_from_args(s, &o.comp, o.localized_desc(), o.flags);
+                            self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                         }
                     }
 
@@ -1394,7 +1377,7 @@ impl<'ctx> Completer<'ctx> {
                                 if o.result_mode.force_files {
                                     has_force = true;
                                 }
-                                self.complete_from_args(s, &o.comp, o.localized_desc(), o.flags);
+                                self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                             }
                         }
                     }
@@ -1417,7 +1400,7 @@ impl<'ctx> Completer<'ctx> {
                 if o.option.is_empty() {
                     use_files &= !o.result_mode.no_files;
                     has_force |= o.result_mode.force_files;
-                    self.complete_from_args(s, &o.comp, o.localized_desc(), o.flags);
+                    self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                 }
 
                 if !use_switches || s.is_empty() {
@@ -1450,7 +1433,7 @@ impl<'ctx> Completer<'ctx> {
                         }
                     }
                     // It's a match.
-                    let desc = o.localized_desc();
+                    let desc = o.desc.localize();
                     // Append a short-style option
                     if !self
                         .completions
@@ -1503,7 +1486,7 @@ impl<'ctx> Completer<'ctx> {
                     // Append a long-style option with a mandatory trailing equal sign
                     if !self.completions.add(Completion::new(
                         completion,
-                        o.localized_desc().to_owned(),
+                        o.desc.localize().to_owned(),
                         StringFuzzyMatch::exact_match(),
                         flags | CompleteFlags::NO_SPACE,
                     )) {
@@ -1514,7 +1497,7 @@ impl<'ctx> Completer<'ctx> {
                 // Append a long-style option
                 if !self.completions.add(Completion::new(
                     whole_opt.slice_from(offset).to_owned(),
-                    o.localized_desc().to_owned(),
+                    o.desc.localize().to_owned(),
                     StringFuzzyMatch::exact_match(),
                     flags,
                 )) {
@@ -2170,7 +2153,7 @@ fn parse_cmd_string(s: &wstr, vars: &dyn Environment) -> CmdString {
 /// Returns a description for the specified function, or an empty string if none.
 fn complete_function_desc(f: &wstr) -> WString {
     if let Some(props) = function::get_props(f) {
-        props.description.clone()
+        props.description.localize().to_owned()
     } else {
         WString::new()
     }
@@ -2320,7 +2303,9 @@ pub fn complete_add(
         typ: option_type,
         result_mode,
         comp,
-        desc,
+        // The external source is a completion script in `share`,
+        // from which `build_tools/fish_xgettext.fish` extracts descriptions.
+        desc: LocalizableString::from_external_source(desc),
         conditions: condition,
         flags,
     };
@@ -2343,14 +2328,14 @@ pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: Comp
 }
 
 /// Removes all completions for a given command.
-pub fn complete_remove_all(cmd: WString, cmd_is_path: bool) {
+pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
     let idx = CompletionEntryIndex {
         name: cmd,
         is_path: cmd_is_path,
     };
     let removed = completion_map.remove(&idx).is_some();
-    if !removed && !idx.is_path {
+    if explicit && !removed && !idx.is_path {
         COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
     }
 }
@@ -2429,7 +2414,7 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
         CompleteOptionType::DoubleLong => append_switch_short_arg(&mut out, 'l', &o.option),
     }
 
-    append_switch_short_arg(&mut out, 'd', o.localized_desc());
+    append_switch_short_arg(&mut out, 'd', o.desc.localize());
     append_switch_short_arg(&mut out, 'a', &o.comp);
     for c in &o.conditions {
         append_switch_short_arg(&mut out, 'n', c);
@@ -2523,7 +2508,7 @@ pub fn complete_invalidate_path() {
         .expect("mutex poisoned")
         .get_autoloaded_commands();
     for cmd in cmds {
-        complete_remove_all(cmd, false /* not a path */);
+        complete_remove_all(cmd, /*cmd_is_path=*/ false, /*explicit=*/ false);
     }
 }
 

@@ -1,11 +1,11 @@
 use crate::global_safety::RelaxedAtomicBool;
-use crate::proc::{AtomicPid, JobGroupRef, Pid};
+use crate::proc::{JobGroupRef, Pid};
 use crate::signal::Signal;
 use crate::wchar::prelude::*;
 use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 /// A job id, corresponding to what is printed by `jobs`. 1 is the first valid job id.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -73,7 +73,7 @@ pub struct JobGroup {
     pub is_foreground: RelaxedAtomicBool,
     /// The pgid leading our group. This is only ever set if [`job_control`](Self::job_control) is
     /// true. We ensure the value (when set) is always non-negative and non-zero.
-    pgid: AtomicPid,
+    pgid: OnceLock<Pid>,
     /// The original command which produced this job tree.
     pub command: WString,
     /// Our job id, if any. `None` here should evaluate to `-1` for ffi purposes.
@@ -143,20 +143,17 @@ impl JobGroup {
     ///
     /// As such, this method takes `&mut self` rather than `&self` to enforce that this operation is
     /// only available during initial construction/initialization.
-    pub fn set_pgid(&self, pgid: libc::pid_t) {
+    pub fn set_pgid(&self, pgid: Pid) {
         assert!(
             self.wants_job_control(),
             "Should not set a pgid for a group that doesn't want job control!"
         );
-        assert!(pgid >= 0, "Invalid pgid!");
-
-        let old_pgid = self.pgid.swap(Pid::new(pgid).unwrap());
-        assert!(old_pgid.is_none(), "JobGroup::pgid already set!");
+        self.pgid.set(pgid).expect("JobGroup::pgid already set!");
     }
 
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
     pub fn get_pgid(&self) -> Option<Pid> {
-        self.pgid.load()
+        self.pgid.get().copied()
     }
 }
 
@@ -223,7 +220,7 @@ impl JobGroup {
             tmodes: RefCell::default(),
             signal: 0.into(),
             is_foreground: RelaxedAtomicBool::new(false),
-            pgid: AtomicPid::default(),
+            pgid: OnceLock::new(),
         }
     }
 

@@ -219,12 +219,10 @@ Or you can run them on a fish, without involving cmake::
 
   cargo build
   cargo test # for the unit tests
-  tests/test_driver.py --cachedir=/tmp target/debug # for the script and interactive tests
+  tests/test_driver.py target/debug # for the script and interactive tests
 
 Here, the first argument to test_driver.py refers to a directory with ``fish``, ``fish_indent`` and ``fish_key_reader`` in it.
 In this example we're in the root of the git repo and have run ``cargo build`` without ``--release``, so it's a debug build.
-The ``--cachedir /tmp`` argument means it will keep the fish_test_helper binary in /tmp instead of recompiling it for every test.
-This saves some time, but isn't strictly necessary.
 
 Git hooks
 ---------
@@ -297,12 +295,6 @@ Adding translations for a new language
 Creating new translations requires the Gettext tools.
 More specifically, you will need ``msguniq`` and ``msgmerge`` for creating translations for a new
 language.
-In addition, the ``cargo-expand`` tool is required.
-If you have ``cargo`` installed, run::
-
-  cargo install --locked --version 1.0.106 cargo-expand
-
-to install ``cargo-expand`` (Note that other versions might not work correctly with our scripts).
 To create a new translation, run::
 
     build_tools/update_translations.fish po/LANG.po

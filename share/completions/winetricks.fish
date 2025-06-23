@@ -1,5 +1,5 @@
 function __fish_winetricks__complete_verbs
-    winetricks list-all 2>/dev/null |
+    __fish_cached -t 3600 -- 'winetricks list-all 2>/dev/null' |
         string match --invert --regex '^==' |
         string match --invert --regex '^(apps|dlls|fonts|games|settings)$' |
         string replace --regex '(\S+)\s+(.+)' '$1\t$2'

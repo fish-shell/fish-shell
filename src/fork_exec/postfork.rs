@@ -3,11 +3,11 @@
 // That means no locking, no allocating, no freeing memory, etc!
 use super::flog_safe::FLOG_SAFE;
 use crate::nix::getpid;
-use crate::proc::Pid;
+use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::{common::exit_without_destructors, wutil::fstat};
-use libc::{c_char, pid_t, O_RDONLY};
+use libc::{pid_t, O_RDONLY};
 use std::ffi::CStr;
 use std::num::NonZeroU32;
 use std::os::unix::fs::MetadataExt;
@@ -35,38 +35,24 @@ fn clear_cloexec(fd: i32) -> i32 {
     }
 }
 
-/// Safe strlen(). Note strlen is async-signal safe as of POSIX.1-2008
-/// but we just implement our own.
-fn strlen_safe(s: *const libc::c_char) -> usize {
-    let mut len = 0;
-    let mut cursor: *const libc::c_char = s;
-    unsafe {
-        while *cursor != 0 {
-            len += 1;
-            cursor = cursor.offset(1);
-        }
-    }
-    len
-}
-
 /// Report the error code for a failed setpgid call.
 pub(crate) fn report_setpgid_error(
     err: i32,
     is_parent: bool,
-    pid: Pid,
-    desired_pgid: Pid,
+    pid: libc::pid_t,
+    desired_pgid: libc::pid_t,
     job_id: i64,
     command: &CStr,
     argv0: &CStr,
 ) {
-    let cur_group = unsafe { libc::getpgid(pid.as_pid_t()) };
+    let cur_group = unsafe { libc::getpgid(pid) };
 
     FLOG_SAFE!(
         warning,
         "Could not send ",
         if is_parent { "child" } else { "self" },
         " ",
-        pid.get(),
+        pid,
         ", '",
         argv0,
         "' in job ",
@@ -76,35 +62,35 @@ pub(crate) fn report_setpgid_error(
         "' from group ",
         cur_group,
         " to group ",
-        desired_pgid.get(),
+        desired_pgid,
     );
 
     match err {
-        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid.get(), " has already exec'd"),
+        libc::EACCES => FLOG_SAFE!(error, "setpgid: Process ", pid, " has already exec'd"),
         libc::EINVAL => FLOG_SAFE!(error, "setpgid: pgid ", cur_group, " unsupported"),
         libc::EPERM => {
             FLOG_SAFE!(
                 error,
                 "setpgid: Process ",
-                pid.get(),
+                pid,
                 " is a session leader or pgid ",
                 cur_group,
                 " does not match"
             );
         }
-        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid.get(), " does not match"),
+        libc::ESRCH => FLOG_SAFE!(error, "setpgid: Process ID ", pid, " does not match"),
         _ => FLOG_SAFE!(error, "setpgid: Unknown error number ", err),
     }
 }
 
-/// Execute setpgid, moving pid into the given pgroup.
-/// Return the result of setpgid.
-pub fn execute_setpgid(pid: Pid, pgroup: Pid, is_parent: bool) -> i32 {
+/// Execute setpgid, assigning a new pgroup based on the specified policy.
+/// Return 0 on success, or the value of errno on failure.
+pub fn execute_setpgid(pid: libc::pid_t, pgroup: libc::pid_t, is_parent: bool) -> i32 {
     // There is a comment "Historically we have looped here to support WSL."
     // TODO: stop looping.
     let mut eperm_count = 0;
     loop {
-        if unsafe { libc::setpgid(pid.as_pid_t(), pgroup.as_pid_t()) } == 0 {
+        if unsafe { libc::setpgid(pid, pgroup) } == 0 {
             return 0;
         }
         let err = errno::errno().0;
@@ -243,29 +229,13 @@ pub fn execute_fork() -> pid_t {
 pub(crate) fn safe_report_exec_error(
     err: i32,
     actual_cmd: &CStr,
-    argvv: *const *const c_char,
-    envv: *const *const c_char,
+    argvv: &OwningNullTerminatedArray,
+    envv: &OwningNullTerminatedArray,
 ) {
     match err {
         libc::E2BIG => {
-            let mut sz = 0;
-            let mut szenv = 0;
-            unsafe {
-                // Compute total size of argv.
-                let mut cursor = argvv;
-                while !(*cursor).is_null() {
-                    sz += strlen_safe(*cursor) + 1;
-                    cursor = cursor.offset(1);
-                }
-
-                // Compute total size of envp.
-                cursor = envv;
-                while !(*cursor).is_null() {
-                    szenv += strlen_safe(*cursor) + 1;
-                    cursor = cursor.offset(1);
-                }
-                sz += szenv;
-            }
+            let szenv = envv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
+            let sz = szenv + argvv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
 
             let arg_max = unsafe { libc::sysconf(libc::_SC_ARG_MAX) };
             if arg_max > 0 {

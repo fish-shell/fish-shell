@@ -635,3 +635,22 @@ complete -C'testcommand '
 abbr cat cat
 complete -C ca | string match -r '^cat(?:\t.*)?$'
 # CHECK: cat{{\t}}Abbreviation: cat
+
+complete complete-list -xa '(__fish_complete_list , "seq 2")'
+complete -C "complete-list 1,"
+# CHECK: 1,1
+# CHECK: 1,2
+complete complete-list -s l -l number-list -xa '(__fish_stripprefix="^(--number-list=|-\w*l)" __fish_complete_list , "seq 2")'
+complete -C "complete-list --number-list=1,"
+# CHECK: --number-list=1,1
+# CHECK: --number-list=1,2
+complete -C "complete-list -abcl1,"
+# CHECK: -abcl1,1
+# CHECK: -abcl1,2
+
+function esc_in_description
+    echo completion\t'escaped \n newline'
+end
+complete complete-list -l desc -xa '(__fish_complete_list , esc_in_description)'
+complete -C 'complete-list --desc '
+# CHECK: completion{{\t}}escaped {{\\n}} newline

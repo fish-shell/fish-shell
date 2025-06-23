@@ -20,8 +20,10 @@ use crate::wchar::{wstr, WString, L};
 use crate::wchar_ext::WExt;
 use crate::wcstringutil::{join_strings, wcs2string_callback};
 use errno::errno;
-pub use gettext::{wgettext, wgettext_fmt, wgettext_maybe_fmt, wgettext_str};
-use std::ffi::OsStr;
+pub use gettext::{
+    localizable_consts, localizable_string, wgettext, wgettext_fmt, LocalizableString,
+};
+use std::ffi::{CStr, OsStr};
 use std::fs::{self, canonicalize};
 use std::io::{self, Write};
 use std::os::unix::prelude::*;
@@ -89,9 +91,8 @@ pub fn perror(s: &str) {
         let _ = write!(stderr, "{s}: ");
     }
     let slice = unsafe {
-        let msg = libc::strerror(e) as *const u8;
-        let len = libc::strlen(msg as *const _);
-        std::slice::from_raw_parts(msg, len)
+        let msg = libc::strerror(e);
+        CStr::from_ptr(msg).to_bytes()
     };
     let _ = stderr.write_all(slice);
     let _ = stderr.write_all(b"\n");

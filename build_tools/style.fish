@@ -1,38 +1,53 @@
 #!/usr/bin/env fish
 #
-# This runs C++ files and fish scripts (*.fish) through their respective code
-# formatting programs.
+# This runs Python files, fish scripts (*.fish), and Rust files
+# through their respective code formatting programs.
 #
+# `--all`: Format all eligible files instead of the ones specified as arguments.
+# `--check`: Instead of reformatting, fail if a file is not formatted correctly.
+# `--force`: Proceed without asking if uncommitted changes are detected.
+#            Only relevant if `--all` is specified but `--check` is not specified.
+
 set -l fish_files
 set -l python_files
 set -l rust_files
 set -l all no
 
-if test "$argv[1]" = --all
+argparse all check force -- $argv
+or exit $status
+
+if set -l -q _flag_all
     set all yes
-    set -e argv[1]
+    if set -q argv[1]
+        echo "Unexpected arguments: '$argv'"
+        exit 1
+    end
 end
 
-if set -q argv[1]
-    echo "Unexpected arguments: '$argv'"
-    exit 1
-end
+set -l repo_root (status dirname)/..
 
 if test $all = yes
-    set -l files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
-    if set -q files[1]
-        echo
-        echo 'You have uncommitted changes. Are you sure you want to restyle?'
-        read -P 'y/N? ' -n1 -l ans
-        if not string match -qi y -- $ans
-            exit 1
+    if not set -l -q _flag_force; and not set -l -q _flag_check
+        # Potential for false positives: Not all fish files are formatted, see the `fish_files`
+        # definition below.
+        set -l relevant_uncommitted_changes (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//' | grep -E '.*\.(fish|py|rs)$')
+        if set -q relevant_uncommitted_changes[1]
+            for changed_file in $relevant_uncommitted_changes
+                echo $changed_file
+            end
+            echo
+            echo 'You have uncommitted changes (listed above). Are you sure you want to restyle?'
+            read -P 'y/N? ' -n1 -l ans
+            if not string match -qi y -- $ans
+                exit 1
+            end
         end
     end
-    set fish_files share/**.fish
+    set fish_files $repo_root/{benchmarks,build_tools,etc,share}/**.fish
     set python_files {doc_src,share,tests}/**.py
-    set rust_files fish-rust/src/**.rs
 else
-    # Extract just the fish files.
+    # Format the files specified as arguments.
+    set -l files $argv
     set fish_files (string match -r '^.*\.fish$' -- $files)
     set python_files (string match -r '^.*\.py$' -- $files)
     set rust_files (string match -r '^.*\.rs$' -- $files)
@@ -40,37 +55,73 @@ end
 
 set -l red (set_color red)
 set -l green (set_color green)
-set -l blue (set_color blue)
+set -l yellow (set_color yellow)
 set -l normal (set_color normal)
 
-# Run the fish reformatter if we have any fish files.
 if set -q fish_files[1]
     if not type -q fish_indent
-        make fish_indent
-        set PATH . $PATH
+        echo
+        echo $yellow'Could not find `fish_indent` in `$PATH`.'$normal
+        echo
+    else
+        echo === Running "$green"fish_indent"$normal"
+        if set -l -q _flag_check
+            if not fish_indent --check -- $fish_files
+                echo $red"Fish files are not formatted correctly."$normal
+                exit 1
+            end
+        else
+            fish_indent -w -- $fish_files
+        end
     end
-    echo === Running "$green"fish_indent"$normal"
-    fish_indent -w -- $fish_files
 end
 
 if set -q python_files[1]
     if not type -q black
         echo
-        echo Please install "`black`" to style python
+        echo $yellow'Please install `black` to style python'$normal
         echo
     else
-        echo === Running "$blue"black"$normal"
-        black $python_files
+        echo === Running "$green"black"$normal"
+        if set -l -q _flag_check
+            if not black --check $python_files
+                echo $red"Python files are not formatted correctly."$normal
+                exit 1
+            end
+        else
+            black $python_files
+        end
     end
 end
 
-if set -q rust_files[1]
-    if not type -q rustfmt
-        echo
-        echo Please install "`rustfmt`" to style rust
-        echo
+if not cargo fmt --version >/dev/null
+    echo
+    echo $yellow'Please install "rustfmt" to style Rust, e.g. via:'
+    echo "rustup component add rustfmt"$normal
+    echo
+else
+    echo === Running "$green"rustfmt"$normal"
+    if set -l -q _flag_check
+        if set -l -q _flag_all
+            if not cargo fmt --check
+                echo $red"Rust files are not formatted correctly."$normal
+                exit 1
+            end
+        else
+            if set -q rust_files[1]
+                if not rustfmt --check --files-with-diff $rust_files
+                    echo $red"Rust files are not formatted correctly."
+                    exit 1
+                end
+            end
+        end
     else
-        echo === Running "$blue"rustfmt"$normal"
-        rustfmt $rust_files
+        if set -l -q _flag_all
+            cargo fmt
+        else
+            if set -q rust_files[1]
+                rustfmt $rust_files
+            end
+        end
     end
 end

@@ -3,7 +3,7 @@ function __fish_complete_ssh -d "common completions for ssh commands" --argument
     complete -c $command -s 6 -d "IPv6 only"
     complete -c $command -s A -d "Enables forwarding of the authentication agent"
     complete -c $command -s C -d "Compress all data"
-    complete -c $command -s c -d "Encryption algorithm" -xa "(__fish_complete_list , __fish_ssh_ciphers)"
+    complete -c $command -s c -d "Encryption algorithm" -xa "(__fish_stripprefix='^-\w*c' __fish_complete_list , __fish_ssh_ciphers)"
     complete -c $command -s F -d "Configuration file" -rF
     complete -c $command -s i -d "Identity key file" -rF
     complete -c $command -s J -d 'ProxyJump host' -xa "(__fish_complete_user_at_hosts)"

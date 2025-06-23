@@ -13,7 +13,7 @@ Synopsis
     path extension GENERAL_OPTIONS [PATH ...]
     path filter GENERAL_OPTIONS [-v | --invert]
         [-d] [-f] [-l] [-r] [-w] [-x]
-        [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
+        [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [--all] [PATH ...]
     path is GENERAL_OPTIONS [(-v | --invert)] [(-t | --type) TYPE]
         [-d] [-f] [-l] [-r] [-w] [-x]
         [(-p | --perm) PERMISSION] [PATH ...]
@@ -22,7 +22,7 @@ Synopsis
     path resolve GENERAL_OPTIONS [PATH ...]
     path change-extension GENERAL_OPTIONS EXTENSION [PATH ...]
     path sort GENERAL_OPTIONS [-r | --reverse]
-        [-u | --unique] [--key=basename|dirname|path] [PATH ...]
+        [-u | --unique] [--key=(basename | dirname | path)] [PATH ...]
 
     GENERAL_OPTIONS
         [-z | --null-in] [-Z | --null-out] [-q | --quiet]
@@ -148,7 +148,7 @@ Examples
    > echo $path$extension
    # reconstructs the original path again.
    ./foo.mp4
-   
+
 .. _cmd-path-filter:
 
 "filter" subcommand
@@ -158,7 +158,7 @@ Examples
 
     path filter [-z | --null-in] [-Z | --null-out] [-q | --quiet] \
         [-d] [-f] [-l] [-r] [-w] [-x] \
-        [-v | --invert] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [PATH ...]
+        [-v | --invert] [(-t | --type) TYPE] [(-p | --perm) PERMISSION] [--all] [PATH ...]
 
 ``path filter`` returns all of the given paths that match the given checks. In all cases, the paths need to exist, nonexistent paths are always filtered.
 
@@ -179,6 +179,10 @@ With ``--invert``, the meaning of the filtering is inverted - any path that woul
 When a path starts with ``-``, ``path filter`` will prepend ``./`` to avoid it being interpreted as an option otherwise.
 
 It returns 0 if at least one path passed the filter.
+
+With ``--all``, return status 0 (true) if all paths pass the filter, and status 1 (false) if any path fails. This is equivalent to ``not path filter -v``. It produces no output, only a status.
+
+When ``--all`` combined with ``--invert``, it returns status 0 (true) if all paths fail the filter and status 1 (false) if any path passes.
 
 ``path is`` is shorthand for ``path filter -q``, i.e. just checking without producing output, see :ref:`The is subcommand <cmd-path-is>`.
 
@@ -210,6 +214,9 @@ Examples
    
    >_ path filter -fx $PATH/*
    # Prints all possible commands - the first entry of each name is what fish would execute!
+
+   >_ path filter --all /usr/bin /usr/argagagji
+   # This returns 1 (false) because not all paths pass the filter.
 
 .. _cmd-path-is:
 

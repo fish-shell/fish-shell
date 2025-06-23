@@ -28,6 +28,7 @@ use crate::wutil;
 use crate::wutil::encoding::zero_mbstate;
 use crate::wutil::perror;
 use libc::SEEK_CUR;
+use std::num::NonZeroUsize;
 use std::os::fd::RawFd;
 use std::sync::atomic::Ordering;
 
@@ -106,10 +107,7 @@ fn parse_cmd_opts(
             }
             'i' => {
                 streams.err.append(wgettext_fmt!(
-                    concat!(
-                        "%ls: usage of -i for --silent is deprecated. Please ",
-                        "use -s or --silent instead.\n"
-                    ),
+                    "%ls: usage of -i for --silent is deprecated. Please use -s or --silent instead.\n",
                     cmd
                 ));
                 return Err(STATUS_INVALID_ARGS);
@@ -244,7 +242,7 @@ fn read_interactive(
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);
-        reader_readline(parser, nchars)
+        reader_readline(parser, NonZeroUsize::try_from(nchars).ok())
     };
     terminal_protocols_disable_ifn();
     if let Some(line) = mline {

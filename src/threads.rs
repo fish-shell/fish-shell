@@ -4,6 +4,7 @@
 use crate::flog::{FloggableDebug, FLOG};
 use crate::reader::Reader;
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 use std::num::NonZeroU64;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -175,8 +176,8 @@ pub fn spawn<F: FnOnce() + Send + 'static>(callback: F) -> bool {
     // (#7837). Conservatively don't try to mask SIGKILL or SIGSTOP either; that's ignored on Linux
     // but maybe has an effect elsewhere.
     let saved_set = unsafe {
-        let mut new_set: libc::sigset_t = std::mem::zeroed();
-        let new_set = &mut new_set as *mut _;
+        let mut new_set = MaybeUninit::uninit();
+        let new_set = new_set.as_mut_ptr();
         libc::sigfillset(new_set);
         libc::sigdelset(new_set, libc::SIGILL); // bad jump
         libc::sigdelset(new_set, libc::SIGFPE); // divide-by-zero
@@ -682,8 +683,8 @@ impl Debounce {
 fn std_thread_inherits_sigmask() {
     // First change our own thread mask
     let (saved_set, t1_set) = unsafe {
-        let mut new_set: libc::sigset_t = std::mem::zeroed();
-        let new_set = &mut new_set as *mut _;
+        let mut new_set = MaybeUninit::uninit();
+        let new_set = new_set.as_mut_ptr();
         libc::sigemptyset(new_set);
         libc::sigaddset(new_set, libc::SIGILL); // mask bad jump
 
@@ -693,8 +694,8 @@ fn std_thread_inherits_sigmask() {
 
         // Now get the current set that includes the masked SIGILL
         let mut t1_set: libc::sigset_t = std::mem::zeroed();
-        let mut empty_set = std::mem::zeroed();
-        let empty_set = &mut empty_set as *mut _;
+        let mut empty_set = MaybeUninit::uninit();
+        let empty_set = empty_set.as_mut_ptr();
         libc::sigemptyset(empty_set);
         let result = libc::pthread_sigmask(libc::SIG_UNBLOCK, empty_set, &mut t1_set as *mut _);
         assert_eq!(result, 0, "Failed to get own altered thread mask!");
@@ -706,8 +707,8 @@ fn std_thread_inherits_sigmask() {
     let t2_set = std::thread::scope(|_| {
         unsafe {
             // Set a new thread sigmask and verify that the old one is what we expect it to be
-            let mut new_set: libc::sigset_t = std::mem::zeroed();
-            let new_set = &mut new_set as *mut _;
+            let mut new_set = MaybeUninit::uninit();
+            let new_set = new_set.as_mut_ptr();
             libc::sigemptyset(new_set);
             let mut saved_set2: libc::sigset_t = std::mem::zeroed();
             let result = libc::pthread_sigmask(libc::SIG_BLOCK, new_set, &mut saved_set2 as *mut _);

@@ -1,10 +1,10 @@
+use std::mem::MaybeUninit;
 use std::num::NonZeroI32;
 
 use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::nix::getpid;
-use crate::panic::AT_EXIT;
-use crate::reader::{reader_handle_sigint, reader_sighup};
+use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
 use crate::termsize::TermsizeContainer;
 use crate::topic_monitor::{topic_monitor_principal, Generation, GenerationsList, Topic};
 use crate::wchar::prelude::*;
@@ -89,9 +89,7 @@ extern "C" fn fish_signal_handler(
         libc::SIGTERM => {
             // Handle sigterm. The only thing we do is restore the front process ID, then die.
             if !observed {
-                if let Some(at_exit) = AT_EXIT.get() {
-                    (at_exit)(true);
-                }
+                safe_restore_term_mode();
                 // Safety: signal() and raise() are async-signal-safe.
                 unsafe {
                     libc::signal(libc::SIGTERM, libc::SIG_DFL);
@@ -131,8 +129,9 @@ pub fn signal_reset_handlers() {
 
     for data in SIGNAL_TABLE.iter() {
         if data.signal == libc::SIGHUP {
-            let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
-            unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null(), &mut oact) };
+            let mut oact = MaybeUninit::uninit();
+            unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null(), oact.as_mut_ptr()) };
+            let oact = unsafe { oact.assume_init() };
             if oact.sa_sigaction == libc::SIG_IGN {
                 continue;
             }
@@ -277,30 +276,31 @@ pub fn signal_handle(sig: Signal) {
 }
 
 pub static signals_to_default: Lazy<libc::sigset_t> = Lazy::new(|| {
-    let mut set: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut set) };
+    let mut set = MaybeUninit::uninit();
+    unsafe { libc::sigemptyset(set.as_mut_ptr()) };
     for data in SIGNAL_TABLE.iter() {
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
         if data.signal == libc::SIGHUP {
-            let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), &mut act) };
+            let mut act = MaybeUninit::uninit();
+            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), act.as_mut_ptr()) };
+            let act = unsafe { act.assume_init() };
             if act.sa_sigaction == libc::SIG_IGN {
                 continue;
             }
         }
-        unsafe { libc::sigaddset(&mut set, data.signal.code()) };
+        unsafe { libc::sigaddset(set.as_mut_ptr(), data.signal.code()) };
     }
-    return set;
+    unsafe { set.assume_init() }
 });
 
 /// Ensure we did not inherit any blocked signals. See issue #3964.
 pub fn signal_unblock_all() {
     unsafe {
-        let mut iset: libc::sigset_t = std::mem::zeroed();
-        libc::sigemptyset(&mut iset);
-        libc::sigprocmask(libc::SIG_SETMASK, &iset, std::ptr::null_mut());
+        let mut iset = MaybeUninit::uninit();
+        libc::sigemptyset(iset.as_mut_ptr());
+        libc::sigprocmask(libc::SIG_SETMASK, iset.as_ptr(), std::ptr::null_mut());
     }
 }
 
@@ -348,11 +348,11 @@ impl SigChecker {
 struct LookupEntry {
     signal: Signal,
     name: &'static wstr,
-    desc: &'static wstr, // Note: this needs to be translated via gettext before presenting it to the user.
+    desc: LocalizableString, // Note: this needs to be localized via gettext before presenting it to the user.
 }
 
 impl LookupEntry {
-    const fn new(signal: i32, name: &'static wstr, desc: &'static wstr) -> Self {
+    const fn new(signal: i32, name: &'static wstr, desc: LocalizableString) -> Self {
         Self {
             signal: Signal::new(signal),
             name,
@@ -362,8 +362,15 @@ impl LookupEntry {
 }
 
 macro_rules! signal_entry {
+    ($name:ident, $desc:literal) => {
+        LookupEntry::new(
+            libc::$name,
+            L!(stringify!($name)),
+            localizable_string!($desc),
+        )
+    };
     ($name:ident, $desc:expr) => {
-        LookupEntry::new(libc::$name, L!(stringify!($name)), L!($desc))
+        LookupEntry::new(libc::$name, L!(stringify!($name)), $desc)
     };
 }
 
@@ -402,23 +409,40 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
 
     #[cfg(any(apple, bsd))]
-    signal_entry!(SIGEMT, "Unused signal"),
+    signal_entry!(SIGEMT, SIGEMT_DESC),
 
     #[cfg(any(apple, bsd))]
-    signal_entry!(SIGINFO, "Information request"),
+    signal_entry!(SIGINFO, SIGINFO_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGSTKFLT, "Stack fault"),
+    signal_entry!(SIGSTKFLT, SIGSTKFLT_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),
+    signal_entry!(SIGIOT, SIGIOT_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGPWR, "Power failure"),
+    signal_entry!(SIGPWR, SIGPWR_DESC),
 
     // TODO: determine whether SIGWIND is defined on any platform.
     //signal_entry!(SIGWIND, "Window size change"),
 ];
+
+localizable_consts!(
+    #[allow(dead_code)]
+    SIGEMT_DESC "Unused signal"
+
+    #[allow(dead_code)]
+    SIGINFO_DESC "Information request"
+
+    #[allow(dead_code)]
+    SIGSTKFLT_DESC "Stack fault"
+
+    #[allow(dead_code)]
+    SIGIOT_DESC "Abort (Alias for SIGABRT)"
+
+    #[allow(dead_code)]
+    SIGPWR_DESC "Power failure"
+);
 
 // Return true if two strings are equal, ignoring ASCII case.
 fn equals_ascii_icase(left: &wstr, right: &wstr) -> bool {
@@ -476,7 +500,7 @@ impl Signal {
     /// Previously signal_get_desc().
     pub fn desc(&self) -> &'static wstr {
         match self.get_lookup_entry() {
-            Some(entry) => wgettext_str(entry.desc),
+            Some(entry) => entry.desc.localize(),
             None => wgettext!("Unknown"),
         }
     }

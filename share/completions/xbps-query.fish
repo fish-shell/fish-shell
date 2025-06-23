@@ -50,7 +50,7 @@ complete -c $progname -s d -d 'Enable extra debugging shown to stderr'
 complete -c $progname -s h -d 'Show the help message'
 complete -c $progname -s i -d 'Ignore repositories defined in configuration files'
 complete -c $progname -s M -d 'For remote repositories, the data is fetched and stored in memory only'
-complete -c $progname -s p -d 'Match one or more package properties' -xa "(__fish_complete_list , __fish_print_xbps_pkg_props)"
+complete -c $progname -s p -d 'Match one or more package properties' -xa "(__fish_stripprefix='^-\w*p' __fish_complete_list , __fish_print_xbps_pkg_props)"
 complete -c $progname -s R -d 'Enable repository mode'
 complete -c $progname -l repository -d 'Append the specified repository to the top of the list'
 complete -c $progname -l regex -d 'Use Extended Regular Expressions'

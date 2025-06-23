@@ -41,7 +41,7 @@ use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::path::{path_as_implicit_cd, path_try_get_path};
 use crate::proc::{
     get_job_control_mode, job_reap, no_exec, ConcreteAssignment, Job, JobControl, JobProperties,
-    JobRef, Process, ProcessList, ProcessType,
+    JobRef, Process, ProcessType,
 };
 use crate::reader::fish_is_unwinding_for_exit;
 use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
@@ -49,10 +49,9 @@ use crate::signal::Signal;
 use crate::timer::push_timer;
 use crate::tokenizer::{variable_assignment_equals_pos, PipeOrRedir, TokenType};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
 use crate::wildcard::wildcard_match;
-use crate::wutil::{wgettext, wgettext_maybe_fmt};
 use libc::{c_int, ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO};
 use std::io::ErrorKind;
 use std::rc::Rc;
@@ -97,7 +96,7 @@ pub struct ExecutionContext<'a> {
 // 'end_execution_reason_t::error'.
 macro_rules! report_error {
     ( $self:ident, $ctx:expr, $status:expr, $node:expr, $fmt:expr $(, $arg:expr )* $(,)? ) => {
-        report_error_formatted!($self, $ctx, $status, $node, wgettext_maybe_fmt!($fmt $(, $arg )*))
+        report_error_formatted!($self, $ctx, $status, $node, wgettext_fmt!($fmt $(, $arg )*))
     };
 }
 macro_rules! report_error_formatted {
@@ -278,10 +277,7 @@ impl<'a> ExecutionContext<'a> {
                         ctx,
                         STATUS_NOT_EXECUTABLE,
                         &statement.command,
-                        concat!(
-                            "Unknown command. A component of '%ls' is not a ",
-                            "directory. Check your $PATH."
-                        ),
+                        "Unknown command. A component of '%ls' is not a directory. Check your $PATH.",
                         cmd
                     );
                 } else {
@@ -569,16 +565,16 @@ impl<'a> ExecutionContext<'a> {
         // Determine the process type, which depends on the statement decoration (command, builtin,
         // etc).
         match statement.decoration() {
-            StatementDecoration::exec => ProcessType::exec,
-            StatementDecoration::command => ProcessType::external,
-            StatementDecoration::builtin => ProcessType::builtin,
+            StatementDecoration::exec => ProcessType::Exec,
+            StatementDecoration::command => ProcessType::External,
+            StatementDecoration::builtin => ProcessType::Builtin,
             StatementDecoration::none => {
                 if function::exists(cmd, ctx.parser()) {
-                    ProcessType::function
+                    ProcessType::Function
                 } else if builtin_exists(cmd) {
-                    ProcessType::builtin
+                    ProcessType::Builtin
                 } else {
-                    ProcessType::external
+                    ProcessType::External
                 }
             }
         }
@@ -724,7 +720,7 @@ impl<'a> ExecutionContext<'a> {
 
         // Determine the process type.
         let mut process_type = self.process_type_for_command(ctx, statement, &cmd);
-        let external_cmd = if [ProcessType::external, ProcessType::exec].contains(&process_type) {
+        let external_cmd = if matches!(process_type, ProcessType::External | ProcessType::Exec) {
             let parser = ctx.parser();
             // Determine the actual command. This may be an implicit cd.
             let external_cmd = path_try_get_path(&cmd, parser.vars());
@@ -775,9 +771,9 @@ impl<'a> ExecutionContext<'a> {
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
             process_type = if function::exists(L!("cd"), ctx.parser()) {
-                ProcessType::function
+                ProcessType::Function
             } else {
-                ProcessType::builtin
+                ProcessType::Builtin
             };
         } else {
             // Not implicit cd.
@@ -835,9 +831,7 @@ impl<'a> ExecutionContext<'a> {
         let mut redirections = RedirectionSpecList::new();
         let reason = self.determine_redirections(ctx, args_or_redirs, &mut redirections);
         if reason == EndExecutionReason::ok {
-            proc.typ = ProcessType::block_node;
-            proc.block_node_source = Some(Arc::clone(self.pstree()));
-            proc.internal_block_node = Some(statement.into());
+            proc.typ = ProcessType::BlockNode(NodeRef::new(Arc::clone(self.pstree()), statement));
             proc.set_redirection_specs(redirections);
         }
         reason
@@ -1284,10 +1278,7 @@ impl<'a> ExecutionContext<'a> {
             ctx.parser(),
             &mut streams,
             &mut shim_arguments,
-            NodeRef::new(
-                Arc::clone(self.pstree()),
-                statement as *const ast::BlockStatement,
-            ),
+            NodeRef::new(Arc::clone(self.pstree()), statement),
         );
 
         ctx.parser().libdata_mut().status_count += 1;
@@ -1782,10 +1773,11 @@ impl<'a> ExecutionContext<'a> {
         job_node: &ast::JobPipeline,
         _associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
-        // We are going to construct process_t structures for every statement in the job.
-        // Create processes. Each one may fail.
-        let mut processes = ProcessList::new();
-        processes.push(Box::new(Process::new()));
+        // We are going to construct Process structures for every statement in the job.
+        // Create processes. Each one may fail. We know how many there are.
+        let mut processes: Vec<Process> = Vec::new();
+        processes.reserve_exact(1 + job_node.continuation.len());
+        processes.push(Process::new());
         let mut result = self.populate_job_process(
             ctx,
             j,
@@ -1794,7 +1786,7 @@ impl<'a> ExecutionContext<'a> {
             &job_node.variables,
         );
 
-        // Construct process_ts for job continuations (pipelines).
+        // Construct Processes for job continuations (pipelines).
         for jc in &job_node.continuation {
             if result != EndExecutionReason::ok {
                 break;
@@ -1825,7 +1817,7 @@ impl<'a> ExecutionContext<'a> {
             }
 
             // Store the new process (and maybe with an error).
-            processes.push(Box::new(Process::new()));
+            processes.push(Process::new());
             result = self.populate_job_process(
                 ctx,
                 j,
@@ -1843,7 +1835,7 @@ impl<'a> ExecutionContext<'a> {
         if result == EndExecutionReason::ok {
             // Link up the processes.
             assert!(!processes.is_empty());
-            *j.processes_mut() = processes;
+            *j.processes_mut() = processes.into_boxed_slice();
         }
         result
     }
@@ -1883,9 +1875,9 @@ impl<'a> ExecutionContext<'a> {
             return false;
         }
         match get_job_control_mode() {
-            JobControl::all => true,
-            JobControl::interactive => ctx.parser().is_interactive(),
-            JobControl::none => false,
+            JobControl::All => true,
+            JobControl::Interactive => ctx.parser().is_interactive(),
+            JobControl::None => false,
         }
     }
 }

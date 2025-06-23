@@ -48,6 +48,7 @@ pub mod fd_readable_set;
 pub mod fds;
 pub mod flog;
 pub mod fork_exec;
+pub mod fs;
 pub mod function;
 pub mod future;
 pub mod future_feature_flags;
@@ -101,6 +102,8 @@ pub mod wcstringutil;
 pub mod wgetopt;
 pub mod widecharwidth;
 pub mod wildcard;
+
+pub extern crate fish_gettext_extraction;
 
 #[cfg(test)]
 mod tests;

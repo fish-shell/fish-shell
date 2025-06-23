@@ -20,10 +20,10 @@ use crate::{
     env::{env_init, EnvStack, Environment},
     future_feature_flags,
     input_common::{
-        terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent, InputEventQueue,
-        InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
+        match_key_event_to_key, terminal_protocol_hacks, terminal_protocols_enable_ifn, CharEvent,
+        InputEventQueue, InputEventQueuer, KeyEvent, QueryResponseEvent, TerminalQuery,
     },
-    key::{char_to_symbol, Key, Modifiers},
+    key::{char_to_symbol, Key},
     nix::isatty,
     panic::panic_handler,
     print_help::print_help,
@@ -40,19 +40,24 @@ use crate::{
 use super::prelude::*;
 
 /// Return true if the recent sequence of characters indicates the user wants to exit the program.
-fn should_exit(streams: &mut IoStreams, recent_keys: &mut Vec<KeyEvent>, key: KeyEvent) -> bool {
-    recent_keys.push(key);
+fn should_exit(
+    streams: &mut IoStreams,
+    recent_keys: &mut Vec<KeyEvent>,
+    key_evt: KeyEvent,
+) -> bool {
+    recent_keys.push(key_evt);
 
     for evt in [VINTR, VEOF] {
         let modes = shell_modes();
         let cc = Key::from_single_byte(modes.c_cc[evt]);
 
-        if key == cc {
+        if match_key_event_to_key(&key_evt, &cc).is_some() {
             if recent_keys
                 .iter()
                 .rev()
                 .nth(1)
-                .is_some_and(|&prev| prev == cc)
+                .and_then(|prev| match_key_event_to_key(prev, &cc))
+                .is_some()
             {
                 return true;
             }
@@ -104,33 +109,27 @@ fn process_input(streams: &mut IoStreams, continuous_mode: bool, verbose: bool) 
             }
             streams.out.append(L!("\n"));
         }
-        let mut print_bind_example = |key: &Key, recommended: bool| {
-            streams.out.append(sprintf!(
-                "bind %s 'do something'%s\n",
-                key,
-                if recommended {
-                    " # recommended notation"
-                } else {
-                    ""
-                }
-            ));
-        };
         let have_shifted_key = kevt.key.shifted_codepoint != '\0';
-        // If we have shift + some other modifier, the lowercase version is the canonical one.
-        let prefer_explicit_shift = kevt.key.modifiers.shift
-            && kevt.key.modifiers != Modifiers::SHIFT
-            && kevt
-                .key
-                .shifted_codepoint
-                .to_lowercase()
-                .eq(Some(kevt.key.codepoint).into_iter());
+        let mut keys = vec![(kevt.key.key, "")];
         if have_shifted_key {
             let mut shifted_key = kevt.key.key;
             shifted_key.modifiers.shift = false;
             shifted_key.codepoint = kevt.key.shifted_codepoint;
-            print_bind_example(&shifted_key, !prefer_explicit_shift);
+            keys.push((shifted_key, "shifted key"));
         }
-        print_bind_example(&kevt.key, have_shifted_key && prefer_explicit_shift);
+        if kevt.key.base_layout_codepoint != '\0' {
+            let mut base_layout_key = kevt.key.key;
+            base_layout_key.codepoint = kevt.key.base_layout_codepoint;
+            keys.push((base_layout_key, "physical key"));
+        }
+        for (key, explanation) in keys {
+            streams.out.append(sprintf!(
+                "bind %s 'do something'%s%s\n",
+                key,
+                if explanation.is_empty() { "" } else { " # " },
+                explanation,
+            ));
+        }
 
         if continuous_mode && should_exit(streams, &mut recent_chars, kevt.key) {
             streams.err.appendln("\nExiting at your request.");

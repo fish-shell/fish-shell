@@ -1,13 +1,15 @@
 //! Wrappers around posix_spawn.
 
 use super::blocked_signals_for_job;
+use crate::exec::{is_thompson_shell_script, PgroupPolicy};
+use crate::libc::_PATH_BSHELL;
 use crate::proc::Job;
 use crate::redirection::Dup2List;
 use crate::signal::signals_to_default;
-use crate::{exec::is_thompson_shell_script, libc::_PATH_BSHELL};
 use errno::Errno;
 use libc::{c_char, posix_spawn_file_actions_t, posix_spawnattr_t};
 use std::ffi::{CStr, CString};
+use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
 
 // The posix_spawn family of functions is unusual in that it returns errno codes directly in the return value, not via errno.
@@ -25,9 +27,9 @@ struct Attr(posix_spawnattr_t);
 impl Attr {
     fn new() -> Result<Self, Errno> {
         unsafe {
-            let mut attr: posix_spawnattr_t = std::mem::zeroed();
-            check_fail(libc::posix_spawnattr_init(&mut attr))?;
-            Ok(Self(attr))
+            let mut attr = MaybeUninit::uninit();
+            check_fail(libc::posix_spawnattr_init(attr.as_mut_ptr()))?;
+            Ok(Self(attr.assume_init()))
         }
     }
 
@@ -62,9 +64,9 @@ struct FileActions(posix_spawn_file_actions_t);
 impl FileActions {
     fn new() -> Result<Self, Errno> {
         unsafe {
-            let mut actions: posix_spawn_file_actions_t = std::mem::zeroed();
-            check_fail(libc::posix_spawn_file_actions_init(&mut actions))?;
-            Ok(Self(actions))
+            let mut actions = MaybeUninit::uninit();
+            check_fail(libc::posix_spawn_file_actions_init(actions.as_mut_ptr()))?;
+            Ok(Self(actions.assume_init()))
         }
     }
 
@@ -98,18 +100,20 @@ pub struct PosixSpawner {
 }
 
 impl PosixSpawner {
-    pub fn new(j: &Job, dup2s: &Dup2List) -> Result<PosixSpawner, Errno> {
+    pub fn new(
+        j: &Job,
+        pgroup_policy: PgroupPolicy,
+        dup2s: &Dup2List,
+    ) -> Result<PosixSpawner, Errno> {
         let mut attr = Attr::new()?;
         let mut actions = FileActions::new()?;
 
         // desired_pgid tracks the pgroup for the process. If it is none, the pgroup is left unchanged.
         // If it is zero, create a new pgroup from the pid. If it is >0, join that pgroup.
-        let desired_pgid = if let Some(pgid) = j.get_pgid() {
-            Some(pgid.get())
-        } else if j.processes()[0].leads_pgrp {
-            Some(0)
-        } else {
-            None
+        let desired_pgid = match pgroup_policy {
+            PgroupPolicy::Inherit => None,
+            PgroupPolicy::Lead => Some(0),
+            PgroupPolicy::Join(pid) => Some(pid),
         };
 
         // Set our flags.
@@ -129,8 +133,9 @@ impl PosixSpawner {
         attr.set_sigdefault(&signals_to_default)?;
 
         // Reset the sigmask.
-        let mut sigmask = unsafe { std::mem::zeroed() };
-        unsafe { libc::sigemptyset(&mut sigmask) };
+        let mut sigmask = MaybeUninit::uninit();
+        unsafe { libc::sigemptyset(sigmask.as_mut_ptr()) };
+        let mut sigmask = unsafe { sigmask.assume_init() };
         blocked_signals_for_job(j, &mut sigmask);
         attr.set_sigmask(&sigmask)?;
 

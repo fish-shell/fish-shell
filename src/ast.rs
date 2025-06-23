@@ -1745,7 +1745,7 @@ macro_rules! parse_error_range {
         $(,)?
     ) => {
         let text = if $self.out_errors.is_some() && !$self.unwinding {
-            Some(wgettext_maybe_fmt!($fmt $(, $args)*))
+            Some(wgettext_fmt!($fmt $(, $args)*))
         } else {
             None
         };

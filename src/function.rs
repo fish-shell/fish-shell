@@ -28,7 +28,7 @@ pub struct FunctionProperties {
     pub named_arguments: Vec<WString>,
 
     /// Description of the function.
-    pub description: WString,
+    pub description: LocalizableString,
 
     /// Mapping of all variables that were inherited from the function definition scope to their
     /// values, as (key, values) pairs.
@@ -111,7 +111,6 @@ static FUNCTION_SET: Lazy<Mutex<FunctionSet>> = Lazy::new(|| {
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.
 pub fn load(name: &wstr, parser: &Parser) -> bool {
-    parser.assert_can_execute();
     let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
@@ -209,7 +208,6 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
 
 /// Return the properties for a function, or None, perhaps triggering autoloading.
 pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionProperties>> {
-    parser.assert_can_execute();
     if parser_keywords_is_reserved(name) {
         return None;
     }
@@ -220,7 +218,6 @@ pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionPr
 /// Returns true if the function named `cmd` exists.
 /// This may autoload.
 pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
-    parser.assert_can_execute();
     if !valid_func_name(cmd) {
         return false;
     }
@@ -287,14 +284,15 @@ fn get_function_body_source(props: &FunctionProperties) -> &wstr {
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
 pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
-    parser.assert_can_execute();
     load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();
     if let Some(props) = funcset.funcs.get(name) {
         // Note the description is immutable, as it may be accessed on another thread, so we copy
         // the properties to modify it.
         let mut new_props = props.as_ref().clone();
-        new_props.description = desc;
+        // Translations will only be available if the function description has been extracted into
+        // the translation files available to fish.
+        new_props.description = LocalizableString::from_external_source(desc);
         funcset.funcs.insert(name.to_owned(), Arc::new(new_props));
     }
 }
@@ -364,15 +362,6 @@ pub fn invalidate_path() {
 }
 
 impl FunctionProperties {
-    /// Return the description, localized via wgettext.
-    pub fn localized_description(&self) -> &'static wstr {
-        if self.description.is_empty() {
-            L!("")
-        } else {
-            wgettext_str(&self.description)
-        }
-    }
-
     /// Return true if this function is a copy.
     pub fn is_copy(&self) -> bool {
         self.is_copy
@@ -426,7 +415,7 @@ impl FunctionProperties {
     /// Note callers must provide the function name, since the function does not know its own name.
     pub fn annotated_definition(&self, name: &wstr) -> WString {
         let mut out = WString::new();
-        let desc = self.localized_description();
+        let desc = self.description.localize();
         let def = get_function_body_source(self);
         let handlers = event::get_function_handlers(name);
 

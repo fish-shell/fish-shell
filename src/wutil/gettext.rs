@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::sync::Mutex;
 
-use crate::common::{charptr2wcstring, truncate_at_nul, wcs2zstring, PACKAGE_NAME};
+use crate::common::{charptr2wcstring, wcs2zstring, PACKAGE_NAME};
 use crate::env::CONFIG_PATHS;
 #[cfg(test)]
 use crate::tests::prelude::*;
@@ -52,9 +53,7 @@ fn wgettext_really_init() {
         return;
     };
     let package_name = CString::new(PACKAGE_NAME).unwrap();
-    // This contains `datadir`; which when replaced to make the binary relocatable,
-    // causes null bytes at the end of the string.
-    let localedir = CString::new(localepath.display().to_string()).unwrap();
+    let localedir = CString::new(localepath.as_os_str().as_bytes()).unwrap();
     fish_bindtextdomain(&package_name, &localedir);
     fish_textdomain(&package_name);
 }
@@ -86,10 +85,7 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
         MaybeStatic::Local(s) => s,
     };
 
-    debug_assert!(
-        truncate_at_nul(key).len() == key.len(),
-        "key should not contain NUL"
-    );
+    debug_assert!(!key.contains('\0'), "key should not contain NUL");
 
     // Note that because entries are immortal, we simply leak non-static keys, and all values.
     static WGETTEXT_MAP: Lazy<Mutex<HashMap<&'static wstr, &'static wstr>>> =
@@ -120,25 +116,106 @@ fn wgettext_impl(text: MaybeStatic) -> &'static wstr {
     res
 }
 
-/// Get a (possibly translated) string from a literal.
-/// Note this assumes that the string does not contain interior NUL characters -
-/// this is checked in debug mode.
-pub fn wgettext_static_str(s: &'static wstr) -> &'static wstr {
-    wgettext_impl(MaybeStatic::Static(s))
+/// A string which can be localized.
+/// The wrapped string itself is the original, unlocalized version.
+/// Use [`LocalizableString::localize`] to obtain the localized version.
+///
+/// Do not construct this type directly.
+/// For string literals defined in fish's Rust sources,
+/// use the macros defined in this file.
+/// For strings defined elsewhere, use [`LocalizableString::from_external_source`].
+/// Use this function with caution. If the string is not extracted into the gettext PO files from
+/// which fish obtains localizations, localization will not work.
+#[derive(Debug, Clone)]
+pub enum LocalizableString {
+    Static(&'static wstr),
+    Owned(WString),
 }
 
-/// Get a (possibly translated) string from a non-literal.
-/// This truncates at the first NUL character.
-pub fn wgettext_str(s: &wstr) -> &'static wstr {
-    wgettext_impl(MaybeStatic::Local(truncate_at_nul(s)))
+impl LocalizableString {
+    /// Create a [`LocalizableString`] from a string which is not from fish's own Rust sources.
+    /// Localizations will only work if this string is extracted into the localization files some
+    /// other way.
+    pub fn from_external_source(s: WString) -> Self {
+        Self::Owned(s)
+    }
+
+    /// Get the localization of a [`LocalizableString`].
+    /// If original string is empty, an empty `wstr` is returned,
+    /// instead of the gettext metadata.
+    pub fn localize(&self) -> &'static wstr {
+        match self {
+            Self::Static(s) => {
+                if s.is_empty() {
+                    L!("")
+                } else {
+                    wgettext_impl(MaybeStatic::Static(s))
+                }
+            }
+            Self::Owned(s) => {
+                if s.is_empty() {
+                    L!("")
+                } else {
+                    wgettext_impl(MaybeStatic::Local(s))
+                }
+            }
+        }
+    }
 }
 
-/// Get a (possibly translated) string from a string literal.
-/// This returns a &'static wstr.
+impl std::fmt::Display for LocalizableString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.localize())
+    }
+}
+
+/// This macro takes a string literal and produces a [`LocalizableString`].
+/// The essential part is the invocation of the proc macro,
+/// which ensures that the string gets extracted for localization.
+#[macro_export]
+macro_rules! localizable_string {
+    ($string:literal) => {
+        $crate::wutil::gettext::LocalizableString::Static(widestring::utf32str!(
+            fish_gettext_extraction::gettext_extract!($string)
+        ))
+    };
+}
+pub use localizable_string;
+
+/// Macro for declaring string consts which should be localized.
+#[macro_export]
+macro_rules! localizable_consts {
+    (
+        $(
+            $(#[$attr:meta])*
+            $vis:vis
+            $name:ident
+            $string:literal
+        )*
+    ) => {
+        $(
+            $(#[$attr])*
+            $vis const $name: $crate::wutil::gettext::LocalizableString =
+                localizable_string!($string);
+        )*
+    };
+}
+pub use localizable_consts;
+
+/// Takes a string literal of a [`LocalizableString`].
+/// Given a string literal, it is extracted for localization.
+/// Returns a possibly localized `&'static wstr`.
 #[macro_export]
 macro_rules! wgettext {
-    ($string:expr) => {
-        $crate::wutil::gettext::wgettext_static_str(widestring::utf32str!($string))
+    (
+        $string:literal
+    ) => {
+        localizable_string!($string).localize()
+    };
+    (
+        $string:expr // format string (LocalizableString)
+    ) => {
+        $string.localize()
     };
 }
 pub use wgettext;
@@ -148,35 +225,33 @@ pub use wgettext;
 #[macro_export]
 macro_rules! wgettext_fmt {
     (
-    $string:expr, // format string
-    $($args:expr),+ // list of expressions
-    $(,)?   // optional trailing comma
+        $string:literal // format string
+        $(, $args:expr)* // list of expressions
+        $(,)?   // optional trailing comma
     ) => {
-        $crate::wutil::sprintf!($crate::wutil::wgettext!($string), $($args),+)
+        $crate::wutil::sprintf!(
+            localizable_string!($string).localize(),
+            $($args),*
+        )
+    };
+    (
+        $string:expr // format string (LocalizableString)
+        $(, $args:expr)* // list of expressions
+        $(,)?   // optional trailing comma
+    ) => {
+        $crate::wutil::sprintf!($string.localize(), $($args),*)
     };
 }
 pub use wgettext_fmt;
 
-/// Like wgettext_fmt, but doesn't require an argument to format.
-/// For use in macros.
-#[macro_export]
-macro_rules! wgettext_maybe_fmt {
-    (
-    $string:expr // format string
-    $(, $args:expr)* // list of expressions
-    $(,)?   // optional trailing comma
-    ) => {
-        $crate::wutil::sprintf!($crate::wutil::wgettext!($string), $($args),*)
-    };
-}
-pub use wgettext_maybe_fmt;
-
 #[test]
 #[serial]
-fn test_untranslated() {
+fn test_unlocalized() {
     let _cleanup = test_init();
-    let s: &'static wstr = wgettext!("abc");
+    let abc_str = LocalizableString::from_external_source(WString::from("abc"));
+    let s: &'static wstr = wgettext!(abc_str);
     assert_eq!(s, "abc");
-    let s2: &'static wstr = wgettext!("static");
+    let static_str = LocalizableString::from_external_source(WString::from("static"));
+    let s2: &'static wstr = wgettext!(static_str);
     assert_eq!(s2, "static");
 }

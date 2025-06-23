@@ -63,6 +63,8 @@ fn main() {
     #[cfg(not(debug_assertions))]
     rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
 
+    rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
+
     cc::Build::new()
         .file("src/libc.c")
         .include(build_dir)
@@ -143,9 +145,9 @@ fn detect_apple(_: &Target) -> Result<bool, Box<dyn Error>> {
     Ok(cfg!(any(target_os = "ios", target_os = "macos")))
 }
 
-#[allow(unexpected_cfgs)]
 fn detect_cygwin(_: &Target) -> Result<bool, Box<dyn Error>> {
-    Ok(cfg!(target_os = "cygwin"))
+    // Cygwin target is usually cross-compiled.
+    Ok(std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "cygwin")
 }
 
 /// Detect if we're being compiled for a BSD-derived OS, allowing targeting code conditionally with

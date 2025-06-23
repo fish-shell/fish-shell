@@ -104,6 +104,7 @@ dependencies = [
  "bitflags",
  "cc",
  "errno",
+ "fish-gettext-extraction",
  "fish-printf",
  "libc",
  "lru",
@@ -119,6 +120,13 @@ dependencies = [
  "terminfo",
  "unix_path",
  "widestring",
+]
+
+[[package]]
+name = "fish-gettext-extraction"
+version = "0.0.1"
+dependencies = [
+ "proc-macro2",
 ]
 
 [[package]]
@@ -348,18 +356,18 @@ checksum = "280dc24453071f1b63954171985a0b0d30058d287960968b9b2aca264c8d4ee6"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.92"
+version = "1.0.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d3544b3f2748c54e147655edb5025752e2303145b5aefb3c3ea2c78b973bb0"
+checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.38"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e4dccaaaf89514f546c693ddc140f729f958c247918a13380cccc6078391acc"
+checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]

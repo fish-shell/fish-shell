@@ -3,6 +3,7 @@ use crate::tests::prelude::*;
 use crate::wchar::prelude::*;
 use crate::wutil::wgetcwd;
 use std::collections::HashMap;
+use std::mem::MaybeUninit;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// An environment built around an std::map.
@@ -69,9 +70,9 @@ fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
         .as_secs()
         .try_into()
         .unwrap();
-    let mut local_time: libc::tm = unsafe { std::mem::zeroed() };
-    unsafe { libc::localtime_r(&tstamp, &mut local_time) };
-
+    let mut local_time = MaybeUninit::uninit();
+    unsafe { libc::localtime_r(&tstamp, local_time.as_mut_ptr()) };
+    let local_time = unsafe { local_time.assume_init() };
     local_time.tm_hour
 }
 

@@ -40,6 +40,6 @@ complete -c systemd-cryptenroll -l fido2-with-user-presence -xa "yes no" -d "Req
 complete -c systemd-cryptenroll -l fido2-with-user-verification -xa "yes no" -d "Require user verification when unlocking the volume"
 complete -c systemd-cryptenroll -l tpm2-device -kxa "(__fish_cryptenroll_tpm2_devices)" -d "Enroll a TPM2 security chip"
 complete -c systemd-cryptenroll -l tpm2-pcrs -x -d "Bind the enrollment of TPM2 device to specified PCRs"
-complete -c systemd-cryptenroll -l wipe-slot -kxa "(__fish_complete_list , __fish_cryptenroll_complete_wipe)" -d "Wipes one or more LUKS2 key slots"
+complete -c systemd-cryptenroll -l wipe-slot -kxa "(__fish_stripprefix='^--wipe-slot=' __fish_complete_list , __fish_cryptenroll_complete_wipe)" -d "Wipes one or more LUKS2 key slots"
 complete -c systemd-cryptenroll -l help -s h -d "Print a short help"
 complete -c systemd-cryptenroll -l version -d "Print a short version string"

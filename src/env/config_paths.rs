@@ -1,18 +1,13 @@
-use std::{
-    ffi::OsStr,
-    path::{Path, PathBuf},
-};
-
-use once_cell::sync::Lazy;
-
-use crate::{FLOG, FLOGF};
-
 use super::ConfigPaths;
+use crate::{common::get_executable_path, FLOG, FLOGF};
+use once_cell::sync::Lazy;
+use std::path::PathBuf;
 
 const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
 const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
+const LOCALE_DIR: &str = env!("LOCALEDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -26,19 +21,13 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         std::env::current_exe().unwrap_or(argv0)
     };
     let argv0 = argv0.canonicalize().unwrap_or(argv0);
-    determine_config_directory_paths(argv0)
-});
-
-fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
-    // PORTING: why is this not just an associated method on ConfigPaths?
-
     let mut paths = ConfigPaths::default();
     let mut done = false;
-    let exec_path = get_executable_path(argv0.as_ref());
+    let exec_path = get_executable_path(&argv0);
     if let Ok(exec_path) = exec_path.canonicalize() {
         FLOG!(
             config,
-            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, argv0.as_ref())
+            format!("exec_path: {:?}, argv[0]: {:?}", exec_path, &argv0)
         );
         // TODO: we should determine program_name from argv0 somewhere in this file
 
@@ -120,6 +109,11 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
         } else {
             Some(PathBuf::from(BIN_DIR))
         };
+        let locale = if cfg!(feature = "embed-data") {
+            None
+        } else {
+            Some(PathBuf::from(LOCALE_DIR))
+        };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
@@ -127,7 +121,7 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
-            locale: data.map(|x| x.join("share")),
+            locale,
         }
     }
 
@@ -155,29 +149,4 @@ fn determine_config_directory_paths(argv0: impl AsRef<Path>) -> ConfigPaths {
     );
 
     paths
-}
-
-/// Get the absolute path to the fish executable itself
-pub fn get_executable_path(argv0: impl AsRef<Path>) -> PathBuf {
-    if let Ok(path) = std::env::current_exe() {
-        if path.exists() {
-            return path;
-        }
-
-        // When /proc/self/exe points to a file that was deleted (or overwritten on update!)
-        // then linux adds a " (deleted)" suffix.
-        // If that's not a valid path, let's remove that awkward suffix.
-        if !path.ends_with(" (deleted)") {
-            return path;
-        }
-
-        if let (Some(filename), Some(parent)) = (path.file_name(), path.parent()) {
-            if let Some(filename) = filename.to_str() {
-                let corrected_filename = OsStr::new(filename.strip_suffix(" (deleted)").unwrap());
-                return parent.join(corrected_filename);
-            }
-        }
-        return path;
-    }
-    argv0.as_ref().to_owned()
-}
+});

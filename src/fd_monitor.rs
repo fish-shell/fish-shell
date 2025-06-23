@@ -27,7 +27,7 @@ use libc::{EFD_CLOEXEC, EFD_NONBLOCK};
 ///
 /// This is like a binary semaphore. A call to [`post()`](FdEventSignaller::post) will
 /// signal an event, making the fd readable.  Multiple calls to `post()` may be coalesced.
-/// On Linux this uses [`eventfd()`](libc::eventfd), on other systems this uses a pipe.
+/// On Linux this uses eventfd, on other systems this uses a pipe.
 /// [`try_consume()`](FdEventSignaller::try_consume) may be used to consume the event.
 /// Importantly this is async signal safe. Of course it is `CLO_EXEC` as well.
 pub struct FdEventSignaller {

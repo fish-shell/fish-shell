@@ -14,15 +14,17 @@ where:
     set -q prefix[1]
     or set -l prefix ""
     set -l pat "$(commandline -t)"
-    #set -l pat $argv[5]
+    if set -q __fish_stripprefix[1]
+        set pat "$(string replace -r -- "$__fish_stripprefix" "" $pat)"
+    end
     switch $pat
         case "*$div*"
-            for i in (echo $pat | sed "s/^\(.\+$div\)$iprefix.*\$/\1/")$iprefix(eval $cmd)
-                string unescape -- $i
+            for i in (string unescape -- $pat | sed "s/^\(.\+$div\)$iprefix.*\$/\1/")$iprefix(eval $cmd)
+                printf %s\n $i
             end
         case '*'
             for i in $prefix$iprefix(eval $cmd)
-                string unescape -- $i
+                printf %s\n $i
             end
     end
 

@@ -4,8 +4,7 @@
 
 use crate::ast;
 use crate::common::{
-    charptr2wcstring, escape, is_windows_subsystem_for_linux, redirect_tty_output, timef,
-    Timepoint, WSL,
+    charptr2wcstring, escape, is_windows_subsystem_for_linux, timef, Timepoint, WSL,
 };
 use crate::env::Statuses;
 use crate::event::{self, Event};
@@ -13,7 +12,7 @@ use crate::flog::{FLOG, FLOGF};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::io::IoChain;
 use crate::job_group::{JobGroup, MaybeJobId};
-use crate::parse_tree::ParsedSourceRef;
+use crate::parse_tree::NodeRef;
 use crate::parser::{Block, Parser};
 use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
 use crate::redirection::RedirectionSpecList;
@@ -21,9 +20,9 @@ use crate::signal::{signal_set_handlers_once, Signal};
 use crate::threads::MainThread;
 use crate::topic_monitor::{topic_monitor_principal, GenerationsList, Topic};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
-use crate::wutil::{perror, sprintf, wbasename, wgettext, wperror};
+use crate::wutil::{perror, wbasename, wperror};
 use libc::{
     EBADF, EINVAL, ENOTTY, EPERM, EXIT_SUCCESS, SIGABRT, SIGBUS, SIGCONT, SIGFPE, SIGHUP, SIGILL,
     SIGINT, SIGKILL, SIGPIPE, SIGQUIT, SIGSEGV, SIGSYS, SIGTTOU, SIG_DFL, SIG_IGN, STDIN_FILENO,
@@ -36,36 +35,41 @@ use portable_atomic::AtomicU64;
 use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::fs;
 use std::io::{Read, Write};
+use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
 use std::os::fd::RawFd;
 use std::rc::Rc;
 #[cfg(target_has_atomic = "64")]
 use std::sync::atomic::AtomicU64;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, OnceLock};
 
 /// Types of processes.
-#[derive(Default, Eq, PartialEq)]
+#[derive(Default)]
 pub enum ProcessType {
     /// A regular external command.
     #[default]
-    external,
-    /// A builtin command.
-    builtin,
+    External,
+    /// A builtin command. The builtin name is stored in `argv[0]`.
+    Builtin,
     /// A shellscript function.
-    function,
+    /// The function name is stored in `argv[0]`.
+    /// Note we don't capture the function body here, because the
+    /// function body may change as part of argument expansion.
+    Function,
     /// A block of commands, represented as a node.
-    block_node,
+    /// This is always either block, ifs, or switchs, never boolean or decorated.
+    BlockNode(NodeRef<ast::Statement>),
     /// The exec builtin.
-    exec,
+    Exec,
 }
 
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum JobControl {
-    all,
-    interactive,
-    none,
+    All,
+    Interactive,
+    None,
 }
 
 impl TryFrom<&wstr> for JobControl {
@@ -73,11 +77,11 @@ impl TryFrom<&wstr> for JobControl {
 
     fn try_from(value: &wstr) -> Result<Self, Self::Error> {
         if value == "full" {
-            Ok(JobControl::all)
+            Ok(JobControl::All)
         } else if value == "interactive" {
-            Ok(JobControl::interactive)
+            Ok(JobControl::Interactive)
         } else if value == "none" {
-            Ok(JobControl::none)
+            Ok(JobControl::None)
         } else {
             Err(())
         }
@@ -99,34 +103,19 @@ pub fn clock_ticks_to_seconds(ticks: ClockTicks) -> f64 {
 
 pub type JobGroupRef = Arc<JobGroup>;
 
-/// A proc_status_t is a value type that encapsulates logic around exited vs stopped vs signaled,
-/// etc.
-///
-/// It contains two fields packed into an AtomicU64 to allow interior mutability, `status: i32` and
-/// `empty: bool`.
-#[derive(Default)]
-pub struct ProcStatus {
-    value: AtomicU64,
-}
-
-impl Clone for ProcStatus {
-    fn clone(&self) -> Self {
-        Self {
-            value: AtomicU64::new(self.value.load(Ordering::Relaxed)),
-        }
-    }
-}
+/// A ProcStatus is a value type that encapsulates logic around exited vs stopped vs signaled,
+/// etc. It contains an i32 status, or None if the status should be ignored (e.g. for builtin set).
+#[derive(Default, Debug, Copy, Clone)]
+pub struct ProcStatus(Option<i32>);
 
 impl ProcStatus {
-    fn new(status: i32, empty: bool) -> Self {
-        ProcStatus {
-            value: Self::to_u64(status, empty).into(),
-        }
+    fn new(status: Option<i32>) -> Self {
+        ProcStatus(status)
     }
 
-    /// Returns the raw `i32` status value.
+    /// Returns the raw `i32` status value, or 0 if empty.
     fn status(&self) -> i32 {
-        Self::from_u64(self.value.load(Ordering::Relaxed)).0
+        self.0.unwrap_or(0)
     }
 
     /// Returns the `empty` field.
@@ -134,28 +123,7 @@ impl ProcStatus {
     /// If `empty` is `true` then there is no actual status to report (e.g. background or variable
     /// assignment).
     pub fn is_empty(&self) -> bool {
-        Self::from_u64(self.value.load(Ordering::Relaxed)).1
-    }
-
-    /// Replace the current `ProcStatus` with that of `other`.
-    pub fn update(&self, other: &ProcStatus) {
-        self.value
-            .store(other.value.load(Ordering::Relaxed), Ordering::Relaxed);
-    }
-
-    fn set_status(&self, status: i32) {
-        let value = Self::to_u64(status, self.is_empty());
-        self.value.store(value, Ordering::Relaxed);
-    }
-
-    fn to_u64(status: i32, empty: bool) -> u64 {
-        (u64::from(empty) << 32) | u64::from(status as u32)
-    }
-
-    fn from_u64(bits: u64) -> (i32, bool) {
-        let status = bits as u32 as i32;
-        let empty = (bits >> 32) != 0;
-        (status, empty)
+        self.0.is_none()
     }
 
     /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
@@ -172,7 +140,7 @@ impl ProcStatus {
 
     /// Construct from a status returned from a waitpid call.
     pub fn from_waitpid(status: i32) -> ProcStatus {
-        ProcStatus::new(status, false)
+        ProcStatus::new(Some(status))
     }
 
     /// Construct directly from an exit code.
@@ -191,18 +159,17 @@ impl ProcStatus {
         );
 
         assert!(ret < 256);
-        ProcStatus::new(Self::w_exitcode(ret, 0 /* sig */), false)
+        ProcStatus::new(Some(Self::w_exitcode(ret, 0 /* sig */)))
     }
 
     /// Construct directly from a signal.
     pub fn from_signal(signal: Signal) -> ProcStatus {
-        ProcStatus::new(Self::w_exitcode(0 /* ret */, signal.code()), false)
+        ProcStatus::new(Some(Self::w_exitcode(0 /* ret */, signal.code())))
     }
 
     /// Construct an empty status_t (e.g. `set foo bar`).
     pub fn empty() -> ProcStatus {
-        let empty = true;
-        ProcStatus::new(0, empty)
+        ProcStatus::new(None)
     }
 
     /// Return if we are stopped (as in SIGSTOP).
@@ -261,11 +228,10 @@ pub struct InternalProc {
     /// This is used for logging purposes only.
     internal_proc_id: u64,
 
-    /// Whether the process has exited.
-    exited: AtomicBool,
-
     /// If the process has exited, its status code.
-    status: ProcStatus,
+    /// Note the presence of a ProcStatus (even if empty) indicates that this process
+    /// has exited.
+    status: OnceLock<ProcStatus>,
 }
 
 impl InternalProc {
@@ -273,21 +239,18 @@ impl InternalProc {
         static NEXT_PROC_ID: AtomicU64 = AtomicU64::new(0);
         Self {
             internal_proc_id: NEXT_PROC_ID.fetch_add(1, Ordering::SeqCst),
-            exited: AtomicBool::new(false),
-            status: ProcStatus::default(),
+            status: OnceLock::new(),
         }
     }
 
     /// Return if this process has exited.
     pub fn exited(&self) -> bool {
-        self.exited.load(Ordering::Acquire)
+        self.status.get().is_some()
     }
 
     /// Mark this process as having exited with the given `status`.
-    pub fn mark_exited(&self, status: &ProcStatus) {
-        assert!(!self.exited(), "Process is already exited");
-        self.status.update(status);
-        self.exited.store(true, Ordering::Release);
+    pub fn mark_exited(&self, status: ProcStatus) {
+        self.status.set(status).expect("Status already set");
         topic_monitor_principal().post(Topic::internal_exit);
         FLOG!(
             proc_internal_proc,
@@ -299,8 +262,7 @@ impl InternalProc {
     }
 
     pub fn get_status(&self) -> ProcStatus {
-        assert!(self.exited(), "Process is not exited");
-        self.status.clone()
+        *self.status.get().expect("Process has not exited")
     }
 
     pub fn get_id(&self) -> u64 {
@@ -343,9 +305,9 @@ impl TtyTransfer {
     /// Save the current tty modes into the owning job group, if we are transferred.
     pub fn save_tty_modes(&mut self) {
         if let Some(ref mut owner) = self.owner {
-            let mut tmodes: libc::termios = unsafe { std::mem::zeroed() };
-            if unsafe { libc::tcgetattr(STDIN_FILENO, &mut tmodes) } == 0 {
-                owner.tmodes.replace(Some(tmodes));
+            let mut tmodes = MaybeUninit::uninit();
+            if unsafe { libc::tcgetattr(STDIN_FILENO, tmodes.as_mut_ptr()) } == 0 {
+                owner.tmodes.replace(Some(unsafe { tmodes.assume_init() }));
             } else if errno::errno().0 != ENOTTY {
                 perror("tcgetattr");
             }
@@ -414,14 +376,9 @@ impl TtyTransfer {
             let getpgrp_res = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
             if getpgrp_res < 0 {
                 match errno::errno().0 {
-                    ENOTTY => {
+                    ENOTTY | EBADF => {
                         // stdin is not a tty. This may come about if job control is enabled but we are
                         // not a tty - see #6573.
-                        return false;
-                    }
-                    EBADF => {
-                        // stdin has been closed. Workaround a glibc bug - see #3644.
-                        redirect_tty_output(false);
                         return false;
                     }
                     _ => {
@@ -550,24 +507,6 @@ impl fish_printf::ToArg<'static> for Pid {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct AtomicPid(AtomicU32);
-
-impl AtomicPid {
-    #[inline(always)]
-    pub fn load(&self) -> Option<Pid> {
-        Pid::new(self.0.load(Ordering::Relaxed) as i32)
-    }
-    #[inline(always)]
-    pub fn store(&self, pid: Pid) {
-        self.0.store(pid.get() as u32, Ordering::Relaxed);
-    }
-    #[inline(always)]
-    pub fn swap(&self, pid: Pid) -> Option<Pid> {
-        Pid::new(self.0.swap(pid.get() as u32, Ordering::Relaxed) as i32)
-    }
-}
-
 /// A structure representing a single fish process. Contains variables for tracking process state
 /// and the process argument list. Actually, a fish process can be either a regular external
 /// process, an internal builtin which may or may not spawn a fake IO process during execution, a
@@ -581,13 +520,13 @@ impl AtomicPid {
 /// represents it. Shellscript functions, builtins and blocks of code may all need to spawn an
 /// external process that handles the piping and redirecting of IO for them.
 ///
-/// If the process is of type [`ProcessType::external`] or [`ProcessType::exec`], `argv` is the argument
+/// If the process is of type [`ProcessType::External`] or [`ProcessType::Exec`], `argv` is the argument
 /// array and `actual_cmd` is the absolute path of the command to execute.
 ///
-/// If the process is of type [`ProcessType::builtin`], `argv` is the argument vector, and `argv[0]` is
+/// If the process is of type [`ProcessType::Builtin`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the builtin command.
 ///
-/// If the process is of type [`ProcessType::function`], `argv` is the argument vector, and `argv[0]` is
+/// If the process is of type [`ProcessType::Function`], `argv` is the argument vector, and `argv[0]` is
 /// the name of the shellscript function.
 #[derive(Default)]
 pub struct Process {
@@ -598,22 +537,17 @@ pub struct Process {
     /// Type of process.
     pub typ: ProcessType,
 
-    /// For internal block processes only, the node of the statement.
-    /// This is always either block, ifs, or switchs, never boolean or decorated.
-    pub block_node_source: Option<ParsedSourceRef>,
-    pub internal_block_node: Option<std::ptr::NonNull<ast::Statement>>,
-
     /// The expanded variable assignments for this process, as specified by the `a=b cmd` syntax.
     pub variable_assignments: Vec<ConcreteAssignment>,
 
-    /// Actual command to pass to exec in case of process_type_t::external or process_type_t::exec.
+    /// Actual command to pass to exec in case of ProcessType::External or ProcessType::Exec.
     pub actual_cmd: WString,
 
     /// Generation counts for reaping.
     pub gens: GenerationsList,
 
     /// Process ID or `None` where not available.
-    pub pid: AtomicPid,
+    pub pid: OnceLock<Pid>,
 
     /// If we are an "internal process," that process.
     pub internal_proc: RefCell<Option<Arc<InternalProc>>>,
@@ -635,7 +569,7 @@ pub struct Process {
     pub posted_proc_exit: RelaxedAtomicBool,
 
     /// Reported status value.
-    pub status: ProcStatus,
+    pub status: Cell<ProcStatus>,
 
     pub last_times: Cell<ProcTimes>,
 
@@ -677,7 +611,7 @@ impl Process {
     /// Retrieves the associated [`libc::pid_t`], `None` if unset.
     #[inline(always)]
     pub fn pid(&self) -> Option<Pid> {
-        self.pid.load()
+        self.pid.get().copied()
     }
 
     #[inline(always)]
@@ -686,10 +620,10 @@ impl Process {
     }
 
     /// Sets the process' pid. Panics if a pid has already been set.
-    pub fn set_pid(&self, pid: libc::pid_t) {
-        let pid = Pid::new(pid).expect("Invalid pid passed to Process::set_pid()");
-        let old = self.pid.swap(pid);
-        assert!(old.is_none(), "Process::set_pid() called more than once!");
+    pub fn set_pid(&self, pid: Pid) {
+        self.pid
+            .set(pid)
+            .expect("Process::set_pid() called more than once!");
     }
 
     /// Sets `argv`.
@@ -705,6 +639,12 @@ impl Process {
     /// Returns `argv[0]`.
     pub fn argv0(&self) -> Option<&wstr> {
         self.argv.get(0).map(|s| s.as_utfstr())
+    }
+
+    /// Returns the status.
+    #[inline]
+    pub fn status(&self) -> ProcStatus {
+        self.status.get()
     }
 
     /// Redirection list getter and setter.
@@ -732,18 +672,35 @@ impl Process {
         self.completed.store(true);
         // The status may have already been set to e.g. STATUS_NOT_EXECUTABLE.
         // Only stomp a successful status.
-        if self.status.is_success() {
+        if self.status().is_success() {
             self.status
-                .set_status(ProcStatus::from_exit_code(libc::EXIT_FAILURE).status())
+                .set(ProcStatus::from_exit_code(libc::EXIT_FAILURE))
         }
     }
 
     /// Return whether this process type is internal (block, function, or builtin).
     pub fn is_internal(&self) -> bool {
         match self.typ {
-            ProcessType::builtin | ProcessType::function | ProcessType::block_node => true,
-            ProcessType::external | ProcessType::exec => false,
+            ProcessType::Builtin | ProcessType::Function | ProcessType::BlockNode(_) => true,
+            ProcessType::External | ProcessType::Exec => false,
         }
+    }
+
+    /// Return if we match various types.
+    pub fn is_builtin(&self) -> bool {
+        matches!(self.typ, ProcessType::Builtin)
+    }
+    pub fn is_function(&self) -> bool {
+        matches!(self.typ, ProcessType::Function)
+    }
+    pub fn is_block_node(&self) -> bool {
+        matches!(self.typ, ProcessType::BlockNode(_))
+    }
+    pub fn is_external(&self) -> bool {
+        matches!(self.typ, ProcessType::External)
+    }
+    pub fn is_exec(&self) -> bool {
+        matches!(self.typ, ProcessType::Exec)
     }
 
     /// Return the wait handle for the process, if it exists.
@@ -763,7 +720,7 @@ impl Process {
     /// As a process does not know its job id, we pass it in.
     /// Note this will return null if the process is not waitable (has no pid).
     pub fn make_wait_handle(&self, jid: InternalJobId) -> Option<WaitHandleRef> {
-        if self.typ != ProcessType::external || self.pid().is_none() {
+        if !matches!(self.typ, ProcessType::External) || self.pid().is_none() {
             // Not waitable.
             None
         } else {
@@ -778,9 +735,6 @@ impl Process {
         }
     }
 }
-
-pub type ProcessPtr = Box<Process>;
-pub type ProcessList = Vec<ProcessPtr>;
 
 /// A set of jobs properties. These are immutable: they do not change for the lifetime of the
 /// job.
@@ -831,7 +785,7 @@ pub struct Job {
     command_str: WString,
 
     /// All the processes in this job.
-    pub processes: ProcessList,
+    pub processes: Box<[Process]>,
 
     // The group containing this job.
     // This is never cleared.
@@ -864,15 +818,13 @@ impl Job {
         &self.command_str
     }
 
-    /// Borrow the job's process list. Only read-only or interior mutability actions may be
-    /// performed on the processes in the list.
-    pub fn processes(&self) -> &ProcessList {
+    /// Borrow the job's process list.
+    pub fn processes(&self) -> &[Process] {
         &self.processes
     }
 
-    /// Get mutable access to the job's process list.
-    /// Only available with a mutable reference `&mut Job`.
-    pub fn processes_mut(&mut self) -> &mut ProcessList {
+    /// Get the mutable list of processes.
+    pub fn processes_mut(&mut self) -> &mut Box<[Process]> {
         &mut self.processes
     }
 
@@ -880,14 +832,14 @@ impl Job {
     ///
     /// Equivalent to `processes().iter().filter(|p| p.pid.is_some())`.
     #[inline(always)]
-    pub fn external_procs(&self) -> impl Iterator<Item = &ProcessPtr> {
-        self.processes.iter().filter(|p| p.pid.load().is_some())
+    pub fn external_procs(&self) -> impl Iterator<Item = &Process> {
+        self.processes.iter().filter(|p| p.pid().is_some())
     }
 
     /// Return whether it is OK to reap a given process. Sometimes we want to defer reaping a
     /// process if it is the group leader and the job is not yet constructed, because then we might
     /// also reap the process group and then we cannot add new processes to the group.
-    pub fn can_reap(&self, p: &ProcessPtr) -> bool {
+    pub fn can_reap(&self, p: &Process) -> bool {
         !(
             // Can't reap twice.
             p.is_completed() ||
@@ -921,9 +873,7 @@ impl Job {
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This will never be fish's own pid.
     pub fn get_last_pid(&self) -> Option<Pid> {
-        self.external_procs()
-            .last()
-            .and_then(|proc| proc.pid.load())
+        self.external_procs().last().and_then(|proc| proc.pid())
     }
 
     /// The id of this job.
@@ -1059,7 +1009,7 @@ impl Job {
             // finished.
             let procs = self.processes();
             let p = procs.last().unwrap();
-            if p.status.normal_exited() || p.status.signal_exited() {
+            if p.status().normal_exited() || p.status().signal_exited() {
                 if let Some(statuses) = self.get_statuses() {
                     parser.set_last_statuses(statuses);
                     parser.libdata_mut().status_count += 1;
@@ -1122,7 +1072,7 @@ impl Job {
         let mut laststatus = 0;
         st.pipestatus.resize(self.processes().len(), 0);
         for (i, p) in self.processes().iter().enumerate() {
-            let status = &p.status;
+            let status = p.status();
             if status.is_empty() {
                 // Corner case for if a variable assignment is part of a pipeline.
                 // e.g. `false | set foo bar | true` will push 1 in the second spot,
@@ -1202,20 +1152,18 @@ pub fn set_job_control_mode(mode: JobControl) {
     // tcsetpgrp(), but as fish is now a background process it will receive SIGTTOU and stop! Ensure
     // that doesn't happen by ignoring SIGTTOU.
     // Note that if we become interactive, we also ignore SIGTTOU.
-    if mode == JobControl::all {
+    if mode == JobControl::All {
         unsafe {
             libc::signal(SIGTTOU, SIG_IGN);
         }
     }
 }
-static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::interactive as u8);
+static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::Interactive as u8);
 
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// Return whether text was printed to stdout.
 pub fn job_reap(parser: &Parser, interactive: bool) -> bool {
-    parser.assert_can_execute();
-
     // Early out for the common case that there are no jobs.
     if parser.jobs().is_empty() {
         return false;
@@ -1304,7 +1252,7 @@ pub fn proc_update_jiffies(parser: &Parser) {
         for p in job.external_procs() {
             p.last_times.replace(ProcTimes {
                 time: timef(),
-                jiffies: proc_get_jiffies(p.pid.load().unwrap()),
+                jiffies: proc_get_jiffies(p.pid().unwrap()),
             });
         }
     }
@@ -1316,8 +1264,8 @@ pub fn proc_init() {
 }
 
 /// Set the status of `proc` to `status`.
-fn handle_child_status(job: &Job, proc: &Process, status: &ProcStatus) {
-    proc.status.update(status);
+fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
+    proc.status.set(status);
     if status.stopped() {
         proc.stopped.store(true);
     } else if status.continued() {
@@ -1430,8 +1378,6 @@ static DISOWNED_PIDS: MainThread<RefCell<Vec<Pid>>> = MainThread::new(RefCell::n
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
 fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
-    parser.assert_can_execute();
-
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
@@ -1498,7 +1444,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             // The process has stopped or exited! Update its status.
             let status = ProcStatus::from_waitpid(statusv);
-            handle_child_status(j, proc, &status);
+            handle_child_status(j, proc, status);
             if status.stopped() {
                 j.group().set_is_foreground(false);
             }
@@ -1511,7 +1457,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     "Reaped external process '%ls' (pid %d, status %d)",
                     proc.argv0().unwrap(),
                     pid,
-                    proc.status.status_value()
+                    proc.status().status_value()
                 );
             } else {
                 assert!(status.stopped() || status.continued());
@@ -1520,7 +1466,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
                     "External process '%ls' (pid %d, %s)",
                     proc.argv0().unwrap(),
                     proc.pid().unwrap(),
-                    if proc.status.stopped() {
+                    if proc.status().stopped() {
                         "stopped"
                     } else {
                         "continued"
@@ -1559,13 +1505,13 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool) {
 
             // The process gets the status from its internal proc.
             let status = internal_proc.get_status();
-            handle_child_status(j, proc, &status);
+            handle_child_status(j, proc, status);
             FLOGF!(
                 proc_reap_internal,
                 "Reaped internal process '%ls' (id %llu, status %d)",
                 proc.argv0().unwrap(),
                 internal_proc.get_id(),
-                proc.status.status_value(),
+                proc.status().status_value(),
             );
         }
     }
@@ -1584,7 +1530,7 @@ fn generate_process_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
                 p.posted_proc_exit.store(true);
                 out_evts.push(Event::process_exit(
                     p.pid().unwrap(),
-                    p.status.status_value(),
+                    p.status().status_value(),
                 ));
             }
         }
@@ -1614,7 +1560,7 @@ fn proc_wants_summary(j: &Job, p: &Process) -> bool {
     }
 
     // Did we die due to a signal other than SIGPIPE?
-    let s = &p.status;
+    let s = p.status();
     if !s.signal_exited() || s.signal_code() == SIGPIPE {
         return false;
     }
@@ -1694,7 +1640,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
         Some(p) => {
             // We are summarizing a process which exited with a signal.
             // Arguments are the signal name and description.
-            let sig = Signal::new(p.status.signal_code());
+            let sig = Signal::new(p.status().signal_code());
             buffer.push(' ');
             buffer += &escape(sig.name())[..];
 
@@ -1766,7 +1712,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
     // Mark all wait handles as complete (but don't create just for this).
     for proc in job.processes().iter() {
         if let Some(wh) = proc.get_wait_handle() {
-            wh.set_status_and_complete(proc.status.status_value());
+            wh.set_status_and_complete(proc.status().status_value());
         }
     }
 }
@@ -1774,8 +1720,6 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// Return whether something was printed.
 fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
-    parser.assert_can_execute();
-
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
     if parser.scope().is_cleaning_procs {

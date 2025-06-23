@@ -30,6 +30,7 @@ use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wildcard::{WildcardResult, ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{normalize_path, wcstoi_partial, Options};
 use bitflags::bitflags;
+use std::mem::MaybeUninit;
 
 bitflags! {
     /// Set of flags controlling expansions.
@@ -360,7 +361,7 @@ macro_rules! append_syntax_error {
             error.source_start = $source_start;
             error.source_length = 0;
             error.code = ParseErrorCode::syntax;
-            error.text = wgettext_maybe_fmt!($fmt $(, $arg)*);
+            error.text = wgettext_fmt!($fmt $(, $arg)*);
             errors.push(error);
         }
     }
@@ -376,7 +377,7 @@ macro_rules! append_cmdsub_error {
     ) => {
         append_cmdsub_error_formatted!(
             $errors, $source_start, $source_end,
-            wgettext_maybe_fmt!($fmt $(, $arg)*));
+            wgettext_fmt!($fmt $(, $arg)*));
     }
 }
 
@@ -1157,19 +1158,20 @@ fn expand_home_directory(input: &mut WString, vars: &dyn Environment) {
     } else {
         // Some other user's home directory.
         let name_cstr = wcs2zstring(username);
-        let mut userinfo: libc::passwd = unsafe { std::mem::zeroed() };
+        let mut userinfo = MaybeUninit::uninit();
         let mut result: *mut libc::passwd = std::ptr::null_mut();
         let mut buf = [0 as libc::c_char; 8192];
         let retval = unsafe {
             libc::getpwnam_r(
                 name_cstr.as_ptr(),
-                &mut userinfo,
+                userinfo.as_mut_ptr(),
                 &mut buf[0],
                 std::mem::size_of_val(&buf),
                 &mut result,
             )
         };
         if retval == 0 && !result.is_null() {
+            let userinfo = unsafe { userinfo.assume_init() };
             home = Some(charptr2wcstring(userinfo.pw_dir));
         }
     }

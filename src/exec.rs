@@ -30,10 +30,8 @@ use crate::io::{
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
 };
 use crate::libc::_PATH_BSHELL;
-use crate::nix::isatty;
-use crate::null_terminated_array::{
-    null_terminated_array_length, AsNullTerminatedArray, OwningNullTerminatedArray,
-};
+use crate::nix::{getpid, isatty};
+use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::parser::{Block, BlockId, BlockType, EvalRes, Parser};
 #[cfg(FISH_USE_POSIX_SPAWN)]
 use crate::proc::Pid;
@@ -42,23 +40,23 @@ use crate::proc::{
     print_exit_warning_for_jobs, InternalProc, Job, JobGroupRef, ProcStatus, Process, ProcessType,
     TtyTransfer,
 };
-use crate::reader::{reader_run_count, restore_term_mode};
+use crate::reader::{reader_run_count, safe_restore_term_mode};
 use crate::redirection::{dup2_list_resolve_chain, Dup2List};
 use crate::threads::{iothread_perform_cant_wait, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ext::ToWString;
 use crate::wutil::{fish_wcstol, perror};
-use crate::wutil::{wgettext, wgettext_fmt};
 use errno::{errno, set_errno};
 use libc::{
-    c_char, EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
+    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat;
 use std::ffi::CStr;
 use std::io::{Read, Write};
+use std::mem::MaybeUninit;
 use std::num::NonZeroU32;
 use std::os::fd::{AsRawFd, OwnedFd, RawFd};
 use std::slice;
@@ -76,7 +74,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     }
 
     // Handle an exec call.
-    if job.processes()[0].typ == ProcessType::exec {
+    if job.processes()[0].is_exec() {
         // If we are interactive, perhaps disallow exec if there are background jobs.
         if !allow_exec_with_background_jobs(parser) {
             for p in job.processes().iter() {
@@ -280,7 +278,6 @@ pub fn exec_subshell_for_expand(
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> Result<(), ErrorCode> {
-    parser.assert_can_execute();
     let mut break_expand = true;
     let ret = exec_subshell_internal(
         cmd,
@@ -388,8 +385,8 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
 fn safe_launch_process(
     _p: &Process,
     actual_cmd: &CStr,
-    argv: &impl AsNullTerminatedArray<CharType = c_char>,
-    envv: &impl AsNullTerminatedArray<CharType = c_char>,
+    argv: &OwningNullTerminatedArray,
+    envv: &OwningNullTerminatedArray,
 ) -> ! {
     // This function never returns, so we take certain liberties with constness.
 
@@ -405,7 +402,7 @@ fn safe_launch_process(
         // Construct new argv.
         // We must not allocate memory, so only 128 args are supported.
         const maxargs: usize = 128;
-        let nargs = null_terminated_array_length(argv.get());
+        let nargs = argv.len();
         let argv = unsafe { slice::from_raw_parts(argv.get(), nargs) };
         if nargs <= maxargs {
             // +1 for /bin/sh, +1 for terminating nullptr
@@ -422,7 +419,7 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd, argv.get(), envv.get());
+    safe_report_exec_error(errno().0, actual_cmd, argv, envv);
     exit_without_destructors(exit_code_from_exec_error(err.0));
 }
 
@@ -440,9 +437,9 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
-    restore_term_mode(false);
+    safe_restore_term_mode();
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, &actual_cmd, &argv, &*envp);
+    safe_launch_process(p, &actual_cmd, &argv, &envp);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -481,8 +478,11 @@ fn internal_exec(vars: &EnvStack, j: &Job, block_io: IoChain) {
         return;
     }
 
-    let mut blocked_signals: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut blocked_signals) };
+    let mut blocked_signals = MaybeUninit::uninit();
+    let mut blocked_signals = unsafe {
+        libc::sigemptyset(blocked_signals.as_mut_ptr());
+        blocked_signals.assume_init()
+    };
     let blocked_signals = if blocked_signals_for_job(j, &mut blocked_signals) {
         Some(&blocked_signals)
     } else {
@@ -592,7 +592,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // If we have nothing to write we can elide the thread.
     // TODO: support eliding output to /dev/null.
     if f.skip_out() && f.skip_err() {
-        internal_proc.mark_exited(&p.status);
+        internal_proc.mark_exited(p.status());
         return;
     }
 
@@ -602,10 +602,10 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     // If our process is a builtin, it will have already set its status value. Make sure we
     // propagate that if our I/O succeeds and don't read it on a background thread. TODO: have
     // builtin_run provide this directly, rather than setting it in the process.
-    f.success_status = p.status.clone();
+    f.success_status = p.status();
 
     iothread_perform_cant_wait(move || {
-        let mut status = f.success_status.clone();
+        let mut status = f.success_status;
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
                 if err.raw_os_error() != Some(EPIPE) {
@@ -626,7 +626,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
                 }
             }
         }
-        f.internal_proc.mark_exited(&status);
+        f.internal_proc.mark_exited(status);
     });
 }
 
@@ -648,7 +648,7 @@ fn run_internal_process_or_short_circuit(
                 "Set status of job %d (%ls) to %d using short circuit",
                 j.job_id(),
                 j.preview(),
-                p.status.status_value()
+                p.status().status_value()
             );
             if let Some(statuses) = j.get_statuses() {
                 parser.set_last_statuses(statuses);
@@ -667,13 +667,21 @@ fn run_internal_process_or_short_circuit(
     }
 }
 
-/// Call fork() as part of executing a process `p` in a job \j. Execute `child_action` in the
-/// context of the child.
+/// Different ways to assign a pgroup for a process.
+#[derive(Copy, Clone)]
+pub enum PgroupPolicy {
+    Inherit,           // Inherit fish's pgroup.
+    Join(libc::pid_t), // Join a specific pgroup.
+    Lead,              // The new process is the leader of a new pgroup.
+}
+
+/// Call fork() as part of executing a process in a job. Set up process groups.
+/// Execute `child_action` in the context of the child.
 fn fork_child_for_process(
     job: &Job,
     p: &Process,
     dup2s: &Dup2List,
-    fork_type: &wstr,
+    pgroup_policy: PgroupPolicy,
     child_action: impl FnOnce(&Process),
 ) -> LaunchResult {
     // Claim the tty from fish, if the job wants it and we are the pgroup leader.
@@ -685,8 +693,11 @@ fn fork_child_for_process(
     };
 
     // Decide if the job wants to set a custom sigmask.
-    let mut blocked_signals: libc::sigset_t = unsafe { std::mem::zeroed() };
-    unsafe { libc::sigemptyset(&mut blocked_signals) };
+    let mut blocked_signals = MaybeUninit::uninit();
+    let mut blocked_signals = unsafe {
+        libc::sigemptyset(blocked_signals.as_mut_ptr());
+        blocked_signals.assume_init()
+    };
     let blocked_signals = if blocked_signals_for_job(job, &mut blocked_signals) {
         Some(&blocked_signals)
     } else {
@@ -697,52 +708,59 @@ fn fork_child_for_process(
     // to avoid allocations in the forked child.
     let narrow_cmd = wcs2zstring(job.command());
     let narrow_argv0 = wcs2zstring(p.argv0().unwrap_or_default());
+    let job_id = job.job_id().as_num();
 
-    let pid = execute_fork();
-    if pid < 0 {
+    // Time to fork.
+    let fork_res = execute_fork();
+    if fork_res < 0 {
         return Err(());
     }
-    let is_parent = pid > 0;
 
-    // Record the pgroup if this is the leader.
-    // Both parent and child attempt to send the process to its new group, to resolve the race.
-    let pid = if is_parent { pid } else { crate::nix::getpid() };
-    p.set_pid(pid);
-    if p.leads_pgrp {
-        job.group().set_pgid(pid);
-    }
-    {
-        let pid = p.pid().unwrap();
-        if let Some(pgid) = job.group().get_pgid() {
-            let err = execute_setpgid(pid, pgid, is_parent);
-            if err != 0 {
-                report_setpgid_error(
-                    err,
-                    is_parent,
-                    pid,
-                    pgid,
-                    job.job_id().as_num(),
-                    &narrow_cmd,
-                    &narrow_argv0,
-                )
-            }
+    // Determine the child pid.
+    let is_parent = fork_res > 0;
+    let pid: libc::pid_t = if is_parent { fork_res } else { getpid() };
+
+    // Send the process to a new pgroup if requested.
+    // Do this in BOTH the parent and child, to resolve the well-known race.
+    if let Some(pgid) = match pgroup_policy {
+        PgroupPolicy::Inherit => None,
+        PgroupPolicy::Join(pgid) => Some(pgid),
+        PgroupPolicy::Lead => Some(pid),
+    } {
+        let err = execute_setpgid(pid, pgid, is_parent);
+        // Note this error is not fatal.
+        if err != 0 {
+            report_setpgid_error(
+                err,
+                is_parent,
+                pid,
+                pgid,
+                job_id,
+                &narrow_cmd,
+                &narrow_argv0,
+            )
         }
     }
 
     if !is_parent {
-        // Child process.
+        // Set up the child process and run its action.
         child_setup_process(claim_tty_from, blocked_signals, true, dup2s);
         child_action(p);
-        panic!("Child process returned control to fork_child lambda!");
+        panic!("Child process returned control to fork_child!");
+    }
+
+    // We are the parent. Record the pid and store the pgid for the job if it should lead the pgroup.
+    p.set_pid(Pid::new(pid).unwrap());
+    if matches!(pgroup_policy, PgroupPolicy::Lead) {
+        job.group().set_pgid(Pid::new(pid).unwrap());
     }
 
     let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
     FLOGF!(
         exec_fork,
-        "Fork #%d, pid %d: %s for '%ls'",
+        "Fork #%d, pid %d fork external command for '%ls'",
         count,
         pid,
-        fork_type,
         p.argv0().unwrap()
     );
     Ok(())
@@ -803,7 +821,7 @@ fn handle_builtin_output(
     out: &OutputStream,
     err: &OutputStream,
 ) {
-    assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
+    assert!(p.is_builtin(), "Process is not a builtin");
 
     // Figure out any data remaining to write. We may have none, in which case we can short-circuit.
     let outbuff = wcs2string(out.contents());
@@ -830,13 +848,23 @@ fn exec_external_command(
     p: &Process,
     proc_io_chain: &IoChain,
 ) -> LaunchResult {
-    assert!(p.typ == ProcessType::external, "Process is not external");
+    assert!(p.is_external(), "Process is not external");
     // Get argv and envv before we fork.
     let narrow_argv = p.argv().iter().map(|s| wcs2zstring(s)).collect();
     let argv = OwningNullTerminatedArray::new(narrow_argv);
 
     // Convert our IO chain to a dup2 sequence.
     let dup2s = dup2_list_resolve_chain(proc_io_chain);
+
+    // Decide on pgroups - either we stay in fish's pgroup, or we set the pgroup from our leader,
+    // or we become the leader.
+    let pgroup_policy = if p.leads_pgrp {
+        PgroupPolicy::Lead
+    } else if let Some(pgid) = j.group().get_pgid() {
+        PgroupPolicy::Join(pgid.as_pid_t())
+    } else {
+        PgroupPolicy::Inherit
+    };
 
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
@@ -852,26 +880,18 @@ fn exec_external_command(
         let file = &parser.libdata().current_filename;
         let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1; // spawn counts as a fork+exec
 
-        let pid = PosixSpawner::new(j, &dup2s).and_then(|mut spawner| {
+        let pid = PosixSpawner::new(j, pgroup_policy, &dup2s).and_then(|mut spawner| {
             spawner.spawn(actual_cmd.as_ptr(), argv.get_mut(), envv.get_mut())
         });
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, &actual_cmd, argv.get(), envv.get());
+                safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
-                    .update(&ProcStatus::from_exit_code(exit_code_from_exec_error(
-                        err.0,
-                    )));
+                    .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
                 return Err(());
             }
         };
-        let pid = Pid::new(pid).expect("Should have either a valid pid, or an error");
-
-        // This usleep can be used to test for various race conditions
-        // (https://github.com/fish-shell/fish-shell/issues/360).
-        // usleep(10000);
-
         FLOGF!(
             exec_fork,
             "Fork #%d, pid %d: spawn external command '%s' from '%ls'",
@@ -884,9 +904,9 @@ fn exec_external_command(
         );
 
         // these are all things do_fork() takes care of normally (for forked processes):
-        p.pid.store(pid);
+        p.set_pid(Pid::new(pid).unwrap());
         if p.leads_pgrp {
-            j.group().set_pgid(pid.as_pid_t());
+            j.group().set_pgid(Pid::new(pid).unwrap());
             // posix_spawn should in principle set the pgid before returning.
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
@@ -896,8 +916,8 @@ fn exec_external_command(
         return Ok(());
     }
 
-    fork_child_for_process(j, p, &dup2s, L!("external command"), |p| {
-        safe_launch_process(p, &actual_cmd, &argv, &*envv)
+    fork_child_for_process(j, p, &dup2s, pgroup_policy, |p| {
+        safe_launch_process(p, &actual_cmd, &argv, &envv)
     })
 }
 
@@ -954,82 +974,66 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
 // The "performer" function of a block or function process.
 // This accepts a place to execute as `parser` and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
-type ProcPerformer = dyn FnOnce(
-    &Parser,
-    &Process,
-    Option<&mut OutputStream>,
-    Option<&mut OutputStream>,
-) -> ProcStatus;
+type ProcPerformer =
+    dyn FnOnce(&Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
 
-// Return a function which may be to run the given process \p.
-// May return an empty std::function in the rare case that the to-be called fish function no longer
-// exists. This is just a dumb artifact of the fact that we only capture the functions name, not its
-// properties, when creating the job; thus a race could delete the function before we fetch its
-// properties.
-fn get_performer_for_process(
-    p: &Process,
-    job: &Job,
-    io_chain: &IoChain,
-) -> Option<Box<ProcPerformer>> {
-    assert!(
-        [ProcessType::function, ProcessType::block_node].contains(&p.typ),
-        "Unexpected process type"
-    );
+// Return a function which may be to run the given block node process 'p'.
+fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
+    let ProcessType::BlockNode(node) = &p.typ else {
+        panic!("Expected a block node process");
+    };
+
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
+    let node = node.clone();
+    Box::new(move |parser: &Parser, _out, _err| {
+        parser
+            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top)
+            .status
+    })
+}
 
-    if p.typ == ProcessType::block_node {
-        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-            let source = p
-                .block_node_source
-                .as_ref()
-                .expect("Process is missing source info");
-            let node = p
-                .internal_block_node
-                .as_ref()
-                .expect("Process is missing node info");
-            parser
-                .eval_node(
-                    source,
-                    unsafe { node.as_ref() },
-                    &io_chain,
-                    job_group.as_ref(),
-                    BlockType::top,
-                )
-                .status
-        }))
-    } else {
-        assert!(p.typ == ProcessType::function);
-        let Some(props) = function::get_props(p.argv0().unwrap()) else {
-            FLOG!(
-                error,
-                wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
-            );
-            return None;
-        };
-        Some(Box::new(move |parser: &Parser, p: &Process, _out, _err| {
-            let argv = p.argv();
-            // Pull out the job list from the function.
-            let body = &props.func_node.jobs;
-            let fb = function_prepare_environment(parser, argv.clone(), &props);
-            let parsed_source = props.func_node.parsed_source_ref();
-            let mut res = parser.eval_node(
-                &parsed_source,
-                body,
-                &io_chain,
-                job_group.as_ref(),
-                BlockType::top,
-            );
-            function_restore_environment(parser, fb);
+// Return a function which may be to run the given process 'p'.
+// May return None in the rare case that the to-be called fish function no longer
+// exists. This is just an artifact of the fact that we only capture the functions name, not its
+// properties, when creating the job; thus a race could delete the function before we fetch its
+// properties. Note this is user visible. An example:
+//
+//    function foo; echo hi; end
+//    foo (functions --erase foo)
+//
+fn get_performer_for_function(
+    p: &Process,
+    job: &Job,
+    io_chain: &IoChain,
+) -> Result<Box<ProcPerformer>, ()> {
+    assert!(p.is_function());
+    // We want to capture the job group.
+    let job_group = job.group.clone();
+    let io_chain = io_chain.clone();
+    // This may occur if the function was erased as part of its arguments or in other strange edge cases.
+    let Some(props) = function::get_props(p.argv0().unwrap()) else {
+        FLOG!(
+            error,
+            wgettext_fmt!("Unknown function '%ls'", p.argv0().unwrap())
+        );
+        return Err(());
+    };
+    let argv = p.argv().clone();
+    Ok(Box::new(move |parser: &Parser, _out, _err| {
+        // Pull out the job list from the function.
+        let fb = function_prepare_environment(parser, argv, &props);
+        let body_node = props.func_node.child_ref(|n| &n.jobs);
+        let mut res = parser.eval_node(&body_node, &io_chain, job_group.as_ref(), BlockType::top);
+        function_restore_environment(parser, fb);
 
-            // If the function did not execute anything, treat it as success.
-            if res.was_empty {
-                res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
-            }
-            res.status
-        }))
-    }
+        // If the function did not execute anything, treat it as success.
+        if res.was_empty {
+            res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
+        }
+        res.status
+    }))
 }
 
 /// Execute a block node or function "process".
@@ -1041,6 +1045,7 @@ fn exec_block_or_func_process(
     mut io_chain: IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
+    assert!(p.is_block_node() || p.is_function());
     // Create an output buffer if we're piping to another process.
     let mut block_output_bufferfill = None;
     if piped_output_needs_buffering {
@@ -1055,14 +1060,13 @@ fn exec_block_or_func_process(
         }
     }
 
-    // Get the process performer, and just execute it directly.
-    // Do it in this scoped way so that the performer function can be eagerly deallocating releasing
-    // its captured io chain.
-    if let Some(performer) = get_performer_for_process(p, j, &io_chain) {
-        p.status.update(&performer(parser, p, None, None));
+    let performer = if p.is_block_node() {
+        get_performer_for_block_node(p, j, &io_chain)
     } else {
-        return Err(());
-    }
+        // Note this may fail if the function was erased.
+        get_performer_for_function(p, j, &io_chain)?
+    };
+    p.status.set(performer(parser, None, None));
 
     // If we have a block output buffer, populate it now.
     let mut buffer_contents = vec![];
@@ -1086,7 +1090,7 @@ fn exec_block_or_func_process(
 }
 
 fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
-    assert!(p.typ == ProcessType::builtin, "Process must be a builtin");
+    assert!(p.is_builtin(), "Process must be a builtin");
 
     // Determine if we have a "direct" redirection for stdin.
     let mut stdin_is_directly_redirected = false;
@@ -1111,9 +1115,9 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
     // Be careful to not capture p or j by value, as the intent is that this may be run on another
     // thread.
+    let argv = p.argv().clone();
     Box::new(
         move |parser: &Parser,
-              p: &Process,
               output_stream: Option<&mut OutputStream>,
               errput_stream: Option<&mut OutputStream>| {
             let output_stream = output_stream.unwrap();
@@ -1142,19 +1146,13 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
             streams.stdin_is_directly_redirected = stdin_is_directly_redirected;
             streams.out_is_redirected = out_io.is_some();
             streams.err_is_redirected = err_io.is_some();
-            streams.out_is_piped = out_io
-                .map(|io| io.io_mode() == IoMode::pipe)
-                .unwrap_or(false);
-            streams.err_is_piped = err_io
-                .map(|io| io.io_mode() == IoMode::pipe)
-                .unwrap_or(false);
+            streams.out_is_piped = out_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
+            streams.err_is_piped = err_io.is_some_and(|io| io.io_mode() == IoMode::pipe);
 
+            // Disallow nul bytes in the arguments, as they are not allowed in builtins.
+            let mut shim_argv: Vec<&wstr> =
+                argv.iter().map(|s| truncate_at_nul(s.as_ref())).collect();
             // Execute the builtin.
-            let mut shim_argv: Vec<&wstr> = p
-                .argv()
-                .iter()
-                .map(|s| truncate_at_nul(s.as_ref()))
-                .collect();
             builtin_run(parser, &mut shim_argv, &mut streams)
         },
     )
@@ -1168,15 +1166,15 @@ fn exec_builtin_process(
     io_chain: &IoChain,
     piped_output_needs_buffering: bool,
 ) -> LaunchResult {
-    assert!(p.typ == ProcessType::builtin, "Process is not a builtin");
+    assert!(p.is_builtin(), "Process is not a builtin");
     let mut out =
         create_output_stream_for_builtin(STDOUT_FILENO, io_chain, piped_output_needs_buffering);
     let mut err =
         create_output_stream_for_builtin(STDERR_FILENO, io_chain, piped_output_needs_buffering);
 
     let performer = get_performer_for_builtin(p, j, io_chain);
-    let status = performer(parser, p, Some(&mut out), Some(&mut err));
-    p.status.update(&status);
+    let status = performer(parser, Some(&mut out), Some(&mut err));
+    p.status.set(status);
     handle_builtin_output(parser, j, p, io_chain, &out, &err);
     Ok(())
 }
@@ -1270,7 +1268,7 @@ fn exec_process_in_job(
         process_net_io_chain.push(Arc::new(IoClose::new(afd.as_raw_fd())));
     }
 
-    if p.typ != ProcessType::block_node {
+    if !p.is_block_node() {
         // A simple `begin ... end` should not be considered an execution of a command.
         parser.libdata_mut().exec_count += 1;
     }
@@ -1306,21 +1304,21 @@ fn exec_process_in_job(
     // Execute the process.
     p.check_generations_before_launch();
     match p.typ {
-        ProcessType::function | ProcessType::block_node => exec_block_or_func_process(
+        ProcessType::Function | ProcessType::BlockNode(_) => exec_block_or_func_process(
             parser,
             j,
             p,
             process_net_io_chain,
             piped_output_needs_buffering,
         ),
-        ProcessType::builtin => exec_builtin_process(
+        ProcessType::Builtin => exec_builtin_process(
             parser,
             j,
             p,
             &process_net_io_chain,
             piped_output_needs_buffering,
         ),
-        ProcessType::external => {
+        ProcessType::External => {
             parser.libdata_mut().exec_external_count += 1;
             exec_external_command(parser, j, p, &process_net_io_chain)?;
             // It's possible (though unlikely) that this is a background process which recycled a
@@ -1328,7 +1326,7 @@ fn exec_process_in_job(
             parser.mut_wait_handles().remove_by_pid(p.pid().unwrap());
             Ok(())
         }
-        ProcessType::exec => {
+        ProcessType::Exec => {
             // We should have handled exec up above.
             panic!("process_type_t::exec process found in pipeline, where it should never be. Aborting.");
         }
@@ -1349,13 +1347,13 @@ fn get_deferred_process(j: &Job) -> Option<usize> {
     }
 
     // Skip execs, which can only appear at the front.
-    if j.processes()[0].typ == ProcessType::exec {
+    if matches!(j.processes()[0].typ, ProcessType::Exec) {
         return None;
     }
 
     // Find the last non-external process, and return it if it pipes into an external process.
     for (i, p) in j.processes().iter().enumerate().rev() {
-        if p.typ != ProcessType::external {
+        if !p.is_external() {
             return if p.is_last_in_job { None } else { Some(i) };
         }
     }
@@ -1453,7 +1451,6 @@ fn exec_subshell_internal(
     apply_exit_status: bool,
     is_subcmd: bool,
 ) -> Result<(), ErrorCode> {
-    parser.assert_can_execute();
     let _scoped = parser.push_scope(|s| {
         s.is_subshell = true;
         s.read_limit = if is_subcmd {

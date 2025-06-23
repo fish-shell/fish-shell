@@ -5,7 +5,7 @@ complete -c usermod -s d -l home -d "Change user's login directory" -r
 complete -c usermod -s e -l expiredate -d "Date (YYYY-MM-DD) on which the user account will be disabled" -x
 complete -c usermod -s f -l inactive -d "Number of days after a password expires until the account is locked" -xa "(seq 0 365)"
 complete -c usermod -s g -l gid -d "Group name or number of the user's new initial login group" -xa "(__fish_complete_groups)"
-complete -c usermod -s G -l groups -d "List of groups which the user is also a member of" -xa "(__fish_complete_list , __fish_complete_groups)"
+complete -c usermod -s G -l groups -d "List of groups which the user is also a member of" -xa "(__fish_stripprefix='^(--groups=|-\w*G)' __fish_complete_list , __fish_complete_groups)"
 complete -c usermod -s l -l login -d "Change user's name" -x
 complete -c usermod -s L -l lock -d "Lock user's password" -f
 complete -c usermod -s m -l move-home -d "Move the content of the user's home directory to the new location" -f

@@ -4,58 +4,35 @@ use std::marker::PhantomData;
 use std::pin::Pin;
 use std::ptr;
 
-pub trait NulTerminatedString {
-    type CharType: Copy;
-
-    /// Return a pointer to the null-terminated string.
-    fn c_str(&self) -> *const Self::CharType;
-}
-
-impl NulTerminatedString for CStr {
-    type CharType = c_char;
-
-    fn c_str(&self) -> *const c_char {
-        self.as_ptr()
-    }
-}
-
-pub trait AsNullTerminatedArray {
-    type CharType;
-    fn get(&self) -> *mut *const Self::CharType;
-}
-
 /// This supports the null-terminated array of NUL-terminated strings consumed by exec.
 /// Given a list of strings, construct a vector of pointers to those strings contents.
 /// This is used for building null-terminated arrays of null-terminated strings.
-pub struct NullTerminatedArray<'p, T: NulTerminatedString + ?Sized> {
-    pointers: Box<[*const T::CharType]>,
-    _phantom: PhantomData<&'p T>,
+struct NullTerminatedArray<'p> {
+    pointers: Box<[*const c_char]>,
+    _phantom: PhantomData<&'p CStr>,
 }
 
-impl<'p, Str: NulTerminatedString + ?Sized> AsNullTerminatedArray for NullTerminatedArray<'p, Str> {
-    type CharType = Str::CharType;
+impl<'p> NullTerminatedArray<'p> {
     /// Return the list of pointers, appropriate for envp or argv.
     /// Note this returns a mutable array of const strings. The caller may rearrange the strings but
     /// not modify their contents.
     /// We freely give out mutable pointers even though we are not mut; this is because most of the uses
     /// expect the array to be mutable even though fish does not mutate it, so it's either this or cast
     /// away the const at the call site.
-    fn get(&self) -> *mut *const Str::CharType {
+    pub fn get(&self) -> *mut *const c_char {
         assert!(
             !self.pointers.is_empty() && self.pointers.last().unwrap().is_null(),
             "Should have null terminator"
         );
-        self.pointers.as_ptr() as *mut *const Str::CharType
+        self.pointers.as_ptr().cast_mut()
     }
-}
-impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
     /// Construct from a list of "strings".
     /// This holds pointers into the strings.
-    pub fn new<S: AsRef<Str>>(strs: &'p [S]) -> Self {
+    pub fn new<S: AsRef<CStr>>(strs: &'p [S]) -> Self {
         let mut pointers = Vec::new();
         pointers.reserve_exact(1 + strs.len());
         for s in strs {
-            pointers.push(s.as_ref().c_str());
+            pointers.push(s.as_ref().as_ptr());
         }
         pointers.push(ptr::null());
         NullTerminatedArray {
@@ -66,8 +43,8 @@ impl<'p, Str: NulTerminatedString + ?Sized> NullTerminatedArray<'p, Str> {
 }
 
 /// Safety: NullTerminatedArray is Send and Sync because it's immutable.
-unsafe impl<T: NulTerminatedString + ?Sized + Send> Send for NullTerminatedArray<'_, T> {}
-unsafe impl<T: NulTerminatedString + ?Sized + Sync> Sync for NullTerminatedArray<'_, T> {}
+unsafe impl Send for NullTerminatedArray<'_> {}
+unsafe impl Sync for NullTerminatedArray<'_> {}
 
 /// A container which exposes a null-terminated array of pointers to strings that it owns.
 /// This is useful for persisted null-terminated arrays, e.g. the exported environment variable
@@ -75,22 +52,17 @@ unsafe impl<T: NulTerminatedString + ?Sized + Sync> Sync for NullTerminatedArray
 pub struct OwningNullTerminatedArray {
     // Note that null_terminated_array holds pointers into our boxed strings.
     // The 'static is a lie.
-    _strings: Pin<Box<[CString]>>,
-    null_terminated_array: NullTerminatedArray<'static, CStr>,
+    strings: Pin<Box<[CString]>>,
+    null_terminated_array: NullTerminatedArray<'static>,
 }
 
 const _: () = assert_send::<OwningNullTerminatedArray>();
 const _: () = assert_sync::<OwningNullTerminatedArray>();
 
-impl AsNullTerminatedArray for OwningNullTerminatedArray {
-    type CharType = c_char;
-    /// Cover over null_terminated_array.get().
-    fn get(&self) -> *mut *const c_char {
+impl OwningNullTerminatedArray {
+    pub fn get(&self) -> *mut *const c_char {
         self.null_terminated_array.get()
     }
-}
-
-impl OwningNullTerminatedArray {
     pub fn get_mut(&self) -> *mut *mut c_char {
         self.get().cast()
     }
@@ -100,31 +72,16 @@ impl OwningNullTerminatedArray {
         // Safety: we're pinning the strings, so they won't move.
         let string_slice: &'static [CString] = unsafe { std::mem::transmute(&*strings) };
         OwningNullTerminatedArray {
-            _strings: Pin::from(strings),
+            strings: Pin::from(strings),
             null_terminated_array: NullTerminatedArray::new(string_slice),
         }
     }
-}
-
-/// Return the length of a null-terminated array of pointers to something.
-pub(crate) fn null_terminated_array_length<T>(mut arr: *const *const T) -> usize {
-    let mut len = 0;
-    // Safety: caller must ensure that arr is null-terminated.
-    unsafe {
-        while !arr.read().is_null() {
-            arr = arr.offset(1);
-            len += 1;
-        }
+    pub fn len(&self) -> usize {
+        self.strings.len()
     }
-    len
-}
-
-#[test]
-fn test_null_terminated_array_length() {
-    let arr = [&1, &2, &3, std::ptr::null()];
-    assert_eq!(null_terminated_array_length(arr.as_ptr()), 3);
-    let arr: &[*const u64] = &[std::ptr::null()];
-    assert_eq!(null_terminated_array_length(arr.as_ptr()), 0);
+    pub fn iter(&self) -> impl Iterator<Item = &CString> {
+        self.strings.iter()
+    }
 }
 
 #[test]
@@ -150,4 +107,9 @@ fn test_owning_null_terminated_array() {
         assert_eq!(CStr::from_ptr(*ptr.offset(1)).to_str().unwrap(), "bar");
         assert_eq!(*ptr.offset(2), ptr::null());
     }
+    assert_eq!(arr.len(), 2);
+    let mut iter = arr.iter();
+    assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("foo"));
+    assert_eq!(iter.next().map(|s| s.to_str().unwrap()), Some("bar"));
+    assert_eq!(iter.next(), None);
 }

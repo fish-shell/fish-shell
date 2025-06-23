@@ -327,6 +327,11 @@ use rust_embed::RustEmbed;
 struct Docs;
 
 pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+    localizable_consts!(
+        #[allow(dead_code)]
+        NO_EMBEDDED_FILES_MSG "%ls: fish was not built with embedded files"
+    );
+
     let cmd = args[0];
     let argc = args.len();
 
@@ -369,9 +374,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             streams.out.append(wgettext!("This is not a login shell\n"));
         }
         let job_control_mode = match get_job_control_mode() {
-            JobControl::interactive => wgettext!("Only on interactive jobs"),
-            JobControl::none => wgettext!("Never"),
-            JobControl::all => wgettext!("Always"),
+            JobControl::Interactive => wgettext!("Only on interactive jobs"),
+            JobControl::None => wgettext!("Never"),
+            JobControl::All => wgettext!("Always"),
         };
         streams
             .out
@@ -474,10 +479,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.appendln(wgettext_fmt!(
-                    "%ls: fish was not built with embedded files",
-                    cmd,
-                ));
+                streams
+                    .err
+                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -520,10 +524,9 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             #[cfg(not(feature = "embed-data"))]
             {
-                streams.err.appendln(wgettext_fmt!(
-                    "%ls: fish was not built with embedded files",
-                    cmd,
-                ));
+                streams
+                    .err
+                    .appendln(sprintf!(NO_EMBEDDED_FILES_MSG.localize(), cmd));
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -639,14 +642,14 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_IS_FULL_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::all {
+                    if get_job_control_mode() == JobControl::All {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
                 STATUS_IS_INTERACTIVE_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::interactive {
+                    if get_job_control_mode() == JobControl::Interactive {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
@@ -660,7 +663,7 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                     }
                 }
                 STATUS_IS_NO_JOB_CTRL => {
-                    if get_job_control_mode() == JobControl::none {
+                    if get_job_control_mode() == JobControl::None {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
@@ -672,11 +675,10 @@ pub fn status(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 STATUS_CURRENT_CMD => {
                     let command = &parser.libdata().status_vars.command;
                     if !command.is_empty() {
-                        streams.out.append(command);
+                        streams.out.appendln(command);
                     } else {
                         streams.out.appendln(*PROGRAM_NAME.get().unwrap());
                     }
-                    streams.out.append_char('\n');
                 }
                 STATUS_CURRENT_COMMANDLINE => {
                     let commandline = &parser.libdata().status_vars.commandline;

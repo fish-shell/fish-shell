@@ -38,7 +38,7 @@ Desktop.ini
 Thumbs.db
 ehthumbs.db
 
-messages.pot
+po/template.po
 *.mo
 .directory
 .fuse_hidden*
@@ -78,6 +78,7 @@ __pycache__
 /share/__fish_build_paths.fish
 /share/pkgconfig
 /tests/*.tmp.*
+/tests/.last-check-all-files
 
 # xcode
 ## Build generated

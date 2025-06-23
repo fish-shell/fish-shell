@@ -9,7 +9,9 @@ use crate::parser::Parser;
 #[cfg(test)]
 use crate::tests::prelude::*;
 use crate::wchar::{wstr, WString, L};
+use crate::wchar_ext::WExt;
 use crate::wutil::{file_id_for_path, FileId, INVALID_FILE_ID};
+use crate::FLOGF;
 use lru::LruCache;
 #[cfg(feature = "embed-data")]
 use rust_embed::RustEmbed;
@@ -56,6 +58,12 @@ pub fn has_asset(_cmd: &str) -> bool {
     false
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum AssetDir {
+    Functions,
+    Completions,
+}
+
 pub enum AutoloadPath {
     #[cfg(feature = "embed-data")]
     Embedded(String),
@@ -63,7 +71,7 @@ pub enum AutoloadPath {
 }
 
 enum AutoloadResult {
-    Path(WString),
+    Path(AutoloadPath),
     Loaded,
     Pending,
     None,
@@ -97,71 +105,33 @@ impl Autoload {
     /// mark_autoload_finished() with the same command. Note this does not actually execute any
     /// code; it is the caller's responsibility to load the file.
     pub fn resolve_command(&mut self, cmd: &wstr, env: &dyn Environment) -> Option<AutoloadPath> {
-        use crate::wchar_ext::WExt;
-
-        let mut possible_path = None;
-        if let Some(var) = env.get(self.env_var_name) {
-            match self.resolve_command_impl(cmd, var.as_list()) {
-                AutoloadResult::Path(path) => {
-                    crate::FLOGF!(autoload, "Loading from path with var: %ls", path);
-                    // HACK: Ignore generated_completions until we tried the embedded assets
-                    if path
-                        .find("/generated_completions/".chars().collect::<Vec<_>>())
-                        .is_some()
-                    {
-                        possible_path = Some(path);
-                    } else {
-                        return Some(AutoloadPath::Path(path));
+        match self.resolve_command_impl(
+            cmd,
+            env.get(self.env_var_name)
+                .as_ref()
+                .map(|var| var.as_list())
+                .unwrap_or_default(),
+        ) {
+            AutoloadResult::Path(path) => {
+                match &path {
+                    #[cfg(feature = "embed-data")]
+                    AutoloadPath::Embedded(_) => {
+                        FLOGF!(autoload, "Embedded: %ls", cmd);
+                    }
+                    AutoloadPath::Path(path) => {
+                        FLOGF!(
+                            autoload,
+                            "Loading %ls from var %ls from path %ls",
+                            cmd,
+                            self.env_var_name,
+                            path
+                        )
                     }
                 }
-                AutoloadResult::Loaded => return None,
-                AutoloadResult::Pending => return None,
-                AutoloadResult::None => (),
-            };
-        } else {
-            match self.resolve_command_impl(cmd, &[]) {
-                AutoloadResult::Path(path) => {
-                    crate::FLOGF!(autoload, "Loading from path with var: %ls", path);
-                    return Some(AutoloadPath::Path(path));
-                }
-                AutoloadResult::Loaded => return None,
-                AutoloadResult::Pending => return None,
-                AutoloadResult::None => (),
-            };
-        }
-
-        // HACK: In cargo tests, this used to never load functions
-        // It will hang for reasons unrelated to this.
-        if cfg!(test) {
-            return None;
-        }
-
-        #[cfg(feature = "embed-data")]
-        {
-            let narrow = wcs2string(cmd);
-            let cmdstr = std::str::from_utf8(&narrow).ok()?;
-            let p = if self.env_var_name == "fish_function_path" {
-                "functions/".to_owned() + cmdstr + ".fish"
-            } else if self.env_var_name == "fish_complete_path" {
-                "completions/".to_owned() + cmdstr + ".fish"
-            } else {
-                return None;
-            };
-            if has_asset(&p) {
-                if let Some(loaded_file) = self.autoloaded_files.get(cmd) {
-                    if *loaded_file == INVALID_FILE_ID {
-                        // The file has been autoloaded and is unchanged.
-                        return None;
-                    }
-                }
-                self.current_autoloading.insert(cmd.to_owned());
-                self.autoloaded_files
-                    .insert(cmd.to_owned(), INVALID_FILE_ID);
-                crate::FLOGF!(autoload, "Embedded: %ls", cmd);
-                return Some(AutoloadPath::Embedded(p));
+                Some(path)
             }
+            AutoloadResult::Loaded | AutoloadResult::Pending | AutoloadResult::None => None,
         }
-        possible_path.map(AutoloadPath::Path)
     }
 
     /// Helper to actually perform an autoload.
@@ -182,7 +152,7 @@ impl Autoload {
             AutoloadPath::Embedded(name) => {
                 use crate::common::str2wcstring;
                 use std::sync::Arc;
-                crate::FLOGF!(autoload, "Loading embedded: %ls", name);
+                FLOGF!(autoload, "Loading embedded: %ls", name);
                 let emfile = Asset::get(name).expect("Embedded file not found");
                 let src = str2wcstring(&emfile.data);
                 let mut widename = L!("embedded:").to_owned();
@@ -209,7 +179,9 @@ impl Autoload {
     /// Return whether a command could potentially be autoloaded.
     /// This does not actually mark the command as being autoloaded.
     pub fn can_autoload(&mut self, cmd: &wstr) -> bool {
-        self.cache.check(cmd, true /* allow stale */).is_some()
+        self.cache
+            .check(self.env_var_name, cmd, true /* allow stale */)
+            .is_some()
     }
 
     /// Return whether autoloading has been attempted for a command.
@@ -259,13 +231,19 @@ impl Autoload {
         }
 
         // Do we have an entry to load?
-        let Some(file) = self.cache.check(cmd, false) else {
+        let Some(file) = self.cache.check(self.env_var_name, cmd, false) else {
             return AutoloadResult::None;
+        };
+
+        let file_id = match &file {
+            AutoloadableFileInfo::FileInfo(file) => &file.file_id,
+            #[cfg(feature = "embed-data")]
+            AutoloadableFileInfo::EmbeddedPath(_) => &INVALID_FILE_ID,
         };
 
         // Is this file the same as what we previously autoloaded?
         if let Some(loaded_file) = self.autoloaded_files.get(cmd) {
-            if *loaded_file == file.file_id {
+            if *loaded_file == *file_id {
                 // The file has been autoloaded and is unchanged.
                 return AutoloadResult::Loaded;
             }
@@ -273,8 +251,13 @@ impl Autoload {
 
         // We're going to (tell our caller to) autoload this command.
         self.current_autoloading.insert(cmd.to_owned());
-        self.autoloaded_files.insert(cmd.to_owned(), file.file_id);
-        AutoloadResult::Path(file.path)
+        self.autoloaded_files
+            .insert(cmd.to_owned(), file_id.clone());
+        AutoloadResult::Path(match file {
+            AutoloadableFileInfo::FileInfo(path) => AutoloadPath::Path(path.path),
+            #[cfg(feature = "embed-data")]
+            AutoloadableFileInfo::EmbeddedPath(path) => AutoloadPath::Embedded(path),
+        })
     }
 }
 
@@ -283,11 +266,20 @@ const AUTOLOAD_STALENESS_INTERVALL: u64 = 15;
 
 /// Represents a file that we might want to autoload.
 #[derive(Clone)]
-struct AutoloadableFile {
+struct FileInfo {
     /// The path to the file.
     path: WString,
     /// The metadata for the file.
     file_id: FileId,
+}
+
+#[derive(Clone)]
+enum AutoloadableFileInfo {
+    /// An on-disk file.
+    FileInfo(FileInfo),
+    /// An embedded file.
+    #[cfg(feature = "embed-data")]
+    EmbeddedPath(String),
 }
 
 // A timestamp is a monotonic point in time.
@@ -295,7 +287,7 @@ type Timestamp = time::Instant;
 type MissesLruCache = LruCache<WString, Timestamp>;
 
 struct KnownFile {
-    file: AutoloadableFile,
+    file: AutoloadableFileInfo,
     last_checked: Timestamp,
 }
 
@@ -343,10 +335,32 @@ impl AutoloadFileCache {
     /// Check if a command `cmd` can be loaded.
     /// If `allow_stale` is true, allow stale entries; otherwise discard them.
     /// This returns an autoloadable file, or none() if there is no such file.
-    fn check(&mut self, cmd: &wstr, allow_stale: bool) -> Option<AutoloadableFile> {
+    fn check(
+        &mut self,
+        env_var_name: &wstr,
+        cmd: &wstr,
+        allow_stale: bool,
+    ) -> Option<AutoloadableFileInfo> {
+        let asset_dir = cfg!(feature = "embed-data").then_some(()).and_then(|()| {
+            if env_var_name == "fish_function_path" {
+                Some(AssetDir::Functions)
+            } else if cfg!(feature = "embed-data") && env_var_name == "fish_complete_path" {
+                Some(AssetDir::Completions)
+            } else {
+                None
+            }
+        });
+
         // Check hits.
         if let Some(value) = self.known_files.get(cmd) {
-            if allow_stale || Self::is_fresh(value.last_checked, Self::current_timestamp()) {
+            #[cfg(feature = "embed-data")]
+            let embedded = matches!(value.file, AutoloadableFileInfo::EmbeddedPath(_));
+            #[cfg(not(feature = "embed-data"))]
+            let embedded = false;
+            if allow_stale
+                || embedded
+                || Self::is_fresh(value.last_checked, Self::current_timestamp())
+            {
                 // Re-use this cached hit.
                 return Some(value.file.clone());
             }
@@ -365,7 +379,10 @@ impl AutoloadFileCache {
         }
 
         // We couldn't satisfy this request from the cache. Hit the disk.
-        let file = self.locate_file(cmd);
+        let file = self
+            .locate_file(cmd, asset_dir, false)
+            .or_else(|| self.locate_asset(cmd, asset_dir?))
+            .or_else(|| self.locate_file(cmd, asset_dir, true));
         if let Some(file) = file.as_ref() {
             let old_value = self.known_files.insert(
                 cmd.to_owned(),
@@ -408,7 +425,12 @@ impl AutoloadFileCache {
 
     /// Attempt to find an autoloadable file by searching our path list for a given command.
     /// Return the file, or none() if none.
-    fn locate_file(&self, cmd: &wstr) -> Option<AutoloadableFile> {
+    fn locate_file(
+        &self,
+        cmd: &wstr,
+        asset_dir: Option<AssetDir>,
+        want_generated_completions: bool,
+    ) -> Option<AutoloadableFileInfo> {
         // If the command is empty or starts with NULL (i.e. is empty as a path)
         // we'd try to source the *directory*, which exists.
         // So instead ignore these here.
@@ -421,6 +443,12 @@ impl AutoloadFileCache {
         // Re-use the storage for path.
         let mut path;
         for dir in self.dirs() {
+            if asset_dir == Some(AssetDir::Completions) {
+                // HACK: Ignore generated_completions until we tried the embedded assets
+                if dir.ends_with(L!("/generated_completions")) != want_generated_completions {
+                    continue;
+                }
+            }
             // Construct the path as dir/cmd.fish
             path = dir.to_owned();
             path.push('/');
@@ -430,10 +458,30 @@ impl AutoloadFileCache {
             let file_id = file_id_for_path(&path);
             if file_id != INVALID_FILE_ID {
                 // Found it.
-                return Some(AutoloadableFile { path, file_id });
+                return Some(AutoloadableFileInfo::FileInfo(FileInfo { path, file_id }));
             }
         }
         None
+    }
+
+    #[cfg(not(feature = "embed-data"))]
+    fn locate_asset(&self, _cmd: &wstr, _asset_dir: AssetDir) -> Option<AutoloadableFileInfo> {
+        None
+    }
+    #[cfg(feature = "embed-data")]
+    fn locate_asset(&self, cmd: &wstr, asset_dir: AssetDir) -> Option<AutoloadableFileInfo> {
+        // HACK: In cargo tests, this used to never load functions
+        // It will hang for reasons unrelated to this.
+        if cfg!(test) {
+            return None;
+        }
+        let narrow = wcs2string(cmd);
+        let cmdstr = std::str::from_utf8(&narrow).ok()?;
+        let p = match asset_dir {
+            AssetDir::Functions => "functions/".to_owned() + cmdstr + ".fish",
+            AssetDir::Completions => "completions/".to_owned() + cmdstr + ".fish",
+        };
+        has_asset(&p).then_some(AutoloadableFileInfo::EmbeddedPath(p))
     }
 }
 

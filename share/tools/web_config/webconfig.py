@@ -244,7 +244,9 @@ def parse_color(color_str):
             underline = "single"
         elif comp.startswith("--underline="):
             underline = comp.stripprefix("--underline=")
-        elif comp.startswith("-u"): # Multiple short options like "-rucurly" are not yet supported.
+        elif comp.startswith(
+            "-u"
+        ):  # Multiple short options like "-rucurly" are not yet supported.
             underline = comp.stripprefix("-u")
         elif comp == "--italics" or comp == "-i":
             italics = True
@@ -253,7 +255,10 @@ def parse_color(color_str):
         elif comp == "--reverse" or comp == "-r":
             reverse = True
         else:
-            def parse_opt(current_best: str, i: int, long_opt: str, short_opt: str | None) -> str:
+
+            def parse_opt(
+                current_best: str, i: int, long_opt: str, short_opt: str | None
+            ) -> str:
                 if comp.startswith(long_opt):
                     c = comp[len(long_opt) :]
                     parsed_c = parse_one_color(c)
@@ -269,13 +274,18 @@ def parse_color(color_str):
                             c = comps[i + 1]
                             i += 1
                     else:
-                        c = comp[len(short_opt):]
+                        c = comp[len(short_opt) :]
                     parsed_c = parse_one_color(c)
                     if better_color(current_best, parsed_c) == parsed_c:
                         return True, c, i
                 return False, current_best, i
-            is_bg, background_color, i = parse_opt(background_color, i, "--background", "-b")
-            is_ul, underline_color, i = parse_opt(underline_color, i, "--underline-color", None)
+
+            is_bg, background_color, i = parse_opt(
+                background_color, i, "--background", "-b"
+            )
+            is_ul, underline_color, i = parse_opt(
+                underline_color, i, "--underline-color", None
+            )
             if not (is_bg or is_ul):
                 # Regular color
                 parsed_c = parse_one_color(comp)

@@ -272,7 +272,7 @@ pub trait WExt {
     }
 
     fn contains(&self, c: char) -> bool {
-        self.as_char_slice().iter().any(|&x| x == c)
+        self.as_char_slice().contains(&c)
     }
 
     /// Return whether we start with a given Prefix.

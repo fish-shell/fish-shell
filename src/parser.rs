@@ -23,15 +23,15 @@ use crate::parse_constants::{
     SOURCE_LOCATION_UNKNOWN,
 };
 use crate::parse_execution::{EndExecutionReason, ExecutionContext};
+use crate::parse_tree::NodeRef;
 use crate::parse_tree::{parse_source, LineCounter, ParsedSourceRef};
 use crate::proc::{job_reap, JobGroupRef, JobList, JobRef, Pid, ProcStatus};
 use crate::signal::{signal_check_cancel, signal_clear_cancel, Signal};
-use crate::threads::assert_is_main_thread;
 use crate::util::get_time;
 use crate::wait_handle::WaitHandleStore;
-use crate::wchar::{wstr, WString, L};
+use crate::wchar::prelude::*;
 use crate::wchar_ext::WExt;
-use crate::wutil::{perror, wgettext, wgettext_fmt};
+use crate::wutil::perror;
 use crate::{function, FLOG};
 use libc::c_int;
 use once_cell::unsync::OnceCell;
@@ -421,7 +421,7 @@ pub struct Parser {
     block_list: RefCell<Vec<Block>>,
 
     /// Set of variables for the parser.
-    pub variables: Rc<EnvStack>,
+    pub variables: EnvStack,
 
     /// Data managed in a scoped fashion.
     scoped_data: ScopedCell<ScopedData>,
@@ -447,7 +447,7 @@ pub struct Parser {
 
 impl Parser {
     /// Create a parser.
-    pub fn new(variables: Rc<EnvStack>, cancel_behavior: CancelBehavior) -> Parser {
+    pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
             line_counter: ScopedRefCell::new(LineCounter::empty()),
             job_list: RefCell::default(),
@@ -495,11 +495,6 @@ impl Parser {
             // If a function sources a file, don't descend further.
             .take_while(|b| b.typ() != BlockType::source)
             .any(|b| b.typ() == BlockType::subst)
-    }
-
-    /// Assert that this parser is allowed to execute on the current thread.
-    pub fn assert_can_execute(&self) {
-        assert_is_main_thread();
     }
 
     pub fn eval(&self, cmd: &wstr, io: &IoChain) -> EvalRes {
@@ -556,11 +551,11 @@ impl Parser {
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
     ) -> EvalRes {
-        assert!([BlockType::top, BlockType::subst].contains(&block_type));
-        let job_list = ps.ast.top();
+        assert!(matches!(block_type, BlockType::top | BlockType::subst));
+        let job_list = ps.top_job_list();
         if !job_list.is_empty() {
             // Execute the top job list.
-            self.eval_node(ps, job_list, io, job_group, block_type)
+            self.eval_node(&job_list, io, job_group, block_type)
         } else {
             let status = ProcStatus::from_exit_code(self.get_last_status());
             EvalRes {
@@ -622,15 +617,14 @@ impl Parser {
     /// The node type must be ast::Statement or ast::JobList.
     pub fn eval_node<T: Node>(
         &self,
-        ps: &ParsedSourceRef,
-        node: &T,
+        node: &NodeRef<T>,
         block_io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
     ) -> EvalRes {
         // Only certain blocks are allowed.
         assert!(
-            [BlockType::top, BlockType::subst].contains(&block_type),
+            matches!(block_type, BlockType::top | BlockType::subst),
             "Invalid block type"
         );
 
@@ -681,20 +675,18 @@ impl Parser {
         op_ctx.cancel_checker = cancel_checker;
 
         // Restore the line counter.
-        let restore_line_counter = self
-            .line_counter
-            .scoped_replace(ps.line_counter::<ast::JobPipeline>());
+        let ps = node.parsed_source_ref();
+        let restore_line_counter = self.line_counter.scoped_replace(ps.line_counter());
 
         // Create a new execution context.
-        let mut execution_context =
-            ExecutionContext::new(ps.clone(), block_io.clone(), &self.line_counter);
+        let mut execution_context = ExecutionContext::new(ps, block_io.clone(), &self.line_counter);
 
         terminal_protocols_disable_ifn();
 
         // Check the exec count so we know if anything got executed.
         let prev_exec_count = self.libdata().exec_count;
         let prev_status_count = self.libdata().status_count;
-        let reason = execution_context.eval_node(&op_ctx, node, Some(scope_block));
+        let reason = execution_context.eval_node(&op_ctx, &**node, Some(scope_block));
         let new_exec_count = self.libdata().exec_count;
         let new_status_count = self.libdata().status_count;
 
@@ -888,11 +880,6 @@ impl Parser {
         &self.variables
     }
 
-    /// Get the variables as an Rc.
-    pub fn vars_ref(&self) -> Rc<EnvStack> {
-        Rc::clone(&self.variables)
-    }
-
     /// Get a copy of the scoped data.
     #[inline(always)]
     pub fn scope(&self) -> ScopedData {
@@ -1055,10 +1042,11 @@ impl Parser {
     }
 
     /// Returns the job and job index with the given pid.
+    /// This assumes that all external jobs have a pid.
     pub fn job_get_with_index_from_pid(&self, pid: Pid) -> Option<(usize, JobRef)> {
         for (i, job) in self.jobs().iter().enumerate() {
             for p in job.external_procs() {
-                if p.pid.load().unwrap() == pid {
+                if p.pid().unwrap() == pid {
                     return Some((i, job.clone()));
                 }
             }

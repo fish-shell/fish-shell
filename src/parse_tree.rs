@@ -4,7 +4,7 @@ use std::ops::Deref;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::ast::{self, Ast, Node};
+use crate::ast::{self, Ast, JobList, Node};
 use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
     token_type_user_presentable_description, ParseErrorCode, ParseErrorList, ParseKeyword,
@@ -126,6 +126,11 @@ impl ParsedSource {
             cached_count: 0,
         }
     }
+
+    // Return the top NodeRef for the parse tree, which is of type JobList.
+    pub fn top_job_list(self: &Arc<Self>) -> NodeRef<JobList> {
+        NodeRef::new(Arc::clone(self), self.ast.top())
+    }
 }
 
 pub type ParsedSourceRef = Arc<ParsedSource>;
@@ -145,6 +150,19 @@ impl<NodeType: Node> NodeRef<NodeType> {
         NodeRef {
             parsed_source: Pin::new(parsed_source),
             node,
+        }
+    }
+
+    // Given a NodeRef, map to a child of the Node.
+    // The caller provides a closure to return a reference to the child node
+    // from the parent.
+    pub fn child_ref<ChildType: Node>(
+        &self,
+        func: impl FnOnce(&NodeType) -> &ChildType,
+    ) -> NodeRef<ChildType> {
+        NodeRef {
+            parsed_source: self.parsed_source.clone(),
+            node: func(self),
         }
     }
 }

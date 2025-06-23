@@ -272,8 +272,6 @@ fn test_history_races() {
     // Ensure history is clear.
     History::new(L!("race_test")).clear();
 
-    // history::CHAOS_MODE.store(true);
-
     let mut children = Vec::with_capacity(RACE_COUNT);
     for i in 0..RACE_COUNT {
         children.push(std::thread::spawn(move || {
@@ -295,7 +293,6 @@ fn test_history_races() {
 
     // Ensure that we got sane, sorted results.
     let hist = History::new(L!("race_test"));
-    history::CHAOS_MODE.store(false);
 
     // History is enumerated from most recent to least
     // Every item should be the last item in some array
@@ -312,7 +309,11 @@ fn test_history_races() {
                 continue;
             };
 
-            // Remove everything from this item on
+            // Remove the item we found.
+            list.remove(position);
+
+            // We expected this item to be the last. Items after this item
+            // in this array were therefore not found in history.
             let removed = list.drain(position..);
             for line in removed.into_iter().rev() {
                 printf!("Item dropped from history: %ls\n", line);
@@ -557,15 +558,15 @@ fn test_history_path_detection() {
 
     // Expected sets of paths.
     let expected_paths = [
-        vec![],                                   // cmd0
-        vec![filename.to_owned()],                // cmd1
-        vec![tmpdir + L!("/") + filename],        // cmd2
-        vec![L!("$HOME/").to_owned() + filename], // cmd3
-        vec![],                                   // cmd4
-        vec![L!("~/").to_owned() + filename],     // cmd5
-        vec![],                                   // cmd6
-        vec![],                                   // cmd7 - we do not expand globs
-        vec![],                                   // cmd8
+        vec![],                                    // cmd0
+        vec![filename.to_owned()],                 // cmd1
+        vec![tmpdir.clone() + L!("/") + filename], // cmd2
+        vec![L!("$HOME/").to_owned() + filename],  // cmd3
+        vec![],                                    // cmd4
+        vec![L!("~/").to_owned() + filename],      // cmd5
+        vec![],                                    // cmd6
+        vec![],                                    // cmd7 - we do not expand globs
+        vec![],                                    // cmd8
     ];
 
     let maxlap = 128;
@@ -586,6 +587,7 @@ fn test_history_path_detection() {
         std::thread::sleep(std::time::Duration::from_millis(2));
     }
     history.clear();
+    let _ = std::fs::remove_dir_all(wcs2osstring(&tmpdir));
 }
 
 fn install_sample_history(name: &wstr) {

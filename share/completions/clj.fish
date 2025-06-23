@@ -49,10 +49,10 @@ function __fish_clj_tools -V bb_helper
     bb -e "$bb_helper" tools
 end
 
-complete -c clj -s X -x -r -k -a "(__fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath or supply exec fn/args"
-complete -c clj -s A -x -r -k -a "(__fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath"
-complete -c clj -s M -x -r -k -a "(__fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath or supply main opts"
-complete -c clj -s T -x -r -k -a "(__fish_complete_list : __fish_clj_tools)" -d "Invoke tool by name or via aliases ala -X"
+complete -c clj -s X -x -r -k -a "(__fish_stripprefix='^-\w*X' __fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath or supply exec fn/args"
+complete -c clj -s A -x -r -k -a "(__fish_stripprefix='^-\w*A' __fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath"
+complete -c clj -s M -x -r -k -a "(__fish_stripprefix='^-\w*M' __fish_complete_list : __fish_clj_aliases)" -d "Use concatenated aliases to modify classpath or supply main opts"
+complete -c clj -s T -x -r -k -a "(__fish_stripprefix='^-\w*T' __fish_complete_list : __fish_clj_tools)" -d "Invoke tool by name or via aliases ala -X"
 
 complete -c clj -f -o Sdeps -r -d "Deps data to use as the last deps file to be merged"
 complete -c clj -f -o Spath -d "Compute classpath and echo to stdout only"

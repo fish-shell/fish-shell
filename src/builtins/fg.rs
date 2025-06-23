@@ -97,10 +97,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
                         streams.err.append(wgettext_fmt!(
-                            concat!(
-                                "%ls: Can't put job %d, '%ls' to foreground because ",
-                                "it is not under job control\n"
-                            ),
+                            "%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n",
                             cmd,
                             raw_pid,
                             j.command()

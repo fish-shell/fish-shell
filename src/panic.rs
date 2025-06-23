@@ -13,7 +13,7 @@ use crate::{
     threads::{asan_maybe_exit, is_main_thread},
 };
 
-pub static AT_EXIT: OnceCell<Box<dyn Fn(bool) + Send + Sync>> = OnceCell::new();
+pub static AT_EXIT: OnceCell<Box<dyn Fn() + Send + Sync>> = OnceCell::new();
 
 pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
     // The isatty() check will stop us from hanging in most fish tests, but not those
@@ -32,7 +32,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                 return;
             }
             if let Some(at_exit) = AT_EXIT.get() {
-                (at_exit)(false);
+                (at_exit)();
             }
             eprintf!(
                 "%s crashed, please report a bug.",
@@ -58,7 +58,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
     }
     let exit_status = main();
     if let Some(at_exit) = AT_EXIT.get() {
-        (at_exit)(false);
+        (at_exit)();
     }
     asan_maybe_exit(exit_status);
     std::process::exit(exit_status)

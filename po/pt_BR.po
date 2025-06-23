@@ -6231,6 +6231,9 @@ msgstr ""
 msgid "Apply packagefiles to the subproject"
 msgstr ""
 
+msgid "Apply partial clone filter to submodules"
+msgstr ""
+
 msgid "Apply patch as another user using sudo"
 msgstr ""
 
@@ -8028,6 +8031,9 @@ msgstr ""
 msgid "Bypass the system configuration file"
 msgstr ""
 
+msgid "Bypass transport mechanism for local repositories"
+msgstr ""
+
 msgid "Byte swapped output"
 msgstr ""
 
@@ -9744,7 +9750,13 @@ msgstr ""
 msgid "Clone an image [indexes]"
 msgstr ""
 
+msgid "Clone histories near the tips of all branches"
+msgstr ""
+
 msgid "Clone install dependencies and link a package for development"
+msgstr ""
+
+msgid "Clone only the history leading to the tip of a single branch"
 msgstr ""
 
 msgid "Clone private branches"
@@ -9757,6 +9769,12 @@ msgid "Clone remote repository for tracking dotfiles"
 msgstr ""
 
 msgid "Clone repository"
+msgstr ""
+
+msgid "Clone submodules with a depth of 1"
+msgstr ""
+
+msgid "Clone tags"
 msgstr ""
 
 msgid "Clone to promote"
@@ -12016,6 +12034,12 @@ msgid "Create a service instance"
 msgstr ""
 
 msgid "Create a set identified with SETNAME"
+msgstr ""
+
+msgid "Create a shallow clone excluding commits from a specified ref"
+msgstr ""
+
+msgid "Create a shallow clone with a history after the specified time"
 msgstr ""
 
 msgid "Create a short table not showing the deleted files"
@@ -17607,6 +17631,12 @@ msgstr ""
 msgid "Do not clear finder interface on exit"
 msgstr ""
 
+msgid "Do not clone submodules shallowly"
+msgstr ""
+
+msgid "Do not clone tags"
+msgstr ""
+
 msgid "Do not close when command exists"
 msgstr ""
 
@@ -17909,6 +17939,9 @@ msgstr ""
 
 msgid "Do not fail if signature is older than key"
 msgstr "Do not fail if signature is older than key"
+
+msgid "Do not fail if the source repository is a shallow repository"
+msgstr ""
 
 msgid "Do not fail on MDC integrity protection failure"
 msgstr "Do not fail on MDC integrity protection failure"
@@ -19029,6 +19062,9 @@ msgid "Do not use script cache"
 msgstr ""
 
 msgid "Do not use sound server"
+msgstr ""
+
+msgid "Do not use submodule remote-tracking branch to update"
 msgstr ""
 
 msgid "Do not use synchronized snapshots in parallel jobs"
@@ -21728,6 +21764,9 @@ msgstr ""
 msgid "Emphasize pixel differences with this color [color]"
 msgstr ""
 
+msgid "Employ a sparse-checkout"
+msgstr ""
+
 msgid "Empty goal, provided only to set loose the lifecycle"
 msgstr ""
 
@@ -24407,6 +24446,9 @@ msgstr ""
 msgid "Fail if inserting already loaded module"
 msgstr "Fail if inserting already loaded module"
 
+msgid "Fail if the source repository is a shallow repository"
+msgstr ""
+
 msgid "Fail if there are patches that would create conflicts"
 msgstr ""
 
@@ -24476,6 +24518,9 @@ msgstr ""
 msgid "Features suggested by this package"
 msgstr ""
 
+msgid "Fetch a bundle from the given URI"
+msgstr ""
+
 msgid "Fetch a partition image from the device"
 msgstr ""
 
@@ -24510,6 +24555,9 @@ msgid "Fetch from and merge with another repository or a local branch"
 msgstr ""
 
 msgid "Fetch from multiple remotes"
+msgstr ""
+
+msgid "Fetch history leading to the given revision"
 msgstr ""
 
 msgid "Fetch logs from instance(s)"
@@ -30557,6 +30605,9 @@ msgid "Initialize all submodules"
 msgstr ""
 
 msgid "Initialize all submodules within the cloned repository"
+msgstr ""
+
+msgid "Initialize and clone submodules"
 msgstr ""
 
 msgid "Initialize database"
@@ -37858,6 +37909,9 @@ msgstr ""
 msgid "Number of spaces used for indentation in the visualized data. [default: 2]"
 msgstr ""
 
+msgid "Number of submodules fetched at the same time"
+msgstr ""
+
 msgid "Number of suggestions visible in the list. [default: 3]"
 msgstr ""
 
@@ -41459,6 +41513,9 @@ msgid "Place output in file"
 msgstr ""
 
 msgid "Place project in root of the solution"
+msgstr ""
+
+msgid "Place the cloned repository in a specified directory"
 msgstr ""
 
 msgid "Places each function in a separate section"
@@ -53488,6 +53545,9 @@ msgstr ""
 msgid "Set a configuration option"
 msgstr ""
 
+msgid "Set a configuration variable in the new repository"
+msgstr ""
+
 msgid "Set a custom prompt prefix for this environment"
 msgstr ""
 
@@ -56087,6 +56147,9 @@ msgid "Settings file to use"
 msgstr ""
 
 msgid "Settings remain in effect until parenthesis boundary"
+msgstr ""
+
+msgid "Setup .git/objects/info/alternates to share objects"
 msgstr ""
 
 msgid "Setup StackDriver logs"
@@ -60775,6 +60838,9 @@ msgstr ""
 msgid "Specify a new name for the package"
 msgstr ""
 
+msgid "Specify a non-default path for the command on the other end"
+msgstr ""
+
 msgid "Specify a non-mountpoint dir"
 msgstr "Specify a non-mountpoint dir"
 
@@ -61855,6 +61921,9 @@ msgstr ""
 msgid "Specify the desktop name"
 msgstr ""
 
+msgid "Specify the directory from which templates will be used"
+msgstr ""
+
 msgid "Specify the display width for the output from the search command"
 msgstr ""
 
@@ -62066,6 +62135,9 @@ msgid "Specify the proxy username"
 msgstr "Specify the proxy username"
 
 msgid "Specify the realm of authentication ID for SASL bind"
+msgstr ""
+
+msgid "Specify the ref storage format"
 msgstr ""
 
 msgid "Specify the register to be used for PIC addressing"
@@ -62981,6 +63053,9 @@ msgid "Stop at the given sample for each input file {#|[+|-]mm:ss.ss}"
 msgstr ""
 
 msgid "Stop automatic profile selection on interface"
+msgstr ""
+
+msgid "Stop borrowing objects from reference repositories after clone"
 msgstr ""
 
 msgid "Stop colorizing output"
@@ -65809,6 +65884,9 @@ msgstr ""
 msgid "Translates SQLJ source code using the SQLJ Translator"
 msgstr ""
 
+msgid "Transmit string to the server when using protocol version 2"
+msgstr ""
+
 msgid "Transparency-compression method"
 msgstr ""
 
@@ -67732,6 +67810,9 @@ msgstr ""
 msgid "Use GSS-API authentication"
 msgstr ""
 
+msgid "Use Git transport for local paths"
+msgstr ""
+
 msgid "Use HP ld specific options"
 msgstr ""
 
@@ -69290,6 +69371,9 @@ msgid "Use strong filter"
 msgstr ""
 
 msgid "Use style as background for transparent image parts"
+msgstr ""
+
+msgid "Use submodule remote-tracking branch to update"
 msgstr ""
 
 msgid "Use swap files for recovery"

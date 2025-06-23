@@ -6229,6 +6229,9 @@ msgstr ""
 msgid "Apply packagefiles to the subproject"
 msgstr "对子项目应用软件包文件"
 
+msgid "Apply partial clone filter to submodules"
+msgstr ""
+
 msgid "Apply patch as another user using sudo"
 msgstr ""
 
@@ -8026,6 +8029,9 @@ msgstr "通过正常的路由表"
 msgid "Bypass the system configuration file"
 msgstr "通过系统配置文件"
 
+msgid "Bypass transport mechanism for local repositories"
+msgstr ""
+
 msgid "Byte swapped output"
 msgstr "字节交换输出"
 
@@ -9742,8 +9748,14 @@ msgstr "切开一卷"
 msgid "Clone an image [indexes]"
 msgstr "克隆图像 [索引]"
 
+msgid "Clone histories near the tips of all branches"
+msgstr ""
+
 msgid "Clone install dependencies and link a package for development"
 msgstr "克隆安装依赖性并链接一个开发软件包"
+
+msgid "Clone only the history leading to the tip of a single branch"
+msgstr ""
 
 msgid "Clone private branches"
 msgstr "克隆人私人分支"
@@ -9756,6 +9768,12 @@ msgstr "用于跟踪点文件的 Clone 远程仓库"
 
 msgid "Clone repository"
 msgstr "克隆存储器"
+
+msgid "Clone submodules with a depth of 1"
+msgstr ""
+
+msgid "Clone tags"
+msgstr ""
 
 msgid "Clone to promote"
 msgstr "克隆来推广"
@@ -12015,6 +12033,12 @@ msgstr "创建服务实例"
 
 msgid "Create a set identified with SETNAME"
 msgstr "创建 SETNAME 识别的一组"
+
+msgid "Create a shallow clone excluding commits from a specified ref"
+msgstr ""
+
+msgid "Create a shallow clone with a history after the specified time"
+msgstr ""
 
 msgid "Create a short table not showing the deleted files"
 msgstr "创建一个不显示已删除文件的短表格"
@@ -17605,6 +17629,12 @@ msgstr "不分类常规文件内容"
 msgid "Do not clear finder interface on exit"
 msgstr "退出时不清除查找器接口"
 
+msgid "Do not clone submodules shallowly"
+msgstr ""
+
+msgid "Do not clone tags"
+msgstr ""
+
 msgid "Do not close when command exists"
 msgstr "命令存在时不要关闭"
 
@@ -17907,6 +17937,9 @@ msgstr "不提取源文件"
 
 msgid "Do not fail if signature is older than key"
 msgstr "如果签名比密钥大, 请不要失败"
+
+msgid "Do not fail if the source repository is a shallow repository"
+msgstr ""
 
 msgid "Do not fail on MDC integrity protection failure"
 msgstr "不要失败于 MDC 完整性保护失败"
@@ -19023,6 +19056,9 @@ msgstr "不使用脚本缓存"
 
 msgid "Do not use sound server"
 msgstr "不使用声音服务器"
+
+msgid "Do not use submodule remote-tracking branch to update"
+msgstr ""
 
 msgid "Do not use synchronized snapshots in parallel jobs"
 msgstr "在并行任务中不要使用同步快照"
@@ -21721,6 +21757,9 @@ msgstr "在一个文件中同时发送源图"
 msgid "Emphasize pixel differences with this color [color]"
 msgstr "强调此颜色的像素差异 [color]"
 
+msgid "Employ a sparse-checkout"
+msgstr ""
+
 msgid "Empty goal, provided only to set loose the lifecycle"
 msgstr ""
 
@@ -24400,6 +24439,9 @@ msgstr "如果 Doas 提示密码则失败"
 msgid "Fail if inserting already loaded module"
 msgstr "插入已装入的模块失败"
 
+msgid "Fail if the source repository is a shallow repository"
+msgstr ""
+
 msgid "Fail if there are patches that would create conflicts"
 msgstr ""
 
@@ -24469,6 +24511,9 @@ msgstr "此软件包所需的特性"
 msgid "Features suggested by this package"
 msgstr ""
 
+msgid "Fetch a bundle from the given URI"
+msgstr ""
+
 msgid "Fetch a partition image from the device"
 msgstr "从设备中获取分区图像"
 
@@ -24504,6 +24549,9 @@ msgstr "从另一个仓库或本地分支获取并合并"
 
 msgid "Fetch from multiple remotes"
 msgstr "从多个远程获取"
+
+msgid "Fetch history leading to the given revision"
+msgstr ""
 
 msgid "Fetch logs from instance(s)"
 msgstr "从实例获取日志"
@@ -30546,6 +30594,9 @@ msgstr "初始化所有子模块"
 
 msgid "Initialize all submodules within the cloned repository"
 msgstr "初始化克隆仓库内的所有子模块"
+
+msgid "Initialize and clone submodules"
+msgstr ""
 
 msgid "Initialize database"
 msgstr "初始化数据库"
@@ -37840,6 +37891,9 @@ msgstr "缩进空格数"
 msgid "Number of spaces used for indentation in the visualized data. [default: 2]"
 msgstr ""
 
+msgid "Number of submodules fetched at the same time"
+msgstr ""
+
 msgid "Number of suggestions visible in the list. [default: 3]"
 msgstr ""
 
@@ -41442,6 +41496,9 @@ msgstr "将输出放入文件"
 
 msgid "Place project in root of the solution"
 msgstr "将工程放置在解决方案根中"
+
+msgid "Place the cloned repository in a specified directory"
+msgstr ""
 
 msgid "Places each function in a separate section"
 msgstr "将每个函数放在单独的一节"
@@ -53464,6 +53521,9 @@ msgstr "直接设置配置文件选项"
 msgid "Set a configuration option"
 msgstr "设置配置选项"
 
+msgid "Set a configuration variable in the new repository"
+msgstr ""
+
 msgid "Set a custom prompt prefix for this environment"
 msgstr "设置此环境的自定义提示前缀"
 
@@ -56064,6 +56124,9 @@ msgstr "要使用的设置文件"
 
 msgid "Settings remain in effect until parenthesis boundary"
 msgstr "设置在括号边界前仍然有效"
+
+msgid "Setup .git/objects/info/alternates to share objects"
+msgstr ""
 
 msgid "Setup StackDriver logs"
 msgstr "设置 StackDriver 日志"
@@ -60751,6 +60814,9 @@ msgstr "指定皮肤的名称"
 msgid "Specify a new name for the package"
 msgstr "指定软件包的新名称"
 
+msgid "Specify a non-default path for the command on the other end"
+msgstr ""
+
 msgid "Specify a non-mountpoint dir"
 msgstr "指定非挂载点目录"
 
@@ -61831,6 +61897,9 @@ msgstr ""
 msgid "Specify the desktop name"
 msgstr ""
 
+msgid "Specify the directory from which templates will be used"
+msgstr ""
+
 msgid "Specify the display width for the output from the search command"
 msgstr "指定搜索命令输出的显示宽度"
 
@@ -62043,6 +62112,9 @@ msgstr "指定代理用户名"
 
 msgid "Specify the realm of authentication ID for SASL bind"
 msgstr "指定 SASL 绑定的认证 ID 域"
+
+msgid "Specify the ref storage format"
+msgstr ""
 
 msgid "Specify the register to be used for PIC addressing"
 msgstr "指定用于 PIC 地址的寄存器"
@@ -62958,6 +63030,9 @@ msgstr "停止于每个输入文件的给定样本 {#|[+|-]mm:ss.ss}"
 
 msgid "Stop automatic profile selection on interface"
 msgstr "在接口上停止自动配置文件选择"
+
+msgid "Stop borrowing objects from reference repositories after clone"
+msgstr ""
 
 msgid "Stop colorizing output"
 msgstr "停止向外输出颜色"
@@ -65785,6 +65860,9 @@ msgstr "将 S(amba)ID 翻译为 POSIX ID"
 msgid "Translates SQLJ source code using the SQLJ Translator"
 msgstr ""
 
+msgid "Transmit string to the server when using protocol version 2"
+msgstr ""
+
 msgid "Transparency-compression method"
 msgstr "透明度压缩方法"
 
@@ -67708,6 +67786,9 @@ msgstr "使用 GNU lt 特定选项"
 msgid "Use GSS-API authentication"
 msgstr "使用GSS- API 认证"
 
+msgid "Use Git transport for local paths"
+msgstr ""
+
 msgid "Use HP ld specific options"
 msgstr "使用 HP lt 特定选项"
 
@@ -69267,6 +69348,9 @@ msgstr "使用强过滤器"
 
 msgid "Use style as background for transparent image parts"
 msgstr "将样式用作透明图像部分的背景"
+
+msgid "Use submodule remote-tracking branch to update"
+msgstr ""
 
 msgid "Use swap files for recovery"
 msgstr "使用互换文件回收"

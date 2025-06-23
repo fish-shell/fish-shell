@@ -5,6 +5,8 @@ set -e
 # This script is copied into the root directory of our Docker tests.
 # It is the entry point for running Docker-based tests.
 
+echo build_tools/check.sh >>~/.bash_history
+
 cd /fish-source
 git config --global --add safe.directory /fish-source
 

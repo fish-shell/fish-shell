@@ -30,6 +30,7 @@ complete -c journalctl -f -l version -d 'Prints a short version string and exits
 complete -c journalctl -f -l no-pager -d 'Do not pipe output into a pager'
 complete -c journalctl -f -s a -l all -d 'Show all fields in full'
 complete -c journalctl -f -s f -l follow -d 'Show live tail of entries'
+complete -c journalctl -f -s e -l pager-end -d 'Skip to the end of the journal'
 complete -c journalctl -f -s n -l lines -d 'Controls the number of journal lines'
 complete -c journalctl -f -l no-tail -d 'Show all lines, even in follow mode'
 complete -c journalctl -f -s o -l output -d 'Controls the formatting' -xa '(printf %s\t\n (command journalctl --output=help))'

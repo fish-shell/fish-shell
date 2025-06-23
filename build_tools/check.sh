@@ -29,8 +29,8 @@ cleanup () {
 trap cleanup EXIT INT TERM HUP
 
 if $lint; then
-    export RUSTFLAGS='-D warnings'
-    export RUSTDOCFLAGS='-D warnings'
+    export RUSTFLAGS="${RUSTFLAGS} --deny=warnings"
+    export RUSTDOCFLAGS="${RUSTDOCFLAGS} --deny=warnings"
 fi
 
 repo_root="$(dirname "$0")/.."

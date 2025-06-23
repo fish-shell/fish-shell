@@ -1,8 +1,8 @@
 FROM ubuntu:noble
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 RUN apt-get update \
   && apt-get -y install \

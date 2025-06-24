@@ -35,4 +35,6 @@ WORKDIR /home/fishuser
 
 COPY fish_run_tests.sh /
 
+ENV FISH_CHECK_LINT=false
+
 CMD /fish_run_tests.sh

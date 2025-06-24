@@ -83,12 +83,12 @@ if set -l --query _flag_only_mo
 end
 
 # Protect from externally set $tmpdir leaking into this script.
-set -g --erase tmpdir
+set -g tmpdir
 
 function cleanup_exit
     set -l exit_status $status
 
-    if set -g --query tmpdir
+    if set -g --query tmpdir[1]
         rm -r $tmpdir
     end
 
@@ -117,7 +117,7 @@ if set -l --query _flag_dry_run
 end
 
 for po_file in $po_files
-    if set -g --query tmpdir
+    if set --query tmpdir[1]
         set po_file $tmpdir/(basename $po_file)
     end
     if set -l --query po
@@ -139,8 +139,7 @@ end
 
 rm $template_file
 
-if set -g --query tmpdir
-    rm $tmpdir/template.po
+if set --query tmpdir[1]
     diff -ur $po_dir $tmpdir
     or cleanup_exit
 end

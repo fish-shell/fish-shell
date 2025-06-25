@@ -11269,6 +11269,9 @@ msgstr ""
 msgid "Control default input to the policy engine"
 msgstr "Choisir la version"
 
+msgid "Control disassembler syntax highlighting style"
+msgstr "Contrôle le style de surlignage syntaxique du désassembleur"
+
 msgid "Control display of additional"
 msgstr "Contrôler l’affichage des suppléments"
 

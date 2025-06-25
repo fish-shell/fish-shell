@@ -11167,6 +11167,9 @@ msgstr "Kontrollera skapandet av glesa filer"
 msgid "Control default input to the policy engine"
 msgstr "Kontrollera standardindata till policymotorn"
 
+msgid "Control disassembler syntax highlighting style"
+msgstr "Controla o estilo de realce de sintaxe do desassemblador"
+
 msgid "Control display of additional"
 msgstr ""
 

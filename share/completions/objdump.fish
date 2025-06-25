@@ -24,6 +24,7 @@ complete -c objdump -l target -s b -d "Specify target object format" -x -a "elf6
 complete -c objdump -l architecture -s m -d "Specify target architecture" -x -a "i386 i386:x86-64 i386:x64-32 i8086 i386:intel i386:x86-64:intel i386:x64-32:intel i386:nacl i386:x86-64:nacl i386:x64-32:nacl iamcu iamcu:intel l1om l1om:intel k1om k1om:intel plugin"
 complete -c objdump -l section -s j -d "Only display information for given section" -x
 complete -c objdump -l disassembler-options -s M -d "Pass given options on to disassembler" -x
+complete -c objdump -l disassembler-color -d "Control disassembler syntax highlighting style" -x -a "off terminal on extended"
 complete -c objdump -l endian -x -d "Set format endianness when disassembling" -a "big little"
 complete -c objdump -o EB -d "Assume big endian format when disassembling"
 complete -c objdump -o EL -d "Assume little endian format when disassembling"

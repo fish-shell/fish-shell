@@ -11172,6 +11172,9 @@ msgstr ""
 msgid "Control default input to the policy engine"
 msgstr "Standardeingabe zur Regelverwaltung leiten"
 
+msgid "Control disassembler syntax highlighting style"
+msgstr "Steuert den Stil der Syntaxhervorhebung im Disassembler"
+
 msgid "Control display of additional"
 msgstr ""
 

@@ -11164,6 +11164,9 @@ msgstr ""
 msgid "Control default input to the policy engine"
 msgstr ""
 
+msgid "Control disassembler syntax highlighting style"
+msgstr "Steruje stylem podświetlania składni w dezasemblerze"
+
 msgid "Control display of additional"
 msgstr ""
 

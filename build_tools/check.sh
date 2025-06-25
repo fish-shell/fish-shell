@@ -55,6 +55,7 @@ fi
 
 template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets
+PATH="$build_dir:$PATH" "$repo_root"/build_tools/update_translations.fish --only-mo
 if $lint; then
     PATH="$build_dir:$PATH" "$repo_root/build_tools/style.fish" --all --check
     cargo clippy --workspace --all-targets

@@ -710,7 +710,9 @@ pub(crate) fn terminal_protocols_disable_ifn() {
     if !TERMINAL_PROTOCOLS.load(Ordering::Acquire) {
         return;
     }
-    let sequences = if !feature_test(FeatureFlag::keyboard_protocols) {
+    let sequences = if !feature_test(FeatureFlag::keyboard_protocols)
+        || IN_MIDNIGHT_COMMANDER_PRE_CSI_U.load()
+    {
         "\x1b[?2004l"
     } else if IN_JETBRAINS.load() || IN_ITERM_PRE_CSI_U.load() {
         concat!("\x1b[?2004l", "\x1b[>4;0m", "\x1b>",)

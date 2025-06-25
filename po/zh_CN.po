@@ -11167,6 +11167,9 @@ msgstr "控制稀有文件的创建"
 msgid "Control default input to the policy engine"
 msgstr "控制对策略引擎的默认输入"
 
+msgid "Control disassembler syntax highlighting style"
+msgstr "控制反汇编器的语法高亮样式"
+
 msgid "Control display of additional"
 msgstr "控制额外显示"
 

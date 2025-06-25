@@ -170,6 +170,12 @@ jobs:
     - name: make
       run: |
         make -C build VERBOSE=1
+    - name: debug
+      run: |
+        ls /usr/share/locale
+        LANG=de_DE.utf8 build/fish -d config -c 'set -S HOME'
+        ls build/fish-locale
+        ls build/fish-locale/de/LC_MESSAGES/fish.mo
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests

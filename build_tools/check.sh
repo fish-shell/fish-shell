@@ -35,6 +35,10 @@ if $lint; then
 fi
 
 repo_root="$(dirname "$0")/.."
+# The directory containing the binaries produced by cargo/rustc.
+# Currently, all builds are debug builds.
+# Note that `$target_triple` might be empty, resulting in `//debug` which is interpreted as
+# `/debug`.
 build_dir="${CARGO_TARGET_DIR:-$repo_root/target}/${target_triple}/debug"
 
 template_file=$(mktemp)

@@ -7,7 +7,16 @@ const DOC_DIR: &str = env!("DOCDIR");
 const DATA_DIR: &str = env!("DATADIR");
 const DATA_DIR_SUBDIR: &str = env!("DATADIR_SUBDIR");
 const SYSCONF_DIR: &str = env!("SYSCONFDIR");
-const LOCALE_DIR: &str = env!("LOCALEDIR");
+// CMake has logic for determining where the locale dir should be expected.
+// We use this in cmake/Rust.cmake via
+// "LOCALEDIR=${CMAKE_INSTALL_FULL_LOCALEDIR}"
+// https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html
+// This will only be used in binaries moved out of their build location
+// and requires that the MO files are placed at the expected locations.
+// Because we only set `LOCALEDIR` in cmake builds,
+// cargo-only builds currently cannot use localization after installation.
+// (It does work from the build directory.)
+const LOCALE_DIR: Option<&str> = option_env!("LOCALEDIR");
 const BIN_DIR: &str = env!("BINDIR");
 
 pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
@@ -24,6 +33,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
     let mut paths = ConfigPaths::default();
     let mut done = false;
     let exec_path = get_executable_path(&argv0);
+    let env_locale_path: Option<PathBuf> = LOCALE_DIR.map(PathBuf::from);
     if let Ok(exec_path) = exec_path.canonicalize() {
         FLOG!(
             config,
@@ -31,21 +41,24 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         );
         // TODO: we should determine program_name from argv0 somewhere in this file
 
-        // Detect if we're running right out of the CMAKE build directory
+        // Detect if we're running right out of the build directory (either cmake or cargo-only)
         if exec_path.starts_with(env!("FISH_BUILD_DIR")) {
             let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             FLOG!(
                 config,
-                "Running out of target directory, using paths relative to CARGO_MANIFEST_DIR:\n",
+                "Running out of build directory, using paths relative to CARGO_MANIFEST_DIR:\n",
                 manifest_dir.display()
             );
             done = true;
+            // This is 'target/fish-locale' for cargo-only builds and 'build/fish-locale' for cmake
+            // builds (assuming cmake builds in 'build')
+            let locale_dir = PathBuf::from(env!("FISH_BUILD_DIR")).join("fish-locale");
             paths = ConfigPaths {
                 data: Some(manifest_dir.join("share")),
                 sysconf: manifest_dir.join("etc"),
                 doc: manifest_dir.join("user_doc/html"),
                 bin: Some(exec_path.parent().unwrap().to_owned()),
-                locale: Some(manifest_dir.join("share/locale")),
+                locale: Some(locale_dir),
             }
         }
 
@@ -66,7 +79,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     sysconf: base_path.join("etc/fish"),
                     doc: base_path.join("share/doc/fish"),
                     bin: Some(base_path.join("bin")),
-                    locale: Some(data_dir.join("locale")),
+                    locale: env_locale_path.clone(),
                 }
             } else if exec_path.ends_with("fish") {
                 FLOG!(
@@ -83,7 +96,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
                     sysconf: base_path.join("etc"),
                     doc: base_path.join("user_doc/html"),
                     bin: Some(base_path.to_path_buf()),
-                    locale: Some(data_dir.join("locale")),
+                    locale: env_locale_path.clone(),
                 }
             }
 
@@ -109,11 +122,6 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
         } else {
             Some(PathBuf::from(BIN_DIR))
         };
-        let locale = if cfg!(feature = "embed-data") {
-            None
-        } else {
-            Some(PathBuf::from(LOCALE_DIR))
-        };
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
@@ -121,7 +129,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,
-            locale,
+            locale: env_locale_path,
         }
     }
 

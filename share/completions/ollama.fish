@@ -2,11 +2,16 @@ function __fish_ollama_list
     ollama list 2>/dev/null | tail -n +2 | string replace --regex "\s.*" ""
 end
 
+function __fish_ollama_ps
+    ollama ps 2>/dev/null | tail -n +2 | string replace --regex "\s.*" ""
+end
+
 complete -f -c ollama
 complete -c ollama -n __fish_use_subcommand -a serve -d "Start ollama"
 complete -c ollama -n __fish_use_subcommand -a create -d "Create a model from a Modelfile"
 complete -c ollama -n __fish_use_subcommand -a show -d "Show information for a model"
 complete -c ollama -n __fish_use_subcommand -a run -d "Run a model"
+complete -c ollama -n __fish_use_subcommand -a stop -d "Stop a running model."
 complete -c ollama -n __fish_use_subcommand -a pull -d "Pull a model from a registry"
 complete -c ollama -n __fish_use_subcommand -a push -d "Push a model to a registry"
 complete -c ollama -n __fish_use_subcommand -a list -d "List models"
@@ -19,3 +24,4 @@ complete -c ollama -f -a "(__fish_ollama_list)" --condition '__fish_seen_subcomm
 complete -c ollama -f -a "(__fish_ollama_list)" --condition '__fish_seen_subcommand_from run'
 complete -c ollama -f -a "(__fish_ollama_list)" --condition '__fish_seen_subcommand_from cp'
 complete -c ollama -f -a "(__fish_ollama_list)" --condition '__fish_seen_subcommand_from rm'
+complete -c ollama -f -a "(__fish_ollama_ps)" --condition '__fish_seen_subcommand_from stop'

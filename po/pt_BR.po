@@ -62992,6 +62992,9 @@ msgstr ""
 msgid "Stop a profile"
 msgstr ""
 
+msgid "Stop a running model."
+msgstr ""
+
 msgid "Stop a standalone server instance"
 msgstr ""
 

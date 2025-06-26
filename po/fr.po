@@ -63070,6 +63070,9 @@ msgstr "Arrêter un paquet"
 msgid "Stop a profile"
 msgstr "Arrêter un profil"
 
+msgid "Stop a running model."
+msgstr ""
+
 msgid "Stop a standalone server instance"
 msgstr ""
 

@@ -62968,6 +62968,9 @@ msgstr "停止一个软件包"
 msgid "Stop a profile"
 msgstr "停止配置文件"
 
+msgid "Stop a running model."
+msgstr ""
+
 msgid "Stop a standalone server instance"
 msgstr "停止独立的服务器实例"
 

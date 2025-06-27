@@ -59,7 +59,14 @@ fn main() {
         let _ = std::fs::create_dir_all(sec1dir.to_str().unwrap());
     }
 
-    rsconf::rebuild_if_paths_changed(&["src", "printf", "Cargo.toml", "Cargo.lock", "build.rs"]);
+    rsconf::rebuild_if_paths_changed(&[
+        "build.rs",
+        "Cargo.lock",
+        "Cargo.toml",
+        "gettext-extraction",
+        "printf",
+        "src",
+    ]);
 
     // These are necessary if built with embedded functions,
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).

@@ -14,6 +14,10 @@ fn canonicalize_str<P: AsRef<Path>>(path: P) -> String {
 
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
+#[cfg(feature = "embed-data")]
+#[cfg(not(clippy))]
+const SPHINX_DOC_SOURCES: [&str; 3] = ["CHANGELOG.rst", "CONTRIBUTING.rst", "doc_src"];
+
 fn main() {
     setup_paths();
 
@@ -72,7 +76,11 @@ fn main() {
     // but only in release builds (because rust-embed in debug builds reads from the filesystem).
     #[cfg(feature = "embed-data")]
     #[cfg(not(debug_assertions))]
-    rsconf::rebuild_if_paths_changed(&["doc_src", "share"]);
+    rsconf::rebuild_if_paths_changed(&["share"]);
+
+    #[cfg(feature = "embed-data")]
+    #[cfg(not(clippy))]
+    rsconf::rebuild_if_paths_changed(&SPHINX_DOC_SOURCES);
 
     rsconf::rebuild_if_env_changed("FISH_GETTEXT_EXTRACTION_FILE");
 

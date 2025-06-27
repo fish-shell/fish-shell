@@ -407,6 +407,88 @@ fn get_version(src_dir: &Path) -> String {
 }
 
 #[cfg(feature = "embed-data")]
+#[cfg(not(clippy))]
+/// Helper function for avoiding unnecessary rebuilds.
+/// Specify all files/directories which should trigger a rebuild if modified via `source_paths`.
+/// `cache_file` is used to store the time of the latest build.
+/// If this file does not exist, it will be created, if possible.
+/// The modification time of all files in `source_paths` are checked.
+/// For symlinks the target file is considered, not the link.
+/// If the most recent mtime found this way is not more recent than the one stored in `cache_file`,
+/// then the build directory is considered up-to-date and `true` is returned.
+/// Otherwise, the timestamp in `cache_file` is updated and false is returned.
+/// The mtime is stored as milliseconds since the Unix epoch.
+/// There are some edge cases around the time, which could theoretically result in unnecessary
+/// builds or builds not being updated when they should.
+/// <https://doc.rust-lang.org/std/time/struct.SystemTime.html>
+/// Deleting the `cache_file` before invoking this function prevents the latter case (but makes
+/// this function useless).
+fn is_build_dir_up_to_date<'a, P: AsRef<Path> + 'a, I: IntoIterator<Item = &'a P>>(
+    source_paths: I,
+    cache_file: &Path,
+) -> bool {
+    use std::{
+        io::{Read, Seek, SeekFrom, Write},
+        str::FromStr,
+        time::UNIX_EPOCH,
+    };
+    let source_timestamp = source_paths
+        .into_iter()
+        // TODO: Can this be simplified to avoid the intermediate `Vec` construction?
+        .flat_map(|p| {
+            let p = p.as_ref();
+            if p.is_dir() {
+                std::fs::read_dir(p)
+                    .unwrap()
+                    .flatten()
+                    .map(|f| f.path())
+                    .collect::<Vec<_>>()
+                    .into_iter()
+            } else {
+                vec![PathBuf::from(p)].into_iter()
+            }
+        })
+        // Do not use `f.metadata()`, since that does not traverse symlinks.
+        .map(|p| std::fs::metadata(p).unwrap().modified().unwrap())
+        .max()
+        .unwrap()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+    let cache_file_dir = cache_file.parent().unwrap();
+    std::fs::create_dir_all(cache_file_dir).unwrap();
+    let mut timestamp_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(cache_file)
+        .unwrap();
+    let mut timestamp_file_content = vec![];
+    timestamp_file
+        .read_to_end(&mut timestamp_file_content)
+        .unwrap();
+    let timestamp_file_str = std::str::from_utf8(&timestamp_file_content).unwrap();
+    let formatted_timestamp = format!("{source_timestamp}");
+    if timestamp_file_content.is_empty() {
+        timestamp_file
+            .write_all(formatted_timestamp.as_bytes())
+            .unwrap();
+    } else {
+        let build_timestamp = u128::from_str(timestamp_file_str).unwrap();
+        if source_timestamp <= build_timestamp {
+            return true;
+        }
+        timestamp_file.seek(SeekFrom::Start(0)).unwrap();
+        timestamp_file.set_len(0).unwrap();
+        timestamp_file
+            .write_all(formatted_timestamp.as_bytes())
+            .unwrap();
+    }
+    false
+}
+
+#[cfg(feature = "embed-data")]
 // disable clippy because otherwise it would panic without sphinx
 #[cfg(not(clippy))]
 fn build_man(build_dir: &Path) {
@@ -415,6 +497,15 @@ fn build_man(build_dir: &Path) {
     let sec1dir = mandir.join("man1");
     let docsrc_path = canonicalize(MANIFEST_DIR).join("doc_src");
     let docsrc = docsrc_path.to_str().unwrap();
+
+    // `sphinx-build` needs several seconds to realize that no rebuild is required.
+    // This can result in the completely useless `sphinx-build` invocation almost doubling the
+    // duration of a `cargo b` (for a non-clean build).
+    let timestamp_file_path = mandir.join("build_timestamp");
+    if is_build_dir_up_to_date(&SPHINX_DOC_SOURCES, &timestamp_file_path) {
+        return;
+    }
+
     let args = &[
         "-j",
         "auto",

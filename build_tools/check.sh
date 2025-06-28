@@ -42,6 +42,23 @@ template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets --features=gettext-extract
 if $lint; then
     PATH="$build_dir:$PATH" "$repo_root/build_tools/style.fish" --all --check
+
+    shellcheck_dir="$repo_root/build_tools/shellcheck"
+    if command -v rg; then
+        echo 'Checking if list of files to shellcheck is up to date.'
+        echo 'If this fails, you can update the list automatically using'
+        echo "$shellcheck_dir/check_for_file_updates.sh --update"
+        "$shellcheck_dir/check_for_file_updates.sh"
+    else
+        echo 'Cannot update list of files to shellcheck. Requires ripgrep.'
+    fi
+    if command -v shellcheck; then
+        "$shellcheck_dir/check.sh"
+    else
+        echo 'Error: ShellCheck is not available.'
+        exit 1
+    fi
+
     cargo clippy --workspace --all-targets
 fi
 cargo test --no-default-features --workspace --all-targets

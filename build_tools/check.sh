@@ -42,6 +42,15 @@ template_file=$(mktemp)
 FISH_GETTEXT_EXTRACTION_FILE=$template_file cargo build --workspace --all-targets
 if $lint; then
     PATH="$build_dir:$PATH" "$repo_root/build_tools/style.fish" --all --check
+
+    if command -v shellcheck; then
+        # shellcheck disable=SC2046
+        shellcheck $(find . -name '*.sh')
+    else
+        echo 'Error: ShellCheck is not available.'
+        exit 1
+    fi
+
     cargo clippy --workspace --all-targets
 fi
 cargo test --no-default-features --workspace --all-targets

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-from dataclasses import dataclass
 from datetime import datetime
 import os
 from pathlib import Path
@@ -235,22 +234,34 @@ async def main():
     return 1 if failcount else 0
 
 
-@dataclass
+# TODO(python>=3.7): @dataclass
 class TestSkip:
     arg: str
 
+    def __init__(self, arg: str):
+        self.arg = arg
 
-@dataclass
+
 class TestFail:
     arg: str
     duration_ms: Optional[int]
     error_message: Optional[str]
 
+    def __init__(
+        self, arg: str, duration_ms: Optional[int], error_message: Optional[str]
+    ):
+        self.arg = arg
+        self.duration_ms = duration_ms
+        self.error_message = error_message
 
-@dataclass
+
 class TestPass:
     arg: str
     duration_ms: int
+
+    def __init__(self, arg: str, duration_ms: Optional[int]):
+        self.arg = arg
+        self.duration_ms = duration_ms
 
 
 TestResult = Union[TestSkip, TestFail, TestPass]
@@ -334,9 +345,22 @@ async def run_test(
         return TestFail(arg, None, "Error in test driver. This should be unreachable.")
 
 
+if sys.version_info < (3, 7):
+
+    def asyncio_run(coro):
+        loop = asyncio.get_event_loop()
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            if not loop.is_closed():
+                loop.close()
+
+else:
+    asyncio_run = asyncio.run
+
 if __name__ == "__main__":
     try:
-        ret = asyncio.run(main())
+        ret = asyncio_run(main())
         sys.exit(ret)
     except KeyboardInterrupt:
         sys.exit(130)

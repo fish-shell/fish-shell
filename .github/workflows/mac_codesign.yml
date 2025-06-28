@@ -9,12 +9,12 @@ jobs:
     environment: macos-codesign
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust 1.73.0
-        uses: dtolnay/rust-toolchain@1.73.0
+      - name: Install Rust
+        uses: ./.github/actions/rust-toolchain@oldest-supported
         with:
           targets: x86_64-apple-darwin
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: ./.github/actions/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
       - name: build-and-codesign

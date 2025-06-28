@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.70
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       run: |
         sudo apt install gettext libpcre2-dev python3-pexpect python3-sphinx tmux
@@ -47,7 +47,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.70
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
         targets: "i586-unknown-linux-gnu" # rust-toolchain wants this comma-separated
     - name: Install deps
@@ -128,7 +128,7 @@ jobs:
   #
   #   steps:
   #   - uses: actions/checkout@v4
-  #   - uses: dtolnay/rust-toolchain@1.70
+  #   - uses: ./.github/actions/rust-toolchain@oldest-supported
   #   - name: Install deps
   #     run: |
   #       sudo apt install gettext libpcre2-dev python3-pexpect tmux
@@ -156,7 +156,7 @@ jobs:
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@1.70
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       run: |
         # --break-system-packages because homebrew has now declared itself "externally managed".

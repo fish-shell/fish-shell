@@ -30,7 +30,7 @@ X86_64_DEPLOY_TARGET='MACOSX_DEPLOYMENT_TARGET=10.9'
 # The first supported version of macOS on arm64 is 10.15, so any Rust is fine for arm64.
 # We wish to support back to 10.9 on x86-64; the last version of Rust to support that is
 # version 1.73.0.
-RUST_VERSION_X86_64=1.73.0
+RUST_VERSION_X86_64=1.70.0
 
 while getopts "sf:i:p:e:nj:" opt; do
     case $opt in

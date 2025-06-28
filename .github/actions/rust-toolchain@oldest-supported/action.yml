@@ -1,0 +1,22 @@
+name: Oldest Supported Rust Toolchain
+
+on:
+  workflow_call:
+    inputs:
+      targets:
+        description: Comma-separated list of target triples to install for this toolchain
+        required: false
+      components:
+        description: Comma-separated list of components to be additionally installed
+        required: false
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+  steps:
+    - uses: dtolnay/rust-toolchain@1.70
+      with:
+        targets: ${{ inputs.targets }}
+        components: ${{ inputs.components}}

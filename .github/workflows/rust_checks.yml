@@ -11,7 +11,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/rust-toolchain@stable
+      with:
+        components: rustfmt
     - name: cargo fmt
       run: cargo fmt --check
 
@@ -20,7 +22,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/rust-toolchain@stable
+      with:
+        components: clippy
     - name: Install deps
       run: |
         sudo apt install gettext libpcre2-dev
@@ -37,18 +41,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: ./.github/actions/rust-toolchain@stable
     - name: cargo doc
       run: |
         RUSTDOCFLAGS='-D warnings' cargo doc --workspace
     - name: cargo doctest
       run: |
         cargo test --doc --workspace
-
-  # Disabling for now because it also checks "advisories",
-  # making CI fail for reasons unrelated to the patch
-  # cargo-deny:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - uses: EmbarkStudios/cargo-deny-action@v1

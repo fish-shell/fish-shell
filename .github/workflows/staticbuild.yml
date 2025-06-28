@@ -16,7 +16,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: dtolnay/rust-toolchain@1.70
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -51,7 +51,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: dtolnay/rust-toolchain@1.70
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0

@@ -464,7 +464,7 @@ pub fn sprintf_locale(
                 let uint = arg.as_uint()?;
                 if uint != 0 {
                     prefix = "0x";
-                    write!(buf, "{:x}", uint)?;
+                    write!(buf, "{uint:x}")?;
                 }
                 buf
             }
@@ -478,9 +478,9 @@ pub fn sprintf_locale(
                         prefix = if lower { "0x" } else { "0X" };
                     }
                     if lower {
-                        write!(buf, "{:x}", uint)?;
+                        write!(buf, "{uint:x}")?;
                     } else {
-                        write!(buf, "{:X}", uint)?;
+                        write!(buf, "{uint:X}")?;
                     }
                 }
                 buf
@@ -488,7 +488,7 @@ pub fn sprintf_locale(
             CS::o => {
                 let uint = arg.as_uint()?;
                 if uint != 0 {
-                    write!(buf, "{:o}", uint)?;
+                    write!(buf, "{uint:o}")?;
                 }
                 if flags.alt_form && desired_precision.unwrap_or(0) <= buf.len() + 1 {
                     desired_precision = Some(buf.len() + 1);
@@ -498,7 +498,7 @@ pub fn sprintf_locale(
             CS::u => {
                 let uint = arg.as_uint()?;
                 if uint != 0 {
-                    write!(buf, "{}", uint)?;
+                    write!(buf, "{uint}")?;
                 }
                 buf
             }

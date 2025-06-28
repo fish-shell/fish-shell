@@ -8,7 +8,6 @@ permissions:
 jobs:
   rustfmt:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable
@@ -17,9 +16,8 @@ jobs:
     - name: cargo fmt
       run: cargo fmt --check
 
-  clippy:
+  clippy-stable:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable
@@ -31,9 +29,21 @@ jobs:
     - name: cargo clippy
       run: cargo clippy --workspace --all-targets -- --deny=warnings
 
+  clippy-msrv:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/rust-toolchain@oldest-supported
+      with:
+        components: clippy
+    - name: Install deps
+      run: |
+        sudo apt install gettext
+    - name: cargo clippy
+      run: cargo clippy --workspace --all-targets -- --deny=warnings
+
   rustdoc:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/rust-toolchain@stable

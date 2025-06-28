@@ -63,7 +63,7 @@ impl ItemMaker {
         let mut buf = [0u8; 1024];
         let res = nix::unistd::read(&fd, &mut buf);
         let amt = res.expect("read error!");
-        self.length_read.fetch_add(amt as usize, Ordering::Relaxed);
+        self.length_read.fetch_add(amt, Ordering::Relaxed);
         let was_closed = amt == 0;
 
         self.total_calls.fetch_add(1, Ordering::Relaxed);

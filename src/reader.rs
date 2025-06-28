@@ -14,8 +14,8 @@
 
 use libc::{
     c_char, ECHO, EINTR, EIO, EISDIR, ENOTTY, EPERM, ESRCH, ICANON, ICRNL, IEXTEN, INLCR, IXOFF,
-    IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDIN_FILENO, STDOUT_FILENO,
-    TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
+    IXON, ONLCR, OPOST, O_NONBLOCK, O_RDONLY, SIGINT, SIGTTIN, STDERR_FILENO, STDIN_FILENO,
+    STDOUT_FILENO, TCSANOW, VMIN, VQUIT, VSUSP, VTIME, _POSIX_VDISABLE,
 };
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
@@ -232,7 +232,6 @@ fn debounce_history_pager() -> &'static Debounce {
 }
 
 fn redirect_tty_after_sighup() {
-    use libc::{EIO, ENOTTY, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
     use std::fs::OpenOptions;
 
     // If we have received SIGHUP, redirect the tty to avoid a user script triggering SIGTTIN or
@@ -1493,7 +1492,7 @@ pub fn combine_command_and_autosuggestion(
     assert!(!autosuggestion.is_empty());
     assert!(autosuggestion.len() >= line_range.len());
     let available = autosuggestion.len() - line_range.len();
-    let line = &cmdline[line_range.clone()];
+    let line = &cmdline[line_range];
 
     if !string_prefixes_string(line, autosuggestion) {
         // We have an autosuggestion which is not a prefix of the command line, i.e. a case
@@ -2591,6 +2590,8 @@ fn send_xtgettcap_query(out: &mut impl Output, cap: &'static str) {
     out.write_command(QueryXtgettcap(cap));
 }
 
+#[allow(renamed_and_removed_lints)]
+#[allow(clippy::blocks_in_if_conditions)] // for old clippy
 fn query_capabilities_via_dcs(out: &mut impl Output, vars: &dyn Environment) {
     if vars.get_unless_empty(L!("STY")).is_some()
         || vars.get_unless_empty(L!("TERM")).is_some_and(|term| {
@@ -4809,7 +4810,7 @@ fn get_autosuggestion_performer(
         };
         let mut result = AutosuggestionResult::new(
             command_line,
-            search_string_range.clone(),
+            search_string_range,
             suggestion,
             true, // normal completions are case-insensitive
             /*is_whole_item_from_history=*/ false,
@@ -6160,6 +6161,7 @@ pub fn completion_apply_to_command_line(
             && unescaped_quote(command_line, insertion_point) != quote
         {
             // This is a quoted parameter, first print a quote.
+            #[allow(clippy::unnecessary_unwrap)] // for old clippy
             result.insert(new_cursor_pos, quote.unwrap());
             new_cursor_pos += 1;
         }

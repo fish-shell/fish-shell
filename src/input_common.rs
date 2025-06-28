@@ -1078,7 +1078,7 @@ pub trait InputEventQueuer {
         }
         let mut count = 0;
         let mut subcount = 0;
-        while count < 16 && c >= 0x30 && c <= 0x3f {
+        while count < 16 && (0x30..=0x3f).contains(&c) {
             if c.is_ascii_digit() {
                 // Return None on invalid ascii numeric CSI parameter exceeding u32 bounds
                 match params[count][subcount]

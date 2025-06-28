@@ -117,7 +117,7 @@ pub static CONFIG_PATHS: Lazy<ConfigPaths> = Lazy::new(|| {
 
         FLOG!(config, "Using compiled in paths:");
         paths = ConfigPaths {
-            data: data.clone(),
+            data,
             sysconf: PathBuf::from(SYSCONF_DIR).join("fish"),
             doc: DOC_DIR.into(),
             bin,

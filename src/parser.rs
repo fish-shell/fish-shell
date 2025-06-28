@@ -604,7 +604,7 @@ impl Parser {
         let sb = self.push_block(Block::source_block(filename.clone()));
         let _filename_push = self
             .library_data
-            .scoped_set(Some(filename.clone()), |s| &mut s.current_filename);
+            .scoped_set(Some(filename), |s| &mut s.current_filename);
 
         let ret = self.eval_wstr(src, io, job_group, BlockType::top);
 

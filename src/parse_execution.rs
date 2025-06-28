@@ -492,7 +492,7 @@ impl<'a> ExecutionContext<'a> {
                     STATUS_UNMATCHED_WILDCARD,
                     statement,
                     WILDCARD_ERR_MSG,
-                    &self.node_source(statement)
+                    self.node_source(statement)
                 );
             }
             ExpandResultCode::cancel => {
@@ -1084,7 +1084,7 @@ impl<'a> ExecutionContext<'a> {
                     STATUS_UNMATCHED_WILDCARD,
                     &statement.argument,
                     WILDCARD_ERR_MSG,
-                    &self.node_source(&statement.argument)
+                    self.node_source(&statement.argument)
                 );
             }
             ExpandResultCode::ok => {
@@ -1370,7 +1370,7 @@ impl<'a> ExecutionContext<'a> {
                             STATUS_UNMATCHED_WILDCARD,
                             arg_node,
                             WILDCARD_ERR_MSG,
-                            &self.node_source(*arg_node)
+                            self.node_source(*arg_node)
                         );
                     }
                 }
@@ -1420,7 +1420,7 @@ impl<'a> ExecutionContext<'a> {
                         STATUS_INVALID_ARGS,
                         redir_node,
                         "Invalid redirection: %ls",
-                        &self.node_source(redir_node)
+                        self.node_source(redir_node)
                     );
                 }
             };
@@ -1801,7 +1801,7 @@ impl<'a> ExecutionContext<'a> {
                     STATUS_INVALID_ARGS,
                     &jc.pipe,
                     ILLEGAL_FD_ERR_MSG,
-                    &self.node_source(&jc.pipe)
+                    self.node_source(&jc.pipe)
                 );
                 break;
             }

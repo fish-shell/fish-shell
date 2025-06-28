@@ -166,7 +166,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
     parser.libdata_mut().within_fish_init = true;
     let _ = parser.eval(&cmd, &IoChain::new());
     parser.libdata_mut().within_fish_init = false;
-    return true;
+    true
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].

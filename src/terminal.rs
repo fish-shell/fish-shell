@@ -878,7 +878,7 @@ pub fn setup() {
     if let Ok(result) = res {
         // Create a new `Term` instance, prepopulate the capabilities we care about.
         let term = Arc::new(Term::new(result));
-        *global_term = Some(term.clone());
+        *global_term = Some(term);
     } else {
         *global_term = None;
     }

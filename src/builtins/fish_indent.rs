@@ -359,6 +359,7 @@ impl<'source, 'ast> PrettyPrinter<'source, 'ast> {
             {
                 next_newline += 1;
             }
+            #[allow(clippy::nonminimal_bool)] // for old clippy; false positive?
             let contains_newline = next_newline != newline_offsets.len() && {
                 let newline_offset = newline_offsets[next_newline];
                 assert!(newline_offset >= brace_statement.source_range().start());

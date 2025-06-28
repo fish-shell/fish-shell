@@ -766,7 +766,7 @@ mod file_tester_tests {
         let tester = temp.file_tester();
 
         let file_path = temp.filepath("file.txt");
-        File::create(&file_path).unwrap();
+        File::create(file_path).unwrap();
 
         let result = tester.test_path(L!("file.txt"), false);
         assert!(result);
@@ -794,7 +794,7 @@ mod file_tester_tests {
 
         // Directories are also files.
         let dir_path = temp.filepath("somedir");
-        create_dir_all(&dir_path).unwrap();
+        create_dir_all(dir_path).unwrap();
 
         let result = tester.test_path(L!("somedir"), false);
         assert!(result);
@@ -818,7 +818,7 @@ mod file_tester_tests {
         // rather than IsFile(false).
 
         let dir_path = temp.filepath("somedir");
-        create_dir_all(&dir_path).unwrap();
+        create_dir_all(dir_path).unwrap();
 
         let result = tester.test_cd_path(L!("somedir"), false);
         assert_eq!(result, Ok(IsFile(true)));

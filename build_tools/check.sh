@@ -22,6 +22,7 @@ cargo() {
 }
 
 cleanup () {
+    # shellcheck disable=2317
     if [ -n "$template_file" ] && [ -e "$template_file" ]; then
         rm "$template_file"
     fi

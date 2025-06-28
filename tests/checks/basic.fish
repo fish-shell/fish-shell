@@ -143,6 +143,11 @@ echo -e 'abc\121def'
 echo -e 'abc\1212def'
 #CHECK: abcQdef
 #CHECK: abcQ2def
+# Test octal overflow: \5555 = 555 octal = 365 decimal, wraps to 109 decimal (155 octal)
+# Followed by literal '5' character (065 octal)
+echo -ne '\5555' | display_bytes
+#CHECK: 0000000 155 065
+#CHECK: 0000002
 echo -e 'abc\cdef' # won't output a newline!
 #CHECK: abc
 echo ''

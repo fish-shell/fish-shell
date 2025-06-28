@@ -110,7 +110,7 @@ where
         return None;
     }
 
-    let mut val = 0;
+    let mut val: u8 = 0;
     let mut consumed = start;
     for digit in chars
         .skip(start)
@@ -120,7 +120,7 @@ where
         // base is either 8 or 16, so digit can never be >255
         let digit = u8::try_from(digit).unwrap();
 
-        val = val * base + digit;
+        val = val.wrapping_mul(base).wrapping_add(digit);
 
         consumed += 1;
     }

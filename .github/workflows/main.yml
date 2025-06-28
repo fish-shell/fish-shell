@@ -21,7 +21,7 @@ jobs:
       run: |
         sudo apt install gettext libpcre2-dev python3-pexpect python3-sphinx tmux
         # Generate a locale that uses a comma as decimal separator.
-        sudo locale-gen fr_FR.UTF-8
+        sudo locale-gen de_DE.UTF-8 en_US.UTF-8 fr_FR.UTF-8
     - name: cmake
       run: |
         mkdir build && cd build
@@ -170,6 +170,12 @@ jobs:
     - name: make
       run: |
         make -C build VERBOSE=1
+    - name: debug
+      run: |
+        ls /usr/share/locale
+        LANG=de_DE.utf8 build/fish -d config -c 'set -S HOME'
+        ls build/fish-locale
+        ls build/fish-locale/de/LC_MESSAGES/fish.mo
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests

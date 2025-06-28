@@ -890,7 +890,7 @@ fn test_exhaustive(rust_fmt: &str, c_fmt: *const c_char) {
     // "There's only 4 billion floats so test them all."
     // This tests a format string expected to be of the form "%.*g" or "%.*e".
     // That is, it takes a precision and a double.
-    println!("Testing {}", rust_fmt);
+    println!("Testing {rust_fmt}");
     let mut rust_str = String::with_capacity(128);
     let mut c_storage = [0u8; 128];
     let c_storage_ptr = c_storage.as_mut_ptr() as *mut c_char;

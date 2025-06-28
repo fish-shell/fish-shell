@@ -6,11 +6,9 @@ ENV LC_ALL=C.UTF-8
 
 RUN zypper --non-interactive install \
   bash \
-  cmake \
   diffutils \
   gcc-c++ \
   git-core \
-  ninja \
   pcre2-devel \
   python311 \
   python311-pip \

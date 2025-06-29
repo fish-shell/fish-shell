@@ -4,6 +4,33 @@ fish 4.0.3 (released ???)
 This release of fish fixes a number of issues identified in fish 4.0.2:
 
 - fish now properly inherits $PATH under Windows WSL2 (:issue:`11354`).
+- the :doc:`read <cmds/printf>` builtin no longer miscalculates width of multi-byte characters (:issue:`11412`).
+- A crash displaying multi-line quoted command substitutions has been fixed (:issue:`11444`).
+- Remote filesystems are detected properly again on non-Linux systems.
+- builtin :doc:`status <cmds/status>` no longer prints a trailing blank line.
+- A workaround has been added to prevent spurious output inside old versions of Midnight Commander.
+- :kbd:`ctrl-alt-h` erases the last word again (:issue:`11548`).
+- :kbd:`alt-left` :kbd:`alt-right` send unexpected sequences on some terminals; a workaround has been added.  (:issue:`11479`).
+- fish no longer interprets invalid terminal control sequences as if they were :kbd:`alt-[` or :kbd:`alt-o` key strokes.
+- :doc:`bind <cmds/bind>` has been taught about the :kbd:`printscreen` and :kbd:`menu` keys.
+- Key bindings like ``bind shift-A`` are no longer accepted; use ``bind shift-a`` or ``bind A``.
+- Key bindings like ``bind shift-a`` take precedence over ``bind A``, assuming that the key event included the shift modifier.
+- Bindings using shift with non-ASCII letters (such as :kbd:`ctrl-shift-ä`) are now supported.
+- Bindings with modifiers such as ``bind ctrl-w`` work again on non-Latin keyboard layouts such as a Russian one.
+  This is implemented by allowing key events such as :kbd:`ctrl-ц` to match bindings of the corresponding Latin key, using the kitty keyboard protocol's base layout key (:issue:`11520`).
+- For a long time now, fish has been "relocatable" -- it was possible to move the entire ``CMAKE_INSTALL_PREFIX`` and fish would use paths relative to its binary.
+  Only gettext locale paths were still purely determined at compile time, which has been fixed.
+- ``set fish_complete_path ...`` accidentally disabled completion autoloading, which has been corrected.
+- ``nmcli`` completions have been fixed to query network information dynamically instead of only when completing the first time.
+- Git completions no longer print an error when no `git-*` executable is in :envvar:`PATH`.
+- the :doc:`commandline <cmds/commandline>` builtin fails to print the commandline set by a ``commandline -C`` invocation, which broken some completion scripts.
+  This has been corrected (:issue:`11423`).
+- Custom completions like ``complete foo -l long -xa ...`` that use the output of ``commandline -t``.
+  on a command-line like ``foo --long=`` have been invalidated by a change in 4.0; the completion scripts have been adjusted accordingly (:issue:`11508`).
+- Some completions were misinterpreted, which broke the completion list. This has been fixed.
+- The routines to save history and universal variables have seen some robustness improvements.
+- Vi mode: The cursor position after pasting via :kbd:`p` has been corrected.
+- Vi mode: Trying to replace the last character via :kbd:`r` no longer replaces the last-but-one character (:issue:`11484`),
 
 fish 4.0.2 (released April 20, 2025)
 ====================================

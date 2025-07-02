@@ -204,25 +204,31 @@ async def main():
                 if semaphore is not None:
                     semaphore.release()
 
-        tasks = [run(f, arg) for f, arg in files]
-        for task in asyncio.as_completed(tasks):
-            result = await task
-            # TODO(python>3.8): use match statement
-            if isinstance(result, TestSkip):
-                arg = result.arg
-                skipcount += 1
-                print_result(arg, "SKIPPED", BLUE)
-            elif isinstance(result, TestFail):
-                # fmt: off
-                arg, duration_ms, error_message = result.arg, result.duration_ms, result.error_message
-                # fmt: on
-                failcount += 1
-                failed += [arg]
-                print_result(arg, "FAILED", RED, duration_ms, error_message)
-            elif isinstance(result, TestPass):
-                arg, duration_ms = result.arg, result.duration_ms
-                passcount += 1
-                print_result(arg, "PASSED", GREEN, duration_ms)
+        tasks = [asyncio.create_task(run(f, arg), name=arg) for f, arg in files]
+        while tasks:
+            done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                try:
+                    result = await task
+                except Exception as e:
+                    arg = task.get_name()
+                    result = TestFail(arg, None, f"Test '{arg}' raised an exception: {e}")
+                # TODO(python>3.8): use match statement
+                if isinstance(result, TestSkip):
+                    arg = result.arg
+                    skipcount += 1
+                    print_result(arg, "SKIPPED", BLUE)
+                elif isinstance(result, TestFail):
+                    # fmt: off
+                    arg, duration_ms, error_message = result.arg, result.duration_ms, result.error_message
+                    # fmt: on
+                    failcount += 1
+                    failed += [arg]
+                    print_result(arg, "FAILED", RED, duration_ms, error_message)
+                elif isinstance(result, TestPass):
+                    arg, duration_ms = result.arg, result.duration_ms
+                    passcount += 1
+                    print_result(arg, "PASSED", GREEN, duration_ms)
 
     if passcount + failcount + skipcount > 1:
         print(f"{passcount} / {passcount + failcount} passed ({skipcount} skipped)")

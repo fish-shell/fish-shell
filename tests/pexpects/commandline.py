@@ -102,6 +102,18 @@ send(control("k"))
 sendline('echo "process extent is [$tmp]"')
 expect_str("process extent is [echo process # comment]")
 
+sendline(
+    """$fish -C 'commandline "sq 2; exit"; commandline --cursor 1; commandline -i e'"""
+)
+expect_str("seq 2")
+send("\r")
+expect_str("1\r\n2\r\n")
+
+sendline("""$fish -C 'commandline 123; read'""")
+expect_str("read> 123")
+sendline("456; exit")
+expect_str("123456")
+
 # DISABLED because it keeps failing under ASAN
 # sendline(r"bind ctrl-b 'set tmp (commandline --current-process | count)'")
 # sendline(r'commandline "echo line1 \\" "# comment" "line2"')

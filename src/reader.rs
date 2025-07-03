@@ -317,11 +317,12 @@ pub fn reader_push<'a>(parser: &'a Parser, history_name: &wstr, conf: ReaderConf
     assert_is_main_thread();
     let hist = History::with_name(history_name);
     hist.resolve_pending();
-    let data = ReaderData::new(hist, conf);
+    let is_top_level = reader_data_stack().is_empty();
+    let data = ReaderData::new(hist, conf, is_top_level);
     reader_data_stack().push(data);
     let data = current_data().unwrap();
     data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
-    if reader_data_stack().len() == 1 {
+    if is_top_level {
         reader_interactive_init(parser);
     }
     Reader { data, parser }
@@ -1201,12 +1202,18 @@ fn reader_received_sighup() -> bool {
 }
 
 impl ReaderData {
-    fn new(history: Arc<History>, conf: ReaderConfig) -> Pin<Box<Self>> {
+    fn new(history: Arc<History>, conf: ReaderConfig, is_top_level: bool) -> Pin<Box<Self>> {
         let input_data = InputData::new(conf.inputfd);
+        let mut command_line = EditableLine::default();
+        if is_top_level {
+            let state = commandline_state_snapshot();
+            command_line.push_edit(Edit::new(0..0, state.text.clone()), false);
+            command_line.set_position(state.cursor_pos);
+        }
         Pin::new(Box::new(Self {
             canary: Rc::new(()),
             conf,
-            command_line: Default::default(),
+            command_line,
             command_line_transient_edit: None,
             rendered_layout: Default::default(),
             autosuggestion: Default::default(),

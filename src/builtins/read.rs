@@ -39,7 +39,7 @@ struct Options {
     prompt: Option<WString>,
     prompt_str: Option<WString>,
     right_prompt: WString,
-    commandline: WString,
+    commandline: Option<WString>,
     // If a delimiter was given. Used to distinguish between the default
     // empty string and a given empty delimiter.
     delimiter: Option<WString>,
@@ -100,7 +100,7 @@ fn parse_cmd_opts(
                 opts.array = true;
             }
             'c' => {
-                opts.commandline = w.woptarg.unwrap().to_owned();
+                opts.commandline = Some(w.woptarg.unwrap().to_owned());
             }
             'd' => {
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
@@ -207,7 +207,7 @@ fn read_interactive(
     silent: bool,
     prompt: &wstr,
     right_prompt: &wstr,
-    commandline: &wstr,
+    commandline: &Option<WString>,
     inputfd: RawFd,
 ) -> BuiltinResult {
     let mut exit_res = Ok(SUCCESS);
@@ -238,7 +238,9 @@ fn read_interactive(
             s.readonly_commandline = false;
         })
     });
-    commandline_set_buffer(parser, Some(commandline.to_owned()), None);
+    if let Some(commandline) = commandline {
+        commandline_set_buffer(parser, Some(commandline.clone()), None);
+    }
 
     let mline = {
         let _interactive = parser.push_scope(|s| s.is_interactive = true);

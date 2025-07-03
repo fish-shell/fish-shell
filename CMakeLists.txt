@@ -56,9 +56,16 @@ function(CREATE_TARGET target)
             --no-default-features
             ${CARGO_FLAGS}
             ${FEATURES_ARG}
-      &&
+    COMMAND
       "${CMAKE_COMMAND}" -E
         copy "${rust_target_dir}/${rust_profile}/${target}" "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMAND
+      if command -v msgfmt >/dev/null \;
+      then
+       "${CMAKE_COMMAND}" -E
+          env ${VARS_FOR_CARGO} PATH="${CMAKE_CURRENT_BINARY_DIR}:$ENV{PATH}"
+            ${CMAKE_SOURCE_DIR}/build_tools/update_translations.fish --only-mo \;
+      fi
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     USES_TERMINAL
   )

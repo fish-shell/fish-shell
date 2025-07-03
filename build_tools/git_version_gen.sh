@@ -34,7 +34,7 @@ fi
 # If the first param is --stdout, then output to stdout and exit.
 if test "$1" = '--stdout'
 then
-	echo $VN
+	echo "$VN"
     exit 0
 fi
 

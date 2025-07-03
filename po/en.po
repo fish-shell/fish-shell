@@ -5591,6 +5591,9 @@ msgstr ""
 msgid "Always Commit without a parent"
 msgstr ""
 
+msgid "Always answer yes"
+msgstr ""
+
 msgid "Always apply patches"
 msgstr ""
 
@@ -6548,6 +6551,12 @@ msgstr ""
 msgid "Assume  the  archive is seekable"
 msgstr ""
 
+msgid "Assume 256 color support"
+msgstr ""
+
+msgid "Assume 88 color support"
+msgstr ""
+
 msgid "Assume IEEE signaling NaNs may generate uservisible traps during float operations"
 msgstr ""
 
@@ -6744,6 +6753,9 @@ msgid "Attach a file to your message using MIME"
 msgstr "Attach a file to your message using MIME"
 
 msgid "Attach additional artifacts to be installed and deployed"
+msgstr ""
+
+msgid "Attach current windows to session"
 msgstr ""
 
 msgid "Attach db ALIAS from PATH"
@@ -11450,6 +11462,9 @@ msgstr ""
 msgid "Convert underscores to dashes"
 msgstr ""
 
+msgid "Convert workspace"
+msgstr ""
+
 msgid "Converts amounts to their cost at txn time"
 msgstr ""
 
@@ -14040,6 +14055,9 @@ msgid "Detach virtual device from a mirroring pool"
 msgstr "Detach virtual device from a mirroring pool"
 
 msgid "Detach when the specified syscall is reached"
+msgstr ""
+
+msgid "Detached session"
 msgstr ""
 
 msgid "Detaches a namespace from requested controller(s)"
@@ -18191,6 +18209,9 @@ msgstr ""
 msgid "Do not load the auto-completion scripts in the environment"
 msgstr ""
 
+msgid "Do not load ~/.pythonrc.py"
+msgstr ""
+
 msgid "Do not look for a conf.py"
 msgstr ""
 
@@ -19098,6 +19119,9 @@ msgid "Do not use the ~/.cvsrc file."
 msgstr ""
 
 msgid "Do not use unicode but ASCII characters for graph meters"
+msgstr ""
+
+msgid "Do not use vi input mode"
 msgstr ""
 
 msgid "Do not use weak symbol support"
@@ -21610,6 +21634,9 @@ msgstr ""
 
 msgid "Edit variable value"
 msgstr "Edit variable value"
+
+msgid "Edit workspace"
+msgstr ""
 
 msgid "Edit/lock a set of files"
 msgstr ""
@@ -24605,6 +24632,9 @@ msgstr ""
 msgid "File for server response"
 msgstr "File for server response"
 
+msgid "File format"
+msgstr ""
+
 msgid "File format section"
 msgstr "File format section"
 
@@ -26553,6 +26583,9 @@ msgid "Freeze --grow command"
 msgstr ""
 
 msgid "Freeze domain's mounted filesystems"
+msgstr ""
+
+msgid "Freeze session to worskpace"
 msgstr ""
 
 msgid "Freeze units with the cgroup freezer"
@@ -29813,6 +29846,9 @@ msgstr "Import the keys with the given key IDs from a keyserver"
 msgid "Import variable from file"
 msgstr ""
 
+msgid "Import workspace"
+msgstr ""
+
 msgid "Import your site from others"
 msgstr ""
 
@@ -31833,6 +31869,9 @@ msgid "Launch in a sandboxed environment"
 msgstr ""
 
 msgid "Launch on <disp> X display"
+msgstr ""
+
+msgid "Launch python shell"
 msgstr ""
 
 msgid "Launch the terminal user interface"
@@ -34880,6 +34919,9 @@ msgstr ""
 msgid "Load the specified plugin"
 msgstr ""
 
+msgid "Load tmuxp workspace"
+msgstr ""
+
 msgid "Load url with a prefix from the directory"
 msgstr ""
 
@@ -34890,6 +34932,9 @@ msgid "Load zone default settings"
 msgstr ""
 
 msgid "Load ~/.julia/config/startup.jl"
+msgstr ""
+
+msgid "Load ~/.pythonrc.py"
 msgstr ""
 
 msgid "Load ~/.tcshrc"
@@ -35090,6 +35135,9 @@ msgstr ""
 msgid "Log file"
 msgstr ""
 
+msgid "Log file path"
+msgstr ""
+
 msgid "Log file to where all build output will go"
 msgstr ""
 
@@ -35127,6 +35175,9 @@ msgid "Log into a private repository"
 msgstr ""
 
 msgid "Log into pub.dev"
+msgstr ""
+
+msgid "Log level"
 msgstr ""
 
 msgid "Log level to use (default: info)"
@@ -40166,6 +40217,9 @@ msgstr ""
 msgid "Overwrite existing binstubs if they exist"
 msgstr "Overwrite existing binstubs if they exist"
 
+msgid "Overwrite existing file"
+msgstr ""
+
 msgid "Overwrite existing files"
 msgstr ""
 
@@ -40647,6 +40701,15 @@ msgid "Passed to pacman: Install as dependencies"
 msgstr ""
 
 msgid "Passed to pacman: Only install what is needed"
+msgstr ""
+
+msgid "Passthru to tmux -L"
+msgstr ""
+
+msgid "Passthru to tmux -S"
+msgstr ""
+
+msgid "Passthru to tmux -f"
 msgstr ""
 
 msgid "Password for the certificate"
@@ -42963,6 +43026,9 @@ msgid "Print device paths while running"
 msgstr ""
 
 msgid "Print diagnostic information."
+msgstr ""
+
+msgid "Print diagnostics"
 msgstr ""
 
 msgid "Print diff"
@@ -50706,6 +50772,9 @@ msgid "Run cargo-asm in a different directory"
 msgstr ""
 
 msgid "Run checks on the permanent configuration"
+msgstr ""
+
+msgid "Run code and exit"
 msgstr ""
 
 msgid "Run command after processing of initialization files"
@@ -68408,6 +68477,9 @@ msgstr ""
 msgid "Use baseline"
 msgstr ""
 
+msgid "Use best shell available"
+msgstr ""
+
 msgid "Use bin wrappers for executables"
 msgstr "Use bin wrappers for executables"
 
@@ -68433,6 +68505,9 @@ msgid "Use blocking I/O for the remote shell"
 msgstr ""
 
 msgid "Use bold font styles when writing HTTP headers to terminal"
+msgstr ""
+
+msgid "Use bpython"
 msgstr ""
 
 msgid "Use btrfs COW lightweight copy"
@@ -68473,6 +68548,9 @@ msgstr ""
 
 msgid "Use clipboard selection"
 msgstr "Use clipboard selection"
+
+msgid "Use code.interact()"
+msgstr ""
 
 msgid "Use colors"
 msgstr "Use colors"
@@ -68822,6 +68900,9 @@ msgstr ""
 msgid "Use internal diff logic"
 msgstr ""
 
+msgid "Use ipython"
+msgstr ""
+
 msgid "Use journal FILE"
 msgstr ""
 
@@ -69023,6 +69104,9 @@ msgstr ""
 msgid "Use patterns from a file"
 msgstr ""
 
+msgid "Use pdb"
+msgstr ""
+
 msgid "Use pipes not temp files for communication"
 msgstr ""
 
@@ -69057,6 +69141,12 @@ msgid "Use proxy server"
 msgstr "Use proxy server"
 
 msgid "Use pseudo-terminal's sense of the stty erase value"
+msgstr ""
+
+msgid "Use ptpython"
+msgstr ""
+
+msgid "Use ptpython+ipython"
 msgstr ""
 
 msgid "Use purge instead of remove"
@@ -69786,6 +69876,9 @@ msgid "Use verbose output"
 msgstr ""
 
 msgid "Use verbose output (-vv very verbose/build.rs output)"
+msgstr ""
+
+msgid "Use vi input mode"
 msgstr ""
 
 msgid "Use visual bell instead of audio bell"

@@ -5590,6 +5590,9 @@ msgstr "此包提供的替代品, 由白空分隔"
 msgid "Always Commit without a parent"
 msgstr "总是在没有父母的情况下提交"
 
+msgid "Always answer yes"
+msgstr ""
+
 msgid "Always apply patches"
 msgstr "总是应用补丁"
 
@@ -6547,6 +6550,12 @@ msgstr "将一个面具与图像联系 [文件名]"
 msgid "Assume  the  archive is seekable"
 msgstr "假设归档可以查找"
 
+msgid "Assume 256 color support"
+msgstr ""
+
+msgid "Assume 88 color support"
+msgstr ""
+
 msgid "Assume IEEE signaling NaNs may generate uservisible traps during float operations"
 msgstr ""
 
@@ -6743,6 +6752,9 @@ msgid "Attach a file to your message using MIME"
 msgstr "使用 MIME 在信件中附加一个文件"
 
 msgid "Attach additional artifacts to be installed and deployed"
+msgstr ""
+
+msgid "Attach current windows to session"
 msgstr ""
 
 msgid "Attach db ALIAS from PATH"
@@ -11449,6 +11461,9 @@ msgstr ""
 msgid "Convert underscores to dashes"
 msgstr "将下划线转换为破折号"
 
+msgid "Convert workspace"
+msgstr ""
+
 msgid "Converts amounts to their cost at txn time"
 msgstr "按txn时间转换其成本"
 
@@ -14040,6 +14055,9 @@ msgstr "从镜像池中分离虚拟设备"
 
 msgid "Detach when the specified syscall is reached"
 msgstr "到达指定音节时切换"
+
+msgid "Detached session"
+msgstr ""
 
 msgid "Detaches a namespace from requested controller(s)"
 msgstr "从请求的控制器中切除命名空间"
@@ -18190,6 +18208,9 @@ msgstr "不装入资源和启动文件"
 msgid "Do not load the auto-completion scripts in the environment"
 msgstr ""
 
+msgid "Do not load ~/.pythonrc.py"
+msgstr ""
+
 msgid "Do not look for a conf.py"
 msgstr "不要寻找一个信任. 键"
 
@@ -19097,6 +19118,9 @@ msgid "Do not use the ~/.cvsrc file."
 msgstr "不要使用 ~/.cvsrc 文件 ."
 
 msgid "Do not use unicode but ASCII characters for graph meters"
+msgstr ""
+
+msgid "Do not use vi input mode"
 msgstr ""
 
 msgid "Do not use weak symbol support"
@@ -21609,6 +21633,9 @@ msgstr "编辑待办事宜列表"
 
 msgid "Edit variable value"
 msgstr "编辑可变值"
+
+msgid "Edit workspace"
+msgstr ""
 
 msgid "Edit/lock a set of files"
 msgstr ""
@@ -24604,6 +24631,9 @@ msgstr "输入的文件描述符"
 msgid "File for server response"
 msgstr "服务器响应文件"
 
+msgid "File format"
+msgstr ""
+
 msgid "File format section"
 msgstr "文件格式区域"
 
@@ -26553,6 +26583,9 @@ msgstr "冻结 --grow 命令"
 
 msgid "Freeze domain's mounted filesystems"
 msgstr "冻结域已挂载的文件系统"
+
+msgid "Freeze session to worskpace"
+msgstr ""
 
 msgid "Freeze units with the cgroup freezer"
 msgstr "带C组冷冻器的冻结单元"
@@ -29812,6 +29845,9 @@ msgstr "从密钥服务器导入带有给定密钥ID的密钥"
 msgid "Import variable from file"
 msgstr "从文件导入变量"
 
+msgid "Import workspace"
+msgstr ""
+
 msgid "Import your site from others"
 msgstr "从他人导入您的网站"
 
@@ -31833,6 +31869,9 @@ msgstr "在沙盒环境中发射"
 
 msgid "Launch on <disp> X display"
 msgstr "在 < disp > X 显示时启动"
+
+msgid "Launch python shell"
+msgstr ""
 
 msgid "Launch the terminal user interface"
 msgstr "启动终端用户界面"
@@ -34879,6 +34918,9 @@ msgstr "装入指定的配置文件"
 msgid "Load the specified plugin"
 msgstr "装入指定的插件"
 
+msgid "Load tmuxp workspace"
+msgstr ""
+
 msgid "Load url with a prefix from the directory"
 msgstr ""
 
@@ -34890,6 +34932,9 @@ msgstr "装入区域默认设置"
 
 msgid "Load ~/.julia/config/startup.jl"
 msgstr "装入~/.julia/ config/启动.jl"
+
+msgid "Load ~/.pythonrc.py"
+msgstr ""
 
 msgid "Load ~/.tcshrc"
 msgstr "装入~/.tcshrc"
@@ -35089,6 +35134,9 @@ msgstr "日志目标"
 msgid "Log file"
 msgstr "日志文件"
 
+msgid "Log file path"
+msgstr ""
+
 msgid "Log file to where all build output will go"
 msgstr ""
 
@@ -35126,6 +35174,9 @@ msgid "Log into a private repository"
 msgstr "登录到私人仓库"
 
 msgid "Log into pub.dev"
+msgstr ""
+
+msgid "Log level"
 msgstr ""
 
 msgid "Log level to use (default: info)"
@@ -40165,6 +40216,9 @@ msgstr "覆盖列表中现有的 VALUE"
 msgid "Overwrite existing binstubs if they exist"
 msgstr "覆盖已存在的 bustub( 如果存在)"
 
+msgid "Overwrite existing file"
+msgstr ""
+
 msgid "Overwrite existing files"
 msgstr "覆盖已存在的文件"
 
@@ -40647,6 +40701,15 @@ msgstr "传给帕特曼: 作为依赖性安装"
 
 msgid "Passed to pacman: Only install what is needed"
 msgstr "传给帕特曼: 只安装需要的东西"
+
+msgid "Passthru to tmux -L"
+msgstr ""
+
+msgid "Passthru to tmux -S"
+msgstr ""
+
+msgid "Passthru to tmux -f"
+msgstr ""
 
 msgid "Password for the certificate"
 msgstr "证书的密码"
@@ -42963,6 +43026,9 @@ msgstr "运行时打印设备路径"
 
 msgid "Print diagnostic information."
 msgstr "印刷诊断信息."
+
+msgid "Print diagnostics"
+msgstr ""
 
 msgid "Print diff"
 msgstr "打印 diff"
@@ -50706,6 +50772,9 @@ msgstr ""
 
 msgid "Run checks on the permanent configuration"
 msgstr "运行永久配置的检查"
+
+msgid "Run code and exit"
+msgstr ""
 
 msgid "Run command after processing of initialization files"
 msgstr "处理初始化文件后运行命令"
@@ -68407,6 +68476,9 @@ msgstr "使用基础 URL"
 msgid "Use baseline"
 msgstr "使用基线"
 
+msgid "Use best shell available"
+msgstr ""
+
 msgid "Use bin wrappers for executables"
 msgstr "对可执行文件使用本包"
 
@@ -68433,6 +68505,9 @@ msgstr "远程外壳使用屏蔽 I/ O"
 
 msgid "Use bold font styles when writing HTTP headers to terminal"
 msgstr "将 HTTP 信头写入终端时使用粗体字体样式"
+
+msgid "Use bpython"
+msgstr ""
 
 msgid "Use btrfs COW lightweight copy"
 msgstr "使用 btrfs COW 轻量级副本"
@@ -68472,6 +68547,9 @@ msgstr "使用类名为以\"@\"语法指定的各个字面字符串所对应的�
 
 msgid "Use clipboard selection"
 msgstr "使用剪贴板选择"
+
+msgid "Use code.interact()"
+msgstr ""
 
 msgid "Use colors"
 msgstr "使用颜色"
@@ -68821,6 +68899,9 @@ msgstr "使用交互式 shell"
 msgid "Use internal diff logic"
 msgstr "使用 diff 内部逻辑"
 
+msgid "Use ipython"
+msgstr ""
+
 msgid "Use journal FILE"
 msgstr "使用日记 FILE"
 
@@ -69022,6 +69103,9 @@ msgstr ""
 msgid "Use patterns from a file"
 msgstr "使用文件的图案"
 
+msgid "Use pdb"
+msgstr ""
+
 msgid "Use pipes not temp files for communication"
 msgstr "使用管道而非临时文件进行通信"
 
@@ -69057,6 +69141,12 @@ msgstr "使用代理服务器"
 
 msgid "Use pseudo-terminal's sense of the stty erase value"
 msgstr "使用假的平面擦去值感"
+
+msgid "Use ptpython"
+msgstr ""
+
+msgid "Use ptpython+ipython"
+msgstr ""
 
 msgid "Use purge instead of remove"
 msgstr "使用清洗而不是去除"
@@ -69786,6 +69876,9 @@ msgstr "使用动词输出"
 
 msgid "Use verbose output (-vv very verbose/build.rs output)"
 msgstr "使用动词输出(-vv非常动词/build.rs输出)"
+
+msgid "Use vi input mode"
+msgstr ""
 
 msgid "Use visual bell instead of audio bell"
 msgstr ""
